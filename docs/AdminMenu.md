@@ -144,6 +144,23 @@ value, ordinally tie-broken. Empty and identity entries never count. The invaria
 renders only when no layer anywhere holds a translation. `docs/localization.mmd` diagrams
 the whole chain.
 
+**Lookup key: the displayed caption, then the invariant literal.** Most provider captions
+reach the resolver as the literal (`S["Content"]` renders "Content" until a translation
+exists), but upstream's Contents menu builds the New branch through `S[displayName]`, so a
+content type whose display name upstream ships a catalog string for arrives already
+translated — an `Account` type is "Cuenta" under `es-ES` before Crest sees it. The tenant's
+own translation of that type is stored under the invariant (`Content Types` / `Account`), so
+the resolver consults the store for the displayed caption first and, when that misses, for
+`MenuItem.Text.Name`; only then does it fall to the PO layer. Without the second lookup a
+tenant could never override upstream's translation of such a type.
+
+The best-alternative step is direction-aware for the same reason. An item with an owning
+menu prefers other menu-context entries for its caption; an **ownerless** caption — in
+Crest's admin only the locked New branch, whose captions are content type names — prefers
+non-menu contexts, because a `Content Types` entry is about that very type while a menu
+entry sharing the literal is about a different item (the same `Account` type flagged into
+the Content menu seeds "Account" under `Primary Navigation`).
+
 This subsumes the earlier special-cased "New"-branch fallback: a content type translated in
 the Translations editor ("Content Types" group) is simply the best alternative for its New
 menu caption, which no "Admin Menus" context translates — one translation covers every

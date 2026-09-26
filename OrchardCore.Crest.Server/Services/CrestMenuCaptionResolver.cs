@@ -137,12 +137,36 @@ public sealed class CrestMenuCaptionResolver(IServiceProvider serviceProvider)
     /// <param name="menuName">The item's owning admin menu, when the built item still has one.</param>
     /// <param name="itemId">The item's Id, used to restore the owning menu when Merge dropped
     /// <paramref name="menuName"/> - for a merged pair this is the node's UniqueId.</param>
-    public string Resolve(string caption, string? menuName, string? itemId)
+    public string Resolve(string caption, string? menuName, string? itemId) => Resolve(caption, menuName, itemId, invariant: null);
+
+    /// <param name="invariant">The caption's invariant literal (MenuItem.Text.Name) when the
+    /// displayed caption may already be a PO translation of it. Upstream's Contents menu
+    /// builds the New branch's captions through S[displayName], so a content type upstream
+    /// ships a catalog string for ("Account" → "Cuenta") arrives translated; the tenant's own
+    /// translation is stored under the invariant, so the store is consulted for both.</param>
+    public string Resolve(string caption, string? menuName, string? itemId, string? invariant)
     {
         if (string.IsNullOrEmpty(caption))
         {
             return caption;
         }
+
+        var resolved = ResolveCore(caption, menuName, itemId, out var fromStore);
+        if (!fromStore && !string.IsNullOrEmpty(invariant) && !string.Equals(invariant, caption, StringComparison.Ordinal))
+        {
+            var byInvariant = ResolveCore(invariant, menuName, itemId, out fromStore);
+            if (fromStore)
+            {
+                return byInvariant;
+            }
+        }
+
+        return resolved;
+    }
+
+    private string ResolveCore(string caption, string? menuName, string? itemId, out bool fromStore)
+    {
+        fromStore = false;
 
         if (string.IsNullOrEmpty(menuName)
             && !string.IsNullOrEmpty(itemId)
@@ -165,6 +189,7 @@ public sealed class CrestMenuCaptionResolver(IServiceProvider serviceProvider)
                     {
                         if (string.Equals(entryContext, context, StringComparison.OrdinalIgnoreCase))
                         {
+                            fromStore = true;
                             return value;
                         }
                     }
@@ -179,7 +204,14 @@ public sealed class CrestMenuCaptionResolver(IServiceProvider serviceProvider)
                 context = context[..separator];
             }
 
-            // The culture's best alternative, from the nearest culture that has any.
+            // The culture's best alternative, from the nearest culture that has any. An item
+            // with an owning menu prefers menu contexts (another menu's translation of the
+            // same caption over, say, a content type's). An OWNERLESS caption is the reverse:
+            // nothing in Crest's admin is ownerless but the locked New branch, whose captions
+            // are content type names - so a "Content Types" entry is about this very item,
+            // while a menu-context entry is about some other item that shares the literal
+            // (an Account type flagged into the Content menu seeds "Account" there).
+            var ownerless = string.IsNullOrEmpty(menuName);
             foreach (var index in indexes)
             {
                 var candidates = index[caption].ToArray();
@@ -189,9 +221,10 @@ public sealed class CrestMenuCaptionResolver(IServiceProvider serviceProvider)
                 }
 
                 var preferred = candidates
-                    .Where(candidate => candidate.Context.StartsWith(RootContext, StringComparison.OrdinalIgnoreCase))
+                    .Where(candidate => candidate.Context.StartsWith(RootContext, StringComparison.OrdinalIgnoreCase) != ownerless)
                     .ToArray();
 
+                fromStore = true;
                 return (preferred.Length > 0 ? preferred : candidates)
                     .GroupBy(candidate => candidate.Value, StringComparer.Ordinal)
                     .OrderByDescending(group => group.Count())

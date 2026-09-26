@@ -64,7 +64,8 @@ public sealed record NavigationItem(
             text = captionResolver.Resolve(
                 text,
                 string.IsNullOrEmpty(item.MenuName) ? null : item.MenuName,
-                item.Id);
+                item.Id,
+                item.Text.Name);
         }
 
         return new(
