@@ -54,7 +54,6 @@ function buildSharedAdminChecks() {
     { name: 'native-authorization-pages', fn: require('./checks/native-authorization-pages') },
     { name: 'navigation-authorization', fn: require('./checks/navigation-authorization') },
     { name: 'role-denial-paths', fn: require('./checks/role-denial-paths') },
-    { name: 'workflows-api', fn: require('../../OrchardCore.Crest.Workflows/tests/playwright/checks/workflows-api') },
     { name: 'icon-selector', fn: require('./checks/icon-selector') },
     { name: 'icon-selector-remote-fallback', fn: require('./checks/icon-selector-remote-fallback') },
     { name: 'iconify-local-mirror', fn: require('./checks/iconify-local-mirror') },

@@ -189,7 +189,7 @@ Two independent mechanisms, by project:
     filenames survive a mirror refresh. Host modules that are not part of Crest (e.g.
     Accounting) may keep module-local `Localization/{culture}.po` inside the host repo.
 
-Excluded from the API-based mechanism: `OrchardCore.Crest.Workflows.Designer` (a
+Excluded from the API-based mechanism: `Fruitful.Workflows.Designer` (a
 vendored third-party package, not a Fruitful admin surface) and any currently-unreferenced
 component with no live surface to verify translations against.
 
