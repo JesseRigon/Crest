@@ -78,8 +78,17 @@ public class ContentItemWorkflowDefinitionPublisher(
             return new(false, validationErrors, new([]));
 
         await mediator.SendAsync(new WorkflowDefinitionPublishing(definition), cancellationToken);
-        
+
         var contentItem = await contentManager.GetAsync(definition.DefinitionId, VersionOptions.DraftRequired);
+
+        if (contentItem == null)
+        {
+            // Saved with publish=true in one call: NewAsync only allocated the id, nothing
+            // is stored yet. Persist the draft first, then publish that content item.
+            await workflowDefinitionStore.SaveAsync(definition, cancellationToken);
+            contentItem = await contentManager.GetAsync(definition.DefinitionId, VersionOptions.DraftRequired)
+                ?? throw new InvalidOperationException($"Workflow definition '{definition.DefinitionId}' could not be stored before publishing.");
+        }
 
         if (definition.IsPublished)
             definition.Version++;

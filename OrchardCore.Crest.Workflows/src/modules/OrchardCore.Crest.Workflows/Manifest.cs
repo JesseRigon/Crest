@@ -1,25 +1,29 @@
 using OrchardCore.Modules.Manifest;
-using OrchardCore.OpenId;
 
 [assembly: Module(
-    Author = ManifestConstants.OrchardCoreTeam,
-    Website = ManifestConstants.OrchardCoreWebsite,
-    Version = ManifestConstants.OrchardCoreVersion,
+    Author = "Fruitful (forked from Elsa Workflows' Orchard Core integration, BSD-3-Clause)",
+    Website = "https://github.com/JesseRigon/OrchardCore.Crest",
+    Version = "0.1.0",
     Name = "Crest Workflows"
 )]
 
+// The engine. Depends on the stock OrchardCore.Workflows feature on purpose: the upstream
+// modules' workflow startups (Email, Users, Contents, ...) are gated on that feature id,
+// and the override route (plans/workflows.md) keeps them running while Crest replaces the
+// services behind them. No OpenID: the API rides the tenant cookie behind Crest's
+// antiforgery header and the ManageWorkflows permission (Security/ElsaApiSecurityMiddleware).
 [assembly: Feature(
     Id = "OrchardCore.Crest.Workflows",
     Name = "Crest Workflows",
-    Description = "Provides foundational Elsa Workflows services.",
+    Description = "Elsa 3 as the tenant's workflow engine: definitions as content items, per-shell stores, the Elsa API behind Orchard permissions.",
     Category = "Crest Workflows",
-    Dependencies = ["OrchardCore.Contents", OpenIdConstants.Features.Core]
+    Dependencies = ["OrchardCore.Contents", "OrchardCore.Workflows"]
 )]
 
 [assembly: Feature(
     Id = "OrchardCore.Crest.Workflows.Http",
     Name = "HTTP Activities",
-    Description = "Provides HTTP activities.",
+    Description = "Elsa HTTP endpoint and request activities.",
     Category = "Crest Workflows",
     Dependencies = ["OrchardCore.Crest.Workflows"]
 )]

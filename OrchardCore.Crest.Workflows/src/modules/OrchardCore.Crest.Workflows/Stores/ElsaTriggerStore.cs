@@ -21,7 +21,7 @@ public class ElsaTriggerStore(ISession session, IPayloadSerializer payloadSerial
     {
         var document = await Query(new() { Ids = new List<string> { record.Id } }).FirstOrDefaultAsync(cancellationToken);
         document = Map(document, record);
-        await session.SaveAsync(document, Collection);
+        await session.SaveAsync(document, collection: Collection);
         await session.SaveChangesAsync(cancellationToken);
     }
 
@@ -31,7 +31,7 @@ public class ElsaTriggerStore(ISession session, IPayloadSerializer payloadSerial
         {
             var document = await Query(new() { Ids = new List<string> { record.Id } }).FirstOrDefaultAsync(cancellationToken);
             document = Map(document, record);
-            await session.SaveAsync(document, Collection);
+            await session.SaveAsync(document, collection: Collection);
         }
 
         await session.SaveChangesAsync(cancellationToken);
@@ -58,7 +58,7 @@ public class ElsaTriggerStore(ISession session, IPayloadSerializer payloadSerial
     {
         var query = Query(filter, order, pageArgs);
         var count = await query.CountAsync(cancellationToken);
-        var documents = await query.ListAsync(cancellationToken).ToList();
+        var documents = (await query.ListAsync(cancellationToken)).ToList();
 
         return Page.Of(Map(documents).ToList(), count);
     }
@@ -84,14 +84,14 @@ public class ElsaTriggerStore(ISession session, IPayloadSerializer payloadSerial
         while (true)
         {
             var query = Query(filter).OrderBy(x => x.TriggerId).Skip(pageArgs.Offset!.Value).Take(pageArgs.Limit!.Value);
-            var documents = await query.ListAsync(cancellationToken).ToList();
+            var documents = (await query.ListAsync(cancellationToken)).ToList();
             count += documents.Count;
 
             if (documents.Count == 0)
                 break;
 
             foreach (var document in documents)
-                session.Delete(document, Collection);
+                session.Delete(document, collection: Collection);
 
             pageArgs = pageArgs.Next();
         }
@@ -102,12 +102,12 @@ public class ElsaTriggerStore(ISession session, IPayloadSerializer payloadSerial
 
     private IQuery<StoredTriggerDocument, StoredTriggerIndex> Query(TriggerFilter filter)
     {
-        return session.Query<StoredTriggerDocument, StoredTriggerIndex>(Collection).Apply(filter);
+        return session.Query<StoredTriggerDocument, StoredTriggerIndex>(collection: Collection).Apply(filter);
     }
 
     private IQuery<StoredTriggerDocument, StoredTriggerIndex> Query<TOrderBy>(TriggerFilter filter, StoredTriggerOrder<TOrderBy>? order = null, PageArgs? pageArgs = null)
     {
-        var query = session.Query<StoredTriggerDocument, StoredTriggerIndex>(Collection).Apply(filter);
+        var query = session.Query<StoredTriggerDocument, StoredTriggerIndex>(collection: Collection).Apply(filter);
         if (order != null) query = query.Apply(order);
 
         if (pageArgs != null)

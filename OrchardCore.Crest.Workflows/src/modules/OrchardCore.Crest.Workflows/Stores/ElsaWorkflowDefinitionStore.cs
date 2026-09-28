@@ -187,12 +187,12 @@ public class ElsaWorkflowDefinitionStore(
 
     public async Task<long> CountDistinctAsync(CancellationToken cancellationToken = default)
     {
-        return await session.Query<WorkflowDefinitionPart, WorkflowDefinitionIndex>(Collection).CountAsync(cancellationToken);
+        return await session.Query<WorkflowDefinitionPart, WorkflowDefinitionIndex>(collection: Collection).CountAsync(cancellationToken);
     }
 
     public async Task<bool> GetIsNameUnique(string name, string? definitionId = null, CancellationToken cancellationToken = default)
     {
-        var query = session.Query<WorkflowDefinitionPart, WorkflowDefinitionIndex>(Collection).Where(x => x.Name == name);
+        var query = session.Query<WorkflowDefinitionPart, WorkflowDefinitionIndex>(collection: Collection).Where(x => x.Name == name);
 
         if (definitionId != null)
             query = query.Where(x => x.DefinitionId != definitionId);
@@ -207,7 +207,7 @@ public class ElsaWorkflowDefinitionStore(
 
     private IQuery<ContentItem, WorkflowDefinitionIndex> Query<TOrderBy>(WorkflowDefinitionFilter filter, WorkflowDefinitionOrder<TOrderBy>? order = null, PageArgs? pageArgs = null)
     {
-        var query = session.Query<ContentItem, WorkflowDefinitionIndex>(Collection).Apply(filter);
+        var query = session.Query<ContentItem, WorkflowDefinitionIndex>(collection: Collection).Apply(filter);
         if (order != null) query = query.Apply(order);
 
         if (pageArgs != null)
@@ -243,7 +243,7 @@ public class ElsaWorkflowDefinitionStore(
     {
         var removeContext = new RemoveContentContext(contentItem);
         await ContentHandlers.InvokeAsync((handler, context) => handler.RemovingAsync(context), removeContext, logger);
-        session.Delete(contentItem, Collection);
+        session.Delete(contentItem, collection: Collection);
         await ReversedHandlers.InvokeAsync((handler, context) => handler.RemovedAsync(context), removeContext, logger);
     }
 }

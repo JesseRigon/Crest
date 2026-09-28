@@ -2,15 +2,15 @@ using OrchardCore.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Workflows Contents",
-    Author = ManifestConstants.OrchardCoreTeam,
-    Website = ManifestConstants.OrchardCoreWebsite,
-    Version = ManifestConstants.OrchardCoreVersion
+    Author = "Fruitful (forked from Elsa Workflows' Orchard Core integration, BSD-3-Clause)",
+    Website = "https://github.com/JesseRigon/OrchardCore.Crest",
+    Version = "0.1.0"
 )]
 
 [assembly: Feature(
     Id = "OrchardCore.Crest.Workflows.Contents",
     Name = "Content Activities",
-    Description = "Provides content related activities.",
+    Description = "Content triggers (created, published, ...) carrying the acting user, and content tasks.",
     Category = "Crest Workflows",
-    Dependencies = ["OrchardCore.Crest.Workflows", "OrchardCore.Contents", "OrchardCore.Title", "OrchardCore.Taxonomies"]
+    Dependencies = ["OrchardCore.Crest.Workflows", "OrchardCore.Contents", "OrchardCore.Title"]
 )]

@@ -3,10 +3,17 @@ using Elsa.Workflows.Runtime;
 using OrchardCore.ContentManagement.Handlers;
 using OrchardCore.Crest.Workflows.Contents.Activities;
 using OrchardCore.Crest.Workflows.Contents.Stimuli;
+using OrchardCore.Crest.Workflows.Contexts;
 
 namespace OrchardCore.Crest.Workflows.Contents.Handlers;
 
-public class ContentEventHandler(IStimulusSender stimulusSender) : ContentHandlerBase
+/// <summary>
+/// Turns Orchard content events into Elsa stimuli, in the tenant they happen in. Every
+/// stimulus carries the acting user snapshot (<see cref="WorkflowUserContext.InputKey"/>)
+/// so triggers and the RequirePermission activity can decide with the real principal, and
+/// the content item id as correlation id so one item's flows can be found together.
+/// </summary>
+public class ContentEventHandler(IStimulusSender stimulusSender, IWorkflowUserContextAccessor userContext) : ContentHandlerBase
 {
     public override Task CreatedAsync(CreateContentContext context) => TriggerActivity<ContentCreated>(context);
     public override Task DraftSavedAsync(SaveDraftContentContext context) => TriggerActivity<ContentDraftSaved>(context);
@@ -19,15 +26,24 @@ public class ContentEventHandler(IStimulusSender stimulusSender) : ContentHandle
     private async Task TriggerActivity<TTriggerActivity>(ContentContextBase context) where TTriggerActivity : IActivity
     {
         var contentItem = context.ContentItem;
-        var contentType = contentItem.ContentType;
-        var stimulus = new ContentEventStimulus(contentType);
+
+        // Workflow definitions are content items too; publishing one must not fan out
+        // to content triggers.
+        if (contentItem.ContentType == "WorkflowDefinition")
+        {
+            return;
+        }
+
+        var stimulus = new ContentEventStimulus(contentItem.ContentType);
 
         await stimulusSender.SendAsync<TTriggerActivity>(stimulus, new()
         {
+            CorrelationId = contentItem.ContentItemId,
             Input = new Dictionary<string, object>
             {
-                ["ContentItem"] = contentItem
-            }
+                ["ContentItem"] = contentItem,
+                [WorkflowUserContext.InputKey] = userContext.Capture(),
+            },
         });
     }
 }

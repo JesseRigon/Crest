@@ -22,7 +22,7 @@ public class ElsaWorkflowExecutionLogStore(ISession session, IPayloadSerializer 
         {
             var document = await Query(new() { Ids = new List<string> { record.Id } }).FirstOrDefaultAsync(cancellationToken);
             document = Map(document, record);
-            await session.SaveAsync(document, Collection);
+            await session.SaveAsync(document, collection: Collection);
         }
 
         await session.SaveChangesAsync(cancellationToken);
@@ -31,7 +31,7 @@ public class ElsaWorkflowExecutionLogStore(ISession session, IPayloadSerializer 
     public async Task AddAsync(WorkflowExecutionLogRecord record, CancellationToken cancellationToken = default)
     {
         var document = Map(null, record);
-        await session.SaveAsync(document, Collection);
+        await session.SaveAsync(document, collection: Collection);
         await session.SaveChangesAsync(cancellationToken);
     }
 
@@ -40,7 +40,7 @@ public class ElsaWorkflowExecutionLogStore(ISession session, IPayloadSerializer 
         foreach (var record in records)
         {
             var document = Map(null, record);
-            await session.SaveAsync(document, Collection);
+            await session.SaveAsync(document, collection: Collection);
         }
 
         await session.SaveChangesAsync(cancellationToken);
@@ -50,7 +50,7 @@ public class ElsaWorkflowExecutionLogStore(ISession session, IPayloadSerializer 
     {
         var document = await Query(new() { Ids = new List<string> { record.Id } }).FirstOrDefaultAsync(cancellationToken);
         document = Map(document, record);
-        await session.SaveAsync(document, Collection);
+        await session.SaveAsync(document, collection: Collection);
         await session.SaveChangesAsync(cancellationToken);
     }
 
@@ -70,7 +70,7 @@ public class ElsaWorkflowExecutionLogStore(ISession session, IPayloadSerializer 
     {
         var query = Query(filter, pageArgs);
         var count = await query.CountAsync(cancellationToken);
-        var documents = await query.ListAsync(cancellationToken).ToList();
+        var documents = (await query.ListAsync(cancellationToken)).ToList();
 
         return Page.Of(Map(documents).ToList(), count);
     }
@@ -79,7 +79,7 @@ public class ElsaWorkflowExecutionLogStore(ISession session, IPayloadSerializer 
     {
         var query = Query(filter, order, pageArgs);
         var count = await query.CountAsync(cancellationToken);
-        var documents = await query.ListAsync(cancellationToken).ToList();
+        var documents = (await query.ListAsync(cancellationToken)).ToList();
 
         return Page.Of(Map(documents).ToList(), count);
     }
@@ -92,14 +92,14 @@ public class ElsaWorkflowExecutionLogStore(ISession session, IPayloadSerializer 
         while (true)
         {
             var query = Query(filter).OrderBy(x => x.RecordId).Skip(pageArgs.Offset!.Value).Take(pageArgs.Limit!.Value);
-            var documents = await query.ListAsync(cancellationToken).ToList();
+            var documents = (await query.ListAsync(cancellationToken)).ToList();
             count += documents.Count;
 
             if (documents.Count == 0)
                 break;
 
             foreach (var document in documents)
-                session.Delete(document, Collection);
+                session.Delete(document, collection: Collection);
 
             pageArgs = pageArgs.Next();
         }
@@ -114,7 +114,7 @@ public class ElsaWorkflowExecutionLogStore(ISession session, IPayloadSerializer 
 
     private IQuery<WorkflowExecutionLogRecordDocument, WorkflowExecutionLogRecordIndex> Query<TOrderBy>(WorkflowExecutionLogRecordFilter filter, WorkflowExecutionLogRecordOrder<TOrderBy>? order = null, PageArgs? pageArgs = null)
     {
-        var query = session.Query<WorkflowExecutionLogRecordDocument, WorkflowExecutionLogRecordIndex>(Collection).Apply(filter);
+        var query = session.Query<WorkflowExecutionLogRecordDocument, WorkflowExecutionLogRecordIndex>(collection: Collection).Apply(filter);
         if (order != null) query = query.Apply(order);
 
         if (pageArgs != null)

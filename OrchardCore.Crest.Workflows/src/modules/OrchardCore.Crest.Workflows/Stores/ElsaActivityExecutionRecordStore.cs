@@ -24,7 +24,7 @@ public class ElsaActivityExecutionRecordStore(ISession session, IPayloadSerializ
         {
             var existingRecord = await Query(new() { Id = record.Id }).FirstOrDefaultAsync(cancellationToken);
             existingRecord = Map(existingRecord, record);
-            await session.SaveAsync(existingRecord, Collection);
+            await session.SaveAsync(existingRecord, collection: Collection);
         }
 
         await session.SaveChangesAsync(cancellationToken);
@@ -35,7 +35,7 @@ public class ElsaActivityExecutionRecordStore(ISession session, IPayloadSerializ
         foreach (var record in records)
         {
             var document = Map(new(), record);
-            await session.SaveAsync(document, Collection);
+            await session.SaveAsync(document, collection: Collection);
         }
 
         await session.SaveChangesAsync(cancellationToken);
@@ -45,7 +45,7 @@ public class ElsaActivityExecutionRecordStore(ISession session, IPayloadSerializ
     {
         var document = await Query(new() { Id = record.Id }).FirstOrDefaultAsync(cancellationToken);
         document = Map(document, record);
-        await session.SaveAsync(document, Collection);
+        await session.SaveAsync(document, collection: Collection);
         await session.SaveChangesAsync(cancellationToken);
     }
 
@@ -70,14 +70,14 @@ public class ElsaActivityExecutionRecordStore(ISession session, IPayloadSerializ
     public async Task<IEnumerable<ActivityExecutionRecordSummary>> FindManySummariesAsync<TOrderBy>(ActivityExecutionRecordFilter filter, ActivityExecutionRecordOrder<TOrderBy> order, CancellationToken cancellationToken = default)
     {
         var query = QueryIndex(filter, order);
-        var indexes = await query.ListAsync(cancellationToken).ToList();
+        var indexes = (await query.ListAsync(cancellationToken)).ToList();
         return MapSummaries(indexes).ToList();
     }
 
     public async Task<IEnumerable<ActivityExecutionRecordSummary>> FindManySummariesAsync(ActivityExecutionRecordFilter filter, CancellationToken cancellationToken = default)
     {
         var query = QueryIndex(filter);
-        var indexes = await query.ListAsync(cancellationToken).ToList();
+        var indexes = (await query.ListAsync(cancellationToken)).ToList();
         return MapSummaries(indexes).ToList();
     }
 
@@ -94,14 +94,14 @@ public class ElsaActivityExecutionRecordStore(ISession session, IPayloadSerializ
         while (true)
         {
             var query = Query(filter).OrderBy(x => x.Id).Skip(pageArgs.Offset!.Value).Take(pageArgs.Limit!.Value);
-            var records = await query.ListAsync(cancellationToken).ToList();
+            var records = (await query.ListAsync(cancellationToken)).ToList();
             count += records.Count;
 
             if (records.Count == 0)
                 break;
 
             foreach (var record in records)
-                session.Delete(record, Collection);
+                session.Delete(record, collection: Collection);
 
             pageArgs = pageArgs.Next();
         }
@@ -116,7 +116,7 @@ public class ElsaActivityExecutionRecordStore(ISession session, IPayloadSerializ
 
     private IQuery<ActivityExecutionRecordDocument, ActivityExecutionRecordIndex> Query<TOrderBy>(ActivityExecutionRecordFilter filter, ActivityExecutionRecordOrder<TOrderBy>? order = null, PageArgs? pageArgs = null)
     {
-        var query = session.Query<ActivityExecutionRecordDocument, ActivityExecutionRecordIndex>(Collection).Apply(filter);
+        var query = session.Query<ActivityExecutionRecordDocument, ActivityExecutionRecordIndex>(collection: Collection).Apply(filter);
         if (order != null) query = query.Apply(order);
 
         if (pageArgs != null)

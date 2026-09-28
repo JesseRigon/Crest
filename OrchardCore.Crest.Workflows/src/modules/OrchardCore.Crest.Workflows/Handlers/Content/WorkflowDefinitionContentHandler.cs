@@ -21,41 +21,6 @@ public class WorkflowDefinitionContentHandler(IMediator mediator, IServiceProvid
     private WorkflowDefinitionMapper WorkflowDefinitionMapper => _workflowDefinitionMapper.Value;
     private WorkflowDefinitionPartSerializer WorkflowDefinitionPartSerializer => _workflowDefinitionPartSerializer.Value;
 
-    public override Task GetContentItemAspectAsync(ContentItemAspectContext context)
-    {
-        if (!context.ContentItem.Has<WorkflowDefinitionPart>())
-            return Task.CompletedTask;
-
-        return context.ForAsync<ContentItemMetadata>(metadata =>
-        {
-            metadata.CreateRouteValues = new()
-            {
-                { "Area", Constants.Area },
-                { "Controller", "WorkflowDefinitions" },
-                { "Action", "Create" },
-                { "Id", context.ContentItem.ContentType },
-            };
-
-            metadata.EditorRouteValues = new()
-            {
-                { "Area", Constants.Area },
-                { "Controller", "WorkflowDefinitions" },
-                { "Action", "Edit" },
-                { "Id", context.ContentItem.ContentItemId },
-            };
-
-            metadata.AdminRouteValues = new()
-            {
-                { "Area", Constants.Area },
-                { "Controller", "WorkflowDefinitions" },
-                { "Action", "Edit" },
-                { "Id", context.ContentItem.ContentItemId },
-            };
-
-            return Task.CompletedTask;
-        });
-    }
-
     public override Task UpdatingAsync(UpdateContentContext context)
     {
         if (!context.ContentItem.Has<WorkflowDefinitionPart>())

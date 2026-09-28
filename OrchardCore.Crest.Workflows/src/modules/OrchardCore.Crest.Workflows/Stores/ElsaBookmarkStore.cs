@@ -19,7 +19,7 @@ public class ElsaBookmarkStore(ISession session, IPayloadSerializer payloadSeria
     {
         var document = await Query(new() { BookmarkId = record.Id }).FirstOrDefaultAsync(cancellationToken);
         document = Map(document, record);
-        await session.SaveAsync(document, Collection);
+        await session.SaveAsync(document, collection: Collection);
         await session.SaveChangesAsync(cancellationToken);
     }
 
@@ -29,7 +29,7 @@ public class ElsaBookmarkStore(ISession session, IPayloadSerializer payloadSeria
         {
             var document = await Query(new() { BookmarkId = record.Id }).FirstOrDefaultAsync(cancellationToken);
             document = Map(document, record);
-            await session.SaveAsync(document, Collection);
+            await session.SaveAsync(document, collection: Collection);
         }
 
         await session.SaveChangesAsync(cancellationToken);
@@ -55,14 +55,14 @@ public class ElsaBookmarkStore(ISession session, IPayloadSerializer payloadSeria
         while (true)
         {
             var query = Query(filter).OrderBy(x => x.BookmarkId).Skip(pageArgs.Offset!.Value).Take(pageArgs.Limit!.Value);
-            var documents = await query.ListAsync(cancellationToken).ToList();
+            var documents = (await query.ListAsync(cancellationToken)).ToList();
             count += documents.Count;
 
             if (documents.Count == 0)
                 break;
 
             foreach (var document in documents)
-                session.Delete(document, Collection);
+                session.Delete(document, collection: Collection);
 
             pageArgs = pageArgs.Next();
         }
@@ -73,7 +73,7 @@ public class ElsaBookmarkStore(ISession session, IPayloadSerializer payloadSeria
 
     private IQuery<StoredBookmarkDocument, StoredBookmarkIndex> Query(BookmarkFilter filter)
     {
-        return session.Query<StoredBookmarkDocument, StoredBookmarkIndex>(Collection).Apply(filter);
+        return session.Query<StoredBookmarkDocument, StoredBookmarkIndex>(collection: Collection).Apply(filter);
     }
 
     private StoredBookmarkDocument Map(StoredBookmarkDocument? target, StoredBookmark source)

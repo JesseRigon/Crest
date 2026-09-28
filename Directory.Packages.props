@@ -56,6 +56,7 @@
     <PackageVersion Include="OrchardCore.Tenants" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.Themes" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.Title" Version="3.0.2-local" />
+    <PackageVersion Include="OrchardCore.Workflows.Abstractions" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.Users" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.Users.Abstractions" Version="3.0.2-local" />
     <PackageVersion Include="Radzen.Blazor" Version="11.0.4" />
@@ -66,5 +67,20 @@
     <PackageVersion Include="Verify.XunitV3" Version="31.27.0" />
     <PackageVersion Include="DotNetEnv" Version="3.2.0" />
     <PackageVersion Include="NSubstitute" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Elsa (Crest.Workflows; pinned stable, bump on purpose)">
+    <PackageVersion Include="Elsa" Version="3.6.0" />
+    <PackageVersion Include="Elsa.Expressions.JavaScript" Version="3.6.0" />
+    <PackageVersion Include="Elsa.Expressions.Liquid" Version="3.6.0" />
+    <PackageVersion Include="Elsa.Http" Version="3.6.0" />
+    <PackageVersion Include="Elsa.Workflows.Api" Version="3.6.0" />
+    <PackageVersion Include="Elsa.Workflows.Core" Version="3.6.0" />
+    <PackageVersion Include="Elsa.Workflows.Management" Version="3.6.0" />
+    <PackageVersion Include="Elsa.Workflows.Runtime" Version="3.6.0" />
+    <PackageVersion Include="Elsa.Workflows.Runtime.Distributed" Version="3.6.0" />
+    <PackageVersion Include="Elsa.Resilience" Version="3.6.0" />
+    <PackageVersion Include="JetBrains.Annotations" Version="2025.2.2" />
+    <PackageVersion Include="System.Linq.Dynamic.Core" Version="1.7.1" />
   </ItemGroup>
 </Project>
