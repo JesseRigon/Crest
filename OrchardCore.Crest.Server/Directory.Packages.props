@@ -41,6 +41,7 @@
     <PackageVersion Include="OrchardCore.Tenants" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.Security" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.Users" Version="3.0.2-local" />
+    <PackageVersion Include="OrchardCore.Workflows.Abstractions" Version="3.0.2-local" />
     <PackageVersion Include="OrchardCore.Users.Abstractions" Version="3.0.2-local" />
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.50.3" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />

@@ -68,6 +68,7 @@
     <PackageReference Include="OrchardCore.Tenants" />
     <PackageReference Include="OrchardCore.Security" />
     <PackageReference Include="OrchardCore.Users" />
+    <PackageReference Include="OrchardCore.Workflows.Abstractions" />
     <PackageReference Include="YesSql.Abstractions" />
     <!-- AddInteractiveWebAssemblyComponents() (Startup.cs) is defined by this package,
          not by Microsoft.AspNetCore.App's shared framework - WASM-hosting-from-a-server

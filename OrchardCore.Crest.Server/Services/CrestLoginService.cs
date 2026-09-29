@@ -5,10 +5,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OrchardCore.Users;
 using OrchardCore.Users.Events;
+using OrchardCore.Users.Models;
 using OrchardCore.Users.Services;
+using OrchardCore.Workflows.Services;
 
 namespace Crest.Services;
 
@@ -89,6 +92,23 @@ public sealed class CrestLoginService(
         foreach (var loginEvent in loginEvents)
         {
             await loginEvent.LoggedInAsync(user);
+        }
+
+        // 5. The stock workflow event (stock: AccountBaseController.LoggedInActionResultAsync,
+        // same input, same correlation), when the tenant has a workflow manager.
+        var workflowManager = httpContext.RequestServices.GetService<IWorkflowManager>();
+        if (workflowManager is not null && user is User orchardUser)
+        {
+            await workflowManager.TriggerEventAsync(
+                name: "UserLoggedInEvent",
+                input: new Dictionary<string, object>
+                {
+                    ["UserName"] = user.UserName,
+                    ["ExternalClaims"] = Array.Empty<object>(),
+                    ["Roles"] = orchardUser.RoleNames,
+                    ["Provider"] = null!,
+                },
+                correlationId: orchardUser.UserId);
         }
 
         return CrestLoginResult.SignedIn(user, principal);
