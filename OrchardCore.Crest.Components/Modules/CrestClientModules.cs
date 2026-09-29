@@ -1,35 +1,14 @@
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Crest.Components.Modules;
 
 /// <summary>
-/// A module's client (its <c>blazor-wasm</c> project) registering services into the Crest
-/// admin client. The admin client finds every implementation in the module assemblies it
-/// was built with (the generated module registry) and calls it once at startup, after
-/// Crest's own services. Most modules only contribute pages and need none; a module that
-/// hosts a component library with its own services (a designer, an editor) does.
+/// Where the admin client runs: <see cref="ApiBaseAddress"/> is where Crest's own
+/// <c>api/crest/*</c> calls resolve (the admin document base; the server maps it to the
+/// tenant); <see cref="TenantBaseAddress"/> is the tenant root, URL prefix included, for a
+/// module's own endpoints mapped outside <c>api/crest</c>. Registered by the admin client.
 /// </summary>
-public interface ICrestClientModule
-{
-    void ConfigureServices(IServiceCollection services, CrestClientModuleContext context);
-
-    /// <summary>
-    /// Components the module's JavaScript renders (custom elements, JS root components):
-    /// registered on the WASM host's root components at startup.
-    /// </summary>
-    void ConfigureJSComponents(IJSComponentConfiguration configuration)
-    {
-    }
-}
-
-/// <summary>
-/// What a client module knows about the host. <see cref="ApiBaseAddress"/> is where Crest's
-/// own <c>api/crest/*</c> calls resolve (the admin document base; the server maps it to the
-/// tenant). <see cref="TenantBaseAddress"/> is the tenant root (its URL prefix included),
-/// for a module's own endpoints mapped in the tenant outside <c>api/crest</c>.
-/// </summary>
-public sealed record CrestClientModuleContext(Uri ApiBaseAddress, Uri TenantBaseAddress);
+public sealed record CrestClientEnvironment(Uri ApiBaseAddress, Uri TenantBaseAddress);
 
 /// <summary>
 /// Orchard's antiforgery request token for the signed-in session, for a module's own
@@ -42,3 +21,15 @@ public interface ICrestAntiforgery
 }
 
 public sealed record CrestAntiforgeryRequestToken(string HeaderName, string RequestToken);
+
+/// <summary>
+/// Marks a component in a module's client assembly as one the module's JavaScript renders
+/// (a custom element, a JS root component): the admin client registers it at startup,
+/// under <see cref="Identifier"/> with the JS <see cref="Initializer"/>.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public sealed class CrestJSComponentAttribute(string identifier, string initializer) : Attribute
+{
+    public string Identifier { get; } = identifier;
+    public string Initializer { get; } = initializer;
+}

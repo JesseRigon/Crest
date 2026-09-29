@@ -4,6 +4,7 @@ using Crest.Admin.Options;
 using Crest.Admin.Theme;
 using Crest.Components.Primitives;
 using Crest.Components.Theme;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 
@@ -36,32 +37,24 @@ public static class CrestAdminClientServiceCollectionExtensions
         services.AddScoped<CrestApiLocalizer>();
         services.AddScoped<ILocalizer>(sp => sp.GetRequiredService<CrestApiLocalizer>());
         services.AddSingleton<Crest.Components.Modules.ICrestAntiforgery>(new CrestAntiforgeryTokenSource(apiBaseAddress));
-
-        // Module clients that bring services of their own (Crest.Components.Modules).
-        var moduleContext = new Crest.Components.Modules.CrestClientModuleContext(apiBaseAddress, tenantBaseAddress ?? apiBaseAddress);
-        foreach (var module in ClientModules)
-        {
-            module.ConfigureServices(services, moduleContext);
-        }
+        services.AddSingleton(new Crest.Components.Modules.CrestClientEnvironment(apiBaseAddress, tenantBaseAddress ?? apiBaseAddress));
 
         return services;
     }
 
-    /// <summary>Lets every client module register the components its JavaScript renders (call with the WASM host's RootComponents).</summary>
-    public static void ConfigureCrestClientModuleJSComponents(this Microsoft.AspNetCore.Components.Web.IJSComponentConfiguration configuration)
+    /// <summary>
+    /// Registers the components module client assemblies mark with
+    /// <see cref="Crest.Components.Modules.CrestJSComponentAttribute"/> (call with the WASM
+    /// host's RootComponents): JavaScript can render them from startup on.
+    /// </summary>
+    public static void RegisterCrestModuleJSComponents(this Microsoft.AspNetCore.Components.Web.IJSComponentConfiguration configuration)
     {
-        foreach (var module in ClientModules)
+        foreach (var type in CrestModuleAssemblyRegistry.Assemblies.SelectMany(assembly => assembly.GetExportedTypes()))
         {
-            module.ConfigureJSComponents(configuration);
+            if (type.GetCustomAttributes(typeof(Crest.Components.Modules.CrestJSComponentAttribute), false).FirstOrDefault() is Crest.Components.Modules.CrestJSComponentAttribute component)
+            {
+                configuration.RegisterForJavaScript(type, component.Identifier, component.Initializer);
+            }
         }
     }
-
-    private static IReadOnlyList<Crest.Components.Modules.ICrestClientModule>? _clientModules;
-
-    // The module assemblies' ICrestClientModule implementations, created once.
-    private static IReadOnlyList<Crest.Components.Modules.ICrestClientModule> ClientModules => _clientModules ??= CrestModuleAssemblyRegistry.Assemblies
-        .SelectMany(assembly => assembly.GetExportedTypes())
-        .Where(type => type is { IsClass: true, IsAbstract: false } && typeof(Crest.Components.Modules.ICrestClientModule).IsAssignableFrom(type))
-        .Select(type => (Crest.Components.Modules.ICrestClientModule)Activator.CreateInstance(type)!)
-        .ToArray();
 }

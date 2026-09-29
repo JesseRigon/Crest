@@ -14,6 +14,10 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 // header is only attached to unsafe requests, credentials are same-origin anyway).
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
+// Module client libraries loaded on demand attach their own service containers later
+// (Crest.Components.Modules.CrestLateServiceProviders); the host's provider falls back to them.
+builder.ConfigureContainer(new CrestServiceProviderFactory());
+
 // The document base itself (tenantPrefix + shellBase + "/", from the <base href>
 // BlazorAdminThemeMiddleware/App.razor composed) is the API base: every api/crest/*
 // URL is issued relative to it and the server middleware strips the shell base back
@@ -49,7 +53,7 @@ routingOptions.AdminPath = tenantBase + routingOptions.AdminPath;
 routingOptions.LoginPath = tenantBase + routingOptions.LoginPath;
 
 builder.Services.AddCrestAdminClient(apiBaseAddress, routingOptions, new Uri(appBaseAddress, tenantBase + "/"));
-builder.RootComponents.ConfigureCrestClientModuleJSComponents();
+builder.RootComponents.RegisterCrestModuleJSComponents();
 builder.Services.AddCrestIconClient();
 builder.Services.AddCrestComponents();
 
