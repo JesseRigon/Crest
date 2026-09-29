@@ -10,6 +10,9 @@ namespace Crest.Admin.Api;
 /// </summary>
 public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js) : DelegatingHandler, ICrestAntiforgeryTokenStore, ICrestCultureCookieWriter
 {
+    /// <summary>Where Orchard hands out the antiforgery request token (Crest.Server's endpoint).</summary>
+    public const string TokenPath = "api/crest/antiforgery/token";
+
     private readonly SemaphoreSlim _tokenLock = new(1, 1);
     private CrestAntiforgeryToken? _token;
     private CultureCookieContext? _cultureCookieContext;
@@ -91,8 +94,8 @@ public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js) : Delegating
             }
 
             var tokenUri = BaseAddress is null
-                ? new Uri("api/crest/antiforgery/token", UriKind.Relative)
-                : new Uri(BaseAddress, "api/crest/antiforgery/token");
+                ? new Uri(TokenPath, UriKind.Relative)
+                : new Uri(BaseAddress, TokenPath);
             using var request = new HttpRequestMessage(HttpMethod.Get, tokenUri);
             request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
             using var response = await base.SendAsync(request, cancellationToken);
@@ -111,7 +114,7 @@ public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js) : Delegating
         request.Method != HttpMethod.Get &&
         request.Method != HttpMethod.Head &&
         request.Method != HttpMethod.Options &&
-        !string.Equals(request.RequestUri?.AbsolutePath, "/api/crest/antiforgery/token", StringComparison.OrdinalIgnoreCase);
+        !string.Equals(request.RequestUri?.AbsolutePath, "/" + TokenPath, StringComparison.OrdinalIgnoreCase);
 }
 
 public interface ICrestAntiforgeryTokenStore
@@ -139,3 +142,43 @@ public sealed record CrestAntiforgeryToken(string HeaderName, string RequestToke
 // DisplayManager itself (avoids a circular DI dependency - DisplayManager depends on
 // IApi, which depends on this handler's owning HttpClient).
 public sealed record CultureCookieContext(string? UserName, CultureSelector CultureSelector, bool IsUnderAdminPath);
+
+/// <summary>
+/// <see cref="Crest.Components.Modules.ICrestAntiforgery"/> for module clients: its own
+/// cookie-carrying request to the token endpoint, cached for the session.
+/// </summary>
+public sealed class CrestAntiforgeryTokenSource(Uri apiBaseAddress) : Crest.Components.Modules.ICrestAntiforgery
+{
+    private readonly SemaphoreSlim _lock = new(1, 1);
+    private Crest.Components.Modules.CrestAntiforgeryRequestToken? _token;
+
+    public async Task<Crest.Components.Modules.CrestAntiforgeryRequestToken> GetTokenAsync(CancellationToken cancellationToken = default)
+    {
+        if (_token is not null)
+        {
+            return _token;
+        }
+
+        await _lock.WaitAsync(cancellationToken);
+        try
+        {
+            if (_token is null)
+            {
+                using var client = new HttpClient { BaseAddress = apiBaseAddress };
+                using var request = new HttpRequestMessage(HttpMethod.Get, CrestAntiforgeryHandler.TokenPath);
+                request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+                using var response = await client.SendAsync(request, cancellationToken);
+                response.EnsureSuccessStatusCode();
+                var token = await response.Content.ReadFromJsonAsync<CrestAntiforgeryToken>(cancellationToken)
+                    ?? throw new InvalidOperationException("Orchard did not return an antiforgery token.");
+                _token = new(token.HeaderName, token.RequestToken);
+            }
+
+            return _token;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+}

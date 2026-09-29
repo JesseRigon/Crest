@@ -32,6 +32,11 @@ async function loginAsAdmin(page, baseUrl, creds = {}) {
     await page.waitForLoadState('networkidle').catch(() => {});
   }
   await page.goto(`${baseUrl}/Admin`, { waitUntil: 'networkidle' });
+  // The bare admin path's Home page redirects to Dashboard client-side, after the document
+  // is already idle - and later still when the admin client is a cold download. Wait for it,
+  // so the first check never has its page navigated out from under an evaluate.
+  await page.waitForURL(/\/Dashboard/i, { timeout: 30000 }).catch(() => {});
+  await page.waitForLoadState('networkidle').catch(() => {});
 }
 
 // Placeholder for the public/front-end site's auth flow. No client-site feature checks

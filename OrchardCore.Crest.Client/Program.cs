@@ -48,7 +48,8 @@ var tenantBase = basePath switch
 routingOptions.AdminPath = tenantBase + routingOptions.AdminPath;
 routingOptions.LoginPath = tenantBase + routingOptions.LoginPath;
 
-builder.Services.AddCrestAdminClient(apiBaseAddress, routingOptions);
+builder.Services.AddCrestAdminClient(apiBaseAddress, routingOptions, new Uri(appBaseAddress, tenantBase + "/"));
+builder.RootComponents.ConfigureCrestClientModuleJSComponents();
 builder.Services.AddCrestIconClient();
 builder.Services.AddCrestComponents();
 

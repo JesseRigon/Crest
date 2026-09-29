@@ -96,6 +96,9 @@
     [Inject]
     private IOptions<BlazorAdminThemeOptions> AdminThemeOptions { get; set; } = default!;
 
+    [Inject]
+    private IEnumerable<global::Crest.Services.ICrestWebAssemblyRouteProvider> WebAssemblyRouteProviders { get; set; } = default!;
+
     private bool _isAdminShell;
     private string _adminBaseHref = "/";
     private string _tenantBasePath = "";
@@ -140,6 +143,15 @@
             // form but runs the interactive phase in the browser, where the fetch's
             // Set-Cookie is stored by the browser exactly like the old WASM shell.
             if (string.Equals(shellBasePath, AdminThemeOptions.Value.LoginPath, StringComparison.OrdinalIgnoreCase))
+            {
+                _renderMode = RenderMode.InteractiveWebAssembly;
+            }
+
+            // Pages a module declared client-only (ICrestWebAssemblyRouteProvider): the
+            // same InteractiveWebAssembly document, so they never run in a server circuit.
+            var adminRemainder = HttpContext.Request.Path.Value;
+            if (WebAssemblyRouteProviders.SelectMany(provider => provider.GetWebAssemblyRoutes())
+                .Any(template => global::Crest.Services.CrestRouteAuthorizationService.Matches(template, adminRemainder)))
             {
                 _renderMode = RenderMode.InteractiveWebAssembly;
             }

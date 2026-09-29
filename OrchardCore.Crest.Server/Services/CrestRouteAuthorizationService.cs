@@ -82,6 +82,19 @@ public interface ICrestRoutePermissionProvider
     IEnumerable<CrestRoutePermission> GetRoutes();
 }
 
+/// <summary>
+/// Admin routes (templates as in <see cref="ICrestRoutePermissionProvider"/>, relative to
+/// the admin path) whose pages must run in the browser: the admin document for them is
+/// rendered InteractiveWebAssembly instead of InteractiveAuto, as the login shell is. For
+/// a page that hosts a client-only component library - one whose services and HTTP
+/// clients exist only in the WASM client (Crest.Components.Modules.ICrestClientModule),
+/// not in a server circuit.
+/// </summary>
+public interface ICrestWebAssemblyRouteProvider
+{
+    IEnumerable<string> GetWebAssemblyRoutes();
+}
+
 public sealed class CrestRoutePermissionProvider : ICrestRoutePermissionProvider
 {
     public IEnumerable<CrestRoutePermission> GetRoutes() =>

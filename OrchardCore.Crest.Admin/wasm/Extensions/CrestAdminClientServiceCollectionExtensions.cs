@@ -18,7 +18,7 @@ namespace Crest.Admin;
 // phases of InteractiveAuto.
 public static class CrestAdminClientServiceCollectionExtensions
 {
-    public static IServiceCollection AddCrestAdminClient(this IServiceCollection services, Uri apiBaseAddress, CrestRoutingOptions routingOptions)
+    public static IServiceCollection AddCrestAdminClient(this IServiceCollection services, Uri apiBaseAddress, CrestRoutingOptions routingOptions, Uri? tenantBaseAddress = null)
     {
         services.AddScoped(sp => new CrestAntiforgeryHandler((IJSInProcessRuntime)sp.GetRequiredService<IJSRuntime>()) { BaseAddress = apiBaseAddress });
         services.AddScoped<ICrestAntiforgeryTokenStore>(sp => sp.GetRequiredService<CrestAntiforgeryHandler>());
@@ -35,6 +35,33 @@ public static class CrestAdminClientServiceCollectionExtensions
         services.AddScoped<CrestThemeEngine>();
         services.AddScoped<CrestApiLocalizer>();
         services.AddScoped<ILocalizer>(sp => sp.GetRequiredService<CrestApiLocalizer>());
+        services.AddSingleton<Crest.Components.Modules.ICrestAntiforgery>(new CrestAntiforgeryTokenSource(apiBaseAddress));
+
+        // Module clients that bring services of their own (Crest.Components.Modules).
+        var moduleContext = new Crest.Components.Modules.CrestClientModuleContext(apiBaseAddress, tenantBaseAddress ?? apiBaseAddress);
+        foreach (var module in ClientModules)
+        {
+            module.ConfigureServices(services, moduleContext);
+        }
+
         return services;
     }
+
+    /// <summary>Lets every client module register the components its JavaScript renders (call with the WASM host's RootComponents).</summary>
+    public static void ConfigureCrestClientModuleJSComponents(this Microsoft.AspNetCore.Components.Web.IJSComponentConfiguration configuration)
+    {
+        foreach (var module in ClientModules)
+        {
+            module.ConfigureJSComponents(configuration);
+        }
+    }
+
+    private static IReadOnlyList<Crest.Components.Modules.ICrestClientModule>? _clientModules;
+
+    // The module assemblies' ICrestClientModule implementations, created once.
+    private static IReadOnlyList<Crest.Components.Modules.ICrestClientModule> ClientModules => _clientModules ??= CrestModuleAssemblyRegistry.Assemblies
+        .SelectMany(assembly => assembly.GetExportedTypes())
+        .Where(type => type is { IsClass: true, IsAbstract: false } && typeof(Crest.Components.Modules.ICrestClientModule).IsAssignableFrom(type))
+        .Select(type => (Crest.Components.Modules.ICrestClientModule)Activator.CreateInstance(type)!)
+        .ToArray();
 }
