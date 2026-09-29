@@ -24,6 +24,7 @@ function buildSharedAdminChecks() {
     { name: 'ssr-culture', fn: require('./checks/ssr-culture') },
     { name: 'admin-interactive-auto-handoff', fn: require('./checks/admin-interactive-auto-handoff') },
     { name: 'dashboard-screenshot', fn: require('./checks/dashboard-screenshot') },
+    { name: 'lazy-module-pages', fn: require('./checks/lazy-module-pages') },
     { name: 'features-page', fn: require('./checks/features-page') },
     { name: 'features-list-api', fn: require('./checks/features-list-api') },
     { name: 'standard-pages', fn: require('./checks/standard-pages') },

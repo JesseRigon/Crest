@@ -57,4 +57,12 @@ public static class CrestAdminClientServiceCollectionExtensions
             }
         }
     }
+
+    /// <summary>Module pages loaded on demand (the manifest OrchardCore.Crest.Client's build generates).</summary>
+    public static IServiceCollection AddCrestLazyModules(this IServiceCollection services, CrestLazyModules modules)
+    {
+        services.AddSingleton(modules);
+        services.AddSingleton<Crest.Components.Regions.IPageRegionContributorLoader>(modules);
+        return services;
+    }
 }

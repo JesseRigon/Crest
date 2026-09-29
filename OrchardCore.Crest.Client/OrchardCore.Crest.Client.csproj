@@ -42,22 +42,7 @@
     <ProjectReference Include="..\OrchardCore.Crest.Site\wasm\OrchardCore.Crest.Site.Client.csproj" />
   </ItemGroup>
 
-  <!-- Module client libraries loaded on demand: a module's blazor-wasm folder may list, one
-       assembly name per line (no extension, nothing else), the assemblies its pages load only when first opened
-       (crest-lazy-assemblies.txt; the module loads them with LazyAssemblyLoader and attaches
-       its own service container - Crest.Components.Modules.CrestLateServiceProviders). The
-       same file is the module's runtime list, so the two cannot drift. -->
-  <ItemGroup>
-    <CrestLazyAssemblyList Include="..\..\**\blazor-wasm\crest-lazy-assemblies.txt" />
-  </ItemGroup>
-
-  <Target Name="CrestModuleLazyAssemblies" BeforeTargets="PrepareForBuild;ResolveReferences">
-    <ReadLinesFromFile File="%(CrestLazyAssemblyList.FullPath)" Condition="'@(CrestLazyAssemblyList)' != ''">
-      <Output TaskParameter="Lines" ItemName="_CrestLazyAssemblyName" />
-    </ReadLinesFromFile>
-    <ItemGroup>
-      <BlazorWebAssemblyLazyLoad Include="@(_CrestLazyAssemblyName->'%(Identity).wasm')" />
-    </ItemGroup>
-  </Target>
+  <!-- Module pages (and module-listed libraries) load on demand: see CrestLazyModules.targets. -->
+  <Import Project="CrestLazyModules.targets" />
 
 </Project>

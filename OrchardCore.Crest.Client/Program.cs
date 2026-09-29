@@ -53,6 +53,7 @@ routingOptions.AdminPath = tenantBase + routingOptions.AdminPath;
 routingOptions.LoginPath = tenantBase + routingOptions.LoginPath;
 
 builder.Services.AddCrestAdminClient(apiBaseAddress, routingOptions, new Uri(appBaseAddress, tenantBase + "/"));
+builder.Services.AddCrestLazyModules(Crest.Client.CrestLazyModulesManifest.Create());
 builder.RootComponents.RegisterCrestModuleJSComponents();
 builder.Services.AddCrestIconClient();
 builder.Services.AddCrestComponents();
