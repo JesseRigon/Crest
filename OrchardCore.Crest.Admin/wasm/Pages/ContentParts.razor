@@ -88,7 +88,7 @@
                                                     <CrestText TextStyle="TextStyle.Subtitle2" Text="@field.Name" />
                                                     @if (locked)
                                                     {
-                                                        @* A locked field keeps its type, binding and visibility (docs/Content-Items.md › Definition locks). *@
+                                                        @* A locked field keeps its existence and shape - type, source, required, visibility; its values stay editable (docs/Content-Items.md › Definition locks). *@
                                                         <CrestBadge Text="@LockLabel(field.Lock)" BadgeStyle="BadgeStyle.Warning" data-testid="field-lock" />
                                                     }
                                                 </CrestStack>

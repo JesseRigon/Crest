@@ -59,9 +59,12 @@ locks are placed and lifted through `PUT api/crest/content-types/locks` by holde
 `LockContentDefinitions` (security-critical, Administrator; deliberately NOT implied by
 `EditContentTypes`). A lock freezes the MACHINE surface only:
 
-- a locked **field** cannot be removed, retyped, bound to a picker, given a visibility
-  condition, or have any settings section but `ContentPartFieldSettings` (display name,
-  description, position, editor, display mode) changed - so Required stays as declared;
+- a locked **field** keeps its existence and SHAPE: it cannot be removed, retyped
+  (converting text to a picker or a picker to text is a retype), pointed at another picker
+  source, made optional, or given a visibility condition; every settings section but
+  `ContentPartFieldSettings` (display name, description, position, editor, display mode)
+  is frozen. Its VALUES are not the lock's business: a locked picker's list is edited as
+  ever, and the data in items is untouched;
 - a locked **part** cannot be deleted and every field it has is locked as if individually;
   new fields may still be added to it (the tenant's, unlocked - unless the part lock covers
   them, which it does while it stands);

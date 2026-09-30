@@ -13,10 +13,12 @@ namespace Crest.Settings;
 /// lifted by whoever holds <c>LockContentDefinitions</c>.
 /// </summary>
 /// <remarks>
-/// What a lock freezes is the MACHINE surface: a locked field cannot be removed, retyped,
-/// or have any settings section other than its display surface (<c>ContentPartFieldSettings</c>:
-/// display name, description, position, editor, display mode) changed - so Required,
-/// visibility conditions, picker bindings and the lock itself stay as declared. A locked
+/// What a lock freezes is existence and SHAPE, never values: a locked field cannot be
+/// removed, retyped (a conversion to or from a picker is a retype), pointed at another
+/// picker source, made optional or hidden by a condition; every settings section other than
+/// its display surface (<c>ContentPartFieldSettings</c>: display name, description,
+/// position, editor, display mode) is frozen. A locked picker's list is still edited as
+/// ever, and item data is untouched. A locked
 /// part definition cannot be deleted and every field it has is locked as if individually
 /// (tenant fields may still be ADDED to it). A locked attachment cannot be detached and its
 /// type cannot be deleted; its display surface (<c>ContentTypePartSettings</c>) stays
