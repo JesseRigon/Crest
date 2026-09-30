@@ -1283,20 +1283,24 @@ public sealed record ContentType(
     JsonObject Settings,
     ContentTypePart[] Parts);
 
+// Lock: the definition lock (None, Tenant, Module) the server reports - docs/Content-Items.md › Definition locks.
 public sealed record ContentTypePart(
     string Name,
     JsonObject Settings,
-    ContentPart Part);
+    ContentPart Part,
+    string Lock = "None");
 
 public sealed record ContentPart(
     string Name,
     JsonObject Settings,
-    ContentPartField[] Fields);
+    ContentPartField[] Fields,
+    string Lock = "None");
 
 public sealed record ContentPartField(
     string Name,
     JsonObject Settings,
-    ContentField Field);
+    ContentField Field,
+    string Lock = "None");
 
 public sealed record ContentField(string Name);
 

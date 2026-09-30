@@ -23,7 +23,8 @@ namespace Crest.Controllers;
 public sealed class OptionPickerAttachmentsController(
     IContentDefinitionManager contentDefinitionManager,
     IEnumerable<IOptionSourceProvider> sourceProviders,
-    IAuthorizationService authorizationService) : ControllerBase
+    IAuthorizationService authorizationService,
+    CrestDefinitionLockGuard locks) : ControllerBase
 {
     /// <summary>The field's current picker binding. 200 with IsOptionPicker=false
     /// for a field of another type (the PUT would convert it); 200 with
@@ -89,6 +90,12 @@ public sealed class OptionPickerAttachmentsController(
 
         var position = current?.Settings?["ContentPartFieldSettings"]?["Position"]?.ToString();
 
+        // A locked field keeps its type and binding; 409 via the lock filter.
+        if (current is not null)
+        {
+            await locks.EnsureFieldChangeAsync(request.Part, request.Field, string.Equals(current.FieldDefinition?.Name, nameof(OptionPickerField), StringComparison.Ordinal) ? CrestDefinitionChanges.SettingsChanged : CrestDefinitionChanges.Retyped);
+        }
+
         if (current is not null && !string.Equals(current.FieldDefinition?.Name, nameof(OptionPickerField), StringComparison.Ordinal))
         {
             await contentDefinitionManager.AlterPartDefinitionAsync(request.Part, part => part.RemoveField(request.Field));
@@ -152,6 +159,7 @@ public sealed class OptionPickerAttachmentsController(
             return Problem("Only option picker fields can be removed here.", statusCode: StatusCodes.Status400BadRequest);
         }
 
+        await locks.EnsureFieldChangeAsync(part, field, CrestDefinitionChanges.Removed);
         await contentDefinitionManager.AlterPartDefinitionAsync(part, definition => definition.RemoveField(field));
         return NoContent();
     }

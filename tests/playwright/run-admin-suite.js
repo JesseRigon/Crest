@@ -31,6 +31,7 @@ function buildSharedAdminChecks() {
     { name: 'content-item-editor-page', fn: require('./checks/content-item-editor-page') },
     { name: 'content-items-page', fn: require('./checks/content-items-page') },
     { name: 'content-parts-page', fn: require('./checks/content-parts-page') },
+    { name: 'definition-locks', fn: require('./checks/definition-locks') },
     { name: 'content-types-page', fn: require('./checks/content-types-page') },
     { name: 'content-type-menu-toggle', fn: require('./checks/content-type-menu-toggle') },
     { name: 'templates-page', fn: require('./checks/templates-page') },

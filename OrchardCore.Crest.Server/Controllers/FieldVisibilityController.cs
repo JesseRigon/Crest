@@ -20,7 +20,8 @@ namespace Crest.Controllers;
 [Route("api/crest/field-visibility")]
 public sealed class FieldVisibilityController(
     IContentDefinitionManager contentDefinitionManager,
-    IAuthorizationService authorization) : ControllerBase
+    IAuthorizationService authorization,
+    Crest.Services.CrestDefinitionLockGuard locks) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<FieldVisibilityModel>> GetAsync([FromQuery] string part, [FromQuery] string field)
@@ -50,6 +51,9 @@ public sealed class FieldVisibilityController(
         {
             return NotFound();
         }
+
+        // A locked field cannot be made conditional (hidden); 409 via the lock filter.
+        await locks.EnsureFieldChangeAsync(request.Part, request.Field, Crest.Services.CrestDefinitionChanges.SettingsChanged);
 
         var incoming = request.Settings ?? new CrestFieldVisibilitySettings();
         var hasCondition = !string.IsNullOrWhiteSpace(incoming.Path);

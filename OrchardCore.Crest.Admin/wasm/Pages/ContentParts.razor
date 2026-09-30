@@ -58,7 +58,13 @@
                 <CrestDetailPane TestId="content-part-detail" Style="flex: 1 1 auto;">
                     <Header>
                         <CrestStack Gap="0.25rem">
-                            <CrestText TextStyle="TextStyle.H5" Text="@SelectedPart.Name" />
+                            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <CrestText TextStyle="TextStyle.H5" Text="@SelectedPart.Name" />
+                                @if (IsLocked(SelectedPart.Part.Lock))
+                                {
+                                    <CrestBadge Text="@LockLabel(SelectedPart.Part.Lock)" BadgeStyle="BadgeStyle.Warning" data-testid="part-lock" />
+                                }
+                            </CrestStack>
                             <CrestText TextStyle="TextStyle.Body2" Text="@TypeUsageText(SelectedPart)" />
                         </CrestStack>
                     </Header>
@@ -76,8 +82,16 @@
                                         {
                                             var fieldName = field.Name;
                                             var fieldType = field.Field.Name;
-                                            <div class="content-part-field">
-                                                <CrestText TextStyle="TextStyle.Subtitle2" Text="@field.Name" />
+                                            var locked = IsLocked(field.Lock);
+                                            <div class="content-part-field" data-field-lock="@field.Lock">
+                                                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                                    <CrestText TextStyle="TextStyle.Subtitle2" Text="@field.Name" />
+                                                    @if (locked)
+                                                    {
+                                                        @* A locked field keeps its type, binding and visibility (docs/Content-Items.md › Definition locks). *@
+                                                        <CrestBadge Text="@LockLabel(field.Lock)" BadgeStyle="BadgeStyle.Warning" data-testid="field-lock" />
+                                                    }
+                                                </CrestStack>
                                                 @* The field's TYPE is the dropdown. Picking most types
                                                    converts immediately; picking Option picker opens the
                                                    settings editor first, so the conversion and the source
@@ -87,18 +101,18 @@
                                                                Data="@FieldTypeChoicesFor(fieldType)"
                                                                TextProperty="Label" ValueProperty="Value"
                                                                Change="@(value => OnFieldTypeChangedAsync(fieldName, fieldType, value as string))"
-                                                               Disabled="@IsLoading"
+                                                               Disabled="@(IsLoading || locked)"
                                                                Style="width: 100%;"
                                                                data-testid="field-type-dropdown" />
                                                 @if (fieldType == "OptionPickerField")
                                                 {
                                                     <CrestButton Text="@T["Picker settings"]" Icon="tune" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
-                                                                 Click="@(() => OpenPickerEditor(fieldName))"
+                                                                 Click="@(() => OpenPickerEditor(fieldName))" Disabled="@locked"
                                                                  data-testid="configure-picker" />
                                                 }
                                                 @* Every field type can carry a visibility condition. *@
                                                 <CrestButton Text="@T["Visibility"]" Icon="visibility" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
-                                                             Click="@(() => OpenVisibilityEditor(fieldName))"
+                                                             Click="@(() => OpenVisibilityEditor(fieldName))" Disabled="@locked"
                                                              data-testid="configure-visibility" />
                                             </div>
                                         }
@@ -176,6 +190,9 @@
     private PartDefinition? SelectedPart => Parts.FirstOrDefault(part => string.Equals(part.Name, SelectedPartName, StringComparison.OrdinalIgnoreCase));
 
     private sealed record PartDefinition(string Name, ContentPart Part, string[] UsedByTypes);
+
+    private static bool IsLocked(string? lockSource) => !string.IsNullOrEmpty(lockSource) && lockSource != "None";
+    private string LockLabel(string lockSource) => lockSource == "Module" ? T["Locked by module"] : T["Locked"];
     private sealed record Choice(string Label, string Value);
 
     private Choice[] FieldTypeChoices => [.. FieldTypes.Select(type => new Choice(FieldTypeLabel(type), type))];

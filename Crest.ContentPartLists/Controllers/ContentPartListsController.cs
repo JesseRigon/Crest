@@ -17,7 +17,8 @@ namespace Crest.Controllers;
 public sealed class ContentPartListsController(
     ICrestContentPartListService contentPartLists,
     IMeasurementPreferenceService measurementPreferences,
-    IAuthorizationService authorizationService) : ControllerBase
+    IAuthorizationService authorizationService,
+    CrestDefinitionLockGuard locks) : ControllerBase
 {
     /// <summary>
     /// The culture-to-units dataset: which measurement system the culture uses and
@@ -341,6 +342,10 @@ public sealed class ContentPartListsController(
         {
             return Forbid();
         }
+
+        // Attaching converts an existing field of another type: a locked one stays what it is
+        // (409 via the definition-lock filter).
+        await locks.EnsureFieldChangeAsync(request.ContentType, request.FieldName, CrestDefinitionChanges.Retyped);
 
         try
         {

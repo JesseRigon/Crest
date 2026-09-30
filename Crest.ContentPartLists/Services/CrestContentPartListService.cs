@@ -543,6 +543,13 @@ public sealed class CrestContentPartListService(
 
         var position = current?.Settings?["ContentPartFieldSettings"]?["Position"]?.ToString();
 
+        // The remove/re-add conversion would drop every other settings section on the
+        // field (a definition lock the declaring migration placed, a visibility
+        // condition): carry them across, as the field-type editor does.
+        var preserved = current?.Settings?.DeepClone()?.AsObject();
+        preserved?.Remove("ContentPartFieldSettings");
+        preserved?.Remove(nameof(OptionPickerFieldSettings));
+
         if (current is not null && !string.Equals(current.FieldDefinition?.Name, nameof(OptionPickerField), StringComparison.Ordinal))
         {
             await contentDefinitionManager.AlterPartDefinitionAsync(contentType, part => part.RemoveField(fieldName));
@@ -551,6 +558,11 @@ public sealed class CrestContentPartListService(
         await contentDefinitionManager.AlterPartDefinitionAsync(contentType, part => part
             .WithField(fieldName, field =>
             {
+                if (preserved is { Count: > 0 })
+                {
+                    field.MergeSettings(preserved);
+                }
+
                 field
                     .OfType(nameof(OptionPickerField))
                     .WithDisplayName(displayName ?? fieldName)

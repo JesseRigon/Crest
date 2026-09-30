@@ -423,6 +423,24 @@ public sealed class TenantMediaIconsStartup : StartupBase
     }
 }
 
+/// <summary>
+/// Definition locks (docs/Content-Items.md › Definition locks). Last of all startups so the
+/// decorators wrap whatever the content-types module registered; the guard and the 409
+/// filter are Crest's own.
+/// </summary>
+[Feature("OrchardCore.Crest")]
+public sealed class DefinitionLocksStartup : StartupBase
+{
+    public override int Order => int.MaxValue;
+
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddScoped<IPermissionProvider, Permissions.CrestContentDefinitionPermissions>();
+        services.AddCrestDefinitionLocks();
+        services.Configure<Microsoft.AspNetCore.Mvc.MvcOptions>(options => options.Filters.Add<Filters.CrestDefinitionLockExceptionFilter>());
+    }
+}
+
 [Feature("OrchardCore.Crest.DesignSystem")]
 public sealed class DesignSystemStartup : StartupBase
 {

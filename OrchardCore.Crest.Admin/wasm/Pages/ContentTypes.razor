@@ -91,9 +91,14 @@
                                             <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
                                                 <CrestBadge Text="@part.Part.Name" BadgeStyle="BadgeStyle.Secondary" />
                                                 <CrestBadge Text="@T["{0} fields", part.Part.Fields.Length]" BadgeStyle="BadgeStyle.Info" />
+                                                @if (part.Lock != "None")
+                                                {
+                                                    @* A locked attachment stays on the type (docs/Content-Items.md › Definition locks). *@
+                                                    <CrestBadge Text="@(part.Lock == "Module" ? T["Locked by module"] : T["Locked"])" BadgeStyle="BadgeStyle.Warning" data-testid="attachment-lock" />
+                                                }
                                             </CrestStack>
                                             <CrestButton Text="@T["Detach"]" Icon="link_off" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
-                                                         Click="@(() => DetachPartAsync(attachedName))" Disabled="@IsLoading" data-testid="detach-part" />
+                                                         Click="@(() => DetachPartAsync(attachedName))" Disabled="@(IsLoading || part.Lock != "None")" data-testid="detach-part" />
                                         </CrestStack>
 
                                         @* The ATTACHMENT's instance settings - how this part presents

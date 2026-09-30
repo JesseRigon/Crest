@@ -47,6 +47,43 @@ writes are FULL-REPLACE, never JSON-merge — a merge would resurrect deleted ro
 There are deliberately NO per-user instance overrides: what the admin configures
 is the behaviour for everyone.
 
+### Definition locks
+
+A module can freeze the parts, fields and attachments a system process downstream depends
+on (`Crest.Settings.CrestDefinitionLockSettings`, stored as a settings section on the
+definition; the first consumer is Fruitful.Accounting's transaction part, whose posting
+flows read its fields). Same shape as the list locks - **one mechanism, two authorities**:
+`Module` locks are declared by the owning migration (`.Locked()` on a field, part or
+attachment builder), re-asserted on every migration run and unliftable in-tenant; `Tenant`
+locks are placed and lifted through `PUT api/crest/content-types/locks` by holders of
+`LockContentDefinitions` (security-critical, Administrator; deliberately NOT implied by
+`EditContentTypes`). A lock freezes the MACHINE surface only:
+
+- a locked **field** cannot be removed, retyped, bound to a picker, given a visibility
+  condition, or have any settings section but `ContentPartFieldSettings` (display name,
+  description, position, editor, display mode) changed - so Required stays as declared;
+- a locked **part** cannot be deleted and every field it has is locked as if individually;
+  new fields may still be added to it (the tenant's, unlocked - unless the part lock covers
+  them, which it does while it stands);
+- a locked **attachment** cannot be detached and its type cannot be deleted; its display
+  surface (`ContentTypePartSettings`) stays editable.
+
+The API reports the effective lock on every part (`lock`), field (`lock`, its own or the
+part's) and attachment (`lock`); the Content Parts and Content Types pages show a badge and
+disable the frozen controls.
+
+> **Gotcha — enforcement is for TENANT writes only, and lives in two places.** Crest's
+> definition controllers ask `CrestDefinitionLockGuard` before altering (409 with the
+> reason, through `CrestDefinitionLockExceptionFilter`); the stock content-types module's
+> `IContentDefinitionService` and `IContentDefinitionDisplayManager` are decorated
+> (`LockedContentDefinitionServices`, registered last) so its admin obeys the same locks if
+> a tenant enables it (it is not in the Fruitful recipe; the decorators are unit-tested,
+> not exercised live). `IContentDefinitionManager` itself is NOT guarded: migrations
+> legitimately write what tenants must not, and re-adding a field through the manager
+> (the list attach conversion, the field-type editor) must carry the lock settings across
+> - both do. Any new tenant-facing write path over the manager must add its own guard call.
+> Recipe imports run through the manager and are not guarded.
+
 > **Gotcha — read-after-write:** `AlterTypeDefinitionAsync` /
 > `AlterPartDefinitionAsync` changes are NOT visible to reads in the same request
 > until the session commits. Anything that must react to a definition change
