@@ -1,6 +1,6 @@
 # OrchardCore.Crest OrchardCore Module
 
-OrchardCore.Crest is a multi-project Orchard Core module repository for hosting Blazor component systems inside Orchard.
+OrchardCore.Crest is a multi-project Orchard Core module repository: an **application layer** on Orchard Core, hosting Blazor component systems and everything a business-facing application needs that is not a line of business — the admin and site shells, the content API, Parties (people, organizations, roles), Members (member accounts, organizations, the member portal, memberships) and Workflows (an Elsa-based workflow service with a registry, units of work and connectors). See [plans/application-layer.md](plans/application-layer.md).
 
 > **⚠ Requires a custom OrchardCore build (for now).** Crest depends on AdminNode
 > `UniqueId` modifications to OrchardCore's admin-menu system that are not yet in any
