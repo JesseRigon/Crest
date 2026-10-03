@@ -53,6 +53,18 @@ binding means no records). Members already rules the scope; the generic facility
 owner-organization part attachable to any content type, its index column, a query scope
 the member portal applies — is designed when the first application asks for it.
 
+## Known rough edge: the global store needs a host call
+
+`Crest.Global`'s `ICrestGlobalStore` is registered by an `OrchardCoreBuilder` extension
+(`AddCrestGlobalStore()`), not by the feature, because the store is one database shared by
+every tenant and so belongs to the host's service collection. A host that enables
+`Crest.Global`, `Crest.Regions` or `Crest.Money` without making that call gets no warning:
+the features enable, and setup then fails with "Unable to resolve service for type
+ICrestGlobalStore". Enabling a feature should not depend on an invisible second step —
+either the features should fail enablement with a clear message, or the registration
+should happen where the feature is. Recorded rather than fixed; it bit the standalone host
+first and will bit the next one.
+
 ## Phases
 
 - [x] 0. This plan; the shell and theme model in [shells-and-themes.md](shells-and-themes.md).

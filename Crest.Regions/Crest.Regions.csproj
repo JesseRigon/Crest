@@ -12,7 +12,7 @@
     <Compile Remove="tests/**/*.cs;blazor-wasm/**/*.cs;Domain/**/*.cs" />
   </ItemGroup>
 
-  <!-- Business Contexts, the geo tree and per-country addressing maps
+  <!-- Localization Profiles, the geo tree and per-country addressing maps
        (plans/regions-and-locations.md). Geo standard data lives in the global store
        (Crest.Global); this module declares its schema and the tenant overlay. -->
   <ItemGroup>

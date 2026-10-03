@@ -8,6 +8,11 @@ const pixelmatch = require('pixelmatch').default;
 // output/base/  — stable screenshots, hand-promoted at known-good points. Checked in.
 // output/new/   — wiped at the start of every suite run, repopulated by this run,
 //                 compared against base/. Diff images (when a check fails) land here too.
+//
+// The baseline is per HOST, not per repository: a screenshot of the admin shell shows
+// whichever modules that host enables, so one checked-in image cannot match two hosts.
+// A consuming host points OUTPUT_ROOT (or runSuite's outputRoot) at its own directory and
+// promotes its own baselines there; the one checked in here is Crest's own.
 function resolveDirs(outputRoot) {
   const base = path.join(outputRoot, 'base');
   const fresh = path.join(outputRoot, 'new');

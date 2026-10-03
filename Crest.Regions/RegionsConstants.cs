@@ -7,18 +7,18 @@ public static class RegionsConstants
     public static class ContentTypes
     {
         /// <summary>A party-attached geo/localization profile. Never "Tenant" - see plans/regions-and-locations.md.</summary>
-        public const string BusinessContext = "CrestBusinessContext";
+        public const string LocalizationProfile = "CrestLocalizationProfile";
     }
 
     public static class Parts
     {
-        public const string BusinessContext = "CrestBusinessContextPart";
+        public const string LocalizationProfile = "CrestLocalizationProfilePart";
 
         /// <summary>
         /// Attachable by DOWNSTREAM modules to whatever carries a context (Parties attaches
         /// it to Person and Organization). Crest never names those types.
         /// </summary>
-        public const string BusinessContextReference = "CrestBusinessContextReferencePart";
+        public const string LocalizationProfileReference = "CrestLocalizationProfileReferencePart";
     }
 
     public static class Routes
