@@ -1,0 +1,531 @@
+using Crest.Workflows.Api.Client.Extensions;
+using Crest.Workflows.Api.Client.Resources.ActivityDescriptors.Models;
+using Crest.Workflows.Api.Client.Resources.WorkflowDefinitions.Models;
+using Crest.Workflows.Api.Client.Resources.WorkflowDefinitions.Responses;
+using Crest.Workflows.Studio.Contracts;
+using Crest.Workflows.Studio.DomInterop.Contracts;
+using Crest.Workflows.Studio.Extensions;
+using Crest.Workflows.Studio.Models;
+using Crest.Workflows.Studio.Workflows.Components.WorkflowDefinitionEditor.Components.ActivityProperties;
+using Crest.Workflows.Studio.Workflows.Components.WorkflowDefinitionEditor.Components.Models;
+using Crest.Workflows.Studio.Workflows.Contracts;
+using Crest.Workflows.Studio.Workflows.Domain.Contracts;
+using Crest.Workflows.Studio.Workflows.Domain.Models;
+using Crest.Workflows.Studio.Workflows.Domain.Notifications;
+using Crest.Workflows.Studio.Workflows.Extensions;
+using Crest.Workflows.Studio.Workflows.Models;
+using Crest.Workflows.Studio.Workflows.Shared.Components;
+using Crest.Workflows.Studio.Workflows.UI.Contracts;
+using Humanizer;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.JSInterop;
+using MudBlazor;
+using Radzen;
+using Radzen.Blazor;
+using System.Text.Json.Nodes;
+using ThrottleDebounce;
+using DialogOptions = MudBlazor.DialogOptions;
+using DialogPosition = MudBlazor.DialogPosition;
+using Variant = MudBlazor.Variant;
+
+namespace Crest.Workflows.Studio.Workflows.Components.WorkflowDefinitionEditor.Components;
+
+/// A component that allows the user to edit a workflow definition.
+public partial class WorkflowEditor : WorkflowEditorComponentBase, INotificationHandler<ImportedWorkflowDefinition>, IDisposable
+{
+    private readonly RateLimitedFunc<bool, Task> _rateLimitedSaveChangesAsync;
+    private bool _isDirty;
+    private RadzenSplitterPane _activityPropertiesPane = null!;
+    private int _activityPropertiesPaneHeight = 300;
+    private DiagramDesignerWrapper _diagramDesigner = null!;
+
+    /// <inheritdoc />
+    public WorkflowEditor()
+    {
+        _rateLimitedSaveChangesAsync = Debouncer.Debounce<bool, Task>(readDiagram => SaveChangesAsync(readDiagram, false, false), TimeSpan.FromMilliseconds(500));
+    }
+
+    /// Gets or sets the drag and drop manager via property injection.
+    [CascadingParameter] public DragDropManager DragDropManager { get; set; } = null!;
+
+    /// Gets or sets the workflow definition.
+    [Parameter] public WorkflowDefinition? WorkflowDefinition { get; set; }
+
+    /// Gets or sets a callback invoked when the workflow definition is updated.
+    [Parameter] public Func<Task>? WorkflowDefinitionUpdated { get; set; }
+
+    /// Gets or sets the event triggered when an activity is selected.
+    [Parameter] public Func<JsonObject, Task>? ActivitySelected { get; set; }
+
+    [Parameter] public bool AutoSave { get; set; }
+    [Parameter] public EventCallback<bool> AutoSaveChanged { get; set; }
+
+    /// Gets the selected activity ID.
+    public string? SelectedActivityId { get; private set; }
+
+    [Inject] private IWorkflowDefinitionEditorService WorkflowDefinitionEditorService { get; set; } = null!;
+    [Inject] private IWorkflowDefinitionImporter WorkflowDefinitionImporter { get; set; } = null!;
+    [Inject] private IActivityVisitor ActivityVisitor { get; set; } = null!;
+    [Inject] private IActivityRegistry ActivityRegistry { get; set; } = null!;
+    [Inject] private IDiagramDesignerService DiagramDesignerService { get; set; } = null!;
+    [Inject] private IDomAccessor DomAccessor { get; set; } = null!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject] private IMediator Mediator { get; set; } = null!;
+    [Inject] private IServiceProvider ServiceProvider { get; set; } = null!;
+    [Inject] private ILogger<WorkflowDefinitionEditor> Logger { get; set; } = null!;
+    [Inject] private IWorkflowJsonDetector WorkflowJsonDetector { get; set; } = null!;
+    [Inject] private IBackendApiClientProvider BackendApiClientProvider { get; set; } = null!;
+    [Inject] private IWorkflowCloningDialogService WorkflowCloningService { get; set; } = null!;
+    [Inject] private IWorkflowExportDialogService WorkflowExportDialogService { get; set; } = null!;
+    [Inject] private IOptions<WorkflowDefinitionOptions> WorkflowDefinitionOptions { get; set; } = null!;
+
+    /// <summary>
+    /// Invoked when the "Ctrl+S" hotkeys are pressed, triggering the save operation.
+    /// </summary>
+    [JSInvokable] public async Task OnHotKeysCtrlS() => await OnSaveClick();
+
+    /// <summary>
+    /// Invoked when the "Ctrl+Shift+S" hotkeys are pressed, triggering the save as operation.
+    /// </summary>
+    [JSInvokable] public async Task OnHotKeysCtrlShiftS() => await OnSaveAsClick();
+
+    private JsonObject? Activity => _workflowDefinition?.Root;
+    private JsonObject? SelectedActivity { get; set; }
+    private ActivityDescriptor? ActivityDescriptor { get; set; }
+    private ActivityPropertiesPanel? ActivityPropertiesPanel { get; set; }
+
+    private DotNetObjectReference<WorkflowEditor>? _dotNetRef;
+
+    private RadzenSplitterPane ActivityPropertiesPane
+    {
+        get => _activityPropertiesPane;
+        set
+        {
+            _activityPropertiesPane = value;
+
+            // Prefix the ID with a non-numerical value, so it can always be used as a query selector
+            // (sometimes, Radzen generates a unique ID starting with a number).
+            _activityPropertiesPane.UniqueID = $"pane-{value.UniqueID}";
+        }
+    }
+
+    /// <summary>
+    /// Applies the specified workflow definition asynchronously to the current context.
+    /// </summary>
+    /// <param name="workflowDefinition">The workflow definition to apply. Cannot be null.</param>
+    public async Task ApplyWorkflowDefinitionAsync(WorkflowDefinition workflowDefinition)
+    {
+        await SetWorkflowDefinitionAsync(workflowDefinition);
+        await HandleChangesAsync(false, true);
+    }
+
+    /// Gets or sets a flag indicating whether the workflow definition is dirty.
+    public async Task NotifyWorkflowChangedAsync(bool force = false)
+    {
+        await HandleChangesAsync(false, force);
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        Mediator.Subscribe<ImportedWorkflowDefinition>(this);
+
+        _workflowDefinition = WorkflowDefinition;
+
+        await ActivityRegistry.EnsureLoadedAsync();
+
+        if (_workflowDefinition?.Root == null)
+            return;
+
+        await SelectActivityAsync(_workflowDefinition.Root);
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        if (WorkflowDefinition == _workflowDefinition)
+            return;
+
+        _workflowDefinition = WorkflowDefinition;
+
+        if (_workflowDefinition?.Root == null)
+            return;
+
+        await _diagramDesigner.LoadActivityAsync(_workflowDefinition!.Root);
+        await SelectActivityAsync(_workflowDefinition.Root);
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UpdateActivityPropertiesVisibleHeightAsync();
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("editorHotkeys.register", _dotNetRef);
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Mediator.Unsubscribe(this);
+        _rateLimitedSaveChangesAsync.Dispose();
+    }    
+
+    private async Task HandleChangesAsync(bool readDiagram, bool force = false)
+    {
+        _isDirty = true;
+        await InvokeAsync(StateHasChanged);
+
+        if (AutoSave)
+            if (force)
+                await SaveChangesAsync(readDiagram, showLoader: false, publish: false);
+            else
+                await SaveChangesRateLimitedAsync(readDiagram);
+    }
+
+    private async Task<Result<SaveWorkflowDefinitionResponse, ValidationErrors>> SaveAsync(bool readDiagram, bool publish)
+    {
+        var workflowDefinition = _workflowDefinition ?? new WorkflowDefinition();
+
+        if (readDiagram)
+        {
+            var root = await _diagramDesigner.GetActivityAsync();
+            workflowDefinition.Root = root;
+        }
+
+        var result = await WorkflowDefinitionEditorService.SaveAsync(workflowDefinition, publish, async definition => await SetWorkflowDefinitionAsync(definition));
+
+        _isDirty = false;
+        await InvokeAsync(StateHasChanged);
+
+        return result;
+    }
+
+    private async Task PublishAsync(Func<SaveWorkflowDefinitionResponse, Task>? onSuccess = null, Func<ValidationErrors, Task>? onFailure = null)
+    {
+        await SaveChangesAsync(true, true, true, onSuccess, onFailure);
+    }
+
+    private async Task RetractAsync(Func<Task>? onSuccess = null, Func<ValidationErrors, Task>? onFailure = null)
+    {
+        var result = await WorkflowDefinitionEditorService.RetractAsync(_workflowDefinition!, async definition => await SetWorkflowDefinitionAsync(definition));
+        await result.OnSuccessAsync(async _ =>
+        {
+            if (onSuccess != null) await onSuccess();
+        });
+
+        await result.OnFailedAsync(async errors =>
+        {
+            if (onFailure != null) await onFailure(errors);
+        });
+    }
+
+    private async Task SaveChangesRateLimitedAsync(bool readDiagram)
+    {
+        await _rateLimitedSaveChangesAsync!.InvokeAsync(readDiagram);
+    }
+
+    private async Task SaveChangesAsync(bool readDiagram, bool showLoader, bool publish, Func<SaveWorkflowDefinitionResponse, Task>? onSuccess = null, Func<ValidationErrors, Task>? onFailure = null)
+    {
+        await InvokeAsync(() =>
+        {
+            if (showLoader)
+            {
+                IsProgressing = true;
+                StateHasChanged();
+            }
+        });
+
+        // Because this method is rate-limited, it's possible that the designer has been disposed of since the last invocation.
+        // Therefore, we need to wrap this in a try/catch block.
+        try
+        {
+            var result = await SaveAsync(readDiagram, publish);
+            await result.OnSuccessAsync(async response =>
+            {
+                var currentSelectedActivityId = SelectedActivityId;
+
+                await SetWorkflowDefinitionAsync(response.WorkflowDefinition);
+
+                if (!string.IsNullOrEmpty(currentSelectedActivityId))
+                {
+                    await RefreshSelectedActivityAsync(currentSelectedActivityId);
+                }
+
+                await InvokeAsync(StateHasChanged);
+
+                if (onSuccess != null)
+                    await onSuccess(response);
+
+            }).ConfigureAwait(false);
+
+            await result.OnFailedAsync(errors =>
+            {
+                onFailure?.Invoke(errors);
+                UserMessageService.ShowSnackbarTextMessage(
+                    errors.Errors.Select(x => x.ErrorMessage),
+                    Severity.Error,
+                    options => options.VisibleStateDuration = 5000
+                );
+                return Task.CompletedTask;
+            });
+        }
+        finally
+        {
+            if (showLoader)
+            {
+                IsProgressing = false;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private async Task SelectActivityAsync(JsonObject activity)
+    {
+        SelectedActivity = activity;
+        SelectedActivityId = activity.GetId();
+        ActivityDescriptor = ActivityRegistry.Find(activity.GetTypeName(), activity.GetVersion());
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SetWorkflowDefinitionAsync(WorkflowDefinition workflowDefinition)
+    {
+        _workflowDefinition = WorkflowDefinition = workflowDefinition;
+        if (WorkflowDefinitionUpdated != null) await WorkflowDefinitionUpdated();
+    }
+
+    /// <summary>
+    /// Refreshes the selected activity reference to point to the updated activity in the current workflow definition.
+    /// This is needed after saving changes to ensure the UI displays the latest activity state.
+    /// </summary>
+    private async Task RefreshSelectedActivityAsync(string activityId)
+    {
+        if (_workflowDefinition?.Root == null || string.IsNullOrEmpty(activityId))
+            return;
+
+        // Find the updated activity in the current workflow definition
+        var updatedActivity = await FindActivityByIdAsync(_workflowDefinition.Root, activityId);
+
+        if (updatedActivity != null)
+        {
+            // Update the selected activity reference without triggering a disruptive UI refresh.
+            // We avoid calling SelectActivity() which sets the activity to null and calls StateHasChanged() multiple times.
+            SelectedActivity = updatedActivity;
+            SelectedActivityId = updatedActivity.GetId();
+            ActivityDescriptor = ActivityRegistry.Find(updatedActivity.GetTypeName(), updatedActivity.GetVersion());
+
+            // Only call StateHasChanged once to update the UI without disrupting focus
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    /// <summary>
+    /// Recursively searches for an activity with the specified ID in the activity tree.
+    /// </summary>
+    private async Task<JsonObject?> FindActivityByIdAsync(JsonObject rootActivity, string activityId)
+    {
+        // Use the activity visitor to traverse the entire activity graph
+        var activityGraph = await ActivityVisitor.VisitAndCreateGraphAsync(rootActivity);
+        
+        // Look for the activity in the activity node lookup
+        foreach (var node in activityGraph.ActivityNodeLookup.Values)
+        {
+            if (node.Activity.GetId() == activityId)
+            {
+                return node.Activity;
+            }
+        }
+        
+        return null;
+    }
+
+    private async Task UpdateActivityPropertiesVisibleHeightAsync()
+    {
+        var paneQuerySelector = $"#{ActivityPropertiesPane.UniqueID}";
+        var visibleHeight = await DomAccessor.GetVisibleHeightAsync(paneQuerySelector);
+        _activityPropertiesPaneHeight = (int)visibleHeight - 50;
+    }
+
+    private async Task OnActivitySelected(JsonObject activity)
+    {
+        await SelectActivityAsync(activity);
+        if (ActivitySelected != null) await ActivitySelected(activity);
+    }
+
+    private async Task OnSelectedActivityUpdated(JsonObject activity)
+    {
+        _isDirty = true;
+        StateHasChanged();
+        await _diagramDesigner.UpdateActivityAsync(SelectedActivityId!, activity);
+    }
+
+    private async Task OnSaveClick()
+    {
+        await SaveChangesAsync(true, true, false, _ =>
+        {
+            UserMessageService.ShowSnackbarTextMessage(Localizer["Workflow saved"], Severity.Success);
+            return Task.CompletedTask;
+        });
+    }
+
+    private async Task OnSaveAsClick()
+    {
+        var result = await WorkflowCloningService.SaveAs(WorkflowDefinition);
+        if (result is null) return;
+        if (result.IsSuccess) NavigationManager.NavigateTo($"workflows/definitions/{result?.Success?.WorkflowDefinition.DefinitionId}/edit");
+    }
+
+    private async Task OnPublishClicked()
+    {
+        await ProgressAsync(async () => await PublishAsync(async response =>
+        {
+            // Depending on whether the workflow contains Not Found activities, display a different message.
+            var graph = await _diagramDesigner.GetActivityGraphAsync();
+            var nodes = graph.ActivityNodeLookup.Values;
+            var hasNotFoundActivities = nodes.Any(x => x.Activity.GetTypeName() == "Crest.Workflows.NotFoundActivity");
+
+            if (hasNotFoundActivities)
+                UserMessageService.ShowSnackbarTextMessage(Localizer["Workflow published with Not Found activities"], Severity.Warning, options => options.VisibleStateDuration = 5000);
+            else
+                UserMessageService.ShowSnackbarTextMessage(Localizer["Workflow published"], Severity.Success);
+
+            if (response.ConsumingWorkflowCount > 0)
+            {
+                UserMessageService.ShowSnackbarTextMessage(Localizer["{0} consuming workflow(s) updated", response.ConsumingWorkflowCount], Severity.Success, options => options.VisibleStateDuration = 3000);
+            }
+        }));
+    }
+
+    private async Task OnRetractClicked()
+    {
+        await ProgressAsync(async () => await RetractAsync(() =>
+        {
+            UserMessageService.ShowSnackbarTextMessage(Localizer["Workflow unpublished"], Severity.Success);
+            return Task.CompletedTask;
+        }, errors =>
+        {
+            UserMessageService.ShowSnackbarTextMessage(string.Join(Environment.NewLine, errors), Severity.Error);
+            return Task.CompletedTask;
+        }));
+    }
+    
+    private async Task OnGraphUpdated() => await HandleChangesAsync(true);
+    
+    private async Task OnActivityUpdated(JsonObject activity)
+    {
+        await HandleChangesAsync(true);
+    }
+
+    private async Task OnResize(RadzenSplitterResizeEventArgs arg)
+    {
+        await UpdateActivityPropertiesVisibleHeightAsync();
+    }
+
+    private async Task OnAutoSaveChanged(bool? value)
+    {
+        AutoSave = value ?? false;
+        if (AutoSaveChanged.HasDelegate)
+            await AutoSaveChanged.InvokeAsync(AutoSave);
+
+        if (AutoSave)
+            await SaveChangesAsync(true, false, false);
+    }
+
+    private async Task OnExportClicked()
+    {
+        await WorkflowExportDialogService.ExportAndDownloadAsync(include =>
+            WorkflowDefinitionEditorService.ExportAsync(_workflowDefinition!, include));
+    }
+
+    private async Task OnImportClicked()
+    {
+        await DomAccessor.ClickElementAsync("#workflow-file-upload-button-wrapper input[type=file]");
+    }
+
+    private async Task OnFilesSelected(IReadOnlyList<IBrowserFile>? files)
+    {
+        if (files == null || files.Count == 0)
+            return;
+
+        await ImportFilesAsync(files);
+        _isDirty = false;
+
+        StateHasChanged();
+    }
+    
+    async Task INotificationHandler<ImportedWorkflowDefinition>.HandleAsync(ImportedWorkflowDefinition notification, CancellationToken cancellationToken)
+    {
+        var definition = notification.WorkflowDefinition;
+        await SetWorkflowDefinitionAsync(definition);
+        await _diagramDesigner.LoadActivityAsync(definition.Root);
+    }
+
+    private async Task ImportFilesAsync(IReadOnlyList<IBrowserFile> files)
+    {
+        _isDirty = true;
+        IsProgressing = true;
+        StateHasChanged();
+
+        var options = new ImportOptions
+        {
+            DefinitionId = WorkflowDefinition?.DefinitionId,
+            ImportedCallback = async definition =>
+            {
+                await SetWorkflowDefinitionAsync(definition);
+                await _diagramDesigner.LoadActivityAsync(definition.Root);
+            },
+            ErrorCallback = ex =>
+            {
+                UserMessageService.ShowSnackbarTextMessage($"Failed to import workflow definition: {ex.Message}", Severity.Error);
+                return Task.CompletedTask;
+            }
+        };
+        var importResults = (await WorkflowDefinitionImporter.ImportFilesAsync(files, options)).ToList();
+        var failedImports = importResults.Where(x => !x.IsSuccess).ToList();
+        var successfulImports = importResults.Where(x => x.IsSuccess).ToList();
+
+        IsProgressing = false;
+        _isDirty = false;
+        StateHasChanged();
+
+        if (importResults.Count == 0)
+        {
+            UserMessageService.ShowSnackbarTextMessage(Localizer["No workflows were imported."], Severity.Info);
+            return;
+        }
+
+        if (successfulImports.Count == 1)
+            UserMessageService.ShowSnackbarTextMessage(Localizer["Successfully imported 1 workflow definition."], Severity.Success, ConfigureSnackbar);
+        else if (importResults.Count > 1)
+            UserMessageService.ShowSnackbarTextMessage(Localizer["Successfully imported {0} workflow definitions.", importResults.Count], Severity.Success, ConfigureSnackbar);
+
+        if (failedImports.Count == 1)
+            UserMessageService.ShowSnackbarTextMessage(Localizer["Failed to import 1 workflow definition: {0}", failedImports[0].Failure!.ErrorMessage], Severity.Error, ConfigureSnackbar);
+        else if (failedImports.Count > 1)
+            UserMessageService.ShowSnackbarTextMessage(Localizer["Failed to import {0} workflow definitions. Errors: {1}", failedImports.Count, string.Join(", ", failedImports.Select(x => x.Failure!.ErrorMessage))], Severity.Error, ConfigureSnackbar);
+
+        return;
+        void ConfigureSnackbar(SnackbarOptions snackbarOptions)
+        {
+            snackbarOptions.SnackbarVariant = Variant.Filled;
+            snackbarOptions.CloseAfterNavigation = failedImports.Count > 0;
+            snackbarOptions.VisibleStateDuration = failedImports.Count > 0 ? 10000 : 3000;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask DisposeAsync()
+    {
+        if (_dotNetRef != null)
+        {
+            await JSRuntime.InvokeVoidAsync("editorHotkeys.dispose", _dotNetRef);
+            _dotNetRef.Dispose();
+            _dotNetRef = null;
+        }
+    }
+}

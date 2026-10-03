@@ -1,0 +1,32 @@
+{
+  "name": "crest-workflows-designer-dependencies",
+  "description": "Bundle dependencies for the designer.",
+  "repository": "https://github.com/JesseRigon/OrchardCore.Crest",
+  "license": "MIT",
+  "version": "1.0.0",
+  "dependencies": {
+    "@antv/layout": "^0.3.25",
+    "@antv/x6": "^2.18.1",
+    "@antv/x6-plugin-clipboard": "^2.1.6",
+    "@antv/x6-plugin-history": "^2.2.4",
+    "@antv/x6-plugin-keyboard": "^2.2.3",
+    "@antv/x6-plugin-scroller": "^2.0.10",
+    "@antv/x6-plugin-selection": "^2.2.2",
+    "@antv/x6-plugin-snapline": "^2.1.7",
+    "@antv/x6-plugin-transform": "^2.1.8",
+    "lodash.camelcase": "^4.3.0",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^13.0.1",
+    "css-loader": "^7.1.2",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1"
+  },
+  "scripts": {
+    "build": "webpack"
+  }
+}

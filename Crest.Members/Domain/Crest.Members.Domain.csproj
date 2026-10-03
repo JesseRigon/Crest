@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- Domain is the server-free assembly (constants, DTO records, pure logic) shared
+       by Server and blazor-wasm - it must never reference OrchardCore or ASP.NET server
+       packages, or the blazor-wasm side stops being able to link it. -->
+
+  <ItemGroup>
+    <ProjectReference Include="../../Crest.Parties/Domain/Crest.Parties.Domain.csproj" />
+  </ItemGroup>
+</Project>

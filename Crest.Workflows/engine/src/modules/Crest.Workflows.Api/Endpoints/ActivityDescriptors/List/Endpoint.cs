@@ -1,0 +1,28 @@
+using Crest.Workflows.Abstractions;
+using Crest.Workflows.Management;
+using JetBrains.Annotations;
+
+namespace Crest.Workflows.Api.Endpoints.ActivityDescriptors.List;
+
+[PublicAPI]
+internal class List(IActivityRegistry registry, IActivityRegistryPopulator registryPopulator) : CrestWorkflowsEndpointWithoutRequest<Response>
+{
+    public override void Configure()
+    {
+        Get("/descriptors/activities");
+        ConfigurePermissions("read:*", "read:activity-descriptors");
+    }
+
+    public override async Task<Response> ExecuteAsync(CancellationToken cancellationToken)
+    {
+        var forceRefresh = Query<bool>("refresh", false);
+
+        if (forceRefresh)
+            await registryPopulator.PopulateRegistryAsync(cancellationToken);
+
+        var descriptors = registry.ListAll().ToList();
+        var response = new Response(descriptors);
+
+        return response;
+    }
+}

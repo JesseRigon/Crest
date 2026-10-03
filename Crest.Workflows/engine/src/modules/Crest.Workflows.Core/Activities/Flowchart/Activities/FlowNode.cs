@@ -1,0 +1,30 @@
+using System.Runtime.CompilerServices;
+using Crest.Workflows.Attributes;
+using JetBrains.Annotations;
+
+namespace Crest.Workflows.Activities.Flowchart.Activities;
+
+/// <summary>
+/// A simple container that executes the specified activity.
+/// </summary>
+[Activity("Crest.Workflows", "Flow", "A simple container that executes the specified activity.", DisplayName = "Container")]
+[PublicAPI]
+public class FlowNode : Activity
+{
+    
+    /// <inheritdoc />
+    public FlowNode([CallerFilePath] string? source = null, [CallerLineNumber] int? line = null) : base(source, line)
+    {
+    }
+    
+    /// <summary>
+    /// The activity to execute.
+    /// </summary>
+    [Port]
+    public IActivity? Body { get; set; }
+
+    /// <inheritdoc />
+    protected override async ValueTask ExecuteAsync(ActivityExecutionContext context) => await context.ScheduleActivityAsync(Body, OnBodyCompletedAsync);
+
+    private async ValueTask OnBodyCompletedAsync(ActivityCompletedContext context) => await context.TargetContext.CompleteActivityAsync();
+}

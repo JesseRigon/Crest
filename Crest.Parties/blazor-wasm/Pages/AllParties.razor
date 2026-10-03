@@ -1,0 +1,171 @@
+@page "/Parties"
+@namespace Crest.Parties.BlazorWasm.Pages
+@using Crest.Parties.BlazorWasm.Components
+@using Crest.Parties.Constants
+@using Crest.Parties.PartyTypes
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+<PageTitle>@T["All Parties"]</PageTitle>
+
+@* The Parties menu's own page and the management page in one: the party types down the
+   left are the Parties menu's children, filtered by the same overlays the sidebar honours -
+   the tenant's admin-menu layout hides a type for everyone, the pane settings here hide one
+   for the signed-in user only (their own hidden-items preference on the menu item's key, so
+   the sidebar link goes with it). The main section is the selected type's pane. *@
+
+<CrestStack Gap="1rem" class="all-parties" data-testid="all-parties">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <div>
+            <CrestText TextStyle="TextStyle.H4" class="rz-m-0">@T["All Parties"]</CrestText>
+            <CrestText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["Every kind of party this tenant works with: the people and organizations, and the roles composed on them."]</CrestText>
+        </div>
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <CrestButton Icon="tune" Text="@T["Panes"]" ButtonStyle="ButtonStyle.Light" Click="@(() => ShowSettings = !ShowSettings)" data-testid="all-parties-panes-toggle" />
+            <CrestButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="IsLoading" />
+        </CrestStack>
+    </CrestStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" Summary="@T["Could not load party types"]" Detail="@Error" />
+    }
+
+    @if (ShowSettings)
+    {
+        <CrestCard data-testid="all-parties-pane-settings">
+            <CrestStack Gap="0.5rem">
+                <CrestText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@T["Panes you see"]</CrestText>
+                <CrestText TextStyle="TextStyle.Caption">@T["Your own view only: a pane you hide here leaves this list and your Parties menu, nobody else's. A type missing from this list was hidden for the whole tenant in the admin menu layout."]</CrestText>
+                @foreach (var type in Types)
+                {
+                    <div>
+                        <CrestCheckBox TValue="bool" Value="@(!type.HiddenByUser)" ValueChanged="@((bool visible) => SetVisibleAsync(type, visible))" Name="@($"pane-{type.Key}")" Disabled="@(IsSaving || type.MenuItemKey is null)" />
+                        <CrestLabel Text="@T[type.DisplayName]" Component="@($"pane-{type.Key}")" />
+                    </div>
+                }
+            </CrestStack>
+        </CrestCard>
+    }
+
+    <CrestStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Stretch" class="all-parties__layout">
+        <CrestModelList TItem="PartyTypeModel"
+                        Title="@T["Party types"]"
+                        Items="@VisibleTypes"
+                        SelectedKey="@SelectedKey"
+                        KeySelector="@(type => type.Key)"
+                        TextSelector="@(type => T[type.DisplayName])"
+                        DescriptionSelector="@(type => type.Kind == PartyTypeKinds.Global ? T["Global catalogue"] : type.ContentType)"
+                        ShowCreate="false"
+                        ShowSearch="false"
+                        Select="@(type => SelectedKey = type.Key)"
+                        EmptyText="@T["No party types are visible to you."]"
+                        IsBusy="IsLoading"
+                        Actions="TypeActions" />
+
+        <div style="flex: 1; min-width: 0;">
+            @if (SelectedType is not null)
+            {
+                <PartyTypePane Type="@SelectedType" />
+            }
+            else if (!IsLoading)
+            {
+                <CrestCard><CrestText TextStyle="TextStyle.Body1">@T["Select a party type."]</CrestText></CrestCard>
+            }
+        </div>
+    </CrestStack>
+</CrestStack>
+
+@code {
+    [SupplyParameterFromQuery(Name = "type")]
+    public string? TypeQuery { get; set; }
+
+    private PartyTypeModel[] Types { get; set; } = [];
+    private PartyTypeModel[] VisibleTypes => Types.Where(type => !type.HiddenByUser).ToArray();
+    private string? SelectedKey { get; set; }
+    private PartyTypeModel? SelectedType => VisibleTypes.FirstOrDefault(type => type.Key == SelectedKey);
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool ShowSettings { get; set; }
+    private string? Error { get; set; }
+    private string TypesUrl => $"{PartiesConstants.Routes.Api}/{PartiesConstants.Routes.Types}";
+
+    private IReadOnlyList<CrestModelListAction<PartyTypeModel>> TypeActions =>
+    [
+        new() { Icon = "open_in_new", Title = T["Open page"], Callback = EventCallback.Factory.Create<PartyTypeModel>(this, type => Navigation.NavigateTo(type.Route.TrimStart('/'))) },
+        new() { Icon = "visibility_off", Title = T["Hide for me"], Callback = EventCallback.Factory.Create<PartyTypeModel>(this, type => SetVisibleAsync(type, false)), Disabled = type => type.MenuItemKey is null },
+    ];
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        Error = null;
+        try
+        {
+            Types = await Http.GetFromJsonAsync<PartyTypeModel[]>(TypesUrl) ?? [];
+            SelectedKey = VisibleTypes.Any(type => type.Key == SelectedKey) ? SelectedKey
+                : VisibleTypes.FirstOrDefault(type => string.Equals(type.Key, TypeQuery, StringComparison.OrdinalIgnoreCase))?.Key
+                ?? VisibleTypes.FirstOrDefault()?.Key;
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    // One write path: the user's full hidden-key set, with this type's key added or removed.
+    // Keys hidden for other reasons (other pages' items) are read first and kept.
+    private async Task SetVisibleAsync(PartyTypeModel type, bool visible)
+    {
+        if (type.MenuItemKey is null)
+        {
+            return;
+        }
+
+        IsSaving = true;
+        Error = null;
+        try
+        {
+            var current = await Http.GetFromJsonAsync<HiddenItems>("api/crest/navigation/me/hidden") ?? new([]);
+            var keys = current.HiddenItemKeys.ToHashSet(StringComparer.Ordinal);
+            if (visible)
+            {
+                keys.Remove(type.MenuItemKey);
+            }
+            else
+            {
+                keys.Add(type.MenuItemKey);
+            }
+
+            var response = await Http.PutAsJsonAsync("api/crest/navigation/me/hidden", new HiddenItems(keys.ToArray()));
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            Types = Types.Select(t => t.Key == type.Key ? t with { HiddenByUser = !visible } : t).ToArray();
+            if (!visible && SelectedKey == type.Key)
+            {
+                SelectedKey = VisibleTypes.FirstOrDefault()?.Key;
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private sealed record HiddenItems(string[] HiddenItemKeys);
+}

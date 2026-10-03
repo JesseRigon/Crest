@@ -1,0 +1,106 @@
+@page "/workflows/approvals"
+@using Crest.Workflows
+@inject HttpClient Http
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* The signed-in user's approval queue (plans/workflows.md, phase 4): the Request approval
+   tasks their roles or permissions let them decide. Deciding resumes the waiting workflow
+   on Approved or Rejected. *@
+
+<PageTitle>@T["Approvals"]</PageTitle>
+
+<CrestStack Gap="1rem" data-testid="workflow-approvals">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <div>
+            <CrestText TextStyle="TextStyle.H4" class="rz-m-0">@T["Approvals"]</CrestText>
+            <CrestText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["Decisions workflows are waiting for, from people in your roles."]</CrestText>
+        </div>
+        <CrestButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="IsBusy" />
+    </CrestStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" Summary="@T["Approval action failed"]" Detail="@Error" />
+    }
+
+    @if (Items.Length == 0 && !IsBusy)
+    {
+        <CrestCard><CrestText TextStyle="TextStyle.Body1">@T["Nothing is waiting for you."]</CrestText></CrestCard>
+    }
+
+    @foreach (var item in Items)
+    {
+        <CrestCard data-testid="approval-task" data-approval-id="@item.Id">
+            <CrestStack Gap="0.5rem">
+                <CrestText TextStyle="TextStyle.H6" class="rz-m-0">@item.Title</CrestText>
+                @if (!string.IsNullOrWhiteSpace(item.Description))
+                {
+                    <CrestText TextStyle="TextStyle.Body2">@item.Description</CrestText>
+                }
+                <CrestText TextStyle="TextStyle.Caption" class="rz-color-secondary">
+                    @T["Requested"] @item.CreatedUtc.ToLocalTime().ToString("g")@(item.RequestedBy is null ? "" : $" · {item.RequestedBy}") · @(item.Role ?? item.Permission)
+                </CrestText>
+                <CrestTextArea Value="@Comment(item.Id)" ValueChanged="@((string value) => Comments[item.Id] = value)" Placeholder="@T["Comment (optional)"]" Style="width: 100%;" Rows="2" />
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                    <CrestButton Text="@T["Approve"]" ButtonStyle="ButtonStyle.Success" Click="@(() => DecideAsync(item, "approve"))" Disabled="IsBusy" data-testid="approval-approve" />
+                    <CrestButton Text="@T["Reject"]" ButtonStyle="ButtonStyle.Danger" Click="@(() => DecideAsync(item, "reject"))" Disabled="IsBusy" data-testid="approval-reject" />
+                </CrestStack>
+            </CrestStack>
+        </CrestCard>
+    }
+</CrestStack>
+
+@code {
+    private ApprovalRow[] Items { get; set; } = [];
+    private Dictionary<string, string> Comments { get; } = [];
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    private string Comment(string id) => Comments.TryGetValue(id, out var value) ? value : string.Empty;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            Items = await Http.GetFromJsonAsync<ApprovalRow[]>(WorkflowsConstants.Routes.ApprovalsApi) ?? [];
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task DecideAsync(ApprovalRow item, string decision)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{WorkflowsConstants.Routes.ApprovalsApi}/{Uri.EscapeDataString(item.Id)}/decide", new { decision, comment = Comment(item.Id) });
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
+        await LoadAsync();
+    }
+
+    private sealed record ApprovalRow(string Id, string Title, string? Description, string? Role, string? Permission, string Status, string? RequestedBy, DateTime CreatedUtc, bool CanDecide);
+}

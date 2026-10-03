@@ -1,0 +1,9 @@
+@using Crest.Workflows.Studio.Workflows.Components.WorkflowInstanceViewer
+
+<StudioFrame>
+    <WorkflowInstanceViewer InstanceId="@InstanceId" />
+</StudioFrame>
+
+@code {
+    [Parameter] public string InstanceId { get; set; } = null!;
+}

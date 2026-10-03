@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- The forked Studio, hosted in the Crest admin and loaded on demand: this assembly and
+       everything only it needs are lazy (blazor-wasm/crest-lazy-assemblies.txt). It builds
+       Studio's own service container when the first workflow page opens and holds the views
+       those pages render. Nothing outside it references its types. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Crest.Workflows.Studio.Host</AssemblyName>
+    <RootNamespace>Crest.Workflows.Studio.Host</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Crest.Workflows.Domain.csproj" />
+    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+    <ProjectReference Include="..\designer\src\framework\Crest.Workflows.Studio.Core.BlazorWasm\Crest.Workflows.Studio.Core.BlazorWasm.csproj" />
+    <ProjectReference Include="..\designer\src\framework\Crest.Workflows.Studio.Shell\Crest.Workflows.Studio.Shell.csproj" />
+    <ProjectReference Include="..\designer\src\modules\Crest.Workflows.Studio.Workflows\Crest.Workflows.Studio.Workflows.csproj" />
+  </ItemGroup>
+</Project>

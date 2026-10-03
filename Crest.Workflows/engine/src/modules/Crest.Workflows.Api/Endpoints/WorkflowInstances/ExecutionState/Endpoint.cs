@@ -1,0 +1,39 @@
+using Crest.Workflows.Abstractions;
+using Crest.Workflows.Extensions;
+using Crest.Workflows.Management;
+using JetBrains.Annotations;
+
+namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.ExecutionState;
+
+/// <summary>
+/// Returns the execution state of the specified workflow instance.
+/// </summary>
+[PublicAPI]
+internal class ExecutionState(IWorkflowInstanceStore store) : CrestWorkflowsEndpoint<Request, Response>
+{
+    /// <inheritdoc />
+    public override void Configure()
+    {
+        Get("/workflow-instances/{id}/execution-state");
+        ConfigurePermissions("read:workflow-instances");
+    }
+
+    /// <inheritdoc />
+    public override async Task HandleAsync(Request request, CancellationToken cancellationToken)
+    {
+        var workflowInstance = await store.FindAsync(request.WorkflowInstanceId, cancellationToken);
+
+        if (workflowInstance == null)
+        {
+            await Send.NotFoundAsync(cancellationToken);
+            return;
+        }
+
+        var response = new Response(
+            workflowInstance.Status,
+            workflowInstance.SubStatus,
+            workflowInstance.UpdatedAt);
+
+        await Send.OkAsync(response, cancellationToken);
+    }
+}

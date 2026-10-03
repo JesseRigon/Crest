@@ -98,7 +98,7 @@ mostly falls out; cross-host cookies and antiforgery need their own pass when it
 ## Theme compatibility
 
 Themes are **not** interchangeable. A Crest shell is a Blazor Web App document plus a
-route bucket plus a design system; a module's pages are written against that. Fruitful's
+route bucket plus a design system; a module's pages are written against that. A host's
 admin pages do not work under an arbitrary Orchard theme — the Crest admin theme (or a
 direct descendant of it) is a dependency, and the system must say so instead of rendering
 a broken shell.

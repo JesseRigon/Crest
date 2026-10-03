@@ -1,0 +1,27 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.Components.Forms
+@using Blazored.FluentValidation
+@using Crest.Workflows.Studio.Localization
+@using Crest.Workflows.Studio.Components
+@using Crest.Workflows.Studio.Workflows.Components
+@using Crest.Workflows.Studio.Workflows.Components.WorkflowDefinitionEditor
+@using Crest.Workflows.Studio.Workflows.Components.WorkflowDefinitionEditor.Components
+@using Crest.Workflows.Studio.Workflows.Components.WorkflowInstanceViewer
+@using Crest.Workflows.Studio.Workflows.Components.WorkflowInstanceViewer.Components
+@using Crest.Workflows.Studio.Workflows.Components.WorkflowDefinitionList
+@using Crest.Workflows.Studio.Workflows.Components.WorkflowInstanceList
+@using Crest.Workflows.Studio.Workflows.Constants
+@using Crest.Workflows.Studio.Workflows.Designer.Components
+@using Crest.Workflows.Studio.Workflows.Shared.Components
+@using Crest.Workflows.Studio.Localization.Time.Components
+@using Humanizer
+@using MudBlazor
+@using MudExtensions
+@using Radzen
+@using Radzen.Blazor
+@attribute [Authorize]
+@* Radzen 11 has an ILocalizer too; Studio means its own. *@
+@using ILocalizer = Crest.Workflows.Studio.Localization.ILocalizer

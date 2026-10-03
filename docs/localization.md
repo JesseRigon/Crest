@@ -4,7 +4,7 @@ How Crest resolves and applies culture (language, date/number formatting) for us
 and how UI strings are translated. This covers the user-facing localization system —
 per-user language, culture-aware formatting, translated menus/components/content. It
 deliberately excludes anything ERP-specific (currency, tax, regions, business
-documents); that lives in the host's business/ERP design (fruitful:
+documents); that lives in the host's business/ERP design (for example:
 `plans/regions-and-locations.md`, `plans/accounting.md`, `plans/taxes.md`).
 
 ## Scope and boundary
@@ -184,13 +184,13 @@ Two independent mechanisms, by project:
     Crest repo ships literals only and stays as stock-localized as upstream makes it —
     its aligned literals inherit whatever the host's catalogs provide. The host project
     supplies editorial translations as its own distinctly-named files next to the
-    mirror (fruitful: `Localization/{culture}/Fruitful.Admin.po`, literal msgids,
-    `msgctxt "Crest.Admin.Client"`; front-site strings in `Fruitful.Site.po`). Distinct
+    mirror (a host, for example: `Localization/{culture}/Admin.po`, literal msgids,
+    `msgctxt "Crest.Admin.Client"`; front-site strings in `Site.po`). Distinct
     filenames survive a mirror refresh. Host modules that are not part of Crest (e.g.
     Accounting) may keep module-local `Localization/{culture}.po` inside the host repo.
 
-Excluded from the API-based mechanism: `Fruitful.Workflows.Designer` (a
-vendored third-party package, not a Fruitful admin surface) and any currently-unreferenced
+Excluded from the API-based mechanism: `Crest.Workflows.Designer` (a
+vendored third-party package, not a Crest admin surface) and any currently-unreferenced
 component with no live surface to verify translations against.
 
 ## Where translations come from: Crowdin, the mirror, and the private lane
@@ -215,7 +215,7 @@ upstream after the last release don't exist as msgids at all yet).
 package's content. Treat it as **read-only upstream output** — never hand-edit it; the
 next refresh from the package clobbers local edits. Nothing refreshes it automatically.
 
-**The private lane**: everything Fruitful authors lives in module-local catalogs
+**The private lane**: everything Crest authors lives in module-local catalogs
 (`OrchardCore.Crest.Server/Localization/{culture}.po` etc.) and the tenant translation
 store. Crowdin has no knowledge of these in either direction — nothing uploads them,
 no refresh touches them. Crest-authored literals (strings that are not upstream msgids)
@@ -232,7 +232,7 @@ case, where never-touched gaps quietly gain translations. Adding your own entry
 permanently shadows upstream's version, and pin-to-literal (store the literal as the
 value) vetoes a shipped translation outright.
 
-Every fruitful literal therefore falls into one of three populations (audit sweep,
+Every Crest literal therefore falls into one of three populations (audit sweep,
 2026-08-22): **inheriting** (matches a translated upstream msgid), **Crowdin
 candidates** (matches an untranslated upstream msgid — translating it on Crowdin's
 OrchardCore project benefits everyone and flows in at the next Translations release),
@@ -279,7 +279,7 @@ i.e. the host machine's configured locale. In a container with `LANG=C.UTF-8` (n
 visitor getting invariant/base-key formatting regardless of `Accept-Language`. This is
 unrelated to ICU data being present (`CultureInfo.GetCultureInfo("es-ES")` resolves fine
 even with `LANG=C.UTF-8`); it's specifically that `InstalledUICulture` has nothing to
-map the OS locale name to. fruitful's `dev/dev.sh` and `dev/reference-sample.sh` both
+map the OS locale name to. the host's `dev/dev.sh` and `dev/reference-sample.sh` both
 pin `LANG=en_US.UTF-8` for local dev to avoid this trap — if you ever see anonymous
 visitors stuck on invariant formatting in a fresh environment (a new container image, a
 CI runner, a minimal deployment target) with otherwise-correct `LocalizationSettings`,

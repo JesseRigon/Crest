@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OrchardCore.ContentFields" />
+    <PackageReference Include="OrchardCore.ContentManagement" />
+    <PackageReference Include="OrchardCore.Contents" />
+    <PackageReference Include="OrchardCore.Data" />
+    <PackageReference Include="OrchardCore.Flows" />
+    <PackageReference Include="OrchardCore.Module.Targets" />
+    <PackageReference Include="YesSql.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Domain/Crest.Parties.Domain.csproj" />
+    <ProjectReference Include="../../Crest.Workflows/Domain/Crest.Workflows.Domain.csproj" />
+    <ProjectReference Include="../../Crest.Workflows/engine/src/modules/Crest.Workflows.Core/Crest.Workflows.Core.csproj" />
+    <ProjectReference Include="../../Crest.Workflows/engine/src/modules/Crest.Workflows.Engine/Crest.Workflows.Engine.csproj" />
+    <ProjectReference Include="../../OrchardCore.Crest.Server/OrchardCore.Crest.csproj" />
+    <ProjectReference Include="../../Crest.ContentPartLists/Crest.ContentPartLists.csproj" />
+    <ProjectReference Include="../../Crest.Regions/Crest.Regions.csproj" />
+  </ItemGroup>
+</Project>

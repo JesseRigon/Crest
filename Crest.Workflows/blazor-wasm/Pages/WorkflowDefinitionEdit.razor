@@ -1,0 +1,8 @@
+@page "/workflows/definitions/{DefinitionId}/edit"
+
+<PageTitle>Workflow designer</PageTitle>
+<StudioHost View="DefinitionEditor" Parameters="@(new Dictionary<string, object> { ["DefinitionId"] = DefinitionId })" @key="DefinitionId" />
+
+@code {
+    [Parameter] public string DefinitionId { get; set; } = null!;
+}

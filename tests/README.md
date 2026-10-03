@@ -1,7 +1,7 @@
 # OrchardCore.Crest tests
 
 This directory is the entrypoint for every test that lives inside the `OrchardCore.Crest`
-submodule. Host repos (`fruitful.orchard`, `OrchardCore.Crest.Host`) don't walk Crest's
+submodule. Host repos (for example a product host and OrchardCore.Crest.Host) don't walk Crest's
 internal project layout themselves — they both call `run-tests.sh` here, and this
 directory is responsible for finding and running everything underneath it.
 
@@ -72,14 +72,14 @@ to copy.
 
 ## Why the host repos don't do this scan themselves
 
-`fruitful.orchard` has a flat `modules/*/tests/` layout (one `tests/` dir per module —
+A product host has a flat `modules/*/tests/` layout (one `tests/` dir per module —
 `Accounting`, `OrchardCore.Crest`, any future module). `OrchardCore.Crest` is the one
 module that isn't flat — it's a submodule with its own nested subprojects, each
 potentially owning a `tests/` dir. Rather than have every host repo's `dev.sh`
 duplicate knowledge of that nested layout, `OrchardCore.Crest` owns discovering and
 running its own tests, and reports pass/fail back to whichever host invoked it. This
 keeps `OrchardCore.Crest.Host/dev/dev.sh` (which only ever needs to run this one
-module's tests) a thin wrapper, and keeps `fruitful.orchard/dev/dev.sh`'s module loop
+module's tests) a thin wrapper, and keeps the host's `dev/dev.sh` module loop
 simple — it just special-cases `OrchardCore.Crest` as "delegate" instead of "scan
 locally" like every other module.
 
@@ -87,16 +87,16 @@ locally" like every other module.
 
 `run-tests.sh` and everything under this directory hold **no credentials, no `.env`
 loading, and no server-lifecycle logic**. This submodule is checked out into multiple
-independent host repos (`fruitful.orchard`, `OrchardCore.Crest.Host`, and potentially
+independent host repos (a product host, `OrchardCore.Crest.Host`, and potentially
 others), each with its own environment, admin accounts, and database — a credential
 baked in here would either leak between hosts or be wrong for at least one of them.
 
 The boundary: `run-tests.sh` accepts `BASE_URL` as an already-resolved input (falling
-back to `FRUITFUL_SERVER_URL`/`CREST_SERVER_URL` only as a convenience, not as its own
+back to `CREST_SERVER_URL` only as a convenience, not as its own
 source of truth) and the Playwright harness (`harness/auth.js`) reads `ADMIN_USER`/
 `ADMIN_PASSWORD`/`CLIENT_USER`/`CLIENT_PASSWORD` from the environment with generic
 fallback defaults — it never hardcodes a real credential. Each host's own `dev/.env`
-(e.g. `fruitful.orchard/dev/.env`'s `ORCHARD_AUTOSETUP_ADMIN_*` values) is what actually
+(e.g. the host's `dev/.env` `ORCHARD_AUTOSETUP_ADMIN_*` values) is what actually
 supplies these at test time; that file is host-repo-local and never copied into or
 read from this submodule.
 

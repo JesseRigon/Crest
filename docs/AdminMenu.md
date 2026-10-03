@@ -111,7 +111,7 @@ which fixes two defects a bare `IDataLocalizer` lookup carries:
 **Merge drops `MenuName`.** `NavigationManager.Merge` folds a provider item and its imported
 node into one; the node's values win via priority, but the *surviving instance* is whichever
 came first in provider registration order, and Merge's copy list omits `MenuName`
-(fruitful's `plans/upstream-orchard-proposals.md` #7). An item that survived as the provider's
+(the host's upstream-proposals plan #7). An item that survived as the provider's
 instance would resolve under the generic "Admin Menus" context and miss its stored
 translation — per caption, decided by module registration order. The resolver restores the
 owning menu from the surviving `Id`, which for a merged pair is the node's `UniqueId`.
@@ -186,7 +186,7 @@ seeded ones). Crest registers `CrestAdminMenuChildCaptionDataLocalizationProvide
 enumerates every admin menu's below-root captions (roots stay upstream's, avoiding duplicate
 rows) — making child captions visible and editable in the editor, and keeping their stored
 values in the list Save round-trips instead of dropping them. The underlying upstream gaps are
-logged in fruitful's `plans/upstream-orchard-proposals.md` (#2 non-recursive enumeration,
+logged in the host's upstream-proposals plan (#2 non-recursive enumeration,
 #3 wholesale save). Should a translation still go missing, `sync-providers` refills any seeded
 entry on demand.
 
@@ -240,7 +240,7 @@ same place OrchardCore keeps a user's culture), edited only by its owner through
 `GET`/`PUT api/crest/navigation/me/hidden`. `CrestAdminMenuBuilder` assembles the served
 tree once for every consumer — the sidebar endpoint, the app manifest, and any page that
 lists what the menu lists — and applies the two layers in that order, both keyed by the served
-item key above. A page that mirrors part of the menu (Fruitful's All Parties lists the Parties
+item key above. A page that mirrors part of the menu (Crest's All Parties lists the Parties
 branch's children as its panes) reads the tree with the user layer left off, so it can flag
 the user's own hidden items and offer them back, while an item the tenant hid is simply absent.
 

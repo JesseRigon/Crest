@@ -12,7 +12,7 @@ from that recipe, so the gap silently returns for every other host, and for anyo
 toggles features by hand.
 
 **If it is a site-level choice about what this particular deployment runs**, it belongs
-in the host's setup recipe (fruitful's is `recipes/fruitful.saas.recipe.json`).
+in the host's setup recipe (the host's setup recipe).
 
 ## Why the manifest is the real fix
 
@@ -38,12 +38,12 @@ T" when the providing feature is off.
 - **`OrchardCore.Queries.Sql`** — a *provider* of `IQuerySource`, not a requirement.
   Crest enumerates whatever sources a tenant has and rejects unknown ones; declaring it
   would force a SQL query feature onto every tenant.
-- **`OrchardCore.Workflows`** — no Crest code references it. It appears in the fruitful
+- **`OrchardCore.Workflows`** — no Crest code references it. It appears in the host
   host's admin-menu layout and in the `legacy-frame-workflows` Playwright check, both
   host-level concerns.
 - **`Accounting`** — a standalone business module that depends on Crest, not the reverse.
 
-These four are host choices, which is why the three the fruitful host wants
+These four are host choices, which is why the three the host wants
 (`Accounting`, `OrchardCore.Workflows`, `OrchardCore.Tenants`) are listed in its setup
 recipe's `feature` step. Everything else Crest needs arrives through the dependency
 graph.

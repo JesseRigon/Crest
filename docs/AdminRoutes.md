@@ -1,6 +1,6 @@
 # Admin route inventory
 
-This list is generated from the current resolved Orchard admin navigation for the enabled features in the Fruitful host. A route is marked `native` only when it has a dedicated, functional Crest `.razor` page backed by Orchard services. Pending routes continue to use Orchard's existing admin UI until their native implementation is complete.
+This list is generated from the current resolved Orchard admin navigation for the enabled features in the host. A route is marked `native` only when it has a dedicated, functional Crest `.razor` page backed by Orchard services. Pending routes continue to use Orchard's existing admin UI until their native implementation is complete.
 
 | Menu | Route | Status |
 | --- | --- | --- |

@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Provides workflow runtime functionality.
+        </Description>
+        <PackageTags>crestWorkflows module workflows runtime</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+		<PackageReference Include="DistributedLock.FileSystem" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+        <PackageReference Include="Open.Linq.AsyncExtensions" />
+        <PackageReference Include="ThrottleDebounce" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Crest.Workflows.Caching\Crest.Workflows.Caching.csproj" />
+        <ProjectReference Include="..\Crest.Workflows.KeyValues\Crest.Workflows.KeyValues.csproj" />
+        <ProjectReference Include="..\Crest.Workflows.Tenants\Crest.Workflows.Tenants.csproj" />
+        <ProjectReference Include="..\Crest.Workflows.Core\Crest.Workflows.Core.csproj" />
+        <ProjectReference Include="..\Crest.Workflows.Management\Crest.Workflows.Management.csproj" />
+    </ItemGroup>
+
+</Project>

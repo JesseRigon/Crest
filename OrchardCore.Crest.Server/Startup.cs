@@ -87,7 +87,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<IModularTenantEvents, CrestProviderMenuSyncTenantEvents>();
         // Upstream's admin node localization providers enumerate root nodes only, which both
         // hides child captions from the Translations editor and lets its wholesale Save delete
-        // their stored translations - see plans/upstream-orchard-proposals.md #2/#3 (fruitful).
+        // their stored translations - see the host's upstream-proposals plan #2/#3.
         services.AddScoped<OrchardCore.Localization.Data.ILocalizationDataProvider, CrestAdminMenuChildCaptionDataLocalizationProvider>();
         // Deleting a content type deletes its display-name translations (unless another type
         // shares the name), so the store doesn't accumulate orphans no editor row can reach.
@@ -95,7 +95,7 @@ public sealed class Startup : StartupBase
         // Caption resolution for the sidebar and app manifest: restores the MenuName that
         // NavigationManager.Merge drops and walks parent/sibling translation contexts before
         // falling back to the invariant literal - see the resolver's remarks and
-        // plans/upstream-orchard-proposals.md #7 (fruitful).
+        // the host's upstream-proposals plan #7.
         services.AddScoped<CrestMenuCaptionResolver>();
         services.AddScoped<CrestMenuPlacementService>();
         services.AddScoped<CrestProfileMenuService>();

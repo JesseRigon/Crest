@@ -1,0 +1,20 @@
+<Project>
+  <!-- Studio projects with a ClientLib (the X6 designer canvas, the DOM interop) bundle their
+       TypeScript into wwwroot with webpack. The bundle is generated, not committed: build it
+       when it is missing, then add it to Content so this same build serves it as a static
+       web asset (evaluation-time globs ran before the files existed). -->
+  <PropertyGroup>
+    <_StudioClientLib>$(MSBuildProjectDirectory)/ClientLib</_StudioClientLib>
+  </PropertyGroup>
+
+  <Target Name="BuildStudioClientLib"
+          BeforeTargets="PrepareForBuild"
+          Condition="Exists('$(_StudioClientLib)/package.json') And !Exists('$(MSBuildProjectDirectory)/wwwroot/.bundled')">
+    <Exec Command="npm install --no-audit --no-fund" WorkingDirectory="$(_StudioClientLib)" Condition="!Exists('$(_StudioClientLib)/node_modules')" />
+    <Exec Command="npm run build" WorkingDirectory="$(_StudioClientLib)" />
+    <Touch Files="$(MSBuildProjectDirectory)/wwwroot/.bundled" AlwaysCreate="true" />
+    <ItemGroup>
+      <Content Include="wwwroot/**/*.js;wwwroot/**/*.css" Exclude="@(Content)" />
+    </ItemGroup>
+  </Target>
+</Project>

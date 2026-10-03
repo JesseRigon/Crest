@@ -1,0 +1,50 @@
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Crest.Components.Modules
+@attribute [CrestJSComponent("crest-workflows-activity-wrapper", "registerBlazorCustomElement")]
+
+@* The designer canvas (X6) renders each activity node as this custom element. It has to be
+   registered at startup, before Studio is loaded, so it is a stand-in here in the always-
+   loaded assembly: it renders Studio's node (Studio.Host's ActivityNode view) - the canvas
+   only exists once Studio is loaded, so its type is there by then. *@
+
+@if (NodeType is { } type)
+{
+    <DynamicComponent Type="type" Parameters="NodeParameters" />
+}
+
+@code {
+    [Parameter] public string? ElementId { get; set; }
+    [Parameter] public string ActivityId { get; set; } = null!;
+    [Parameter] public JsonObject? Activity { get; set; }
+    [Parameter] public string ActivityJson { get; set; } = null!;
+    [Parameter] public string? SelectedPortName { get; set; }
+
+    /// <summary>Studio's ActivityStats, as JSON (its type is in a lazy assembly).</summary>
+    [Parameter] public JsonElement? Stats { get; set; }
+
+    private static Type? _nodeType;
+    private static Type? NodeType => _nodeType ??= AppDomain.CurrentDomain.GetAssemblies()
+        .FirstOrDefault(a => a.GetName().Name == "Crest.Workflows.Studio.Host")?.GetType("Crest.Workflows.Studio.Host.Views.ActivityNode");
+
+    private IDictionary<string, object?> NodeParameters
+    {
+        get
+        {
+            var parameters = new Dictionary<string, object?>
+            {
+                ["ElementId"] = ElementId,
+                ["ActivityId"] = ActivityId,
+                ["ActivityJson"] = ActivityJson,
+                ["SelectedPortName"] = SelectedPortName,
+            };
+            if (Activity is not null) parameters["Activity"] = Activity;
+            if (Stats is { } stats && NodeType?.GetProperty("Stats")?.PropertyType is { } statsType)
+            {
+                parameters["Stats"] = stats.Deserialize(Nullable.GetUnderlyingType(statsType) ?? statsType, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            }
+
+            return parameters;
+        }
+    }
+}

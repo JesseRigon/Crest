@@ -20,8 +20,8 @@ async function clickLoginButton(page) {
 // Log into /Admin once per suite run. Every existing script hand-rolled this same
 // function — it now lives in exactly one place.
 async function loginAsAdmin(page, baseUrl, creds = {}) {
-  const username = creds.username || process.env.ADMIN_USER || 'admin';
-  const password = creds.password || process.env.ADMIN_PASSWORD || 'FruitfulRules1!';
+  const username = creds.username || process.env.ADMIN_USER || process.env.ADMIN_USERNAME || 'admin';
+  const password = creds.password || process.env.ADMIN_PASSWORD || 'CrestRules1!';
 
   await page.goto(`${baseUrl}/login`, { waitUntil: 'networkidle' });
   if (await page.locator('#UserName').count()) {

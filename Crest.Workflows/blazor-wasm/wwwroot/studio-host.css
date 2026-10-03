@@ -1,0 +1,19 @@
+/* Studio inside the Crest admin content area: fill it, and keep MudBlazor's typography
+   scoped to the designer rather than the page around it. */
+.crest-studio {
+  min-height: calc(100vh - 8rem);
+  font-family: var(--rz-text-font-family, Roboto, sans-serif);
+}
+
+.crest-studio .mud-main-content {
+  padding-top: 0;
+}
+
+.crest-studio-loading,
+.crest-studio-error {
+  padding: 1rem;
+}
+
+.crest-studio-error {
+  color: var(--rz-danger, #b00020);
+}

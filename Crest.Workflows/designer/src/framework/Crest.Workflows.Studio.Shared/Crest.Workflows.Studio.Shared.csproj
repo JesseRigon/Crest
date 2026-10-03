@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <Description>Crest.Workflows Studio shared services and components.</Description>
+        <PackageTags>crestWorkflows studio framework</PackageTags>
+        <RootNamespace>Crest.Workflows.Studio</RootNamespace>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <SupportedPlatform Include="browser" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Blazored.LocalStorage" />
+        <PackageReference Include="BlazorMonaco" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\Crest.Workflows.Studio.Core\Crest.Workflows.Studio.Core.csproj" />
+      <ProjectReference Include="..\Crest.Workflows.Studio.DomInterop\Crest.Workflows.Studio.DomInterop.csproj" />
+    </ItemGroup>
+    
+</Project>

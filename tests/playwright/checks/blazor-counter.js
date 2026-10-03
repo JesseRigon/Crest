@@ -6,7 +6,7 @@ const DEFAULT_BLAZOR_COUNTER_CONTENT_ITEM_ID = '4c1b6c1f8f5b4a2f9c2d7e8a1b3f5c6d
 // circuit/WASM click handler, not just server-rendered markup. The seeded content item
 // (see Recipes/orchardcore.crest.dev.recipe.json) carries CrestBlazorComponentPart with
 // ComponentName "CrestCounter" and Parameters.StartValue "5". Some host recipes (e.g.
-// fruitful.orchard's fruitful.saas.recipe.json) generate this content item's id fresh
+// a host's setup recipe) generate this content item's id fresh
 // per-run via [js:uuid()] instead of a fixed id, so BLAZOR_COUNTER_CONTENT_ITEM_ID lets
 // the host override it instead of forking this check.
 module.exports = async function run(page, ctx) {

@@ -1,4 +1,4 @@
-# Fruitful host-owned translations (moved out of the Crest submodule 2026-08-22:
+# Host-owned translations (moved out of the Crest submodule 2026-08-22:
 # Crest ships literals only and stays stock-localized; editorial translation
 # content is the HOST's. Distinct filename = never clobbered by a mirror refresh
 # of the OrchardCore.Translations package content around it.)

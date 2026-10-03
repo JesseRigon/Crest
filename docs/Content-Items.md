@@ -51,7 +51,7 @@ is the behaviour for everyone.
 
 A module can freeze the parts, fields and attachments a system process downstream depends
 on (`Crest.Settings.CrestDefinitionLockSettings`, stored as a settings section on the
-definition; the first consumer is Fruitful.Accounting's transaction part, whose posting
+definition; the first consumer is the ERP host's transaction part, whose posting
 flows read its fields). Same shape as the list locks - **one mechanism, two authorities**:
 `Module` locks are declared by the owning migration (`.Locked()` on a field, part or
 attachment builder), re-asserted on every migration run and unliftable in-tenant; `Tenant`
@@ -80,7 +80,7 @@ disable the frozen controls.
 > reason, through `CrestDefinitionLockExceptionFilter`); the stock content-types module's
 > `IContentDefinitionService` and `IContentDefinitionDisplayManager` are decorated
 > (`LockedContentDefinitionServices`, registered last) so its admin obeys the same locks if
-> a tenant enables it (it is not in the Fruitful recipe; the decorators are unit-tested,
+> a tenant enables it (it is not in the host recipe; the decorators are unit-tested,
 > not exercised live). `IContentDefinitionManager` itself is NOT guarded: migrations
 > legitimately write what tenants must not, and re-adding a field through the manager
 > (the list attach conversion, the field-type editor) must carry the lock settings across

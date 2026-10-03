@@ -1,0 +1,12 @@
+using Crest.Workflows.State;
+using Microsoft.AspNetCore.Http;
+
+namespace Crest.Workflows.Http;
+
+/// <summary>
+/// Provides context about the faulted workflow.
+/// </summary>
+/// <param name="HttpContext">The HTTP context.</param>
+/// <param name="WorkflowState">The faulted workflow state.</param>
+/// <param name="CancellationToken">The cancellation token.</param>
+public record HttpEndpointFaultContext(HttpContext HttpContext, WorkflowState WorkflowState, CancellationToken CancellationToken);

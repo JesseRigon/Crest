@@ -1,0 +1,104 @@
+@attribute [Route(MembersConstants.Routes.PortalRegister)]
+@attribute [AllowAnonymous]
+@namespace Crest.Members.BlazorWasm.Pages
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* Portal self-registration (plans/user-systems.md §G): creates the Person and the
+   member account bound to the organization, through Orchard's own registration
+   sequence (moderation / email confirmation settings apply). *@
+<PageTitle>@T["Create a member account"]</PageTitle>
+
+<div style="min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 2rem;" data-testid="member-portal-register">
+<CrestStack Gap="1rem" AlignItems="AlignItems.Center">
+    <CrestText TextStyle="TextStyle.H3" Text="@T["Create a member account"]" />
+
+    @if (string.IsNullOrWhiteSpace(OrganizationId))
+    {
+        <CrestText Text="@T["Registration needs the organization you are joining. Use the link your organization gave you."]" />
+    }
+    else if (_result is { } result)
+    {
+        @if (result.SignedIn)
+        {
+            <CrestText Text="@T["Your account is ready."]" />
+        }
+        else if (result.AwaitingModeration)
+        {
+            <CrestText Text="@T["Your account is waiting for approval."]" />
+        }
+        else
+        {
+            <CrestText Text="@T["Check your email to confirm your account."]" />
+        }
+        <a href="@MembersConstants.Routes.PortalLogin.TrimStart('/')">@T["Go to sign in"]</a>
+    }
+    else
+    {
+        <CrestStack Gap="0.75rem" Style="width: 22rem; max-width: 100%;">
+            <CrestTextBox Name="FirstName" @bind-Value="_firstName" Placeholder="@T["First name"]" />
+            <CrestTextBox Name="LastName" @bind-Value="_lastName" Placeholder="@T["Last name"]" />
+            <CrestTextBox Name="UserName" @bind-Value="_userName" Placeholder="@T["Username"]" />
+            <CrestTextBox Name="Email" @bind-Value="_email" Placeholder="@T["Email"]" />
+            <CrestPassword Name="Password" @bind-Value="_password" Placeholder="@T["Password"]" />
+            <CrestButton Text="@T["Register"]" Click="RegisterAsync" Disabled="@(_busy || !RendererInfo.IsInteractive)" data-testid="member-portal-register-submit" />
+
+            @foreach (var error in _errors)
+            {
+                <CrestText TextStyle="TextStyle.Caption" Text="@error" data-testid="member-portal-error" />
+            }
+
+            <a href="@LoginHref">@T["Already have an account? Sign in"]</a>
+        </CrestStack>
+    }
+</CrestStack>
+</div>
+
+@code {
+    private string _firstName = string.Empty;
+    private string _lastName = string.Empty;
+    private string _userName = string.Empty;
+    private string _email = string.Empty;
+    private string _password = string.Empty;
+    private bool _busy;
+    private List<string> _errors = [];
+    private PortalRegisterResult? _result;
+
+    [SupplyParameterFromQuery(Name = "org")]
+    public string? OrganizationId { get; set; }
+
+    private string LoginHref => $"{MembersConstants.Routes.PortalLogin.TrimStart('/')}?org={Uri.EscapeDataString(OrganizationId ?? string.Empty)}";
+
+    private async Task RegisterAsync()
+    {
+        _busy = true;
+        _errors = [];
+        try
+        {
+            using var response = await Http.PostAsJsonAsync("api/crest/members/portal/register",
+                new PortalRegisterRequest(_userName, _email, _password, _firstName, _lastName, OrganizationId!));
+            if (response.IsSuccessStatusCode)
+            {
+                _result = await response.Content.ReadFromJsonAsync<PortalRegisterResult>();
+                if (_result?.SignedIn == true)
+                {
+                    Navigation.NavigateTo(MembersConstants.Routes.PortalHome.TrimStart('/'), forceLoad: true);
+                }
+
+                return;
+            }
+
+            var refusal = await response.Content.ReadFromJsonAsync<PortalRefusal>();
+            _errors = refusal?.Errors?.ToList() is { Count: > 0 } errors ? errors : [T["Registration failed."]];
+        }
+        catch (Exception ex)
+        {
+            _errors = [ex.Message];
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

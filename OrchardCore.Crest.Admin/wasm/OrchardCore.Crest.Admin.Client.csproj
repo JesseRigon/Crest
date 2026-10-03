@@ -62,6 +62,9 @@
          back one by one - they participate in the same generated registry as host
          module wasm libraries. -->
     <CrestModuleWasmProject Include="..\..\Crest.ContentPartLists\blazor-wasm\Crest.ContentPartLists.BlazorWasm.csproj" />
+    <CrestModuleWasmProject Include="..\..\Crest.Parties\blazor-wasm\Crest.Parties.BlazorWasm.csproj" />
+    <CrestModuleWasmProject Include="..\..\Crest.Members\blazor-wasm\Crest.Members.BlazorWasm.csproj" />
+    <CrestModuleWasmProject Include="..\..\Crest.Workflows\blazor-wasm\Crest.Workflows.BlazorWasm.csproj" />
     <ProjectReference Include="@(CrestModuleWasmProject)" />
   </ItemGroup>
 

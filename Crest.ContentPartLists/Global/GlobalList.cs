@@ -60,7 +60,7 @@ public static class GlobalLists
     public const string NameSuffixes = "global.name-suffixes";
     public const string UomRec20 = "global.uom-rec20";
 
-    /// <summary>The ONE canonical item classification every consumer maps from (tax, GDSN). Ships empty until an open dataset (NAPCS candidate) is loaded; an unclassified item is undecidable, never silently untaxed (plans/fruitful-modules.md).</summary>
+    /// <summary>The ONE canonical item classification every consumer maps from (tax, GDSN). Ships empty until an open dataset (NAPCS candidate) is loaded; an unclassified item is undecidable, never silently untaxed (the host's module inventory).</summary>
     public const string ItemBaseClassification = "items.base-classification";
 
     /// <summary>Deterministic, stable id for a global option - what pickers store instead of a tenant content item id.</summary>

@@ -1,0 +1,6 @@
+@using Crest.Workflows.Studio.Workflows.Components.WorkflowDefinitionList
+@inject NavigationManager Navigation
+
+<StudioFrame>
+    <WorkflowDefinitionList EditWorkflowDefinition="@(id => Navigation.NavigateTo($"workflows/definitions/{id}/edit"))" />
+</StudioFrame>

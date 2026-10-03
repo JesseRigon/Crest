@@ -94,7 +94,7 @@ Before adding a new `api/crest/*` endpoint:
 2. Check whether GraphQL can query or mutate the data cleanly.
 3. If a Crest endpoint is still needed, keep it projection-oriented and call Orchard services directly.
 4. Use Orchard permission constants and `IAuthorizationService` for admin-level data/actions.
-5. Avoid Fruitful-specific names, tenants, credentials, recipes, or local dev settings in this module.
+5. Avoid host-specific names, tenants, credentials, recipes, or local dev settings in this module.
 
 ## Near-term API cleanup
 

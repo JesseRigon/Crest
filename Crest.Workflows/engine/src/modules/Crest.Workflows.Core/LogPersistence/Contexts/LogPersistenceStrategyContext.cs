@@ -1,0 +1,3 @@
+namespace Crest.Workflows.LogPersistence;
+
+public record LogPersistenceStrategyContext(CancellationToken CancellationToken);

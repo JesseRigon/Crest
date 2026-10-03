@@ -8,7 +8,7 @@ namespace Crest.Services;
 /// <summary>
 /// Deletes a content type's display-name translations when the type itself is deleted, so they
 /// do not linger as orphans the Translations editor cannot show (its rows come from live
-/// descriptors - see plans/upstream-orchard-proposals.md #3 in fruitful).
+/// descriptors - see the host's upstream-proposals plan #3).
 /// </summary>
 /// <remarks>
 /// Translations are keyed on the display name, and display names are not unique - if another

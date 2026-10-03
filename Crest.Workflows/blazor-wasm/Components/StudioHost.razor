@@ -1,0 +1,99 @@
+@using System.Reflection
+@using Crest.Components.Modules
+@using Microsoft.AspNetCore.Components.WebAssembly.Services
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+@* Loads the forked Studio on first use and renders one of its views. Studio's assemblies
+   are lazy (crest-lazy-assemblies.txt) and its services live in its own container, attached
+   to the admin's provider as a fallback (CrestLateServiceProviders): nothing of Studio is in
+   the admin client until a workflow page opens. The server prerenders the placeholder; the
+   admin document for these routes is InteractiveWebAssembly (WorkflowsRoutePermissionProvider).
+   Studio's stylesheets are added only while a workflow page is on screen. *@
+
+@if (OperatingSystem.IsBrowser())
+{
+    <HeadContent>
+        <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
+        <link rel="stylesheet" href="_content/CodeBeam.MudBlazor.Extensions/MudExtensions.min.css" />
+        <link rel="stylesheet" href="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" />
+        <link rel="stylesheet" href="_content/Crest.Workflows.BlazorWasm/studio-host.css" />
+    </HeadContent>
+}
+
+<div class="crest-studio" data-testid="workflows-studio" data-ready="@(_viewType is null ? "false" : "true")">
+    @if (_error is not null)
+    {
+        <div class="crest-studio-error" role="alert">@_error</div>
+    }
+    else if (_viewType is null)
+    {
+        <div class="crest-studio-loading">Loading the workflow designer…</div>
+    }
+    else
+    {
+        <DynamicComponent Type="_viewType" Parameters="Parameters" />
+    }
+</div>
+
+@code {
+    public const string ContainerKey = "Crest.Workflows.Studio";
+    private const string HostAssembly = "Crest.Workflows.Studio.Host";
+
+    /// <summary>The view in Crest.Workflows.Studio.Host.Views: DefinitionList, DefinitionEditor, InstanceList, InstanceViewer.</summary>
+    [Parameter, EditorRequired] public string View { get; set; } = null!;
+
+    [Parameter] public IDictionary<string, object>? Parameters { get; set; }
+
+    private Type? _viewType;
+    private string? _error;
+
+    // Once per session: the lazy assemblies, the scripts, Studio's container.
+    private static Task<Assembly>? _loading;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        // Reached inside a server circuit (an in-app link from a page that ran on the
+        // server): reload, and the server hands this route to the WASM client.
+        if (!OperatingSystem.IsBrowser())
+        {
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+            return;
+        }
+
+        try
+        {
+            var host = await (_loading ??= LoadAsync());
+            _viewType = host.GetType($"{HostAssembly}.Views.{View}", throwOnError: true);
+        }
+        catch (Exception ex)
+        {
+            _loading = null;
+            _error = $"The workflow designer could not start: {ex.Message}";
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task<Assembly> LoadAsync()
+    {
+        var loaded = await Services.GetRequiredService<LazyAssemblyLoader>().LoadAssembliesAsync(StudioAssemblies.Names.Select(name => $"{name}.wasm"));
+        var host = loaded.Concat(AppDomain.CurrentDomain.GetAssemblies()).First(a => a.GetName().Name == HostAssembly);
+
+        await using (var loader = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Crest.Workflows.BlazorWasm/studio-host.js"))
+        {
+            await loader.InvokeVoidAsync("loadStudioAssets");
+        }
+
+        var build = host.GetType($"{HostAssembly}.StudioServices", throwOnError: true)!.GetMethod("BuildAsync")!;
+        var studio = await (Task<IServiceProvider>)build.Invoke(null, [Services])!;
+        Services.GetRequiredService<CrestLateServiceProviders>().Attach(ContainerKey, () => studio);
+        return host;
+    }
+}

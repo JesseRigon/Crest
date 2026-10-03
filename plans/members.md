@@ -1,0 +1,721 @@
+# User systems — tenants, members, hierarchies, portals
+
+Status: BUILT (phases A–I) and pushed as `Crest.Members` on 2026-09-10; member
+portal surfaces followed on 2026-09-14. The design below stands as the reference
+for WHY the shipped shape is what it is — see "Build status" near the bottom for
+what was verified, and the host's module inventory for the current
+state of the module. Sections still marked as open questions or deferred rulings
+(the super tenant, below) remain unbuilt. Companion facts: the tenancy/identity
+research findings are summarized at the bottom; Parties model work is tracked in
+the host's module inventory (Tier 1 › Crest.Parties).
+
+**Deferred by ruling (2026-09-08): the super tenant.** Cross-tenant read access
+for the Default tenant's users is a later design. Recorded so it is not lost:
+the sanctioned mechanism is `IShellHost.GetScopeAsync` into the target tenant's
+shell (never shared-DB queries), behind an opt-in per-type contract registry,
+fail-closed, read-only first, audited. Nothing below depends on it.
+
+## Terminology (user ruling, 2026-09-08)
+
+- **Member** — a user who belongs to an ORGANIZATION within a tenant (a
+  customer's or vendor's person). The class name for what was earlier sketched
+  as "customer users" / "org users".
+- **Membership** — the member's relationship record (ties into the outline's
+  Memberships: tiers, groups, perks).
+- **Member portal** — the per-organization portal surface members sign in
+  through. A vendor org has a vendor-flavored member portal on tenant A; a
+  customer org has a customer-flavored one on tenant B; same class of thing.
+
+## The two classes of user in a tenant
+
+Both classes are ORDINARY ORCHARD USERS in the tenant's own user store — same
+shell context, same user-management surfaces, same roles/permissions machinery,
+same hierarchy system (ruling: "organization users should be treated the same
+as tenant users in terms of hierarchy, user management, and permissions
+functions in the shell context").
+
+| | Tenant users (staff) | Members |
+| --- | --- | --- |
+| Account lives in | the tenant's user store | the tenant's user store (same) |
+| Managed by | tenant admins | tenant admins + the org's MEMBER ADMIN (portal-side, org-subtree-scoped) |
+| Hierarchy | per-tenant hierarchy store | same store; a member's subtree hangs under their organization |
+| Permissions | Orchard roles/permissions | Orchard roles/permissions (portal-shaped roles) |
+| Login surface | tenant admin/site login | the MEMBER PORTAL only — never the tenant login |
+| Tenant SSO (Default-as-IdP, later) | eligible | **excluded, by ruling** |
+| External IdPs (Google, GitHub, …) | per tenant settings | per tenant settings — same mechanism, allowed |
+| Data scope | tenant-wide per role (+ hierarchy) | their ORGANIZATION's records only (+ hierarchy within it) |
+
+**Class marker — RULED 2026-09-09: a property on the user record**, never a
+role. Roles are what tenant admins grant and revoke daily; the class decides
+which login surfaces accept the account at all, so it must not be grantable —
+a mis-granted "member" role would lock staff out, a removed one would let a
+member into the staff login. The property is stamped at account creation by
+the creating flow (staff-creation stamps staff; member-portal provisioning
+stamps member) and indexed via a custom `IndexProvider<User>` map index
+(UserId + Class — the same mechanism as stock `UserIndexProvider`), so admin
+user lists filter by class with a real SQL WHERE, reliably.
+
+**Class conversion (ruled 2026-09-09)**: the property IS updatable — but only
+through a dedicated, permission-gated administrative action (its own
+permission, never the role editor), so a member hired onto staff converts
+keeping their account, credentials and external logins; the conversion is a
+natural audit event. Design details for the implementation plan: org bindings
+end and the hierarchy node leaves the org subtree on member→staff; whether
+staff→member is also allowed or conversion is hire-direction only.
+
+**Class permission ceiling (ruled 2026-09-09)**: some permissions are NEVER
+valid for the member class — tenant settings editing is the canonical example
+— even when a superadmin assigns a role carrying them. A code-declared
+registry (modules contribute their staff-only permissions alongside their
+normal `IPermissionProvider`) backs an authorization handler that FAILS the
+check for a member-class principal asking for a ceilinged permission; in
+ASP.NET authorization an explicit fail overrides every success, so the grant
+simply cannot take effect. Role-editor UX may additionally warn or hide, but
+the ceiling is enforced at authorization time, not by UI politeness.
+
+Enforcement of the class itself is a login-channel gate, not merely a
+permission — a member authenticating against the tenant login must be refused
+even with valid credentials. Staff reach a member portal only via
+IMPERSONATION (below), never by logging in as the member — impersonation
+starts from an authenticated staff session and never passes through a login,
+so the class gate does not interfere with it.
+
+## Hierarchies
+
+**Ruling (clarified 2026-09-09): hierarchies live in a custom DB TABLE in the
+tenant's store** (physically per-tenant already via TablePrefix) — not a
+separate database file, and not edges scattered across content items. Orchard
+stores no user hierarchy natively (roles are flat; the only stock tree is
+taxonomy TERMS, which is content categorization) — this is ours entirely.
+
+**Shared vs separate stores — RULED 2026-09-09: ONE shared table**, a forest with
+one root for tenant staff and one root per organization. Decisive argument: the
+org-A-vs-org-B boundary INSIDE a members-only table is exactly as sensitive as
+the staff-vs-member boundary, so the mandatory root-scoped write/read guard has
+to exist regardless — a second table duplicates schema/service/queries without
+adding protection the guard does not already provide. The shared design also
+keeps the scope resolver class-blind (it only asks subtree(user)) and reuses
+one tree-management code path for staff admins and member admins alike. The
+"no crossover" policy is enforced by the guard: every query and write carries
+the root/organization id. (Separate stores' one real advantage — a member-admin
+bug physically cannot touch staff rows — is bought by that same guard.)
+The user confirmed the shared table on 2026-09-09.
+
+Implementation sketch (for when this builds): adjacency (parent id) for
+integrity plus a materialized-path column for subtree queries — subtree is a
+path-prefix match, because YesSql's query layer cannot express recursive SQL.
+
+What the hierarchy store must answer (the scope resolver's queries):
+- subtree(user) — "me and everyone under me", the expansion step in front of
+  the existing fail-closed scope machinery (6d/6e assignment scoping): a
+  manager sees the records their subtree may see.
+- chain(user) — path to root, for escalation/approval routing later.
+- Membership of a node: user id + parent + the organization (or tenant root)
+  the subtree belongs to.
+
+## Members and organizations
+
+- A member links to a **Person**, and the Person's org position links to the
+  **Organization** — the party model (Parties slices 4–5) carries the
+  relationship; the user record carries authentication and roles. The
+  user↔Person link is BUILT (2026-09-11) on both sides: `Person.PortalUser` is a
+  real `UserPickerField` (indexed via `OrchardCore.ContentFields.Indexing.SQL.
+  UserPicker`, so "which person is this account" is a query —
+  `IPartyUserLinkService.FindPersonIdForUserAsync`), and
+  `Crest.Members.CreateMemberAsync` writes it through
+  `IPartyUserLinkService.LinkPortalUserAsync` whenever a `PersonId` is supplied.
+  The old PortalUserId text field is gone (migrated by Parties v5).
+- **Member admin (rulings 2026-09-09)**: each organization's member portal has
+  a member admin — DEFAULTING TO THE FIRST MEMBER ADDED for that org. Their
+  scope, precisely: manage their org's MEMBERS (hierarchy and sub-users),
+  member DATA and CREDENTIALS, and the ORG SETTINGS that future modules'
+  permission systems expose to them (e.g. autopayment scheduling, payment
+  types / wallet connections). Explicitly NOT theirs: tenant features,
+  extensions, tenant settings, users outside their org, data outside their
+  org. Enforcement is two-layered: the hierarchy store's root guard bounds the
+  WHO, and ordinary Orchard permissions (tenant-governed, below) bound the
+  WHAT — the member admin holds a role the tenant defines, not a parallel
+  authority.
+- **Memberships** (tiers, perks, subscriptions, seats, groups, entitlements) are
+  designed in **the host's Memberships module documentation**, including what is built today
+  and how it differs from the ruled model. Nothing about memberships is decided
+  in this document.
+- **Data separation**: a member's queries are scoped to records that reference
+  or are assigned to their organization — the organization-scope axis,
+  generalizing the option-source scope work (fail-closed: no org link means
+  NO records, never all records). Hierarchy expansion applies within the org
+  subtree.
+
+## The three user classes (ruling 2026-09-16)
+
+Naming, because "member" was carrying two unrelated meanings and the ambiguity is
+what produced the duplicated-fact problem below:
+
+| Class | Scope | Signs in to | Administered by |
+| --- | --- | --- | --- |
+| **platform-user** | supertenant | the Default tenant | the platform operator |
+| **tenant-user** | one tenant | the tenant admin portal | tenant admins |
+| **org-user** | one organization within one tenant | that org's member portal | that org's org admin (within the ceiling) |
+
+All three are ordinary Orchard users in their tenant's own store — same shell,
+same user-management surfaces, same roles/permissions machinery (the standing
+ruling above). The class is a marker, not a separate identity system.
+
+**Within one tenant there are exactly TWO portal user classes**: tenant-users
+(the admin portal) and org-users (the customer, vendor, … portals). platform-user
+is the supertenant class and belongs to the Default tenant, which is deferred by
+ruling (see the super tenant note at the top), so it never appears in an ordinary
+tenant's user store. Every statement in this document about "portal users" means
+those two.
+
+## Two features, not one: Org Internal Management vs. Members (ruling 2026-09-16)
+
+`Crest.Members` today conflates two systems that have nothing to do with each
+other beyond both touching people. They SPLIT into two features:
+
+- **Org Internal Management** (new feature) — org-users, org-user groups, and the
+  org roles/permissions system. Per organization, per tenant. NO tiers, NO perks:
+  this is access control, and an org admin's job is managing who is in their
+  organization and what they may do. The user class marker, org bindings, the
+  hierarchy store, the permission ceiling, impersonation and the portal session
+  work already built all belong here.
+- **Members** (stays) — the true loyalty/subscription system built into Memberships:
+  subscriptions, seats, groups and entitlements (the four objects below). Tier and
+  perk DEFINITIONS are administered at the tenant level; they are CONSUMED through
+  a seat, keyed by (portal user, organization). This is the "subscriber at tier 1
+  with perks 1-3" sense.
+
+This is a SPLIT, not a rename: the loyalty system keeps the Members name and the
+membership nomenclature, and the access-control half moves out from under it.
+The two remain independent facts about a person: holding a seat in a subscription
+says nothing about org-user access, and being an org-user with customer-portal
+access implies no seat. What they SHARE is the resolution context — an org-user's
+active-org session — which is why they kept getting modelled as one system.
+
+### The membership feature lives in its own document
+
+Subscriptions, seats, groups and entitlements — the loyalty/subscription half of
+the old `Crest.Members` — are designed in
+**the host's Memberships module documentation**. It covers the four objects, the unique
+(portal user, organization) key, the subscription ceiling / group grant split,
+the free tier and seat exhaustion rules, entitlement resolution in the active org
+context, and the gap between that model and what is built today.
+
+What stays HERE is the access-control half: the user classes, org-user
+management, the hierarchy store, the permission ceiling, impersonation and the
+portal session work.
+
+### One home per fact: the org binding record, not a second declaration
+
+The duplicated-fact bug this replaces: the same person-belongs-to-org fact was
+declared TWICE and independently — as a `Membership` content item (Person +
+Organization pickers, `MembershipIndex`) and as a `MemberOrgBinding` on
+`User.CrestMemberInfo` (`MemberOrgBindingIndex`). `CreateMemberAsync` wrote the
+binding and never the membership; `MembershipRecordService.CreateAsync` wrote the
+membership and never the binding. Delete either and the other survived, disagreeing
+about whether the person belongs to the org, with nothing detecting it.
+
+The rule, the same one-home-per-fact rule the field model follows: **the record is
+the seam of record; the binding is a derived read-model.** A picker is how an
+association is CHOSEN in the UI; the record IS the association.
+
+- Org membership is declared once, in the org-user's binding record (Org Internal
+  Management), carrying roles and member-admin standing.
+- The flattened projection on the user object stays — it is what the authorization
+  hot path reads — but it is written ONLY by that record's write path and is
+  rebuildable from the records. `AddBindingAsync`/`RemoveBindingAsync` stop being
+  public API; they become internal projection writers. A rebuild command ships with
+  the work, both as drift repair and as the migration that populates existing data.
+
+## Layering: identity in the user layer, structure in content (ruling 2026-09-16)
+
+Three options were considered for where org access data lives.
+
+- **A — fully in the user layer.** Class, bindings and roles as claims/properties on
+  `User`. Fastest auth, nothing extra to query. But org structure is not content, so
+  it is not editable through the content UI, not versioned, and gets no content
+  permissions — managing thousands of users means hand-building every admin surface.
+- **B — fully in content.** Org membership and groups as content items; auth queries
+  them. Everything editable/versioned/permissioned for free, but the content store
+  is hit on every request, or cached — and the cache is the derived projection again.
+- **C — split by what each layer is good at. CHOSEN.** Identity and the
+  authorization hot path live in the user layer (class, active org, effective
+  roles); the DECLARATIVE org structure — groups, group→role mappings, org settings
+  — lives in content. Login resolves roles from the content-defined groups once and
+  projects the result onto the user/claims.
+
+C is the same middle path as the binding ruling, applied one seam over: the
+declarative thing is content (editable, listable, permissioned, importable — which
+is what makes thousands of users tractable), and the hot path reads a flat
+projection that is rebuildable from it.
+
+### Groups: one type, ORG-SCOPED (ruling 2026-09-16)
+
+Tenant user groups and org user groups are the SAME mechanism — one groups
+tenant-users for role assignment ("these 200 people are Warehouse Staff"), the
+other groups org-users within one organization ("these 12 people at Acme are
+Approvers"). One group type, one implementation, one editor, one index.
+
+**A group belongs to ONE organization and is managed by that org's admin.** An
+earlier note here allowed a tenant-owned variant; that was reversed — the grant is
+the org admin's decision, bounded by what the org's subscription bought. Every org
+is seeded a default set (org-admin, and org-user with view-only permissions) so no
+org starts from scratch; see the host's Memberships module documentation › Groups are
+org-scoped and org-managed for the defaults and for the subscription ceiling they
+sit under.
+
+**Groups grant roles**, they do not merely organize: an org admin manages one user
+hierarchy rather than a hierarchy plus a parallel role-assignment surface. So
+group→role mapping is a real seam and login must flatten it into the projection.
+Two bounds keep this safe, and a grant must satisfy BOTH: the user-class ceiling
+that already exists (`MemberPermissionCeiling` — an org-user cannot hold past what
+their class permits) and the subscription ceiling (an org cannot grant what it did
+not buy). Fail-closed on each.
+
+### Still open
+
+- **Group→role flattening at login.** Groups grant roles, so the projection the
+  authorization hot path reads must be the flattened result of every group a seat
+  belongs to, intersected with both ceilings. When that flattening happens (login,
+  org switch, group edit) and what invalidates it is an implementation decision the
+  binding-projection rebuild command has to cover.
+
+Membership-side open questions — perks resolution, membership status vs. access —
+live in the host's Memberships module documentation › Still open.
+
+## Permissions — tenant-governed, on Orchard's own pipelines (ruling 2026-09-09)
+
+Role permissions are managed by TENANTS, never by organizations: what each
+role can or cannot do is defined in the tenant's role management, and an org's
+member admin merely holds roles the tenant shaped. Orgs choose people, tenants
+choose powers.
+
+The implementation plan must include a detailed pass over OrchardCore's
+permission system and integrate on its established patterns rather than beside
+them:
+
+- Every module contributes its permissions via standard `IPermissionProvider`
+  implementations (with stereotype defaults), so member-portal abilities
+  appear in the tenant's ordinary role editor like any other permission —
+  including future org-settings permissions (autopayment scheduling, wallet
+  connections), which their owning modules declare when they exist.
+- Authorization flows through `IAuthorizationService` and Orchard's
+  authorization handlers; org scoping and hierarchy expansion NARROW what a
+  granted permission reaches (the existing fail-closed scope machinery), they
+  never grant. Permission says "may manage members"; scope says "of THIS org's
+  subtree".
+- Per-org roles ride the same rails: the active org binding contributes its
+  role claims into the request principal the way Orchard's role system does,
+  so every downstream permission check works unchanged.
+- The deep-dive itself (users/roles/permissions internals in the vendored
+  source, and what to mimic vs diverge from) is the first step of writing the
+  implementation plan — see the Implementation directive.
+
+## Staff support access = impersonation (ruling 2026-09-09)
+
+Staff may enter a member portal for support, but via an impersonation session,
+not by authenticating as the member. Attribution splits deliberately in two:
+
+- **Functional attribution**: everything behaves as the member — a generated
+  invoice's CreatedBy field is the impersonated member, scoping is the
+  member's org scope, the portal renders as that member would see it.
+- **Audit attribution**: the auditing system records every action as the STAFF
+  user — explicitly "created by <staff user> impersonating <org member>" —
+  never as the member alone.
+
+AUDITING ITSELF IS OUT OF SCOPE for this plan (noted in the host.s module inventory
+too); the requirement recorded here is that the impersonation session must
+carry BOTH identities so the audit layer can attribute correctly when it
+exists — retrofitting dual attribution onto single-identity sessions later
+would be the expensive path.
+
+## Multi-org members (ruling 2026-09-09)
+
+One member ACCOUNT can hold multiple org bindings, with DIFFERENT ROLES PER
+ORG; the member's UI and effective permissions change with the org they are
+acting in. Members get an ORG SWITCHER component to change the active org.
+
+Design consequence (for the implementation plan): Orchard roles are per-user,
+not per-user-per-org, so the org binding record carries the org-scoped roles
+and the Members module resolves effective permissions from (user, ACTIVE
+org binding) —
+the natural shape is contributing the active binding's role claims into the
+request principal the same way Orchard's own role system does, so downstream
+IAuthorizationService checks keep working unchanged. The hierarchy store
+places the member once PER BINDING (a node under each org's root).
+
+## Implementation directive (ruling 2026-09-09)
+
+When the full implementation plan is written: study OrchardCore's own user,
+permission, and role management implementations first and MIMIC them wherever
+they fit — services, stores, events, admin patterns — so the whole system
+reads as a seamless EXTENSION of Orchard, not an addition beside it (this
+applies to the member system and to any Crest seam it rides —
+see the Ownership ruling). But no square pegs
+in round holes: where Orchard's shape genuinely does not fit (per-org roles,
+the hierarchy store), diverge deliberately and document why.
+
+## Identity and login flows
+
+- **Member portal login**: per-organization portal surface; local tenant
+  accounts and/or external identity providers (Google, GitHub, …) exactly as
+  the tenant configures them — the stock OrchardCore.Users external
+  authentication features, with auto-provisioning creating the member-class
+  user on first sign-in (class + org binding assigned by the portal's
+  registration flow, never by the raw external callback).
+- **Tenant SSO** (Default tenant as OpenID Connect IdP — the stock OpenId
+  Server/Client features) is for TENANT USERS across a person's multiple
+  tenants; members are excluded by ruling. A member of two organizations (or
+  two tenants) simply has separate member accounts; if that person is ALSO
+  staff somewhere, that staff account is a separate identity too.
+- The login-channel gate: which surface may authenticate which class is
+  enforced by the Members module through Orchard's auth pipeline per tenant
+  (the member portal endpoint
+  only issues sessions for member-class users; the tenant login only for
+  staff-class), on top of Orchard's own authentication — never a fork of it.
+
+## Ownership: Crest, as `Crest.Members`
+
+Members is part of the application layer
+([application-layer.md](application-layer.md)): every business
+with a public face has members on the other side of it, and the member portal
+is how a product reaches them. Members builds on `Crest.Parties` (a member is
+a Person with a portal user; an org binding points at an Organization) and on
+Orchard's user, role and permission pipelines; nothing in it is specific to a
+line of business. Billing is the one thing it does not own: Members declares
+the seam a membership's billing event raises, and a downstream module
+(Accounting, in the ERP) turns it into an invoice. This plan lives with the
+module in Crest's `plans/members.md`; the move is on the checklist in
+[application-layer.md](application-layer.md).
+
+## What is stock vs to build
+
+Verified against the vendored OrchardCore source (2026-09-08):
+
+- STOCK: per-tenant isolation (own shell, DI, YesSql store, per-tenant user
+  documents — no global user table); flat roles/permissions; external login
+  providers with auto-provisioning and scriptable role mapping; OpenID Server +
+  Client + Validation features for the later tenant SSO.
+- TO BUILD (all Members-owned):
+  1. The user CLASS marker + login-channel gate (member portal vs tenant login).
+  2. The per-tenant hierarchy store + service (+ storage-shape ruling above).
+  3. Hierarchy-aware scope expansion feeding the existing fail-closed scope
+     machinery.
+  4. The organization-scope axis on the content surfaces portals query.
+  5. Member auto-provisioning flow binding class + Person + organization at
+     portal registration.
+  6. Membership (tier/group/perks) records — design when reached.
+  7. Later: tenant SSO wiring (Default-as-IdP); the super tenant (deferred).
+
+
+## Implementation plan (deep-dive completed 2026-09-09, against the vendored source)
+
+Everything below cites verified mechanics — file paths and seams confirmed in
+/workspaces/OrchardCore. Module home decision needed (see Decisions): the code
+is Members-owned.
+
+### A. Class marker foundation
+
+- The class is a POCO in `User.Properties` via the stock entity-aspect pattern
+  (`EntityExtensions.GetOrCreate<T>/Alter<T>/TryGet<T>`, keyed by type name —
+  OrchardCore.Entities). NOT the Custom User Settings feature: verified those
+  are unqueryable (`CustomUserSettingsService` enumerates every user in
+  memory).
+- Stamped in `IUserEventHandler.CreatingAsync` — fires in `UserStore.CreateAsync`
+  BEFORE `SaveAsync`, so the stamp persists in the same write and the index
+  maps it on first save; `UserCreateContext.Cancel` even gives a creation veto.
+  Registered `AddScoped<IUserEventHandler, …>` (precedent:
+  `UserDisabledEventHandler`).
+- Filtering: our own `IndexProvider<User>` (`UserClassIndex`: UserId + Class),
+  registered `AddIndexProvider<T>` — must be singleton-safe (the
+  `ILookupNormalizer` note in Users/Startup.cs:81); out-of-module precedent:
+  `UserByRoleNameIndexProvider` registered from RolesStartup. There is NO
+  YesSql index rebuild path — backfill is a data migration doing a paged
+  load-and-resave of users (stock precedent: Users/Migrations.cs UpdateFrom).
+- Admin list: `IUsersAdminListFilterProvider` adds a named search term
+  (`class:member`) — copy `RolesAdminListFilterProvider` (shows `.AlwaysRun()`
+  for FORCED scoping, useful later for portal-side lists); the dropdown is a
+  display driver on `UserIndexOptions` (stock puts the role dropdown at
+  Thumbnail/Content:40; ours goes at Content:60). The stock `UsersFilter` enum
+  is closed — the named-term route is the correct one, not an enum fork.
+- The user editor gets a read-only class section via
+  `SectionDisplayDriver<User, T>` (precedent: Demo's UserProfileDisplayDriver);
+  conversion is NOT edited there — it is its own action (below).
+- A `class` claim is added at principal creation via `IUserClaimsProvider`
+  (collected by `DefaultUserClaimsPrincipalProviderFactory`), so the ceiling
+  handler and login gates read the principal, not the store, per check.
+
+### B. Login-channel gate
+
+- `ILoginFormEvent.ValidatingLoginAsync(IUser)` is THE veto seam — the only
+  member that can refuse an otherwise-valid credential, and it fires at all
+  four sign-in points (AccountController.Login + the three external-login
+  paths), so one handler covers local and external logins. Stock precedents to
+  copy: `DisabledUserLoginFormEvent`, `UserModerationLoginFormEvent`.
+  (`IsLockedOutAsync` is notification-only — cannot veto; verified.)
+- The gate reads the class POCO: member at the tenant login surface → refuse;
+  the member portal's login flow conversely only signs in member-class users.
+  `RoleLoginSettings` is the closest stock analogue (role-conditional login
+  policy) and worth mirroring for settings shape.
+
+### C. Member portal sessions — one cookie, not two
+
+- RULING-GRADE finding: `SignInManager` is hard-wired to
+  `IdentityConstants.ApplicationScheme`; a second cookie scheme would mean
+  reimplementing two-factor, lockout, security-stamp and external login.
+  Portal sessions therefore ride the SAME per-tenant Identity cookie
+  (`orchauth_<tenant>`, Path deliberately unset — preserve that) and are
+  distinguished by claims + AuthenticationProperties.
+- `AuthenticationProperties.Items` round-trips (in-tree precedent:
+  ExternalAuthenticationsController reading RememberMe back on a later
+  request) and lives server-side when `CacheTicketStore` is active — the home
+  for `active-org` and `impersonator` session state. Attaching items at
+  sign-in needs `SignInManager.SignInAsync(user, properties, method)` (the
+  password path doesn't take properties), or set later in OnValidatePrincipal
+  with `ShouldRenew = true`.
+
+### D. Active organization and per-org roles
+
+- Per-request enrichment: a custom `CookieAuthenticationEvents.OnValidatePrincipal`
+  registered via `IConfigureNamedOptions<CookieAuthenticationOptions>` for the
+  application scheme (mirroring stock `CookieAuthenticationOptionsConfigure`),
+  CHAINED to `SecurityStampValidator.ValidatePrincipalAsync` — replacing it
+  would silently disable stamp validation. No in-tree precedent exists (and
+  Orchard registers no `IClaimsTransformation` either — both seams are free);
+  OnValidatePrincipal wins because it can read/write Properties and
+  `ReplacePrincipal`.
+- Org switch = update the active-org item + `RefreshSignInAsync` (stock uses
+  it after profile-affecting changes). Caveat verified: stamp refresh copies
+  old claims ADDITIVELY (`ConfigureSecurityStampOptions.OnRefreshingPrincipal`)
+  — stale org claims can survive, which is one more reason enforcement never
+  trusts claims curation (the ceiling handler is authoritative).
+- Per-org roles are NOT thousands of Orchard Role rows: `RolesDocument` is a
+  single cached per-tenant blob (verified — no partitioning, no index), so org
+  volume would bloat it. Instead the tenant defines a SMALL set of ordinary
+  member role templates (Member, MemberAdmin, …) in the normal role editor —
+  tenant governs powers — and the ORG BINDING record says which template the
+  member holds in which org. The enrichment step contributes the ACTIVE
+  binding's role + permission claims exactly the way `RoleClaimsProvider`
+  does at sign-in (role-name claim + the role's `"Permission"` claims), so
+  every downstream check works unchanged.
+- Verified consequence to design around: role→permission expansion is a
+  SIGN-IN-TIME SNAPSHOT into the cookie — editing a role's permissions does
+  not affect signed-in users until principal refresh. Acceptable for staff
+  (stock behavior); the per-request enrichment makes the ACTIVE-org claims
+  fresher than stock, not staler.
+
+### E. The class permission ceiling
+
+- Shape (verified compositional): a RAW `IAuthorizationHandler` mirroring
+  `SuperUserHandler`, iterating `context.Requirements.OfType<PermissionRequirement>()`,
+  calling `context.Fail()` when the principal carries the member class claim
+  and the permission name is in the ceiling set. NO `HasSucceeded` guard —
+  this handler must run despite prior successes.
+- Why Fail() is the only working design (all verified): stock Orchard NEVER
+  calls Fail (all handlers additive); admins bypass permission claims entirely
+  (`SuperUserHandler` succeeds all requirements on the admin ROLE NAME, and
+  `RoleClaimsProvider` gives admins ZERO permission claims) — so claims
+  filtering cannot ceiling an admin-role member; `HasFailed` is sticky and
+  evaluation is `!HasFailed && HasSucceeded`, and `InvokeHandlersAfterFailure`
+  stays default-true, so our Fail beats SuperUserHandler regardless of order.
+- Ceiling set: `HashSet<string>(OrdinalIgnoreCase)` of permission NAMES
+  (Permission equality is reference-based — never set-of-instances), CLOSED
+  over dynamic expansions: `ContentTypeAuthorizationHandler` and
+  `RoleAuthorizationHandler` re-enter `AuthorizeAsync` with derived
+  permissions (`Publish_{Type}`, per-role user-management variants), so
+  ceiling the coarse template alone is insufficient — the registry must
+  expand templates the way `ContentTypePermissionsHelper` does.
+- Resolve the admin role via `ISystemRoleProvider.GetAdminRole()` — the name
+  is tenant-configurable, never hard-code "Administrator". Anonymous/
+  Authenticated pseudo-role claims are applied LIVE per request by
+  `RolesPermissionsHandler` (not from the cookie) — covered, since the
+  ceiling acts at authorization time.
+- Bonus verified: the role editor's effective-permissions preview builds a
+  fake principal and calls the real IAuthorizationService — our ceiling will
+  correctly gray ceilinged permissions there for free.
+
+### F. Hierarchy store
+
+- A plain (non-index) table via `SchemaBuilder.CreateTableAsync` +
+  `AlterTableAsync(...).CreateIndex(...)` in a data migration — canonical
+  model: RecordIndexingTaskMigrations. Columns: NodeId, UserId, ParentId,
+  RootKind (staff|org), OrgId (null for staff), Path (materialized,
+  prefix-indexed), plus ordering.
+- Query/write through `IDbConnectionAccessor` with `ISqlDialect` quoting and
+  `TablePrefix`/`Schema` composition — canonical model: IndexingTaskManager
+  (own connection + own transaction, OUTSIDE the ambient ISession; dialect
+  branching precedent for LIKE semantics: AuditTrail's migration).
+- The service exposes subtree(user)/chain(user)/move/attach with the
+  root-scope guard on EVERY call (root kind + org id are mandatory
+  parameters); multi-org members get one node per binding.
+
+### G. Member provisioning and external identity
+
+- Portal registration wraps the stock flows: `UserService.RegisterAsync`
+  fires `IRegistrationFormEvents` and `IUserEventHandler` (our CreatingAsync
+  stamp applies); for external sign-ins, an additional
+  `IExternalLoginEventHandler.UpdateUserAsync` sets `PropertiesToUpdate`
+  (merged with Replace semantics by `UserManagerExtensions.
+  UpdateUserPropertiesAsync`) — class + binding stamped by OUR portal flow,
+  never by the raw callback. Verified: auto-provisioning without a form only
+  happens when the tenant sets NoPassword+NoEmail+NoUsername; otherwise the
+  RegisterExternalLogin form mediates — the portal supplies its own.
+- Per-tenant providers (Google/GitHub/Microsoft/…) are stock feature modules
+  configured via SITE SETTINGS (`GitHubAuthenticationSettings` pattern) —
+  members get them wherever the tenant enables them, no new work.
+
+### H. Class conversion action
+
+- A dedicated endpoint + its own permission: rewrites the class POCO and
+  resaves (index updates on save), ends org bindings, moves/retires the
+  hierarchy node, and calls `UpdateSecurityStampAsync` — verified to be the
+  mechanism that invalidates existing sessions, forcing re-login on the
+  correct surface. Audit event when auditing exists.
+
+### I. Impersonation (verified: NO stock impersonation exists — zero hits)
+
+- Build on: `IUserService.CreatePrincipalAsync(member)` +
+  `SignInManager.SignInAsync(member, properties)` with the STAFF identity in
+  `AuthenticationProperties.Items` (server-side via CacheTicketStore);
+  enrichment adds an `impersonator` claim so both identities ride the session
+  (the dual-attribution prerequisite). Exit = re-issue the staff session from
+  the stored identity. Recording lands on the AuditTrail seam when adopted:
+  `IAuditTrailManager.RecordEventAsync` takes caller-supplied UserId/UserName
+  (staff) with CorrelationId free for the member/org — the module exists in
+  stock with exactly the right shape.
+
+### Build status (2026-09-09, one batch, all phases compile-gated; uncommitted)
+
+**VERIFIED 2026-09-09 on a freshly provisioned tenant**: 16 Crest.Members unit
+tests; live probes green end-to-end (member create with first-member-admin rule,
+second binding, member refused 401 at the tenant login, impersonation session
+carrying member principal + impersonator claim + auto active-org, THE CEILING
+LIVE - impersonated member 403 on users/site APIs while members/me stays 200 and
+staff gets 200 after stop, org switcher flips active org, member→staff
+conversion after which the account logs in on the staff surface); full admin
+suite green (two documented first-sync-race transients passed on settled
+re-runs). Three real defects found and fixed BY the verification:
+1. Inline vocabulary seeding in Parties' CreateAsync aborted FIRST-TIME
+   provisioning (early module, index tables not yet created) - now deferred.
+2. Crest's login endpoint (api/crest/auth/login) authenticates via
+   IUserService.AuthenticateAsync and never fires ILoginFormEvent - the gate
+   gained a second layer, a MemberGatedUserService decorator.
+3. The hierarchy store's raw write transaction deadlocked SQLite against the
+   ambient session's uncommitted lock - hierarchy writes now run as deferred
+   tasks (post-commit), the same ordering rule as content seeding.
+
+**Login restructure (ruled + built 2026-09-10):** Crest's JSON login
+(CrestAuthController) now fires the standard `ILoginFormEvent` sequence exactly
+like the stock MVC AccountController (LoggingIn → AuthenticateAsync →
+ValidatingLogin veto → SignIn → LoggedIn, with LoggingInFailed on every failure
+path) - so moderation, email-confirmation, audit-trail login recording and the
+member gate all apply to Crest logins through the ONE standard seam. A veto's
+MVC IActionResult is TRANSLATED, not executed: redirect-shaped results yield
+their target path (`~/` normalized away) and the handler's TempData `error_*`
+messages fill the 401 payload (`{errors, redirect}`); untranslatable results
+degrade to a generic refusal - refusal is always the fail-safe direction. 2FA
+behavior is unchanged (AuthenticateAsync's built-in checks run exactly as
+before). Per the NO-COMPAT-IN-DEV rule (2026-09-10, both agents.md files):
+`MemberGatedUserService` was DELETED outright - the ILoginFormEvent gate now
+covers every tenant login surface by itself. Verified live: member refusal
+401 `{errors:[portal message], redirect:"/Login"}`, bad password 401 with the
+stock error, admin login 200; full admin suite green (one unrelated
+menu-translation check passed 7/7 on a settled re-run).
+
+**BUILT as the new `Crest.Members` module** (Server/Domain/blazor-wasm +
+tests; the wasm project is an empty shell until the portal UI slices):
+
+- Phase 1: `CrestUserClass` aspect + `UserClassIndex` (+ backfill migration),
+  `UserClassStampHandler` (CreatingAsync), `UserClassClaimsProvider`,
+  `MemberLoginSurfaceGate` (ValidatingLoginAsync, redirect via UserOptions;
+  was `MemberTenantLoginGate` until the portal surface existed).
+- Phase 2: `MemberPermissionCeilingOptions` (names + prefixes, baseline covers
+  tenant machinery + dynamic variants) + `MemberPermissionCeilingHandler`
+  (raw handler, context.Fail, no HasSucceeded guard) - unit-tested incl. the
+  blanket-Succeed (SuperUserHandler) scenario.
+- Phase 3: `CrestUserHierarchy` table (adjacency + materialized path,
+  root-guarded service `UserHierarchyService` over IDbConnectionAccessor with
+  dialect quoting; `HierarchyPathMath` pure + unit-tested).
+- Phase 4: `CrestMemberInfo` bindings aspect + `MemberOrgBindingIndex` (row
+  per binding), `MemberService` (first-member-of-org becomes member admin),
+  `MemberSessionService` (active-org in AuthenticationProperties; enrichment
+  claims stripped before any re-issue), `MemberCookieEventsConfiguration`
+  (chained OnValidatePrincipal contributing active-org + template role claims
+  per request).
+- Phase 5: member creation/binding endpoints + member role templates ensured
+  by migration (deferred, idempotent). **Portal surfaces BUILT 2026-09-14**:
+  - Crest seam (party-agnostic): a `@page` component carrying `[AllowAnonymous]`
+    yields `RouteComponentEntry.AllowsAnonymous`; `BlazorAdminThemeMiddleware`
+    skips the login redirect and route authorization for it and `AdminRoutes`
+    renders it shell-less. The JSON login flow moved out of `CrestAuthController`
+    into `CrestLoginService` (same ILoginFormEvent sequence, veto translation,
+    caller-supplied AuthenticationProperties) so any surface can sign in on the
+    ONE cookie (§C) without re-implementing the sequence.
+  - `MemberPortalLoginContext` (scoped): the portal endpoints mark the request;
+    an external-login callback carries the mark on the EXTERNAL cookie's
+    properties (`MemberSessionKeys.PortalOrganization`, set by the portal's
+    external-login start). `MemberLoginSurfaceGate` reads it: member refused on
+    the tenant surface, staff refused on the portal, member without a binding to
+    the named org refused. `UserClassStampHandler` reads it too: a user created
+    by Orchard's own `RegisterAsync` (portal registration) or external-login
+    auto-registration during a portal request is stamped member + org binding
+    (+ deferred hierarchy node) via `MemberStampService`, shared with
+    `MemberService.CreateMemberAsync`; everything else stays staff.
+  - `api/crest/members/portal`: `login` (org optional; first binding becomes
+    the active org), `register` (creates the Person, wraps `RegisterAsync` so
+    the tenant's RegistrationSettings - moderation, email confirmation - apply;
+    links person↔user; re-issues the cookie with the active org),
+    `external-providers`, `external-login` (GET; the stock challenge with the
+    org stamped on the external properties; Orchard's own callback finishes it).
+  - Pages (`Crest.Members.BlazorWasm`, routes in `MembersConstants.Routes`,
+    declared via `@attribute [Route(...)]` off that one literal): portal login
+    (`?org=` optional), registration (`?org=` required), member home with the
+    org switcher and sign-out. All `[AllowAnonymous]`; the home page sends an
+    unauthenticated visitor to the portal login itself (its data is
+    `[Authorize]`-gated server-side).
+  - Still open: a public Site-bucket host for the portal (today the pages live
+    in the Admin bucket under the admin prefix, per the standing scope-expander
+    question), and Person creation for external-login auto-registered members
+    (they get class + binding only).
+- Phase 6: `MemberImpersonationService` (member principal + staff identity in
+  auth properties; enrichment surfaces the impersonator claim; stop restores
+  staff) + `UserClassConversionService` (member→staff only, per the open
+  question; ends bindings, removes org nodes, bumps the security stamp).
+- API: `api/crest/members` - me, active-org, list-by-org, create, bindings
+  add/remove, impersonate/start+stop, convert-to-staff.
+
+**Deliberately not wired yet**: hierarchy subtree expansion into the existing
+6d/6e scope machinery - `OptionSourceScope` is CREST code and party-blind, so
+feeding it subtree data needs a Crest-side expander seam, which per the
+Ownership ruling is a separate, explicitly justified decision before any code.
+
+### Phasing (each phase compile-gated; rebuild + suite at batch ends, per the
+usual cadence)
+
+1. Class foundation (A) + staff-login gate (B) — shippable alone; members
+   cannot exist yet but the machinery is testable with seeded users.
+2. Permission ceiling (E) — registry + handler + adversarial tests (admin-role
+   member, Authenticated-role path, dynamic expansion closure).
+3. Hierarchy store + service (F), scope-resolver expansion wired into the
+   existing 6d/6e machinery.
+4. Org bindings + active-org session + org switcher API (C, D).
+5. Member portal login + provisioning (B portal side, G) + member admin role
+   templates.
+6. Impersonation (I) — last, because it composes everything before it.
+
+### Decisions still open before phase 1 starts
+
+- ~~MODULE HOME~~ — SETTLED: `Crest.Members` is a separate module
+  (Server/Domain/blazor-wasm, depending on Crest.Parties), built and pushed
+  2026-09-10. Ruled 2026-09-16 to SPLIT into two features: Org Internal Management
+  (this document) and Members (the loyalty system, the host's Memberships module documentation).
+- Whether the ceiling registry also ceilings STAFF-class-only permissions in
+  reverse (probably unnecessary — staff are trusted with member-portal
+  surfaces via impersonation).
+- Conversion direction (from Open questions): staff→member allowed or not.
+
+## Open questions
+
+- Conversion semantics detail: staff→member allowed, or hire-direction only?
+  (Marker location itself is ruled: user property; see the class-marker ruling.)
+

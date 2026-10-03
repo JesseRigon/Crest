@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Crest.Money</AssemblyName>
+    <RootNamespace>Crest.Money</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs;Domain/**/*.cs" />
+  </ItemGroup>
+
+  <!-- The money content field and the currency table behind it. ISO 4217 minor units are
+       reference data every application shares, so they live in the global store
+       (Crest.Global); a tenant chooses its default currency, never the units. -->
+  <ItemGroup>
+    <PackageReference Include="OrchardCore.ContentFields" />
+    <PackageReference Include="OrchardCore.ContentManagement" />
+    <PackageReference Include="OrchardCore.Data" />
+    <PackageReference Include="OrchardCore.Module.Targets" />
+    <PackageReference Include="YesSql.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../OrchardCore.Crest.Server/OrchardCore.Crest.csproj" />
+    <ProjectReference Include="../Crest.Global/Crest.Global.csproj" />
+    <ProjectReference Include="Domain/Crest.Money.Domain.csproj" />
+  </ItemGroup>
+</Project>

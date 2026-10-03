@@ -1,0 +1,17 @@
+@inherits StudioComponentBase
+@using Orientation = Radzen.Orientation
+
+<RadzenSplitter Orientation="Orientation.Horizontal" Style="height: calc(100vh - var(--mud-appbar-height));">
+    <RadzenSplitterPane Size="20%" Min="100px">
+        <Journal @ref="Journal" JournalEntrySelected="OnWorkflowExecutionLogRecordSelected"/>
+    </RadzenSplitterPane>
+    <RadzenSplitterPane Size="80%">
+        <WorkflowInstanceWorkspace 
+            @ref="_workspace" 
+            WorkflowInstance="@_workflowInstance" 
+            WorkflowDefinition="@_workflowDefinition"
+            PathChanged="OnDesignerPathChanged" 
+            ActivitySelected="OnActivitySelected"
+            EditWorkflowDefinition="EditWorkflowDefinition"/>
+    </RadzenSplitterPane>
+</RadzenSplitter>

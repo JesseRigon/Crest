@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# Crest-owned test entrypoint. Host repos (fruitful.orchard, OrchardCore.Crest.Host) delegate
-# here instead of walking OrchardCore.Crest's internal OrchardCore.Crest.*/ subproject layout
+# Crest-owned test entrypoint. Host repos (a product host, OrchardCore.Crest.Host) delegate
+# here instead of walking OrchardCore.Crest's internal subproject layout
 # themselves - this script is the one place that knows that layout.
 #
 # This script holds no credentials and makes no decisions about .env, server lifecycle, or
 # whether tests should run at all - that's entirely the calling host's job. It only accepts
 # BASE_URL (already resolved by the caller) and discovers/runs what's underneath it.
 #
-# Discovers and runs, for every OrchardCore.Crest.*/tests/ subdirectory:
+# Discovers and runs, for every module's tests/ subdirectory (OrchardCore.Crest.* and
+# Crest.* alike):
 #   - a C# test project (*.csproj directly under tests/<ProjectName>/) via `dotnet test`
 #   - a Playwright suite (tests/playwright/) via the existing checks/ convention
 # plus this directory's own shared modules/OrchardCore.Crest/tests/playwright/ suite.
@@ -16,7 +17,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CREST_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-export BASE_URL="${BASE_URL:-${FRUITFUL_SERVER_URL:-${CREST_SERVER_URL:-}}}"
+export BASE_URL="${BASE_URL:-${CREST_SERVER_URL:-}}"
 
 overall_failed=0
 

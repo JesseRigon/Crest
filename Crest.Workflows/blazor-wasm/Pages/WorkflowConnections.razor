@@ -1,0 +1,286 @@
+@page "/workflows/connections"
+@using Crest.Workflows
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* The tenant's connections to external services (plans/workflows.md, phase 3). Secrets go in
+   through the form and never come back: the API reports only whether one is set. Crest
+   components throughout; this page is not part of the forked Studio. *@
+
+<PageTitle>@T["Connections"]</PageTitle>
+
+<CrestStack Gap="1rem" data-testid="workflow-connections">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <div>
+            <CrestText TextStyle="TextStyle.H4" class="rz-m-0">@T["Connections"]</CrestText>
+            <CrestText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["External services your workflows call or receive webhooks from. Credentials are sealed for this tenant and never shown again."]</CrestText>
+        </div>
+        <CrestButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="IsBusy" />
+    </CrestStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" Summary="@T["Connection action failed"]" Detail="@Error" />
+    }
+
+    <CrestStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Stretch">
+        <CrestModelList TItem="WorkflowConnectionModel"
+                        Title="@T["Connections"]"
+                        Items="@Items"
+                        SelectedKey="@SelectedKey"
+                        KeySelector="@(item => item.Key)"
+                        TextSelector="@(item => item.DisplayName)"
+                        DescriptionSelector="@(item => $"{item.Key} · {item.AuthKind}")"
+                        SearchPredicate="@((item, text) => (item.Key + " " + item.DisplayName + " " + item.BaseUrl).Contains(text, StringComparison.OrdinalIgnoreCase))"
+                        Select="@(item => Edit(item))"
+                        Create="@(() => Edit(null))"
+                        CreateText="@T["New"]"
+                        EmptyText="@T["No connections yet."]"
+                        IsBusy="IsBusy" />
+
+        <CrestCard Style="flex: 1;">
+            @if (Draft is null)
+            {
+                <CrestText TextStyle="TextStyle.Body1">@T["Select or create a connection."]</CrestText>
+            }
+            else
+            {
+                <CrestStack Gap="0.75rem">
+                    <CrestText TextStyle="TextStyle.H5" class="rz-m-0">@(IsNew ? T["New connection"] : Draft.DisplayName)</CrestText>
+
+                    @if (IsNew)
+                    {
+                        <CrestFormField Text="@T["Connector"]">
+                            <CrestDropDown TValue="string" Value="@Draft.ConnectorKey" Data="@Connectors" TextProperty="DisplayName" ValueProperty="Key" AllowClear="true"
+                                           Change="@(value => ApplyConnector(value as string))" Style="width: 100%;" />
+                        </CrestFormField>
+                        <CrestFormField Text="@T["Key"]">
+                            <CrestTextBox @bind-Value="Draft.Key" Placeholder="accountant-api" Style="width: 100%;" data-testid="connection-key" />
+                        </CrestFormField>
+                    }
+                    else
+                    {
+                        <CrestText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["Key"]: @Draft.Key</CrestText>
+                    }
+
+                    <CrestFormField Text="@T["Name"]"><CrestTextBox @bind-Value="Draft.DisplayName" Style="width: 100%;" data-testid="connection-name" /></CrestFormField>
+                    <CrestFormField Text="@T["Base URL"]"><CrestTextBox @bind-Value="Draft.BaseUrl" Placeholder="https://api.example.com/v1/" Style="width: 100%;" data-testid="connection-base-url" /></CrestFormField>
+                    <CrestFormField Text="@T["Authentication"]">
+                        <CrestDropDown TValue="string" Value="@Draft.AuthKind" Data="@AuthKinds" Change="@(value => Draft.AuthKind = value as string ?? WorkflowConnectorAuthKinds.None)" Style="width: 100%;" data-testid="connection-auth-kind" />
+                    </CrestFormField>
+
+                    @foreach (var setting in SettingsFor(Draft.AuthKind))
+                    {
+                        <CrestFormField Text="@T[setting.Label]">
+                            <CrestTextBox Value="@Draft.Setting(setting.Key)" ValueChanged="@((string value) => Draft.Settings[setting.Key] = value)" Placeholder="@setting.Placeholder" Style="width: 100%;" />
+                        </CrestFormField>
+                    }
+
+                    @if (Draft.AuthKind != WorkflowConnectorAuthKinds.None)
+                    {
+                        <CrestFormField Text="@SecretLabel(Draft.AuthKind)">
+                            <CrestPassword @bind-Value="Draft.Secret" Placeholder="@(Draft.HasSecret ? T["Stored - type to replace"] : string.Empty)" Style="width: 100%;" data-testid="connection-secret" />
+                        </CrestFormField>
+                    }
+
+                    <CrestStack Orientation="Orientation.Horizontal" Gap="1rem">
+                        <CrestFormField Text="@T["Retries"]"><CrestNumeric TValue="int" @bind-Value="Draft.RetryCount" Min="0" Max="5" /></CrestFormField>
+                        <CrestFormField Text="@T["Requests per minute"]"><CrestNumeric TValue="int?" @bind-Value="Draft.RateLimitPerMinute" Min="0" Placeholder="@T["No limit"]" /></CrestFormField>
+                        <CrestFormField Text="@T["Timeout (s)"]"><CrestNumeric TValue="int" @bind-Value="Draft.TimeoutSeconds" Min="1" Max="120" /></CrestFormField>
+                    </CrestStack>
+
+                    @if (Draft.AuthKind == WorkflowConnectorAuthKinds.Hmac && !IsNew)
+                    {
+                        <CrestAlert AlertStyle="AlertStyle.Info" Summary="@T["Webhook URL"]"
+                                    Detail="@($"{WebhookBase}{Draft.Key}/{{hook}} - POST, signed with HMAC-SHA256 of the body in the {Draft.Setting(WorkflowConnectionSettingKeys.SignatureHeader) ?? WorkflowConnectionSettingKeys.DefaultSignatureHeader} header.")" />
+                    }
+
+                    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                        <CrestButton Text="@T["Save"]" Click="SaveAsync" Disabled="IsBusy" data-testid="connection-save" />
+                        @if (!IsNew)
+                        {
+                            <CrestButton Text="@T["Delete"]" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="IsBusy" data-testid="connection-delete" />
+                        }
+                        <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => { Draft = null; SelectedKey = null; })" />
+                    </CrestStack>
+                </CrestStack>
+            }
+        </CrestCard>
+    </CrestStack>
+</CrestStack>
+
+@code {
+    private WorkflowConnectionModel[] Items { get; set; } = [];
+    private WorkflowConnectorDescriptor[] Connectors { get; set; } = [];
+    private string? SelectedKey { get; set; }
+    private ConnectionDraft? Draft { get; set; }
+    private bool IsNew => SelectedKey is null;
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    private static readonly IReadOnlyList<string> AuthKinds = WorkflowConnectorAuthKinds.All;
+
+    // The tenant root is the admin document base one segment up (tenant prefix kept).
+    private string WebhookBase => new Uri(new Uri(Navigation.BaseUri), "../").AbsoluteUri + WorkflowsConstants.Routes.WebhooksApi + "/";
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            Items = await Http.GetFromJsonAsync<WorkflowConnectionModel[]>(WorkflowsConstants.Routes.ConnectionsApi) ?? [];
+            var registry = await Http.GetFromJsonAsync<WorkflowRegistryModel>(WorkflowsConstants.Routes.RegistryApi);
+            Connectors = registry?.Connectors.ToArray() ?? [];
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private void Edit(WorkflowConnectionModel? item)
+    {
+        SelectedKey = item?.Key;
+        Draft = item is null ? new ConnectionDraft() : ConnectionDraft.From(item);
+    }
+
+    private void ApplyConnector(string? key)
+    {
+        Draft!.ConnectorKey = key;
+        var connector = Connectors.FirstOrDefault(c => c.Key == key);
+        if (connector is not null)
+        {
+            Draft.AuthKind = connector.AuthKind;
+            Draft.BaseUrl ??= connector.BaseUrl;
+            if (string.IsNullOrWhiteSpace(Draft.DisplayName)) Draft.DisplayName = connector.DisplayName;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var request = Draft!.ToRequest();
+            var response = IsNew
+                ? await Http.PostAsJsonAsync(WorkflowsConstants.Routes.ConnectionsApi, request)
+                : await Http.PutAsJsonAsync($"{WorkflowsConstants.Routes.ConnectionsApi}/{Uri.EscapeDataString(Draft.Key)}", request);
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            var saved = await response.Content.ReadFromJsonAsync<WorkflowConnectionModel>();
+            await LoadAsync();
+            Edit(Items.FirstOrDefault(i => i.Key == saved?.Key));
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var response = await Http.DeleteAsync($"{WorkflowsConstants.Routes.ConnectionsApi}/{Uri.EscapeDataString(Draft!.Key)}");
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            Draft = null;
+            SelectedKey = null;
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private sealed record SettingField(string Key, string Label, string Placeholder);
+
+    private static IEnumerable<SettingField> SettingsFor(string authKind) => authKind switch
+    {
+        WorkflowConnectorAuthKinds.ApiKey => [new(WorkflowConnectionSettingKeys.HeaderName, "Header", WorkflowConnectionSettingKeys.DefaultApiKeyHeader)],
+        WorkflowConnectorAuthKinds.Basic => [new(WorkflowConnectionSettingKeys.Username, "User name", string.Empty)],
+        WorkflowConnectorAuthKinds.OAuth2ClientCredentials =>
+        [
+            new(WorkflowConnectionSettingKeys.TokenUrl, "Token URL", "https://auth.example.com/oauth/token"),
+            new(WorkflowConnectionSettingKeys.ClientId, "Client id", string.Empty),
+            new(WorkflowConnectionSettingKeys.Scope, "Scope", string.Empty),
+        ],
+        WorkflowConnectorAuthKinds.Hmac => [new(WorkflowConnectionSettingKeys.SignatureHeader, "Signature header", WorkflowConnectionSettingKeys.DefaultSignatureHeader)],
+        _ => [],
+    };
+
+    private string SecretLabel(string authKind) => authKind switch
+    {
+        WorkflowConnectorAuthKinds.ApiKey => T["API key"],
+        WorkflowConnectorAuthKinds.Basic => T["Password"],
+        WorkflowConnectorAuthKinds.Bearer => T["Token"],
+        WorkflowConnectorAuthKinds.OAuth2ClientCredentials => T["Client secret"],
+        WorkflowConnectorAuthKinds.Hmac => T["Signing secret"],
+        _ => T["Secret"],
+    };
+
+    private sealed class ConnectionDraft
+    {
+        public string Key { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public string? ConnectorKey { get; set; }
+        public string? BaseUrl { get; set; }
+        public string AuthKind { get; set; } = WorkflowConnectorAuthKinds.None;
+        public Dictionary<string, string> Settings { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public string? Secret { get; set; }
+        public bool HasSecret { get; set; }
+        public int RetryCount { get; set; } = 2;
+        public int? RateLimitPerMinute { get; set; }
+        public int TimeoutSeconds { get; set; } = 30;
+
+        public string? Setting(string key) => Settings.TryGetValue(key, out var value) ? value : null;
+
+        public static ConnectionDraft From(WorkflowConnectionModel model) => new()
+        {
+            Key = model.Key,
+            DisplayName = model.DisplayName,
+            ConnectorKey = model.ConnectorKey,
+            BaseUrl = model.BaseUrl,
+            AuthKind = model.AuthKind,
+            Settings = new Dictionary<string, string>(model.Settings, StringComparer.OrdinalIgnoreCase),
+            HasSecret = model.HasSecret,
+            RetryCount = model.RetryCount,
+            RateLimitPerMinute = model.RateLimitPerMinute,
+            TimeoutSeconds = model.TimeoutSeconds,
+        };
+
+        // An empty secret box keeps the stored secret (null); only a typed one replaces it.
+        public WorkflowConnectionSaveRequest ToRequest() => new(
+            Key, DisplayName, ConnectorKey, string.IsNullOrWhiteSpace(BaseUrl) ? string.Empty : BaseUrl, AuthKind,
+            Settings.Where(s => !string.IsNullOrWhiteSpace(s.Value)).ToDictionary(s => s.Key, s => s.Value),
+            string.IsNullOrEmpty(Secret) ? null : Secret, RetryCount, RateLimitPerMinute ?? 0, TimeoutSeconds);
+    }
+}

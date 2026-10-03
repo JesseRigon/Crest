@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Crest.Parties.BlazorWasm</AssemblyName>
+    <RootNamespace>Crest.Parties.BlazorWasm</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Provides the Razor component model ([Parameter], ComponentBase, etc.) without any
+       WASM-only APIs - this plain package pair works identically under every host: WASM
+       standalone, Blazor Server, and Blazor Web App SSR (mirrors
+       OrchardCore.Crest.Components/OrchardCore.Crest.Components.csproj). -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Crest.Parties.Domain.csproj" />
+    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+  </ItemGroup>
+</Project>

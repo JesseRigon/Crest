@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <Description>Adds workflow designer Blazor components powered by JS interop with X6.</Description>
+        <PackageTags>crestWorkflows studio module x6</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <SupportedPlatform Include="browser"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="wwwroot\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\framework\Crest.Workflows.Studio.Core\Crest.Workflows.Studio.Core.csproj"/>
+        <ProjectReference Include="..\Crest.Workflows.Studio.Workflows.Core\Crest.Workflows.Studio.Workflows.Core.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Prevents build error on GH Actions -->
+        <Content Remove="ClientLib\package-lock.json;ClientLib\package.json;ClientLib\tsconfig.json"/>
+        <!--                <None Include="ClientLib\package-lock.json;ClientLib\package.json;ClientLib\tsconfig.json">-->
+        <!--                    <CopyToOutputDirectory>Never</CopyToOutputDirectory>-->
+        <!--                    <CopyToPublishDirectory>Never</CopyToPublishDirectory>-->
+        <!--                </None>-->
+    </ItemGroup>
+
+</Project>

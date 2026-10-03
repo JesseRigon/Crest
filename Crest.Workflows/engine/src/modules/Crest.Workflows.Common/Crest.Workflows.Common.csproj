@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Provides services and utility functions common to Crest.Workflows modules.
+            For example, it provides a system clock and a memory store implementation.
+        </Description>
+        <PackageTags>crestWorkflows module common</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\common\Crest.Workflows.Features\Crest.Workflows.Features.csproj" />
+        <ProjectReference Include="..\..\common\Crest.Workflows.Mediator\Crest.Workflows.Mediator.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Cronos" />
+        <PackageReference Include="IronCompress" />
+        <PackageReference Include="LinqKit.Core" />
+        <PackageReference Include="DistributedLock.Core" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="DistributedHosting\" />
+    </ItemGroup>
+
+</Project>

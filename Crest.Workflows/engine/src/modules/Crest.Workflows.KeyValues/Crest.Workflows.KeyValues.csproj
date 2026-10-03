@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Provides a store for holding key value records.
+        </Description>
+        <PackageTags>crestWorkflows module keyvalue</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\common\Crest.Workflows.Features\Crest.Workflows.Features.csproj" />
+      <ProjectReference Include="..\Crest.Workflows.Common\Crest.Workflows.Common.csproj" />
+    </ItemGroup>
+</Project>

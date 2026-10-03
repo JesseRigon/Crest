@@ -1,0 +1,90 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using Crest.Workflows.Studio.Workflows.Designer.Components;
+using Crest.Workflows.Studio.Workflows.Designer.Options;
+using Crest.Workflows.Studio.Workflows.Domain.Models;
+using Microsoft.Extensions.Options;
+using Microsoft.JSInterop;
+
+namespace Crest.Workflows.Studio.Workflows.Designer.Interop;
+
+/// <summary>
+/// Provides access to the designer JavaScript module.
+/// </summary>
+public class DesignerJsInterop(IJSRuntime jsRuntime, IOptions<DesignerOptions> options, IServiceProvider serviceProvider) : JsInteropBase(jsRuntime)
+{
+    /// <summary>
+    /// Provides the string.
+    /// </summary>
+    protected override string ModuleName => "designer";
+
+    /// <summary>
+    /// Creates a new X6 graph object and returns its ID.
+    /// </summary>
+    /// <param name="containerId">The ID of the container element.</param>
+    /// <param name="componentRef">A reference to the <see cref="FlowchartDesigner"/> component.</param>
+    /// <param name="isReadOnly">Whether the graph is read-only.</param>
+    /// <returns>The ID of the graph.</returns>
+    public async ValueTask<X6GraphApi> CreateGraphAsync(string containerId, DotNetObjectReference<FlowchartDesigner> componentRef, bool isReadOnly = false)
+    {
+        return await TryInvokeAsync(async module =>
+        {
+            var graphSettings = options.Value.GraphSettings;
+            await module.InvokeAsync<string>("createGraph", containerId, componentRef, isReadOnly, graphSettings);
+            return new X6GraphApi(module, serviceProvider, containerId);
+        });
+    }
+
+    /// <summary>
+    /// Provides the task.
+    /// </summary>
+    public async Task UpdateActivitySizeAsync(string elementId, JsonObject activity, Crest.Workflows.Api.Client.Shared.Models.Size? size = null, int? portCount = null)
+    {
+        var serializerOptions = GetSerializerOptions();
+        var activityJson = JsonSerializer.Serialize(activity, serializerOptions);
+        await TryInvokeAsync(module => module.InvokeVoidAsync("updateActivitySize", elementId, activityJson, size, portCount));
+    }
+
+    /// <summary>
+    /// Provides the task.
+    /// </summary>
+    public async Task UpdateActivityStatsAsync(string elementId, string activityId, ActivityStats stats) =>
+        await TryInvokeAsync(module => module.InvokeVoidAsync("updateActivityStats", elementId, activityId, stats));
+
+    /// <summary>
+    /// Performs the raise activity selected operation asynchronously.
+    /// </summary>
+    /// <param name="elementId">The element id.</param>
+    /// <param name="activity">The activity.</param>
+    public async Task RaiseActivitySelectedAsync(string elementId, JsonObject activity)
+    {
+        var serializerOptions = GetSerializerOptions();
+        var activityJson = JsonSerializer.Serialize(activity, serializerOptions);
+        await TryInvokeAsync(module => module.InvokeVoidAsync("raiseActivitySelected", elementId, activityJson));
+    }
+
+    /// <summary>
+    /// Performs the raise activity embedded port selected operation asynchronously.
+    /// </summary>
+    /// <param name="elementId">The element id.</param>
+    /// <param name="activity">The activity.</param>
+    /// <param name="portName">The port name.</param>
+    public async Task RaiseActivityEmbeddedPortSelectedAsync(string elementId, JsonObject activity, string portName)
+    {
+        var serializerOptions = GetSerializerOptions();
+        var activityJson = JsonSerializer.Serialize(activity, serializerOptions);
+        await TryInvokeAsync(module => module.InvokeVoidAsync("raiseActivityEmbeddedPortSelected", elementId, activityJson, portName));
+    }
+
+    private static JsonSerializerOptions GetSerializerOptions()
+    {
+        var serializerOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        serializerOptions.Converters.Add(new JsonStringEnumConverter());
+        return serializerOptions;
+    }
+}

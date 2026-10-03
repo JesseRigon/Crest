@@ -1,0 +1,41 @@
+<Project>
+    <PropertyGroup>
+        <Authors>Crest Workflows Community</Authors>
+        <Copyright>2025</Copyright>
+
+        <PackageProjectUrl>https://github.com/JesseRigon/OrchardCore.Crest</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/JesseRigon/OrchardCore.Crest</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageIcon>icon.png</PackageIcon>
+
+        <!-- For NuGet browsers that currently don't support <PackageIcon> yet -->
+        <PackageIconUrl>https://github.com/JesseRigon/OrchardCore.Crest/blob/main/plans/workflows.md</PackageIconUrl>
+
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <AnalysisModeDocumentation>Default</AnalysisModeDocumentation>
+        <AnalysisLevelDocumentation>latest</AnalysisLevelDocumentation>
+
+        <NuGetAudit>enable</NuGetAudit>
+        <NuGetAuditMode>all</NuGetAuditMode>
+
+        <!-- https://github.com/dotnet/sourcelink -->
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    </PropertyGroup>
+    <PropertyGroup>
+        <NoWarn>$(NoWarn);CS0162;CS1591</NoWarn>
+        <!-- Obsolete API warnings - Suppressed for backward compatibility during migration period -->
+        <NoWarn>$(NoWarn);CS0618</NoWarn>
+        <!-- IL trimming warnings -->
+        <NoWarn>$(NoWarn);IL2026;IL2046;IL2057;IL2067;IL2070;IL2072;IL2075;IL2087;IL2091;IL2111</NoWarn>
+    </PropertyGroup>
+</Project>

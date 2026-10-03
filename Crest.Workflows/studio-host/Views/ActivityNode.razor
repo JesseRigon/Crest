@@ -1,0 +1,14 @@
+@using Crest.Workflows.Studio.Workflows.Designer.Components.ActivityWrappers.V2
+
+@* The designer canvas's activity node (Studio's ActivityWrapper), behind the always-loaded
+   stand-in the canvas's JavaScript renders (Crest.Workflows.BlazorWasm's StudioActivityNode). *@
+<ActivityWrapper ElementId="@ElementId" ActivityId="@ActivityId" Activity="@Activity" ActivityJson="@ActivityJson" SelectedPortName="@SelectedPortName" Stats="@Stats" />
+
+@code {
+    [Parameter] public string? ElementId { get; set; }
+    [Parameter] public string ActivityId { get; set; } = null!;
+    [Parameter] public System.Text.Json.Nodes.JsonObject Activity { get; set; } = null!;
+    [Parameter] public string ActivityJson { get; set; } = null!;
+    [Parameter] public string? SelectedPortName { get; set; }
+    [Parameter] public Crest.Workflows.Studio.Workflows.Domain.Models.ActivityStats? Stats { get; set; }
+}

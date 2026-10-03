@@ -1,0 +1,6 @@
+namespace Crest.Workflows.Http;
+
+public static class HttpFaultCodes
+{
+    public const string NoHttpContext = "NoHttpContext";
+}

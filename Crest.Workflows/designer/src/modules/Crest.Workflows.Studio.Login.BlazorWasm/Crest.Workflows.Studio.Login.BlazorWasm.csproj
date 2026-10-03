@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    
+    <PropertyGroup>
+        <Description>Crest.Workflows Studio Login module for Blazor Web Assembly apps.</Description>
+        <PackageTags>crestWorkflows studio module login blazor wasm</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Crest.Workflows.Studio.Login\Crest.Workflows.Studio.Login.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,120 @@
+@attribute [Route(MembersConstants.Routes.PortalLogin)]
+@attribute [AllowAnonymous]
+@namespace Crest.Members.BlazorWasm.Pages
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* The member portal's sign-in surface (plans/user-systems.md §B): public and
+   shell-less by the [AllowAnonymous] marker, over the portal login API - the SAME
+   cookie and login-event sequence as the tenant login, with the request marked as
+   the portal surface so members are admitted and staff refused. *@
+<PageTitle>@T["Member sign in"]</PageTitle>
+
+<div style="min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 2rem;" data-testid="member-portal-login">
+<CrestStack Gap="1rem" AlignItems="AlignItems.Center">
+    <CrestText TextStyle="TextStyle.H3" Text="@T["Member portal"]" />
+    <CrestText Text="@T["Sign in with your member account."]" />
+
+    <CrestStack Gap="0.75rem" Style="width: 22rem; max-width: 100%;">
+        <CrestTextBox Name="UserName" @bind-Value="_userName" Placeholder="@T["Username or email"]" />
+        <CrestPassword Name="Password" @bind-Value="_password" Placeholder="@T["Password"]" />
+        <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+            <CrestCheckBox @bind-Value="_rememberMe" Name="RememberMe" />
+            <label class="rz-label" for="RememberMe" style="margin: 0; cursor: pointer;">@T["Remember me"]</label>
+        </CrestStack>
+        @* Disabled until interactive: no form element here, but the same rule as the
+           admin login shell - nothing submits before the runtime is attached. *@
+        <CrestButton Text="@T["Sign in"]" Click="LoginAsync" Disabled="@(_busy || !RendererInfo.IsInteractive)" data-testid="member-portal-submit" />
+
+        @if (_providers.Count > 0 && !string.IsNullOrWhiteSpace(OrganizationId))
+        {
+            <CrestText TextStyle="TextStyle.Caption" Text="@T["Or sign in with"]" />
+            @foreach (var provider in _providers)
+            {
+                <CrestButton ButtonStyle="ButtonStyle.Light" Text="@provider.DisplayName" Click="@(() => ExternalLogin(provider.Name))" Disabled="@(!RendererInfo.IsInteractive)" />
+            }
+        }
+
+        @foreach (var error in _errors)
+        {
+            <CrestText TextStyle="TextStyle.Caption" Text="@error" data-testid="member-portal-error" />
+        }
+
+        <a href="@RegisterHref">@T["Create a member account"]</a>
+    </CrestStack>
+</CrestStack>
+</div>
+
+@code {
+    private string _userName = string.Empty;
+    private string _password = string.Empty;
+    private bool _rememberMe;
+    private bool _busy;
+    private List<string> _errors = [];
+    private List<PortalExternalProvider> _providers = [];
+
+    /// <summary>Optional: the organization this portal instance belongs to. Names the
+    /// binding the account must hold and the org that becomes active.</summary>
+    [SupplyParameterFromQuery(Name = "org")]
+    public string? OrganizationId { get; set; }
+
+    private string RegisterHref => string.IsNullOrWhiteSpace(OrganizationId)
+        ? MembersConstants.Routes.PortalRegister.TrimStart('/')
+        : $"{MembersConstants.Routes.PortalRegister.TrimStart('/')}?org={Uri.EscapeDataString(OrganizationId)}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        try
+        {
+            _providers = await Http.GetFromJsonAsync<List<PortalExternalProvider>>("api/crest/members/portal/external-providers") ?? [];
+        }
+        catch
+        {
+            _providers = [];
+        }
+    }
+
+    private async Task LoginAsync()
+    {
+        _busy = true;
+        _errors = [];
+        try
+        {
+            using var response = await Http.PostAsJsonAsync("api/crest/members/portal/login",
+                new PortalLoginRequest(_userName, _password, _rememberMe, OrganizationId));
+            if (response.IsSuccessStatusCode)
+            {
+                // Same shell, but a full reload so the session cookie is in play for
+                // the prerender of the member home.
+                Navigation.NavigateTo(MembersConstants.Routes.PortalHome.TrimStart('/'), forceLoad: true);
+                return;
+            }
+
+            var refusal = await response.Content.ReadFromJsonAsync<PortalRefusal>();
+            _errors = refusal?.Errors?.ToList() is { Count: > 0 } errors ? errors : [T["Sign in failed."]];
+        }
+        catch (Exception ex)
+        {
+            _errors = [ex.Message];
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    // A navigation, not a fetch: the endpoint answers with the provider challenge.
+    // Composed on the API client's base address (the tenant root), never on this
+    // page's <base href>.
+    private void ExternalLogin(string provider)
+    {
+        var url = new Uri(Http.BaseAddress!, $"api/crest/members/portal/external-login?provider={Uri.EscapeDataString(provider)}&organizationId={Uri.EscapeDataString(OrganizationId!)}");
+        Navigation.NavigateTo(url.ToString(), forceLoad: true);
+    }
+}

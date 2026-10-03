@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <Description>Adds various UI hint handlers for activity input.</Description>
+        <PackageTags>crestWorkflows studio module</PackageTags>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <SupportedPlatform Include="browser" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\framework\Crest.Workflows.Studio.Shared\Crest.Workflows.Studio.Shared.csproj" />
+      <ProjectReference Include="..\Crest.Workflows.Studio.Workflows.Core\Crest.Workflows.Studio.Workflows.Core.csproj" />
+    </ItemGroup>
+    
+</Project>

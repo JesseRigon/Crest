@@ -1,0 +1,346 @@
+@namespace Crest.Parties.BlazorWasm.Components
+@using Crest.Components.Regions
+@using Crest.Parties.PartyTypes
+@inject HttpClient Http
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* The list/detail/editor pane for one party type - the shape Customers.razor established,
+   generalised over the descriptor. A tenant kind lists its content type through the generic
+   content-items API and edits inline; a global kind renders nothing of its own and lets
+   the owning module's page-region contributor fill the pane. Either way the pane is the
+   same on All Parties and on the type's dedicated page. *@
+
+@if (Type.Kind == PartyTypeKinds.Global)
+{
+    <CrestPageRegion Key="@PartiesPageRegions.Pane(Type.Key)" Context="@Type" />
+    return;
+}
+
+<CrestStack Gap="1rem" class="party-type-pane" data-party-type="@Type.Key">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <div>
+            <CrestText TextStyle="TextStyle.H4" class="rz-m-0">@T[Type.DisplayName]</CrestText>
+            <CrestText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["Manage {0}.", T[Type.DisplayName].ToLowerInvariant()]</CrestText>
+        </div>
+        <CrestButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="IsLoading" />
+    </CrestStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" Summary="@T["Action failed"]" Detail="@Error" />
+    }
+
+    <CrestStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Stretch" class="party-type-pane__layout">
+        <CrestModelList TItem="CrestModel"
+                        Title="@T[Type.DisplayName]"
+                        Items="@Items"
+                        SelectedKey="@SelectedId"
+                        KeySelector="@(item => item.ContentItem?.ContentItemId)"
+                        TextSelector="@(item => item.ContentItem?.DisplayText)"
+                        DescriptionSelector="@(item => item.ContentItem?.ContentItemId)"
+                        SearchPredicate="MatchesSearch"
+                        Select="Select"
+                        Create="CreateAsync"
+                        CreateText="@T["Create"]"
+                        EmptyText="@T["Nothing here yet. Create one to start."]"
+                        IsBusy="IsLoading || IsSaving"
+                        Actions="ItemActions" />
+
+        <CrestCard class="party-type-pane__detail" Style="flex: 1;">
+            @if (IsLoading)
+            {
+                <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+            }
+            else if (Selected is null)
+            {
+                <CrestText TextStyle="TextStyle.Body1">@T["Select or create one."]</CrestText>
+            }
+            else
+            {
+                <CrestStack Gap="1rem">
+                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                        <div>
+                            <CrestText TextStyle="TextStyle.H5" class="rz-m-0">@Selected.ContentItem?.DisplayText</CrestText>
+                            <CrestText TextStyle="TextStyle.Body2" class="rz-color-secondary">@Selected.ContentItem?.ContentItemId</CrestText>
+                        </div>
+                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                            <CrestButton Icon="edit" Text="@T["Edit"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(Selected))" />
+                            <CrestButton Icon="content_copy" Text="@T["Duplicate"]" ButtonStyle="ButtonStyle.Light" Click="@(() => DuplicateAsync(Selected))" Disabled="IsSaving" />
+                            <CrestButton Icon="delete" Text="@T["Delete"]" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteAsync(Selected))" Disabled="IsSaving" />
+                        </CrestStack>
+                    </CrestStack>
+
+                    <CrestStack Gap="0.5rem">
+                        @foreach (var field in SummaryFields(Selected))
+                        {
+                            <CrestText><strong>@field.Label:</strong> @field.Value</CrestText>
+                        }
+                        @if (PartyReference is not null)
+                        {
+                            <CrestText><strong>@T["Party"]:</strong> @PartyReference</CrestText>
+                        }
+                    </CrestStack>
+
+                    <CrestPageRegion Key="@PartiesPageRegions.Detail(Type.Key)" Context="@SelectedId" />
+
+                    @if (IsEditing)
+                    {
+                        <CrestContentItemEditor ContentItemId="@SelectedId"
+                                                Title="@T["Edit"]"
+                                                Saved="OnEditorSavedAsync"
+                                                Duplicated="OnEditorDuplicatedAsync"
+                                                Deleted="OnEditorDeletedAsync"
+                                                Closed="CloseEditor" />
+                    }
+                </CrestStack>
+            }
+        </CrestCard>
+    </CrestStack>
+</CrestStack>
+
+@code {
+    [Parameter, EditorRequired]
+    public PartyTypeModel Type { get; set; } = default!;
+
+    private string ContentType => Type.ContentType ?? Type.Key;
+    private CrestModel[] Items { get; set; } = [];
+    private string? SelectedId { get; set; }
+    private CrestModel? Selected => Items.FirstOrDefault(item => item.ContentItem?.ContentItemId == SelectedId);
+    private string? PartyReference { get; set; }
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsEditing { get; set; }
+    private string? Error { get; set; }
+    private string? _loadedType;
+
+    private IReadOnlyList<CrestModelListAction<CrestModel>> ItemActions =>
+    [
+        new() { Icon = "edit", Title = T["Edit"], Callback = EventCallback.Factory.Create<CrestModel>(this, Edit) },
+        new() { Icon = "content_copy", Title = T["Duplicate"], Callback = EventCallback.Factory.Create<CrestModel>(this, DuplicateAsync) },
+        new() { Icon = "delete", Title = T["Delete"], ButtonStyle = ButtonStyle.Danger, Callback = EventCallback.Factory.Create<CrestModel>(this, DeleteAsync) },
+    ];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Type.Kind == PartyTypeKinds.Global || string.Equals(_loadedType, Type.Key, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _loadedType = Type.Key;
+        SelectedId = null;
+        IsEditing = false;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        Error = null;
+        try
+        {
+            var state = await Http.GetFromJsonAsync<CrestContentItemPage>($"api/crest/content-items?contentType={Uri.EscapeDataString(ContentType)}&pageSize=100");
+            Items = state?.Items.Select(CrestModel.FromContentItem).OfType<CrestModel>().ToArray() ?? [];
+            SelectedId = Items.Any(item => item.ContentItem?.ContentItemId == SelectedId)
+                ? SelectedId
+                : Items.FirstOrDefault()?.ContentItem?.ContentItemId;
+            await ResolvePartyReferenceAsync();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task Select(CrestModel item)
+    {
+        SelectedId = item.ContentItem?.ContentItemId;
+        await ResolvePartyReferenceAsync();
+    }
+
+    // A role's Party picker holds an id; the person or organization behind it is what a
+    // reader wants to see. The base parties have no Party field and skip this.
+    private async Task ResolvePartyReferenceAsync()
+    {
+        PartyReference = null;
+        var ids = Selected?.GetPickerIds(ContentType, "Party");
+        var partyId = ids?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(partyId))
+        {
+            return;
+        }
+
+        try
+        {
+            var view = await Http.GetFromJsonAsync<Dictionary<string, JsonNode?>>($"api/crest/content-items/{Uri.EscapeDataString(partyId)}/view");
+            var text = view is not null && view.TryGetValue("DisplayText", out var node) ? node?.ToString() : null;
+            var type = view is not null && view.TryGetValue("ContentType", out var typeNode) ? typeNode?.ToString() : null;
+            PartyReference = string.IsNullOrWhiteSpace(text) ? partyId : $"{text} ({type ?? "party"}, {partyId})";
+        }
+        catch
+        {
+            PartyReference = partyId;
+        }
+    }
+
+    // The role part is named after its type (PartyRoleDefinitions); the base parties' own
+    // part likewise. Scalars come out as "label: value" without the pane knowing the type.
+    private IEnumerable<(string Label, string Value)> SummaryFields(CrestModel item)
+    {
+        if (item.ContentItem?.Content?[ContentType] is not JsonObject part)
+        {
+            yield break;
+        }
+
+        foreach (var (name, node) in part)
+        {
+            if (name == "Party" || node is not JsonObject field)
+            {
+                continue;
+            }
+
+            var value = field["Text"]?.ToString() ?? field["Value"]?.ToString();
+            if (value is null && field["ContentItemIds"] is JsonArray ids)
+            {
+                value = string.Join(", ", ids.Select(id => id?.ToString()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                yield return (name, value);
+            }
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        var created = CrestModel.FromContentItem(
+            await SendJsonAsync<CrestContentItem>(HttpMethod.Post, "api/crest/content-items", new CreateCrestContentItemRequest(ContentType, T["New {0}", T[Type.DisplayName].ToLowerInvariant()])));
+        if (created is not null)
+        {
+            await LoadAsync();
+            SelectedId = created.ContentItem?.ContentItemId;
+            Edit(created);
+        }
+    }
+
+    private async Task DuplicateAsync(CrestModel item)
+    {
+        var id = item.ContentItem?.ContentItemId;
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return;
+        }
+
+        // The content-items API has no duplicate endpoint: duplicate = create a new draft
+        // of the same type carrying a copy of the source item's content.
+        var duplicate = CrestModel.FromContentItem(
+            await SendJsonAsync<CrestContentItem>(HttpMethod.Post, "api/crest/content-items",
+                new CreateCrestContentItemRequest(
+                    item.ContentItem?.ContentType ?? ContentType,
+                    $"{item.ContentItem?.DisplayText} (copy)",
+                    item.ContentItem?.Content?.DeepClone() as JsonObject)));
+        await LoadAsync();
+        SelectedId = duplicate?.ContentItem?.ContentItemId ?? SelectedId;
+    }
+
+    private async Task DeleteAsync(CrestModel item)
+    {
+        var id = item.ContentItem?.ContentItemId;
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return;
+        }
+
+        await SendAsync(HttpMethod.Delete, $"api/crest/content-items/{Uri.EscapeDataString(id)}", null);
+        if (SelectedId == id)
+        {
+            SelectedId = null;
+            IsEditing = false;
+        }
+
+        await LoadAsync();
+    }
+
+    private void Edit(CrestModel item)
+    {
+        SelectedId = item.ContentItem?.ContentItemId;
+        IsEditing = !string.IsNullOrWhiteSpace(SelectedId);
+    }
+
+    private async Task OnEditorSavedAsync(CrestModel item)
+    {
+        await LoadAsync();
+        SelectedId = item.ContentItem?.ContentItemId ?? SelectedId;
+        IsEditing = true;
+    }
+
+    private async Task OnEditorDuplicatedAsync(CrestModel item)
+    {
+        await LoadAsync();
+        SelectedId = item.ContentItem?.ContentItemId ?? SelectedId;
+        IsEditing = true;
+    }
+
+    private async Task OnEditorDeletedAsync(string deletedContentItemId)
+    {
+        if (SelectedId == deletedContentItemId)
+        {
+            SelectedId = null;
+        }
+
+        IsEditing = false;
+        await LoadAsync();
+    }
+
+    private void CloseEditor() => IsEditing = false;
+
+    private bool MatchesSearch(CrestModel item, string search) =>
+        item.ContentItem?.DisplayText?.Contains(search, StringComparison.OrdinalIgnoreCase) == true
+        || item.ContentItem?.ContentItemId?.Contains(search, StringComparison.OrdinalIgnoreCase) == true
+        || SummaryFields(item).Any(field => field.Value.Contains(search, StringComparison.OrdinalIgnoreCase));
+
+    private async Task<TResult?> SendJsonAsync<TResult>(HttpMethod method, string url, object? body)
+    {
+        using var response = await SendAsync(method, url, body);
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<TResult>() : default;
+    }
+
+    // Credentials and the antiforgery token are attached by the registered HttpClient's
+    // handler (WASM: CrestAntiforgeryHandler; SSR/InteractiveServer: CrestForwardedAuthHandler),
+    // never per request here - that keeps the pane portable across all three render contexts.
+    private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string url, object? body)
+    {
+        IsSaving = true;
+        Error = null;
+        try
+        {
+            var request = new HttpRequestMessage(method, url);
+            if (body is not null)
+            {
+                request.Content = JsonContent.Create(body);
+            }
+
+            var response = await Http.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await response.Content.ReadAsStringAsync();
+            }
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+            throw;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+}

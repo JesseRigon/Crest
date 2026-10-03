@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Provides multitenancy services.
+        </Description>
+        <PackageTags>crestWorkflows module multitenancy</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\common\Crest.Workflows.Api.Common\Crest.Workflows.Api.Common.csproj" />
+        <ProjectReference Include="..\..\common\Crest.Workflows.Features\Crest.Workflows.Features.csproj"/>
+        <ProjectReference Include="..\Crest.Workflows.Common\Crest.Workflows.Common.csproj"/>
+    </ItemGroup>
+
+</Project>

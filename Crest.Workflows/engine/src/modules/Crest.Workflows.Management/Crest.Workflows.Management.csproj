@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Provides workflow management functionality.
+        </Description>
+        <PackageTags>crestWorkflows module workflows management</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Humanizer.Core" />
+        <PackageReference Include="IronCompress" />
+        <PackageReference Include="System.Linq.Dynamic.Core" />
+        <PackageReference Include="PolySharp">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\common\Crest.Workflows.Api.Common\Crest.Workflows.Api.Common.csproj" />
+        <ProjectReference Include="..\Crest.Workflows.Caching\Crest.Workflows.Caching.csproj" />
+        <ProjectReference Include="..\Crest.Workflows.Core\Crest.Workflows.Core.csproj" />
+    </ItemGroup>
+
+</Project>

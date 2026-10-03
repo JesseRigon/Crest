@@ -11,10 +11,10 @@ using OrchardCore.Navigation;
 namespace Crest.ContentPartLists;
 
 // Content Part Lists - the tenant-editable enum system (see the host repo's
-// plans/fruitful-modules.md, Tier 0). Modules declare the sets they own and consume
+// the host's module inventory, Tier 0). Modules declare the sets they own and consume
 // them by logical key; tenants relabel/reorder/hide at runtime. Extracted from
 // Crest.Server into its own feature so tenants opt in rather than getting it with
-// the Crest core - consumers (the Fruitful modules) declare it as a manifest
+// the Crest core - consumers (consuming modules) declare it as a manifest
 // dependency instead.
 public sealed class Startup : StartupBase
 {

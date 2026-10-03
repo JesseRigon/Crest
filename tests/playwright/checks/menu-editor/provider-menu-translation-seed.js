@@ -12,7 +12,7 @@
 // JSON endpoint Orchard's own translations editor loads from) and the served sidebar (the
 // navigation API, which resolves captions through IDataLocalizer per request culture).
 //
-// A fresh FruitfulSetup tenant supports en-US and es-ES, so es-ES needs no provisioning here.
+// A fresh setup tenant supports en-US and es-ES, so es-ES needs no provisioning here.
 // No cleanup either: seeded translations are the intended baseline state of a synced tenant,
 // exactly like the imported nodes themselves.
 const { fetchAntiforgeryToken } = require('../../harness/antiforgery');

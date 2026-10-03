@@ -1,0 +1,158 @@
+@attribute [Route(MembersConstants.Routes.PortalHome)]
+@attribute [AllowAnonymous]
+@namespace Crest.Members.BlazorWasm.Pages
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* The member's landing page and org switcher (ruling: one account, N bindings, the
+   UI and permissions follow the ACTIVE org). Public at the route level (a member is
+   not an admin-shell user, so the shell's login redirect must not apply); the data
+   behind it is [Authorize]-gated, and an unauthenticated visitor is sent to the
+   portal sign-in from here. *@
+<PageTitle>@T["Member portal"]</PageTitle>
+
+<div style="min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 2rem;" data-testid="member-portal-home">
+<CrestStack Gap="1rem" AlignItems="AlignItems.Center">
+    <CrestText TextStyle="TextStyle.H3" Text="@T["Member portal"]" />
+
+    @if (!RendererInfo.IsInteractive || _loading)
+    {
+        <CrestText Text="@T["Loading..."]" />
+    }
+    else if (_session?.Member is { } member)
+    {
+        <CrestText Text="@T["Signed in as {0}", member.UserName]" data-testid="member-portal-user" />
+
+        @if (_session.ImpersonatorUserId is not null)
+        {
+            <CrestText TextStyle="TextStyle.Caption" Text="@T["This session is an impersonation."]" />
+        }
+
+        <CrestStack Gap="0.5rem" Style="width: 22rem; max-width: 100%;">
+            <CrestText TextStyle="TextStyle.Caption" Text="@T["Your organizations"]" />
+            @foreach (var binding in member.Bindings)
+            {
+                var isActive = string.Equals(binding.OrganizationId, _session.ActiveOrganizationId, StringComparison.Ordinal);
+                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" data-testid="member-portal-org">
+                    <CrestText Text="@OrganizationName(binding.OrganizationId)" Style="flex: 1 1 auto;" />
+                    @if (isActive)
+                    {
+                        <CrestText TextStyle="TextStyle.Caption" Text="@T["Active"]" />
+                    }
+                    else
+                    {
+                        <CrestButton ButtonStyle="ButtonStyle.Light" Text="@T["Switch"]" Click="@(() => SwitchAsync(binding.OrganizationId))" Disabled="@_busy" />
+                    }
+                </CrestStack>
+            }
+        </CrestStack>
+
+        <CrestButton ButtonStyle="ButtonStyle.Light" Text="@T["Sign out"]" Click="LogoutAsync" Disabled="@_busy" />
+    }
+    else
+    {
+        <CrestText Text="@T["This account is not a member account."]" />
+        <CrestButton ButtonStyle="ButtonStyle.Light" Text="@T["Sign out"]" Click="LogoutAsync" Disabled="@_busy" />
+    }
+
+    @if (_error is not null)
+    {
+        <CrestText TextStyle="TextStyle.Caption" Text="@_error" />
+    }
+</CrestStack>
+</div>
+
+@code {
+    private MemberSessionModel? _session;
+    private readonly Dictionary<string, string> _organizationNames = new(StringComparer.Ordinal);
+    private bool _loading = true;
+    private bool _busy;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try
+        {
+            using var response = await Http.GetAsync("api/crest/members/me");
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                Navigation.NavigateTo(MembersConstants.Routes.PortalLogin.TrimStart('/'));
+                return;
+            }
+
+            response.EnsureSuccessStatusCode();
+            _session = await response.Content.ReadFromJsonAsync<MemberSessionModel>();
+
+            foreach (var binding in _session?.Member?.Bindings ?? [])
+            {
+                if (_organizationNames.ContainsKey(binding.OrganizationId))
+                {
+                    continue;
+                }
+
+                var view = await Http.GetFromJsonAsync<Dictionary<string, object?>>($"api/crest/content-items/{Uri.EscapeDataString(binding.OrganizationId)}/view");
+                _organizationNames[binding.OrganizationId] = view?.TryGetValue("displayText", out var text) == true && text is not null
+                    ? text.ToString() ?? binding.OrganizationId
+                    : binding.OrganizationId;
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private string OrganizationName(string organizationId) =>
+        _organizationNames.TryGetValue(organizationId, out var name) ? name : organizationId;
+
+    private async Task SwitchAsync(string organizationId)
+    {
+        _busy = true;
+        _error = null;
+        try
+        {
+            using var response = await Http.PostAsJsonAsync("api/crest/members/active-org", new { organizationId });
+            if (!response.IsSuccessStatusCode)
+            {
+                _error = T["Could not switch organization."];
+                return;
+            }
+
+            await LoadAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task LogoutAsync()
+    {
+        _busy = true;
+        try
+        {
+            using var response = await Http.PostAsync("api/crest/auth/logout", null);
+            Navigation.NavigateTo(MembersConstants.Routes.PortalLogin.TrimStart('/'), forceLoad: true);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

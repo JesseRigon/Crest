@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <Description>Crest.Workflows Studio application shell.</Description>
+        <PackageTags>crestWorkflows studio framework</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <SupportedPlatform Include="browser"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Crest.Workflows.Studio.Core\Crest.Workflows.Studio.Core.csproj" />
+      <ProjectReference Include="..\Crest.Workflows.Studio.Shared\Crest.Workflows.Studio.Shared.csproj" />
+    </ItemGroup>
+    
+</Project>

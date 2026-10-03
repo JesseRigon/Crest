@@ -1,9 +1,11 @@
-# Crest as an application layer: Parties, Members and Workflows
+# Crest as an application layer: Parties, Members, Workflows and Money
 
 ## Status
 
-**Planning; the three modules have not moved yet** — until phase 1 below lands they
-still live in the host repository that first built them.
+**The three modules are here** (Parties, Members, Workflows), along with `Crest.Money`
+— the money type and the `PriceField`, since every content field type belongs to the
+application layer. The member shell
+([shells-and-themes.md](shells-and-themes.md)) is the remaining large piece.
 
 ## What Crest is
 
@@ -17,6 +19,7 @@ store and the geographic tree. Three modules complete it:
 | `Crest.Parties` | Who an application deals with: Person and Organization content types, contact points, addresses, positions, a role registry (`IPartyTypeProvider`) that downstream modules register their party roles with (customer, vendor, employee, lead, …), and the parties UI. |
 | `Crest.Members` | The other side of the business: member accounts (ordinary Orchard users with a class marker), organization bindings with per-organization roles, a hierarchy store, the member portal (login, register, external login, pages), impersonation for staff support, and memberships (tiers, seats, groups, perks, entitlements). Billing a membership is left to a downstream module through a seam Members declares. |
 | `Crest.Workflows` | A workflow service for Orchard built on a vendored fork of Elsa 3 (MIT): a registry of activities, triggers, hook slots and flows that modules contribute; units of work (one request, one session, one transaction, with inline hooks and durable background calls); connectors with API-key, bearer, basic and OAuth2 authentication and OpenAPI import; approvals; field dependencies; ownership tiers and per-flow access; the stock-Orchard bridge; the designer bridge. |
+| `Crest.Money` | The money type and the `PriceField` a tenant puts on any content type: `Amount` bound to an `ICurrency`, ISO 4217 metadata from the global store so minor units are never a per-tenant guess, and a tenant-chosen default currency. Adapted from OrchardCore.Commerce (MIT). |
 
 The thesis: **all an application needs is parties, workflows and content items.** A
 party is who, a workflow is what happens, a content item is everything else. Line-of-
@@ -53,10 +56,13 @@ the member portal applies — is designed when the first application asks for it
 ## Phases
 
 - [x] 0. This plan; the shell and theme model in [shells-and-themes.md](shells-and-themes.md).
-- [ ] 1. `Crest.Parties`, `Crest.Members`, `Crest.Workflows` arrive with their tests
-      (xUnit projects in `tests/`, browser checks in `tests/playwright/checks` registered
-      in `run-admin-suite.js`), docs (`docs/workflows.md`, `docs/workflows.mmd`,
-      `docs/memberships.md`) and plans (`plans/workflows.md`, `plans/members.md`,
-      `plans/machine-actors.md`); README updated.
-- [ ] 2. The host repository that consumes them repoints and the aggregated suite runs
-      green from both runners.
+- [x] 1. `Crest.Parties`, `Crest.Members`, `Crest.Workflows` and `Crest.Money` arrived
+      with their tests (xUnit projects under each module's `tests/`, discovered by
+      `tests/run-tests.sh`; browser checks in each module's
+      `tests/playwright/checks`), the workflow docs (`docs/workflows.md`,
+      `docs/workflows.mmd`) and plans (`plans/workflows.md`, `plans/members.md`,
+      `plans/machine-actors.md`); READMEs updated.
+- [ ] 2. The member shell, so a product's pages have somewhere to live that is not the
+      admin bucket ([shells-and-themes.md](shells-and-themes.md) phases 1–2).
+- [ ] 3. A party role of Crest's own (or a test fixture that registers one), so the
+      generic role pages can be exercised without a host's modules.

@@ -1,0 +1,78 @@
+%% How a Crest workflow gets triggered and runs: entry points, the unit of work a burst
+%% commits as, what happens inside the unit (hooks) versus after it (triggers, external
+%% calls), and the posting engine as the worked example. See docs/workflows.md.
+flowchart TB
+    subgraph Entry["Entry points (each one is a shell scope = a unit of work)"]
+        direction LR
+        API["API request<br/>(POST transactions/{id}/post, content save, ...)"]
+        Manual["Run by hand<br/>(designer / execute endpoint)"]
+        Timer["Scheduled task<br/>(Timer, Cron, Delay)<br/>ShellScopedRunScheduledTaskHandler"]
+        Webhook["Webhook received<br/>(HMAC-signed POST)"]
+        Decision["Approval decided<br/>(api/.../approvals/{id}/decide)"]
+        Channels["Engine background channels,<br/>bookmark queue<br/>ShellScopedBackgroundConsumers"]
+    end
+
+    subgraph Unit["Unit of work: one burst, one session, one transaction"]
+        direction TB
+        Service["Registry service writes the object<br/>(TransactionService: number, snapshot, publish)<br/>under the object's lock (IWorkflowObjectLock)"]
+        HookSlot{{"Hook slot runs inline<br/>transaction.created / transaction.posting / transaction.voiding<br/>(IWorkflowHookRunner)"}}
+        Attach["Attached flows run as child instances<br/>in the SAME scope and session<br/>system: accounting.post-invoice ...<br/>tenant: Copy fields, ..."]
+        Ledger["Journal entry activity → ILedgerService<br/>JournalEntry + JournalLines posted<br/>(LedgerLineIndex rows)"]
+        Burst["Flow executes synchronously<br/>until a wait (bookmark) or the end"]
+        Mark["Background activity reached?<br/>Call connector / Poll connector / Orchard external task"]
+        Job["Job written in the unit<br/>(DurableBackgroundActivityScheduler)<br/>+ bookmark on the node"]
+        Raise["Raise trigger / registry PublishAsync<br/>→ WorkflowStimulusQueue (queued, not sent)"]
+        Fail{"Required attachment failed<br/>or Fail unit?"}
+        Commit[("Commit: engine state + business writes<br/>as one transaction")]
+        Cancel[("Cancel session: nothing stands<br/>faulted instance recorded in a fresh scope<br/>API answers 409")]
+    end
+
+    subgraph After["After commit (WorkflowAfterCommit, Orchard deferred task)"]
+        direction TB
+        Send["Each queued stimulus sent in its own child scope<br/>under the object's lock<br/>(StimulusId = idempotency key)"]
+        Match{"Trigger node matches?<br/>key, payload filter, permission"}
+        NewRun["New instance / resumed instance<br/>= a new unit of work"]
+        Nothing["Nothing (not queued when nobody listens)"]
+        RunJob["Job runs: mark Running → execute activity<br/>(auth, resilience strategy, rate limit,<br/>Idempotency-Key) → record Done/Failed"]
+        Resume["Result handed back by bookmark<br/>(ShellScopedBackgroundActivityInvoker)<br/>→ next burst = new unit"]
+    end
+
+    API --> Service
+    Manual --> Burst
+    Timer --> Burst
+    Webhook --> Burst
+    Decision --> Burst
+    Channels --> Burst
+
+    Service --> HookSlot
+    HookSlot --> Attach
+    Attach --> Ledger
+    Attach --> Fail
+    Burst --> Mark
+    Burst -->|Hook activity| HookSlot
+    Burst -->|Raise trigger| Raise
+    Service -->|registry trigger| Raise
+    Mark -->|yes| Job
+    Mark -->|no| Fail
+    Job --> Fail
+    Raise --> Fail
+    Ledger --> Fail
+    Fail -->|no| Commit
+    Fail -->|yes| Cancel
+
+    Commit --> Send
+    Commit --> RunJob
+    Cancel -.->|"nothing sent, no job runs"| Nothing
+    Send --> Match
+    Match -->|yes| NewRun
+    Match -->|no| Nothing
+    RunJob --> Resume
+    NewRun -.->|"its own burst, same rules"| Burst
+    Resume -.->|"its own burst, same rules"| Burst
+
+    classDef inside fill:#eef6ee,stroke:#3a7d44,color:#1b3a20;
+    classDef after fill:#eef1f8,stroke:#3d5a99,color:#1c2a4d;
+    classDef bad fill:#fbeeee,stroke:#a33,color:#511;
+    class Service,HookSlot,Attach,Ledger,Burst,Mark,Job,Raise,Fail,Commit inside;
+    class Send,Match,NewRun,Nothing,RunJob,Resume after;
+    class Cancel bad;

@@ -1,0 +1,45 @@
+using System.Linq.Expressions;
+using Crest.Workflows.Extensions;
+using Crest.Workflows.Models;
+using JetBrains.Annotations;
+
+namespace Crest.Workflows.Management;
+
+/// <summary>
+/// Provides extension methods for <see cref="IActivityDescriber"/>.
+/// </summary>
+[PublicAPI]
+public static class ActivityDescriberExtensions
+{
+    /// <param name="activityDescriber">The activity describer.</param>
+    extension(IActivityDescriber activityDescriber)
+    {
+        /// <summary>
+        /// Describes an output property.
+        /// </summary>
+        /// <param name="expression">The property expression.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <typeparam name="TActivity">The type of the activity.</typeparam>
+        /// <typeparam name="TProperty">The type of the property.</typeparam>
+        /// <returns>The output descriptor.</returns>
+        public async Task<OutputDescriptor> DescribeOutputProperty<TActivity, TProperty>(Expression<Func<TActivity, TProperty>> expression, CancellationToken cancellationToken = default)
+        {
+            var propertyInfo = expression.GetProperty()!;
+            return await activityDescriber.DescribeOutputPropertyAsync(propertyInfo, cancellationToken);
+        }
+
+        /// <summary>
+        /// Describes an input property.
+        /// </summary>
+        /// <param name="expression">The property expression.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <typeparam name="TActivity">The type of the activity.</typeparam>
+        /// <typeparam name="TProperty">The type of the property.</typeparam>
+        /// <returns>The input descriptor.</returns>
+        public async Task<InputDescriptor> DescribeInputPropertyAsync<TActivity, TProperty>(Expression<Func<TActivity, TProperty>> expression, CancellationToken cancellationToken = default)
+        {
+            var propertyInfo = expression.GetProperty()!;
+            return await activityDescriber.DescribeInputPropertyAsync(propertyInfo, cancellationToken);
+        }
+    }
+}

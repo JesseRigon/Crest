@@ -1,0 +1,110 @@
+using Crest.Workflows.Extensions;
+using Crest.Workflows.Http.Bookmarks;
+using Crest.Workflows.Http.Contexts;
+using Crest.Workflows;
+using Crest.Workflows.Models;
+using Crest.Workflows.Runtime;
+using Crest.Workflows.Runtime.Entities;
+using Crest.Workflows.Runtime.Filters;
+
+namespace Crest.Workflows.Http.Services;
+
+/// <inheritdoc />
+public class DefaultRouteTableUpdater(
+    IRouteTable routeTable, 
+    ITriggerStore triggerStore, 
+    IBookmarkStore bookmarkStore, 
+    IHttpEndpointRoutesProvider httpEndpointRoutesProvider)
+    : IRouteTableUpdater
+{
+    /// <inheritdoc />
+    public async Task UpdateAsync(CancellationToken cancellationToken = default)
+    {
+        var stimulusName = HttpStimulusNames.HttpEndpoint;
+        var triggerFilter = new TriggerFilter
+        {
+            Name = stimulusName
+        };
+        var bookmarkFilter = new BookmarkFilter
+        {
+            Name = stimulusName
+        };
+        var triggers = (await triggerStore.FindManyAsync(triggerFilter, cancellationToken)).ToList();
+        var bookmarks = (await bookmarkStore.FindManyAsync(bookmarkFilter, cancellationToken)).ToList();
+
+        await AddRoutesAsync(triggers, cancellationToken);
+        await AddRoutesAsync(bookmarks, cancellationToken);
+    }
+
+    public async Task AddRoutesAsync(IEnumerable<StoredTrigger> triggers, CancellationToken cancellationToken = default)
+    {
+        var httpEndpointTriggers = Filter(triggers).ToList();
+
+        foreach (var trigger in httpEndpointTriggers)
+        {
+            var payload = trigger.GetPayload<HttpEndpointBookmarkPayload>();
+            await AddRoutesAsync(payload, trigger.TenantId, cancellationToken);
+        }
+    }
+
+    public async Task AddRoutesAsync(IEnumerable<StoredBookmark> bookmarks, CancellationToken cancellationToken = default)
+    {
+        var httpEndpointBookmarks = Filter(bookmarks).ToList();
+
+        foreach (var bookmark in httpEndpointBookmarks)
+        {
+            var payload = bookmark.GetPayload<HttpEndpointBookmarkPayload>();
+            await AddRoutesAsync(payload, bookmark.TenantId, cancellationToken);
+        }
+    }
+
+    public async Task AddRoutesAsync(IEnumerable<Bookmark> bookmarks, WorkflowExecutionContext workflowExecutionContext, CancellationToken cancellationToken = default)
+    {
+        var httpEndpointBookmarks = Filter(bookmarks).ToList();
+
+        foreach (var bookmark in httpEndpointBookmarks)
+        {
+            var payload = bookmark.GetPayload<HttpEndpointBookmarkPayload>();
+            await AddRoutesAsync(payload, workflowExecutionContext.Workflow.Identity.TenantId, cancellationToken);
+        }
+    }
+
+    public void RemoveRoutes(IEnumerable<StoredTrigger> triggers)
+    {
+        var paths = Filter(triggers).Select(x => x.GetPayload<HttpEndpointBookmarkPayload>().Path).ToList();
+        routeTable.RemoveRange(paths);
+    }
+
+    public void RemoveRoutes(IEnumerable<Bookmark> bookmarks)
+    {
+        var paths = Filter(bookmarks).Select(x => x.GetPayload<HttpEndpointBookmarkPayload>().Path).ToList();
+        routeTable.RemoveRange(paths);
+    }
+
+    private async Task AddRoutesAsync(HttpEndpointBookmarkPayload payload, string? tenantId, CancellationToken cancellationToken)
+    {
+        var context = new HttpEndpointRouteProviderContext(payload, tenantId, cancellationToken);
+        var routes = await httpEndpointRoutesProvider.GetRoutesAsync(context);
+            
+        foreach (var route in routes)
+            routeTable.Add(route);
+    }
+
+    private static IEnumerable<StoredTrigger> Filter(IEnumerable<StoredTrigger> triggers)
+    {
+        var stimulusName = HttpStimulusNames.HttpEndpoint;
+        return triggers.Where(x => x.Name == stimulusName && x.Payload != null);
+    }
+
+    private static IEnumerable<StoredBookmark> Filter(IEnumerable<StoredBookmark> bookmarks)
+    {
+        var stimulusName = HttpStimulusNames.HttpEndpoint;
+        return bookmarks.Where(x => x.Name == stimulusName && x.Payload != null);
+    }
+
+    private static IEnumerable<Bookmark> Filter(IEnumerable<Bookmark> bookmarks)
+    {
+        var stimulusName = HttpStimulusNames.HttpEndpoint;
+        return bookmarks.Where(x => x.Name == stimulusName && x.Payload != null);
+    }
+}

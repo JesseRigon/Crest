@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>Provides various port providers for activities such as `FlowSwitch` and `SendHttpRequest`.</Description>
+        <PackageTags>crestWorkflows studio module</PackageTags>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\framework\Crest.Workflows.Studio.Core\Crest.Workflows.Studio.Core.csproj" />
+      <ProjectReference Include="..\Crest.Workflows.Studio.Workflows.Core\Crest.Workflows.Studio.Workflows.Core.csproj" />
+    </ItemGroup>
+    
+</Project>

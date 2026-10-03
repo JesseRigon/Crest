@@ -3,7 +3,7 @@ const { runSuite, printSummary } = require('./harness/run-suite');
 const { loginAsAdmin } = require('./harness/auth');
 
 async function main() {
-  const baseUrl = process.env.BASE_URL || 'http://fruitful.localhost:5010';
+  const baseUrl = process.env.BASE_URL || 'http://crest.localhost:5010';
   const outputRoot = process.env.OUTPUT_ROOT || path.join(__dirname, 'output');
 
   const checks = [

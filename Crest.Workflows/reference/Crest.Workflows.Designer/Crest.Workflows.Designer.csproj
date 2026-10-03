@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <IsPackable>true</IsPackable>
+        <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+        <PackageId>Crest.Workflows.Designer</PackageId>
+        <PackageTags>OrchardCore;Crest;Workflows;Designer</PackageTags>
+        <Description>Shared components for the Crest.Workflows Studio visual workflow designer. Provides core UI components and workflow design functionality for Orchard Core integration.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Crest.Workflows.Studio.Core" />
+        <PackageReference Include="Crest.Workflows.Studio.Workflows.Core" />
+        <PackageReference Include="Crest.Workflows.Studio.Workflows" />
+        <PackageReference Include="Crest.Workflows.Studio.Shell" />
+    </ItemGroup>
+
+</Project>

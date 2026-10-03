@@ -1,0 +1,3 @@
+namespace Crest.Workflows.Pipelines.WorkflowExecution;
+
+public delegate ValueTask WorkflowMiddlewareDelegate(WorkflowExecutionContext context);

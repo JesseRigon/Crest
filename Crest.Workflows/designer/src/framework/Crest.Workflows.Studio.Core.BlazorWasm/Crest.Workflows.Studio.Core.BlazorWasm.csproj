@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>Blazor WebAssembly impementation for certain abstractions provided by Crest.Workflows.Studio.Core.</Description>
+        <PackageTags>crestWorkflows studio blazor webassembly</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Blazored.LocalStorage"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Crest.Workflows.Studio.Core\Crest.Workflows.Studio.Core.csproj"/>
+        <ProjectReference Include="..\Crest.Workflows.Studio.Shared\Crest.Workflows.Studio.Shared.csproj" />
+    </ItemGroup>
+
+</Project>

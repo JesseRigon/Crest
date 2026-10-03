@@ -4,7 +4,7 @@ Reference copies of the hand-written `msgctxt "Crest.Admin.Client"` `.po` entrie
 seed the WASM `.Admin` client string catalog (`CrestApiLocalizer`, served via
 `GET api/crest/localization/strings` — see `plans/user-localization.md`'s "Client string
 localization for `.Admin`"). The files actually consumed at runtime live in the HOST
-project at `Localization/{culture}/Fruitful.Admin.po` (fruitful.orchard) — by ruling,
+project at `Localization/{culture}/Admin.po` (the host) — by ruling,
 the Crest submodule ships literals only and stays stock-localized; translation content
 is the host's. These fixtures are reference copies for the test suite.
 

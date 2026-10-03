@@ -14,7 +14,7 @@ function testUserCredentials(suffix) {
   const upper = suffix.toUpperCase();
   return {
     username: process.env[`CLIENT_USER${upper}`] || `testuser${suffix}`,
-    password: process.env[`CLIENT_PASSWORD${upper}`] || 'FruitfulRules1!',
+    password: process.env[`CLIENT_PASSWORD${upper}`] || 'CrestRules1!',
   };
 }
 
@@ -89,7 +89,7 @@ async function ensureTestUser(page, baseUrl, suffix = '', options = {}) {
       headers,
       body: JSON.stringify({
         userName: username,
-        email: `${username}@fruitful.example.com`,
+        email: `${username}@crest.example.com`,
         emailConfirmed: true,
         isEnabled: true,
         roles,

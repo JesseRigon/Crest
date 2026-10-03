@@ -4,7 +4,7 @@ const { fetchAntiforgeryToken } = require('./antiforgery');
 // restore function for the check's `finally`.
 //
 // Checks that exercise a specific culture must provision it themselves: a freshly provisioned
-// FruitfulSetup tenant supports only en-US/es-ES, so a check that assumes e.g. 'français' is in
+// The host's setup tenant supports only en-US/es-ES, so a check that assumes e.g. 'français' is in
 // the culture picker only ever worked on tenants where some earlier check had leaked its test
 // cultures into the settings (localization-sequential-settings did exactly that before it
 // learned to restore them). Self-provisioning keeps every check honest on a fresh tenant and

@@ -1,0 +1,17 @@
+using Crest.Workflows.Features.Services;
+using Crest.Workflows.Expressions.Liquid.Features;
+
+// ReSharper disable once CheckNamespace
+namespace Crest.Workflows.Extensions;
+
+public static class ModuleExtensions
+{
+    /// <summary>
+    /// Setup the <see cref="LiquidFeature"/> feature.
+    /// </summary>
+    public static IModule UseLiquid(this IModule module, Action<LiquidFeature>? configure = default)
+    {
+        module.Configure(configure);
+        return module;
+    }
+}

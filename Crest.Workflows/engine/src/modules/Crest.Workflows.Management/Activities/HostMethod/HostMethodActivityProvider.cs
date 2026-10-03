@@ -1,0 +1,30 @@
+using Crest.Workflows.Management.Options;
+using Crest.Workflows.Models;
+using JetBrains.Annotations;
+using Microsoft.Extensions.Options;
+
+namespace Crest.Workflows.Management.Activities.HostMethod;
+
+/// <summary>
+/// Provides activities for each configured host method type registered via <see cref="HostMethodActivitiesOptions"/>.
+/// Public instance methods of the configured types are exposed as activities (as determined by <see cref="IHostMethodActivityDescriber"/>).
+/// Inputs come from public properties and method parameters.
+/// </summary>
+[UsedImplicitly]
+public class HostMethodActivityProvider(IOptions<HostMethodActivitiesOptions> options, IHostMethodActivityDescriber hostMethodActivityDescriber) : IActivityProvider
+{
+    public async ValueTask<IEnumerable<ActivityDescriptor>> GetDescriptorsAsync(CancellationToken cancellationToken = default)
+    {
+        var descriptors = new List<ActivityDescriptor>();
+
+        foreach (var kvp in options.Value.ActivityTypes)
+        {
+            var key = kvp.Key;
+            var type = kvp.Value;
+            var methodDescriptors = await hostMethodActivityDescriber.DescribeAsync(key, type, cancellationToken);
+            descriptors.AddRange(methodDescriptors);
+        }
+
+        return descriptors;
+    }
+}

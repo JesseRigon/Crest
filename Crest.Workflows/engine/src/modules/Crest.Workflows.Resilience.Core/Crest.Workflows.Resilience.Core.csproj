@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Provides core services and types for implementing resilient services and activities.
+        </Description>
+        <PackageTags>crestWorkflows module resilience core</PackageTags>
+        <RootNamespace>Crest.Workflows.Resilience</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Crest.Workflows.Core\Crest.Workflows.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Polly" />
+      <PackageReference Include="Polly.Extensions" />
+    </ItemGroup>
+
+</Project>

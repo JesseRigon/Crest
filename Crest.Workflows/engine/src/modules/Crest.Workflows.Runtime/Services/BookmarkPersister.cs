@@ -1,0 +1,25 @@
+using Crest.Workflows.Mediator.Contracts;
+using Crest.Workflows.Runtime.Notifications;
+using Crest.Workflows.Runtime.Requests;
+
+namespace Crest.Workflows.Runtime;
+
+/// <inheritdoc />
+public class BookmarksPersister(IBookmarkUpdater bookmarkUpdater, INotificationSender notificationSender) : IBookmarksPersister
+{
+    /// <inheritdoc />
+    public async Task PersistBookmarksAsync(UpdateBookmarksRequest updateBookmarksRequest)
+    {
+        await bookmarkUpdater.UpdateBookmarksAsync(updateBookmarksRequest);
+
+        // Publish domain event.
+        await notificationSender.SendAsync(new WorkflowBookmarksIndexed(new(
+            updateBookmarksRequest.WorkflowExecutionContext,
+            updateBookmarksRequest.Diff.Added, 
+            updateBookmarksRequest.Diff.Removed, 
+            updateBookmarksRequest.Diff.Unchanged)));
+
+        // Publish domain event.
+        await notificationSender.SendAsync(new WorkflowBookmarksPersisted(updateBookmarksRequest.Diff));
+    }
+}

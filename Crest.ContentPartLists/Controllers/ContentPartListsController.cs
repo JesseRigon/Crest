@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Crest.Controllers;
 
 // The management API behind Content Part Lists. The SCREEN lives in this module's
-// blazor-wasm project; Fruitful modules only declare and consume sets, they never own
+// blazor-wasm project; consuming modules only declare and consume sets, they never own
 // these editors. The provider-generic picker endpoints (api/crest/option-sources/*)
 // live in Crest.Server with the IOptionSourceProvider abstraction itself.
 [ApiController]

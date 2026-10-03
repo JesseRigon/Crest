@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Crest.Members.BlazorWasm</AssemblyName>
+    <RootNamespace>Crest.Members.BlazorWasm</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Same host-agnostic component package pair as the other module wasm projects.
+       Authorization is for the [AllowAnonymous] marker the portal pages carry - the
+       seam Crest's admin gate and AdminRoutes read to serve a page publicly and
+       shell-less. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Crest.Members.Domain.csproj" />
+    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+  </ItemGroup>
+</Project>

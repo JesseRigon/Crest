@@ -3,8 +3,8 @@ const { runSuite, printSummary } = require('./harness/run-suite');
 const { loginAsAdmin } = require('./harness/auth');
 
 // The set of admin-route checks that exist in the shared Crest submodule — every repo
-// that embeds this submodule (fruitful.orchard, OrchardCore.Crest.Host) gets these for
-// free. A consuming repo's own entry script (e.g. fruitful.orchard/dev/run-admin-suite.js)
+// that embeds this submodule (a product host, OrchardCore.Crest.Host) gets these for
+// free. A consuming repo's own entry script (e.g. a host's own dev/run-admin-suite.js)
 // calls buildSharedAdminChecks() and appends its own repo-specific checks to the list
 // before calling runSuite — same shared browser instance, same login, no extra cost.
 //
@@ -30,6 +30,7 @@ function buildSharedAdminChecks() {
     { name: 'standard-pages', fn: require('./checks/standard-pages') },
     { name: 'content-item-editor-page', fn: require('./checks/content-item-editor-page') },
     { name: 'content-items-page', fn: require('./checks/content-items-page') },
+    { name: 'content-items-type-filter', fn: require('./checks/content-items-type-filter') },
     { name: 'content-parts-page', fn: require('./checks/content-parts-page') },
     { name: 'definition-locks', fn: require('./checks/definition-locks') },
     { name: 'content-types-page', fn: require('./checks/content-types-page') },
@@ -101,7 +102,7 @@ function buildSharedAdminChecks() {
 }
 
 async function main() {
-  const baseUrl = process.env.BASE_URL || 'http://fruitful.localhost:5010';
+  const baseUrl = process.env.BASE_URL || 'http://crest.localhost:5010';
   const outputRoot = process.env.OUTPUT_ROOT || path.join(__dirname, 'output');
 
   const results = await runSuite({

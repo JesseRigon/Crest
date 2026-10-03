@@ -1,0 +1,67 @@
+@page "/Parties/{TypeKey}"
+@namespace Crest.Parties.BlazorWasm.Pages
+@using Crest.Parties.BlazorWasm.Components
+@using Crest.Parties.Constants
+@using Crest.Parties.PartyTypes
+@inject HttpClient Http
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* The dedicated page for one tenant-kind party type (Customers, Vendors, Contacts...):
+   the same pane All Parties shows, on its own route, one per registered type. A global
+   kind's dedicated page belongs to its owning module, so it never lands here. *@
+
+<PageTitle>@(Type is null ? T["Parties"] : T[Type.DisplayName])</PageTitle>
+
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+    <CrestAlert AlertStyle="AlertStyle.Danger" Summary="@T["Could not load party types"]" Detail="@Error" />
+}
+else if (IsLoading)
+{
+    <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+}
+else if (Type is null)
+{
+    <CrestCard><CrestText TextStyle="TextStyle.Body1">@T["No party type '{0}' is available to you.", TypeKey]</CrestText></CrestCard>
+}
+else
+{
+    <PartyTypePane Type="@Type" />
+}
+
+@code {
+    [Parameter]
+    public string TypeKey { get; set; } = string.Empty;
+
+    private PartyTypeModel? Type { get; set; }
+    private bool IsLoading { get; set; }
+    private string? Error { get; set; }
+    private string? _loadedKey;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.Equals(_loadedKey, TypeKey, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _loadedKey = TypeKey;
+        IsLoading = true;
+        Error = null;
+        try
+        {
+            var types = await Http.GetFromJsonAsync<PartyTypeModel[]>($"{PartiesConstants.Routes.Api}/{PartiesConstants.Routes.Types}") ?? [];
+            // The user's own hidden panes still open by direct link: hiding is a menu
+            // preference, not a permission.
+            Type = types.FirstOrDefault(type => string.Equals(type.Key, TypeKey, StringComparison.OrdinalIgnoreCase) && type.Kind == PartyTypeKinds.Tenant);
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

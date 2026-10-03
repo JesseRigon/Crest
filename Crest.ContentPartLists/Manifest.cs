@@ -10,7 +10,7 @@ using OrchardCore.Modules.Manifest;
 )]
 
 // Deliberately NOT IsAlwaysEnabled: a tenant opts into Content Part Lists. Consumers that
-// require it (the Fruitful modules) declare it in their own manifest Dependencies so
+// require it (consuming modules) declare it in their own manifest Dependencies so
 // enabling them enables this - features, not recipes, carry prerequisites.
 [assembly: Feature(
     Id = "Crest.ContentPartLists",

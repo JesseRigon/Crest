@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Provides API endpoints for client applications such as the Crest.Workflows Designer web component.
+        </Description>
+        <PackageTags>crestWorkflows module workflows api</PackageTags>
+    </PropertyGroup>
+	
+    <ItemGroup>
+        <ProjectReference Include="..\..\common\Crest.Workflows.Api.Common\Crest.Workflows.Api.Common.csproj" />
+        <ProjectReference Include="..\Crest.Workflows.Expressions.JavaScript\Crest.Workflows.Expressions.JavaScript.csproj" />
+        <ProjectReference Include="..\Crest.Workflows.SasTokens\Crest.Workflows.SasTokens.csproj" />
+        <ProjectReference Include="..\Crest.Workflows.Management\Crest.Workflows.Management.csproj" />
+        <ProjectReference Include="..\Crest.Workflows.Runtime\Crest.Workflows.Runtime.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+@page "/workflows/instances/{Id}/view"
+
+<PageTitle>Workflow instance</PageTitle>
+<StudioHost View="InstanceViewer" Parameters="@(new Dictionary<string, object> { ["InstanceId"] = Id })" @key="Id" />
+
+@code {
+    [Parameter] public string Id { get; set; } = null!;
+}

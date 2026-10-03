@@ -1,0 +1,70 @@
+@using System.Text.Json.Nodes
+@using Orientation = Radzen.Orientation
+@using Crest.Workflows.Studio.Workflows.Models
+@using Crest.Workflows.Api.Client.Resources.WorkflowDefinitions.Models
+@using Crest.Workflows.Api.Client.Shared.Models
+@using Crest.Workflows.Studio.Contracts
+@using Crest.Workflows.Studio.Workflows.Domain.Contracts
+@using Crest.Workflows.Studio.Workflows.Extensions
+@inherits StudioComponentBase
+
+@if (IsReadOnly)
+{
+    <MudAlert Severity="Severity.Warning" Variant="MudBlazor.Variant.Filled" Square="true" Class="py-1" Icon="@Icons.Material.Filled.EnergySavingsLeaf">@Localizer["Unable to make changes as the workflow or application is currently in read-only mode"].</MudAlert>
+}
+
+<CascadingValue Value="_dragDropManager">
+    <RadzenSplitter Orientation="Orientation.Horizontal" Style="height: calc(100vh - var(--mud-appbar-height));">
+        <RadzenSplitterPane Size="15%" Min="100px">
+            @ActivityPickerComponentProvider.GetActivityPickerComponent()
+        </RadzenSplitterPane>
+        <RadzenSplitterPane Size="85%">
+            <WorkflowDefinitionWorkspace
+                @ref="WorkflowDefinitionWorkspace"
+                WorkflowDefinition="@_workflowDefinition"
+                WorkflowDefinitionVersionSelected="WorkflowDefinitionVersionSelected"
+                WorkflowDefinitionExecuted="WorkflowDefinitionExecuted"
+                ActivitySelected="ActivitySelected"
+            />
+        </RadzenSplitterPane>
+    </RadzenSplitter>
+</CascadingValue>
+
+@code
+{
+    private readonly DragDropManager _dragDropManager = new();
+    private WorkflowDefinition? _workflowDefinition;
+    private WorkflowDefinitionWorkspace WorkflowDefinitionWorkspace { get; set; } = null!;
+
+    /// The ID of the workflow definition to load.
+    [Parameter] public string DefinitionId { get; set; } = null!;
+
+    /// Gets or sets the event that occurs when the workflow definition version is updated.
+    [Parameter] public Func<WorkflowDefinition, Task>? WorkflowDefinitionVersionSelected { get; set; }
+
+    /// Gets or sets the event triggered when an activity is selected.
+    [Parameter] public Func<JsonObject, Task>? ActivitySelected { get; set; }
+
+    [Inject] private ILocalizer Localizer { get; set; } = null!;
+    [Inject] private IWorkflowDefinitionService WorkflowDefinitionService { get; set; } = null!;
+    [Inject] private IActivityPickerComponentProvider ActivityPickerComponentProvider { get; set; } = null!;
+
+    /// Gets the currently selected workflow definition version.
+    public WorkflowDefinition? GetSelectedWorkflowDefinitionVersion() => WorkflowDefinitionWorkspace.GetSelectedWorkflowDefinitionVersion();
+
+    /// <summary>An event that is invoked when a workflow definition has been executed.</summary>
+    /// <remarks>The ID of the workflow instance is provided as the value to the event callback.</remarks>
+    [Parameter] public Func<string, Task>? WorkflowDefinitionExecuted { get; set; }
+
+    /// Gets the currently selected activity ID.
+    public string? SelectedActivityId => WorkflowDefinitionWorkspace.SelectedActivityId;
+
+    /// Gets a value that indicates if the workflow definition editor should be displayed in readonly mode.
+    private bool IsReadOnly => _workflowDefinition.GetIsReadOnly();
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        _workflowDefinition = await WorkflowDefinitionService.FindByDefinitionIdAsync(DefinitionId, VersionOptions.Latest);
+    }
+}

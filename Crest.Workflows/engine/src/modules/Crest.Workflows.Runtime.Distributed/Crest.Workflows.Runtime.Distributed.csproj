@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Provides distributed workflow runtime functionality.
+        </Description>
+        <PackageTags>crestWorkflows extensions module workflows distributed runtime</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+	  <PackageReference Include="DistributedLock.FileSystem" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+	  <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions"/>
+      <PackageReference Include="Open.Linq.AsyncExtensions" />
+      <PackageReference Include="Polly" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Crest.Workflows.Resilience\Crest.Workflows.Resilience.csproj" />
+      <ProjectReference Include="..\Crest.Workflows.Runtime\Crest.Workflows.Runtime.csproj" />
+    </ItemGroup>
+	
+</Project>

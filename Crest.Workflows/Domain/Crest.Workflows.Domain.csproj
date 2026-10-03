@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- The workflow registry's contracts: what a module registers (triggers, flows) and the
+       one call it makes (publish a trigger). Server-free so any module - and the
+       blazor-wasm side - can reference it without pulling the engine in. -->
+</Project>
