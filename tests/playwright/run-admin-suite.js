@@ -101,6 +101,26 @@ function buildSharedAdminChecks() {
   ];
 }
 
+// The checks belonging to Crest's own opt-in modules, which live beside each module
+// rather than in this directory. Kept separate from the platform set above so a host
+// that enables only some of these modules, or wants its own ordering, can pick: it calls
+// buildSharedAdminChecks() and then whichever of these it needs. Running Crest on its
+// own takes the lot.
+function buildCrestModuleChecks() {
+  const module = (name, relative) => ({ name, fn: require(`../../${relative}`) });
+  return [
+    module('parties-contacts-api', 'Crest.Parties/tests/playwright/checks/party-contacts-api'),
+    module('parties-positions-api', 'Crest.Parties/tests/playwright/checks/party-positions-api'),
+    module('workflows-api', 'Crest.Workflows/tests/playwright/checks/workflows-api'),
+    module('workflows-orchard-activities', 'Crest.Workflows/tests/playwright/checks/workflows-orchard-activities'),
+    module('workflows-orchard-messaging', 'Crest.Workflows/tests/playwright/checks/workflows-orchard-messaging'),
+    module('workflows-units', 'Crest.Workflows/tests/playwright/checks/workflows-units'),
+    module('workflows-approvals', 'Crest.Workflows/tests/playwright/checks/workflows-approvals'),
+    module('workflows-designer', 'Crest.Workflows/tests/playwright/checks/workflows-designer'),
+    module('members-portal-api', 'Crest.Members/tests/playwright/checks/members-portal-api'),
+  ];
+}
+
 async function main() {
   const baseUrl = process.env.BASE_URL || 'http://crest.localhost:5010';
   const outputRoot = process.env.OUTPUT_ROOT || path.join(__dirname, 'output');
@@ -108,7 +128,7 @@ async function main() {
   const results = await runSuite({
     baseUrl,
     login: loginAsAdmin,
-    checks: buildSharedAdminChecks(),
+    checks: [...buildSharedAdminChecks(), ...buildCrestModuleChecks()],
     outputRoot,
   });
 
@@ -116,7 +136,7 @@ async function main() {
   process.exit(ok ? 0 : 1);
 }
 
-module.exports = { buildSharedAdminChecks };
+module.exports = { buildSharedAdminChecks, buildCrestModuleChecks };
 
 if (require.main === module) {
   main();
