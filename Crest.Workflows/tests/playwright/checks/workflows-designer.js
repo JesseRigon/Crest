@@ -111,12 +111,16 @@ module.exports = async function run(page, ctx) {
     const designerReady = await page.locator('.x6-node').first().waitFor({ timeout: 60000 }).then(() => true, () => false);
     const palette = [];
     // The palette is an accordion (one category open at a time): open each, then look.
-    for (const [category, label] of [['Connectors', 'Call connector'], ['Approvals', 'Request approval'], ['Accounting', 'Convert transaction']]) {
+    // Only categories Crest itself registers belong here. A consuming host's activities
+    // (Fruitful's "Accounting" category, say) are asserted by that host's own checks -
+    // this check runs against standalone Crest too, where they do not exist.
+    const crestCategories = [['Connectors', 'Call connector'], ['Approvals', 'Request approval']];
+    for (const [category, label] of crestCategories) {
       await page.locator('.mud-expand-panel-header', { hasText: category }).first().click();
       const item = page.locator('div[draggable="true"]', { hasText: label }).first();
       if (await item.waitFor({ state: 'visible', timeout: 5000 }).then(() => true, () => false)) palette.push(label);
     }
-    results.push({ name: 'designer-opens-the-definition-with-crest-activities', pass: designerReady && palette.length === 3, message: `canvas=${designerReady} palette=${palette.join(',')}` });
+    results.push({ name: 'designer-opens-the-definition-with-crest-activities', pass: designerReady && palette.length === crestCategories.length, message: `canvas=${designerReady} palette=${palette.join(',')}` });
 
     // 2. Add a node from the palette and connect it.
     await page.locator('.mud-expand-panel-header', { hasText: 'Console' }).first().click();

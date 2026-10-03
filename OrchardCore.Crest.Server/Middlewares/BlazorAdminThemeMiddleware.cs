@@ -101,21 +101,29 @@ internal sealed class BlazorAdminThemeStartupFilter : Microsoft.AspNetCore.Hosti
 public sealed class BlazorAdminThemeMiddleware
 {
     private const string LegacyHostRoute = "/legacy-host";
+    // Member-shell route literals. These name the @page literals the member client's own
+    // components declare; they are shell-relative (the member base is in PathBase by the
+    // time endpoint routing sees them), which is why they carry no prefix.
+    private const string MemberLoginRoute = "/login";
+    private const string MemberNotFoundRoute = "/not-found";
 
     private static readonly PathString CrestAdminThemePreviewPath = new("/OrchardCore.Crest.Admin/Theme.png");
     private const string CrestAdminThemePreviewAsset = "/_content/OrchardCore.Crest.Admin.Client/Theme.png";
 
     private readonly RequestDelegate _next;
     private readonly IOptions<BlazorAdminThemeOptions> _options;
+    private readonly IOptions<Crest.Routing.MemberOptions> _memberOptions;
     private readonly ILogger<BlazorAdminThemeMiddleware> _logger;
 
     public BlazorAdminThemeMiddleware(
         RequestDelegate next,
         IOptions<BlazorAdminThemeOptions> options,
+        IOptions<Crest.Routing.MemberOptions> memberOptions,
         ILogger<BlazorAdminThemeMiddleware> logger)
     {
         _next = next;
         _options = options;
+        _memberOptions = memberOptions;
         _logger = logger;
     }
 
@@ -164,7 +172,10 @@ public sealed class BlazorAdminThemeMiddleware
         // page URL and rewritten to /legacy-host, killing the interactive circuit. No
         // theme check here - these requests only follow a document this middleware
         // already theme-gated, and a stray one merely 404s at root.
-        if (TryStripShellPrefixForBlazorInfrastructure(requestPath, adminPath, new PathString(options.LoginPath), out var infrastructurePath))
+        if (TryStripShellPrefixForBlazorInfrastructure(
+                requestPath,
+                [adminPath, new PathString(options.LoginPath), new PathString("/" + _memberOptions.Value.MemberUrlPrefix)],
+                out var infrastructurePath))
         {
             context.Request.Path = infrastructurePath;
             try
@@ -192,17 +203,31 @@ public sealed class BlazorAdminThemeMiddleware
         // canonical LoginPath via the redirect below beats a dead 404.
         var isLoginRoute = requestPath.StartsWithSegments(new PathString(options.LoginPath), StringComparison.OrdinalIgnoreCase, out _);
 
+        // The member shell, at MemberOptions.MemberUrlPrefix ("/members" by default,
+        // tenant-settable). Matched the same way the admin shell is - a path-prefix match
+        // producing the canonical remainder its route table is keyed on - because that is
+        // all a shell selection is. Site needs no match of its own: it is the fallback
+        // bucket for every request this middleware does not claim.
+        var memberPath = new PathString("/" + _memberOptions.Value.MemberUrlPrefix);
+        var isMemberRoute = requestPath.StartsWithSegments(memberPath, StringComparison.OrdinalIgnoreCase, out var memberRemainder);
+
         // Only page requests are gated/rewritten. Asset requests (anything with a file
         // extension) are none of this middleware's business anymore - admin assets are
         // root-absolute _content/* / _framework/* URLs served by the static-assets
         // pipeline, never admin-path-prefixed.
-        if ((!isAdminRoute && !isLoginRoute) || !IsPageRequest(requestPath))
+        if ((!isAdminRoute && !isLoginRoute && !isMemberRoute) || !IsPageRequest(requestPath))
         {
             await _next(context);
             return;
         }
 
-        if (!await IsBlazorAdminThemeAsync(context, requestPath))
+        // The admin theme check gates the admin and login shells only. The member shell
+        // is a separate, independently-active theme (a tenant has an active admin theme
+        // AND an active member theme at once), so gating it on "is the Blazor admin theme
+        // active" would make the member portal unreachable on any tenant running a
+        // different admin theme - and the member shell is the surface a product's own
+        // users live in, which must not depend on what staff see.
+        if (!isMemberRoute && !await IsBlazorAdminThemeAsync(context, requestPath))
         {
             await _next(context);
             return;
@@ -216,17 +241,25 @@ public sealed class BlazorAdminThemeMiddleware
         // redirect instead.
         var canonicalPath = isLoginRoute
             ? options.LoginPath
-            : options.AdminPath + adminRemainder.Value;
+            : isMemberRoute
+                ? memberPath.Value + memberRemainder.Value
+                : options.AdminPath + adminRemainder.Value;
         if (!string.Equals(requestPath.Value, canonicalPath, StringComparison.Ordinal))
         {
             context.Response.Redirect(requestPathBase.Add(new PathString(canonicalPath)).Value + context.Request.QueryString);
             return;
         }
 
+        // Each shell matches its own remainder against the route table, scoped to its own
+        // bucket: "/members/account" must find the member-bucket page at "/account", never
+        // an admin page that happens to share the literal.
         var (isAdminBlazorRoute, blazorRoute) = isAdminRoute
-            ? await MatchBlazorRouteAsync(context, adminRemainder, context.Request.Query)
+            ? await MatchBlazorRouteAsync(context, adminRemainder, context.Request.Query, RouteBucket.Admin)
             : (false, null);
-        var isBlazorPageRoute = isLoginRoute || isAdminBlazorRoute;
+        var (isMemberBlazorRoute, memberRoute) = isMemberRoute
+            ? await MatchBlazorRouteAsync(context, memberRemainder, context.Request.Query, RouteBucket.Member)
+            : (false, null);
+        var isBlazorPageRoute = isLoginRoute || isAdminBlazorRoute || isMemberBlazorRoute;
 
         // Direct URL requests are authorized on the server. In-app navigation
         // uses the login manifest's batch as a fast UI guard, but that browser
@@ -266,6 +299,34 @@ public sealed class BlazorAdminThemeMiddleware
             }
         }
 
+        // The member shell authenticates the same way, and redirects unauthenticated
+        // requests to the MEMBER login rather than the staff one: the two login surfaces
+        // are separate by construction (each is a page in its own shell at its own base),
+        // not by a runtime check on one shared page.
+        //
+        // No route-permission check here, deliberately. Admin routes map to Orchard
+        // permissions, which is what CrestRouteAuthorizationService answers. A member's
+        // reach is not a permission on a route - it is which organization they are acting
+        // in and what their member class allows, which is per-record and belongs in the
+        // query that reads those records, failing closed. Gating the route would imply the
+        // page is safe once entered, which is exactly the wrong guarantee: the member
+        // theme is shared by every org-bound user in the tenant, so a page being
+        // reachable says nothing about which rows that member may see.
+        if (isMemberBlazorRoute && memberRoute?.AllowsAnonymous != true)
+        {
+            var authentication = await context.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+            if (authentication.Succeeded && authentication.Principal is not null)
+            {
+                context.User = authentication.Principal;
+            }
+
+            if (context.User.Identity?.IsAuthenticated != true)
+            {
+                context.Response.Redirect(requestPathBase.Add(memberPath.Add(new PathString(MemberLoginRoute))).Value!);
+                return;
+            }
+        }
+
         // Bridge the tenant-configured prefix to MapRazorComponents' route table by
         // shifting the shell base into PathBase (PathBase += shellBase, Path = the
         // compile-time @page literal) - the same move ModularTenantRouterMiddleware
@@ -279,15 +340,33 @@ public sealed class BlazorAdminThemeMiddleware
         // page. When .NET 11's <BasePath /> component ships
         // (dotnet/aspnetcore#66388) it derives from this exact PathBase too, so the
         // document side can adopt it without touching this middleware.
-        var shellBasePath = isLoginRoute ? options.LoginPath : options.AdminPath;
+        var shellBasePath = isLoginRoute
+            ? options.LoginPath
+            : isMemberRoute
+                ? memberPath.Value!
+                : options.AdminPath;
+        // The shell's own identity, not inferred from the base path: RouteGateMatcherPolicy
+        // and App.razor both read this to pick a bucket and a document, and a base-path
+        // string cannot answer "which of three shells" the way a presence check answered
+        // "admin or not". Login is part of the admin shell - it renders the admin
+        // document and its page lives in the admin bucket.
+        var shellBucket = isMemberRoute ? RouteBucket.Member : RouteBucket.Admin;
         context.Items[CrestBlazorHosting.OriginalPathItem] = requestPath.Value;
         context.Items[CrestBlazorHosting.ShellBasePathItem] = shellBasePath;
+        context.Items[CrestBlazorHosting.ShellBucketItem] = shellBucket;
         context.Items[CrestBlazorHosting.TenantBasePathItem] = requestPathBase.Value ?? string.Empty;
         var rewrittenPath = isLoginRoute
             ? new PathString("/login")
-            : isBlazorPageRoute
-                ? (adminRemainder.HasValue ? adminRemainder : new PathString("/"))
-                : new PathString(LegacyHostRoute);
+            : isMemberRoute
+                ? (isMemberBlazorRoute
+                    // A member URL with no member page is a 404 inside the member shell,
+                    // not the admin legacy frame: that frame is Orchard's admin UI, which
+                    // a member has no business being shown.
+                    ? (memberRemainder.HasValue ? memberRemainder : new PathString("/"))
+                    : new PathString(MemberNotFoundRoute))
+                : isBlazorPageRoute
+                    ? (adminRemainder.HasValue ? adminRemainder : new PathString("/"))
+                    : new PathString(LegacyHostRoute);
         context.Request.PathBase = requestPathBase.Add(new PathString(shellBasePath));
         context.Request.Path = rewrittenPath;
         try
@@ -301,14 +380,27 @@ public sealed class BlazorAdminThemeMiddleware
         }
     }
 
+    // shellBases is every shell's base path (admin, login, member). A shell whose
+    // infrastructure requests are not stripped here loses its interactive circuit:
+    // "{shellBase}/_blazor" has no file extension, so it would fall through to the page
+    // gating and be rewritten to /legacy-host.
     private static bool TryStripShellPrefixForBlazorInfrastructure(
         PathString requestPath,
-        PathString adminPath,
-        PathString loginPath,
+        PathString[] shellBases,
         out PathString infrastructurePath)
     {
-        if ((requestPath.StartsWithSegments(adminPath, out var remainder) ||
-             requestPath.StartsWithSegments(loginPath, out remainder)) &&
+        var matchedShell = false;
+        var remainder = PathString.Empty;
+        foreach (var shellBase in shellBases)
+        {
+            if (shellBase.HasValue && requestPath.StartsWithSegments(shellBase, StringComparison.OrdinalIgnoreCase, out remainder))
+            {
+                matchedShell = true;
+                break;
+            }
+        }
+
+        if (matchedShell &&
             (remainder.StartsWithSegments("/_framework") ||
              remainder.StartsWithSegments("/_content") ||
              remainder.StartsWithSegments("/_blazor") ||
@@ -348,10 +440,11 @@ public sealed class BlazorAdminThemeMiddleware
     // middleware no longer scans .razor source files itself, avoiding two independent
     // "is this an Admin route" implementations drifting out of sync.
     // (matched, entry): the entry is null for the one non-table match below.
-    private static async Task<(bool Matched, RouteComponentEntry? Entry)> MatchBlazorRouteAsync(HttpContext context, PathString adminRemainder, IQueryCollection query)
+    private static async Task<(bool Matched, RouteComponentEntry? Entry)> MatchBlazorRouteAsync(HttpContext context, PathString shellRemainder, IQueryCollection query, RouteBucket bucket)
     {
-        var normalized = NormalizeRoute(adminRemainder.Value);
-        if (string.Equals(normalized, "/settings", StringComparison.OrdinalIgnoreCase) &&
+        var normalized = NormalizeRoute(shellRemainder.Value);
+        if (bucket == RouteBucket.Admin &&
+            string.Equals(normalized, "/settings", StringComparison.OrdinalIgnoreCase) &&
             string.Equals(query["groupId"], "SecurityHeaders", StringComparison.OrdinalIgnoreCase))
         {
             return (true, null);
@@ -359,7 +452,12 @@ public sealed class BlazorAdminThemeMiddleware
 
         var tableManager = context.RequestServices.GetRequiredService<IRouteComponentTableManager>();
         var table = await tableManager.GetRouteComponentTableAsync();
-        return table.TryMatch(new PathString(normalized), out var matched) ? (true, matched) : (false, null);
+        // Scoped to the shell's own bucket: the same literal can exist in two buckets
+        // (both an admin and a member "/account"), and matching across buckets would let
+        // one shell's URL resolve to the other shell's page.
+        return table.TryMatch(new PathString(normalized), out var matched) && matched?.Bucket == bucket
+            ? (true, matched)
+            : (false, null);
     }
 
     private static string NormalizeRoute(string? route)

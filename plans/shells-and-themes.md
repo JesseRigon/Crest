@@ -47,6 +47,25 @@ bucket, lazy-loaded per route. `Crest.Members` keeps the portal's server machine
 member pages; its staff-facing screens (membership tiers, perks, default groups) stay in
 the **admin** bucket, where they belong.
 
+### One theme, per-member authorization
+
+The member theme is **shared by every organization-bound user in the tenant**, exactly as
+the admin theme is shared by every staff user: one theme, one active-theme setting, one
+set of shapes and assets, chosen per tenant.
+
+**Data access and permissions are not shared.** Two members signing into the same member
+theme may see entirely different data and hold entirely different permissions, scoped to
+the organization they are acting in and to their member class. The theme decides how a
+page looks; it decides nothing about what the page is allowed to read.
+
+The practical consequence is that **no authorization may be expressed in the theme or in a
+component**. A shared theme that hid a nav entry or a panel would be doing access control
+in markup that every member downloads — the same WASM assembly, the same lazy-loaded
+route. Every scope decision belongs server-side, in the query, keyed on the member's
+active organization and class, and fails closed; the UI renders what the server returned
+and nothing more. Hiding a control in the client is a presentation choice layered on top
+of a server decision that has already been made, never the decision itself.
+
 ## Generalizing shell dispatch
 
 The existing mechanism is two-valued in three places. Each becomes a registry of shells,
@@ -83,17 +102,14 @@ browser. The member login, registration and any other page that establishes a se
 the identical trap, so the rule is general: **a page that sets an authentication cookie
 renders `InteractiveWebAssembly`**, declared by the page, not special-cased per shell.
 
-### Host-based shells (subdomains)
+### The selector takes the request
 
-Orchard matches tenants by host already, but one tenant serving different shells on
-different hosts does not exist. It is the same decision point: the selector picks a shell
-from the request and sets its base, and a host-selected shell simply has an empty base
-path. `office.example.com` → admin at root, `app.example.com` → member at root,
-`example.com` → site, in one tenant. The shell-selector refactor should therefore take the
-request, not a path prefix, and keep its matching rules in options — not build host
-selection yet, but not foreclose it. Cookie path scoping (tenant base, never shell base)
-and absolute cross-shell navigation targets already work this way, so a host-based shell
-mostly falls out; cross-host cookies and antiforgery need their own pass when it is built.
+The shell selector matches on the **request**, not on a path prefix string, and keeps its
+matching rules in options. Path prefixes are the only rule it implements: every shell is
+selected by its prefix, and the site shell is the fallback when none matches.
+
+Taking the request rather than a prefix costs nothing now and is what keeps other matching
+rules — a shell on its own hostname, say — addable later without reshaping the selector.
 
 ## Theme compatibility
 
@@ -158,11 +174,25 @@ same text, so the state is visible rather than merely having been warned about o
 - Incompatible themes are listed, marked, and selectable only through the two-step
   confirmation above.
 
+## The member base path
+
+`MemberOptions.MemberUrlPrefix`, defaulting to **`members`**, tenant-settable exactly as
+`AdminOptions.AdminUrlPrefix` is: one option, post-configured per tenant, read through
+`IOptions<MemberOptions>` and never hardcoded at a call site. Every member URL is built
+from it — navigation, the login surface, cross-shell links — so a tenant that changes the
+prefix gets working links with no further edits, the way `AdminUrlPrefix "backoffice"`
+already works for the admin shell.
+
+The override is part of the feature, not a later addition: a default nobody can change is
+not a tenant setting, and a path that only works at its default value is the bug this
+option exists to prevent. Any consuming host should therefore set a non-default prefix on
+at least one tenant, so both the default and the override are exercised.
+
+The prefix is how the member shell is reached, for every tenant, with no alternative
+mechanism in this plan.
+
 ## Open questions
 
-- **Member base path.** A tenant-configurable prefix (the shape `AdminOptions.AdminUrlPrefix`
-  has) is the obvious answer, with the host-based option above layered on later. The
-  default value is unsettled.
 - **Does the site shell need a bucket tag** of its own for symmetry, or is "neither admin
   nor member" good enough? The latter keeps existing site themes valid with no manifest
   edit, which argues for it.
@@ -171,7 +201,8 @@ same text, so the state is visible rather than merely having been warned about o
 
 ## Phases
 
-- [ ] 0. This plan; the bucket/contract vocabulary agreed.
+- [x] 0. This plan; the bucket/contract vocabulary agreed, and the member base path settled
+      (`members` by default, tenant-settable).
 - [ ] 1. Generalize shell dispatch: shell registry, bucket as a shell id, selector over
       the registered shells, `App.razor` branch per shell, the auth-cookie render-mode
       rule declared by pages. Admin and Site behaviour unchanged, proven by the existing
@@ -184,5 +215,3 @@ same text, so the state is visible rather than merely having been warned about o
       its API acknowledgement, and the incompatibility badges.
 - [ ] 4. Theme-selection UI: three sections, filters, the Member section gated on the
       Members feature.
-- [ ] 5. Host-based shell selection (subdomains), with the cookie and antiforgery pass it
-      needs.

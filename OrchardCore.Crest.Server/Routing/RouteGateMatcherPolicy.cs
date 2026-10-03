@@ -33,15 +33,18 @@ namespace Crest.Routing;
 // one should win is entirely decided by whether BlazorAdminThemeMiddleware routed this
 // specific request to the admin shell (it rewrites the request path AND stashes
 // CrestBlazorHosting.ShellBasePathItem before endpoint routing ever runs) - the exact
-// same signal Components/App.razor itself reads to decide which document (Admin vs Site)
-// to render. So: an Admin-bucket candidate is valid iff the middleware marked this
-// request as the admin shell; a Site-bucket candidate is valid iff it did NOT (Site is
-// the fallback bucket for every request the middleware didn't claim - see
-// BlazorAdminThemeMiddleware's IsPageRequest/isAdminRoute/isLoginRoute gating, which
-// never even runs for a bare "/" request). The two are deliberately mutually exclusive,
-// mirroring exactly the _isAdminShell branch in Components/App.razor - a request that
-// the middleware rewrote into "/" (e.g. a bare "/Admin" with no further segments) must
-// only ever leave the Admin candidate standing, never both.
+// same signal Components/App.razor itself reads to decide which document to render. So:
+// a candidate is valid iff its bucket IS the bucket the middleware selected for this
+// request, stamped as CrestBlazorHosting.ShellBucketItem. Site is the fallback for every
+// request the middleware didn't claim - see BlazorAdminThemeMiddleware's
+// IsPageRequest/shell-matching gating, which never even runs for a bare "/" request - so
+// an absent stamp reads as Site.
+//
+// The buckets are mutually exclusive by construction, mirroring exactly the shell branch
+// in Components/App.razor: a request the middleware rewrote into "/" (e.g. a bare
+// "/Admin" with no further segments, or "/members") must leave only that shell's
+// candidate standing, never two. This is an equality test rather than one arm per bucket
+// precisely so that property cannot be broken by adding a shell.
 public sealed class RouteGateMatcherPolicy : MatcherPolicy, IEndpointSelectorPolicy
 {
     // Runs before Blazor's own render-mode negotiation policies, so a vetoed candidate
@@ -58,8 +61,15 @@ public sealed class RouteGateMatcherPolicy : MatcherPolicy, IEndpointSelectorPol
         // document to render. No theme-service calls needed here: whether Admin's bucket
         // is allowed to win is entirely a function of the middleware's own routing
         // decision, already made once per request.
-        var isAdminShellRequest = httpContext.Items.TryGetValue(CrestBlazorHosting.ShellBasePathItem, out var shellBasePath)
-            && shellBasePath is string { Length: > 0 };
+        // The bucket the middleware selected for this request. Absent means Site: Site is
+        // the fallback bucket for every request no shell claimed, and the middleware
+        // never runs its gating for those (a bare "/" never reaches it). Reading the
+        // bucket rather than "is a base path present" is what makes a third shell
+        // possible at all - presence is one bit and cannot distinguish three shells.
+        var requestBucket = httpContext.Items.TryGetValue(CrestBlazorHosting.ShellBucketItem, out var bucketItem)
+            && bucketItem is RouteBucket stamped
+                ? stamped
+                : RouteBucket.Site;
 
         var logger = httpContext.RequestServices.GetRequiredService<ILoggerFactory>()
             .CreateLogger<RouteGateMatcherPolicy>();
@@ -77,21 +87,18 @@ public sealed class RouteGateMatcherPolicy : MatcherPolicy, IEndpointSelectorPol
                 continue;
             }
 
-            var isValidForBucket = themeOwner.Bucket switch
-            {
-                RouteBucket.Admin => isAdminShellRequest,
-                RouteBucket.Site => !isAdminShellRequest,
-                _ => false,
-            };
-
-            if (!isValidForBucket)
+            // Exactly one bucket is valid per request: the one the middleware selected.
+            // Equality rather than a per-bucket arm, so adding a shell needs no change
+            // here - and so no two buckets can ever both be valid, which is what the
+            // AmbiguousMatchException described above came from.
+            if (themeOwner.Bucket != requestBucket)
             {
                 logger.LogDebug(
-                    "RouteGateMatcherPolicy vetoed candidate {DisplayName} (bucket {Bucket}) for {Path}: isAdminShellRequest={IsAdminShellRequest}.",
+                    "RouteGateMatcherPolicy vetoed candidate {DisplayName} (bucket {Bucket}) for {Path}: this request is serving the {RequestBucket} shell.",
                     candidates[index].Endpoint.DisplayName,
                     themeOwner.Bucket,
                     httpContext.Request.Path,
-                    isAdminShellRequest);
+                    requestBucket);
                 candidates.SetValidity(index, false);
             }
         }

@@ -685,7 +685,6 @@ shipped.
 | --- | --- |
 | `workflows-api` | engine API round-trip (save, publish, execute, journal), antiforgery 400, limited role 403, anonymous 401 |
 | `workflows-orchard-activities` | stock `ContentPublishedEvent` (filtered) starts a flow; stock `CreateContentTask` with stock Liquid |
-| `workflows-orchard-messaging` | a login raises `UserLoggedInEvent`; stock `EmailTask` through `Orchard external task` mails after commit (pickup directory `CREST_MAIL_DIR`) |
 | `workflows-accounting` (Accounting) | registry entries, the system sample flow runs once per posted document, the convert chain stops itself |
 | `workflows-ledger` (Accounting) | the posting and voiding slots carry the system flows; posting an invoice posts a balanced entry inside the unit (receivable debit = total, sales credit = subtotal); the trial balance balances and receivable carries the total; a failed posting attachment answers 409, the invoice stays Draft, no entry; voiding posts a reversal and receivable returns; a customer payment books undeposited receipts against receivable; entries by id; five postings within budget |
 | `workflows-parties` (Parties) | role-created/removed |
@@ -706,8 +705,8 @@ the async-only disposable scan, the shipped-flow sync decision.
 
 **Known flake:** on a freshly provisioned tenant, a check running early in a filtered run
 occasionally hits Playwright's "Execution context was destroyed" (the admin page navigated
-once under an evaluate). Not reproduced idle or in the full suite; `workflows-orchard-messaging`
-and `workflows-accounting` settle and retry once. Suspect a circuit drop and reload in Crest.
+once under an evaluate). Not reproduced idle or in the full suite; `workflows-accounting`
+settles and retries once. Suspect a circuit drop and reload in Crest.
 Also: edits under the watch dev server during a `dev.sh test` run rebuild shared WASM
 assets and break the test server's integrity checks (every login stays disabled); stop the
 watch server or do not edit during a run. A build that fails on

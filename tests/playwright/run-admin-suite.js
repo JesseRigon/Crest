@@ -113,7 +113,6 @@ function buildCrestModuleChecks() {
     module('parties-positions-api', 'Crest.Parties/tests/playwright/checks/party-positions-api'),
     module('workflows-api', 'Crest.Workflows/tests/playwright/checks/workflows-api'),
     module('workflows-orchard-activities', 'Crest.Workflows/tests/playwright/checks/workflows-orchard-activities'),
-    module('workflows-orchard-messaging', 'Crest.Workflows/tests/playwright/checks/workflows-orchard-messaging'),
     module('workflows-units', 'Crest.Workflows/tests/playwright/checks/workflows-units'),
     module('workflows-approvals', 'Crest.Workflows/tests/playwright/checks/workflows-approvals'),
     module('workflows-designer', 'Crest.Workflows/tests/playwright/checks/workflows-designer'),

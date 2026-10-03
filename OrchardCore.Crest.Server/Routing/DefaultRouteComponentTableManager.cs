@@ -13,7 +13,10 @@ namespace Crest.Routing;
 //
 // Keyed by the concrete (admin theme id, site theme id) pair currently active for this
 // shell - still a valid, useful cache key (it changes exactly when a theme change could
-// change which pages are registered), even though which BUCKETS are active is decided
+// change which pages are registered). The member theme is deliberately NOT in the key:
+// member routes are registered unconditionally (see BuildAsync), so no member theme
+// change can change the table's contents, and a change of the active member theme tears
+// the shell down anyway, which drops this cache with it. Which BUCKETS are active is decided
 // below via IBlazorAdminThemeDetector, not by comparing those ids against each
 // provider's own id. Earlier code compared adminThemeId/siteThemeId directly against
 // each IRouteComponentTableProvider.ThemeId (then a raw string) via
@@ -46,10 +49,17 @@ public sealed class DefaultRouteComponentTableManager(
         // itself claim (see RouteGateMatcherPolicy's comment) - its routes are always
         // registered. Admin's routes are only registered when Blazor is genuinely the
         // active admin theme for this tenant.
+        //
+        // Member's routes are always registered too, and deliberately NOT gated on the
+        // admin theme: a tenant's admin theme and member theme are independent,
+        // simultaneously-active settings, so gating the member shell on the admin one
+        // would make a product's own member portal vanish because staff switched their
+        // back-office theme. The member shell is present when the Members feature is
+        // enabled, which is what decides whether a member provider is registered at all.
         var isBlazorAdminThemeActive = await blazorAdminThemeDetector.IsBlazorAdminThemeActiveAsync();
 
         var entries = providers
-            .Where(provider => provider.Bucket == RouteBucket.Site || isBlazorAdminThemeActive)
+            .Where(provider => provider.Bucket != RouteBucket.Admin || isBlazorAdminThemeActive)
             .SelectMany(provider => provider.GetRouteComponents())
             .ToArray();
 

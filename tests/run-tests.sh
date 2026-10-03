@@ -21,24 +21,48 @@ export BASE_URL="${BASE_URL:-${CREST_SERVER_URL:-}}"
 
 overall_failed=0
 
-echo "=== OrchardCore.Crest C# tests ==="
-csharp_total=0
-csharp_failures=0
-while IFS= read -r -d '' csproj; do
-  csharp_total=$((csharp_total + 1))
-  relative="${csproj#${CREST_DIR}/}"
-  echo "==> dotnet test ${relative}"
-  if ! dotnet test "${csproj}"; then
-    csharp_failures=$((csharp_failures + 1))
-  fi
-done < <(find "${CREST_DIR}" -mindepth 3 -maxdepth 4 -path "*/tests/*/*.csproj" -print0 | sort -z)
-
-if ((csharp_total == 0)); then
-  echo "(none found)"
-elif ((csharp_failures > 0)); then
+# Every test project in ONE dotnet process, via OrchardCore.Crest.Tests.slnx.
+#
+# This used to be a loop of `dotnet test <csproj>`, one process per project. Each one
+# re-restored and re-evaluated the whole project graph - the vendored workflow engine
+# included - which cost minutes of MSBuild startup to execute well under a second of
+# tests, and every consuming host that delegates here paid it.
+#
+# The solution is .slnx, not .sln, deliberately: `dotnet sln add` on a .sln mirrors each
+# project's directory as a solution folder, and a folder named identically to a sibling
+# project is MSB5004 ("two projects named X"), which this tree hits 11 times. .slnx keeps
+# a flat project list and has neither problem. A new tests/ project is added to that
+# solution rather than to a loop here.
+#
+# No --no-build: a host may or may not have built first, and this script is called
+# standalone too, so it builds what it needs.
+CREST_TESTS_SLNX="${CREST_DIR}/OrchardCore.Crest.Tests.slnx"
+echo "=== OrchardCore.Crest C# tests (dotnet test OrchardCore.Crest.Tests.slnx) ==="
+if [ ! -f "${CREST_TESTS_SLNX}" ]; then
+  echo "OrchardCore.Crest.Tests.slnx not found at ${CREST_TESTS_SLNX}" >&2
   overall_failed=1
+else
+  # A test project that is on disk but not in the solution would be silently skipped, and
+  # the run would still pass - the failure mode this whole arrangement has to rule out.
+  # So the two are compared before running, and a mismatch fails the run loudly.
+  unlisted=0
+  while IFS= read -r -d '' csproj; do
+    name="$(basename "${csproj}")"
+    if ! grep -q "${name}" "${CREST_TESTS_SLNX}"; then
+      echo "Test project not in OrchardCore.Crest.Tests.slnx: ${csproj#${CREST_DIR}/}" >&2
+      echo "  add it with: dotnet sln OrchardCore.Crest.Tests.slnx add <path>" >&2
+      unlisted=$((unlisted + 1))
+    fi
+  done < <(find "${CREST_DIR}" -path "*/tests/*" -name "*.csproj" \
+             -not -path "*/obj/*" -not -path "*/bin/*" -print0 2>/dev/null | sort -z)
+
+  if ((unlisted > 0)); then
+    echo "${unlisted} test project(s) missing from the solution - not running a partial suite." >&2
+    overall_failed=1
+  elif ! dotnet test "${CREST_TESTS_SLNX}"; then
+    overall_failed=1
+  fi
 fi
-echo "C# test projects: $((csharp_total - csharp_failures))/${csharp_total} passed"
 
 echo
 echo "=== OrchardCore.Crest shared Playwright suite ==="
