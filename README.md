@@ -130,3 +130,12 @@ dotnet build OrchardCore.Crest.Host.csproj --no-restore
 ```
 
 Browser validation should use reusable Playwright scripts under the owning project's `tests/playwright` directory, not one-off inline scripts.
+
+## Licence
+
+MIT — see [LICENSE](LICENSE).
+
+Crest vendors, forks and adapts several permissively licensed works, each of which keeps
+its own licence beside the code it covers: the workflow engine and designer (Elsa), the
+Blazor component library (Radzen Blazor), the money types (OrchardCore.Commerce) and the
+default site theme's front-end assets. [NOTICE.md](NOTICE.md) is the inventory.

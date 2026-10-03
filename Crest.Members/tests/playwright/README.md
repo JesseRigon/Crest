@@ -1,14 +1,13 @@
 # Crest.Members live checks
 
-Registered in `dev/run-admin-suite.js`; run one with `CHECK_FILTER=<name> node dev/run-admin-suite.js`.
+Registered in the shared suite (`../../../tests/playwright/run-admin-suite.js`) and in a
+consuming host's own entry script; run one with `CHECK_FILTER=<name>`.
 
-checks/members-memberships-api.js — memberships backend round trip over subscriptions
-and seats: a Perk option on `members.perk`, a tier carrying the permission CEILING, an
-org-scoped group carrying the GRANT, a subscription an org buys, and seats assigned to
-portal users under it. Asserts the rules that make entitlement resolution total — the
-(member, organization) key unique across EVERY subscription in that org, a paid
-subscription refusing when full, an inactive seat releasing its slot, the free
-subscription never running out and only one per org, a group from another org being
-refused, and resolution intersecting the group's grant with the tier's ceiling. Seats
-and subscriptions are deleted afterwards, member org bindings removed, test perks
-hidden (options never delete).
+checks/members-portal-api.js — the member portal's surface and its gate: registering and
+signing in through the portal, the portal session, the active-organization binding, and
+the login-channel rule in both directions (a member account refused at the tenant login,
+a staff account refused at the portal).
+
+The commercial side of a member relationship — subscriptions, seats, tiers, perks,
+entitlement resolution — is not Members' and is checked by whichever module owns it.
+Members declares `IMemberLifecycleHandler` for it and knows nothing more.
