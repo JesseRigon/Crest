@@ -125,10 +125,13 @@ code.AppendLine("        dependencies: new System.Collections.Generic.Dictionary
 foreach (var module in lazyRoots.Where(n => moduleNames.Contains(n) && lazySet.Contains(n)).OrderBy(n => n))
 {
     var deps = closure(new[] { module }, new HashSet<string>(lazyRoots.Where(r => r != module), StringComparer.OrdinalIgnoreCase)).Where(lazySet.Contains).OrderBy(n => n);
-    code.AppendLine("            [" + quote(module) + "] = new[] { " + string.Join(", ", deps.Select(quote)) + " },");
+    code.AppendLine("            [" + quote(module) + "] = new string[] { " + string.Join(", ", deps.Select(quote)) + " },");
 }
 code.AppendLine("        },");
-code.AppendLine("        regionContributors: new[] { " + string.Join(", ", regionAssemblies.Where(lazySet.Contains).OrderBy(n => n).Select(quote)) + " });");
+// Explicitly typed: with no module contributing regions - a host that enables no
+// region-contributing module, or Crest on its own - an implicitly-typed empty array
+// does not compile.
+code.AppendLine("        regionContributors: new string[] { " + string.Join(", ", regionAssemblies.Where(lazySet.Contains).OrderBy(n => n).Select(quote)) + " });");
 code.AppendLine("}");
 Directory.CreateDirectory(Path.GetDirectoryName(generatedFile)!);
 if (!File.Exists(generatedFile) || File.ReadAllText(generatedFile) != code.ToString()) File.WriteAllText(generatedFile, code.ToString());
