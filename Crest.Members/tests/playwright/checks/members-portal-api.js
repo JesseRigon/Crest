@@ -1,6 +1,7 @@
-// Live check of the member portal surfaces (plans/user-systems.md §B/§G): the
-// [AllowAnonymous] portal pages are served to an anonymous visitor without the admin
-// shell's login redirect (while a normal admin page still redirects), portal sign-in
+// Live check of the member portal surfaces (plans/user-systems.md §B/§G,
+// plans/shells-and-themes.md): the member shell's sign-in page is served to an anonymous
+// visitor at the member base (while a normal admin page still redirects), an admin page
+// requested inside the member shell is not found there, portal sign-in
 // admits a member and refuses staff, the tenant JSON login refuses the member, and
 // portal self-registration provisions a member of the organization with a linked
 // Person. Setup (org, member) runs on the admin session; the surface probes run in a
@@ -9,6 +10,9 @@ module.exports = async function run(page, ctx) {
   const stamp = Date.now();
   const results = [];
   const check = (name, pass, message) => results.push({ name, pass, message });
+  // The tenant's member base (MemberOptions.MemberUrlPrefix): "members" unless the host
+  // moved it, as Venti does.
+  const memberBase = `${ctx.baseUrl}/${(process.env.MEMBER_URL_PREFIX || 'members').replace(/^\/+|\/+$/g, '')}`;
 
   function apiOn(target) {
     return async function api(method, url, body) {
@@ -62,14 +66,23 @@ module.exports = async function run(page, ctx) {
     if (member.json?.userId) userIds.push(member.json.userId);
     check('create-member', member.ok && member.json?.bindings?.[0]?.organizationId === orgId, `HTTP ${member.status} ${member.text}`);
 
-    // The seam: an anonymous GET of the portal login page is served (200, no
-    // redirect to the login shell); a regular admin page still redirects.
-    const loginPage = await visitor.goto(`${ctx.baseUrl}/Admin/members/login`, { waitUntil: 'domcontentloaded' });
-    const loginPageOk = loginPage?.status() === 200 && (await visitor.locator('[data-testid="member-portal-login"]').count()) > 0;
+    // The member shell's own sign-in page is public at the member base (200, no redirect
+    // to the staff login); a regular admin page still redirects.
+    const loginPage = await visitor.goto(`${memberBase}/login`, { waitUntil: 'domcontentloaded' });
+    const loginPageOk = loginPage?.status() === 200 && (await visitor.locator('[data-testid="member-login"]').count()) > 0;
     check('portal-login-page-is-public', loginPageOk, `HTTP ${loginPage?.status()} url=${visitor.url()}`);
 
     const dashboard = await visitor.request.get(`${ctx.baseUrl}/Admin/Dashboard`, { maxRedirects: 0 });
     check('admin-page-still-redirects-anonymous', dashboard.status() === 302 || dashboard.status() === 301, `HTTP ${dashboard.status()}`);
+
+    // UI isolation: an admin module page requested inside the member shell is not found
+    // there. /Parties is Crest.Parties' admin page; the member shell's route table holds
+    // member-bucket pages only, so it must render the member not-found page, never the
+    // admin one.
+    await visitor.goto(`${memberBase}/Parties`, { waitUntil: 'domcontentloaded' });
+    const leakedNotFound = (await visitor.locator('[data-testid="member-not-found"]').count()) > 0;
+    const leakedAdminChrome = (await visitor.locator('.primary-nav-menu').count()) > 0;
+    check('member-shell-does-not-render-admin-pages', leakedNotFound && !leakedAdminChrome, `notFound=${leakedNotFound} adminChrome=${leakedAdminChrome} url=${visitor.url()}`);
 
     const visitorApi = apiOn(visitor);
     const staffOnPortal = await visitorApi('POST', '/api/crest/members/portal/login', { userName: 'admin', password: process.env.ADMIN_PASSWORD || 'CrestRules1!', rememberMe: false, organizationId: null });
@@ -87,15 +100,23 @@ module.exports = async function run(page, ctx) {
     const me = await visitorApi('GET', '/api/crest/members/me', null);
     check('member-session-has-active-org', me.ok && me.json?.activeOrganizationId === orgId, `HTTP ${me.status} ${me.text}`);
 
-    // The member home renders the org switcher for the signed-in member.
-    await visitor.goto(`${ctx.baseUrl}/Admin/members`, { waitUntil: 'domcontentloaded' });
-    const homeUser = visitor.locator('[data-testid="member-portal-user"]');
+    // The member shell's home greets the signed-in member, inside the member chrome.
+    await visitor.goto(`${memberBase}/`, { waitUntil: 'domcontentloaded' });
+    const homeUser = visitor.locator('[data-testid="member-home"]');
     let homeOk = false;
+    let homeText = null;
     try {
       await homeUser.waitFor({ timeout: 20000 });
-      homeOk = (await homeUser.textContent())?.includes(memberName) === true;
+      homeText = await homeUser.textContent();
+      homeOk = homeText?.includes(memberName) === true;
     } catch {}
-    check('portal-home-shows-member', homeOk, `url=${visitor.url()}`);
+    const pageText = homeOk ? '' : ((await visitor.locator('body').innerText().catch(() => '')) || '').replace(/\s+/g, ' ').slice(0, 300);
+    check('portal-home-shows-member', homeOk, `url=${visitor.url()} home=${JSON.stringify(homeText)} page=${JSON.stringify(pageText)}`);
+
+    // The active organization shows by name, resolved server-side with the session -
+    // never the bare content item id.
+    const activeOrgText = homeOk ? await visitor.locator('[data-testid="member-home-active-org"]').textContent().catch(() => null) : null;
+    check('portal-home-shows-active-org-name', activeOrgText?.trim() === `Playwright portal org ${stamp}`, `activeOrg=${JSON.stringify(activeOrgText)}`);
 
     await visitorApi('POST', '/api/crest/auth/logout', null);
 

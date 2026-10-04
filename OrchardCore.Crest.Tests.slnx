@@ -8,7 +8,6 @@
   </Folder>
   <Folder Name="/Crest.Members/" />
   <Folder Name="/Crest.Members/blazor-wasm/">
-    <Project Path="Crest.Members/blazor-wasm/Crest.Members.BlazorWasm.csproj" />
   </Folder>
   <Folder Name="/Crest.Members/Domain/">
     <Project Path="Crest.Members/Domain/Crest.Members.Domain.csproj" />

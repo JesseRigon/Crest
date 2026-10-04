@@ -18,6 +18,7 @@ public sealed record ImpersonateRequest(string UserId);
 public sealed class MembersController(
     IMemberService memberService,
     MemberSessionService sessionService,
+    MemberOrganizationDirectory organizationDirectory,
     MemberImpersonationService impersonationService,
     UserClassConversionService conversionService,
     IAuthorizationService authorizationService) : ControllerBase
@@ -31,7 +32,7 @@ public sealed class MembersController(
         var activeOrg = await sessionService.GetActiveOrganizationAsync(HttpContext);
         var impersonator = User.FindFirst(MemberClaims.Impersonator)?.Value;
 
-        return Ok(new MemberSessionModel(member, activeOrg, impersonator));
+        return Ok(new MemberSessionModel(member, activeOrg, impersonator, await organizationDirectory.GetAsync(member)));
     }
 
     // The org switcher (ruling: one account, N bindings, per-org roles; the UI and

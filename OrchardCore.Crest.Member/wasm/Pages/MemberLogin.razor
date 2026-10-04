@@ -1,0 +1,91 @@
+@attribute [Route(MemberRoutePaths.Login)]
+@attribute [AllowAnonymous]
+@namespace Crest.Member.Pages
+@inject NavigationManager Navigation
+
+@* Member sign-in, at the member shell's own base.
+
+   The staff and member login surfaces are separate BY CONSTRUCTION - each is a page in
+   its own shell at its own base - rather than one shared page deciding at runtime which
+   kind of account it is talking to. A runtime check is a gate someone can get wrong; two
+   bases cannot be confused.
+
+   Renders InteractiveWebAssembly, set by App.razor's auth-cookie rule rather than
+   declared here: under InteractiveAuto's first-visit server circuit the credential POST
+   goes out on the server-side loopback HttpClient, so the auth Set-Cookie lands in that
+   handler and never reaches the browser - a "successful" sign-in that leaves the browser
+   anonymous. *@
+
+<PageTitle>Sign in</PageTitle>
+
+<div class="crest-member-centred" data-testid="member-login">
+    <CrestStack Gap="1rem" Style="width: 22rem; max-width: 100%;">
+        <CrestText TextStyle="TextStyle.H5" Text="Sign in" />
+
+        <CrestTextBox @bind-Value="_userName"
+                      Placeholder="User name"
+                      Disabled="@_busy"
+                      data-testid="member-login-username" />
+
+        <CrestPassword @bind-Value="_password"
+                       Placeholder="Password"
+                       Disabled="@_busy"
+                       data-testid="member-login-password" />
+
+        <CrestCheckBox @bind-Value="_rememberMe" Disabled="@_busy" />
+
+        <CrestButton Text="Sign in"
+                     Click="@SignInAsync"
+                     Disabled="@(_busy || !RendererInfo.IsInteractive)"
+                     data-testid="member-login-submit" />
+
+        @if (_error is { Length: > 0 })
+        {
+            <CrestText TextStyle="TextStyle.Caption" Text="@_error" data-testid="member-login-error" />
+        }
+
+        <CrestLink Path="@MemberRoutePaths.Register" Text="Create an account" />
+    </CrestStack>
+</div>
+
+@code {
+    // Supplied by MemberRoutes, which activates the implementation a member module provides
+    // (its library is lazy, so it cannot be registered in the sealed WASM container).
+    [CascadingParameter]
+    private IMemberAuthenticationService Auth { get; set; } = default!;
+
+    private string _userName = string.Empty;
+    private string _password = string.Empty;
+    private bool _rememberMe;
+    private bool _busy;
+    private string? _error;
+
+    private async Task SignInAsync()
+    {
+        _busy = true;
+        _error = null;
+        try
+        {
+            var result = await Auth.SignInAsync(_userName, _password, _rememberMe);
+            if (!result.Succeeded)
+            {
+                // Deliberately the service's message and nothing more: whether the user
+                // name exists is not something an unauthenticated caller gets to learn.
+                _error = result.Error ?? "Could not sign in.";
+                return;
+            }
+
+            // forceLoad: the session cookie was just set, and the member shell's
+            // authenticated document has to be fetched with it.
+            Navigation.NavigateTo(Navigation.BaseUri, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

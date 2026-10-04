@@ -40,12 +40,65 @@ library compiled into the one WASM app, exactly as Admin.Client and Site.Client 
   their memberships;
 - the route table and page-contribution seam modules plug into.
 
-Modules contribute member pages the way they already contribute admin pages: a
-`blazor-wasm` library whose `[Route]`-attributed components are scanned into the member
-bucket, lazy-loaded per route. `Crest.Members` keeps the portal's server machinery
-(sessions, class stamping, org bindings, provisioning) and contributes only generic
-member pages; its staff-facing screens (membership tiers, perks, default groups) stay in
-the **admin** bucket, where they belong.
+Modules contribute member pages the way they contribute admin pages, through a client
+library whose `[Route]`-attributed components are scanned into a bucket - but a
+**separate library per bucket**: admin pages in the module's `blazor-wasm/` library,
+member pages in its `member-wasm/` library. `Crest.Members` keeps the portal's server
+machinery (sessions, class stamping, org bindings, provisioning); its member-facing
+client half (the shell seams below) is its `member-wasm` library, and its staff-facing
+screens (membership tiers, perks, default groups) stay in `blazor-wasm`, in the admin
+bucket.
+
+### UI isolation: one bucket per assembly
+
+A shell must never be able to render another shell's pages - a member must not reach an
+accounting page by accident. Three layers make that hold, and each one alone is
+insufficient:
+
+1. **The API authorizes every read and write** - Orchard permissions, the member class
+   ceiling, the active organization's binding. This is the security boundary; the other
+   two keep the UI honest.
+2. **The server route gate** scopes each URL to one bucket, so `/members/...` can only
+   ever resolve a member page.
+3. **Each shell's client router is handed only its own bucket's assemblies.** Blazor's
+   `Router` routes every `[Route]` component in the assemblies it is given and has no
+   per-type filter, so a bucket is an *assembly* property, never a per-page marker: an
+   admin page and a member page in one assembly would both be routable in both shells
+   on client-side navigation, past the server gate.
+
+An assembly declares its bucket with `[assembly: CrestShell(...)]`
+(`Crest.Components.Modules`). A module ships one client library per shell it contributes
+to: `blazor-wasm/` for admin pages, `member-wasm/` (`CrestShells.Member`) for member pages,
+`site-wasm/` (`CrestShells.Site`) for public pages. A module client library without the
+attribute is admin, which is where module pages have always gone. All three shells are
+built the same way: the theme client is the router's own assembly, and module libraries
+of that shell reach it through the app's per-folder glob and are loaded with the shell.
+An errant public link can therefore never render an admin or member page inside the
+site, and the reverse holds for each shell. That one attribute is read everywhere the bucket
+matters - the server's route-table providers, the endpoint bucket stamping, the lazy-module
+generator and each shell's router - so they cannot disagree.
+
+### The shell runtime is eager; shell UIs and module UIs load per shell
+
+The WASM payload has one entry and one `Program.cs`, but what a browser *loads* is per
+shell:
+
+- **`OrchardCore.Crest.Shell`** - eager, small: the shell runtime every shell needs
+  (the lazy-module loader, per-bucket module manifests). Theme clients reference it; it
+  references no theme.
+- **Module client libraries** load per shell and per route: a member's browser loads
+  member-bucket libraries only.
+- **Seam implementations a module supplies** (`IMemberShellContext`,
+  `IMemberAuthenticationService`) live in that module's lazily-loaded library, so they
+  cannot be registered in the WASM container, which is sealed at `builder.Build()`
+  before any lazy assembly loads. The shell loads its bucket's module libraries before
+  it renders, activates the implementations against the container
+  (`ActivatorUtilities`), and cascades them to its layout and pages.
+- **Theme UIs** (pages, layout, the shell's `Routes` component) are the next step:
+  split from each theme's services, loaded only for the shell being served, behind one
+  small eager root component that renders the active shell's `Routes` dynamically.
+  Until then theme clients are eager, as Admin and Site always have been - every theme
+  client the host references is an eager root of the lazy-module generator.
 
 ### One theme, per-member authorization
 
@@ -208,8 +261,14 @@ mechanism in this plan.
       rule declared by pages. Admin and Site behaviour unchanged, proven by the existing
       suite.
 - [ ] 2. `OrchardCore.Crest.Member` + `Member.Client`: layout, navigation, login and
-      account pages, the org switcher, the page-contribution seam. Members' portal pages
-      move into it; its staff pages stay in the admin bucket.
+      account pages, the org switcher, the page-contribution seam. One bucket per
+      assembly (`[assembly: CrestShell]`), each shell's router handed only its own
+      bucket; `OrchardCore.Crest.Shell` as the eager shell runtime; module seam
+      implementations activated per shell. Members' portal pages are replaced by the
+      member shell's own; its staff pages stay in the admin bucket.
+- [ ] 2b. Theme UIs load per shell: each theme client split into its services (eager)
+      and its UI (lazy), one eager root component rendering the served shell's `Routes`
+      dynamically, `Program.cs` naming no theme UI assembly.
 - [ ] 3. Theme compatibility: manifest tags, `BaseTheme`-walking detector, module
       contracts, the feature-enable refusal, the two-step theme-change confirmation with
       its API acknowledgement, and the incompatibility badges.

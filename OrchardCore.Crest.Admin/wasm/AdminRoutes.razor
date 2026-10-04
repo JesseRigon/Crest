@@ -3,6 +3,8 @@
 @using Crest.Components.Primitives
 @using Crest.Components.Regions
 @using System.Reflection
+@using Crest.Shell
+@using Crest.Components.Modules
 @using Microsoft.AspNetCore.Components.WebAssembly.Services
 @using Microsoft.Extensions.DependencyInjection
 @inject IServiceProvider Services
@@ -47,8 +49,10 @@
             || string.Equals(routeData.PageType.Name, "LegacyHost", StringComparison.Ordinal)
             || routeData.PageType.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), inherit: false);
 
-    // The module assemblies the router knows: those loaded at startup, plus each module
-    // loaded on demand (CrestLazyModules; browser only - on the server every assembly is loaded).
+    // The module assemblies the router knows: those loaded at startup, plus each ADMIN module
+    // loaded on demand (CrestLazyModules; browser only - on the server every assembly is
+    // loaded). Admin only: the loader holds every shell's loaded modules, and handing this
+    // Router a member library would make its pages routable in the admin shell.
     private readonly List<Assembly> _assemblies = [.. CrestModuleAssemblyRegistry.Assemblies];
     private CrestLazyModules? _lazyModules;
 
@@ -70,7 +74,7 @@
     // Before the router matches a path, the module serving it is loaded.
     private async Task OnNavigateAsync(NavigationContext context)
     {
-        if (_lazyModules is not null && await _lazyModules.EnsureForPathAsync(context.Path))
+        if (_lazyModules is not null && await _lazyModules.EnsureForPathAsync(context.Path, CrestShells.Admin))
         {
             SyncAssemblies();
         }
@@ -78,7 +82,7 @@
 
     private void SyncAssemblies()
     {
-        foreach (var assembly in _lazyModules!.LoadedModules.Where(assembly => !_assemblies.Contains(assembly)))
+        foreach (var assembly in _lazyModules!.LoadedModules.Where(assembly => ShellAssemblyFilter.BelongsTo(assembly, CrestShells.Admin) && !_assemblies.Contains(assembly)))
         {
             _assemblies.Add(assembly);
         }

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- The Members module's member-shell library: everything this module contributes to the
+       member shell, and nothing it contributes to the admin one. One library per shell,
+       because a shell's router routes every page in the assemblies it is handed - see
+       CrestShellAttribute. Declares [assembly: CrestShell(CrestShells.Member)] in
+       CrestShell.cs.
+
+       Today that is the shell's seams: IMemberShellContext (who this member is, which
+       organizations they are bound to, which one is active) and IMemberAuthenticationService
+       (what signing in means). Crest owns the shell and the interfaces; this module owns what
+       a member IS and supplies them. Lazily loaded: the member shell loads its modules
+       before it renders and activates these against the container. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Crest.Members.Member.BlazorWasm</AssemblyName>
+    <RootNamespace>Crest.Members.Member</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Crest.Members.Domain.csproj" />
+    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+    <ProjectReference Include="..\..\OrchardCore.Crest.Member\wasm\OrchardCore.Crest.Member.Client.csproj" />
+  </ItemGroup>
+</Project>

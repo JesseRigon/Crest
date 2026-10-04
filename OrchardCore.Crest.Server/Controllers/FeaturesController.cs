@@ -4,6 +4,7 @@ using OrchardCore.Environment.Extensions.Features;
 using OrchardCore.Environment.Shell;
 using OrchardCore.Environment.Shell.Descriptor;
 using Crest.ViewModels;
+using Crest.Themes;
 
 namespace Crest.Controllers;
 
@@ -13,6 +14,7 @@ namespace Crest.Controllers;
 public sealed class FeaturesController(
     IShellDescriptorManager shellDescriptorManager,
     IShellFeaturesManager shellFeaturesManager,
+    IShellCompatibilityService shellCompatibility,
     IAuthorizationService authorizationService) : ControllerBase
 {
     [HttpGet]
@@ -44,6 +46,20 @@ public sealed class FeaturesController(
         if (feature is null)
         {
             return NotFound();
+        }
+
+        // Enabling a feature whose shell contract is unsatisfiable is REFUSED, not warned
+        // about: its pages would render nothing usable, and the admin has not asked for
+        // that outcome - unlike a theme change, which is their own deliberate decision
+        // about their site and therefore only warns (see ThemesController.SetCurrent).
+        // The report names the feature, the bucket and the active theme so the refusal is
+        // actionable rather than just a "no".
+        var incompatibilities = await shellCompatibility.GetIncompatibilitiesAsync([feature.Id]);
+        if (incompatibilities.Count > 0)
+        {
+            return Conflict(new ShellIncompatibilityReport(
+                $"'{feature.Id}' needs a shell its active theme does not provide.",
+                incompatibilities));
         }
 
         await shellFeaturesManager.EnableFeaturesAsync([feature], force: true);

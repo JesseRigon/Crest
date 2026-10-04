@@ -122,6 +122,9 @@ public sealed class Startup : StartupBase
         services.AddRecipeExecutionStep<Recipes.CrestAdminMenuLayoutStep>();
         services.Configure<BlazorAdminThemeOptions>(options => { });
         services.AddTransient<IPostConfigureOptions<BlazorAdminThemeOptions>, BlazorAdminThemeOptionsConfiguration>();
+        // Where the member shell lives, bound from the tenant's Crest_Member shell
+        // configuration section (MemberOptionsConfiguration) rather than hardcoded.
+        services.AddTransient<IConfigureOptions<Crest.Routing.MemberOptions>, Crest.Routing.MemberOptionsConfiguration>();
         services.AddScoped<Crest.Routing.IBlazorAdminThemeDetector, Crest.Routing.BlazorAdminThemeDetector>();
 
         // RouteComponentTable: a per-shell, per-active-(admin+site)-theme-pair registry
@@ -137,6 +140,8 @@ public sealed class Startup : StartupBase
         services.AddScoped<Crest.Routing.IRouteComponentTableManager, Crest.Routing.DefaultRouteComponentTableManager>();
         services.AddScoped<Crest.Routing.IRouteComponentTableProvider, Crest.Routing.AdminRouteComponentTableProvider>();
         services.AddScoped<Crest.Routing.IRouteComponentTableProvider, Crest.Routing.SiteRouteComponentTableProvider>();
+        services.AddScoped<Crest.Routing.IRouteComponentTableProvider, Crest.Routing.MemberRouteComponentTableProvider>();
+        services.AddScoped<Crest.Themes.IShellCompatibilityService, Crest.Themes.ShellCompatibilityService>();
 
         // The gate itself - see Crest.Routing.RouteGateMatcherPolicy's own comments for
         // why this is a MatcherPolicy/IEndpointSelectorPolicy and not a
@@ -385,7 +390,7 @@ public sealed class Startup : StartupBase
             // per-endpoint rather than a single global tag on the whole data source -
             // confirmed via decompiled Microsoft.AspNetCore.Components.Endpoints source.
             // Crest.Routing.RouteGateMatcherPolicy is the sole consumer. The metadata
-            // carries a two-value RouteBucket, not a raw theme id - see
+            // carries a RouteBucket, not a raw theme id - see
             // ThemeOwnerMetadata's own comment for why a theme-id comparison can never
             // disambiguate an Admin-vs-Site route collision (both a tenant's admin theme
             // and site theme are active at once, by construction).
@@ -394,15 +399,14 @@ public sealed class Startup : StartupBase
                 var componentType = endpointBuilder.Metadata
                     .OfType<Microsoft.AspNetCore.Components.Endpoints.ComponentTypeMetadata>()
                     .FirstOrDefault()?.Type;
-                var assemblyName = componentType?.Assembly.GetName().Name;
-
-                Crest.Routing.RouteBucket? bucket = assemblyName switch
-                {
-                    "OrchardCore.Crest.Admin.Client" => Crest.Routing.RouteBucket.Admin,
-                    "OrchardCore.Crest.Site.Client" => Crest.Routing.RouteBucket.Site,
-                    { } name when name.EndsWith(".BlazorWasm", StringComparison.Ordinal) => Crest.Routing.RouteBucket.Admin,
-                    _ => null,
-                };
+                // Must agree with the IRouteComponentTableProvider set exactly: the table
+                // decides whether a URL resolves, this metadata decides which shell the
+                // matched endpoint may win in. Both read the bucket from the component's
+                // assembly (ShellAssemblies), so they cannot disagree - a page in one
+                // bucket here and another there would be reachable in neither.
+                Crest.Routing.RouteBucket? bucket = componentType is null
+                    ? null
+                    : Crest.Routing.ShellAssemblies.GetBucket(componentType.Assembly);
 
                 if (bucket is { } value)
                 {

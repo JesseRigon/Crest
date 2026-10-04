@@ -50,6 +50,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+    <!-- The shell runtime: the lazy-module loader every shell shares. -->
+    <ProjectReference Include="..\..\OrchardCore.Crest.Shell\OrchardCore.Crest.Shell.csproj" />
     <ProjectReference Include="..\..\OrchardCore.Crest.Icons\OrchardCore.Crest.Icons.csproj" />
     <!-- Auto-import Crest component libraries contributed by Orchard modules: ANY
          blazor-wasm/ project anywhere under modules/, at any depth, so module
@@ -63,7 +65,6 @@
          module wasm libraries. -->
     <CrestModuleWasmProject Include="..\..\Crest.ContentPartLists\blazor-wasm\Crest.ContentPartLists.BlazorWasm.csproj" />
     <CrestModuleWasmProject Include="..\..\Crest.Parties\blazor-wasm\Crest.Parties.BlazorWasm.csproj" />
-    <CrestModuleWasmProject Include="..\..\Crest.Members\blazor-wasm\Crest.Members.BlazorWasm.csproj" />
     <CrestModuleWasmProject Include="..\..\Crest.Workflows\blazor-wasm\Crest.Workflows.BlazorWasm.csproj" />
     <ProjectReference Include="@(CrestModuleWasmProject)" />
   </ItemGroup>

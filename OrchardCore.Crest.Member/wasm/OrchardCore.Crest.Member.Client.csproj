@@ -29,9 +29,11 @@
     <Compile Remove="tests\**\*.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <InternalsVisibleTo Include="OrchardCore.Crest.Member.Tests" />
-  </ItemGroup>
+  <!-- No InternalsVisibleTo until OrchardCore.Crest.Member.Tests exists. A friend-assembly
+       reference is compiled into the binary, and the WASM loader resolves it at load
+       time: naming a test assembly that does not exist makes this client unloadable, and
+       because every shell shares the one WASM payload, that stops the whole runtime from
+       booting - admin login included. -->
 
   <ItemGroup>
     <!-- Same rationale as the admin client: the WebAssembly package (not the full
@@ -44,10 +46,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
     <ProjectReference Include="..\..\OrchardCore.Crest.Icons\OrchardCore.Crest.Icons.csproj" />
-    <!-- No CrestModuleWasmProject glob here, unlike the admin client. A module's
-         blazor-wasm library is referenced once, by the admin client, and compiled into
-         the single WASM payload; the member router reaches those same assemblies through
-         the shared registry rather than referencing them a second time. -->
+    <!-- The shell runtime: the lazy-module loader and the shell filter for its router. -->
+    <ProjectReference Include="..\..\OrchardCore.Crest.Shell\OrchardCore.Crest.Shell.csproj" />
+    <!-- No module references here: the member theme never references a module. Module
+         member-wasm libraries reach the payload through the app's own glob
+         (OrchardCore.Crest.Client.csproj), and the member router loads them per shell
+         through CrestLazyModules. -->
   </ItemGroup>
 
 </Project>

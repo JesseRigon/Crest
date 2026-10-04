@@ -1,92 +1,135 @@
-@using Microsoft.AspNetCore.Components.Routing
-@using Crest.Components.Primitives
-@using Crest.Member.Components
 @using System.Reflection
+@using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.WebAssembly.Services
 @using Microsoft.Extensions.DependencyInjection
+@using Crest.Components.Modules
+@using Crest.Components.Primitives
+@using Crest.Member.Components
+@using Crest.Shell
 @inject IServiceProvider Services
 
 @* The member shell's Routes component, the member-bucket counterpart of AdminRoutes,
    mounted by Crest.Server's theme-dispatching Components/App.razor. It must live in this
    client assembly rather than in Server: the WASM runtime only has the assemblies it was
    compiled with, so a Routes defined server-side resolves over the circuit and then throws
-   the moment InteractiveAuto switches to WASM. See docs/BlazorWeb.md. *@
+   the moment InteractiveAuto switches to WASM. See docs/BlazorWeb.md.
+
+   Before rendering anything it loads the member shell's module libraries, activates the
+   seam implementations they supply (IMemberShellContext, IMemberAuthenticationService),
+   loads the member's session into the shell context, then cascades them to the layout
+   and pages. Those implementations cannot be registered
+   in the WASM container the usual way: their libraries are lazy, and the container is
+   sealed at builder.Build(), before any lazy assembly can load. *@
 
 <CrestNotification />
 
-<Router AppAssembly="@typeof(MemberRoutes).Assembly" AdditionalAssemblies="@_assemblies" OnNavigateAsync="OnNavigateAsync">
-    <Found Context="routeData">
-        @if (IsShelllessRoute(routeData))
-        {
-            <RouteView RouteData="@routeData" />
-        }
-        else
-        {
-            <MemberLayout>
-                <RouteView RouteData="@routeData" />
-            </MemberLayout>
-        }
-    </Found>
-    <NotFound>
-        @* A member URL with no member page. Deliberately NOT the LegacyAdminFrame that
-           AdminRoutes falls back to: that frame is Orchard's admin UI, which a member has
-           no business being shown. *@
-        <MemberNotFound />
-    </NotFound>
-</Router>
+@if (_ready)
+{
+    <CascadingValue Value="_shellContext" IsFixed="true">
+        <CascadingValue Value="_authentication" IsFixed="true">
+            <Router AppAssembly="@typeof(MemberRoutes).Assembly" AdditionalAssemblies="@_assemblies">
+                <Found Context="routeData">
+                    @if (IsShelllessRoute(routeData))
+                    {
+                        <RouteView RouteData="@routeData" />
+                    }
+                    else
+                    {
+                        <MemberLayout>
+                            <RouteView RouteData="@routeData" />
+                        </MemberLayout>
+                    }
+                </Found>
+                <NotFound>
+                    @* A member URL with no member page. Deliberately NOT the LegacyAdminFrame
+                       that AdminRoutes falls back to: that frame is Orchard's admin UI, which
+                       a member has no business being shown. *@
+                    <MemberNotFound />
+                </NotFound>
+            </Router>
+        </CascadingValue>
+    </CascadingValue>
+}
 
 @code {
+    private Assembly[] _assemblies = [];
+    private IMemberShellContext _shellContext = new EmptyMemberShellContext();
+    private IMemberAuthenticationService _authentication = new UnavailableMemberAuthenticationService();
+    private bool _ready;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Browser: load every member module library. Server (prerender): nothing to load,
+        // every assembly is already in the process - the loader is simply not attached.
+        if (Services.GetService<CrestLazyModules>() is { } lazyModules)
+        {
+            if (Services.GetService<LazyAssemblyLoader>() is { } loader)
+            {
+                lazyModules.Attach(loader);
+            }
+
+            await lazyModules.EnsureShellAsync(CrestShells.Member);
+        }
+
+        // ONLY member-shell assemblies, and not this theme client itself (whose own pages the
+        // Router already gets as AppAssembly, and whose fallbacks must not count as a module's
+        // implementation). Handing this Router an admin library would make that library's
+        // pages routable inside the member shell on client-side navigation - past the
+        // server's route gate. See CrestShellAttribute.
+        var themeAssembly = typeof(MemberRoutes).Assembly;
+        _assemblies =
+        [
+            .. AppDomain.CurrentDomain.GetAssemblies()
+                .Where(assembly => assembly != themeAssembly
+                    && assembly.GetCustomAttribute<CrestShellAttribute>() is not null
+                    && ShellAssemblyFilter.BelongsTo(assembly, CrestShells.Member))
+        ];
+
+        _shellContext = Activate<IMemberShellContext>() ?? _shellContext;
+        _authentication = Activate<IMemberAuthenticationService>() ?? _authentication;
+
+        // Loaded once, here, before any member page renders: every page then reads a
+        // loaded context. Loading it later (in the layout) would leave a page that already
+        // rendered with an empty context, since a page with no parameters is not
+        // re-rendered when its layout is.
+        await _shellContext.EnsureLoadedAsync();
+        _ready = true;
+    }
+
+    // A module's implementation of a shell seam, created against the container so it gets
+    // the container's services (HttpClient, options) through its constructor. Crest looks
+    // for an implementation of ITS OWN interface and never names the module - the dependency
+    // still runs one way, module to Crest.
+    private TService? Activate<TService>() where TService : class
+    {
+        var implementation = _assemblies
+            .SelectMany(ExportedTypes)
+            .FirstOrDefault(type => type is { IsClass: true, IsAbstract: false } && typeof(TService).IsAssignableFrom(type));
+
+        return implementation is null
+            ? null
+            : (TService)ActivatorUtilities.CreateInstance(Services, implementation);
+    }
+
+    private static Type[] ExportedTypes(Assembly assembly)
+    {
+        try
+        {
+            return assembly.GetExportedTypes();
+        }
+        catch (ReflectionTypeLoadException)
+        {
+            // A module whose types cannot all be loaded must not take the shell down with it.
+            return [];
+        }
+    }
+
     // Shell-less: the pages that establish a session (they render their own centred card,
-    // not the member chrome, and there is no active organization to put in a nav yet),
-    // plus any page declaring [AllowAnonymous] - the same marker the server gate reads,
-    // so a public page a module contributes is public end to end.
+    // not the member chrome - there is no active organization to put in a nav yet), plus
+    // any page declaring [AllowAnonymous] - the same marker the server gate reads, so a
+    // public page a module contributes is public end to end.
     private static bool IsShelllessRoute(RouteData routeData)
         => string.Equals(routeData.PageType.Name, "MemberLogin", StringComparison.Ordinal)
             || string.Equals(routeData.PageType.Name, "MemberRegister", StringComparison.Ordinal)
-            || routeData.PageType.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), inherit: false);
-
-    // The module assemblies the router knows. A module contributes member pages exactly
-    // the way it contributes admin pages: a blazor-wasm library whose [Route]-attributed
-    // components are scanned into a bucket.
-    //
-    // Those libraries are referenced once (by the admin client) and compiled into the one
-    // WASM payload, so they are already loaded - this reads them off the current
-    // AssemblyLoadContext rather than from the admin client's own generated registry,
-    // which is internal to that assembly. Taking a member -> admin project reference to
-    // reach it would invert the shells' independence for nothing: either shell must work
-    // with the other's theme inactive.
-    [Inject]
-    private ICrestMemberModuleAssemblies ModuleAssemblies { get; set; } = default!;
-
-    private List<Assembly> _assemblies = [];
-    private CrestLazyModules? _lazyModules;
-
-    protected override void OnInitialized()
-    {
-        _assemblies = [.. ModuleAssemblies.Assemblies];
-        _lazyModules = Services.GetService<CrestLazyModules>();
-        if (_lazyModules is not null && Services.GetService<LazyAssemblyLoader>() is { } loader)
-        {
-            _lazyModules.Attach(loader);
-            _lazyModules.ModulesLoaded += SyncAssemblies;
-        }
-
-        base.OnInitialized();
-    }
-
-    private async Task OnNavigateAsync(NavigationContext context)
-    {
-        if (_lazyModules is not null && await _lazyModules.EnsureForPathAsync(context.Path))
-        {
-            SyncAssemblies();
-        }
-    }
-
-    private void SyncAssemblies()
-    {
-        foreach (var assembly in _lazyModules!.LoadedModules.Where(assembly => !_assemblies.Contains(assembly)))
-        {
-            _assemblies.Add(assembly);
-        }
-    }
+            || routeData.PageType.IsDefined(typeof(AllowAnonymousAttribute), inherit: false);
 }

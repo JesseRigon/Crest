@@ -32,6 +32,7 @@ public sealed class MemberPortalController(
     CrestLoginService loginService,
     MemberPortalLoginContext portalContext,
     IMemberService memberService,
+    MemberOrganizationDirectory organizationDirectory,
     IUserService users,
     IContentManager contentManager,
     IPartyUserLinkService partyUserLink,
@@ -71,7 +72,7 @@ public sealed class MemberPortalController(
             });
         }
 
-        return Ok(new MemberSessionModel(member, activeOrganization, null));
+        return Ok(new MemberSessionModel(member, activeOrganization, null, await organizationDirectory.GetAsync(member)));
     }
 
     // Self-registration wraps Orchard's own RegisterAsync (registration validation

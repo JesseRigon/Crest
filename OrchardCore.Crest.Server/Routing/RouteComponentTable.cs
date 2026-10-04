@@ -11,11 +11,14 @@ public sealed class RouteComponentTable(IReadOnlyList<RouteComponentEntry> entri
 {
     public IReadOnlyList<RouteComponentEntry> Entries { get; } = entries;
 
-    public bool TryMatch(PathString path, out RouteComponentEntry entry)
+    // Matches within one shell's bucket only. The same literal exists in several shells
+    // ("/" in admin, site and member; "/login" in admin and member), so a first match
+    // across the whole table would find another shell's page and hide this shell's own.
+    public bool TryMatch(PathString path, RouteBucket bucket, out RouteComponentEntry entry)
     {
         foreach (var candidate in Entries)
         {
-            if (CrestRouteAuthorizationService.Matches(candidate.RoutePattern, path.Value))
+            if (candidate.Bucket == bucket && CrestRouteAuthorizationService.Matches(candidate.RoutePattern, path.Value))
             {
                 entry = candidate;
                 return true;

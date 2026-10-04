@@ -27,6 +27,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<IMemberService, MemberService>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<MemberSessionService>();
+        services.AddScoped<MemberOrganizationDirectory>();
         services.AddScoped<MemberStampService>();
         services.AddScoped<MemberPortalLoginContext>();
         services.AddScoped<MemberImpersonationService>();

@@ -323,11 +323,9 @@ not by authenticating as the member. Attribution splits deliberately in two:
   user — explicitly "created by <staff user> impersonating <org member>" —
   never as the member alone.
 
-AUDITING ITSELF IS OUT OF SCOPE for this plan (noted in the host.s module inventory
-too); the requirement recorded here is that the impersonation session must
-carry BOTH identities so the audit layer can attribute correctly when it
-exists — retrofitting dual attribution onto single-identity sessions later
-would be the expensive path.
+Recording is plans/audit.md. This plan's requirement is that the impersonation
+session carries BOTH identities, so the audit layer can attribute every action
+to the staff user without any write path knowing about impersonation.
 
 ## Multi-org members (ruling 2026-09-09)
 

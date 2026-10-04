@@ -38,7 +38,14 @@ public static class HierarchyRootKinds
 
 /// <summary>Member session view for the current principal: who am I, which orgs, which
 /// one is active, and whether this session is an impersonation.</summary>
-public sealed record MemberSessionModel(MemberModel? Member, string? ActiveOrganizationId, string? ImpersonatorUserId);
+public sealed record MemberSessionModel(
+    MemberModel? Member,
+    string? ActiveOrganizationId,
+    string? ImpersonatorUserId,
+    IReadOnlyList<MemberSessionOrganization> Organizations);
+
+/// <summary>An organization the session's member is bound to, with its display name.</summary>
+public sealed record MemberSessionOrganization(string Id, string Name);
 
 /// <summary>Portal sign-in. <paramref name="OrganizationId"/> is optional: when given,
 /// the account must be bound to that organization and it becomes the active one;

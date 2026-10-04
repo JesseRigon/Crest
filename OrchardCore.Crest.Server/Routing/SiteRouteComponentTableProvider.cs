@@ -1,19 +1,15 @@
 namespace Crest.Routing;
 
-// Scans Site's own client assembly for @page-attributed components. Bucket is the fixed
-// RouteBucket.Site value - see ThemeOwnerMetadata's comment for why routing works in
-// terms of the two-value bucket rather than a raw theme id.
+// The site-bucket counterpart of MemberRouteComponentTableProvider: the site theme's own
+// client assembly plus every module client library declaring
+// [assembly: CrestShell(CrestShells.Site)] (a module's site-wasm/ library). The bucket is
+// read from the assembly (ShellAssemblies), never from the page, because the client router
+// can only be scoped by assembly - see CrestShellAttribute.
 public sealed class SiteRouteComponentTableProvider : IRouteComponentTableProvider
 {
     public RouteBucket Bucket => RouteBucket.Site;
 
-    public IEnumerable<RouteComponentEntry> GetRouteComponents()
-    {
-        var siteClientAssembly = AppDomain.CurrentDomain.GetAssemblies()
-            .FirstOrDefault(assembly => assembly.GetName().Name == "OrchardCore.Crest.Site.Client");
-
-        return siteClientAssembly is null
-            ? []
-            : AssemblyRouteComponentScanner.Scan(siteClientAssembly, Bucket, defaultLandingRoutePattern: "/");
-    }
+    public IEnumerable<RouteComponentEntry> GetRouteComponents() =>
+        ShellAssemblies.InBucket(Bucket).SelectMany(assembly =>
+            AssemblyRouteComponentScanner.Scan(assembly, Bucket, defaultLandingRoutePattern: "/"));
 }

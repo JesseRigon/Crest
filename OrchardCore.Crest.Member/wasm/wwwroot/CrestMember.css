@@ -1,0 +1,74 @@
+/* The member shell's own chrome styles.
+ *
+ * Kept deliberately small: the member shell is one theme shared by every
+ * organization-bound user in a tenant, and a product that wants its own look forks this
+ * theme (BaseTheme = "OrchardCore.Crest.Member") rather than having the shell grow
+ * product-specific styling.
+ *
+ * Served as a static web asset at _content/OrchardCore.Crest.Member.Client/CrestMember.css,
+ * referenced from App.razor's member branch on the tenant base so URL-prefixed tenants
+ * resolve it.
+ */
+
+.crest-member-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+}
+
+.crest-member-shell__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--rz-base-300, #e0e0e0);
+    flex-wrap: wrap;
+}
+
+.crest-member-shell__brand {
+    margin-inline-end: auto;
+}
+
+.crest-member-shell__org {
+    min-width: 12rem;
+}
+
+.crest-member-shell__nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.crest-member-shell__account {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.crest-member-shell__content {
+    flex: 1 1 auto;
+    padding: 1.5rem 1rem;
+}
+
+/* The centred card the session pages (sign in, register) and the not-found page render
+ * in. They are shell-less by design: there is no active organization to put in a header
+ * yet, so the chrome would be showing state that does not exist. */
+.crest-member-centred {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+/* Phone width: the header stacks rather than scrolling sideways. */
+@media (max-width: 40rem) {
+    .crest-member-shell__header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .crest-member-shell__brand {
+        margin-inline-end: 0;
+    }
+}

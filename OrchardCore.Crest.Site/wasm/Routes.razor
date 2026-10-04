@@ -1,10 +1,55 @@
+@using System.Reflection
 @using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.WebAssembly.Services
+@using Microsoft.Extensions.DependencyInjection
+@using Crest.Components.Modules
+@using Crest.Shell
+@inject IServiceProvider Services
 
-<Router AppAssembly="typeof(Routes).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="routeData" />
-    </Found>
-    <NotFound>
-        <p>Not found.</p>
-    </NotFound>
-</Router>
+@* The public site shell's Routes component, the site-bucket counterpart of AdminRoutes and
+   MemberRoutes. Before rendering it loads the site shell's module libraries (each module's
+   site-wasm/ library), then routes ONLY site-bucket assemblies - an admin or member library
+   handed to this Router would make its pages routable on the public site on client-side
+   navigation, past the server's route gate. See CrestShellAttribute. *@
+
+@if (_ready)
+{
+    <Router AppAssembly="typeof(Routes).Assembly" AdditionalAssemblies="@_assemblies">
+        <Found Context="routeData">
+            <RouteView RouteData="routeData" />
+        </Found>
+        <NotFound>
+            <p data-testid="site-not-found">Not found.</p>
+        </NotFound>
+    </Router>
+}
+
+@code {
+    private Assembly[] _assemblies = [];
+    private bool _ready;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Browser: load every site module library. Server (prerender): every assembly is
+        // already in the process - the loader is simply not attached.
+        if (Services.GetService<CrestLazyModules>() is { } lazyModules)
+        {
+            if (Services.GetService<LazyAssemblyLoader>() is { } loader)
+            {
+                lazyModules.Attach(loader);
+            }
+
+            await lazyModules.EnsureShellAsync(CrestShells.Site);
+        }
+
+        var themeAssembly = typeof(Routes).Assembly;
+        _assemblies =
+        [
+            .. AppDomain.CurrentDomain.GetAssemblies()
+                .Where(assembly => assembly != themeAssembly
+                    && assembly.GetCustomAttribute<CrestShellAttribute>() is not null
+                    && ShellAssemblyFilter.BelongsTo(assembly, CrestShells.Site))
+        ];
+        _ready = true;
+    }
+}

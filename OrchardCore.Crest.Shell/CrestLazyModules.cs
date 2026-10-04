@@ -2,17 +2,28 @@ using System.Reflection;
 using Crest.Components.Regions;
 using Microsoft.AspNetCore.Components.WebAssembly.Services;
 
-namespace Crest.Admin;
+namespace Crest.Shell;
 
 /// <summary>
-/// Module pages loaded on demand, browser side. OrchardCore.Crest.Client's build works out
-/// which module assemblies are lazy, the routes each serves, what each needs with it and
-/// which contribute to page regions (CrestLazyModules.targets) and hands that here; the
-/// admin router asks for a path's module before it matches (<see cref="EnsureForPathAsync"/>),
-/// a page region for the region contributors. Each assembly loads once per session.
+/// Module client libraries loaded on demand, browser side, per shell.
 /// </summary>
+/// <remarks>
+/// OrchardCore.Crest.Client's build works out which module assemblies are lazy, which shell
+/// each belongs to (<c>CrestShellAttribute</c>), the routes each serves, what each needs
+/// with it and which contribute to page regions (CrestLazyModules.targets), and hands that
+/// here. A shell's router asks for a path's module before it matches
+/// (<see cref="EnsureForPathAsync"/>) - only among ITS OWN shell's modules, so the admin
+/// shell can never load a member page and the member shell never an admin one. A shell can
+/// also load all of its modules up front (<see cref="EnsureShellAsync"/>), which the member
+/// shell does to activate the seam implementations its modules supply. Each assembly loads
+/// once per session.
+///
+/// Lives in the eager shell runtime rather than in a theme client so every shell can use it
+/// without referencing another shell.
+/// </remarks>
 public sealed class CrestLazyModules(
-    (string Template, string Assembly)[] routes,
+    (string Template, string Assembly, string Shell)[] routes,
+    Dictionary<string, string[]> shellModules,
     Dictionary<string, string[]> dependencies,
     string[] regionContributors) : IPageRegionContributorLoader
 {
@@ -22,20 +33,42 @@ public sealed class CrestLazyModules(
     private LazyAssemblyLoader? _loader;
     private bool _regionsLoaded;
 
-    /// <summary>Module assemblies loaded so far (the router's additional assemblies grow with them).</summary>
+    /// <summary>
+    /// The module assemblies that were never lazy (loaded at boot), which page-region
+    /// discovery runs over alongside <see cref="LoadedModules"/>. Set by the admin client,
+    /// which is where the build's eager module registry lives.
+    /// </summary>
+    public IReadOnlyList<Assembly> EagerModules { get; set; } = [];
+
+    /// <summary>Module assemblies loaded so far, every shell's (a router filters by shell).</summary>
     public IReadOnlyList<Assembly> LoadedModules => _loadedModules;
 
+    /// <summary>Raised after a load added assemblies.</summary>
     public event Action? ModulesLoaded;
 
-    internal void Attach(LazyAssemblyLoader loader) => _loader ??= loader;
+    /// <summary>Whether a browser loader is attached - false on the server, where every assembly is already loaded.</summary>
+    public bool IsAttached => _loader is not null;
 
-    /// <summary>Loads the module serving <paramref name="path"/> (relative to the admin base), if it is lazy and not loaded.</summary>
-    public Task<bool> EnsureForPathAsync(string path)
+    public void Attach(LazyAssemblyLoader loader) => _loader ??= loader;
+
+    /// <summary>
+    /// Loads the <paramref name="shell"/> module serving <paramref name="path"/> (relative to
+    /// that shell's base), if it is lazy and not loaded yet.
+    /// </summary>
+    public Task<bool> EnsureForPathAsync(string path, string shell)
     {
         var relative = "/" + path.Split('?', '#')[0].Trim('/');
-        var modules = routes.Where(route => Matches(route.Template, relative)).Select(route => route.Assembly).Distinct().ToArray();
+        var modules = routes
+            .Where(route => string.Equals(route.Shell, shell, StringComparison.Ordinal) && Matches(route.Template, relative))
+            .Select(route => route.Assembly)
+            .Distinct()
+            .ToArray();
         return LoadAsync(modules);
     }
+
+    /// <summary>Loads every module library belonging to <paramref name="shell"/>.</summary>
+    public Task<bool> EnsureShellAsync(string shell) =>
+        LoadAsync(shellModules.TryGetValue(shell, out var modules) ? modules : []);
 
     public async Task EnsureLoadedAsync()
     {
@@ -75,7 +108,7 @@ public sealed class CrestLazyModules(
             }
 
             _loadedModules.AddRange(loaded.Where(assembly => dependencies.ContainsKey(assembly.GetName().Name ?? string.Empty)));
-            PageRegionRegistry.Configure(CrestModuleAssemblyRegistry.Assemblies.Concat(_loadedModules));
+            PageRegionRegistry.Configure(EagerModules.Concat(_loadedModules));
             ModulesLoaded?.Invoke();
             return true;
         }
@@ -86,7 +119,7 @@ public sealed class CrestLazyModules(
     }
 
     // Blazor route templates: literal segments, {parameter[:constraint][?]} and {*catchAll}.
-    internal static bool Matches(string template, string path)
+    public static bool Matches(string template, string path)
     {
         var templateSegments = template.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
         var pathSegments = path.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);

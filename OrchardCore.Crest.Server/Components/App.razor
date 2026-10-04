@@ -4,6 +4,7 @@
 @using global::Crest
 @using global::Crest.Admin
 @using global::Crest.Site.Client
+@using global::Crest.Member
 @using global::Crest.Middlewares
 @using global::Crest.Extensions
 
@@ -55,6 +56,20 @@
         <link rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Admin.Client/OrchardCore.Crest.Admin.Client.bundle.scp.css")" />
         <link rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Icons/CrestIcons.css")" />
     }
+    else if (_isMemberShell)
+    {
+        <title>Members</title>
+        @* Same base-href mechanism as the admin shell: the middleware shifted the member
+           base into PathBase, so PathBase + "/" is the composed base href. *@
+        <base href="@_adminBaseHref" />
+        <meta name="crest-tenant-base" content="@_tenantBasePath" />
+        <link id="crest-radzen-theme" rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Components/css/material-base.css")" />
+        <link rel="stylesheet" href="@Asset("/OrchardCore.Resources/Vendor/fontawesome-free/css/all.min.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Components/CrestComponents.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Components/OrchardCore.Crest.Components.bundle.scp.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Member.Client/CrestMember.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/OrchardCore.Crest.Icons/CrestIcons.css")" />
+    }
     else
     {
         <base href="@(_tenantBasePath + "/")" />
@@ -72,6 +87,13 @@
         @* Crest.ContentPartLists is opt-in, but its client assembly is always compiled
            into the WASM payload, so its page's drag script loads with the shell. *@
         <script src="@Asset("/_content/Crest.ContentPartLists.BlazorWasm/crest.contentPartLists.js")"></script>
+        <script src="@Asset("/_content/OrchardCore.Crest.Icons/icons.js")"></script>
+        <script src="@Asset("/_content/OrchardCore.Crest.Components/Radzen.Blazor.js")"></script>
+    }
+    else if (_isMemberShell)
+    {
+        <MemberRoutes @rendermode="@_renderMode" />
+        <script src="@Asset("/_content/OrchardCore.Crest.Components/crest.components.js")"></script>
         <script src="@Asset("/_content/OrchardCore.Crest.Icons/icons.js")"></script>
         <script src="@Asset("/_content/OrchardCore.Crest.Components/Radzen.Blazor.js")"></script>
     }

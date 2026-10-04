@@ -452,10 +452,10 @@ public sealed class BlazorAdminThemeMiddleware
 
         var tableManager = context.RequestServices.GetRequiredService<IRouteComponentTableManager>();
         var table = await tableManager.GetRouteComponentTableAsync();
-        // Scoped to the shell's own bucket: the same literal can exist in two buckets
-        // (both an admin and a member "/account"), and matching across buckets would let
-        // one shell's URL resolve to the other shell's page.
-        return table.TryMatch(new PathString(normalized), out var matched) && matched?.Bucket == bucket
+        // Scoped to the shell's own bucket: the same literal can exist in several buckets,
+        // and matching across buckets would let one shell's URL resolve to - or be hidden
+        // by - another shell's page.
+        return table.TryMatch(new PathString(normalized), bucket, out var matched)
             ? (true, matched)
             : (false, null);
     }

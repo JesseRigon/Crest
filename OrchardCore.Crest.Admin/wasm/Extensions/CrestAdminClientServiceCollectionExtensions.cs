@@ -59,8 +59,13 @@ public static class CrestAdminClientServiceCollectionExtensions
     }
 
     /// <summary>Module pages loaded on demand (the manifest OrchardCore.Crest.Client's build generates).</summary>
-    public static IServiceCollection AddCrestLazyModules(this IServiceCollection services, CrestLazyModules modules)
+    /// <remarks>
+    /// The loader lives in the shell runtime so every shell can use it; the build's registry
+    /// of modules that were never lazy is internal to this assembly, so it is handed over here.
+    /// </remarks>
+    public static IServiceCollection AddCrestLazyModules(this IServiceCollection services, Crest.Shell.CrestLazyModules modules)
     {
+        modules.EagerModules = CrestModuleAssemblyRegistry.Assemblies;
         services.AddSingleton(modules);
         services.AddSingleton<Crest.Components.Regions.IPageRegionContributorLoader>(modules);
         return services;

@@ -40,6 +40,31 @@
   <ItemGroup>
     <ProjectReference Include="..\OrchardCore.Crest.Admin\wasm\OrchardCore.Crest.Admin.Client.csproj" />
     <ProjectReference Include="..\OrchardCore.Crest.Site\wasm\OrchardCore.Crest.Site.Client.csproj" />
+    <!-- The member shell's client half. A third shell is a theme + a client library
+         + a route bucket + an App.razor branch, compiled into this one WASM payload -
+         never a third build output. -->
+    <ProjectReference Include="..\OrchardCore.Crest.Member\wasm\OrchardCore.Crest.Member.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Module member-shell libraries: ANY member-wasm/ project under modules/, the
+         counterpart of the admin client's blazor-wasm/ glob. Referenced here, by the app,
+         and not by the member theme client - Crest's theme never references a module, so
+         a module's member library reaches the payload through the app, exactly as admin
+         libraries reach it through the admin client's glob. Crest's own tree is excluded
+         and its member libraries added back explicitly, the same way. -->
+    <CrestMemberModuleWasmProject Include="..\..\**\member-wasm\*.csproj" Exclude="..\..\OrchardCore.Crest\**\*.csproj" />
+    <CrestMemberModuleWasmProject Include="..\Crest.Members\member-wasm\Crest.Members.Member.BlazorWasm.csproj" />
+    <ProjectReference Include="@(CrestMemberModuleWasmProject)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Module public-site libraries: ANY site-wasm/ project under modules/, the same shape
+         as the member glob above and for the same reason - Crest's site theme never
+         references a module. Crest's own tree is excluded; it ships no site-wasm library
+         yet, and one added there is listed here explicitly. -->
+    <CrestSiteModuleWasmProject Include="..\..\**\site-wasm\*.csproj" Exclude="..\..\OrchardCore.Crest\**\*.csproj" />
+    <ProjectReference Include="@(CrestSiteModuleWasmProject)" />
   </ItemGroup>
 
   <!-- Module pages (and module-listed libraries) load on demand: see CrestLazyModules.targets. -->

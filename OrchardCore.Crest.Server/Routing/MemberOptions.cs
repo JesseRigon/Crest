@@ -46,7 +46,7 @@ public sealed class MemberOptions
 /// named for Crest rather than borrowing an Orchard one, because this is Crest's option
 /// and not an Orchard setting Crest happens to read.
 /// </remarks>
-internal sealed class MemberOptionsConfiguration(IShellConfiguration shellConfiguration) : IConfigureOptions<MemberOptions>
+public sealed class MemberOptionsConfiguration(IShellConfiguration shellConfiguration) : IConfigureOptions<MemberOptions>
 {
     public void Configure(MemberOptions options)
     {

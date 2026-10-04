@@ -1,17 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
-  <!-- Phase 8: converted from Microsoft.NET.Sdk.BlazorWebAssembly to a Razor class
-       library - a Blazor Web App has exactly ONE WASM entry project
-       (OrchardCore.Crest.Client), which references this library. Routable @page
-       components (Routes.razor, Pages/*) stay here, per docs/BlazorWeb.md. -->
-
+  <!-- The shell runtime: what every shell needs at boot, regardless of which shell a
+       request is served by - the lazy-module loader and its per-shell manifests. Always
+       eager: theme clients reference it, it references no theme, and a module library
+       only ever reaches it through a theme client. Kept small on purpose, because every
+       browser downloads it whatever shell it lands in. See plans/shells-and-themes.md,
+       "The shell runtime is eager; shell UIs and module UIs load per shell". -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
-    <AssemblyName>OrchardCore.Crest.Site.Client</AssemblyName>
-    <RootNamespace>Crest.Site.Client</RootNamespace>
+    <AssemblyName>OrchardCore.Crest.Shell</AssemblyName>
+    <RootNamespace>Crest.Shell</RootNamespace>
     <OrchardCoreCompatibilityVersion>3.0.0</OrchardCoreCompatibilityVersion>
     <CrestSecurityPatch>0</CrestSecurityPatch>
     <CrestBugPatch>0</CrestBugPatch>
@@ -24,17 +25,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="tests\**\*.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <!-- LazyAssemblyLoader. The WebAssembly package, not the BlazorWebAssembly SDK: this
+         assembly also loads server-side, where the loader is simply never attached. -->
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
-    <ProjectReference Include="..\..\OrchardCore.Crest.Icons\OrchardCore.Crest.Icons.csproj" />
-    <ProjectReference Include="..\..\OrchardCore.Crest.Shell\OrchardCore.Crest.Shell.csproj" />
+    <ProjectReference Include="..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
   </ItemGroup>
 
 </Project>

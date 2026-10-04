@@ -1,0 +1,23 @@
+@attribute [Route(MemberRoutePaths.NotFound)]
+@attribute [AllowAnonymous]
+@namespace Crest.Member.Pages
+@using Crest.Components.Primitives
+@using Crest.Member.Services
+
+@* A member URL with no member page. Deliberately its own page rather than the
+   LegacyAdminFrame AdminRoutes falls back to: that frame is Orchard's admin UI, and a
+   member has no business being shown it.
+
+   [AllowAnonymous] because a 404 must not depend on being signed in - an unauthenticated
+   visitor hitting a bad member URL should see "not found", not a login redirect that
+   implies the page exists. *@
+
+<PageTitle>Not found</PageTitle>
+
+<div class="crest-member-centred" data-testid="member-not-found">
+    <CrestStack Gap="1rem" AlignItems="AlignItems.Center">
+        <CrestText TextStyle="TextStyle.H4" Text="Not found" />
+        <CrestText TextStyle="TextStyle.Body1" Text="This page does not exist." />
+        <CrestLink Path="@MemberRoutePaths.Home" Text="Go to the portal" />
+    </CrestStack>
+</div>
