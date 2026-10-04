@@ -36,6 +36,7 @@ public interface IShellContractProvider
 /// <summary>One feature whose shell contract the active themes do not satisfy.</summary>
 public sealed record ShellIncompatibility(
     string FeatureId,
+    [property: System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RouteBucket>))]
     RouteBucket Bucket,
     string? ActiveThemeId,
     string Reason);

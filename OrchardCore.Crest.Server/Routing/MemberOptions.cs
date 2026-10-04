@@ -27,12 +27,6 @@ public sealed class MemberOptions
     /// key.
     /// </summary>
     public string MemberUrlPrefix { get; set; } = "members";
-
-    /// <summary>
-    /// The theme id that marks a theme as Crest's member shell, the member-bucket
-    /// counterpart to <c>BlazorAdminThemeOptions.BlazorAdminThemeId</c>.
-    /// </summary>
-    public string MemberThemeId { get; set; } = "OrchardCore.Crest.Member";
 }
 
 /// <summary>

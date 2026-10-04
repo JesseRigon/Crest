@@ -23,7 +23,7 @@ namespace Crest.Routing;
 // "activeThemeIds.Contains(provider.ThemeId)" - the exact same bug class
 // RouteGateMatcherPolicy had: IAdminThemeService.GetAdminThemeNameAsync() returns null
 // unless a tenant/recipe explicitly called SetAdminThemeAsync, and even when it doesn't,
-// a tenant can still have the Blazor admin theme active via the "blazor" extension tag
+// a tenant can still have the Blazor admin theme active via the "crest-blazor" extension tag
 // (see IBlazorAdminThemeDetector) - a case the old string-equality check silently missed,
 // leaving AdminRouteComponentTableProvider's routes never registered for that tenant.
 public sealed class DefaultRouteComponentTableManager(

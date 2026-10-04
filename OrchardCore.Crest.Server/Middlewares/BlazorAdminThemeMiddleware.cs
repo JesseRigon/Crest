@@ -26,8 +26,6 @@ public sealed class BlazorAdminThemeOptions
     public string AdminPath { get; set; } = "/admin";
     public string LoginPath { get; set; } = "/login";
     public string LogoutPath { get; set; } = "/users/logoff";
-    public string BlazorThemeTag { get; set; } = "blazor";
-    public string BlazorAdminThemeId { get; set; } = "OrchardCore.Crest.Admin";
 }
 
 // Keeps BlazorAdminThemeOptions.AdminPath/LoginPath/LogoutPath in sync with Orchard's own,

@@ -1,208 +1,157 @@
 @page "/Themes"
 @using Crest.Admin.Api
 @using Crest.Admin.Components.Admin
-@using Crest.Components.Primitives
+@using Crest.Components.Modules
 @using Crest.Components.Primitives
 @inject IApi Api
 @inject NotificationService Notifications
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
-    <CrestStack Gap="1rem">
-                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
-                    <CrestStack Gap="0.25rem">
-                        <CrestText TextStyle="TextStyle.H4" Text="@T["Themes"]" />
-                        <CrestText TextStyle="TextStyle.Body2" Text="@T["Select the current site and admin themes, and enable or disable available themes."]" />
-                    </CrestStack>
-                    <CrestButton Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
-                </CrestStack>
+@* One section per shell - Site, Admin, and Member when an enabled feature ships member
+   pages. Themes are not interchangeable across shells or with arbitrary Orchard themes:
+   each card says which shell it hosts, whether it is a Crest Blazor theme (itself or
+   through its base themes), and which enabled features it would break.
 
-                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
-                {
-                    <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">
-                        @ErrorMessage
-                    </CrestAlert>
-                }
+   Every change is sent to the server unacknowledged first. If the server refuses it as a
+   breaking change, the two-step confirmation shows the server's own report and only the
+   second, explicit confirmation resends it acknowledged - the UI never decides on its own
+   that a change is safe. See plans/shells-and-themes.md, "The two guards". *@
 
-                @if (IsLoading)
-                {
-                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
-                        <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-                        <CrestText Text="@T["Loading themes..."]" />
-                    </CrestStack>
-                }
-                else if (State.Themes.Length == 0)
-                {
-                    <CrestCard>
-                        <CrestText Text="@T["There are no themes installed."]" />
-                    </CrestCard>
-                }
-                else
-                {
-                    <CrestStack Gap="0.75rem">
-                        <CrestText TextStyle="TextStyle.H6" Text="@T["Current themes"]" />
-                        <div class="theme-grid current-theme-grid">
-                            @if (State.CurrentSiteTheme is { } currentSiteTheme)
-                            {
-                                <CrestCard class="theme-card theme-card--current">
-                                    <CrestText TextStyle="TextStyle.Caption" Text="@T["Current site theme"]" class="theme-card__slot" />
-                                    <div class="theme-card__preview">
-                                        <img src="@currentSiteTheme.PreviewImageUrl" alt="@(T["{0} preview", currentSiteTheme.Name])" loading="lazy" @onerror="@(() => MarkPreviewFailed(currentSiteTheme.Id))" hidden="@PreviewFailed(currentSiteTheme.Id)" />
-                                        @if (PreviewFailed(currentSiteTheme.Id))
-                                        {
-                                            <div class="theme-card__placeholder">
-                                                <CrestIcon IconKey="iconify.mdi/current/default/palette" />
-                                                <span>@currentSiteTheme.Name</span>
-                                            </div>
-                                        }
-                                    </div>
+<CrestStack Gap="1.5rem" data-testid="themes-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="@T["Themes"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Choose the theme for each shell, and enable or disable available themes."]" />
+        </CrestStack>
+        <CrestButton Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
+    </CrestStack>
 
-                                    <CrestStack Gap="0.75rem" class="theme-card__body">
-                                        <CrestStack Gap="0.35rem">
-                                            <CrestText TextStyle="TextStyle.H6" Text="@currentSiteTheme.Name" />
-                                            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
-                                                <CrestText TextStyle="TextStyle.Caption" Text="@T["Site theme"]" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                <CrestText TextStyle="TextStyle.Caption" Text="@T["Current site"]" Style="background: var(--rz-primary); color: var(--rz-on-primary); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                <CrestText TextStyle="TextStyle.Caption" Text="@T["Enabled"]" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                            </CrestStack>
-                                        </CrestStack>
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
+    }
 
-                                        @if (!string.IsNullOrWhiteSpace(currentSiteTheme.Description))
-                                        {
-                                            <CrestText TextStyle="TextStyle.Body2" Text="@currentSiteTheme.Description" class="theme-card__description" />
-                                        }
+    @if (IsLoading)
+    {
+        <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+            <CrestProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+            <CrestText Text="@T["Loading themes..."]" />
+        </CrestStack>
+    }
+    else
+    {
+        @foreach (var shell in State.Shells)
+        {
+            var current = State.Themes.FirstOrDefault(theme => theme.Shell == shell.Shell && theme.IsCurrent);
+            var alternatives = Alternatives(shell.Shell).ToArray();
 
-                                        <CrestText TextStyle="TextStyle.Caption" Text="@ThemeMeta(currentSiteTheme)" />
-                                        <CrestButton Text="@T["Reset Site Theme"]" ButtonStyle="ButtonStyle.Light" Click="ResetSiteThemeAsync" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" />
-                                    </CrestStack>
-                                </CrestCard>
-                            }
-                            else
-                            {
-                                <CrestCard class="theme-card theme-card--empty">
-                                    <CrestText TextStyle="TextStyle.Caption" Text="@T["Current site theme"]" class="theme-card__slot" />
-                                    <div class="theme-card__placeholder theme-card__placeholder--empty">
-                                        <CrestIcon IconKey="iconify.mdi/current/default/web-off" />
-                                        <span>@T["No site theme selected"]</span>
-                                    </div>
-                                </CrestCard>
-                            }
-
-                            @if (State.CurrentAdminTheme is { } currentAdminTheme)
-                            {
-                                <CrestCard class="theme-card theme-card--current">
-                                    <CrestText TextStyle="TextStyle.Caption" Text="@T["Current admin theme"]" class="theme-card__slot" />
-                                    <div class="theme-card__preview">
-                                        <img src="@currentAdminTheme.PreviewImageUrl" alt="@(T["{0} preview", currentAdminTheme.Name])" loading="lazy" @onerror="@(() => MarkPreviewFailed(currentAdminTheme.Id))" hidden="@PreviewFailed(currentAdminTheme.Id)" />
-                                        @if (PreviewFailed(currentAdminTheme.Id))
-                                        {
-                                            <div class="theme-card__placeholder">
-                                                <CrestIcon IconKey="iconify.mdi/current/default/palette" />
-                                                <span>@currentAdminTheme.Name</span>
-                                            </div>
-                                        }
-                                    </div>
-
-                                    <CrestStack Gap="0.75rem" class="theme-card__body">
-                                        <CrestStack Gap="0.35rem">
-                                            <CrestText TextStyle="TextStyle.H6" Text="@currentAdminTheme.Name" />
-                                            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
-                                                <CrestText TextStyle="TextStyle.Caption" Text="@T["Admin theme"]" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                <CrestText TextStyle="TextStyle.Caption" Text="@T["Current admin"]" Style="background: var(--rz-primary); color: var(--rz-on-primary); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                <CrestText TextStyle="TextStyle.Caption" Text="@T["Enabled"]" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                            </CrestStack>
-                                        </CrestStack>
-
-                                        @if (!string.IsNullOrWhiteSpace(currentAdminTheme.Description))
-                                        {
-                                            <CrestText TextStyle="TextStyle.Body2" Text="@currentAdminTheme.Description" class="theme-card__description" />
-                                        }
-
-                                        <CrestText TextStyle="TextStyle.Caption" Text="@ThemeMeta(currentAdminTheme)" />
-                                        <CrestButton Text="@T["Reset Admin Theme"]" ButtonStyle="ButtonStyle.Light" Click="ResetAdminThemeAsync" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" />
-                                    </CrestStack>
-                                </CrestCard>
-                            }
-                            else
-                            {
-                                <CrestCard class="theme-card theme-card--empty">
-                                    <CrestText TextStyle="TextStyle.Caption" Text="@T["Current admin theme"]" class="theme-card__slot" />
-                                    <div class="theme-card__placeholder theme-card__placeholder--empty">
-                                        <CrestIcon IconKey="iconify.mdi/current/default/shield-account" />
-                                        <span>@T["No admin theme selected"]</span>
-                                    </div>
-                                </CrestCard>
-                            }
-                        </div>
+            <section class="theme-section" data-testid="theme-section" data-shell="@shell.Shell">
+                <CrestStack Gap="0.75rem">
+                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+                        <CrestStack Gap="0.15rem">
+                            <CrestText TextStyle="TextStyle.H5" Text="@ShellTitle(shell.Shell)" />
+                            <CrestText TextStyle="TextStyle.Caption" Text="@ShellDescription(shell.Shell)" />
+                        </CrestStack>
+                        <input class="rz-textbox theme-section__filter"
+                               placeholder="@T["Filter themes..."]"
+                               value="@Filter(shell.Shell)"
+                               @oninput="@((ChangeEventArgs args) => Filters[shell.Shell] = args.Value?.ToString() ?? string.Empty)"
+                               data-testid="theme-filter" />
                     </CrestStack>
 
-                    <CrestStack Gap="0.75rem">
-                        <CrestText TextStyle="TextStyle.H6" Text="@T["Available alternatives"]" />
-                        @if (!AlternateThemes.Any())
+                    <div class="theme-grid">
+                        @if (current is not null)
                         {
-                            <CrestCard>
-                                <CrestText Text="@T["There are no alternate themes installed."]" />
+                            <CrestCard class="theme-card theme-card--current" data-testid="theme-card" data-theme-id="@current.Id" data-current="true">
+                                <CrestText TextStyle="TextStyle.Caption" Text="@T["Current"]" class="theme-card__slot" />
+                                @Preview(current)
+                                <CrestStack Gap="0.75rem" class="theme-card__body">
+                                    @Details(current)
+                                    @if (shell.CanReset)
+                                    {
+                                        <CrestButton Text="@T["Reset"]" ButtonStyle="ButtonStyle.Light" Click="@(() => RequestResetAsync(shell.Shell))" Disabled="@IsBusy" Style="margin-top: auto; align-self: flex-start;" data-testid="theme-reset" />
+                                    }
+                                </CrestStack>
                             </CrestCard>
                         }
                         else
                         {
-                            <div class="theme-grid">
-                                @foreach (var theme in AlternateThemes)
-                                {
-                                    <CrestCard class="theme-card">
-                                        <div class="theme-card__preview">
-                                            <img src="@theme.PreviewImageUrl" alt="@(T["{0} preview", theme.Name])" loading="lazy" @onerror="@(() => MarkPreviewFailed(theme.Id))" hidden="@PreviewFailed(theme.Id)" />
-                                            @if (PreviewFailed(theme.Id))
-                                            {
-                                                <div class="theme-card__placeholder">
-                                                    <CrestIcon IconKey="iconify.mdi/current/default/palette" />
-                                                    <span>@theme.Name</span>
-                                                </div>
-                                            }
-                                        </div>
-
-                                        <CrestStack Gap="0.75rem" class="theme-card__body">
-                                            <CrestStack Gap="0.35rem">
-                                                <CrestText TextStyle="TextStyle.H6" Text="@theme.Name" />
-                                                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
-                                                    <CrestText TextStyle="TextStyle.Caption" Text="@(theme.IsAdmin ? T["Admin theme"] : T["Site theme"])" Style="border: 1px solid var(--rz-border-color); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                    @if (theme.Enabled)
-                                                    {
-                                                        <CrestText TextStyle="TextStyle.Caption" Text="@T["Enabled"]" Style="background: var(--rz-success); color: var(--rz-on-success); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                    }
-                                                    else
-                                                    {
-                                                        <CrestText TextStyle="TextStyle.Caption" Text="@T["Disabled"]" Style="background: var(--rz-warning); color: var(--rz-on-warning); border-radius: 999px; padding: 0.15rem 0.5rem;" />
-                                                    }
-                                                </CrestStack>
-                                            </CrestStack>
-
-                                            @if (!string.IsNullOrWhiteSpace(theme.Description))
-                                            {
-                                                <CrestText TextStyle="TextStyle.Body2" Text="@theme.Description" class="theme-card__description" />
-                                            }
-
-                                            <CrestText TextStyle="TextStyle.Caption" Text="@ThemeMeta(theme)" />
-
-                                            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap; margin-top: auto;">
-                                                <CrestButton Text="@(theme.IsAdmin ? T["Use as admin"] : T["Use as site"])" ButtonStyle="ButtonStyle.Primary" Click="@(() => SetCurrentAsync(theme))" Disabled="@IsBusy" />
-                                                @if (theme.Enabled)
-                                                {
-                                                    <CrestButton Text="@T["Disable"]" ButtonStyle="ButtonStyle.Light" Click="@(() => DisableAsync(theme))" Disabled="@IsBusy" />
-                                                }
-                                                else
-                                                {
-                                                    <CrestButton Text="@T["Enable"]" ButtonStyle="ButtonStyle.Secondary" Click="@(() => EnableAsync(theme))" Disabled="@IsBusy" />
-                                                }
-                                            </CrestStack>
-                                        </CrestStack>
-                                    </CrestCard>
-                                }
-                            </div>
+                            <CrestCard class="theme-card theme-card--empty" data-testid="theme-card-empty">
+                                <div class="theme-card__placeholder theme-card__placeholder--empty">
+                                    <CrestIcon IconKey="iconify.mdi/current/default/palette-outline" />
+                                    <span>@(T["No {0} theme selected", ShellTitle(shell.Shell)])</span>
+                                </div>
+                            </CrestCard>
                         }
-                    </CrestStack>
-                }
-    </CrestStack>
 
+                        @foreach (var theme in alternatives)
+                        {
+                            <CrestCard class="theme-card" data-testid="theme-card" data-theme-id="@theme.Id" data-current="false">
+                                @Preview(theme)
+                                <CrestStack Gap="0.75rem" class="theme-card__body">
+                                    @Details(theme)
+                                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap; margin-top: auto;">
+                                        <CrestButton Text="@T["Use"]" ButtonStyle="@(theme.Incompatibilities.Length > 0 ? ButtonStyle.Warning : ButtonStyle.Primary)" Click="@(() => RequestUseAsync(theme))" Disabled="@IsBusy" data-testid="theme-use" />
+                                        @if (theme.Enabled)
+                                        {
+                                            <CrestButton Text="@T["Disable"]" ButtonStyle="ButtonStyle.Light" Click="@(() => DisableAsync(theme))" Disabled="@IsBusy" />
+                                        }
+                                        else
+                                        {
+                                            <CrestButton Text="@T["Enable"]" ButtonStyle="ButtonStyle.Secondary" Click="@(() => EnableAsync(theme))" Disabled="@IsBusy" />
+                                        }
+                                    </CrestStack>
+                                </CrestStack>
+                            </CrestCard>
+                        }
+                    </div>
+
+                    @if (alternatives.Length == 0 && !string.IsNullOrWhiteSpace(Filter(shell.Shell)))
+                    {
+                        <CrestText TextStyle="TextStyle.Caption" Text="@T["No themes match the filter."]" />
+                    }
+                </CrestStack>
+            </section>
+        }
+    }
+
+    @if (Breaking is not null)
+    {
+        <div class="theme-dialog-backdrop" data-testid="theme-breaking-dialog" data-step="@(Breaking.Step)">
+            <CrestCard class="theme-dialog">
+                <CrestStack Gap="1rem">
+                    @if (Breaking.Step == 1)
+                    {
+                        <CrestText TextStyle="TextStyle.H5" Text="@T["This is a breaking change"]" />
+                        <CrestText Text="@Breaking.Report.Message" />
+                        <ul data-testid="theme-breaking-features">
+                            @foreach (var item in Breaking.Report.Incompatibilities)
+                            {
+                                <li><strong>@item.FeatureId</strong> - @item.Reason</li>
+                            }
+                        </ul>
+                        <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                            <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CancelBreaking" data-testid="theme-breaking-cancel" />
+                            <CrestButton Text="@T["Continue"]" ButtonStyle="ButtonStyle.Danger" Click="@(() => Breaking = Breaking with { Step = 2 })" data-testid="theme-breaking-continue" />
+                        </CrestStack>
+                    }
+                    else
+                    {
+                        <CrestText TextStyle="TextStyle.H5" Text="@T["Confirm the breaking change"]" />
+                        <label class="theme-dialog__acknowledge">
+                            <input type="checkbox" checked="@Breaking.Acknowledged" @onchange="@((ChangeEventArgs args) => Breaking = Breaking with { Acknowledged = args.Value is true })" data-testid="theme-breaking-acknowledge" />
+                            <span>@(T["I understand this will break {0} features.", Breaking.Report.Incompatibilities.Length])</span>
+                        </label>
+                        <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                            <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CancelBreaking" />
+                            <CrestButton Text="@T["Apply anyway"]" ButtonStyle="ButtonStyle.Danger" Click="ConfirmBreakingAsync" Disabled="@(IsBusy || !Breaking.Acknowledged)" data-testid="theme-breaking-confirm" />
+                        </CrestStack>
+                    }
+                </CrestStack>
+            </CrestCard>
+        </div>
+    }
+</CrestStack>
 
 <style>
     .theme-grid {
@@ -211,8 +160,9 @@
         grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
     }
 
-    .current-theme-grid {
-        grid-template-columns: repeat(2, minmax(18rem, 1fr));
+    .theme-section__filter {
+        max-width: 18rem;
+        width: 100%;
     }
 
     .theme-card {
@@ -286,10 +236,49 @@
         overflow: hidden;
     }
 
-    @@media (max-width: 900px) {
-        .current-theme-grid {
-            grid-template-columns: 1fr;
-        }
+    .theme-card__pill {
+        border: 1px solid var(--rz-border-color);
+        border-radius: 999px;
+        padding: 0.15rem 0.5rem;
+    }
+
+    .theme-card__pill--strong {
+        background: var(--rz-primary);
+        border-color: var(--rz-primary);
+        color: var(--rz-on-primary);
+    }
+
+    .theme-card__pill--danger {
+        background: var(--rz-danger);
+        border-color: var(--rz-danger);
+        color: var(--rz-on-danger);
+    }
+
+    .theme-card__breaks {
+        margin: 0;
+        padding-left: 1.1rem;
+    }
+
+    .theme-dialog-backdrop {
+        align-items: center;
+        background: color-mix(in srgb, var(--rz-base-900) 45%, transparent);
+        display: flex;
+        inset: 0;
+        justify-content: center;
+        padding: 1rem;
+        position: fixed;
+        z-index: 1000;
+    }
+
+    .theme-dialog {
+        max-width: 36rem;
+        width: 100%;
+    }
+
+    .theme-dialog__acknowledge {
+        align-items: center;
+        display: flex;
+        gap: 0.5rem;
     }
 </style>
 
@@ -300,7 +289,8 @@
     private bool IsBusy => IsLoading || IsSaving;
     private string? ErrorMessage { get; set; }
     private HashSet<string> FailedPreviewIds { get; } = new(StringComparer.OrdinalIgnoreCase);
-    private IEnumerable<ThemeSummary> AlternateThemes => State.Themes.Where(theme => !IsCurrentThemeId(theme.Id));
+    private Dictionary<string, string> Filters { get; } = new(StringComparer.Ordinal);
+    private BreakingChange? Breaking { get; set; }
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
@@ -323,48 +313,143 @@
         }
     }
 
-    private async Task SetCurrentAsync(ThemeSummary theme) => await ExecuteAsync(
-        () => Api.Crest.Rest.Themes.SetCurrentAsync(theme.Id),
-        T["{0} is now the current {1} theme.", theme.Name, theme.IsAdmin ? T["admin"] : T["site"]]);
+    private string Filter(string shell) => Filters.GetValueOrDefault(shell) ?? string.Empty;
 
-    private async Task EnableAsync(ThemeSummary theme) => await ExecuteAsync(
+    private IEnumerable<ThemeSummary> Alternatives(string shell)
+    {
+        var term = Filter(shell).Trim();
+        return State.Themes.Where(theme => theme.Shell == shell && !theme.IsCurrent
+            && (term.Length == 0
+                || theme.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || theme.Id.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || theme.Description.Contains(term, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private string ShellTitle(string shell) => shell switch
+    {
+        CrestShells.Admin => T["Admin"],
+        CrestShells.Member => T["Member"],
+        _ => T["Site"],
+    };
+
+    private string ShellDescription(string shell) => shell switch
+    {
+        CrestShells.Admin => T["What staff see in the back office."],
+        CrestShells.Member => T["What signed-in members see in their portal."],
+        _ => T["The public website."],
+    };
+
+    private RenderFragment Preview(ThemeSummary theme) => @<div class="theme-card__preview">
+        <img src="@theme.PreviewImageUrl" alt="@(T["{0} preview", theme.Name])" loading="lazy" @onerror="@(() => MarkPreviewFailed(theme.Id))" hidden="@PreviewFailed(theme.Id)" />
+        @if (PreviewFailed(theme.Id))
+        {
+            <div class="theme-card__placeholder">
+                <CrestIcon IconKey="iconify.mdi/current/default/palette" />
+                <span>@theme.Name</span>
+            </div>
+        }
+    </div>;
+
+    private RenderFragment Details(ThemeSummary theme) => @<CrestStack Gap="0.5rem">
+        <CrestText TextStyle="TextStyle.H6" Text="@theme.Name" />
+        <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="flex-wrap: wrap;">
+            @if (theme.IsCrestBlazor)
+            {
+                <CrestText TextStyle="TextStyle.Caption" Text="@T["Crest Blazor"]" class="theme-card__pill theme-card__pill--strong" data-testid="theme-crest-blazor" />
+            }
+            <CrestText TextStyle="TextStyle.Caption" Text="@(theme.Enabled ? T["Enabled"] : T["Disabled"])" class="theme-card__pill" />
+            @if (theme.Incompatibilities.Length > 0)
+            {
+                <CrestText TextStyle="TextStyle.Caption"
+                           Text="@(theme.IsCurrent ? T["{0} features incompatible", theme.Incompatibilities.Length] : T["Breaks {0} features", theme.Incompatibilities.Length])"
+                           class="theme-card__pill theme-card__pill--danger"
+                           data-testid="theme-incompatible" />
+            }
+        </CrestStack>
+        @if (theme.BaseThemes.Length > 0)
+        {
+            <CrestText TextStyle="TextStyle.Caption" Text="@(T["Based on {0}", string.Join(" → ", theme.BaseThemes)])" data-testid="theme-base-themes" />
+        }
+        @if (!string.IsNullOrWhiteSpace(theme.Description))
+        {
+            <CrestText TextStyle="TextStyle.Body2" Text="@theme.Description" class="theme-card__description" />
+        }
+        @if (theme.Incompatibilities.Length > 0)
+        {
+            <ul class="theme-card__breaks">
+                @foreach (var item in theme.Incompatibilities)
+                {
+                    <li><CrestText TextStyle="TextStyle.Caption" Text="@item.FeatureId" /></li>
+                }
+            </ul>
+        }
+        <CrestText TextStyle="TextStyle.Caption" Text="@ThemeMeta(theme)" />
+    </CrestStack>;
+
+    private Task RequestUseAsync(ThemeSummary theme) => ChangeAsync(
+        acknowledge => Api.Crest.Rest.Themes.SetCurrentAsync(theme.Id, acknowledge),
+        T["{0} is now the current {1} theme.", theme.Name, ShellTitle(theme.Shell)]);
+
+    private Task RequestResetAsync(string shell) => ChangeAsync(
+        acknowledge => shell == CrestShells.Admin
+            ? Api.Crest.Rest.Themes.ResetAdminThemeAsync(acknowledge)
+            : Api.Crest.Rest.Themes.ResetSiteThemeAsync(acknowledge),
+        T["The {0} theme was reset.", ShellTitle(shell)]);
+
+    // Sent unacknowledged; a refusal opens the two-step confirmation with the server's
+    // report, and only its second step resends the change acknowledged.
+    private async Task ChangeAsync(Func<bool, Task<ShellChangeResult>> change, string successMessage)
+    {
+        var result = await RunAsync(() => change(false));
+        if (result?.Refusal is { } refusal)
+        {
+            Breaking = new BreakingChange(refusal, change, successMessage, Step: 1, Acknowledged: false);
+            return;
+        }
+
+        await ReportAsync(result, successMessage);
+    }
+
+    private async Task ConfirmBreakingAsync()
+    {
+        if (Breaking is not { Acknowledged: true } breaking)
+        {
+            return;
+        }
+
+        Breaking = null;
+        await ReportAsync(await RunAsync(() => breaking.Change(true)), breaking.SuccessMessage);
+    }
+
+    private void CancelBreaking() => Breaking = null;
+
+    private Task EnableAsync(ThemeSummary theme) => SimpleAsync(
         () => Api.Crest.Rest.Themes.EnableAsync(theme.Id),
         T["{0} was enabled.", theme.Name]);
 
-    private async Task DisableAsync(ThemeSummary theme) => await ExecuteAsync(
+    private Task DisableAsync(ThemeSummary theme) => SimpleAsync(
         () => Api.Crest.Rest.Themes.DisableAsync(theme.Id),
         T["{0} was disabled.", theme.Name]);
 
-    private async Task ResetSiteThemeAsync() => await ExecuteAsync(
-        () => Api.Crest.Rest.Themes.ResetSiteThemeAsync(),
-        T["The Site theme was reset."]);
+    private async Task SimpleAsync(Func<Task<bool>> action, string successMessage)
+    {
+        var succeeded = await RunAsync(action);
+        await ReportAsync(succeeded ? ShellChangeResult.Applied : new ShellChangeResult(false, null), successMessage);
+    }
 
-    private async Task ResetAdminThemeAsync() => await ExecuteAsync(
-        () => Api.Crest.Rest.Themes.ResetAdminThemeAsync(),
-        T["The Admin theme was reset."]);
-
-    private async Task ExecuteAsync(Func<Task<bool>> action, string successMessage)
+    private async Task<TResult?> RunAsync<TResult>(Func<Task<TResult>> action)
     {
         IsSaving = true;
         ErrorMessage = null;
-
         try
         {
-            if (await action())
-            {
-                Notifications.Notify(NotificationSeverity.Success, T["Themes"], successMessage);
-                State = await Api.Crest.Rest.Themes.ListAsync();
-            }
-            else
-            {
-                ErrorMessage = T["The theme action did not complete successfully."];
-                Notifications.Notify(NotificationSeverity.Error, T["Themes"], ErrorMessage);
-            }
+            return await action();
         }
         catch (Exception exception)
         {
             ErrorMessage = exception.Message;
             Notifications.Notify(NotificationSeverity.Error, T["Themes"], ErrorMessage);
+            return default;
         }
         finally
         {
@@ -372,13 +457,27 @@
         }
     }
 
+    private async Task ReportAsync(ShellChangeResult? result, string successMessage)
+    {
+        if (result is null)
+        {
+            return;
+        }
+
+        if (result.Succeeded)
+        {
+            Notifications.Notify(NotificationSeverity.Success, T["Themes"], successMessage);
+            await LoadAsync();
+            return;
+        }
+
+        ErrorMessage = T["The theme action did not complete successfully."];
+        Notifications.Notify(NotificationSeverity.Error, T["Themes"], ErrorMessage);
+    }
+
     private bool PreviewFailed(string themeId) => FailedPreviewIds.Contains(themeId);
 
     private void MarkPreviewFailed(string themeId) => FailedPreviewIds.Add(themeId);
-
-    private bool IsCurrentThemeId(string themeId) =>
-        string.Equals(themeId, State.CurrentSiteThemeId, StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(themeId, State.CurrentAdminThemeId, StringComparison.OrdinalIgnoreCase);
 
     private string ThemeMeta(ThemeSummary theme)
     {
@@ -401,4 +500,11 @@
 
         return string.Join(" · ", parts);
     }
+
+    private sealed record BreakingChange(
+        ShellIncompatibilityReport Report,
+        Func<bool, Task<ShellChangeResult>> Change,
+        string SuccessMessage,
+        int Step,
+        bool Acknowledged);
 }

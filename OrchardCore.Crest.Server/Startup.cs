@@ -141,6 +141,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<Crest.Routing.IRouteComponentTableProvider, Crest.Routing.AdminRouteComponentTableProvider>();
         services.AddScoped<Crest.Routing.IRouteComponentTableProvider, Crest.Routing.SiteRouteComponentTableProvider>();
         services.AddScoped<Crest.Routing.IRouteComponentTableProvider, Crest.Routing.MemberRouteComponentTableProvider>();
+        services.AddScoped<Crest.Themes.IMemberThemeService, Crest.Themes.MemberThemeService>();
         services.AddScoped<Crest.Themes.IShellCompatibilityService, Crest.Themes.ShellCompatibilityService>();
 
         // The gate itself - see Crest.Routing.RouteGateMatcherPolicy's own comments for

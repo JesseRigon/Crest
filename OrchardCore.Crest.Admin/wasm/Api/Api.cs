@@ -107,7 +107,7 @@ public interface IContentItemsApi
 public interface IFeaturesApi
 {
     Task<Feature[]> ListAsync();
-    Task<bool> EnableAsync(string id);
+    Task<ShellChangeResult> EnableAsync(string id);
     Task<bool> DisableAsync(string id);
 }
 
@@ -132,11 +132,13 @@ public interface IThemeApi
 public interface IThemesApi
 {
     Task<ThemesState> ListAsync();
-    Task<bool> SetCurrentAsync(string id);
+    // A change that would break enabled features is refused with the report unless it is
+    // acknowledged - the server's gate, so the UI's two-step confirmation is not the only one.
+    Task<ShellChangeResult> SetCurrentAsync(string id, bool acknowledgeIncompatibilities = false);
     Task<bool> EnableAsync(string id);
     Task<bool> DisableAsync(string id);
-    Task<bool> ResetSiteThemeAsync();
-    Task<bool> ResetAdminThemeAsync();
+    Task<ShellChangeResult> ResetSiteThemeAsync(bool acknowledgeIncompatibilities = false);
+    Task<ShellChangeResult> ResetAdminThemeAsync(bool acknowledgeIncompatibilities = false);
 }
 
 public interface IIconsApi
@@ -642,7 +644,18 @@ public sealed class FeaturesApi(HttpClient http) : IFeaturesApi
             : [];
     }
 
-    public Task<bool> EnableAsync(string id) => SetStateAsync(id, "enable");
+    public async Task<ShellChangeResult> EnableAsync(string id)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/crest/features/{Uri.EscapeDataString(id)}/enable")));
+        if (response.IsSuccessStatusCode)
+        {
+            return ShellChangeResult.Applied;
+        }
+
+        return response.StatusCode == System.Net.HttpStatusCode.Conflict
+            ? new ShellChangeResult(false, await response.Content.ReadFromJsonAsync<ShellIncompatibilityReport>())
+            : new ShellChangeResult(false, null);
+    }
 
     public Task<bool> DisableAsync(string id) => SetStateAsync(id, "disable");
 
@@ -713,20 +726,37 @@ public sealed class ThemesApi(HttpClient http) : IThemesApi
             : ThemesState.Empty;
     }
 
-    public Task<bool> SetCurrentAsync(string id) => PostAsync($"api/crest/themes/{Uri.EscapeDataString(id)}/current");
+    public Task<ShellChangeResult> SetCurrentAsync(string id, bool acknowledgeIncompatibilities = false) =>
+        ChangeAsync($"api/crest/themes/{Uri.EscapeDataString(id)}/current", acknowledgeIncompatibilities);
 
     public Task<bool> EnableAsync(string id) => PostAsync($"api/crest/themes/{Uri.EscapeDataString(id)}/enable");
 
     public Task<bool> DisableAsync(string id) => PostAsync($"api/crest/themes/{Uri.EscapeDataString(id)}/disable");
 
-    public Task<bool> ResetSiteThemeAsync() => PostAsync("api/crest/themes/reset-site");
+    public Task<ShellChangeResult> ResetSiteThemeAsync(bool acknowledgeIncompatibilities = false) =>
+        ChangeAsync("api/crest/themes/reset-site", acknowledgeIncompatibilities);
 
-    public Task<bool> ResetAdminThemeAsync() => PostAsync("api/crest/themes/reset-admin");
+    public Task<ShellChangeResult> ResetAdminThemeAsync(bool acknowledgeIncompatibilities = false) =>
+        ChangeAsync("api/crest/themes/reset-admin", acknowledgeIncompatibilities);
 
     private async Task<bool> PostAsync(string uri)
     {
         using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, uri)));
         return response.IsSuccessStatusCode;
+    }
+
+    private async Task<ShellChangeResult> ChangeAsync(string uri, bool acknowledgeIncompatibilities)
+    {
+        var target = acknowledgeIncompatibilities ? $"{uri}?acknowledgeIncompatibilities=true" : uri;
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, target)));
+        if (response.IsSuccessStatusCode)
+        {
+            return ShellChangeResult.Applied;
+        }
+
+        return response.StatusCode == System.Net.HttpStatusCode.Conflict
+            ? new ShellChangeResult(false, await response.Content.ReadFromJsonAsync<ShellIncompatibilityReport>())
+            : new ShellChangeResult(false, null);
     }
 
     private static HttpRequestMessage WithCredentials(HttpRequestMessage request)
@@ -1417,19 +1447,18 @@ public sealed record Feature(
     string[] Dependencies,
     bool AlwaysEnabled,
     bool Enabled,
-    bool EnabledByDependencyOnly);
+    bool EnabledByDependencyOnly,
+    string? Incompatibility = null);
 
 public sealed record Role(string Name, string Description, bool IsAdmin, bool IsSystem);
 
-public sealed record ThemesState(
-    string? CurrentSiteThemeId,
-    string? CurrentAdminThemeId,
-    ThemeSummary? CurrentSiteTheme,
-    ThemeSummary? CurrentAdminTheme,
-    ThemeSummary[] Themes)
+public sealed record ThemesState(ThemeShell[] Shells, ThemeSummary[] Themes)
 {
-    public static ThemesState Empty { get; } = new(null, null, null, null, []);
+    public static ThemesState Empty { get; } = new([], []);
 }
+
+/// <summary>One shell's section on the themes page ("site", "admin" or "member").</summary>
+public sealed record ThemeShell(string Shell, string? CurrentThemeId, bool CanReset);
 
 public sealed record ThemeSummary(
     string Id,
@@ -1439,10 +1468,26 @@ public sealed record ThemeSummary(
     string Website,
     string Version,
     string ExtensionId,
-    bool IsAdmin,
+    string Shell,
+    bool IsCrestBlazor,
+    string[] BaseThemes,
     bool IsCurrent,
     bool Enabled,
-    string PreviewImageUrl);
+    string PreviewImageUrl,
+    ShellIncompatibility[] Incompatibilities);
+
+/// <summary>An enabled feature whose pages need a shell its active theme does not provide.</summary>
+public sealed record ShellIncompatibility(string FeatureId, string Bucket, string? ActiveThemeId, string Reason);
+
+public sealed record ShellIncompatibilityReport(string Message, ShellIncompatibility[] Incompatibilities);
+
+/// <summary>The outcome of a feature enable or theme change; <paramref name="Refusal"/> is set
+/// when the server refused it because of shell contracts (an unsatisfiable feature, or an
+/// unacknowledged breaking theme change).</summary>
+public sealed record ShellChangeResult(bool Succeeded, ShellIncompatibilityReport? Refusal)
+{
+    public static ShellChangeResult Applied { get; } = new(true, null);
+}
 
 public sealed record IconSearchResult(IconLibrary[] Libraries, IconSearchFacet[] Facets, IconCatalogItem[] Items, int Total, int Skip, int Take)
 {

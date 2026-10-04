@@ -8,5 +8,5 @@ using OrchardCore.Modules.Manifest;
     Website = ManifestConstants.OrchardCoreWebsite,
     Version = "3.0.0.0.0",
     Description = "A regular Orchard Core site theme with content type, content menu, and site menu templates.",
-    Tags = new[] { "Blog", "Bootstrap", "Liquid" }
+    Tags = new[] { "Blog", "Bootstrap", "Liquid", "crest-blazor" }
 )]

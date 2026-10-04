@@ -15,7 +15,11 @@ public sealed record Feature(
     string[] Dependencies,
     bool AlwaysEnabled,
     bool Enabled,
-    bool EnabledByDependencyOnly)
+    bool EnabledByDependencyOnly,
+    // Why this enabled feature's pages cannot work under the active themes, or null when
+    // they can. Shown as a badge, so a theme change that broke a feature stays visible
+    // after the warning was dismissed.
+    string? Incompatibility = null)
 {
     public static Feature From(IFeatureInfo feature, bool enabled) => new(
         feature.Id,

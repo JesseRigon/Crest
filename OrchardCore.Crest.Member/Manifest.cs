@@ -11,6 +11,6 @@ using OrchardCore.DisplayManagement.Manifest;
     // "member" is the bucket tag, the member-shell counterpart of the admin theme's
     // "admin" tag: it is how a theme declares which shell it hosts, so a fork of this
     // theme is recognized as a member theme without its id being hardcoded anywhere.
-    // "blazor" marks it as hosting a Crest Blazor shell document.
-    Tags = ["member", "blazor", "radzen"]
+    // "crest-blazor" marks it as hosting a Crest Blazor shell document.
+    Tags = ["member", "crest-blazor", "radzen"]
 )]

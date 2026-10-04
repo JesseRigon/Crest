@@ -8,5 +8,5 @@ using OrchardCore.DisplayManagement.Manifest;
     Website = "https://github.com/OrchardCore.Crest/Orchard-Crest",
     Version = "3.0.0.0.0",
     Description = "A Blazor WebAssembly admin theme for Orchard Core using Crest components.",
-    Tags = ["admin", "blazor", "radzen"]
+    Tags = ["admin", "crest-blazor", "radzen"]
 )]

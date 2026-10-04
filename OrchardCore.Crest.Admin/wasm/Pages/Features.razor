@@ -87,7 +87,16 @@
                                     {
                                         <CrestBadge Text="@T["Dependency only"]" BadgeStyle="BadgeStyle.Warning" />
                                     }
+                                    @if (feature.Incompatibility is { Length: > 0 })
+                                    {
+                                        <CrestBadge Text="@T["Incompatible"]" BadgeStyle="BadgeStyle.Danger" data-testid="feature-incompatible" />
+                                    }
                                 </CrestStack>
+
+                                @if (feature.Incompatibility is { Length: > 0 } incompatibility)
+                                {
+                                    <CrestText TextStyle="TextStyle.Caption" Text="@incompatibility" data-testid="feature-incompatibility-reason" />
+                                }
 
                                 @if (!string.IsNullOrWhiteSpace(feature.Description))
                                 {
@@ -281,10 +290,23 @@
         ErrorMessage = null;
         try
         {
-            var succeeded = enable
-                ? await Api.Crest.Rest.Features.EnableAsync(feature.Id)
-                : await Api.Crest.Rest.Features.DisableAsync(feature.Id);
-            if (!succeeded) throw new InvalidOperationException(T["Orchard could not {0} {1}.", enable ? T["Enable"] : T["Disable"], feature.Name]);
+            if (enable)
+            {
+                var result = await Api.Crest.Rest.Features.EnableAsync(feature.Id);
+                if (result.Refusal is { } refusal)
+                {
+                    // The server refused because the feature's pages need a shell the active
+                    // theme does not provide: say which, rather than a generic failure.
+                    throw new InvalidOperationException(string.Join(" ", refusal.Incompatibilities.Select(item => item.Reason).Prepend(refusal.Message)));
+                }
+
+                if (!result.Succeeded) throw new InvalidOperationException(T["Orchard could not {0} {1}.", T["Enable"], feature.Name]);
+            }
+            else if (!await Api.Crest.Rest.Features.DisableAsync(feature.Id))
+            {
+                throw new InvalidOperationException(T["Orchard could not {0} {1}.", T["Disable"], feature.Name]);
+            }
+
             Notifications.Notify(NotificationSeverity.Success, T["Features"], T["{0} was {1}.", feature.Name, enable ? T["Enabled"] : T["Disabled"]]);
             await LoadAsync();
         }

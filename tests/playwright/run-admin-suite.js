@@ -27,6 +27,7 @@ function buildSharedAdminChecks() {
     { name: 'lazy-module-pages', fn: require('./checks/lazy-module-pages') },
     { name: 'features-page', fn: require('./checks/features-page') },
     { name: 'features-list-api', fn: require('./checks/features-list-api') },
+    { name: 'themes-compatibility', fn: require('./checks/themes-compatibility') },
     { name: 'standard-pages', fn: require('./checks/standard-pages') },
     { name: 'content-item-editor-page', fn: require('./checks/content-item-editor-page') },
     { name: 'content-items-page', fn: require('./checks/content-items-page') },

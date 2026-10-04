@@ -32,26 +32,35 @@ public interface IShellCompatibilityService
     /// The contracts these features declare that the given active themes do not satisfy.
     /// </summary>
     /// <param name="featureIds">Features to check; null checks every enabled feature.</param>
-    /// <param name="overrideThemeId">
-    /// A theme to evaluate INSTEAD of the currently active one for its bucket - how a
-    /// pending theme change is checked before it is applied.
+    /// <param name="pending">
+    /// A theme change to evaluate INSTEAD of the currently active theme of its bucket - how
+    /// a change is checked before it is applied.
     /// </param>
     Task<IReadOnlyList<ShellIncompatibility>> GetIncompatibilitiesAsync(
         IEnumerable<string>? featureIds = null,
-        string? overrideThemeId = null);
+        PendingThemeChange? pending = null);
+
+    /// <summary>The shells the enabled features ship pages for.</summary>
+    Task<IReadOnlySet<RouteBucket>> GetRequiredBucketsAsync();
 }
+
+/// <summary>
+/// A theme change not yet applied: <paramref name="ThemeId"/> becomes the active theme of
+/// <paramref name="Bucket"/>, or the bucket is left with no theme when it is null (a reset).
+/// </summary>
+public sealed record PendingThemeChange(RouteBucket Bucket, string? ThemeId);
 
 public sealed class ShellCompatibilityService(
     IAdminThemeService adminThemeService,
     ISiteThemeService siteThemeService,
+    IMemberThemeService memberThemeService,
     IExtensionManager extensionManager,
     IShellFeaturesManager shellFeaturesManager,
-    IEnumerable<IShellContractProvider> contractProviders,
-    Microsoft.Extensions.Options.IOptions<MemberOptions> memberOptions) : IShellCompatibilityService
+    IEnumerable<IShellContractProvider> contractProviders) : IShellCompatibilityService
 {
     public async Task<IReadOnlyList<ShellIncompatibility>> GetIncompatibilitiesAsync(
         IEnumerable<string>? featureIds = null,
-        string? overrideThemeId = null)
+        PendingThemeChange? pending = null)
     {
         var contracts = await ResolveContractsAsync(featureIds);
         if (contracts.Count == 0)
@@ -59,7 +68,7 @@ public sealed class ShellCompatibilityService(
             return [];
         }
 
-        var activeThemes = await GetActiveThemesAsync(overrideThemeId);
+        var activeThemes = await GetActiveThemesAsync(pending);
         var incompatibilities = new List<ShellIncompatibility>();
 
         foreach (var (featureId, contract) in contracts)
@@ -76,18 +85,9 @@ public sealed class ShellCompatibilityService(
                 continue;
             }
 
-            if (!contract.RequiresCrestBlazor)
-            {
-                continue;
-            }
-
             // The chain, not the id: a fork (BaseTheme = the Crest theme) is the normal
             // way to brand a shell and must satisfy the same contract.
-            var satisfied = ThemeBuckets
-                .WalkBaseThemeChain(activeTheme, id => extensionManager.GetExtension(id))
-                .Any(theme => ThemeBuckets.IsCrestBlazor(theme.Manifest));
-
-            if (!satisfied)
+            if (contract.RequiresCrestBlazor && !ThemeBuckets.IsCrestBlazorTheme(activeTheme, extensionManager.GetExtension))
             {
                 incompatibilities.Add(new ShellIncompatibility(
                     featureId,
@@ -100,38 +100,64 @@ public sealed class ShellCompatibilityService(
         return incompatibilities;
     }
 
+    public async Task<IReadOnlySet<RouteBucket>> GetRequiredBucketsAsync() =>
+        (await ResolveContractsAsync(null)).Select(contract => contract.Contract.Bucket).ToHashSet();
+
+    // Every contract the given features declare - explicitly, through an
+    // IShellContractProvider, or implicitly, by the client libraries their module ships.
+    // A null feature list means every enabled feature.
     private async Task<List<(string FeatureId, ShellContract Contract)>> ResolveContractsAsync(IEnumerable<string>? featureIds)
     {
         var wanted = featureIds is null
             ? (await shellFeaturesManager.GetEnabledFeaturesAsync()).Select(feature => feature.Id).ToHashSet(StringComparer.OrdinalIgnoreCase)
             : featureIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        return
-        [
-            .. contractProviders
-                .Where(provider => wanted.Contains(provider.FeatureId))
-                .SelectMany(provider => provider.GetContracts().Select(contract => (provider.FeatureId, contract)))
-        ];
+        var declared = contractProviders
+            .Where(provider => wanted.Contains(provider.FeatureId))
+            .SelectMany(provider => provider.GetContracts().Select(contract => (provider.FeatureId, contract)));
+
+        var shipped = extensionManager.GetFeatures()
+            .Where(feature => wanted.Contains(feature.Id))
+            .SelectMany(feature => ShippedContracts(feature.Extension.Id).Select(contract => (feature.Id, contract)));
+
+        return [.. declared.Concat(shipped).Distinct()];
     }
 
-    private async Task<Dictionary<RouteBucket, IExtensionInfo?>> GetActiveThemesAsync(string? overrideThemeId)
+    // A module that ships a client library for a shell needs a Crest Blazor theme for that
+    // shell: its pages are Blazor components rendered by the shell's document, and under
+    // any other theme they render nothing. Module client libraries are named for their
+    // module ("Crest.Members.Member.BlazorWasm" belongs to "Crest.Members"), the same
+    // convention the client project globs and the lazy-module generator already rely on.
+    // Theme clients are excluded: a theme does not need itself.
+    private static IEnumerable<ShellContract> ShippedContracts(string extensionId) =>
+        AppDomain.CurrentDomain.GetAssemblies()
+            .Where(assembly => assembly.GetName().Name is { } name
+                && name.StartsWith(extensionId + ".", StringComparison.OrdinalIgnoreCase)
+                && name.EndsWith(ModuleClientSuffix, StringComparison.Ordinal))
+            .Select(ShellAssemblies.GetBucket)
+            .OfType<RouteBucket>()
+            .Distinct()
+            .Select(bucket => new ShellContract(bucket));
+
+    private const string ModuleClientSuffix = ".BlazorWasm";
+
+    private async Task<Dictionary<RouteBucket, IExtensionInfo?>> GetActiveThemesAsync(PendingThemeChange? pending)
     {
         var themes = new Dictionary<RouteBucket, IExtensionInfo?>
         {
             [RouteBucket.Admin] = await adminThemeService.GetAdminThemeAsync(),
             [RouteBucket.Site] = await siteThemeService.GetSiteThemeAsync(),
-            // The member theme is resolved by id from options rather than from an Orchard
-            // theme service, because Orchard has site and admin theme settings and no
-            // member one. A tenant selecting a member theme is Crest's own setting.
-            [RouteBucket.Member] = extensionManager.GetExtension(memberOptions.Value.MemberThemeId),
+            [RouteBucket.Member] = await memberThemeService.GetMemberThemeAsync(),
         };
 
         // A pending theme change replaces the active theme of ITS OWN bucket only: that is
         // what "would this change break anything" means.
-        if (overrideThemeId is { Length: > 0 }
-            && extensionManager.GetExtension(overrideThemeId) is { } pending)
+        if (pending is not null)
         {
-            themes[ThemeBuckets.GetBucket(pending.Manifest)] = pending;
+            themes[pending.Bucket] = pending.ThemeId is { Length: > 0 }
+                && extensionManager.GetExtension(pending.ThemeId) is { Exists: true } theme
+                    ? theme
+                    : null;
         }
 
         return themes;

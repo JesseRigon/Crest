@@ -1,8 +1,6 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using OrchardCore.Admin;
 using OrchardCore.Environment.Extensions;
-using Crest.Middlewares;
 
 namespace Crest.Routing;
 
@@ -20,29 +18,24 @@ public interface IBlazorAdminThemeDetector
     Task<bool> IsBlazorAdminThemeActiveAsync();
 }
 
+// A Crest Blazor admin theme is one that is, or descends from, a theme tagged
+// crest-blazor (ThemeBuckets.IsCrestBlazorTheme) - so a branded fork of the Crest admin
+// theme serves the Blazor admin shell exactly as the Crest theme does.
 public sealed class BlazorAdminThemeDetector(
     IAdminThemeService adminThemeService,
-    IOptions<BlazorAdminThemeOptions> options,
+    IExtensionManager extensionManager,
     ILogger<BlazorAdminThemeDetector> logger) : IBlazorAdminThemeDetector
 {
     public async Task<bool> IsBlazorAdminThemeActiveAsync()
     {
-        var adminThemeName = await adminThemeService.GetAdminThemeNameAsync();
         var adminTheme = await adminThemeService.GetAdminThemeAsync();
-        var hasBlazorTag = HasBlazorTag(adminTheme, options.Value.BlazorThemeTag);
-        var isBlazorAdminTheme = string.Equals(adminThemeName, options.Value.BlazorAdminThemeId, StringComparison.OrdinalIgnoreCase) || hasBlazorTag;
+        var isBlazorAdminTheme = Crest.Themes.ThemeBuckets.IsCrestBlazorTheme(adminTheme, extensionManager.GetExtension);
 
         logger.LogDebug(
-            "Blazor admin theme check: selected admin theme name '{AdminThemeName}', resolved extension '{ExtensionId}', has '{Tag}' tag: {HasBlazorTag}, serving Blazor: {ServeBlazor}.",
-            adminThemeName,
+            "Blazor admin theme check: active admin theme '{ExtensionId}', serving Blazor: {ServeBlazor}.",
             adminTheme?.Id,
-            options.Value.BlazorThemeTag,
-            hasBlazorTag,
             isBlazorAdminTheme);
 
         return isBlazorAdminTheme;
     }
-
-    private static bool HasBlazorTag(IExtensionInfo? extension, string tag) =>
-        extension?.Manifest?.Tags?.Any(candidate => string.Equals(candidate, tag, StringComparison.OrdinalIgnoreCase)) == true;
 }

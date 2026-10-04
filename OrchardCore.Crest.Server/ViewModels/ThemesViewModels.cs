@@ -1,22 +1,20 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using OrchardCore.Admin;
-using OrchardCore.DisplayManagement.Extensions;
-using OrchardCore.Environment.Extensions;
-using OrchardCore.Environment.Extensions.Features;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Modules.Manifest;
-using OrchardCore.Themes;
-using OrchardCore.Themes.Services;
+using Crest.Themes;
 
 namespace Crest.ViewModels;
 
-public sealed record ThemesState(
-    string? CurrentSiteThemeId,
-    string? CurrentAdminThemeId,
-    ThemeSummary? CurrentSiteTheme,
-    ThemeSummary? CurrentAdminTheme,
-    ThemeSummary[] Themes);
+/// <summary>The theme-selection state: one section per shell, and every selectable theme.</summary>
+/// <param name="Shells">
+/// Site, Admin and - only when an enabled feature ships member pages - Member, in that order.
+/// </param>
+public sealed record ThemesState(ThemeShell[] Shells, ThemeSummary[] Themes);
+
+/// <summary>One shell's section: its bucket and its active theme.</summary>
+/// <param name="Shell">A <c>CrestShells</c> value: "site", "admin" or "member".</param>
+/// <param name="CanReset">
+/// Whether the shell can be left with no theme. The member shell cannot: Crest's member
+/// theme is its default rather than "none".
+/// </param>
+public sealed record ThemeShell(string Shell, string? CurrentThemeId, bool CanReset);
 
 public sealed record ThemeSummary(
     string Id,
@@ -26,21 +24,12 @@ public sealed record ThemeSummary(
     string Website,
     string Version,
     string ExtensionId,
-    bool IsAdmin,
+    string Shell,
+    bool IsCrestBlazor,
+    string[] BaseThemes,
     bool IsCurrent,
     bool Enabled,
-    string PreviewImageUrl)
-{
-    public static ThemeSummary From(IFeatureInfo feature, bool isAdmin, bool enabled, bool isCurrent, string previewImageUrl) => new(
-        feature.Id,
-        feature.Name ?? feature.Id,
-        feature.Description ?? string.Empty,
-        feature.Extension.Manifest.Author ?? string.Empty,
-        feature.Extension.Manifest.Website ?? string.Empty,
-        feature.Extension.Manifest.Version ?? string.Empty,
-        feature.Extension.Id,
-        isAdmin,
-        isCurrent,
-        enabled,
-        previewImageUrl);
-}
+    string PreviewImageUrl,
+    // For the current theme: the enabled features it fails now. For any other theme: the
+    // enabled features that would fail if it became current.
+    ShellIncompatibility[] Incompatibilities);

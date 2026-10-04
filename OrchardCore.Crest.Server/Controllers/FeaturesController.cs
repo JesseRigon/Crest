@@ -14,6 +14,7 @@ namespace Crest.Controllers;
 public sealed class FeaturesController(
     IShellDescriptorManager shellDescriptorManager,
     IShellFeaturesManager shellFeaturesManager,
+    OrchardCore.Environment.Extensions.IExtensionManager extensionManager,
     IShellCompatibilityService shellCompatibility,
     IAuthorizationService authorizationService) : ControllerBase
 {
@@ -26,9 +27,18 @@ public sealed class FeaturesController(
             .Select(feature => feature.Id)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         var featureInfos = await shellFeaturesManager.GetAvailableFeaturesAsync();
+        var incompatible = (await shellCompatibility.GetIncompatibilitiesAsync())
+            .GroupBy(incompatibility => incompatibility.FeatureId, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                group => group.Key,
+                group => string.Join(" ", group.Select(incompatibility => incompatibility.Reason)),
+                StringComparer.OrdinalIgnoreCase);
 
         return Ok(featureInfos
-            .Select(feature => Feature.From(feature, enabledIds.Contains(feature.Id)))
+            .Select(feature => Feature.From(feature, enabledIds.Contains(feature.Id)) with
+            {
+                Incompatibility = incompatible.GetValueOrDefault(feature.Id),
+            })
             .OrderBy(feature => feature.Category)
             .ThenBy(feature => feature.Name)
             .ToArray());
@@ -53,8 +63,10 @@ public sealed class FeaturesController(
         // that outcome - unlike a theme change, which is their own deliberate decision
         // about their site and therefore only warns (see ThemesController.SetCurrent).
         // The report names the feature, the bucket and the active theme so the refusal is
-        // actionable rather than just a "no".
-        var incompatibilities = await shellCompatibility.GetIncompatibilitiesAsync([feature.Id]);
+        // actionable rather than just a "no". The features this one depends on are checked
+        // too: enabling it enables them, and their pages are just as unusable.
+        var incompatibilities = await shellCompatibility.GetIncompatibilitiesAsync(
+            extensionManager.GetFeatureDependencies(feature.Id).Select(dependency => dependency.Id).Append(feature.Id));
         if (incompatibilities.Count > 0)
         {
             return Conflict(new ShellIncompatibilityReport(

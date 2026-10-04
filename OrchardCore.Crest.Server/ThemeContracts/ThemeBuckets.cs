@@ -12,8 +12,8 @@ namespace Crest.Themes;
 /// Manifest tags are the mechanism, because Orchard already reads them (<c>admin</c> and
 /// <c>hidden</c> are honoured today): a theme tagged <c>admin</c> hosts the admin shell,
 /// one tagged <c>member</c> hosts the member shell, and one tagged neither is a site
-/// theme. <c>crest-blazor</c> (or the legacy <c>blazor</c> tag) marks a theme as hosting a
-/// Crest Blazor shell document rather than a classic Orchard view theme.
+/// theme. <c>crest-blazor</c> marks a theme as hosting a Crest Blazor shell document rather
+/// than a classic Orchard view theme.
 ///
 /// <para>
 /// <strong>Descendants count.</strong> Orchard's <c>BaseTheme</c> chain is exactly "a
@@ -31,12 +31,6 @@ public static class ThemeBuckets
     /// <summary>Marks a theme as hosting a Crest Blazor shell document.</summary>
     public const string CrestBlazorTag = "crest-blazor";
 
-    /// <summary>
-    /// The tag Crest's own themes have always carried, honoured as an alias so existing
-    /// themes and forks keep working without a manifest edit.
-    /// </summary>
-    public const string LegacyBlazorTag = "blazor";
-
     /// <summary>The bucket a theme's manifest declares.</summary>
     /// <remarks>
     /// Site is the default for a theme that declares neither tag, which keeps every
@@ -53,9 +47,20 @@ public static class ThemeBuckets
         return HasTag(manifest, AdminTag) ? RouteBucket.Admin : RouteBucket.Site;
     }
 
-    /// <summary>Whether a theme hosts a Crest Blazor shell document.</summary>
-    public static bool IsCrestBlazor(IManifestInfo? manifest) =>
-        HasTag(manifest, CrestBlazorTag) || HasTag(manifest, LegacyBlazorTag);
+    /// <summary>Whether a theme's own manifest declares a Crest Blazor shell document.</summary>
+    public static bool IsCrestBlazor(IManifestInfo? manifest) => HasTag(manifest, CrestBlazorTag);
+
+    /// <summary>
+    /// Whether a theme hosts a Crest Blazor shell document, itself or through any theme
+    /// in its <c>BaseTheme</c> chain - a fork of a Crest theme is a Crest theme.
+    /// </summary>
+    /// <remarks>
+    /// The one answer to this question: the admin shell's detector and the shell-contract
+    /// check both ask it here, so serving the shell and checking compatibility can never
+    /// disagree about a theme.
+    /// </remarks>
+    public static bool IsCrestBlazorTheme(IExtensionInfo? theme, Func<string, IExtensionInfo?> resolve) =>
+        WalkBaseThemeChain(theme, resolve).Any(candidate => IsCrestBlazor(candidate.Manifest));
 
     public static bool HasTag(IManifestInfo? manifest, string tag) =>
         manifest?.Tags?.Any(candidate => string.Equals(candidate, tag, StringComparison.OrdinalIgnoreCase)) == true;
@@ -79,26 +84,16 @@ public static class ThemeBuckets
         {
             yield return current;
 
-            current = resolve is null ? null : ResolveBaseTheme(current, resolve);
+            current = ResolveBaseTheme(current, resolve);
         }
     }
 
-    // Orchard exposes a theme's BaseTheme on its theme extension-info type rather than on
-    // IExtensionInfo or IManifestInfo, and that type is not in the abstractions this
-    // project references - so the property is read reflectively off whichever concrete
-    // extension/manifest object Orchard handed us. The alternative would be taking a
-    // reference purely to name a type whose single property we read once.
-    //
+    // Orchard reads BaseTheme from the theme's manifest attribute onto ThemeExtensionInfo.
     // A theme with no BaseTheme (or a non-theme extension) yields null, which ends the
     // walk - the common case, since most themes declare no base.
     private static IExtensionInfo? ResolveBaseTheme(IExtensionInfo extension, Func<string, IExtensionInfo?> resolve)
     {
-        var baseThemeId = ReadBaseThemeId(extension) ?? ReadBaseThemeId(extension.Manifest);
+        var baseThemeId = (extension as ThemeExtensionInfo)?.BaseTheme;
         return string.IsNullOrWhiteSpace(baseThemeId) ? null : resolve(baseThemeId);
     }
-
-    private static string? ReadBaseThemeId(object? source) =>
-        source?.GetType()
-            .GetProperty("BaseTheme", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
-            ?.GetValue(source) as string;
 }

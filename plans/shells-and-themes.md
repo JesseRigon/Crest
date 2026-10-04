@@ -2,11 +2,10 @@
 
 ## Status
 
-**Planning.** The admin and site shells are built and documented in
-[docs/BlazorWeb.md](../docs/BlazorWeb.md); the member shell, the generalized shell
-dispatch, and the theme-compatibility contracts below are not. The member portal exists
-today only as `[AllowAnonymous]` pages in the Members module borrowing another shell's
-client — this plan replaces that arrangement.
+**In progress.** Shell dispatch, the member shell, per-assembly UI isolation for all three
+shells, theme compatibility and the per-shell theme-selection UI are built (phases 1–4).
+Lazy-loaded theme UIs (phase 2b) are not. The admin and site shells are documented in
+[docs/BlazorWeb.md](../docs/BlazorWeb.md).
 
 ## Three shells
 
@@ -177,9 +176,10 @@ a broken shell.
 Manifest tags are already the mechanism (`admin` and `hidden` are read today):
 
 - a **bucket** tag — `admin`, `member`, or neither (site);
-- `crest-blazor` for a theme that hosts a Crest shell document. `IBlazorAdminThemeDetector`
-  already accepts "the theme id matches, or the theme carries the `blazor` tag"; this
-  formalizes and extends it per bucket.
+- `crest-blazor` for a theme that hosts a Crest shell document. This one tag, read through
+  the `BaseTheme` chain (`ThemeBuckets.IsCrestBlazorTheme`), is the only answer to "is this
+  a Crest Blazor theme": the admin shell's detector and the compatibility check both ask
+  it, so serving a shell and checking compatibility cannot disagree.
 
 **Descendants count.** Orchard's `BaseTheme` chain is exactly "a direct child fork with
 simple mods": a child theme inherits its parent's shapes and assets, so
@@ -188,16 +188,25 @@ check walks the `BaseTheme` chain, never a single id.
 
 ### How a module declares what it needs
 
-A module states its required shell contract — "my admin pages need a `crest-blazor` admin
-theme", "my member pages need a `crest-blazor` member theme" — and the check resolves
+A module's contract follows from what it ships: a module with a `blazor-wasm/` library
+needs a `crest-blazor` admin theme, one with `member-wasm/` a `crest-blazor` member theme,
+one with `site-wasm/` a `crest-blazor` site theme. The libraries are named for their module
+(`Crest.Members.Member.BlazorWasm` belongs to `Crest.Members`), so every feature of that
+module carries the contract with no declaration to keep in sync. A module whose needs go
+beyond what it ships adds an `IShellContractProvider`. The check resolves each contract
 against the active theme of that bucket and its `BaseTheme` ancestors.
+
+Orchard has a site theme and an admin theme but no member theme, so the member theme is a
+Crest site setting (`IMemberThemeService`), defaulting to `OrchardCore.Crest.Member`.
+Selecting a member theme sets that setting; it never touches the site theme.
 
 ### The two guards
 
 Both directions are guarded, with deliberately different severity:
 
-**Enabling a feature is refused** when its contract is unsatisfiable: the active theme of
-the required bucket is incompatible and no compatible one is active. The feature would
+**Enabling a feature is refused** when its contract, or the contract of any feature it
+would enable with it, is unsatisfiable: the active theme of the required bucket is
+incompatible and no compatible one is active. The feature would
 render nothing usable, and the admin has not yet asked for that outcome. The refusal names
 the module, the required contract and the active theme.
 
@@ -221,7 +230,8 @@ same text, so the state is visible rather than merely having been warned about o
 ### Theme-selection UI
 
 - Three sections — Site, Admin, Member — each with its own active-theme card at the top
-  and its own filter; the Member section appears only when Members is enabled.
+  and its own filter; the Member section appears only when an enabled feature ships member
+  pages.
 - Each theme shows its bucket, whether it is `crest-blazor`-capable, and its `BaseTheme`
   ancestry when it has one.
 - Incompatible themes are listed, marked, and selectable only through the two-step
@@ -256,11 +266,11 @@ mechanism in this plan.
 
 - [x] 0. This plan; the bucket/contract vocabulary agreed, and the member base path settled
       (`members` by default, tenant-settable).
-- [ ] 1. Generalize shell dispatch: shell registry, bucket as a shell id, selector over
+- [x] 1. Generalize shell dispatch: shell registry, bucket as a shell id, selector over
       the registered shells, `App.razor` branch per shell, the auth-cookie render-mode
       rule declared by pages. Admin and Site behaviour unchanged, proven by the existing
       suite.
-- [ ] 2. `OrchardCore.Crest.Member` + `Member.Client`: layout, navigation, login and
+- [x] 2. `OrchardCore.Crest.Member` + `Member.Client`: layout, navigation, login and
       account pages, the org switcher, the page-contribution seam. One bucket per
       assembly (`[assembly: CrestShell]`), each shell's router handed only its own
       bucket; `OrchardCore.Crest.Shell` as the eager shell runtime; module seam
@@ -269,8 +279,8 @@ mechanism in this plan.
 - [ ] 2b. Theme UIs load per shell: each theme client split into its services (eager)
       and its UI (lazy), one eager root component rendering the served shell's `Routes`
       dynamically, `Program.cs` naming no theme UI assembly.
-- [ ] 3. Theme compatibility: manifest tags, `BaseTheme`-walking detector, module
+- [x] 3. Theme compatibility: manifest tags, `BaseTheme`-walking detector, module
       contracts, the feature-enable refusal, the two-step theme-change confirmation with
       its API acknowledgement, and the incompatibility badges.
-- [ ] 4. Theme-selection UI: three sections, filters, the Member section gated on the
-      Members feature.
+- [x] 4. Theme-selection UI: three sections, filters, the Member section shown when an
+      enabled feature ships member pages; the member theme as its own Crest setting.
