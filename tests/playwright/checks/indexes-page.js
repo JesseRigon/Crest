@@ -1,5 +1,5 @@
 // Converted from the old admin-indexes-page.js
-// (modules/OrchardCore.Crest/tests/playwright/admin-indexes-page.js).
+// (modules/Crest/tests/playwright/admin-indexes-page.js).
 // Same assertions as the original minified script: the Indexes page renders natively
 // (test id + heading) and never falls back to the legacy iframe.
 module.exports = async function run(page, ctx) {

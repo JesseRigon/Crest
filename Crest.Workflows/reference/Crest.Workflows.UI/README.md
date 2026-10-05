@@ -1,4 +1,4 @@
-# OrchardCore.Crest.Workflows.UI
+# Crest.Workflows.UI
 
 Provides UI-related workflow activities for Orchard Core.
 
@@ -35,7 +35,7 @@ The module supports various notification styles:
 
 ## Dependencies
 
-- `OrchardCore.Crest.Workflows`
+- `Crest.Workflows`
 
 ## Installation
 
@@ -43,5 +43,5 @@ Enable the **UI Activities** feature in the Orchard Core admin dashboard under F
 
 ## Package Information
 
-- **Package ID**: `OrchardCore.Crest.Workflows.UI`
+- **Package ID**: `Crest.Workflows.UI`
 - **Category**: Crest Workflows

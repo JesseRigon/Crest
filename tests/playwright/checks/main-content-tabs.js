@@ -1,5 +1,5 @@
 // Converted from the old admin-main-content-tabs.js
-// (modules/OrchardCore.Crest/tests/playwright/admin-main-content-tabs.js). Verifies the
+// (modules/Crest/tests/playwright/admin-main-content-tabs.js). Verifies the
 // shared CrestMainContentTabs component across three different settings pages: the tab
 // strip renders with the expected labels, and clicking the last tab actually selects it
 // (aria-selected="true").

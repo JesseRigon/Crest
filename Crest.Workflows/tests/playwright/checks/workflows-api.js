@@ -1,7 +1,7 @@
-const { createInstance } = require('../../../../../OrchardCore.Crest/tests/playwright/harness/instance');
-const { loginAsUser } = require('../../../../../OrchardCore.Crest/tests/playwright/harness/auth');
-const { ensureTestUser } = require('../../../../../OrchardCore.Crest/tests/playwright/harness/testUsers');
-const { fetchAntiforgeryToken } = require('../../../../../OrchardCore.Crest/tests/playwright/harness/antiforgery');
+const { createInstance } = require('../../../../../Crest/tests/playwright/harness/instance');
+const { loginAsUser } = require('../../../../../Crest/tests/playwright/harness/auth');
+const { ensureTestUser } = require('../../../../../Crest/tests/playwright/harness/testUsers');
+const { fetchAntiforgeryToken } = require('../../../../../Crest/tests/playwright/harness/antiforgery');
 
 // Phase 0a of plans/workflows.md: the Crest.Workflows engine runs inside the tenant and its API is
 // gated by Orchard. As admin: list definitions; create + publish a one-activity flow;

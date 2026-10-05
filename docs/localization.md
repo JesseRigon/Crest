@@ -88,11 +88,11 @@ extra plumbing needed.
 
 ## Front end and anonymous visitors (server-rendered)
 
-The tenant's front-end site (`OrchardCore.Crest.Site`) is plain server-rendered
+The tenant's front-end site (`Crest.Site`) is plain server-rendered
 Razor/Liquid — no WASM client to resolve anything itself. It relies on the stock ASP.NET
 Core `RequestLocalizationOptions` pipeline instead:
 
-1. `CrestCultureCookieOptionsConfiguration` (`OrchardCore.Crest.Server/Services/CrestCultureCookie.cs`)
+1. `CrestCultureCookieOptionsConfiguration` (`Crest.Server/Services/CrestCultureCookie.cs`)
    rebuilds `RequestCultureProviders` as
    `[CookieRequestCultureProvider, AcceptLanguageHeaderRequestCultureProvider]` —
    Crest's own tenant-wide cookie (the same one the admin's client-side chain writes)
@@ -147,11 +147,11 @@ data (the SDK's default trimmed set only covers a handful of cultures).
 
 Two independent mechanisms, by project:
 
-- **`OrchardCore.Crest.Components`, `OrchardCore.Crest.Site`** — compiled-resource /
+- **`Crest.Components`, `Crest.Site`** — compiled-resource /
   `.po`-based mechanisms (`CrestStrings.resx` + `ILocalizer`/`Localizer` for Components;
   a `.po`-based theme mechanism for Site). New languages are `.po`/API content, not new
   `CrestStrings.{culture}.resx` files.
-- **`OrchardCore.Crest.Admin` (headless Blazor WASM) and any project that can reference
+- **`Crest.Admin` (headless Blazor WASM) and any project that can reference
   `Crest.Components`** — pulls its string catalog at runtime via an API rather than
   compiled resources:
   - Keys are **invariant literals**, native Orchard style: `T["Some text"]`, or
@@ -216,7 +216,7 @@ package's content. Treat it as **read-only upstream output** — never hand-edit
 next refresh from the package clobbers local edits. Nothing refreshes it automatically.
 
 **The private lane**: everything Crest authors lives in module-local catalogs
-(`OrchardCore.Crest.Server/Localization/{culture}.po` etc.) and the tenant translation
+(`Crest.Server/Localization/{culture}.po` etc.) and the tenant translation
 store. Crowdin has no knowledge of these in either direction — nothing uploads them,
 no refresh touches them. Crest-authored literals (strings that are not upstream msgids)
 can **only** be translated here; they never appear in Crowdin's template, so modules
@@ -287,9 +287,9 @@ check `LANG` on that host before assuming it's a code bug.
 
 ## Testing
 
-- **C# unit tests** exist per `OrchardCore.Crest.*` subproject
-  (`OrchardCore.Crest.Server.Tests`, `.Admin.Tests`, etc.), following the
-  `OrchardCore.Crest.Icons.Tests` convention (xUnit + Verify + NSubstitute), discovered
+- **C# unit tests** exist per `Crest.*` subproject
+  (`Crest.Server.Tests`, `.Admin.Tests`, etc.), following the
+  `Crest.Icons.Tests` convention (xUnit + Verify + NSubstitute), discovered
   automatically by `tests/run-tests.sh`. Localization-specific coverage: the culture
   resolution priority chain (table-driven over all rungs and combinations),
   `IsUnderAdminPath()`, `CultureSelector.FromAsync`, and `LocalizationController.SaveAsync`'s

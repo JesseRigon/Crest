@@ -1,0 +1,73 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Phase 8: the single WASM entry project for the whole Crest Blazor Web App. A
+       Blazor Web App has exactly one browser payload with one Program.Main; every
+       theme's client half (Site, Admin, future themes) and every module-contributed
+       blazor-wasm library is compiled into it via the references below. Crest.Server
+       references this project and passes its assembly graph to
+       MapRazorComponents<App>().AddAdditionalAssemblies(...). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Crest.Client</AssemblyName>
+    <RootNamespace>Crest.Client</RootNamespace>
+    <OrchardCoreCompatibilityVersion>4.0.0</OrchardCoreCompatibilityVersion>
+    <CrestSecurityPatch>0</CrestSecurityPatch>
+    <CrestBugPatch>0</CrestBugPatch>
+    <CrestVersion>$(OrchardCoreCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
+    <VersionPrefix>$(OrchardCoreCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(OrchardCoreCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
+    <!-- DisplayManager sets CultureInfo.CurrentCulture from the resolved tenant/user/
+         browser culture (see plans/user-localization.md phase 7) so date/number
+         formatting (CrestDataGridColumn, CrestScheduler views, etc.) reflects it
+         correctly. The SDK's default trimmed ICU data only ships full formatting data
+         for a small set of cultures; without this, a resolved culture outside that set
+         falls back to the invariant format even though CurrentCulture is set
+         correctly. (Carried over from the pre-Phase-8 Admin WASM project.) -->
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Admin\wasm\Crest.Admin.Client.csproj" />
+    <ProjectReference Include="..\Crest.Site\wasm\Crest.Site.Client.csproj" />
+    <!-- The member shell's client half. A third shell is a theme + a client library
+         + a route bucket + an App.razor branch, compiled into this one WASM payload -
+         never a third build output. -->
+    <ProjectReference Include="..\Crest.Member\wasm\Crest.Member.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Module member-shell libraries: ANY member-wasm/ project under modules/, the
+         counterpart of the admin client's blazor-wasm/ glob. Referenced here, by the app,
+         and not by the member theme client - Crest's theme never references a module, so
+         a module's member library reaches the payload through the app, exactly as admin
+         libraries reach it through the admin client's glob. Crest's own tree is excluded
+         and its member libraries added back explicitly, the same way. -->
+    <CrestMemberModuleWasmProject Include="..\..\**\member-wasm\*.csproj" Exclude="..\..\Crest\**\*.csproj" />
+    <CrestMemberModuleWasmProject Include="..\Crest.Members\member-wasm\Crest.Members.Member.BlazorWasm.csproj" />
+    <ProjectReference Include="@(CrestMemberModuleWasmProject)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Module public-site libraries: ANY site-wasm/ project under modules/, the same shape
+         as the member glob above and for the same reason - Crest's site theme never
+         references a module. Crest's own tree is excluded; it ships no site-wasm library
+         yet, and one added there is listed here explicitly. -->
+    <CrestSiteModuleWasmProject Include="..\..\**\site-wasm\*.csproj" Exclude="..\..\Crest\**\*.csproj" />
+    <ProjectReference Include="@(CrestSiteModuleWasmProject)" />
+  </ItemGroup>
+
+  <!-- Module pages (and module-listed libraries) load on demand: see CrestLazyModules.targets. -->
+  <Import Project="CrestLazyModules.targets" />
+
+</Project>

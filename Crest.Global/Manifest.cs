@@ -2,9 +2,9 @@ using OrchardCore.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Global Reference Data",
-    Author = "OrchardCore.Crest",
+    Author = "Crest",
     Version = "1.0.0",
-    Category = "OrchardCore.Crest"
+    Category = "Crest"
 )]
 
 // The shell-side half: the permission that gates super-tenant editing and, later, the
@@ -14,6 +14,6 @@ using OrchardCore.Modules.Manifest;
     Id = "Crest.Global",
     Name = "Crest Global Reference Data",
     Description = "Reference data shared by every tenant, editable only from the Default tenant.",
-    Category = "OrchardCore.Crest",
-    Dependencies = ["OrchardCore.Crest"]
+    Category = "Crest",
+    Dependencies = ["Crest"]
 )]

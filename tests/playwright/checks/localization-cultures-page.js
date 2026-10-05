@@ -1,6 +1,6 @@
 // Converted from the old admin-localization-page.js at
-// modules/OrchardCore.Crest/tests/playwright/admin-localization-page.js — the PLAIN Crest
-// tests dir, NOT modules/OrchardCore.Crest/OrchardCore.Crest.Admin/tests/playwright/
+// modules/Crest/tests/playwright/admin-localization-page.js — the PLAIN Crest
+// tests dir, NOT modules/Crest/Crest.Admin/tests/playwright/
 // admin-localization-page.js (a different, more thorough script that asserts culture cards,
 // Crest dropdown option counts, etc. — that one is presumed to be converted separately,
 // possibly under a name like "localization-page.js"). This file is named

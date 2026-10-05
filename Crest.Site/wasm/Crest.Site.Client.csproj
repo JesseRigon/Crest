@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!-- Phase 8: converted from Microsoft.NET.Sdk.BlazorWebAssembly to a Razor class
+       library - a Blazor Web App has exactly ONE WASM entry project
+       (Crest.Client), which references this library. Routable @page
+       components (Routes.razor, Pages/*) stay here, per docs/blazor-web.md. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Crest.Site.Client</AssemblyName>
+    <RootNamespace>Crest.Site.Client</RootNamespace>
+    <OrchardCoreCompatibilityVersion>4.0.0</OrchardCoreCompatibilityVersion>
+    <CrestSecurityPatch>0</CrestSecurityPatch>
+    <CrestBugPatch>0</CrestBugPatch>
+    <CrestVersion>$(OrchardCoreCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
+    <VersionPrefix>$(OrchardCoreCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(OrchardCoreCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
+    <ProjectReference Include="..\..\Crest.Icons\Crest.Icons.csproj" />
+    <ProjectReference Include="..\..\Crest.Shell\Crest.Shell.csproj" />
+  </ItemGroup>
+
+</Project>

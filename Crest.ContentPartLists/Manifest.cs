@@ -2,11 +2,11 @@ using OrchardCore.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Content Part Lists",
-    Author = "OrchardCore.Crest",
+    Author = "Crest",
     Website = "https://crest.local",
     Version = "4.0.0.0.0",
     Description = "Tenant-editable content part lists (enums) with shared global sets.",
-    Category = "OrchardCore.Crest"
+    Category = "Crest"
 )]
 
 // Deliberately NOT IsAlwaysEnabled: a tenant opts into Content Part Lists. Consumers that
@@ -16,6 +16,6 @@ using OrchardCore.Modules.Manifest;
     Id = "Crest.ContentPartLists",
     Name = "Crest Content Part Lists",
     Description = "Named, tenant-editable sets of options that content types can reference. Ships shared global sets (country codes, units of measure) every enabling tenant receives.",
-    Category = "OrchardCore.Crest",
-    Dependencies = ["OrchardCore.Crest", "OrchardCore.Contents", "OrchardCore.ContentFields", "Crest.Global"]
+    Category = "Crest",
+    Dependencies = ["Crest", "OrchardCore.Contents", "OrchardCore.ContentFields", "Crest.Global"]
 )]

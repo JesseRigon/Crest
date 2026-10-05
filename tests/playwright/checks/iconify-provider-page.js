@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest.Icons/tests/playwright/iconify-provider-icons-page.js.
+// Converted from Crest.Icons/tests/playwright/iconify-provider-icons-page.js.
 // Verifies the /Admin/Design/Icons page renders the Iconify provider search preview, hides
 // the removed manual cache-update button, and that picking a remote Iconify icon updates the
 // field end-to-end.

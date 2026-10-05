@@ -1,4 +1,4 @@
-# OrchardCore.Crest.Workflows.Designer.BlazorServer
+# Crest.Workflows.Designer.BlazorServer
 
 Blazor Server implementation of the Elsa Studio workflow designer for Orchard Core.
 
@@ -39,7 +39,7 @@ Use this module if:
 
 ## Dependencies
 
-- `OrchardCore.Crest.Workflows.Designer`
+- `Crest.Workflows.Designer`
 
 ## Installation
 
@@ -47,5 +47,5 @@ Enable this feature in the Orchard Core admin dashboard under Features. Note tha
 
 ## Package Information
 
-- **Package ID**: `OrchardCore.Crest.Workflows.Designer.BlazorServer`
+- **Package ID**: `Crest.Workflows.Designer.BlazorServer`
 - **Category**: Crest Workflows

@@ -22,7 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="../Domain/Crest.Members.Domain.csproj" />
     <ProjectReference Include="../../Crest.Parties/Server/Crest.Parties.csproj" />
-    <ProjectReference Include="../../OrchardCore.Crest.Server/OrchardCore.Crest.csproj" />
+    <ProjectReference Include="../../Crest.Server/Crest.csproj" />
     <ProjectReference Include="../../Crest.ContentPartLists/Crest.ContentPartLists.csproj" />
   </ItemGroup>
 

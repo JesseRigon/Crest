@@ -1,4 +1,4 @@
-# OrchardCore.Crest.Workflows.Queries
+# Crest.Workflows.Queries
 
 Provides Elsa workflow activities for executing Orchard Core queries.
 
@@ -32,7 +32,7 @@ The module provides activities for:
 
 ## Dependencies
 
-- `OrchardCore.Crest.Workflows`
+- `Crest.Workflows`
 - `OrchardCore.Queries.Sql`
 
 ## Installation
@@ -41,5 +41,5 @@ Enable the **Query Activities** feature in the Orchard Core admin dashboard unde
 
 ## Package Information
 
-- **Package ID**: `OrchardCore.Crest.Workflows.Queries`
+- **Package ID**: `Crest.Workflows.Queries`
 - **Category**: Crest Workflows

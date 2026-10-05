@@ -31,7 +31,7 @@ This module provides the foundational integration between Elsa Workflows and Orc
 
 - `OrchardCore.Contents`
 - `OrchardCore.Workflows`
-- `OrchardCore.Crest`
+- `Crest`
 
 ## Installation
 

@@ -21,7 +21,7 @@
     <ProjectReference Include="../../Crest.Workflows/Domain/Crest.Workflows.Domain.csproj" />
     <ProjectReference Include="../../Crest.Workflows/engine/src/modules/Crest.Workflows.Core/Crest.Workflows.Core.csproj" />
     <ProjectReference Include="../../Crest.Workflows/engine/src/modules/Crest.Workflows.Engine/Crest.Workflows.Engine.csproj" />
-    <ProjectReference Include="../../OrchardCore.Crest.Server/OrchardCore.Crest.csproj" />
+    <ProjectReference Include="../../Crest.Server/Crest.csproj" />
     <ProjectReference Include="../../Crest.ContentPartLists/Crest.ContentPartLists.csproj" />
     <ProjectReference Include="../../Crest.Regions/Crest.Regions.csproj" />
   </ItemGroup>

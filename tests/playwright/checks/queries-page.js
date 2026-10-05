@@ -1,5 +1,5 @@
 // Converted from the old admin-queries-page.js
-// (modules/OrchardCore.Crest/tests/playwright/admin-queries-page.js). Covers, in order:
+// (modules/Crest/tests/playwright/admin-queries-page.js). Covers, in order:
 // page render, query catalog API shape, a full create-then-delete lifecycle through the
 // Crest query editor UI, and confirming the legacy raw-SQL console route still resolves
 // through the Crest legacy iframe rather than being hijacked by the native "All Queries"

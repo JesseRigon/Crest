@@ -22,7 +22,7 @@ public class SchemaWorkflowJsonDetector : IWorkflowJsonDetector
         if (!rootElement.TryGetProperty("$schema", out var schemaUrl))
             return false;
 
-        if (schemaUrl.GetString()?.StartsWith("https://github.com/JesseRigon/OrchardCore.Crest/blob/main/plans/workflows.md") == false)
+        if (schemaUrl.GetString()?.StartsWith("https://github.com/JesseRigon/Crest/blob/main/plans/workflows.md") == false)
             return false;
 
         return true;

@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest/tests/playwright/admin-primary-nav-menu-compact-mode.js.
+// Converted from Crest/tests/playwright/admin-primary-nav-menu-compact-mode.js.
 // Collapsed (compact/rail) primaryNavMenu: correct rail width/icon sizing, active-item
 // accent styling, auto-generated tier separators, animated expand/collapse of children,
 // and hover-to-overlay-expand behavior (with a one-second hover delay before it opens,

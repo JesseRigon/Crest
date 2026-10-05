@@ -25,7 +25,7 @@
        (crest-lazy-assemblies.txt) and nothing here touches their types. -->
   <ItemGroup>
     <ProjectReference Include="..\Domain\Crest.Workflows.Domain.csproj" />
-    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+    <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
     <ProjectReference Include="..\studio-host\Crest.Workflows.Studio.Host.csproj" />
   </ItemGroup>
 

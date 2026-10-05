@@ -42,7 +42,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Crest.Workflows.Domain.csproj" />
-    <ProjectReference Include="..\..\OrchardCore.Crest.Server\OrchardCore.Crest.csproj" />
+    <ProjectReference Include="..\..\Crest.Server\Crest.csproj" />
   </ItemGroup>
 
 </Project>

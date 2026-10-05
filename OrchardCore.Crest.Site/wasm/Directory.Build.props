@@ -1,6 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <BaseIntermediateOutputPath>obj\OrchardCore.Crest.Site.Client\</BaseIntermediateOutputPath>
-    <BaseOutputPath>bin\OrchardCore.Crest.Site.Client\</BaseOutputPath>
-  </PropertyGroup>
-</Project>

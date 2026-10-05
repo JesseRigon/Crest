@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest.Icons/tests/playwright/iconify-local-mirror-api.js.
+// Converted from Crest.Icons/tests/playwright/iconify-local-mirror-api.js.
 // Verifies the App_Data local Iconify mirror is used for search when the provider is
 // configured with the public Iconify baseUrl, and is bypassed (no stale results) when a
 // deliberately unreachable custom baseUrl (127.0.0.1:9) is configured instead. Restores

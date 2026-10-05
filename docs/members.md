@@ -473,7 +473,7 @@ before). The ILoginFormEvent gate covers every tenant login surface by itself.
     `external-providers`, `external-login` (GET; the stock challenge with the
     org stamped on the external properties; Orchard's own callback finishes it).
   - Pages: the portal login, registration, member home and account pages live in the
-    member shell (`OrchardCore.Crest.Member`, routes in `MemberRoutePaths`, shell-relative
+    member shell (`Crest.Member`, routes in `MemberRoutePaths`, shell-relative
     under the tenant's member prefix); `Crest.Members`' `member-wasm` library supplies the
     shell's member seams (`MemberAuthenticationService`, `MemberShellContext`). See
     [shells-and-themes.md](shells-and-themes.md).

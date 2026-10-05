@@ -1,11 +1,11 @@
-# OrchardCore.Crest.Workflows.Designer API Reference
+# Crest.Workflows.Designer API Reference
 
 ## Overview
 
-The OrchardCore.Crest.Workflows.Designer is a Razor Class Library (RCL) that provides Blazor components and services for the Elsa workflow designer. The core library is hosting-model agnostic and is accompanied by two lightweight wrapper packages:
+The Crest.Workflows.Designer is a Razor Class Library (RCL) that provides Blazor components and services for the Elsa workflow designer. The core library is hosting-model agnostic and is accompanied by two lightweight wrapper packages:
 
-- `OrchardCore.Crest.Workflows.Designer.BlazorWasm` – extension methods and references for WebAssembly hosts.
-- `OrchardCore.Crest.Workflows.Designer.BlazorServer` – extension methods and references for Blazor Server hosts.
+- `Crest.Workflows.Designer.BlazorWasm` – extension methods and references for WebAssembly hosts.
+- `Crest.Workflows.Designer.BlazorServer` – extension methods and references for Blazor Server hosts.
 
 Use the package that matches your hosting model, or build a custom host by calling the shared `AddElsaDesignerCore` method described below.
 
@@ -13,7 +13,7 @@ Use the package that matches your hosting model, or build a custom host by calli
 
 ### WebAssemblyHostBuilder Extensions
 
-Located in: `OrchardCore.Crest.Workflows.Designer.Extensions.WebAssemblyHostBuilderExtensions`
+Located in: `Crest.Workflows.Designer.Extensions.WebAssemblyHostBuilderExtensions`
 
 #### `AddElsaDesigner()`
 
@@ -41,7 +41,7 @@ builder.AddElsaDesigner();
 
 ### Service Collection Extensions
 
-Located in: `OrchardCore.Crest.Workflows.Designer.Extensions.ServiceCollectionExtensions`
+Located in: `Crest.Workflows.Designer.Extensions.ServiceCollectionExtensions`
 
 #### `AddElsaDesignerCore(IConfiguration, Action<IServiceCollection>)`
 
@@ -69,10 +69,10 @@ Registers all services required for the Elsa Designer, including:
 **Usage:**
 ```csharp
 // WebAssembly host
-builder.Services.AddElsaDesigner(builder.Configuration); // Provided by OrchardCore.Crest.Workflows.Designer.BlazorWasm
+builder.Services.AddElsaDesigner(builder.Configuration); // Provided by Crest.Workflows.Designer.BlazorWasm
 
 // Blazor Server host
-builder.Services.AddElsaDesigner(builder.Configuration); // Provided by OrchardCore.Crest.Workflows.Designer.BlazorServer
+builder.Services.AddElsaDesigner(builder.Configuration); // Provided by Crest.Workflows.Designer.BlazorServer
 ```
 
 **When to use:**
@@ -104,7 +104,7 @@ Use this directly if you're calling `AddElsaDesigner(IConfiguration)` manually i
 
 ### WebAssemblyHost Extensions
 
-Located in: `OrchardCore.Crest.Workflows.Designer.Extensions.WebAssemblyHostExtensions`
+Located in: `Crest.Workflows.Designer.Extensions.WebAssemblyHostExtensions`
 
 #### `RunStartupTasksAsync()`
 
@@ -161,7 +161,7 @@ The Designer requires backend configuration in `wwwroot/appsettings.json`:
 
 ```csharp
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using OrchardCore.Crest.Workflows.Designer.Extensions;
+using Crest.Workflows.Designer.Extensions;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -177,7 +177,7 @@ await app.RunAsync();
 
 ```csharp
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using OrchardCore.Crest.Workflows.Designer.Extensions;
+using Crest.Workflows.Designer.Extensions;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -200,7 +200,7 @@ await app.RunAsync();
 
 ```csharp
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using OrchardCore.Crest.Workflows.Designer.Extensions;
+using Crest.Workflows.Designer.Extensions;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -233,7 +233,7 @@ The Designer provides several Blazor components that are automatically registere
 | `BackendProvider` | Provides backend context |
 | `ThemedComponentWrapper` | Provides theming context |
 
-These components are registered as custom elements and rendered in your Razor views via the OrchardCore.Crest.Workflows module.
+These components are registered as custom elements and rendered in your Razor views via the Crest.Workflows module.
 
 ---
 
@@ -248,7 +248,7 @@ The Designer has the following package dependencies:
 - `Elsa.Studio.Workflows`
 - `Elsa.Studio.Shell`
 
-All dependencies are automatically included when you reference the `OrchardCore.Crest.Workflows.Designer` package.
+All dependencies are automatically included when you reference the `Crest.Workflows.Designer` package.
 
 ---
 

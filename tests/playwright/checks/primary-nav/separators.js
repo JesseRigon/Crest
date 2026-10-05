@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest/tests/playwright/admin-menu-separators.js.
+// Converted from Crest/tests/playwright/admin-menu-separators.js.
 // Adding a separator renders a visible themed line, left-aligns its handle/text/line, can
 // be drag-reordered above another entry, and can be deleted back to the original count.
 // (The original script's CLEANUP_EXTRA_SEPARATORS maintenance mode was dev-only tooling,

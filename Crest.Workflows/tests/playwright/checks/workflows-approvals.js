@@ -1,6 +1,6 @@
-const { createInstance } = require('../../../../../OrchardCore.Crest/tests/playwright/harness/instance');
-const { ensureTestUser } = require('../../../../../OrchardCore.Crest/tests/playwright/harness/testUsers');
-const { fetchAntiforgeryToken } = require('../../../../../OrchardCore.Crest/tests/playwright/harness/antiforgery');
+const { createInstance } = require('../../../../../Crest/tests/playwright/harness/instance');
+const { ensureTestUser } = require('../../../../../Crest/tests/playwright/harness/testUsers');
+const { fetchAntiforgeryToken } = require('../../../../../Crest/tests/playwright/harness/antiforgery');
 
 // Approvals (plans/workflows.md, phase 4): Request approval parks a flow on a task for an
 // Orchard role; the queue shows it to that role's members only; someone outside the role

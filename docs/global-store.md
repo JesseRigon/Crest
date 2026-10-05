@@ -26,7 +26,7 @@ session against a **store of its own** — its own `DatabaseProvider`, `Connecti
 `TablePrefix` and `Schema`, configured under `OrchardCore_Shells_Database`.
 
 Crest does the same: a **`CrestGlobalStore`** — one host-level service that owns a
-tenant-less YesSql store configured under its own section (`OrchardCore_Crest_Global`,
+tenant-less YesSql store configured under its own section (`Crest_Global`,
 same four fields). Full YesSql: documents, map indexes, SQLite, Postgres, SQL Server or
 MySQL. Shell services resolve host services, so tenant code queries it like any other
 service.
@@ -175,7 +175,7 @@ global store.
 ## The store and its cache
 
 - `CrestGlobalStore`: host-level service (`Crest.Global`, `AddCrestGlobalStore()` in
-  `Program.cs`), configuration section `OrchardCore_Crest_Global`, shell-less
+  `Program.cs`), configuration section `Crest_Global`, shell-less
   `ReadAsync`/`WriteAsync`, versioned `CrestGlobalSchemaState` per `ICrestGlobalSchema`,
   hosted-service lifetime. Two tenants reading one row set is exercised by every list
   read, not by a dedicated test.

@@ -19,7 +19,7 @@ port from with a `NOTICE`/attribution entry once implementation starts.
 
 Verification (structural + pixel snapshotting) stays in the
 same spirit as the Playwright screenshot-diff harness already built under
-`modules/OrchardCore.Crest/tests/playwright/harness/`.
+`modules/Crest/tests/playwright/harness/`.
 
 ## Phase 0: Study pass (Day 0)
 
@@ -91,7 +91,7 @@ graph TD
   `type name -> (Type, default ComponentNode, property schema)` map, analogous to
   `WidgetProvider/`'s registry.
   - Sub-task: only scan module assemblies within the same trust boundary as
-    `modules/OrchardCore.Crest/` and this workbench module itself. **Never auto-register
+    `modules/Crest/` and this workbench module itself. **Never auto-register
     third-party/vendored assemblies** (e.g. `OrchardCore.Commerce`'s vendored subtree,
     see [[project-crest-test-plan]]'s note on that project's separate upstream/CI) without
     an explicit opt-in list.
@@ -118,11 +118,11 @@ graph TD
 
   Site/Admin's routing-reachability fix (`RouteComponentTable`/`IRouteComponentTableProvider`) has shipped and is documented in [docs/blazor-web.md](blazor-web.md)'s "Route reachability" section. Record here, concretely, what that leaves behind for this plan to build on.
 
-  **`RouteComponentTable` and `IRouteComponentTableProvider`** (`OrchardCore.Crest.Server/Routing/`, documented in `docs/blazor-web.md`) — a per-tenant, per-active-theme, convention-scanned registry mapping a route pattern to a Blazor component `Type`, built once per shell (mirroring `DefaultShapeTableManager`/`ShapeTable`'s cache-per-`themeId` shape) and invalidated on shell/feature/theme change, never rebuilt per request. Each Blazor theme (Admin, Site, and this workbench once it exists) supplies its own `IRouteComponentTableProvider`, self-reporting its own `@page`-attributed components via reflection — nobody hand-maintains a central route list.
+  **`RouteComponentTable` and `IRouteComponentTableProvider`** (`Crest.Server/Routing/`, documented in `docs/blazor-web.md`) — a per-tenant, per-active-theme, convention-scanned registry mapping a route pattern to a Blazor component `Type`, built once per shell (mirroring `DefaultShapeTableManager`/`ShapeTable`'s cache-per-`themeId` shape) and invalidated on shell/feature/theme change, never rebuilt per request. Each Blazor theme (Admin, Site, and this workbench once it exists) supplies its own `IRouteComponentTableProvider`, self-reporting its own `@page`-attributed components via reflection — nobody hand-maintains a central route list.
 
   **Why this matters for the workbench specifically:** this document's §3's `IWorkbenchComponentRegistry` (reflection scan of `[WorkbenchComponent]`-attributed Razor components, `type name -> (Type, default ComponentNode, property schema)` map) is architecturally the *same* primitive as `IRouteComponentTableProvider` (reflection scan of `@page`-attributed Razor components, `route pattern -> Type` map) — both are "convention-scanned, theme/shell-scoped, Orchard-native registry," just keyed differently (component type name vs. route pattern) and serving different consumers (canvas palette vs. HTTP routing). **Do not build `IWorkbenchComponentRegistry` as an unrelated, parallel mechanism.**
 
-  - **Reuse the scanning/caching infrastructure, not just the pattern.** `AdminRouteComponentTableProvider` and `SiteRouteComponentTableProvider` (`OrchardCore.Crest.Server/Routing/AssemblyRouteComponentScanner.cs`) are already two consumers of the same scan logic before the workbench is even a third — `AssemblyScanningWorkbenchComponentRegistry` should factor out and reuse a shared "scan these assemblies for components carrying attribute `TAttribute`, cache per shell, invalidate on theme/feature change" helper with `WorkbenchComponentAttribute`, instead of duplicating the scan/cache logic from scratch.
+  - **Reuse the scanning/caching infrastructure, not just the pattern.** `AdminRouteComponentTableProvider` and `SiteRouteComponentTableProvider` (`Crest.Server/Routing/AssemblyRouteComponentScanner.cs`) are already two consumers of the same scan logic before the workbench is even a third — `AssemblyScanningWorkbenchComponentRegistry` should factor out and reuse a shared "scan these assemblies for components carrying attribute `TAttribute`, cache per shell, invalidate on theme/feature change" helper with `WorkbenchComponentAttribute`, instead of duplicating the scan/cache logic from scratch.
   - **`WorkbenchComponentAttribute` and any future `[RouteComponent]`-style marker (if `@page` itself isn't judged sufficient as the routing implementation's registration point) should be designed to coexist on the same component class.** A component usable both as a routable page *and* a placeable workbench widget is a real, expected case (e.g. `CrestCounter`, already both a `[CrestBlazorComponent]`-marked shape-pipeline component *and* a routable `@page "/blazor-counter/{ContentItemId}"` island) — the two attributes are orthogonal facts about the same type, not competing registration systems.
   - **Theme/shell scoping is inherited for free.** Because the workbench's own registry follows the same per-shell-cache shape as `RouteComponentTable`, a tenant with the workbench feature disabled simply has an empty/absent registry — no separate feature-gating logic needs inventing for "is the workbench available on this tenant," it falls out of the same `IShellFeaturesManager`-driven invalidation `RouteComponentTable` already uses.
   - **No invented literals here either.** `IWorkbenchComponentRegistry`'s `type name -> Type` keys must come from the same place `RouteComponentTable`'s route patterns do — the attribute/reflection scan itself — never a hand-typed registration list in a `Startup.cs`. This plan already designed it this way (§3c); this section exists to make explicit that the routing implementation is not just a *precedent* for that design, it's the literal shared plumbing to build it on top of.
@@ -221,7 +221,7 @@ public class DesignSnapshot
 - [ ] **Record canvas snapshots with Puppeteer Sharp.** Integrate Puppeteer Sharp (MIT) into an isolated OrchardCore background task running
   local Chromium targets to record canvas renderings into baseline binaries — same
   base/new/`UPDATE_BASE=1` promotion convention as
-  `modules/OrchardCore.Crest/tests/playwright/harness/screenshot-diff.js`, for consistency
+  `modules/Crest/tests/playwright/harness/screenshot-diff.js`, for consistency
   across both harnesses.
 - [ ] **Write or adopt the image-difference processor.** Write a deterministic image-difference processor using standard mathematical color
   delta loops (`dE = sqrt((r1-r2)^2 + (g1-g2)^2 + (b1-b2)^2)`), or evaluate reusing
@@ -229,10 +229,10 @@ public class DesignSnapshot
   [[project-crest-test-stack]]) instead of hand-rolling this — check before Phase 3 starts
   whether Verify already covers this well enough to drop the custom delta loop.
 
-## Phase 4: Convert an existing OrchardCore.Crest component as the pilot
+## Phase 4: Convert an existing Crest component as the pilot
 
 - [ ] **Register a real Crest component as the pilot.** Pick one real, already-built Crest component (a good candidate: something in
-  `modules/OrchardCore.Crest/OrchardCore.Crest.Components/`) and register it via
+  `modules/Crest/Crest.Components/`) and register it via
   `[WorkbenchComponent]` as the first end-to-end proof — palette → canvas → property pane
   → snapshot, no synthetic test-only component.
 

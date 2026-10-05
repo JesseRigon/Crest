@@ -5,8 +5,8 @@
     <LangVersion>latest</LangVersion>
     <Authors>Crest Workflows Community</Authors>
     <Copyright>2023</Copyright>
-    <PackageProjectUrl>https://github.com/JesseRigon/OrchardCore.Crest</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/JesseRigon/OrchardCore.Crest</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/JesseRigon/Crest</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/JesseRigon/Crest</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -14,7 +14,7 @@
     <PackageIcon>icon.png</PackageIcon>
 
     <!-- For NuGet browsers that currently don't support <PackageIcon> yet -->
-    <PackageIconUrl>https://github.com/JesseRigon/OrchardCore.Crest/blob/main/plans/workflows.md</PackageIconUrl>
+    <PackageIconUrl>https://github.com/JesseRigon/Crest/blob/main/plans/workflows.md</PackageIconUrl>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AnalysisModeDocumentation>Default</AnalysisModeDocumentation>

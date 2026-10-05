@@ -1,6 +1,6 @@
-# OrchardCore.Crest OrchardCore Module
+# Crest OrchardCore Module
 
-OrchardCore.Crest is a multi-project Orchard Core module repository: an **application layer** on Orchard Core, hosting Blazor component systems and everything a business-facing application needs that is not a line of business — the admin and site shells, the content API, Parties (people, organizations, roles), Members (member accounts, organizations, the member portal) and Workflows (an Elsa-based workflow service with a registry, units of work and connectors). See [docs/architecture.md](docs/architecture.md).
+Crest is a multi-project Orchard Core module repository: an **application layer** on Orchard Core, hosting Blazor component systems and everything a business-facing application needs that is not a line of business — the admin and site shells, the content API, Parties (people, organizations, roles), Members (member accounts, organizations, the member portal) and Workflows (an Elsa-based workflow service with a registry, units of work and connectors). See [docs/architecture.md](docs/architecture.md).
 
 > **⚠ Requires a custom OrchardCore build (for now).** Crest depends on AdminNode
 > `UniqueId` modifications to OrchardCore's admin-menu system that are not yet in any
@@ -17,35 +17,35 @@ OrchardCore.Crest is a multi-project Orchard Core module repository: an **applic
 > the package ids and that version; **where** the packages come from is the HOST
 > app's decision, via its `NuGet.config` package-source mapping (`OrchardCore*` →
 > the local feed). See the
-> [OrchardCore.Crest.Host](https://github.com/JesseRigon/OrchardCore.Crest.Host)
+> [OrchardCore.Crest.Host](https://github.com/JesseRigon/Crest.Host)
 > repository for a working host: its dev script clones the fork into `modules/` and
 > packs the feed automatically when no prebuilt feed is present.
 
 The repository is intentionally kept together for source management, but its projects are meant to remain independently packageable later.
 
 ```text
-OrchardCore.Crest/
-  OrchardCore.Crest.Server/
-  OrchardCore.Crest.Components/
-  OrchardCore.Crest.Iconify/
-  OrchardCore.Crest.Icons/
-  OrchardCore.Crest.Admin/
-  OrchardCore.Crest.Site/
+Crest/
+  Crest.Server/
+  Crest.Components/
+  Crest.Iconify/
+  Crest.Icons/
+  Crest.Admin/
+  Crest.Site/
 ```
 
 ## Project Roles
 
-`OrchardCore.Crest.Server` is the backend overlay on top of Orchard Core. It integrates with Orchard, serves the active Blazor admin shell when a Crest-compatible admin theme is selected, exposes thin `api/crest/*` JSON adapters for Blazor admin needs, and owns shared Orchard-side infrastructure such as legacy frame theme selection. It should call Orchard services, enforce Orchard permissions, and avoid owning duplicate CMS/auth/menu/theme state.
+`Crest.Server` is the backend overlay on top of Orchard Core. It integrates with Orchard, serves the active Blazor admin shell when a Crest-compatible admin theme is selected, exposes thin `api/crest/*` JSON adapters for Blazor admin needs, and owns shared Orchard-side infrastructure such as legacy frame theme selection. It should call Orchard services, enforce Orchard permissions, and avoid owning duplicate CMS/auth/menu/theme state.
 
-`OrchardCore.Crest.Components` is the shared Radzen-backed Blazor component layer. It owns reusable primitives, forms, model/editor UI, and client-safe UI contracts. It must not reference feature modules.
+`Crest.Components` is the shared Radzen-backed Blazor component layer. It owns reusable primitives, forms, model/editor UI, and client-safe UI contracts. It must not reference feature modules.
 
-`OrchardCore.Crest.Iconify` owns the Iconify-specific C# API, provider settings, and optional full-library cache integration. It does not depend on `OrchardCore.Crest.Icons`.
+`Crest.Iconify` owns the Iconify-specific C# API, provider settings, and optional full-library cache integration. It does not depend on `Crest.Icons`.
 
-`OrchardCore.Crest.Icons` owns the generic icon provider contract, registry/search/used-icon pack services, tenant/media icon cache behavior, icon UI such as `IconSelector`, and icon-specific CSS/JS/assets. It depends on `OrchardCore.Crest.Iconify` for the default Iconify provider.
+`Crest.Icons` owns the generic icon provider contract, registry/search/used-icon pack services, tenant/media icon cache behavior, icon UI such as `IconSelector`, and icon-specific CSS/JS/assets. It depends on `Crest.Iconify` for the default Iconify provider.
 
-Admin and Site themes are composition roots. They reference `OrchardCore.Crest.Components`, `OrchardCore.Crest.Icons`, and other feature UI modules they want compiled into the WASM app.
+Admin and Site themes are composition roots. They reference `Crest.Components`, `Crest.Icons`, and other feature UI modules they want compiled into the WASM app.
 
-Application modules that build UI for the current Radzen line reference `OrchardCore.Crest.Components` explicitly. For example, a new module `Example.BlazorWasm` would reference the components project and contributes Blazor routes/components to the admin WASM build.
+Application modules that build UI for the current Radzen line reference `Crest.Components` explicitly. For example, a new module `Example.BlazorWasm` would reference the components project and contributes Blazor routes/components to the admin WASM build.
 
 In the future, I'd like 3rd party modules to be able to call a 'generic' components from the shared components module as a standard library. This would enable custom component libraries to recreate them in their own style.
 
@@ -67,40 +67,40 @@ Preferred data-access order:
 
 ## Blazor Admin Theme Serving
 
-`OrchardCore.Crest.Server` installs middleware that checks the selected Orchard admin theme. If the selected admin theme is `OrchardCore.Crest.Admin` or carries the `crest-blazor` manifest tag (itself or through its `BaseTheme` chain), the middleware serves the Crest admin WASM files for admin routes and Blazor assets.
+`Crest.Server` installs middleware that checks the selected Orchard admin theme. If the selected admin theme is `Crest.Admin` or carries the `crest-blazor` manifest tag (itself or through its `BaseTheme` chain), the middleware serves the Crest admin WASM files for admin routes and Blazor assets.
 
 The current admin shell assets still live under:
 
 ```text
-OrchardCore.Crest.Admin/wasm
+Crest.Admin/wasm
 ```
 
 The Orchard-loadable admin theme manifest project still lives at:
 
 ```text
-OrchardCore.Crest.Admin
+Crest.Admin
 ```
 
 ## Component System Boundary
 
-The current concrete UI implementation is Radzen-based. Shared Radzen-backed primitives belong in `OrchardCore.Crest.Components`. Feature UI and assets belong with their feature modules; theme chrome belongs with theme projects.
+The current concrete UI implementation is Radzen-based. Shared Radzen-backed primitives belong in `Crest.Components`. Feature UI and assets belong with their feature modules; theme chrome belongs with theme projects.
 
 Shared runtime contracts and infrastructure should not depend on Radzen. Future component systems should be able to reuse the Orchard-side server runtime, JSON contracts, route/theme conventions, and legacy frame infrastructure without copying Radzen-specific code.
 
-The planned neutral client/core package has not been extracted yet. Until it exists, some client contracts and display-management ideas still live inside `OrchardCore.Crest.Components` or the Crest admin WASM project.
+The planned neutral client/core package has not been extracted yet. Until it exists, some client contracts and display-management ideas still live inside `Crest.Components` or the Crest admin WASM project.
 
 ## Legacy Frame System
 
 Legacy framing is shared Crest infrastructure. It exists so normal Orchard admin pages can render inside the Crest admin shell when no native Blazor route exists.
 
-The Orchard-side legacy frame pieces live in `OrchardCore.Crest.Server`:
+The Orchard-side legacy frame pieces live in `Crest.Server`:
 
 ```text
-OrchardCore.Crest.Server/LegacyFrameThemeSelector.cs
-OrchardCore.Crest.Server/Themes/OrchardCore.Crest.LegacyFrame
+Crest.Server/LegacyFrameThemeSelector.cs
+Crest.Server/Themes/Crest.LegacyFrame
 ```
 
-Requests with `legacy-frame=1` or `legacy-frame=true` use the stripped `OrchardCore.Crest.LegacyFrame` admin theme. That theme keeps Orchard admin resources available while hiding the normal admin chrome so the page can sit inside an iframe.
+Requests with `legacy-frame=1` or `legacy-frame=true` use the stripped `Crest.LegacyFrame` admin theme. That theme keeps Orchard admin resources available while hiding the normal admin chrome so the page can sit inside an iframe.
 
 The current iframe UI is still implemented inside the Radzen admin shell. A future neutral client package should own the reusable iframe component and URL-building behavior.
 
@@ -108,18 +108,18 @@ The current iframe UI is still implemented inside the Radzen admin shell. A futu
 
 The repository can remain a single git repository while publishing separate NuGet packages. The intended package boundaries are:
 
-- `OrchardCore.Crest.Server`: Orchard runtime module and shared server infrastructure.
-- `OrchardCore.Crest.Components`: shared Radzen-backed component layer.
-- `OrchardCore.Crest.Iconify`: Iconify provider API and optional full-library cache.
-- `OrchardCore.Crest.Icons`: icon providers, icon UI, and icon-owned assets.
+- `Crest.Server`: Orchard runtime module and shared server infrastructure.
+- `Crest.Components`: shared Radzen-backed component layer.
+- `Crest.Iconify`: Iconify provider API and optional full-library cache.
+- `Crest.Icons`: icon providers, icon UI, and icon-owned assets.
 - Theme packages/projects: admin/site composition roots that reference components and feature modules.
-- Future `OrchardCore.Crest.Client`: UI-library-neutral client contracts, display manager, routing helpers, and legacy frame client component.
+- Future `Crest.Client`: UI-library-neutral client contracts, display manager, routing helpers, and legacy frame client component.
 
 Project files are not fully package-ready yet. Some projects still have `IsPackable=false`; packaging metadata and dependency boundaries need to be finalized before publishing.
 
 ## Development Recipes
 
-Reusable Crest development recipes live under `OrchardCore.Crest.Site/Recipes`: `OrchardCore.CrestBasicDev` for a focused Crest admin shell and `OrchardCore.CrestFullDev` for broad Orchard/Crest feature testing. Host apps should keep tenant/user autosetup recipes in the host repo.
+Reusable Crest development recipes live under `Crest.Site/Recipes`: `CrestBasicDev` for a focused Crest admin shell and `CrestFullDev` for broad Orchard/Crest feature testing. Host apps should keep tenant/user autosetup recipes in the host repo.
 
 ## Validation
 

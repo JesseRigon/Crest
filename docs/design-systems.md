@@ -1,6 +1,6 @@
 # Orchard Crest design system plan
 
-This plan defines the direction for tenant and user design systems in Orchard Crest UI Framework using Orchard as the system of record. The canonical `--crest-*` primitive token contract, its packaged default CSS and the current Site-Settings-backed Design System page are built: see [OrchardCore.Crest.Components/README.md](../OrchardCore.Crest.Components/README.md) › Design tokens.
+This plan defines the direction for tenant and user design systems in Orchard Crest UI Framework using Orchard as the system of record. The canonical `--crest-*` primitive token contract, its packaged default CSS and the current Site-Settings-backed Design System page are built: see [Crest.Components/README.md](../Crest.Components/README.md) › Design tokens.
 
 Planned:
 
@@ -98,7 +98,7 @@ Crest.Admin should provide the Blazor editor, preview, selector, and token appli
 - [ ] **Seed packaged default into tenant content via recipe/setup.** Keep a static CSS file such as:
 
   ```text
-  OrchardCore.Crest.Admin/wasm/wwwroot/CrestAdmin.DesignSystem.Default.css
+  Crest.Admin/wasm/wwwroot/CrestAdmin.DesignSystem.Default.css
   ```
 
   Purpose:
@@ -118,7 +118,7 @@ Crest.Admin should provide the Blazor editor, preview, selector, and token appli
 
   Recipes can create the default `CrestDesignSystem` content item on setup.
 
-  - [x] The default file's token contract is built: see [OrchardCore.Crest.Components/README.md](../OrchardCore.Crest.Components/README.md) › Design tokens.
+  - [x] The default file's token contract is built: see [Crest.Components/README.md](../Crest.Components/README.md) › Design tokens.
 
 ## Resolution and runtime
 
@@ -165,7 +165,7 @@ Multiple tenant design systems should be allowed, for example:
   }
   ```
 
-  The admin shell applies this payload by setting CSS custom properties on the admin root element. How components consume those `--crest-*` variables is built: see [OrchardCore.Crest.Components/README.md](../OrchardCore.Crest.Components/README.md) › Design tokens.
+  The admin shell applies this payload by setting CSS custom properties on the admin root element. How components consume those `--crest-*` variables is built: see [Crest.Components/README.md](../Crest.Components/README.md) › Design tokens.
 
   **Token source mapping.** Keep a provider pattern only at the source-to-Crest-token boundary.
 

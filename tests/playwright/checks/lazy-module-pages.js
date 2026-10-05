@@ -1,7 +1,7 @@
 const { createInstance } = require('../harness/instance');
 const { loginAsAdmin } = require('../harness/auth');
 
-// Module pages load on demand (OrchardCore.Crest.Client/CrestLazyModules.targets): a fresh
+// Module pages load on demand (Crest.Client/CrestLazyModules.targets): a fresh
 // browser on the dashboard downloads no module page library except one that registers JS
 // components at startup; opening a module's page downloads that module and renders it.
 // Crest's own opt-in module (Content Part Lists) is the subject, so this holds in any host.

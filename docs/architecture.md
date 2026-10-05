@@ -172,8 +172,8 @@ The global store's host-call rough edge is in [global-store.md](global-store.md)
   that registers one), so the generic role pages can be exercised without a host's modules.
 - [ ] **4. Remove the host references below, and add the publishing gate check.** Crest must
   build, test and read without any host present.
-  - [ ] `OrchardCore.Crest.Tests.slnx` lists a host's projects. Root cause:
-    `OrchardCore.Crest.Admin.Client.csproj` globs `..\..\..\**\blazor-wasm\*.csproj`, reaching out
+  - [ ] `Crest.Tests.slnx` lists a host's projects. Root cause:
+    `Crest.Admin.Client.csproj` globs `..\..\..\**\blazor-wasm\*.csproj`, reaching out
     of the repository. Replace the glob with an item the host supplies.
   - [ ] Workflow object constants and a payload fallback key name a host's records; object
     names are free strings, and the subject key becomes a generic `ContentItemId`.

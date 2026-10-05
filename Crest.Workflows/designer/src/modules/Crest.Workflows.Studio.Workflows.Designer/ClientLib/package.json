@@ -1,7 +1,7 @@
 {
   "name": "crest-workflows-designer-dependencies",
   "description": "Bundle dependencies for the designer.",
-  "repository": "https://github.com/JesseRigon/OrchardCore.Crest",
+  "repository": "https://github.com/JesseRigon/Crest",
   "license": "MIT",
   "version": "1.0.0",
   "dependencies": {

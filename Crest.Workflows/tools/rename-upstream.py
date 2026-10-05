@@ -44,8 +44,8 @@ def map_text(s: str) -> str:
     s = re.sub(r'\bElsa(?=[A-Z])', 'CrestWorkflows', s)
     s = re.sub(r'\b(I)Elsa(?=[A-Z])', r'\1CrestWorkflows', s)
     # 6. (second pass, 2026-09-28) upstream URLs -> the fork's home; whole strings first
-    s = re.sub(r'https?://(www\.)?github\.com/elsa-workflows/[A-Za-z0-9._-]+', 'https://github.com/JesseRigon/OrchardCore.Crest', s)
-    s = re.sub(r'https?://[a-z0-9.]*elsaworkflows\.io[^\s"\'<>)]*', 'https://github.com/JesseRigon/OrchardCore.Crest/blob/main/plans/workflows.md', s)
+    s = re.sub(r'https?://(www\.)?github\.com/elsa-workflows/[A-Za-z0-9._-]+', 'https://github.com/JesseRigon/Crest', s)
+    s = re.sub(r'https?://[a-z0-9.]*elsaworkflows\.io[^\s"\'<>)]*', 'https://github.com/JesseRigon/Crest/blob/main/plans/workflows.md', s)
     s = re.sub(r'https?://f\.feedz\.io/elsa-workflows/[^\s"\'<>)]*', 'https://api.nuget.org/v3/index.json', s)
     # 7. prose and remaining words: "Elsa Workflows" -> "Crest Workflows", the word Elsa -> Crest.Workflows
     s = re.sub(r'\bElsa Workflows\b', 'Crest Workflows', s)

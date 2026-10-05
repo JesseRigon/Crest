@@ -1,4 +1,4 @@
-# OrchardCore.Crest.Workflows.Data
+# Crest.Workflows.Data
 
 Provides Elsa workflow activities for data processing operations.
 
@@ -19,7 +19,7 @@ These activities are useful for batch processing, data import/export operations,
 
 ## Dependencies
 
-- `OrchardCore.Crest.Workflows`
+- `Crest.Workflows`
 
 ## Installation
 
@@ -27,5 +27,5 @@ Enable the **CSV Activities** feature in the Orchard Core admin dashboard under 
 
 ## Package Information
 
-- **Package ID**: `OrchardCore.Crest.Workflows.Data`
+- **Package ID**: `Crest.Workflows.Data`
 - **Category**: Crest Workflows

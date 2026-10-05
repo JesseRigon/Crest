@@ -2,7 +2,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Text;
 
-// Crest lazy modules (OrchardCore.Crest.Client/CrestLazyModules.targets): reads the WASM app's
+// Crest lazy modules (Crest.Client/CrestLazyModules.targets): reads the WASM app's
 // referenced assemblies and decides which load on demand. Arguments: references file (one
 // "path|source project" per line), extra lazy names file, app assembly name, generated C#
 // file, lazy list output file.

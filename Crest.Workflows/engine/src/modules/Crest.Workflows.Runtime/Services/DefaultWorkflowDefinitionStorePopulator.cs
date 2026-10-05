@@ -193,7 +193,7 @@ public class DefaultWorkflowDefinitionStorePopulator : IWorkflowDefinitionStoreP
             {
                 // It's possible that the imported workflow definition has a different ID than the existing one in the store.
                 // In a future update, we might store this discrepancy in a "troubleshooting" table and provide tooling for managing these, and other, discrepancies.
-                // See https://github.com/JesseRigon/OrchardCore.Crest/issues/5540
+                // See https://github.com/JesseRigon/Crest/issues/5540
                 _logger.LogWarning("Workflow with ID {WorkflowId} already exists with a different ID {ExistingWorkflowId}", workflow.Identity.Id, existingDefinitionVersion.Id);
             }
         }

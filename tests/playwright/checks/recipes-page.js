@@ -1,5 +1,5 @@
 // Converted from the old admin-recipes-page.js
-// (modules/OrchardCore.Crest/tests/playwright/admin-recipes-page.js). Same assertions as
+// (modules/Crest/tests/playwright/admin-recipes-page.js). Same assertions as
 // the original minified script: the Recipes page renders natively (test id + heading) and
 // never falls back to the legacy iframe.
 module.exports = async function run(page, ctx) {

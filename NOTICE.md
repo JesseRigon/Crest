@@ -29,13 +29,13 @@ Each adapted file carries its attribution in its own header.
 
 | Code | Upstream | Licence | Notice |
 | --- | --- | --- | --- |
-| `OrchardCore.Crest.Components/` — the Blazor component library | [Radzen Blazor](https://github.com/radzenhq/radzen-blazor) | MIT, Copyright (c) 2018-2026 Radzen Ltd | `OrchardCore.Crest.Components/NOTICE.md` |
+| `Crest.Components/` — the Blazor component library | [Radzen Blazor](https://github.com/radzenhq/radzen-blazor) | MIT, Copyright (c) 2018-2026 Radzen Ltd | `Crest.Components/NOTICE.md` |
 
 The component library was forked from Radzen's source and renamed `Radzen*` → `Crest*`;
 the chart, data grid, scheduler, Gantt, HTML editor, spreadsheet, tree, upload, form and
 dropdown families all originate there, as do the models, services and JavaScript that
 support them. Behaviour has since diverged and components with no Radzen counterpart were
-added, but the library as a whole is a derivative work. `OrchardCore.Crest.Admin` and
+added, but the library as a whole is a derivative work. `Crest.Admin` and
 anything else built on it inherit that status.
 
 ## Libraries used as packages
@@ -47,11 +47,11 @@ project's `PackageReference` set and `Directory.Packages.props`.
 ## Bundled front-end assets
 
 The default site theme ships third-party static assets in
-`OrchardCore.Crest.Site/wwwroot/`:
+`Crest.Site/wwwroot/`:
 
 | Asset | Licence |
 | --- | --- |
-| The theme's HTML/CSS, from a Start Bootstrap template | MIT, Copyright (c) 2013-2020 Start Bootstrap LLC — `OrchardCore.Crest.Site/wwwroot/LICENSE` |
+| The theme's HTML/CSS, from a Start Bootstrap template | MIT, Copyright (c) 2013-2020 Start Bootstrap LLC — `Crest.Site/wwwroot/LICENSE` |
 | `vendor/bootstrap` — Bootstrap v4.5.0 | MIT, Copyright 2011-2020 The Bootstrap Authors and Twitter, Inc. |
 | `vendor/jquery` — jQuery v3.5.1 | MIT, Copyright OpenJS Foundation and other contributors |
 | `vendor/fontawesome-free` — Font Awesome Free 5.13.0 | Icons CC BY 4.0, fonts SIL OFL 1.1, code MIT — Copyright Fonticons, Inc.; see https://fontawesome.com/license/free |

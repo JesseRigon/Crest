@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest/tests/playwright/admin-menu-primary-nav-menu-settings.js.
+// Converted from Crest/tests/playwright/admin-menu-primary-nav-menu-settings.js.
 // The primaryNavMenu settings flyout: tier-4 fields render correctly (no indentation
 // input, but background/base-size inputs still present), an unsaved checkbox edit
 // doesn't get reverted by a background reload, and saved settings actually apply to the

@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Crest.Workflows.Domain.csproj" />
-    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+    <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
     <ProjectReference Include="..\designer\src\framework\Crest.Workflows.Studio.Core.BlazorWasm\Crest.Workflows.Studio.Core.BlazorWasm.csproj" />
     <ProjectReference Include="..\designer\src\framework\Crest.Workflows.Studio.Shell\Crest.Workflows.Studio.Shell.csproj" />
     <ProjectReference Include="..\designer\src\modules\Crest.Workflows.Studio.Workflows\Crest.Workflows.Studio.Workflows.csproj" />

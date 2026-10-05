@@ -1,8 +1,8 @@
 using OrchardCore.Modules.Manifest;
 
 [assembly: Module(
-    Author = "OrchardCore.Crest (forked from Elsa Workflows, MIT)",
-    Website = "https://github.com/JesseRigon/OrchardCore.Crest",
+    Author = "Crest (forked from Elsa Workflows, MIT)",
+    Website = "https://github.com/JesseRigon/Crest",
     Version = "0.1.0",
     Name = "Crest Workflows"
 )]
@@ -17,7 +17,7 @@ using OrchardCore.Modules.Manifest;
     Name = "Crest Workflows",
     Description = "Crest.Workflows 3 as the tenant's workflow engine: definitions as content items, per-shell stores, the Crest.Workflows API behind Orchard permissions.",
     Category = "Crest.Workflows",
-    Dependencies = ["OrchardCore.Contents", "OrchardCore.Workflows", "OrchardCore.Crest"]
+    Dependencies = ["OrchardCore.Contents", "OrchardCore.Workflows", "Crest"]
 )]
 
 [assembly: Feature(

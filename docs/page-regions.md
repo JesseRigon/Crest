@@ -3,7 +3,7 @@
 How a downstream module puts UI on a page owned by a module it must not be referenced by.
 
 Implemented as `IPageRegionContributor` / `PageRegionRegistry` / `<CrestPageRegion>` in
-`OrchardCore.Crest.Components/Regions`, discovered over the module assemblies in
+`Crest.Components/Regions`, discovered over the module assemblies in
 `AdminRoutes.razor`. Crest.Parties declares regions on its party-type panes
 (`PartiesPageRegions.Pane(...)`, `PartiesPageRegions.Detail(...)`) for other modules to
 contribute to. The reasoning that produced it:
@@ -14,7 +14,7 @@ The dependency rule applies — **the page's module must not reference the downs
 to render its contribution** — so the UI contribution has to be injected the way a
 downstream module's content parts are.
 
-**No seam existed for this.** `RenderFragment` slots across `OrchardCore.Crest.Components`
+**No seam existed for this.** `RenderFragment` slots across `Crest.Components`
 are *caller-supplied*: they let a page pass content into a component it uses, not a foreign
 module push content into a page. `IRouteComponentTableProvider` is the right *shape* —
 modules declare their own contributions, the host discovers by convention — but it registers

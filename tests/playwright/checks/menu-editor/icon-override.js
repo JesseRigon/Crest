@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest.Admin/tests/playwright/admin-menu-icon-override.js.
+// Converted from Crest.Admin/tests/playwright/admin-menu-icon-override.js.
 // Setting a custom iconClass on an admin menu node via the API should be reflected in the
 // rendered primary-nav icon. Restores the original iconClass in `finally` either way.
 //

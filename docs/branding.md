@@ -2,7 +2,7 @@
 
 **Status: not started.** Plan only. Nothing here is implemented.
 A tenant presents ITS OWN identity, not the platform's: the login page greets
-with the tenant's display name (today it says "OrchardCore.Crest"), and the app
+with the tenant's display name (today it says "Crest"), and the app
 chrome uses tenant-uploaded logos wherever a logo appears. Managed by the tenant
 admin from a **Branding** section at the TOP of the Design System page, above the
 design-variables section. The design-variables section it sits above is documented in
@@ -14,14 +14,14 @@ Current state:
   served by `GET api/crest/site` (`siteName`) and editable on the Crest Settings
   › General screen.
 - The login page hardcodes the platform name:
-  `OrchardCore.Crest.Admin/wasm/Pages/Login.razor` line 16 —
-  `<CrestText TextStyle="TextStyle.H3" Text="OrchardCore.Crest" />`.
+  `Crest.Admin/wasm/Pages/Login.razor` line 16 —
+  `<CrestText TextStyle="TextStyle.H3" Text="Crest" />`.
 - The admin document title is also hardcoded:
-  `OrchardCore.Crest.Server/Components/App.razor` — `<title>Crest</title>`.
+  `Crest.Server/Components/App.razor` — `<title>Crest</title>`.
 - `GET api/crest/site` requires `ManageSettings` — NOT usable from the anonymous
   login page. `GET api/crest/site/home` is the existing `[AllowAnonymous]`
   precedent on the same controller.
-- The Design System page is `OrchardCore.Crest.Admin/wasm/Pages/DesignSystem.razor`
+- The Design System page is `Crest.Admin/wasm/Pages/DesignSystem.razor`
   (route `/DesignSystem`, gated by `ManageSettings` in
   `CrestRoutePermissionProvider`).
 - Tenant media already flows through Orchard Media elsewhere (icon overrides use

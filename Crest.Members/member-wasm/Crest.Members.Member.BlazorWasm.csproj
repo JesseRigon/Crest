@@ -26,7 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Crest.Members.Domain.csproj" />
-    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
-    <ProjectReference Include="..\..\OrchardCore.Crest.Member\wasm\OrchardCore.Crest.Member.Client.csproj" />
+    <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
+    <ProjectReference Include="..\..\Crest.Member\wasm\Crest.Member.Client.csproj" />
   </ItemGroup>
 </Project>

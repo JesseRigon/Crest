@@ -1,7 +1,7 @@
 const { createInstance } = require('../harness/instance');
 
 // Verifies anonymous-visitor culture resolution on the front-end site
-// (OrchardCore.Crest.Site) - server-rendered Liquid/cshtml, no Blazor WASM client, so
+// (Crest.Site) - server-rendered Liquid/cshtml, no Blazor WASM client, so
 // this exercises the STOCK ASP.NET Core RequestLocalizationOptions pipeline (the
 // Accept-Language header provider + the tenant's LocalizationSettings.DefaultCulture
 // fallback), not DisplayManager.ResolveCultureAsync's client-side chain - the

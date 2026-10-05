@@ -44,7 +44,7 @@ module.exports = async function run(page, ctx) {
 
   // A member theme belongs to the member shell, never the site: selecting it must not make
   // it the public site's theme.
-  const memberThemesOnSite = state.themes.filter((theme) => theme.shell === 'site' && theme.id === 'OrchardCore.Crest.Member');
+  const memberThemesOnSite = state.themes.filter((theme) => theme.shell === 'site' && theme.id === 'Crest.Member');
   check('member-theme-is-not-a-site-theme', memberThemesOnSite.length === 0, JSON.stringify(memberThemesOnSite.map((theme) => theme.id)));
 
   const features = await api('GET', '/api/crest/features');

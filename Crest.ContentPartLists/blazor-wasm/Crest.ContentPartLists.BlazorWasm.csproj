@@ -20,6 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+    <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
   </ItemGroup>
 </Project>

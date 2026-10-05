@@ -1,6 +1,6 @@
-# OrchardCore.Crest tests
+# Crest tests
 
-This directory is the entrypoint for every test that lives inside the `OrchardCore.Crest`
+This directory is the entrypoint for every test that lives inside the `Crest`
 submodule when it runs standalone: `run-tests.sh` here runs everything underneath it. A
 host that builds Crest's test projects into its own solution and starts its browser suite
 with Crest's shared checks (see "Adding a browser check" below) does not call
@@ -43,7 +43,7 @@ native UI automation.
 ## Layout and discovery
 
 ```
-modules/OrchardCore.Crest/
+modules/Crest/
   tests/
     run-tests.sh                 <- the entrypoint host dev.sh scripts call
     playwright/                  <- shared browser E2E suite (existing)
@@ -51,34 +51,34 @@ modules/OrchardCore.Crest/
       harness/                   <- auth, health, instance bootstrap, screenshot-diff
       run-admin-suite.js
       run-client-suite.js
-  OrchardCore.Crest.Icons/
+  Crest.Icons/
     tests/
-      OrchardCore.Crest.Icons.Tests/
-        OrchardCore.Crest.Icons.Tests.csproj   <- discovered and run by run-tests.sh
-  OrchardCore.Crest.<OtherProject>/
+      Crest.Icons.Tests/
+        Crest.Icons.Tests.csproj   <- discovered and run by run-tests.sh
+  Crest.<OtherProject>/
     tests/
       <OtherProject>.Tests/...                 <- same convention
 ```
 
 `run-tests.sh` runs every test project in one `dotnet test` over
-`OrchardCore.Crest.Tests.slnx`, refusing a partial run when a `*/tests/*` project is
+`Crest.Tests.slnx`, refusing a partial run when a `*/tests/*` project is
 missing from that solution, then runs this directory's own shared Playwright suite.
-Adding a new C# test project to any `OrchardCore.Crest.*` subproject means: create it
+Adding a new C# test project to any `Crest.*` subproject means: create it
 under `<Subproject>/tests/<ProjectName>/`, and **exclude that `tests/` folder from the
 parent project's own compile glob** — SDK-style projects (especially
 `Microsoft.NET.Sdk.Razor` ones) default-glob every `.cs` file under the project
 directory, so without an explicit exclusion the parent project will try to compile the
 test files itself and fail on missing test package references. See
-`OrchardCore.Crest.Icons.csproj`'s `<Compile Remove="tests\**\*.cs" />` for the pattern
+`Crest.Icons.csproj`'s `<Compile Remove="tests\**\*.cs" />` for the pattern
 to copy.
 
 ## Why the host repos don't do this scan themselves
 
 A product host has a flat `modules/*/tests/` layout (one `tests/` dir per module —
-its business modules, `OrchardCore.Crest`, any future module). `OrchardCore.Crest` is the one
+its business modules, `Crest`, any future module). `Crest` is the one
 module that isn't flat — it's a submodule with its own nested subprojects, each
 potentially owning a `tests/` dir. Rather than have every host repo's `dev.sh`
-duplicate knowledge of that nested layout, `OrchardCore.Crest` owns discovering and
+duplicate knowledge of that nested layout, `Crest` owns discovering and
 running its own tests, and reports pass/fail back to whichever host invoked it. This
 keeps `OrchardCore.Crest.Host/dev/dev.sh` (which only ever needs to run this one
 module's tests) a thin wrapper. A product host that registers every Crest test project in
@@ -120,4 +120,4 @@ supplies these at test time; that file is host-repo-local and never copied into 
 read from this submodule.
 
 If a future test needs a new credential or connection string, add the env var to the
-*host's* `.env` and `dev.sh`, not to anything under `modules/OrchardCore.Crest/`.
+*host's* `.env` and `dev.sh`, not to anything under `modules/Crest/`.

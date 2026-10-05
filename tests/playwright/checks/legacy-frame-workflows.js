@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest/tests/playwright/legacy-frame-workflows.js.
+// Converted from Crest/tests/playwright/legacy-frame-workflows.js.
 // Legacy (pre-Crest) Orchard admin pages render inside an iframe wrapper, never nesting
 // a second Crest shell. Verifies the initial frame, an in-frame link navigation, and a
 // location.href reassignment all preserve legacy-frame=1 and stay free of nested chrome.

@@ -4,7 +4,7 @@ Crest.Server hosts interactive Blazor islands (routable `.razor` pages marked `@
 
 ## Hosting model, in brief (stable — the design below is done, not in flux)
 
-- **`OrchardCore.Crest.Server` is the single Blazor Web App host** for every Crest theme (Site, Admin, and any future Blazor-capable theme). No theme self-hosts `AddRazorComponents()`. Theme WASM client assemblies (`*.Client.csproj`) are discovered by an MSBuild glob, not a hardcoded `ProjectReference` — adding a new theme's client project never requires editing `Server.csproj`.
+- **`Crest.Server` is the single Blazor Web App host** for every Crest theme (Site, Admin, and any future Blazor-capable theme). No theme self-hosts `AddRazorComponents()`. Theme WASM client assemblies (`*.Client.csproj`) are discovered by an MSBuild glob, not a hardcoded `ProjectReference` — adding a new theme's client project never requires editing `Server.csproj`.
 - **`Components/App.razor` is a theme-dispatching document root.** One `MapRazorComponents<App>()` call serves every theme; `App.razor` picks the Admin, Member or Site branch off `HttpContext.Items[CrestBlazorHosting.ShellBucketItem]` (with `ShellBasePathItem` for the base href), markers stamped by `BlazorAdminThemeMiddleware` — never a raw path check, since that would bypass the middleware's theme-selection and route-authorization gates. The three shells are described in [shells-and-themes.md](shells-and-themes.md).
 - **`InteractiveAuto` is the default render mode** for every page (server circuit first, WASM once cached), with one deliberate exception: a page that sets the auth cookie (the admin login, the member login and registration) renders `InteractiveWebAssembly`. Under Auto's first-visit server circuit, a credential POST goes out on the *server-side* loopback `HttpClient`, so the auth `Set-Cookie` lands in that handler and never reaches the browser — login silently succeeds server-side while leaving the browser anonymous. Don't "simplify" this back to Auto.
 - **A separate `<Router>` per shell** (Admin's `AdminRoutes.razor`, Member's `MemberRoutes.razor`, Site's `Routes.razor`), each correctly scoped to its own `AppAssembly`/`AdditionalAssemblies`. This is right for client-side navigation *after* a component is already rendering, but does **not** scope which routes the server itself will match — see "What `<Router>` scoping does and doesn't do" below and "Route reachability: the `RouteComponentTable` gate" for how the server-side gap is actually closed.
@@ -16,7 +16,7 @@ Crest.Server hosts interactive Blazor islands (routable `.razor` pages marked `@
 1. Build-time: Crest.Admin.Client's discovery glob (`modules/**/blazor-wasm/*.csproj`
    - ANY depth, so module grouping needs no glob change; Crest's own tree excluded)
    turns each module blazor-wasm project into a project reference, compiling its
-   pages into the single wasm payload (OrchardCore.Crest.Client, the one
+   pages into the single wasm payload (Crest.Client, the one
    Program.Main).
 2. Runtime: Crest.Server's startup scans the assembly graph (`*.Client.dll`,
    `*.BlazorWasm.dll`) into MapRazorComponents' route table, so `@page` routes in
@@ -59,7 +59,7 @@ Crest.Server hosts interactive Blazor islands (routable `.razor` pages marked `@
 
 **Symptom:** the page 404s, or a type like `App`/`Routes` fails to resolve, even though the `.razor` file is clearly present on disk.
 
-**Fix** — add explicitly in the module's `.csproj` (see `OrchardCore.Crest.Server/OrchardCore.Crest.csproj`):
+**Fix** — add explicitly in the module's `.csproj` (see `Crest.Server/Crest.csproj`):
 
 ```xml
 <ItemGroup>
@@ -80,7 +80,7 @@ Crest.Server hosts interactive Blazor islands (routable `.razor` pages marked `@
 - Orchard's shell-scoped `IEndpointRouteBuilder` — it's the same live `IEndpointRouteBuilder`/`DataSources` as the real request pipeline (Orchard's `ShellPipelineExtensions.BuildPipelineInternalAsync` is the only place `UseRouting()`/`UseEndpoints()` run), so `MapStaticAssets()` inside a module `Startup.Configure()` is correctly wired — it just has nothing to serve, because the asset was never in the manifest to begin with.
 - Setting `OutputType=Exe` on the module project directly *would* satisfy the SDK gate, but risks breaking `OrchardCore.Module.Targets`' embedded-resource-based module asset packaging, which assumes a library. Not used here.
 
-**Fix** — `OrchardCore.Crest.Server/BlazorFrameworkScriptEndpoints.cs`: the boot scripts are mapped as ordinary **tenant endpoints** in Crest's own `Startup.Configure` (`routes.MapBlazorFrameworkScripts(...)`), serving the physical files from the `microsoft.aspnetcore.app.internal.assets` package directory, version-pinned to the running shared framework. Consuming hosts need **nothing** in `Program.cs` anymore.
+**Fix** — `Crest.Server/BlazorFrameworkScriptEndpoints.cs`: the boot scripts are mapped as ordinary **tenant endpoints** in Crest's own `Startup.Configure` (`routes.MapBlazorFrameworkScripts(...)`), serving the physical files from the `microsoft.aspnetcore.app.internal.assets` package directory, version-pinned to the running shared framework. Consuming hosts need **nothing** in `Program.cs` anymore.
 
 An earlier revision registered a host-level `UseStaticFiles(PhysicalFileProvider, RequestPath: "/_framework")` in each host's `Program.cs` instead. That was retired deliberately: registered before `UseOrchardCore()`, it only ever matched the bare root form of the URL — it could never serve `/{tenantPrefix}/_framework/...` (Orchard strips the tenant prefix *inside* `UseOrchardCore()`) or `/{shellBase}/_framework/...` (stripped by `BlazorAdminThemeMiddleware`, also inside the tenant pipeline), and it had to be copy-pasted into every consuming host. As a tenant endpoint, matching runs after both prefix strips, so one registration serves every request form — and OrchardCore's routing stays the single authority over the URL space.
 

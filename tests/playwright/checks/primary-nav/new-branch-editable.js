@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest/tests/playwright/admin-menu-new-branch-editable.js.
+// Converted from Crest/tests/playwright/admin-menu-new-branch-editable.js.
 // The synthetic "New" node is fixed-position (locked/non-draggable) but must still be
 // editable — its edit button opens the node editor with the expected fields.
 module.exports = async function run(page, ctx) {

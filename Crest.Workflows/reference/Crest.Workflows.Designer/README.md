@@ -1,4 +1,4 @@
-# OrchardCore.Crest.Workflows.Designer
+# Crest.Workflows.Designer
 
 Shared components for the Elsa Studio visual workflow designer.
 
@@ -18,8 +18,8 @@ This module serves as the foundation for both the Blazor Server and Blazor WebAs
 
 Choose one of the following implementation modules based on your deployment preferences:
 
-- **OrchardCore.Crest.Workflows.Designer.BlazorServer** - Server-side rendering (recommended for most scenarios)
-- **OrchardCore.Crest.Workflows.Designer.BlazorWasm** - Client-side rendering (for offline or low-latency requirements)
+- **Crest.Workflows.Designer.BlazorServer** - Server-side rendering (recommended for most scenarios)
+- **Crest.Workflows.Designer.BlazorWasm** - Client-side rendering (for offline or low-latency requirements)
 
 ## Dependencies
 
@@ -27,5 +27,5 @@ This module requires no Orchard Core-specific dependencies but provides shared f
 
 ## Package Information
 
-- **Package ID**: `OrchardCore.Crest.Workflows.Designer`
+- **Package ID**: `Crest.Workflows.Designer`
 - **Category**: Crest Workflows

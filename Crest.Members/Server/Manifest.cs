@@ -2,7 +2,7 @@ using OrchardCore.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Members",
-    Author = "OrchardCore.Crest",
+    Author = "Crest",
     Version = "0.0.1",
     Description = "Organization-bound member users: user classes, hierarchies, org bindings, member portals."
 )]

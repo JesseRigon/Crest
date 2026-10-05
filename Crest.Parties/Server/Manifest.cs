@@ -2,7 +2,7 @@ using OrchardCore.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Parties",
-    Author = "OrchardCore.Crest",
+    Author = "Crest",
     Website = "https://crest.local",
     Version = "1.0.0",
     Description = "The platform-wide party model: Person and Organization profiles that domain modules attach roles to.",

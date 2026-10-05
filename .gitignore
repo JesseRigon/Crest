@@ -56,7 +56,7 @@ appsettings.Development.json
 # translation .po files into a project-local "Localization/" folder on every build -
 # references that package/SDK in this submodule, so scoped to just its directory (not a
 # bare "Localization/" pattern) - every other Localization/ folder here (e.g.
-# OrchardCore.Crest.Server/Localization/, OrchardCore.Crest.Site/Localization/) is
+# Crest.Server/Localization/, Crest.Site/Localization/) is
 # genuine hand-authored .po source content and must stay tracked.
 
 # Local databases

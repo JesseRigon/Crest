@@ -16,11 +16,11 @@ in the host's setup recipe (the host's setup recipe).
 
 ## Why the manifest is the real fix
 
-`OrchardCore.Crest` is `IsAlwaysEnabled = true`, and Orchard's feature system refuses to
+`Crest` is `IsAlwaysEnabled = true`, and Orchard's feature system refuses to
 disable a feature while an enabled dependent declares it. So a correct manifest
 dependency is self-healing: it auto-enables on setup, survives another recipe's
 `feature.disable` list, and survives manual toggling in the admin UI. See commit
-`5c022f2` in the `OrchardCore.Crest` submodule, which audited every constructor-injected
+`5c022f2` in the `Crest` submodule, which audited every constructor-injected
 `OrchardCore.*` type in the Server assembly against its real registration site.
 
 Note that the lazy `ICrestRequestAccess.GetRequiredService<T>()` pattern does **not**

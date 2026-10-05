@@ -8,8 +8,8 @@ const { loginAsAdmin } = require('./harness/auth');
 // calls buildSharedAdminChecks() and appends its own repo-specific checks to the list
 // before calling runSuite — same shared browser instance, same login, no extra cost.
 //
-// STATUS: 34 of the ~55 pre-existing raw scripts under OrchardCore.Crest.Admin,
-// OrchardCore.Crest.Icons, and the shared OrchardCore.Crest/tests/playwright directory
+// STATUS: 34 of the ~55 pre-existing raw scripts under Crest.Admin,
+// Crest.Icons, and the shared Crest/tests/playwright directory
 // have been converted into this checks/ convention. The Icons subproject is fully
 // converted. Remaining un-converted (still standalone, not wired in here): the menu
 // editor scripts (drag/drop, icon overrides, layout export), primary-nav-menu

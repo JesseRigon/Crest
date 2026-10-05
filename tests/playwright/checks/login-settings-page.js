@@ -1,5 +1,5 @@
 // Converted from the old admin-login-settings-page.js
-// (modules/OrchardCore.Crest/tests/playwright/admin-login-settings-page.js). Same
+// (modules/Crest/tests/playwright/admin-login-settings-page.js). Same
 // assertions: the User Login Settings page renders natively (test id + heading), shows the
 // remember-me / 2FA / external-login sections, and never falls back to the legacy iframe.
 module.exports = async function run(page, ctx) {

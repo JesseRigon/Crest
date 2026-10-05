@@ -4,7 +4,7 @@ namespace Crest.Workflows.BlazorWasm;
 
 /// <summary>
 /// The assemblies loaded on demand for Studio: crest-lazy-assemblies.txt, embedded. The
-/// same file tells the WASM app (OrchardCore.Crest.Client) which assemblies to leave out of
+/// same file tells the WASM app (Crest.Client) which assemblies to leave out of
 /// its startup download.
 /// </summary>
 public static class StudioAssemblies

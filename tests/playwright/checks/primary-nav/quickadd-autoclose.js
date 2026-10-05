@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest/tests/playwright/admin-primary-nav-menu-quickadd-autoclose.js.
+// Converted from Crest/tests/playwright/admin-primary-nav-menu-quickadd-autoclose.js.
 // The Quick Add popover must exactly overlay the primaryNavMenu bounds (both expanded and
 // compact), auto-close on outside pointer movement, and expand wider than the rail in
 // compact mode. Also checks the default iconless-item placeholder dot renders visibly

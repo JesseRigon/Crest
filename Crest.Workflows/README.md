@@ -16,7 +16,7 @@ bind to), `engine/` and `designer/` (vendored Elsa and Elsa Studio), `blazor-was
 
 - `Crest.Workflows` — the engine and the engine's HTTP API (`~/crest-workflows/api`) inside
   the tenant. Depends on `OrchardCore.Workflows` (the upstream modules' workflow startups
-  are gated on that id), `OrchardCore.Contents` and `OrchardCore.Crest`.
+  are gated on that id), `OrchardCore.Contents` and `Crest`.
 - `Crest.Workflows.Http` — Elsa HTTP endpoint/request activities.
 - `Crest.Workflows.Contents` — content triggers and tasks.
 

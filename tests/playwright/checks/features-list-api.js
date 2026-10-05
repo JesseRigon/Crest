@@ -1,5 +1,5 @@
 // Converted from the old admin-features-list.js
-// (modules/OrchardCore.Crest/tests/playwright/admin-features-list.js).
+// (modules/Crest/tests/playwright/admin-features-list.js).
 //
 // The original didn't assert much beyond an implicit throw-on-non-ok-response — it logged
 // the sorted feature-id catalog for a human to eyeball. This keeps the same network

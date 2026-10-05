@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest.Icons/tests/playwright/iconify-provider-reset-defaults.js.
+// Converted from Crest.Icons/tests/playwright/iconify-provider-reset-defaults.js.
 // Verifies PUT /api/crest/icons/providers resets the Iconify provider to its default baseUrl
 // and an empty prefix allow-list.
 //

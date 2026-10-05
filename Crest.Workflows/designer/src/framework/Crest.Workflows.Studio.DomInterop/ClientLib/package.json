@@ -1,7 +1,7 @@
 {
   "name": "crest-workflows-studio-dom-interop",
   "description": "Bundle DOM interop functions.",
-  "repository": "https://github.com/JesseRigon/OrchardCore.Crest",
+  "repository": "https://github.com/JesseRigon/Crest",
   "license": "MIT",
   "version": "1.0.0",
   "dependencies": {

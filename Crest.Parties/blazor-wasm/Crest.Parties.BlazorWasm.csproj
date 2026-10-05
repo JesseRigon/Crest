@@ -11,7 +11,7 @@
   <!-- Provides the Razor component model ([Parameter], ComponentBase, etc.) without any
        WASM-only APIs - this plain package pair works identically under every host: WASM
        standalone, Blazor Server, and Blazor Web App SSR (mirrors
-       OrchardCore.Crest.Components/OrchardCore.Crest.Components.csproj). -->
+       Crest.Components/Crest.Components.csproj). -->
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
@@ -19,6 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Crest.Parties.Domain.csproj" />
-    <ProjectReference Include="..\..\OrchardCore.Crest.Components\OrchardCore.Crest.Components.csproj" />
+    <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
   </ItemGroup>
 </Project>

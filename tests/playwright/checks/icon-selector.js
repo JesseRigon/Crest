@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest.Icons/tests/playwright/admin-icon-selector.js.
+// Converted from Crest.Icons/tests/playwright/admin-icon-selector.js.
 // Exercises the admin menu node icon-picker dialog: grid rendering, metadata-backed filters
 // (icon set category/traits/palette), infinite-scroll pagination, style-pack switching,
 // category filtering, search, and cross-version de-duplication.

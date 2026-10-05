@@ -1,4 +1,4 @@
-# OrchardCore.Crest.Workflows.Timers
+# Crest.Workflows.Timers
 
 Provides timer services and scheduling activities for Elsa workflows in Orchard Core.
 
@@ -38,10 +38,10 @@ An alternative timer implementation using Quartz.NET:
 ## Features
 
 ### Timer Services
-- **OrchardCore.Crest.Workflows.Timers** - Base timer services and activities
+- **Crest.Workflows.Timers** - Base timer services and activities
 
 ### Quartz Provider
-- **OrchardCore.Crest.Workflows.Timers.Quartz** - Quartz.NET-based implementation for clustered deployments
+- **Crest.Workflows.Timers.Quartz** - Quartz.NET-based implementation for clustered deployments
 
 ## When to Use Quartz
 
@@ -54,7 +54,7 @@ Enable the Quartz Timer Provider if:
 
 ## Dependencies
 
-- `OrchardCore.Crest.Workflows`
+- `Crest.Workflows`
 
 ## Installation
 
@@ -63,5 +63,5 @@ Enable the Quartz Timer Provider if:
 
 ## Package Information
 
-- **Package ID**: `OrchardCore.Crest.Workflows.Timers`
+- **Package ID**: `Crest.Workflows.Timers`
 - **Category**: Crest Workflows

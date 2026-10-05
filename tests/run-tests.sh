@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # Crest-owned test entrypoint. Host repos (a product host, OrchardCore.Crest.Host) delegate
-# here instead of walking OrchardCore.Crest's internal subproject layout
+# here instead of walking Crest's internal subproject layout
 # themselves - this script is the one place that knows that layout.
 #
 # This script holds no credentials and makes no decisions about .env, server lifecycle, or
 # whether tests should run at all - that's entirely the calling host's job. It only accepts
 # BASE_URL (already resolved by the caller) and discovers/runs what's underneath it.
 #
-# Discovers and runs, for every module's tests/ subdirectory (OrchardCore.Crest.* and
+# Discovers and runs, for every module's tests/ subdirectory (Crest.* and
 # Crest.* alike):
 #   - a C# test project (*.csproj directly under tests/<ProjectName>/) via `dotnet test`
 #   - a Playwright suite (tests/playwright/) via the existing checks/ convention
-# plus this directory's own shared modules/OrchardCore.Crest/tests/playwright/ suite.
+# plus this directory's own shared modules/Crest/tests/playwright/ suite.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,7 +21,7 @@ export BASE_URL="${BASE_URL:-${CREST_SERVER_URL:-}}"
 
 overall_failed=0
 
-# Every test project in ONE dotnet process, via OrchardCore.Crest.Tests.slnx.
+# Every test project in ONE dotnet process, via Crest.Tests.slnx.
 #
 # This used to be a loop of `dotnet test <csproj>`, one process per project. Each one
 # re-restored and re-evaluated the whole project graph - the vendored workflow engine
@@ -36,10 +36,10 @@ overall_failed=0
 #
 # No --no-build: a host may or may not have built first, and this script is called
 # standalone too, so it builds what it needs.
-CREST_TESTS_SLNX="${CREST_DIR}/OrchardCore.Crest.Tests.slnx"
-echo "=== OrchardCore.Crest C# tests (dotnet test OrchardCore.Crest.Tests.slnx) ==="
+CREST_TESTS_SLNX="${CREST_DIR}/Crest.Tests.slnx"
+echo "=== Crest C# tests (dotnet test Crest.Tests.slnx) ==="
 if [ ! -f "${CREST_TESTS_SLNX}" ]; then
-  echo "OrchardCore.Crest.Tests.slnx not found at ${CREST_TESTS_SLNX}" >&2
+  echo "Crest.Tests.slnx not found at ${CREST_TESTS_SLNX}" >&2
   overall_failed=1
 else
   # A test project that is on disk but not in the solution would be silently skipped, and
@@ -49,8 +49,8 @@ else
   while IFS= read -r -d '' csproj; do
     name="$(basename "${csproj}")"
     if ! grep -q "${name}" "${CREST_TESTS_SLNX}"; then
-      echo "Test project not in OrchardCore.Crest.Tests.slnx: ${csproj#${CREST_DIR}/}" >&2
-      echo "  add it with: dotnet sln OrchardCore.Crest.Tests.slnx add <path>" >&2
+      echo "Test project not in Crest.Tests.slnx: ${csproj#${CREST_DIR}/}" >&2
+      echo "  add it with: dotnet sln Crest.Tests.slnx add <path>" >&2
       unlisted=$((unlisted + 1))
     fi
   done < <(find "${CREST_DIR}" -path "*/tests/*" -name "*.csproj" \
@@ -65,7 +65,7 @@ else
 fi
 
 echo
-echo "=== OrchardCore.Crest shared Playwright suite ==="
+echo "=== Crest shared Playwright suite ==="
 if [ -f "${SCRIPT_DIR}/playwright/run-admin-suite.js" ]; then
   if ! node "${SCRIPT_DIR}/playwright/run-admin-suite.js"; then
     overall_failed=1

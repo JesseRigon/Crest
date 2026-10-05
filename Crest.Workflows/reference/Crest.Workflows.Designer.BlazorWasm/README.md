@@ -1,4 +1,4 @@
-# OrchardCore.Crest.Workflows.Designer.BlazorWasm
+# Crest.Workflows.Designer.BlazorWasm
 
 Blazor WebAssembly implementation of the Elsa Studio workflow designer for Orchard Core.
 
@@ -47,7 +47,7 @@ Consider that WebAssembly apps:
 
 ## Dependencies
 
-- `OrchardCore.Crest.Workflows.Designer`
+- `Crest.Workflows.Designer`
 
 ## Installation
 
@@ -55,5 +55,5 @@ Enable this feature in the Orchard Core admin dashboard under Features. Note tha
 
 ## Package Information
 
-- **Package ID**: `OrchardCore.Crest.Workflows.Designer.BlazorWasm`
+- **Package ID**: `Crest.Workflows.Designer.BlazorWasm`
 - **Category**: Crest Workflows

@@ -2,8 +2,8 @@ using OrchardCore.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Workflows Contents",
-    Author = "OrchardCore.Crest (forked from Elsa Workflows, MIT)",
-    Website = "https://github.com/JesseRigon/OrchardCore.Crest",
+    Author = "Crest (forked from Elsa Workflows, MIT)",
+    Website = "https://github.com/JesseRigon/Crest",
     Version = "0.1.0"
 )]
 

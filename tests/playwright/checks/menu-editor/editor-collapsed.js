@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest.Admin/tests/playwright/admin-menu-editor-collapsed.js.
+// Converted from Crest.Admin/tests/playwright/admin-menu-editor-collapsed.js.
 // Admin menu tree nodes with children should default to collapsed.
 module.exports = async function run(page, ctx) {
   await page.goto(`${ctx.baseUrl}/Admin/AdminMenus`, { waitUntil: 'networkidle' });

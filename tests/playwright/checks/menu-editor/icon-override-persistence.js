@@ -1,4 +1,4 @@
-// Converted from OrchardCore.Crest.Admin/tests/playwright/admin-menu-icon-override-persistence.js.
+// Converted from Crest.Admin/tests/playwright/admin-menu-icon-override-persistence.js.
 // Two separate icon-override saves on different root nodes must each persist
 // independently — a later save on one node must not clobber an earlier save on another.
 const { fetchAntiforgeryToken } = require('../../harness/antiforgery');

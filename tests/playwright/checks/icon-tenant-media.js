@@ -1,10 +1,10 @@
-// Converted from OrchardCore.Crest.Icons/tests/playwright/tenant-media-icons-api.js.
+// Converted from Crest.Icons/tests/playwright/tenant-media-icons-api.js.
 // Verifies the tenant media icon lifecycle: enabling the TenantMedia feature, uploading an
 // SVG icon, seeing it listed and searchable, then deleting it. Uses a timestamped icon name
 // (as the original did) so repeated runs don't collide.
 const { fetchAntiforgeryToken } = require('../harness/antiforgery');
 
-const featureId = 'OrchardCore.Crest.Icons.TenantMedia';
+const featureId = 'Crest.Icons.TenantMedia';
 const svg =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Zm-7 8v5l7 5 7-5v-5l-7 4-7-4Z"/></svg>';
 

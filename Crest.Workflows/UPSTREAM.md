@@ -3,7 +3,7 @@
 Forked from [elsa-workflows/elsa-orchard-core](https://github.com/elsa-workflows/elsa-orchard-core)
 (BSD-3-Clause, see LICENSE), cloned into Crest around 2026-09-15 (Crest commit `2f8dd4d`);
 the exact upstream commit was not recorded at clone time. Upstream ids
-`OrchardCore.ElsaWorkflows*` became `OrchardCore.Crest.Workflows*`, and the package is now
+`OrchardCore.ElsaWorkflows*` became `Crest.Workflows*`, and the package is now
 `Crest.Workflows*`: the application layer's workflow service.
 
 **Renaming and upstream merges.** Every identifier, namespace and assembly in the vendored
