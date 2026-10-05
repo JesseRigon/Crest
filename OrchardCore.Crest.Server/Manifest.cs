@@ -4,7 +4,7 @@ using OrchardCore.Modules.Manifest;
     Name = "Crest Server",
     Author = "OrchardCore.Crest",
     Website = "https://crest.local",
-    Version = "3.0.0.0.0",
+    Version = "4.0.0.0.0",
     Description = "Provides Crest tenant APIs and server-side Orchard integrations.",
     Category = "OrchardCore.Crest"
 )]

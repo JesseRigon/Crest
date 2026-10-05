@@ -7,7 +7,7 @@ using OrchardCore.Modules.Manifest;
     BaseTheme = "TheAdmin",
     Author = "Orchard Crest UI Framework",
     Website = "https://github.com/OrchardCore.Crest/Orchard-Crest",
-    Version = "3.0.0.0.0",
+    Version = "4.0.0.0.0",
     Description = "A stripped admin theme for rendering standard Orchard admin pages inside Orchard Crest UI Framework iframes.",
     Tags = new[] { ManifestConstants.AdminTag, "crest", "legacy-frame", "hidden" },
     // Always enabled rather than pulled in via OrchardCore.Crest's Dependencies: a module

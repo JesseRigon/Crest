@@ -4,7 +4,7 @@ using OrchardCore.Modules.Manifest;
     Name = "Crest Content Part Lists",
     Author = "OrchardCore.Crest",
     Website = "https://crest.local",
-    Version = "3.0.0.0.0",
+    Version = "4.0.0.0.0",
     Description = "Tenant-editable content part lists (enums) with shared global sets.",
     Category = "OrchardCore.Crest"
 )]
