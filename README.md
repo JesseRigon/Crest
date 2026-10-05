@@ -11,7 +11,7 @@ OrchardCore.Crest is a multi-project Orchard Core module repository: an **applic
 > the custom **`Crest`** branch.
 >
 > How the linking works: this repository's `Directory.Packages.props` pins every
-> OrchardCore package to version **`3.0.2-local`**, a version that only exists in a
+> OrchardCore package to version **`4.0.0-local`**, a version that only exists in a
 > NuGet feed packed from that fork — so a restore against nuget.org fails loudly
 > instead of silently compiling against stock OrchardCore. Crest itself declares only
 > the package ids and that version; **where** the packages come from is the HOST

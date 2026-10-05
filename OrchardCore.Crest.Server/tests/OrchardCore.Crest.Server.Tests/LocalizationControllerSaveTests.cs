@@ -38,6 +38,8 @@ internal sealed class FakeSite : ISite
     public string CdnBaseUrl { get; set; } = "";
     public int PageSize { get; set; }
     public int MaxPageSize { get; set; }
+    public bool AllowPageSizeSelection { get; set; }
+    public int[] PageSizeOptions { get; set; } = [];
     public int MaxPagedCount { get; set; }
     public string BaseUrl { get; set; } = "";
     public RouteValueDictionary HomeRoute { get; set; } = [];

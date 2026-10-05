@@ -53,13 +53,15 @@ public sealed class CrestBlazorComponentPipelineIntegrationTests
         // live Orchard request actually uses - only the theme/shape-table dependencies are
         // faked, since a real Blazor-rendered shape never reaches them (resolvers win first).
         var shapeFactory = new DefaultShapeFactory([], shapeTableManager, themeManager, displayServiceProvider);
+        var shapeRenderingOptions = NSubstitute.Substitute.For<Microsoft.Extensions.Options.IOptionsMonitor<OrchardCore.DisplayManagement.ShapeRenderingOptions>>();
+        shapeRenderingOptions.CurrentValue.Returns(new OrchardCore.DisplayManagement.ShapeRenderingOptions());
         var htmlDisplay = new DefaultHtmlDisplay(
             [],
             [resolver],
             shapeTableManager,
             displayServiceProvider,
             new NullLogger<DefaultHtmlDisplay>(),
-            Microsoft.Extensions.Options.Options.Create(new OrchardCore.DisplayManagement.ShapeRenderingOptions()),
+            shapeRenderingOptions,
             themeManager);
 
         // This is exactly what CrestBlazorComponentPartDisplayDriver.Display's

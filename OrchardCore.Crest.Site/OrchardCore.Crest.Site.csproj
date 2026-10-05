@@ -6,14 +6,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
-    <OrchardCoreCompatibilityVersion>3.0.0</OrchardCoreCompatibilityVersion>
+    <OrchardCoreCompatibilityVersion>4.0.0</OrchardCoreCompatibilityVersion>
     <CrestSecurityPatch>0</CrestSecurityPatch>
     <CrestBugPatch>0</CrestBugPatch>
     <CrestVersion>$(OrchardCoreCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
     <VersionPrefix>$(OrchardCoreCompatibilityVersion)</VersionPrefix>
     <PackageVersion>$(OrchardCoreCompatibilityVersion)</PackageVersion>
-    <AssemblyVersion>3.0.0.0</AssemblyVersion>
-    <FileVersion>3.0.0.0</FileVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
     <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
   </PropertyGroup>
 

@@ -20,7 +20,7 @@ move to a shared place, and the workflow activity becomes one way of requesting 
 ## Known needs
 
 - **Personal drive access when a notice fails.** Today the access proceeds and the failure is
-  recorded ([published-vs-public.md](published-vs-public.md), notices). With approvals, a
+  recorded ([media.md](media.md), notices). With approvals, a
   tenant could require one instead.
 - **Overriding the personal drive notice delay**, as an alternative to entering a reason.
 - Likely later: making content public, granting sensitive permissions, publishing changes to
