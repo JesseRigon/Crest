@@ -60,7 +60,7 @@ public sealed class AppController(
         var featureInfos = extensionManager.GetFeatures(featureIds.AsEnumerable()).ToDictionary(feature => feature.Id);
         var tenants = await GetAvailableTenantsAsync();
         var userDefaultCulture = await GetUserDefaultCultureAsync();
-        var adminDefaultCulture = site.As<CrestLocalizationSettings>().AdminDefaultCulture;
+        var adminDefaultCulture = site.GetOrCreate<CrestLocalizationSettings>().AdminDefaultCulture;
         var cultureSelector = await CultureSelector.FromAsync(HttpContext, shellSettings, serviceProvider.GetService<ILocalizationService>(), userDefaultCulture, adminDefaultCulture);
         var profileMenu = await profileMenuService.BuildAsync(User, HttpContext.RequestAborted);
         var adminMenu = await adminMenuBuilder.BuildAsync(ControllerContext, User);

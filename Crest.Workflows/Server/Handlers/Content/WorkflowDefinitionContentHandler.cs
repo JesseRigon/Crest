@@ -26,7 +26,7 @@ public class WorkflowDefinitionContentHandler(IMediator mediator, IServiceProvid
         if (!context.ContentItem.Has<WorkflowDefinitionPart>())
             return Task.CompletedTask;
         
-        var workflowDefinitionPart = context.ContentItem.As<WorkflowDefinitionPart>();
+        var workflowDefinitionPart = context.ContentItem.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name);
         context.ContentItem.DisplayText = workflowDefinitionPart.Name;
         return Task.CompletedTask;
     }
@@ -72,12 +72,12 @@ public class WorkflowDefinitionContentHandler(IMediator mediator, IServiceProvid
 
         if (previousItem != null)
         {
-            var previousDefinitionPart = previousItem.As<WorkflowDefinitionPart>();
+            var previousDefinitionPart = previousItem.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name);
             var previousDefinition = WorkflowDefinitionPartMapper.Map(previousDefinitionPart);
             await mediator.SendAsync(new WorkflowDefinitionVersionRetracted(previousDefinition));
         }
         
-        var workflowDefinitionPart = context.ContentItem.As<WorkflowDefinitionPart>();
+        var workflowDefinitionPart = context.ContentItem.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name);
         var workflowDefinition = WorkflowDefinitionPartMapper.Map(workflowDefinitionPart);
         var affectedWorkflows = new AffectedWorkflows(new List<WorkflowDefinition>());
         await mediator.SendAsync(new WorkflowDefinitionPublished(workflowDefinition, affectedWorkflows));
@@ -99,7 +99,7 @@ public class WorkflowDefinitionContentHandler(IMediator mediator, IServiceProvid
         // unpublished - the content item still says Published here, Unpublishing being before
         // the fact - or the indexer re-indexes it as published and a retracted flow keeps its
         // triggers (and keeps firing).
-        var workflowDefinitionPart = context.ContentItem.As<WorkflowDefinitionPart>();
+        var workflowDefinitionPart = context.ContentItem.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name);
         var workflowDefinition = WorkflowDefinitionPartMapper.Map(workflowDefinitionPart);
         workflowDefinition.IsPublished = false;
         await mediator.SendAsync(new WorkflowDefinitionRetracting(workflowDefinition));
@@ -111,7 +111,7 @@ public class WorkflowDefinitionContentHandler(IMediator mediator, IServiceProvid
         if (!context.ContentItem.Has<WorkflowDefinitionPart>())
             return;
         
-        var workflowDefinitionPart = context.ContentItem.As<WorkflowDefinitionPart>();
+        var workflowDefinitionPart = context.ContentItem.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name);
         await mediator.SendAsync(new WorkflowDefinitionDeleting(workflowDefinitionPart.DefinitionId));
     }
 }

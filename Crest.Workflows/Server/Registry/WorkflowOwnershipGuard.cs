@@ -107,7 +107,7 @@ public sealed class WorkflowOwnershipGuard(
         }
 
         var contentItem = await contentManager.GetAsync(definitionId, VersionOptions.Latest);
-        var part = contentItem?.As<WorkflowDefinitionPart>();
+        var part = contentItem?.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name);
         return part is null || part.SerializedData is null ? null : partMapper.MapModel(part).CustomProperties;
     }
 

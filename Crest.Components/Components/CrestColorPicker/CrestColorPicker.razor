@@ -2,14 +2,15 @@
 @using System.Linq.Expressions
 @using Microsoft.AspNetCore.Components
 @using Crest.Components
-@using PrimitiveColorPicker = Crest.Components.CrestColorPicker
 
-<PrimitiveColorPicker Value="@Value" Change="OnChangeAsync" ValueExpression="@ValueExpression" Name="@Name"
+@* Fully qualified: Razor does not resolve components through a using alias, so the aliased
+   tag rendered as a dead element. *@
+<Crest.Components.CrestColorPicker Value="@Value" Change="OnChangeAsync" ValueExpression="@ValueExpression" Name="@Name"
                       Disabled="@Disabled" Style="@Style" Class="@CssClass" ShowRGBA="@ShowRgba" ShowHSV="@ShowHsv"
                       ShowColors="@ShowColors" ShowButton="@ShowButton" ButtonText="@ButtonText" HexText="@HexText" RedText="@RedText"
                       GreenText="@GreenText" BlueText="@BlueText" AlphaText="@AlphaText" @attributes="AdditionalAttributes">
     @ChildContent
-</PrimitiveColorPicker>
+</Crest.Components.CrestColorPicker>
 
 @code {
     // Centralized defaults for Orchard Crest UI Framework color pickers. When these become

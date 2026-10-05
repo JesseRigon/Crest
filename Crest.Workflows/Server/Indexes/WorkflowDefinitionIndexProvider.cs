@@ -13,7 +13,7 @@ public class WorkflowDefinitionIndexProvider : IndexProvider<ContentItem>
         context.For<WorkflowDefinitionIndex>()
             .Map(contentItem =>
             {
-                var workflowDefinitionPart = contentItem.As<WorkflowDefinitionPart>();
+                var workflowDefinitionPart = contentItem.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name);
                 
                 if(workflowDefinitionPart == null)
                     return null!;

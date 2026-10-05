@@ -10,6 +10,7 @@
     <ItemGroup>
         <PackageReference Include="Humanizer.Core" />
         <PackageReference Include="IronCompress" />
+        <PackageReference Include="Snappier" />
         <PackageReference Include="System.Linq.Dynamic.Core" />
         <PackageReference Include="PolySharp">
           <PrivateAssets>all</PrivateAssets>

@@ -5210,7 +5210,11 @@ window.Crest = {
             if (!value)
                 return null;
 
-            value=value.trim().toLowerCase();
+            // A pane size can arrive as a number (Min/Max/Size bound to a numeric value): pixels.
+            if (typeof value === 'number')
+                return value;
+
+            value=String(value).trim().toLowerCase();
 
             if (value.endsWith("%"))
                 return totalLength*parseFloat(value)/100;

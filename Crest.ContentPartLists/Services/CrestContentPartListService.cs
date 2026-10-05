@@ -47,7 +47,7 @@ public sealed class CrestContentPartListService(
                 index.ContentType == CrestContentPartListMigrations.ContentPartListContentType && index.Latest)
             .ListAsync();
         var itemsByKey = items
-            .GroupBy(item => CrestContentPartListRules.NormalizeKey(item.As<CrestContentPartListPart>()?.Key), CrestContentPartListRules.KeyComparer)
+            .GroupBy(item => CrestContentPartListRules.NormalizeKey(item.Get<CrestContentPartListPart>(typeof(CrestContentPartListPart).Name)?.Key), CrestContentPartListRules.KeyComparer)
             .ToDictionary(group => group.Key, group => group.First(), CrestContentPartListRules.KeyComparer);
 
         var models = new List<CrestContentPartListModel>();
@@ -158,7 +158,7 @@ public sealed class CrestContentPartListService(
         // unlike sort or labels there is no tenant edit of them to preserve (the API
         // refuses to touch a Module lock). Asserted, never cleared: dropping a lock
         // from a seed downgrades to whatever the tenant state says.
-        var currentPart = listItem.As<CrestContentPartListPart>();
+        var currentPart = listItem.Get<CrestContentPartListPart>(typeof(CrestContentPartListPart).Name);
         var wantsDataLock = seed.DataLock && currentPart?.DataLock != CrestContentPartListLockSources.Module;
         var wantsEditLock = seed.EditLock && currentPart?.EditLock != CrestContentPartListLockSources.Module;
         if (wantsDataLock || wantsEditLock)
@@ -289,7 +289,7 @@ public sealed class CrestContentPartListService(
         listItem.Alter<CrestContentPartListPart>(part =>
         {
             option = part.Options.FirstOrDefault(candidate =>
-                CrestContentPartListRules.KeyComparer.Equals(CrestContentPartListRules.NormalizeKey(candidate.As<CrestOptionPart>()?.Key), normalized));
+                CrestContentPartListRules.KeyComparer.Equals(CrestContentPartListRules.NormalizeKey(candidate.Get<CrestOptionPart>(typeof(CrestOptionPart).Name)?.Key), normalized));
 
             if (option is null)
             {
@@ -384,7 +384,7 @@ public sealed class CrestContentPartListService(
         {
             foreach (var option in part.Options)
             {
-                var optionKey = CrestContentPartListRules.NormalizeKey(option.As<CrestOptionPart>()?.Key);
+                var optionKey = CrestContentPartListRules.NormalizeKey(option.Get<CrestOptionPart>(typeof(CrestOptionPart).Name)?.Key);
                 if (positionByKey.TryGetValue(optionKey, out var position))
                 {
                     option.Alter<CrestOptionPart>(optionPart => optionPart.Position = position);
@@ -463,7 +463,7 @@ public sealed class CrestContentPartListService(
         // list would orphan their data behind the new type's field surface and make
         // stale field names fail on update. Migrate-or-recreate is a deliberate,
         // separate decision - refuse the silent version.
-        var options = listItem.As<CrestContentPartListPart>()?.Options ?? [];
+        var options = listItem.Get<CrestContentPartListPart>(typeof(CrestContentPartListPart).Name)?.Options ?? [];
         var mismatched = options.FirstOrDefault(option => !string.Equals(option.ContentType, typeName, StringComparison.OrdinalIgnoreCase));
         if (mismatched is not null)
         {
@@ -510,7 +510,7 @@ public sealed class CrestContentPartListService(
         // A module-seeded list's key is that module's contract with code; deleting it
         // would break the consuming module until the next reseed silently recreated an
         // empty list. Tenants hide module options instead.
-        var source = listItem.As<CrestContentPartListPart>()?.Source ?? CrestOptionSources.Tenant;
+        var source = listItem.Get<CrestContentPartListPart>(typeof(CrestContentPartListPart).Name)?.Source ?? CrestOptionSources.Tenant;
         if (string.Equals(source, CrestOptionSources.Module, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException($"The content part list '{key}' is provided by a module and cannot be deleted. Hide its options instead.");
@@ -593,7 +593,7 @@ public sealed class CrestContentPartListService(
 
         return items.FirstOrDefault(item =>
             CrestContentPartListRules.KeyComparer.Equals(
-                CrestContentPartListRules.NormalizeKey(item.As<CrestContentPartListPart>()?.Key),
+                CrestContentPartListRules.NormalizeKey(item.Get<CrestContentPartListPart>(typeof(CrestContentPartListPart).Name)?.Key),
                 normalizedKey));
     }
 
@@ -625,7 +625,7 @@ public sealed class CrestContentPartListService(
     {
         // New options take the LIST's option content type (custom data fields live
         // on it); the shared Option type is only the blank-value fallback.
-        var optionType = listItem.As<CrestContentPartListPart>()?.OptionContentType;
+        var optionType = listItem.Get<CrestContentPartListPart>(typeof(CrestContentPartListPart).Name)?.OptionContentType;
         var option = await contentManager.NewAsync(
             string.IsNullOrWhiteSpace(optionType) ? CrestContentPartListMigrations.OptionContentType : optionType);
         option.DisplayText = displayText;
@@ -650,7 +650,7 @@ public sealed class CrestContentPartListService(
     // type name because pre-existing lists always used the shared Option type.
     private async Task<CrestOptionFieldModel[]> GetOptionFieldsAsync(ContentItem listItem)
     {
-        var optionContentType = listItem.As<CrestContentPartListPart>()?.OptionContentType;
+        var optionContentType = listItem.Get<CrestContentPartListPart>(typeof(CrestContentPartListPart).Name)?.OptionContentType;
         var typeName = string.IsNullOrWhiteSpace(optionContentType)
             ? CrestContentPartListMigrations.OptionContentType
             : optionContentType;
@@ -697,7 +697,7 @@ public sealed class CrestContentPartListService(
     // source, overrides applied) plus the tenant item's own additions.
     private static CrestContentPartListModel Merge(GlobalList global, ContentItem? tenantItem, CrestOptionFieldModel[] fields)
     {
-        var tenantPart = tenantItem?.As<CrestContentPartListPart>();
+        var tenantPart = tenantItem?.Get<CrestContentPartListPart>(typeof(CrestContentPartListPart).Name);
         var overrides = tenantPart?.Overrides ?? new Dictionary<string, CrestOptionOverride>(StringComparer.OrdinalIgnoreCase);
 
         var standard = global.Options.Select(option =>
@@ -731,7 +731,7 @@ public sealed class CrestContentPartListService(
 
     private static CrestContentPartListModel ToModel(ContentItem item, CrestOptionFieldModel[]? fields = null)
     {
-        var listPart = item.As<CrestContentPartListPart>();
+        var listPart = item.Get<CrestContentPartListPart>(typeof(CrestContentPartListPart).Name);
         var options = listPart?.Options ?? [];
 
         return new CrestContentPartListModel(
@@ -750,7 +750,7 @@ public sealed class CrestContentPartListService(
 
     private static CrestOptionModel ToOptionModel(ContentItem option, CrestOptionFieldModel[]? fields = null)
     {
-        var part = option.As<CrestOptionPart>();
+        var part = option.Get<CrestOptionPart>(typeof(CrestOptionPart).Name);
 
         IReadOnlyDictionary<string, string?>? fieldValues = null;
         if (fields is { Length: > 0 })

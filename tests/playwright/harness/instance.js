@@ -27,7 +27,9 @@ async function createInstance(opts = {}) {
   });
   page.on('pageerror', error => {
     consoleErrors.push(`[pageerror] ${error.message}`);
-    console.log(`[browser:pageerror] ${error.message}`);
+    // The page and the first stack frame, so an error that fails no check can still be traced.
+    const frame = (error.stack || '').split('\n').map(line => line.trim()).find(line => line.startsWith('at ')) || '';
+    console.log(`[browser:pageerror] ${error.message} | page=${page.url()} ${frame}`);
   });
 
   return { browser, context, page, consoleErrors };

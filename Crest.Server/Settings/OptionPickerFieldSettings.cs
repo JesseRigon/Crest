@@ -14,17 +14,11 @@ public class OptionPickerFieldSettings : FieldSettings
 
     public bool Multiple { get; set; }
 
-    /// <summary>
-    /// Whether a value must be chosen for the document to be complete. Declared here
-    /// because stock field settings carry no shared Required flag - each field type
-    /// that needs one defines its own.
-    /// <para>
-    /// This is also what a DEPENDENT field derives its own requiredness from: if the
-    /// parent is required, the child is too, since a document cannot be complete with
-    /// the pair half-filled.
-    /// </para>
-    /// </summary>
-    public bool Required { get; set; }
+    // Required is FieldSettings.Required: whether a value must be chosen for the document
+    // to be complete. It is also what a DEPENDENT field derives its own requiredness from:
+    // if the parent is required, the child is too, since a document cannot be complete with
+    // the pair half-filled. (A redeclaration here once hid the base property, so code
+    // reading the settings as FieldSettings always saw false.)
 
     public string Placeholder { get; set; } = string.Empty;
 

@@ -26,7 +26,7 @@ public sealed class LocalizationProfileIndexProvider : IndexProvider<ContentItem
                     return null;
                 }
 
-                var part = contentItem.As<CrestLocalizationProfilePart>();
+                var part = contentItem.Get<CrestLocalizationProfilePart>(typeof(CrestLocalizationProfilePart).Name);
                 if (part is null)
                 {
                     return null;

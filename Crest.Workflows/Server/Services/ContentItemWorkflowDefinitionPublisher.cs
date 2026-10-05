@@ -155,7 +155,7 @@ public class ContentItemWorkflowDefinitionPublisher(
     // What the caller gets back: the definition as it is now, unpublished.
     private WorkflowDefinition Unpublished(ContentItem contentItem)
     {
-        var definition = workflowDefinitionPartMapper.Map(contentItem.As<WorkflowDefinitionPart>());
+        var definition = workflowDefinitionPartMapper.Map(contentItem.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name));
         definition.IsPublished = false;
         return definition;
     }
@@ -164,7 +164,7 @@ public class ContentItemWorkflowDefinitionPublisher(
     {
         // Reverting is an edit: a shipped flow forks, a system one refuses.
         var ownership = await ownershipGuard.AuthorizeChangeAsync(definitionId, WorkflowChange.Save);
-        var allVersions = (await contentManager.GetAllVersionsAsync(definitionId)).Select(x => x.As<WorkflowDefinitionPart>()).ToList();
+        var allVersions = (await contentManager.GetAllVersionsAsync(definitionId)).Select(x => x.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name)).ToList();
         var specifiedVersion = allVersions.FirstOrDefault(x => x.Version == version);
         
         if (specifiedVersion == null)
@@ -198,7 +198,7 @@ public class ContentItemWorkflowDefinitionPublisher(
 
         if (!ownership.IsTenant)
         {
-            var model = workflowDefinitionPartMapper.MapModel(draft.As<WorkflowDefinitionPart>());
+            var model = workflowDefinitionPartMapper.MapModel(draft.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name));
             model.CustomProperties ??= new Dictionary<string, object>();
             ownership.Stamp(model.CustomProperties);
             draft.Alter<WorkflowDefinitionPart>(part => workflowDefinitionPartMapper.Map(model, part));
@@ -235,7 +235,7 @@ public class ContentItemWorkflowDefinitionPublisher(
             workflowDefinitionPartSerializer.UpdateSerializedData(part);
         });
 
-        return workflowDefinitionPartMapper.Map(contentItem.As<WorkflowDefinitionPart>());
+        return workflowDefinitionPartMapper.Map(contentItem.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name));
     }
 
     public async Task<WorkflowDefinition> SaveDraftAsync(WorkflowDefinition definition, CancellationToken cancellationToken = default)

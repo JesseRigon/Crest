@@ -167,7 +167,7 @@ public sealed class WorkflowDefinitionAccessService(
     public async Task<WorkflowDefinitionAccessResource?> GetAsync(string definitionId)
     {
         var contentItem = await contentManager.GetAsync(definitionId, VersionOptions.Latest);
-        var part = contentItem?.As<WorkflowDefinitionPart>();
+        var part = contentItem?.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name);
         return part is null || part.SerializedData is null ? null : WorkflowDefinitionAccessResource.From(definitionId, partMapper.MapModel(part).CustomProperties);
     }
 
@@ -195,7 +195,7 @@ public sealed class WorkflowDefinitionAccessService(
         var clean = new WorkflowDefinitionAccessModel(WorkflowDefinitionAccessResource.Clean(access.Edit), WorkflowDefinitionAccessResource.Clean(access.Run));
         foreach (var version in versions)
         {
-            var model = partMapper.MapModel(version.As<WorkflowDefinitionPart>());
+            var model = partMapper.MapModel(version.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name));
             model.CustomProperties ??= new Dictionary<string, object>();
             WorkflowDefinitionAccessResource.Stamp(model.CustomProperties, clean);
             version.Alter<WorkflowDefinitionPart>(part => partMapper.Map(model, part));

@@ -9,7 +9,7 @@ public sealed class LocalizationProfileResolver(ISession session, IContentManage
 {
     public async Task<LocalizationProfileModel?> ResolveAsync(ContentItem? carrier, CancellationToken cancellationToken = default)
     {
-        var id = carrier?.As<CrestLocalizationProfileReferencePart>()?.LocalizationProfileId;
+        var id = carrier?.Get<CrestLocalizationProfileReferencePart>(typeof(CrestLocalizationProfileReferencePart).Name)?.LocalizationProfileId;
         return string.IsNullOrWhiteSpace(id) ? null : await GetAsync(id, cancellationToken);
     }
 
@@ -38,7 +38,7 @@ public sealed class LocalizationProfileResolver(ISession session, IContentManage
 
     private static LocalizationProfileModel ToModel(ContentItem item)
     {
-        var part = item.As<CrestLocalizationProfilePart>() ?? new CrestLocalizationProfilePart();
+        var part = item.Get<CrestLocalizationProfilePart>(typeof(CrestLocalizationProfilePart).Name) ?? new CrestLocalizationProfilePart();
         return new LocalizationProfileModel(
             item.ContentItemId,
             part.Key,

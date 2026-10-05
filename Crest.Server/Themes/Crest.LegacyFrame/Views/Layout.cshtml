@@ -81,7 +81,7 @@
         (() => {
             const parameter = 'legacy-frame';
             const isLocalDocumentReference = value => {
-                if (!value) {
+                if (typeof value !== 'string' || !value) {
                     return true;
                 }
 
@@ -122,12 +122,15 @@
                     return;
                 }
 
+                // Attributes, not form.action/form.method: a control named "action" or "method"
+                // (Orchard's Tenants/Create has a submit button named "action") replaces those
+                // properties with the element itself.
                 const rawAction = form.getAttribute('action');
                 if (!isLocalDocumentReference(rawAction)) {
-                    form.action = ensureLegacyFrame(form.action || window.location.href);
+                    form.setAttribute('action', ensureLegacyFrame(new URL(rawAction || window.location.href, window.location.href).href));
                 }
 
-                if ((form.method || 'get').toLowerCase() === 'get' && !form.querySelector(`input[name="${parameter}"]`)) {
+                if ((form.getAttribute('method') || 'get').toLowerCase() === 'get' && !form.querySelector(`input[name="${parameter}"]`)) {
                     const input = document.createElement('input');
                     input.type = 'hidden';
                     input.name = parameter;

@@ -70,7 +70,7 @@ public sealed class CrestAssignmentIndexProvider : IndexProvider<ContentItem>
                     return Enumerable.Empty<CrestAssignmentIndex>();
                 }
 
-                var part = contentItem.As<CrestAssignmentPart>();
+                var part = contentItem.Get<CrestAssignmentPart>(typeof(CrestAssignmentPart).Name);
                 if (part?.Assignments is not { Count: > 0 })
                 {
                     return Enumerable.Empty<CrestAssignmentIndex>();

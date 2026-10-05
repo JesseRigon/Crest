@@ -1,3 +1,7 @@
 @using Microsoft.AspNetCore.Components.Web
+@* CrestIcon lives in Display and the spreadsheet toolbar tools in Spreadsheet.Tools; without
+   these, every component using them rendered a dead <CrestIcon>/<CrestSpreadsheet...> tag. *@
+@using Crest.Components.Display
+@using Crest.Components.Primitives.Spreadsheet.Tools
 
 @using Crest.Components

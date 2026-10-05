@@ -4,7 +4,7 @@
     <MudContainer MaxWidth="MaxWidth.ExtraSmall">
         @if (Activity != null)
         {
-            <ActivityWrapper Activity="@Activity" ActivityId="@Activity.GetId()"></ActivityWrapper>
+            <Crest.Workflows.Studio.Workflows.Designer.Components.ActivityWrappers.V2.ActivityWrapper Activity="@Activity" ActivityId="@Activity.GetId()" />
         }
     </MudContainer>
 </MudPaper>

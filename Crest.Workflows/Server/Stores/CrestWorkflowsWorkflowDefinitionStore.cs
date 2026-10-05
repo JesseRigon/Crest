@@ -229,7 +229,7 @@ public class CrestWorkflowsWorkflowDefinitionStore(
 
     private WorkflowDefinition? Map(ContentItem? contentItem)
     {
-        return Map(contentItem?.As<WorkflowDefinitionPart>());
+        return Map(contentItem?.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name));
     }
 
     private WorkflowDefinition? Map(WorkflowDefinitionPart? part)
@@ -239,12 +239,12 @@ public class CrestWorkflowsWorkflowDefinitionStore(
 
     private IEnumerable<WorkflowDefinition> Map(IEnumerable<ContentItem> contentItems)
     {
-        return contentItems.Select(x => WorkflowDefinitionPartMapper.Map(x.As<WorkflowDefinitionPart>()));
+        return contentItems.Select(x => WorkflowDefinitionPartMapper.Map(x.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name)));
     }
 
     private IEnumerable<WorkflowDefinitionSummary> MapSummaries(IEnumerable<ContentItem> contentItems)
     {
-        return contentItems.Select(x => WorkflowDefinitionPartMapper.MapSummary(x.As<WorkflowDefinitionPart>()));
+        return contentItems.Select(x => WorkflowDefinitionPartMapper.MapSummary(x.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name)));
     }
 
     private async Task RemoveContentItemVersionAsync(ContentItem contentItem, CancellationToken cancellationToken = default)
