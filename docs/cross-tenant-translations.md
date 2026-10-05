@@ -17,7 +17,7 @@ distribute), with none of the external dependency — which also fits the air-ga
 ruling: the host becomes its own translation platform.
 
 **Why this works now (and didn't before).** The invariant-literal key ruling is the enabler: module-string keys
-(`msgctxt "Crest.Admin.Client"` literals, stock msgids) are **tenant-independent by
+(`msgctxt "Crest.AdminTheme.Client"` literals, stock msgids) are **tenant-independent by
 construction**, so a translation authored in tenant A is semantically valid in
 tenant B. Under the old slug/caption-keyed world this feature was impossible.
 
@@ -25,7 +25,7 @@ tenant B. Under the old slug/caption-keyed world this feature was impossible.
 
 - [ ] **Classify each saved translation's (context, key).** When a tenant saves a translation via the Crest Translations editor
   (`CrestTranslationsController.SaveAsync`), classify its (context, key):
-  - **Eligible**: module literals — context `Crest.Admin.Client`, or a key that exists
+  - **Eligible**: module literals — context `Crest.AdminTheme.Client`, or a key that exists
     as a stock msgid in the shipped catalogs. The audit classification machinery
     (`CrestPoTranslationLookup` index + template membership, see
     [docs/localization.md](localization.md) "three populations") already answers this.
@@ -41,7 +41,7 @@ tenant B. Under the old slug/caption-keyed world this feature was impossible.
   class TranslationSuggestion
   {
       string Culture;         // "es"
-      string Context;         // "Crest.Admin.Client" or stock msgctxt
+      string Context;         // "Crest.AdminTheme.Client" or stock msgctxt
       string Key;             // invariant literal
       string Value;           // the suggested translation
       string SourceTenant;    // provenance

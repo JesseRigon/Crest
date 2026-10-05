@@ -104,12 +104,12 @@
   <Folder Name="/Crest.Workflows/tests/">
     <Project Path="Crest.Workflows/tests/Crest.Workflows.Tests/Crest.Workflows.Tests.csproj" />
   </Folder>
-  <Folder Name="/Crest.Admin/" />
-  <Folder Name="/Crest.Admin/tests/">
-    <Project Path="Crest.Admin/tests/Crest.Admin.Tests/Crest.Admin.Tests.csproj" />
+  <Folder Name="/Crest.AdminTheme/" />
+  <Folder Name="/Crest.AdminTheme/tests/">
+    <Project Path="Crest.AdminTheme/tests/Crest.AdminTheme.Tests/Crest.AdminTheme.Tests.csproj" />
   </Folder>
-  <Folder Name="/Crest.Admin/wasm/">
-    <Project Path="Crest.Admin/wasm/Crest.Admin.Client.csproj" />
+  <Folder Name="/Crest.AdminTheme/wasm/">
+    <Project Path="Crest.AdminTheme/wasm/Crest.AdminTheme.Client.csproj" />
   </Folder>
   <Folder Name="/Crest.Components/" />
   <Folder Name="/Crest.Components/tests/">
@@ -129,12 +129,12 @@
   <Folder Name="/Crest.Server/tests/">
     <Project Path="Crest.Server/tests/Crest.Server.Tests/Crest.Server.Tests.csproj" />
   </Folder>
-  <Folder Name="/Crest.Site/" />
-  <Folder Name="/Crest.Site/tests/">
-    <Project Path="Crest.Site/tests/Crest.Site.Tests/Crest.Site.Tests.csproj" />
+  <Folder Name="/Crest.SiteTheme/" />
+  <Folder Name="/Crest.SiteTheme/tests/">
+    <Project Path="Crest.SiteTheme/tests/Crest.SiteTheme.Tests/Crest.SiteTheme.Tests.csproj" />
   </Folder>
-  <Folder Name="/Crest.Site/wasm/">
-    <Project Path="Crest.Site/wasm/Crest.Site.Client.csproj" />
+  <Folder Name="/Crest.SiteTheme/wasm/">
+    <Project Path="Crest.SiteTheme/wasm/Crest.SiteTheme.Client.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/Crest.LazyModules/Crest.LazyModules.csproj" />
@@ -150,9 +150,8 @@
   <Project Path="Crest.ContentPartLists/Crest.ContentPartLists.csproj" />
   <Project Path="Crest.Global/Crest.Global.csproj" />
   <Project Path="Crest.Regions/Crest.Regions.csproj" />
-  <Project Path="Crest.Client/Crest.Client.csproj" />
   <Project Path="Crest.Components/Crest.Components.csproj" />
   <Project Path="Crest.Iconify/Crest.Iconify.csproj" />
   <Project Path="Crest.Icons/Crest.Icons.csproj" />
-  <Project Path="Crest.Site/Crest.Site.csproj" />
+  <Project Path="Crest.SiteTheme/Crest.SiteTheme.csproj" />
 </Solution>

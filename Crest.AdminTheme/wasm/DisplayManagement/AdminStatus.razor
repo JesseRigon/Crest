@@ -1,0 +1,15 @@
+@namespace Crest.AdminTheme.DisplayManagement
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
+@inherits ShapeTemplate
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+<CrestStack Gap="0.25rem">
+    <CrestText TextStyle="TextStyle.H6" Text="@T["Crest Admin"]" />
+    <CrestText Text="@T["Signed in as {0}", UserName]" />
+</CrestStack>
+
+@code {
+    [Parameter]
+    public string? UserName { get; set; }
+}

@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>obj\Crest.AdminTheme\</BaseIntermediateOutputPath>
+    <BaseOutputPath>bin\Crest.AdminTheme\</BaseOutputPath>
+  </PropertyGroup>
+</Project>

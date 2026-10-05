@@ -1,4 +1,4 @@
-// /login is a Blazor WASM component (Crest.Admin), not a plain server-rendered MVC
+// /login is a Blazor WASM component (Crest.AdminTheme), not a plain server-rendered MVC
 // form - its submit button starts disabled and only enables once Blazor's own
 // validation re-render catches up with the filled values. Clicking immediately after
 // page.fill() races that re-render and can hit the button while it's still disabled

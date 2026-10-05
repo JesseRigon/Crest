@@ -1,6 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <BaseIntermediateOutputPath>obj\Crest.Site.Client\</BaseIntermediateOutputPath>
-    <BaseOutputPath>bin\Crest.Site.Client\</BaseOutputPath>
-  </PropertyGroup>
-</Project>

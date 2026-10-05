@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!-- Phase 8: converted from Microsoft.NET.Sdk.BlazorWebAssembly (a standalone WASM
+       app entry with its own index.html + Program.Main) to a Razor class library. A
+       Blazor Web App has exactly ONE WASM entry project - the host app's -
+       which references this library (and Site's and Member's) and runs
+       CrestWebAssemblyHost. This project keeps everything else: the admin
+       pages/components, the WASM-side service implementations (registered via
+       AddCrestAdminClient in Extensions/), and the admin module registry
+       (CrestModuleAssemblyRegistry). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Crest.AdminTheme.Client</AssemblyName>
+    <RootNamespace>Crest.AdminTheme</RootNamespace>
+    <OrchardCoreCompatibilityVersion>4.0.0</OrchardCoreCompatibilityVersion>
+    <CrestSecurityPatch>0</CrestSecurityPatch>
+    <CrestBugPatch>0</CrestBugPatch>
+    <CrestVersion>$(OrchardCoreCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
+    <VersionPrefix>$(OrchardCoreCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(OrchardCoreCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SDK default items discover C#, Razor components, colocated .razor.css, and wwwroot assets. -->
+    <Watch Include="**\*.cs;**\*.razor;wwwroot\**\*" Exclude="bin\**;obj\**;**\bin\**;**\obj\**" />
+    <Watch Remove="bin\**;obj\**;**\bin\**;**\obj\**" />
+    <Compile Remove="tests\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Crest.AdminTheme.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WebAssembly package (not the full BlazorWebAssembly SDK): WASM-side service
+         classes here still use browser-only APIs (CrestAntiforgeryHandler's
+         IJSInProcessRuntime + SetBrowserRequestCredentials). Those code paths only ever
+         execute in the browser; the assembly itself also loads server-side for SSR
+         route discovery, which is fine - referencing the package doesn't require a
+         browser host, invoking those APIs does. -->
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
+    <!-- The shell runtime: the lazy-module loader every shell shares. -->
+    <ProjectReference Include="..\..\Crest.Shell\Crest.Shell.csproj" />
+    <ProjectReference Include="..\..\Crest.Icons\Crest.Icons.csproj" />
+    <!-- Crest's own opt-in modules' admin libraries. A host's modules are never referenced
+         here: the host app's WASM entry project references the module client libraries it
+         ships (source or packages), see CrestWebAssemblyHost, and CrestModuleAssemblyRegistry
+         finds them at runtime. -->
+    <ProjectReference Include="..\..\Crest.ContentPartLists\blazor-wasm\Crest.ContentPartLists.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Crest.Parties\blazor-wasm\Crest.Parties.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Crest.Workflows\blazor-wasm\Crest.Workflows.BlazorWasm.csproj" />
+  </ItemGroup>
+
+</Project>

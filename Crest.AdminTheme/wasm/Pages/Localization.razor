@@ -1,0 +1,297 @@
+@page "/Settings/localization"
+@using Crest.AdminTheme.Api
+@using Crest.AdminTheme.DisplayManagement
+@using Crest.Components.Inputs
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+<CrestStack Gap="1rem" class="localization-page" data-testid="localization-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <div>
+            <CrestText TextStyle="TextStyle.H4" Text="@T["Cultures"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Choose the cultures this site serves and the default culture used when no request culture is selected."]" />
+        </div>
+        @if (HasDynamicTranslations)
+        {
+            <CrestButton Text="@T["Edit translations"]" Icon="translate" ButtonStyle="ButtonStyle.Light" Click="OpenTranslations" />
+        }
+    </CrestStack>
+
+    @if (IsLoading)
+    {
+        <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (Model is null)
+    {
+        <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T["Localization settings are unavailable for this tenant."]</CrestAlert>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
+        }
+
+        <CrestCard>
+            <CrestStack Gap="0.75rem">
+                <CrestText TextStyle="TextStyle.Subtitle1" Text="@T["Supported cultures"]" />
+                <CrestText TextStyle="TextStyle.Body2" Text="@T["These are the valid .NET/BCP 47 cultures the site can serve."]" />
+
+                @if (SupportedCultureOptions.Length == 0)
+                {
+                    <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T["At least one culture is required."]</CrestAlert>
+                }
+                else
+                {
+                    <div class="localization-page__supported-list">
+                        @foreach (var culture in SupportedCultureOptions)
+                        {
+                            <div class="localization-page__culture-card" @key="culture.Value">
+                                <div>
+                                    <div class="localization-page__culture-name">@DisplayCultureName(culture)</div>
+                                    <div class="localization-page__culture-code">@(string.IsNullOrEmpty(culture.Value) ? T["Invariant culture"] : culture.Value)</div>
+                                </div>
+                                <CrestButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" title="@T["Remove culture"]" aria-label="@T["Remove {0}", DisplayCultureName(culture)]" Disabled="@(SupportedCultureOptions.Length == 1 || IsSaving)" Click="@(() => RemoveCulture(culture.Value))" />
+                            </div>
+                        }
+                    </div>
+                }
+
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
+                    <div class="localization-page__add-picker">
+                        <CrestLabel Text="@T["Add a standard culture"]" />
+                        <CrestDropDown TValue="string"
+                                        Data="AvailableCultureOptions"
+                                        Value="@SelectedCultureToAdd"
+                                        ValueChanged="SelectCultureToAddAsync"
+                                        TextProperty="@nameof(CrestCulture.Label)"
+                                        ValueProperty="@nameof(CrestCulture.Value)"
+                                        Placeholder="@T["Choose a culture"]"
+                                        AllowFiltering="true"
+                                        FilterPlaceholder="@T["Filter cultures"]"
+                                        class="localization-page__culture-dropdown" />
+                    </div>
+                    <CrestButton Text="@T["Add culture"]" Icon="add" Disabled="@(IsSaving || string.IsNullOrWhiteSpace(SelectedCultureToAdd))" Click="AddSelectedCultureAsync" />
+                </CrestStack>
+
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
+                    <div class="localization-page__add-picker">
+                        <CrestLabel Text="@T["Add a valid custom culture code"]" />
+                        <CrestTextBox @bind-Value="CustomCultureCode" Placeholder="@T["Example: en-GB"]" Style="width: 100%;" Disabled="@IsSaving" />
+                    </div>
+                    <CrestButton Text="@T["Add custom culture"]" Icon="add" ButtonStyle="ButtonStyle.Light" Disabled="@(IsSaving || string.IsNullOrWhiteSpace(CustomCultureCode))" Click="AddCustomCultureAsync" />
+                </CrestStack>
+                <CrestText TextStyle="TextStyle.Caption" Text="@T["Custom entries must be culture names recognized by .NET/BCP 47. They are validated again on save."]" />
+            </CrestStack>
+        </CrestCard>
+
+        <CrestCard>
+            <CrestStack Gap="0.75rem">
+                <CrestText TextStyle="TextStyle.Subtitle1" Text="@T["Default culture"]" />
+                <CrestText TextStyle="TextStyle.Body2" Text="@T["This is used when a request does not select one of the supported cultures."]" />
+                <CrestDropDown TValue="string"
+                                Data="SupportedCultureOptions"
+                                Value="@Model.DefaultCulture"
+                                ValueChanged="SelectDefaultCultureAsync"
+                                TextProperty="@nameof(CrestCulture.Label)"
+                                ValueProperty="@nameof(CrestCulture.Value)"
+                                Placeholder="@T["Choose the default culture"]"
+                                AllowFiltering="true"
+                                FilterPlaceholder="@T["Filter supported cultures"]"
+                                class="localization-page__culture-dropdown" />
+                <div>
+                    <CrestCheckBox @bind-Value="Model.FallBackToParentCulture" Name="fallback-to-parent" Disabled="@IsSaving" />
+                    <label for="fallback-to-parent"> @T["Fall back to parent culture(s)"]</label>
+                </div>
+            </CrestStack>
+        </CrestCard>
+
+        <CrestCard>
+            <CrestStack Gap="0.75rem">
+                <CrestText TextStyle="TextStyle.Subtitle1" Text="@T["Admin default culture"]" />
+                <CrestText TextStyle="TextStyle.Body2" Text="@T["Optional. Only applies to the admin area — a signed-in user's own language preference or an explicit session choice still takes priority here. Leave unset to use the default culture above everywhere, including the admin area."]" />
+                <CrestDropDown TValue="string"
+                                Data="AdminDefaultCultureOptions"
+                                Value="@Model.AdminDefaultCulture"
+                                ValueChanged="SelectAdminDefaultCultureAsync"
+                                TextProperty="@nameof(CrestCulture.Label)"
+                                ValueProperty="@nameof(CrestCulture.Value)"
+                                Placeholder="@T["No admin-specific override"]"
+                                AllowClear="true"
+                                AllowFiltering="true"
+                                FilterPlaceholder="@T["Filter supported cultures"]"
+                                class="localization-page__culture-dropdown" />
+            </CrestStack>
+        </CrestCard>
+
+        <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <CrestButton Text="@T["Save"]" Icon="save" Disabled="@(IsSaving || SupportedCultureOptions.Length == 0)" Click="SaveAsync" />
+        </CrestStack>
+    }
+</CrestStack>
+
+@code {
+    [CascadingParameter] public DisplayManager? DisplayManager { get; set; }
+
+    private CrestLocalization? Model { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool IsSaving { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SelectedCultureToAdd { get; set; }
+    private string? CustomCultureCode { get; set; }
+
+    private bool HasDynamicTranslations => DisplayManager?.Manifest?.Features.Any(feature =>
+        string.Equals(feature.Id, "OrchardCore.DataLocalization", StringComparison.OrdinalIgnoreCase)) == true;
+
+    private CrestCulture[] SupportedCultureOptions => Model?.SupportedCultures
+        .Select(ToCulture)
+        .OrderBy(culture => culture.Label, StringComparer.OrdinalIgnoreCase)
+        .ToArray() ?? [];
+
+    // Same set as SupportedCultureOptions - the admin default, when set, must be one of the
+    // tenant's own supported cultures (enforced again server-side on save). "No override"
+    // is represented by a null Model.AdminDefaultCulture, via the dropdown's AllowClear.
+    private CrestCulture[] AdminDefaultCultureOptions => SupportedCultureOptions;
+
+    private CrestCulture[] AvailableCultureOptions => Model?.AvailableCultures
+        .Where(culture => !Model.SupportedCultures.Contains(culture.Value, StringComparer.OrdinalIgnoreCase))
+        .ToArray() ?? [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Model = await Api.Crest.Rest.Localization.GetAsync();
+            EnsureDefaultCulture();
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private Task SelectCultureToAddAsync(string? value)
+    {
+        SelectedCultureToAdd = value;
+        return Task.CompletedTask;
+    }
+
+    private Task SelectDefaultCultureAsync(string? value)
+    {
+        if (Model is not null && !string.IsNullOrWhiteSpace(value))
+        {
+            Model.DefaultCulture = value;
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task SelectAdminDefaultCultureAsync(string? value)
+    {
+        if (Model is not null)
+        {
+            Model.AdminDefaultCulture = string.IsNullOrWhiteSpace(value) ? null : value;
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task AddSelectedCultureAsync()
+    {
+        AddCulture(SelectedCultureToAdd);
+        SelectedCultureToAdd = null;
+        return Task.CompletedTask;
+    }
+
+    private Task AddCustomCultureAsync()
+    {
+        if (string.IsNullOrWhiteSpace(CustomCultureCode))
+        {
+            return Task.CompletedTask;
+        }
+
+        AddCulture(CustomCultureCode.Trim());
+        CustomCultureCode = null;
+        return Task.CompletedTask;
+    }
+
+    private void AddCulture(string? culture)
+    {
+        if (Model is null || string.IsNullOrWhiteSpace(culture)) return;
+        if (Model.SupportedCultures.Contains(culture, StringComparer.OrdinalIgnoreCase)) return;
+
+        Model.SupportedCultures = [.. Model.SupportedCultures, culture];
+        EnsureDefaultCulture();
+    }
+
+    private void RemoveCulture(string culture)
+    {
+        if (Model is null || Model.SupportedCultures.Length <= 1) return;
+        Model.SupportedCultures = Model.SupportedCultures
+            .Where(value => !string.Equals(value, culture, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        EnsureDefaultCulture();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (Model is null) return;
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            var saved = await Api.Crest.Rest.Localization.SaveAsync(Model);
+            if (saved is null)
+            {
+                throw new InvalidOperationException(T["The culture settings could not be saved. Verify custom culture codes and your permission to manage cultures."]);
+            }
+
+            Model = saved;
+            EnsureDefaultCulture();
+            Notifications.Notify(NotificationSeverity.Success, T["Cultures"], T["Culture settings were saved. New requests use the updated cultures."]);
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private void OpenTranslations() => NavigationManager.NavigateTo("DataLocalization/Index");
+
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+
+    private void EnsureDefaultCulture()
+    {
+        if (Model is null || Model.SupportedCultures.Length == 0) return;
+        if (!Model.SupportedCultures.Contains(Model.DefaultCulture, StringComparer.OrdinalIgnoreCase))
+        {
+            Model.DefaultCulture = Model.SupportedCultures[0];
+        }
+
+        // Unlike DefaultCulture, AdminDefaultCulture is optional - if the culture it pointed
+        // at was just removed from the supported list, clear it back to "no override" rather
+        // than reassigning it to some other culture the admin didn't choose.
+        if (!string.IsNullOrWhiteSpace(Model.AdminDefaultCulture) &&
+            !Model.SupportedCultures.Contains(Model.AdminDefaultCulture, StringComparer.OrdinalIgnoreCase))
+        {
+            Model.AdminDefaultCulture = null;
+        }
+    }
+
+    private CrestCulture ToCulture(string value) => Model?.AvailableCultures.FirstOrDefault(culture =>
+        string.Equals(culture.Value, value, StringComparison.OrdinalIgnoreCase))
+        ?? new CrestCulture(value, string.IsNullOrEmpty(value) ? T["Invariant culture"] : value, value);
+
+    private static string DisplayCultureName(CrestCulture culture) => string.IsNullOrWhiteSpace(culture.NativeLabel)
+        ? culture.Label
+        : $"{culture.NativeLabel} ({culture.Label})";
+}

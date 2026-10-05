@@ -1,0 +1,177 @@
+@page "/Media"
+@using Crest.AdminTheme.Api
+@using Microsoft.AspNetCore.Components.Forms
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+<CrestStack Gap="1rem" data-testid="media-library-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="@T["Media Library"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Manage this tenant's media files and folders."]" />
+        </CrestStack>
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+            <label class="rz-button rz-button-md rz-button-primary"><span class="rzi rzi-upload"></span> @T["Upload"]<InputFile hidden OnChange="UploadAsync" disabled="@IsBusy" /></label>
+            <CrestButton Text="@T["New folder"]" Icon="create_new_folder" Click="OpenFolderDialog" Disabled="@IsBusy" />
+            <CrestButton Text="@T["Refresh"]" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="@(() => LoadAsync())" Disabled="@IsBusy" />
+        </CrestStack>
+    </CrestStack>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
+    }
+
+    <CrestCard>
+        <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.35rem" Wrap="FlexWrap.Wrap" data-testid="media-breadcrumbs">
+            <CrestButton Text="@T["Media"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OpenFolderAsync(string.Empty))" />
+            @foreach (var crumb in Breadcrumbs)
+            {
+                <CrestText Text="@T["/"]" />
+                <CrestButton Text="@crumb.Name" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OpenFolderAsync(crumb.Path))" />
+            }
+        </CrestStack>
+    </CrestCard>
+
+    @if (IsLoading)
+    {
+        <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (Directory.Entries.Length == 0)
+    {
+        <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["This folder is empty. Upload a file or create a folder to get started."]</CrestAlert>
+    }
+    else
+    {
+        <CrestDataGrid Data="@Directory.Entries" TItem="MediaEntry" AllowPaging="false" Responsive="true" data-testid="media-library-grid">
+            <Columns>
+                <CrestDataGridColumn TItem="MediaEntry" Title="@T["Name"]">
+                    <Template Context="entry">
+                        @if (entry.IsDirectory)
+                        {
+                            <CrestButton Text="@entry.Name" Icon="folder" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => OpenFolderAsync(entry.Path))" />
+                        }
+                        else if (!string.IsNullOrWhiteSpace(entry.PublicUrl))
+                        {
+                            <a href="@entry.PublicUrl" target="_blank" rel="noopener">@entry.Name</a>
+                        }
+                        else { @entry.Name }
+                    </Template>
+                </CrestDataGridColumn>
+                <CrestDataGridColumn TItem="MediaEntry" Title="@T["Type"]"><Template Context="entry">@(entry.IsDirectory ? T["Folder"] : T["File"])</Template></CrestDataGridColumn>
+                <CrestDataGridColumn TItem="MediaEntry" Title="@T["Size"]"><Template Context="entry">@(entry.IsDirectory ? T["—"] : FormatBytes(entry.Length))</Template></CrestDataGridColumn>
+                <CrestDataGridColumn TItem="MediaEntry" Title="@T["Modified"]"><Template Context="entry">@entry.LastModifiedUtc.LocalDateTime.ToString("g")</Template></CrestDataGridColumn>
+                <CrestDataGridColumn TItem="MediaEntry" Title="@T["Actions"]" Width="6rem" Sortable="false" Filterable="false">
+                    <Template Context="entry">
+                        @if (!entry.IsDirectory)
+                        {
+                            <CrestButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Delete file"]" Click="@(() => ConfirmDelete(entry))" Disabled="@IsBusy" />
+                        }
+                    </Template>
+                </CrestDataGridColumn>
+            </Columns>
+        </CrestDataGrid>
+    }
+
+    @if (FolderDialogOpen)
+    {
+        <div class="media-dialog-backdrop"><CrestCard class="media-dialog"><CrestStack Gap="1rem"><CrestText TextStyle="TextStyle.H5" Text="@T["New folder"]" /><CrestTextBox @bind-Value="NewFolderName" Placeholder="@T["Folder name"]" Style="width: 100%;" /><CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CloseFolderDialog" /><CrestButton Text="@T["Create"]" Click="CreateFolderAsync" Disabled="@(IsBusy || string.IsNullOrWhiteSpace(NewFolderName))" /></CrestStack></CrestStack></CrestCard></div>
+    }
+    @if (DeleteCandidate is not null)
+    {
+        <div class="media-dialog-backdrop"><CrestCard class="media-dialog"><CrestStack Gap="1rem"><CrestText TextStyle="TextStyle.H5" Text="@T["Delete media file?"]" /><CrestText Text="@(T["This permanently removes {0}.", DeleteCandidate.Name])" /><CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CancelDelete" /><CrestButton Text="@T["Delete"]" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="@IsBusy" /></CrestStack></CrestStack></CrestCard></div>
+    }
+</CrestStack>
+
+@code {
+    private MediaDirectoryResult Directory { get; set; } = MediaDirectoryResult.Empty;
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsBusy => IsLoading || IsSaving;
+    private string? ErrorMessage { get; set; }
+    private bool FolderDialogOpen { get; set; }
+    private string? NewFolderName { get; set; }
+    private MediaEntry? DeleteCandidate { get; set; }
+    private IEnumerable<Breadcrumb> Breadcrumbs
+    {
+        get
+        {
+            var segments = Directory.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            return segments.Select((name, index) => new Breadcrumb(name, string.Join('/', segments.Take(index + 1))));
+        }
+    }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync(string? path = null)
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try { Directory = await Api.Crest.Rest.Media.ListAsync(path ?? Directory.Path); }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsLoading = false; }
+    }
+
+    private Task OpenFolderAsync(string path) => LoadAsync(path);
+    private void OpenFolderDialog() { NewFolderName = null; FolderDialogOpen = true; }
+    private void CloseFolderDialog() => FolderDialogOpen = false;
+    private void ConfirmDelete(MediaEntry entry) => DeleteCandidate = entry;
+    private void CancelDelete() => DeleteCandidate = null;
+
+    private async Task CreateFolderAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewFolderName)) return;
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            var result = await Api.Crest.Rest.Media.CreateFolderAsync(Directory.Path, NewFolderName);
+            if (result is null) throw new InvalidOperationException(T["The media folder could not be created."]);
+            Directory = result;
+            FolderDialogOpen = false;
+            Notifications.Notify(NotificationSeverity.Success, T["Media Library"], T["Folder created."]);
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private async Task UploadAsync(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+        if (file.Size == 0) return;
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            await using var stream = file.OpenReadStream(100 * 1024 * 1024);
+            var result = await Api.Crest.Rest.Media.UploadAsync(Directory.Path, file.Name, stream);
+            if (result is null) throw new InvalidOperationException(T["The media file could not be uploaded."]);
+            Directory = result;
+            Notifications.Notify(NotificationSeverity.Success, T["Media Library"], T["{0} uploaded.", file.Name]);
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (DeleteCandidate is null) return;
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            if (!await Api.Crest.Rest.Media.DeleteAsync(DeleteCandidate.Path)) throw new InvalidOperationException(T["The media file could not be deleted."]);
+            Notifications.Notify(NotificationSeverity.Success, T["Media Library"], T["{0} deleted.", DeleteCandidate.Name]);
+            DeleteCandidate = null;
+            await LoadAsync();
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private static string FormatBytes(long bytes) => bytes < 1024 ? $"{bytes} B" : bytes < 1024 * 1024 ? $"{bytes / 1024d:F1} KB" : $"{bytes / 1024d / 1024d:F1} MB";
+    private sealed record Breadcrumb(string Name, string Path);
+}

@@ -26,7 +26,7 @@ filter, and is present only when the Members feature is enabled.
 
 ### What the member shell owns
 
-`Crest.Member` (theme) + `Crest.Member.Client` (a razor class
+`Crest.MemberTheme` (theme) + `Crest.MemberTheme.Client` (a razor class
 library compiled into the one WASM app, exactly as Admin.Client and Site.Client are):
 
 - the layout, header and navigation region;
@@ -135,7 +135,7 @@ Dispatch is three-valued in three places, with Site as the fallback:
 - **`App.razor`** has a branch per shell (base href, head assets, `<MemberRoutes>` for the
   member shell), selected by the same `HttpContext.Items` bucket marker.
 
-**Not a new WASM app.** There is one WASM app (`Crest.Client`) with one
+**Not a new WASM app.** There is one WASM app (the host app's WASM entry project) with one
 `Program.cs`, one lazy-module graph and one asset set; the shells are libraries inside it.
 A third shell therefore adds a theme, a client library, a bucket and a branch — not a
 third build output.
@@ -172,7 +172,7 @@ Manifest tags are the mechanism (`admin` and `hidden` are read by Orchard itself
 
 **Descendants count.** Orchard's `BaseTheme` chain is exactly "a direct child fork with
 simple mods": a child theme inherits its parent's shapes and assets, so
-`BaseTheme = Crest.Admin` is a compatible admin theme. Every compatibility
+`BaseTheme = Crest.AdminTheme` is a compatible admin theme. Every compatibility
 check walks the `BaseTheme` chain, never a single id.
 
 ### How a module declares what it needs
@@ -189,7 +189,7 @@ contract in practice, and per-page granularity would multiply the declarations w
 changing any answer.
 
 Orchard has a site theme and an admin theme but no member theme, so the member theme is a
-Crest site setting (`IMemberThemeService`), defaulting to `Crest.Member`.
+Crest site setting (`IMemberThemeService`), defaulting to `Crest.MemberTheme`.
 Selecting a member theme sets that setting; it never touches the site theme.
 
 ### The two guards

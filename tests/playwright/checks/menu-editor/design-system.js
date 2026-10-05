@@ -1,4 +1,4 @@
-// Converted from Crest.Admin/tests/playwright/admin-menu-design-system.js.
+// Converted from Crest.AdminTheme/tests/playwright/admin-menu-design-system.js.
 // Validates the Blazor-managed Admin Menu editor consumes Crest design tokens (not
 // hardcoded colors) and renders as a native Blazor page (no iframes).
 module.exports = async function run(page, ctx) {
@@ -13,9 +13,9 @@ module.exports = async function run(page, ctx) {
     Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(link => link.getAttribute('href') || ''),
   );
   // Phase 8: the admin shell is a Razor class library now, so its scoped CSS ships as
-  // the RCL bundle _content/Crest.Admin.Client/*.bundle.scp.css instead of
-  // the old exe-style Crest.Admin.styles.css app bundle.
-  const requiredStyles = ['/CrestAdmin.DesignSystem.Default.css', '/CrestAdmin.css', '/Crest.Admin.Client.bundle.scp.css'];
+  // the RCL bundle _content/Crest.AdminTheme.Client/*.bundle.scp.css instead of
+  // the old exe-style Crest.AdminTheme.styles.css app bundle.
+  const requiredStyles = ['/CrestAdmin.DesignSystem.Default.css', '/CrestAdmin.css', '/Crest.AdminTheme.Client.bundle.scp.css'];
   const missingStyles = requiredStyles.filter(required => !loadedStyles.some(href => href.endsWith(required)));
 
   const initialSelected = page.locator('.admin-menu-list-item--selected').first();

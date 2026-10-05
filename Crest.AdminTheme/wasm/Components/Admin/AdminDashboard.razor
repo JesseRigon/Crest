@@ -1,0 +1,213 @@
+@using Crest.AdminTheme.Api
+@using Crest.AdminTheme.DisplayManagement
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+<CrestStack Gap="1rem">
+            <CrestTabs>
+                <Tabs>
+            <CrestTabsItem Text="@T["App"]">
+                @if (DisplayManager?.Manifest is null)
+                {
+                    <CrestText Text="@T["Loading app manifest..."]" />
+                }
+                else
+                {
+                    <CrestStack Gap="0.75rem">
+                        <CrestText TextStyle="TextStyle.H6" Text="@DisplayManager.Manifest.Site.SiteName" />
+                        <CrestText Text="@T["Tenant: {0} · State: {1} · Admin: {2}", DisplayManager.Manifest.Tenant.Name, DisplayManager.Manifest.Tenant.State, DisplayManager.Manifest.Admin.BasePath]" />
+                        <CrestText TextStyle="TextStyle.Caption" Text="@T["Feature hash: {0}", DisplayManager.Manifest.FeatureHash]" />
+                        <CrestText Text="@T["Enabled features: {0}", DisplayManager.Manifest.Features.Length]" />
+                        <CrestText Text="@T["Roles: {0}", DisplayManager.Roles.Length]" />
+                    </CrestStack>
+                }
+            </CrestTabsItem>
+
+            <CrestTabsItem Text="@T["Site"]">
+                @if (Site is null)
+                {
+                    <CrestText Text="@T["Loading site settings..."]" />
+                }
+                else
+                {
+                    <CrestStack Gap="1rem" Style="max-width: 48rem;">
+                        <CrestTextBox @bind-Value="Site.SiteName" Placeholder="@T["Site name"]" />
+                        <CrestTextBox @bind-Value="Site.PageTitleFormat" Placeholder="@T["Page title format"]" />
+                        <CrestTextBox @bind-Value="Site.BaseUrl" Placeholder="@T["Base url"]" />
+                        <CrestTextBox @bind-Value="Site.TimeZoneId" Placeholder="@T["Time zone ID"]" />
+                        <CrestTextBox @bind-Value="Site.Calendar" Placeholder="@T["Calendar"]" />
+                        <CrestNumeric @bind-Value="Site.PageSize" Placeholder="@T["Page Size"]" />
+                        <CrestNumeric @bind-Value="Site.MaxPageSize" Placeholder="@T["Max page size"]" />
+                        <CrestNumeric @bind-Value="Site.MaxPagedCount" Placeholder="@T["Max paged count"]" />
+                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <CrestButton Text="@T["Save site settings"]" Click="SaveSiteAsync" Disabled="@IsLoading" />
+                            <CrestButton Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
+                        </CrestStack>
+                        @if (!string.IsNullOrWhiteSpace(Status))
+                        {
+                            <CrestText TextStyle="TextStyle.Caption" Text="@Status" />
+                        }
+                    </CrestStack>
+                }
+            </CrestTabsItem>
+
+            <CrestTabsItem Text="@T["Content"]">
+                <CrestStack Gap="1rem">
+                    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        <CrestTextBox @bind-Value="ContentHandle" Placeholder="@T["alias:main-menu"]" Style="min-width: 18rem;" />
+                        <CrestButton Text="@T["Load by handle"]" Click="LoadContentItemAsync" Disabled="@IsLoading" />
+                    </CrestStack>
+
+                    @if (DisplayManager?.CurrentContentItem is not null)
+                    {
+                        <CrestCard>
+                            <CrestText TextStyle="TextStyle.H6" Text="@DisplayManager.CurrentContentItem.DisplayText" />
+                            <CrestText Text="@($"{DisplayManager.CurrentContentItem.ContentType} · {DisplayManager.CurrentContentItem.ContentItemId}")" />
+                        </CrestCard>
+                    }
+
+                    <CrestText TextStyle="TextStyle.H6" Text="@T["Content Types"]" />
+                    @if (DisplayManager?.ContentTypes.Length is null or 0)
+                    {
+                        <CrestText Text="@T["No content types returned."]" />
+                    }
+                    else
+                    {
+                        <ul>
+                            @foreach (var contentType in DisplayManager.ContentTypes)
+                            {
+                                <li>@contentType.DisplayName (@contentType.Name) · @contentType.Parts.Length @T["Parts"]</li>
+                            }
+                        </ul>
+                    }
+                </CrestStack>
+            </CrestTabsItem>
+                </Tabs>
+            </CrestTabs>
+</CrestStack>
+
+@code {
+    [CascadingParameter]
+    public DisplayManager? DisplayManager { get; set; }
+
+    private EditableSiteSettings? Site { get; set; }
+    private string ContentHandle { get; set; } = "alias:main-menu";
+    private bool IsLoading { get; set; }
+    private string? Status { get; set; }
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        if (DisplayManager is null)
+        {
+            return;
+        }
+
+        IsLoading = true;
+        Status = null;
+
+        if (DisplayManager.Manifest is null)
+        {
+            await DisplayManager.RefreshAdminStateAsync();
+        }
+
+        BindEditableSite();
+
+        IsLoading = false;
+    }
+
+    private async Task LoadContentItemAsync()
+    {
+        if (DisplayManager is null || string.IsNullOrWhiteSpace(ContentHandle))
+        {
+            return;
+        }
+
+        IsLoading = true;
+        await DisplayManager.LoadContentItemByHandleAsync(ContentHandle.Trim());
+        IsLoading = false;
+    }
+
+    private async Task SaveSiteAsync()
+    {
+        if (DisplayManager is null || Site is null)
+        {
+            return;
+        }
+
+        IsLoading = true;
+        Status = null;
+
+        var saved = await DisplayManager.UpdateSiteAsync(Site.ToUpdate());
+        if (saved is null)
+        {
+            Status = DisplayManager.ErrorMessage ?? "Unable to save site settings.";
+        }
+        else
+        {
+            Site = EditableSiteSettings.From(saved);
+            Status = "Site settings saved.";
+        }
+
+        IsLoading = false;
+    }
+
+    private void BindEditableSite()
+    {
+        if (DisplayManager?.Site is not null)
+        {
+            Site = EditableSiteSettings.From(DisplayManager.Site);
+        }
+    }
+
+    private sealed class EditableSiteSettings
+    {
+        public string SiteName { get; set; } = string.Empty;
+        public string PageTitleFormat { get; set; } = string.Empty;
+        public string BaseUrl { get; set; } = string.Empty;
+        public string TimeZoneId { get; set; } = string.Empty;
+        public string Calendar { get; set; } = string.Empty;
+        public int PageSize { get; set; }
+        public int MaxPageSize { get; set; }
+        public int MaxPagedCount { get; set; }
+        public bool AppendVersion { get; set; }
+        public bool UseCdn { get; set; }
+        public string CdnBaseUrl { get; set; } = string.Empty;
+        public string ResourceDebugMode { get; set; } = "FromConfiguration";
+        public string CacheMode { get; set; } = "FromConfiguration";
+
+        public static EditableSiteSettings From(SiteSettings settings) => new()
+        {
+            SiteName = settings.SiteName,
+            PageTitleFormat = settings.PageTitleFormat,
+            BaseUrl = settings.BaseUrl,
+            TimeZoneId = settings.TimeZoneId,
+            Calendar = settings.Calendar,
+            PageSize = settings.PageSize,
+            MaxPageSize = settings.MaxPageSize,
+            MaxPagedCount = settings.MaxPagedCount,
+            AppendVersion = settings.AppendVersion,
+            UseCdn = settings.UseCdn,
+            CdnBaseUrl = settings.CdnBaseUrl,
+            ResourceDebugMode = settings.ResourceDebugMode,
+            CacheMode = settings.CacheMode,
+        };
+
+        public SiteSettingsUpdate ToUpdate() => new(
+            SiteName,
+            PageTitleFormat,
+            BaseUrl,
+            TimeZoneId,
+            Calendar,
+            PageSize,
+            MaxPageSize,
+            MaxPagedCount,
+            AppendVersion,
+            UseCdn,
+            CdnBaseUrl,
+            ResourceDebugMode,
+            CacheMode);
+    }
+}

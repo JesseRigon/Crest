@@ -18,10 +18,10 @@ namespace Crest.Server.Tests;
 // change or reset is evaluated against the bucket it changes.
 public class ShellCompatibilityTests
 {
-    private const string CrestAdmin = "Crest.Admin";
+    private const string CrestAdmin = "Crest.AdminTheme";
     private const string ClassicAdmin = "TheAdmin";
     private const string BrandedAdmin = "Acme.Admin";
-    private const string CrestMember = "Crest.Member";
+    private const string CrestMember = "Crest.MemberTheme";
     private const string AdminFeature = "Acme.Ledger";
     private const string MemberFeature = "Acme.Portal";
 

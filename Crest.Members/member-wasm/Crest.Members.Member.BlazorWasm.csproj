@@ -14,7 +14,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <IsPackable>false</IsPackable>
     <AssemblyName>Crest.Members.Member.BlazorWasm</AssemblyName>
     <RootNamespace>Crest.Members.Member</RootNamespace>
   </PropertyGroup>
@@ -27,6 +26,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Domain\Crest.Members.Domain.csproj" />
     <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
-    <ProjectReference Include="..\..\Crest.Member\wasm\Crest.Member.Client.csproj" />
+    <ProjectReference Include="..\..\Crest.MemberTheme\wasm\Crest.MemberTheme.Client.csproj" />
   </ItemGroup>
 </Project>

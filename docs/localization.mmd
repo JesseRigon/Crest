@@ -14,7 +14,7 @@ flowchart TD
 %% shadow build and persisted on the sync document's entries (SourceContexts).
 %%
 %% The WASM client's own UI strings (T["Some text"] literals) resolve through the same
-%% layer order - store edit (context Crest.Admin.Client) -> PO (client context, else
+%% layer order - store edit (context Crest.AdminTheme.Client) -> PO (client context, else
 %% most-common across all catalogs) -> the literal itself - server-side in
 %% CrestLocalizationController.GetStringsAsync, shipped to CrestApiLocalizer as one
 %% per-culture dictionary. Same shape, no per-item identity tiers.
@@ -28,7 +28,7 @@ flowchart TD
 %%     Site.po; host modules may use module-local files): the
 %%     PRIVATE lane. By ruling (2026-08-22) Crest itself ships NO translation content -
 %%     literals only, stock-localized. Crowdin never sees or touches these; air-gap
-%%     safe. Entries under msgctxt "Crest.Admin.Client" outrank the mirror for the same
+%%     safe. Entries under msgctxt "Crest.AdminTheme.Client" outrank the mirror for the same
 %%     literal, and the store above outranks both - so upstream updates only fill gaps
 %%     you never claimed, and pin-to-literal vetoes a shipped translation entirely.
 %% Literal fidelity: matching is case-sensitive; a literal inherits upstream work only

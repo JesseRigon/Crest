@@ -29,8 +29,8 @@ Crest/
   Crest.Components/
   Crest.Iconify/
   Crest.Icons/
-  Crest.Admin/
-  Crest.Site/
+  Crest.AdminTheme/
+  Crest.SiteTheme/
 ```
 
 ## Project Roles
@@ -67,18 +67,18 @@ Preferred data-access order:
 
 ## Blazor Admin Theme Serving
 
-`Crest.Server` installs middleware that checks the selected Orchard admin theme. If the selected admin theme is `Crest.Admin` or carries the `crest-blazor` manifest tag (itself or through its `BaseTheme` chain), the middleware serves the Crest admin WASM files for admin routes and Blazor assets.
+`Crest.Server` installs middleware that checks the selected Orchard admin theme. If the selected admin theme is `Crest.AdminTheme` or carries the `crest-blazor` manifest tag (itself or through its `BaseTheme` chain), the middleware serves the Crest admin WASM files for admin routes and Blazor assets.
 
 The current admin shell assets still live under:
 
 ```text
-Crest.Admin/wasm
+Crest.AdminTheme/wasm
 ```
 
 The Orchard-loadable admin theme manifest project still lives at:
 
 ```text
-Crest.Admin
+Crest.AdminTheme
 ```
 
 ## Component System Boundary
@@ -119,7 +119,7 @@ Project files are not fully package-ready yet. Some projects still have `IsPacka
 
 ## Development Recipes
 
-Reusable Crest development recipes live under `Crest.Site/Recipes`: `CrestBasicDev` for a focused Crest admin shell and `CrestFullDev` for broad Orchard/Crest feature testing. Host apps should keep tenant/user autosetup recipes in the host repo.
+Reusable Crest development recipes live under `Crest.SiteTheme/Recipes`: `CrestBasicDev` for a focused Crest admin shell and `CrestFullDev` for broad Orchard/Crest feature testing. Host apps should keep tenant/user autosetup recipes in the host repo.
 
 ## Validation
 

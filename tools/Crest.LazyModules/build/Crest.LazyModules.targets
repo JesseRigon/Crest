@@ -1,0 +1,54 @@
+<Project>
+  <!-- Module pages load on demand. Imported by the HOST app's WASM entry project (the one
+       Microsoft.NET.Sdk.BlazorWebAssembly project with Program.Main) - through the
+       Crest.LazyModules package, or directly when the host builds Crest from source.
+
+       Every module client library the host references is lazy, with the assemblies only it
+       needs; the admin router loads a route's module before it matches (Crest.AdminTheme's
+       CrestLazyModules), and a page region loads the modules that contribute to regions
+       before it renders. Worked out at build time by the Crest.LazyModules tool from the
+       referenced assemblies themselves, so nothing is listed by hand and nothing depends on
+       where a module sits on disk (source or package):
+       - lazy roots: every referenced module client library (*.BlazorWasm - the same
+         convention Crest.Server uses for the server-side route table), plus
+         any assembly a module names in its embedded crest-lazy-assemblies.txt resource (a
+         library it loads itself, e.g. the workflow designer);
+       - kept eager: a module assembly declaring [CrestJSComponent] (JS components register
+         at startup), and everything the app itself reaches;
+       - framework and Microsoft.* assemblies always stay eager.
+       Produces BlazorWebAssemblyLazyLoad items and CrestLazyModules.g.cs (a
+       CrestLazyModulesManifest class in the app's own namespace - routes, per-module
+       dependencies, region contributors) that the app's Program.cs hands to Crest. -->
+  <PropertyGroup>
+    <!-- From source: set CrestLazyModulesToolProject to tools/Crest.LazyModules/Crest.LazyModules.csproj
+         before this file is imported and the tool is built with the app. From the package:
+         the tool ships next to this file. -->
+    <_CrestLazyToolDll Condition="'$(CrestLazyModulesToolProject)' == ''">$(MSBuildThisFileDirectory)..\tools\net10.0\Crest.LazyModules.dll</_CrestLazyToolDll>
+    <!-- The tool is run by the build, not deployed with the app. -->
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
+  </PropertyGroup>
+
+  <!-- Built before the app (restored with it); its output is run, not referenced. -->
+  <ItemGroup Condition="'$(CrestLazyModulesToolProject)' != ''">
+    <ProjectReference Include="$(CrestLazyModulesToolProject)" ReferenceOutputAssembly="false" Private="false" />
+  </ItemGroup>
+
+  <Target Name="CrestLazyModules" AfterTargets="ResolveReferences" BeforeTargets="CoreCompile">
+    <!-- Here, not at evaluation: IntermediateOutputPath is set after this file is imported. -->
+    <PropertyGroup>
+      <_CrestLazyDir>$(IntermediateOutputPath)CrestLazyModules/</_CrestLazyDir>
+    </PropertyGroup>
+    <MSBuild Projects="$(CrestLazyModulesToolProject)" Targets="GetTargetPath" Condition="'$(CrestLazyModulesToolProject)' != ''">
+      <Output TaskParameter="TargetOutputs" PropertyName="_CrestLazyToolDll" />
+    </MSBuild>
+    <MakeDir Directories="$(_CrestLazyDir)" />
+    <WriteLinesToFile File="$(_CrestLazyDir)references.txt" Lines="@(ReferencePath->'%(FullPath)')" Overwrite="true" />
+    <Exec Command="dotnet &quot;$(_CrestLazyToolDll)&quot; &quot;$(_CrestLazyDir)references.txt&quot; $(AssemblyName) &quot;$(_CrestLazyDir)CrestLazyModules.g.cs&quot; &quot;$(_CrestLazyDir)lazy.txt&quot;" />
+    <ReadLinesFromFile File="$(_CrestLazyDir)lazy.txt">
+      <Output TaskParameter="Lines" ItemName="BlazorWebAssemblyLazyLoad" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <Compile Include="$(_CrestLazyDir)CrestLazyModules.g.cs" />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -10,11 +10,11 @@ const { createInstance } = require('../harness/instance');
 // by keeping Liquid alive. See the "Site root" section of plans/blazor hybrid conversion.md.
 //
 // Verifies translated content actually renders on the front-end site
-// (Crest.Site) for a non-English resolved culture - the "simple component
+// (Crest.SiteTheme) for a non-English resolved culture - the "simple component
 // just to test the translations actually work" from plans/user-localization-testing.md.
 // The smoke block lives in Content-Page.liquid (data-testid="localization-smoke"),
 // rendering {{ "Welcome" | t }} - a hand-written test string backed by
-// Crest.Site/Localization/{es,fr,de}.po (mirrored under
+// Crest.SiteTheme/Localization/{es,fr,de}.po (mirrored under
 // tests/playwright/fixtures/localization-smoke/ - see that directory's README).
 //
 // Requires at least one published Page content item to exist at ctx.baseUrl so

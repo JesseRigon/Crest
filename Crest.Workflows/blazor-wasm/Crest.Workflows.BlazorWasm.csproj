@@ -3,7 +3,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <IsPackable>false</IsPackable>
     <AssemblyName>Crest.Workflows.BlazorWasm</AssemblyName>
     <RootNamespace>Crest.Workflows.BlazorWasm</RootNamespace>
   </PropertyGroup>

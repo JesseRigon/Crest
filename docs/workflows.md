@@ -699,8 +699,8 @@ by reflection, attaches it as a late container and renders the view) and
 token, a cookie auth provider manager) and the views with MudBlazor's providers. The lazy
 set (26 assemblies: Studio, MudBlazor + extensions, Monaco, Refit, Polly, FluentValidation,
 Humanizer, Radzen, the engine API client) is listed in `crest-lazy-assemblies.txt`; the
-Crest build turns every module's `blazor-wasm` project into lazy pages
-(`CrestLazyModules.targets`, `tools/Crest.LazyModules`). Measured on a trimmed Release
+host app's WASM build turns every module's `blazor-wasm` library into lazy pages
+(`tools/Crest.LazyModules`, imported by the host's WASM entry project). Measured on a trimmed Release
 publish (brotli): startup ≈ 5.2 MB, on demand 2.6 MB. **Browser-only** because under
 InteractiveAuto a first visit runs in a server circuit where Studio's HTTP clients would
 share scopes across users; the host prerenders a placeholder and reloads into WASM if an

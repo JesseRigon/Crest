@@ -18,7 +18,7 @@ namespace Crest.Themes;
 /// <para>
 /// <strong>Descendants count.</strong> Orchard's <c>BaseTheme</c> chain is exactly "a
 /// child fork with simple modifications": a child theme inherits its parent's shapes and
-/// assets, so <c>BaseTheme = "Crest.Admin"</c> IS a compatible admin theme.
+/// assets, so <c>BaseTheme = "Crest.AdminTheme"</c> IS a compatible admin theme.
 /// Every check here walks that chain rather than comparing a single id - a fork is the
 /// normal way to brand a shell, and an id comparison would reject every fork.
 /// </para>

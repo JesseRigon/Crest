@@ -9,7 +9,7 @@ namespace Crest.Components.Modules;
 /// demand (lazy assemblies) builds its own container when its first page opens and attaches
 /// it here. Components from that library are created by the app's renderer, so the app's
 /// provider falls back to these containers for
-/// anything it does not have itself (Crest.Admin's CrestServiceProviderFactory). The app's own
+/// anything it does not have itself (Crest.AdminTheme's CrestServiceProviderFactory). The app's own
 /// registrations always win.
 /// </summary>
 public sealed class CrestLateServiceProviders

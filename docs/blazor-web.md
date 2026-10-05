@@ -13,11 +13,12 @@ Crest.Server hosts interactive Blazor islands (routable `.razor` pages marked `@
 
 ## How Crest hosts a module's pages
 
-1. Build-time: Crest.Admin.Client's discovery glob (`modules/**/blazor-wasm/*.csproj`
-   - ANY depth, so module grouping needs no glob change; Crest's own tree excluded)
-   turns each module blazor-wasm project into a project reference, compiling its
-   pages into the single wasm payload (Crest.Client, the one
-   Program.Main).
+1. Build-time: the host app owns the single wasm payload (its WASM entry project, the
+   one Program.Main, which calls `CrestWebAssemblyHost.RunAsync`). It references the theme
+   client libraries and every module blazor-wasm library it ships - as projects or as
+   NuGet packages - and imports Crest.LazyModules, which finds the module libraries among
+   those references by name (`*.BlazorWasm`) and generates the lazy-module manifest. Crest
+   never references a host's modules and never scans the disk for them.
 2. Runtime: Crest.Server's startup scans the assembly graph (`*.Client.dll`,
    `*.BlazorWasm.dll`) into MapRazorComponents' route table, so `@page` routes in
    module blazor-wasm projects just work; wwwroot assets flow through standard RCL

@@ -32,7 +32,7 @@ public interface IMemberThemeService
 public sealed class MemberThemeService(ISiteService siteService, IExtensionManager extensionManager) : IMemberThemeService
 {
     /// <summary>Crest's own member theme, used until a tenant selects another.</summary>
-    public const string DefaultThemeId = "Crest.Member";
+    public const string DefaultThemeId = "Crest.MemberTheme";
 
     public async Task<string> GetMemberThemeIdAsync()
     {

@@ -1,0 +1,90 @@
+@using Microsoft.AspNetCore.Components.Routing
+@using Crest.AdminTheme.Components.Admin
+@using Crest.Components.Primitives
+@using Crest.Components.Regions
+@using System.Reflection
+@using Crest.Shell
+@using Crest.Components.Modules
+@using Microsoft.AspNetCore.Components.WebAssembly.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject IServiceProvider Services
+
+@* Phase 8: this was App.razor, the WASM SPA's root component mounted at #app by the
+   old wasm/Program.cs. Under the Blazor Web App model it's the admin *Routes*
+   component instead, mounted (with @rendermode InteractiveAuto) by Crest.Server's
+   theme-dispatching Components/App.razor document root. It must live in this client
+   assembly, not Server - the WASM runtime only has the assemblies it was compiled
+   with (see docs/blazor-web.md). *@
+
+<CrestNotification />
+
+<Router AppAssembly="@typeof(AdminRoutes).Assembly" AdditionalAssemblies="@_assemblies" OnNavigateAsync="OnNavigateAsync">
+    <Found Context="routeData">
+        @if (IsShelllessRoute(routeData))
+        {
+            <RouteView RouteData="@routeData" />
+        }
+        else
+        {
+            <CrestAuthorizedRoute>
+                <CrestAppContainer>
+                    <RouteView RouteData="@routeData" />
+                </CrestAppContainer>
+            </CrestAuthorizedRoute>
+        }
+    </Found>
+    <NotFound>
+        <LegacyAdminFrame />
+    </NotFound>
+</Router>
+
+@code {
+    // Shell-less: Admin's own chrome-free pages, plus any page declaring
+    // [AllowAnonymous] - the same marker the server gate (RouteComponentEntry
+    // .AllowsAnonymous, BlazorAdminThemeMiddleware) reads, so a public page a
+    // module contributes is public end to end without Crest knowing the module.
+    private static bool IsShelllessRoute(RouteData routeData)
+        => string.Equals(routeData.PageType.Name, "Login", StringComparison.Ordinal)
+            || string.Equals(routeData.PageType.Name, "Home", StringComparison.Ordinal)
+            || string.Equals(routeData.PageType.Name, "LegacyHost", StringComparison.Ordinal)
+            || routeData.PageType.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), inherit: false);
+
+    // The module assemblies the router knows: those loaded at startup, plus each ADMIN module
+    // loaded on demand (CrestLazyModules; browser only - on the server every assembly is
+    // loaded). Admin only: the loader holds every shell's loaded modules, and handing this
+    // Router a member library would make its pages routable in the admin shell.
+    private readonly List<Assembly> _assemblies = [.. CrestModuleAssemblyRegistry.Assemblies];
+    private CrestLazyModules? _lazyModules;
+
+    protected override void OnInitialized()
+    {
+        // Downstream modules contribute components to pages they do not own through the
+        // page-region seam; discovery runs over the same module assemblies the Router uses.
+        PageRegionRegistry.Configure(CrestModuleAssemblyRegistry.Assemblies);
+        _lazyModules = Services.GetService<CrestLazyModules>();
+        if (_lazyModules is not null && Services.GetService<LazyAssemblyLoader>() is { } loader)
+        {
+            _lazyModules.Attach(loader);
+            _lazyModules.ModulesLoaded += SyncAssemblies;
+        }
+
+        base.OnInitialized();
+    }
+
+    // Before the router matches a path, the module serving it is loaded.
+    private async Task OnNavigateAsync(NavigationContext context)
+    {
+        if (_lazyModules is not null && await _lazyModules.EnsureForPathAsync(context.Path, CrestShells.Admin))
+        {
+            SyncAssemblies();
+        }
+    }
+
+    private void SyncAssemblies()
+    {
+        foreach (var assembly in _lazyModules!.LoadedModules.Where(assembly => ShellAssemblyFilter.BelongsTo(assembly, CrestShells.Admin) && !_assemblies.Contains(assembly)))
+        {
+            _assemblies.Add(assembly);
+        }
+    }
+}

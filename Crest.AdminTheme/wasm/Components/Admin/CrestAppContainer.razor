@@ -1,0 +1,70 @@
+@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.Options
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
+@implements IDisposable
+@inject DisplayManager DisplayManager
+@inject CrestRoutingOptions Routing
+@inject NavigationManager Navigation
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@if (!DisplayManager.IsInitialized)
+{
+    <CrestStack Gap="1rem" Style="padding: 2rem;">
+        <CrestText Text="@T["Loading..."]" />
+    </CrestStack>
+}
+else if (DisplayManager.IsAuthenticated)
+{
+    <CascadingValue Value="DisplayManager">
+        <div class="admin-shell">
+            <AdminTitleBar />
+            <div class="@DashboardClass">
+                <Sidebar IsMobileOpen="@IsPrimaryNavMenuOpen">
+                    <PrimaryNavMenu />
+                </Sidebar>
+                @if (IsPrimaryNavMenuOpen)
+                {
+                    <button type="button" class="admin-dashboard__backdrop" aria-label="@T["Close navigation menu"]" @onclick="ClosePrimaryNavMenu"></button>
+                }
+                <main class="admin-dashboard__main" @onclick="ClosePrimaryNavMenu">
+                    @ChildContent
+                </main>
+            </div>
+        </div>
+    </CascadingValue>
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool IsPrimaryNavMenuOpen { get; set; }
+
+    private string DashboardClass => IsPrimaryNavMenuOpen ? "admin-dashboard admin-dashboard--primary-nav-menu-open" : "admin-dashboard";
+
+    protected override async Task OnInitializedAsync()
+    {
+        DisplayManager.Changed += StateHasChanged;
+        await DisplayManager.EnsureInitializedAsync();
+        EnsureAuthenticated();
+    }
+
+    public void Dispose()
+    {
+        DisplayManager.Changed -= StateHasChanged;
+    }
+
+    private void ClosePrimaryNavMenu() => IsPrimaryNavMenuOpen = false;
+
+    private void EnsureAuthenticated()
+    {
+        if (!DisplayManager.IsAuthenticated)
+        {
+            // Crossing from the admin shell (base href = AdminPath) to the login
+            // shell (base href = LoginPath) requires a full reload - see
+            // AdminTitleBar.LogoutAsync for the same rationale.
+            Navigation.NavigateTo(Routing.LoginPath, forceLoad: true);
+        }
+    }
+}

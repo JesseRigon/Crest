@@ -29,7 +29,7 @@ public sealed class CrestLocalizationController(
     ILocalizationManager localizationManager,
     IServiceProvider serviceProvider) : ControllerBase
 {
-    // Crest.Admin (Blazor WASM) has no server-side round trip per render, so it cannot
+    // Crest.AdminTheme (Blazor WASM) has no server-side round trip per render, so it cannot
     // use IStringLocalizer<T> directly the way server-rendered Razor/CRM.AdminMenu.cs
     // does. Baking .resx satellite assemblies into the WASM bundle (as
     // Crest.Components already does for its own component-library strings)
@@ -48,7 +48,7 @@ public sealed class CrestLocalizationController(
     // the most common translation of the literal across ALL shipped catalogs, so
     // upstream's own translations cover Crest pages for free) -> miss, where the client
     // renders the literal itself. Each layer resolves es-ES before es.
-    public const string ClientStringsContext = "Crest.Admin.Client";
+    public const string ClientStringsContext = "Crest.AdminTheme.Client";
 
     private static readonly string[] ClientContextPreference = [ClientStringsContext];
 

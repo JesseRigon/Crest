@@ -1,0 +1,58 @@
+@attribute [Route(MemberRoutePaths.Account)]
+@namespace Crest.MemberTheme.Pages
+
+@* "My account": the member's own view of themselves - who they are signed in as, and
+   which organizations they are bound to.
+
+   Only the member's OWN record, deliberately. A member administering other members is a
+   different surface with different authorization, and belongs to whichever module owns
+   memberships - not to the shell. *@
+
+<PageTitle>My account</PageTitle>
+
+<div data-testid="member-account">
+    <CrestStack Gap="1.5rem">
+        <CrestText TextStyle="TextStyle.H4" Text="My account" />
+
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.Caption" Text="Signed in as" />
+            <CrestText TextStyle="TextStyle.Body1"
+                       Text="@ShellContext.UserName"
+                       data-testid="member-account-username" />
+        </CrestStack>
+
+        @if (ShellContext.Organizations.Count > 0)
+        {
+            <CrestStack Gap="0.5rem">
+                <CrestText TextStyle="TextStyle.Caption" Text="My organizations" />
+                @foreach (var organization in ShellContext.Organizations)
+                {
+                    var isActive = string.Equals(organization.Id, ShellContext.ActiveOrganizationId, StringComparison.Ordinal);
+                    <CrestStack Orientation="Orientation.Horizontal"
+                                AlignItems="AlignItems.Center"
+                                Gap="0.5rem"
+                                data-testid="member-account-org">
+                        <CrestText Text="@organization.Name" Style="flex: 1 1 auto;" />
+                        @if (isActive)
+                        {
+                            <CrestText TextStyle="TextStyle.Caption" Text="Active" />
+                        }
+                        else
+                        {
+                            <CrestButton ButtonStyle="ButtonStyle.Light"
+                                         Text="Switch"
+                                         Click="@(() => ShellContext.SetActiveOrganizationAsync(organization.Id))" />
+                        }
+                    </CrestStack>
+                }
+            </CrestStack>
+        }
+    </CrestStack>
+</div>
+
+@code {
+    // Supplied by MemberRoutes, which activates the implementation a member module provides
+    // (its library is lazy, so it cannot be registered in the sealed WASM container).
+    [CascadingParameter]
+    private IMemberShellContext ShellContext { get; set; } = default!;
+}

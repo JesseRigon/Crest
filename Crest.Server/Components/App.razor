@@ -2,9 +2,9 @@
 @using Microsoft.AspNetCore.Http
 @using Microsoft.Extensions.Options
 @using global::Crest
-@using global::Crest.Admin
-@using global::Crest.Site.Client
-@using global::Crest.Member
+@using global::Crest.AdminTheme
+@using global::Crest.SiteTheme.Client
+@using global::Crest.MemberTheme
 @using global::Crest.Middlewares
 @using global::Crest.Extensions
 
@@ -19,7 +19,7 @@
     other request gets the Site branch, exactly what this file rendered before Phase 8.
 
     Routes (and every routable @page component) live in the WASM client assemblies
-    (Site.Client / Admin.Client under the Crest.Client entry), never here -
+    (Site.Client / Admin.Client / Member.Client under the host app's WASM entry), never here -
     the WASM runtime only has whatever assemblies it was compiled with; a Routes
     defined server-side resolves over the circuit but throws the moment
     InteractiveAuto switches to WASM. See docs/blazor-web.md.
@@ -49,11 +49,11 @@
         <link rel="stylesheet" href="@Asset("/OrchardCore.Resources/Vendor/fontawesome-free/css/all.min.css")" />
         <link rel="stylesheet" href="@Asset("/OrchardCore.Resources/Vendor/fontawesome-free/css/v4-shims.min.css")" />
         <link rel="stylesheet" href="@Asset("/OrchardCore.Resources/Vendor/fontawesome-free/css/v5-font-face.min.css")" />
-        <link rel="stylesheet" href="@Asset("/_content/Crest.Admin.Client/CrestAdmin.DesignSystem.Default.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Crest.AdminTheme.Client/CrestAdmin.DesignSystem.Default.css")" />
         <link rel="stylesheet" href="@Asset("/_content/Crest.Components/CrestComponents.css")" />
         <link rel="stylesheet" href="@Asset("/_content/Crest.Components/Crest.Components.bundle.scp.css")" />
-        <link rel="stylesheet" href="@Asset("/_content/Crest.Admin.Client/CrestAdmin.css")" />
-        <link rel="stylesheet" href="@Asset("/_content/Crest.Admin.Client/Crest.Admin.Client.bundle.scp.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Crest.AdminTheme.Client/CrestAdmin.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Crest.AdminTheme.Client/Crest.AdminTheme.Client.bundle.scp.css")" />
         <link rel="stylesheet" href="@Asset("/_content/Crest.Icons/CrestIcons.css")" />
     }
     else if (_isMemberShell)
@@ -67,7 +67,7 @@
         <link rel="stylesheet" href="@Asset("/OrchardCore.Resources/Vendor/fontawesome-free/css/all.min.css")" />
         <link rel="stylesheet" href="@Asset("/_content/Crest.Components/CrestComponents.css")" />
         <link rel="stylesheet" href="@Asset("/_content/Crest.Components/Crest.Components.bundle.scp.css")" />
-        <link rel="stylesheet" href="@Asset("/_content/Crest.Member.Client/CrestMember.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Crest.MemberTheme.Client/CrestMember.css")" />
         <link rel="stylesheet" href="@Asset("/_content/Crest.Icons/CrestIcons.css")" />
     }
     else
@@ -81,9 +81,9 @@
     @if (_isAdminShell)
     {
         <AdminRoutes @rendermode="@_renderMode" />
-        <script src="@Asset("/_content/Crest.Admin.Client/crest.theme.js")"></script>
+        <script src="@Asset("/_content/Crest.AdminTheme.Client/crest.theme.js")"></script>
         <script src="@Asset("/_content/Crest.Components/crest.components.js")"></script>
-        <script src="@Asset("/_content/Crest.Admin.Client/crest.adminMenus.js")"></script>
+        <script src="@Asset("/_content/Crest.AdminTheme.Client/crest.adminMenus.js")"></script>
         @* Crest.ContentPartLists is opt-in, but its client assembly is always compiled
            into the WASM payload, so its page's drag script loads with the shell. *@
         <script src="@Asset("/_content/Crest.ContentPartLists.BlazorWasm/crest.contentPartLists.js")"></script>

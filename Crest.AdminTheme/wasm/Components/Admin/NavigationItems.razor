@@ -1,0 +1,41 @@
+@using Crest.AdminTheme.Api
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@if (Items.Length == 0)
+{
+    <CrestText TextStyle="TextStyle.Body2" Text="@T["No menu items returned."]" />
+}
+else
+{
+    <ul class="navigation-items">
+        @foreach (var item in Items)
+        {
+            <li>
+                <CrestStack Gap="0.25rem">
+                    <CrestText Text="@item.Text" />
+                    <CrestText TextStyle="TextStyle.Caption" Text="@GetDetails(item)" />
+                    @if (item.Items.Length > 0)
+                    {
+                        <NavigationItems Items="item.Items" />
+                    }
+                </CrestStack>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter]
+    public NavigationItem[] Items { get; set; } = [];
+
+    private string GetDetails(NavigationItem item)
+    {
+        var href = !string.IsNullOrWhiteSpace(item.Href) ? item.Href : item.Url;
+        var position = !string.IsNullOrWhiteSpace(item.Position) ? T["position: {0}", item.Position] : null;
+        var id = !string.IsNullOrWhiteSpace(item.Id) ? T["id: {0}", item.Id] : null;
+
+        return string.Join(" · ", new[] { href, position, id }.Where(value => !string.IsNullOrWhiteSpace(value)));
+    }
+}

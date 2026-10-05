@@ -319,7 +319,7 @@ import, and the boundary and geocoding seams. This section is the checklist of w
 
 The validation engine is a genuinely shared piece of code referenced by both client and
 server — worth fixing regardless, since `CrestTenant` today is hand-duplicated between
-`Crest.Admin/wasm/Api/Api.cs` and
+`Crest.AdminTheme/wasm/Api/Api.cs` and
 `Crest.Server/ViewModels/TenantsViewModels.cs` with nothing keeping the two
 in sync. That duplication is the concrete proof this problem is real.
 

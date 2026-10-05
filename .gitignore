@@ -67,3 +67,6 @@ appsettings.Development.json
 # Playwright screenshot-diff output — base/ is the committed reference set,
 # new/ is wiped and regenerated on every test run.
 tests/playwright/output/new/
+
+# Packed NuGet packages for host apps (dotnet pack Crest.slnx -o output)
+/output/

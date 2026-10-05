@@ -27,7 +27,7 @@ Use a first-party Orchard content type for design systems so Orchard owns:
 - audit/history where enabled;
 - search/indexing where enabled.
 
-Crest.Admin should provide the Blazor editor, preview, selector, and token application layer. It should not create a parallel storage or permission model.
+Crest.AdminTheme should provide the Blazor editor, preview, selector, and token application layer. It should not create a parallel storage or permission model.
 
 - [ ] **Define token taxonomy and content part model.** Suggested `CrestDesignSystemPart` fields/properties:
 
@@ -98,7 +98,7 @@ Crest.Admin should provide the Blazor editor, preview, selector, and token appli
 - [ ] **Seed packaged default into tenant content via recipe/setup.** Keep a static CSS file such as:
 
   ```text
-  Crest.Admin/wasm/wwwroot/CrestAdmin.DesignSystem.Default.css
+  Crest.AdminTheme/wasm/wwwroot/CrestAdmin.DesignSystem.Default.css
   ```
 
   Purpose:
@@ -126,7 +126,7 @@ Crest.Admin should provide the Blazor editor, preview, selector, and token appli
 
 #### System fallback
 
-Static packaged defaults loaded from Crest.Admin.
+Static packaged defaults loaded from Crest.AdminTheme.
 
 Used only when no tenant/user design system can be resolved.
 
@@ -153,7 +153,7 @@ Multiple tenant design systems should be allowed, for example:
 
   Every resolution step must verify Orchard content permissions for the current user.
 
-- [ ] **Add the full content-item design-system payload to the admin manifest.** Crest.Admin should convert the selected design system content item into a compact client payload:
+- [ ] **Add the full content-item design-system payload to the admin manifest.** Crest.AdminTheme should convert the selected design system content item into a compact client payload:
 
   ```json
   {
@@ -180,7 +180,7 @@ Multiple tenant design systems should be allowed, for example:
 
 ## Admin UI and user workflow
 
-- [ ] **Build Blazor Design System page over Orchard content services.** Add or extend the Design System page in Crest.Admin.
+- [ ] **Build Blazor Design System page over Orchard content services.** Add or extend the Design System page in Crest.AdminTheme.
 
   Primary areas:
 

@@ -3,7 +3,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
     <AssemblyName>Crest.Icons</AssemblyName>
     <RootNamespace>Crest.Icons</RootNamespace>
   </PropertyGroup>

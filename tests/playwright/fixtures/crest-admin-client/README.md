@@ -1,6 +1,6 @@
-# Crest.Admin.Client localization fixtures
+# Crest.AdminTheme.Client localization fixtures
 
-Reference copies of the hand-written `msgctxt "Crest.Admin.Client"` `.po` entries that
+Reference copies of the hand-written `msgctxt "Crest.AdminTheme.Client"` `.po` entries that
 seed the WASM `.Admin` client string catalog (`CrestApiLocalizer`, served via
 `GET api/crest/localization/strings` — see `docs/localization.md`). The files actually consumed at runtime live in the HOST
 project at `Localization/{culture}/Admin.po` (the host) — by ruling,

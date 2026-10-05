@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
-using Crest.Member.Services;
+using Crest.MemberTheme.Services;
 using Crest.Members.Models;
 using Microsoft.AspNetCore.Components;
 
@@ -44,7 +44,7 @@ public sealed class MemberShellContext(HttpClient http) : IMemberShellContext
     // generic ones (account, sign out) - so it adds no nav entries.
     public IReadOnlyList<MemberShellNavigationEntry> NavigationEntries { get; } = [];
 
-    public string AccountPath => Crest.Member.MemberRoutePaths.Account;
+    public string AccountPath => Crest.MemberTheme.MemberRoutePaths.Account;
 
     public string SignOutText => "Sign out";
 

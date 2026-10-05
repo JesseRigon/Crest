@@ -1,4 +1,4 @@
-// Converted from Crest.Admin/tests/playwright/admin-menu-new-node-locked.js.
+// Converted from Crest.AdminTheme/tests/playwright/admin-menu-new-node-locked.js.
 // The synthetic "New" menu node (and all its children) must render move-locked: greyed,
 // non-draggable, badged "Fixed", with delete and add-separator disabled. (The original
 // asserted a "Locked" badge and ALL actions disabled — the product deliberately relaxed

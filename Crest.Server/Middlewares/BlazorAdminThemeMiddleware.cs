@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -105,8 +106,8 @@ public sealed class BlazorAdminThemeMiddleware
     private const string MemberLoginRoute = "/login";
     private const string MemberNotFoundRoute = "/not-found";
 
-    private static readonly PathString CrestAdminThemePreviewPath = new("/Crest.Admin/Theme.png");
-    private const string CrestAdminThemePreviewAsset = "/_content/Crest.Admin.Client/Theme.png";
+    private static readonly PathString CrestAdminThemePreviewPath = new("/Crest.AdminTheme/Theme.png");
+    private const string CrestAdminThemePreviewAsset = "/_content/Crest.AdminTheme.Client/Theme.png";
 
     private readonly RequestDelegate _next;
     private readonly IOptions<BlazorAdminThemeOptions> _options;
@@ -365,6 +366,15 @@ public sealed class BlazorAdminThemeMiddleware
                 : isBlazorPageRoute
                     ? (adminRemainder.HasValue ? adminRemainder : new PathString("/"))
                     : new PathString(LegacyHostRoute);
+        // Every cookie stays scoped to the TENANT base (see the infrastructure branch above),
+        // and antiforgery's is no exception: Orchard leaves its Cookie.Path unset, so it
+        // follows the request's PathBase - which the shift below is about to extend with the
+        // shell base. A page render issuing the cookie after the shift scoped it to "/Admin"
+        // or "/Login", and the browser then never sent it to tenant-root endpoints such as the
+        // workflow engine API (crest-workflows/api), which refused every unsafe call as
+        // "Antiforgery token missing or invalid". Issue the token pair here, before the shift;
+        // antiforgery keeps it for the rest of the request, so the render reuses it.
+        context.RequestServices.GetRequiredService<IAntiforgery>().GetAndStoreTokens(context);
         context.Request.PathBase = requestPathBase.Add(new PathString(shellBasePath));
         context.Request.Path = rewrittenPath;
         try

@@ -2,9 +2,9 @@
 
 Reference copies of the `.po` entries that back `checks/localization-smoke-site.js`. The
 files actually consumed at runtime live at
-`Crest.Site/Localization/{culture}.po` — `ModularPoFileLocationProvider`
+`Crest.SiteTheme/Localization/{culture}.po` — `ModularPoFileLocationProvider`
 resolves each extension's own `Localization/` folder first (see
-`docs/localization.md`), so `Crest.Site` ships its own test
+`docs/localization.md`), so `Crest.SiteTheme` ships its own test
 string ("Welcome") without needing a global `/Localization/{culture}/*.po` entry.
 
 These copies exist so the test suite has its own stable reference to what the check

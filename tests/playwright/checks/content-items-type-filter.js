@@ -1,4 +1,4 @@
-// /Admin/Contents/ContentItems is a NATIVE Crest Blazor page (Crest.Admin wasm
+// /Admin/Contents/ContentItems is a NATIVE Crest Blazor page (Crest.AdminTheme wasm
 // Pages/ContentItems.razor), not the legacy Orchard iframe an earlier version of this
 // check guarded (the duplicated-shell-inside-iframe bug can no longer occur on this
 // route). This verifies the native replacement: the page renders without any legacy

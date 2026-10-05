@@ -20,11 +20,11 @@ namespace Crest.Components.Theme;
 // a page component and a Crest.Components primitive it hosts can each keep using their own
 // catalog without collision.
 //
-// Lives in Crest.Components (not Crest.Admin) because every WASM client project below
-// Crest.Admin in the dependency graph - Crest.Icons, Accounting.BlazorWasm, and any future
+// Lives in Crest.Components (not Crest.AdminTheme) because every WASM client project below
+// Crest.AdminTheme in the dependency graph - Crest.Icons, Accounting.BlazorWasm, and any future
 // module's blazor-wasm project - needs to localize its own strings too, and none of them
-// can reference Crest.Admin (Crest.Admin depends on them, not the other way around).
-// Deliberately depends on a plain HttpClient rather than Crest.Admin.Api.IApi - the
+// can reference Crest.AdminTheme (Crest.AdminTheme depends on them, not the other way around).
+// Deliberately depends on a plain HttpClient rather than Crest.AdminTheme.Api.IApi - the
 // strings endpoint is unauthenticated GET-only, so the antiforgery-token machinery IApi's
 // other members need is unnecessary baggage here.
 public sealed class CrestApiLocalizer(HttpClient http) : ILocalizer
@@ -85,7 +85,7 @@ public sealed class CrestApiLocalizer(HttpClient http) : ILocalizer
         string.Format(CultureInfo.CurrentCulture, this[text], args);
 
     // Cookie/credential inclusion is configured once, at HttpClient registration time
-    // (see Crest.Admin/wasm/Program.cs's CrestAntiforgeryHandler-wrapped HttpClient), not
+    // (see Crest.AdminTheme/wasm/Program.cs's CrestAntiforgeryHandler-wrapped HttpClient), not
     // per-request here - that keeps this class portable across WASM and server-rendered
     // execution contexts. The WASM-only per-request BrowserRequestCredentials extension
     // (Microsoft.AspNetCore.Components.WebAssembly.Http) doesn't exist outside a browser

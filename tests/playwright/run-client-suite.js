@@ -2,7 +2,7 @@ const path = require('path');
 const { runSuite, printSummary } = require('./harness/run-suite');
 const { loginAsClient } = require('./harness/auth');
 
-// Mirror of run-admin-suite.js for the public/front-end (Crest.Site) side. No
+// Mirror of run-admin-suite.js for the public/front-end (Crest.SiteTheme) side. No
 // client-site feature checks exist yet — this is the wired-up entry point ready for the
 // first one, using the same shared-instance runSuite engine and the same base/new
 // screenshot-diff convention as the admin suite. Health checks are admin-shaped

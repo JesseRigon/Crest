@@ -173,7 +173,7 @@ The global store's host-call rough edge is in [global-store.md](global-store.md)
 - [ ] **4. Remove the host references below, and add the publishing gate check.** Crest must
   build, test and read without any host present.
   - [ ] `Crest.Tests.slnx` lists a host's projects. Root cause:
-    `Crest.Admin.Client.csproj` globs `..\..\..\**\blazor-wasm\*.csproj`, reaching out
+    `Crest.AdminTheme.Client.csproj` globs `..\..\..\**\blazor-wasm\*.csproj`, reaching out
     of the repository. Replace the glob with an item the host supplies.
   - [ ] Workflow object constants and a payload fallback key name a host's records; object
     names are free strings, and the subject key becomes a generic `ContentItemId`.

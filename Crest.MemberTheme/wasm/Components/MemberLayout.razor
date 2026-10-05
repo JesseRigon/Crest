@@ -1,0 +1,98 @@
+@using Crest.Components.Primitives
+@using Crest.MemberTheme.Services
+@implements IDisposable
+
+@* The member shell's chrome: header, the active-organization region, and the content
+   area modules' pages render into.
+
+   This layout knows nothing about parties, organizations-as-content, memberships or
+   member classes - all of that belongs to whichever module implements
+   IMemberShellContext (Crest.Members does). The shell is Crest's; what a member IS is
+   the module's. That is the same direction every other Crest seam runs in: upstream
+   never references downstream.
+
+   One theme, shared by every organization-bound user in the tenant - exactly as the
+   admin theme is shared by every staff user. What differs per member is their DATA and
+   their PERMISSIONS, never the theme. So nothing here hides or shows anything as an
+   authorization decision: this chrome renders what the server already returned for this
+   member, and every scope decision is made server-side, keyed on the active organization
+   and member class, failing closed. A nav entry hidden in markup would be access control
+   in a WASM assembly every member downloads. *@
+
+<div class="crest-member-shell" data-testid="member-shell">
+    <header class="crest-member-shell__header">
+        <div class="crest-member-shell__brand">
+            <CrestText TextStyle="TextStyle.H6" Text="@ShellContext.SiteName" />
+        </div>
+
+        @* The active-organization switcher. Present only when the member is bound to more
+           than one organization - a single-organization member (a one-person household,
+           say) should not be asked to choose. *@
+        @if (ShellContext.Organizations.Count > 1)
+        {
+            <div class="crest-member-shell__org" data-testid="member-shell-org-switcher">
+                <CrestDropDown TValue="string"
+                               Data="@ShellContext.Organizations"
+                               TextProperty="Name"
+                               ValueProperty="Id"
+                               Value="@ShellContext.ActiveOrganizationId"
+                               Change="@OnOrganizationChangedAsync"
+                               AllowClear="false" />
+            </div>
+        }
+        else if (ShellContext.ActiveOrganizationName is { Length: > 0 } onlyOrganization)
+        {
+            <div class="crest-member-shell__org" data-testid="member-shell-org">
+                <CrestText TextStyle="TextStyle.Body2" Text="@onlyOrganization" />
+            </div>
+        }
+
+        <nav class="crest-member-shell__nav" data-testid="member-shell-nav">
+            @* Modules contribute member nav entries the same way they contribute pages.
+               These are presentation, not permission: the server decides what a member
+               may read, and an entry leading somewhere empty is a far better failure
+               than a client-side gate pretending to be security. *@
+            @foreach (var entry in ShellContext.NavigationEntries)
+            {
+                <CrestLink Path="@entry.Path" Text="@entry.Text" />
+            }
+        </nav>
+
+        <div class="crest-member-shell__account">
+            <CrestLink Path="@ShellContext.AccountPath" Text="@ShellContext.UserName" data-testid="member-shell-account" />
+            <CrestButton ButtonStyle="ButtonStyle.Light"
+                         Text="@ShellContext.SignOutText"
+                         Click="@OnSignOutAsync"
+                         data-testid="member-shell-signout" />
+        </div>
+    </header>
+
+    <main class="crest-member-shell__content">
+        @ChildContent
+    </main>
+</div>
+
+@code {
+    // Supplied by MemberRoutes, which activates the implementation a member module provides
+    // (its library is lazy, so it cannot be registered in the sealed WASM container).
+    [CascadingParameter]
+    private IMemberShellContext ShellContext { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private Task OnOrganizationChangedAsync(object? value) =>
+        value is string organizationId && !string.IsNullOrEmpty(organizationId)
+            ? ShellContext.SetActiveOrganizationAsync(organizationId)
+            : Task.CompletedTask;
+
+    private Task OnSignOutAsync() => ShellContext.SignOutAsync();
+
+    // MemberRoutes loads the context before any page renders; the layout only follows
+    // later changes (an organization switch, sign-out).
+    protected override void OnInitialized() => ShellContext.Changed += OnChanged;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ShellContext.Changed -= OnChanged;
+}

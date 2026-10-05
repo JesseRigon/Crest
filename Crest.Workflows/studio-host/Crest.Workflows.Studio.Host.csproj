@@ -7,7 +7,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <IsPackable>false</IsPackable>
     <AssemblyName>Crest.Workflows.Studio.Host</AssemblyName>
     <RootNamespace>Crest.Workflows.Studio.Host</RootNamespace>
   </PropertyGroup>

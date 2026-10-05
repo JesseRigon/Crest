@@ -35,7 +35,7 @@ The component library was forked from Radzen's source and renamed `Radzen*` → 
 the chart, data grid, scheduler, Gantt, HTML editor, spreadsheet, tree, upload, form and
 dropdown families all originate there, as do the models, services and JavaScript that
 support them. Behaviour has since diverged and components with no Radzen counterpart were
-added, but the library as a whole is a derivative work. `Crest.Admin` and
+added, but the library as a whole is a derivative work. `Crest.AdminTheme` and
 anything else built on it inherit that status.
 
 ## Libraries used as packages
@@ -47,11 +47,11 @@ project's `PackageReference` set and `Directory.Packages.props`.
 ## Bundled front-end assets
 
 The default site theme ships third-party static assets in
-`Crest.Site/wwwroot/`:
+`Crest.SiteTheme/wwwroot/`:
 
 | Asset | Licence |
 | --- | --- |
-| The theme's HTML/CSS, from a Start Bootstrap template | MIT, Copyright (c) 2013-2020 Start Bootstrap LLC — `Crest.Site/wwwroot/LICENSE` |
+| The theme's HTML/CSS, from a Start Bootstrap template | MIT, Copyright (c) 2013-2020 Start Bootstrap LLC — `Crest.SiteTheme/wwwroot/LICENSE` |
 | `vendor/bootstrap` — Bootstrap v4.5.0 | MIT, Copyright 2011-2020 The Bootstrap Authors and Twitter, Inc. |
 | `vendor/jquery` — jQuery v3.5.1 | MIT, Copyright OpenJS Foundation and other contributors |
 | `vendor/fontawesome-free` — Font Awesome Free 5.13.0 | Icons CC BY 4.0, fonts SIL OFL 1.1, code MIT — Copyright Fonticons, Inc.; see https://fontawesome.com/license/free |

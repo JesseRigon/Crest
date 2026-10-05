@@ -1,0 +1,22 @@
+@namespace Crest.AdminTheme.Components.Shared
+@using Crest.Components.Primitives
+@using Crest.Components.Primitives
+
+<CrestTabs @attributes="Attributes"
+            class="crest-main-content-tabs"
+            RenderMode="TabRenderMode.Client"
+            SelectedIndex="@SelectedIndex"
+            SelectedIndexChanged="@SelectedIndexChanged"
+            Change="@Change">
+    <Tabs>
+        @ChildContent
+    </Tabs>
+</CrestTabs>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public int SelectedIndex { get; set; }
+    [Parameter] public EventCallback<int> SelectedIndexChanged { get; set; }
+    [Parameter] public EventCallback<int> Change { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? Attributes { get; set; }
+}

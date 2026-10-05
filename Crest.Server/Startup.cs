@@ -179,7 +179,7 @@ public sealed class Startup : StartupBase
         // circuit) before a WASM runtime is even downloaded - every component that
         // calls a relative api/crest/* endpoint via HttpClient needs one with a real
         // BaseAddress during those server-side phases too, mirroring what the WASM
-        // entry (Crest.Client/Program.cs) sets up client-side. Scoped +
+        // entry (Crest.AdminTheme.Client's CrestWebAssemblyHost) sets up client-side. Scoped +
         // IHttpContextAccessor-derived base address: correct per-request even behind a
         // reverse proxy/different host header.
         //
@@ -218,8 +218,8 @@ public sealed class Startup : StartupBase
             return new HttpClient(handler) { BaseAddress = baseAddress };
         });
         services.AddScoped<CrestForwardedAuthHandler>();
-        services.AddScoped<Crest.Admin.Api.ICrestAntiforgeryTokenStore>(sp => sp.GetRequiredService<CrestForwardedAuthHandler>());
-        services.AddScoped<Crest.Admin.Api.ICrestCultureCookieWriter, CrestNoOpCultureCookieWriter>();
+        services.AddScoped<Crest.AdminTheme.Api.ICrestAntiforgeryTokenStore>(sp => sp.GetRequiredService<CrestForwardedAuthHandler>());
+        services.AddScoped<Crest.AdminTheme.Api.ICrestCultureCookieWriter, CrestNoOpCultureCookieWriter>();
         services.AddCrestComponents();
         services.AddCrestIconClient();
 
@@ -227,7 +227,7 @@ public sealed class Startup : StartupBase
         // under InteractiveAuto, so their SSR/circuit phases resolve these from THIS
         // container - any admin-page dependency missing here is the AdminMenu DI bug
         // all over again (an unresolvable constructor surfacing as a blank/broken
-        // page). Counterparts of Crest.Admin's AddCrestAdminClient (WASM side):
+        // page). Counterparts of Crest.AdminTheme's AddCrestAdminClient (WASM side):
         // IApi/DisplayManager/CrestThemeEngine/CrestApiLocalizer ride the
         // forwarded-cookie HttpClient above; CrestRoutingOptions comes straight from
         // the tenant's configured options (no HTTP self-call needed server-side) via
@@ -236,9 +236,9 @@ public sealed class Startup : StartupBase
         // Culture needs no explicit registration: CultureInfo.CurrentUICulture is
         // already resolved per-request by CrestCultureCookieOptionsConfiguration's
         // RequestLocalizationOptions pipeline, which CrestApiLocalizer picks up.
-        services.AddScoped<Crest.Admin.Api.IApi, Crest.Admin.Api.Api>();
-        services.AddScoped<Crest.Admin.DisplayManagement.DisplayManager>();
-        services.AddScoped<Crest.Admin.Theme.CrestThemeEngine>();
+        services.AddScoped<Crest.AdminTheme.Api.IApi, Crest.AdminTheme.Api.Api>();
+        services.AddScoped<Crest.AdminTheme.DisplayManagement.DisplayManager>();
+        services.AddScoped<Crest.AdminTheme.Theme.CrestThemeEngine>();
         services.AddScoped<Crest.Components.Theme.CrestApiLocalizer>();
         services.AddScoped<Crest.Components.Primitives.ILocalizer>(sp => sp.GetRequiredService<Crest.Components.Theme.CrestApiLocalizer>());
         services.AddScoped(sp =>
@@ -246,7 +246,7 @@ public sealed class Startup : StartupBase
             var themeOptions = sp.GetRequiredService<IOptions<BlazorAdminThemeOptions>>().Value;
             // Composed on the tenant base so these stay real, navigable browser URLs
             // under URL-prefixed tenants, mirroring the WASM side's own composition
-            // (Crest.Client/Program.cs). During SSR of an admin page the
+            // (CrestWebAssemblyHost). During SSR of an admin page the
             // middleware has already shifted the shell base into PathBase, so the
             // pre-shift value it stashed is the tenant layer; on a circuit/hub request
             // PathBase was never shifted and is already exactly that layer.
@@ -255,7 +255,7 @@ public sealed class Startup : StartupBase
                 && stashed is string stashedBase
                     ? stashedBase
                     : httpContext?.Request.PathBase.Value ?? string.Empty).TrimEnd('/');
-            return new Crest.Admin.Options.CrestRoutingOptions
+            return new Crest.AdminTheme.Options.CrestRoutingOptions
             {
                 AdminPath = tenantBase + themeOptions.AdminPath,
                 LoginPath = tenantBase + themeOptions.LoginPath,
@@ -355,12 +355,11 @@ public sealed class Startup : StartupBase
         // project (see docs/blazor-web.md) silently 404 - MapRazorComponents<App>()
         // built its route table before the assembly was ever loaded.
         // Two naming conventions feed the route table: theme client assemblies
-        // (*.Client - Site.Client, Admin.Client, the Crest.Client entry)
-        // and module-contributed Blazor page libraries (*.BlazorWasm - any
-        // blazor-wasm/ project anywhere under modules/, the same set Admin.Client's
-        // generated CrestModuleAssemblyRegistry loads browser-side; keep the two
-        // conventions in sync or a module's pages route in one runtime and 404 in
-        // the other).
+        // (*.Client - Site.Client, Admin.Client, Member.Client, the host's WASM entry)
+        // and module-contributed Blazor page libraries (*.BlazorWasm - whatever module
+        // client libraries the host app references, the same set the Crest.LazyModules
+        // generator treats as modules browser-side; keep the two conventions in sync or a
+        // module's pages route in one runtime and 404 in the other).
         foreach (var clientAssemblyPath in Directory.EnumerateFiles(AppContext.BaseDirectory, "*.Client.dll", SearchOption.TopDirectoryOnly)
             .Concat(Directory.EnumerateFiles(AppContext.BaseDirectory, "*.BlazorWasm.dll", SearchOption.TopDirectoryOnly)))
         {

@@ -8,10 +8,10 @@ namespace Crest.Shell;
 /// Module client libraries loaded on demand, browser side, per shell.
 /// </summary>
 /// <remarks>
-/// Crest.Client's build works out which module assemblies are lazy, which shell
-/// each belongs to (<c>CrestShellAttribute</c>), the routes each serves, what each needs
-/// with it and which contribute to page regions (CrestLazyModules.targets), and hands that
-/// here. A shell's router asks for a path's module before it matches
+/// The host app's WASM build (Crest.LazyModules) works out which module client libraries
+/// the app ships, which of them are lazy, which shell each belongs to
+/// (<c>CrestShellAttribute</c>), the routes each serves, what each needs with it and which
+/// contribute to page regions, and hands that here. A shell's router asks for a path's module before it matches
 /// (<see cref="EnsureForPathAsync"/>) - only among ITS OWN shell's modules, so the admin
 /// shell can never load a member page and the member shell never an admin one. A shell can
 /// also load all of its modules up front (<see cref="EnsureShellAsync"/>), which the member
@@ -22,11 +22,18 @@ namespace Crest.Shell;
 /// without referencing another shell.
 /// </remarks>
 public sealed class CrestLazyModules(
+    string[] modules,
     (string Template, string Assembly, string Shell)[] routes,
     Dictionary<string, string[]> shellModules,
     Dictionary<string, string[]> dependencies,
     string[] regionContributors) : IPageRegionContributorLoader
 {
+    /// <summary>
+    /// Every module client library the host app ships, eager and lazy, every shell's - the
+    /// browser-side counterpart of the *.BlazorWasm assemblies the server loads.
+    /// </summary>
+    public IReadOnlyList<string> Modules { get; } = modules;
+
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly HashSet<string> _loadedNames = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<Assembly> _loadedModules = [];
@@ -36,7 +43,7 @@ public sealed class CrestLazyModules(
     /// <summary>
     /// The module assemblies that were never lazy (loaded at boot), which page-region
     /// discovery runs over alongside <see cref="LoadedModules"/>. Set by the admin client,
-    /// which is where the build's eager module registry lives.
+    /// which is where the module registry lives.
     /// </summary>
     public IReadOnlyList<Assembly> EagerModules { get; set; } = [];
 

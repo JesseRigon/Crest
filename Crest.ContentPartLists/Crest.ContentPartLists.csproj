@@ -3,7 +3,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
     <AssemblyName>Crest.ContentPartLists</AssemblyName>
     <RootNamespace>Crest</RootNamespace>
   </PropertyGroup>

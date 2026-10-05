@@ -88,7 +88,7 @@ extra plumbing needed.
 
 ## Front end and anonymous visitors (server-rendered)
 
-The tenant's front-end site (`Crest.Site`) is plain server-rendered
+The tenant's front-end site (`Crest.SiteTheme`) is plain server-rendered
 Razor/Liquid — no WASM client to resolve anything itself. It relies on the stock ASP.NET
 Core `RequestLocalizationOptions` pipeline instead:
 
@@ -147,11 +147,11 @@ data (the SDK's default trimmed set only covers a handful of cultures).
 
 Two independent mechanisms, by project:
 
-- **`Crest.Components`, `Crest.Site`** — compiled-resource /
+- **`Crest.Components`, `Crest.SiteTheme`** — compiled-resource /
   `.po`-based mechanisms (`CrestStrings.resx` + `ILocalizer`/`Localizer` for Components;
   a `.po`-based theme mechanism for Site). New languages are `.po`/API content, not new
   `CrestStrings.{culture}.resx` files.
-- **`Crest.Admin` (headless Blazor WASM) and any project that can reference
+- **`Crest.AdminTheme` (headless Blazor WASM) and any project that can reference
   `Crest.Components`** — pulls its string catalog at runtime via an API rather than
   compiled resources:
   - Keys are **invariant literals**, native Orchard style: `T["Some text"]`, or
@@ -171,7 +171,7 @@ Two independent mechanisms, by project:
     `CrestLocalizationController` serves a **layered** per-culture dictionary, callable
     pre-login, resolving each literal as **stored edit → PO → miss** (the client then
     renders the literal): tenant translation store entries under context
-    `Crest.Admin.Client` first; then PO — a `Crest.Admin.Client`-context entry if one
+    `Crest.AdminTheme.Client` first; then PO — a `Crest.AdminTheme.Client`-context entry if one
     exists, else the most common translation of the literal across **all** shipped
     catalogs (via `CrestPoTranslationLookup`, the same helper the menu caption chain
     uses). Every layer falls back from a region culture (`es-ES`) to its parent (`es`).
@@ -185,7 +185,7 @@ Two independent mechanisms, by project:
     its aligned literals inherit whatever the host's catalogs provide. The host project
     supplies editorial translations as its own distinctly-named files next to the
     mirror (a host, for example: `Localization/{culture}/Admin.po`, literal msgids,
-    `msgctxt "Crest.Admin.Client"`; front-site strings in `Site.po`). Distinct
+    `msgctxt "Crest.AdminTheme.Client"`; front-site strings in `Site.po`). Distinct
     filenames survive a mirror refresh. Host modules that are not part of Crest (e.g. a
     line-of-business module) may keep module-local `Localization/{culture}.po` inside the host repo.
 
@@ -226,7 +226,7 @@ localizes identically.
 
 **Where the two worlds meet** — literals that are also upstream msgids (the point of
 literal-key alignment). Resolution order arbitrates: store edit → own `.po` entry
-(`Crest.Admin.Client` context) → upstream catalog → the literal. A Crowdin refresh can
+(`Crest.AdminTheme.Client` context) → upstream catalog → the literal. A Crowdin refresh can
 only change what renders when layers 1–2 say nothing about a string — the desirable
 case, where never-touched gaps quietly gain translations. Adding your own entry
 permanently shadows upstream's version, and pin-to-literal (store the literal as the

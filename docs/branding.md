@@ -14,14 +14,14 @@ Current state:
   served by `GET api/crest/site` (`siteName`) and editable on the Crest Settings
   › General screen.
 - The login page hardcodes the platform name:
-  `Crest.Admin/wasm/Pages/Login.razor` line 16 —
+  `Crest.AdminTheme/wasm/Pages/Login.razor` line 16 —
   `<CrestText TextStyle="TextStyle.H3" Text="Crest" />`.
 - The admin document title is also hardcoded:
   `Crest.Server/Components/App.razor` — `<title>Crest</title>`.
 - `GET api/crest/site` requires `ManageSettings` — NOT usable from the anonymous
   login page. `GET api/crest/site/home` is the existing `[AllowAnonymous]`
   precedent on the same controller.
-- The Design System page is `Crest.Admin/wasm/Pages/DesignSystem.razor`
+- The Design System page is `Crest.AdminTheme/wasm/Pages/DesignSystem.razor`
   (route `/DesignSystem`, gated by `ManageSettings` in
   `CrestRoutePermissionProvider`).
 - Tenant media already flows through Orchard Media elsewhere (icon overrides use

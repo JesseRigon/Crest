@@ -3,7 +3,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
     <OrchardCoreCompatibilityVersion>4.0.0</OrchardCoreCompatibilityVersion>
     <CrestSecurityPatch>0</CrestSecurityPatch>
     <CrestBugPatch>0</CrestBugPatch>
@@ -81,7 +80,7 @@
        conversion.md's decision to keep everything Blazor-hosting-related in one server
        rather than duplicating hosting per theme. Server only references Components -
        the shared, generic Blazor primitives/rendering machinery every Blazor-capable
-       theme builds on - not any specific theme (Crest.Site, Crest.Admin, or any future
+       theme builds on - not any specific theme (Crest.SiteTheme, Crest.AdminTheme, or any future
        third-party Blazor theme). Themes are discovered dynamically at runtime via
        Orchard's own extension/feature system, the same way BlazorAdminThemeMiddleware
        already detects "is the current theme Blazor-tagged" via IAdminThemeService
@@ -100,21 +99,19 @@
     <Compile Include="..\Crest.Icons\Providers\TenantMedia\**\*.cs" Link="Icons\Providers\TenantMedia\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <!-- Phase 8: Server references the single WASM entry project
-       (Crest.Client) instead of glob-discovering per-theme client
-       projects - a Blazor Web App has exactly one browser payload/Program.Main, and
-       the entry project is where per-theme client libraries (Site, Admin, future
-       themes via its own references) and module blazor-wasm libraries (via
-       Admin.Client's CrestModuleWasmProject glob) all converge. Extensibility moved,
-       it didn't disappear: adding a theme client library or module blazor-wasm project
-       means it gets picked up by the entry project's reference graph, and
-       Startup.Configure's assembly scan (*.Client.dll / *.BlazorWasm.dll) feeds
-       everything to MapRazorComponents' route table automatically. Which theme
-       actually renders for a given request is still decided at runtime (the
-       theme-dispatching Components/App.razor + BlazorAdminThemeMiddleware's theme
-       check), never at build time. -->
+  <!-- Server references the theme client libraries it renders (SSR and InteractiveServer).
+       The single WASM entry project (Program.Main) belongs to the HOST app, which
+       references these same libraries plus the module client libraries it ships - see
+       Crest.AdminTheme.Client's CrestWebAssemblyHost. Crest never references a host's modules:
+       Startup.Configure's assembly scan (*.Client.dll / *.BlazorWasm.dll) picks up
+       whatever the host brought into the app's output and feeds it to
+       MapRazorComponents' route table. Which theme actually renders for a given request
+       is still decided at runtime (the theme-dispatching Components/App.razor +
+       BlazorAdminThemeMiddleware's theme check), never at build time. -->
   <ItemGroup>
-    <ProjectReference Include="..\Crest.Client\Crest.Client.csproj" />
+    <ProjectReference Include="..\Crest.AdminTheme\wasm\Crest.AdminTheme.Client.csproj" />
+    <ProjectReference Include="..\Crest.SiteTheme\wasm\Crest.SiteTheme.Client.csproj" />
+    <ProjectReference Include="..\Crest.MemberTheme\wasm\Crest.MemberTheme.Client.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Crest.Server.Tests" />

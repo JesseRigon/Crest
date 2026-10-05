@@ -1,4 +1,4 @@
-// Converted from Crest.Admin/tests/playwright/admin-menu-node-editor-dialog.js.
+// Converted from Crest.AdminTheme/tests/playwright/admin-menu-node-editor-dialog.js.
 // The add/edit node editor must be an inline panel under the clicked node, not a modal
 // Radzen dialog, and must pre-populate existing values when editing.
 module.exports = async function run(page, ctx) {

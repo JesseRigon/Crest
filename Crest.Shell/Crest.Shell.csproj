@@ -10,7 +10,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <IsPackable>false</IsPackable>
     <AssemblyName>Crest.Shell</AssemblyName>
     <RootNamespace>Crest.Shell</RootNamespace>
     <OrchardCoreCompatibilityVersion>4.0.0</OrchardCoreCompatibilityVersion>

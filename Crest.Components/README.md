@@ -34,7 +34,7 @@ Reusable layout and navigation mechanics belong in this project. Theme-specific 
 
 Shared components consume the canonical `--crest-*` primitive token contract; they do not consume Admin or Radzen token names directly. In place today:
 
-- packaged default primitive token CSS (`Crest.Admin/wasm/wwwroot/CrestAdmin.DesignSystem.Default.css`), loaded by the admin document and applied via the shell;
+- packaged default primitive token CSS (`Crest.AdminTheme/wasm/wwwroot/CrestAdmin.DesignSystem.Default.css`), loaded by the admin document and applied via the shell;
 - shared component cleanup so primitives do not consume Admin or Radzen token names directly;
 - Admin shell/primary-navigation/titlebar/shared tab components moved toward canonical `--crest-*` tokens;
 - a Design System page (`wasm/Pages/DesignSystem.razor`) + `CrestThemeSettings` covering a small fixed token set (Radzen theme, 4 colors, radius) via Site Settings.
