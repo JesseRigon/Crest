@@ -1,10 +1,10 @@
 %% How a Crest workflow gets triggered and runs: entry points, the unit of work a burst
 %% commits as, what happens inside the unit (hooks) versus after it (triggers, external
-%% calls), and the posting engine as the worked example. See docs/workflows.md.
+%% calls). See docs/workflows.md; a consuming module's docs carry its worked example.
 flowchart TB
     subgraph Entry["Entry points (each one is a shell scope = a unit of work)"]
         direction LR
-        API["API request<br/>(POST transactions/{id}/post, content save, ...)"]
+        API["API request<br/>(a registry service's write, content save, ...)"]
         Manual["Run by hand<br/>(designer / execute endpoint)"]
         Timer["Scheduled task<br/>(Timer, Cron, Delay)<br/>ShellScopedRunScheduledTaskHandler"]
         Webhook["Webhook received<br/>(HMAC-signed POST)"]
@@ -14,10 +14,10 @@ flowchart TB
 
     subgraph Unit["Unit of work: one burst, one session, one transaction"]
         direction TB
-        Service["Registry service writes the object<br/>(TransactionService: number, snapshot, publish)<br/>under the object's lock (IWorkflowObjectLock)"]
-        HookSlot{{"Hook slot runs inline<br/>transaction.created / transaction.posting / transaction.voiding<br/>(IWorkflowHookRunner)"}}
-        Attach["Attached flows run as child instances<br/>in the SAME scope and session<br/>system: accounting.post-invoice ...<br/>tenant: Copy fields, ..."]
-        Ledger["Journal entry activity → ILedgerService<br/>JournalEntry + JournalLines posted<br/>(LedgerLineIndex rows)"]
+        Service["Registry service writes the object<br/>under the object's lock (IWorkflowObjectLock)"]
+        HookSlot{{"Hook slot runs inline<br/>a module's slot or flow.hook<br/>(IWorkflowHookRunner)"}}
+        Attach["Attached flows run as child instances<br/>in the SAME scope and session<br/>system: the module's shipped attachments<br/>tenant: Copy fields, ..."]
+        Ledger["Attached activities write<br/>through the module's services<br/>in the same unit"]
         Burst["Flow executes synchronously<br/>until a wait (bookmark) or the end"]
         Mark["Background activity reached?<br/>Call connector / Poll connector / Orchard external task"]
         Job["Job written in the unit<br/>(DurableBackgroundActivityScheduler)<br/>+ bookmark on the node"]

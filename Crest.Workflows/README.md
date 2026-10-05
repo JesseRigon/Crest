@@ -3,33 +3,35 @@
 The workflow service of the Crest application layer, and the registry every module
 contributes its triggers, activities, hook slots and flows to. Elsa 3, integrated the way
 `OrchardCore.Workflows` is: per-shell YesSql stores, definitions as content items,
-Orchard permissions on the API. Plan and rulings: `../../plans/workflows.md`. Origin:
-`UPSTREAM.md`.
+Orchard permissions on the API. How it works: `../docs/workflows.md`; design not yet built
+and rulings: `../docs/workflows.md`. Origin: `UPSTREAM.md`.
 
 Layout: `Server/` (engine, feature `Crest.Workflows`), `Contents/` (content
-triggers and tasks, feature `Crest.Workflows.Contents`), `tests/`, and `reference/`
-(the port's other modules and the designer, kept unbuilt until their phase).
+triggers and tasks, feature `Crest.Workflows.Contents`), `Domain/` (the contracts modules
+bind to), `engine/` and `designer/` (vendored Elsa and Elsa Studio), `blazor-wasm/` and
+`studio-host/` (the admin pages and the lazily loaded Studio), `tests/`, and `reference/`
+(the port's other modules, kept unbuilt for diffing).
 
 ## Features
 
 - `Crest.Workflows` — the engine and the engine's HTTP API (`~/crest-workflows/api`) inside
   the tenant. Depends on `OrchardCore.Workflows` (the upstream modules' workflow startups
-  are gated on that id) and `OrchardCore.Contents`.
+  are gated on that id), `OrchardCore.Contents` and `OrchardCore.Crest`.
 - `Crest.Workflows.Http` — Elsa HTTP endpoint/request activities.
 - `Crest.Workflows.Contents` — content triggers and tasks.
 
 ## Security model
 
 - **Who may call the API:** `CrestWorkflowsApiSecurityMiddleware`. Anonymous → 401; authenticated
-  without Orchard's `ManageWorkflows` → 403 (evaluated per request through Orchard's
+  without *View workflows* → 403 (evaluated per request through Orchard's
   authorization pipeline, so every module's `IAuthorizationHandler` applies — the member
-  permission ceiling lists `ManageWorkflows`); non-GET without a valid antiforgery token →
-  400. Only then does the request get the engine's `permissions=*` grant, on a per-request
-  identity, never in the cookie.
+  permission ceiling included); non-GET without a valid antiforgery token →
+  400. Only then does the request get the engine permission names its Orchard workflow
+  permissions map to (`EnginePermissions`), on a per-request identity, never in the cookie.
 - **Tenant isolation:** one Elsa per shell — services, stores (tenant `ISession`),
   hosted services and the file lock directory (`<tenant App_Data>/locks`) are all the
   shell's own. Nothing addresses another tenant.
-- **Acting user:** every content stimulus carries a `User` input
+- **Acting user:** every content stimulus carries an `Actor` input
   (`WorkflowUserContext`: id, name, tenant, claims snapshot). Triggers can require a
   permission (`RequiredPermission`) and the `RequirePermission` activity gates any flow;
   both evaluate the snapshot through Orchard's real `IAuthorizationService`.
@@ -40,7 +42,7 @@ triggers and tasks, feature `Crest.Workflows.Contents`), `tests/`, and `referenc
 
 A consuming module depends on `Crest.Workflows.Domain` and registers:
 
-- `IWorkflowTriggerProvider` — the triggers its registry raises (`transaction.posted`).
+- `IWorkflowTriggerProvider` — the triggers its registry raises (`party.role-created`).
 - `IWorkflowActivityProvider` — activities it contributes to the palette for the objects it
   owns; the activity classes live in the module and are added to the engine from its
   startup with `services.ConfigureCrestWorkflows(w => w.AddActivitiesFrom<Startup>())`.
@@ -64,7 +66,7 @@ the ports). Stock workflow *types* are not run; definitions live here.
 
 ## Tests
 
-`tests/playwright/checks/` (registered in the shared suite, `../../tests/playwright/run-admin-suite.js`;
+`tests/playwright/checks/` (registered in the shared suite, `../tests/playwright/run-admin-suite.js`;
 a consuming host's own checks cover the registry end to end through its modules) and
-`tests/Crest.Workflows.Tests` (xUnit, discovered by `../../tests/run-tests.sh`). A host
+`tests/Crest.Workflows.Tests` (xUnit, discovered by `../tests/run-tests.sh`). A host
 runs everything through its own test entrypoint.

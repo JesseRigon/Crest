@@ -4,12 +4,9 @@ This list is generated from the current resolved Orchard admin navigation for th
 
 | Menu | Route | Status |
 | --- | --- | --- |
-| New > Customer | `/Admin/Contents/ContentTypes/Customer/Create` | native document editor |
 | New > Organization | `/Admin/Contents/ContentTypes/Organization/Create` | native document editor |
-| New > Partner | `/Admin/Contents/ContentTypes/Partner/Create` | native document editor |
 | New > Person | `/Admin/Contents/ContentTypes/Person/Create` | native document editor |
 | New > Taxonomy | `/Admin/Contents/ContentTypes/Taxonomy/Create` | native document editor |
-| New > Vendor | `/Admin/Contents/ContentTypes/Vendor/Create` | native document editor |
 | Content > Admin Menus | `/Admin/AdminMenu/List` | native |
 | Content > Site Menus | `/Admin/Contents/ContentItems/Menu` | native |
 | Content > Content Definition > Content Types | `/Admin/ContentTypes/List` | native browse |
@@ -26,7 +23,6 @@ This list is generated from the current resolved Orchard admin navigation for th
 | Design > Widgets | `/Admin/Layers` | standard Orchard UI (deferred) |
 | Design > Shortcodes | `/Admin/Shortcodes` | standard Orchard UI (deferred) |
 | Design > Icons | `/Admin/Design/Icons` | native |
-| CRM > Customers | `/Admin/CRM/Customers` | native host module |
 | Settings > General | `/Admin/Settings/general` | native |
 | Settings > Admin | `/Admin/Settings/admin` | native |
 | Settings > Access Control > Roles | `/Admin/Roles/Index` | native browse |

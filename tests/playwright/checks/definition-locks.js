@@ -1,4 +1,4 @@
-// Definition locks (docs/Content-Items.md › Definition locks) from the tenant side, on a
+// Definition locks (docs/content-items.md › Definition locks) from the tenant side, on a
 // part this check owns (CrestLockCheckPart, created if absent and left in place - there is
 // no Crest endpoint that deletes a part, and the check is idempotent). A Tenant lock on a
 // field refuses retyping, a visibility condition and an option-picker conversion (409, with

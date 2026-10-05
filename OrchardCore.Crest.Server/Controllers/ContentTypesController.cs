@@ -104,7 +104,7 @@ public sealed class ContentTypesController(
             return NoContent();
         }
 
-        // A locked field keeps its type (docs/Content-Items.md › Definition locks); 409 via the lock filter.
+        // A locked field keeps its type (docs/content-items.md › Definition locks); 409 via the lock filter.
         if (current is not null)
         {
             await locks.EnsureFieldChangeAsync(request.Part, request.Field, Crest.Services.CrestDefinitionChanges.Retyped);
@@ -257,7 +257,7 @@ public sealed class ContentTypesController(
     /// <summary>
     /// Places or lifts a TENANT lock on a part definition (Part), one of its fields (Part +
     /// Field) or a part's attachment to a type (Type + Part). Module locks never move here;
-    /// the permission is LockContentDefinitions, not EditContentTypes (docs/Content-Items.md
+    /// the permission is LockContentDefinitions, not EditContentTypes (docs/content-items.md
     /// › Definition locks).
     /// </summary>
     [HttpPut("locks")]

@@ -18,7 +18,7 @@ namespace Crest.Routing;
 // (wrong pipeline stage, designed for rewriting/generating candidates, not vetoing
 // already-generated ones) and not a filtering wrapper around
 // RazorComponentEndpointDataSource<App> (internal-shaped, would require re-deriving
-// undocumented caching/change-token semantics). See docs/BlazorWeb.md's "Route
+// undocumented caching/change-token semantics). See docs/blazor-web.md's "Route
 // reachability" section for the full research and reasoning.
 //
 // Bucket disambiguation - NOT a theme-id comparison. Earlier versions of this policy

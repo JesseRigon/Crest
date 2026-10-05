@@ -17,7 +17,7 @@
 
     Lives in the .Client (WASM) project, not Server's own Components/ - Routes/routable
     @page components have to live wherever MapRazorComponents<App>()'s WASM runtime can
-    actually find them once downloaded to the browser (see docs/BlazorWeb.md's "Root
+    actually find them once downloaded to the browser (see docs/blazor-web.md's "Root
     component type ... could not be found" entry). That also means this component can't
     inject IContentManager (server-only, no WASM implementation) - it fetches its
     placement data from api/crest/content-items/{id}/view (ContentItemsController.ViewAsync)

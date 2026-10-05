@@ -1,6 +1,6 @@
 # OrchardCore.Crest OrchardCore Module
 
-OrchardCore.Crest is a multi-project Orchard Core module repository: an **application layer** on Orchard Core, hosting Blazor component systems and everything a business-facing application needs that is not a line of business — the admin and site shells, the content API, Parties (people, organizations, roles), Members (member accounts, organizations, the member portal, memberships) and Workflows (an Elsa-based workflow service with a registry, units of work and connectors). See [plans/application-layer.md](plans/application-layer.md).
+OrchardCore.Crest is a multi-project Orchard Core module repository: an **application layer** on Orchard Core, hosting Blazor component systems and everything a business-facing application needs that is not a line of business — the admin and site shells, the content API, Parties (people, organizations, roles), Members (member accounts, organizations, the member portal) and Workflows (an Elsa-based workflow service with a registry, units of work and connectors). See [docs/architecture.md](docs/architecture.md).
 
 > **⚠ Requires a custom OrchardCore build (for now).** Crest depends on AdminNode
 > `UniqueId` modifications to OrchardCore's admin-menu system that are not yet in any
@@ -45,7 +45,7 @@ OrchardCore.Crest/
 
 Admin and Site themes are composition roots. They reference `OrchardCore.Crest.Components`, `OrchardCore.Crest.Icons`, and other feature UI modules they want compiled into the WASM app.
 
-Application modules that build UI for the current Radzen line reference `OrchardCore.Crest.Components` explicitly. For example, a new module `CRM.BlazorWasm` would reference the components project and contributes Blazor routes/components to the admin WASM build.
+Application modules that build UI for the current Radzen line reference `OrchardCore.Crest.Components` explicitly. For example, a new module `Example.BlazorWasm` would reference the components project and contributes Blazor routes/components to the admin WASM build.
 
 In the future, I'd like 3rd party modules to be able to call a 'generic' components from the shared components module as a standard library. This would enable custom component libraries to recreate them in their own style.
 
@@ -67,7 +67,7 @@ Preferred data-access order:
 
 ## Blazor Admin Theme Serving
 
-`OrchardCore.Crest.Server` installs middleware that checks the selected Orchard admin theme. If the selected admin theme is `OrchardCore.Crest.Admin` or has the configured Blazor tag, the middleware serves the Crest admin WASM files for admin routes and Blazor assets.
+`OrchardCore.Crest.Server` installs middleware that checks the selected Orchard admin theme. If the selected admin theme is `OrchardCore.Crest.Admin` or carries the `crest-blazor` manifest tag (itself or through its `BaseTheme` chain), the middleware serves the Crest admin WASM files for admin routes and Blazor assets.
 
 The current admin shell assets still live under:
 

@@ -41,11 +41,11 @@ T" when the providing feature is off.
 - **`OrchardCore.Workflows`** — no Crest code references it. It appears in the host
   host's admin-menu layout and in the `legacy-frame-workflows` Playwright check, both
   host-level concerns.
-- **`Accounting`** — a standalone business module that depends on Crest, not the reverse.
+- **A host's business modules** — standalone modules that depend on Crest, not the reverse.
 
-These four are host choices, which is why the three the host wants
-(`Accounting`, `OrchardCore.Workflows`, `OrchardCore.Tenants`) are listed in its setup
-recipe's `feature` step. Everything else Crest needs arrives through the dependency
+These are host choices, which is why the ones a host wants (its business modules,
+`OrchardCore.Workflows`, `OrchardCore.Tenants`) are listed in its setup recipe's `feature`
+step. Everything else Crest needs arrives through the dependency
 graph.
 
 ## Verifying a change

@@ -6,6 +6,6 @@ public interface IRouteComponentTableManager
     // theme pair itself (IAdminThemeService / ISiteThemeService), the same sources
     // BlazorAdminThemeMiddleware.IsBlazorAdminThemeAsync already reads. Keying by more
     // than that live pair (e.g. every installed theme) has no consumer and was
-    // deliberately rejected - see docs/BlazorWeb.md's "Route reachability" section.
+    // deliberately rejected - see docs/blazor-web.md's "Route reachability" section.
     Task<RouteComponentTable> GetRouteComponentTableAsync();
 }

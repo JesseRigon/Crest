@@ -11,7 +11,7 @@ namespace Crest.Endpoints;
 // neither is true for OrchardCore.Crest.csproj, a Sdk="Microsoft.NET.Sdk.Razor"
 // module library (Orchard's module convention), so the scripts never reach the app's
 // static web assets manifest and MapStaticAssets cannot serve them. See
-// docs/BlazorWeb.md (Bug 2).
+// docs/blazor-web.md (Bug 2).
 //
 // Served here as tenant-pipeline ENDPOINTS (not a host-level UseStaticFiles) so that
 // OrchardCore's routing stays the single authority over the URL space: endpoint

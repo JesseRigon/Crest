@@ -1,9 +1,10 @@
 # OrchardCore.Crest tests
 
 This directory is the entrypoint for every test that lives inside the `OrchardCore.Crest`
-submodule. Host repos (for example a product host and OrchardCore.Crest.Host) don't walk Crest's
-internal project layout themselves — they both call `run-tests.sh` here, and this
-directory is responsible for finding and running everything underneath it.
+submodule when it runs standalone: `run-tests.sh` here runs everything underneath it. A
+host that builds Crest's test projects into its own solution and starts its browser suite
+with Crest's shared checks (see "Adding a browser check" below) does not call
+`run-tests.sh`, which would run both a second time.
 
 ## Stack
 
@@ -59,8 +60,9 @@ modules/OrchardCore.Crest/
       <OtherProject>.Tests/...                 <- same convention
 ```
 
-`run-tests.sh` discovers every `OrchardCore.Crest.*/tests/<ProjectName>/*.csproj` and
-runs each with `dotnet test`, then runs this directory's own shared Playwright suite.
+`run-tests.sh` runs every test project in one `dotnet test` over
+`OrchardCore.Crest.Tests.slnx`, refusing a partial run when a `*/tests/*` project is
+missing from that solution, then runs this directory's own shared Playwright suite.
 Adding a new C# test project to any `OrchardCore.Crest.*` subproject means: create it
 under `<Subproject>/tests/<ProjectName>/`, and **exclude that `tests/` folder from the
 parent project's own compile glob** — SDK-style projects (especially
@@ -73,15 +75,32 @@ to copy.
 ## Why the host repos don't do this scan themselves
 
 A product host has a flat `modules/*/tests/` layout (one `tests/` dir per module —
-`Accounting`, `OrchardCore.Crest`, any future module). `OrchardCore.Crest` is the one
+its business modules, `OrchardCore.Crest`, any future module). `OrchardCore.Crest` is the one
 module that isn't flat — it's a submodule with its own nested subprojects, each
 potentially owning a `tests/` dir. Rather than have every host repo's `dev.sh`
 duplicate knowledge of that nested layout, `OrchardCore.Crest` owns discovering and
 running its own tests, and reports pass/fail back to whichever host invoked it. This
 keeps `OrchardCore.Crest.Host/dev/dev.sh` (which only ever needs to run this one
-module's tests) a thin wrapper, and keeps the host's `dev/dev.sh` module loop
-simple — it just special-cases `OrchardCore.Crest` as "delegate" instead of "scan
-locally" like every other module.
+module's tests) a thin wrapper. A product host that registers every Crest test project in
+its own solution and runs Crest's shared checks at the head of its own browser suite needs
+no delegation at all.
+
+## Adding a browser check
+
+1. Write `tests/playwright/checks/<name>.js` (or `<Project>/tests/playwright/checks/<name>.js`)
+   exporting `async function (page, { baseUrl, outputRoot, consoleErrors })` that returns
+   one result `{ name, pass, message }` or an array of them. The page is already logged in
+   as admin; `consoleErrors` holds the browser console errors raised during this check.
+2. Crest-owned checks are registered once in `tests/playwright/run-admin-suite.js`'s
+   `buildSharedAdminChecks()`, after any check they depend on (a feature-enable check
+   precedes the checks that need the feature); a host's own suite list starts with those.
+3. Wait for a **positive signal** and assert on it. `await x.waitFor({ timeout: 20000 })
+   .catch(() => false)` on the happy path passes after twenty wasted seconds when the
+   element never appears — that is the pattern behind every slow check in the table.
+4. Screenshots compare against `tests/playwright/output/base/`
+   through the harness's `screenshot-diff`. A deliberate UI change (a new menu entry)
+   fails the diff; look at the `*.diff.png` in the run directory, and if it is the
+   intended change promote `output/new/<name>.png` to `output/base/`.
 
 ## Credentials never live here
 

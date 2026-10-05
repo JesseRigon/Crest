@@ -20,5 +20,5 @@ public sealed class UnsupportedJSRuntime : IJSRuntime
     private static InvalidOperationException NotSupported() => new(
         "JavaScript interop is not available when a component is rendered by CrestBlazorComponentShapeBindingResolver " +
         "(Static SSR via HtmlRenderer, no browser attached). Guard interop calls behind OnAfterRenderAsync, or mark the " +
-        "component as an interactive island instead (see docs/BlazorWeb.md).");
+        "component as an interactive island instead (see docs/blazor-web.md).");
 }

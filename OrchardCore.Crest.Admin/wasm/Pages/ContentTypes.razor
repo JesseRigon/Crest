@@ -93,7 +93,7 @@
                                                 <CrestBadge Text="@T["{0} fields", part.Part.Fields.Length]" BadgeStyle="BadgeStyle.Info" />
                                                 @if (part.Lock != "None")
                                                 {
-                                                    @* A locked attachment stays on the type (docs/Content-Items.md › Definition locks). *@
+                                                    @* A locked attachment stays on the type (docs/content-items.md › Definition locks). *@
                                                     <CrestBadge Text="@(part.Lock == "Module" ? T["Locked by module"] : T["Locked"])" BadgeStyle="BadgeStyle.Warning" data-testid="attachment-lock" />
                                                 }
                                             </CrestStack>

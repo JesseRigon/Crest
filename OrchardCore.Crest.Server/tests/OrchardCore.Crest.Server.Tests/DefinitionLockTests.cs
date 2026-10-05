@@ -8,7 +8,7 @@ using Xunit;
 
 namespace OrchardCore.Crest.Server.Tests;
 
-// Definition locks (docs/Content-Items.md › Definition locks): the source ranking, the lift
+// Definition locks (docs/content-items.md › Definition locks): the source ranking, the lift
 // rules, what the builders store, and the guard's refusals over stored definitions.
 public class DefinitionLockTests
 {

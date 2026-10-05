@@ -1,11 +1,10 @@
 # Shells and themes: admin, site, member — and theme compatibility
 
-## Status
-
-**In progress.** Shell dispatch, the member shell, per-assembly UI isolation for all three
-shells, theme compatibility and the per-shell theme-selection UI are built (phases 1–4).
-Lazy-loaded theme UIs (phase 2b) are not. The admin and site shells are documented in
-[docs/BlazorWeb.md](../docs/BlazorWeb.md).
+How a Crest tenant serves its three audiences as three shells, how a module contributes
+pages to a shell, and how themes declare what they host so incompatible ones are caught.
+The admin and site shells' hosting mechanics (endpoint gate, base paths, render modes) are
+in [blazor-web.md](blazor-web.md); open work is in
+[shells-and-themes.md](shells-and-themes.md).
 
 ## Three shells
 
@@ -31,9 +30,9 @@ filter, and is present only when the Members feature is enabled.
 library compiled into the one WASM app, exactly as Admin.Client and Site.Client are):
 
 - the layout, header and navigation region;
-- the member login, registration, password-reset and external-login pages at the member
-  base, so the staff and member login surfaces are separate **by construction** rather
-  than by a runtime check (`MemberLoginSurfaceGate` becomes a backstop, not the gate);
+- the member login and registration pages at the member base, so the staff and member
+  login surfaces are separate **by construction** rather than by a runtime check
+  (`MemberLoginSurfaceGate` becomes a backstop, not the gate);
 - the active-organization switcher;
 - "my account": profile, credentials, organization bindings, and the member's own view of
   their memberships;
@@ -50,8 +49,8 @@ bucket.
 
 ### UI isolation: one bucket per assembly
 
-A shell must never be able to render another shell's pages - a member must not reach an
-accounting page by accident. Three layers make that hold, and each one alone is
+A shell must never be able to render another shell's pages - a member must not reach a
+back-office page by accident. Three layers make that hold, and each one alone is
 insufficient:
 
 1. **The API authorizes every read and write** - Orchard permissions, the member class
@@ -77,7 +76,7 @@ site, and the reverse holds for each shell. That one attribute is read everywher
 matters - the server's route-table providers, the endpoint bucket stamping, the lazy-module
 generator and each shell's router - so they cannot disagree.
 
-### The shell runtime is eager; shell UIs and module UIs load per shell
+### The shell runtime is eager; module UIs load per shell
 
 The WASM payload has one entry and one `Program.cs`, but what a browser *loads* is per
 shell:
@@ -93,11 +92,9 @@ shell:
   before any lazy assembly loads. The shell loads its bucket's module libraries before
   it renders, activates the implementations against the container
   (`ActivatorUtilities`), and cascades them to its layout and pages.
-- **Theme UIs** (pages, layout, the shell's `Routes` component) are the next step:
-  split from each theme's services, loaded only for the shell being served, behind one
-  small eager root component that renders the active shell's `Routes` dynamically.
-  Until then theme clients are eager, as Admin and Site always have been - every theme
-  client the host references is an eager root of the lazy-module generator.
+- **Theme clients are eager**, as Admin and Site always have been - every theme client
+  the host references is an eager root of the lazy-module generator. Loading theme UIs per
+  shell is open work (plan, phase 2b).
 
 ### One theme, per-member authorization
 
@@ -118,27 +115,25 @@ active organization and class, and fails closed; the UI renders what the server 
 and nothing more. Hiding a control in the client is a presentation choice layered on top
 of a server decision that has already been made, never the decision itself.
 
-## Generalizing shell dispatch
+## Shell dispatch
 
-The existing mechanism is two-valued in three places. Each becomes a registry of shells,
-with Site as the fallback:
+Dispatch is three-valued in three places, with Site as the fallback:
 
-- **`RouteBucket`** (`Admin`/`Site`) → a shell id carried by `RouteComponentEntry` and by
+- **`RouteBucket`** (`Admin`/`Site`/`Member`) is carried by `RouteComponentEntry` and by
   the `ThemeOwnerMetadata` endpoint marker.
-- **`RouteGateMatcherPolicy`** reads "admin marker present → Admin valid, else Site
-  valid". It becomes "the shell this request was dispatched to → that bucket is valid,
-  Site is the fallback bucket" — still a decision the middleware made once per request,
-  never a theme-id comparison (see [docs/BlazorWeb.md](../docs/BlazorWeb.md) for why that
-  distinction is load-bearing).
-- **`BlazorAdminThemeMiddleware`** + `BlazorAdminThemeOptions` + `IBlazorAdminThemeDetector`
-  know one shell base pair (`AdminPath`/`LoginPath`). They become a shell **selector** over
-  a registered list of shells, each with its base path, bucket, theme detector and
-  authentication policy. The `PathBase += shellBase; Path = @page literal` move,
-  the `IStartupFilter` registration (it must run before `UseRouting`), and the Path-only
-  strip for `_framework`/`_content`/`_blazor`/`api` requests are unchanged — a third shell
-  reuses all of it.
-- **`App.razor`** gains a third branch (base href, head assets, `<MemberRoutes>`), selected
-  by the same `HttpContext.Items` marker.
+- **`RouteGateMatcherPolicy`** reads "the shell this request was dispatched to
+  (`CrestBlazorHosting.ShellBucketItem`) → that bucket is valid, Site is the fallback
+  bucket" — a decision the middleware made once per request, never a theme-id comparison
+  (see [blazor-web.md](blazor-web.md) for why that distinction is load-bearing).
+- **`BlazorAdminThemeMiddleware`** matches the request against the admin prefix, the login
+  path and the member prefix (`MemberOptions.MemberUrlPrefix`), and stamps the selected
+  bucket. Path prefixes are the only rule it implements: every shell is selected by its
+  prefix, and the site shell is the fallback when none matches. The
+  `PathBase += shellBase; Path = @page literal` move, the `IStartupFilter` registration (it
+  must run before `UseRouting`), and the Path-only strip for
+  `_framework`/`_content`/`_blazor`/`api` requests are shared by all three shells.
+- **`App.razor`** has a branch per shell (base href, head assets, `<MemberRoutes>` for the
+  member shell), selected by the same `HttpContext.Items` bucket marker.
 
 **Not a new WASM app.** There is one WASM app (`OrchardCore.Crest.Client`) with one
 `Program.cs`, one lazy-module graph and one asset set; the shells are libraries inside it.
@@ -147,21 +142,13 @@ third build output.
 
 ### Auth-cookie pages render `InteractiveWebAssembly`
 
-The admin login page is already a deliberate exception to `InteractiveAuto`: under Auto's
+The admin login page is a deliberate exception to `InteractiveAuto`: under Auto's
 first-visit server circuit a credential POST goes out on the server-side loopback
 `HttpClient`, so the auth `Set-Cookie` lands in that handler and never reaches the
 browser. The member login, registration and any other page that establishes a session hits
 the identical trap, so the rule is general: **a page that sets an authentication cookie
-renders `InteractiveWebAssembly`**, declared by the page, not special-cased per shell.
-
-### The selector takes the request
-
-The shell selector matches on the **request**, not on a path prefix string, and keeps its
-matching rules in options. Path prefixes are the only rule it implements: every shell is
-selected by its prefix, and the site shell is the fallback when none matches.
-
-Taking the request rather than a prefix costs nothing now and is what keeps other matching
-rules — a shell on its own hostname, say — addable later without reshaping the selector.
+renders `InteractiveWebAssembly`**. `App.razor` applies it to the admin login shell and to
+the member shell's `/login` and `/register` pages.
 
 ## Theme compatibility
 
@@ -173,9 +160,11 @@ a broken shell.
 
 ### How a theme declares itself
 
-Manifest tags are already the mechanism (`admin` and `hidden` are read today):
+Manifest tags are the mechanism (`admin` and `hidden` are read by Orchard itself):
 
-- a **bucket** tag — `admin`, `member`, or neither (site);
+- a **bucket** tag — `admin`, `member`, or neither (site). The site shell deliberately has
+  no bucket tag of its own: "neither admin nor member" keeps every existing Orchard site
+  theme valid with no manifest edit (`ThemeBuckets.GetBucket`);
 - `crest-blazor` for a theme that hosts a Crest shell document. This one tag, read through
   the `BaseTheme` chain (`ThemeBuckets.IsCrestBlazorTheme`), is the only answer to "is this
   a Crest Blazor theme": the admin shell's detector and the compatibility check both ask
@@ -194,7 +183,10 @@ one with `site-wasm/` a `crest-blazor` site theme. The libraries are named for t
 (`Crest.Members.Member.BlazorWasm` belongs to `Crest.Members`), so every feature of that
 module carries the contract with no declaration to keep in sync. A module whose needs go
 beyond what it ships adds an `IShellContractProvider`. The check resolves each contract
-against the active theme of that bucket and its `BaseTheme` ancestors.
+against the active theme of that bucket and its `BaseTheme` ancestors. Contracts are per
+module, not per contributed page set: a module's pages are written against one shell
+contract in practice, and per-page granularity would multiply the declarations without
+changing any answer.
 
 Orchard has a site theme and an admin theme but no member theme, so the member theme is a
 Crest site setting (`IMemberThemeService`), defaulting to `OrchardCore.Crest.Member`.
@@ -240,8 +232,9 @@ same text, so the state is visible rather than merely having been warned about o
 ## The member base path
 
 `MemberOptions.MemberUrlPrefix`, defaulting to **`members`**, tenant-settable exactly as
-`AdminOptions.AdminUrlPrefix` is: one option, post-configured per tenant, read through
-`IOptions<MemberOptions>` and never hardcoded at a call site. Every member URL is built
+`AdminOptions.AdminUrlPrefix` is: one option, bound per tenant from the shell
+configuration (`Crest_Member:MemberUrlPrefix`), read through `IOptions<MemberOptions>` and
+never hardcoded at a call site. Every member URL is built
 from it — navigation, the login surface, cross-shell links — so a tenant that changes the
 prefix gets working links with no further edits, the way `AdminUrlPrefix "backoffice"`
 already works for the admin shell.
@@ -252,35 +245,52 @@ option exists to prevent. Any consuming host should therefore set a non-default 
 at least one tenant, so both the default and the override are exercised.
 
 The prefix is how the member shell is reached, for every tenant, with no alternative
-mechanism in this plan.
+mechanism.
 
-## Open questions
+## Still to build
 
-- **Does the site shell need a bucket tag** of its own for symmetry, or is "neither admin
-  nor member" good enough? The latter keeps existing site themes valid with no manifest
-  edit, which argues for it.
-- **Contract granularity:** per module, or per contributed page set? Per module is simpler
-  and probably enough.
+The three shells (admin, site, member), shell dispatch, per-assembly UI isolation, theme
+compatibility and the per-shell theme-selection UI are built and documented in
+[docs/shells-and-themes.md](shells-and-themes.md). This file holds what is not
+built yet.
 
-## Phases
+### Theme UIs load per shell
 
-- [x] 0. This plan; the bucket/contract vocabulary agreed, and the member base path settled
-      (`members` by default, tenant-settable).
-- [x] 1. Generalize shell dispatch: shell registry, bucket as a shell id, selector over
-      the registered shells, `App.razor` branch per shell, the auth-cookie render-mode
-      rule declared by pages. Admin and Site behaviour unchanged, proven by the existing
-      suite.
-- [x] 2. `OrchardCore.Crest.Member` + `Member.Client`: layout, navigation, login and
-      account pages, the org switcher, the page-contribution seam. One bucket per
-      assembly (`[assembly: CrestShell]`), each shell's router handed only its own
-      bucket; `OrchardCore.Crest.Shell` as the eager shell runtime; module seam
-      implementations activated per shell. Members' portal pages are replaced by the
-      member shell's own; its staff pages stay in the admin bucket.
-- [ ] 2b. Theme UIs load per shell: each theme client split into its services (eager)
-      and its UI (lazy), one eager root component rendering the served shell's `Routes`
-      dynamically, `Program.cs` naming no theme UI assembly.
-- [x] 3. Theme compatibility: manifest tags, `BaseTheme`-walking detector, module
-      contracts, the feature-enable refusal, the two-step theme-change confirmation with
-      its API acknowledgement, and the incompatibility badges.
-- [x] 4. Theme-selection UI: three sections, filters, the Member section shown when an
-      enabled feature ships member pages; the member theme as its own Crest setting.
+- [ ] **2b. Theme UIs load per shell.** Each theme client split into its services (eager)
+  and its UI (lazy), one eager root component rendering the served shell's `Routes`
+  dynamically, `Program.cs` naming no theme UI assembly.
+
+  **Theme UIs** (pages, layout, the shell's `Routes` component) are the next step:
+  split from each theme's services, loaded only for the shell being served, behind one
+  small eager root component that renders the active shell's `Routes` dynamically.
+  Until then theme clients are eager, as Admin and Site always have been - every theme
+  client the host references is an eager root of the lazy-module generator.
+
+### Member account pages
+
+- [ ] **Member password-reset and external-login pages.** The member shell owns the member login and registration pages at the member base; the
+  member **password-reset and external-login pages** belong there too, so every staff and
+  member login surface is separate by construction.
+
+### A registry of shells
+
+Shell dispatch is three-valued today, with each shell named in the middleware. The design
+is a registry of shells, with Site as the fallback:
+
+- [ ] **`RouteBucket`** → a shell id carried by `RouteComponentEntry` and by the
+  `ThemeOwnerMetadata` endpoint marker.
+- [ ] **`BlazorAdminThemeMiddleware`** + `BlazorAdminThemeOptions` + `IBlazorAdminThemeDetector`
+  know one shell base pair (`AdminPath`/`LoginPath`) plus the member prefix. They become a
+  shell **selector** over a registered list of shells, each with its base path, bucket,
+  theme detector and authentication policy. The `PathBase += shellBase; Path = @page
+  literal` move, the `IStartupFilter` registration (it must run before `UseRouting`), and
+  the Path-only strip for `_framework`/`_content`/`_blazor`/`api` requests are unchanged —
+  a further shell reuses all of it.
+  - [ ] **The selector takes the request.** The shell selector matches on the **request**, not on a path prefix string, and keeps its
+    matching rules in options. Path prefixes are the only rule it implements: every shell is
+    selected by its prefix, and the site shell is the fallback when none matches.
+
+    Taking the request rather than a prefix costs nothing now and is what keeps other matching
+    rules — a shell on its own hostname, say — addable later without reshaping the selector.
+- [ ] **The auth-cookie render-mode rule is declared by the page** that sets the cookie, not
+  special-cased per shell in `App.razor`.

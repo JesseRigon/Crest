@@ -24,8 +24,9 @@ mapping before merging it.
   at tag 3.6.0 (commit in `designer/UPSTREAM-COMMIT`; MIT): Core, Shell, Shared,
   DomInterop, UIHints, ActivityPortProviders, Workflows, Workflows.Core,
   Workflows.Designer, Login, and the BlazorWasm/BlazorServer shims. `UseProjectReferences`
-  points it at the vendored `Elsa.Api.Client`. Radzen 8.3.5 and MudBlazor come from its
-  own `Directory.Packages.props`; the transition to Crest components is a later phase.
+  points it at the vendored `Elsa.Api.Client`. Radzen 11 (Crest's version) and MudBlazor come from its
+  own `Directory.Packages.props`; the transition to Crest components is in
+  `../docs/workflows.md`.
 - `Server/` and `Contents/` reference engine projects directly; no `Elsa*` package is in
   the graph. The Elsa pins were removed from the root `Directory.Packages.props`.
 - Not vendored: elsa-extensions (`Elsa.Scheduling.Quartz`, `Elsa.Sql`, `Elsa.Data.Csv`),
@@ -53,17 +54,16 @@ To pull an upstream fix: diff the upstream tag range against `engine/` or `desig
 and apply by hand; re-check every transitive package licence (MIT / Apache-2.0 / BSD
 only) when you do.
 
-## What diverged (2026-09-28, plans/workflows.md phase 0a)
+## What diverged from the port
 
 - Built: `Server/` (engine) and `Contents/`. Everything else from the port (Timers,
-  Queries, Data, UI, Designer*) is under `reference/`, unbuilt and unreferenced, until
-  its phase.
+  Queries, Data, UI, Designer*) is under `reference/`, unbuilt and unreferenced.
 - Removed: sample hosts (`src/apps`), the port's own solutions, `Directory.*.props`,
   `NuGet.config`, the MVC designer pages/controllers/admin menu, the OpenID dependency,
   `PermissionsClaimsProvider` (granted `permissions=*` to every user), the Taxonomies
   dependency of Contents (`ResolveTerm`).
-- Added: `Security/ElsaApiSecurityMiddleware` (the API gate: Orchard permission,
-  antiforgery, per-request Elsa grant), `Contexts/*` (acting-user snapshot and
+- Added: `Security/CrestWorkflowsApiSecurityMiddleware` (the API gate: Orchard permission,
+  antiforgery, per-request engine grant), `Contexts/*` (acting-user snapshot and
   authorizer), `Activities/RequirePermission`, per-shell file lock directory,
   `RequiredPermission` on the content triggers, acting user on every content stimulus,
   `Controllers/WorkflowTriggersController` (stored-trigger diagnostics and re-index),

@@ -2,17 +2,16 @@
 
 Reference copies of the hand-written `msgctxt "Crest.Admin.Client"` `.po` entries that
 seed the WASM `.Admin` client string catalog (`CrestApiLocalizer`, served via
-`GET api/crest/localization/strings` — see `plans/user-localization.md`'s "Client string
-localization for `.Admin`"). The files actually consumed at runtime live in the HOST
+`GET api/crest/localization/strings` — see `docs/localization.md`). The files actually consumed at runtime live in the HOST
 project at `Localization/{culture}/Admin.po` (the host) — by ruling,
 the Crest submodule ships literals only and stays stock-localized; translation content
 is the host's. These fixtures are reference copies for the test suite.
 
 Seeded with `AdminMenus_Loading`/`AdminMenus_NoneFound` (the original `AdminMenus.razor`
-proof-of-concept keys) plus a representative sample added 2026-08-07 spanning Login,
+proof-of-concept keys) plus a representative sample spanning Login,
 Profile, Menus, Indexes, Templates, and AdminStatus — enough to live-verify the full
-`.po` → API → `CrestApiLocalizer` → rendered UI pipeline for phase 6's file-by-file
-conversion (see `plans/user-localization.md` phase 6) without hand-translating every
+`.po` → API → `CrestApiLocalizer` → rendered UI pipeline for the file-by-file
+conversion without hand-translating every
 converted key. Extend both this directory and the server's copy together if more keys
 need test coverage.
 

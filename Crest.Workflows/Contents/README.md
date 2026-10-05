@@ -1,4 +1,4 @@
-# OrchardCore.Crest.Workflows.Contents
+# Crest.Workflows.Contents
 
 Provides Elsa workflow activities for Orchard Core content management.
 
@@ -16,9 +16,6 @@ This module integrates Elsa Workflows with Orchard Core's content management sys
 - **UnpublishContent** - Unpublish published content items
 - **DeleteContent** - Delete content items
 
-**Taxonomy Operations:**
-- **ResolveTerm** - Resolve taxonomy terms for content categorization
-
 ### Content Event Triggers
 
 These activities trigger workflows in response to content lifecycle events:
@@ -33,10 +30,9 @@ These activities trigger workflows in response to content lifecycle events:
 
 ## Dependencies
 
-- `OrchardCore.Crest.Workflows`
+- `Crest.Workflows`
 - `OrchardCore.Contents`
 - `OrchardCore.Title`
-- `OrchardCore.Taxonomies`
 
 ## Installation
 
@@ -44,5 +40,5 @@ Enable the **Content Activities** feature in the Orchard Core admin dashboard un
 
 ## Package Information
 
-- **Package ID**: `OrchardCore.Crest.Workflows.Contents`
-- **Category**: Crest Workflows
+- **Project**: `Crest.Workflows.Contents` (feature `Crest.Workflows.Contents`)
+- **Category**: Crest.Workflows

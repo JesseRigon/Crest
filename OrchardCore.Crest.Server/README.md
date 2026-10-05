@@ -8,9 +8,9 @@ Shared Radzen-backed UI primitives belong in `OrchardCore.Crest.Components`. Fea
 
 ## Current rendering model
 
-OrchardCore.Crest is currently a **Blazor WebAssembly admin system** served from Orchard. The admin shell and compiled Crest components run in the browser and call Orchard or thin `api/crest/*` JSON adapters from this server module for data and actions.
+OrchardCore.Crest is a **Blazor Web App** hosted from Orchard: this module is the single host for every Crest shell (admin, site, member), pages prerender server-side and run `InteractiveAuto` (a server circuit on first visit, WebAssembly once cached), and the compiled Crest components call Orchard or thin `api/crest/*` JSON adapters from this server module for data and actions. See [docs/blazor-web.md](../docs/blazor-web.md) and [docs/shells-and-themes.md](../docs/shells-and-themes.md).
 
-It is not currently a Blazor Hybrid, MAUI, or server-side/backend-rendered component system. Those models are possible future directions, especially for sharing more UI across native, web, and Orchard-hosted experiences, but the current implementation should be documented, designed, and tested as WASM-first.
+It is not currently a Blazor Hybrid or MAUI component system. Those models are possible future directions, especially for sharing more UI across native, web, and Orchard-hosted experiences.
 
 Orchard's MVC/Razor/shape system still remains in place for the Orchard host and modules. OrchardCore.Crest adapts Orchard data, menus, auth, permissions, themes, and content to a WASM Blazor admin shell; it does not replace Orchard's backend rendering pipeline.
 

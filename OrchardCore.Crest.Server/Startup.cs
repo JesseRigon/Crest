@@ -132,7 +132,7 @@ public sealed class Startup : StartupBase
         // DefaultShapeTableManager/ShapeTable's own caching shape (a keyed singleton
         // dictionary, no separate invalidation signal - the shell itself is torn down and
         // rebuilt by Orchard on feature/theme change). See
-        // Crest.Routing.DefaultRouteComponentTableManager and docs/BlazorWeb.md's "Route
+        // Crest.Routing.DefaultRouteComponentTableManager and docs/blazor-web.md's "Route
         // reachability" section for the full rationale. Each theme supplies its own
         // IRouteComponentTableProvider; nobody hand-maintains a central route list.
         services.AddSingleton(new System.Collections.Concurrent.ConcurrentDictionary<
@@ -352,7 +352,7 @@ public sealed class Startup : StartupBase
         // early in startup. Force each candidate to load via a throwaway
         // Assembly.LoadFrom on its own already-resolved location before re-querying
         // GetAssemblies(), or Routes/routable @page components living in the .Client
-        // project (see docs/BlazorWeb.md) silently 404 - MapRazorComponents<App>()
+        // project (see docs/blazor-web.md) silently 404 - MapRazorComponents<App>()
         // built its route table before the assembly was ever loaded.
         // Two naming conventions feed the route table: theme client assemblies
         // (*.Client - Site.Client, Admin.Client, the OrchardCore.Crest.Client entry)
@@ -429,7 +429,7 @@ public sealed class TenantMediaIconsStartup : StartupBase
 }
 
 /// <summary>
-/// Definition locks (docs/Content-Items.md › Definition locks). Last of all startups so the
+/// Definition locks (docs/content-items.md › Definition locks). Last of all startups so the
 /// decorators wrap whatever the content-types module registered; the guard and the 409
 /// filter are Crest's own.
 /// </summary>

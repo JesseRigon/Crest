@@ -22,7 +22,7 @@
     (Site.Client / Admin.Client under the OrchardCore.Crest.Client entry), never here -
     the WASM runtime only has whatever assemblies it was compiled with; a Routes
     defined server-side resolves over the circuit but throws the moment
-    InteractiveAuto switches to WASM. See docs/BlazorWeb.md.
+    InteractiveAuto switches to WASM. See docs/blazor-web.md.
 
     Admin head assets are tenant-root-absolute _content/* static-web-asset URLs
     (served by MapStaticAssets inside the tenant pipeline), deliberately independent
@@ -102,7 +102,7 @@
         @* Site shell. Admin's Home.razor also declares @page "/" (meaning "this admin
            shell's own base", /Admin/ or /Login/) — both endpoints exist in the same
            shared Blazor Web App route table, but Crest.Routing.RouteGateMatcherPolicy
-           (see docs/BlazorWeb.md's "Route reachability" section) vetoes whichever one
+           (see docs/blazor-web.md's "Route reachability" section) vetoes whichever one
            doesn't own this request before endpoint selection completes, so only one of
            the two ever actually renders here. *@
         <Routes @rendermode="@_renderMode" />

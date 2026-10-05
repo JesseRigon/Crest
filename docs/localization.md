@@ -4,8 +4,8 @@ How Crest resolves and applies culture (language, date/number formatting) for us
 and how UI strings are translated. This covers the user-facing localization system —
 per-user language, culture-aware formatting, translated menus/components/content. It
 deliberately excludes anything ERP-specific (currency, tax, regions, business
-documents); that lives in the host's business/ERP design (for example:
-`plans/regions-and-locations.md`, `plans/accounting.md`, `plans/taxes.md`).
+documents); that lives in the host's business/ERP design (for example its regions,
+accounting and tax plans).
 
 ## Scope and boundary
 
@@ -186,8 +186,8 @@ Two independent mechanisms, by project:
     supplies editorial translations as its own distinctly-named files next to the
     mirror (a host, for example: `Localization/{culture}/Admin.po`, literal msgids,
     `msgctxt "Crest.Admin.Client"`; front-site strings in `Site.po`). Distinct
-    filenames survive a mirror refresh. Host modules that are not part of Crest (e.g.
-    Accounting) may keep module-local `Localization/{culture}.po` inside the host repo.
+    filenames survive a mirror refresh. Host modules that are not part of Crest (e.g. a
+    line-of-business module) may keep module-local `Localization/{culture}.po` inside the host repo.
 
 Excluded from the API-based mechanism: `Crest.Workflows.Designer` (a
 vendored third-party package, not a Crest admin surface) and any currently-unreferenced
@@ -248,7 +248,7 @@ most-common), with provider-item translations seeded from the PO catalogs at imp
 edited in the Crest translations page (`/Admin/DataLocalization`). Deleting a stored
 entry reverts to the next layer down. `docs/localization.mmd` is the full resolution
 chain as a diagram — rename overlay, store steps, PO tiers, literal — kept current with
-the resolver. `docs/AdminMenu.md` documents the whole system — the provider-menu
+the resolver. `docs/admin-menu.md` documents the whole system — the provider-menu
 import, item identity, seeding, the PO layer, the translations editor, and per-culture
 renames.
 
@@ -256,7 +256,7 @@ Admin-menu override persistence (hidden/reordered/renamed/re-iconed state) keys 
 `AdminNode.UniqueId` (which the node navigation builders copy onto `MenuItem.Id`), with
 the invariant `Text.Name` literal as the fallback for items no node backs — never by the
 resolved display text, which varies per culture. Renames are recorded per culture; see
-`docs/AdminMenu.md`'s "Renames are per culture".
+`docs/admin-menu.md`'s "Renames are per culture".
 
 The user profile dropdown menu is built from native, admin-editable `AdminMenu`
 documents (`CrestMenuPlacement.User`), merged across every enabled menu of that
