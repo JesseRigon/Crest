@@ -1,102 +1,467 @@
-# Published vs public content
+# Access control for files and content: published vs public
 
-## Status
+Status: requirements agreed, not started. Next: the OrchardCore audit (what exists, what Crest
+builds), then phases.
 
-Not started. Sequenced after the member login (plans/shells-and-themes.md,
-plans/members.md). Media visibility is out of scope here and parked; see "Media"
-below.
+## Example
 
-## Two different things
+A shared drive of product information. Customer is a business role, Staff and Marketing are
+staff roles, Sam is a staff user, and Dana is an external contractor with a user account.
 
-- **Published** is a version state. An item has a draft and/or a published version;
-  publishing makes the published version the one readers get. It says nothing about
-  *who* the readers are.
-- **Public** is an authorization fact: the Anonymous role may view this item.
-  Public content is reachable by anyone with the link, signed in or not, from the
-  public site, the member shell, or a plain `<img src>` / `fetch` on any page.
+```
+Product Info (shared drive)  Customer: Viewer, Staff: Viewer, Sam: Blocked
+├── Spec sheets/             Tenant: Viewer
+└── Images/                  Marketing: Editor
+    │  rule 1: extension is .psd → Customer: Blocked, Dana: Editor
+    │  rule 2: tag is "final"    → Anyone: Viewer
+    ├── chair-original.jpg   customers, staff, marketing
+    ├── chair.psd            staff, marketing, Dana - not customers
+    └── chair-final.jpg      everyone, signed in or not: public
+```
 
-Every public item is published. Most published items are not public: accounting
-records, parties, internal pages and member-only content are published so staff
-and members can read them, and an anonymous caller must get nothing.
+- The drive is owned by the tenant account and grants Customer and Staff. Access is denied by
+  default, so nobody else gets in and no blocks are needed to keep them out.
+- Spec sheets is open to the whole tenant, so Dana can see it too. Sam cannot: his block is
+  about his user, which outranks a tenant grant at any depth. Only "Sam: Viewer" on Spec sheets
+  would let him in.
+- Everything under Images inherits customers and staff and adds marketing.
+- Rule 1 lives on Images, the highest folder it should cover. On every Photoshop file under
+  Images it blocks the inherited Customer grant and grants Dana. A Photoshop file in Spec sheets
+  is untouched, and elsewhere under Images Dana has no grant.
+- Rule 2 makes final images public. Public is absolute for viewing, so Sam can view
+  chair-final.jpg despite his block, but his block still stops him commenting on or editing it.
+- A customer opening chair-final.jpg sees the file, not how it is shared. A Drive Admin
+  sees the whole chain. A customer never sees chair.psd: it is in none of their listings, searches
+  or counts.
+- The rules list for Product Info shows rules on Product Info and above, not rules 1 and 2.
+- A marketer deleting Images is refused if they may not delete chair.psd, and the refusal does
+  not mention it.
 
-## Where public content is served
+## Goal
 
-Public links are served by the tenant's server endpoints (the content view
-endpoint `api/crest/content-items/{id}/view`, Orchard's own display routes,
-Fruitful.Content's publishable links), never by a shell's pages. Site and member
-pages, and any external consumer, read the same URL. Because the URL stays the
-same, an item edited and republished in admin updates everywhere it is linked.
+Crest gets a file system with sharing modelled on Google Drive's behaviour, in its own
+implementation and under its own names, and applied the way a Unix file system applies
+permissions: every file, folder and drive is a file object, and access is overlaid on it.
 
-A public read grants exactly one item's published fields. It does not authenticate
-the caller, expose any tenant, user or organization API, or reveal drafts. Every
-other endpoint checks permissions the Anonymous role does not hold.
+Access has two layers: **sharing**, grants and blocks on objects that flow down the tree as in
+Drive, and **rules**, ordered "conditions → effect" lists that Drive does not have, so "every
+PDF here is public, but not the Word files they come from" is one rule. Conflicts are allowed;
+unexplained access is not.
 
-## Today's problem: published means public
+Publishing is separate. Published says which version readers get; access says who the readers
+are. Content items use the same model, with their content type in the chain.
 
-When the Contents feature installs, Orchard seeds the Anonymous role with
-`ViewContent` from the feature's default role stereotypes. `ViewContent` covers
-every content type, and the Crest site recipe grants it to Anonymous explicitly.
-So any published item of any type can be read anonymously by ID through the view
-endpoint.
+## Terms
 
-Public must be an explicit opt-in, never the default.
+- **File object**: a drive, folder or file, with a stable id, kind, name, parent, owner,
+  metadata and access entries. A file's **type** is its MIME type, its extension and, for a
+  content item, its content type.
+- **Principal**: Anyone (public), Tenant, Organization, Role or User.
+- **Role**: any group the business recognises: staff roles (Editor, Sales Rep, Marketing) and
+  business roles (Customer, Vendor, Lead, Member).
+- **Access level**, each including the ones before it:
+  - **Viewer**: read.
+  - **Commenter**: read and comment, nothing more.
+  - **Editor**: create, read and update.
+  - **Manager**: create, read, update and delete.
+  - **Drive Admin**: a Manager who can also change sharing and rules. Granted only on a drive
+    itself, never inside it.
+- **Tenant administrator**: Orchard's administrator role for the tenant. A different thing from
+  Drive Admin: it is not an access level and is never granted on a drive. Tenant
+  administrators hold every permission on everything within their tenant.
+- **Entry**: a grant ("Customer: Viewer") or a block ("Sam: Blocked") on one object, optionally
+  time-bound.
+- **Rule**: conditions → grants and blocks, defined on a folder, a drive or the tenant.
+- **Drive**: the top of a tree of file objects. Personal, shared and organization drives are
+  one class with one behaviour; they differ only in their defaults. A drive's **drive type**
+  (Personal, Shared or Organization) records which it is.
+- **System account**: a principal that owns things rather than a person: the tenant account,
+  and one account per organization.
+- **Published**: the object has a published version. Readers only ever get it; drafts are for
+  Editors and Managers.
 
-## The model
+## Requirements
 
-Anonymous holds no blanket `ViewContent`. An item is public when either:
+### A tenant feature
 
-1. **Its type is public.** The type is *Securable*, which gives it its own
-   `View_{Type}` permission, and Anonymous is granted `View_{Type}` for that type
-   only. This is Orchard's built-in per-type permission and needs no new code: the
-   view endpoint's `ViewContent` check already goes through Orchard's
-   `ContentTypeAuthorizationHandler`, which maps it to `View_{Type}` for securable
-   types.
-2. **The item is marked public.** Orchard has no per-item permission, so Crest adds
-   one: a content part carrying the public flag, plus an `IAuthorizationHandler`
-   that grants `ViewContent` on the item to an anonymous caller when the published
-   version has the flag set. This is Orchard's intended extension point, so the
-   rule stays in Crest (open source, no Fruitful dependency), and Fruitful.Content's
-   publishable links mark their items through it.
+1. Content sharing is a feature each tenant enables. Without it a tenant has no drives, sharing
+   or rules, and its content items keep Orchard's standard permissions. Nothing about it
+   crosses tenants.
 
-In both cases only the published version is served. A draft is never public, even
-on a public type or an item marked public.
+### File objects
 
-## Admin surface
+2. Images, files, videos and documents are file objects. Folders and drives are file objects of
+   another kind: they contain objects, and their sharing flows down.
+3. An object's id never changes. Renaming, moving or replacing its bytes keeps the id, and
+   links address the id, so a link keeps working and shows the current version.
+4. Every object carries editable metadata: title, description, alternative text, tags, owner,
+   type, size, and who created and last modified it, and when.
+5. Replacing a file keeps its earlier versions, so a published version can be rolled back.
 
-- A content type's settings show whether the type is public (Securable plus the
-  Anonymous grant), as one toggle that sets both.
-- An item editor shows a "Public" switch when the type allows per-item public
-  marking, along with the item's public link.
-- The content list shows a public badge so staff can see exposure at a glance.
+### Drives
 
-## Media
+6. Personal, shared and organization drives are one class with the same file objects, levels,
+   sharing, rules, resolution, enforcement and interface. They differ only in their defaults:
 
-Media files are public by URL as soon as they are uploaded, whatever the content
-permissions say, unless Orchard's Secure Media feature is enabled. Making media
-follow the same public-vs-published model (Secure Media plus a designated public
-folder or per-asset flag) is a separate piece of work, parked until after this
-plan.
+   | Drive | Owner | Default Drive Admins | Created |
+   | --- | --- | --- | --- |
+   | Shared | the tenant account | none; assigned (requirement 25) | by hand |
+   | Organization | the organization's account | the organization's admins | with each organization, when the tenant turns it on |
+   | Personal | the staff user | that user, and only that user | with each staff user, when the tenant turns it on |
+
+7. Every drive stores its drive type: Personal, Shared or Organization. It is set when the
+   drive is created, determines the defaults above, and is what the interface filters, groups
+   and labels drives by ("My drive", "Shared drives", "Organization drives"). It never changes
+   how access is resolved.
+8. Everything in a drive is owned by the drive's owner, except in a personal drive, where its
+   owner owns what they create. Members' portal uploads are owned by the drive they land in,
+   normally their organization's.
+9. Drive Admin can be granted only on a drive itself, never on a folder or file inside it, and
+   covers the whole drive. Below the drive, the highest grantable level is Manager.
+10. A Drive Admin never loses access to anything in their drive: blocks and rules below the
+   drive do not apply to them. Full permissions in a drive (create, read, update, delete, and
+   changing sharing and rules) belong to its Drive Admins.
+11. An organization's admins are its drive's Drive Admins by default, and follow the
+    organization: someone who becomes an organization admin gains it, someone who stops loses
+    it. Other Drive Admins can be added like any grant.
+12. Organization drives and personal drives are each a tenant setting, off by default, so each
+    tenant chooses which drive types it uses: for example organization drives for each customer
+    or household and no personal drives, or personal drives for staff alongside shared drives.
+    Members never have a personal drive.
+13. In a personal drive, Drive Admin cannot be granted to anyone but the owner. How tenant
+    administrators reach personal drives is set by the settings in "Administrator access to
+    personal drives".
+14. Deleting a user asks the person deleting them what happens to that user's personal drive,
+    together with the rest of their data: transfer it to another user, move it into a shared
+    drive, keep it inactive, or delete it. Which choices are allowed is set by the tenant's
+    retention policies and legal requirements, once the retention system exists (a separate
+    system, not yet planned); until then all four are offered.
+15. A drive can be **inactive**: kept, with its contents and sharing intact, but out of use.
+    Turning off the organization or personal drive setting makes the existing drives of that
+    type inactive rather than deleting them, and a deleted user's drive can be kept inactive.
+    What eventually happens to an inactive drive is for the retention system to decide.
+16. Reactivating a drive, whether by turning its setting back on or individually, asks the
+    person doing it whether to keep the drive's previous sharing and rules or start fresh with
+    its drive type's defaults. Its contents are kept either way.
+17. Inactive drives are visible only to tenant administrators. Drive Admins, holders of the
+    shared-drive permission and everyone with a grant inside lose access while it is inactive;
+    nothing in it is reachable by link, search or listing.
+
+### Administrator access to personal drives
+
+Tenant administrators always have full permissions on personal drives (the standing rule). Their
+access is always a separate, deliberate step, and the tenant settings below decide what goes with
+it: notice, delay and override. Together they let a tenant meet workplace-privacy requirements: a
+legitimate reason, proportionate access, and telling people it can happen. The major drive
+products take the same approach: admin access to a personal drive exists, but as a deliberate,
+logged action rather than something in the admin's everyday view.
+
+18. **Separate access.** Other users' personal drives never appear in a tenant administrator's
+    everyday drive view. They are reached only through a separate "open a user's drive" button,
+    which opens the drive in its own window, clearly marked as administrator access. This is
+    fixed, not a setting.
+19. **Notice.** When a tenant administrator opens another user's personal drive, the owner can
+    be notified by email, by a portal notification, by both, or not at all. Default: not at all.
+    Notices go through Orchard's notification service (`OrchardCore.Notifications`), which sends
+    through each enabled method: email through its Email Notifications feature, and portal
+    notifications through the stored, per-user notifications that Crest's portal notifications
+    feature displays (requirement 24). Crest adds no delivery of its own. If a notice cannot be
+    sent (email not configured, portal notifications turned off), the access proceeds and the
+    failure is recorded with it. Requiring an approval instead waits for the approvals system
+    ([approvals.md](approvals.md)).
+20. **Notice delay.** A tenant can set a delay between the notice and the access: with 30
+    minutes, the administrator cannot open the drive until 30 minutes after the notice was
+    sent, whether or not the owner has read it. Default: no delay. A delay requires notice to
+    be on.
+21. **Delay override.** A tenant can allow the delay to be overridden. When allowed, a user with
+    the "override personal drive notice delay" permission can open the drive at once, but must
+    enter a reason, which is recorded and included in the notice. Default: not allowed.
+22. **Access duration.** When opening a user's drive, the administrator chooses how long the
+    access lasts from a list the tenant sets and can edit. Default list: 30 minutes, 1 hour,
+    1 hour 30 minutes, 2 hours, and until closed. When the time runs out the access ends and
+    the window closes; continuing needs a new access, with notice and delay applied again.
+23. **Logging.** Every step is recorded in the audit trail: the access request, the notice and
+    how it was sent, any override and its reason, the opening itself and its chosen duration,
+    and when and how the access ended.
+24. **Portal notifications** are a Crest feature, enabled by default when a tenant is created and
+    able to be turned off. It shows each user's stored Orchard notifications in Crest's admin and
+    member shells: a notification indicator, the list, and marking as read. Orchard's own display
+    of them lives in its classic admin, which Crest's shells do not use. While an administrator
+    is in another user's personal drive, every action they take there is recorded too, marked as
+    administrator access.
+
+### Drive administration
+
+25. Managing shared drives is a tenant permission, separate from any access level: creating
+    shared drives, assigning and removing their Drive Admins, and editing their base share
+    settings (the entries on the drive itself). By default only the tenant administrator role
+    holds it. It gives no access to a drive's contents: a user who holds it but has no grant
+    inside a drive cannot open, edit or delete anything in it, though they can make someone,
+    themselves included, a Drive Admin, which the audit trail records.
+26. Tenant administrators have full permissions on everything within their tenant, as a
+    standing rule: every drive, every object in them, their sharing and rules, and tenant-level
+    rules. Blocks and rules never apply to them. Personal drives are reached as set in requirements
+    18–24. Everything they do is recorded in the audit trail like anyone else's actions.
+
+### System accounts
+
+27. Each tenant has one tenant account, created with the tenant, and each organization has one
+    organization account, created with the organization. They own what their tenant or
+    organization owns, such as shared and organization drives.
+28. A system account cannot sign in, cannot be impersonated, and does not appear in user lists
+    or pickers.
+29. A system account is never counted as a user, member or seat by subscriptions, memberships,
+    pricing or plan limits. Counting excludes system accounts by construction, not by a filter
+    each count must remember.
+30. Actions the system takes on a tenant's or organization's behalf are attributed to its
+    account in the audit trail, distinct from people and machine actors
+    ([machine-actors.md](machine-actors.md)).
+
+### Principals and roles
+
+31. Tenant means everyone signed in to that one tenant, staff and members, and never anyone
+    from another tenant on the same instance.
+32. A member acts for one organization at a time, and only that organization's entries count
+    for them.
+
+### Business roles
+
+33. Business relationships are roles: a user linked to a customer, vendor or lead party, or a
+    member of an organization, holds the matching role (Customer, Vendor, Lead, Member).
+34. Each business role is a real Orchard role: it has a stable identity, appears in sharing
+    pickers and permission screens, and is stored in the access index like any role.
+35. Membership is never stored on the user. It is computed from the relationship records when a
+    session's principals are resolved (requirement 70) and attached to the session as role
+    claims, which Orchard's permission checks already read. The relationship records are the
+    only source of truth, so there is nothing to keep in sync.
+36. Membership follows the organization the person is acting for: a member of two organizations
+    holds each organization's business roles only while acting for it.
+37. Changing a relationship invalidates the affected user's sessions, so their principals are
+    recomputed on their next request and a removed role stops counting immediately.
+38. Each role has a **kind**, kept in Crest's role registry: **Assigned** (stored on users, the
+    ordinary Orchard kind) or **Derived** (computed, with the provider that computes it).
+    Orchard's role model has no field for this, and its built-in "system role" mechanism covers
+    only its own fixed roles.
+39. Derived roles cannot be assigned. Every assignment path (the user editor, the users API,
+    recipes, bulk assignment) offers Assigned roles only and refuses Derived ones on the server.
+    Like Orchard's own assignable-role filter, it also leaves out system roles (Anyone,
+    Authenticated).
+40. Sharing pickers offer both kinds, with derived roles labelled.
+41. The user editor shows a user's derived roles read-only beneath their assigned ones, each
+    with the relationship that grants it ("Customer, member of Acme Corp"), linking to that
+    relationship, since changing it is the only way to change the role.
+42. Derived roles are computed by providers behind a Crest interface: given a user and the
+    organization they are acting for, a provider answers which business roles they hold.
+    Fruitful's party relationships are one provider, so Crest never needs to know what a party
+    is.
+
+### Sharing
+
+43. **Default deny.** Nobody has access unless granted, except the owner. No decision is not a
+    block; it is simply no access, so a new user or role sees nothing and nothing needs updating
+    when one is added.
+44. Grants and blocks flow down the tree. Each object inherits its parent's and adds its own.
+45. Blocks are optional: they carve an exception out of an inherited grant, such as one user or
+    role that must not see a folder under a tenant-wide grant. There is no "stop inheriting"
+    switch; narrowing is a block on the inherited principal plus grants for whoever keeps access.
+46. An object shared with someone is reachable through its link even if they cannot open its
+    parent folder, as in Drive.
+47. An entry can have a start and an end.
+
+### Rules
+
+48. A rule applies only to objects below the folder, drive or tenant it is defined on that
+    match all its conditions.
+49. A rule belongs at the highest folder whose contents it should cover, so one rule replaces
+    many individual shares.
+50. Conditions cover at least file type, extension, named group ("Documents", "Images"), content
+    type, metadata and tags, and time (a window, a schedule, an age). Modules can add their own.
+51. A rule's effects are grants and blocks, the same as entries.
+
+### How access is resolved
+
+Precedence runs from general to specific on two axes:
+
+- **Principal**: Anyone → Tenant → Organization → Role → User.
+- **Depth**: tenant → drive → each folder → the object.
+
+52. Every entry and every matching rule effect on an object's path is a decision: a principal,
+    a grant or block, its depth, and its position in that level's order. Only decisions about
+    principals a person matches count for them: their user, their roles (business roles
+    included), their acting organization, the tenant and Anyone.
+53. **Principal first.** The most specific principal tier with any decision for the person
+    decides. A user decision beats any role decision, a role decision beats any organization
+    decision, and so on, at any depth. With no decision in any tier, access is denied.
+54. **Then depth.** Within the deciding tier, the deepest decision wins. A user blocked on a
+    folder and granted on a file inside it can open that file. A user with the Customer and
+    Vendor roles, both blocked on a folder, can open a subfolder that grants Vendor.
+55. **Then order, then grant.** Within one tier at one depth, rules apply in their listed order
+    with equal priority, so a later rule overrides an earlier one about the same principal.
+    If the person's different principals in that tier still disagree at that depth (one of
+    their roles granted, another blocked), the grant wins, and grants stack to the highest
+    level.
+56. **Public is absolute for viewing.** When an object's Anyone decision, resolved by depth and
+    order within the Anyone tier, is a grant, everyone can view it and no block removes that.
+    Everything beyond viewing is still decided by 53–55: a user blocked on a public file can
+    view it but not comment on, edit or delete it.
+57. Anyone can only be granted Viewer.
+58. Public follows the tree like any grant: children of a public folder are public, and a child
+    leaves public view only by a deeper "Anyone: Blocked".
+59. Resolution is fully determined by the path, the person's principals and rule order.
+
+### Who sees the sharing
+
+60. Only a Drive Admin of an object's drive, or a tenant administrator, sees how it is shared: every entry, block and matching rule from
+    the tenant down, in order, which decision won, and who has access as a result. Everyone
+    else sees nothing of it. Changing a tenant-level step needs the tenant permission in 79.
+61. A folder's rules list shows rules from the tenant down to that folder, not below it.
+62. An object a person cannot view does not exist for them: it is in no listing, search, picker,
+    count, explanation or error message.
+
+### Deleting and moving
+
+63. Deleting needs Manager. Deleting a folder needs Manager on it and everything below it, including objects
+    the person cannot see. If any fail, nothing is deleted, and the refusal says the folder
+    contains items they cannot delete, without naming or counting them.
+64. Moving changes the access of everything moved, so it needs Manager over everything moved,
+    plus Editor on the destination, with the same refusal.
+
+### Comments
+
+65. A Commenter can add comments and do nothing else.
+66. Comments are stored in the object's metadata by default. A file type can keep them where
+    that format keeps comments instead, through a per-type comment store.
+
+### Content items
+
+67. Content items use the same principals, levels, entries and rules. Their chain is tenant →
+    content type → item: a content type carries entries (set in its settings and in recipes),
+    and an item adds its own.
+68. A content item that belongs in a folder, such as a document page in a client folder, follows
+    that folder's chain instead, with its content type as its type for rules.
+
+### Enforcement and the access index
+
+69. Access is precomputed. For every object, an index holds each principal's winning grant or
+    block and its tier, and whether the object is public, after the resolution above. Every
+    read path checks the index; nothing is resolved on access.
+70. A person's principals are resolved once per session or when they change, so a check is a
+    lookup of their most specific principal with an entry on the object, or of the public flag.
+71. Every read path enforces access: object endpoints, folder listings, search, pickers,
+    Orchard's display routes and file bytes. Listings and search filter in the database query,
+    never by dropping rows after paging.
+72. The index is recalculated for only the affected objects when an input changes: an entry, a
+    rule or its order, a move or rename, metadata a rule reads, a content type's entries, a role
+    or relationship, an organization binding. A rule change recalculates its scope; a move, the
+    moved subtree.
+73. Every time-bound entry and time-based rule registers its next boundary in a time registry,
+    indexed by time. A per-tenant job runs every minute, reads only the registry entries now
+    due, recalculates the objects they affect and registers their next boundaries. It never
+    scans every object. Index entries with a known end carry it, and reads ignore them once it
+    passes, so access ends on time even between runs.
+74. Removing access takes effect before the change is reported as done. Adding access may wait
+    for its recalculation, and the Share panel shows it as pending.
+75. The explanation (60) and the index come from the same entries and rules and always agree.
+    Crest can verify any scope by recalculating and comparing.
+76. Failure is closed: an object with no resolvable access or no index entry is not visible.
+77. Public bytes are cacheable. Private bytes are served only after the access check.
+
+### Defaults and permissions
+
+78. No recipe shipped with Crest or a host built on it grants anything to Anyone or Tenant
+    unless it means to.
+79. Changing sharing or rules inside a drive needs Drive Admin of that drive. Tenant-level rules and
+    entries, which reach every drive, need a dedicated tenant permission. Granting Anyone also
+    needs a dedicated permission, so not every Drive Admin can make content public.
+
+### Upload security (host-wide)
+
+80. Upload scanning is one host-level system shared by every tenant, independent of the sharing
+    feature. Every upload from any user in any tenant is scanned before it is usable, because
+    tenants share storage, processes and the host. No tenant can run without scanning.
+81. Scanning checks for malware, checks the content matches its claimed type, and removes
+    metadata that should not be published, such as location data in images.
+82. Until it passes, an upload is quarantined outside the tenant's storage, shown to its
+    uploader as pending, and never served or processed (no thumbnails, resizing, text extraction
+    or indexing).
+83. The scanner is shared; tenant data is not. Uploads, quarantine and results are visible only
+    to their own tenant.
+84. Scanners are providers behind one Crest interface, the way icon and tax providers are. The
+    host configures its own scanners. A tenant can add an external scanner of its own and
+    choose whether the host's scanners still run alongside it or are bypassed. A tenant with no
+    external scanner always uses the host's.
+85. Type detection is a provider of its own: it identifies a file's real type from its content
+    and reports it as a MIME type, which the type check (81) and rules (50) use. A scanner that
+    also detects types can supply both.
+86. A provider returns a verdict: clean, rejected (with a reason), or failed. A failure keeps the
+    upload in quarantine; it never releases it. Scanning is asynchronous, so a provider can be a
+    remote service that answers later.
+87. Scanning and type detection run on the server side only, never on the uploading device. A
+    client can be modified, scripted around or impersonated, so no verdict from it is trusted.
+88. A provider can be offsite: any scanner reachable through an API, such as a dedicated
+    scanning server run beside the application or an external service. When uploads are a large
+    part of an app's load, scanning moves to its own servers without changing the application.
+    An offsite provider is handed the quarantined file by a time-limited reference it can fetch
+    directly, so large files are not relayed through the application server, and reports its
+    verdict back to Crest.
+89. The first deliverable is the interface and the quarantine flow. The first providers are
+    ClamAV for malware and libmagic for type detection (85); pattern-rule scanning such as YARA is an
+    optional later provider. See "Scanner candidates".
+
+### Interface
+
+90. Every object has a Share panel for its drive's Drive Admins: who has access and why, grants and blocks
+    to add, change or remove, and the public link when it is public.
+91. Each folder, drive and the tenant has a Rules screen, for the drive's Drive Admins or, at the
+    tenant, for holders of the tenant permission (79): rules in run order as
+    "conditions → effect", reorderable, filterable and editable, scoped as in 61.
+92. Lists show an access indicator (private, shared, public) and filter by it.
+
+### Accountability and ownership
+
+93. Every sharing and rule change is recorded in the audit trail ([audit.md](audit.md)) with who
+    made it, including while impersonating.
+94. All of this is Crest: open source, with no Fruitful dependency. Fruitful.Content builds its
+    publishable links on it, and Fruitful's party relationships supply business roles through a
+    seam Crest defines.
+
+## Scanner candidates
+
+Research for the scanner and type-detection providers (requirements 84 and 85). Licences checked October 2026; nothing here
+is legal advice.
+
+- **OrchardCore.Antivirus** (Orchard, BSD-3): Orchard's own module, in the 3.0.2 build Fruitful
+  uses. It scans through a file-storage hook before a file is stored, using a ClamAV daemon
+  over its socket, and rejects the upload synchronously. It is the obvious first provider, but
+  it rejects rather than quarantines, so Crest adapts it to the asynchronous verdict (86).
+- **ClamAV** (GPLv2): the only mature open-source engine with a maintained signature database.
+  It runs as a separate daemon reached over a socket rather than linked into Crest, on the same
+  machine or a dedicated scanning server (requirement 88), which is
+  how Orchard's module and most products use it. No MIT, BSD or Apache engine matches its
+  coverage. ClamAV identifies file types from content, but as its own type codes
+  (`CL_TYPE_PDF`), not MIME types, and the daemon does not return them: its
+  `GenerateMetadataJson` option only prints to its debug log or writes into its temp
+  directory. The command-line scanner can output them but reloads its whole signature
+  database per file, too slow per upload. So ClamAV is a malware provider, not the type
+  detector.
+- **nClam** (Apache-2.0): a .NET client for the ClamAV daemon, an alternative to Orchard's own
+  connector.
+- **YARA / YARA-X** (BSD-3): a pattern-matching engine that runs detection rules on top of
+  ClamAV's signatures, such as "Office documents with macros" or "PDFs containing JavaScript".
+  Not a scanner on its own and not type detection; it needs rule sets, which carry their own
+  licences. An optional later provider.
+- **Atomdrift Scan** (Apache-2.0, rules included): a newer, ML-assisted scanner. Promising
+  licence; too young to rely on without evaluation.
+- **Type detection** (requirement 85): **libmagic, chosen.** The library behind the Unix `file`
+  command (BSD-2-Clause), with the broadest file-type coverage. It is native: built into macOS
+  and Linux and packaged for Windows (vcpkg). The `Mime` .NET wrapper (MIT) ships libmagic
+  binaries for Windows (x86, x64, arm64), macOS (x64, arm64) and Linux (x64, arm64, musl),
+  covering every server platform; it has no iOS or Android build, which detection never needs
+  because it runs on the server (requirement 87). Mime-Detective, the pure .NET alternative,
+  was set aside: only its smaller default signature pack is free for commercial use.
+- **External services** (a tenant's own provider): cloud malware scanning such as the storage
+  scanning offered by the large cloud providers, behind the same interface.
 
 ## Open questions
 
-- Is per-type public enough for the first cut, or does Fruitful.Content need
-  per-item marking from the start?
-- Should an item marked public in a non-public type need a separate permission
-  (`PublishPublicContent`) so not every editor can expose content?
-
-## Phases
-
-- [ ] **1. Close the default.** Remove `ViewContent` from Anonymous in the Crest
-  site recipe and in Fruitful, Crest.Host and Venti setup recipes, and stop the
-  Contents stereotype from re-granting it on feature install. Test: an anonymous
-  `GET .../view` on a published, non-public item returns 403/404.
-- [ ] **2. Public types.** Securable plus Anonymous `View_{Type}` through recipe
-  steps and the type-settings toggle. Test: an anonymous read of a public type's
-  published item succeeds, its draft does not, and other types stay closed.
-- [ ] **3. Public items.** The public part and its authorization handler, the item
-  editor switch and the list badge. Test: the flag exposes exactly that item's
-  published version anonymously and nothing else of its type.
-- [ ] **4. Consumers.** The site and member shells read public content through the
-  same endpoints with no shell-specific path. Fruitful.Content's publishable links
-  mark their items public. Test: a site page and a member page render the same
-  public item anonymously, and both update after an admin republish.
+None at present.
