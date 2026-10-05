@@ -48,6 +48,17 @@ public sealed class SiteController(
         return Ok(new SiteHomeResult(homeContentItemId));
     }
 
+    // Anonymous: the login page greets with the tenant's own name, before anyone is signed
+    // in. The branding display name IS ISite.SiteName (docs/branding.md) - the same value the
+    // General settings screen edits - and nothing else from ISite is exposed here.
+    [HttpGet("branding")]
+    [AllowAnonymous]
+    public async Task<ActionResult<SiteBrandingResult>> GetBrandingAsync()
+    {
+        var site = await siteService.GetSiteSettingsAsync();
+        return Ok(new SiteBrandingResult(site.SiteName ?? string.Empty));
+    }
+
     [HttpPut]
     public async Task<ActionResult<SiteSettings>> Put(SiteSettingsUpdate update)
     {

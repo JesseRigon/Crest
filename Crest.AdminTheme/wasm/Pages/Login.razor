@@ -13,7 +13,12 @@
    flex centering, both axes. *@
 <div style="min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 2rem;">
 <CrestStack Gap="1rem" AlignItems="AlignItems.Center">
-    <CrestText TextStyle="TextStyle.H3" Text="Crest" />
+    @* The tenant's own name (ISite.SiteName), not the platform's: each tenant has its own
+       users and its own login page. *@
+    @if (!string.IsNullOrWhiteSpace(DisplayManager.Branding?.SiteName))
+    {
+        <CrestText TextStyle="TextStyle.H3" Text="@DisplayManager.Branding.SiteName" />
+    }
 
     @if (DisplayManager.IsAuthenticated)
     {

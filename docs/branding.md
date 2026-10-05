@@ -1,6 +1,6 @@
 # Tenant branding — display name and logos
 
-**Status: not started.** Plan only. Nothing here is implemented.
+**Status: in progress.** The display name is done; logos and the Branding section are not.
 A tenant presents ITS OWN identity, not the platform's: the login page greets
 with the tenant's display name (today it says "Crest"), and the app
 chrome uses tenant-uploaded logos wherever a logo appears. Managed by the tenant
@@ -13,14 +13,11 @@ Current state:
 - A tenant's display name is the standard Orchard **`ISite.SiteName`**, already
   served by `GET api/crest/site` (`siteName`) and editable on the Crest Settings
   › General screen.
-- The login page hardcodes the platform name:
-  `Crest.AdminTheme/wasm/Pages/Login.razor` line 16 —
-  `<CrestText TextStyle="TextStyle.H3" Text="Crest" />`.
-- The admin document title is also hardcoded:
-  `Crest.Server/Components/App.razor` — `<title>Crest</title>`.
-- `GET api/crest/site` requires `ManageSettings` — NOT usable from the anonymous
-  login page. `GET api/crest/site/home` is the existing `[AllowAnonymous]`
-  precedent on the same controller.
+- The login page greets with the site name, read anonymously from
+  `GET api/crest/site/branding` (`siteName` only) through `DisplayManager.Branding`.
+- The admin and member documents' `<title>` is the site name (`App.razor`, from
+  `ISiteService` during SSR).
+- `GET api/crest/site` requires `ManageSettings` and is not used by the login page.
 - The Design System page is `Crest.AdminTheme/wasm/Pages/DesignSystem.razor`
   (route `/DesignSystem`, gated by `ManageSettings` in
   `CrestRoutePermissionProvider`).
@@ -32,15 +29,15 @@ files live in **Orchard Media**, no parallel stores, no invented path literals.
 
 ## Display name
 
-- [ ] **Use `ISite.SiteName` as the branding display name.** The branding display name IS `ISite.SiteName` — no second field. The Branding
+- [x] **Use `ISite.SiteName` as the branding display name.** The branding display name IS `ISite.SiteName` — no second field. The Branding
   section edits it through the same site-settings pipeline the General settings
   screen uses (`ISiteService`), so the two screens can never disagree.
-- [ ] **Add the anonymous branding read and render the site name on the login page.** Login page renders the site name instead of the literal. The name must be
+- [x] **Add the anonymous branding read and render the site name on the login page.** Login page renders the site name instead of the literal. The name must be
   readable ANONYMOUSLY: add a small `[AllowAnonymous]` branding read
   (`GET api/crest/site/branding` on SiteController, or fold into `site/home`)
   returning only public-safe facts: site name + logo slot URLs. Nothing else
   from `ISite` leaks through it.
-- [ ] **Use the site name in the document title.** `App.razor`'s `<title>` uses the site name too (SSR has `ISiteService`
+- [x] **Use the site name in the document title.** `App.razor`'s `<title>` uses the site name too (SSR has `ISiteService`
   available directly — no endpoint needed there).
 
 ## Logos — named slots, size variants

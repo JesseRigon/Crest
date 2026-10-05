@@ -20,6 +20,7 @@ function buildSharedAdminChecks() {
     // Phase 8 hosting-model checks: SSR prerender, route gating ahead of render,
     // culture flowing into the static document, and InteractiveAuto handoff.
     { name: 'ssr-login-prerender', fn: require('./checks/ssr-login-prerender') },
+    { name: 'branding-login', fn: require('./checks/branding-login') },
     { name: 'route-auth-ssr', fn: require('./checks/route-auth-ssr') },
     { name: 'ssr-culture', fn: require('./checks/ssr-culture') },
     { name: 'admin-interactive-auto-handoff', fn: require('./checks/admin-interactive-auto-handoff') },

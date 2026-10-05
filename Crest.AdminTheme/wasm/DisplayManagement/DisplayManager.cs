@@ -23,6 +23,9 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
     public AuthUser User { get; private set; } = AuthUser.Anonymous;
     public CrestThemeSettings Theme { get; private set; } = CrestThemeSettings.Default;
     public AppManifest? Manifest { get; private set; }
+
+    /// <summary>The tenant's public identity (site name), loaded for every visitor - the login page greets with it.</summary>
+    public SiteBranding? Branding { get; private set; }
     public SiteSettings? Site { get; private set; }
     public DisplayMenu? AdminMenu { get; private set; }
     public DisplayMenu? ProfileMenu { get; private set; }
@@ -83,6 +86,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         await RunAsync(async () =>
         {
             Theme = await api.Crest.Rest.Theme.GetAsync();
+            Branding = await api.Crest.Rest.Site.GetBrandingAsync();
             await themeEngine.ApplyAsync(Theme);
             User = await api.Crest.Rest.Auth.MeAsync();
 

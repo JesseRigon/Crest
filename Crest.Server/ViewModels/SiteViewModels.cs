@@ -53,3 +53,10 @@ public sealed record SiteSettingsUpdate(
     string CacheMode);
 
 public sealed record SiteHomeResult(string ContentItemId);
+
+/// <summary>
+/// The tenant's public identity, readable anonymously (the login page greets with it): only
+/// public-safe facts, nothing else from <c>ISite</c>. Logo slots join it later
+/// (docs/branding.md).
+/// </summary>
+public sealed record SiteBrandingResult(string SiteName);

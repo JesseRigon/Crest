@@ -42,7 +42,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     @if (_isAdminShell)
     {
-        <title>Crest</title>
+        <title>@_siteName</title>
         <base href="@_adminBaseHref" />
         <meta name="crest-tenant-base" content="@_tenantBasePath" />
         <link id="crest-radzen-theme" rel="stylesheet" href="@Asset("/_content/Crest.Components/css/material-base.css")" />
@@ -58,7 +58,7 @@
     }
     else if (_isMemberShell)
     {
-        <title>Members</title>
+        <title>@_siteName</title>
         @* Same base-href mechanism as the admin shell: the middleware shifted the member
            base into PathBase, so PathBase + "/" is the composed base href. *@
         <base href="@_adminBaseHref" />
@@ -124,6 +124,13 @@
     [Inject]
     private IOptions<global::Crest.Routing.MemberOptions> MemberOptions { get; set; } = default!;
 
+    [Inject]
+    private OrchardCore.Settings.ISiteService SiteService { get; set; } = default!;
+
+    // The tenant's own name for the shell documents' <title> (docs/branding.md: the display
+    // name IS ISite.SiteName), not the platform's.
+    private string _siteName = string.Empty;
+
     private global::Crest.Routing.RouteBucket _shellBucket = global::Crest.Routing.RouteBucket.Site;
     private bool _isAdminShell => _shellBucket == global::Crest.Routing.RouteBucket.Admin;
     private bool _isMemberShell => _shellBucket == global::Crest.Routing.RouteBucket.Member;
@@ -135,6 +142,11 @@
     // admin <base href> - see the header comment), composed on Orchard's tenant base
     // so they survive URL-prefixed tenants: "/_content/x" becomes "/tenant2/_content/x".
     private string Asset(string path) => _tenantBasePath + path;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _siteName = (await SiteService.GetSiteSettingsAsync()).SiteName ?? string.Empty;
+    }
 
     protected override void OnInitialized()
     {

@@ -58,6 +58,8 @@ public interface IAppApi
 public interface ISiteApi
 {
     Task<SiteSettings> GetAsync();
+    /// <summary>The tenant's public identity (anonymous); null when it cannot be read.</summary>
+    Task<SiteBranding?> GetBrandingAsync();
     Task<SiteSettings?> UpdateAsync(SiteSettingsUpdate update);
 }
 
@@ -330,6 +332,12 @@ public sealed class SiteApi(HttpClient http) : ISiteApi
         return response.IsSuccessStatusCode
             ? await response.Content.ReadFromJsonAsync<SiteSettings>() ?? SiteSettings.Default
             : SiteSettings.Default;
+    }
+
+    public async Task<SiteBranding?> GetBrandingAsync()
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, "api/crest/site/branding")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<SiteBranding>() : null;
     }
 
     public async Task<SiteSettings?> UpdateAsync(SiteSettingsUpdate update)
@@ -1227,6 +1235,8 @@ public sealed record AdminSettingsUpdate(
     bool DisplayMenuFilter,
     bool DisplayNewMenu,
     bool DisplayTitlesInTopbar);
+
+public sealed record SiteBranding(string SiteName);
 
 public sealed record SiteSettings(
     string SiteName,
