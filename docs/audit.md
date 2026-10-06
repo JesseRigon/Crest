@@ -79,6 +79,27 @@ unpublished, deleted and restored, with a snapshot of the item.
   - An organization's member admin sees nothing of the trail in the first cut. Whether
     they get an organization-scoped view is an open question.
 
+- [ ] **5. Activity feeds are filtered views of the trail** (ruling 2026-10-06). One backend:
+  the audit trail holds all the data, and an activity feed is a filter over it, not a
+  second store. An invoice's activity is the trail filtered to that content item; a
+  customer's communications activity is the communications category filtered to that
+  customer. What a person sees is further limited by their permissions — only activity
+  they own, or the record's full activity. Front ends differ by what they ask for; the
+  data does not. Consequences:
+  - **Events carry what feeds filter on**, indexed: the record, the parties it concerns,
+    the category, the owner, the organization.
+  - **Attribution follows the audience.** The trail view shows who really acted (staff
+    impersonating a member); a feed shown to members shows functional attribution only,
+    so "members never see the audit trail" still holds for the trail itself.
+  - **The audit API is broad but strictly secured.** Every read is filtered by the
+    caller's permissions and context in the query, never after paging — the same
+    fail-closed rule as the file access index. Important and difficult; designed as its
+    own step.
+  - **It leans on Crest's query system** ([queries.md](queries.md)), as reporting does: feed definitions are queries
+    over the audit indexes, since the filters and criteria vary so much.
+  - The likely start is still forking OrchardCore's AuditTrail, as the file module forks
+    Media; its storage structure decides how the indexes above are built.
+
 ## Decisions needed
 
 - [ ] **Retention.** How long events are kept per tenant, and whether some categories

@@ -61,10 +61,16 @@ are. Content items use the same model, with their content type in the chain.
 
 - **File object**: a drive, folder or file, with a stable id, kind, name, parent, owner,
   metadata and access entries. A file's **type** is its MIME type, its extension and, for a
-  content item, its content type.
+  content item, its content type. A hard-linked file has one content record and several
+  placements, each with its own parent (3, Hard links).
 - **Principal**: Anyone (public), Tenant, Organization, Role or User.
 - **Role**: any group the business recognises: staff roles (Editor, Sales Rep, Marketing) and
   business roles (Customer, Vendor, Lead, Member).
+- **No-permission role (shim, 2026-10-05)**: a role that grants no permissions and exists
+  only so people can be shared with as a set ("everyone on this drive"). It is a **shim**:
+  Crest has no group concept yet, and how grouping should work is open
+  ([members.md](members.md) › Decisions needed › Grouping). The code that introduces it is
+  marked as a shim, so it is found and replaced when grouping is decided.
 - **Access level**, each including the ones before it:
   - **Viewer**: read.
   - **Commenter**: read and comment, nothing more.
@@ -159,6 +165,12 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
       ClamAV for malware and libmagic for type detection (91); pattern-rule scanning such as YARA is an
       optional later provider. See "Scanner candidates".
 
+- [ ] **Module-generated files go through the same pipeline, with exemptions** (ruling
+  2026-10-05). A module that generates files server-side writes them as new file objects or
+  versions through the file-object API, so they are scanned like uploads. Not every write:
+  the goal is cooperative real-time editing, so whether a write is scanned depends on the
+  document type and the module creating it, and modules can be whitelisted.
+
 ## 3. File objects and drives
 
 Documents, opaque blob keys, versions, metadata; the drive class, drive types and settings, organization drives with their admins, personal drives, inactive drives; the file-object API and the byte-serving endpoint.
@@ -171,6 +183,24 @@ Documents, opaque blob keys, versions, metadata; the drive class, drive types an
   4. Every object carries editable metadata: title, description, alternative text, tags, owner,
      type, size, and who created and last modified it, and when.
   5. Replacing a file keeps its earlier versions, so a published version can be rolled back.
+
+- [ ] **Hard links: one file, several places** (ruling 2026-10-06). A file can be placed in
+  more than one folder, like a Linux hard link. The only real file is its content record
+  (the id in the database, with its versions); every location is a virtual placement of
+  it. Each placement is a full citizen of its folder: its own URL, its own permissions and
+  share settings, inheriting from its own path. The content is shared exactly — editing
+  through any placement changes it everywhere, and versions are the content's.
+  - A **soft link** is different: an ordinary link that points at one file's location and
+    opens it there; it has no permissions of its own and grants nothing.
+  - Removing a placement removes that location only; the content goes when its last
+    placement goes.
+  - Folders can be hard-linked too (unlike Linux), with a **loop gate**: placing a folder
+    is refused when the target is the folder itself or anything inside it, through any of
+    its placements, so no folder ever contains itself. Checked on every placement and move.
+  - This changes requirement 6 (one URL per file becomes one URL per placement, still no
+    copies) and makes the access index per placement, not per file. Expected permission
+    issues — such as someone with Editor on one placement changing content another
+    placement's viewers see — are fixed as they are hit, not designed away up front.
 
 - [ ] **One file system: Crest replaces Orchard's Media module.**
   6. Files and media are one system. Every file has one URL; there is no separate media library
@@ -477,9 +507,24 @@ logged action rather than something in the admin's everyday view.
       person doing it whether to keep the drive's previous sharing and rules or start fresh with
       its drive type's defaults. Its contents are kept either way.
 
+- [ ] **Scope: Crest owns drives, sharing, the CDN, version control, and the viewer pane
+  with its add-on seam** (ruling 2026-10-06). Add-ons themselves (PDF, document, image and
+  spreadsheet editors), bulk editing, version compare/merge, multi-provider redundancy and
+  sync clients are downstream — provided by downstream modules or by anyone else. They
+  work on files the way Google Drive add-ons do: through the file-object API with the
+  user's own access, saving back as a new version or file object through the same pipeline
+  as uploads. The file-object API must serve them.
+
 ## 8. Interface
 
 Drive browser, Share panel, Rules screens, access indicators, the user editor's derived roles.
+
+- [ ] **Build the viewer pane and its add-on seam** (ruling 2026-10-06). The drive browser
+  has a viewer pane for the selected file. Add-ons register against file types and hook
+  into it, so a file can be edited **in place** — simple edits to a document or an image
+  right in the pane, without opening a separate app — or opened full in the add-on's own
+  editor. With no add-on for a type, the pane previews. Add-ons can come from any module
+  or third party; the pane and the seam are Crest's.
 
 - [ ] **Build the Share panel.**
   96. Every object has a Share panel for its drive's Drive Admins: who has access and why, grants and blocks
@@ -572,21 +617,53 @@ branch `Crest`), and against Crest as it stands. What each area gives us, and wh
 
 ### Replacing the Media module
 
-Established by the spike in [internal/media-module-swap.md](../internal/media-module-swap.md),
-which restored full current media functionality with a Crest-owned module and no change to
-Orchard (requirements 6–11).
+Crest's file system replaces Orchard's `OrchardCore.Media` module outright, so files and
+media are one system with one URL per file, while every module that depends on Media keeps
+working (requirements 6–11). A spike on 2026-10-05 proved it in a throwaway host, with no
+change to Orchard.
 
-- **Every stock sub-feature id is a contract.** Dependents name `OrchardCore.Media.Indexing`;
-  Crest's module must declare whichever of the stock module's eight feature ids anything depends
-  on (`OrchardCore.Media`, `.Indexing`, `.Indexing.Text`, `.Cache`, `.Slugify`, `.Security`,
-  `.Tus`, `.SignalR`).
-- **Services are a contract too.** Dependents resolve services the stock module registers
-  (`IMediaFileStore` first). The spike's inventory (its step 6) is the real size of the module.
+**The approach.** Orchard's Media is two layers:
+
+- **Libraries** (`OrchardCore.Media.Abstractions`, `OrchardCore.Media.Core`): `MediaField`,
+  `IMediaFileStore`, `MediaOptions`, `MediaPermissions`, `DefaultMediaFileStore`, the image
+  processing contract. Other modules compile against these, and stored content refers to them.
+  **Crest keeps them.**
+- **The module** (`OrchardCore.Media`: 139 source files, 8 features, about 70 service
+  registrations): the feature ids, `/media` serving, API endpoints, admin UI, Secure Media, Tus
+  uploads, SignalR, Liquid filters, shortcodes, display drivers, recipes, deployment. **Crest
+  replaces it**; each host leaves the stock module out with a direct
+  `<PackageReference Include="OrchardCore.Media" ExcludeAssets="all" />`, which removes
+  `OrchardCore.Media.dll` from the output while the libraries and sibling modules stay.
+
+**Who depends on what.**
+
+- *Feature-id dependents:* `OrchardCore.Seo` depends on `OrchardCore.Media`; the media startups
+  in Content Fields, HTML and Markdown are `[RequireFeatures("OrchardCore.Media")]`;
+  `Media.Azure`, `Media.AmazonS3` and `Media.ImageSharpV3` depend on it in their manifests.
+- *Library-only dependents:* Seo, Html, Markdown, ContentFields and the two indexing modules
+  (PDF, OpenXML).
+- *Module-assembly dependents:* `Media.Azure` and `Media.AmazonS3` implement `ITusTempStore`
+  from the stock module assembly, so without it Orchard's module discovery fails at startup
+  (`GetExportedTypes`, assembly not found) before anything is enabled. ImageSharp uses only the
+  processing types, which Orchard 3.0 moved into the abstractions.
+- *Bundling:* hosts reference `OrchardCore.Application.Cms.Targets`, which brings in the Media
+  module and its sibling modules through `Cms.Core.Targets`.
+- The precedent to avoid is OrchardCore issue #1023: a custom `OrchardCore.Users` replacement
+  worked until a module with a hard dependency (OpenID) re-enabled the stock module. The swap
+  holds only because Crest's module carries the exact feature ids and the stock module is
+  absent, so nothing can re-enable it.
 
 **Same module id, different assembly.** `Crest.Media` declares
 `[assembly: Module(Id = "OrchardCore.Media")]`. Orchard supports this (`ModuleInfo.Id` lets a
 module change its assembly name and keep its logical name), so areas, routes, static paths and
 every feature id stay exactly as Orchard and its dependents expect.
+
+- **Every stock sub-feature id is a contract.** Crest's module must declare whichever of the
+  stock module's eight feature ids anything depends on (`OrchardCore.Media`, `.Indexing`,
+  `.Indexing.Text`, `.Cache`, `.Slugify`, `.Security`, `.Tus`, `.SignalR`); the PDF and OpenXML
+  indexing modules, for example, need `.Indexing`.
+- **Services are a contract too.** Dependents resolve services the stock module registers —
+  `IMediaFileStore` first (Seo's handler needs it; without it the tenant fails to start).
 
 **One gap in Orchard, fixed in Crest's project file.** Orchard's module build
 (`OrchardCore.Module.Targets`) names embedded static assets and the module asset index after
@@ -594,6 +671,47 @@ every feature id stay exactly as Orchard and its dependents expect.
 name different, every `/OrchardCore.Media/...` asset returned 404. A small MSBuild target in
 `Crest.Media.csproj`, running after Orchard's embedding step, renames both to the id (handling `/`
 and `\` path separators). Worth offering upstream: let the targets use the module id.
+
+**What the spike verified** — against the 4.0.0-local feed, stock `OrchardCore.Media`,
+`OrchardCore.Media.Azure` and `OrchardCore.Media.AmazonS3` excluded, a Crest-owned copy of the
+stock module's source built as `Crest.Media`:
+
+| Behaviour | Result |
+| --- | --- |
+| Stock assemblies | Absent: only `Crest.Media` plus the Media libraries and sibling modules load |
+| Recipes enabling `OrchardCore.Media` | The stock Blank and Blog setup recipes enable Crest's feature; the Blog media step writes its images to the tenant's media store |
+| `/media/...` serving | 200, correct content types |
+| Resizing (NetVips) | 100×100 crop and WebP conversion produced; resized cache written. Needs a token unless `UseTokenizedQueryString` is off, and only configured `SupportedSizes`, as stock |
+| Admin Media library page | 200, with its scripts and styles served |
+| Media API | Listing, upload, serving the upload, folder creation: all 200 |
+| Feature by feature | Cache, Slugify, Indexing, Indexing.Text, PDF, OpenXML, SEO, ImageSharp, Tus, SignalR, Security: all enable; site, media and admin keep working after each |
+| Secure Media | Anonymous 404, signed-in admin 200, as stock |
+| Resumable uploads (Tus) | Endpoint live (`Tus-Resumable: 1.0.0`, creation, termination, expiration) |
+
+**Decisions (2026-10-05).**
+
+- **No change to the Orchard fork.** Storage is Crest's own provider interface (the icon and
+  tax provider pattern), so Orchard's `OrchardCore.Media.Azure` and `OrchardCore.Media.AmazonS3`
+  modules are left out of hosts like the stock Media module, and the `ITusTempStore` coupling
+  no longer matters. Local disk first; Azure and S3 providers later, on Orchard's storage
+  libraries. Moving `ITusTempStore` into a library was tried and reverted.
+- **The local feed is 4.0.0-local**, matching the fork's own 4.0.0, and Crest's compatibility
+  and assembly versions are 4.0.0.
+
+**Still to do and to watch.**
+
+- [ ] **Inventory the rest of the stock module** — every service, route, shape, filter and
+  handler that a dependent or existing content relies on (display drivers for `MediaField`,
+  Liquid filters such as `asset_url`, shortcodes, the resizing middleware). That inventory is
+  the real size of the module.
+- [ ] **Offer upstream:** module targets that embed assets under the module id; routing Tus
+  uploads through `FileCreationService` so `IFileEventHandler` (antivirus) runs on them — a
+  security fix whatever Crest does.
+- **Risks.** Claiming `OrchardCore.Media` means tracking the stock module's public surface as
+  Orchard evolves (new features, settings, recipe steps), or dependents drift. Recipes,
+  deployment plans and admin menus that target the stock module's settings and endpoints stop
+  working unless Crest provides equivalents. Third-party modules that reference the stock
+  module assembly hit the same load failure as Azure and S3.
 
 ### Crest today
 

@@ -630,6 +630,12 @@ the flow on Approved or Rejected with DecidedBy/Comment as outputs; 403 outside 
 
 ## Connectors
 
+**Moving to Queries (ruling 2026-10-06).** The connection model, sealed secrets and tokens,
+OAuth flow, HTTP invoker, token cache and rate limiting described here move into
+`Crest.Queries`' connection system, and Workflows depends on Queries; the activities and
+inbound webhook triggers stay here as consumers ([queries.md](queries.md) › Workflows on
+Queries). The section below describes what is built today.
+
 A **connection** is a tenant's handle on an external service: base URL, auth kind (`none`,
 `api-key`, `basic`, `bearer`, `oauth2-client-credentials`, `oauth2-authorization-code`,
 `hmac` for inbound webhooks), a sealed secret that never leaves the server, retry count,
@@ -834,6 +840,17 @@ Built today: see [docs/workflows.md › Designer and admin pages](workflows.md#d
   `workflows-designer` stays green throughout; the security token consolidation
   (`ICrestAntiforgery`) happens with this merge.
   - [ ] The security token consolidation (`ICrestAntiforgery`).
+  The workflows pages are built on the Elsa designer UI; what it offers must not be lost in
+  the move (ruling 2026-10-05).
+- [ ] **Hook attachment and hook insight** (ruling 2026-10-05: planned, not built).
+  - [ ] A hook-attachment page (the API exists: `HooksController`).
+  - [ ] Clear, labelled sections for **webhooks** — pub/sub insight, process instances and
+    history — and for **internal hooks**, with the same insight data.
+- [ ] **Per-process metrics** (ruling 2026-10-05): run counts, timings and failures per flow,
+  on the workflow pages, over the already-indexed instances, execution logs and activity
+  records.
+- [ ] **Logic reroute.** An outline asks for "logic reroute options" in process mapping; read
+  it against the Elsa UIs and code to find what it maps to before planning.
 - [ ] **The designer UI that comes with it.** With it: the tier badge, Outdated + Reset, the access-list editor, the field-dependency
   panel, the pending state, an OAuth "Authorize" button on a connection, and a dedicated
   mapping editor for `Copy fields` (until then the rows are a JSON input).

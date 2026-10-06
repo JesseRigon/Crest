@@ -14,8 +14,8 @@ The party model it builds on is [parties.md](parties.md).
 - **Member** — a user who belongs to an ORGANIZATION within a tenant (a
   customer's or vendor's person). The class name for what was earlier sketched
   as "customer users" / "org users".
-- **Membership** — the member's relationship record. Tiers, groups and perks on top of
-  it are a downstream subscription module's, not Members' (see below).
+- **Membership** — the member's relationship record. Tiers and perks on top of it are a
+  downstream subscription module's, not Members' (see below).
 - **Member portal** — the per-organization portal surface members sign in
   through. A vendor org has a vendor-flavored member portal on tenant A; a
   customer org has a customer-flavored one on tenant B; same class of thing.
@@ -24,8 +24,9 @@ The party model it builds on is [parties.md](parties.md).
 
 Members is access control: org-users, their org bindings and roles, the hierarchy store,
 the permission ceiling, impersonation and the portal session. The loyalty/subscription
-system — subscriptions, seats, groups and entitlements, tier and perk definitions — is
-not part of `Crest.Members`; it is a separate downstream module built on it.
+system — subscriptions, seats and entitlements, tier and perk definitions — is not part
+of `Crest.Members`; it is a separate downstream module built on it. Crest has no group
+concept (ruling 2026-10-05, Decisions needed › Grouping).
 
 The two remain independent facts about a person: holding a seat in a subscription
 says nothing about org-user access, and being an org-user with customer-portal
@@ -35,6 +36,13 @@ active-org session — which is why they kept getting modelled as one system.
 Members raises a member's organization-binding lifecycle through
 `IMemberLifecycleHandler` (`MemberBoundAsync` / `MemberUnboundAsync`, resolved in a fresh
 scope after the binding write commits) and knows nothing more about its consumers.
+
+- [ ] **Access-policy seam (ruling 2026-10-05).** A downstream module may affect a member's
+  access without Members knowing why: Crest consults registered access policies at
+  portal sign-in, organization switch and session load, and a policy may refuse portal
+  access for that organization or narrow the member's permissions there. A subscription
+  module uses it so an unpaid membership loses access; what it loses is that module's and
+  the tenant's business, not Crest's.
 
 ## The two classes of user in a tenant
 
@@ -69,9 +77,9 @@ user lists filter by class with a real SQL WHERE, reliably.
 through a dedicated, permission-gated administrative action (its own
 permission, never the role editor), so a member hired onto staff converts
 keeping their account, credentials and external logins; the conversion is a
-natural audit event. On member→staff the org bindings end and the hierarchy node
-leaves the org subtree. Conversion is member→staff only; whether staff→member is
-also allowed is open ([members.md](members.md)).
+natural audit event. Conversion adds or removes a class in either direction; adding staff
+keeps the org bindings, removing member ends them (ruling 2026-10-05, One account, both
+sides).
 
 **Class permission ceiling**: some permissions are NEVER
 valid for the member class — tenant settings editing is the canonical example
@@ -91,6 +99,25 @@ starts from an authenticated staff session and never passes through a login,
 so the class gate does not interfere with it.
 
 ## Hierarchies
+
+**The hierarchy is relational, not a tree of slots (ruling 2026-10-05).** It is a set of
+manager → report relationships between users, not an entity users are placed into: a user
+can have two managers, a manager many reports, and no two users' patterns have to match.
+It answers ownership and visibility — who sees whose records — and nothing else;
+permissions stay a separate system (roles).
+
+**Relationships are typed.** *Reports-to* is the hierarchy: it grants a manager visibility
+of their reports' records, and it stays within one root (staff, or one organization).
+Other types are **associations**, and they may cross between staff and an organization: a
+large customer organization can have several sales reps assigned, each connected to
+different contacts there. The tenant holds all of it, but each rep sees only what their
+own connections give them, not the whole organization, and the organization's people do
+not see the reps' side either. An association grants no visibility of the other party's
+data by default — a rep does not see their contact's data just by being connected —
+unlike a direct report. "Teams" are this hierarchy; there is no separate teams table and
+no group concept. The single-parent design below
+(one node per user, materialized path) is what is built and is superseded: see Still to
+build › Relational hierarchy.
 
 **Hierarchies live in a custom DB TABLE in the
 tenant's store** (physically per-tenant already via TablePrefix) — not a
@@ -520,6 +547,51 @@ ruling (see the super tenant item under Later), so it never appears in an ordina
 tenant's user store. Every statement in this document about "portal users" means
 those two.
 
+### One account, both sides (ruling 2026-10-05)
+
+Supersedes "one class per user" and "conversion ends the org bindings" above. A user can
+hold **staff and member at once**, under one account and one credential; which side they
+sign in to decides what they see.
+
+- [ ] **Class becomes a set.** The class property holds tenant-user, org-user or both (the
+  class index gets a row per class). Conversion becomes adding or removing a class through
+  the same permission-gated action; adding staff no longer ends org bindings, and removing
+  member does. The tenant's own organization still has no members
+  ([parties.md](parties.md) › Organizations).
+- [ ] **The side comes from the request, not the user.** Admin paths act as staff — the
+  user's tenant roles, tenant-wide. Member-portal paths act as member — the active org
+  binding's roles, the class permission ceiling, data scoped to that organization. One
+  session (the one per-tenant cookie) serves both sides, even in two tabs at once.
+- [ ] **The ceiling keys on the side.** The class permission ceiling fails a ceilinged
+  permission on a member-side request, never on the user as such, so a dual user keeps
+  their staff permissions in the admin. This is the security-critical change.
+- [ ] **The login gate checks the side.** The admin login accepts a user holding staff; the
+  member portal's login accepts a user with at least one org binding.
+- [ ] **One switcher, the same on both sides.** The admin and the member portal show the
+  same switcher, listing only what the user is registered for, in two sections: **tenants**
+  on top, then a separator, then **organizations**. Choosing a tenant switches tenant (as
+  the admin's tenant list does today, users found in each tenant's store); choosing an
+  organization opens the member portal with that organization active.
+- [ ] **Tenant SSO stays staff-side.** A dual user gets tenant SSO on the admin side only.
+- [ ] **Audit records the side** each action came from ([audit.md](audit.md)).
+
+### Relational hierarchy
+
+- [ ] **Replace the single-parent tree with manager → report relationships** (ruling
+  2026-10-05, Hierarchies). A relationship row per (manager, report) within a root (the
+  staff root or one organization), so a user can have several managers. Subtree(user) is
+  everyone reachable downward through any path; chain(user) is every path upward, for
+  escalation and approval routing. YesSql cannot express recursive SQL, so subtree and
+  chain read a maintained closure table (ancestor, descendant) rather than a materialized
+  path. Writes refuse cycles. The root-scope guard holds for reports-to: every query and
+  write carries the root and organization. Rebuilds `UserHierarchyService`.
+- [ ] **Association relationship types** (ruling 2026-10-05). Typed connections beside
+  reports-to (sales rep → contact, account rep → organization, …) that may cross staff and
+  an organization. They grant no visibility by default; what, if anything, a type grants is
+  decided per type. **Both modules and tenants declare types:** module types are built in,
+  code relies on them, so a tenant cannot edit or remove them; tenant types are an editable
+  list on top.
+
 ### Org bindings and org structure
 
 - [ ] **One home per fact: the org binding record, not a second declaration.** The rule, the same one-home-per-fact rule the field model follows: **the record is
@@ -543,14 +615,18 @@ those two.
     is hit on every request, or cached — and the cache is the derived projection again.
   - **C — split by what each layer is good at. CHOSEN.** Identity and the
     authorization hot path live in the user layer (class, active org, effective
-    roles); the DECLARATIVE org structure — groups, group→role mappings, org settings
-    — lives in content. Login resolves roles from the content-defined groups once and
-    projects the result onto the user/claims.
+    roles); the DECLARATIVE org structure — org settings (groups and group→role
+    mappings were part of this until 2026-10-05; groups are dropped, see Decisions needed ›
+    Grouping) — lives in content. Login resolves the effective roles once and projects the
+    result onto the user/claims.
 
   C is the same middle path as the binding ruling, applied one seam over: the
   declarative thing is content (editable, listable, permissioned, importable — which
   is what makes thousands of users tractable), and the hot path reads a flat
   projection that is rebuildable from it.
+- [ ] **The tenant's own organization has no members** (ruling 2026-10-05): no binding may
+  point at the Organization that represents the tenant ([parties.md](parties.md) ›
+  Organizations), so staff and member logins never share an organization.
 
 ### Data separation by organization
 
@@ -578,6 +654,11 @@ subtree.
 - [ ] **User editor class section.** The user editor gets a read-only class section via
   `SectionDisplayDriver<User, T>` (precedent: Demo's UserProfileDisplayDriver);
   conversion is NOT edited there — it is its own action.
+- [ ] **Permission editor** (ruling 2026-10-05: planned). Role permissions edited in the
+  Crest admin over Orchard's `IPermissionProvider`s (`Roles.razor` still points at it:
+  "Role permissions will be added with the dedicated permission editor"). It also shows,
+  per module, what each user can effectively do — the union of their roles, since a user
+  holds several.
 - [ ] **Person creation for external-login auto-registered members**
   (they get class + binding only).
 
@@ -596,8 +677,18 @@ subtree.
 
 ### Decisions needed
 
-- [ ] **Decide conversion semantics.** Conversion semantics detail: staff→member allowed, or hire-direction only?
-  (Marker location itself is ruled: user property; see the class-marker ruling.)
+- [ ] **Grouping — not final; a starting point for next time** (2026-10-05). For now Crest
+  has **no group concept**: roles stay exactly as they are, and the existing system keeps
+  working with no Orchard change. Where the discussion landed, to pick up next time:
+  **groups grant access (what you can see, read) and roles grant actions (create, update,
+  delete and the other verbs)**, every action requiring that you can see the record first.
+  Open with it: capability screens (settings, audit) as actions; answering Orchard's view
+  permissions from the access system without changing Orchard; business roles as derived
+  groups. Until then, sharing uses the **no-permission role shim** ([media.md](media.md) ›
+  Terms).
+
+- [x] **Decide conversion semantics.** Ruled 2026-10-05: both directions, as adding or
+  removing a class (One account, both sides).
 - [ ] **Decide whether the ceiling registry also ceilings staff-class-only permissions in
   reverse.** Whether the ceiling registry also ceilings STAFF-class-only permissions in
   reverse (probably unnecessary — staff are trusted with member-portal

@@ -17,6 +17,12 @@ shape as the "component workbench" this plan already wanted, and a mature, battl
 implementation of it. License is Apache 2.0 (permissive, attribution required) — safe to
 port from with a `NOTICE`/attribution entry once implementation starts.
 
+**Prerequisite before it is done: custom data types.** The designer will hook into the
+custom data types system to build UIs for types a tenant creates without code. How such
+types reach the registries and their pages has to be designed first; tenant-made party
+roles are the first case ([parties.md](parties.md) › Tenant-defined party roles). Far down
+the pipeline.
+
 Verification (structural + pixel snapshotting) stays in the
 same spirit as the Playwright screenshot-diff harness already built under
 `modules/Crest/tests/playwright/harness/`.

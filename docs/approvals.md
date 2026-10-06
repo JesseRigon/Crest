@@ -22,6 +22,8 @@ Crest.Workflows already has approvals ([workflows.md](workflows.md), "Approvals"
   recorded ([media.md](media.md), notices). With approvals, a
   tenant could require one instead.
 - [ ] **Overriding the personal drive notice delay**, as an alternative to entering a reason.
+- [ ] **Downstream uses.** Request/approval forms and optional approval of generated purchase
+  orders; until the shared system exists they use the `Request approval` workflow activity.
 - [ ] **Later uses.** Likely later: making content public, granting sensitive permissions,
   publishing changes to shipped definitions.
 

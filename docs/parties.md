@@ -167,6 +167,61 @@ holds what is not built yet.
   eventually auto-create or link a `Person` profile, but that does not mean every `Person`
   can log in.
 
+### Organizations
+
+- [ ] **Legal entity names** (ruling 2026-10-05). The display name (the TitlePart; for the
+  tenant, `ISite.SiteName`) stays the default name everywhere a name is shown. An
+  Organization additionally carries its legal entity names as **a list of kinds**, the way
+  contact points are: an `OrganizationNames` bag whose entries carry a Kind from a
+  tenant-editable option set (seed: legal, DBA / trade name, former, other) and the name,
+  so an organization can hold several DBAs. **One primary entry per kind**, exclusive like
+  contact points' Preferred. **No effective dates**: a superseded name becomes the
+  `former` kind. None of these is a second display name ([branding.md](branding.md)).
+- [ ] **Parent organization** (ruling 2026-10-05): a picker on Organization restricted to
+  Organization.
+- [ ] **The tenant's own organization** (ruling 2026-10-05). A site-settings reference to an
+  Organization party representing the tenant's legal entity: its legal names, tax id and
+  addresses come from there; the display name stays `ISite.SiteName`. It is a **special
+  organization that has no members** — no member binding may point at it — so staff
+  (tenant-users) and members (org-users) never share an organization and their logins stay
+  separate ([members.md](members.md)).
+
+### Tenant-defined party roles (deferred, far down the pipeline)
+
+- [ ] **A tenant creates a party role without code.** Possible in principle: a party role
+  is a content type with a `Party` picker (the shape `CreatePartyRoleDefinitionsAsync`
+  stamps), so only the registry needs code — a built-in provider could register every
+  content type the tenant marks as a party role. **Kept out for now (2026-10-05)** for
+  simplicity: a role ties deeply into its UI (menu, `/Parties/{key}` page, panes, editors),
+  and a tenant-made role has no module to supply that UI. **Must be figured out before the
+  Blazor UI designer is done** ([blazordesigner.md](blazordesigner.md)), because the designer
+  will hook into the custom data types system to build UIs for tenant-made types, and
+  tenant-made party roles are one of those types. Until then party roles come only from
+  modules.
+
+### Contacts and addresses
+
+- [ ] **One kind list, with a hidden type per kind** (ruling 2026-10-06). The user picks one
+  contact kind from one tenant-editable list (`parties.contact-point-kind`); landline,
+  mobile, VOIP, WhatsApp and LinkedIn are kinds, never separate fields or lookups. Each kind
+  carries its **type** in the option's existing `Category` — phone, e-mail, web, social,
+  messaging, other — which the user never selects. Validation runs per kind, defaulting to
+  its type's rule (number, address, URL, handle); reports and the person's preferred
+  contact methods can group by type, so a tenant-added kind rolls up once it has a type.
+  The seed gives every kind a type; a tenant adding a kind chooses one, and the data lock
+  freezes it once code relies on it.
+
+- [ ] **Preferred contact methods are per Person only** (ruling 2026-10-05): an ordered
+  party-level preference across channels (text, call, e-mail) on Person. `Preferred` on a
+  contact point keeps picking one entry *within* a kind. Organizations have contact
+  information (a main line, a general inbox) but no preferred method: an organization is
+  reached through its people.
+- **Addresses on non-party records are case by case** (ruling 2026-10-05). Every record
+  hangs off a Person or an Organization; whether a record's editor edits addresses, and
+  through which API, is decided per editor, and access follows ownership or access grants
+  to organizations and party type. The contacts API is not opened generically to any type
+  carrying an `Addresses` bag.
+
 ### Industry classification
 
 - [ ] **Reseed `parties.industry` from NAICS.** It ships today as a
@@ -190,4 +245,6 @@ holds what is not built yet.
   if party industry is ever reported on internationally.
 - [ ] **Party merge/dedupe mechanics** (survivorship rules, live-reference rewriting UI,
   audit trail) — Parties module concern, design later. The enabling rule is already
-  decided: live references by id + posted-document snapshots.
+  decided: live references by id + posted-document snapshots. What a posted document
+  copies is decided by the posting workflow of the module that owns the document, not by
+  Parties.

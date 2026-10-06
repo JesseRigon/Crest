@@ -220,6 +220,9 @@ The global store's host-call rough edge is in [global-store.md](global-store.md)
     verification and the suite entry point, as `tools/dev-lib.sh` and a `runHostSuite()`
     harness helper. Hosts pass their solution, features, ports and credentials.
 
+- [ ] **The query system and the connection system (Workflows depends on it)** — planned in
+  [queries.md](queries.md).
+
 ### Recorded for later
 
 - [ ] **Organization ownership of records.** Applications that serve many organizations inside
@@ -234,6 +237,4 @@ The global store's host-call rough edge is in [global-store.md](global-store.md)
 - [ ] **Translations of Crest's own UI.** Hosts currently ship them in their own catalogs, so
   a second host gets an untranslated admin. Ship them with Crest, or keep translations
   the host's?
-- [ ] **Organization groups.** Whether group-based grants within an organization are Crest's
-  access control (with a commercial ceiling contributed through a seam) or a downstream
-  module's; see [members.md](members.md).
+
