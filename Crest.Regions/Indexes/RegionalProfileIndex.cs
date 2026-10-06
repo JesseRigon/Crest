@@ -4,7 +4,7 @@ using YesSql.Indexes;
 
 namespace Crest.Regions.Indexes;
 
-public sealed class LocalizationProfileIndex : MapIndex
+public sealed class RegionalProfileIndex : MapIndex
 {
     public string ContentItemId { get; set; } = string.Empty;
     public string Key { get; set; } = string.Empty;
@@ -14,25 +14,25 @@ public sealed class LocalizationProfileIndex : MapIndex
     public bool Latest { get; set; }
 }
 
-public sealed class LocalizationProfileIndexProvider : IndexProvider<ContentItem>
+public sealed class RegionalProfileIndexProvider : IndexProvider<ContentItem>
 {
     public override void Describe(DescribeContext<ContentItem> context)
     {
-        context.For<LocalizationProfileIndex>()
+        context.For<RegionalProfileIndex>()
             .Map(contentItem =>
             {
-                if (contentItem.ContentType != RegionsConstants.ContentTypes.LocalizationProfile || (!contentItem.Published && !contentItem.Latest))
+                if (contentItem.ContentType != RegionsConstants.ContentTypes.RegionalProfile || (!contentItem.Published && !contentItem.Latest))
                 {
                     return null;
                 }
 
-                var part = contentItem.Get<CrestLocalizationProfilePart>(typeof(CrestLocalizationProfilePart).Name);
+                var part = contentItem.Get<CrestRegionalProfilePart>(typeof(CrestRegionalProfilePart).Name);
                 if (part is null)
                 {
                     return null;
                 }
 
-                return new LocalizationProfileIndex
+                return new RegionalProfileIndex
                 {
                     ContentItemId = contentItem.ContentItemId,
                     Key = part.Key,

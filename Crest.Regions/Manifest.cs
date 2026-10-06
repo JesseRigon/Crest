@@ -10,7 +10,7 @@ using OrchardCore.Modules.Manifest;
 [assembly: Feature(
     Id = "Crest.Regions",
     Name = "Crest Regions and Locations",
-    Description = "Localization Profiles (a party's place, culture and currency), the geo tree every place resolves into, and per-country addressing maps.",
+    Description = "Regional Profiles (a party's place, culture and currency), the geo tree every place resolves into, and per-country addressing maps.",
     Category = "Crest",
     Dependencies = ["Crest", "OrchardCore.Contents", "OrchardCore.ContentFields", "OrchardCore.Title", "Crest.Global"]
 )]

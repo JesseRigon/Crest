@@ -5,10 +5,10 @@ namespace Crest.Regions.Models;
 /// <summary>
 /// What the context ITSELF declares: the geo-tied defaults that are true for the party
 /// regardless of which features are enabled. Everything else (currency, tax, ...) is a
-/// facet a downstream module attaches to the CrestLocalizationProfile type from its own
+/// facet a downstream module attaches to the CrestRegionalProfile type from its own
 /// migration and reads back as optional - the context is a composition point.
 /// </summary>
-public class CrestLocalizationProfilePart : ContentPart
+public class CrestRegionalProfilePart : ContentPart
 {
     /// <summary>Stable logical key, e.g. "us", "eu". Resolution and seeds address contexts by key.</summary>
     public string Key { get; set; } = string.Empty;
@@ -30,9 +30,9 @@ public class CrestLocalizationProfilePart : ContentPart
 
 /// <summary>
 /// The reference a party (or any content item) carries to its context. Attached by the
-/// module that owns the referencing type; read by <see cref="Services.ILocalizationProfileResolver"/>.
+/// module that owns the referencing type; read by <see cref="Services.IRegionalProfileResolver"/>.
 /// </summary>
-public class CrestLocalizationProfileReferencePart : ContentPart
+public class CrestRegionalProfileReferencePart : ContentPart
 {
-    public string? LocalizationProfileId { get; set; }
+    public string? RegionalProfileId { get; set; }
 }

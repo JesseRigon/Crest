@@ -1,21 +1,21 @@
-# Regions and locations — Localization Profiles, the geo tree, addresses
+# Regions and locations — Regional Profiles, the geo tree, addresses
 
-`Crest.Regions` owns everything about **where** a party or a thing is: the Localization Profile
+`Crest.Regions` owns everything about **where** a party or a thing is: the Regional Profile
 a party is assigned, the geographic tree every place resolves into, and how addresses are
 entered per country. The `Address` part and the tenant's own Locations, which consume them,
 are `Crest.Parties`' content types. What is not built yet is in
-[regions.md](regions.md).
+[Still to build](#still-to-build).
 
 Nothing here assumes a UI language — that is [localization.md](localization.md)'s scope
 entirely.
 
-## Naming: "Localization Profile," never "Tenant"
+## Naming: "Regional Profile," never "Tenant"
 
 OrchardCore's "Tenant" is a Shell — a hard isolation boundary with its own database,
-content, users and permissions (`CrestTenant`, the Tenants admin page). A Localization
+content, users and permissions (`CrestTenant`, the Tenants admin page). A Regional
 Profile is a content item living *inside* one Orchard Tenant. One Orchard Tenant can, and
 typically will, have several profiles (US, MX, CA, EU) side by side. Use
-`CrestLocalizationProfile` for the content type and keep "Tenant" language out of this
+`CrestRegionalProfile` for the content type and keep "Tenant" language out of this
 feature's code, permissions and content types.
 
 The profile is a party's place, culture and currency, which is why it lives in Crest
@@ -25,17 +25,17 @@ business's own — an accounting module attaches its currency tier facet, a tax 
 jurisdiction facet — and those attachments are made from the attaching module's migration,
 never declared here.
 
-## Localization Profiles
+## Regional Profiles
 
-Content type `CrestLocalizationProfile`, following the same "Orchard content, not a parallel
+Content type `CrestRegionalProfile`, following the same "Orchard content, not a parallel
 JSON store" decision as [design-systems.md](design-systems.md)'s `CrestDesignSystem`.
-A tenant publishes and can enable/disable each Localization Profile independently.
+A tenant publishes and can enable/disable each Regional Profile independently.
 
-Built as `CrestLocalizationProfilePart`, `CrestLocalizationProfileReferencePart` (the
-reference a party carries), `LocalizationProfileIndex`, permissions and
-`ILocalizationProfileResolver` (party → context). It declares no facets of its own.
+Built as `CrestRegionalProfilePart`, `CrestRegionalProfileReferencePart` (the
+reference a party carries), `RegionalProfileIndex`, permissions and
+`IRegionalProfileResolver` (party → context). It declares no facets of its own.
 
-**A Localization Profile is a party-attached geo/localization profile.** It is assigned to a
+**A Regional Profile is a party-attached geo/regional profile.** It is assigned to a
 party and bundles everything that varies with where that party is: default
 country, language, measurement system, time zone, address standards, and whatever facets
 downstream modules contribute. Any future field tied to a party's geography belongs here.
@@ -58,7 +58,7 @@ What it does **not** declare, because downstream modules attach it:
 
 ### The context is a composition point
 
-`CrestLocalizationProfile` must not gain a field of any downstream module's kind, because that
+`CrestRegionalProfile` must not gain a field of any downstream module's kind, because that
 would point this layer at a downstream module and the dependency only runs downstream.
 Instead each module attaches its own part to the context in its own migration, declaring the
 owner as a Manifest dependency ([architecture.md](architecture.md) › The rules that keep it
@@ -149,7 +149,7 @@ patterns for 107 countries; `AddressingMap`/`AddressInput`/`AddressRules` live i
 subdivisions) and `global.postal-formats` one column of the map. Per the validation decision
 below, both the WASM client and the server resolve the map at runtime from the same source.
 
-**The country on the address selects the map**, not the party's Localization Profile. The
+**The country on the address selects the map**, not the party's Regional Profile. The
 context supplies the *default* country for a new address; a German customer can still have
 a UK delivery address, and that address is entered and validated as a UK address.
 
@@ -236,7 +236,7 @@ centroid; boundary memberships follow from the point. The US/UK/FR entry-and-val
 | Consumer | Reads |
 | --- | --- |
 | Tax (a downstream tax module) | the address's geo stack — one node per level — plus boundary memberships — one address reaches state, county, city and district authorities at once |
-| Localization / Localization Profile defaults | the level-1 node |
+| Localization / Regional Profile defaults | the level-1 node |
 | Sales territories, reporting | groupings |
 | Shipping, distance, geocoded search | `Point` |
 
@@ -277,7 +277,7 @@ measurement, business policy), never UI-language-driven.
 
 **Decision: validation rules are pulled from Orchard at runtime, not compiled into a shared
 static library.** Rule *definitions* — the addressing maps above (global store),
-allowed-currency lists a downstream module attaches per Localization Profile (tenant store),
+allowed-currency lists a downstream module attaches per Regional Profile (tenant store),
 required-field sets per document type — are Orchard-managed data, never compiled in. Both the
 Blazor WASM client and the Orchard Core server resolve the same definitions from that same
 source at runtime, so there is one place a rule is edited and both sides pick up the change
@@ -298,7 +298,7 @@ with no network.
 
 ## Still to build
 
-Built: see [docs/regions.md](regions.md) — Localization Profiles, the geo tree and its
+Built: see [docs/regions.md](regions.md) — Regional Profiles, the geo tree and its
 overlay, addressing maps, the `Address` part over the geo stack, Locations, the first county
 import, and the boundary and geocoding seams. This section is the checklist of what remains.
 

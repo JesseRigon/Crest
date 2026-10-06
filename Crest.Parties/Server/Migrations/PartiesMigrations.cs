@@ -328,7 +328,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .WithPart("TitlePart", part => part.WithPosition("0"))
             .WithPart(PartiesConstants.ContentTypes.Person, part => part.WithPosition("1"))
             // Parties attaches the context reference; Crest never names Person (agents.md).
-            .WithPart(RegionsConstants.Parts.LocalizationProfileReference, part => part.WithPosition("5"))
+            .WithPart(RegionsConstants.Parts.RegionalProfileReference, part => part.WithPosition("5"))
             .WithPart(PartiesConstants.Bags.ContactPoints, "BagPart", part => part
                 .WithDisplayName("Contact points")
                 .WithPosition("2")
@@ -351,7 +351,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .Securable()
             .WithPart("TitlePart", part => part.WithPosition("0"))
             .WithPart(PartiesConstants.ContentTypes.Organization, part => part.WithPosition("1"))
-            .WithPart(RegionsConstants.Parts.LocalizationProfileReference, part => part.WithPosition("5"))
+            .WithPart(RegionsConstants.Parts.RegionalProfileReference, part => part.WithPosition("5"))
             .WithPart(PartiesConstants.Bags.ContactPoints, "BagPart", part => part
                 .WithDisplayName("Contact points")
                 .WithPosition("2")
