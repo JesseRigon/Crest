@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
-using OrchardCore.Admin;
-using OrchardCore.Navigation;
-using OrchardCore.Settings;
+using Crest.Admin;
+using Crest.Navigation;
+using Crest.Settings;
 
 namespace Crest.Navigation;
 
-// Stock OrchardCore admin menu providers use .Action(...), which MVC's
+// Stock Crest admin menu providers use .Action(...), which MVC's
 // IUrlHelper/LinkGenerator resolves against the tenant's real, configured
 // AdminOptions.AdminUrlPrefix automatically - e.g. AdminUrlPrefix "backoffice"
 // replaces the literal word "Admin" in every URL (see

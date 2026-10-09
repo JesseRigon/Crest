@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.UrlRewriting</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest UrlRewriting Core</Title>
+    <Description>
+      $(OCCMSDescription)
+
+      Core Services for the UrlRewriting module.
+    </Description>
+    <PackageTags>$(PackageTags) Crest Core</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.UrlRewriting.Abstractions\Crest.UrlRewriting.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

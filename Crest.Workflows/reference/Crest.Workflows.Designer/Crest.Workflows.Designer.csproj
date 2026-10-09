@@ -7,8 +7,8 @@
         <IsPackable>true</IsPackable>
         <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
         <PackageId>Crest.Workflows.Designer</PackageId>
-        <PackageTags>OrchardCore;Crest;Workflows;Designer</PackageTags>
-        <Description>Shared components for the Crest.Workflows Studio visual workflow designer. Provides core UI components and workflow design functionality for Orchard Core integration.</Description>
+        <PackageTags>Crest;Crest;Workflows;Designer</PackageTags>
+        <Description>Shared components for the Crest.Workflows Studio visual workflow designer. Provides core UI components and workflow design functionality for Crest integration.</Description>
     </PropertyGroup>
 
     <ItemGroup>

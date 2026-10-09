@@ -2,7 +2,7 @@
 
 Money/currency value types adapted from OrchardCore.Commerce's
 `OrchardCore.Commerce.MoneyDataType` library (MIT License, Copyright (c) 2018
-OrchardCMS). Namespaces rewritten `OrchardCore.Commerce.MoneyDataType.*` ->
+Crest). Namespaces rewritten `OrchardCore.Commerce.MoneyDataType.*` ->
 `Crest.Money.*`; behaviour unchanged.
 
 Server-free on purpose: the same types round and serialize amounts identically in

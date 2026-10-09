@@ -7,7 +7,7 @@ using Crest.Workflows.Models;
 using Crest.Workflows.UIHints;
 using Crest.Workflows.UIHints.Dropdown;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.Security.Services;
+using Crest.Security.Services;
 using YesSql;
 
 namespace Crest.Workflows.Approvals;
@@ -16,12 +16,12 @@ namespace Crest.Workflows.Approvals;
 public sealed record ApprovalStimulus(string ApprovalId);
 
 /// <summary>
-/// A human decision in a flow: records an approval task for an Orchard role (or the holders
+/// A human decision in a flow: records an approval task for an Crest role (or the holders
 /// of a permission), waits, and continues on Approved or Rejected when someone allowed to
 /// decide does so (<c>api/crest/workflows/approvals</c>). Who decided and their comment are
 /// outputs, for the journal and the next steps.
 /// </summary>
-[Activity("Crest.Workflows", "Approvals", "Waits for a member of an Orchard role (or a holder of a permission) to approve or reject.", DisplayName = "Request approval")]
+[Activity("Crest.Workflows", "Approvals", "Waits for a member of an Crest role (or a holder of a permission) to approve or reject.", DisplayName = "Request approval")]
 [FlowNode("Approved", "Rejected")]
 public class RequestApproval : Activity, Units.IUnitBoundary
 {
@@ -33,10 +33,10 @@ public class RequestApproval : Activity, Units.IUnitBoundary
     [Input(DisplayName = "Description", UIHint = InputUIHints.MultiLine)]
     public Input<string?> Description { get; set; } = null!;
 
-    [Input(DisplayName = "Role", Description = "Members of this Orchard role may decide.", UIHint = InputUIHints.DropDown, UIHandler = typeof(RoleOptionsProvider))]
+    [Input(DisplayName = "Role", Description = "Members of this Crest role may decide.", UIHint = InputUIHints.DropDown, UIHandler = typeof(RoleOptionsProvider))]
     public Input<string?> Role { get; set; } = null!;
 
-    [Input(DisplayName = "Permission", Description = "Optional. Holders of this Orchard permission may decide too.", UIHint = InputUIHints.DropDown, UIHandler = typeof(PermissionOptionsProvider))]
+    [Input(DisplayName = "Permission", Description = "Optional. Holders of this Crest permission may decide too.", UIHint = InputUIHints.DropDown, UIHandler = typeof(PermissionOptionsProvider))]
     public Input<string?> Permission { get; set; } = null!;
 
     [Output(Description = "The approval task's id.")]
@@ -101,7 +101,7 @@ public class RequestApproval : Activity, Units.IUnitBoundary
     }
 }
 
-/// <summary>The tenant's Orchard roles, for role inputs.</summary>
+/// <summary>The tenant's Crest roles, for role inputs.</summary>
 public sealed class RoleOptionsProvider(IRoleService roleService) : DropDownOptionsProviderBase
 {
     protected override async ValueTask<ICollection<SelectListItem>> GetItemsAsync(PropertyInfo propertyInfo, object? context, CancellationToken cancellationToken) =>

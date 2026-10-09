@@ -10,7 +10,7 @@ import {
     transientNotification,
 } from "./eventbus";
 
-const debug = dbg("orchardcore:bloom:signalr");
+const debug = dbg("crest:bloom:signalr");
 
 export interface SignalRConnectionBootstrap {
     apiEndpoint: string;

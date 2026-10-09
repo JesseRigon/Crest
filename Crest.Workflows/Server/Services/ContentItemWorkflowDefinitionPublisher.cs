@@ -10,7 +10,7 @@ using Crest.Workflows.Management.Models;
 using Crest.Workflows.Management.Notifications;
 using Crest.Workflows.Management.Stores;
 using Crest.Workflows.Models;
-using OrchardCore.ContentManagement;
+using Crest.ContentManagement;
 using Crest.Workflows.Parts;
 using Crest.Workflows.Registry;
 
@@ -213,7 +213,7 @@ public class ContentItemWorkflowDefinitionPublisher(
 
     public async Task<WorkflowDefinition?> GetDraftAsync(string definitionId, global::Crest.Workflows.Common.Models.VersionOptions versionOptions, CancellationToken cancellationToken = default)
     {
-        // Before DraftRequired: Orchard creates (and saves) a new draft version on that read,
+        // Before DraftRequired: Crest creates (and saves) a new draft version on that read,
         // so a refused edit must be refused here or it leaves a stray draft as the latest
         // version - which for a system flow would read as "no longer published".
         await ownershipGuard.AuthorizeChangeAsync(definitionId, WorkflowChange.Save);

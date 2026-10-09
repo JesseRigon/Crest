@@ -1,6 +1,6 @@
 # Crest.Iconify
 
-`Crest.Iconify` owns the Iconify-specific integration layer for Orchard Crest UI Framework.
+`Crest.Iconify` owns the Iconify-specific integration layer for Crest Crest UI Framework.
 
 It provides:
 

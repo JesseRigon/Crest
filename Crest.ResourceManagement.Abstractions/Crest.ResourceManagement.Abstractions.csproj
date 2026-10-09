@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.ResourceManagement</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest ResourceManagement Abstractions</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Abstractions for ResourceManagement.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

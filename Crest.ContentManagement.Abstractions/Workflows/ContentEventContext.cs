@@ -1,0 +1,10 @@
+namespace Crest.ContentManagement.Workflows;
+
+public class ContentEventContext
+{
+    public string Name { get; set; }
+    public string ContentType { get; set; }
+    public string ContentItemId { get; set; }
+    public string ContentItemVersionId { get; set; }
+    public bool IsStart { get; set; }
+}

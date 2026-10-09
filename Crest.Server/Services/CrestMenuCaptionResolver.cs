@@ -1,10 +1,10 @@
 using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.AdminMenu.Models;
-using OrchardCore.AdminMenu.Services;
-using OrchardCore.DataLocalization.Services;
-using OrchardCore.Localization;
-using OrchardCore.Navigation;
+using Crest.AdminMenu.Models;
+using Crest.AdminMenu.Services;
+using Crest.DataLocalization.Services;
+using Crest.Localization;
+using Crest.Navigation;
 
 namespace Crest.Services;
 
@@ -50,7 +50,7 @@ namespace Crest.Services;
 /// </remarks>
 public sealed class CrestMenuCaptionResolver(IServiceProvider serviceProvider)
 {
-    private static readonly string RootContext = OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(null);
+    private static readonly string RootContext = Crest.AdminMenu.DataLocalizationContext.AdminMenu(null);
 
     // Most-specific culture first (es-ES, then es): caption -> its entries in that culture.
     private List<ILookup<string, (string Context, string Value)>>? _cultureIndexes;
@@ -116,7 +116,7 @@ public sealed class CrestMenuCaptionResolver(IServiceProvider serviceProvider)
         }
 
         // Tier 0 provenance for the PO layer, recorded by the provider-menu sync.
-        var syncDocuments = serviceProvider.GetService<OrchardCore.Documents.IDocumentManager<CrestProviderMenuSyncDocument>>();
+        var syncDocuments = serviceProvider.GetService<Crest.Documents.IDocumentManager<CrestProviderMenuSyncDocument>>();
         if (syncDocuments is not null)
         {
             var syncState = await syncDocuments.GetOrCreateImmutableAsync();
@@ -179,7 +179,7 @@ public sealed class CrestMenuCaptionResolver(IServiceProvider serviceProvider)
         if (_cultureIndexes is { Count: > 0 } indexes)
         {
             // Exact context, then its parents by stripping ':'-separated segments.
-            var context = OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(
+            var context = Crest.AdminMenu.DataLocalizationContext.AdminMenu(
                 string.IsNullOrEmpty(menuName) ? null : menuName);
             while (true)
             {

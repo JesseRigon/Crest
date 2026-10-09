@@ -134,7 +134,7 @@ public sealed class IconifyServerController(
         return Ok(response);
     }
 
-    private Task<bool> CanUseIconsAsync() => authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu);
+    private Task<bool> CanUseIconsAsync() => authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu);
 
     private static HashSet<string> RequestedPrefixes(string? prefix, string? prefixes)
     {

@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <!-- NuGet properties-->
+    <Title>Crest Queries</Title>
+    <Description>$(OCCMSDescription)
+
+    Provides querying capabilities for Content.
+    </Description>
+    <PackageTags>$(PackageTags) PlatformCMS ContentManagement</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement.Display\Crest.ContentManagement.Display.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement.GraphQL\Crest.ContentManagement.GraphQL.csproj" />
+    <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Deployment.Abstractions\Crest.Deployment.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Crest.DisplayManagement.Liquid\Crest.DisplayManagement.Liquid.csproj" />
+    <ProjectReference Include="..\Crest.Localization.Abstractions\Crest.Localization.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Liquid.Abstractions\Crest.Liquid.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
+    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Queries.Core\Crest.Queries.Core.csproj" />
+    <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Cyqwel" />
+  </ItemGroup>
+
+</Project>

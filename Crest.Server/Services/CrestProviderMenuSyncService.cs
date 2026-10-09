@@ -3,16 +3,16 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;
-using OrchardCore.AdminMenu;
-using OrchardCore.AdminMenu.AdminNodes;
-using OrchardCore.AdminMenu.Models;
-using OrchardCore.AdminMenu.Services;
-using OrchardCore.Data.Documents;
-using OrchardCore.DataLocalization.Models;
-using OrchardCore.DataLocalization.Services;
-using OrchardCore.Documents;
-using OrchardCore.Localization;
-using OrchardCore.Navigation;
+using Crest.AdminMenu;
+using Crest.AdminMenu.AdminNodes;
+using Crest.AdminMenu.Models;
+using Crest.AdminMenu.Services;
+using Crest.Data.Documents;
+using Crest.DataLocalization.Models;
+using Crest.DataLocalization.Services;
+using Crest.Documents;
+using Crest.Localization;
+using Crest.Navigation;
 using Crest.ViewModels;
 
 namespace Crest.Services;
@@ -37,7 +37,7 @@ namespace Crest.Services;
 /// <para>
 /// Items are matched across runs on <c>MenuItem.Text.Name</c> - the invariant literal a
 /// provider passed to <c>S["..."]</c> (the localization key itself, English only by
-/// convention), which is what OrchardCore's own
+/// convention), which is what Crest's own
 /// <c>NavigationManager.Merge</c> matches on and therefore does not vary by culture - qualified
 /// by the item's position in the tree so that two identically-captioned items under different
 /// parents stay distinct. The match key is held in this service's own document rather than on
@@ -110,7 +110,7 @@ public sealed class CrestProviderMenuSyncService(
         var created = false;
         if (menu is null)
         {
-            menu = new OrchardCore.AdminMenu.Models.AdminMenu { Name = ImportedMenuName };
+            menu = new Crest.AdminMenu.Models.AdminMenu { Name = ImportedMenuName };
             list.AdminMenu.Add(menu);
             created = true;
         }
@@ -373,7 +373,7 @@ public sealed class CrestProviderMenuSyncService(
     /// branches (several modules each add to "Configuration"), and importing the unmerged list
     /// would create a separate root per contributor. Href computation is still applied because
     /// most providers declare their target as MVC route values, and the node needs the resolved
-    /// URL - resolved by Orchard's own <c>IUrlHelper</c>, never assembled by hand.
+    /// URL - resolved by Crest's own <c>IUrlHelper</c>, never assembled by hand.
     /// </remarks>
     // One provenance candidate: which provider class declared an item, with the inputs
     // upstream Merge's value-authority ladder consults.
@@ -462,7 +462,7 @@ public sealed class CrestProviderMenuSyncService(
     /// provider items.
     /// </summary>
     /// <remarks>
-    /// The DB-backed nodes reach the "admin" menu through <c>OrchardCore.AdminMenu</c>'s own
+    /// The DB-backed nodes reach the "admin" menu through <c>Crest.AdminMenu</c>'s own
     /// <c>AdminMenu</c> navigation provider, which contributes its static items ("Tools" →
     /// "Admin Menus") and then internally invokes <c>AdminMenuNavigationProvidersCoordinator</c>
     /// for every admin menu document - including this service's own imported menu. The
@@ -488,7 +488,7 @@ public sealed class CrestProviderMenuSyncService(
     }
 
     // The same resolution NavigationManager.GetUrl performs (that method is private): route
-    // values resolve through IUrlHelper against Orchard's registered routes, absolute and
+    // values resolve through IUrlHelper against Crest's registered routes, absolute and
     // app-relative urls pass through on the tenant's PathBase.
     private void ComputeHrefs(List<MenuItem> items, ActionContext actionContext)
     {
@@ -852,7 +852,7 @@ public sealed class CrestProviderMenuSyncService(
 
 /// <summary>
 /// Maps each imported item's culture-invariant match key to the admin node created for it.
-/// Kept in Crest's own document so that <see cref="AdminNode"/> stays exactly as OrchardCore
+/// Kept in Crest's own document so that <see cref="AdminNode"/> stays exactly as Crest
 /// defines it.
 /// </summary>
 public sealed class CrestProviderMenuSyncDocument : Document

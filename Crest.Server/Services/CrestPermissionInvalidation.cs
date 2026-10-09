@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using OrchardCore.Admin;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Security;
+using Crest.Admin;
+using Crest.Environment.Shell;
+using Crest.Security;
 
 namespace Crest.Services;
 
@@ -46,7 +46,7 @@ public sealed class CrestPermissionInvalidator(
             .SendAsync(CrestPermissionHub.EventName, cancellationToken);
 }
 
-/// <summary>Receives native Orchard role permission updates, including changes made outside Crest.</summary>
+/// <summary>Receives native Crest role permission updates, including changes made outside Crest.</summary>
 public sealed class CrestRolePermissionInvalidationHandler(ICrestPermissionInvalidator invalidator) : IRoleUpdatedEventHandler
 {
     public Task RoleUpdatedAsync(string roleName) => invalidator.InvalidateTenantAsync();

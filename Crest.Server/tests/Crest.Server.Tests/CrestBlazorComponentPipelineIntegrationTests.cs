@@ -7,10 +7,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.JSInterop;
 using NSubstitute;
-using OrchardCore.DisplayManagement;
-using OrchardCore.DisplayManagement.Descriptors;
-using OrchardCore.DisplayManagement.Implementation;
-using OrchardCore.DisplayManagement.Theming;
+using Crest.DisplayManagement;
+using Crest.DisplayManagement.Descriptors;
+using Crest.DisplayManagement.Implementation;
+using Crest.DisplayManagement.Theming;
 using Xunit;
 
 namespace Crest.Server.Tests;
@@ -18,7 +18,7 @@ namespace Crest.Server.Tests;
 // Goes one level deeper than CrestBlazorComponentShapeBindingResolverTests: instead of
 // hand-building the CrestBlazorComponentShapeViewModel and calling the resolver directly,
 // this drives the real chain a live request would use -
-// IShapeFactory.CreateAsync<TModel>(shapeType, initialize) (Orchard's real dynamic-proxy/
+// IShapeFactory.CreateAsync<TModel>(shapeType, initialize) (Crest's real dynamic-proxy/
 // Shape machinery, the same DefaultShapeFactory a live tenant uses, and the same call
 // DisplayDriverBase.Initialize<TModel> makes internally on CrestBlazorComponentPart's
 // behalf) -> IHtmlDisplay.ExecuteAsync with CrestBlazorComponentShapeBindingResolver
@@ -45,16 +45,16 @@ public sealed class CrestBlazorComponentPipelineIntegrationTests
             .Returns(new ShapeTable(new Dictionary<string, ShapeDescriptor>(), new Dictionary<string, ShapeBinding>()));
 
         var themeManager = Substitute.For<IThemeManager>();
-        themeManager.GetThemeAsync().Returns(default(OrchardCore.Environment.Extensions.IExtensionInfo));
+        themeManager.GetThemeAsync().Returns(default(Crest.Environment.Extensions.IExtensionInfo));
 
         var displayServiceProvider = registryServiceProvider;
 
         // Same IShapeFactory implementation, and the same IHtmlDisplay implementation, a
-        // live Orchard request actually uses - only the theme/shape-table dependencies are
+        // live Crest request actually uses - only the theme/shape-table dependencies are
         // faked, since a real Blazor-rendered shape never reaches them (resolvers win first).
         var shapeFactory = new DefaultShapeFactory([], shapeTableManager, themeManager, displayServiceProvider);
-        var shapeRenderingOptions = NSubstitute.Substitute.For<Microsoft.Extensions.Options.IOptionsMonitor<OrchardCore.DisplayManagement.ShapeRenderingOptions>>();
-        shapeRenderingOptions.CurrentValue.Returns(new OrchardCore.DisplayManagement.ShapeRenderingOptions());
+        var shapeRenderingOptions = NSubstitute.Substitute.For<Microsoft.Extensions.Options.IOptionsMonitor<Crest.DisplayManagement.ShapeRenderingOptions>>();
+        shapeRenderingOptions.CurrentValue.Returns(new Crest.DisplayManagement.ShapeRenderingOptions());
         var htmlDisplay = new DefaultHtmlDisplay(
             [],
             [resolver],
@@ -75,7 +75,7 @@ public sealed class CrestBlazorComponentPipelineIntegrationTests
             model.Properties["Text"] = "Real content pipeline.";
         var shape = await shapeFactory.CreateAsync("CrestQuote", initialize);
 
-        var html = (await htmlDisplay.ExecuteAsync(new OrchardCore.DisplayManagement.Implementation.DisplayContext
+        var html = (await htmlDisplay.ExecuteAsync(new Crest.DisplayManagement.Implementation.DisplayContext
         {
             Value = shape,
             ServiceProvider = displayServiceProvider,

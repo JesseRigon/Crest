@@ -19,7 +19,7 @@ public class OptionKeyValidationTests
     [Fact]
     public void Duplicate_detection_ignores_case_and_surrounding_space()
     {
-        // Orchard has no unique index for a content field, so this check is the only
+        // Crest has no unique index for a content field, so this check is the only
         // thing standing between a tenant and two "Markup" options in one set.
         Assert.False(CrestContentPartListRules.ValidateKey("markup", Existing).IsValid);
         Assert.False(CrestContentPartListRules.ValidateKey("  MARKUP  ", Existing).IsValid);

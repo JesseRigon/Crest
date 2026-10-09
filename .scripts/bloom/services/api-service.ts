@@ -3,7 +3,7 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import dbg from "debug";
 import { getAntiForgeryToken } from "../helpers/globals";
 
-const debug = dbg("orchardcore:bloom:api-service");
+const debug = dbg("crest:bloom:api-service");
 
 export type AuthType = "cookie" | "bearer";
 
@@ -30,7 +30,7 @@ export interface ApiServiceOptions {
 }
 
 /**
- * A generic, reusable HTTP service for calling OrchardCore API endpoints.
+ * A generic, reusable HTTP service for calling Crest API endpoints.
  * Wraps Axios with sensible defaults and supports cookie or Bearer token auth.
  */
 export class ApiService {

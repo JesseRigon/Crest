@@ -1,0 +1,58 @@
+using Crest.Environment.Shell.Models;
+using Crest.Tenants.Services;
+
+namespace Crest.Modules.Crest.Tenants.Tests;
+
+public class ProfilesTests
+{
+    [Fact]
+    public void FeatureProfilesSchemaService_Default_CreatesValidSchema()
+    {
+        var featureProfilesRuleOptions = new FeatureProfilesRuleOptions();
+        featureProfilesRuleOptions.Rules["Exclude"] = static (expression, name) => (true, true);
+        var options = Options.Create(featureProfilesRuleOptions);
+
+        var service = new FeatureProfilesSchemaService(options);
+
+        var expectedSchema = """
+            {
+              "$schema": "http://json-schema.org/draft-04/schema#",
+              "title": "Feature rules",
+              "type": "array",
+              "description": "An array of feature rules",
+              "items": {
+                "$ref": "#/definitions/FeatureRule"
+              },
+              "definitions": {
+                "FeatureRule": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "Rule",
+                    "Expression"
+                  ],
+                  "properties": {
+                    "Rule": {
+                      "minLength": 1,
+                      "$ref": "#/definitions/Rule"
+                    },
+                    "Expression": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "Rule": {
+                  "type": "string",
+                  "description": "The rule to apply to this expression",
+                  "enum": [
+                    "Exclude"
+                  ]
+                }
+              }
+            }
+            """;
+
+        Assert.Equal(expectedSchema, service.GetJsonSchema());
+    }
+}

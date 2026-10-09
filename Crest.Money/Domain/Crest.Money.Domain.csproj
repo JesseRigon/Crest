@@ -8,5 +8,5 @@
   </PropertyGroup>
   <!-- Server-free: the money type, the currency table and their JSON converters, shared
        by the server and the Blazor WASM client so both round and serialize amounts the
-       same way. Never reference OrchardCore. -->
+       same way. Never reference Crest. -->
 </Project>

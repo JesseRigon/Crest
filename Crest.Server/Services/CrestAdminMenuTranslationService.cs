@@ -1,6 +1,6 @@
-using OrchardCore.AdminMenu;
-using OrchardCore.DataLocalization.Models;
-using OrchardCore.DataLocalization.Services;
+using Crest.AdminMenu;
+using Crest.DataLocalization.Models;
+using Crest.DataLocalization.Services;
 using Crest.ViewModels;
 
 namespace Crest.Services;
@@ -12,13 +12,13 @@ namespace Crest.Services;
 /// <remarks>
 /// A rename stored in the Crest layout only applies inside Crest's own Blazor admin: it is a
 /// per-tenant display override Crest substitutes over the built menu. The tenant's translation
-/// store is what Orchard's own Razor admin consults (see
+/// store is what Crest's own Razor admin consults (see
 /// <c>TheAdmin/Views/NavigationItemText.cshtml</c>, which resolves each caption through
 /// <c>IDataLocalizer</c> keyed on the caption itself). Promoting a rename writes the same text
 /// there, so both admins agree on the caption instead of Crest silently disagreeing with the
 /// Razor admin for the same tenant and culture.
 ///
-/// The key is the caption Orchard itself would look up, not the item's Crest key: the data
+/// The key is the caption Crest itself would look up, not the item's Crest key: the data
 /// localizer is keyed on the source caption within a context, mirroring how
 /// <c>IStringLocalizer</c> keys on the invariant literal. Callers pass the pre-override
 /// caption for that reason.
@@ -27,7 +27,7 @@ public sealed class CrestAdminMenuTranslationService(TranslationsManager transla
 {
     /// <summary>
     /// Records <paramref name="translation"/> as the translation of <paramref name="sourceText"/>
-    /// for <paramref name="culture"/>, under the admin menu context Orchard's own admin menu
+    /// for <paramref name="culture"/>, under the admin menu context Crest's own admin menu
     /// rendering looks up. Passing a blank <paramref name="translation"/> removes the entry
     /// rather than storing an empty caption.
     /// </summary>

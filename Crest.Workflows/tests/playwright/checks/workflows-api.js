@@ -4,7 +4,7 @@ const { ensureTestUser } = require('../../../../../Crest/tests/playwright/harnes
 const { fetchAntiforgeryToken } = require('../../../../../Crest/tests/playwright/harness/antiforgery');
 
 // Phase 0a of docs/workflows.md: the Crest.Workflows engine runs inside the tenant and its API is
-// gated by Orchard. As admin: list definitions; create + publish a one-activity flow;
+// gated by Crest. As admin: list definitions; create + publish a one-activity flow;
 // execute it; read the journal. A content-published trigger on Item, with an acting user,
 // runs once the item is published and correlates to the item. Security: writes without
 // the Crest antiforgery header are 400; a limited role gets 403; anonymous gets 401.
@@ -96,7 +96,7 @@ module.exports = async function run(page, ctx) {
       type: 'Crest.Workflows.Flowchart', id: 'flow', version: 1,
       activities: [
         {
-          type: 'OrchardCore.Content.ContentPublished', id: 'published', version: 1,
+          type: 'Crest.Content.ContentPublished', id: 'published', version: 1,
           contentTypes: ['Item'],
           ...(requiredPermission ? { requiredPermission: literal(requiredPermission) } : {}),
           customProperties: { canStartWorkflow: true },
@@ -161,7 +161,7 @@ module.exports = async function run(page, ctx) {
     results.push({ name: 'write-without-antiforgery-is-400', pass: noToken.status === 400, message: `HTTP ${noToken.status}` });
 
     // 5. Security: a limited role is refused (403), anonymous is refused (401). The stock
-    //    OrchardCore.Workflows stereotypes grant ManageWorkflows to Editor as well as
+    //    Crest.Workflows.Platform stereotypes grant ManageWorkflows to Editor as well as
     //    Administrator (feature enable applies them), so the limited role must be one
     //    outside that pair - Contributor or Author on a stock tenant.
     const roles = await call('GET', `${ctx.baseUrl}/api/crest/roles`);

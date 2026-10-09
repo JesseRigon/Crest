@@ -8,8 +8,8 @@ their own documents: [global-store.md](global-store.md), [regions.md](regions.md
 
 ## What Crest is
 
-Crest has two halves in one repository. **The platform** (`src/`, `test/`) is a hard fork of
-OrchardCore: tenants, users, permissions, content, features, settings and the module
+Crest has two halves in one repository. **The platform** (the projects listed in
+`Crest.Build/Platform.Projects.props`, and `test/`) is a hard fork of OrchardCore: tenants, users, permissions, content, features, settings and the module
 system. Crest develops it as its own code. **The application layer** is everything a business-facing
 application needs that is not a line of business. Its foundation is built — the Blazor admin and
 site shells, the content-item API, icons, localization, Content Part Lists, the global
@@ -31,17 +31,18 @@ users on the other side of it, and the member portal is how a product reaches th
 
 ## Direction: Blazor or headless, nothing else
 
-Crest hard-forked OrchardCore into `src/` (ruling 2026-10-09). When the platform lacks
+Crest hard-forked OrchardCore (ruling 2026-10-09); its projects sit beside Crest's own, in
+one tier. When the platform lacks
 something, the platform is changed: no shims, no stock-id module forks, no workarounds
 kept to stay mergeable. **The platform is renamed from `OrchardCore` to `Crest`, fully** (ruling 2026-10-09):
 namespaces, assemblies, project and folder names, package ids, feature and module ids,
 recipes, configuration sections and static asset paths. Dev tenants are reset. Identifiers
-that carry the project name become neutral, per the naming rule (`OrchardCoreBuilder` →
-`PlatformBuilder`, `AddOrchardCore()` → `AddPlatform()`, `IOrchardHelper` →
+that carry the project name become neutral, per the naming rule (`PlatformBuilder` →
+`PlatformBuilder`, `AddPlatform()` → `AddPlatform()`, `IPlatformHelper` →
 `IPlatformHelper`, JS globals likewise), so a later rename touches module names only. Dotted
 module, namespace and package segments become `Crest`; prose "Orchard Core" becomes "Crest".
 External URLs and the `OrchardCore.Translations` packages are left as they are. The stock
-`OrchardCore.Workflows` module is merged into `Crest.Workflows` as part of the rename, and
+`Crest.Workflows.Platform` module is merged into `Crest.Workflows` as part of the rename, and
 the four sample site themes (TheTheme, TheBlogTheme, TheAgencyTheme, TheComingSoonTheme) are
 pruned first. Neither the platform nor Crest.Server is named just `Crest`: the
 platform's core library becomes `Crest.Core` and Crest.Server's assembly and package become
@@ -55,7 +56,10 @@ API, GraphQL, Queries) is first class alongside Blazor. Every capability a Blazo
 is reachable through the API, and no feature exists only in the UI. Stock front-end assets
 and their build pipeline shrink with the UIs they serve.
 
-Everything is streamlined to Blazor: no work goes into other UI systems. There is **one
+Everything is streamlined to Blazor: no work goes into other UI systems. Templates, layouts,
+pages and content items become data rendered into Blazor components through the platform's own
+display system, with its HTML binding replaced by a component binding
+([blazor-display.md](blazor-display.md)). There is **one
 expression engine** for the whole application: query parameters, route and title patterns,
 workflow expressions, notification and email templates. Liquid as a view engine goes with
 the stock UIs.

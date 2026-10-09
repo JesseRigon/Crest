@@ -1,5 +1,5 @@
-export const assetsLookupGlob = "src/{OrchardCore.Themes,OrchardCore.Modules}/**/Assets.json";
-export const parcelBundleOutput = "src/OrchardCore.Modules/OrchardCore.Resources/wwwroot/Scripts/bundle"
+export const assetsLookupGlob = "*/Assets.json";
+export const parcelBundleOutput = "Crest.Resources/wwwroot/Scripts/bundle"
 
 export function parcel() {
   return {

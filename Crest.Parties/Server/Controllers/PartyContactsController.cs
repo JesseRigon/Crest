@@ -3,16 +3,16 @@ using Crest.Parties.Services;
 using Crest.Parties.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.ContentManagement;
-using OrchardCore.Contents;
-using OrchardCore.Security.Permissions;
+using Crest.ContentManagement;
+using Crest.Contents;
+using Crest.Security.Permissions;
 
 namespace Crest.Parties.Controllers;
 
 /// <summary>
 /// Contact points and addresses of one party. These live INSIDE the party document
 /// (BagParts), which the generic content-items editor round-trips but cannot edit,
-/// so this is the write surface. Authorization is Orchard's own content permissions
+/// so this is the write surface. Authorization is Crest's own content permissions
 /// evaluated against the PARTY item - a caller who may edit the party may edit its
 /// contact data, nothing more granular.
 /// </summary>

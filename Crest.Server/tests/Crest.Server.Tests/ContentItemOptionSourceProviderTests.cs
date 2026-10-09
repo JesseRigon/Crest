@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Crest.Services;
 using Crest.Settings;
-using OrchardCore.ContentManagement;
+using Crest.ContentManagement;
 using Xunit;
 
 namespace Crest.Server.Tests;
@@ -96,7 +96,7 @@ public class ContentItemOptionSourceProviderProjectionTests
         };
 
         // ContentItem.Content is a read-only DYNAMIC view over the item's JsonObject
-        // (Data itself is internal to OrchardCore), so parts are written through the
+        // (Data itself is internal to Crest), so parts are written through the
         // dynamic indexer - the same way stock field handlers do.
         if (json is not null)
         {
@@ -334,9 +334,9 @@ public class ContentItemOptionSourceProviderFilterPromotionTests
 // and which stock index table holds its value.
 public class ContentItemOptionSourceProviderFieldResolutionTests
 {
-    private static OrchardCore.ContentManagement.Metadata.Models.ContentTypeDefinition Customer()
+    private static Crest.ContentManagement.Metadata.Models.ContentTypeDefinition Customer()
     {
-        var part = new OrchardCore.ContentManagement.Metadata.Builders.ContentPartDefinitionBuilder()
+        var part = new Crest.ContentManagement.Metadata.Builders.ContentPartDefinitionBuilder()
             .Named("CustomerPart")
             .WithField("Badge", field => field.OfType("TextField"))
             .WithField("CreditLimit", field => field.OfType("NumericField"))
@@ -344,7 +344,7 @@ public class ContentItemOptionSourceProviderFieldResolutionTests
             .WithField("Notes", field => field.OfType("HtmlField"))
             .Build();
 
-        return new OrchardCore.ContentManagement.Metadata.Builders.ContentTypeDefinitionBuilder()
+        return new Crest.ContentManagement.Metadata.Builders.ContentTypeDefinitionBuilder()
             .WithName("Customer")
             .WithPart("CustomerPart", part, _ => { })
             .Build();

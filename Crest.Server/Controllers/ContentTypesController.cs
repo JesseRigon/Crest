@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using OrchardCore.Contents;
-using OrchardCore.ContentManagement;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Metadata.Models;
-using OrchardCore.ContentManagement.Metadata.Settings;
+using Crest.Contents;
+using Crest.ContentManagement;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Models;
+using Crest.ContentManagement.Metadata.Settings;
 using System.Text.Json.Nodes;
 using Crest.Settings;
 using Crest.ViewModels;
@@ -51,7 +51,7 @@ public sealed class ContentTypesController(
         // The ActionContext stays valid through request completion; the deferred
         // scope supplies fresh services reading the committed definitions.
         var actionContext = ControllerContext;
-        OrchardCore.Environment.Shell.Scope.ShellScope.AddDeferredTask(scope =>
+        Crest.Environment.Shell.Scope.ShellScope.AddDeferredTask(scope =>
             scope.ServiceProvider
                 .GetRequiredService<Crest.Services.CrestProviderMenuSyncService>()
                 .SyncAsync(actionContext));

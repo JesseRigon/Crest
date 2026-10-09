@@ -1,0 +1,61 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Crest.DisplayManagement.Entities;
+using Crest.DisplayManagement.Handlers;
+using Crest.DisplayManagement.Views;
+using Crest.Liquid;
+using Crest.Mvc.ModelBinding;
+using Crest.Settings;
+using Crest.Users.Models;
+
+namespace Crest.Users.Drivers;
+
+public sealed class SmsAuthenticatorLoginSettingsDisplayDriver : SiteDisplayDriver<SmsAuthenticatorLoginSettings>
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IAuthorizationService _authorizationService;
+    private readonly ILiquidTemplateManager _liquidTemplateManager;
+
+    public SmsAuthenticatorLoginSettingsDisplayDriver(
+        IHttpContextAccessor httpContextAccessor,
+        IAuthorizationService authorizationService,
+        ILiquidTemplateManager liquidTemplateManager)
+    {
+        _httpContextAccessor = httpContextAccessor;
+        _authorizationService = authorizationService;
+        _liquidTemplateManager = liquidTemplateManager;
+    }
+
+    protected override string SettingsGroupId
+        => LoginSettingsDisplayDriver.GroupId;
+
+    public override IDisplayResult Edit(ISite site, SmsAuthenticatorLoginSettings settings, BuildEditorContext c)
+    {
+        return Initialize<SmsAuthenticatorLoginSettings>("SmsAuthenticatorLoginSettings_Edit", model =>
+        {
+            model.Body = string.IsNullOrWhiteSpace(settings.Body)
+            ? EmailAuthenticatorLoginSettings.DefaultBody
+            : settings.Body;
+        }).Location("Content:15#Two-Factor Authentication")
+        .RenderWhen(static (driver) => driver._authorizationService.AuthorizeAsync(driver._httpContextAccessor.HttpContext?.User, UsersPermissions.ManageUsers), this)
+        .OnGroup(SettingsGroupId);
+    }
+
+    public override async Task<IDisplayResult> UpdateAsync(ISite site, SmsAuthenticatorLoginSettings settings, UpdateEditorContext context)
+    {
+        if (!await _authorizationService.AuthorizeAsync(_httpContextAccessor.HttpContext?.User, UsersPermissions.ManageUsers))
+        {
+            return null;
+        }
+
+        await context.Updater.TryUpdateModelAsync(settings, Prefix);
+
+        if (!_liquidTemplateManager.Validate(settings.Body, out var bodyErrors))
+        {
+            context.Updater.ModelState.AddModelError(Prefix, nameof(settings.Body), string.Join(' ', bodyErrors));
+        }
+
+        return Edit(site, settings, context);
+    }
+}

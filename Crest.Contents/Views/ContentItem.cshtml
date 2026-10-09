@@ -1,0 +1,5 @@
+@model Crest.DisplayManagement.IShape
+@foreach (var item in Model.Items)
+{
+    @await DisplayAsync(item)
+}

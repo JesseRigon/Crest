@@ -4,7 +4,7 @@ using Crest.Models;
 
 /// <summary>
 /// The pure rules behind Content Part Lists - key normalization, uniqueness, seed layering
-/// and effective-list projection. Kept free of Orchard content plumbing so the
+/// and effective-list projection. Kept free of Crest content plumbing so the
 /// behaviour that matters (a tenant's relabel surviving a module reseed, a hidden
 /// option staying resolvable) is directly unit-testable.
 /// </summary>
@@ -48,7 +48,7 @@ public static class CrestContentPartListRules
 
     /// <summary>
     /// Validates a key about to be written into <paramref name="existingKeys"/>.
-    /// Orchard has no unique index for a content field, so uniqueness is enforced
+    /// Crest has no unique index for a content field, so uniqueness is enforced
     /// here, on write.
     /// </summary>
     /// <param name="key">The candidate key.</param>

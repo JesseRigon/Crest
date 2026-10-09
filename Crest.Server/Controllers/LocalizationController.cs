@@ -5,16 +5,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.DataLocalization.Services;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Entities;
-using OrchardCore.Localization;
-using OrchardCore.Localization.Models;
-using OrchardCore.Localization.Services;
-using OrchardCore.Settings;
-using OrchardCore.Users;
-using OrchardCore.Users.Localization.Models;
-using OrchardCore.Users.Models;
+using Crest.DataLocalization.Services;
+using Crest.Environment.Shell;
+using Crest.Entities;
+using Crest.Localization;
+using Crest.Localization.Models;
+using Crest.Localization.Services;
+using Crest.Settings;
+using Crest.Users;
+using Crest.Users.Localization.Models;
+using Crest.Users.Models;
 using Crest.ViewModels;
 
 namespace Crest.Controllers;
@@ -34,13 +34,13 @@ public sealed class CrestLocalizationController(
     // does. Baking .resx satellite assemblies into the WASM bundle (as
     // Crest.Components already does for its own component-library strings)
     // was explicitly rejected for .Admin's own UI strings: those need to be editable the
-    // same way any other translatable content is - via OrchardCore's normal localization
+    // same way any other translatable content is - via Crest's normal localization
     // tooling (.po files) - without a recompile/redeploy. So instead: this endpoint
     // exposes a resolved per-culture dictionary and the client (CrestApiLocalizer)
     // fetches and caches it, plugging into the same Localizer/ILocalizer seam
     // Crest.Components already defines for exactly this kind of override.
     //
-    // Client string keys are INVARIANT LITERALS (T["Some text"], native Orchard style),
+    // Client string keys are INVARIANT LITERALS (T["Some text"], native Crest style),
     // so the same literal a Crest page uses is also the msgid every shipped module
     // catalog uses for that string. The dictionary is therefore layered per key,
     // mirroring the menu caption chain (docs/localization.mmd): stored edit (tenant
@@ -128,7 +128,7 @@ public sealed class CrestLocalizationController(
     }
 
     // Self-service: the current user's own stored default culture
-    // (OrchardCore.Users.Localization's UserLocalizationSettings, on User.Properties —
+    // (Crest.Users.Localization's UserLocalizationSettings, on User.Properties —
     // see docs/localization.md). Deliberately scoped to "current user only", not
     // gated by LocalizationPermissions.ManageCultures/user-management permissions the way
     // the stock admin "edit user" screen is, since every signed-in user manages their own
@@ -253,7 +253,7 @@ public sealed class CrestLocalizationController(
         site.Alter<CrestLocalizationSettings>(settings => settings.AdminDefaultCulture = adminDefaultCulture);
         await sites.UpdateSiteSettingsAsync(site);
 
-        // This is Orchard's required lifecycle step: RequestLocalizationOptions are
+        // This is Crest's required lifecycle step: RequestLocalizationOptions are
         // rebuilt from the tenant's LocalizationSettings after the tenant reloads.
         releases.RequestRelease();
 

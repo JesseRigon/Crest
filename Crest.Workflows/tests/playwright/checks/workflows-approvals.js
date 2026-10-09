@@ -3,7 +3,7 @@ const { ensureTestUser } = require('../../../../../Crest/tests/playwright/harnes
 const { fetchAntiforgeryToken } = require('../../../../../Crest/tests/playwright/harness/antiforgery');
 
 // Approvals (docs/workflows.md, phase 4): Request approval parks a flow on a task for an
-// Orchard role; the queue shows it to that role's members only; someone outside the role
+// Crest role; the queue shows it to that role's members only; someone outside the role
 // cannot decide (403), a member can, the flow resumes on the chosen port, and a second
 // decision is refused (409). A task gated on a permission is decided by its holders.
 module.exports = async function run(page, ctx) {

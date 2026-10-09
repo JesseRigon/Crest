@@ -6,7 +6,7 @@ using Crest.Parties.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using OrchardCore.Admin;
+using Crest.Admin;
 
 namespace Crest.Parties.Controllers;
 
@@ -51,7 +51,7 @@ public sealed class PartyTypesController(
             var menuItem = root is null ? null : Flatten(root.Items).FirstOrDefault(item => UrlMatches(item, adminPath + route));
             if (menuItem is null)
             {
-                // Not served: the tenant hid it, or Orchard's permission filter dropped it.
+                // Not served: the tenant hid it, or Crest's permission filter dropped it.
                 continue;
             }
 
@@ -82,7 +82,7 @@ public sealed class PartyTypesController(
         }
     }
 
-    // Orchard may prefix a served href with the application path base; the tail is ours.
+    // Crest may prefix a served href with the application path base; the tail is ours.
     private static bool UrlMatches(NavigationItem item, string url) =>
         item.Link?.TrimEnd('/').EndsWith(url.TrimEnd('/'), StringComparison.OrdinalIgnoreCase) == true;
 }

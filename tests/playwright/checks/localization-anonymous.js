@@ -10,7 +10,7 @@ const { createInstance } = require('../harness/instance');
 //
 // CrestCultureCookie.cs's provider list is [CrestCookie, AcceptLanguage] via
 // IPostConfigureOptions (deterministic - see that file's comment for why a plain
-// IConfigureOptions Insert(0, ...) raced with stock OrchardCore.Localization's own
+// IConfigureOptions Insert(0, ...) raced with stock Crest.Localization's own
 // AdminCookieCultureProvider and made Accept-Language win unpredictably). A first-ever
 // anonymous visitor has no Crest cookie yet, so Accept-Language is the real fallback:
 //   - a browser locale the tenant DOES support (es-ES) should resolve to es-ES.

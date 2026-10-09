@@ -233,6 +233,11 @@ Because design systems are Orchard content:
 - [ ] **Add deployment/recipe export path.** Host apps can provide their own design-system recipe steps without modifying Crest source.
 - [ ] **Add cache invalidation/refresh for active design system changes.** The client may cache the resolved token payload for performance, but the server remains authoritative. A changed user/tenant design system should invalidate or refresh the client design payload through the same manifest refresh mechanism used for admin permissions/navigation.
 
+**Localizable by default (ruling 2026-10-09).** Tokens and the style schema expose only
+direction-aware, logical values; the shell root sets `dir` from the culture. A Master mode allows
+raw CSS and physical properties, with a notice on every such edit that it breaks localization.
+Detail in [blazor-display.md](blazor-display.md) › Design systems.
+
 ## Decisions needed
 
 - [ ] **Token taxonomy.** Exact token taxonomy: semantic names first, component slots second.

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Workflows.Platform</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest Workflows Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for the Workflows module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Crest.Liquid.Abstractions\Crest.Liquid.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

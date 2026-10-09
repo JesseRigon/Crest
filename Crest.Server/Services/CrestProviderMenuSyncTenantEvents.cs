@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OrchardCore.BackgroundTasks;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Environment.Shell.Scope;
-using OrchardCore.Modules;
+using Crest.BackgroundTasks;
+using Crest.Environment.Shell;
+using Crest.Environment.Shell.Scope;
+using Crest.Modules;
 
 namespace Crest.Services;
 
@@ -19,7 +19,7 @@ namespace Crest.Services;
 /// <remarks>
 /// Activation has no request of its own, and the import resolves each item's Href through
 /// IUrlHelper. So the work is deferred to the scope that runs once the activation scope
-/// completes - OrchardCore activates in a scope of its own, so that is still before whatever
+/// completes - Crest activates in a scope of its own, so that is still before whatever
 /// triggered the activation (the first request, or the background service) goes on to do its
 /// work - and given a synthetic request context built the way ModularBackgroundService builds
 /// one: <see cref="ShellContextExtensions.CreateHttpContext"/> for a tenant-correct host and

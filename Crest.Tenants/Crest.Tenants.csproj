@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <!-- NuGet properties-->
+    <Title>Crest Tenants</Title>
+    <Description>$(OCCMSDescription)
+
+    Provides features to manage tenants from the Admin UI</Description>
+    <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Deployment.Abstractions\Crest.Deployment.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Localization.Abstractions\Crest.Localization.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
+    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Recipes.Abstractions\Crest.Recipes.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
+    <ProjectReference Include="..\Crest.Setup.Abstractions\Crest.Setup.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Setup.Core\Crest.Setup.Core.csproj" />
+    <ProjectReference Include="..\Crest.Workflows.Platform.Abstractions\Crest.Workflows.Platform.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NJsonSchema" />
+  </ItemGroup>
+
+</Project>

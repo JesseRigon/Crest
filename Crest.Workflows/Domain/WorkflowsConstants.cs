@@ -62,8 +62,8 @@ public static class WorkflowsConstants
         public const string Transaction = "transaction";
         public const string Content = "content";
 
-        /// <summary>A stock OrchardCore activity (users, e-mail, notifications, tenants, ...).</summary>
-        public const string Orchard = "orchard";
+        /// <summary>A stock platform activity (users, e-mail, notifications, tenants, ...).</summary>
+        public const string Platform = "platform";
 
         /// <summary>The workflow system itself (flow-raised triggers).</summary>
         public const string Workflow = "workflow";
@@ -92,7 +92,7 @@ public static class WorkflowsConstants
     {
         public const string TriggerKey = "TriggerKey";
         public const string Payload = "Payload";
-        // Not "User": stock Users events already carry the Orchard user under that key.
+        // Not "User": stock Users events already carry the Crest user under that key.
         public const string Actor = "Actor";
         /// <summary>On a hook attachment's run: the slot it was run for.</summary>
         public const string HookSlot = "HookSlot";

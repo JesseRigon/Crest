@@ -1,10 +1,10 @@
-using OrchardCore.Modules.Manifest;
+using Crest.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Workflows Queries",
-    Author = ManifestConstants.OrchardCoreTeam,
-    Website = ManifestConstants.OrchardCoreWebsite,
-    Version = ManifestConstants.OrchardCoreVersion
+    Author = ManifestConstants.PlatformTeam,
+    Website = ManifestConstants.PlatformWebsite,
+    Version = ManifestConstants.PlatformVersion
 )]
 
 [assembly: Feature(
@@ -12,5 +12,5 @@ using OrchardCore.Modules.Manifest;
     Name = "Query Activities",
     Description = "Provides query related activities.",
     Category = "Crest.Workflows",
-    Dependencies = ["Crest.Workflows", "OrchardCore.Queries.Sql"]
+    Dependencies = ["Crest.Workflows", "Crest.Queries.Sql"]
 )]

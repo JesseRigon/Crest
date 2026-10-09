@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Crest Redis</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Provides Redis features for configuration, cache, bus and lock.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework Infrastructure</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
+    <ProjectReference Include="..\Crest.Redis.Abstractions\Crest.Redis.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Crest.Tests" />
+  </ItemGroup>
+
+</Project>

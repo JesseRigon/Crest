@@ -3,7 +3,7 @@ namespace Crest.Members.Models;
 /// <summary>
 /// One org binding on a member account (ruling: one account, multiple org bindings,
 /// different roles per org). <paramref name="Roles"/> holds member ROLE TEMPLATE names
-/// (tenant-defined Orchard roles); the ACTIVE binding's role claims are contributed to
+/// (tenant-defined Crest roles); the ACTIVE binding's role claims are contributed to
 /// the principal per request, so downstream permission checks work unchanged.
 /// </summary>
 public sealed record MemberOrgBindingModel(

@@ -22,11 +22,11 @@ export const initializeTemplatePreview = (element: HTMLInputElement | HTMLTextAr
             Content: target.value,
             __RequestVerificationToken: antiforgerytoken,
         };
-        localStorage.setItem("OrchardCore.templates", JSON.stringify(toQueryString(formData)));
+        localStorage.setItem("Crest.templates", JSON.stringify(toQueryString(formData)));
     };
 
     window.addEventListener("storage", (ev) => {
-        if (ev.key !== "OrchardCore.templates:ready") {
+        if (ev.key !== "Crest.templates:ready") {
             return;
         }
 
@@ -36,8 +36,8 @@ export const initializeTemplatePreview = (element: HTMLInputElement | HTMLTextAr
     element.addEventListener(changeEventName, () => sendFormData(element));
 
     window.addEventListener("unload", () => {
-        localStorage.removeItem("OrchardCore.templates");
-        localStorage.setItem("OrchardCore.templates:not-connected", "");
-        localStorage.removeItem("OrchardCore.templates:not-connected");
+        localStorage.removeItem("Crest.templates");
+        localStorage.setItem("Crest.templates:not-connected", "");
+        localStorage.removeItem("Crest.templates:not-connected");
     });
 };

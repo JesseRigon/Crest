@@ -1,13 +1,13 @@
 using System.Collections.Concurrent;
-using OrchardCore.Admin;
-using OrchardCore.Themes.Services;
+using Crest.Admin;
+using Crest.Themes.Services;
 
 namespace Crest.Routing;
 
 // Mirrors DefaultShapeTableManager's actual caching shape (confirmed against
-// OrchardCore.DisplayManagement/Descriptors/DefaultShapeTableManager.cs): a keyed
+// Crest.DisplayManagement/Descriptors/DefaultShapeTableManager.cs): a keyed
 // singleton dictionary, populated lazily per key, with NO separate invalidation
-// signal/event subscription. Orchard already tears down and rebuilds the whole tenant
+// signal/event subscription. Crest already tears down and rebuilds the whole tenant
 // shell (and every singleton inside it, including this cache) on feature/theme change -
 // piggybacking on that is the correct, minimal amount of invalidation logic, not a gap.
 //

@@ -57,8 +57,8 @@ public static class WorkflowOwnership
 /// activity type name (namespace + class, e.g. <c>MyModule.PostTransaction</c>);
 /// the activity class itself lives in the owning module and is registered with the engine
 /// from that module's startup. <see cref="Inputs"/> presets the node's inputs when the
-/// palette entry is one generic activity configured for a purpose (a stock Orchard task is
-/// the <c>OrchardTask</c> activity with its <c>ActivityName</c> preset).
+/// palette entry is one generic activity configured for a purpose (a stock Crest task is
+/// the <c>PlatformTask</c> activity with its <c>ActivityName</c> preset).
 /// </summary>
 public sealed record WorkflowActivityDescriptor(
     string Key,

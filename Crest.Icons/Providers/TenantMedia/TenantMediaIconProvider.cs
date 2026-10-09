@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
-using OrchardCore.FileStorage;
-using OrchardCore.Media;
+using Crest.FileStorage;
+using Crest.Media;
 
 namespace Crest.Icons;
 

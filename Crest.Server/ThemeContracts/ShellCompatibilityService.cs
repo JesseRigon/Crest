@@ -1,7 +1,7 @@
-using OrchardCore.Admin;
-using OrchardCore.Environment.Extensions;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Themes.Services;
+using Crest.Admin;
+using Crest.Environment.Extensions;
+using Crest.Environment.Shell;
+using Crest.Themes.Services;
 using Crest.Routing;
 
 namespace Crest.Themes;
@@ -13,7 +13,7 @@ namespace Crest.Themes;
 /// <remarks>
 /// Themes are not interchangeable: a Crest shell is a Blazor Web App document plus a route
 /// bucket plus a design system, and a module's pages are written against that. A host's
-/// admin pages do not work under an arbitrary Orchard theme, so the system says so rather
+/// admin pages do not work under an arbitrary Crest theme, so the system says so rather
 /// than rendering a broken shell.
 ///
 /// Both directions are guarded, with deliberately different severity - see

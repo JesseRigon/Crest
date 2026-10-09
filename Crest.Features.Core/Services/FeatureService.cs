@@ -1,0 +1,90 @@
+using Crest.DisplayManagement.Extensions;
+using Crest.Environment.Extensions;
+using Crest.Environment.Extensions.Features;
+using Crest.Environment.Shell;
+using Crest.Features.Models;
+using Crest.Features.ViewModels;
+
+namespace Crest.Features.Services;
+
+public class FeatureService
+{
+    private readonly IShellFeaturesManager _shellFeaturesManager;
+    private readonly IExtensionManager _extensionManager;
+
+    public FeatureService(IShellFeaturesManager shellFeaturesManager, IExtensionManager extensionManager)
+    {
+        _shellFeaturesManager = shellFeaturesManager;
+        _extensionManager = extensionManager;
+    }
+
+    public async Task<IEnumerable<IFeatureInfo>> GetAvailableFeatures()
+    {
+        return (await _shellFeaturesManager.GetAvailableFeaturesAsync()).Where(feature => !feature.IsTheme());
+    }
+
+    public async Task<IFeatureInfo> GetAvailableFeature(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+        {
+            return null;
+        }
+
+        return (await GetAvailableFeatures()).FirstOrDefault(feature => feature.Id == id);
+    }
+
+    public async Task<IEnumerable<IFeatureInfo>> GetAvailableFeatures(string[] ids)
+    {
+        if (ids == null || ids.Length == 0)
+        {
+            return [];
+        }
+
+        return (await GetAvailableFeatures()).Where(feature => ids.Contains(feature.Id));
+    }
+
+    public async Task<IEnumerable<ModuleFeature>> GetModuleFeaturesAsync()
+    {
+        var enabledFeatures = await _shellFeaturesManager.GetEnabledFeaturesAsync();
+        var alwaysEnabledFeatures = await _shellFeaturesManager.GetAlwaysEnabledFeaturesAsync();
+
+        var moduleFeatures = new List<ModuleFeature>();
+
+        foreach (var moduleFeatureInfo in await GetAvailableFeatures())
+        {
+            var dependentFeatures = _extensionManager.GetDependentFeatures(moduleFeatureInfo.Id);
+            var featureDependencies = _extensionManager.GetFeatureDependencies(moduleFeatureInfo.Id);
+
+            var moduleFeature = new ModuleFeature
+            {
+                Descriptor = moduleFeatureInfo,
+                IsEnabled = enabledFeatures.Contains(moduleFeatureInfo),
+                EnabledByDependencyOnly = moduleFeatureInfo.EnabledByDependencyOnly,
+                IsAlwaysEnabled = alwaysEnabledFeatures.Contains(moduleFeatureInfo),
+                EnabledDependentFeatures = dependentFeatures.Where(x => x.Id != moduleFeatureInfo.Id && enabledFeatures.Contains(x)).ToList(),
+                FeatureDependencies = featureDependencies.Where(d => d.Id != moduleFeatureInfo.Id).ToList(),
+            };
+
+            moduleFeatures.Add(moduleFeature);
+        }
+
+        return moduleFeatures;
+    }
+
+    public async Task EnableOrDisableFeaturesAsync(IEnumerable<IFeatureInfo> features, FeaturesBulkAction action, bool? force, Func<IEnumerable<IFeatureInfo>, bool, Task> notifyAsync)
+    {
+        switch (action)
+        {
+            case FeaturesBulkAction.Enable:
+                await _shellFeaturesManager.EnableFeaturesAsync(features, force == true);
+                await notifyAsync(features, true);
+                break;
+            case FeaturesBulkAction.Disable:
+                await _shellFeaturesManager.DisableFeaturesAsync(features, force == true);
+                await notifyAsync(features, false);
+                break;
+            default:
+                break;
+        }
+    }
+}

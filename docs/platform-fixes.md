@@ -1,10 +1,10 @@
 # Platform fixes
 
-Gaps and inefficiencies found in the platform (`src/`, forked from OrchardCore) while building
+Gaps and inefficiencies found in the platform (forked from OrchardCore) while building
 Crest. Before the hard fork (2026-10-09) these were candidates to propose upstream, and each
 was worked around in Crest. Now the platform is Crest's own code, so each entry is a fix to
-make in `src/` directly, after which the Crest-side workaround it names is removed.
-"Upstream" in an entry means the platform's code as it came from OrchardCore.
+make in the platform directly, after which the Crest-side workaround it names is removed.
+"Upstream" in an entry means the platform's code as it came from Crest.
 
 Each entry: what was found, why it matters, and (if relevant) what a fix might look like.
 
@@ -14,7 +14,7 @@ Each entry: what was found, why it matters, and (if relevant) what a fix might l
 
   Found and fixed in Crest's localization work (see [docs/localization.md](localization.md)) — root cause of "anonymous front-end visitors ignored `Accept-Language`."
 
-  Two independent OrchardCore modules (stock `OrchardCore.Localization`'s `AdminCookieCultureProvider` configurator, and Crest's own `CrestCultureCookieOptionsConfiguration`) each registered an `IConfigureOptions<RequestLocalizationOptions>` that called `Insert(0, ...)` on the same `RequestCultureProviders` list. ASP.NET Core does not guarantee `IConfigureOptions<T>` ordering across independently-registered configurators for the same options type — whichever one happened to run last (determined by Orchard's feature load order, not by either module) won the front slot. This produced silent, hard-to-diagnose behavior (culture resolution "randomly" not working depending on feature registration order) rather than a startup error.
+  Two independent OrchardCore modules (stock `Crest.Localization`'s `AdminCookieCultureProvider` configurator, and Crest's own `CrestCultureCookieOptionsConfiguration`) each registered an `IConfigureOptions<RequestLocalizationOptions>` that called `Insert(0, ...)` on the same `RequestCultureProviders` list. ASP.NET Core does not guarantee `IConfigureOptions<T>` ordering across independently-registered configurators for the same options type — whichever one happened to run last (determined by Orchard's feature load order, not by either module) won the front slot. This produced silent, hard-to-diagnose behavior (culture resolution "randomly" not working depending on feature registration order) rather than a startup error.
 
   Crest's fix was to move its own registration to `IPostConfigureOptions<T>` (guaranteed to run after every `IConfigureOptions<T>` for the same type), which sidesteps the race but only from Crest's side — any other module doing the same `IConfigureOptions<T>.Insert(0, ...)` pattern against `RequestLocalizationOptions` (or any other shared options type) is still exposed to the same non-determinism against *other* modules that haven't taken the same precaution.
 
@@ -122,7 +122,7 @@ Each entry: what was found, why it matters, and (if relevant) what a fix might l
   `Merge`) omits `MenuName` (it copies Text, Id, Href, Position, Culture, RouteValues, Url,
   Target, Permissions, Classes). The *surviving instance* is whichever item came first in the
   built list, i.e. provider DI registration order. So when an admin menu node merges with a
-  provider item contributed by a module registered before OrchardCore.AdminMenu, the merged item
+  provider item contributed by a module registered before Crest.AdminMenu, the merged item
   carries the node's caption and Id but a null `MenuName` - and TheAdmin's
   `NavigationItemText.cshtml` then looks the caption up under the generic "Admin Menus" context
   instead of `"Admin Menus:{menu}"`, missing the stored translation. Which captions break is

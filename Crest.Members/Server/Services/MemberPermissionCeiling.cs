@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Crest.Members.Constants;
-using OrchardCore.Security;
+using Crest.Security;
 
 namespace Crest.Members.Services;
 
@@ -13,7 +13,7 @@ namespace Crest.Members.Services;
 /// <c>services.Configure&lt;MemberPermissionCeilingOptions&gt;(...)</c> alongside their
 /// normal IPermissionProvider. Prefixes cover the dynamic expansions
 /// (ManageUsersInRole_{role}, …) so the ceiling stays CLOSED under the derived
-/// permissions Orchard's handlers re-enter authorization with.
+/// permissions Crest's handlers re-enter authorization with.
 /// </summary>
 public class MemberPermissionCeilingOptions
 {

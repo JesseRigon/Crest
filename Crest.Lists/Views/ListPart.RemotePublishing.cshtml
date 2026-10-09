@@ -1,0 +1,10 @@
+@using Crest.ContentManagement
+@using Crest.Infrastructure
+@using Crest.ResourceManagement
+@inject IResourceManager ResourceManager
+
+@{
+    ContentItem contentItem = Model.ContentItem;
+    ResourceManager.RegisterLink(new LinkEntry { Rel = "wlwmanifest", Type = MediaTypeNamesExtended.Application.XmlWindowsLiveWriter, Href = Url.Action("Manifest", "MetaWeblog", new { area = "Crest.XmlRpc" }, Context.Request.Scheme) });
+    ResourceManager.RegisterLink(new LinkEntry { Rel = "EditURI", Type = MediaTypeNamesExtended.Application.XmlRsd, Title = "RSD", Href = Url.Action("Rsd", "RemotePublishing", new { area = "Crest.Lists", contentItemId = contentItem.ContentItemId }, Context.Request.Scheme) });
+}

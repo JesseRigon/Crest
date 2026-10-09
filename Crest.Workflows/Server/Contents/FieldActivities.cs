@@ -7,7 +7,7 @@ using Crest.Workflows.UIHints;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OrchardCore.ContentManagement;
+using Crest.ContentManagement;
 
 namespace Crest.Workflows.Contents;
 

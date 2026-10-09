@@ -80,7 +80,7 @@ module that isn't flat — it's a submodule with its own nested subprojects, eac
 potentially owning a `tests/` dir. Rather than have every host repo's `dev.sh`
 duplicate knowledge of that nested layout, `Crest` owns discovering and
 running its own tests, and reports pass/fail back to whichever host invoked it. This
-keeps `OrchardCore.Crest.Host/dev/dev.sh` (which only ever needs to run this one
+keeps `Crest.Crest.Host/dev/dev.sh` (which only ever needs to run this one
 module's tests) a thin wrapper. A product host that registers every Crest test project in
 its own solution and runs Crest's shared checks at the head of its own browser suite needs
 no delegation at all.
@@ -106,7 +106,7 @@ no delegation at all.
 
 `run-tests.sh` and everything under this directory hold **no credentials, no `.env`
 loading, and no server-lifecycle logic**. This submodule is checked out into multiple
-independent host repos (a product host, `OrchardCore.Crest.Host`, and potentially
+independent host repos (a product host, `Crest.Crest.Host`, and potentially
 others), each with its own environment, admin accounts, and database — a credential
 baked in here would either leak between hosts or be wrong for at least one of them.
 

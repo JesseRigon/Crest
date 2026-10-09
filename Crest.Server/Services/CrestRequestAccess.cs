@@ -1,14 +1,14 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.Security.Permissions;
+using Crest.Security.Permissions;
 
 namespace Crest.Services;
 
 /// <summary>
-/// The single Crest adapter boundary for Orchard-authorized work.
-/// A domain service is deliberately resolved only after Orchard has authorized
-/// the current request's real principal for the requested Orchard permission.
+/// The single Crest adapter boundary for Crest-authorized work.
+/// A domain service is deliberately resolved only after Crest has authorized
+/// the current request's real principal for the requested Crest permission.
 /// </summary>
 public interface ICrestRequestAccess
 {
@@ -37,7 +37,7 @@ public sealed class CrestRequestAccess(
 }
 
 /// <summary>
-/// A successful Orchard authorization. Its service accessor is intentionally
+/// A successful Crest authorization. Its service accessor is intentionally
 /// unavailable until <see cref="ICrestRequestAccess.AuthorizeAsync"/> succeeds.
 /// </summary>
 public sealed class CrestAuthorizedRequest

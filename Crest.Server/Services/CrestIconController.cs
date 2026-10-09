@@ -5,7 +5,7 @@ namespace Crest.Services;
 
 /// <summary>
 /// Resolves Crest icon declarations into response-level icon packs.
-/// Explicit Crest/Iconify declarations are preferred; legacy Orchard and Font Awesome metadata
+/// Explicit Crest/Iconify declarations are preferred; legacy Crest and Font Awesome metadata
 /// is normalized into Iconify keys so older modules still get icons in the headless UI path.
 /// </summary>
 public sealed class CrestIconController(CrestIconSourceStore iconSourceStore)

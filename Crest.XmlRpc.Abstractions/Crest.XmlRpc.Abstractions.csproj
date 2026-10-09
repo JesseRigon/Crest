@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.XmlRpc</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest XmlRpc Abstractions</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Abstractions for XmlRpc.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework Abstractions Infrastructure</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

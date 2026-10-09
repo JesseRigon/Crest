@@ -1,4 +1,4 @@
-using OrchardCore.Data.Migration;
+using Crest.Data.Migration;
 using YesSql.Indexes;
 using YesSql.Sql;
 
@@ -19,10 +19,10 @@ public sealed class ApprovalTask
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
 
-    /// <summary>Orchard role whose members may decide. Either this or <see cref="Permission"/>, or both.</summary>
+    /// <summary>Crest role whose members may decide. Either this or <see cref="Permission"/>, or both.</summary>
     public string? Role { get; set; }
 
-    /// <summary>Orchard permission whose holders may decide.</summary>
+    /// <summary>Crest permission whose holders may decide.</summary>
     public string? Permission { get; set; }
 
     public string WorkflowInstanceId { get; set; } = string.Empty;

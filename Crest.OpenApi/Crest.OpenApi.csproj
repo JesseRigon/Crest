@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Crest OpenApi</Title>
+    <Description>$(OCCMSDescription)
+
+    Provides OpenApi functionality.
+    </Description>
+    <PackageTags>$(PackageTags) PlatformCMS Api</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Swashbuckle.AspNetCore.ReDoc" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
+    <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement\Crest.ContentManagement.csproj" />
+    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.OpenApi.Core\Crest.OpenApi.Core.csproj" />
+    <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
+    <ProjectReference Include="..\Crest.Contents\Crest.Contents.csproj" />
+  </ItemGroup>
+</Project>

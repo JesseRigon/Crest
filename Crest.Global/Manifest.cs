@@ -1,4 +1,4 @@
-using OrchardCore.Modules.Manifest;
+using Crest.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Global Reference Data",

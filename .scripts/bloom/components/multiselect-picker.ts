@@ -2,11 +2,11 @@ import { getTranslations, setTranslations } from "../helpers/localizations";
 
 // Shared by 3 near-identical Vue 2 "draggable selected-list + async-search multiselect" widgets
 // that existed as separate copy-pasted files before this migration:
-//   - OrchardCore.ContentFields' ContentPickerField.Edit.cshtml (badge: hasPublished/"Not
+//   - Crest.ContentFields' ContentPickerField.Edit.cshtml (badge: hasPublished/"Not
 //     published"; only consumer with per-item clickable links via editUrl/viewUrl)
-//   - OrchardCore.ContentFields' LocalizationSetContentPickerField.Edit.cshtml (badge:
+//   - Crest.ContentFields' LocalizationSetContentPickerField.Edit.cshtml (badge:
 //     hasPublished/"Not published"; no clickable links)
-//   - OrchardCore.ContentFields' UserPickerField.Edit.cshtml (badge: isEnabled/"Not enabled"; no
+//   - Crest.ContentFields' UserPickerField.Edit.cshtml (badge: isEnabled/"Not enabled"; no
 //     clickable links; own debounce copy in the original Vue 2 file, now shared)
 //
 // Follows this repo's established plain-.ts bloom-component shape (Vue.createApp + template
@@ -14,7 +14,7 @@ import { getTranslations, setTranslations } from "../helpers/localizations";
 // translation-editor.ts - rather than a .vue SFC.
 //
 // Display text goes through the IJSLocalizer / getTranslations()-setTranslations() pattern (see
-// src/docs/reference/modules/Localize/javascript-localization.md) under the
+// docs/platform/reference/modules/Localize/javascript-localization.md) under the
 // "content-fields-multiselect-picker" translation group (ContentFieldsJSLocalizer).
 declare const Vue: {
     createApp(options: Record<string, unknown>): { mount(selector: string | Element): void };

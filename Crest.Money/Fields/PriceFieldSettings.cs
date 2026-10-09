@@ -1,4 +1,4 @@
-// Adapted from OrchardCore.Commerce (MIT, Copyright (c) 2018 OrchardCMS).
+// Adapted from OrchardCore.Commerce (MIT, Copyright (c) 2018 Crest).
 namespace Crest.Money.Fields;
 
 public class PriceFieldSettings

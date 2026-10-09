@@ -40,10 +40,10 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
     public bool IsAuthenticated => User.IsAuthenticated;
 
     // This is a navigation convenience only. The server independently
-    // authorizes direct route requests and every Crest/Orchard data operation.
+    // authorizes direct route requests and every Crest/Platform data operation.
     // AuthorizedRoutes' templates are canonical ("/Features", "/Themes", ... -
     // matching this app's own @page directives, and matching the real, MVC-resolved
-    // shape of stock Orchard admin URLs once AdminUrlPrefix is substituted in) and
+    // shape of stock Crest admin URLs once AdminUrlPrefix is substituted in) and
     // Blazor's Router itself resolves @page routes relative to BaseUri (see
     // BlazorAdminThemeMiddleware's PathBase shift), so a base-relative path IS
     // already the canonical path minus its leading slash (e.g. "/backoffice/Features"
@@ -435,7 +435,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         }
         catch
         {
-            // Preserve the last known UI state. Orchard remains authoritative
+            // Preserve the last known UI state. Crest remains authoritative
             // for every subsequent server request.
         }
         finally

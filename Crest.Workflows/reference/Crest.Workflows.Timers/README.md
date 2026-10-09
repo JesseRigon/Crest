@@ -1,6 +1,6 @@
 # Crest.Workflows.Timers
 
-Provides timer services and scheduling activities for Elsa workflows in Orchard Core.
+Provides timer services and scheduling activities for Elsa workflows in Crest.
 
 ## Features
 

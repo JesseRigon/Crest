@@ -19,8 +19,8 @@ work and connectors). See [docs/architecture.md](docs/architecture.md).
 Crest started as a set of modules on [OrchardCore](https://github.com/OrchardCMS/OrchardCore).
 Over time I wanted a lot of opinionated changes — Blazor-only UIs, permissions injected
 into queries, a different audit and media model — that the OrchardCore community
-shouldn't have to carry. So Crest now contains a hard fork of OrchardCore under `src/` and
-`test/` and develops it on its own. It is not meant to go back upstream.
+shouldn't have to carry. So Crest now contains a hard fork of OrchardCore, its projects beside
+Crest's own, and develops it on its own. It is not meant to go back upstream.
 
 Crest borrows heavily from several permissively licensed projects (MIT and BSD-3-Clause):
 OrchardCore, Elsa, Radzen Blazor, OrchardCore.Commerce and others. Their licences and
@@ -34,9 +34,11 @@ independently packageable.
 
 ```text
 Crest/
-  src/                the platform: forked from OrchardCore (namespaces and package ids
-                      still OrchardCore.*): tenants, users, permissions, content,
-                      features, settings, the module system
+  Crest.Core/, Crest.Abstractions/, Crest.ContentManagement/, Crest.Users/, Crest.Media/, ...
+                      the platform, forked from OrchardCore and renamed Crest.*:
+                      tenants, users, permissions, content, features, settings, the
+                      module system. Listed by kind in Crest.Build/Platform.Projects.props.
+  Crest.Build/        the platform's build settings
   test/               the platform's tests
   Crest.Server/       the application layer's server module
   Crest.Components/   the Blazor component library
@@ -47,8 +49,10 @@ Crest/
   docs/               design docs and decisions
 ```
 
-`OrchardCore.slnx` builds the platform; `Crest.slnx` builds the Crest modules, which
-reference the platform's projects directly (`$(PlatformSrcDir)`).
+`Crest.Platform.slnx` builds the platform; `Crest.slnx` builds the Crest modules, which
+reference the platform's projects directly (`$(PlatformSrcDir)`, the repository root). Platform
+and application projects sit in one tier; `Crest.Build/Platform.Projects.props` says which is
+which, and `Directory.Build.props` gives the platform projects their own build settings.
 
 ## Project roles
 
@@ -83,7 +87,7 @@ pages that Crest serves as WASM on their behalf.
 
 ## Runtime model
 
-The platform (`src/`) is the system of record for tenants, users, permissions, content,
+The platform is the system of record for tenants, users, permissions, content,
 features, settings, themes, admin menus and navigation. Crest's modules build on its
 services. When the platform lacks something Crest needs, the platform is changed: no
 shims or parallel copies.
@@ -146,7 +150,7 @@ so the page can sit inside an iframe.
 The repository stays a single git repository while publishing separate NuGet packages. The
 intended package boundaries are:
 
-- The platform's packages (still `OrchardCore.*` ids; renaming them is open).
+- The platform's packages (`Crest.*`; the core library is `Crest.Core`).
 - `Crest.Server`: the server module and shared server infrastructure.
 - `Crest.Components`: the component layer.
 - `Crest.Iconify`: Iconify provider API and optional full-library cache.
@@ -177,7 +181,7 @@ inline scripts.
 MIT — see [LICENSE](LICENSE).
 
 Crest vendors, forks and adapts several permissively licensed works, each of which keeps
-its own licence beside the code it covers: the platform under `src/` and `test/`
-(OrchardCore, BSD-3-Clause), the workflow engine and designer (Elsa), the Blazor component
+its own licence beside the code it covers: the platform projects (OrchardCore,
+BSD-3-Clause, `LICENSE.platform`), the workflow engine and designer (Elsa), the Blazor component
 library (Radzen Blazor), the money types (OrchardCore.Commerce) and the default site
 theme's front-end assets. [NOTICE.md](NOTICE.md) is the inventory.

@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>true</IsPackable>
     <PackageId>Crest.Workflows.Designer.BlazorServer</PackageId>
-    <PackageTags>OrchardCore;Crest;Workflows;Designer;BlazorServer</PackageTags>
-    <Description>Blazor Server implementation of the Crest.Workflows Studio workflow designer for Orchard Core. Provides server-side rendering of the visual workflow designer.</Description>
+    <PackageTags>Crest;Crest;Workflows;Designer;BlazorServer</PackageTags>
+    <Description>Blazor Server implementation of the Crest.Workflows Studio workflow designer for Crest. Provides server-side rendering of the visual workflow designer.</Description>
   </PropertyGroup>
 
   <ItemGroup>

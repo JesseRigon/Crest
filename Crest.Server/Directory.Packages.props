@@ -7,42 +7,42 @@
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.11" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.11" />
-    <PackageVersion Include="OrchardCore.Admin.Abstractions" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.AdminMenu" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.AdminMenu.Abstractions" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.ContentManagement" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.ContentFields" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Contents" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Admin.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.AdminMenu" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.AdminMenu.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.ContentManagement" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.ContentFields" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Contents" Version="4.0.0-local" />
     <PackageVersion Include="YesSql.Abstractions" Version="6.0.0" />
-    <PackageVersion Include="OrchardCore.DataLocalization" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.DisplayManagement" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Email.Abstractions" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Features" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.FileStorage.Abstractions" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Menu" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Media.Abstractions" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Media" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Module.Targets" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Theme.Targets" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Recipes.Abstractions" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Recipes.Core" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Queries" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Localization.Core" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Localization" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Indexing.Abstractions" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Indexing.Core" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Lucene.Core" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.ResourceManagement" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Roles.Abstractions" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Setup" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Setup.Abstractions" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Themes" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Templates" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Tenants" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Security" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Users" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Workflows.Abstractions" Version="4.0.0-local" />
-    <PackageVersion Include="OrchardCore.Users.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.DataLocalization" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.DisplayManagement" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Email.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Features" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.FileStorage.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Menu" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Media.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Media" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Module.Targets" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Theme.Targets" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Recipes.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Recipes.Core" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Queries" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Localization.Core" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Localization" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Indexing.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Indexing.Core" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Lucene.Core" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.ResourceManagement" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Roles.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Setup" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Setup.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Themes" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Templates" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Tenants" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Security" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Users" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Workflows.Platform.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Users.Abstractions" Version="4.0.0-local" />
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.50.3" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />

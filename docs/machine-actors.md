@@ -10,16 +10,15 @@ The question: can an external machine (a CLI, an integration server) act in a te
 its own identity, permissions and workflow usage, or must it borrow a user account?
 
 Short answer: the platform has a per-tenant system for machine identities
-(`OrchardCore.OpenId`), so no user account is needed. It has no opaque API keys and no
+(`Crest.OpenId`), so no user account is needed. It has no opaque API keys and no
 machine registry. Crest's own APIs are cookie-only today and would need to accept
 bearer tokens.
 
-**How much of this is verified:** that `OrchardCore.OpenId` is in the platform
-(`src/`) and that the host's setup recipe does
+**How much of this is verified:** that `Crest.OpenId` is in the platform and that the host's setup recipe does
 not enable it. Everything else below is from knowledge of the module and has not been
 re-read in the source; confirm each point at design time.
 
-## What the platform provides: `OrchardCore.OpenId`
+## What the platform provides: `Crest.OpenId`
 
 - **Applications are machine identities, per tenant.** Each tenant can run its own OpenID
   Connect server. An "application" registered there has a client id and secret and is

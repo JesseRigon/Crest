@@ -1,9 +1,9 @@
 /*
-    Default Orchard Crest design token contract.
+    Default Crest Crest design token contract.
 
     This file is the packaged fallback/reference design system. Runtime tenant
     and user design systems should set the same --crest-* primitive variables
-    from Orchard content, not edit component implementation CSS.
+    from Crest content, not edit component implementation CSS.
 */
 
 :root,

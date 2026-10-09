@@ -40,7 +40,9 @@ public class BookmarkQueueWorker : IBookmarkQueueWorker
             _cts.Cancel();
         }
 
-        _cts.Dispose();
+        // A tenant can be deactivated before the worker ever started (a setup that failed),
+        // in which case there is no token source yet.
+        _cts?.Dispose();
     }
 
     private async Task AwaitSignalAsync()

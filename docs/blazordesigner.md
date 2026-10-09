@@ -1,6 +1,24 @@
 # Blazor Component Workbench & WYSIWYG Editor
 
 **Status: not started.** This is a stored plan only — nothing here has been implemented.
+
+**Builds on [blazor-display.md](blazor-display.md)** (2026-10-09): the backend comes first. The
+designer edits a template's component tree and reads the component registry's parameter schema,
+both defined there. What this plan calls `IWorkbenchComponentRegistry` is that registry, and
+`ComponentNode` is a node of the display tree; neither is built separately. The `[WorkbenchComponent]`
+attribute folds into the one component attribute. The Appsmith-derived canvas, palette, property
+pane and verification engine remain this document's scope.
+
+**Reference systems** (ruling 2026-10-09; verify each licence before porting anything):
+- [Blazing Story](https://github.com/jsakamoto/BlazingStory) (MIT, Blazor): the Storybook
+  equivalent. Merged into this plan as the **component catalog**: every registry entry gets
+  stories (parameter presets) that the palette previews, the property pane uses as examples
+  and the verification engine (Phase 3) snapshots. Port its story model and catalog UI rather
+  than building a catalog from scratch.
+- Appsmith (Apache-2.0): canvas, palette, property pane, as already planned.
+- Craft.js and Puck (MIT, React): the editor's node/resolver/drag-drop architecture and typed
+  field schemas; design references only.
+- Backend references for the data model are in [blazor-display.md](blazor-display.md).
 A self-owned Component Workbench & WYSIWYG design surface, native to OrchardCore/Blazor,
 using Appsmith's widget/canvas/layout architecture as the model — reimplemented for
 Blazor's `RenderFragment`/component-parameter model in place of Appsmith's
@@ -90,7 +108,7 @@ graph TD
     Canvas -->|Snapshot request| Engines
 ```
 
-### §3. Core Data Models (`OrchardCore.Module.Workbench.Core`)
+### §3. Core Data Models (`Crest.Module.Workbench.Core`)
 
 - [ ] **Build `IWorkbenchComponentRegistry` on the routing registry's plumbing (§0, §3c).** Build `IWorkbenchComponentRegistry`: reflection scan of loaded module assemblies for
   `[WorkbenchComponent]`-attributed Razor components at OrchardCore startup, producing a
@@ -141,7 +159,7 @@ graph TD
   Component Tree Node:
 
   ```csharp
-  namespace OrchardCore.Module.Workbench.Core;
+  namespace Crest.Module.Workbench.Core;
 
   public class ComponentNode
   {

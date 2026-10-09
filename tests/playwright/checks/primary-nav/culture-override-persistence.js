@@ -6,7 +6,7 @@ const { loginAsAdmin } = require('../../harness/auth');
 // icon/rename) used to be keyed by a hash of the item's TRANSLATED display text when no
 // explicit Id/link was present, so switching the admin UI culture changed the hash and
 // silently orphaned every stored override for items without an Id (most stock
-// OrchardCore admin-menu category nodes - "Content", "Design", etc). The fix makes Key
+// Crest admin-menu category nodes - "Content", "Design", etc). The fix makes Key
 // use LocalizedString.Name (the untranslated resource key) instead, so this check drives
 // the SAME override under one culture and verifies it still applies after switching the
 // admin's resolved culture, in a browser context configured for that other culture.

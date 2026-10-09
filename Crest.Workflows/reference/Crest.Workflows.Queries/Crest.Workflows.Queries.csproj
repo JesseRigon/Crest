@@ -1,19 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.props" />
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <IsPackable>true</IsPackable>
         <PackageId>Crest.Workflows.Queries</PackageId>
-        <PackageTags>OrchardCore;Crest;Workflows;Queries</PackageTags>
-        <Description>Provides Crest.Workflows workflow activities for executing Orchard Core queries. Enables workflow integration with SQL queries and other query sources.</Description>
+        <PackageTags>Crest;Crest;Workflows;Queries</PackageTags>
+        <Description>Provides Crest.Workflows workflow activities for executing Crest queries. Enables workflow integration with SQL queries and other query sources.</Description>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations"/>
-        <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.DisplayManagement\OrchardCore.DisplayManagement.csproj" />
-        <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.csproj" />
-        <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.Queries\OrchardCore.Queries.csproj" />
+        <ProjectReference Include="$(PlatformSrcDir)Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+        <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
+        <ProjectReference Include="$(PlatformSrcDir)Crest.Queries\Crest.Queries.csproj" />
         <PackageReference Include="YesSql.Abstractions" />
     </ItemGroup>
 
@@ -21,6 +21,4 @@
         <PackageReference Include="Crest.Workflows.Sql"/>
         <PackageReference Include="Crest.Workflows.Engine"/>
     </ItemGroup>
-
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
 </Project>

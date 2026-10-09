@@ -1,10 +1,10 @@
 using Crest.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Environment.Shell.Removing;
-using OrchardCore.Tenants;
-using TenantsPermissions = OrchardCore.Tenants.Permissions;
+using Crest.Environment.Shell;
+using Crest.Environment.Shell.Removing;
+using Crest.Tenants;
+using TenantsPermissions = Crest.Tenants.Permissions;
 
 namespace Crest.ViewModels;
 

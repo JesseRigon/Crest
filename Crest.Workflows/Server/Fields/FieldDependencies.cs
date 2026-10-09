@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 using VersionOptions = Crest.Workflows.Common.Models.VersionOptions;
-using OrchardVersionOptions = OrchardCore.ContentManagement.VersionOptions;
+using PlatformVersionOptions = Crest.ContentManagement.VersionOptions;
 using Crest.Workflows.Contents;
 using Crest.Workflows.Management;
 using Crest.Workflows.Management.Activities.WorkflowDefinitionActivity;
@@ -10,9 +10,9 @@ using Crest.Workflows.Mediator.Contracts;
 using Crest.Workflows.Models;
 using Crest.Workflows.Activities;
 using Microsoft.Extensions.Logging;
-using OrchardCore.ContentManagement;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Metadata.Models;
+using Crest.ContentManagement;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Models;
 
 namespace Crest.Workflows.Fields;
 
@@ -148,7 +148,7 @@ public sealed class WorkflowFieldDependencyAnalyzer(IWorkflowDefinitionService d
         return Binding(WorkflowFieldDependencyStatuses.Ok, fieldType);
     }
 
-    /// <summary>Orchard keeps Required on the field's typed settings (<c>TextFieldSettings.Required</c>, ...).</summary>
+    /// <summary>Crest keeps Required on the field's typed settings (<c>TextFieldSettings.Required</c>, ...).</summary>
     private static bool IsRequired(ContentPartFieldDefinition field) =>
         field.Settings[$"{field.FieldDefinition.Name}Settings"] is JsonObject settings && settings["Required"]?.GetValue<bool>() == true;
 
@@ -198,7 +198,7 @@ public sealed class FieldDependencyChecker(IContentDefinitionManager definitions
 {
     public async Task<string?> CheckAsync(object activity, string contentItemId, CancellationToken cancellationToken = default)
     {
-        var item = await contentManager.GetAsync(contentItemId, OrchardVersionOptions.Latest);
+        var item = await contentManager.GetAsync(contentItemId, PlatformVersionOptions.Latest);
         return item is null ? null : await CheckAsync(activity, item);
     }
 

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <!-- NuGet properties-->
+    <Title>Crest Rules</Title>
+    <Description>$(OCFrameworkDescription)
+
+    The Rule module adds rule building capabilities.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jint" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.ContentManagement.Display\Crest.ContentManagement.Display.csproj" />
+    <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
+    <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
+    <ProjectReference Include="..\Crest.Rules.Core\Crest.Rules.Core.csproj" />
+  </ItemGroup>
+
+</Project>

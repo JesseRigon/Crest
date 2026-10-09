@@ -1,0 +1,25 @@
+@model Crest.Markdown.ViewModels.EditMarkdownFieldViewModel
+@using Crest.ContentFields
+@using Crest.ContentLocalization
+@using Crest.ContentManagement.Metadata.Models
+@using Crest.Markdown.Settings
+@using Crest.Mvc.Utilities
+@using Crest.Localization.Data
+@inject IDataLocalizer D
+@{
+    var settings = Model.PartFieldDefinition.GetSettings<MarkdownFieldSettings>();
+    var culture = await Platform.GetContentCultureAsync(Model.Field.ContentItem);
+    string localizedFieldName = D[Model.PartFieldDefinition.DisplayName(), DataLocalizationContext.ContentField(Model.PartFieldDefinition.PartDefinition.Name)];
+}
+
+<div class="@($"ocat-wrapper field-wrapper field-wrapper-{Model.PartFieldDefinition.PartDefinition.Name.HtmlClassify()}-{Model.PartFieldDefinition.Name.HtmlClassify()}" + (Model.PartFieldDefinition.IsNamedPart() ? $" field-wrapper-{Model.PartFieldDefinition.ContentTypePartDefinition.Name.HtmlClassify()}-{Model.PartFieldDefinition.Name.HtmlClassify()}" : string.Empty))" id="@Html.IdFor(x => x.Markdown)_FieldWrapper">
+    @await DisplayAsync(await New.ShortcodeModal())
+    <label asp-for="Markdown" class="ocat-label">@localizedFieldName</label>
+    <div class="ocat-end">
+        <textarea asp-for="Markdown" rows="5" class="form-control content-preview-text shortcode-modal-input" dir="@culture.GetLanguageDirection()"></textarea>
+        @if (!string.IsNullOrEmpty(settings.Hint))
+        {
+            @await DisplayAsync(await New.Hint_Admin(Hint: settings.Hint))
+        }
+    </div>
+</div>

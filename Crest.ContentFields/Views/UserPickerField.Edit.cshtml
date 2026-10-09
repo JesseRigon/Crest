@@ -1,0 +1,37 @@
+@model Crest.ContentFields.ViewModels.EditUserPickerFieldViewModel
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Crest.ContentFields
+@using Crest.Mvc.Utilities
+@using Crest.Localization.Data
+@inject IDataLocalizer D
+@{
+    var settings = Model.PartFieldDefinition.GetSettings<UserPickerFieldSettings>();
+    var selectedUsers = JConvert.SerializeObject(Model.SelectedUsers, JOptions.CamelCase);
+    var partName = Model.PartFieldDefinition.PartDefinition.Name;
+    var fieldName = Model.PartFieldDefinition.Name;
+    var contentTypeName = Model.TypePartDefinition.Name;
+    var searchUrl = Url.RouteUrl(new { area = "Crest.ContentFields", controller = "UserPickerAdmin", action = "SearchUsers", part = partName, field = fieldName, contentType = contentTypeName });
+    var vueElementId = $"UserPicker_{partName}_{fieldName}_{Guid.NewGuid().ToString("n")}";
+    var multiple = settings.Multiple.ToString().ToLowerInvariant();
+    string localizedFieldName = D[Model.PartFieldDefinition.DisplayName(), DataLocalizationContext.ContentField(Model.PartFieldDefinition.PartDefinition.Name)];
+    var translations = Platform.GetJSLocalizations("content-fields-multiselect-picker");
+    var translationsJson = Json.Serialize(translations).ToString();
+}
+
+<script asp-name="vue-draggable" at="Foot"></script>
+<style asp-name="vue-multiselect" at="Foot"></style>
+
+<div class="@($"ocat-wrapper field-wrapper field-wrapper-{Model.PartFieldDefinition.PartDefinition.Name.HtmlClassify()}-{Model.PartFieldDefinition.Name.HtmlClassify()}" + (Model.PartFieldDefinition.IsNamedPart() ? $" field-wrapper-{Model.PartFieldDefinition.ContentTypePartDefinition.Name.HtmlClassify()}-{Model.PartFieldDefinition.Name.HtmlClassify()}" : string.Empty))" id="@Html.IdFor(x => x.UserIds)_FieldWrapper">
+    <label asp-for="UserIds" class="ocat-label @(settings.Required ? "ocat-label-required" : "")">@localizedFieldName</label>
+    <div class="ocat-end">
+        <div id="@vueElementId" class="vue-multiselect" data-part="@partName" data-field="@fieldName" data-content-type="@contentTypeName" data-editor-type="UserPicker" data-selected-users="@selectedUsers" data-search-url="@searchUrl" data-multiple="@multiple" data-translations="@translationsJson" data-placeholder="@settings.Placeholder" data-selected-ids-input-id="@Html.IdFor(x => x.UserIds)" data-selected-ids-input-name="@Html.NameFor(x => x.UserIds)">
+        </div>
+        @if (!string.IsNullOrEmpty(settings.Hint))
+        {
+            <span class="hint">@settings.Hint</span>
+        }
+        <span asp-validation-for="UserIds"></span>
+    </div>
+</div>
+<script asp-src="~/Crest.ContentFields/Scripts/vue-multiselect-fields/vue-multiselect-fields.min.js" debug-src="~/Crest.ContentFields/Scripts/vue-multiselect-fields/vue-multiselect-fields.js" at="Foot" depends-on="vuejs, vue-multiselect, vue-draggable" type="module"></script>

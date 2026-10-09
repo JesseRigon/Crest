@@ -75,7 +75,7 @@ module.exports = async function run(page, ctx) {
       );
       if (!item) return null;
       const textElement = item.querySelector('.crest-panel-menu__text-rail');
-      const icon = item.querySelector('.orchard-icon:not(.primary-nav-menu__icon-placeholder)');
+      const icon = item.querySelector('.platform-icon:not(.primary-nav-menu__icon-placeholder)');
       const placeholder = item.querySelector('.primary-nav-menu__icon-placeholder');
       const textBox = textElement?.getBoundingClientRect();
       return { text, hasIcon: !!icon, hasPlaceholder: !!placeholder, textLeft: textBox?.left || 0 };

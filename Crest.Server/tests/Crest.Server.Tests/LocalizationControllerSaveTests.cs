@@ -9,18 +9,18 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using NSubstitute;
-using OrchardCore.Entities;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Localization;
-using OrchardCore.Settings;
-using OrchardCore.Users;
+using Crest.Entities;
+using Crest.Environment.Shell;
+using Crest.Localization;
+using Crest.Settings;
+using Crest.Users;
 using Xunit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Crest.Server.Tests;
 
-// ISite's concrete OrchardCore.Settings.SiteSettings implementation lives in the
-// OrchardCore.Settings module, which the Crest server project doesn't reference (only
+// ISite's concrete Crest.Settings.SiteSettings implementation lives in the
+// Crest.Settings module, which the Crest server project doesn't reference (only
 // the ISite/ISiteService abstractions). A minimal fake is enough here: the controller
 // only ever calls TryGet<T>/Alter<T> (Entity extension methods driven by ISite.Properties)
 // against it, never any of the other ISite members.

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Data</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest Data Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for data access functionality</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Data Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

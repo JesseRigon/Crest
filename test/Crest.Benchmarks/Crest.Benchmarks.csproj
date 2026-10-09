@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(CommonTargetFrameworks)</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+    <IsTestProject>false</IsTestProject>
+    <TestProject>false</TestProject>
+    <OutputType>Exe</OutputType>
+    <!-- Remove the underscores from member name -->
+    <NoWarn>$(NoWarn);CA1707;EnableGenerateDocumentationFile</NoWarn>
+    <!-- Without this, we get an "error CS0017: Program has more than one entry point defined." due to
+    BenchmarkDotNet's auto-generated entry point. -->
+    <StartupObject>Crest.Benchmarks.Program</StartupObject>
+    <InterceptorsNamespaces>$(InterceptorsNamespaces);Crest.DisplayManagement.Generated</InterceptorsNamespaces>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Tests\Crest.Tests.csproj" />
+    <ProjectReference Include="..\..\Crest.Workflows\Server\Crest.Workflows.csproj" />
+    <ProjectReference Include="..\..\Crest.SourceGenerators\Crest.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Import Project="..\..\Crest.Build\Crest.Commons.targets" />
+
+</Project>

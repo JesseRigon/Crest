@@ -6,7 +6,7 @@ namespace Crest.Icons.Tests;
 /// Crest.Icons/README.md: "two tenants with different public prefix settings share the same local cache
 /// but see different visible libraries/results" and "two tenants with custom server settings do
 /// not share data or cache entries". Tenant scoping is entirely driven by each tenant's own
-/// IIconProviderSettingsStore (Orchard DI-scopes one per tenant) - CrestIconProvidersSettings
+/// IIconProviderSettingsStore (Crest DI-scopes one per tenant) - CrestIconProvidersSettings
 /// carries no tenant key itself. So the isolation boundary to prove is: two separately constructed
 /// IconifyIconProvider instances, each wired to a different settings/HTTP double, never leak
 /// results, requests, or cached state into each other.

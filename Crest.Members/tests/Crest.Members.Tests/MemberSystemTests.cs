@@ -5,9 +5,9 @@ using Crest.Members.Models;
 using Crest.Members.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
-using OrchardCore.Entities;
-using OrchardCore.Security;
-using OrchardCore.Users.Models;
+using Crest.Entities;
+using Crest.Security;
+using Crest.Users.Models;
 using Xunit;
 
 namespace Crest.Members.Tests;
@@ -61,7 +61,7 @@ public class MemberPermissionCeilingTests
         var identity = new ClaimsIdentity("Test");
         identity.AddClaim(new Claim(MemberClaims.UserClass, userClass));
         var requirements = permissionNames
-            .Select(name => new PermissionRequirement(new OrchardCore.Security.Permissions.Permission(name)))
+            .Select(name => new PermissionRequirement(new Crest.Security.Permissions.Permission(name)))
             .Cast<IAuthorizationRequirement>()
             .ToArray();
         return new AuthorizationHandlerContext(requirements, new ClaimsPrincipal(identity), resource: null);
@@ -118,7 +118,7 @@ public class MemberPermissionCeilingTests
     {
         var identity = new ClaimsIdentity("Test");
         var context = new AuthorizationHandlerContext(
-            [new PermissionRequirement(new OrchardCore.Security.Permissions.Permission("ManageTenants"))],
+            [new PermissionRequirement(new Crest.Security.Permissions.Permission("ManageTenants"))],
             new ClaimsPrincipal(identity),
             resource: null);
         await Handler().HandleAsync(context);
@@ -129,7 +129,7 @@ public class MemberPermissionCeilingTests
     public async Task Unauthenticated_Unaffected()
     {
         var context = new AuthorizationHandlerContext(
-            [new PermissionRequirement(new OrchardCore.Security.Permissions.Permission("ManageTenants"))],
+            [new PermissionRequirement(new Crest.Security.Permissions.Permission("ManageTenants"))],
             new ClaimsPrincipal(new ClaimsIdentity()),
             resource: null);
         await Handler().HandleAsync(context);

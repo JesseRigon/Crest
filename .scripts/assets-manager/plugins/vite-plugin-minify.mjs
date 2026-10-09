@@ -6,7 +6,7 @@ import { writeAssetFile } from "../output.mjs";
 
 /**
  * Vite plugin that minifies output and generates files following the
- * Orchard Core asset-manager convention:
+ * Crest asset-manager convention:
  *
  *   file.js      — minified WITH sourceMappingURL reference
  *   file.min.js  — minified WITHOUT sourceMappingURL reference
@@ -20,7 +20,7 @@ export function minifyPlugin() {
     let outDir = "";
 
     return {
-        name: "orchard-minify",
+        name: "platform-minify",
         apply: "build",
         configResolved(config) {
             outDir = config.build.outDir;

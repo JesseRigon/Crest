@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>true</IsPackable>
     <PackageId>Crest.Workflows.Designer.BlazorWasm</PackageId>
-    <PackageTags>OrchardCore;Crest;Workflows;Designer;BlazorWasm</PackageTags>
-    <Description>Blazor WebAssembly implementation of the Crest.Workflows Studio workflow designer for Orchard Core. Provides client-side rendering of the visual workflow designer.</Description>
+    <PackageTags>Crest;Crest;Workflows;Designer;BlazorWasm</PackageTags>
+    <Description>Blazor WebAssembly implementation of the Crest.Workflows Studio workflow designer for Crest. Provides client-side rendering of the visual workflow designer.</Description>
   </PropertyGroup>
 
   <ItemGroup>

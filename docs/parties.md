@@ -90,7 +90,7 @@ Also avoid attaching `CustomerPart` directly to both `Person` and `Organization`
 
 - **Party ↔ user link**: `Person.PortalUser` is a stock
   `UserPickerField`, indexed
-  by `OrchardCore.ContentFields.Indexing.SQL.UserPicker` so person-for-user is a
+  by `Crest.ContentFields.Indexing.SQL.UserPicker` so person-for-user is a
   query. `IPartyUserLinkService` (Parties) owns the writes and the lookup;
   `Crest.Members.CreateMemberAsync` calls it when a `PersonId` is supplied
   (unknown person → error), so the link is recorded on both sides by the module

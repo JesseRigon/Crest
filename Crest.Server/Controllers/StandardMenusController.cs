@@ -3,14 +3,14 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore;
-using OrchardCore.ContentManagement;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Metadata.Models;
-using OrchardCore.Contents;
-using OrchardCore.Menu;
-using OrchardCore.Menu.Models;
-using OrchardContentItem = OrchardCore.ContentManagement.ContentItem;
+using Crest;
+using Crest.ContentManagement;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Models;
+using Crest.Contents;
+using Crest.Menu;
+using Crest.Menu.Models;
+using PlatformContentItem = Crest.ContentManagement.ContentItem;
 using Crest.ViewModels;
 
 namespace Crest.Controllers;
@@ -20,19 +20,19 @@ namespace Crest.Controllers;
 [Route("api/crest/menus")]
 public sealed class StandardMenusController(
     IAuthorizationService authorizationService,
-    IOrchardHelper orchardHelper,
+    IPlatformHelper platformHelper,
     IContentManager contentManager,
     IContentDefinitionManager contentDefinitionManager) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<StandardMenusState>> ListAsync()
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.Menu.Permissions.ManageMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.Menu.Permissions.ManageMenu))
         {
             return Forbid();
         }
 
-        var menus = await orchardHelper.QueryContentItemsAsync(query => query
+        var menus = await platformHelper.QueryContentItemsAsync(query => query
             .Where(index => index.ContentType == "Menu" && index.Latest)
             .OrderBy(index => index.DisplayText));
 
@@ -297,9 +297,9 @@ public sealed class StandardMenusController(
         return Ok(StandardMenuSummary.From(menu));
     }
 
-    private Task<bool> IsAuthorizedAsync() => authorizationService.AuthorizeAsync(User, OrchardCore.Menu.Permissions.ManageMenu);
+    private Task<bool> IsAuthorizedAsync() => authorizationService.AuthorizeAsync(User, Crest.Menu.Permissions.ManageMenu);
 
-    private async Task<OrchardContentItem?> LoadMenuForUpdateAsync(string menuId)
+    private async Task<PlatformContentItem?> LoadMenuForUpdateAsync(string menuId)
     {
         var definition = await contentDefinitionManager.GetTypeDefinitionAsync("Menu");
         return definition?.IsDraftable() == true

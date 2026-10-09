@@ -1,14 +1,14 @@
 using Crest.Parties.Constants;
-using OrchardCore.ContentFields.Fields;
-using OrchardCore.ContentFields.Indexing.SQL;
-using OrchardCore.ContentManagement;
+using Crest.ContentFields.Fields;
+using Crest.ContentFields.Indexing.SQL;
+using Crest.ContentManagement;
 using YesSql;
 
 namespace Crest.Parties.Services;
 
 /// <summary>
 /// The party ↔ user account link, from the party side: a Person may carry the
-/// Orchard user that IS that person (a member's portal account, an employee's staff
+/// Crest user that IS that person (a member's portal account, an employee's staff
 /// account) in its PortalUser picker. The user side of the same link is owned by
 /// whichever module creates the account (Crest.Members stamps the person id on
 /// the member).

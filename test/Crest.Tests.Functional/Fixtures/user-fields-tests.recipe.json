@@ -1,0 +1,37 @@
+{
+  "name": "UserFieldsTests",
+  "displayName": "UserFieldsTests",
+  "description": "Testing Crest.Users' user-fields.ts (password generator/toggle wiring on the Create User admin form).",
+  "author": "The Crest Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "tests" ],
+  "tags": [ "tests" ],
+
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Crest.HomeRoute",
+        "Crest.Admin",
+        "Crest.Navigation",
+        "Crest.Recipes",
+        "Crest.Resources",
+        "Crest.Roles",
+        "Crest.Security",
+        "Crest.Settings",
+        "Crest.Themes",
+        "Crest.Users",
+
+        "TheAdmin",
+        "SafeMode"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "TheAdmin",
+      "site": "TheAdmin"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.ContentPreview</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest ContentPreview Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for ContentPreview Module</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

@@ -3,7 +3,7 @@
 // translated, and its caption being edited.
 //
 // Two different mechanisms provide that stability, and this check covers both:
-//   * Provider-contributed items (OrchardCore's INavigationProvider implementations) carry
+//   * Provider-contributed items (Crest's INavigationProvider implementations) carry
 //     MenuItem.Text.Name, the untranslated S["..."] literal. Served as TextKey.
 //   * Admin Menu feature nodes (DB-backed, created in the admin UI) carry no such literal -
 //     their caption is a raw string the admin typed. They instead carry AdminNode.UniqueId,

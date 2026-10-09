@@ -1,0 +1,11 @@
+{
+  "name": "@crest/html",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "crest-media-gallery": "workspace:*"
+  }
+}

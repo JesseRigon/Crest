@@ -12,7 +12,7 @@ module.exports = async function run(page, ctx) {
   const legacyFrame = await page.locator('iframe').count();
 
   // Round-trips a throwaway template through the native API to prove the page sits on
-  // top of real Orchard template APIs, then cleans it up immediately.
+  // top of real Crest template APIs, then cleans it up immediately.
   // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
   const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
 

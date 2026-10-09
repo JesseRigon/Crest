@@ -120,7 +120,7 @@ msgid "Signed in as {0}"
 msgstr "Sesión iniciada como {0}"
 
 # Machine-assisted es coverage for every Crest.Admin.Client literal (2026-08-22)
-# - reviewed terminology per OrchardCore Crowdin conventions. Entries here outrank
+# - reviewed terminology per Crest Crowdin conventions. Entries here outrank
 # the upstream mirror for the same literal (client-context tier).
 
 msgctxt "Crest.Admin.Client"
@@ -1332,8 +1332,8 @@ msgid "Optional. Only applies to the admin area — a signed-in user's own langu
 msgstr "Opcional. Solo se aplica al área de administración — la preferencia de idioma propia de un usuario conectado o una opción de sesión explícita aún tiene prioridad aquí. Deja sin establecer para usar la cultura predeterminada anterior en todas partes, incluida el área de administración."
 
 msgctxt "Crest.Admin.Client"
-msgid "Orchard could not {0} {1}."
-msgstr "Orchard no pudo {0} {1}."
+msgid "Crest could not {0} {1}."
+msgstr "Crest no pudo {0} {1}."
 
 msgctxt "Crest.Admin.Client"
 msgid "Culture settings were saved. New requests use the updated cultures."

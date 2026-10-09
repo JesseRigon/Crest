@@ -4,7 +4,7 @@ Provides Elsa workflow activities for data processing operations.
 
 ## Features
 
-This module adds data handling capabilities to Elsa workflows within Orchard Core.
+This module adds data handling capabilities to Elsa workflows within Crest.
 
 ### CSV Activities
 
@@ -23,7 +23,7 @@ These activities are useful for batch processing, data import/export operations,
 
 ## Installation
 
-Enable the **CSV Activities** feature in the Orchard Core admin dashboard under Features.
+Enable the **CSV Activities** feature in the Crest admin dashboard under Features.
 
 ## Package Information
 

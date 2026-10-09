@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Crest.Server.Tests;
 
-// The Crest packages version as <OrchardCore compatibility>.<security patch>.<bug patch>
+// The Crest packages version as <Crest compatibility>.<security patch>.<bug patch>
 // (CrestVersion in Crest.csproj). A module manifest that carries that five-part
 // scheme must show the same number, since the themes page displays the manifest's Version.
 public partial class ManifestVersionTests
@@ -13,7 +13,7 @@ public partial class ManifestVersionTests
     public void FivePartManifestVersionsMatchTheCrestVersion()
     {
         var root = RepositoryRoot();
-        var crestVersion = CrestVersion(Path.Combine(root, "Crest.Server", "Crest.csproj"));
+        var crestVersion = CrestVersion(Path.Combine(root, "Crest.Server", "Crest.Server.csproj"));
 
         var manifests = Directory.EnumerateFiles(root, "Manifest.cs", SearchOption.AllDirectories)
             .Where(path => !IsBuildOutput(path))
@@ -31,7 +31,7 @@ public partial class ManifestVersionTests
     {
         var project = File.ReadAllText(projectPath);
         string Property(string name) => Regex.Match(project, $"<{name}>(?<value>[^<]+)</{name}>").Groups["value"].Value;
-        return $"{Property("OrchardCoreCompatibilityVersion")}.{Property("CrestSecurityPatch")}.{Property("CrestBugPatch")}";
+        return $"{Property("PlatformCompatibilityVersion")}.{Property("CrestSecurityPatch")}.{Property("CrestBugPatch")}";
     }
 
     private static bool IsBuildOutput(string path) =>

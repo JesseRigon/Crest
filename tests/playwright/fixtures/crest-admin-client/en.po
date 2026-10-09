@@ -1535,8 +1535,8 @@ msgid "Optional. Only applies to the admin area — a signed-in user's own langu
 msgstr "Optional. Only applies to the admin area — a signed-in user's own language preference or an explicit session choice still takes priority here. Leave unset to use the default culture above everywhere, including the admin area."
 
 msgctxt "Crest.Admin.Client"
-msgid "Orchard could not {0} {1}."
-msgstr "Orchard could not {0} {1}."
+msgid "Crest could not {0} {1}."
+msgstr "Crest could not {0} {1}."
 
 msgctxt "Crest.Admin.Client"
 msgid "Culture settings were saved. New requests use the updated cultures."

@@ -1,13 +1,13 @@
 @* "/" here means "this admin shell's own base": the document that serves this page sets
    <base href> to /Admin/ or /Login/, so a base-relative "/" lands here no matter which
    of the two served it. Keep it that way — do NOT change this to absolute "@page "/Admin""
-   / "@page "/Login"": those collide with OrchardCore's real server routes (notably
-   OrchardCore.Users' AccountController.Login) and the endpoint selector throws an
+   / "@page "/Login"": those collide with Crest's real server routes (notably
+   Crest.Users' AccountController.Login) and the endpoint selector throws an
    ambiguous-match 500 on every /Login request.
 
    The site-root leak this route can cause (Admin.Client shares ONE route table with the
    Site client under the Blazor Web App model, so a bare "/" also matches the SITE root
-   and swallows Orchard's Liquid homepage) is handled in Crest.Server's App.razor, which
+   and swallows Crest's Liquid homepage) is handled in Crest.Server's App.razor, which
    only renders AdminRoutes when the middleware marked the request as an admin shell. *@
 @page "/"
 @using Crest.AdminTheme.DisplayManagement
@@ -38,7 +38,7 @@
     // already loaded - only cross to the *other* shell's real, absolute path with
     // forceLoad when this base isn't already the right one. Dashboard is currently
     // the only landing page - see docs/user-settings.md for a future per-user
-    // configurable default landing page, which Orchard has no built-in equivalent of
+    // configurable default landing page, which Crest has no built-in equivalent of
     // today.
     protected override async Task OnInitializedAsync()
     {

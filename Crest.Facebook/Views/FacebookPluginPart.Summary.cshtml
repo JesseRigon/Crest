@@ -1,0 +1,17 @@
+@using System.Globalization
+@using Crest.Entities
+@using Crest.Settings
+@using Crest.Facebook.Settings
+@model Crest.Facebook.Widgets.ViewModels.FacebookPluginPartViewModel
+@inject ISiteService SiteService
+@{
+    var fbInit = (await SiteService.GetSettingsAsync<FacebookSettings>()).FBInit;
+    var culture = CultureInfo.CurrentUICulture.Name;
+}
+
+@Html.Raw(Model.Html)
+
+@if (!fbInit)
+{
+    <script asp-name="fb" culture="@culture" at="Foot"></script>
+}

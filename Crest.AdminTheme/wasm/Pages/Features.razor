@@ -223,7 +223,7 @@
             || feature.Dependencies.Any(dependency => dependency.Contains(term, StringComparison.OrdinalIgnoreCase));
     }
 
-    private bool CanEnable(Feature feature) => !feature.EnabledByDependencyOnly && feature.Id is not "OrchardCore.Setup" and not "OrchardCore.AutoSetup";
+    private bool CanEnable(Feature feature) => !feature.EnabledByDependencyOnly && feature.Id is not "Crest.Setup" and not "Crest.AutoSetup";
     private bool CanDisable(Feature feature) => !feature.AlwaysEnabled && !feature.EnabledByDependencyOnly && !string.Equals(feature.Category, "Core", StringComparison.OrdinalIgnoreCase);
     private bool IsDependencyAvailable(string id) => AllFeatures.Any(feature => string.Equals(feature.Id, id, StringComparison.OrdinalIgnoreCase));
     private string DependencyName(string id) => AllFeatures.FirstOrDefault(feature => string.Equals(feature.Id, id, StringComparison.OrdinalIgnoreCase))?.Name ?? id;
@@ -300,11 +300,11 @@
                     throw new InvalidOperationException(string.Join(" ", refusal.Incompatibilities.Select(item => item.Reason).Prepend(refusal.Message)));
                 }
 
-                if (!result.Succeeded) throw new InvalidOperationException(T["Orchard could not {0} {1}.", T["Enable"], feature.Name]);
+                if (!result.Succeeded) throw new InvalidOperationException(T["Crest could not {0} {1}.", T["Enable"], feature.Name]);
             }
             else if (!await Api.Crest.Rest.Features.DisableAsync(feature.Id))
             {
-                throw new InvalidOperationException(T["Orchard could not {0} {1}.", T["Disable"], feature.Name]);
+                throw new InvalidOperationException(T["Crest could not {0} {1}.", T["Disable"], feature.Name]);
             }
 
             Notifications.Notify(NotificationSeverity.Success, T["Features"], T["{0} was {1}.", feature.Name, enable ? T["Enabled"] : T["Disabled"]]);

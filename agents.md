@@ -2,14 +2,14 @@
 
 ## General Instructions
 
-- Crest is pre-release: do NOT write backward-compatibility code (shims, dual code paths, kept-around redundant services). Restructure outright and delete the old path in the same change. Data migrations for existing dev tenants are fine; parallel code paths are not. (Applies to the platform under `src/` too.)
+- Crest is pre-release: do NOT write backward-compatibility code (shims, dual code paths, kept-around redundant services). Restructure outright and delete the old path in the same change. Data migrations for existing dev tenants are fine; parallel code paths are not. (Applies to the platform projects too.)
 - Read all README files and all `agents.md`/`AGENTS.md` files in this repo before making substantial changes.
 - Do not use one-off inline/terminal-coded Playwright scripts for browser validation.
 - Tests live with their owning project under `<project>/tests/`. Save new tests in that project's `tests/` directory.
 
 ## Platform Integration
 
-The platform (`src/`, forked from OrchardCore, namespaces still `OrchardCore.*`) is Crest's own code. When it lacks something Crest needs, change it there rather than wrapping, shimming or copying it.
+The platform (the projects forked from OrchardCore and renamed `Crest.*`, listed in `Crest.Build/Platform.Projects.props`) is Crest's own code. When it lacks something Crest needs, change it there rather than wrapping, shimming or copying it.
 
 - Prefer native platform APIs before adding `api/crest/*`: Contents REST, GraphQL, Query API, OpenID/JWT, Media, Taxonomies, Users, and existing admin services/controllers.
 - Keep Crest server thin: JSON adapters over platform services only; do not duplicate the platform's content-definition, permissions, display-driver, or API framework.

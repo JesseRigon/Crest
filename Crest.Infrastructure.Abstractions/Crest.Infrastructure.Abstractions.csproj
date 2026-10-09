@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Infrastructure</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest Infrastructure Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for PlatformCMS Infrastructure </Description>
+    <PackageTags>$(PackageTags) PlatformCMS Infrastructure Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ResourceManagement.Abstractions\Crest.ResourceManagement.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

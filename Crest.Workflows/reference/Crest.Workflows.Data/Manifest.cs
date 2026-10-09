@@ -1,10 +1,10 @@
-using OrchardCore.Modules.Manifest;
+using Crest.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Workflows Data",
-    Author = ManifestConstants.OrchardCoreTeam,
-    Website = ManifestConstants.OrchardCoreWebsite,
-    Version = ManifestConstants.OrchardCoreVersion
+    Author = ManifestConstants.PlatformTeam,
+    Website = ManifestConstants.PlatformWebsite,
+    Version = ManifestConstants.PlatformVersion
 )]
 
 [assembly: Feature(

@@ -1,4 +1,4 @@
-using OrchardCore.Modules.Manifest;
+using Crest.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Workflows Contents",
@@ -12,5 +12,5 @@ using OrchardCore.Modules.Manifest;
     Name = "Content Activities",
     Description = "Content triggers (created, published, ...) carrying the acting user, and content tasks.",
     Category = "Crest.Workflows",
-    Dependencies = ["Crest.Workflows", "OrchardCore.Contents", "OrchardCore.Title"]
+    Dependencies = ["Crest.Workflows", "Crest.Contents", "Crest.Title"]
 )]

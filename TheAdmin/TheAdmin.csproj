@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+
+    <!-- NuGet properties-->
+    <Title>The Admin theme</Title>
+    <Description>$(OCCMSDescription)
+
+    The default Admin theme of Crest CMS</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Theme</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.AdminMenu\Crest.AdminMenu.csproj" />
+    <ProjectReference Include="..\Crest.Contents\Crest.Contents.csproj" />
+    <ProjectReference Include="..\Crest.Lists\Crest.Lists.csproj" />
+    <ProjectReference Include="..\Crest.AdminMenu.Abstractions\Crest.AdminMenu.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Theme.Targets\Crest.Theme.Targets.csproj" />
+    <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
+    <ProjectReference Include="..\Crest.Admin\Crest.Admin.csproj" />
+    <ProjectReference Include="..\Crest.Themes\Crest.Themes.csproj" />
+    <ProjectReference Include="..\Crest.Users.Core\Crest.Users.Core.csproj" />
+  </ItemGroup>
+
+</Project>

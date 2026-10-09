@@ -1,0 +1,9 @@
+namespace Crest.Environment.Shell.Builders;
+
+public interface IShellPipeline
+{
+    /// <summary>
+    /// Executes this shell pipeline.
+    /// </summary>
+    Task Invoke(object context);
+}

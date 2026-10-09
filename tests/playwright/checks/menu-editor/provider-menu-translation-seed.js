@@ -9,7 +9,7 @@
 // items.
 //
 // Assertions run against both halves of the pipeline: the store itself (via GetStrings, the
-// JSON endpoint Orchard's own translations editor loads from) and the served sidebar (the
+// JSON endpoint Crest's own translations editor loads from) and the served sidebar (the
 // navigation API, which resolves captions through IDataLocalizer per request culture).
 //
 // A fresh setup tenant supports en-US and es-ES, so es-ES needs no provisioning here.

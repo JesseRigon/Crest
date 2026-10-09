@@ -1,0 +1,11 @@
+@using Crest.DisplayManagement.Views
+@using Crest.Indexing.Models
+
+@model ShapeViewModel<Crest.Indexing.Models.IndexProfile>
+
+<a asp-action="QueryIndex"
+   asp-route-indexName="@Model.Value.Name"
+   asp-action="Query"
+   asp-controller="Admin"
+   asp-area="Crest.Lucene"
+   class="dropdown-item btn-sm">@T["Query Index"]</a>

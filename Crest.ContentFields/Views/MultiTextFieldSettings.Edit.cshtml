@@ -1,0 +1,36 @@
+@model Crest.ContentFields.ViewModels.MultiTextFieldSettingsViewModel
+
+@{
+    var translations = Platform.GetJSLocalizations("content-fields-options-editor");
+    var translationsJson = Json.Serialize(translations).ToString();
+}
+
+<div class="ocat-wrapper">
+    <div class="ocat-end-offset">
+        <div class="form-check">
+            <input asp-for="Required" type="checkbox" class="form-check-input">
+            <label class="form-check-label" asp-for="Required">@T["Required"]</label>
+            <span class="hint dashed">@T["Whether a value is required."]</span>
+        </div>
+    </div>
+</div>
+
+<div class="ocat-limited-wrapper">
+    <label asp-for="Hint" class="ocat-label">@T["Hint"]</label>
+    <div class="ocat-limited">
+        <textarea asp-for="Hint" rows="2" class="form-control"></textarea>
+        <span class="hint">@T["The hint text to display for this field on the editor."]</span>
+    </div>
+</div>
+
+<script asp-src="~/Crest.Resources/Scripts/vue-draggable.umd.min.js" debug-src="~/Crest.Resources/Scripts/vue-draggable.umd.js" asp-name="vue-draggable" at="Foot" depends-on="vuejs"></script>
+<style asp-src="~/Crest.ContentFields/Styles/optionsEditor.min.css" debug-src="~/Crest.ContentFields/Styles/optionsEditor.css"></style>
+
+<script asp-src="~/Crest.ContentFields/Scripts/options-editor-fields/options-editor-fields.min.js" debug-src="~/Crest.ContentFields/Scripts/options-editor-fields/options-editor-fields.js" at="Foot" depends-on="vuejs, vue-draggable" type="module"></script>
+
+<div id="@Html.IdFor(m => m)" class="options-editor-wrapper" data-options="@Model.Options" data-options-input-id="@Html.IdFor(m => m.Options)" data-options-input-name="@Html.NameFor(m => m.Options)" data-translations="@translationsJson">
+    <div class="ocat-limited-wrapper">
+        <label asp-for="Options" class="ocat-label">@T["Options"]</label>
+        <div class="ocat-limited options-table-editor-mount"></div>
+    </div>
+</div>

@@ -186,7 +186,7 @@ The subtree expansion is not wired into the scope machinery yet — see
   **Organization** — the party model ([parties.md](parties.md)) carries the
   relationship; the user record carries authentication and roles. The
   user↔Person link is built on both sides: `Person.PortalUser` is a
-  real `UserPickerField` (indexed via `OrchardCore.ContentFields.Indexing.SQL.
+  real `UserPickerField` (indexed via `Crest.ContentFields.Indexing.SQL.
   UserPicker`, so "which person is this account" is a query —
   `IPartyUserLinkService.FindPersonIdForUserAsync`), and
   `Crest.Members.CreateMemberAsync` writes it through
@@ -273,7 +273,7 @@ the hierarchy store), diverge deliberately and document why.
 
 - **Member portal login**: per-organization portal surface; local tenant
   accounts and/or external identity providers (Google, GitHub, …) exactly as
-  the tenant configures them — the stock OrchardCore.Users external
+  the tenant configures them — the stock Crest.Users external
   authentication features, with auto-provisioning creating the member-class
   user on first sign-in (class + org binding assigned by the portal's
   registration flow, never by the raw external callback).
@@ -308,13 +308,13 @@ Verified against the vendored OrchardCore source:
 ## How it is built (against the vendored source)
 
 Everything below cites verified mechanics — file paths and seams confirmed in
-the platform source (`src/`, then the OrchardCore fork).
+the platform source (and before it the OrchardCore fork).
 
 ### A. Class marker foundation
 
 - The class is a POCO in `User.Properties` via the stock entity-aspect pattern
   (`EntityExtensions.GetOrCreate<T>/Alter<T>/TryGet<T>`, keyed by type name —
-  OrchardCore.Entities). NOT the Custom User Settings feature: verified those
+  Crest.Entities). NOT the Custom User Settings feature: verified those
   are unqueryable (`CustomUserSettingsService` enumerates every user in
   memory).
 - Stamped in `IUserEventHandler.CreatingAsync` — fires in `UserStore.CreateAsync`

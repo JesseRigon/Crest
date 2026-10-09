@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Crest.Services;
-using OrchardCore.Recipes.Models;
-using OrchardCore.Recipes.Services;
+using Crest.Recipes.Models;
+using Crest.Recipes.Services;
 
 namespace Crest.Recipes;
 

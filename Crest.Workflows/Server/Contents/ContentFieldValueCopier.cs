@@ -2,9 +2,9 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Dynamic;
 using System.Text.Json.Nodes;
-using OrchardCore.ContentManagement;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Metadata.Models;
+using Crest.ContentManagement;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Models;
 
 namespace Crest.Workflows.Contents;
 
@@ -141,7 +141,7 @@ public sealed class ContentFieldValueCopier(IContentDefinitionManager definition
 
     /// <summary>
     /// Writes the field's JSON (null clears it) and re-applies a typed field element over it:
-    /// a field element Orchard has already handed out keeps the values it was deserialized
+    /// a field element Crest has already handed out keeps the values it was deserialized
     /// with, not the node's, so the node alone would leave the item's own reader (the service
     /// building its response) seeing the old value. Apply replaces the cached element and
     /// drops the item's cached parts.

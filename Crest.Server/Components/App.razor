@@ -26,7 +26,7 @@
 
     Admin head assets are tenant-root-absolute _content/* static-web-asset URLs
     (served by MapStaticAssets inside the tenant pipeline), deliberately independent
-    of the admin <base href> and composed via Asset() on Orchard's tenant base so
+    of the admin <base href> and composed via Asset() on Crest's tenant base so
     URL-prefixed tenants resolve them correctly - the old wasm/index.html +
     CopyCrestSharedAssets flattened copies are retired with the middleware's shell
     serving.
@@ -46,9 +46,9 @@
         <base href="@_adminBaseHref" />
         <meta name="crest-tenant-base" content="@_tenantBasePath" />
         <link id="crest-radzen-theme" rel="stylesheet" href="@Asset("/_content/Crest.Components/css/material-base.css")" />
-        <link rel="stylesheet" href="@Asset("/OrchardCore.Resources/Vendor/fontawesome-free/css/all.min.css")" />
-        <link rel="stylesheet" href="@Asset("/OrchardCore.Resources/Vendor/fontawesome-free/css/v4-shims.min.css")" />
-        <link rel="stylesheet" href="@Asset("/OrchardCore.Resources/Vendor/fontawesome-free/css/v5-font-face.min.css")" />
+        <link rel="stylesheet" href="@Asset("/Crest.Resources/Vendor/fontawesome-free/css/all.min.css")" />
+        <link rel="stylesheet" href="@Asset("/Crest.Resources/Vendor/fontawesome-free/css/v4-shims.min.css")" />
+        <link rel="stylesheet" href="@Asset("/Crest.Resources/Vendor/fontawesome-free/css/v5-font-face.min.css")" />
         <link rel="stylesheet" href="@Asset("/_content/Crest.AdminTheme.Client/CrestAdmin.DesignSystem.Default.css")" />
         <link rel="stylesheet" href="@Asset("/_content/Crest.Components/CrestComponents.css")" />
         <link rel="stylesheet" href="@Asset("/_content/Crest.Components/Crest.Components.bundle.scp.css")" />
@@ -64,7 +64,7 @@
         <base href="@_adminBaseHref" />
         <meta name="crest-tenant-base" content="@_tenantBasePath" />
         <link id="crest-radzen-theme" rel="stylesheet" href="@Asset("/_content/Crest.Components/css/material-base.css")" />
-        <link rel="stylesheet" href="@Asset("/OrchardCore.Resources/Vendor/fontawesome-free/css/all.min.css")" />
+        <link rel="stylesheet" href="@Asset("/Crest.Resources/Vendor/fontawesome-free/css/all.min.css")" />
         <link rel="stylesheet" href="@Asset("/_content/Crest.Components/CrestComponents.css")" />
         <link rel="stylesheet" href="@Asset("/_content/Crest.Components/Crest.Components.bundle.scp.css")" />
         <link rel="stylesheet" href="@Asset("/_content/Crest.MemberTheme.Client/CrestMember.css")" />
@@ -125,7 +125,7 @@
     private IOptions<global::Crest.Routing.MemberOptions> MemberOptions { get; set; } = default!;
 
     [Inject]
-    private OrchardCore.Settings.ISiteService SiteService { get; set; } = default!;
+    private Crest.Settings.ISiteService SiteService { get; set; } = default!;
 
     // The tenant's own name for the shell documents' <title> (docs/branding.md: the display
     // name IS ISite.SiteName), not the platform's.
@@ -139,7 +139,7 @@
     private IComponentRenderMode _renderMode = RenderMode.InteractiveAuto;
 
     // Head/body asset URLs are tenant-root-absolute (deliberately independent of the
-    // admin <base href> - see the header comment), composed on Orchard's tenant base
+    // admin <base href> - see the header comment), composed on Crest's tenant base
     // so they survive URL-prefixed tenants: "/_content/x" becomes "/tenant2/_content/x".
     private string Asset(string path) => _tenantBasePath + path;
 
@@ -150,7 +150,7 @@
 
     protected override void OnInitialized()
     {
-        // Orchard's own layer of the request base: the tenant RequestUrlPrefix (plus
+        // Crest's own layer of the request base: the tenant RequestUrlPrefix (plus
         // any host-level PathBase), WITHOUT Crest's admin shell base. For admin-shell
         // requests the middleware stashes the pre-shift value; for site requests
         // PathBase was never shifted, so it IS the tenant base.

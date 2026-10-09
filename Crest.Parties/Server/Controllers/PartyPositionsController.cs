@@ -3,8 +3,8 @@ using Crest.Parties.Services;
 using Crest.Parties.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.ContentManagement;
-using OrchardCore.Contents;
+using Crest.ContentManagement;
+using Crest.Contents;
 
 namespace Crest.Parties.Controllers;
 
@@ -83,6 +83,6 @@ public sealed class PartyPositionsController(
         return Ok(await positions.ListPeopleAsync(organization!.ContentItemId, HttpContext.RequestAborted));
     }
 
-    private Task<(ContentItem? Party, ActionResult? Failure)> LoadPersonAsync(string partyId, OrchardCore.Security.Permissions.Permission permission) =>
+    private Task<(ContentItem? Party, ActionResult? Failure)> LoadPersonAsync(string partyId, Crest.Security.Permissions.Permission permission) =>
         PartyRequests.LoadAsync(contentManager, authorizationService, User, partyId, permission, PartiesConstants.ContentTypes.Person);
 }

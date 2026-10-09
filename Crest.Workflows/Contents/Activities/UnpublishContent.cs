@@ -4,11 +4,11 @@ using Crest.Workflows.Activities.Flowchart.Attributes;
 using Crest.Workflows.Attributes;
 using Crest.Workflows.Models;
 using JetBrains.Annotations;
-using OrchardCore.ContentManagement;
+using Crest.ContentManagement;
 
 namespace Crest.Workflows.Contents.Activities;
 
-[Activity("OrchardCore.Content", "Content", "Unpublish a content item.")]
+[Activity("Crest.Content", "Content", "Unpublish a content item.")]
 [FlowNode("Unpublished", "Not Found", "Done")]
 [UsedImplicitly]
 public class UnpublishContent : CodeActivity<ContentItem>

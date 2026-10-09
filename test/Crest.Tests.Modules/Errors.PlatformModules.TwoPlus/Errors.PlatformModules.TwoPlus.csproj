@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\..\Crest.Build\Crest.Commons.props" />
+  <Import Project="..\..\..\Crest.Module.Targets\Crest.Module.Targets.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(CommonTargetFrameworks)</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Crest.Abstractions\Crest.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Should error on Type="module" with or without the property, i.e. defaults to "module" -->
+    <PlatformAttributes Include="$(MSBuildProjectName).One"
+                           Type="module"
+                           ModuleType="two"
+                           Category="three"
+                           Priority="4"
+                           Description="five"
+                           Author="six"
+                           Version="7.8.9"
+                           Website="oc://twoormoremodules.prop"
+                           Dependencies="nine;ten;eleven"
+                           Tags="ten;eleven;twelve" />
+    <PlatformAttributes Include="$(MSBuildProjectName).Two"
+                           ModuleType="three"
+                           Category="four"
+                           Priority="5"
+                           Description="six"
+                           Author="seven"
+                           Version="8.9.10"
+                           Website="oc://twoormoremodules.prop"
+                           Dependencies="ten;eleven;twelve"
+                           Tags="eleven;twelve;thirteen" />
+  </ItemGroup>
+
+  <Import Project="..\..\..\Crest.Module.Targets\Crest.Module.Targets.targets" />
+  <Import Project="..\..\..\Crest.Build\Crest.Commons.targets" />
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Crest.Abstractions.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>

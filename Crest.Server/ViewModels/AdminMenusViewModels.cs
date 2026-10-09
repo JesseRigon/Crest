@@ -4,12 +4,14 @@ using Crest.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.AdminMenu.AdminNodes;
-using OrchardCore.AdminMenu.Models;
-using OrchardCore.AdminMenu.Services;
-using OrchardCore.Navigation;
+using Crest.AdminMenu.AdminNodes;
+using Crest.AdminMenu.Models;
+using Crest.AdminMenu.Services;
+using Crest.Navigation;
 
 namespace Crest.ViewModels;
+
+using AdminMenu = Crest.AdminMenu.Models.AdminMenu;
 
 public sealed record AdminMenusState(AdminMenuSummary[] Menus);
 
@@ -99,7 +101,7 @@ public sealed record AdminMenuNodeSummary(
     {
         var itemOverride = layout.Items.FirstOrDefault(layoutItem => string.Equals(layoutItem.ItemKey, item.Key, StringComparison.Ordinal));
         // The "originally called X" hint shown next to a renamed item. Resolved by Id from
-        // the pre-override menu tree, whose captions Orchard just localized for THIS
+        // the pre-override menu tree, whose captions Crest just localized for THIS
         // request - never from a stored copy. The layout document is identity-only by
         // design: persisting a caption there would bake whatever culture the renaming
         // admin happened to be using into the tenant's layout, and from there into its
@@ -133,7 +135,7 @@ public sealed record AdminMenuNodeSummary(
             item.Items.Select((child, index) => From(child, layout, layoutService, item.Key, depth + 1, index, originalTextsById)).ToArray());
     }
 
-    // Id -> the item's own, un-overridden caption as Orchard localized it for this
+    // Id -> the item's own, un-overridden caption as Crest localized it for this
     // request. Built from the base menu before any layout override is applied.
     public static Dictionary<string, string> CollectOriginalTexts(IEnumerable<NavigationItem> items)
     {

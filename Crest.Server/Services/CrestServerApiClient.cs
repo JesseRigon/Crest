@@ -9,7 +9,7 @@ namespace Crest.Services;
 /// SSR/InteractiveServer phases of InteractiveAuto. Admin components keep calling
 /// api/crest/* over the same scoped HttpClient abstraction in every render context;
 /// here the browser isn't making the request, so the current user's identity has to be
-/// forwarded explicitly: the incoming request's Cookie header (Orchard auth cookie +
+/// forwarded explicitly: the incoming request's Cookie header (Crest auth cookie +
 /// antiforgery cookie + culture cookie) is captured once per scope and attached to
 /// every outgoing loopback request, and the antiforgery request token is fetched
 /// through the same forwarded cookie exactly like the WASM handler does - no browser
@@ -82,7 +82,7 @@ public sealed class CrestForwardedAuthHandler(IHttpContextAccessor httpContextAc
             using var response = await base.SendAsync(request, cancellationToken);
             response.EnsureSuccessStatusCode();
             _token = await response.Content.ReadFromJsonAsync<CrestAntiforgeryToken>(cancellationToken)
-                ?? throw new InvalidOperationException("Orchard did not return an antiforgery token.");
+                ?? throw new InvalidOperationException("Crest did not return an antiforgery token.");
             return _token;
         }
         finally

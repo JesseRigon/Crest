@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\..\Crest.Build\Crest.Commons.props" />
+  <Import Project="..\..\..\Crest.Theme.Targets\Crest.Theme.Targets.props" />
+  <Import Project="..\..\..\Crest.Module.Targets\Crest.Module.Targets.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(CommonTargetFrameworks)</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Crest.Theme.Targets\Crest.Theme.Targets.csproj" />
+    <ProjectReference Include="..\..\..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+  </ItemGroup>
+
+  <!-- TODO: TBD: do we need to import both MODULE+THEME targets? -->
+  <Import Project="..\..\..\Crest.Module.Targets\Crest.Module.Targets.targets" />
+  <Import Project="..\..\..\Crest.Theme.Targets\Crest.Theme.Targets.targets" />
+  <Import Project="..\..\..\Crest.Build\Crest.Commons.targets" />
+
+  <ItemGroup>
+    <PlatformAttributes Include="$(MSBuildProjectName).One"
+                           Type="theme"
+                           Base="two"
+                           Category="three"
+                           Priority="4"
+                           Description="five"
+                           Author="six"
+                           Version="7.8.9"
+                           Website="oc://twoormorethemes.prop"
+                           Dependencies="nine;ten;eleven"
+                           Tags="ten;eleven;twelve" />
+    <PlatformAttributes Include="$(MSBuildProjectName).Two"
+                           Type="theme"
+                           Base="three"
+                           Category="four"
+                           Priority="5"
+                           Description="six"
+                           Author="seven"
+                           Version="8.9.10"
+                           Website="oc://twoormorethemes.prop"
+                           Dependencies="ten;eleven;twelve"
+                           Tags="eleven;twelve;thirteen" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Crest.Abstractions.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>

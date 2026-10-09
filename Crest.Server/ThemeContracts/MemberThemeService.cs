@@ -1,6 +1,6 @@
-using OrchardCore.Entities;
-using OrchardCore.Environment.Extensions;
-using OrchardCore.Settings;
+using Crest.Entities;
+using Crest.Environment.Extensions;
+using Crest.Settings;
 
 namespace Crest.Themes;
 
@@ -11,12 +11,12 @@ public sealed class CrestMemberThemeSettings
 }
 
 /// <summary>
-/// The member-shell counterpart of Orchard's <c>ISiteThemeService</c> and
+/// The member-shell counterpart of Crest's <c>ISiteThemeService</c> and
 /// <c>IAdminThemeService</c>.
 /// </summary>
 /// <remarks>
-/// Orchard has a site theme and an admin theme and no member theme, so Crest keeps this
-/// one setting itself, in the site settings where Orchard keeps the other two. Without it a
+/// Crest has a site theme and an admin theme and no member theme, so Crest keeps this
+/// one setting itself, in the site settings where Crest keeps the other two. Without it a
 /// member theme could only be "selected" by making it the site theme - which would put the
 /// member theme on the public site.
 /// </remarks>

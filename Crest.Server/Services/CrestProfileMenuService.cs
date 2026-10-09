@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using OrchardCore.AdminMenu.Services;
-using OrchardCore.Navigation;
+using Crest.AdminMenu.Services;
+using Crest.Navigation;
 using Crest.Controllers;
 using Crest.Icons;
 using Crest.ViewModels;
@@ -20,8 +20,8 @@ namespace Crest.Services;
 // There can be MORE THAN ONE User-placement menu, by design: different menus are gated by
 // different node-level permissions (e.g. one for editors, one for admins), and a user who
 // has access to several should see the union of everything they're authorized for - the
-// same way OrchardCore's own admin sidebar merges every enabled AdminMenu document into
-// one tree (AdminMenuNavigationProvidersCoordinator.BuildNavigationAsync, upstream OrchardCore.AdminMenu
+// same way Crest's own admin sidebar merges every enabled AdminMenu document into
+// one tree (AdminMenuNavigationProvidersCoordinator.BuildNavigationAsync, the platform's Crest.AdminMenu
 // module: it iterates ALL enabled menus into one shared NavigationBuilder, then
 // permission-filters the merged result once). This service mirrors that exact
 // merge-then-filter shape rather than picking a single menu.

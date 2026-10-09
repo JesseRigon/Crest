@@ -1,0 +1,96 @@
+using Fluid;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Crest.ContentManagement;
+using Crest.ContentManagement.Display.ContentDisplay;
+using Crest.Data.Migration;
+using Crest.DisplayManagement;
+using Crest.Forms.Activities;
+using Crest.Forms.Drivers;
+using Crest.Forms.Filters;
+using Crest.Forms.Models;
+using Crest.Forms.Services;
+using Crest.Localization;
+using Crest.Modules;
+using Crest.Workflows.Platform.Helpers;
+
+namespace Crest.Forms;
+
+public sealed class Startup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.Configure<TemplateOptions>(o =>
+        {
+            o.MemberAccessStrategy.Register<FormPart>();
+            o.MemberAccessStrategy.Register<FormElementPart>();
+            o.MemberAccessStrategy.Register<FormInputElementPart>();
+            o.MemberAccessStrategy.Register<LabelPart>();
+            o.MemberAccessStrategy.Register<InputPart>();
+            o.MemberAccessStrategy.Register<SelectPart>();
+            o.MemberAccessStrategy.Register<TextAreaPart>();
+            o.MemberAccessStrategy.Register<ButtonPart>();
+        });
+
+        services.Configure<MvcOptions>(options =>
+        {
+            options.Filters.Add<ExportModelStateAttribute>();
+            options.Filters.Add<ImportModelStateAttribute>();
+            options.Filters.Add<ImportModelStatePageFilter>();
+        });
+
+        services.AddScoped<IContentDisplayDriver, FormContentDisplayDriver>();
+
+        services.AddContentPart<FormPart>()
+            .UseDisplayDriver<FormPartDisplayDriver>();
+
+        services.AddContentPart<FormElementPart>()
+            .UseDisplayDriver<FormElementPartDisplayDriver>();
+
+        services.AddContentPart<FormInputElementPart>()
+            .UseDisplayDriver<FormInputElementPartDisplayDriver>();
+
+        services.AddContentPart<FormInputElementVisibilityPart>()
+            .UseDisplayDriver<FormInputElementVisibilityPartDisplayDriver>();
+
+        services.AddContentPart<LabelPart>()
+            .UseDisplayDriver<LabelPartDisplayDriver>();
+
+        services.AddContentPart<ButtonPart>()
+            .UseDisplayDriver<ButtonPartDisplayDriver>();
+
+        services.AddContentPart<InputPart>()
+            .UseDisplayDriver<InputPartDisplayDriver>();
+
+        services.AddContentPart<SelectPart>()
+            .UseDisplayDriver<SelectPartDisplayDriver>();
+
+        services.AddContentPart<TextAreaPart>()
+            .UseDisplayDriver<TextAreaPartDisplayDriver>();
+
+        services.AddContentPart<ValidationSummaryPart>()
+            .UseDisplayDriver<ValidationSummaryPartDisplayDriver>();
+
+        services.AddContentPart<ValidationPart>()
+            .UseDisplayDriver<ValidationPartDisplayDriver>();
+
+        services.AddContentPart<FormElementLabelPart>()
+            .UseDisplayDriver<FormElementLabelPartDisplayDriver>();
+
+        services.AddContentPart<FormElementValidationPart>()
+            .UseDisplayDriver<FormElementValidationPartDisplayDriver>();
+
+        services.AddDataMigration<Migrations>();
+        services.AddShapeTableProvider<FormShapeTableProvider>();
+        services.AddScoped<IJSLocalizer, FormsJSLocalizer>();
+    }
+}
+
+[RequireFeatures("Crest.Workflows")]
+public sealed class WorkflowStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddActivity<HttpRedirectToFormLocationTask>();
+    }
+}

@@ -1,0 +1,60 @@
+using Microsoft.Extensions.Localization;
+using Crest.ContentManagement;
+using Crest.Workflows.Platform.Abstractions.Models;
+using Crest.Workflows.Platform.Activities;
+using Crest.Workflows.Platform.Models;
+using Crest.Workflows.Platform.Services;
+
+namespace Crest.Contents.Workflows.Activities;
+
+public class PublishContentTask : ContentTask
+{
+    public PublishContentTask(
+        IContentManager contentManager,
+        IWorkflowScriptEvaluator scriptEvaluator,
+        IStringLocalizer<PublishContentTask> localizer)
+        : base(contentManager, scriptEvaluator, localizer)
+    {
+    }
+
+    public override string Name => nameof(PublishContentTask);
+
+    public override LocalizedString DisplayText => S["Publish Content Task"];
+
+    public override LocalizedString Category => S["Content"];
+
+    public override IEnumerable<Outcome> GetPossibleOutcomes(WorkflowExecutionContext workflowContext, ActivityContext activityContext)
+        => Outcome(S["Published"], S["Noop"]);
+
+    public override async Task<ActivityExecutionResult> ExecuteAsync(WorkflowExecutionContext workflowContext, ActivityContext activityContext)
+    {
+        var content = (await GetContentAsync(workflowContext))
+            ?? throw new InvalidOperationException($"The '{nameof(PublishContentTask)}' failed to retrieve the content item.");
+
+        if (!content.HasDraft())
+        {
+            return Outcome("Noop");
+        }
+
+        var contentItem = await ContentManager.GetAsync(content.ContentItem.ContentItemId, VersionOptions.DraftRequired);
+
+        if (contentItem == null)
+        {
+            if (content is ContentItemIdExpressionResult)
+            {
+                throw new InvalidOperationException($"The '{nameof(PublishContentTask)}' failed to retrieve the content item.");
+            }
+
+            contentItem = content.ContentItem;
+        }
+
+        if (InlineEvent.IsStart && InlineEvent.ContentType == contentItem.ContentType && InlineEvent.Name == nameof(ContentPublishedEvent))
+        {
+            throw new InvalidOperationException($"The '{nameof(PublishContentTask)}' can't publish the content item as it is executed inline from a starting '{nameof(ContentPublishedEvent)}' of the same content type, which would result in an infinitive loop.");
+        }
+
+        await ContentManager.PublishAsync(contentItem);
+
+        return Outcome("Published");
+    }
+}

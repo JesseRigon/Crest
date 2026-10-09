@@ -1,4 +1,4 @@
-using OrchardCore.DisplayManagement.Shapes;
+using Crest.DisplayManagement.Shapes;
 
 namespace Crest.ViewModels;
 

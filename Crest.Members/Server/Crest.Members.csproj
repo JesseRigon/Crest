@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.props" />
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -7,28 +7,26 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.ContentFields\OrchardCore.ContentFields.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.ContentManagement\OrchardCore.ContentManagement.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.Contents\OrchardCore.Contents.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Data\OrchardCore.Data.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Infrastructure.Abstractions\OrchardCore.Infrastructure.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Roles.Core\OrchardCore.Roles.Core.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.Users\OrchardCore.Users.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Users.Core\OrchardCore.Users.Core.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.ContentFields\Crest.ContentFields.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.ContentManagement\Crest.ContentManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Contents\Crest.Contents.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Data\Crest.Data.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Roles.Core\Crest.Roles.Core.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Users\Crest.Users.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Users.Core\Crest.Users.Core.csproj" />
     <PackageReference Include="YesSql.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../Domain/Crest.Members.Domain.csproj" />
     <ProjectReference Include="../../Crest.Parties/Server/Crest.Parties.csproj" />
-    <ProjectReference Include="../../Crest.Server/Crest.csproj" />
+    <ProjectReference Include="../../Crest.Server/Crest.Server.csproj" />
     <ProjectReference Include="../../Crest.ContentPartLists/Crest.ContentPartLists.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Crest.Members.Tests" />
   </ItemGroup>
-
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
 </Project>

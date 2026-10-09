@@ -1,0 +1,17 @@
+@model Crest.Layers.ViewModels.WidgetWrapper
+@using Crest.Layers.Models
+
+@{
+    Model.Widget.TryGet<LayerMetadata>(out var layerMetadata);
+}
+
+<div class="widget-container">
+    @if (layerMetadata.RenderTitle)
+    {
+    <div class="widget-container-title">
+        <h2>@Model.Widget.DisplayText</h2>
+    </div>
+    }
+
+    @await DisplayAsync(Model.Content)
+</div>

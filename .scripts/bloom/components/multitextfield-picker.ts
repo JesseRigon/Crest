@@ -1,6 +1,6 @@
 import { getTranslations, setTranslations } from "../helpers/localizations";
 
-// OrchardCore.ContentFields' MultiTextField-Picker.Edit.cshtml: a static-options (no async
+// Crest.ContentFields' MultiTextField-Picker.Edit.cshtml: a static-options (no async
 // search), taggable vue-multiselect - structurally distinct from the async-search family covered
 // by multiselect-picker.ts (no draggable list, no server round-trip, options are supplied
 // up-front from the field's settings).

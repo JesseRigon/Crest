@@ -1,0 +1,24 @@
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer T
+@inject Crest.IPlatformHelper Platform
+
+<!DOCTYPE html>
+<html lang="@Platform.CultureName()" dir="@Platform.CultureDir()">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@T["Setup"]</title>
+    <link type="image/x-icon" rel="shortcut icon" href="~/Crest.Setup/favicon.ico" />
+    <link type="text/css" rel="stylesheet" href="~/Crest.Setup/Styles/setup.min.css" />
+    <link type="text/css" rel="stylesheet" href="~/Crest.Resources/Vendor/fontawesome-free/css/all.min.css" />
+    @await RenderSectionAsync("Header", required: false)
+</head>
+<body>
+    <div class="container">
+        @RenderBody()
+        <footer>
+            @await RenderSectionAsync("Footer", required: false)
+        </footer>
+    </div>
+</body>
+</html>

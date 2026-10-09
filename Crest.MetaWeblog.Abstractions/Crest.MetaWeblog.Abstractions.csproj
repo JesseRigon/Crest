@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.MetaWeblog</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest MetaWeblog</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for MetaWeblog.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Infrastructure</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.XmlRpc.Abstractions\Crest.XmlRpc.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -10,9 +10,9 @@ using Microsoft.Extensions.Options;
 using Crest.Routing;
 using Crest.Services;
 using Crest.Extensions;
-using OrchardCore.Admin;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Environment.Shell.Scope;
+using Crest.Admin;
+using Crest.Environment.Shell;
+using Crest.Environment.Shell.Scope;
 
 namespace Crest.Middlewares;
 
@@ -21,7 +21,7 @@ public sealed class BlazorAdminThemeOptions
     // Defaults match AdminOptions.AdminUrlPrefix / UserOptions.LoginPath's own stock
     // defaults ("Admin" / "Login") - BlazorAdminThemeOptionsConfiguration below
     // overrides these from the tenant's real, configured values (recipe/appsettings,
-    // "OrchardCore_Admin"/"OrchardCore_Users" shell config sections) so a tenant that
+    // "Crest_Admin"/"Crest_Users" shell config sections) so a tenant that
     // customizes either path doesn't silently break admin-theme routing. These
     // property defaults only apply if that PostConfigure step is somehow skipped.
     public string AdminPath { get; set; } = "/admin";
@@ -29,10 +29,10 @@ public sealed class BlazorAdminThemeOptions
     public string LogoutPath { get; set; } = "/users/logoff";
 }
 
-// Keeps BlazorAdminThemeOptions.AdminPath/LoginPath/LogoutPath in sync with Orchard's own,
+// Keeps BlazorAdminThemeOptions.AdminPath/LoginPath/LogoutPath in sync with Crest's own,
 // real, tenant-configurable settings (AdminOptions.AdminUrlPrefix, UserOptions.LoginPath,
 // UserOptions.LogoffPath - all bound from shell config, e.g. a recipe's
-// "OrchardCore_Admin"/"OrchardCore_Users" sections) instead of Crest hardcoding its
+// "Crest_Admin"/"Crest_Users" sections) instead of Crest hardcoding its
 // own copies that silently drift if a tenant customizes any of them. Runs as
 // IPostConfigureOptions so it applies after BlazorAdminThemeOptions' own
 // IConfigureOptions (currently just the no-op in Startup.cs, but this keeps the
@@ -40,7 +40,7 @@ public sealed class BlazorAdminThemeOptions
 // CrestCultureCookieOptionsConfiguration for the same pattern and its rationale).
 internal sealed class BlazorAdminThemeOptionsConfiguration(
     IOptions<AdminOptions> adminOptions,
-    IOptions<OrchardCore.Users.UserOptions> userOptions) : IPostConfigureOptions<BlazorAdminThemeOptions>
+    IOptions<Crest.Users.UserOptions> userOptions) : IPostConfigureOptions<BlazorAdminThemeOptions>
 {
     public void PostConfigure(string? name, BlazorAdminThemeOptions options)
     {
@@ -66,7 +66,7 @@ internal sealed class BlazorAdminThemeOptionsConfiguration(
 //      on the tenant PathBase);
 //   3. authentication + per-route authorization for admin Blazor pages, server-side,
 //      ahead of any rendering;
-//   4. the shell-base shift that bridges Orchard's tenant-configured admin prefix to
+//   4. the shell-base shift that bridges Crest's tenant-configured admin prefix to
 //      MapRazorComponents' compile-time route table, mirroring how
 //      ModularTenantRouterMiddleware handles the tenant's own RequestUrlPrefix:
 //      PathBase += shellBase, Path = the @page literal ("/Admin/Features" ->
@@ -83,7 +83,7 @@ internal sealed class BlazorAdminThemeOptionsConfiguration(
 //      get a Path-ONLY strip instead - see the comment at that branch for why
 //      PathBase (and therefore cookie scoping) must stay at the tenant layer there.
 // Inserts BlazorAdminThemeMiddleware ahead of the tenant pipeline's UseRouting() -
-// OrchardCore applies IStartupFilters before it adds routing (ShellPipelineExtensions),
+// Crest applies IStartupFilters before it adds routing (ShellPipelineExtensions),
 // while module Configure() middlewares all land after, where a Request.Path rewrite
 // can no longer influence which endpoint was matched. See the registration comment in
 // Startup.ConfigureServices.
@@ -139,13 +139,13 @@ public sealed class BlazorAdminThemeMiddleware
         // shifted it there (PathBase += prefix, Path = remainder) before this tenant
         // pipeline was even invoked. Every absolute URL this middleware emits
         // (redirects) must be composed on top of it, and the shell-base shifts below
-        // append to it - mirroring exactly how Orchard itself layers the tenant prefix
+        // append to it - mirroring exactly how Crest itself layers the tenant prefix
         // on whatever PathBase the host (IIS virtual dir, reverse proxy) already set.
         var requestPathBase = context.Request.PathBase;
         var options = _options.Value;
         var adminPath = new PathString(options.AdminPath);
 
-        // Orchard's theme-gallery preview thumbnail. The wasm project is a Razor class
+        // Crest's theme-gallery preview thumbnail. The wasm project is a Razor class
         // library now, so its wwwroot (including Theme.png) is a static web asset
         // under _content/ - redirect rather than resurrecting a file-serving path here.
         if (requestPath.Equals(CrestAdminThemePreviewPath))
@@ -165,7 +165,7 @@ public sealed class BlazorAdminThemeMiddleware
         // request's PathBase, and every cookie must stay scoped to the TENANT base -
         // appending the shell base here scoped the auth cookie to "/Login" once,
         // making the just-logged-in session invisible to "/Admin" (an infinite
-        // login redirect loop). PathBase therefore stays exactly what Orchard set:
+        // login redirect loop). PathBase therefore stays exactly what Crest set:
         // the tenant layer. This must run before the page gating below:
         // "/Admin/_blazor" has no file extension and would otherwise be treated as a
         // page URL and rewritten to /legacy-host, killing the interactive circuit. No
@@ -194,7 +194,7 @@ public sealed class BlazorAdminThemeMiddleware
         // through auto-discovered @page literals - Login.razor's "@page "/login"" is a
         // WASM-router-relative route name, not a server path, so a tenant that
         // customizes LoginPath (e.g. "/signin") would otherwise never match here and
-        // would silently fall through to Orchard's own (unconfigured,
+        // would silently fall through to Crest's own (unconfigured,
         // Blazor-theme-incompatible) login flow. Subpaths under LoginPath match too:
         // the login shell serves exactly one page, but URLs like "/Login/login" reach
         // browsers anyway (the statically prerendered form's action is the middleware's
@@ -268,8 +268,8 @@ public sealed class BlazorAdminThemeMiddleware
         // API calls stay authorization-checked server-side like every other page's.
         if (isBlazorPageRoute && isAdminRoute && blazorRoute?.AllowsAnonymous != true)
         {
-            // Crest gates the admin shell before Orchard's later authentication
-            // middleware. Authenticate the same Orchard application cookie here
+            // Crest gates the admin shell before Crest's later authentication
+            // middleware. Authenticate the same Crest application cookie here
             // before making an early route decision.
             var authentication = await context.AuthenticateAsync(IdentityConstants.ApplicationScheme);
             if (authentication.Succeeded && authentication.Principal is not null)
@@ -303,7 +303,7 @@ public sealed class BlazorAdminThemeMiddleware
         // are separate by construction (each is a page in its own shell at its own base),
         // not by a runtime check on one shared page.
         //
-        // No route-permission check here, deliberately. Admin routes map to Orchard
+        // No route-permission check here, deliberately. Admin routes map to Crest
         // permissions, which is what CrestRouteAuthorizationService answers. A member's
         // reach is not a permission on a route - it is which organization they are acting
         // in and what their member class allows, which is per-record and belongs in the
@@ -359,7 +359,7 @@ public sealed class BlazorAdminThemeMiddleware
             : isMemberRoute
                 ? (isMemberBlazorRoute
                     // A member URL with no member page is a 404 inside the member shell,
-                    // not the admin legacy frame: that frame is Orchard's admin UI, which
+                    // not the admin legacy frame: that frame is Crest's admin UI, which
                     // a member has no business being shown.
                     ? (memberRemainder.HasValue ? memberRemainder : new PathString("/"))
                     : new PathString(MemberNotFoundRoute))
@@ -367,7 +367,7 @@ public sealed class BlazorAdminThemeMiddleware
                     ? (adminRemainder.HasValue ? adminRemainder : new PathString("/"))
                     : new PathString(LegacyHostRoute);
         // Every cookie stays scoped to the TENANT base (see the infrastructure branch above),
-        // and antiforgery's is no exception: Orchard leaves its Cookie.Path unset, so it
+        // and antiforgery's is no exception: Crest leaves its Cookie.Path unset, so it
         // follows the request's PathBase - which the shift below is about to extend with the
         // shell base. A page render issuing the cookie after the shift scoped it to "/Admin"
         // or "/Login", and the browser then never sent it to tenant-root endpoints such as the
@@ -419,7 +419,7 @@ public sealed class BlazorAdminThemeMiddleware
              // the controllers/hubs are actually mapped at. This is what lets the
              // client stay entirely base-relative (no origin-root or tenant-prefix
              // knowledge browser-side) and still work under URL-prefixed tenants.
-             // Orchard's own admin never routes "{AdminUrlPrefix}/api/..." (admin
+             // Crest's own admin never routes "{AdminUrlPrefix}/api/..." (admin
              // controller routes are "{prefix}/{area}/{controller}/...", and "api" is
              // not an area), so nothing legitimate is shadowed.
              remainder.StartsWithSegments("/api")))

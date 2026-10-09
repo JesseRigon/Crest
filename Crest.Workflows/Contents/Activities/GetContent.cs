@@ -4,11 +4,11 @@ using Crest.Workflows.Activities.Flowchart.Attributes;
 using Crest.Workflows.Attributes;
 using Crest.Workflows.Models;
 using JetBrains.Annotations;
-using OrchardCore.ContentManagement;
+using Crest.ContentManagement;
 
 namespace Crest.Workflows.Contents.Activities;
 
-[Activity("OrchardCore.Content", "Content", "Get an existing content item.")]
+[Activity("Crest.Content", "Content", "Get an existing content item.")]
 [FlowNode("Found", "Not Found")]
 [UsedImplicitly]
 public class GetContent : CodeActivity<ContentItem>

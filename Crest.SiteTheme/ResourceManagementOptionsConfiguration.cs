@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
-using OrchardCore.ResourceManagement;
+using Crest.ResourceManagement;
 
-namespace OrchardCore.Themes.Crest.SiteTheme;
+namespace Crest.Themes.Crest.SiteTheme;
 
 public sealed class ResourceManagementOptionsConfiguration : IConfigureOptions<ResourceManagementOptions>
 {

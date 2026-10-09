@@ -50,8 +50,8 @@
 }
 
 ::deep .admin-titlebar__tenant-selector .rz-dropdown-trigger .crest-icon,
-::deep .admin-titlebar__tenant-selector .rz-dropdown-trigger .orchard-icon,
-::deep .admin-titlebar__tenant-selector .rz-state-highlight .orchard-icon {
+::deep .admin-titlebar__tenant-selector .rz-dropdown-trigger .platform-icon,
+::deep .admin-titlebar__tenant-selector .rz-state-highlight .platform-icon {
     color: var(--crest-color-accent-1, #2f6f4e);
 }
 
@@ -73,7 +73,7 @@
     font-weight: 600;
 }
 
-::deep .admin-titlebar__culture-selector .orchard-icon,
+::deep .admin-titlebar__culture-selector .platform-icon,
 ::deep .admin-titlebar__culture-selector .rz-dropdown-trigger .crest-icon {
     color: var(--crest-color-accent-1, #2f6f4e);
 }

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using OrchardCore.Environment.Extensions.Features;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Environment.Shell.Descriptor;
+using Crest.Environment.Extensions.Features;
+using Crest.Environment.Shell;
+using Crest.Environment.Shell.Descriptor;
 using Crest.ViewModels;
 using Crest.Themes;
 
@@ -14,14 +14,14 @@ namespace Crest.Controllers;
 public sealed class FeaturesController(
     IShellDescriptorManager shellDescriptorManager,
     IShellFeaturesManager shellFeaturesManager,
-    OrchardCore.Environment.Extensions.IExtensionManager extensionManager,
+    Crest.Environment.Extensions.IExtensionManager extensionManager,
     IShellCompatibilityService shellCompatibility,
     IAuthorizationService authorizationService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<Feature[]>> List()
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.Features.FeaturesPermissions.ManageFeatures)) return Forbid();
+        if (!await authorizationService.AuthorizeAsync(User, Crest.Features.FeaturesPermissions.ManageFeatures)) return Forbid();
         var descriptor = await shellDescriptorManager.GetShellDescriptorAsync();
         var enabledIds = descriptor.Features
             .Select(feature => feature.Id)
@@ -47,7 +47,7 @@ public sealed class FeaturesController(
     [HttpPost("{id}/enable")]
     public async Task<IActionResult> Enable(string id)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.Features.FeaturesPermissions.ManageFeatures))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.Features.FeaturesPermissions.ManageFeatures))
         {
             return Forbid();
         }
@@ -81,7 +81,7 @@ public sealed class FeaturesController(
     [HttpPost("{id}/disable")]
     public async Task<IActionResult> Disable(string id)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.Features.FeaturesPermissions.ManageFeatures))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.Features.FeaturesPermissions.ManageFeatures))
         {
             return Forbid();
         }

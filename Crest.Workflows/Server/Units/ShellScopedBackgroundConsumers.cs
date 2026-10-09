@@ -9,8 +9,8 @@ using Crest.Workflows.Management;
 using Crest.Workflows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Environment.Shell.Scope;
+using Crest.Environment.Shell;
+using Crest.Environment.Shell.Scope;
 
 namespace Crest.Workflows.Units;
 
@@ -19,8 +19,8 @@ namespace Crest.Workflows.Units;
 /// on workflows, audit 2026-10-01). The engine registers hosted services for its
 /// <c>CommandStrategy.Background</c> commands (DispatchWorkflow, BulkDispatchWorkflows, the
 /// background stimulus and event dispatchers) and background notifications, but a tenant
-/// container's hosted services are never started by Orchard, and the engine's consumers would
-/// run each message in a bare service scope where no Orchard transaction commits. This reads
+/// container's hosted services are never started by Crest, and the engine's consumers would
+/// run each message in a bare service scope where no Crest transaction commits. This reads
 /// the same channels and runs each message in a shell scope of its own - one unit, with the
 /// after-commit queue, hooks and background jobs all working. Started when the tenant
 /// activates, stopped when it terminates.

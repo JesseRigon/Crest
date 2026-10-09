@@ -1,14 +1,14 @@
 # Crest.Workflows.UI
 
-Provides UI-related workflow activities for Orchard Core.
+Provides UI-related workflow activities for Crest.
 
 ## Features
 
-This module adds user interface interaction capabilities to Elsa workflows, enabling workflows to communicate with users through the Orchard Core UI.
+This module adds user interface interaction capabilities to Elsa workflows, enabling workflows to communicate with users through the Crest UI.
 
 ### UI Activities
 
-**DisplayNotification** - Display notifications to users in the Orchard Core admin interface
+**DisplayNotification** - Display notifications to users in the Crest admin interface
 
 This activity allows workflows to:
 - Show success, information, warning, or error messages
@@ -39,7 +39,7 @@ The module supports various notification styles:
 
 ## Installation
 
-Enable the **UI Activities** feature in the Orchard Core admin dashboard under Features.
+Enable the **UI Activities** feature in the Crest admin dashboard under Features.
 
 ## Package Information
 

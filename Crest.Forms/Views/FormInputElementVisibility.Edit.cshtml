@@ -1,0 +1,24 @@
+@using Crest.Forms.Models
+@using Crest.Forms.ViewModels
+@using System.Text.Json
+
+@model FormInputElementVisibilityViewModel
+
+<div class="ocat-wrapper">
+    <label asp-for="Action" class="ocat-label">@T["Action"]</label>
+    <div class="ocat-end">
+        <select asp-for="Action" asp-items="Model.Actions" class="form-select"></select>
+        <span class="hint">@T["The action to take when the condition is met."]</span>
+    </div>
+</div>
+
+<div class="input-visibility-settings d-none" data-prefix="@Html.NameForModel()">
+    <div class="main-group-container"
+         data-prefix="@Html.NameForModel()"
+         data-model="@JsonSerializer.Serialize(Model, JOptions.CamelCase)">
+    </div>
+</div>
+
+<script asp-name="form-visibility" asp-src="~/Crest.Forms/Scripts/form-visibility.min.js" debug-src="~/Crest.Forms/Scripts/form-visibility.js" at="Foot" depends-on="vuejs"> </script>
+
+<script asp-src="~/Crest.Forms/Scripts/form-input-element-visibility/form-input-element-visibility.min.js" debug-src="~/Crest.Forms/Scripts/form-input-element-visibility/form-input-element-visibility.js" depends-on="vuejs, form-visibility" at="Foot" type="module"></script>

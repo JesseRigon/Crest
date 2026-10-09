@@ -1,0 +1,23 @@
+@using Crest.Admin.Models
+@using Crest.DisplayManagement
+@using Crest.DisplayManagement.ModelBinding
+@using Crest.DisplayManagement.Zones
+
+@inject IDisplayManager<Navbar> DisplayManager
+@inject IUpdateModelAccessor UpdateModelAccessor
+
+@if (Model.Content == null)
+{
+    var shape = await DisplayManager.BuildDisplayAsync(UpdateModelAccessor.ModelUpdater, (string)Model.Metadata.DisplayType);
+
+    if (!shape.TryGetProperty<IShape>("Content", out var content))
+    {
+        return;
+    }
+
+    Model.Content = content;
+}
+
+<ul class="navbar-nav user-top-navbar">
+    @await DisplayAsync(Model.Content)
+</ul>

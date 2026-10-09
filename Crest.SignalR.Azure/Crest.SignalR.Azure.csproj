@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <!-- NuGet properties-->
+    <Title>Crest SignalR Azure Backplane</Title>
+    <Description>
+      $(OCFrameworkDescription)
+
+      Routes SignalR messages across application nodes through the Azure SignalR Service, keeping the base SignalR module free of Azure dependencies.
+    </Description>
+    <PackageTags>$(PackageTags) PlatformFramework SignalR Azure</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.SignalR" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Crest.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,31 @@
+<Project ToolsVersion="15.0" Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(CommonTargetFrameworks)</TargetFrameworks>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- Disable XML comment warning on single file Program -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
+  <Target Name="EnsureWwwRootExists" BeforeTargets="Build;Publish">
+    <MakeDir Directories="$(MSBuildProjectDirectory)\wwwroot" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Application.Mvc.Targets\Crest.Application.Mvc.Targets.csproj" />
+    <ProjectReference Include="..\Crest.HealthChecks\Crest.HealthChecks.csproj" />
+    <ProjectReference Include="..\Crest.Mvc.HelloWorld\Crest.Mvc.HelloWorld.csproj" />
+  </ItemGroup>
+
+  <!-- Necessary as we reference the Project and not the Package -->
+  <Import Project="..\Crest.Application.Targets\Crest.Application.Targets.targets" />
+
+  <Import Project="..\Crest.Build\Crest.Commons.targets" />
+
+</Project>

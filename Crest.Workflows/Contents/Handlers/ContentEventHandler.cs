@@ -1,6 +1,6 @@
 using Crest.Workflows;
 using Crest.Workflows.Runtime;
-using OrchardCore.ContentManagement.Handlers;
+using Crest.ContentManagement.Handlers;
 using Crest.Workflows.Contents.Activities;
 using Crest.Workflows.Contents.Stimuli;
 using Crest.Workflows.Contexts;
@@ -8,7 +8,7 @@ using Crest.Workflows.Contexts;
 namespace Crest.Workflows.Contents.Handlers;
 
 /// <summary>
-/// Turns Orchard content events into engine stimuli, queued to fire after commit. Every
+/// Turns Crest content events into engine stimuli, queued to fire after commit. Every
 /// stimulus carries the acting user snapshot (<see cref="WorkflowUserContext.InputKey"/>)
 /// so triggers and the RequirePermission activity can decide with the real principal, and
 /// the content item id as correlation id so one item's flows can be found together.

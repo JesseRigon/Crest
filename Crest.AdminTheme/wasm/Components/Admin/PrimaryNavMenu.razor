@@ -829,7 +829,7 @@
 
     private RenderFragment RenderPanelActionIcon(CrestPanelMenuActionIconContext context) => builder =>
     {
-        builder.OpenComponent<OrchardIcon>(0);
+        builder.OpenComponent<PlatformIcon>(0);
         builder.AddAttribute(1, "IconKey", context.IconKey);
         builder.AddAttribute(2, "Name", GetIconNameFromKey(context.IconKey));
         builder.AddAttribute(3, "Library", "iconify.mdi");
@@ -841,7 +841,7 @@
 
     private RenderFragment RenderChromeIcon(DisplayIcon? icon, string cssClass, string title) => builder =>
     {
-        builder.OpenComponent<OrchardIcon>(0);
+        builder.OpenComponent<PlatformIcon>(0);
         builder.AddAttribute(1, "IconKey", icon?.Key);
         builder.AddAttribute(2, "Name", icon?.Name);
         builder.AddAttribute(3, "Library", icon?.Library);

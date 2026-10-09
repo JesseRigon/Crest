@@ -1,6 +1,6 @@
 using Crest.Members.Models;
-using OrchardCore.Entities;
-using OrchardCore.Users.Models;
+using Crest.Entities;
+using Crest.Users.Models;
 using YesSql.Indexes;
 
 namespace Crest.Members.Indexes;

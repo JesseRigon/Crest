@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using OrchardCore.Media;
+using Crest.Media;
 
 namespace Crest.ViewModels;
 

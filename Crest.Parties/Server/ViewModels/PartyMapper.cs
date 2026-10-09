@@ -1,6 +1,6 @@
 using Crest.Parties.Constants;
 using Crest.Parties.Services;
-using OrchardCore.ContentManagement;
+using Crest.ContentManagement;
 
 namespace Crest.Parties.ViewModels;
 

@@ -1,0 +1,14 @@
+@model Crest.Taxonomies.ViewModels.DisplayTaxonomyFieldViewModel
+@using Crest.Mvc.Utilities
+
+@{
+    var name = (Model.PartFieldDefinition.PartDefinition.Name + "-" + Model.PartFieldDefinition.Name).HtmlClassify();
+}
+
+<div class="field field-type-taxonomyfield field-name-@name">
+    @foreach (var contentItemId in Model.TermContentItemIds)
+    {
+        var term = await Platform.GetTaxonomyTermAsync(Model.TaxonomyContentItemId, contentItemId);
+        <span class="taxonomy-term">@term</span>
+    }
+</div>

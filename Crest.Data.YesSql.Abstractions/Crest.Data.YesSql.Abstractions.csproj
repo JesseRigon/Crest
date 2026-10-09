@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Data.YesSql</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest Data YesSql Abstractions</Title>
+    <Description>
+      $(OCCMSDescription)
+
+      Provides abstractions over data access functionality using YesSql
+    </Description>
+    <PackageTags>$(PackageTags) PlatformCMS Data</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YesSql.Abstractions" />
+  </ItemGroup>
+
+</Project>

@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.Templates;
-using OrchardCore.Templates.Models;
-using OrchardCore.Templates.Services;
-using TemplatesPermissions = OrchardCore.Templates.Permissions;
+using Crest.Templates;
+using Crest.Templates.Models;
+using Crest.Templates.Services;
+using TemplatesPermissions = Crest.Templates.Permissions;
 
 namespace Crest.ViewModels;
 

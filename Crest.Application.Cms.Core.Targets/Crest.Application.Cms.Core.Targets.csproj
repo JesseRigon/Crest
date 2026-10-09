@@ -1,0 +1,140 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Target for Modular Crest CMS Application</Title>
+    <Description>
+      $(OCCMSDescription)
+
+      Converts the application into a modular Crest CMS application with TheAdmin theme but without any front-end Themes.
+    </Description>
+    <PackageTags>$(PackageTags) PlatformCMS CMS</PackageTags>
+  </PropertyGroup>
+
+  <!-- Add ".props" and ".targets" files in the package specific to the "Cms.Core" bundle -->
+
+  <ItemGroup>
+    <None Include="Crest.Application.Cms.Core.Targets.props" Pack="true">
+      <PackagePath>build\Crest.Application.Cms.Core.Targets.props</PackagePath>
+    </None>
+    <None Include="Crest.Application.Cms.Core.Targets.targets" Pack="true">
+      <PackagePath>build\Crest.Application.Cms.Core.Targets.targets</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <!--
+    When a package is not directly referenced, e.g only through the reference of this bundle package,
+    the files in its build folder are not evaluated on building if this folder is marked as private.
+    This can be defined by using the 'PrivateAssets' attribute.
+
+    Here, only project references are used but when packing the bundle they become package references,
+    and with the same 'PrivateAssets' attribute.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Application.Targets\Crest.Application.Targets.csproj" PrivateAssets="none" />
+
+    <!--
+      When adding a reference to this list, please keep it ordered alphabetically, and set PrivateAssets="none"
+    -->
+    <ProjectReference Include="..\Crest.Admin\Crest.Admin.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.AdminDashboard\Crest.AdminDashboard.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.AdminMenu\Crest.AdminMenu.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Alias\Crest.Alias.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Antivirus\Crest.Antivirus.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Apis.GraphQL\Crest.Apis.GraphQL.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.ArchiveLater\Crest.ArchiveLater.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.AuditTrail\Crest.AuditTrail.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Autoroute\Crest.Autoroute.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.AutoSetup\Crest.AutoSetup.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.BackgroundTasks\Crest.BackgroundTasks.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.ContentFields\Crest.ContentFields.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.ContentLocalization\Crest.ContentLocalization.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.ContentPreview\Crest.ContentPreview.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Contents\Crest.Contents.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.ContentTypes\Crest.ContentTypes.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Cors\Crest.Cors.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.CustomSettings\Crest.CustomSettings.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.DataProtection.Azure\Crest.DataProtection.Azure.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Deployment\Crest.Deployment.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Deployment.Remote\Crest.Deployment.Remote.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Diagnostics\Crest.Diagnostics.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.DynamicCache\Crest.DynamicCache.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Email\Crest.Email.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Email.Azure\Crest.Email.Azure.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Email.Smtp\Crest.Email.Smtp.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Facebook\Crest.Facebook.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Features\Crest.Features.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Feeds\Crest.Feeds.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Flows\Crest.Flows.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Forms\Crest.Forms.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.GitHub\Crest.GitHub.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Google\Crest.Google.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.HealthChecks\Crest.HealthChecks.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.HomeRoute\Crest.HomeRoute.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Html\Crest.Html.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Https\Crest.Https.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Indexing\Crest.Indexing.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Infrastructure\Crest.Infrastructure.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Layers\Crest.Layers.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Liquid\Crest.Liquid.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Lists\Crest.Lists.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Localization\Crest.Localization.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.DataLocalization\Crest.DataLocalization.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Markdown\Crest.Markdown.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Media\Crest.Media.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Media.AmazonS3\Crest.Media.AmazonS3.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Media.Azure\Crest.Media.Azure.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Media.ImageSharpV3\Crest.Media.ImageSharpV3.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Media.Indexing.OpenXML\Crest.Media.Indexing.OpenXML.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Media.Indexing.Pdf\Crest.Media.Indexing.Pdf.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Microsoft.Authentication\Crest.Microsoft.Authentication.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.MiniProfiler\Crest.MiniProfiler.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Menu\Crest.Menu.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Notifications\Crest.Notifications.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.OpenApi\Crest.OpenApi.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.OpenId\Crest.OpenId.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Placements\Crest.Placements.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.PublishLater\Crest.PublishLater.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Queries\Crest.Queries.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.RateLimits\Crest.RateLimits.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.ReCaptcha\Crest.ReCaptcha.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Recipes\Crest.Recipes.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Redis\Crest.Redis.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Resources\Crest.Resources.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.ResponseCompression\Crest.ResponseCompression.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.UrlRewriting\Crest.UrlRewriting.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.ReverseProxy\Crest.ReverseProxy.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Rules\Crest.Rules.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Roles\Crest.Roles.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Scripting\Crest.Scripting.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Search\Crest.Search.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.AzureAI\Crest.AzureAI.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Elasticsearch\Crest.Elasticsearch.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Lucene\Crest.Lucene.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Security\Crest.Security.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Seo\Crest.Seo.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Settings\Crest.Settings.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Setup\Crest.Setup.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.SignalR\Crest.SignalR.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.SignalR.Azure\Crest.SignalR.Azure.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.SignalR.Redis\Crest.SignalR.Redis.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Sitemaps\Crest.Sitemaps.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Shortcodes\Crest.Shortcodes.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Sms\Crest.Sms.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Sms.Azure\Crest.Sms.Azure.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Spatial\Crest.Spatial.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Taxonomies\Crest.Taxonomies.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Templates\Crest.Templates.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Tenants\Crest.Tenants.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Themes\Crest.Themes.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Title\Crest.Title.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Twitter\Crest.Twitter.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Users\Crest.Users.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Widgets\Crest.Widgets.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.XmlRpc\Crest.XmlRpc.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\TheAdmin\TheAdmin.csproj" PrivateAssets="none" />
+  </ItemGroup>
+
+</Project>

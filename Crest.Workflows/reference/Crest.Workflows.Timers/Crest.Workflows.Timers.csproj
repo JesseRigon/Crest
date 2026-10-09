@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.props" />
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <IsPackable>true</IsPackable>
         <PackageId>Crest.Workflows.Timers</PackageId>
-        <PackageTags>OrchardCore;Crest;Workflows;Timers</PackageTags>
-        <Description>Provides timer services and scheduling activities for Crest.Workflows workflows in Orchard Core. Includes Quartz.NET-based scheduling for clustered deployments.</Description>
+        <PackageTags>Crest;Crest;Workflows;Timers</PackageTags>
+        <Description>Provides timer services and scheduling activities for Crest.Workflows workflows in Crest. Includes Quartz.NET-based scheduling for clustered deployments.</Description>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations"/>
         <PackageReference Include="ncrontab"/>
-        <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.csproj" />
+        <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
         <PackageReference Include="Quartz"/>
     </ItemGroup>
 
@@ -21,6 +21,4 @@
         <PackageReference Include="Crest.Workflows.Scheduling.Quartz"/>
         <PackageReference Include="Crest.Workflows.Engine"/>
     </ItemGroup>
-
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
 </Project>

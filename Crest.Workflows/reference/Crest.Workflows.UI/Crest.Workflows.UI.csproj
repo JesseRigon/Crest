@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.props" />
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
         <IsPackable>true</IsPackable>
         <PackageId>Crest.Workflows.UI</PackageId>
-        <PackageTags>OrchardCore;Crest;Workflows;UI</PackageTags>
-        <Description>Provides UI-related workflow activities for Orchard Core. Includes activities for displaying notifications and interacting with the user interface.</Description>
+        <PackageTags>Crest;Crest;Workflows;UI</PackageTags>
+        <Description>Provides UI-related workflow activities for Crest. Includes activities for displaying notifications and interacting with the user interface.</Description>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,13 +16,11 @@
 
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations"/>
-        <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.DisplayManagement\OrchardCore.DisplayManagement.csproj" />
-        <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.csproj" />
+        <ProjectReference Include="$(PlatformSrcDir)Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+        <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
     </ItemGroup>
 
     <ItemGroup Label="Crest.Workflows">
         <PackageReference Include="Crest.Workflows.Engine"/>
     </ItemGroup>
-
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
 </Project>

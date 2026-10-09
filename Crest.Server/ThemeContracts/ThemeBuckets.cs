@@ -1,6 +1,6 @@
-using OrchardCore.DisplayManagement.Extensions;
-using OrchardCore.Environment.Extensions;
-using OrchardCore.Modules.Manifest;
+using Crest.DisplayManagement.Extensions;
+using Crest.Environment.Extensions;
+using Crest.Modules.Manifest;
 using Crest.Routing;
 
 namespace Crest.Themes;
@@ -9,14 +9,14 @@ namespace Crest.Themes;
 /// How a theme declares which shell it hosts, and how that declaration is read.
 /// </summary>
 /// <remarks>
-/// Manifest tags are the mechanism, because Orchard already reads them (<c>admin</c> and
+/// Manifest tags are the mechanism, because Crest already reads them (<c>admin</c> and
 /// <c>hidden</c> are honoured today): a theme tagged <c>admin</c> hosts the admin shell,
 /// one tagged <c>member</c> hosts the member shell, and one tagged neither is a site
 /// theme. <c>crest-blazor</c> marks a theme as hosting a Crest Blazor shell document rather
-/// than a classic Orchard view theme.
+/// than a classic Crest view theme.
 ///
 /// <para>
-/// <strong>Descendants count.</strong> Orchard's <c>BaseTheme</c> chain is exactly "a
+/// <strong>Descendants count.</strong> Crest's <c>BaseTheme</c> chain is exactly "a
 /// child fork with simple modifications": a child theme inherits its parent's shapes and
 /// assets, so <c>BaseTheme = "Crest.AdminTheme"</c> IS a compatible admin theme.
 /// Every check here walks that chain rather than comparing a single id - a fork is the
@@ -34,7 +34,7 @@ public static class ThemeBuckets
     /// <summary>The bucket a theme's manifest declares.</summary>
     /// <remarks>
     /// Site is the default for a theme that declares neither tag, which keeps every
-    /// existing Orchard site theme valid with no manifest change - the reason the site
+    /// existing Crest site theme valid with no manifest change - the reason the site
     /// shell deliberately has no bucket tag of its own.
     /// </remarks>
     public static RouteBucket GetBucket(IManifestInfo? manifest)
@@ -88,7 +88,7 @@ public static class ThemeBuckets
         }
     }
 
-    // Orchard reads BaseTheme from the theme's manifest attribute onto ThemeExtensionInfo.
+    // Crest reads BaseTheme from the theme's manifest attribute onto ThemeExtensionInfo.
     // A theme with no BaseTheme (or a non-theme extension) yields null, which ends the
     // walk - the common case, since most themes declare no base.
     private static IExtensionInfo? ResolveBaseTheme(IExtensionInfo extension, Func<string, IExtensionInfo?> resolve)

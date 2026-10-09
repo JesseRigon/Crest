@@ -1,6 +1,6 @@
 import { getTranslations, setTranslations } from "../helpers/localizations";
 
-// Shared by OrchardCore.Menu's MenuItemPermissionPart.Edit.cshtml and OrchardCore.AdminMenu's
+// Shared by Crest.Menu's MenuItemPermissionPart.Edit.cshtml and Crest.AdminMenu's
 // LinkAdminNode/PlaceholderAdminNode.Fields.TreeEdit.cshtml - both views ship byte-identical
 // X-Templates and Vue instances (menu-permission-picker.js / admin-menu-permission-picker.js),
 // differing only in the CustomEvent name they dispatch afterward. One shared component replaces
@@ -11,7 +11,7 @@ import { getTranslations, setTranslations } from "../helpers/localizations";
 // translation-editor.ts - rather than a .vue SFC (no SFC compilation exists anywhere in this
 // repo's shared bloom/ workspace). Display text goes through the IJSLocalizer /
 // getTranslations()-setTranslations() pattern (see
-// src/docs/reference/modules/Localize/javascript-localization.md) - each consuming module
+// docs/platform/reference/modules/Localize/javascript-localization.md) - each consuming module
 // registers its own IJSLocalizer under the shared "permission-picker" translation group.
 declare const Vue: {
     createApp(options: Record<string, unknown>): { mount(selector: string | Element): unknown };
@@ -47,7 +47,7 @@ export interface PermissionPickerConfig {
     // the "hook for other scripts" integration point each original file exposed under its own
     // event name (menu-permission-picker-created / admin-menu-permission-picker-created).
     createdEventName: string;
-    // Raw translations payload from Orchard.GetJSLocalizations("permission-picker"), seeded into
+    // Raw translations payload from Platform.GetJSLocalizations("permission-picker"), seeded into
     // the shared store via setTranslations() before this component reads any of it.
     translations: Record<string, string>;
 }

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Crest Response Compression</Title>
+    <Description>$(OCFrameworkDescription)
+
+    The Response Compression module provides the gzip compression.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
+  </ItemGroup>
+
+</Project>

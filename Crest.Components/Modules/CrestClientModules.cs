@@ -11,7 +11,7 @@ namespace Crest.Components.Modules;
 public sealed record CrestClientEnvironment(Uri ApiBaseAddress, Uri TenantBaseAddress);
 
 /// <summary>
-/// Orchard's antiforgery request token for the signed-in session, for a module's own
+/// Crest's antiforgery request token for the signed-in session, for a module's own
 /// HTTP clients: Crest APIs and module APIs behind the same cookie validate it on every
 /// unsafe request. Crest's own API client adds it by itself.
 /// </summary>

@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <!-- Domain is the server-free assembly (constants, DTO records, pure logic) shared
-       by Server and blazor-wasm - it must never reference OrchardCore or ASP.NET server
+       by Server and blazor-wasm - it must never reference Crest or ASP.NET server
        packages, or the blazor-wasm side stops being able to link it. -->
 
   <ItemGroup>

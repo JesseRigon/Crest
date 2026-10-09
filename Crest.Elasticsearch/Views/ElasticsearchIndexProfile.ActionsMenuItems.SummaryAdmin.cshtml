@@ -1,0 +1,17 @@
+@using Crest.DisplayManagement.Views
+@using Crest.Indexing.Models
+
+@model ShapeViewModel<Crest.Indexing.Models.IndexProfile>
+
+<a asp-controller="Admin"
+   asp-action="QueryIndex"
+   asp-route-indexName="@Model.Value.Name"
+   asp-area="Crest.Elasticsearch"
+   class="dropdown-item btn-sm">@T["Query Index"]</a>
+
+<a asp-controller="Admin"
+   asp-action="IndexInfo"
+   asp-route-id="@Model.Value.Id"
+   asp-controller="Admin"
+   asp-area="Crest.Elasticsearch"
+   class="dropdown-item btn-sm">@T["Index Info"]</a>

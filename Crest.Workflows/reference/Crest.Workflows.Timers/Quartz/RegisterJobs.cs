@@ -2,8 +2,8 @@ using Crest.Workflows.Scheduling.Quartz.Contracts;
 using Crest.Workflows.Scheduling.Quartz.Jobs;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.Environment.Shell.Scope;
-using OrchardCore.Modules;
+using Crest.Environment.Shell.Scope;
+using Crest.Modules;
 using Quartz;
 using QuartzIScheduler = Quartz.IScheduler;
 

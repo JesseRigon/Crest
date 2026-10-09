@@ -1,4 +1,4 @@
-using OrchardCore.Modules.Manifest;
+using Crest.Modules.Manifest;
 
 [assembly: Module(
     Author = "Crest (forked from Elsa Workflows, MIT)",
@@ -7,17 +7,17 @@ using OrchardCore.Modules.Manifest;
     Name = "Crest Workflows"
 )]
 
-// The engine. Depends on the stock OrchardCore.Workflows feature on purpose: the upstream
-// modules' workflow startups (Email, Users, Contents, ...) are gated on that feature id,
-// and the override route (docs/workflows.md) keeps them running while Crest replaces the
-// services behind them. No OpenID: the API rides the tenant cookie behind Crest's
+// The engine. The platform modules' workflow startups (Email, Users, Contents, ...) are
+// gated on this feature id and contribute their activities to the platform activity library
+// (Crest.Workflows.Platform.Abstractions), which this feature hosts and runs through the
+// engine (docs/workflows.md). No OpenID: the API rides the tenant cookie behind Crest's
 // antiforgery header and the ManageWorkflows permission (Security/CrestWorkflowsApiSecurityMiddleware).
 [assembly: Feature(
     Id = "Crest.Workflows",
     Name = "Crest Workflows",
-    Description = "Crest.Workflows 3 as the tenant's workflow engine: definitions as content items, per-shell stores, the Crest.Workflows API behind Orchard permissions.",
+    Description = "Crest.Workflows 3 as the tenant's workflow engine: definitions as content items, per-shell stores, the Crest.Workflows API behind Crest permissions.",
     Category = "Crest.Workflows",
-    Dependencies = ["OrchardCore.Contents", "OrchardCore.Workflows", "Crest"]
+    Dependencies = ["Crest.Contents", "Crest.Liquid", "Crest.Scripting", "Crest"]
 )]
 
 [assembly: Feature(

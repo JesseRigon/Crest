@@ -79,7 +79,7 @@ public sealed class CurrencyGlobalSchema : ICrestGlobalSchema
         return JsonSerializer.Deserialize<CurrenciesFile>(stream, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new CurrenciesFile();
     }
 
-    // OrchardCore.Module.Targets embeds files with ">" as the folder separator; a plain SDK embed uses "."; match either.
+    // Crest.Module.Targets embeds files with ">" as the folder separator; a plain SDK embed uses "."; match either.
     private static bool IsDataFile(string resourceName, string fileName) =>
         resourceName.EndsWith(">" + fileName, StringComparison.Ordinal)
         || resourceName.EndsWith("." + fileName, StringComparison.Ordinal)

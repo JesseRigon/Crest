@@ -5,8 +5,8 @@ using Crest.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Metadata.Models;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Models;
 
 namespace Crest.Controllers;
 
@@ -283,7 +283,7 @@ public sealed class OptionSourcesController(
 
     private Task<bool> CanViewAsync() => IsAuthorizedAsync(CrestContentPartListPermissions.ViewContentPartLists);
 
-    private async Task<bool> IsAuthorizedAsync(OrchardCore.Security.Permissions.Permission permission) =>
+    private async Task<bool> IsAuthorizedAsync(Crest.Security.Permissions.Permission permission) =>
         await authorizationService.AuthorizeAsync(User, permission);
 }
 

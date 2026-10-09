@@ -2,14 +2,14 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using NSubstitute;
 using Crest.Workflows.Contexts;
-using OrchardCore.Security;
-using OrchardCore.Security.Permissions;
+using Crest.Security;
+using Crest.Security.Permissions;
 using Xunit;
 
 namespace Crest.Workflows.Tests;
 
 // The acting-user snapshot: what a trigger captures in the request must rebuild into a
-// principal that Orchard's authorization sees exactly as the original - every claim,
+// principal that Crest's authorization sees exactly as the original - every claim,
 // including the ones other modules add (the user class and active organization),
 // so their handlers keep working on the background side.
 public class WorkflowUserContextTests

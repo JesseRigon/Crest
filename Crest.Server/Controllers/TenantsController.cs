@@ -1,15 +1,15 @@
 using Crest.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Environment.Shell.Removing;
-using OrchardCore.Tenants;
-using TenantsPermissions = OrchardCore.Tenants.Permissions;
+using Crest.Environment.Shell;
+using Crest.Environment.Shell.Removing;
+using Crest.Tenants;
+using TenantsPermissions = Crest.Tenants.Permissions;
 using Crest.ViewModels;
 
 namespace Crest.Controllers;
 
-// OrchardCore.Tenants is deliberately NOT declared in Crest's manifest
+// Crest.Tenants is deliberately NOT declared in Crest's manifest
 // Dependencies (unlike Contents/Media/Localization/etc. - see Manifest.cs) even though
 // this controller is reachable whenever the always-enabled Crest feature is present:
 // the Tenants feature is DefaultTenantOnly, so a hard dependency would be invalid (and

@@ -1,0 +1,30 @@
+using Crest;
+
+/// <summary>
+/// Provides an extension methods for <see cref="IPlatformHelper"/>.
+/// </summary>
+#pragma warning disable CA1050 // Declare types in namespaces
+public static class MediaPlatformHelperExtensions
+#pragma warning restore CA1050 // Declare types in namespaces
+{
+    private static readonly HashSet<string> s_imageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".bmp",
+        ".gif",
+        ".jpeg",
+        ".jpg",
+        ".png",
+        ".webp",
+    };
+
+    /// <summary>
+    /// Determines if a path is an image file.
+    /// </summary>
+    /// <param name="_">The <see cref="IPlatformHelper"/>.</param>
+    /// <param name="path">The path.</param>
+    /// <returns>true if the path is an image file. Otherwise false.</returns>
+    public static bool IsImageFile(this IPlatformHelper _, string path)
+    {
+        return s_imageExtensions.Contains(Path.GetExtension(path));
+    }
+}

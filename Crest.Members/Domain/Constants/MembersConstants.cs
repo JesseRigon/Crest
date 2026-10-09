@@ -55,9 +55,9 @@ public static class MemberSessionKeys
 }
 
 /// <summary>
-/// The member ROLE TEMPLATES: ordinary Orchard roles the tenant shapes in the normal
+/// The member ROLE TEMPLATES: ordinary Crest roles the tenant shapes in the normal
 /// role editor (tenant governs powers); an org binding names which template the member
-/// holds in that org. Never one Orchard role per organization - the roles document is a
+/// holds in that org. Never one Crest role per organization - the roles document is a
 /// single cached per-tenant blob and must not scale with org count.
 /// </summary>
 public static class MemberRoleTemplates

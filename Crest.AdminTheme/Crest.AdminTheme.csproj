@@ -1,18 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Theme.Targets\OrchardCore.Theme.Targets.props" />
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Theme.Targets\Crest.Theme.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.props" />
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>Crest.AdminTheme</AssemblyName>
     <RootNamespace>Crest.AdminTheme</RootNamespace>
-    <OrchardCoreCompatibilityVersion>4.0.0</OrchardCoreCompatibilityVersion>
+    <PlatformCompatibilityVersion>4.0.0</PlatformCompatibilityVersion>
     <CrestSecurityPatch>0</CrestSecurityPatch>
     <CrestBugPatch>0</CrestBugPatch>
-    <CrestVersion>$(OrchardCoreCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
-    <VersionPrefix>$(OrchardCoreCompatibilityVersion)</VersionPrefix>
-    <PackageVersion>$(OrchardCoreCompatibilityVersion)</PackageVersion>
+    <CrestVersion>$(PlatformCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
+    <VersionPrefix>$(PlatformCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(PlatformCompatibilityVersion)</PackageVersion>
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <FileVersion>4.0.0.0</FileVersion>
     <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
@@ -35,8 +35,8 @@
     <!-- Theme.Targets, not Module.Targets: sets ModuleType=Theme so IsTheme() is true at
          runtime and ThemeViewLocationExpanderProvider contributes this theme's Views/
          paths. See the same note in Crest.LegacyFrame.csproj. -->
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Theme.Targets\OrchardCore.Theme.Targets.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.DisplayManagement\OrchardCore.DisplayManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Theme.Targets\Crest.Theme.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
   </ItemGroup>
 
   <!-- Phase 8: the old BuildCrestAdminWasm Exec target (side-building the standalone
@@ -44,7 +44,4 @@
        admin client (wasm/Crest.AdminTheme.Client.csproj, now a Razor class
        library) builds as an ordinary member of the dependency graph via
        Crest.Server and the host app's WASM entry project. -->
-
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Theme.Targets\OrchardCore.Theme.Targets.targets" />
 </Project>

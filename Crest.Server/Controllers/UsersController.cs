@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Crest.Services;
-using OrchardCore.Users;
-using OrchardCore.Users.Indexes;
-using OrchardCore.Users.Models;
-using OrchardCore.Users.Services;
+using Crest.Users;
+using Crest.Users.Indexes;
+using Crest.Users.Models;
+using Crest.Users.Services;
 using YesSql;
 using Crest.ViewModels;
 
@@ -22,9 +22,9 @@ public sealed class CrestUsersController(UserManager<IUser> userManager, IUserSe
         if (!await authorization.AuthorizeAsync(User, UsersPermissions.ListUsers, new User())) return Forbid();
 
         // userManager.Users (IQueryableUserStore<TUser>) is unusable here - stock
-        // OrchardCore's UserStore never implements that interface, so the property
+        // Crest's UserStore never implements that interface, so the property
         // throws NotSupportedException regardless of tenant/data provider. Query the
-        // YesSql UserIndex directly instead (same pattern as OrchardCore.Users'
+        // YesSql UserIndex directly instead (same pattern as Crest.Users'
         // own AdminController), then materialize the matching User documents.
         var query = session.Query<User, UserIndex>();
         if (string.Equals(status, "enabled", StringComparison.OrdinalIgnoreCase)) query = query.Where(index => index.IsEnabled);

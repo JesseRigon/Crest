@@ -1,0 +1,131 @@
+using Microsoft.Extensions.Logging;
+using Crest.Environment.Extensions;
+using Crest.Environment.Extensions.Features;
+using Crest.Environment.Shell.Builders.Models;
+using Crest.Environment.Shell.Descriptor.Models;
+using Crest.Modules;
+
+namespace Crest.Environment.Shell.Builders;
+
+public class CompositionStrategy : ICompositionStrategy
+{
+    private readonly IExtensionManager _extensionManager;
+    private readonly ITypeFeatureProvider _typeFeatureProvider;
+    private readonly ILogger _logger;
+
+    public CompositionStrategy(
+        IExtensionManager extensionManager,
+        ITypeFeatureProvider typeFeatureProvider,
+        ILogger<CompositionStrategy> logger)
+    {
+        _extensionManager = extensionManager;
+        _typeFeatureProvider = typeFeatureProvider;
+        _logger = logger;
+    }
+
+    public async Task<ShellBlueprint> ComposeAsync(ShellSettings settings, ShellDescriptor descriptor)
+    {
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Composing blueprint");
+        }
+
+        var featureNames = descriptor.Features.Select(x => x.Id).ToHashSet();
+
+        var features = await _extensionManager.LoadFeaturesAsync(featureNames);
+
+        var entries = new Dictionary<Type, IEnumerable<IFeatureInfo>>();
+        var alwaysComposedTypes = new HashSet<Type>();
+
+        foreach (var feature in features)
+        {
+            if (feature.DefaultTenantOnly && !settings.IsDefaultShell())
+            {
+                _logger.LogError("Skipping feature '{FeatureName}' as it is allowed on the default tenant only.", feature.Id);
+
+                continue;
+            }
+
+            foreach (var exportedType in _typeFeatureProvider.GetTypesForFeature(feature))
+            {
+                if (RequiredStartupAttribute.IsRequiredForType(exportedType))
+                {
+                    continue;
+                }
+
+                var requiredFeatures = RequireFeaturesAttribute.GetRequiredFeatureNamesForType(exportedType);
+
+                if (!requiredFeatures.All(x => featureNames.Contains(x)))
+                {
+                    continue;
+                }
+
+                entries[exportedType] = entries.TryGetValue(exportedType, out var featureDependencies)
+                    ? featureDependencies.Append(feature).ToArray()
+                    : [feature];
+
+            }
+        }
+
+        var allFeatures = _extensionManager.GetFeatures();
+        foreach (var feature in allFeatures)
+        {
+            foreach (var exportedType in _typeFeatureProvider.GetTypesForFeature(feature))
+            {
+                if (!RequiredStartupAttribute.IsRequiredForType(exportedType))
+                {
+                    continue;
+                }
+
+                var requiredFeatures = RequireFeaturesAttribute.GetRequiredFeatureNamesForType(exportedType);
+
+                if (!requiredFeatures.All(x => featureNames.Contains(x)))
+                {
+                    continue;
+                }
+
+                alwaysComposedTypes.Add(exportedType);
+            }
+        }
+
+        if (alwaysComposedTypes.Count > 0)
+        {
+            var applicationFeature = allFeatures.FirstOrDefault(feature => feature.Id == Application.DefaultFeatureId)
+                ?? throw new InvalidOperationException($"The '{Application.DefaultFeatureId}' feature is not registered.");
+
+            foreach (var exportedType in alwaysComposedTypes)
+            {
+                entries[exportedType] = [applicationFeature];
+            }
+        }
+
+        var result = new ShellBlueprint
+        {
+            Settings = settings,
+            Descriptor = descriptor,
+            Dependencies = entries,
+        };
+
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Done composing blueprint");
+
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                _logger.LogTrace("Shell blueprint for tenant '{TenantName}' contains {TypeCount} type(s)", settings.Name, entries.Count);
+
+                foreach (var entry in entries)
+                {
+                    _logger.LogTrace("Type '{TypeName}' is provided by feature(s): {FeatureNames}", entry.Key.FullName, string.Join(", ", entry.Value.Select(f => f.Id)));
+                }
+
+                foreach (var feature in entries.Values.SelectMany(f => f).Select(f => f.Id).Distinct().OrderBy(f => f))
+                {
+                    _logger.LogTrace("Enabled feature: '{FeatureId}'", feature);
+                }
+            }
+        }
+
+        return result;
+    }
+}

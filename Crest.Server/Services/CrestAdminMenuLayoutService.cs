@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Text.Json.Serialization;
 using Crest.Controllers;
-using OrchardCore.AdminMenu.Models;
-using OrchardCore.AdminMenu.Services;
-using OrchardCore.Data.Documents;
-using OrchardCore.Documents;
+using Crest.AdminMenu.Models;
+using Crest.AdminMenu.Services;
+using Crest.Data.Documents;
+using Crest.Documents;
 using Crest.ViewModels;
 
 namespace Crest.Services;
@@ -180,9 +180,9 @@ public sealed class CrestAdminMenuLayoutService(
                 continue;
             }
 
-            // The input tree is already authorization-filtered by Orchard's
+            // The input tree is already authorization-filtered by Crest's
             // INavigationManager. A saved layout must never recreate a parent
-            // that Orchard omitted for this request. Keep an authorized child
+            // that Crest omitted for this request. Keep an authorized child
             // reachable if its saved parent is unavailable, but do not expose
             // that absent parent as a synthetic menu node.
             roots.Add(node);
@@ -805,10 +805,10 @@ public sealed class CrestPrimaryNavMenuSettings
     }
 }
 
-// An override row for a stock Orchard menu item, addressed purely by its stable
+// An override row for a stock Crest menu item, addressed purely by its stable
 // MenuItem.Id (ItemKey/ParentKey). Everything here is either identity or a deliberate
 // user authoring decision - notably there is NO copy of the item's own caption: that is
-// Orchard's, resolved per-request per-culture, and snapshotting it here made a tenant's
+// Crest's, resolved per-request per-culture, and snapshotting it here made a tenant's
 // layout (and its exported recipe) carry whatever language the admin happened to be
 // using when they last dragged something. DisplayText is the one caption in this type
 // and it is a genuine user-authored rename, not a snapshot.

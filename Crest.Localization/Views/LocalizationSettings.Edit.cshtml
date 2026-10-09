@@ -1,0 +1,45 @@
+@model LocalizationSettingsViewModel
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using System.Globalization
+
+@{
+    // ['fr-FR', 'en-US']
+    var supportedCultures = JConvert.SerializeObject(Model.Cultures
+        .Where(x => x.Supported)
+        .Select(c => c.CultureInfo.Name)
+        .ToArray());
+    var allCultures = JConvert.SerializeObject(Model.Cultures
+        .Select(c => new
+        {
+            Name = c.CultureInfo.Name,
+            DisplayName = !string.IsNullOrEmpty(c.CultureInfo.DisplayName)
+                ? c.CultureInfo.DisplayName
+                : c.CultureInfo.NativeName,
+            Supported = c.Supported,
+        })
+        .ToArray(), JsonSerializerOptions.Default);
+    var defaultCulture = Model.Cultures.FirstOrDefault(x => x.IsDefault).CultureInfo.Name;
+    var selectedCulture = Model.Cultures.Except(Model.Cultures.Where(x => x.Supported)).First().CultureInfo.Name;
+    var translations = Platform.GetJSLocalizations("localization-culture-settings-editor");
+    var translationsJson = Json.Serialize(translations).ToString();
+}
+
+<script asp-src="~/Crest.Localization/Scripts/localization-settings/localization-settings.min.js" debug-src="~/Crest.Localization/Scripts/localization-settings/localization-settings.js" at="Foot" depends-on="vuejs" type="module"></script>
+
+<div class="ocat-wrapper">
+    <label class="ocat-label">@T["Define which cultures are supported by the site."]</label>
+    <div class="ocat-end">
+        <div id="@Html.IdFor(m => m)" class="field-editor field-editor-predefinedlist localization-settings-wrapper" data-supported-cultures="@supportedCultures" data-all-cultures="@allCultures" data-default-culture="@defaultCulture" data-selected-culture="@selectedCulture" data-invariant-culture-display-name="@CultureInfo.InvariantCulture.DisplayName" data-translations="@translationsJson" data-supported-cultures-input-id="@Html.IdFor(m => m.SupportedCultures)" data-supported-cultures-input-name="@Html.NameFor(m => m.SupportedCultures)" data-default-culture-input-id="@Html.IdFor(m => m.DefaultCulture)" data-default-culture-input-name="@Html.NameFor(m => m.DefaultCulture)">
+        </div>
+    </div>
+</div>
+
+<div class="ocat-wrapper" asp-validation-class-for="FallBackToParentCultures">
+    <div class="ocat-end-offset">
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" asp-for="FallBackToParentCultures" />
+            <label class="form-check-label" asp-for="FallBackToParentCultures">@T["Fall back to parent culture(s)"]</label>
+        </div>
+    </div>
+</div>

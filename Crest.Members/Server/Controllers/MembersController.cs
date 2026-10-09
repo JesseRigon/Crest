@@ -82,7 +82,7 @@ public sealed class MembersController(
             return ValidationProblem(ModelState);
         }
 
-        var member = await memberService.GetAsync(((OrchardCore.Users.Models.User)created).UserId, HttpContext.RequestAborted);
+        var member = await memberService.GetAsync(((Crest.Users.Models.User)created).UserId, HttpContext.RequestAborted);
         return Ok(member);
     }
 

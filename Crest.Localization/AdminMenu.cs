@@ -1,0 +1,72 @@
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
+using Crest.Localization.Drivers;
+using Crest.Navigation;
+
+namespace Crest.Localization;
+
+/// <summary>
+/// Represents a localization menu in the admin site.
+/// </summary>
+public sealed class AdminMenu : AdminNavigationProvider
+{
+    private static readonly RouteValueDictionary s_routeValues = new()
+    {
+        { "area", "Crest.Settings" },
+        { "groupId", LocalizationSettingsDisplayDriver.GroupId },
+    };
+
+    internal readonly IStringLocalizer S;
+
+    /// <summary>
+    /// Creates a new instance of the <see cref="AdminMenu"/>.
+    /// </summary>
+    /// <param name="stringLocalizer">The <see cref="IStringLocalizer"/>.</param>
+    public AdminMenu(IStringLocalizer<AdminMenu> stringLocalizer)
+    {
+        S = stringLocalizer;
+    }
+
+    /// <inheritdocs />
+    protected override ValueTask BuildAsync(NavigationBuilder builder)
+    {
+        if (NavigationHelper.UseLegacyFormat())
+        {
+            builder
+               .Add(S["Configuration"], configuration => configuration
+                   .Add(S["Settings"], settings => settings
+                       .Add(S["Localization"], localization => localization
+                           .AddClass("localization")
+                           .Id("localization")
+                           .Add(S["Cultures"], S["Cultures"].PrefixPosition(), cultures => cultures
+                               .AddClass("cultures")
+                               .Id("cultures")
+                               .Action("Index", "Admin", s_routeValues)
+                               .Permission(LocalizationPermissions.ManageCultures)
+                               .LocalNav()
+                           )
+                       )
+                   )
+               );
+
+            return ValueTask.CompletedTask;
+        }
+
+        builder
+            .Add(S["Settings"], settings => settings
+                .Add(S["Localization"], S["Localization"].PrefixPosition(), localization => localization
+                    .AddClass("localization")
+                    .Id("localization")
+                    .Add(S["Cultures"], S["Cultures"].PrefixPosition(), cultures => cultures
+                        .AddClass("cultures")
+                        .Id("cultures")
+                        .Action("Index", "Admin", s_routeValues)
+                        .Permission(LocalizationPermissions.ManageCultures)
+                        .LocalNav()
+                    )
+                )
+            );
+
+        return ValueTask.CompletedTask;
+    }
+}

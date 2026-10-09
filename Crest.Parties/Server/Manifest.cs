@@ -1,4 +1,4 @@
-using OrchardCore.Modules.Manifest;
+using Crest.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Parties",
@@ -15,11 +15,11 @@ using OrchardCore.Modules.Manifest;
     Description = "Person and Organization party content types shared by every domain module, with bag-contained contact points and addresses.",
     Dependencies = [
         "Crest.Workflows",
-        "OrchardCore.Contents",
-        "OrchardCore.ContentFields",
-        "OrchardCore.ContentFields.Indexing.SQL.UserPicker",
-        "OrchardCore.Title",
-        "OrchardCore.Flows",
+        "Crest.Contents",
+        "Crest.ContentFields",
+        "Crest.ContentFields.Indexing.SQL.UserPicker",
+        "Crest.Title",
+        "Crest.Flows",
         "Crest.ContentPartLists",
         "Crest.Regions"
     ],

@@ -3,15 +3,15 @@ using Crest.ViewModels;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Logging;
-using OrchardCore.DisplayManagement;
-using OrchardCore.DisplayManagement.Descriptors;
-using OrchardCore.DisplayManagement.Implementation;
+using Crest.DisplayManagement;
+using Crest.DisplayManagement.Descriptors;
+using Crest.DisplayManagement.Implementation;
 
 namespace Crest.Services;
 
-// Participates in Orchard's own shape pipeline (DefaultHtmlDisplay.GetShapeBindingAsync
+// Participates in Crest's own shape pipeline (DefaultHtmlDisplay.GetShapeBindingAsync
 // tries every registered IShapeBindingResolver before the compiled ShapeTable) exactly
-// the way OrchardCore.Templates' TemplatesShapeBindingResolver overrides a shape's
+// the way Crest.Templates' TemplatesShapeBindingResolver overrides a shape's
 // rendering with tenant-stored Liquid - here the override renders a Blazor component with
 // .NET's own HtmlRenderer instead. Falls through (returns null) for every shape that isn't
 // a registered component name, so normal Liquid/Razor/Templates-resolved shapes are

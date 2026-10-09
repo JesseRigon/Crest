@@ -1,23 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.props" />
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <IsPackable>true</IsPackable>
         <PackageId>Crest.Workflows.Data</PackageId>
-        <PackageTags>OrchardCore;Crest;Workflows;Data</PackageTags>
+        <PackageTags>Crest;Crest;Workflows;Data</PackageTags>
         <Description>Provides Crest.Workflows workflow activities for data processing operations. Includes CSV file handling and data transformation activities.</Description>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations"/>
-        <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.csproj" />
+        <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
     </ItemGroup>
 
     <ItemGroup Label="Crest.Workflows">
         <PackageReference Include="Crest.Workflows.Data.Csv"/>
         <PackageReference Include="Crest.Workflows.Engine"/>
     </ItemGroup>
-
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
 </Project>

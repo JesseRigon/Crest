@@ -1,0 +1,51 @@
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
+
+namespace Crest.Workflows.Platform.Activities;
+
+using Crest.Workflows.Platform.Abstractions.Models;
+using Crest.Workflows.Platform.Models;
+using Crest.Workflows.Platform.Services;
+
+public class LogTask : TaskActivity<LogTask>
+{
+    private readonly ILogger _logger;
+    private readonly IWorkflowExpressionEvaluator _expressionEvaluator;
+    protected readonly IStringLocalizer S;
+
+    public LogTask(ILogger<LogTask> logger, IWorkflowExpressionEvaluator expressionEvaluator, IStringLocalizer<LogTask> localizer)
+    {
+        _logger = logger;
+        _expressionEvaluator = expressionEvaluator;
+        S = localizer;
+    }
+
+    public override LocalizedString DisplayText => S["Log Task"];
+
+    public override LocalizedString Category => S["Primitives"];
+
+    public LogLevel LogLevel
+    {
+        get => GetProperty(() => LogLevel.Information);
+        set => SetProperty(value);
+    }
+
+    public WorkflowExpression<string> Text
+    {
+        get => GetProperty(() => new WorkflowExpression<string>());
+        set => SetProperty(value);
+    }
+
+    public override IEnumerable<Outcome> GetPossibleOutcomes(WorkflowExecutionContext workflowContext, ActivityContext activityContext)
+        => Outcome(S["Done"]);
+
+    public override async Task<ActivityExecutionResult> ExecuteAsync(WorkflowExecutionContext workflowContext, ActivityContext activityContext)
+    {
+        var text = await _expressionEvaluator.EvaluateAsync(Text, workflowContext, null);
+        var logLevel = LogLevel;
+
+        _logger.Log(logLevel, 0, text, null, (state, error) => state.ToString());
+
+        return Outcome("Done");
+    }
+}

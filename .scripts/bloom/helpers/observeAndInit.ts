@@ -20,14 +20,14 @@ interface ObserveAndInitState {
 // shared observer instead of one per widget type.
 declare global {
     interface Window {
-        __orchardCoreObserveAndInit?: ObserveAndInitState;
+        __platformObserveAndInit?: ObserveAndInitState;
     }
 }
 
 const getState = (): ObserveAndInitState => {
-    window.__orchardCoreObserveAndInit ??= { registry: [], observer: null };
+    window.__platformObserveAndInit ??= { registry: [], observer: null };
 
-    return window.__orchardCoreObserveAndInit;
+    return window.__platformObserveAndInit;
 };
 
 const initExisting = (registration: Registration) => {

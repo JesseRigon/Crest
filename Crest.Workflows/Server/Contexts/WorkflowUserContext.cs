@@ -5,7 +5,7 @@ namespace Crest.Workflows.Contexts;
 /// <summary>
 /// The acting user at the moment a workflow was triggered, carried as workflow input under
 /// <see cref="InputKey"/>. Activities run on a background job with no HttpContext, so the
-/// principal is snapshotted as its claims (type + value) and rebuilt on demand: Orchard's
+/// principal is snapshotted as its claims (type + value) and rebuilt on demand: Crest's
 /// authorization pipeline - role permissions, the super user, the member class
 /// ceiling (which reads the class claim), the active-organization claim - then evaluates
 /// exactly as it would have in the request. Tenant name is included for logs and journals

@@ -3,8 +3,8 @@ using Crest.ViewModels;
 using Crest.Services;
 using Microsoft.AspNetCore.Http;
 using NSubstitute;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Localization;
+using Crest.Environment.Shell;
+using Crest.Localization;
 using Xunit;
 
 namespace Crest.Server.Tests;

@@ -287,7 +287,7 @@ public sealed class AuthApi(HttpClient http, ICrestAntiforgeryTokenStore antifor
             return null;
         }
 
-        // Orchard antiforgery tokens are user-bound. Renew after sign-in.
+        // Crest antiforgery tokens are user-bound. Renew after sign-in.
         antiforgery.Clear();
         return await response.Content.ReadFromJsonAsync<AuthUser>();
     }
@@ -1309,7 +1309,7 @@ public sealed record NavigationItem(
     // compute the same key independently from the same wire payload) - Text is
     // translated and must never be part of the match key.
     //
-    // TextKey is MenuItem.Text.Name, the untranslated S["..."] literal that OrchardCore's
+    // TextKey is MenuItem.Text.Name, the untranslated S["..."] literal that Crest's
     // own Merge matches on, so it does not vary by admin culture. Id is preferred because
     // it survives a caption being reworded; TextKey is the fallback for items whose
     // provider never set an Id, which would otherwise have no stable handle at all.
@@ -1596,7 +1596,7 @@ public sealed record AdminMenusState(AdminMenuSummary[] Menus)
     public static AdminMenusState Empty { get; } = new([]);
 }
 
-// Vanilla OrchardCore's own AdminMenu has no concept of placement — every custom menu it
+// Vanilla Crest's own AdminMenu has no concept of placement — every custom menu it
 // stores gets injected into the "admin" sidebar tree unconditionally. Placement is a
 // Crest-owned classification (tracked server-side in CrestMenuPlacementDocument) layered on
 // top: Admin behaves exactly as it always has; Local and User are excluded from the

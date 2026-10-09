@@ -12,16 +12,16 @@ namespace Crest.Workflows.Activities;
 
 /// <summary>
 /// Gate on the acting user: continues on "Allowed" when the user captured at trigger time
-/// holds the Orchard permission, "Denied" otherwise (anonymous, unknown permission, or a
+/// holds the Crest permission, "Denied" otherwise (anonymous, unknown permission, or a
 /// member-class user asking for a ceilinged permission all land on Denied). Put it right
 /// after a trigger to make a flow fire only for users who may cause its effects.
 /// </summary>
-[Activity("Crest.Workflows", "Security", "Continue only if the user who triggered the workflow holds an Orchard permission.", DisplayName = "Require permission")]
+[Activity("Crest.Workflows", "Security", "Continue only if the user who triggered the workflow holds an Crest permission.", DisplayName = "Require permission")]
 [FlowNode("Allowed", "Denied")]
 [UsedImplicitly]
 public class RequirePermission : Activity
 {
-    [Input(Description = "The Orchard permission name, e.g. ManageWorkflows or PublishContent.", UIHint = InputUIHints.DropDown, UIHandler = typeof(PermissionOptionsProvider))]
+    [Input(Description = "The Crest permission name, e.g. ManageWorkflows or PublishContent.", UIHint = InputUIHints.DropDown, UIHandler = typeof(PermissionOptionsProvider))]
     public Input<string> Permission { get; set; } = null!;
 
     [Output(Description = "The user name that was evaluated, for journals.")]

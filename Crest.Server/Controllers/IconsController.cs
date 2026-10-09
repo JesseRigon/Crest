@@ -19,7 +19,7 @@ public sealed class IconsController(
         [FromQuery] int skip = 0,
         [FromQuery] int take = 200)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }

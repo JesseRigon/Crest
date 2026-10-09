@@ -210,11 +210,11 @@ Documents, opaque blob keys, versions, metadata; the drive class, drive types an
   6. Files and media are one system. Every file has one URL; there is no separate media library
      holding copies. A file is public because it is shared with Anyone, not because it was put in a
      particular place.
-  7. The platform's `OrchardCore.Media` module is reworked in place into Crest's file
+  7. The platform's `Crest.Media` module is reworked in place into Crest's file
      module. Its feature ids and the services other modules resolve stay, so everything built
      on Media keeps working: SEO, image fields, images in rich text and Markdown, media
      indexing, image processing, and recipes that enable Media.
-  8. The Media libraries (`OrchardCore.Media.Abstractions`, `OrchardCore.Media.Core`) stay:
+  8. The Media libraries (`Crest.Media.Abstractions`, `Crest.Media.Core`) stay:
      stored content and other modules are built against their types. See "Reworking the
      Media module".
   9. `/media/...` URLs keep their form and are served by Crest from the drive tree, after the
@@ -226,8 +226,8 @@ Documents, opaque blob keys, versions, metadata; the drive class, drive types an
       (object and version), keeps quarantined uploads apart from committed files, and keeps each
       tenant's bytes in that tenant's own root.
   11. Local disk is the first provider. Azure Blob and Amazon S3 providers follow, built on
-      Orchard's storage libraries (`OrchardCore.FileStorage.AzureBlob`,
-      `OrchardCore.FileStorage.AmazonS3`) rather than Orchard's Media storage modules.
+      Orchard's storage libraries (`Crest.FileStorage.AzureBlob`,
+      `Crest.FileStorage.AmazonS3`) rather than Orchard's Media storage modules.
 
 - [ ] **Build the drive class and drive types.**
   12. Personal, shared and organization drives are one class with the same file objects, levels,
@@ -459,7 +459,7 @@ logged action rather than something in the admin's everyday view.
 - [ ] **Notify the owner.**
   25. **Notice.** When a tenant administrator opens another user's personal drive, the owner can
       be notified by email, by a portal notification, by both, or not at all. Default: not at all.
-      Notices go through Orchard's notification service (`OrchardCore.Notifications`), which sends
+      Notices go through Orchard's notification service (`Crest.Notifications`), which sends
       through each enabled method: email through its Email Notifications feature, and portal
       notifications through the stored, per-user notifications that Crest's portal notifications
       feature displays (requirement 30). Crest adds no delivery of its own. If a notice cannot be
@@ -548,7 +548,7 @@ Drive browser, Share panel, Rules screens, access indicators, the user editor's 
 
 ## Platform audit
 
-Audited against the platform (`src/`, then the OrchardCore fork on branch `Crest`) and
+Audited against the platform (and before it the OrchardCore fork on branch `Crest`) and
 against Crest as it stands. What each area gives us, and what Crest builds.
 
 ### Files and storage
@@ -570,7 +570,7 @@ against Crest as it stands. What each area gives us, and what Crest builds.
   reject or replace an upload stream, but runs synchronously inside the request, and Orchard's
   resumable (Tus) upload path skips it. Crest's quarantine flow is its own: uploads land in
   quarantine storage, providers return verdicts asynchronously, and only then is the file
-  committed. Orchard's ClamAV connector (`OrchardCore.Antivirus`) is wrapped as the first
+  committed. Orchard's ClamAV connector (`Crest.Antivirus`) is wrapped as the first
   malware provider.
 - **Text extraction: reuse later.** `IMediaFileTextProvider` (PDF, Word, PowerPoint, text)
   can feed search for file objects.
@@ -619,8 +619,8 @@ against Crest as it stands. What each area gives us, and what Crest builds.
 
 ### Reworking the Media module
 
-Crest's file system is built **into the platform's `OrchardCore.Media` module**
-(`src/OrchardCore.Modules/OrchardCore.Media`), so files and media are one system with one
+Crest's file system is built **into the platform's `Crest.Media` module**
+(`Crest.Media`), so files and media are one system with one
 URL per file while every module that depends on Media keeps working (requirements 6–11).
 Since the hard fork (2026-10-09) this is an in-place rework. The earlier plan, a
 Crest-owned copy carrying the stock module id with the stock assembly excluded from hosts
@@ -629,17 +629,17 @@ its asset-naming MSBuild fix.
 
 **What the module is.** Media is two layers:
 
-- **Libraries** (`OrchardCore.Media.Abstractions`, `OrchardCore.Media.Core`): `MediaField`,
+- **Libraries** (`Crest.Media.Abstractions`, `Crest.Media.Core`): `MediaField`,
   `IMediaFileStore`, `MediaOptions`, `MediaPermissions`, `DefaultMediaFileStore`, the image
   processing contract. Other modules compile against these, and stored content refers to them.
-- **The module** (`OrchardCore.Media`: 139 source files, 8 features, about 70 service
+- **The module** (`Crest.Media`: 139 source files, 8 features, about 70 service
   registrations): the feature ids, `/media` serving, API endpoints, admin UI, Secure Media, Tus
   uploads, SignalR, Liquid filters, shortcodes, display drivers, recipes, deployment.
 
 **Who depends on what** (what the rework must keep working, or change alongside):
 
-- *Feature-id dependents:* `OrchardCore.Seo` depends on `OrchardCore.Media`; the media startups
-  in Content Fields, HTML and Markdown are `[RequireFeatures("OrchardCore.Media")]`;
+- *Feature-id dependents:* `Crest.Seo` depends on `Crest.Media`; the media startups
+  in Content Fields, HTML and Markdown are `[RequireFeatures("Crest.Media")]`;
   `Media.Azure`, `Media.AmazonS3` and `Media.ImageSharpV3` depend on it in their manifests.
 - *Library-only dependents:* Seo, Html, Markdown, ContentFields and the two indexing modules
   (PDF, OpenXML).
@@ -692,7 +692,7 @@ its asset-naming MSBuild fix.
 Research for the scanner and type-detection providers (requirements 90 and 91). Licences checked October 2026; nothing here
 is legal advice.
 
-- **OrchardCore.Antivirus** (Orchard, BSD-3): Orchard's own module, in the Orchard build the
+- **Crest.Antivirus** (Orchard, BSD-3): Orchard's own module, in the Orchard build the
   hosts use. It scans through a file-storage hook before a file is stored, using a ClamAV daemon
   over its socket, and rejects the upload synchronously. It is the obvious first provider, but
   it rejects rather than quarantines, so Crest adapts it to the asynchronous verdict (92).

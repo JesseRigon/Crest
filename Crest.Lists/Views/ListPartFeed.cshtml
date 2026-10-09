@@ -1,0 +1,25 @@
+@using Crest.Feeds.Models
+@using Crest.Infrastructure
+@using Crest.ResourceManagement
+@using Crest.ContentManagement
+
+@inject IResourceManager ResourceManager
+@inject IContentManager ContentManager
+
+@{
+    ContentItem contentItem = Model.ContentItem;
+    var feedMetadata = await ContentManager.PopulateAspectAsync<FeedMetadata>(contentItem);
+
+    if (!feedMetadata.DisableRssFeed)
+    {
+        ResourceManager.RegisterLink(new LinkEntry
+        {
+            Rel = "alternate",
+            Type = MediaTypeNamesExtended.Application.XmlRss,
+            Title = contentItem.DisplayText,
+            Href = string.IsNullOrWhiteSpace(feedMetadata.FeedProxyUrl)
+                ? Url.Action("Index", "Feed", new { area = "Crest.Feeds", ContentItemId = contentItem.ContentItemId }, Context.Request.Scheme)
+                : feedMetadata.FeedProxyUrl
+        });
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@crest/contenttypes",
+  "version": "1.0.0",
+  "scripts": {
+    "check": "vue-tsc --noEmit"
+  }
+}

@@ -1,6 +1,6 @@
 using Crest.Workflows.Extensions;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.Modules;
+using Crest.Modules;
 
 namespace Crest.Workflows.Data;
 

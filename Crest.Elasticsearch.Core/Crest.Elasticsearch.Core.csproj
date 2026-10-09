@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Elasticsearch.Core</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest Elasticsearch Search Core</Title>
+    <Description>
+      $(OCCMSDescription)
+
+      Core Implementation for Elasticsearch Search module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Elastic.Clients.Elasticsearch" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.ContentLocalization.Abstractions\Crest.ContentLocalization.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement\Crest.ContentManagement.csproj" />
+    <ProjectReference Include="..\Crest.ContentPreview.Abstractions\Crest.ContentPreview.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Contents.Core\Crest.Contents.Core.csproj" />
+    <ProjectReference Include="..\Crest.ContentTypes.Abstractions\Crest.ContentTypes.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Deployment.Abstractions\Crest.Deployment.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Indexing.Abstractions\Crest.Indexing.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Indexing.Core\Crest.Indexing.Core.csproj" />
+    <ProjectReference Include="..\Crest.Liquid.Abstractions\Crest.Liquid.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Queries.Abstractions\Crest.Queries.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Roles.Abstractions\Crest.Roles.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Search.Abstractions\Crest.Search.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

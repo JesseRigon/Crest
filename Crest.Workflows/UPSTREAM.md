@@ -3,7 +3,7 @@
 Forked from [elsa-workflows/elsa-orchard-core](https://github.com/elsa-workflows/elsa-orchard-core)
 (BSD-3-Clause, see LICENSE), cloned into Crest around 2026-09-15 (Crest commit `2f8dd4d`);
 the exact upstream commit was not recorded at clone time. Upstream ids
-`OrchardCore.ElsaWorkflows*` became `Crest.Workflows*`, and the package is now
+`Crest.ElsaWorkflows*` became `Crest.Workflows*`, and the package is now
 `Crest.Workflows*`: the application layer's workflow service.
 
 **Renaming and upstream merges.** Every identifier, namespace and assembly in the vendored
@@ -62,12 +62,12 @@ only) when you do.
   `NuGet.config`, the MVC designer pages/controllers/admin menu, the OpenID dependency,
   `PermissionsClaimsProvider` (granted `permissions=*` to every user), the Taxonomies
   dependency of Contents (`ResolveTerm`).
-- Added: `Security/CrestWorkflowsApiSecurityMiddleware` (the API gate: Orchard permission,
+- Added: `Security/CrestWorkflowsApiSecurityMiddleware` (the API gate: Crest permission,
   antiforgery, per-request engine grant), `Contexts/*` (acting-user snapshot and
   authorizer), `Activities/RequirePermission`, per-shell file lock directory,
   `RequiredPermission` on the content triggers, acting user on every content stimulus,
   `Controllers/WorkflowTriggersController` (stored-trigger diagnostics and re-index),
-  `Services/SyncDisposableTenantService` (Orchard disposes containers synchronously;
+  `Services/SyncDisposableTenantService` (Crest disposes containers synchronously;
   Elsa's tenant service is async-only and crashed the process on shell release).
 - Fixed: `ContentItemWorkflowDefinitionPublisher.PublishAsync` stores the draft before
   publishing a brand-new definition (save with `publish=true` used to NRE); YesSql 6

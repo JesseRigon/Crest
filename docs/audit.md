@@ -129,7 +129,7 @@ unpublished, deleted and restored, with a snapshot of the item.
 
 - [ ] **Change AuditTrail's save path?** The index ruling holds unless diff storage or
   taking over the workflow engine's journal needs changes to the save path. Since the hard
-  fork that is an in-place change to `src/`, not a module fork; to be discussed with both in
+  fork that is an in-place change to the platform, not a module fork; to be discussed with both in
   view.
 
 - [ ] **Organization-scoped view.** Does a member admin get an organization-scoped audit view?

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using OrchardCore.Environment.Shell.Configuration;
+using Crest.Environment.Shell.Configuration;
 
 namespace Crest.Routing;
 
@@ -8,7 +8,7 @@ namespace Crest.Routing;
 /// Where the member shell lives, and what it is called.
 /// </summary>
 /// <remarks>
-/// Shaped after Orchard's own <c>AdminOptions.AdminUrlPrefix</c>: one option, bound from
+/// Shaped after Crest's own <c>AdminOptions.AdminUrlPrefix</c>: one option, bound from
 /// the tenant's shell configuration, read through <c>IOptions&lt;MemberOptions&gt;</c> and
 /// never re-typed as a literal at a call site. Every member URL - navigation, the login
 /// surface, cross-shell links - is composed from <see cref="MemberUrlPrefix"/>, so a
@@ -34,11 +34,11 @@ public sealed class MemberOptions
 /// appsettings section can move the member shell the way it can move the admin one.
 /// </summary>
 /// <remarks>
-/// Orchard exposes a tenant's configuration as <see cref="IShellConfiguration"/>; binding
+/// Crest exposes a tenant's configuration as <see cref="IShellConfiguration"/>; binding
 /// a section of it is how <c>AdminOptions</c> itself is configured
-/// (<c>OrchardCore.Admin</c>'s own startup binds "OrchardCore_Admin"). Crest's section is
-/// named for Crest rather than borrowing an Orchard one, because this is Crest's option
-/// and not an Orchard setting Crest happens to read.
+/// (<c>Crest.Admin</c>'s own startup binds "Crest_Admin"). Crest's section is
+/// named for Crest rather than borrowing an Crest one, because this is Crest's option
+/// and not an Crest setting Crest happens to read.
 /// </remarks>
 public sealed class MemberOptionsConfiguration(IShellConfiguration shellConfiguration) : IConfigureOptions<MemberOptions>
 {

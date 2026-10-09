@@ -1,0 +1,25 @@
+using Microsoft.Extensions.DependencyInjection;
+using Crest.Apis;
+using Crest.Forms.Models;
+using Crest.Modules;
+
+namespace Crest.Forms.GraphQL;
+
+[RequireFeatures("Crest.Apis.GraphQL")]
+public sealed class Startup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddObjectGraphType<FormPart, FormPartQueryObjectType>();
+        services.AddObjectGraphType<FormElementPart, FormElementPartQueryObjectType>();
+        services.AddObjectGraphType<FormInputElementPart, FormInputElementPartQueryObjectType>();
+        services.AddObjectGraphType<LabelPart, LabelPartQueryObjectType>();
+        services.AddObjectGraphType<ButtonPart, ButtonPartQueryObjectType>();
+        services.AddObjectGraphType<InputPart, InputPartQueryObjectType>();
+        services.AddObjectGraphType<TextAreaPart, TextAreaPartQueryObjectType>();
+        services.AddObjectGraphType<ValidationPart, ValidationPartQueryObjectType>();
+
+        // Broken
+        // services.AddGraphQLQueryType<ValidationSummaryPart, ValidationSummaryPartQueryObjectType>();
+    }
+}

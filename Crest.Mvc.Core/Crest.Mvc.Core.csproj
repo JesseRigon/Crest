@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Mvc</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest Mvc Core</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Core Implementation for MVC application.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" ExcludeAssets="build;buildTransitive" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.DisplayManagement.Abstractions\Crest.DisplayManagement.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

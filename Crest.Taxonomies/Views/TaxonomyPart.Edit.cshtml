@@ -1,0 +1,71 @@
+@model TaxonomyPartEditViewModel
+@inject IContentManager ContentManager
+@inject Crest.ContentManagement.Display.IContentItemDisplayManager ContentItemDisplayManager
+@inject Crest.DisplayManagement.ModelBinding.IUpdateModelAccessor ModelUpdaterAccessor
+@inject Crest.ContentManagement.Metadata.IContentDefinitionManager ContentDefinitionManager
+@using Crest.ContentManagement.Metadata.Settings
+@using Crest.ContentManagement.Metadata.Models
+@using Crest.Localization.Data
+@inject IDataLocalizer D
+@*
+    This template is used to render the editor for a Taxonomy content item.
+    It render the hierarchy of the terms.
+    The shape is created from TaxonomyPartDisplayDriver
+*@
+
+<script asp-src="~/Crest.Taxonomies/Scripts/menu/menu.min.js" debug-src="~/Crest.Taxonomies/Scripts/menu/menu.js" at="Foot" depends-on="Sortable"></script>
+<style asp-src="~/Crest.Taxonomies/Styles/menu.min.css" debug-src="~/Crest.Taxonomies/Styles/menu.css"></style>
+
+@{
+    var updater = ModelUpdaterAccessor.ModelUpdater;
+    var canAddTerm = Model.TaxonomyPart.ContentItem.Id != 0;
+    var termContentTypes = (await ContentDefinitionManager.ListTypeDefinitionsAsync()).Where(t => !t.HasStereotype()).OrderBy(x => x.DisplayName);
+    var index = 0;
+}
+<div class="ocat-wrapper" asp-validation-class-for="TermContentType">
+    <label asp-for="TermContentType" class="ocat-label">@T["Term Content Type"]</label>
+    <div class="ocat-end">
+        <select asp-for="TermContentType" class="form-select" asp-items="@(new SelectList(termContentTypes, "Name", "DisplayName"))">
+            <option value="">@T["Select a term content type"]</option>
+        </select>
+    </div>
+    <span asp-validation-for="TermContentType"></span>
+</div>
+<div class="ocat-wrapper">
+
+    <div class="ocat-end-offset">
+        @if (canAddTerm && Model.TermContentType != null)
+        {
+            var termContentType = await ContentDefinitionManager.GetTypeDefinitionAsync(Model.TermContentType);
+            @if (termContentType != null)
+            {
+                <a class="btn btn-primary btn-sm"
+                   asp-route-action="Create"
+                   asp-route-controller="Admin"
+                   asp-route-id="@Model.TaxonomyPart.TermContentType"
+                   asp-route-taxonomyContentItemId="@Model.TaxonomyPart.ContentItem.ContentItemId"
+                   asp-route-area="Crest.Taxonomies">
+                    @T["Add {0}", D[termContentType.DisplayName, "Content Types"]]
+                </a>
+            }
+        }
+
+        @{
+            var taxonomyItems = Model.TaxonomyPart.ContentItem.TryGet<TaxonomyPart>(out var taxonomyPart)
+                ? taxonomyPart.Terms
+                : [];
+        }
+        <ol id="menu" class="list-group my-3" data-hierarchy-input="@Html.IdFor(m => m.Hierarchy)" data-leave-message="@T["You have reordered the taxonomy."]">
+            @foreach (var menuItem in taxonomyItems)
+            {
+                var termShape = await ContentItemDisplayManager.BuildDisplayAsync(menuItem, updater, "TermAdmin");
+                termShape.Properties["TaxonomyPart"] = Model.TaxonomyPart;
+                termShape.Properties["Index"] = index++;
+                termShape.Properties["Depth"] = 0;
+                @await DisplayAsync(termShape)
+            }
+        </ol>
+
+        <input asp-for="Hierarchy" type="hidden" value="" />
+    </div>
+</div>

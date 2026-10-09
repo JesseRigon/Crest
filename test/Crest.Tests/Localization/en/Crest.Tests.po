@@ -1,0 +1,3 @@
+msgctxt "Crest.Tests.Localization.LocalizationManagerTests"
+msgid "hello!"
+msgstr "Hello en !"

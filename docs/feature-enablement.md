@@ -21,7 +21,7 @@ disable a feature while an enabled dependent declares it. So a correct manifest
 dependency is self-healing: it auto-enables on setup, survives another recipe's
 `feature.disable` list, and survives manual toggling in the admin UI. See commit
 `5c022f2` in the `Crest` submodule, which audited every constructor-injected
-`OrchardCore.*` type in the Server assembly against its real registration site.
+`Crest.*` type in the Server assembly against its real registration site.
 
 Note that the lazy `ICrestRequestAccess.GetRequiredService<T>()` pattern does **not**
 remove the need for a dependency. It defers the failure from startup to request time
@@ -30,21 +30,21 @@ T" when the providing feature is off.
 
 ## What is deliberately NOT a Crest dependency
 
-- **`OrchardCore.Tenants`** — `DefaultTenantOnly = true`. A hard dependency from an
+- **`Crest.Tenants`** — `DefaultTenantOnly = true`. A hard dependency from an
   always-enabled feature would be invalid on every non-default tenant.
   `CrestTenantsController` is already restricted to the default tenant and injects only
   `IOptions<TenantsOptions>`, which always resolves to a safe default
   (`TenantRemovalAllowed = false`).
-- **`OrchardCore.Queries.Sql`** — a *provider* of `IQuerySource`, not a requirement.
+- **`Crest.Queries.Sql`** — a *provider* of `IQuerySource`, not a requirement.
   Crest enumerates whatever sources a tenant has and rejects unknown ones; declaring it
   would force a SQL query feature onto every tenant.
-- **`OrchardCore.Workflows`** — no Crest code references it. It appears in the host
+- **`Crest.Workflows.Platform`** — no Crest code references it. It appears in the host
   host's admin-menu layout and in the `legacy-frame-workflows` Playwright check, both
   host-level concerns.
 - **A host's business modules** — standalone modules that depend on Crest, not the reverse.
 
 These are host choices, which is why the ones a host wants (its business modules,
-`OrchardCore.Workflows`, `OrchardCore.Tenants`) are listed in its setup recipe's `feature`
+`Crest.Workflows.Platform`, `Crest.Tenants`) are listed in its setup recipe's `feature`
 step. Everything else Crest needs arrives through the dependency
 graph.
 

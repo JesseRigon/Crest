@@ -4,7 +4,7 @@ using Crest.Workflows.Scheduling.Quartz.Handlers;
 using Crest.Workflows.Scheduling.Quartz.Services;
 using Crest.Workflows;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.Modules;
+using Crest.Modules;
 
 namespace Crest.Workflows.Timers.Quartz;
 

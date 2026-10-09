@@ -1,8 +1,8 @@
 using Crest.Services;
 using Crest.Icons;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.Admin;
-using OrchardCore.Navigation;
+using Crest.Admin;
+using Crest.Navigation;
 
 namespace Crest.ViewModels;
 
@@ -28,13 +28,13 @@ public sealed record NavigationItem(
     NavigationItem[] Items)
 {
     // Menu labels (Text) are translated and must never be part of the match key - the same
-    // item resolves to different Text per admin culture. Every stock OrchardCore admin
+    // item resolves to different Text per admin culture. Every stock Crest admin
     // navigation provider now sets a stable, culture-invariant Id, so Id is the preferred
     // match key.
     //
     // TextKey is MenuItem.Text.Name: the invariant literal a provider passed to S["..."]
     // (the localization key itself, English only by convention),
-    // which OrchardCore's own NavigationManager.Merge matches on and which therefore does not
+    // which Crest's own NavigationManager.Merge matches on and which therefore does not
     // vary by admin culture. It is a weaker identifier than Id, because it changes whenever
     // someone rewords the caption in the provider's source, but it is present on every item
     // rather than only on those whose provider bothered to set an Id. Falling back to it lets
@@ -47,7 +47,7 @@ public sealed record NavigationItem(
 
     // An item that belongs to an admin menu (MenuName is set only by the admin node navigation
     // builders) carries its node's raw caption as Text - the built LocalizedString is
-    // (LinkText, LinkText) - the invariant literal in both slots. Orchard's own Razor admin
+    // (LinkText, LinkText) - the invariant literal in both slots. Crest's own Razor admin
     // resolves every caption through IDataLocalizer at render time (TheAdmin's
     // NavigationItemText.cshtml, keyed on the displayed caption); serialization here is Crest's
     // render time, so resolution happens in the same place, unconditionally - but through
@@ -125,7 +125,7 @@ internal sealed class NavigationPositionComparer : IComparer<string?>
                 // Position strings are built almost universally upstream via
                 // LocalizedString.PrefixPosition(), which bakes in the TRANSLATED display
                 // text (LocalizedString.ToString() returns .Value, discarding .Name - see
-                // OrchardCore.Navigation.Core's PrefixPosition(LocalizedString) overload).
+                // Crest.Navigation.Core's PrefixPosition(LocalizedString) overload).
                 // Comparing that text would sort items differently per admin culture. Treat
                 // non-numeric segments as tied instead: OrderBy is a stable sort, so ties
                 // fall through to the underlying provider's original (culture-invariant)

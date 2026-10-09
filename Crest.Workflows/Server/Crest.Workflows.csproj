@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.props" />
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -15,17 +15,18 @@
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Admin.Abstractions\OrchardCore.Admin.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.Contents\OrchardCore.Contents.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Infrastructure\OrchardCore.Infrastructure.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.ContentManagement\OrchardCore.ContentManagement.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.ContentTypes.Abstractions\OrchardCore.ContentTypes.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.DisplayManagement\OrchardCore.DisplayManagement.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Navigation.Core\OrchardCore.Navigation.Core.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.ResourceManagement\OrchardCore.ResourceManagement.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Roles.Abstractions\OrchardCore.Roles.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Workflows.Abstractions\OrchardCore.Workflows.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Contents\Crest.Contents.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Infrastructure\Crest.Infrastructure.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.ContentManagement\Crest.ContentManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.ContentTypes.Abstractions\Crest.ContentTypes.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Roles.Abstractions\Crest.Roles.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Workflows.Platform.Abstractions\Crest.Workflows.Platform.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Liquid.Abstractions\Crest.Liquid.Abstractions.csproj" />
     <PackageReference Include="System.Linq.Dynamic.Core" />
   </ItemGroup>
 
@@ -42,8 +43,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Crest.Workflows.Domain.csproj" />
-    <ProjectReference Include="..\..\Crest.Server\Crest.csproj" />
+    <ProjectReference Include="..\..\Crest.Server\Crest.Server.csproj" />
   </ItemGroup>
-
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
 </Project>

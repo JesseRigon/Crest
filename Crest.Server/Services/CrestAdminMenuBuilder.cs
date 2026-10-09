@@ -1,12 +1,12 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.Navigation;
+using Crest.Navigation;
 using Crest.ViewModels;
 
 namespace Crest.Services;
 
 /// <summary>
-/// The served admin menu, assembled once here for everyone who needs it: Orchard builds
+/// The served admin menu, assembled once here for everyone who needs it: Crest builds
 /// and permission-filters the tree for the request user, the provider sync has keyed its
 /// items by node UniqueId, captions resolve through the tenant translation store, the
 /// tenant's layout overlay is applied, and - unless a caller needs the tenant view - the
@@ -45,7 +45,7 @@ public sealed class CrestAdminMenuBuilder(
                 .Select(item => NavigationItem.From(item, captionResolver))
                 .ToArray());
 
-        // Orchard has already authorized and reduced the tree for the request user; the
+        // Crest has already authorized and reduced the tree for the request user; the
         // tenant-wide layout applies only afterwards, and the user's own overlay after that.
         menu = await layoutService.ApplyAsync(menu);
         return applyUserPreferences ? await userMenuPreferences.ApplyAsync(menu, user) : menu;

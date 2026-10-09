@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(CommonTargetFrameworks)</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Fixtures\**\*.json" />
+    <EmbeddedResource Include="Fixtures\**\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
+    <PackageReference Include="Microsoft.Playwright" />
+    <PackageReference Include="xunit.v3.mtp-v2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Crest.Cms.Web\Crest.Cms.Web.csproj" />
+    <ProjectReference Include="..\..\Crest.Mvc.Web\Crest.Mvc.Web.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\Crest.Build\Crest.Commons.targets" />
+
+</Project>

@@ -1,0 +1,34 @@
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Routing
+@using Microsoft.AspNetCore.Mvc.Localization
+@using Microsoft.Extensions.Localization
+@using Crest.Contents.AuditTrail.ViewModels
+@using Crest.ContentManagement
+@using Crest.ContentManagement.Metadata
+@using Crest.ContentManagement.Display.ViewModels
+@using Crest.ContentManagement.Metadata.Settings
+@using Crest.Contents.Workflows.Activities
+@using Crest.Deployment.Services
+@using Crest.DisplayManagement.Views
+@using Crest.Contents.AdminNodes
+@using Crest.Contents.Deployment
+@using Crest.Contents.Deployment.AddToDeploymentPlan
+@using Crest.Contents.Deployment.ExportContentToDeploymentTarget
+@using Crest.Contents.Deployment.Download
+@using Crest.Contents.Sitemaps
+@using Crest.Contents.ViewModels
+@using Crest.Contents.VersionPruning.ViewModels
+@using Crest.DisplayManagement
+@using Crest.DisplayManagement.ViewModels
+@using Crest.Entities
+@using Crest.Localization
+@using Crest.Mvc.Utilities
+@using Crest.Sitemaps.Models
+@using Crest.Workflows.Platform.Helpers
+@using System.Globalization
+
+@inherits Crest.DisplayManagement.Razor.RazorPage<TModel>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, Crest.Contents.TagHelpers
+@addTagHelper *, Crest.DisplayManagement
+@addTagHelper *, Crest.ResourceManagement

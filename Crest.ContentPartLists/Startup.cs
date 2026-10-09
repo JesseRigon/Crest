@@ -3,10 +3,10 @@ using Crest.Models;
 using Crest.Navigation;
 using Crest.Services;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.ContentManagement;
-using OrchardCore.Data.Migration;
-using OrchardCore.Modules;
-using OrchardCore.Navigation;
+using Crest.ContentManagement;
+using Crest.Data.Migration;
+using Crest.Modules;
+using Crest.Navigation;
 
 namespace Crest.ContentPartLists;
 

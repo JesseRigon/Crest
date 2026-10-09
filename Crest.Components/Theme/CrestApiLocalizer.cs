@@ -7,10 +7,10 @@ namespace Crest.Components.Theme;
 // .Admin's own UI strings (as opposed to Crest.Components' compiled-in CrestStrings.resx)
 // deliberately do NOT live in a .resx satellite assembly baked into the WASM bundle -
 // that would need a recompile/redeploy to edit, unlike every other piece of translatable
-// content in Orchard. Instead this fetches the resolved .po catalog (see
+// content in Crest. Instead this fetches the resolved .po catalog (see
 // CrestLocalizationController.GetStrings, server-side) for the active culture and plugs
 // into the SAME Localizer/ILocalizer extension seam Crest.Components already
-// defines. Keys are invariant literals (T["Some text"], native Orchard style - see
+// defines. Keys are invariant literals (T["Some text"], native Crest style - see
 // docs/localization.md): the literal is simultaneously the key and the fallback, so an
 // untranslated string renders itself, and the same literal shares its translation with
 // every other pipeline keyed on it (store, shipped module .po catalogs).
@@ -67,10 +67,10 @@ public sealed class CrestApiLocalizer(HttpClient http) : ILocalizer
             : null;
     }
 
-    // Native Orchard-style lookup for plain @page-routed Razor components (not
+    // Native Crest-style lookup for plain @page-routed Razor components (not
     // CrestComponent-derived, so they have no Localize(key) instance method to call).
     // Inject CrestApiLocalizer as T and write T["Some text"] - the invariant literal IS
-    // the translation key, exactly like S["..."] in server-side Orchard code, and doubles
+    // the translation key, exactly like S["..."] in server-side Crest code, and doubles
     // as the rendered fallback when the culture holds no translation for it. Identity is
     // never carried by these literals (menu items keep UniqueId for that); they are purely
     // translation keys.

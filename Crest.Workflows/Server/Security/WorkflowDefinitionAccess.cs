@@ -8,11 +8,11 @@ using Crest.Workflows.Registry;
 using Crest.Workflows.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore;
-using OrchardCore.ContentManagement;
-using OrchardCore.Security;
-using OrchardCore.Security.Permissions;
-using OrchardCore.Settings;
+using Crest;
+using Crest.ContentManagement;
+using Crest.Security;
+using Crest.Security.Permissions;
+using Crest.Settings;
 using YesSql;
 
 namespace Crest.Workflows.Security;
@@ -20,7 +20,7 @@ namespace Crest.Workflows.Security;
 /// <summary>
 /// The resource a workflow permission is evaluated against: the definition's own lists of
 /// who may edit and who may run it (docs/workflows.md, phase 5). Passed as the resource of
-/// <c>AuthorizeAsync(user, permission, resource)</c>, so the check stays one Orchard
+/// <c>AuthorizeAsync(user, permission, resource)</c>, so the check stays one Crest
 /// authorization call; <see cref="WorkflowDefinitionAccessHandler"/> is the part of the
 /// pipeline that reads it.
 /// </summary>
@@ -82,7 +82,7 @@ public sealed record WorkflowDefinitionAccessResource(string DefinitionId, IRead
 /// the member ceiling (a raw handler that runs despite prior successes; Fail is sticky) so
 /// the role grant, the super user and every other handler still apply in the same call -
 /// except that the super user and administrators are never narrowed by a list, as nowhere
-/// else in Orchard.
+/// else in Crest.
 /// </summary>
 public sealed class WorkflowDefinitionAccessHandler(ISiteService siteService) : IAuthorizationHandler
 {
@@ -106,7 +106,7 @@ public sealed class WorkflowDefinitionAccessHandler(ISiteService siteService) : 
             return;
         }
 
-        if (context.User.IsInRole(OrchardCoreConstants.Roles.Administrator))
+        if (context.User.IsInRole(PlatformConstants.Roles.Administrator))
         {
             return;
         }
@@ -154,7 +154,7 @@ public interface IWorkflowDefinitionAccessReader
 
 /// <summary>
 /// Reads and writes a definition's access lists, and authorizes a user against a definition
-/// in one Orchard call (permission + the definition as resource).
+/// in one Crest call (permission + the definition as resource).
 /// </summary>
 public sealed class WorkflowDefinitionAccessService(
     IAuthorizationService authorizationService,

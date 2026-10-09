@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Crest XmlRpc</Title>
+    <Description>$(OCFrameworkDescription)
+
+    The remote publishing feature enables creation of contents from client applications such as Open Live Writer.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework Infrastructure</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
+    <ProjectReference Include="..\Crest.XmlRpc.Abstractions\Crest.XmlRpc.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

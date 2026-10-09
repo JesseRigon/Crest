@@ -1,0 +1,53 @@
+{
+  "name": "SitemapCacheTests",
+  "displayName": "SitemapCacheTests",
+  "description": "Testing Crest.Sitemaps' SitemapsCache admin page (search box + Purge/Purge All actions).",
+  "author": "The Crest Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "tests" ],
+  "tags": [ "tests" ],
+
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Crest.HomeRoute",
+        "Crest.Admin",
+        "Crest.Navigation",
+        "Crest.Recipes",
+        "Crest.Resources",
+        "Crest.Roles",
+        "Crest.Security",
+        "Crest.Settings",
+        "Crest.Themes",
+        "Crest.Users",
+
+        "Crest.Contents",
+        "Crest.Sitemaps",
+
+        "TheAdmin",
+        "SafeMode"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "TheAdmin",
+      "site": "TheAdmin"
+    },
+    {
+      "name": "Sitemaps",
+      "Data": [
+        {
+          "$type": "Crest.Sitemaps.Models.Sitemap, Crest.Sitemaps.Abstractions",
+          "SitemapId": "sitemapcachetestsitemap",
+          "Name": "Sitemap Cache Test Sitemap",
+          "Enabled": true,
+          "Path": "sitemap-cache-test-sitemap",
+          "SitemapSources": []
+        }
+      ]
+    }
+  ]
+}

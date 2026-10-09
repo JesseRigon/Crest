@@ -15,7 +15,7 @@ namespace Crest.Services;
 /// Authorization that any configuration can omit is not authorization.
 /// </para>
 /// <para>
-/// The MECHANISM here is Orchard's, not ours: <c>AuthorizeContentTypeAsync</c> with
+/// The MECHANISM here is Crest's, not ours: <c>AuthorizeContentTypeAsync</c> with
 /// <c>owner: null</c> asks "may they view OTHERS' items of this type?" and with the
 /// user's id asks "may they view their OWN?". That is the same pair of questions
 /// <c>DefaultContentsAdminListFilterProvider</c> asks when it scopes the admin content

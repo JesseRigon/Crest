@@ -1,4 +1,4 @@
-using OrchardCore.Security.Permissions;
+using Crest.Security.Permissions;
 
 namespace Crest.Permissions;
 

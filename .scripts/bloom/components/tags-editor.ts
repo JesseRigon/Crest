@@ -1,6 +1,6 @@
 import { getTranslations, setTranslations } from "../helpers/localizations";
 
-// OrchardCore.Taxonomies' TaxonomyField-Tags.Edit.cshtml: a static-options taggable
+// Crest.Taxonomies' TaxonomyField-Tags.Edit.cshtml: a static-options taggable
 // vue-multiselect with an inline "create new term" flow (POSTs to a Create Tag endpoint and adds
 // the new term into both the full term list and the current selection). Structurally distinct
 // from every other consumer migrated so far - closest relative is

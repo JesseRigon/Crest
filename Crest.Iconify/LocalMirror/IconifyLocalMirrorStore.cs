@@ -426,7 +426,7 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
 
     private string RootPath => pathProvider.RootPath;
 
-    private string MetadataPath => Path.Combine(RootPath, ".crest-orchard-cache.json");
+    private string MetadataPath => Path.Combine(RootPath, ".crest-platform-cache.json");
 
     private static IReadOnlyDictionary<string, IconifyLocalCollectionInfo> EmptyCollections { get; } = new Dictionary<string, IconifyLocalCollectionInfo>(StringComparer.OrdinalIgnoreCase);
 

@@ -1,5 +1,5 @@
 /**
- * Maps to OrchardCore's FileStoreEntryDto returned by the MediaApiController.
+ * Maps to Crest's FileStoreEntryDto returned by the MediaApiController.
  */
 export interface IFileLibraryItemDto {
   name: string;

@@ -205,7 +205,7 @@ display); Taxonomies have the right data shape but are a CMS categorization
 feature whose routing apparatus (AliasPart/AutoroutePart, term pages) is noise
 for configuration data. So Crest defines its own system —
 `Crest.ContentPartLists`, its own feature, with no dependency on
-`OrchardCore.Taxonomies`.
+`Crest.Taxonomies`.
 
 - **`ContentPartList`**: `TitlePart` + `CrestContentPartListPart` (`Key` — the
   set's stable logical key like `pricing.modifier-kind`; `Source`;
@@ -359,7 +359,7 @@ columns are never indexed — they are projections of the referenced record.
 The `contentitem` provider pushes sort and filter into SQL where it can
 (`PlanSqlSort`, `PlanFieldFilterPromotion` over the stock
 Text/Numeric/BooleanFieldIndex tables — Crest's Server manifest depends on
-`OrchardCore.ContentFields.Indexing.SQL` so those rows exist). Known,
+`Crest.ContentFields.Indexing.SQL` so those rows exist). Known,
 ACCEPTED boundaries:
 
 - Text filters deliberately never promote to SQL: the in-memory matcher is
@@ -443,7 +443,7 @@ Blazor endpoints only, by standing ruling, with no Liquid path in.
   decides which parity refactors happen — nothing below is scheduled.
 - [x] **Liquid can already embed Crest components.**
   `CrestBlazorComponentShapeBindingResolver` participates in Orchard's shape
-  pipeline the way `OrchardCore.Templates`' resolver does, so
+  pipeline the way `Crest.Templates`' resolver does, so
   `{{ "ComponentName" | shape_new: text: "..." | shape_render }}` renders a
   Blazor component via `HtmlRenderer`. Named arguments land in
   `IShape.Properties` and map onto `[Parameter]`s by name. Falls through for
@@ -453,7 +453,7 @@ Blazor endpoints only, by standing ruling, with no Liquid path in.
     renders server-side against objects in scope; an HTTP request back into the
     same server to reach a service already in DI is the wrong shape.
   - **The right mechanism is `AddLiquidFilter` over the SAME services the API
-    wraps.** Prior art: `OrchardCore.Users` (`users_by_id`, `has_permission`,
+    wraps.** Prior art: `Crest.Users` (`users_by_id`, `has_permission`,
     `is_in_role`) calling `IUserService` directly. A Crest equivalent —
     `option_list`, `option_label` over `ICrestContentPartListService` — gives
     template authors `{{ item.Content.SomePart.Status | option_label }}`

@@ -1,12 +1,12 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using OrchardCore.Contents;
+using Crest.Contents;
 
 namespace Crest.Services;
 
 /// <summary>
-/// Builds the <see cref="OptionSourceScope"/> for the current user, using Orchard's own
+/// Builds the <see cref="OptionSourceScope"/> for the current user, using Crest's own
 /// resource-based authorization rather than a parallel permission scheme.
 /// </summary>
 public interface IOptionSourceScopeResolver

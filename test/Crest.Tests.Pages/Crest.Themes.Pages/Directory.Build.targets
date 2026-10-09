@@ -1,0 +1,6 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="..\..\..\Crest.Build\Crest.Commons.targets" />
+  <Import Project="..\..\..\Crest.Module.Targets\Crest.Module.Targets.targets" />
+
+</Project>

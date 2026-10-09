@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.AdminMenu</RootNamespace>
+
+    <!-- NuGet properties-->
+    <Title>Crest AdminMenu Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for AdminMenu Module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+  </ItemGroup>
+
+</Project>
+

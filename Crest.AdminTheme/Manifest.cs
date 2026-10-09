@@ -1,12 +1,12 @@
-using OrchardCore.DisplayManagement.Manifest;
+using Crest.DisplayManagement.Manifest;
 
 [assembly: Theme(
     Id = "Crest.AdminTheme",
-    Name = "Orchard Crest UI Framework Admin",
+    Name = "Crest Crest UI Framework Admin",
     BaseTheme = "",
-    Author = "Orchard Crest UI Framework",
+    Author = "Crest Crest UI Framework",
     Website = "https://github.com/Crest/Orchard-Crest",
     Version = "4.0.0.0.0",
-    Description = "A Blazor WebAssembly admin theme for Orchard Core using Crest components.",
+    Description = "A Blazor WebAssembly admin theme for Crest using Crest components.",
     Tags = ["admin", "crest-blazor", "radzen"]
 )]

@@ -1,0 +1,31 @@
+using Crest.Environment.Extensions.Features;
+
+namespace Crest.DisplayManagement.Descriptors;
+
+public class ShapeTableBuilder
+{
+    private readonly IList<ShapeAlterationBuilder> _alterationBuilders = [];
+    private readonly IFeatureInfo _feature;
+
+    public ShapeTableBuilder(IFeatureInfo feature, IReadOnlyCollection<string> excludedFeatureIds = null)
+    {
+        _feature = feature;
+        ExcludedFeatureIds = excludedFeatureIds ?? new HashSet<string>();
+    }
+
+    public IReadOnlyCollection<string> ExcludedFeatureIds { get; }
+
+    internal IFeatureInfo Feature => _feature;
+
+    public ShapeAlterationBuilder Describe(string shapeType)
+    {
+        var alterationBuilder = new ShapeAlterationBuilder(_feature, shapeType);
+        _alterationBuilders.Add(alterationBuilder);
+        return alterationBuilder;
+    }
+
+    public IEnumerable<ShapeAlteration> BuildAlterations()
+    {
+        return _alterationBuilders.Select(b => b.Build());
+    }
+}

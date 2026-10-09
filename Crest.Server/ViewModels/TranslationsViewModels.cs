@@ -2,10 +2,10 @@ using System.Globalization;
 using Crest.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.DataLocalization.Models;
-using OrchardCore.DataLocalization.Services;
-using OrchardCore.Localization;
-using OrchardCore.Localization.Data;
+using Crest.DataLocalization.Models;
+using Crest.DataLocalization.Services;
+using Crest.Localization;
+using Crest.Localization.Data;
 
 namespace Crest.ViewModels;
 

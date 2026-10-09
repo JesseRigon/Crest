@@ -20,17 +20,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.JSInterop;
-using OrchardCore.ContentManagement;
-using OrchardCore.ContentManagement.Display.ContentDisplay;
-using OrchardCore.Data;
-using OrchardCore.Data.Migration;
-using OrchardCore.DisplayManagement;
-using OrchardCore.DisplayManagement.Theming;
-using OrchardCore.Modules;
-using OrchardCore.Navigation;
-using OrchardCore.Recipes;
-using OrchardCore.Security;
-using OrchardCore.Security.Permissions;
+using Crest.ContentManagement;
+using Crest.ContentManagement.Display.ContentDisplay;
+using Crest.Data;
+using Crest.Data.Migration;
+using Crest.DisplayManagement;
+using Crest.DisplayManagement.Theming;
+using Crest.Modules;
+using Crest.Navigation;
+using Crest.Recipes;
+using Crest.Security;
+using Crest.Security.Permissions;
 
 namespace Crest;
 
@@ -57,7 +57,7 @@ public sealed class Startup : StartupBase
         // BlazorAdminThemeMiddleware rewrites Request.Path (tenant-configured admin
         // prefix -> compile-time @page literals, plus base-href-relative _framework/
         // _content/_blazor infrastructure URLs -> site root) - so it MUST run before
-        // endpoint routing matches a path. OrchardCore's tenant pipeline calls
+        // endpoint routing matches a path. Crest's tenant pipeline calls
         // UseRouting() ahead of every module middleware regardless of ConfigureOrder
         // (ShellPipelineExtensions.ConfigurePipelineAsync), which is why this is an
         // IStartupFilter (applied before UseRouting, see BuildPipelineInternalAsync)
@@ -88,10 +88,10 @@ public sealed class Startup : StartupBase
         // Upstream's admin node localization providers enumerate root nodes only, which both
         // hides child captions from the Translations editor and lets its wholesale Save delete
         // their stored translations - see the host's upstream-proposals plan #2/#3.
-        services.AddScoped<OrchardCore.Localization.Data.ILocalizationDataProvider, CrestAdminMenuChildCaptionDataLocalizationProvider>();
+        services.AddScoped<Crest.Localization.Data.ILocalizationDataProvider, CrestAdminMenuChildCaptionDataLocalizationProvider>();
         // Deleting a content type deletes its display-name translations (unless another type
         // shares the name), so the store doesn't accumulate orphans no editor row can reach.
-        services.AddScoped<OrchardCore.ContentTypes.Events.IContentDefinitionEventHandler, CrestContentTypeTranslationCleanup>();
+        services.AddScoped<Crest.ContentTypes.Events.IContentDefinitionEventHandler, CrestContentTypeTranslationCleanup>();
         // Caption resolution for the sidebar and app manifest: restores the MenuName that
         // NavigationManager.Merge drops and walks parent/sibling translation contexts before
         // falling back to the invariant literal - see the resolver's remarks and
@@ -131,7 +131,7 @@ public sealed class Startup : StartupBase
         // mapping @page route patterns to their owning Blazor component Type, mirroring
         // DefaultShapeTableManager/ShapeTable's own caching shape (a keyed singleton
         // dictionary, no separate invalidation signal - the shell itself is torn down and
-        // rebuilt by Orchard on feature/theme change). See
+        // rebuilt by Crest on feature/theme change). See
         // Crest.Routing.DefaultRouteComponentTableManager and docs/blazor-web.md's "Route
         // reachability" section for the full rationale. Each theme supplies its own
         // IRouteComponentTableProvider; nobody hand-maintains a central route list.
@@ -185,7 +185,7 @@ public sealed class Startup : StartupBase
         //
         // Phase 8: wrapped in CrestForwardedAuthHandler - Admin components make
         // *authenticated* api/crest/* calls, and server-side there's no browser to
-        // attach the Orchard auth cookie, so the handler forwards the incoming
+        // attach the Crest auth cookie, so the handler forwards the incoming
         // request's own Cookie header (auth + antiforgery + culture cookies) and
         // fetches the antiforgery request token through it, exactly like the WASM
         // CrestAntiforgeryHandler does browser-side. Anonymous callers (Site's
@@ -262,9 +262,9 @@ public sealed class Startup : StartupBase
             };
         });
 
-        // Phase 3: Blazor participates in Orchard's own shape pipeline instead of a
+        // Phase 3: Blazor participates in Crest's own shape pipeline instead of a
         // custom request-intercepting middleware - see docs/blazor-web.md
-        // ("Orchard's routing does not fit stock Blazor Web App hosting"
+        // ("Crest's routing does not fit stock Blazor Web App hosting"
         // finding for why. CrestBlazorComponentPart is the tenant-placeable tree node
         // (mirrors WidgetsListPart/BagPart); the registry is the shared, tenant-agnostic
         // catalog of components tenants can place, scanned once from Server's own
@@ -370,7 +370,7 @@ public sealed class Startup : StartupBase
         // The framework boot scripts are absent from the static web assets manifest by
         // construction (see BlazorFrameworkScriptEndpoints' own comment) - mapped as
         // ordinary tenant endpoints so tenant/admin prefix stripping applies to them
-        // like everything else Orchard routes.
+        // like everything else Crest routes.
         routes.MapBlazorFrameworkScripts(
             serviceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Startup>>());
         routes.MapRazorComponents<App>()

@@ -1,4 +1,4 @@
-using OrchardCore.Security.Permissions;
+using Crest.Security.Permissions;
 
 namespace Crest.Members.Permissions;
 
@@ -37,7 +37,7 @@ public sealed class MembersPermissionProvider : IPermissionProvider
     [
         new PermissionStereotype
         {
-            Name = OrchardCore.OrchardCoreConstants.Roles.Administrator,
+            Name = Crest.PlatformConstants.Roles.Administrator,
             Permissions = _allPermissions,
         },
     ];

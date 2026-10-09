@@ -1,0 +1,44 @@
+{
+  "name": "MediaTusAzure",
+  "displayName": "Media TUS Azure",
+  "description": "Minimal recipe for testing Media TUS uploads with Azure Blob storage.",
+  "author": "The Crest Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "tests" ],
+  "tags": [ "tests" ],
+
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Crest.HomeRoute",
+        "Crest.Admin",
+        "Crest.Diagnostics",
+        "Crest.Features",
+        "Crest.Navigation",
+        "Crest.Recipes",
+        "Crest.Resources",
+        "Crest.Roles",
+        "Crest.Security",
+        "Crest.Settings",
+        "Crest.Themes",
+        "Crest.Users",
+        "Crest.Contents",
+        "Crest.ContentTypes",
+        "Crest.Media",
+        "Crest.Media.SignalR",
+        "Crest.Media.Tus",
+        "Crest.Media.Azure.Storage",
+        "TheAdmin",
+        "SafeMode"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "TheAdmin",
+      "site": ""
+    }
+  ]
+}

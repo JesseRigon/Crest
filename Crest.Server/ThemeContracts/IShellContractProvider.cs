@@ -26,7 +26,7 @@ public sealed record ShellContract(RouteBucket Bucket, bool RequiresCrestBlazor 
 /// </remarks>
 public interface IShellContractProvider
 {
-    /// <summary>The feature these contracts belong to, as Orchard knows it.</summary>
+    /// <summary>The feature these contracts belong to, as Crest knows it.</summary>
     string FeatureId { get; }
 
     /// <summary>The shell contracts this feature's pages require.</summary>

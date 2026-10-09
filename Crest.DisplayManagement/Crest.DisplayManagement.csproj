@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+
+    <!-- NuGet properties-->
+    <Title>Crest DisplayManagement</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Library for DisplayManagement. Provides BaseDisplayManager, Shape, Layout and Theming support.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework DisplayManagement</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Crest.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.DisplayManagement.Abstractions\Crest.DisplayManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Liquid.Abstractions\Crest.Liquid.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Localization.Abstractions\Crest.Localization.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Mvc.Core\Crest.Mvc.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Castle.Core" />
+  </ItemGroup>
+
+</Project>

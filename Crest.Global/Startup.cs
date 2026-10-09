@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.Modules;
-using OrchardCore.Security.Permissions;
+using Crest.Modules;
+using Crest.Security.Permissions;
 
 namespace Crest.Global;
 

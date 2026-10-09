@@ -8,12 +8,12 @@ using Crest.Parties.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.ContentFields.Fields;
-using OrchardCore.ContentManagement;
-using OrchardCore.Settings;
-using OrchardCore.Users;
-using OrchardCore.Users.Models;
-using OrchardCore.Users.Services;
+using Crest.ContentFields.Fields;
+using Crest.ContentManagement;
+using Crest.Settings;
+using Crest.Users;
+using Crest.Users.Models;
+using Crest.Users.Services;
 
 namespace Crest.Members.Controllers;
 
@@ -75,7 +75,7 @@ public sealed class MemberPortalController(
         return Ok(new MemberSessionModel(member, activeOrganization, null, await organizationDirectory.GetAsync(member)));
     }
 
-    // Self-registration wraps Orchard's own RegisterAsync (registration validation
+    // Self-registration wraps Crest's own RegisterAsync (registration validation
     // events, moderation, email confirmation - the tenant's RegistrationSettings apply
     // unchanged); the portal mark makes the creation stamp provision a member of the
     // organization, and the Person created here is the party the account IS.
@@ -142,7 +142,7 @@ public sealed class MemberPortalController(
         return Ok(schemes.Select(scheme => new PortalExternalProvider(scheme.Name, scheme.DisplayName ?? scheme.Name)).ToArray());
     }
 
-    // Starts an external sign-in FOR the portal: the same challenge Orchard's own
+    // Starts an external sign-in FOR the portal: the same challenge Crest's own
     // ExternalAuthenticationsController issues (its callback handles the return), with
     // the organization stamped on the external cookie's properties so the callback's
     // gate and creation stamp treat it as a portal login. A navigation, not a fetch:
@@ -155,7 +155,7 @@ public sealed class MemberPortalController(
             return BadRequest(new PortalRefusal(["A provider and an organization are required."]));
         }
 
-        var redirectUrl = Url.Action("ExternalLoginCallback", "ExternalAuthentications", new { area = "OrchardCore.Users", returnUrl });
+        var redirectUrl = Url.Action("ExternalLoginCallback", "ExternalAuthentications", new { area = "Crest.Users", returnUrl });
         var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
         properties.Items[MemberSessionKeys.PortalOrganization] = organizationId;
         return Challenge(properties, provider);

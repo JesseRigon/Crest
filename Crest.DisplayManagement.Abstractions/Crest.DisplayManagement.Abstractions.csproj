@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.DisplayManagement</RootNamespace>
+
+    <!-- NuGet properties-->
+    <Title>Crest DisplayManagement Abstractions</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Abstractions for DisplayManagement.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework DisplayManagement Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

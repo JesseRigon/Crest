@@ -144,7 +144,7 @@
     private string? CustomCultureCode { get; set; }
 
     private bool HasDynamicTranslations => DisplayManager?.Manifest?.Features.Any(feature =>
-        string.Equals(feature.Id, "OrchardCore.DataLocalization", StringComparison.OrdinalIgnoreCase)) == true;
+        string.Equals(feature.Id, "Crest.DataLocalization", StringComparison.OrdinalIgnoreCase)) == true;
 
     private CrestCulture[] SupportedCultureOptions => Model?.SupportedCultures
         .Select(ToCulture)

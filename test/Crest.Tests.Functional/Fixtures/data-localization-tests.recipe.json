@@ -1,0 +1,41 @@
+{
+  "name": "DataLocalizationTests",
+  "displayName": "DataLocalizationTests",
+  "description": "Testing Crest.DataLocalization's translation-editor.ts (a net-new interactive Vue 3 editor with search/filter/auto-save, added as part of the Vue2-to-Vue3 migration effort).",
+  "author": "The Crest Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "tests" ],
+  "tags": [ "tests" ],
+
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Crest.HomeRoute",
+        "Crest.Admin",
+        "Crest.Navigation",
+        "Crest.Recipes",
+        "Crest.Resources",
+        "Crest.Roles",
+        "Crest.Security",
+        "Crest.Settings",
+        "Crest.Themes",
+        "Crest.Users",
+
+        "Crest.Contents",
+        "Crest.ContentTypes",
+        "Crest.DataLocalization",
+
+        "TheAdmin",
+        "SafeMode"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "TheAdmin",
+      "site": "TheAdmin"
+    }
+  ]
+}

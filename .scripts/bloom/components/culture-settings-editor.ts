@@ -1,6 +1,6 @@
 import { getTranslations, setTranslations } from "../helpers/localizations";
 
-// OrchardCore.Localization's LocalizationSettings.Edit.cshtml: the site's supported-culture list
+// Crest.Localization's LocalizationSettings.Edit.cshtml: the site's supported-culture list
 // editor - a plain radio-select table (pick the default culture) plus an add/remove list, no
 // vue-multiselect or drag involved (structurally unrelated to every other "OptionsEditor"-named
 // file migrated in Task 3 - see that task's investigation notes distinguishing this "Family B"

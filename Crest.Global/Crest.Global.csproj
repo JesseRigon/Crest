@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.props" />
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -13,16 +13,14 @@
   </ItemGroup>
 
   <!-- The tenant-less reference-data store (plans/global.md). Host-level: the store is
-       built once per process and shared by every shell, on Orchard's own
-       DatabaseShellsSettingsSources pattern. OrchardCore.Data.YesSql is referenced for
+       built once per process and shared by every shell, on Crest's own
+       DatabaseShellsSettingsSources pattern. Crest.Data.YesSql is referenced for
        the provider extensions (UseSqLite/UsePostgreSql/...) and SqliteHelper. -->
   <ItemGroup>
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Data\OrchardCore.Data.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Data.YesSql\OrchardCore.Data.YesSql.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.Security\OrchardCore.Security.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Data\Crest.Data.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Data.YesSql\Crest.Data.YesSql.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Security\Crest.Security.csproj" />
     <PackageReference Include="YesSql.Abstractions" />
   </ItemGroup>
-
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
 </Project>

@@ -1,9 +1,9 @@
 {
-    "name": "@orchardcore/assets-manager",
+    "name": "@crest/assets-manager",
     "version": "1.0.0",
     "type": "module",
     "bin": "./build.mjs",
-    "description": "OrchardCore asset management CLI tool and build orchestrator",
+    "description": "Crest asset management CLI tool and build orchestrator",
     "eslintConfig": {
         "parserOptions": {
             "ecmaVersion": "latest"

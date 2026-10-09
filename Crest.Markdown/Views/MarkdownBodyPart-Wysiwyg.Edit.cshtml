@@ -1,0 +1,27 @@
+@model MarkdownBodyPartViewModel
+@using Crest.ContentLocalization
+@using Crest.ContentManagement.Metadata.Models
+@using Crest.Localization
+@using Crest.Markdown.ViewModels
+@using Crest.Markdown.Settings
+
+@{
+    var settings = Model.TypePartDefinition.GetSettings<MarkdownBodyPartSettings>();
+    var wysiwygSettings = Model.TypePartDefinition.GetSettings<MarkdownBodyPartWysiwygEditorSettings>();
+    var culture = await Platform.GetContentCultureAsync(Model.MarkdownBodyPart.ContentItem);
+}
+
+<style asp-name="codemirror"></style>
+<style asp-name="easymde"></style>
+
+@await DisplayAsync(await New.ShortcodeModal())
+
+<div class="ocat-wrapper mde-editor markdown-body-part-wysiwyg-editor" data-is-rtl="@(culture.IsRightToLeft() ? "true" : "false")" data-options="@wysiwygSettings.Options">
+    <label asp-for="Markdown" class="ocat-label">@Model.TypePartDefinition.DisplayName()</label>
+    <div class="ocat-end">
+        <span class="hint">@T["The markdown text of the content item."]</span>
+        <textarea asp-for="Markdown" rows="5" class="form-control content-preview-text"></textarea>
+    </div>
+</div>
+
+<script asp-src="~/Crest.Markdown/Scripts/markdown-editors/markdown-body-part-wysiwyg.min.js" debug-src="~/Crest.Markdown/Scripts/markdown-editors/markdown-body-part-wysiwyg.js" depends-on="easymde-mediatoolbar" at="Foot" type="module"></script>

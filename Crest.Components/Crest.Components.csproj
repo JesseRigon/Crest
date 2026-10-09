@@ -39,7 +39,7 @@
     <!-- Runtime assets are exposed from this project's canonical wwwroot. -->
     <EmbeddedResource Include="Components\Resources\Spreadsheet\theme1.xml" />
     <!-- English-only compiled default (see plans/user-localization.md "Client string
-         localization for .Admin"). Real translations come from OrchardCore's .po
+         localization for .Admin"). Real translations come from Crest's .po
          pipeline via Crest.AdminTheme.Theme.CrestApiLocalizer at runtime - satellite .resx
          files per language were removed 2026-07-31: they shipped as separate compiled
          .resources.dll assemblies in the WASM bundle regardless of which cultures a

@@ -5,16 +5,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.DataLocalization.Services;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Entities;
-using OrchardCore.Localization;
-using OrchardCore.Localization.Models;
-using OrchardCore.Localization.Services;
-using OrchardCore.Settings;
-using OrchardCore.Users;
-using OrchardCore.Users.Localization.Models;
-using OrchardCore.Users.Models;
+using Crest.DataLocalization.Services;
+using Crest.Environment.Shell;
+using Crest.Entities;
+using Crest.Localization;
+using Crest.Localization.Models;
+using Crest.Localization.Services;
+using Crest.Settings;
+using Crest.Users;
+using Crest.Users.Localization.Models;
+using Crest.Users.Models;
 
 namespace Crest.ViewModels;
 
@@ -30,8 +30,8 @@ public sealed record CrestLocalization(
     string? AdminDefaultCulture,
     CrestCulture[] AvailableCultures);
 
-// Crest-owned, separate from OrchardCore's own LocalizationSettings - AdminDefaultCulture
-// is a Crest concept upstream OrchardCore has no equivalent for.
+// Crest-owned, separate from Crest's own LocalizationSettings - AdminDefaultCulture
+// is a Crest concept the platform had no equivalent for.
 public sealed class CrestLocalizationSettings
 {
     public string? AdminDefaultCulture { get; set; }

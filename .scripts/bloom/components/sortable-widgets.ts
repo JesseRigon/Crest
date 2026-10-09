@@ -1,6 +1,6 @@
 /**
- * Cross-container widget drag-and-drop shared by OrchardCore.Flows' FlowPart/BagPart
- * editors and OrchardCore.Widgets' WidgetsListPart editor: each renders its widgets
+ * Cross-container widget drag-and-drop shared by Crest.Flows' FlowPart/BagPart
+ * editors and Crest.Widgets' WidgetsListPart editor: each renders its widgets
  * into a "widget-template-placeholder" container, and widgets can be dragged not just
  * to reorder within one container but into any OTHER compatible container on the page
  * (e.g. moving a widget between two Flow fields, or between two zones of a

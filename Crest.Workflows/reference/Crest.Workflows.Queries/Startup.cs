@@ -2,7 +2,7 @@ using Crest.Workflows.Extensions;
 using Crest.Workflows;
 using Microsoft.Extensions.DependencyInjection;
 using Crest.Workflows.Queries.UI;
-using OrchardCore.Modules;
+using Crest.Modules;
 
 namespace Crest.Workflows.Queries;
 

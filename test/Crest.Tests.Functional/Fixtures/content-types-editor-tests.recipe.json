@@ -1,0 +1,104 @@
+{
+  "name": "ContentTypesEditorTests",
+  "displayName": "ContentTypesEditorTests",
+  "description": "Testing Crest.ContentTypes' field/part drag-reorder (content-type-sortable.ts) and Crest.Contents' ContentTypesSitemapSource cascading show/hide toggle (content-types-sitemap-source.ts).",
+  "author": "The Crest Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "tests" ],
+  "tags": [ "tests" ],
+
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Crest.HomeRoute",
+        "Crest.Admin",
+        "Crest.Navigation",
+        "Crest.Recipes",
+        "Crest.Resources",
+        "Crest.Roles",
+        "Crest.Security",
+        "Crest.Settings",
+        "Crest.Themes",
+        "Crest.Users",
+
+        "Crest.Contents",
+        "Crest.ContentTypes",
+        "Crest.Autoroute",
+        "Crest.Html",
+        "Crest.Sitemaps",
+        "Crest.Title",
+
+        "TheAdmin",
+        "SafeMode"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "TheAdmin",
+      "site": "TheAdmin"
+    },
+    {
+      "name": "ContentDefinition",
+      "ContentTypes": [
+        {
+          "Name": "ReorderTestType",
+          "DisplayName": "Reorder Test Type",
+          "Settings": {
+            "ContentTypeSettings": {
+              "Creatable": true,
+              "Draftable": true,
+              "Versionable": true,
+              "Listable": true,
+              "Securable": true
+            }
+          },
+          "ContentTypePartDefinitionRecords": [
+            {
+              "PartName": "TitlePart",
+              "Name": "TitlePart",
+              "Settings": {
+                "ContentTypePartSettings": {
+                  "Position": "0"
+                }
+              }
+            },
+            {
+              "PartName": "HtmlBodyPart",
+              "Name": "HtmlBodyPart",
+              "Settings": {
+                "ContentTypePartSettings": {
+                  "Position": "1"
+                }
+              }
+            },
+            {
+              "PartName": "AutoroutePart",
+              "Name": "AutoroutePart",
+              "Settings": {
+                "ContentTypePartSettings": {
+                  "Position": "2"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sitemaps",
+      "Data": [
+        {
+          "$type": "Crest.Sitemaps.Models.Sitemap, Crest.Sitemaps.Abstractions",
+          "SitemapId": "contenttypeseditortestsitemap",
+          "Name": "ContentTypesEditor Test Sitemap",
+          "Enabled": true,
+          "Path": "content-types-editor-test-sitemap",
+          "SitemapSources": []
+        }
+      ]
+    }
+  ]
+}

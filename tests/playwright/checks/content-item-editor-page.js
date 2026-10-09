@@ -36,7 +36,7 @@ module.exports = async function run(page, ctx) {
   results.push({ name: 'editor-json-valid', pass: jsonValid, message: `length=${jsonLength}` });
 
   // Round-trips a throwaway content item through the native API to prove the editor
-  // route sits on top of real Orchard content APIs, then cleans it up immediately.
+  // route sits on top of real Crest content APIs, then cleans it up immediately.
   // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
   const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
   const created = await page.request.post(`${ctx.baseUrl}/api/crest/content-items`, {

@@ -7,15 +7,15 @@ using Crest.Services;
 using Crest.Parties.Constants;
 using Crest.Parties.Indexes;
 using Crest.Parties.Services;
-using OrchardCore.ContentFields.Settings;
+using Crest.ContentFields.Settings;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.ContentManagement;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Metadata.Settings;
-using OrchardCore.ContentManagement.Records;
-using OrchardCore.Data.Migration;
-using OrchardCore.Environment.Shell.Scope;
-using OrchardCore.Flows.Models;
+using Crest.ContentManagement;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Settings;
+using Crest.ContentManagement.Records;
+using Crest.Data.Migration;
+using Crest.Environment.Shell.Scope;
+using Crest.Flows.Models;
 using YesSql;
 using YesSql.Sql;
 
@@ -54,7 +54,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .Attachable()
             .Reusable(false)
             .WithDisplayName("Person")
-            .WithDescription("A human party profile. A person is not automatically an Orchard user account.")
+            .WithDescription("A human party profile. A person is not automatically an Crest user account.")
             .WithField("FirstName", field => field
                 .OfType("TextField")
                 .WithDisplayName("First name")
@@ -64,12 +64,12 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
                 .WithDisplayName("Last name")
                 .WithPosition("1"))
             // The user <-> Person link, person side. A real user picker (indexed by
-            // OrchardCore.ContentFields.Indexing.SQL.UserPicker) so "which person is
+            // Crest.ContentFields.Indexing.SQL.UserPicker) so "which person is
             // this account" is a query, not a scan.
             .WithField(PartyUserLinkService.PortalUserField, field => field
                 .OfType("UserPickerField")
                 .WithDisplayName("Portal user")
-                .WithDescription("The Orchard user account that IS this person, once one exists (set by the module that creates the account).")
+                .WithDescription("The Crest user account that IS this person, once one exists (set by the module that creates the account).")
                 .WithPosition("2")
                 .MergeSettings<UserPickerFieldSettings>(settings =>
                 {

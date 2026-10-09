@@ -1,0 +1,27 @@
+@model HtmlBodyPartViewModel
+@{
+    var settings = Model.TypePartDefinition.GetSettings<HtmlBodyPartSettings>();
+    var culture = await Platform.GetContentCultureAsync(Model.ContentItem);
+}
+
+@await DisplayAsync(await New.ShortcodeModal())
+
+<div class="ocat-wrapper">
+    <label asp-for="Html" class="ocat-label">@Model.TypePartDefinition.DisplayName()</label>
+    <div class="ocat-end">
+        <textarea asp-for="Html" rows="5" class="form-control content-preview-text html-body-part-codemirror" dir="@culture.GetLanguageDirection()"></textarea>
+        <span class="hint">@T["The body of the content item."]</span>
+    </div>
+</div>
+
+<style asp-name="codemirror"></style>
+<style asp-name="monokai"></style>
+<script asp-name="codemirror" at="Foot"></script>
+<script asp-name="codemirror-addon-display-autorefresh" at="Foot"></script>
+<script asp-name="codemirror-addon-edit-closetag" at="Foot"></script>
+<script asp-name="codemirror-addon-selection-active-line" at="Foot"></script>
+<script asp-name="codemirror-mode-css" at="Foot"></script>
+<script asp-name="codemirror-mode-htmlmixed" at="Foot"></script>
+<script asp-name="codemirror-mode-javascript" at="Foot"></script>
+<script asp-name="codemirror-mode-xml" at="Foot"></script>
+<script asp-src="~/Crest.Html/Scripts/html-body-part-editors/html-body-part.min.js" debug-src="~/Crest.Html/Scripts/html-body-part-editors/html-body-part.js" at="Foot" type="module"></script>

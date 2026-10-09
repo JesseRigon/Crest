@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.props" />
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -13,11 +13,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.ContentFields\OrchardCore.ContentFields.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.ContentManagement\OrchardCore.ContentManagement.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.Contents\OrchardCore.Contents.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Data\OrchardCore.Data.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.ContentFields\Crest.ContentFields.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.ContentManagement\Crest.ContentManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Contents\Crest.Contents.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Data\Crest.Data.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <PackageReference Include="YesSql.Abstractions" />
   </ItemGroup>
 
@@ -25,9 +25,7 @@
     <!-- The picker abstraction (IOptionSourceProvider, OptionRow,
          CrestOptionSourceKeys) and OptionPickerField live in Crest.Server; this module
          plugs Content Part Lists in as one provider among several. -->
-    <ProjectReference Include="../Crest.Server/Crest.csproj" />
+    <ProjectReference Include="../Crest.Server/Crest.Server.csproj" />
     <ProjectReference Include="../Crest.Global/Crest.Global.csproj" />
   </ItemGroup>
-
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
 </Project>

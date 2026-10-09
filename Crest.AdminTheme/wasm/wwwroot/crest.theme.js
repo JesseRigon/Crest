@@ -143,7 +143,7 @@ window.crestTheme = (() => {
   // called with the fully-resolved culture on every resolution (not only when the user
   // explicitly picks one), and writes a tenant-wide cookie (CrestCultureCookie server-side,
   // NOT AdminCookieCultureProvider's admin-path-scoped one) so both the WASM app's own API
-  // calls and any legacy same-origin iframed Orchard page see the same answer. Mirrored
+  // calls and any legacy same-origin iframed Crest page see the same answer. Mirrored
   // into localStorage, same pattern as crest-theme-mode/crest-admin-local-users, so a fresh
   // tab can rehydrate the resolved culture before the first server round-trip completes.
   // NOTE: because the cookie is per-origin (not per-tab), it only reflects whichever tab

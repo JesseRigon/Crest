@@ -110,7 +110,7 @@
     color: var(--crest-color-text-muted, #6b7280);
 }
 
-.admin-menu-node__icon-slot .orchard-icon {
+.admin-menu-node__icon-slot .platform-icon {
     width: 1.35rem;
     height: 1.35rem;
 }

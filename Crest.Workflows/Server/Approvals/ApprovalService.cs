@@ -2,7 +2,7 @@ using System.Security.Claims;
 using Crest.Workflows.Runtime;
 using Crest.Workflows.Runtime.Options;
 using Microsoft.AspNetCore.Authorization;
-using OrchardCore.Security.Permissions;
+using Crest.Security.Permissions;
 using YesSql;
 
 namespace Crest.Workflows.Approvals;
@@ -18,7 +18,7 @@ public enum ApprovalDecisionResult { Decided, NotFound, Forbidden, AlreadyDecide
 
 /// <summary>
 /// The approval tasks of this tenant: who may decide one (a member of its role, or a holder
-/// of its permission, through Orchard's authorization - member ceilings included), the
+/// of its permission, through Crest's authorization - member ceilings included), the
 /// queue a user sees, and the decision, which is recorded first and then resumes the
 /// waiting workflow. A task is decided once.
 /// </summary>

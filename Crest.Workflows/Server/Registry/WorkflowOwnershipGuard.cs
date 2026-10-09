@@ -4,8 +4,8 @@ using Crest.Workflows.Parts;
 using Crest.Workflows.Security;
 using Crest.Workflows.Services;
 using Microsoft.AspNetCore.Http;
-using OrchardCore.ContentManagement;
-using OrchardCore.Security.Permissions;
+using Crest.ContentManagement;
+using Crest.Security.Permissions;
 
 namespace Crest.Workflows.Registry;
 
@@ -85,7 +85,7 @@ public sealed class WorkflowChangeDeniedException(string message) : InvalidOpera
 /// decides (never the incoming model's: a client could strip the properties), the stored
 /// ownership is stamped back onto what gets saved, and a user's save of a shipped flow marks
 /// the fork. Then the acting user (the request's principal; a change with no request is the
-/// system's own) is authorized against the definition in one Orchard call - the permission
+/// system's own) is authorized against the definition in one Crest call - the permission
 /// the change needs, with the definition's access lists as the resource - so the role grant,
 /// the super user, the member ceiling and the per-flow lists all decide together. The
 /// importer's own writes run inside <see cref="WorkflowSystemScope"/> and are exempt: that

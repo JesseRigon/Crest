@@ -1,0 +1,70 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Crest.ArchiveLater.Models;
+using Crest.ArchiveLater.ViewModels;
+using Crest.ContentManagement.Display.ContentDisplay;
+using Crest.ContentManagement.Display.Models;
+using Crest.Contents;
+using Crest.DisplayManagement.Views;
+using Crest.Modules;
+
+namespace Crest.ArchiveLater.Drivers;
+
+public sealed class ArchiveLaterPartDisplayDriver : ContentPartDisplayDriver<ArchiveLaterPart>
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IAuthorizationService _authorizationService;
+    private readonly ILocalClock _localClock;
+
+    public ArchiveLaterPartDisplayDriver(
+        IHttpContextAccessor httpContextAccessor,
+        IAuthorizationService authorizationService,
+        ILocalClock localClock)
+    {
+        _httpContextAccessor = httpContextAccessor;
+        _authorizationService = authorizationService;
+        _localClock = localClock;
+    }
+
+    public override IDisplayResult Display(ArchiveLaterPart part, BuildPartDisplayContext context)
+        => Initialize<ArchiveLaterPartViewModel, ArchiveLaterPartDisplayDriver, ArchiveLaterPart>(
+            $"{nameof(ArchiveLaterPart)}_SummaryAdmin",
+            static (model, driver, part) => driver.PopulateViewModel(part, model), this, part).Location(PlatformConstants.DisplayType.SummaryAdmin, "Meta:25");
+
+    public override IDisplayResult Edit(ArchiveLaterPart part, BuildPartEditorContext context)
+        => Initialize<ArchiveLaterPartViewModel, ArchiveLaterPartDisplayDriver, ArchiveLaterPart>(
+            GetEditorShapeType(context),
+            static (model, driver, part) => driver.PopulateViewModel(part, model), this, part).Location("Actions:10.5");
+
+    public override async Task<IDisplayResult> UpdateAsync(ArchiveLaterPart part, UpdatePartEditorContext context)
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+
+        if (await _authorizationService.AuthorizeAsync(httpContext?.User, CommonPermissions.PublishContent, part.ContentItem))
+        {
+            var viewModel = new ArchiveLaterPartViewModel();
+
+            await context.Updater.TryUpdateModelAsync(viewModel, Prefix);
+
+            if (viewModel.ScheduledArchiveLocalDateTime == null || httpContext.Request.Form["submit.Publish"] == "submit.CancelArchiveLater")
+            {
+                part.ScheduledArchiveUtc = null;
+            }
+            else
+            {
+                part.ScheduledArchiveUtc = await _localClock.ConvertToUtcAsync(viewModel.ScheduledArchiveLocalDateTime.Value);
+            }
+        }
+
+        return Edit(part, context);
+    }
+
+    private async ValueTask PopulateViewModel(ArchiveLaterPart part, ArchiveLaterPartViewModel viewModel)
+    {
+        viewModel.ContentItem = part.ContentItem;
+        viewModel.ScheduledArchiveUtc = part.ScheduledArchiveUtc;
+        viewModel.ScheduledArchiveLocalDateTime = part.ScheduledArchiveUtc.HasValue
+            ? (await _localClock.ConvertToLocalAsync(part.ScheduledArchiveUtc.Value)).DateTime
+            : null;
+    }
+}

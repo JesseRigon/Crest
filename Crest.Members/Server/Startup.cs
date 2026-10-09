@@ -5,15 +5,15 @@ using Crest.Members.Permissions;
 using Crest.Members.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using OrchardCore.Data;
-using OrchardCore.Data.Migration;
-using OrchardCore.Modules;
-using OrchardCore.Navigation;
-using OrchardCore.Security.Permissions;
-using OrchardCore.Users;
-using OrchardCore.Users.Events;
-using OrchardCore.Users.Handlers;
-using OrchardCore.Users.Services;
+using Crest.Data;
+using Crest.Data.Migration;
+using Crest.Modules;
+using Crest.Navigation;
+using Crest.Security.Permissions;
+using Crest.Users;
+using Crest.Users.Events;
+using Crest.Users.Handlers;
+using Crest.Users.Services;
 
 namespace Crest.Members;
 
@@ -49,7 +49,7 @@ public sealed class Startup : StartupBase
         // with their own staff-only permissions via Configure<...> next to their
         // IPermissionProvider. Names are the owning modules' permission names verbatim
         // (referenced as strings because the registry must also cover modules this one
-        // does not reference, e.g. OrchardCore.Tenants).
+        // does not reference, e.g. Crest.Tenants).
         services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, MemberPermissionCeilingHandler>();
         services.Configure<MemberPermissionCeilingOptions>(options => options
             .Ceiling(

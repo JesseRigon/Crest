@@ -1,0 +1,11 @@
+{
+  "name": "@crest/users",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "qrcodejs": "^1.0.0"
+  }
+}

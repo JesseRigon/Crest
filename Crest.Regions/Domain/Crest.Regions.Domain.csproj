@@ -8,5 +8,5 @@
   </PropertyGroup>
   <!-- Server-free: the addressing-map shape and the validation rules over it, shared by
        the server and the Blazor WASM client so both resolve the same rules from the same
-       data (plans/regions-and-locations.md › Validation). Never reference OrchardCore. -->
+       data (plans/regions-and-locations.md › Validation). Never reference Crest. -->
 </Project>

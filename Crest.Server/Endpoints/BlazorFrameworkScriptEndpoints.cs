@@ -9,18 +9,18 @@ namespace Crest.Endpoints;
 // microsoft.aspnetcore.app.internal.assets SDK package's static-web-assets target,
 // but that target only fires when OutputType=Exe AND UsingMicrosoftNETSdkWeb=true -
 // neither is true for Crest.csproj, a Sdk="Microsoft.NET.Sdk.Razor"
-// module library (Orchard's module convention), so the scripts never reach the app's
+// module library (Crest's module convention), so the scripts never reach the app's
 // static web assets manifest and MapStaticAssets cannot serve them. See
 // docs/blazor-web.md (Bug 2).
 //
 // Served here as tenant-pipeline ENDPOINTS (not a host-level UseStaticFiles) so that
-// OrchardCore's routing stays the single authority over the URL space: endpoint
+// Crest's routing stays the single authority over the URL space: endpoint
 // matching happens after ModularTenantRouterMiddleware has stripped the tenant's
 // RequestUrlPrefix into PathBase and after BlazorAdminThemeMiddleware has stripped
 // the admin/login shell base the same way - so one registration serves the script
 // for every form a browser can request it in ("/_framework/blazor.web.js",
 // "/tenant2/_framework/...", "/tenant2/Admin/_framework/..."). A host-level
-// UseStaticFiles registered before UseOrchardCore() (the previous approach, in each
+// UseStaticFiles registered before UsePlatform() (the previous approach, in each
 // consuming host's Program.cs) only ever matched the bare root form and had to be
 // copy-pasted into every host.
 //
@@ -78,8 +78,8 @@ internal static class BlazorFrameworkScriptEndpoints
     private static string? ResolveFrameworkAssetsRoot(ILogger logger)
     {
         var packageRoot = Path.Combine(
-            Environment.GetEnvironmentVariable("NUGET_PACKAGES")
-                ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages"),
+            System.Environment.GetEnvironmentVariable("NUGET_PACKAGES")
+                ?? Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), ".nuget", "packages"),
             "microsoft.aspnetcore.app.internal.assets");
 
         if (!Directory.Exists(packageRoot))
@@ -89,9 +89,9 @@ internal static class BlazorFrameworkScriptEndpoints
 
         // Prefer the package version matching the running shared framework, so the
         // boot script and the runtime it boots can never drift apart (the package
-        // version tracks Microsoft.AspNetCore.App's own). Environment.Version is the
+        // version tracks Microsoft.AspNetCore.App's own). System.Environment.Version is the
         // runtime version (e.g. 10.0.9), which matches in every normal install.
-        var runtimeVersionDir = Path.Combine(packageRoot, Environment.Version.ToString(3), "_framework");
+        var runtimeVersionDir = Path.Combine(packageRoot, System.Environment.Version.ToString(3), "_framework");
         if (Directory.Exists(runtimeVersionDir))
         {
             return runtimeVersionDir;
@@ -109,7 +109,7 @@ internal static class BlazorFrameworkScriptEndpoints
                 "No microsoft.aspnetcore.app.internal.assets package matches the running framework version " +
                 "{RuntimeVersion}; serving Blazor framework scripts from {Fallback} instead. A version mismatch " +
                 "between blazor.web.js and the runtime can cause silent boot failures.",
-                Environment.Version.ToString(3), fallback);
+                System.Environment.Version.ToString(3), fallback);
         }
 
         return fallback;

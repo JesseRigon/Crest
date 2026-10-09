@@ -77,7 +77,7 @@ module.exports = async function run(page, ctx) {
     contentIcon = await page
       .locator('.crest-panel-menu__item-content', { hasText: /^Content$/ })
       .first()
-      .locator('.orchard-icon')
+      .locator('.platform-icon')
       .evaluate(icon => ({
         library: icon.getAttribute('data-icon-library'),
         name: icon.getAttribute('data-icon-name'),

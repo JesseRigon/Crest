@@ -1,9 +1,9 @@
 using Crest.Services;
 using Crest.Settings;
 using NSubstitute;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Metadata.Builders;
-using OrchardCore.ContentManagement.Metadata.Models;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Builders;
+using Crest.ContentManagement.Metadata.Models;
 using Xunit;
 
 namespace Crest.Server.Tests;

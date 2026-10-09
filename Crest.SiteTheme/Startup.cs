@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.Modules;
+using Crest.Modules;
 
-namespace OrchardCore.Themes.Crest.SiteTheme;
+namespace Crest.Themes.Crest.SiteTheme;
 
 public sealed class Startup : StartupBase
 {

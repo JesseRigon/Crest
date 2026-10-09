@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
-using OrchardCore.Admin;
-using OrchardCore.Navigation;
+using Crest.Admin;
+using Crest.Navigation;
 
 namespace Crest.Navigation;
 
-// Joins stock OrchardCore.ContentTypes' menu group - Design > Content Definition >
-// Content Types / Content Parts - as a sibling entry, matching Orchard's
+// Joins stock Crest.ContentTypes' menu group - Design > Content Definition >
+// Content Types / Content Parts - as a sibling entry, matching Crest's
 // content-definition nomenclature. Same .Url(...) rationale as Crest.Server's
 // CrestAdminMenu: the screen is a Blazor page with no MVC action to .Action(...) to,
 // so the link is built from the tenant's real AdminOptions.AdminUrlPrefix.

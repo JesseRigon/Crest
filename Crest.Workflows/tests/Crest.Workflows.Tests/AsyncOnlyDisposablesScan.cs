@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Crest.Workflows.Tests;
 
-// Orchard disposes a tenant container synchronously when a shell is released (and from
+// Crest disposes a tenant container synchronously when a shell is released (and from
 // the ShellContext finalizer as a fallback); a registered root service that implements
 // only IAsyncDisposable makes that throw and, on the finalizer thread, kills the process
 // - seen in the suite with Crest.Workflows.Common.Multitenancy.DefaultTenantService. This pins the

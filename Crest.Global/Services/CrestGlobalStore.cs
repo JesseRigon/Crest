@@ -3,9 +3,9 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OrchardCore.Data;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Json;
+using Crest.Data;
+using Crest.Environment.Shell;
+using Crest.Json;
 using YesSql;
 using YesSql.Indexes;
 using YesSql.Provider.MySql;
@@ -18,13 +18,13 @@ using YesSql.Sql;
 namespace Crest.Global.Services;
 
 /// <summary>
-/// Host-level singleton owning the tenant-less store. Built the way OrchardCore.Data
+/// Host-level singleton owning the tenant-less store. Built the way Crest.Data
 /// builds a tenant's store (a hand-assembled YesSql <see cref="Configuration"/> switched
 /// on the provider) but from <see cref="CrestGlobalStoreOptions"/> instead of ShellSettings,
 /// so no shell is involved. Schema steps are discovered from every loaded module assembly
 /// implementing <see cref="ICrestGlobalSchema"/> and applied once, versioned, on first use.
 /// </summary>
-// NOT IDisposable/IAsyncDisposable, deliberately. Orchard clones host singletons into
+// NOT IDisposable/IAsyncDisposable, deliberately. Crest clones host singletons into
 // each tenant container through a factory delegate, and MS DI disposes factory-produced
 // disposables when a tenant container is torn down (feature toggle, shell reload) - which
 // would dispose this process-wide store under every other tenant. The underlying IStore is
@@ -131,7 +131,7 @@ public sealed class CrestGlobalStore : ICrestGlobalStore
     private CrestGlobalStoreOptions ReadOptions()
     {
         var options = Microsoft.Extensions.Configuration.ConfigurationBinder.Get<CrestGlobalStoreOptions>(
-            _configuration.GetSection("OrchardCore").GetSection(CrestGlobalStoreOptions.SectionName)) ?? new CrestGlobalStoreOptions();
+            _configuration.GetSection("Crest").GetSection(CrestGlobalStoreOptions.SectionName)) ?? new CrestGlobalStoreOptions();
 
         options.TablePrefix ??= CrestGlobalStoreOptions.DefaultTablePrefix;
         return options;
@@ -189,12 +189,12 @@ public sealed class CrestGlobalStore : ICrestGlobalStore
 
     private static string Require(string? connectionString, string provider) =>
         string.IsNullOrWhiteSpace(connectionString)
-            ? throw new InvalidOperationException($"The Crest global store needs a ConnectionString for provider '{provider}' (section OrchardCore:{CrestGlobalStoreOptions.SectionName}).")
+            ? throw new InvalidOperationException($"The Crest global store needs a ConnectionString for provider '{provider}' (section Crest:{CrestGlobalStoreOptions.SectionName}).")
             : connectionString;
 
     // Modules contribute global documents without the host naming each one: any loaded
     // assembly that references Crest.Global is scanned for ICrestGlobalSchema types.
-    // Orchard loads every module assembly at startup, before any shell is built, so the
+    // Crest loads every module assembly at startup, before any shell is built, so the
     // first store use sees them all.
     private IReadOnlyList<ICrestGlobalSchema> DiscoverSchemas()
     {

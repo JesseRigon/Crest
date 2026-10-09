@@ -1,5 +1,5 @@
 using System.Reflection;
-using OrchardCore.DisplayManagement.Manifest;
+using Crest.DisplayManagement.Manifest;
 using Xunit;
 
 namespace Crest.SiteTheme.Tests;
@@ -12,7 +12,7 @@ public sealed class ManifestTests
     [Fact]
     public void ThemeManifestDeclaresTheExpectedThemeId()
     {
-        var attribute = typeof(OrchardCore.Themes.Crest.SiteTheme.Startup).Assembly
+        var attribute = typeof(Crest.Themes.Crest.SiteTheme.Startup).Assembly
             .GetCustomAttribute<ThemeAttribute>();
 
         Assert.NotNull(attribute);

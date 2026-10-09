@@ -12,12 +12,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>Crest.MemberTheme.Client</AssemblyName>
     <RootNamespace>Crest.MemberTheme</RootNamespace>
-    <OrchardCoreCompatibilityVersion>4.0.0</OrchardCoreCompatibilityVersion>
+    <PlatformCompatibilityVersion>4.0.0</PlatformCompatibilityVersion>
     <CrestSecurityPatch>0</CrestSecurityPatch>
     <CrestBugPatch>0</CrestBugPatch>
-    <CrestVersion>$(OrchardCoreCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
-    <VersionPrefix>$(OrchardCoreCompatibilityVersion)</VersionPrefix>
-    <PackageVersion>$(OrchardCoreCompatibilityVersion)</PackageVersion>
+    <CrestVersion>$(PlatformCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
+    <VersionPrefix>$(PlatformCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(PlatformCompatibilityVersion)</PackageVersion>
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <FileVersion>4.0.0.0</FileVersion>
     <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>

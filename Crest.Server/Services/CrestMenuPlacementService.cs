@@ -1,18 +1,18 @@
 using System.Text.Json.Serialization;
-using OrchardCore.Data.Documents;
-using OrchardCore.Documents;
+using Crest.Data.Documents;
+using Crest.Documents;
 
 namespace Crest.Services;
 
-// Vanilla OrchardCore has no concept of "which navigation surface does this custom admin
-// menu belong to" — OrchardCore.AdminMenu's own AdminMenu document (see
-// OrchardCore.AdminMenu.Abstractions.Models.AdminMenu, a NuGet package type we can't edit)
+// Vanilla Crest has no concept of "which navigation surface does this custom admin
+// menu belong to" — Crest.AdminMenu's own AdminMenu document (see
+// Crest.AdminMenu.Abstractions.Models.AdminMenu, a NuGet package type we can't edit)
 // unconditionally injects every enabled custom menu into the "admin" sidebar tree. This is
 // a Crest-owned companion document, keyed by that same AdminMenu.Id, tracking which
 // placement each custom menu actually belongs to (default Admin for anything without an
 // entry, so pre-existing menus are unaffected) and — for Local/User placements — an
 // independent Enabled flag, since the underlying AdminMenu.Enabled gets forced false for
-// those to keep OrchardCore's own coordinator from also rendering them into the sidebar.
+// those to keep Crest's own coordinator from also rendering them into the sidebar.
 [JsonConverter(typeof(JsonStringEnumConverter<CrestMenuPlacement>))]
 public enum CrestMenuPlacement
 {

@@ -104,7 +104,7 @@ public class ResolveExclusionTests
     [Fact]
     public void An_in_scope_item_projects_normally()
     {
-        var item = new OrchardCore.ContentManagement.ContentItem
+        var item = new Crest.ContentManagement.ContentItem
         {
             ContentItemId = "item-1",
             ContentType = "Customer",

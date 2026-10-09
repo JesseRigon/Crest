@@ -2,10 +2,10 @@ using System.Globalization;
 using System.Text.Json.Dynamic;
 using System.Text.Json.Nodes;
 using Crest.Settings;
-using OrchardCore.ContentFields.Indexing.SQL;
-using OrchardCore.ContentManagement;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Records;
+using Crest.ContentFields.Indexing.SQL;
+using Crest.ContentManagement;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Records;
 using YesSql;
 using YesSql.Services;
 
@@ -297,7 +297,7 @@ public sealed class ContentItemOptionSourceProvider(
         string qualifier, IEnumerable<string> paths)
     {
         var results = new Dictionary<string, FieldIndexTarget?>(StringComparer.OrdinalIgnoreCase);
-        OrchardCore.ContentManagement.Metadata.Models.ContentTypeDefinition? type = null;
+        Crest.ContentManagement.Metadata.Models.ContentTypeDefinition? type = null;
         var typeLoaded = false;
 
         foreach (var raw in paths)
@@ -320,7 +320,7 @@ public sealed class ContentItemOptionSourceProvider(
     }
 
     internal static FieldIndexTarget? ResolveFieldTarget(
-        OrchardCore.ContentManagement.Metadata.Models.ContentTypeDefinition type, string path)
+        Crest.ContentManagement.Metadata.Models.ContentTypeDefinition type, string path)
     {
         var trimmed = path.StartsWith(OptionRowPaths.FieldPrefix, StringComparison.OrdinalIgnoreCase)
             ? path[OptionRowPaths.FieldPrefix.Length..]
@@ -368,7 +368,7 @@ public sealed class ContentItemOptionSourceProvider(
     /// Text/Numeric/Boolean field (one join per index type is the YesSql constraint,
     /// so tiebreak columns behind it refine in-page); or nothing (DisplayText
     /// default). NOTE: SQL collation, not the request culture, orders pushed sorts -
-    /// cross-page correctness is worth that trade and it matches every stock Orchard
+    /// cross-page correctness is worth that trade and it matches every stock Crest
     /// list.
     /// </summary>
     internal static SqlSortPlan PlanSqlSort(

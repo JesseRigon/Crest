@@ -1,4 +1,4 @@
-using OrchardCore.Modules.Manifest;
+using Crest.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Regions",
@@ -12,5 +12,5 @@ using OrchardCore.Modules.Manifest;
     Name = "Crest Regions and Locations",
     Description = "Regional Profiles (a party's place, culture and currency), the geo tree every place resolves into, and per-country addressing maps.",
     Category = "Crest",
-    Dependencies = ["Crest", "OrchardCore.Contents", "OrchardCore.ContentFields", "OrchardCore.Title", "Crest.Global"]
+    Dependencies = ["Crest", "Crest.Contents", "Crest.ContentFields", "Crest.Title", "Crest.Global"]
 )]

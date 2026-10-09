@@ -2,13 +2,13 @@ import { getTranslations, setTranslations } from "../helpers/localizations";
 
 // Shared by 4 near-identical Vue 2 "draggable key/value(s) table + JSON-edit-modal" widgets that
 // existed as separate copy-pasted files before this migration:
-//   - OrchardCore.ContentFields' TextFieldPredefinedListEditorSettings.Edit.cshtml (2 columns,
+//   - Crest.ContentFields' TextFieldPredefinedListEditorSettings.Edit.cshtml (2 columns,
 //     name/value, "default" column in radio mode)
-//   - OrchardCore.ContentFields' MultiTextFieldSettings.Edit.cshtml (2 columns, name/value,
+//   - Crest.ContentFields' MultiTextFieldSettings.Edit.cshtml (2 columns, name/value,
 //     "default" column in checkbox mode)
-//   - OrchardCore.OpenId's OpenIdClientSettings.Edit.cshtml (2 columns, name/value, no "default"
+//   - Crest.OpenId's OpenIdClientSettings.Edit.cshtml (2 columns, name/value, no "default"
 //     column)
-//   - OrchardCore.Seo's SeoMetaPart.Edit.cshtml (5 columns: content/name/property/httpEquiv/
+//   - Crest.Seo's SeoMetaPart.Edit.cshtml (5 columns: content/name/property/httpEquiv/
 //     charset, no "default" column)
 //
 // Follows this repo's established plain-.ts bloom-component shape (Vue.createApp + template
@@ -17,9 +17,9 @@ import { getTranslations, setTranslations } from "../helpers/localizations";
 // the fully independent media-picker/media-gallery Vite apps.
 //
 // All display text is resolved through the IJSLocalizer / getTranslations() pattern (see
-// src/docs/reference/modules/Localize/javascript-localization.md and the Media Gallery app,
+// docs/platform/reference/modules/Localize/javascript-localization.md and the Media Gallery app,
 // which established it) rather than passed pre-translated from Razor: each consumer view calls
-// Orchard.GetJSLocalizations("options-table-editor") and serializes the result into a
+// Platform.GetJSLocalizations("options-table-editor") and serializes the result into a
 // translations="..." attribute; this component seeds the shared store once via setTranslations()
 // and every label below is looked up by key through getTranslations(), exactly like
 // media-gallery's App.vue does with its own "media-gallery" group.

@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Target for Crest Module</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Converts project/library into an Crest Module that can be referenced in Crest modular application.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!--
+    Add the necessary '.props' and '.targets' files under the 'build\' folder of this package,
+    so that a referencing project is built / packed and considered as an 'Crest' module.
+
+    If a referencing project targets multiple TFMs the scripts under 'build\' may not be used,
+    so we pack other scripts under 'buildMultiTargeting\' just to import those under `build\`.
+  -->
+
+  <ItemGroup>
+    <None Include="Crest.Module.Targets.props" Pack="true">
+      <PackagePath>build\Crest.Module.Targets.props</PackagePath>
+    </None>
+    <None Include="buildMultiTargeting\Crest.Module.Targets.props" Pack="true">
+      <PackagePath>buildMultiTargeting\Crest.Module.Targets.props</PackagePath>
+    </None>
+    <None Include="Crest.Module.Targets.targets" Pack="true">
+      <PackagePath>build\Crest.Module.Targets.targets</PackagePath>
+    </None>
+    <None Include="buildMultiTargeting\Crest.Module.Targets.targets" Pack="true">
+      <PackagePath>buildMultiTargeting\Crest.Module.Targets.targets</PackagePath>
+    </None>
+    <None Include="Package.Build.props" Pack="true">
+      <PackagePath>build\Package.Build.props</PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

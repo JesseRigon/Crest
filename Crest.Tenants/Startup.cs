@@ -1,0 +1,138 @@
+using System.Net.Mime;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
+using Crest.Deployment;
+using Crest.DisplayManagement;
+using Crest.Environment.Shell;
+using Crest.Environment.Shell.Configuration;
+using Crest.Environment.Shell.Distributed;
+using Crest.Modules;
+using Crest.Modules.FileProviders;
+using Crest.Navigation;
+using Crest.Recipes;
+using Crest.Security.Permissions;
+using Crest.Setup;
+using Crest.Tenants.Deployment;
+using Crest.Tenants.Recipes;
+using Crest.Tenants.Services;
+
+namespace Crest.Tenants;
+
+public sealed class Startup : StartupBase
+{
+    private readonly IShellConfiguration _shellConfiguration;
+
+    public Startup(IShellConfiguration shellConfiguration)
+    {
+        _shellConfiguration = shellConfiguration;
+    }
+
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddNavigationProvider<AdminMenu>();
+        services.AddPermissionProvider<Permissions>();
+        services.AddScoped<TenantDatabasePatternResolver>();
+        services.AddScoped<ITenantValidator, TenantValidator>();
+        services.AddShapeTableProvider<TenantShapeTableProvider>();
+        services.AddSetup();
+
+        services.Configure<TenantsOptions>(_shellConfiguration.GetSection("Crest_Tenants"));
+    }
+}
+
+[Feature("Crest.Tenants.FileProvider")]
+public sealed class FileProviderStartup : StartupBase
+{
+    /// <summary>
+    /// The path in the tenant's App_Data folder containing the files.
+    /// </summary>
+    private const string AssetsPath = "wwwroot";
+
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddSingleton<ITenantFileProvider>(serviceProvider =>
+        {
+            var shellOptions = serviceProvider.GetRequiredService<IOptions<ShellOptions>>();
+            var shellSettings = serviceProvider.GetRequiredService<ShellSettings>();
+
+            var contentRoot = GetContentRoot(shellOptions.Value, shellSettings);
+
+            if (!Directory.Exists(contentRoot))
+            {
+                Directory.CreateDirectory(contentRoot);
+            }
+            return new TenantFileProvider(contentRoot);
+        });
+
+        services.AddSingleton<IStaticFileProvider>(serviceProvider =>
+        {
+            return serviceProvider.GetRequiredService<ITenantFileProvider>();
+        });
+    }
+
+    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
+    {
+        var tenantFileProvider = serviceProvider.GetRequiredService<ITenantFileProvider>();
+
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = tenantFileProvider,
+            DefaultContentType = MediaTypeNames.Application.Octet,
+            ServeUnknownFileTypes = true,
+
+            // Cache the tenant static files for 30 days.
+            OnPrepareResponse = ctx =>
+            {
+                ctx.Context.Response.Headers[HeaderNames.CacheControl] = $"public, max-age={TimeSpan.FromDays(30).TotalSeconds}, s-max-age={TimeSpan.FromDays(365.25).TotalSeconds}";
+            },
+        });
+    }
+
+    private static string GetContentRoot(ShellOptions shellOptions, ShellSettings shellSettings) =>
+        Path.Combine(shellOptions.ShellsApplicationDataPath, shellOptions.ShellsContainerName, shellSettings.Name, AssetsPath);
+}
+
+[Feature("Crest.Tenants.Distributed")]
+public sealed class DistributedStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddSingleton<DistributedShellMarkerService>();
+    }
+}
+
+[Feature("Crest.Tenants.FeatureProfiles")]
+public sealed class FeatureProfilesStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddNavigationProvider<FeatureProfilesAdminMenu>();
+        services.AddScoped<FeatureProfilesManager>();
+        services.AddScoped<IFeatureProfilesService, FeatureProfilesService>();
+        services.AddScoped<IFeatureProfilesSchemaService, FeatureProfilesSchemaService>();
+        services.AddShapeTableProvider<TenantFeatureProfileShapeTableProvider>();
+
+        services.AddRecipeExecutionStep<FeatureProfilesStep>();
+    }
+}
+
+[RequireFeatures("Crest.Deployment", "Crest.Tenants.FeatureProfiles")]
+public sealed class FeatureProfilesDeploymentStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddDeployment<AllFeatureProfilesDeploymentSource, AllFeatureProfilesDeploymentStep, AllFeatureProfilesDeploymentStepDriver>();
+    }
+}
+
+[RequireFeatures("Crest.Features")]
+public sealed class TenantFeatureProfilesStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddShapeTableProvider<TenantFeatureShapeTableProvider>();
+    }
+}

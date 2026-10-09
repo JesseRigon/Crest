@@ -40,7 +40,7 @@ public static class StudioServices
         services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
         services.AddOptions();
 
-        // Studio: core, MudBlazor, the workflows module, the engine behind the Orchard cookie.
+        // Studio: core, MudBlazor, the workflows module, the engine behind the Crest cookie.
         services.AddCore();
         services.AddShell(options => options.DisableAuthorization = true);
         services.AddRemoteBackend(new BackendApiConfig
@@ -66,9 +66,9 @@ public static class StudioServices
 }
 
 /// <summary>
-/// Studio's API clients authenticate with the tenant's Orchard cookie (the engine API's
+/// Studio's API clients authenticate with the tenant's Crest cookie (the engine API's
 /// gate maps the workflow permissions the user holds onto the engine's grants) and send
-/// Orchard's antiforgery token on every unsafe request, as Crest's own client does.
+/// Crest's antiforgery token on every unsafe request, as Crest's own client does.
 /// </summary>
 public sealed class CrestCookieApiHandler(ICrestAntiforgery antiforgery) : DelegatingHandler
 {
@@ -87,7 +87,7 @@ public sealed class CrestCookieApiHandler(ICrestAntiforgery antiforgery) : Deleg
 
 /// <summary>
 /// Studio asks for a bearer token for its real-time connections; in the Crest admin the
-/// session is the Orchard cookie, so there is none to give and the browser sends the cookie.
+/// session is the Crest cookie, so there is none to give and the browser sends the cookie.
 /// </summary>
 public sealed class CookieAuthenticationProviderManager : IAuthenticationProviderManager
 {

@@ -1,0 +1,21 @@
+@model HtmlBodyPartViewModel
+@{
+    var settings = Model.TypePartDefinition.GetSettings<HtmlBodyPartSettings>();
+    var monacoSettings = Model.TypePartDefinition.GetSettings<HtmlBodyPartMonacoEditorSettings>();
+    var culture = await Platform.GetContentCultureAsync(Model.ContentItem) ?? CultureInfo.CurrentUICulture;
+}
+
+@await DisplayAsync(await New.ShortcodeModal())
+
+<div class="row mb-3 html-monaco-editor" data-options="@(string.IsNullOrWhiteSpace(monacoSettings.Options) ? "{}" : monacoSettings.Options)">
+    <label asp-for="Html" class="ocat-label">@Model.TypePartDefinition.DisplayName()</label>
+    <div class="ocat-end">
+        <div id="@Html.IdFor(x => x.Html)_editor" asp-for="Text" style="min-height: 400px;" class="form-control html-monaco-editor-container" dir="@culture.GetLanguageDirection()"></div>
+        <textarea asp-for="Html" class="content-preview-text html-monaco-editor-value" hidden>@Html.Raw(Model.Html)</textarea>
+        <span class="hint">@T["The body of the content item."]</span>
+    </div>
+</div>
+
+<style asp-name="monaco"></style>
+<script asp-name="monaco" at="Foot"></script>
+<script asp-src="~/Crest.Html/Scripts/html-body-part-editors/html-body-part-monaco.min.js" debug-src="~/Crest.Html/Scripts/html-body-part-editors/html-body-part-monaco.js" depends-on="monaco" at="Foot" type="module"></script>

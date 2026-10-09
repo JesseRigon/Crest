@@ -1,0 +1,8 @@
+using Crest.Data.Documents;
+
+namespace Crest.Indexing.Core;
+
+public sealed class DictionaryDocument<T> : Document
+{
+    public Dictionary<string, T> Records { get; init; } = [];
+}

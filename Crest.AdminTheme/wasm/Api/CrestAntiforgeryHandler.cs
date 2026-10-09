@@ -5,12 +5,12 @@ using Microsoft.JSInterop;
 namespace Crest.AdminTheme.Api;
 
 /// <summary>
-/// Adds Orchard's antiforgery request token to every unsafe same-origin Crest
-/// request. Authentication continues to use the browser's Orchard cookie.
+/// Adds Crest's antiforgery request token to every unsafe same-origin Crest
+/// request. Authentication continues to use the browser's Crest cookie.
 /// </summary>
 public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js) : DelegatingHandler, ICrestAntiforgeryTokenStore, ICrestCultureCookieWriter
 {
-    /// <summary>Where Orchard hands out the antiforgery request token (Crest.Server's endpoint).</summary>
+    /// <summary>Where Crest hands out the antiforgery request token (Crest.Server's endpoint).</summary>
     public const string TokenPath = "api/crest/antiforgery/token";
 
     private readonly SemaphoreSlim _tokenLock = new(1, 1);
@@ -101,7 +101,7 @@ public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js) : Delegating
             using var response = await base.SendAsync(request, cancellationToken);
             response.EnsureSuccessStatusCode();
             _token = await response.Content.ReadFromJsonAsync<CrestAntiforgeryToken>(cancellationToken)
-                ?? throw new InvalidOperationException("Orchard did not return an antiforgery token.");
+                ?? throw new InvalidOperationException("Crest did not return an antiforgery token.");
             return _token;
         }
         finally
@@ -170,7 +170,7 @@ public sealed class CrestAntiforgeryTokenSource(Uri apiBaseAddress) : Crest.Comp
                 using var response = await client.SendAsync(request, cancellationToken);
                 response.EnsureSuccessStatusCode();
                 var token = await response.Content.ReadFromJsonAsync<CrestAntiforgeryToken>(cancellationToken)
-                    ?? throw new InvalidOperationException("Orchard did not return an antiforgery token.");
+                    ?? throw new InvalidOperationException("Crest did not return an antiforgery token.");
                 _token = new(token.HeaderName, token.RequestToken);
             }
 

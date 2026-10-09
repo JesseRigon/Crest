@@ -1,0 +1,221 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    This file is packaged with "Crest.Module.Targets.nupkg" in "./build" such that any
+    Module that references it will embed in its assembly all assets files and mapping infos.
+    Here we use some msbuild properties that would not be evaluated in the `.props` file.
+    It also prevents VS from adding / keeping some unnecessary lines in the project file.
+  -->
+
+  <PropertyGroup>
+    <ModuleDefaultAssetExcludes>$(ModuleDefaultAssetExcludes);**\*$(DefaultLanguageSourceExtension);**\*.resx</ModuleDefaultAssetExcludes>
+    <ModuleNoneExcludes>$(BaseIntermediateOutputPath)**\*.props;$(BaseIntermediateOutputPath)**\*.targets</ModuleNoneExcludes>
+    <ModuleNoneIncludes>$(ModuleAssetExcludes)</ModuleNoneIncludes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(AppDesignerFolder)' != ''">
+    <ModuleDefaultAssetExcludes>$(ModuleDefaultAssetExcludes);$(AppDesignerFolder)\**</ModuleDefaultAssetExcludes>
+    <ModuleNoneExcludes>$(ModuleNoneExcludes);$(AppDesignerFolder)\**\*$(DefaultLanguageSourceExtension)</ModuleNoneExcludes>
+    <ModuleNoneExcludes>$(ModuleNoneExcludes);$(AppDesignerFolder)\**\*.resx</ModuleNoneExcludes>
+    <ModuleNoneIncludes>$(ModuleNoneIncludes);$(AppDesignerFolder)\**</ModuleNoneIncludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="**\*.cshtml" />
+    <None Update="@(None)" CopyToPublishDirectory="Never" />
+    <EmbeddedResource Update="@(EmbeddedResource)" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <Target Name="EnsureRazorSdk"
+          BeforeTargets="BeforeBuild">
+    <Error
+      Code="OC2001"
+      Condition="!('@(RazorGenerate)' == '' or '$(ResolvedRazorCompileToolset)' == 'RazorSdk')"
+      Text="The 'Microsoft.NET.Sdk.Razor' SDK is required on Themes and Modules for Razor files to be precompiled." />
+  </Target>
+
+  <Target Name="NoWarnOnRazorViewImportedTypeConflicts"
+          BeforeTargets="RazorCoreCompile">
+    <PropertyGroup>
+      <NoWarn>$(NoWarn);0436</NoWarn>
+    </PropertyGroup>
+  </Target>
+
+  <PropertyGroup>
+    <!-- MWP: Yes, embed 'after' resolving references; however, also deterministically evaluate BEFORE generating AssyInfo.
+     Both are key for a lot of reasons. Chief among them is that we identify the target boundaries cleanly. But we also allow
+     authors to be able to append their own custom, internal targets, which may need to be evaluated before/after the OC ones. -->
+    <PlatformEmbeddingAfterTargets>AfterResolveReferences</PlatformEmbeddingAfterTargets>
+    <PlatformEmbeddingBeforeTargets>GenerateAssemblyInfo</PlatformEmbeddingBeforeTargets>
+  </PropertyGroup>
+
+  <Target Name="PlatformEmbedModuleAssets"
+          AfterTargets="$(PlatformEmbeddingAfterTargets)"
+          BeforeTargets="$(PlatformEmbeddingBeforeTargets)">
+    <RemoveDuplicates Inputs="@(EmbeddedResource)">
+      <Output TaskParameter="Filtered" ItemName="ModuleAssetFiles"/>
+    </RemoveDuplicates>
+
+    <ItemGroup>
+      <ModuleAssets
+        Include="Areas\$(AssemblyName)\%(ModuleAssetFiles.RelativeDir)%(Filename)%(Extension)|%(ModuleAssetFiles.FullPath)"
+        Condition="'%(ModuleAssetFiles.Link)' == '' and '%(ModuleAssetFiles.Filename)' != ''"/>
+      <ModuleAssets
+        Include="Areas\$(AssemblyName)\%(ModuleAssetFiles.Link)|%(ModuleAssetFiles.FullPath)"
+        Condition="!('%(ModuleAssetFiles.Link)' == '' or '%(ModuleAssetFiles.Filename)' == '')" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="@(EmbeddedResource)" />
+      <EmbeddedResource Include="@(ModuleAssetFiles)" />
+      <EmbeddedResource Update="@(EmbeddedResource)" Condition="'%(EmbeddedResource.Link)' == '' and '%(Extension)' != '.resx'">
+        <LogicalName>$([System.String]::new('$(AssemblyName).%(RelativeDir)%(FileName)%(Extension)').Replace('\', '>').Replace('/', '>'))</LogicalName>
+      </EmbeddedResource>
+      <EmbeddedResource Update="@(EmbeddedResource)" Condition="!('%(EmbeddedResource.Link)' == '' or '%(Extension)' == '.resx')">
+        <LogicalName>$([System.String]::new('$(AssemblyName).%(EmbeddedResource.Link)').Replace('\', '>').Replace('/', '>'))</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <AssemblyAttribute Include="Crest.Modules.Manifest.ModuleMarkerAttribute">
+        <_Parameter1>$(AssemblyName)</_Parameter1>
+        <_Parameter2>$(ModuleType)</_Parameter2>
+      </AssemblyAttribute>
+      <AssemblyAttribute Include="Crest.Modules.Manifest.ModuleAssetAttribute">
+        <_Parameter1>%(ModuleAssets.Identity)</_Parameter1>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="UpdateModuleAssets"
+          AfterTargets="CreateManifestResourceNames">
+    <ItemGroup>
+      <EmbeddedResource Update="@(EmbeddedResource)" Condition="'%(EmbeddedResource.WithCulture)' == 'true'">
+        <WithCulture>false</WithCulture>
+        <Culture></Culture>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="GetModuleProjectName" Returns="@(ModuleProjectName)">
+    <ItemGroup>
+      <ModuleProjectName Include="$(AssemblyName)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Identify Features+Modules from the overall set of specified Crest attributes -->
+  <Target Name="PlatformFilterFeatures">
+    <!--<Message Importance="high" Text="Filtering features (@(PlatformAttributes->Count()))..." />-->
+    <ItemGroup Condition="@(PlatformFeatures->Count()) == 0">
+      <PlatformFeatures Include="@(PlatformAttributes)"
+                           Condition="(%(PlatformAttributes.Type) == 'feature')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="PlatformFilterModules">
+    <!--<Message Importance="high" Text="Filtering modules (@(PlatformAttributes->Count()))..." />-->
+    <ItemGroup Condition="@(PlatformModules->Count()) == 0">
+      <!-- Modules specified as anything that is !(type == 'feature' || type == 'theme') -->
+      <PlatformModules Include="@(PlatformAttributes)"
+                          Condition="!((%(PlatformAttributes.Type) == 'feature') or (%(PlatformAttributes.Type) == 'theme'))" />
+    </ItemGroup>
+  </Target>
+
+  <!-- A bit of separation needed in order to appropriately filter feature attribute specs from overall OC ones -->
+  <Target Name="PlatformErrorsFeatureNoErrors"
+          DependsOnTargets="PlatformFilterFeatures"
+          BeforeTargets="BeforeBuild">
+    <!-- No errors are 'expected' for purposes of specifying features -->
+  </Target>
+
+  <!-- Keyed on ItemGroup PlatformFeatures list item, ctor args by position:
+    1: string id
+    2: , string name
+    3: , string category
+    4: , string priority
+    5: , string description
+    6: , string featureDependencies
+    7: , object defaultTenant
+    8: , object alwaysEnabled
+    9: , object enabledByDependencyOnly
+    -->
+  <Target Name="PlatformEmbedFeatures"
+          DependsOnTargets="PlatformErrorsFeatureNoErrors"
+          AfterTargets="$(PlatformEmbeddingAfterTargets)"
+          BeforeTargets="$(PlatformEmbeddingBeforeTargets)"
+          Condition="@(PlatformFeatures->Count()) > 0">
+    <Message
+      Importance="high"
+      Condition="'$(PlatformDebugTargets)' == 'true'"
+      Text="Embedding '@(PlatformFeatures)' feature: {'id': '%(PlatformFeatures.Identity)', 'name': '%(PlatformFeatures.Name)', 'category': '%(PlatformFeatures.Category)', 'priority': '%(PlatformFeatures.Priority)', 'description': '%(PlatformFeatures.Description)', 'dependencies': '%(PlatformFeatures.Dependencies)', 'defaultTenant': '%(PlatformFeatures.DefaultTenant)', 'alwaysEnabled': '%(PlatformFeatures.AlwaysEnabled)')}" />
+    <ItemGroup>
+      <AssemblyAttribute Include="Crest.Modules.Manifest.FeatureAttribute">
+        <_Parameter1>@(PlatformFeatures)</_Parameter1>
+        <_Parameter2>%(PlatformFeatures.Name)</_Parameter2>
+        <_Parameter3>%(PlatformFeatures.Category)</_Parameter3>
+        <_Parameter4>%(PlatformFeatures.Priority)</_Parameter4>
+        <_Parameter5>%(PlatformFeatures.Description)</_Parameter5>
+        <_Parameter6>%(PlatformFeatures.Dependencies)</_Parameter6>
+        <_Parameter7>%(PlatformFeatures.DefaultTenant)</_Parameter7>
+        <_Parameter8>%(PlatformFeatures.AlwaysEnabled)</_Parameter8>
+        <_Parameter9>%(PlatformFeatures.EnabledByDependencyOnly)</_Parameter9>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
+
+  <!-- Fail ASAP when one+ MODULE declaration has been detected. -->
+  <Target Name="PlatformErrorsModuleAtMostOne"
+          DependsOnTargets="PlatformFilterModules"
+          BeforeTargets="BeforeBuild">
+    <Error
+      Code="OC2002"
+      Condition="@(PlatformModules->Count()) > 1"
+      Text="'$(MSBuildProjectName)' cannot declare itself to be more than one 'Module' (@(PlatformModules->Count()))." />
+  </Target>
+
+  <!-- Keyed on ItemGroup PlatformModules list item, ctor args by position:
+    1: string id
+    2: , string name
+    3: , string type // May be provide but is usually null or blank, defaults to 'Module' (in this caes), or 'Theme' when a ThemeAttribute
+    4: , string category
+    5: , string priority
+    6: , string description
+    7: , string author
+    8: , string semVer
+    9: , string websiteUrl
+    10: , string featureDependencies
+    11: , string tags
+    12: , object defaultTenant
+    13: , object alwaysEnabled
+    14: , object enabledByDependencyOnly
+    -->
+  <Target Name="PlatformEmbedModules"
+          DependsOnTargets="PlatformErrorsModuleAtMostOne"
+          AfterTargets="$(PlatformEmbeddingAfterTargets)"
+          BeforeTargets="$(PlatformEmbeddingBeforeTargets)"
+          Condition="@(PlatformModules->Count()) > 0">
+    <!-- 'ModuleType' property consistent with other usage, i.e. 'ModuleMarkerAttribute' -->
+    <Message Importance="high"
+             Condition="'$(PlatformDebugTargets)' == 'true'"
+             Text="Embedding '@(PlatformModules)' module: {'id': '%(PlatformModules.Identity)', 'name': '%(PlatformModules.Name)', 'type': '%(PlatformModules.ModuleType)', 'category': '%(PlatformModules.Category)', 'priority': '%(PlatformModules.Priority)', 'description': '%(PlatformModules.Description)', 'author': '%(PlatformModules.Author)', 'version': '%(PlatformModules.Version)', 'website': '%(PlatformModules.Website)', 'dependencies': '%(PlatformModules.Dependencies)', 'tags': '%(PlatformModules.Tags)', 'defaultTenant': '%(PlatformModules.DefaultTenant)', 'alwaysEnabled': '%(PlatformModules.AlwaysEnabled)')}" />
+    <ItemGroup>
+      <AssemblyAttribute Include="Crest.Modules.Manifest.ModuleAttribute">
+        <_Parameter1>@(PlatformModules)</_Parameter1>
+        <_Parameter2>%(PlatformModules.Name)</_Parameter2>
+        <_Parameter3>%(PlatformModules.ModuleType)</_Parameter3>
+        <_Parameter4>%(PlatformModules.Category)</_Parameter4>
+        <_Parameter5>%(PlatformModules.Priority)</_Parameter5>
+        <_Parameter6>%(PlatformModules.Description)</_Parameter6>
+        <_Parameter7>%(PlatformModules.Author)</_Parameter7>
+        <_Parameter8>%(PlatformModules.Version)</_Parameter8>
+        <_Parameter9>%(PlatformModules.Website)</_Parameter9>
+        <_Parameter10>%(PlatformModules.Dependencies)</_Parameter10>
+        <_Parameter11>%(PlatformModules.Tags)</_Parameter11>
+        <_Parameter12>%(PlatformModules.DefaultTenant)</_Parameter12>
+        <_Parameter13>%(PlatformModules.AlwaysEnabled)</_Parameter13>
+        <_Parameter14>%(PlatformModules.EnabledByDependencyOnly)</_Parameter14>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
+
+</Project>

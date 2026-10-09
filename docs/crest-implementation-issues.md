@@ -2,7 +2,7 @@
 
 A feasibility audit (2026-10-06) of the plans in these docs against the current Crest code and
 the OrchardCore fork, then still a separate repository. Since the hard fork (2026-10-09) that
-code is the platform under `src/`, and Crest changes it directly; items written around "no
+code is the platform, and Crest changes it directly; items written around "no
 change to OrchardCore" are restated below.
 
 **How to use this file.** Each open issue below has the context, the options and a
@@ -56,12 +56,12 @@ I was only talking about the services so module rebrands are easy. Keep the ui s
 later rulings may need changes to the save path: content history stored as diffs with
 compressed checkpoints (instead of a full snapshot per save), and the workflow engine's own run
 journal moving onto the audit system. Since the hard fork, changing AuditTrail is an in-place
-edit to `src/`, not a module fork, so the question is only which design is cleaner.
+edit to the platform, not a module fork, so the question is only which design is cleaner.
 
 **Options.**
 1. Keep the save path: replace the Contents audit handler with one that writes diffs, and
    record workflow history through `IAuditTrailManager` as ordinary events.
-2. Change AuditTrail itself (in `src/`) to own diff storage and the workflow journal.
+2. Change AuditTrail itself (in the platform) to own diff storage and the workflow journal.
 
 **Recommendation.** 1 until a concrete need forces 2: both rulings fit through the existing
 handler seams, and the module stays small.
@@ -98,7 +98,7 @@ we'll diagnose afterwords
 
 **Context.** Ruled: search engines (Lucene, Elasticsearch, Azure AI Search) are connections,
 and a Search module runs through Queries the standard way. Orchard's search modules today
-implement the query contract in `OrchardCore.Queries.Abstractions` (`IQuerySource`: no
+implement the query contract in `Crest.Queries.Abstractions` (`IQuerySource`: no
 paging, no caller scope, results in one list). Only Lucene and Elasticsearch (their Core
 libraries and modules) and Crest's `QueriesController` use it. Since the hard fork, Crest can
 change that contract in place.

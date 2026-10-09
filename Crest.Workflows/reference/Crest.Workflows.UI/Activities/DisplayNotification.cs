@@ -3,11 +3,11 @@ using Crest.Workflows;
 using Crest.Workflows.Attributes;
 using Crest.Workflows.Models;
 using JetBrains.Annotations;
-using OrchardCore.DisplayManagement.Notify;
+using Crest.DisplayManagement.Notify;
 
 namespace Crest.Workflows.UI.Activities;
 
-[Activity("OrchardCore.UI", "UI", "Displays a notification.")]
+[Activity("Crest.UI", "UI", "Displays a notification.")]
 [UsedImplicitly]
 public class DisplayNotification : CodeActivity
 {

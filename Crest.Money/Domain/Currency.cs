@@ -1,6 +1,6 @@
 // Adapted from OrchardCore.Commerce's MoneyDataType library
 // (https://github.com/OrchardCMS/OrchardCore.Commerce, MIT License,
-// Copyright (c) 2018 OrchardCMS).
+// Copyright (c) 2018 Crest).
 using Crest.Money.Abstractions;
 using Crest.Money.Serialization;
 using System;

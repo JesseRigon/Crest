@@ -1,6 +1,6 @@
 using Crest.Parties.Constants;
-using OrchardCore.ContentFields.Fields;
-using OrchardCore.ContentManagement;
+using Crest.ContentFields.Fields;
+using Crest.ContentManagement;
 using YesSql.Indexes;
 
 namespace Crest.Parties.Indexes;

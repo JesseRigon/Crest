@@ -1,0 +1,9 @@
+@using Crest.DisplayManagement.ModelBinding
+@using Crest.Users.Models
+
+@inject IDisplayManager<UserMenu> DisplayManager
+@inject IUpdateModelAccessor UpdateModelAccessor
+
+<li class="nav-item">
+    @await DisplayAsync(await DisplayManager.BuildDisplayAsync(UpdateModelAccessor.ModelUpdater, (string)Model.Metadata.DisplayType))
+</li>

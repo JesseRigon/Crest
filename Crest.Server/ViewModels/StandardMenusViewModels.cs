@@ -3,14 +3,14 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore;
-using OrchardCore.ContentManagement;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Metadata.Models;
-using OrchardCore.Contents;
-using OrchardCore.Menu;
-using OrchardCore.Menu.Models;
-using OrchardContentItem = OrchardCore.ContentManagement.ContentItem;
+using Crest;
+using Crest.ContentManagement;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Models;
+using Crest.Contents;
+using Crest.Menu;
+using Crest.Menu.Models;
+using PlatformContentItem = Crest.ContentManagement.ContentItem;
 
 namespace Crest.ViewModels;
 
@@ -40,7 +40,7 @@ public sealed record StandardMenuSummary(
     bool Published,
     StandardMenuNodeSummary[] Nodes)
 {
-    public static StandardMenuSummary From(OrchardContentItem menu) => new(
+    public static StandardMenuSummary From(PlatformContentItem menu) => new(
         menu.ContentItemId,
         menu.ContentItemId,
         menu.ContentItemVersionId,

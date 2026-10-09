@@ -1,8 +1,8 @@
 using System.Text.Json.Nodes;
 using Crest.Services;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.Queries;
-using QueriesPermissions = OrchardCore.Queries.Permissions;
+using Crest.Queries;
+using QueriesPermissions = Crest.Queries.Permissions;
 using Crest.ViewModels;
 
 namespace Crest.Controllers;

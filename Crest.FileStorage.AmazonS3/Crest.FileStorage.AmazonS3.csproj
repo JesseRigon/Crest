@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+
+    <!-- NuGet properties-->
+    <Title>Crest FileStorage Amazon S3</Title>
+    <Description>$(OCFrameworkDescription)
+
+      Implementation for Amazon S3 FileStorage.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework Amazon</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" />
+    <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.FileStorage.Abstractions\Crest.FileStorage.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

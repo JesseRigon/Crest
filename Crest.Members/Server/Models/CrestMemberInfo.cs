@@ -1,7 +1,7 @@
 namespace Crest.Members.Models;
 
 /// <summary>One org binding as stored on the member's user record: which organization,
-/// which member ROLE TEMPLATES apply there (tenant-defined Orchard roles - the tenant
+/// which member ROLE TEMPLATES apply there (tenant-defined Crest roles - the tenant
 /// governs powers, the binding only points), and whether this member is the org's
 /// member admin.</summary>
 public class MemberOrgBinding

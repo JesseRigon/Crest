@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 using Crest.Services;
-using OrchardCore.Users.Models;
+using Crest.Users.Models;
 using Xunit;
 
 namespace Crest.Server.Tests;

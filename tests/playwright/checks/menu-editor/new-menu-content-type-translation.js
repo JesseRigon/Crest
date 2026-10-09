@@ -7,7 +7,7 @@
 // uses. One translation covers every surface a type name appears on.
 //
 // The check writes a probe translation for the first New child's type name under the
-// "Content Types" context (via Orchard's own Save endpoint, carrying the full existing list
+// "Content Types" context (via Crest's own Save endpoint, carrying the full existing list
 // because Save replaces a culture's translations wholesale), asserts the New menu serves it
 // for that culture, and restores the original list afterwards.
 const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
@@ -142,7 +142,7 @@ module.exports = async function run(page, ctx) {
     });
   } finally {
     await saveTranslations(original).catch(() => {});
-    // Orchard's Save replaces the culture's list with what the editor enumerates, and the
+    // Crest's Save replaces the culture's list with what the editor enumerates, and the
     // upstream admin menu providers enumerate top-level nodes only - so both saves above
     // silently dropped every seeded child-caption translation. Re-running the provider sync
     // reseeds exactly the missing ones, leaving the tenant as this check found it.

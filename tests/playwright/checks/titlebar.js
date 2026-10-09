@@ -21,7 +21,7 @@ module.exports = async function run(page, ctx) {
   let cultureIconCount = null;
   if (cultureSelectorCount) {
     cultureIconCount = await cultureSelector
-      .locator('.rz-dropdown-label .orchard-icon, .rz-dropdown-trigger .crest-icon, .rz-dropdown-trigger .orchard-icon')
+      .locator('.rz-dropdown-label .platform-icon, .rz-dropdown-trigger .crest-icon, .rz-dropdown-trigger .platform-icon')
       .count();
   }
 

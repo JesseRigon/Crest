@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Feeds</RootNamespace>
+
+    <!-- NuGet properties-->
+    <Title>Crest Feeds Abstractions</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Abstractions for Feeds Module.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework Abstractions RSS</PackageTags>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.DisplayManagement.Abstractions\Crest.DisplayManagement.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,273 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Localization;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Crest.DisplayManagement;
+using Crest.DisplayManagement.ModelBinding;
+using Crest.DisplayManagement.Notify;
+using Crest.Modules;
+using Crest.Mvc.Core.Utilities;
+using Crest.RateLimits;
+using Crest.Settings;
+using Crest.Users.Events;
+using Crest.Users.Models;
+using Crest.Users.Services;
+using Crest.Users.ViewModels;
+
+namespace Crest.Users.Controllers;
+
+[Authorize]
+public sealed class AccountController : AccountBaseController
+{
+    private readonly IUserService _userService;
+    private readonly SignInManager<IUser> _signInManager;
+    private readonly UserManager<IUser> _userManager;
+    private readonly ILogger _logger;
+    private readonly ISiteService _siteService;
+    private readonly IEnumerable<ILoginFormEvent> _loginFormEvents;
+    private readonly IEnumerable<ILogoutFormEvent> _logoutFormEvents;
+    private readonly IDisplayManager<LoginForm> _loginFormDisplayManager;
+    private readonly IUpdateModelAccessor _updateModelAccessor;
+    private readonly INotifier _notifier;
+    private readonly PasswordTimingNormalizationService _timingNormalization;
+
+    internal readonly IHtmlLocalizer H;
+    internal readonly IStringLocalizer S;
+
+    public AccountController(
+        IUserService userService,
+        SignInManager<IUser> signInManager,
+        UserManager<IUser> userManager,
+        ILogger<AccountController> logger,
+        ISiteService siteService,
+        IHtmlLocalizer<AccountController> htmlLocalizer,
+        IStringLocalizer<AccountController> stringLocalizer,
+        IEnumerable<ILoginFormEvent> loginFormEvents,
+        IEnumerable<ILogoutFormEvent> logoutFormEvents,
+        INotifier notifier,
+        IDisplayManager<LoginForm> loginFormDisplayManager,
+        IUpdateModelAccessor updateModelAccessor,
+        PasswordTimingNormalizationService timingNormalization)
+    {
+        _signInManager = signInManager;
+        _userManager = userManager;
+        _userService = userService;
+        _logger = logger;
+        _siteService = siteService;
+        _loginFormEvents = loginFormEvents;
+        _logoutFormEvents = logoutFormEvents;
+        _notifier = notifier;
+        _loginFormDisplayManager = loginFormDisplayManager;
+        _updateModelAccessor = updateModelAccessor;
+        _timingNormalization = timingNormalization;
+
+        H = htmlLocalizer;
+        S = stringLocalizer;
+    }
+
+    [AllowAnonymous]
+    public async Task<IActionResult> Login(string returnUrl = null)
+    {
+        if (HttpContext.User?.Identity?.IsAuthenticated ?? false)
+        {
+            returnUrl = null;
+        }
+
+        // Clear the existing external cookie to ensure a clean login process.
+        await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
+        foreach (var loginFormEvent in _loginFormEvents)
+        {
+            var result = await loginFormEvent.LoggingInAsync();
+
+            if (result != null)
+            {
+                return result;
+            }
+        }
+
+        var loginSettings = await _siteService.GetSettingsAsync<LoginSettings>();
+        var model = new LoginForm
+        {
+            RememberMe = loginSettings.UsePersistentAuthenticationCookie,
+        };
+
+        var formShape = await _loginFormDisplayManager.BuildEditorAsync(model, _updateModelAccessor.ModelUpdater, false);
+
+        CopyTempDataErrorsToModelState();
+
+        ViewData["ReturnUrl"] = returnUrl;
+
+        return View(formShape);
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    [ActionName(nameof(Login))]
+    [RateLimitGroup(UserRateLimiterPolicyNames.PasswordAuthentication)]
+    public async Task<IActionResult> LoginPOST(string returnUrl = null)
+    {
+        var loginSettings = await _siteService.GetSettingsAsync<LoginSettings>();
+
+        if (loginSettings.DisableLocalLogin)
+        {
+            await _notifier.ErrorAsync(H["Local login is disabled."]);
+
+            return RedirectToAction(nameof(Login), new { returnUrl });
+        }
+
+        ViewData["ReturnUrl"] = returnUrl;
+
+        var model = new LoginForm();
+
+        var formShape = await _loginFormDisplayManager.UpdateEditorAsync(model, _updateModelAccessor.ModelUpdater, false);
+
+        await _loginFormEvents.InvokeAsync((e, model, modelState) => e.LoggingInAsync(model.UserName, (key, message) => modelState.AddModelError(key, message)), model, ModelState, _logger);
+
+        IUser user = null;
+
+        if (ModelState.IsValid)
+        {
+            user = await _userService.GetUserAsync(model.UserName);
+
+            if (user != null)
+            {
+                var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: true);
+                var rememberMe = loginSettings.AllowRememberMe
+                    ? model.RememberMe
+                    : loginSettings.UsePersistentAuthenticationCookie;
+
+                if (result.Succeeded)
+                {
+                    foreach (var loginFormEvent in _loginFormEvents)
+                    {
+                        var loginResult = await loginFormEvent.ValidatingLoginAsync(user);
+
+                        if (loginResult != null)
+                        {
+                            return loginResult;
+                        }
+                    }
+
+                    result = await _signInManager.PasswordSignInAsync(user, model.Password, rememberMe, lockoutOnFailure: true);
+
+                    if (result.Succeeded)
+                    {
+                        _logger.LogInformation(1, "User logged in.");
+
+                        await _loginFormEvents.InvokeAsync((e, user) => e.LoggedInAsync(user), user, _logger);
+
+                        return await LoggedInActionResultAsync(user, returnUrl);
+                    }
+
+                }
+
+                if (result.RequiresTwoFactor)
+                {
+                    return RedirectToAction(
+                        nameof(TwoFactorAuthenticationController.LoginWithTwoFactorAuthentication),
+                        typeof(TwoFactorAuthenticationController).ControllerName(),
+                        new
+                        {
+                            returnUrl,
+                            rememberMe,
+                        });
+                }
+
+                if (result.IsLockedOut)
+                {
+                    ModelState.AddModelError(string.Empty, S["The account is locked out"]);
+                    await _loginFormEvents.InvokeAsync((e, user) => e.IsLockedOutAsync(user), user, _logger);
+
+                    return View();
+                }
+            }
+            else
+            {
+                // Perform a dummy hash verification so the response time is
+                // indistinguishable from a real password check, preventing
+                // username enumeration attack via timing analysis.
+                _timingNormalization.NormalizeResponseTime();
+            }
+
+            ModelState.AddModelError(string.Empty, S["Invalid login attempt."]);
+        }
+
+        if (user == null)
+        {
+            // Login failed unknown user.
+            await _loginFormEvents.InvokeAsync((e, model) => e.LoggingInFailedAsync(model.UserName), model, _logger);
+        }
+        else
+        {
+            // Login failed with a known user.
+            await _loginFormEvents.InvokeAsync((e, user) => e.LoggingInFailedAsync(user), user, _logger);
+        }
+
+        // If we got this far, something failed, redisplay form.
+        return View(formShape);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> LogOff(string returnUrl = null)
+    {
+        // Resolve the authenticated user before signing out, while the principal is still available.
+        var user = await _userService.GetAuthenticatedUserAsync(User);
+
+        if (user != null)
+        {
+            await _logoutFormEvents.InvokeAsync((e, user) => e.LoggingOutAsync(user), user, _logger);
+        }
+
+        await _signInManager.SignOutAsync();
+
+        _logger.LogInformation(4, "User logged out.");
+
+        if (user != null)
+        {
+            await _logoutFormEvents.InvokeAsync((e, user) => e.LoggedOutAsync(user), user, _logger);
+        }
+
+        return RedirectToLocal(returnUrl);
+    }
+
+    public IActionResult ChangePassword(string returnUrl = null)
+    {
+        ViewData["ReturnUrl"] = returnUrl;
+
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model, string returnUrl = null)
+    {
+        if (ModelState.IsValid)
+        {
+            var user = await _userService.GetAuthenticatedUserAsync(User);
+
+            if (await _userService.ChangePasswordAsync(user, model.CurrentPassword, model.Password, ModelState.AddModelError))
+            {
+                if (Url.IsLocalUrl(returnUrl))
+                {
+                    await _notifier.SuccessAsync(H["Your password has been changed successfully."]);
+
+                    return this.Redirect(returnUrl, true);
+                }
+
+                return Redirect(Url.Action(nameof(ChangePasswordConfirmation)));
+            }
+        }
+
+        ViewData["ReturnUrl"] = returnUrl;
+
+        return View(model);
+    }
+
+    [HttpGet]
+    public IActionResult ChangePasswordConfirmation()
+        => View();
+}

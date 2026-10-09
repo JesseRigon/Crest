@@ -1,0 +1,39 @@
+{
+  "name": "CorsAdminTests",
+  "displayName": "CorsAdminTests",
+  "description": "Testing Crest.Cors' policy list/editor (cors-admin-index.ts, rewritten from a jQuery Vue 2 app to native DOM + Vue 3 across PR #19489/#19774).",
+  "author": "The Crest Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "tests" ],
+  "tags": [ "tests" ],
+
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Crest.HomeRoute",
+        "Crest.Admin",
+        "Crest.Navigation",
+        "Crest.Recipes",
+        "Crest.Resources",
+        "Crest.Roles",
+        "Crest.Security",
+        "Crest.Settings",
+        "Crest.Themes",
+        "Crest.Users",
+
+        "Crest.Cors",
+
+        "TheAdmin",
+        "SafeMode"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "TheAdmin",
+      "site": "TheAdmin"
+    }
+  ]
+}

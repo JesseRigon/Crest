@@ -657,7 +657,7 @@
                                 {
                                     <span class="admin-menu-node__original-text">@node.OriginalText</span>
                                     @* A rename applies only inside Crest until it is promoted into the
-                                       tenant's translation store, which is what Orchard's own admin reads.
+                                       tenant's translation store, which is what Crest's own admin reads.
                                        Only offered where a rename actually exists for the current culture -
                                        OriginalText is set exactly then. *@
                                     <CrestButton Size="ButtonSize.Small"
@@ -729,7 +729,7 @@
                                                                                aria-label="@NodeIconTitle(node)">
         @if (node.Icon is not null)
         {
-            <OrchardIcon IconKey="@node.Icon.Key"
+            <PlatformIcon IconKey="@node.Icon.Key"
                          Library="@node.Icon.Library"
                          Version="@node.Icon.Version"
                          Name="@node.Icon.Name"
@@ -1163,7 +1163,7 @@
 
     private static string OriginalNodeText(AdminMenuNodeSummary node) => string.IsNullOrWhiteSpace(node.OriginalText) ? node.Text : node.OriginalText;
 
-    // Writes the rename into the tenant's translation store so Orchard's own admin renders it
+    // Writes the rename into the tenant's translation store so Crest's own admin renders it
     // too. Requires ManageTranslations on top of ManageAdminMenu, so a null result here is
     // usually a permission refusal rather than a failure - reported as such instead of a
     // generic error.

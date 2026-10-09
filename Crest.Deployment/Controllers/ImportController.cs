@@ -1,0 +1,208 @@
+using System.IO.Compression;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Localization;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
+using Crest.Admin;
+using Crest.Deployment.Services;
+using Crest.Deployment.ViewModels;
+using Crest.DisplayManagement.Notify;
+using Crest.FileStorage;
+using Crest.Mvc.Utilities;
+using Crest.Recipes.Models;
+
+namespace Crest.Deployment.Controllers;
+
+[Admin("DeploymentPlan/Import/{action}", "DeploymentPlanImport{action}")]
+public sealed class ImportController : Controller
+{
+    private readonly IDeploymentManager _deploymentManager;
+    private readonly IAuthorizationService _authorizationService;
+    private readonly INotifier _notifier;
+    private readonly ILogger _logger;
+    private readonly FileCreationService _fileCreationService;
+    private readonly ITempDirectoryProvider _tempDirectoryProvider;
+
+    internal readonly IHtmlLocalizer H;
+    internal readonly IStringLocalizer S;
+
+    public ImportController(
+        IDeploymentManager deploymentManager,
+        IAuthorizationService authorizationService,
+        FileCreationService fileCreationService,
+        ITempDirectoryProvider tempDirectoryProvider,
+        INotifier notifier,
+        ILogger<ImportController> logger,
+        IHtmlLocalizer<ImportController> htmlLocalizer,
+        IStringLocalizer<ImportController> stringLocalizer
+    )
+    {
+        _deploymentManager = deploymentManager;
+        _authorizationService = authorizationService;
+        _fileCreationService = fileCreationService;
+        _tempDirectoryProvider = tempDirectoryProvider;
+        _notifier = notifier;
+        _logger = logger;
+        H = htmlLocalizer;
+        S = stringLocalizer;
+    }
+
+    public async Task<IActionResult> Index()
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, DeploymentPermissions.Import))
+        {
+            return Forbid();
+        }
+
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Import(IFormFile importedPackage)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, DeploymentPermissions.Import))
+        {
+            return Forbid();
+        }
+
+        if (importedPackage != null)
+        {
+            var tempArchiveName = _tempDirectoryProvider.GetTempFileName(Path.GetExtension(importedPackage.FileName));
+            var tempArchiveFolder = _tempDirectoryProvider.GetTempFileName();
+
+            try
+            {
+                await using var uploadedStream = importedPackage.OpenReadStream();
+                await using var fileCreatingResult = await _fileCreationService.CreateAsync(
+                    new FileCreatingContext(importedPackage.FileName, importedPackage.Length, importedPackage.ContentType),
+                    uploadedStream,
+                    HttpContext.RequestAborted);
+
+                if (!fileCreatingResult.Succeeded)
+                {
+                    await _notifier.ErrorAsync(H[fileCreatingResult.ErrorMessage ?? $"The uploaded file '{importedPackage.FileName}' was rejected."]);
+
+                    return RedirectToAction(nameof(Index));
+                }
+
+                await using (var stream = new FileStream(tempArchiveName, FileMode.Create))
+                {
+                    await fileCreatingResult.Stream.CopyToAsync(stream, HttpContext.RequestAborted);
+                }
+
+                if (importedPackage.FileName.EndsWith(".zip"))
+                {
+                    ZipFile.ExtractToDirectory(tempArchiveName, tempArchiveFolder);
+                }
+                else if (importedPackage.FileName.EndsWith(".json"))
+                {
+                    Directory.CreateDirectory(tempArchiveFolder);
+                    System.IO.File.Move(tempArchiveName, Path.Combine(tempArchiveFolder, "Recipe.json"));
+                }
+                else
+                {
+                    await _notifier.ErrorAsync(H["Only zip or json files are supported."]);
+
+                    return RedirectToAction(nameof(Index));
+                }
+
+                await _deploymentManager.ImportDeploymentPackageAsync(new PhysicalFileProvider(tempArchiveFolder));
+
+                await _notifier.SuccessAsync(H["Deployment package imported."]);
+            }
+            catch (RecipeExecutionException e)
+            {
+                _logger.LogError(e, "Unable to import a deployment package.");
+
+                await _notifier.ErrorAsync(H["The import failed with the following errors: {0}", string.Join(' ', e.StepResult.Errors)]);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Unable to import a deployment package.");
+
+                await _notifier.ErrorAsync(H["Unexpected error occurred while importing the deployment package."]);
+            }
+            finally
+            {
+                if (System.IO.File.Exists(tempArchiveName))
+                {
+                    System.IO.File.Delete(tempArchiveName);
+                }
+
+                if (Directory.Exists(tempArchiveFolder))
+                {
+                    Directory.Delete(tempArchiveFolder, true);
+                }
+            }
+        }
+        else
+        {
+            await _notifier.ErrorAsync(H["Please add a file to import."]);
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> Json()
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, DeploymentPermissions.Import))
+        {
+            return Forbid();
+        }
+
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Json(ImportJsonViewModel model)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, DeploymentPermissions.Import))
+        {
+            return Forbid();
+        }
+
+        if (!model.Json.IsJson(JOptions.Document))
+        {
+            ModelState.AddModelError(nameof(model.Json), S["The recipe is written in an incorrect JSON format."]);
+        }
+
+        if (ModelState.IsValid)
+        {
+            var tempArchiveFolder = _tempDirectoryProvider.CreateTempSubdirectory();
+
+            try
+            {
+                System.IO.File.WriteAllText(Path.Combine(tempArchiveFolder, "Recipe.json"), model.Json);
+
+                await _deploymentManager.ImportDeploymentPackageAsync(new PhysicalFileProvider(tempArchiveFolder));
+
+                await _notifier.SuccessAsync(H["Recipe imported successfully!"]);
+            }
+            catch (RecipeExecutionException e)
+            {
+                _logger.LogError(e, "Unable to import a recipe from JSON input.");
+
+                ModelState.AddModelError(nameof(model.Json), string.Join(' ', e.StepResult.Errors));
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Unable to import a recipe from JSON input.");
+
+                ModelState.AddModelError(string.Empty, S["Unexpected error occurred while importing the recipe."]);
+            }
+            finally
+            {
+                if (Directory.Exists(tempArchiveFolder))
+                {
+                    Directory.Delete(tempArchiveFolder, true);
+                }
+            }
+        }
+
+        return RedirectToAction(nameof(Json));
+    }
+}

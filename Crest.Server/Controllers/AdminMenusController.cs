@@ -4,13 +4,15 @@ using Crest.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.AdminMenu.AdminNodes;
-using OrchardCore.AdminMenu.Models;
-using OrchardCore.AdminMenu.Services;
-using OrchardCore.Navigation;
+using Crest.AdminMenu.AdminNodes;
+using Crest.AdminMenu.Models;
+using Crest.AdminMenu.Services;
+using Crest.Navigation;
 using Crest.ViewModels;
 
 namespace Crest.Controllers;
+
+using AdminMenu = Crest.AdminMenu.Models.AdminMenu;
 
 [ApiController]
 [AutoValidateAntiforgeryToken]
@@ -34,7 +36,7 @@ public sealed class AdminMenusController(
     [HttpPost("sync-providers")]
     public async Task<ActionResult<CrestProviderMenuSyncResult>> SyncProvidersAsync()
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -49,7 +51,7 @@ public sealed class AdminMenusController(
     [HttpGet]
     public async Task<ActionResult<AdminMenusState>> ListAsync()
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -63,7 +65,7 @@ public sealed class AdminMenusController(
     [HttpGet("{menuId}")]
     public async Task<ActionResult<AdminMenuSummary>> GetAsync(string menuId)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -87,7 +89,7 @@ public sealed class AdminMenusController(
     [HttpPost]
     public async Task<ActionResult<AdminMenuSummary>> CreateMenuAsync(AdminMenuEditModel model)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -98,7 +100,7 @@ public sealed class AdminMenusController(
             return BadRequest("Menu name is required.");
         }
 
-        // OrchardCore's own admin-menu coordinator unconditionally injects every enabled
+        // Crest's own admin-menu coordinator unconditionally injects every enabled
         // custom menu into the "admin" sidebar tree — it has no concept of placement. Menus
         // that aren't Admin-placed stay Enabled=false here forever so that coordinator never
         // picks them up; CrestMenuPlacementEntry.Enabled is the "real" visible/hidden flag
@@ -118,7 +120,7 @@ public sealed class AdminMenusController(
     [HttpPost("{menuId}/convert")]
     public async Task<ActionResult<AdminMenuSummary>> ConvertMenuAsync(string menuId, ConvertMenuModel model)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -169,7 +171,7 @@ public sealed class AdminMenusController(
     [HttpPost("{menuId}/rename")]
     public async Task<ActionResult<AdminMenuSummary>> RenameMenuAsync(string menuId, AdminMenuEditModel model)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -205,7 +207,7 @@ public sealed class AdminMenusController(
     [HttpPost("{menuId}/toggle")]
     public async Task<ActionResult<AdminMenuSummary>> ToggleMenuAsync(string menuId)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -240,7 +242,7 @@ public sealed class AdminMenusController(
     [HttpPost("{menuId}/duplicate")]
     public async Task<ActionResult<AdminMenuSummary>> DuplicateMenuAsync(string menuId)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -281,7 +283,7 @@ public sealed class AdminMenusController(
     [HttpDelete("{menuId}")]
     public async Task<IActionResult> DeleteMenuAsync(string menuId)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -304,13 +306,13 @@ public sealed class AdminMenusController(
         // The menu's translations go with it: its whole context, plus the menu NAME's own
         // entry in the generic context (that one only if no other menu still bears the name -
         // menu names are not enforced unique).
-        await translationService.RemoveContextAsync(OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(menu.Name));
+        await translationService.RemoveContextAsync(Crest.AdminMenu.DataLocalizationContext.AdminMenu(menu.Name));
         var nameStillUsed = list.AdminMenu.Any(other =>
             other.Id != menu.Id && string.Equals(other.Name, menu.Name, StringComparison.OrdinalIgnoreCase));
         if (!nameStillUsed)
         {
             await translationService.RemoveKeysAsync(
-                OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(),
+                Crest.AdminMenu.DataLocalizationContext.AdminMenu(),
                 [menu.Name]);
         }
 
@@ -320,7 +322,7 @@ public sealed class AdminMenusController(
     [HttpPost("{menuId}/nodes")]
     public async Task<ActionResult<AdminMenuSummary>> CreateNodeAsync(string menuId, AdminMenuNodeEditModel model)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -377,7 +379,7 @@ public sealed class AdminMenusController(
     [HttpPost("{menuId}/separators")]
     public async Task<ActionResult<AdminMenuSummary>> CreateSeparatorAsync(string menuId, AdminMenuSeparatorEditModel model)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -400,7 +402,7 @@ public sealed class AdminMenusController(
     [HttpPost("{menuId}/primary-nav-menu-settings")]
     public async Task<ActionResult<AdminMenuSummary>> UpdatePrimaryNavMenuSettingsAsync(string menuId, [FromBody] CrestPrimaryNavMenuSettings settings)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -417,7 +419,7 @@ public sealed class AdminMenusController(
     [HttpDelete("{menuId}/separators/{separatorId}")]
     public async Task<ActionResult<AdminMenuSummary>> DeleteSeparatorAsync(string menuId, string separatorId)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -434,7 +436,7 @@ public sealed class AdminMenusController(
     [HttpPost("{menuId}/separators/{separatorId}/move")]
     public async Task<ActionResult<AdminMenuSummary>> MoveSeparatorAsync(string menuId, string separatorId, AdminMenuSeparatorEditModel model)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -457,7 +459,7 @@ public sealed class AdminMenusController(
     [HttpPut("{menuId}/nodes/{nodeId}")]
     public async Task<ActionResult<AdminMenuSummary>> UpdateNodeAsync(string menuId, string nodeId, AdminMenuNodeEditModel model)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -523,7 +525,7 @@ public sealed class AdminMenusController(
     [HttpPost("{menuId}/nodes/{nodeId}/rename")]
     public async Task<ActionResult<AdminMenuSummary>> RenameNodeAsync(string menuId, string nodeId, AdminMenuNodeRenameModel model)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -542,14 +544,14 @@ public sealed class AdminMenusController(
     // making it the tenant-wide translation of that caption rather than a Crest-only display
     // override. Separate from the rename endpoint above, and separately authorized: renaming an
     // item in Crest's own sidebar only needs ManageAdminMenu, but writing the tenant's
-    // translation store changes what Orchard's Razor admin renders for every user of this
+    // translation store changes what Crest's Razor admin renders for every user of this
     // tenant in that culture, so it additionally requires ManageTranslations (Administrator
-    // only by default - see OrchardCore.DataLocalization's Permissions).
+    // only by default - see Crest.DataLocalization's Permissions).
     [HttpPost("{menuId}/nodes/{nodeId}/promote-rename")]
     public async Task<ActionResult<AdminMenuSummary>> PromoteRenameAsync(string menuId, string nodeId)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu) ||
-            !await authorizationService.AuthorizeAsync(User, OrchardCore.Localization.Data.DataLocalizationPermissions.ManageTranslations))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu) ||
+            !await authorizationService.AuthorizeAsync(User, Crest.Localization.Data.DataLocalizationPermissions.ManageTranslations))
         {
             return Forbid();
         }
@@ -568,7 +570,7 @@ public sealed class AdminMenusController(
         // Not every admin menu feeds that navigation, so looking the node up there would make
         // promotion unreachable for menus that don't - and the node's own menu is where both
         // pieces this needs actually live:
-        //   * the caption Orchard looks the translation up by, and
+        //   * the caption Crest looks the translation up by, and
         //   * the menu name that scopes the IDataLocalizer context (see TheAdmin's
         //     NavigationItemText.cshtml, which keys on the item's own MenuName).
         var owner = await FindNodeAsync(nodeId);
@@ -600,7 +602,7 @@ public sealed class AdminMenusController(
     [HttpPost("{menuId}/nodes/{nodeId}/move")]
     public async Task<ActionResult<AdminMenuSummary>> MoveNodeAsync(string menuId, string nodeId, AdminMenuNodeMoveModel model)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -641,7 +643,7 @@ public sealed class AdminMenusController(
     [HttpPost("{menuId}/nodes/{nodeId}/toggle")]
     public async Task<ActionResult<AdminMenuSummary>> ToggleNodeAsync(string menuId, string nodeId)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -679,7 +681,7 @@ public sealed class AdminMenusController(
     [HttpPost("{menuId}/prune-overrides")]
     public async Task<ActionResult<AdminMenuSummary>> PruneOverridesAsync(string menuId)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -697,7 +699,7 @@ public sealed class AdminMenusController(
     [HttpDelete("{menuId}/nodes/{nodeId}")]
     public async Task<ActionResult<AdminMenuSummary>> DeleteNodeAsync(string menuId, string nodeId)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
@@ -748,7 +750,7 @@ public sealed class AdminMenusController(
         CollectNodeCaptions(menu.MenuItems, survivingCaptions);
         deletedCaptions.ExceptWith(survivingCaptions);
         await translationService.RemoveKeysAsync(
-            OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(menu.Name),
+            Crest.AdminMenu.DataLocalizationContext.AdminMenu(menu.Name),
             deletedCaptions);
 
         return Ok(AdminMenuSummary.From(menu));

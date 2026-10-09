@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using OrchardCore.Environment.Shell;
+using Crest.Environment.Shell;
 
 namespace Crest.Services;
 
@@ -12,15 +12,15 @@ namespace Crest.Services;
 // - see docs/localization.md's "Resolution architecture" section): the client is the
 // only party that knows the full priority chain (session override, stored user default,
 // browser locale, tenant default), so it resolves the winner itself and writes one cookie
-// with the final answer. This is deliberately NOT OrchardCore.Localization's
+// with the final answer. This is deliberately NOT Crest.Localization's
 // AdminCookieCultureProvider - that provider only ever answers for requests under the
-// admin path prefix, which is wrong here: legacy Orchard pages embedded via
+// admin path prefix, which is wrong here: legacy Crest pages embedded via
 // LegacyAdminFrame.razor (same-origin, same tenant base path) and any other tenant-scoped
 // route also need to see the client-resolved culture. So this registers the stock,
 // otherwise-unused CookieRequestCultureProvider tenant-wide instead.
 //
 // This runs as an IPostConfigureOptions, not IConfigureOptions - deliberately. Stock
-// OrchardCore.Localization's RequestLocalizationOptionsConfigurations ALSO inserts its
+// Crest.Localization's RequestLocalizationOptionsConfigurations ALSO inserts its
 // own provider (AdminCookieCultureProvider) at index 0 via the same
 // AddInitialRequestCultureProvider pattern, on the same options instance. Two independent
 // Insert(0, ...) calls from two different IConfigureOptions registrations race - ASP.NET

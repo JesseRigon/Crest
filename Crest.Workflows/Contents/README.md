@@ -1,10 +1,10 @@
 # Crest.Workflows.Contents
 
-Provides Elsa workflow activities for Orchard Core content management.
+Provides Elsa workflow activities for Crest content management.
 
 ## Features
 
-This module integrates Elsa Workflows with Orchard Core's content management system, enabling workflows to interact with content items.
+This module integrates Elsa Workflows with Crest's content management system, enabling workflows to interact with content items.
 
 ### Content Activities
 
@@ -31,12 +31,12 @@ These activities trigger workflows in response to content lifecycle events:
 ## Dependencies
 
 - `Crest.Workflows`
-- `OrchardCore.Contents`
-- `OrchardCore.Title`
+- `Crest.Contents`
+- `Crest.Title`
 
 ## Installation
 
-Enable the **Content Activities** feature in the Orchard Core admin dashboard under Features.
+Enable the **Content Activities** feature in the Crest admin dashboard under Features.
 
 ## Package Information
 

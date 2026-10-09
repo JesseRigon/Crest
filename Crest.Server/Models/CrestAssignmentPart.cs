@@ -1,4 +1,4 @@
-using OrchardCore.ContentManagement;
+using Crest.ContentManagement;
 
 namespace Crest.Models;
 
@@ -8,7 +8,7 @@ namespace Crest.Models;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Assignment is deliberately NOT Orchard's <c>Owner</c>. <c>Owner</c> records who
+/// Assignment is deliberately NOT Crest's <c>Owner</c>. <c>Owner</c> records who
 /// CREATED a record and is what the stock own-content permission variations key on;
 /// reassigning work by rewriting it would destroy the audit answer to "who entered
 /// this" and silently change the meaning of every `ViewOwnContent`-style grant. They
@@ -38,7 +38,7 @@ public sealed class CrestAssignment
 
     /// <summary>
     /// What the target IS - a content type name, or
-    /// <see cref="CrestAssignmentTargets.User"/> for Orchard users, who are not
+    /// <see cref="CrestAssignmentTargets.User"/> for Crest users, who are not
     /// content items.
     /// </summary>
     public string TargetType { get; set; } = string.Empty;
@@ -53,7 +53,7 @@ public sealed class CrestAssignment
 public static class CrestAssignmentTargets
 {
     /// <summary>
-    /// Orchard users are not content items, so they cannot be addressed by content
+    /// Crest users are not content items, so they cannot be addressed by content
     /// type. This sentinel marks a user-targeted assignment.
     /// </summary>
     public const string User = "@user";

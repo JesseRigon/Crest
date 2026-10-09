@@ -4,11 +4,11 @@ using Crest.Workflows.Activities.Flowchart.Attributes;
 using Crest.Workflows.Attributes;
 using Crest.Workflows.Models;
 using JetBrains.Annotations;
-using OrchardCore.ContentManagement;
+using Crest.ContentManagement;
 
 namespace Crest.Workflows.Contents.Activities;
 
-[Activity("OrchardCore.Content", "Content", "Publish a content item.")]
+[Activity("Crest.Content", "Content", "Publish a content item.")]
 [FlowNode("Published", "Already Published", "Not Found", "Done")]
 [UsedImplicitly]
 public class PublishContent : CodeActivity<ContentItem>

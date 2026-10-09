@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.Admin;
-using OrchardCore.DisplayManagement.Extensions;
-using OrchardCore.Environment.Extensions;
-using OrchardCore.Environment.Extensions.Features;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Themes.Services;
+using Crest.Admin;
+using Crest.DisplayManagement.Extensions;
+using Crest.Environment.Extensions;
+using Crest.Environment.Extensions.Features;
+using Crest.Environment.Shell;
+using Crest.Themes.Services;
 using Crest.Components.Modules;
 using Crest.Routing;
 using Crest.Themes;
@@ -28,7 +28,7 @@ public sealed class ThemesController(
     [HttpGet]
     public async Task<ActionResult<ThemesState>> List()
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.Themes.Permissions.ApplyTheme))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.Themes.Permissions.ApplyTheme))
         {
             return Forbid();
         }
@@ -88,7 +88,7 @@ public sealed class ThemesController(
     [HttpPost("{id}/current")]
     public async Task<IActionResult> SetCurrent(string id, [FromQuery] bool acknowledgeIncompatibilities = false)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.Themes.Permissions.ApplyTheme))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.Themes.Permissions.ApplyTheme))
         {
             return Forbid();
         }
@@ -130,7 +130,7 @@ public sealed class ThemesController(
     [HttpPost("reset-site")]
     public async Task<IActionResult> ResetSiteTheme([FromQuery] bool acknowledgeIncompatibilities = false)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.Themes.Permissions.ApplyTheme))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.Themes.Permissions.ApplyTheme))
         {
             return Forbid();
         }
@@ -147,7 +147,7 @@ public sealed class ThemesController(
     [HttpPost("reset-admin")]
     public async Task<IActionResult> ResetAdminTheme([FromQuery] bool acknowledgeIncompatibilities = false)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.Themes.Permissions.ApplyTheme))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.Themes.Permissions.ApplyTheme))
         {
             return Forbid();
         }
@@ -164,7 +164,7 @@ public sealed class ThemesController(
     [HttpPost("{id}/enable")]
     public async Task<IActionResult> Enable(string id)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.Themes.Permissions.ApplyTheme))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.Themes.Permissions.ApplyTheme))
         {
             return Forbid();
         }
@@ -182,7 +182,7 @@ public sealed class ThemesController(
     [HttpPost("{id}/disable")]
     public async Task<IActionResult> Disable(string id)
     {
-        if (!await authorizationService.AuthorizeAsync(User, OrchardCore.Themes.Permissions.ApplyTheme))
+        if (!await authorizationService.AuthorizeAsync(User, Crest.Themes.Permissions.ApplyTheme))
         {
             return Forbid();
         }

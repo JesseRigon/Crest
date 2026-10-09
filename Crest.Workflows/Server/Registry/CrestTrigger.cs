@@ -16,7 +16,7 @@ public sealed record CrestTriggerStimulus(string TriggerKey);
 /// Fires when a Crest registry raises a trigger (transaction.posted, party.role-created,
 /// ...). The result is the payload the registry sent; the acting user rides along as the
 /// workflow input <c>Actor</c>. Optional <see cref="RequiredPermission"/> ends the run on
-/// Denied when that user lacks the Orchard permission; optional <see cref="PayloadFilter"/>
+/// Denied when that user lacks the Crest permission; optional <see cref="PayloadFilter"/>
 /// ends it on Skipped when the payload does not match (docs/workflows.md, phase 5: "when a
 /// transaction hits account X" is one node: trigger <c>transaction.account-posted</c>,
 /// filter <c>AccountCode = 1200</c>).
@@ -28,7 +28,7 @@ public class CrestTrigger : Trigger<IDictionary<string, object>>
     [Input(DisplayName = "Trigger", Description = "The registered trigger key, e.g. transaction.posted.", UIHint = InputUIHints.DropDown, UIHandler = typeof(WorkflowTriggerOptionsProvider))]
     public Input<string> TriggerKey { get; set; } = null!;
 
-    [Input(DisplayName = "Required permission", Description = "Optional. Orchard permission the acting user must hold for the flow to proceed; otherwise the run ends on Denied.", UIHint = InputUIHints.DropDown, UIHandler = typeof(PermissionOptionsProvider))]
+    [Input(DisplayName = "Required permission", Description = "Optional. Crest permission the acting user must hold for the flow to proceed; otherwise the run ends on Denied.", UIHint = InputUIHints.DropDown, UIHandler = typeof(PermissionOptionsProvider))]
     public Input<string?> RequiredPermission { get; set; } = null!;
 
     [Input(DisplayName = "Payload filter", Description = "Optional. One 'Key = value' per line; every line must match a payload value (case-insensitive) or the run ends on Skipped. Example: Kind = invoice.", UIHint = InputUIHints.MultiLine)]

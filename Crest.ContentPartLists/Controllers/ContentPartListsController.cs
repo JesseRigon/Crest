@@ -371,7 +371,7 @@ public sealed class ContentPartListsController(
 
     private Task<bool> CanManageAsync() => IsAuthorizedAsync(CrestContentPartListPermissions.ManageContentPartLists);
 
-    private async Task<bool> IsAuthorizedAsync(OrchardCore.Security.Permissions.Permission permission) =>
+    private async Task<bool> IsAuthorizedAsync(Crest.Security.Permissions.Permission permission) =>
         await authorizationService.AuthorizeAsync(User, permission);
 }
 

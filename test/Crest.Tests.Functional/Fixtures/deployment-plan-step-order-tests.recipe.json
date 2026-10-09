@@ -1,0 +1,41 @@
+{
+  "name": "DeploymentPlanStepOrderTests",
+  "displayName": "DeploymentPlanStepOrderTests",
+  "description": "Testing Crest.Deployment's step reordering (Assets/js/steporder.js, a fetch-based SortableJS drag handler; was jQuery $.ajax before the jQuery-removal migration).",
+  "author": "The Crest Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "tests" ],
+  "tags": [ "tests" ],
+
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Crest.HomeRoute",
+        "Crest.Admin",
+        "Crest.Navigation",
+        "Crest.Recipes",
+        "Crest.Resources",
+        "Crest.Roles",
+        "Crest.Security",
+        "Crest.Settings",
+        "Crest.Themes",
+        "Crest.Users",
+
+        "Crest.Contents",
+        "Crest.ContentTypes",
+        "Crest.Deployment",
+
+        "TheAdmin",
+        "SafeMode"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "TheAdmin",
+      "site": "TheAdmin"
+    }
+  ]
+}

@@ -1,10 +1,10 @@
 /**
- * In OrchardCore, file extension validation is handled server-side.
+ * In Crest, file extension validation is handled server-side.
  * These functions provide a basic client-side fallback.
  */
 
 /**
- * Returns allowed file extensions. In OrchardCore all extensions are allowed client-side
+ * Returns allowed file extensions. In Crest all extensions are allowed client-side
  * (server validates against MediaOptions.AllowedFileExtensions).
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- signature kept for API compatibility; extension filtering is server-side only.

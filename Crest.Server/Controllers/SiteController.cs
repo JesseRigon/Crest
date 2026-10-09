@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using OrchardCore.ContentManagement.Routing;
-using OrchardCore.Settings;
+using Crest.ContentManagement.Routing;
+using Crest.Settings;
 using Crest.ViewModels;
 
 namespace Crest.Controllers;
@@ -26,11 +26,11 @@ public sealed class SiteController(
     // Anonymous, permission-shaped like ContentItemsController.ViewAsync: any caller may
     // ask "what is the site's home content item", the same way any caller may load the
     // home page in a browser. ISite.HomeRoute is written by AutoroutePartHandler when a
-    // content item's AutoroutePart.SetHomepage is published (OrchardCore.Autoroute,
+    // content item's AutoroutePart.SetHomepage is published (Crest.Autoroute,
     // now a real Crest.Server manifest dependency - see Manifest.cs) - reading it here
     // via IOptions<AutorouteOptions>.ContentItemIdKey ("contentItemId", configured in
-    // OrchardCore.Contents/Startup.cs) is the same lookup HomeRouteTransformer performs
-    // server-side; no invented literal, just the one real key Orchard itself defines.
+    // Crest.Contents/Startup.cs) is the same lookup HomeRouteTransformer performs
+    // server-side; no invented literal, just the one real key Crest itself defines.
     [HttpGet("home")]
     [AllowAnonymous]
     public async Task<ActionResult<SiteHomeResult>> GetHomeAsync()

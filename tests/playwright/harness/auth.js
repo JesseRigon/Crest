@@ -41,7 +41,7 @@ async function loginAsAdmin(page, baseUrl, creds = {}) {
 
 // Placeholder for the public/front-end site's auth flow. No client-site feature checks
 // exist yet — this exists so run-client-suite.js has a real login step to call once the
-// first front-end check is written, instead of inventing the shape then. Same Orchard
+// first front-end check is written, instead of inventing the shape then. Same Crest
 // /login mechanism as admin, just no forced redirect into /Admin afterward.
 async function loginAsClient(page, baseUrl, creds = {}) {
   const username = creds.username || process.env.CLIENT_USER;

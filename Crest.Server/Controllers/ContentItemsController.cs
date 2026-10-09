@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Nodes;
-using OrchardCore;
-using OrchardCore.ContentManagement;
+using Crest;
+using Crest.ContentManagement;
 using System.Text.Json.Settings;
-using OrchardCore.ContentManagement.Records;
-using OrchardCore.Contents;
-using OrchardCore.Security.Permissions;
+using Crest.ContentManagement.Records;
+using Crest.Contents;
+using Crest.Security.Permissions;
 using YesSql;
 using YesSql.Services;
 using Crest.ViewModels;
@@ -18,7 +18,7 @@ namespace Crest.Controllers;
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/content-items")]
 public sealed class ContentItemsController(
-    IOrchardHelper orchardHelper,
+    IPlatformHelper platformHelper,
     ISession session,
     IContentManager contentManager,
     Crest.Services.CrestFieldVisibilityEnforcer visibilityEnforcer,
@@ -27,8 +27,8 @@ public sealed class ContentItemsController(
 {
     private static readonly string[] DefaultViewFields =
     [
-        nameof(OrchardCore.ContentManagement.ContentItem.DisplayText),
-        nameof(OrchardCore.ContentManagement.ContentItem.ContentType),
+        nameof(Crest.ContentManagement.ContentItem.DisplayText),
+        nameof(Crest.ContentManagement.ContentItem.ContentType),
     ];
 
     [HttpGet]
@@ -58,7 +58,7 @@ public sealed class ContentItemsController(
 
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 100);
-        var query = session.Query<OrchardCore.ContentManagement.ContentItem, ContentItemIndex>()
+        var query = session.Query<Crest.ContentManagement.ContentItem, ContentItemIndex>()
             .With<ContentItemIndex>(index => index.Latest);
 
         if (!string.IsNullOrWhiteSpace(contentType))
@@ -144,7 +144,7 @@ public sealed class ContentItemsController(
     // endpoint, it's permission-shaped for whoever's asking.
     //
     // Today every requested field checks the same item-level CommonPermissions.ViewContent
-    // - OrchardCore has no built-in per-part permission (see docs/permissions.md for
+    // - Crest has no built-in per-part permission (see docs/permissions.md for
     // why, and what real per-part permissions would require). That means "permitted"
     // currently means "can view this item at all," not yet differentiated per part -
     // each field's check is already its own step below so a real per-part permission
@@ -175,8 +175,8 @@ public sealed class ContentItemsController(
 
             result[field] = field switch
             {
-                nameof(OrchardCore.ContentManagement.ContentItem.DisplayText) => item.DisplayText,
-                nameof(OrchardCore.ContentManagement.ContentItem.ContentType) => item.ContentType,
+                nameof(Crest.ContentManagement.ContentItem.DisplayText) => item.DisplayText,
+                nameof(Crest.ContentManagement.ContentItem.ContentType) => item.ContentType,
                 _ => item.Content[field],
             };
         }
@@ -239,7 +239,7 @@ public sealed class ContentItemsController(
     [HttpGet("by-handle/{handle}")]
     public async Task<ActionResult<ContentItem>> GetByHandle(string handle)
     {
-        var contentItem = await orchardHelper.GetContentItemByHandleAsync(handle);
+        var contentItem = await platformHelper.GetContentItemByHandleAsync(handle);
         if (contentItem is null) return NotFound();
         return await authorizationService.AuthorizeAsync(User, CommonPermissions.EditContent, contentItem)
             ? Ok(ContentItem.From(contentItem))
@@ -269,7 +269,7 @@ public sealed class ContentItemsController(
     // and GetAsync weld part objects into the item's element cache, and a cache that
     // is not reset keeps serving those stale parts to everything that runs on save
     // (index providers, handlers) instead of the content the request wrote.
-    private static void ReplaceContent(OrchardCore.ContentManagement.ContentItem item, JsonObject? content)
+    private static void ReplaceContent(Crest.ContentManagement.ContentItem item, JsonObject? content)
     {
         item.Content.Clear();
         item.Merge(content?.DeepClone() ?? new JsonObject(), new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });

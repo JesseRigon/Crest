@@ -1,12 +1,12 @@
 using Crest.Settings;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
-using OrchardCore.Admin;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Metadata.Models;
-using OrchardCore.Contents;
-using OrchardCore.Contents.Security;
-using OrchardCore.Navigation;
+using Crest.Admin;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Models;
+using Crest.Contents;
+using Crest.Contents.Security;
+using Crest.Navigation;
 
 namespace Crest.Navigation;
 
@@ -34,7 +34,7 @@ public sealed class ContentTypesMenuNavigationProvider(
     /// keep the global one — their dynamic name is unregistered, and an
     /// unresolvable name would silently drop the gate entirely.
     /// </summary>
-    internal static OrchardCore.Security.Permissions.Permission SelectPermission(ContentTypeDefinition definition) =>
+    internal static Crest.Security.Permissions.Permission SelectPermission(ContentTypeDefinition definition) =>
         definition.IsSecurable()
             ? ContentTypePermissionsHelper.CreateDynamicPermission(
                 ContentTypePermissionsHelper.PermissionTemplates[CommonPermissions.ListContent.Name], definition)

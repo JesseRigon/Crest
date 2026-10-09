@@ -1,19 +1,19 @@
-.orchard-icon {
+.platform-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--orchard-icon-box-size, 1.25rem);
-    min-width: var(--orchard-icon-box-size, 1.25rem);
-    flex: 0 0 var(--orchard-icon-box-size, 1.25rem);
-    height: var(--orchard-icon-box-size, 1.25rem);
-    font-size: var(--orchard-icon-size, 1rem);
+    width: var(--platform-icon-box-size, 1.25rem);
+    min-width: var(--platform-icon-box-size, 1.25rem);
+    flex: 0 0 var(--platform-icon-box-size, 1.25rem);
+    height: var(--platform-icon-box-size, 1.25rem);
+    font-size: var(--platform-icon-size, 1rem);
     line-height: 1;
-    color: var(--orchard-icon-color, currentColor);
-    opacity: var(--orchard-icon-opacity, 1);
+    color: var(--platform-icon-color, currentColor);
+    opacity: var(--platform-icon-opacity, 1);
     text-align: center;
 }
 
-.orchard-icon > svg {
+.platform-icon > svg {
     display: block;
     width: 1em;
     height: 1em;

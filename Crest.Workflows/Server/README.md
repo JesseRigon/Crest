@@ -1,10 +1,10 @@
 # Crest.Workflows
 
-Core Elsa Workflows integration for Orchard Core CMS.
+Core Elsa Workflows integration for Crest CMS.
 
 ## Features
 
-This module provides the foundational integration between Elsa Workflows and Orchard Core, including:
+This module provides the foundational integration between Elsa Workflows and Crest, including:
 
 ### Workflow Services
 - Complete Elsa Workflows runtime integration
@@ -24,18 +24,18 @@ This module provides the foundational integration between Elsa Workflows and Orc
 
 ### Integration Features
 - Role-based access control for workflows
-- Orchard Core content management integration
+- Crest content management integration
 - Admin menu and navigation integration
 
 ## Dependencies
 
-- `OrchardCore.Contents`
-- `OrchardCore.Workflows`
+- `Crest.Contents`
+- `Crest.Workflows.Platform`
 - `Crest`
 
 ## Installation
 
-Enable the **Crest Workflows** feature in the Orchard Core admin dashboard under Features.
+Enable the **Crest Workflows** feature in the Crest admin dashboard under Features.
 
 ## Package Information
 

@@ -1,3 +1,7 @@
+> **Ruling 2026-10-09:** this module becomes `Crest.Data.Global`, the home of the standardized
+> global data set imports and loading and of the global data registry; see
+> [blazor-display.md](blazor-display.md) › Rulings.
+
 # The global store — tenant-less reference data
 
 Reference data that is the same for every tenant is stored **once**, in a YesSql store that
@@ -23,7 +27,7 @@ ordering, visibility and additions are.
 Orchard can store tenant settings in a database rather than `tenants.json`
 (`DatabaseShellsSettingsSources`). That data belongs to no tenant, so Orchard opens a YesSql
 session against a **store of its own** — its own `DatabaseProvider`, `ConnectionString`,
-`TablePrefix` and `Schema`, configured under `OrchardCore_Shells_Database`.
+`TablePrefix` and `Schema`, configured under `Crest_Shells_Database`.
 
 Crest does the same: a **`CrestGlobalStore`** — one host-level service that owns a
 tenant-less YesSql store configured under its own section (`Crest_Global`,
@@ -33,7 +37,7 @@ service.
 
 Rather than building a synthetic `ShellSettings` and asking `IShellContextFactory` for a
 context, as Orchard's `internal` helper does, the store builds its YesSql `Configuration`
-directly from those options, the way OrchardCore.Data builds a tenant's store, so no shell is
+directly from those options, the way Crest.Data builds a tenant's store, so no shell is
 involved. Modules contribute their global documents as `ICrestGlobalSchema` types, discovered
 by scanning the loaded module assemblies, so the host does not name each one.
 
@@ -42,17 +46,17 @@ by table prefix, or in separate databases by connection string, per configuratio
 store is the same: with no section configured it is a SQLite file (`crest-global.db`) in a
 `CrestGlobal` folder beside the tenant folders, with the table prefix `CrestGlobal`; an
 operator who wants it elsewhere (Postgres, SQL Server, MySQL) sets the provider and connection
-string, exactly as they would for `OrchardCore_Shells_Database`.
+string, exactly as they would for `Crest_Shells_Database`.
 
 **No cross-store joins**, and none needed. Tenant indexes hold global ids (stable strings,
 see below); lookups query the global store with an `IN`. Two indexed queries, not one join.
 
 ### The host registers it
 
-`ICrestGlobalStore` is registered by an `OrchardCoreBuilder` extension
+`ICrestGlobalStore` is registered by an `PlatformBuilder` extension
 (`AddCrestGlobalStore()`), not by the feature, because the store is one database shared by
 every tenant and so belongs to the host's service collection: a host calls
-`AddOrchardCms().AddCrestGlobalStore()` in `Program.cs`. The `Crest.Global` feature itself
+`AddPlatformCms().AddCrestGlobalStore()` in `Program.cs`. The `Crest.Global` feature itself
 only adds the `ManageCrestGlobalReferenceData` permission.
 
 ## Who can write
@@ -208,7 +212,7 @@ hidden one.
 ### Known rough edge: the global store needs a host call
 
 - [ ] **Make the global store need no host call.** `Crest.Global`'s `ICrestGlobalStore` is
-  registered by an `OrchardCoreBuilder` extension (`AddCrestGlobalStore()`), not by the
+  registered by an `PlatformBuilder` extension (`AddCrestGlobalStore()`), not by the
   feature, because the store is one database shared by every tenant and so belongs to the
   host's service collection. A host that enables `Crest.Global`, `Crest.Regions` or
   `Crest.Money` without making that call gets no warning: the features enable, and setup

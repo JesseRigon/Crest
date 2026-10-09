@@ -9,10 +9,10 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
-using OrchardCore.Entities;
-using OrchardCore.Users;
-using OrchardCore.Users.Events;
-using OrchardCore.Users.Models;
+using Crest.Entities;
+using Crest.Users;
+using Crest.Users.Events;
+using Crest.Users.Models;
 
 namespace Crest.Members.Handlers;
 
@@ -31,7 +31,7 @@ public class MemberLoginSurfaceGate : LoginFormEventBase
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ITempDataDictionaryFactory _tempDataDictionaryFactory;
-    private readonly IOptions<OrchardCore.Users.UserOptions> _userOptions;
+    private readonly IOptions<Crest.Users.UserOptions> _userOptions;
     private readonly MemberPortalLoginContext _portalContext;
 
     private readonly IStringLocalizer S;
@@ -39,7 +39,7 @@ public class MemberLoginSurfaceGate : LoginFormEventBase
     public MemberLoginSurfaceGate(
         IHttpContextAccessor httpContextAccessor,
         ITempDataDictionaryFactory tempDataDictionaryFactory,
-        IOptions<OrchardCore.Users.UserOptions> userOptions,
+        IOptions<Crest.Users.UserOptions> userOptions,
         MemberPortalLoginContext portalContext,
         IStringLocalizer<MemberLoginSurfaceGate> stringLocalizer)
     {
@@ -93,7 +93,7 @@ public class MemberLoginSurfaceGate : LoginFormEventBase
         tempData["error_member_login"] = refusal;
 
         // Redirect to the tenant login. The path comes from UserOptions - the same
-        // Orchard configuration that registered the login route - never a literal.
+        // Crest configuration that registered the login route - never a literal.
         var loginPath = "/" + _userOptions.Value.LoginPath;
         if (httpContext.Request.Query.TryGetValue("returnUrl", out var returnUrl))
         {

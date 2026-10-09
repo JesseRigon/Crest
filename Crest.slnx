@@ -23,7 +23,7 @@
   <Project Path="Crest.Parties/blazor-wasm/Crest.Parties.BlazorWasm.csproj" />
   <Project Path="Crest.Regions/Crest.Regions.csproj" />
   <Project Path="Crest.Regions/Domain/Crest.Regions.Domain.csproj" />
-  <Project Path="Crest.Server/Crest.csproj" />
+  <Project Path="Crest.Server/Crest.Server.csproj" />
   <Project Path="Crest.Server/Themes/Crest.LegacyFrame/Crest.LegacyFrame.csproj" />
   <Project Path="Crest.Shell/Crest.Shell.csproj" />
   <Project Path="Crest.SiteTheme/Crest.SiteTheme.csproj" />

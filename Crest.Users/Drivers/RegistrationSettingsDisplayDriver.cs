@@ -1,0 +1,80 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Crest.DisplayManagement.Entities;
+using Crest.DisplayManagement.Handlers;
+using Crest.DisplayManagement.Views;
+using Crest.Environment.Options;
+using Crest.Settings;
+using Crest.Users.Models;
+
+namespace Crest.Users.Drivers;
+
+public sealed class RegistrationSettingsDisplayDriver : SiteDisplayDriver<RegistrationSettings>
+{
+    public const string GroupId = "userRegistration";
+
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IAuthorizationService _authorizationService;
+    private readonly IOptionsUpdateNotifier _optionsUpdateNotifier;
+
+    public RegistrationSettingsDisplayDriver(
+        IHttpContextAccessor httpContextAccessor,
+        IAuthorizationService authorizationService,
+        IOptionsUpdateNotifier optionsUpdateNotifier)
+    {
+        _httpContextAccessor = httpContextAccessor;
+        _authorizationService = authorizationService;
+        _optionsUpdateNotifier = optionsUpdateNotifier;
+    }
+
+    protected override string SettingsGroupId
+        => GroupId;
+
+    public override async Task<IDisplayResult> EditAsync(ISite site, RegistrationSettings settings, BuildEditorContext context)
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+
+        if (!await _authorizationService.AuthorizeAsync(user, UsersPermissions.ManageUsers))
+        {
+            return null;
+        }
+
+        return Initialize<RegistrationSettings>("RegistrationSettings_Edit", model =>
+        {
+            model.UsersMustValidateEmail = settings.UsersMustValidateEmail;
+            model.UsersAreModerated = settings.UsersAreModerated;
+            model.UseSiteTheme = settings.UseSiteTheme;
+        }).Location("Content:5#General")
+        .OnGroup(SettingsGroupId);
+    }
+
+    public override async Task<IDisplayResult> UpdateAsync(ISite site, RegistrationSettings settings, UpdateEditorContext context)
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+
+        if (!await _authorizationService.AuthorizeAsync(user, UsersPermissions.ManageUsers))
+        {
+            return null;
+        }
+
+        var model = new RegistrationSettings();
+
+        await context.Updater.TryUpdateModelAsync(model, Prefix);
+
+        var hasChange =
+            model.UsersMustValidateEmail != settings.UsersMustValidateEmail ||
+            model.UsersAreModerated != settings.UsersAreModerated ||
+            model.UseSiteTheme != settings.UseSiteTheme;
+
+        settings.UsersMustValidateEmail = model.UsersMustValidateEmail;
+        settings.UsersAreModerated = model.UsersAreModerated;
+        settings.UseSiteTheme = model.UseSiteTheme;
+
+        if (hasChange)
+        {
+            _optionsUpdateNotifier.RequestUpdate<RegistrationOptions>();
+        }
+
+        return await EditAsync(site, settings, context);
+    }
+}

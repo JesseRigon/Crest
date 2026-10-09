@@ -24,6 +24,11 @@ Zoho Analytics, Fabric, a given REST API, …) are plugins of a downstream repor
 with a plugin registry other modules can hook into. Very downstream; not in the first
 public release.
 
+> **Ruling 2026-10-09:** the value type registry (field type, editor, display primitive, query
+> column type, workflow type per value type) lives in `Crest.Data` (`Crest.Data.Types`); the
+> query system reads it. The data-layer module chain (`Crest.Data`, connectors, query, API
+> surfaces) is still to be decided; see [blazor-display.md](blazor-display.md) › Rulings.
+
 ## The query system
 
 Every question about queries is answered from **two aspects**, kept apart: **the builder**
@@ -53,7 +58,7 @@ for whoever requests it — API, GraphQL, Liquid, feeds).
   query's results. Sharing, scheduled delivery and full reporting are built downstream on
   it.
 - [ ] **Rework the platform's Queries: simple querying, enough for Crest's own consumers** (ruling
-  2026-10-06), in place in `src/` (since the hard fork), as the file system reworks Media. The bar is
+  2026-10-06), in place in the platform (since the hard fork), as the file system reworks Media. The bar is
   that stock Crest is enough for the audit system to build custom filtered activity streams
   on it ([audit.md](audit.md) › 5), and for downstream reporting to extend it. Orchard's
   contract (`IQuerySource.ExecuteQueryAsync(Query, IDictionary<string, object>)` returning

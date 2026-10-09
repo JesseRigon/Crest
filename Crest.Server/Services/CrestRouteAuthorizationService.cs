@@ -1,23 +1,23 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using OrchardCore.Admin;
-using OrchardCore.Contents;
-using OrchardCore.Indexing;
-using OrchardCore.Indexing.Core;
-using OrchardCore.Localization;
-using OrchardCore.Media;
-using OrchardCore.Recipes;
-using OrchardCore.Roles;
-using OrchardCore.Security;
-using OrchardCore.Security.Permissions;
-using OrchardCore.Settings;
-using OrchardCore.Users;
+using Crest.Admin;
+using Crest.Contents;
+using Crest.Indexing;
+using Crest.Indexing.Core;
+using Crest.Localization;
+using Crest.Media;
+using Crest.Recipes;
+using Crest.Roles;
+using Crest.Security;
+using Crest.Security.Permissions;
+using Crest.Settings;
+using Crest.Users;
 
 namespace Crest.Services;
 
 /// <summary>
-/// A batch, client-navigation projection of Orchard permissions. This is only
-/// a UI gate: the underlying Orchard services and Crest adapters remain the
+/// A batch, client-navigation projection of Crest permissions. This is only
+/// a UI gate: the underlying Crest services and Crest adapters remain the
 /// authority for every data operation.
 /// </summary>
 public sealed class CrestRouteAuthorizationService(
@@ -106,33 +106,33 @@ public sealed class CrestRoutePermissionProvider : ICrestRoutePermissionProvider
         // just under Matches' own empty-template-matches-empty-path shape.
         new("", AdminPermissions.AccessAdminPanel),
         new("/Dashboard", AdminPermissions.AccessAdminPanel),
-        new("/Features", OrchardCore.Features.FeaturesPermissions.ManageFeatures),
-        new("/Themes", OrchardCore.Themes.Permissions.ApplyTheme),
-        new("/AdminMenus", OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu),
-        new("/AdminMenu", OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu),
-        new("/AdminMenu/List", OrchardCore.AdminMenu.AdminMenuPermissions.ManageAdminMenu),
-        new("/Menus", OrchardCore.Menu.Permissions.ManageMenu),
-        new("/Menu", OrchardCore.Menu.Permissions.ManageMenu),
-        new("/Menu/List", OrchardCore.Menu.Permissions.ManageMenu),
-        new("/Contents/ContentItems/Menu", OrchardCore.Menu.Permissions.ManageMenu),
-        new("/Contents/ContentItems", OrchardCore.Contents.CommonPermissions.ListContent),
-        new("/Contents/ContentTypes/{ContentType}/Create", OrchardCore.Contents.CommonPermissions.EditContent),
-        new("/Contents/ContentItems/{ContentItemId}/Edit", OrchardCore.Contents.CommonPermissions.EditContent),
+        new("/Features", Crest.Features.FeaturesPermissions.ManageFeatures),
+        new("/Themes", Crest.Themes.Permissions.ApplyTheme),
+        new("/AdminMenus", Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu),
+        new("/AdminMenu", Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu),
+        new("/AdminMenu/List", Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu),
+        new("/Menus", Crest.Menu.Permissions.ManageMenu),
+        new("/Menu", Crest.Menu.Permissions.ManageMenu),
+        new("/Menu/List", Crest.Menu.Permissions.ManageMenu),
+        new("/Contents/ContentItems/Menu", Crest.Menu.Permissions.ManageMenu),
+        new("/Contents/ContentItems", Crest.Contents.CommonPermissions.ListContent),
+        new("/Contents/ContentTypes/{ContentType}/Create", Crest.Contents.CommonPermissions.EditContent),
+        new("/Contents/ContentItems/{ContentItemId}/Edit", Crest.Contents.CommonPermissions.EditContent),
         new("/ContentTypes/List", ContentTypesPermissions.ViewContentTypes),
         new("/ContentTypes/ContentPartLists", Crest.Permissions.CrestContentPartListPermissions.ViewContentPartLists),
         new("/ContentTypes/ListParts", ContentTypesPermissions.ViewContentTypes),
         new("/Users/Index", UsersPermissions.ListUsers),
         new("/Users/Create", UsersPermissions.EditUsers),
         new("/Users/Edit/{Id}", UsersPermissions.EditUsers),
-        new("/Tenants", OrchardCore.Tenants.Permissions.ManageTenants),
+        new("/Tenants", Crest.Tenants.Permissions.ManageTenants),
         new("/Roles/Index", RolesPermissions.ManageRoles),
         new("/Media", MediaPermissions.ManageMedia),
         new("/Media/Options", MediaPermissions.ViewMediaOptions),
         new("/MediaProfiles", MediaPermissions.ManageMediaProfiles),
         new("/indexing", IndexingPermissions.ManageIndexes),
-        new("/Queries/Index", OrchardCore.Queries.Permissions.ManageQueries),
+        new("/Queries/Index", Crest.Queries.Permissions.ManageQueries),
         new("/Recipes", RecipePermissions.ManageRecipes),
-        new("/Templates", OrchardCore.Templates.Permissions.ManageTemplates),
+        new("/Templates", Crest.Templates.Permissions.ManageTemplates),
         new("/Settings/general", SettingsPermissions.ManageSettings),
         new("/Settings/admin", AdminPermissions.ManageAdminSettings),
         new("/Settings/localization", LocalizationPermissions.ManageCultures),
@@ -140,8 +140,8 @@ public sealed class CrestRoutePermissionProvider : ICrestRoutePermissionProvider
         // DataLocalization URLs so the existing admin menu link and the Localization page's
         // "Edit translations" button land on it instead of the legacy frame. View-level gate
         // only - the API enforces per-culture edit rights on top.
-        new("/DataLocalization", OrchardCore.Localization.Data.DataLocalizationPermissions.ViewDynamicTranslations),
-        new("/DataLocalization/Index", OrchardCore.Localization.Data.DataLocalizationPermissions.ViewDynamicTranslations),
+        new("/DataLocalization", Crest.Localization.Data.DataLocalizationPermissions.ViewDynamicTranslations),
+        new("/DataLocalization/Index", Crest.Localization.Data.DataLocalizationPermissions.ViewDynamicTranslations),
         new("/Settings/userLogin", UsersPermissions.ManageUsers),
         new("/Settings/SecurityHeaders", SecurityPermissions.ManageSecurityHeadersSettings),
         new("/Settings", SecurityPermissions.ManageSecurityHeadersSettings),

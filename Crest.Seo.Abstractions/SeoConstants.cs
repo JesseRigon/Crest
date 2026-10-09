@@ -1,0 +1,12 @@
+using Crest.Security.Permissions;
+
+namespace Crest.Seo;
+
+public static class SeoConstants
+{
+    public const string RobotsFileName = "robots.txt";
+
+    public const string RobotsSettingsGroupId = "robotsSettings";
+
+    public static readonly Permission ManageSeoSettings = new("ManageSeoSettings", "Manage SEO related settings");
+}

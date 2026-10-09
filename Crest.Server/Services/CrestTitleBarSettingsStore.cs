@@ -1,10 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using OrchardCore.Settings;
+using Crest.Settings;
 
 namespace Crest.Services;
 
-/// <summary>Tenant-scoped Crest title-bar preferences stored alongside Orchard site settings.</summary>
+/// <summary>Tenant-scoped Crest title-bar preferences stored alongside Crest site settings.</summary>
 public sealed class CrestTitleBarSettingsStore(ISiteService siteService)
 {
     private const string SettingsKey = "CrestTitleBar";

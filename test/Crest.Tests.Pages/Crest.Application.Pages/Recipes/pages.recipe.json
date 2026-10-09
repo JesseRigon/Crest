@@ -1,0 +1,100 @@
+{
+  "name": "Pages",
+  "displayName": "Pages",
+  "description": "Blank site for testing razor pages.",
+  "author": "The Crest Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "default" ],
+  "tags": [ "blank" ],
+
+  // The variables are evaluated the first time they are accessed, and reused across steps
+  "variables": {
+    // "now": "[js: new Date().toISOString()]"
+  },
+
+  "steps": [
+    {
+      "name": "feature",
+      "disable": [],
+      "enable": [
+        // SaaS
+        "Crest.HomeRoute",
+        "Crest.Admin",
+        "Crest.Diagnostics",
+        "Crest.DynamicCache",
+        "Crest.Features",
+        "Crest.Navigation",
+        "Crest.Recipes",
+        "Crest.Resources",
+        "Crest.Roles",
+        "Crest.Settings",
+        "Crest.Themes",
+        "Crest.Users",
+
+        // Content Management
+        "Crest.Alias",
+        "Crest.Autoroute",
+        "Crest.Html",
+        "Crest.ContentFields",
+        "Crest.ContentPreview",
+        "Crest.Contents",
+        "Crest.Contents.FileContentDefinition",
+        "Crest.ContentTypes",
+        "Crest.CustomSettings",
+        "Crest.Deployment",
+        "Crest.Deployment.Remote",
+        "Crest.Feeds",
+        "Crest.Flows",
+        "Crest.Indexing",
+        "Crest.Layers",
+        "Crest.Lucene",
+        "Crest.Lists",
+        "Crest.Markdown",
+        "Crest.Media",
+        "Crest.Queries",
+        "Crest.Title",
+        "Crest.Templates",
+        "Crest.Widgets",
+
+        "Module.Pages",
+
+        // Themes
+        "Theme.Pages",
+        "TheAdmin",
+        "SafeMode"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "TheAdmin",
+      "site": "Theme.Pages"
+    },
+    {
+      "name": "Roles",
+      "Roles": [
+        {
+          "Name": "Moderator",
+          "Description": "Grants users the ability to moderate content.",
+          "Permissions": []
+        },
+        {
+          "Name": "Editor",
+          "Description": "Grants users the ability to edit existing content.",
+          "Permissions": []
+        },
+        {
+          "Name": "Author",
+          "Description": "Grants users the ability to create content.",
+          "Permissions": []
+        },
+        {
+          "Name": "Contributor",
+          "Description": "Grants users the ability to contribute content.",
+          "Permissions": []
+        }
+      ]
+    }
+  ]
+}

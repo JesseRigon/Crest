@@ -6,13 +6,13 @@ using Crest.Workflows.Attributes;
 using Crest.Workflows.Models;
 using Crest.Workflows.UIHints;
 using JetBrains.Annotations;
-using OrchardCore.ContentManagement;
-using OrchardCore.ContentManagement.Handlers;
+using Crest.ContentManagement;
+using Crest.ContentManagement.Handlers;
 using Crest.Workflows.Contents.UIHints;
 
 namespace Crest.Workflows.Contents.Activities;
 
-[Activity("OrchardCore.Content", "Content", "Update an existing content item.")]
+[Activity("Crest.Content", "Content", "Update an existing content item.")]
 [FlowNode("Updated", "Validation Error")]
 [UsedImplicitly]
 public class UpdateContent : CodeActivity<ContentItem>

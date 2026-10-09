@@ -4,17 +4,17 @@ using Crest.Members.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using OrchardCore.Entities;
-using OrchardCore.Users;
-using OrchardCore.Users.Models;
-using OrchardCore.Users.Services;
+using Crest.Entities;
+using Crest.Users;
+using Crest.Users.Models;
+using Crest.Users.Services;
 using YesSql;
 
 namespace Crest.Members.Services;
 
 /// <summary>
 /// Staff support access to member portals (ruling: impersonation, never logging in as
-/// the member; stock Orchard has NO impersonation - verified, built from primitives).
+/// the member; stock Crest has NO impersonation - verified, built from primitives).
 /// The issued session IS the member's principal (functional attribution: CreatedBy =
 /// member, member org scope, member view) while AuthenticationProperties carry the
 /// STAFF identity, surfaced per request as the impersonator claim - both identities

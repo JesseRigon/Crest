@@ -4,11 +4,11 @@ using Crest.Workflows.Activities.Flowchart.Attributes;
 using Crest.Workflows.Attributes;
 using Crest.Workflows.Models;
 using JetBrains.Annotations;
-using OrchardCore.ContentManagement;
+using Crest.ContentManagement;
 
 namespace Crest.Workflows.Contents.Activities;
 
-[Activity("OrchardCore.Content", "Content", "Update an existing content item.")]
+[Activity("Crest.Content", "Content", "Update an existing content item.")]
 [FlowNode("Deleted", "Not Found")]
 [UsedImplicitly]
 public class DeleteContent : CodeActivity<ContentItem>

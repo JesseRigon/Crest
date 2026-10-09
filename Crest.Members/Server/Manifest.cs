@@ -1,4 +1,4 @@
-using OrchardCore.Modules.Manifest;
+using Crest.Modules.Manifest;
 
 [assembly: Module(
     Name = "Crest Members",
@@ -12,11 +12,11 @@ using OrchardCore.Modules.Manifest;
     Name = "Members",
     Description = "Member user class, per-tenant user hierarchies, org bindings and member portal access control.",
     Dependencies = [
-        "OrchardCore.Users",
-        "OrchardCore.Roles",
-        "OrchardCore.Contents",
-        "OrchardCore.ContentFields",
-        "OrchardCore.Title",
+        "Crest.Users",
+        "Crest.Roles",
+        "Crest.Contents",
+        "Crest.ContentFields",
+        "Crest.Title",
         "Crest.ContentPartLists",
         "Crest.Parties"
     ],

@@ -4,19 +4,19 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using OrchardCore.Security.Permissions;
+using Crest.Security.Permissions;
 
 namespace Crest.Workflows.Security;
 
 /// <summary>
 /// The one gate on Crest.Workflows's API inside the tenant. The engine authorizes its
 /// FastEndpoints by <c>permissions</c> claims on the principal (one name per endpoint, any
-/// of them admits), not by Orchard permissions; the upstream integration stamped
+/// of them admits), not by Crest permissions; the upstream integration stamped
 /// <c>permissions=*</c> on every user at sign-in, which made any logged-in tenant user a
-/// workflow administrator. Here the grant is decided per request, from Orchard's own
+/// workflow administrator. Here the grant is decided per request, from Crest's own
 /// authorization pipeline (roles, the super user, and every <c>IAuthorizationHandler</c> a
 /// module adds - the member permission ceiling included), and added to the principal
-/// only for the duration of the request, as exactly the engine names each Orchard permission
+/// only for the duration of the request, as exactly the engine names each Crest permission
 /// maps to (<see cref="EnginePermissions"/>):
 /// <list type="bullet">
 /// <item>anonymous → 401;</item>
@@ -38,7 +38,7 @@ public sealed class CrestWorkflowsApiSecurityMiddleware(RequestDelegate next, IL
     public const string CrestWorkflowsPermissionsClaimType = "permissions";
     public const string CrestWorkflowsAllPermissions = "*";
 
-    /// <summary>The engine endpoint permission names each Orchard permission grants.</summary>
+    /// <summary>The engine endpoint permission names each Crest permission grants.</summary>
     public static class EnginePermissions
     {
         public static readonly string[] View =

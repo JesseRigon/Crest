@@ -1,0 +1,65 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Crest.DisplayManagement.Entities;
+using Crest.DisplayManagement.Handlers;
+using Crest.DisplayManagement.Views;
+using Crest.Liquid;
+using Crest.Mvc.ModelBinding;
+using Crest.Settings;
+using Crest.Users.Models;
+
+namespace Crest.Users.Drivers;
+
+public sealed class EmailAuthenticatorLoginSettingsDisplayDriver : SiteDisplayDriver<EmailAuthenticatorLoginSettings>
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IAuthorizationService _authorizationService;
+    private readonly ILiquidTemplateManager _liquidTemplateManager;
+
+    public EmailAuthenticatorLoginSettingsDisplayDriver(
+        IHttpContextAccessor httpContextAccessor,
+        IAuthorizationService authorizationService,
+        ILiquidTemplateManager liquidTemplateManager)
+    {
+        _httpContextAccessor = httpContextAccessor;
+        _authorizationService = authorizationService;
+        _liquidTemplateManager = liquidTemplateManager;
+    }
+
+    protected override string SettingsGroupId
+        => LoginSettingsDisplayDriver.GroupId;
+
+    public override IDisplayResult Edit(ISite site, EmailAuthenticatorLoginSettings settings, BuildEditorContext context)
+    {
+        return Initialize<EmailAuthenticatorLoginSettings>("EmailAuthenticatorLoginSettings_Edit", model =>
+        {
+            model.Subject = string.IsNullOrWhiteSpace(settings.Subject) ? EmailAuthenticatorLoginSettings.DefaultSubject : settings.Subject;
+            model.Body = string.IsNullOrWhiteSpace(settings.Body) ? EmailAuthenticatorLoginSettings.DefaultBody : settings.Body;
+        }).Location("Content:10#Two-Factor Authentication")
+        .RenderWhen(static (driver) => driver._authorizationService.AuthorizeAsync(driver._httpContextAccessor.HttpContext?.User, UsersPermissions.ManageUsers), this)
+        .OnGroup(SettingsGroupId);
+    }
+
+    public override async Task<IDisplayResult> UpdateAsync(ISite site, EmailAuthenticatorLoginSettings settings, UpdateEditorContext context)
+    {
+        if (!await _authorizationService.AuthorizeAsync(_httpContextAccessor.HttpContext?.User, UsersPermissions.ManageUsers))
+        {
+            return null;
+        }
+
+        await context.Updater.TryUpdateModelAsync(settings, Prefix);
+
+        if (!_liquidTemplateManager.Validate(settings.Subject, out var subjectErrors))
+        {
+            context.Updater.ModelState.AddModelError(Prefix, nameof(settings.Subject), string.Join(' ', subjectErrors));
+        }
+
+        if (!_liquidTemplateManager.Validate(settings.Body, out var bodyErrors))
+        {
+            context.Updater.ModelState.AddModelError(Prefix, nameof(settings.Body), string.Join(' ', bodyErrors));
+        }
+
+        return Edit(site, settings, context);
+    }
+}

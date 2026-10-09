@@ -21,7 +21,7 @@ global store.
 `Data/currencies.json` is ISO 4217 reference data (codes, names, symbols and minor
 units), not a third-party work.
 
-OrchardCore.Commerce is Copyright (c) 2018 OrchardCMS and licensed under the MIT
+OrchardCore.Commerce is Copyright (c) 2018 Crest and licensed under the MIT
 License:
 
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this

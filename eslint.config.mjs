@@ -21,12 +21,12 @@ export default [
             "**/eslintrc.cjs",
             "**/docs/assets/js/**",
             // TODO: large, jQuery-heavy legacy codebases; deferred to a dedicated follow-up.
-            "**/OrchardCore.Resources/**",
-            "**/OrchardCore.Media/**",
+            "**/Crest.Resources/**",
+            "**/Crest.Media/**",
             // Hand-authored ambient type declarations for the untyped third-party jsPlumb library
             // (not from DefinitelyTyped) - a typing compatibility shim, not application code.
             // Properly typing jsPlumb's full API is a separate, substantial effort.
-            "**/OrchardCore.Workflows/Assets/Lib/jsplumb/typings.d.ts",
+            "**/Crest.Workflows.Platform/Assets/Lib/jsplumb/typings.d.ts",
         ],
     },
     { languageOptions: { globals: globals.browser } },
@@ -38,7 +38,7 @@ export default [
         // Legacy (pre-module) module/theme scripts that rely on libraries loaded as global
         // <script> tags rather than bundled imports. Scoped to .js only: the .ts sources that
         // have been migrated off jQuery must keep failing no-undef if $/jQuery reappear in them.
-        files: ["**/OrchardCore.Modules/**/*.js", "**/OrchardCore.Themes/**/*.js"],
+        files: ["**/Crest.Modules/**/*.js", "**/Crest.Themes/**/*.js"],
         languageOptions: {
             globals: {
                 $: "readonly",
@@ -52,9 +52,9 @@ export default [
                 CodeMirror: "readonly",
                 L: "readonly",
                 confirmDialog: "readonly",
-                // Defined by the (currently lint-deferred) OrchardCore.Media module, consumed here.
+                // Defined by the (currently lint-deferred) Crest.Media module, consumed here.
                 mediaApp: "readonly",
-                // Defined by OrchardCore.Shortcodes, consumed here.
+                // Defined by Crest.Shortcodes, consumed here.
                 shortcodesApp: "readonly",
             },
         },

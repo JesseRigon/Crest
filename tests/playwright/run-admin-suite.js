@@ -3,7 +3,7 @@ const { runSuite, printSummary } = require('./harness/run-suite');
 const { loginAsAdmin } = require('./harness/auth');
 
 // The set of admin-route checks that exist in the shared Crest submodule — every repo
-// that embeds this submodule (a product host, OrchardCore.Crest.Host) gets these for
+// that embeds this submodule (a product host, Crest.Crest.Host) gets these for
 // free. A consuming repo's own entry script (e.g. a host's own dev/run-admin-suite.js)
 // calls buildSharedAdminChecks() and appends its own repo-specific checks to the list
 // before calling runSuite — same shared browser instance, same login, no extra cost.
@@ -13,7 +13,7 @@ const { loginAsAdmin } = require('./harness/auth');
 // have been converted into this checks/ convention. The Icons subproject is fully
 // converted. Remaining un-converted (still standalone, not wired in here): the menu
 // editor scripts (drag/drop, icon overrides, layout export), primary-nav-menu
-// interaction tests (flyout/compact/quickadd), and legacy-frame-workflows.js — these are
+// interaction tests (flyout/compact/quickadd), and legacy-frame-navigation.js — these are
 // stateful/interactive enough to need real judgment, not a mechanical port.
 function buildSharedAdminChecks() {
   return [
@@ -92,7 +92,7 @@ function buildSharedAdminChecks() {
     { name: 'primary-nav-quickadd-autoclose', fn: require('./checks/primary-nav/quickadd-autoclose') },
     { name: 'primary-nav-culture-override-persistence', fn: require('./checks/primary-nav/culture-override-persistence') },
     { name: 'primary-nav-default-icon-culture-switch', fn: require('./checks/primary-nav/default-icon-culture-switch') },
-    { name: 'legacy-frame-workflows', fn: require('./checks/legacy-frame-workflows') },
+    { name: 'legacy-frame-navigation', fn: require('./checks/legacy-frame-navigation') },
     { name: 'localization-sequential-settings', fn: require('./checks/localization-sequential-settings') },
     { name: 'localization-tab-scoping', fn: require('./checks/localization-tab-scoping') },
     { name: 'localization-new-tab-inheritance', fn: require('./checks/localization-new-tab-inheritance') },
@@ -114,7 +114,7 @@ function buildCrestModuleChecks() {
     module('parties-contacts-api', 'Crest.Parties/tests/playwright/checks/party-contacts-api'),
     module('parties-positions-api', 'Crest.Parties/tests/playwright/checks/party-positions-api'),
     module('workflows-api', 'Crest.Workflows/tests/playwright/checks/workflows-api'),
-    module('workflows-orchard-activities', 'Crest.Workflows/tests/playwright/checks/workflows-orchard-activities'),
+    module('workflows-platform-activities', 'Crest.Workflows/tests/playwright/checks/workflows-platform-activities'),
     module('workflows-units', 'Crest.Workflows/tests/playwright/checks/workflows-units'),
     module('workflows-approvals', 'Crest.Workflows/tests/playwright/checks/workflows-approvals'),
     module('workflows-designer', 'Crest.Workflows/tests/playwright/checks/workflows-designer'),

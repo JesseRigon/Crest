@@ -1,4 +1,4 @@
-using OrchardCore;
+using Crest;
 using Crest.Workflows.Common.Multitenancy.HostedServices;
 using Crest.Workflows.Extensions;
 using Crest.Workflows.Mediator.HostedServices;
@@ -11,13 +11,13 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using OrchardCore.ContentManagement.Handlers;
+using Crest.ContentManagement.Handlers;
 using Crest.Workflows.Approvals;
 using Crest.Workflows.Connectors;
 using Crest.Workflows.Contexts;
-using Crest.Workflows.Orchard;
+using Crest.Workflows.Platform;
 using Crest.Workflows.Registry;
-using OrchardCore.Workflows.Services;
+using Crest.Workflows.Platform.Services;
 using Crest.Workflows.Handlers.Content;
 using Crest.Workflows.Indexes;
 using Crest.Workflows.Migrations;
@@ -31,22 +31,22 @@ using Crest.Workflows.CommitStates;
 using Crest.Workflows.Runtime;
 using Crest.Workflows.Mediator.Extensions;
 using Microsoft.Extensions.Logging;
-using OrchardCore.Data;
-using OrchardCore.Data.Migration;
-using OrchardCore.Environment.Shell;
-using OrchardCore.Environment.Shell.Configuration;
-using OrchardCore.Modules;
-using OrchardCore.Navigation;
-using OrchardCore.Security.Permissions;
+using Crest.Data;
+using Crest.Data.Migration;
+using Crest.Environment.Shell;
+using Crest.Environment.Shell.Configuration;
+using Crest.Modules;
+using Crest.Navigation;
+using Crest.Security.Permissions;
 
 namespace Crest.Workflows.Features;
 
 [Feature("Crest.Workflows")]
 public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shellSettings, IShellConfiguration shellConfiguration) : StartupBase
 {
-    // Last of all startups: Orchard orders them by feature dependency and then stably by
-    // Order, so this is where the stock OrchardCore.Workflows services get overridden
-    // (docs/workflows.md, "Override").
+    // Last of all startups: Crest orders them by feature dependency and then stably by
+    // Order, so registrations here win over any a platform module makes for the same
+    // service (IWorkflowManager in particular; docs/workflows.md, "Override").
     public override int Order => int.MaxValue;
 
     // The pipeline is a different order. With endpoint routing, the authorization
@@ -55,7 +55,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
     // startup's middleware is therefore slotted ahead of the authentication order; the
     // Crest.Workflows branch authenticates the request itself (see ConfigureAsync) so the gate sees
     // the real principal, then the grant is in place before UseAuthorization.
-    public override int ConfigureOrder => OrchardCoreConstants.ConfigureOrder.Authentication - 1;
+    public override int ConfigureOrder => PlatformConstants.ConfigureOrder.Authentication - 1;
 
     public override void ConfigureServices(IServiceCollection services)
     {
@@ -106,7 +106,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             crestWorkflows.UseWorkflowsApi(api => api.AddFastEndpointsAssembly<CoreStartup>());
         });
 
-        // Orchard may dispose the tenant container synchronously; Crest.Workflows's tenant service is
+        // Crest may dispose the tenant container synchronously; Crest.Workflows's tenant service is
         // async-only and would crash the process on that path (SyncDisposableTenantService).
         SyncDisposableTenantService.ReplaceIn(services);
 
@@ -152,12 +152,12 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
         services.Replace(ServiceDescriptor.Scoped<ICommitStateHandler>(sp => new UnitOfWorkCommitStateHandler(
             sp.GetRequiredService<DefaultCommitStateHandler>(),
             sp.GetRequiredService<WorkflowUnitOfWork>(),
-            sp.GetRequiredService<OrchardCore.Data.Documents.IDocumentStore>(),
+            sp.GetRequiredService<Crest.Data.Documents.IDocumentStore>(),
             sp.GetRequiredService<ILogger<UnitOfWorkCommitStateHandler>>())));
 
         // Ownership tiers, the permission set and per-definition access (docs/workflows.md,
         // phase 5). The guard sits in the publisher and store; the access handler joins
-        // Orchard's authorization pipeline; the linker narrows Studio's links to what the
+        // Crest's authorization pipeline; the linker narrows Studio's links to what the
         // user may do, replacing the engine's static one.
         services.AddPermissionProvider<WorkflowsPermissionProvider>();
         services
@@ -190,16 +190,11 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<IPropertyUIHandler, RoleOptionsProvider>();
 
         // The admin surface: the Workflows menu root and its page gates (the Studio pages in
-        // blazor-wasm). The stock module's own "Workflows" entry is removed - its workflow
-        // types are not run here, and one Workflows menu is the only one a tenant should see.
+        // blazor-wasm).
         services.AddNavigationProvider<Navigation.WorkflowsAdminMenu>();
         services.AddScoped<Navigation.WorkflowsRoutePermissionProvider>();
         services.AddScoped<Crest.Services.ICrestRoutePermissionProvider>(sp => sp.GetRequiredService<Navigation.WorkflowsRoutePermissionProvider>());
         services.AddScoped<Crest.Services.ICrestWebAssemblyRouteProvider>(sp => sp.GetRequiredService<Navigation.WorkflowsRoutePermissionProvider>());
-        foreach (var stockMenu in services.Where(d => d.ServiceType == typeof(OrchardCore.Navigation.INavigationProvider) && d.ImplementationType?.FullName == "OrchardCore.Workflows.AdminMenu").ToList())
-        {
-            services.Remove(stockMenu);
-        }
 
         // The sample host set this at the process level; here it is per shell.
         services.Configure<MediatorOptions>(options => options.JobWorkerCount = 1);
@@ -235,7 +230,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<IWorkflowTriggerPublisher, WorkflowTriggerPublisher>()
             .AddScoped<IWorkflowTriggerProvider, WorkflowsTriggerProvider>()
             .AddScoped<WorkflowFlowImporter>()
-            // Stock OrchardCore activities run on this engine: the upstream modules' events
+            // Stock Crest activities run on this engine: the upstream modules' events
             // arrive through IWorkflowManager (this registration is last, so it wins) and their
             // tasks run through StockActivityRunner.
             .AddScoped<StockActivityRunner>()
@@ -245,7 +240,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<IPropertyUIHandler, WorkflowTriggerOptionsProvider>()
             .AddScoped<IPropertyUIHandler, StockEventOptionsProvider>()
             .AddScoped<IPropertyUIHandler, StockTaskOptionsProvider>()
-            .AddScoped<IWorkflowManager, OrchardWorkflowManager>()
+            .AddScoped<IWorkflowManager, PlatformWorkflowManager>()
             .AddIndexProvider<WorkflowDefinitionIndexProvider>()
             .AddIndexProvider<WorkflowInstanceIndexProvider>()
             .AddIndexProvider<StoredTriggerIndexProvider>()

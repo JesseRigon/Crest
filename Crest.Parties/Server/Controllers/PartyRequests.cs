@@ -1,14 +1,14 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.ContentManagement;
-using OrchardCore.Security.Permissions;
+using Crest.ContentManagement;
+using Crest.Security.Permissions;
 
 namespace Crest.Parties.Controllers;
 
 /// <summary>Shared "load this party and authorize the caller against it" step of the
 /// party API controllers. 404 for a missing item or a non-party type (so the API
-/// never confirms the existence of other content), 403 when Orchard refuses.</summary>
+/// never confirms the existence of other content), 403 when Crest refuses.</summary>
 internal static class PartyRequests
 {
     public static async Task<(ContentItem? Party, ActionResult? Failure)> LoadAsync(

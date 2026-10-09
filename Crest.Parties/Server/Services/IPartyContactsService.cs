@@ -1,5 +1,5 @@
 using Crest.Parties.ViewModels;
-using OrchardCore.ContentManagement;
+using Crest.ContentManagement;
 
 namespace Crest.Parties.Services;
 

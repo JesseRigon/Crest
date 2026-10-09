@@ -17,7 +17,7 @@ declare const CodeMirror: {
     fromTextArea(textArea: HTMLTextAreaElement, options?: Record<string, unknown>): CodeMirrorEditor;
 };
 
-// Defined by OrchardCore.Shortcodes (Assets/js/shortcodes.js), consumed here.
+// Defined by Crest.Shortcodes (Assets/js/shortcodes.js), consumed here.
 declare function initializeCodeMirrorShortcodeWrapper(editor: CodeMirrorEditor): void;
 declare const shortcodesApp: {
     init(callback: (value: string) => void): void;
@@ -47,14 +47,14 @@ declare class QRCode {
     constructor(element: HTMLElement, options: Record<string, unknown>);
 }
 
-// OrchardCore.UrlRewriting/Assets/js/sortable-rules.js - a classic global shared by any
+// Crest.UrlRewriting/Assets/js/sortable-rules.js - a classic global shared by any
 // admin list needing drag-to-reorder + a single AJAX call to persist the new position.
 declare const sortingListManager: {
     create(selector: string, sortUrl: string, errorMessage?: string): void;
 };
 
 // EasyMDE (markdown Wysiwyg editor) and its toolbar/shortcode-wrapper helper, both loaded as
-// classic global resources (easymde.min.js, OrchardCore.Markdown's mde.mediatoolbar.js).
+// classic global resources (easymde.min.js, Crest.Markdown's mde.mediatoolbar.js).
 interface EasyMdeInstance {
     codemirror: CodeMirrorEditor;
 }
@@ -67,16 +67,16 @@ declare class EasyMDE implements EasyMdeInstance {
 declare const mdeToolbar: Array<string | Record<string, unknown>>;
 declare function initializeMdeShortcodeWrapper(mde: EasyMdeInstance): void;
 
-// Defined by OrchardCore.Liquid (wwwroot/monaco/liquid-intellisense.js), consumed here.
+// Defined by Crest.Liquid (wwwroot/monaco/liquid-intellisense.js), consumed here.
 declare function ConfigureLiquidIntellisense(monacoInstance: typeof import("monaco-editor"), registerHtml?: boolean): void;
 
-// Defined by OrchardCore.Resources (Assets/js/credential-helpers.js), consumed here.
+// Defined by Crest.Resources (Assets/js/credential-helpers.js), consumed here.
 declare function randomUUID(options?: { includeHyphens?: boolean }): string;
 declare function togglePasswordVisibility(passwordCtl: HTMLElement, togglePasswordCtl: HTMLElement): void;
 declare function copyToClipboard(str: string): Promise<void>;
 declare function generateStrongPassword(options?: { generateBase64?: boolean }): string;
 
-// Defined by OrchardCore.Users (Assets/js/password-generator.js), consumed here.
+// Defined by Crest.Users (Assets/js/password-generator.js), consumed here.
 declare const passwordManager: {
     generatePassword(
         requiredPasswordLength: number,
@@ -89,15 +89,15 @@ declare const passwordManager: {
     copyPassword(password: string): void;
 };
 
-// Defined by OrchardCore.AdminMenu (Assets/js/admin-menu-icon-picker.js), consumed here.
+// Defined by Crest.AdminMenu (Assets/js/admin-menu-icon-picker.js), consumed here.
 declare const iconPickerVue: {
     show(relatedNodeId: string, sampleIconId: string): void;
 };
 
-// Defined by OrchardCore.AdminMenu (Assets/js/admin-menu-permission-picker.js), consumed here.
+// Defined by Crest.AdminMenu (Assets/js/admin-menu-permission-picker.js), consumed here.
 declare function initAdminMenuPermissionsPicker(element: Element | null): void;
 
-// Defined by OrchardCore.Menu (Assets/js/menu-permission-picker.js) - a separate, near-identical
+// Defined by Crest.Menu (Assets/js/menu-permission-picker.js) - a separate, near-identical
 // copy of the picker above for MenuItemPermissionPart, unrelated to the AdminMenu tree editors.
 declare function initMenuPermissionsPicker(element: Element | null): void;
 
@@ -116,7 +116,7 @@ declare const noUiSlider: {
     create(element: HTMLElement, options: Record<string, unknown>): void;
 };
 
-// Defined by OrchardCore.OpenId (Scripts/parametersEditor.js), consumed here.
+// Defined by Crest.OpenId (Scripts/parametersEditor.js), consumed here.
 declare function initializeParametersEditor(
     element: Element | null,
     parameters: unknown,

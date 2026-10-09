@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="@Orchard.CultureName()">
+<html lang="@Platform.CultureName()">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
@@ -67,7 +67,7 @@
         }
     </style>
 </head>
-<body dir="@Orchard.CultureDir()" class="crest-legacy-frame">
+<body dir="@Platform.CultureDir()" class="crest-legacy-frame">
     <main class="ta-content crest-legacy-frame-content">
         @await RenderSectionAsync("Header", required: false)
         @await RenderSectionAsync("Messages", required: false)
@@ -123,7 +123,7 @@
                 }
 
                 // Attributes, not form.action/form.method: a control named "action" or "method"
-                // (Orchard's Tenants/Create has a submit button named "action") replaces those
+                // (Crest's Tenants/Create has a submit button named "action") replaces those
                 // properties with the element itself.
                 const rawAction = form.getAttribute('action');
                 if (!isLocalDocumentReference(rawAction)) {

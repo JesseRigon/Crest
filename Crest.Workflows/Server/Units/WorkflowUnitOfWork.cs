@@ -3,8 +3,8 @@ using Crest.Workflows.Models;
 using Crest.Workflows.State;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OrchardCore.Data.Documents;
-using OrchardCore.Environment.Shell.Scope;
+using Crest.Data.Documents;
+using Crest.Environment.Shell.Scope;
 
 namespace Crest.Workflows.Units;
 
@@ -16,7 +16,7 @@ namespace Crest.Workflows.Units;
 /// is discarded and the faulted state is recorded in a fresh scope so the journal still
 /// says what happened. The unit is not only a workflow's: a service running a hook slot
 /// inside its own request (Accounting creating an invoice) fails the same unit, and the
-/// scope's session is cancelled before Orchard would commit it.
+/// scope's session is cancelled before Crest would commit it.
 /// </summary>
 public sealed class WorkflowUnitOfWork(IDocumentStore? documentStore = null)
 {

@@ -4,7 +4,7 @@ namespace Crest.Routing;
 // string: routing only ever needs to answer "which shell is serving this request" -
 // never "which literal theme id is active." A tenant has an active admin theme, an
 // active site theme and (with Members enabled) an active member theme ALL AT THE SAME
-// TIME - they are independent Orchard settings, not mutually exclusive alternatives - so
+// TIME - they are independent Crest settings, not mutually exclusive alternatives - so
 // comparing a component's own theme id against "is it any of the active theme ids" can
 // never disambiguate a collision between buckets (e.g. Admin/Home.razor,
 // Site/Home.razor and Member/Home.razor all declaring @page "/"): every side of that OR

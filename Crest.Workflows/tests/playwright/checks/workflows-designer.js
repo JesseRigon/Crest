@@ -4,7 +4,7 @@ const { loginAsAdmin } = require('../../../../../Crest/tests/playwright/harness/
 
 // The designer in the Crest shell (docs/workflows.md, 0c): the forked Studio, mounted as
 // a Crest client module, in the Crest admin chrome, over the tenant's engine API with the
-// Orchard cookie. The pass condition from the plan, driven through the real UI: open an
+// Crest cookie. The pass condition from the plan, driven through the real UI: open an
 // existing definition, add a node from the palette, connect it, save, publish; run it; the
 // instance page shows the journal. The API confirms what the designer did.
 module.exports = async function run(page, ctx) {

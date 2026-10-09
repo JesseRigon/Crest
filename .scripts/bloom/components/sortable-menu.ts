@@ -1,6 +1,6 @@
 /**
- * Nested drag-and-drop hierarchy editor shared by OrchardCore.Menu (menu items)
- * and OrchardCore.Taxonomies (taxonomy terms), built on SortableJS (no jQuery UI).
+ * Nested drag-and-drop hierarchy editor shared by Crest.Menu (menu items)
+ * and Crest.Taxonomies (taxonomy terms), built on SortableJS (no jQuery UI).
  *
  * The whole tree is rendered as ONE FLAT list of <li data-depth="N"> siblings
  * (see MenuItem.Admin.cshtml / Content.TermAdmin.cshtml) rather than as actual

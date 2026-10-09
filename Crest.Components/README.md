@@ -1,8 +1,8 @@
 # Crest.Components
 
-`Crest.Components` is the shared Radzen-backed Blazor component layer for Orchard Crest UI Framework. It owns reusable client-side primitives, forms, model/editor UI, shared client models, and experimental shape/model helpers.
+`Crest.Components` is the shared Radzen-backed Blazor component layer for Crest Crest UI Framework. It owns reusable client-side primitives, forms, model/editor UI, shared client models, and experimental shape/model helpers.
 
-Components render under `InteractiveAuto` (SSR prerender, a server circuit on first visit, WebAssembly once cached — see [docs/blazor-web.md](../docs/blazor-web.md)) and call Orchard or thin `api/crest/*` adapters exposed by `Crest.Server`; Orchard remains the backend authority for tenants, users, permissions, content, features, settings, themes, and navigation.
+Components render under `InteractiveAuto` (SSR prerender, a server circuit on first visit, WebAssembly once cached — see [docs/blazor-web.md](../docs/blazor-web.md)) and call Crest or thin `api/crest/*` adapters exposed by `Crest.Server`; Crest remains the backend authority for tenants, users, permissions, content, features, settings, themes, and navigation.
 
 Boundary rule: shared Radzen-backed UI primitives belong here; backend integration belongs in `Crest.Server`; feature-specific UI belongs with the feature module that owns it. This project must not reference feature modules such as `Crest.Icons` or line-of-business modules.
 
@@ -81,7 +81,7 @@ Use component-local variables only for true component mechanics or derived value
 }
 ```
 
-Tenant and user design systems stored as Orchard content are planned in [design-systems.md](../docs/design-systems.md).
+Tenant and user design systems stored as Crest content are planned in [design-systems.md](../docs/design-systems.md).
 
 ## Admin master-detail layout standard
 
@@ -107,7 +107,7 @@ For example, `Crest.Icons` owns `IconSelector`, icon registry/search UI, and ico
 
 ## Module component convention
 
-Third-party Orchard modules can currently contribute Crest admin UI at build time by adding a WASM project shaped like:
+Third-party Crest modules can currently contribute Crest admin UI at build time by adding a WASM project shaped like:
 
 ```text
 modules/{ModuleName}/blazor-wasm/*.csproj
@@ -115,16 +115,16 @@ modules/{ModuleName}/blazor-wasm/*.csproj
 
 The admin WASM project discovers these projects, references them, generates a module assembly registry, and passes those assemblies to the Blazor router as additional assemblies. This is a build-time convention today, not a finalized runtime plugin API. Member and public pages go in separate `member-wasm/` and `site-wasm/` libraries — see [docs/shells-and-themes.md](../docs/shells-and-themes.md); hosting details are in [docs/blazor-web.md](../docs/blazor-web.md).
 
-Future work should formalize this into a module manifest/registry model so enabled Orchard modules can declare routes, assemblies, scripts, styles, editor components, and permissions more explicitly. A later runtime lane may serve compiled WASM module bundles from `App_Data/wasm/{module}`.
+Future work should formalize this into a module manifest/registry model so enabled Crest modules can declare routes, assemblies, scripts, styles, editor components, and permissions more explicitly. A later runtime lane may serve compiled WASM module bundles from `App_Data/wasm/{module}`.
 
 ## Versioning
 
-Orchard Crest UI Framework uses a five-part compatibility version:
+Crest Crest UI Framework uses a five-part compatibility version:
 
 ```text
-{orchard-major}.{orchard-minor}.{orchard-patch}.{crest-security}.{crest-bug}
+{platform-major}.{platform-minor}.{platform-patch}.{crest-security}.{crest-bug}
 ```
 
-The first three parts identify the Orchard Core version tested with this build. The last two parts are Orchard Crest UI Framework's security and bug-fix counters.
+The first three parts identify the Crest version tested with this build. The last two parts are Crest Crest UI Framework's security and bug-fix counters.
 
 Current compatibility version: `3.0.0.0.0`.

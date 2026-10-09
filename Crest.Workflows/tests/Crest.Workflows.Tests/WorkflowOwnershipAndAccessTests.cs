@@ -4,8 +4,8 @@ using Crest.Workflows.Registry;
 using Crest.Workflows.Security;
 using Microsoft.AspNetCore.Authorization;
 using NSubstitute;
-using OrchardCore.Security;
-using OrchardCore.Settings;
+using Crest.Security;
+using Crest.Settings;
 using Xunit;
 
 namespace Crest.Workflows.Tests;
@@ -87,7 +87,7 @@ public class WorkflowOwnershipAndAccessTests
         settings.SuperUser.Returns(superUser);
         siteService.GetSiteSettingsAsync().Returns(settings);
         var handler = new WorkflowDefinitionAccessHandler(siteService);
-        var context = new AuthorizationHandlerContext([new PermissionRequirement(new OrchardCore.Security.Permissions.Permission(permissionName))], user, resource);
+        var context = new AuthorizationHandlerContext([new PermissionRequirement(new Crest.Security.Permissions.Permission(permissionName))], user, resource);
         await handler.HandleAsync(context);
         return context;
     }

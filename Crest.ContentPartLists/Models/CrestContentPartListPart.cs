@@ -1,4 +1,4 @@
-using OrchardCore.ContentManagement;
+using Crest.ContentManagement;
 
 namespace Crest.Models;
 
@@ -6,12 +6,12 @@ namespace Crest.Models;
 /// Marks a content item as an Content part list - Crest's tenant-editable enum set.
 /// </summary>
 /// <remarks>
-/// Deliberately parallel to Orchard's Taxonomy rather than built on it. Taxonomies
+/// Deliberately parallel to Crest's Taxonomy rather than built on it. Taxonomies
 /// are a CMS categorization feature: the stock type is routable (AliasPart +
 /// AutoroutePart, term pages, Liquid shapes) and everything carrying TaxonomyPart
 /// shows up under Configuration > Taxonomies. Configuration data wants none of that,
 /// and "taxonomy" is jargon to tenants - so this part carries its own option storage
-/// and Crest takes no dependency on OrchardCore.Taxonomies.
+/// and Crest takes no dependency on Crest.Taxonomies.
 /// </remarks>
 public class CrestContentPartListPart : ContentPart
 {

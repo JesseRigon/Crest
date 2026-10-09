@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Crest.Workflows.Security;
-using OrchardCore.Security;
-using OrchardCore.Security.Permissions;
+using Crest.Security;
+using Crest.Security.Permissions;
 using Xunit;
 
 namespace Crest.Workflows.Tests;

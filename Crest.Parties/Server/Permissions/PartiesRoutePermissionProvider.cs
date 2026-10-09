@@ -2,7 +2,7 @@ using Crest.Parties.Constants;
 using Crest.Parties.PartyTypes;
 using Crest.Parties.Services;
 using Crest.Services;
-using OrchardCore.Contents;
+using Crest.Contents;
 
 namespace Crest.Parties.Permissions;
 

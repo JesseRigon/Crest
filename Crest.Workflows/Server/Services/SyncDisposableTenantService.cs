@@ -6,7 +6,7 @@ namespace Crest.Workflows.Services;
 
 /// <summary>
 /// Crest.Workflows's <see cref="DefaultTenantService"/> is a root singleton that implements only
-/// <see cref="IAsyncDisposable"/>. Orchard disposes a tenant container synchronously when
+/// <see cref="IAsyncDisposable"/>. Crest disposes a tenant container synchronously when
 /// a shell is released or, as a fallback, from the ShellContext finalizer; the service
 /// provider then throws "type only implements IAsyncDisposable", and on the finalizer
 /// thread that takes the whole process down (seen in the test suite on the first shell

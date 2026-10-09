@@ -68,7 +68,7 @@ public sealed class ContentPartListsGlobalSchema : ICrestGlobalSchema
             ?? throw new InvalidOperationException("global-lists.json is empty.");
     }
 
-    // OrchardCore.Module.Targets embeds files with ">" as the folder separator
+    // Crest.Module.Targets embeds files with ">" as the folder separator
     // ("Crest.Regions.Data>geo-nodes.json"); a plain SDK embed uses "."; match either.
     private static bool IsDataFile(string resourceName, string fileName) =>
         resourceName.EndsWith(">" + fileName, StringComparison.Ordinal)

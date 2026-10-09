@@ -1,6 +1,6 @@
 # Crest.Workflows.Designer.BlazorWasm
 
-Blazor WebAssembly implementation of the Elsa Studio workflow designer for Orchard Core.
+Blazor WebAssembly implementation of the Elsa Studio workflow designer for Crest.
 
 ## Features
 
@@ -51,7 +51,7 @@ Consider that WebAssembly apps:
 
 ## Installation
 
-Enable this feature in the Orchard Core admin dashboard under Features. Note that you should enable either this module OR the BlazorServer variant, not both.
+Enable this feature in the Crest admin dashboard under Features. Note that you should enable either this module OR the BlazorServer variant, not both.
 
 ## Package Information
 

@@ -6,7 +6,7 @@ import {
 } from "oidc-client-ts";
 
 /**
- * Shared silent OAuth2 authorization-code + PKCE core for Orchard Core first-party admin SPAs
+ * Shared silent OAuth2 authorization-code + PKCE core for Crest first-party admin SPAs
  * (the Media gallery, the OpenAPI documentation UIs, …).
  *
  * Every such consumer authenticates the same way: the admin is already cookie-authenticated, so a

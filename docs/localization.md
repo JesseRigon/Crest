@@ -10,7 +10,7 @@ accounting and tax plans).
 ## Scope and boundary
 
 This is an **optional, additive feature set** over the platform's standard localization
-module (`OrchardCore.Localization`) — nothing else in the codebase requires it. If it were
+module (`Crest.Localization`) — nothing else in the codebase requires it. If it were
 stripped out entirely, other modules keep working correctly using only the platform's
 localization
 (tenant culture); they don't get a required new dependency, cascading parameter, or
@@ -57,7 +57,7 @@ Instead:
 4. **Server reads back exactly what the client decided.** No ordering race remains,
    since there's a single writer by construction. `UserLocalizationRequestCultureProvider`
    and `AdminCookieCultureProvider` stay registered (other code may expect
-   `OrchardCore.Users.Localization` to be on) but neither is relied on to resolve
+   `Crest.Users.Localization` to be on) but neither is relied on to resolve
    anything for Crest.
 
 ### Per-tab and per-user override scoping
@@ -100,7 +100,7 @@ Core `RequestLocalizationOptions` pipeline instead:
    first, then the browser's `Accept-Language` header as the fallback for a visitor who
    hasn't run the admin client yet.
 2. This runs as an `IPostConfigureOptions<RequestLocalizationOptions>`, not
-   `IConfigureOptions<T>`, deliberately: stock OrchardCore.Localization's
+   `IConfigureOptions<T>`, deliberately: stock Crest.Localization's
    `AdminCookieCultureProvider` also inserts itself into this same options object via its
    own `IConfigureOptions<T>`, and ASP.NET Core does not guarantee configure-delegate
    ordering across independent DI registrations — two competing `Insert(0, ...)` calls
@@ -108,7 +108,7 @@ Core `RequestLocalizationOptions` pipeline instead:
    guaranteed to run after every `IConfigureOptions<T>`, so this wins deterministically
    instead of fighting the race.
 3. The tenant's actual supported/default cultures come from `LocalizationSettings`
-   (`OrchardCore.Localization`'s site settings, editable at `/Admin/Settings/localization`
+   (`Crest.Localization`'s site settings, editable at `/Admin/Settings/localization`
    or via a recipe's `settings` step) — **as top-level keys of the step itself**
    (`LocalizationSettings`, not wrapped in an extra `Properties` key). `SettingsStep.cs`'s
    recipe handler writes any key it doesn't special-case directly into
@@ -139,7 +139,7 @@ data (the SDK's default trimmed set only covers a handful of cultures).
   from the supported-cultures list) means "no admin-specific override, use the tenant
   default everywhere."
 - **Per-user stored default** — `UserLocalizationSettings.Culture` (upstream
-  `OrchardCore.Users.Localization`'s storage, via `User.Properties`). Read/write via
+  `Crest.Users.Localization`'s storage, via `User.Properties`). Read/write via
   `GET`/`PUT api/crest/localization/me`, scoped to the current user.
 - **Session override** — client-only, `sessionStorage`, keyed by user name. Never touches
   the server unless explicitly saved as the new stored default.
@@ -209,11 +209,15 @@ on **Crowdin** (crowdin.com) via the `OrchardCore.Translations` repo:
    `.All` NuGet packages per OrchardCore release.
 
 **After the platform rename** (ruling 2026-10-09), the platform's own names are no longer
-`OrchardCore.*`, but the Crowdin packages still are: their `msgctxt` values are OrchardCore
+`Crest.*`, but the Crowdin packages still are: their `msgctxt` values are OrchardCore
 type and view names. Internally, translations take a generic name (for example
-`Translations.*`, not a project name), and a mapping rewrites the packages' `OrchardCore.*`
+`Translations.*`, not a project name), and a mapping rewrites the packages' `Crest.*`
 contexts to the renamed platform names when they are loaded, so the community translations
-keep applying.
+keep applying. Built: `TranslationContextMap` (`Crest.Localization.Core/PortableObject`) is
+applied by the PO parser to every entry it reads, with the same rules as the rename
+(`OrchardCore.Workflows.*` → `Crest.Workflows.Platform.*`, `OrchardCore.*` → `Crest.*`,
+identifiers carrying the name made neutral); contexts that never carried the name pass through
+unchanged.
 
 Two consequences: **coverage lag** (extraction is automatic, translation is human — new
 strings sit untranslated until a volunteer does them) and **release lag** (strings added

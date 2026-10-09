@@ -2,16 +2,16 @@ using System.Globalization;
 using Crest.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OrchardCore.DataLocalization.Models;
-using OrchardCore.DataLocalization.Services;
-using OrchardCore.Localization;
-using OrchardCore.Localization.Data;
+using Crest.DataLocalization.Models;
+using Crest.DataLocalization.Services;
+using Crest.Localization;
+using Crest.Localization.Data;
 using Crest.ViewModels;
 
 namespace Crest.Controllers;
 
 /// <summary>
-/// The Crest translations editor's API - the same functionality as Orchard's stock
+/// The Crest translations editor's API - the same functionality as Crest's stock
 /// Translations page (Configuration → Localization → Translations), backed by the merge-correct
 /// write discipline every other Crest writer already follows.
 /// </summary>
@@ -38,7 +38,7 @@ public sealed class CrestTranslationsController(
     ILocalizationService localizationService,
     ILocalizationManager localizationManager,
     IEnumerable<ILocalizationDataProvider> localizationDataProviders,
-    OrchardCore.Documents.IDocumentManager<CrestProviderMenuSyncDocument> syncDocuments,
+    Crest.Documents.IDocumentManager<CrestProviderMenuSyncDocument> syncDocuments,
     TranslationsManager translationsManager) : ControllerBase
 {
     [HttpGet]
@@ -219,7 +219,7 @@ public sealed class CrestTranslationsController(
         string key)
     {
         var isMenuCaption = context.StartsWith(
-            OrchardCore.AdminMenu.DataLocalizationContext.AdminMenu(null), StringComparison.OrdinalIgnoreCase);
+            Crest.AdminMenu.DataLocalizationContext.AdminMenu(null), StringComparison.OrdinalIgnoreCase);
 
         return CrestPoTranslationLookup.Resolve(
             poIndexes,

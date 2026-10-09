@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Search.Lucene</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest Lucene Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for Lucene.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Lucene.Net" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Queries.Abstractions\Crest.Queries.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

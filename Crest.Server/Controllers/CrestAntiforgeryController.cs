@@ -5,8 +5,8 @@ using Crest.ViewModels;
 namespace Crest.Controllers;
 
 /// <summary>
-/// Supplies Orchard's normal antiforgery request token to the same-origin WASM
-/// client. The token remains bound to the browser's Orchard cookie and user.
+/// Supplies Crest's normal antiforgery request token to the same-origin WASM
+/// client. The token remains bound to the browser's Crest cookie and user.
 /// </summary>
 [ApiController]
 [IgnoreAntiforgeryToken]

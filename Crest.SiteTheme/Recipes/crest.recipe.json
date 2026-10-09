@@ -1,8 +1,8 @@
 {
-  "name": "Orchard Crest UI Framework",
-  "displayName": "Orchard Crest UI Framework",
-  "description": "Orchard Crest UI Framework Site.",
-  "author": "The Orchard Core Team",
+  "name": "Crest Crest UI Framework",
+  "displayName": "Crest Crest UI Framework",
+  "description": "Crest Crest UI Framework Site.",
+  "author": "The Crest Team",
   "website": "https://orchardcore.net",
   "version": "1.0.0-rc2",
   "issetuprecipe": true,
@@ -29,55 +29,55 @@
       "disable": [],
       "enable": [
         // SaaS
-        "OrchardCore.Admin",
-        "OrchardCore.Diagnostics",
-        "OrchardCore.DynamicCache",
-        "OrchardCore.Features",
-        "OrchardCore.Localization",
-        "OrchardCore.Navigation",
-        "OrchardCore.OpenId.Server",
-        "OrchardCore.OpenId.Management",
-        "OrchardCore.OpenId.Validation",
-        "OrchardCore.Recipes",
-        "OrchardCore.Resources",
-        "OrchardCore.Roles",
-        "OrchardCore.Settings",
-        "OrchardCore.Themes",
-        "OrchardCore.Users",
-        "OrchardCore.Users.ChangeEmail",
-        "OrchardCore.Users.Registration",
-        "OrchardCore.Users.ResetPassword",
+        "Crest.Admin",
+        "Crest.Diagnostics",
+        "Crest.DynamicCache",
+        "Crest.Features",
+        "Crest.Localization",
+        "Crest.Navigation",
+        "Crest.OpenId.Server",
+        "Crest.OpenId.Management",
+        "Crest.OpenId.Validation",
+        "Crest.Recipes",
+        "Crest.Resources",
+        "Crest.Roles",
+        "Crest.Settings",
+        "Crest.Themes",
+        "Crest.Users",
+        "Crest.Users.ChangeEmail",
+        "Crest.Users.Registration",
+        "Crest.Users.ResetPassword",
 
         // Content Management
-        "OrchardCore.Alias",
-        "OrchardCore.AdminMenu",
-        "OrchardCore.Autoroute",
-        "OrchardCore.ContentFields",
-        "OrchardCore.ContentPreview",
-        "OrchardCore.Contents",
-        "OrchardCore.Contents.FileContentDefinition",
-        "OrchardCore.ContentTypes",
-        "OrchardCore.CustomSettings",
-        "OrchardCore.Deployment",
-        "OrchardCore.Deployment.Remote",
-        "OrchardCore.Feeds",
-        "OrchardCore.Flows",
-        "OrchardCore.Forms",
-        "OrchardCore.HomeRoute",
-        "OrchardCore.Html",
-        "OrchardCore.Indexing",
-        "OrchardCore.Layers",
-        "OrchardCore.Lucene",
-        "OrchardCore.Lists",
-        "OrchardCore.Markdown",
-        "OrchardCore.Media",
-        "OrchardCore.Menu",
-        "OrchardCore.Queries",
-        "OrchardCore.Shortcodes.Templates",
-        "OrchardCore.Taxonomies",
-        "OrchardCore.Title",
-        "OrchardCore.Templates",
-        "OrchardCore.Widgets",
+        "Crest.Alias",
+        "Crest.AdminMenu",
+        "Crest.Autoroute",
+        "Crest.ContentFields",
+        "Crest.ContentPreview",
+        "Crest.Contents",
+        "Crest.Contents.FileContentDefinition",
+        "Crest.ContentTypes",
+        "Crest.CustomSettings",
+        "Crest.Deployment",
+        "Crest.Deployment.Remote",
+        "Crest.Feeds",
+        "Crest.Flows",
+        "Crest.Forms",
+        "Crest.HomeRoute",
+        "Crest.Html",
+        "Crest.Indexing",
+        "Crest.Layers",
+        "Crest.Lucene",
+        "Crest.Lists",
+        "Crest.Markdown",
+        "Crest.Media",
+        "Crest.Menu",
+        "Crest.Queries",
+        "Crest.Shortcodes.Templates",
+        "Crest.Taxonomies",
+        "Crest.Title",
+        "Crest.Templates",
+        "Crest.Widgets",
 
         "Crest",
 
@@ -97,7 +97,7 @@
       "HomeRoute": {
         "Action": "Display",
         "Controller": "Item",
-        "Area": "OrchardCore.Contents",
+        "Area": "Crest.Contents",
         "ContentItemId": "[js: variables('blogContentItemId')]"
       },
       "LayerSettings": {
@@ -1332,14 +1332,14 @@
             "SetHomepage": true
           },
           "HtmlBodyPart": {
-            "Html": "<p class=\"text-center\">Welcome to Orchard Crest UI Framework</p>"
+            "Html": "<p class=\"text-center\">Welcome to Crest Crest UI Framework</p>"
           },
           "TitlePart": {
             "Title": "Home"
           },
           "Article": {
             "Subtitle": {
-              "Text": "Orchard Crest UI Framework"
+              "Text": "Crest Crest UI Framework"
             },
             "Image": {
               "Paths": []
@@ -1732,7 +1732,7 @@
           "Enabled": true,
           "MenuItems": [
             {
-              "$type": "OrchardCore.AdminMenu.AdminNodes.LinkAdminNode, OrchardCore.AdminMenu",
+              "$type": "Crest.AdminMenu.AdminNodes.LinkAdminNode, Crest.AdminMenu",
               "LinkText": "Blog",
               "LinkUrl": "[js: 'Admin/Contents/ContentItems/' +  variables('blogContentItemId') + '/Display']",
               "IconClass": "fas fa-rss",
@@ -1753,7 +1753,7 @@
               "Classes": []
             },
             {
-              "$type": "OrchardCore.AdminMenu.AdminNodes.LinkAdminNode, OrchardCore.AdminMenu",
+              "$type": "Crest.AdminMenu.AdminNodes.LinkAdminNode, Crest.AdminMenu",
               "LinkText": "Main Menu",
               "LinkUrl": "[js: 'Admin/Contents/ContentItems/' +  variables('menuContentItemId') + '/Edit']",
               "IconClass": "fas fa-sitemap",
@@ -1774,7 +1774,7 @@
               "Classes": []
             },
             {
-              "$type": "OrchardCore.AdminMenu.AdminNodes.PlaceholderAdminNode, OrchardCore.AdminMenu",
+              "$type": "Crest.AdminMenu.AdminNodes.PlaceholderAdminNode, Crest.AdminMenu",
               "LinkText": "Content",
               "IconClass": null,
               "UniqueId": "3e590d44f8704e4588e272dd966ce291",
@@ -1790,7 +1790,7 @@
               "Resource": null,
               "Items": [
                 {
-                  "$type": "OrchardCore.AdminMenu.AdminNodes.LinkAdminNode, OrchardCore.AdminMenu",
+                  "$type": "Crest.AdminMenu.AdminNodes.LinkAdminNode, Crest.AdminMenu",
                   "LinkText": "Content Items",
                   "LinkUrl": "Admin/Contents/ContentItems/",
                   "IconClass": null,
@@ -1811,7 +1811,7 @@
                   "Classes": []
                 },
                 {
-                  "$type": "OrchardCore.AdminMenu.AdminNodes.PlaceholderAdminNode, OrchardCore.AdminMenu",
+                  "$type": "Crest.AdminMenu.AdminNodes.PlaceholderAdminNode, Crest.AdminMenu",
                   "LinkText": "Content Types",
                   "IconClass": null,
                   "UniqueId": "2f1fc33133334a1abf7d1a0516ee8b4e",
@@ -1828,7 +1828,7 @@
                   "Resource": null,
                   "Items": [
                     {
-                      "$type": "OrchardCore.Contents.AdminNodes.ContentTypesAdminNode, OrchardCore.Contents",
+                      "$type": "Crest.Contents.AdminNodes.ContentTypesAdminNode, Crest.Contents",
                       "ShowAll": true,
                       "IconClass": null,
                       "ContentTypes": [],

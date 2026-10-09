@@ -8,10 +8,10 @@ using Crest.Parties.Permissions;
 using Crest.Parties.Services;
 using Crest.Parties.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.Data;
-using OrchardCore.Data.Migration;
-using OrchardCore.Modules;
-using OrchardCore.Navigation;
+using Crest.Data;
+using Crest.Data.Migration;
+using Crest.Modules;
+using Crest.Navigation;
 
 namespace Crest.Parties;
 
@@ -21,14 +21,14 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddDataMigration<PartiesMigrations>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddNavigationProvider<Navigation.AdminMenu>();
         services.AddScoped<Crest.ContentGroups.IContentGroupProvider, PartiesContentGroupProvider>();
         services.AddScoped<ICrestRoutePermissionProvider, PartiesRoutePermissionProvider>();
         services.AddScoped<PartyTypeCatalog>();
         services.AddScoped<IPartyTypeProvider, BasePartyTypeProvider>();
         // Registered with the workflow registry: role created/removed, raised from the content handler.
         services.AddScoped<Crest.Workflows.IWorkflowTriggerProvider, Workflows.PartiesWorkflowProvider>();
-        services.AddScoped<OrchardCore.ContentManagement.Handlers.IContentHandler, Workflows.PartyRoleWorkflowHandler>();
+        services.AddScoped<Crest.ContentManagement.Handlers.IContentHandler, Workflows.PartyRoleWorkflowHandler>();
         services.AddScoped<Crest.Workflows.IWorkflowActivityProvider, Workflows.PartiesWorkflowProvider>();
         services.ConfigureCrestWorkflows(workflows => workflows.AddActivitiesFrom<Startup>());
 

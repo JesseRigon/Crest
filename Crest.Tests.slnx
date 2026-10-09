@@ -124,7 +124,7 @@
     <Project Path="Crest.Icons/tests/Crest.Icons.Tests/Crest.Icons.Tests.csproj" />
   </Folder>
   <Folder Name="/Crest.Server/">
-    <Project Path="Crest.Server/Crest.csproj" />
+    <Project Path="Crest.Server/Crest.Server.csproj" />
   </Folder>
   <Folder Name="/Crest.Server/tests/">
     <Project Path="Crest.Server/tests/Crest.Server.Tests/Crest.Server.Tests.csproj" />

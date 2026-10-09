@@ -12,7 +12,7 @@ namespace Crest.Workflows.Controllers;
 /// The stored triggers of this tenant, and a re-index for one definition. Crest.Workflows indexes
 /// triggers when a definition is published; this is how an operator (or the test suite)
 /// sees what a published flow actually listens for, without reading the database.
-/// Crest conventions: cookie + antiforgery, Orchard permission, tenant-prefixed route.
+/// Crest conventions: cookie + antiforgery, Crest permission, tenant-prefixed route.
 /// </summary>
 [ApiController, AutoValidateAntiforgeryToken, Route("api/crest/workflows/triggers")]
 public sealed class WorkflowTriggersController(

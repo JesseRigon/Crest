@@ -4,11 +4,11 @@ Shared components for the Elsa Studio visual workflow designer.
 
 ## Features
 
-This module provides the core shared components and configuration for the Elsa Studio workflow designer when integrated with Orchard Core.
+This module provides the core shared components and configuration for the Elsa Studio workflow designer when integrated with Crest.
 
 ### Core Components
 
-- **Elsa Studio Integration** - Integrates Elsa Studio UI components with Orchard Core
+- **Elsa Studio Integration** - Integrates Elsa Studio UI components with Crest
 - **Workflow Designer Core** - Core workflow design and editing functionality
 - **Shell Configuration** - Shell and module configuration for the designer
 
@@ -23,7 +23,7 @@ Choose one of the following implementation modules based on your deployment pref
 
 ## Dependencies
 
-This module requires no Orchard Core-specific dependencies but provides shared functionality for the designer implementations.
+This module requires no Crest-specific dependencies but provides shared functionality for the designer implementations.
 
 ## Package Information
 

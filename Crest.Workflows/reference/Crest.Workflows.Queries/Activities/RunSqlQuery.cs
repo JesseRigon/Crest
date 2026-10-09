@@ -9,13 +9,13 @@ using Fluid.Values;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Options;
 using Crest.Workflows.Queries.UI;
-using OrchardCore.Liquid;
-using OrchardCore.Queries.Sql;
+using Crest.Liquid;
+using Crest.Queries.Sql;
 using YesSql;
 
 namespace Crest.Workflows.Queries.Activities;
 
-[Activity("OrchardCore.Queries", "Queries", "Executes a SQL query and returns the results.", DisplayName = "Run SQL Query")]
+[Activity("Crest.Queries", "Queries", "Executes a SQL query and returns the results.", DisplayName = "Run SQL Query")]
 [UsedImplicitly]
 public class RunSqlQuery : CodeActivity<ICollection<dynamic>>
 {

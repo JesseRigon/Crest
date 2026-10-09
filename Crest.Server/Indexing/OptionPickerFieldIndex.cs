@@ -2,10 +2,10 @@ using Crest.Fields;
 using Crest.Models;
 using Crest.Services;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.ContentFields.Indexing.SQL;
-using OrchardCore.ContentManagement;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Metadata.Models;
+using Crest.ContentFields.Indexing.SQL;
+using Crest.ContentManagement;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Models;
 using YesSql.Indexes;
 
 namespace Crest.Indexing;

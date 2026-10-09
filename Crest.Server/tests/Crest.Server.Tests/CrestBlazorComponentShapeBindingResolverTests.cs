@@ -5,7 +5,7 @@ using Crest.Components.Primitives;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.JSInterop;
-using OrchardCore.DisplayManagement.Implementation;
+using Crest.DisplayManagement.Implementation;
 using Xunit;
 
 namespace Crest.Server.Tests;

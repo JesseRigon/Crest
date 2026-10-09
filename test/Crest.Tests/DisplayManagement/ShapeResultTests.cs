@@ -1,0 +1,207 @@
+using Crest.DisplayManagement;
+using Crest.DisplayManagement.Descriptors;
+using Crest.DisplayManagement.Handlers;
+using Crest.DisplayManagement.Implementation;
+using Crest.DisplayManagement.Layout;
+using Crest.DisplayManagement.Theming;
+using Crest.DisplayManagement.Views;
+using Crest.Environment.Extensions;
+using Crest.Scripting;
+using Crest.Tests.DisplayManagement.Stubs;
+using Crest.Tests.Stubs;
+
+namespace Crest.Tests.DisplayManagement;
+
+public class ShapeResultTests
+{
+    [Theory]
+    [InlineData("groupOne", "gRoUpOnE")] // case insensitive check.
+    [InlineData("groupOne", "groupOne")]
+    [InlineData("", "")]
+    [InlineData("", null)]
+    [InlineData(null, "")]
+    [InlineData(null, null)]
+    public async Task Shape_CalledReturnShapeWhenGroupIsMatched_Succeeds(string groupId, string renderingGroupId)
+    {
+        var serviceProvider = GetServiceProvider(new GroupDisplayDriverStub(groupId));
+
+        var displayManager = serviceProvider.GetRequiredService<IDisplayManager<GroupModel>>();
+        var model = new GroupModel();
+
+        var shape = await displayManager.BuildEditorAsync(model, updater: null, isNew: false, groupId: renderingGroupId);
+
+        var testZone = shape.GetProperty<IShape>(GroupDisplayDriverStub.ZoneName);
+
+        Assert.NotNull(testZone);
+
+        var shapeModel = testZone.Items[0] as ShapeViewModel<GroupModel>;
+
+        Assert.NotNull(shapeModel);
+        Assert.Equal(shapeModel.Value.Value, model.Value);
+    }
+
+    [Theory]
+    [InlineData("groupOne", "groupTwo")]
+    [InlineData("", "groupTwo")]
+    [InlineData(null, "groupTwo")]
+    [InlineData("groupOne", "")]
+    [InlineData("groupOne", null)]
+    public async Task Shape_CalledReturnNullWhenIncorrectGroupIsSpecified_Succeeds(string groupId, string renderingGroupId)
+    {
+        var serviceProvider = GetServiceProvider(new GroupDisplayDriverStub(groupId));
+
+        var displayManager = serviceProvider.GetRequiredService<IDisplayManager<GroupModel>>();
+        var model = new GroupModel();
+
+        var shape = await displayManager.BuildEditorAsync(model, updater: null, isNew: false, groupId: renderingGroupId);
+
+        var testZone = shape.GetProperty<IShape>(GroupDisplayDriverStub.ZoneName);
+
+        Assert.Null(testZone);
+    }
+
+    [Fact]
+    public async Task Shape_WhenRenderPredicateReturnsFalse_DoesNotRenderShape()
+    {
+        var serviceProvider = GetServiceProvider(new RenderPredicateDisplayDriverStub(canRender: false));
+
+        var displayManager = serviceProvider.GetRequiredService<IDisplayManager<GroupModel>>();
+        var model = new GroupModel();
+
+        var shape = await displayManager.BuildEditorAsync(model, updater: null, isNew: false);
+
+        var testZone = shape.GetProperty<IShape>(GroupDisplayDriverStub.ZoneName);
+
+        Assert.Null(testZone);
+    }
+
+    [Fact]
+    public async Task Shape_WhenTypedRenderPredicateReturnsTrue_RendersShape()
+    {
+        var serviceProvider = GetServiceProvider(new TypedRenderPredicateDisplayDriverStub(canRender: true));
+
+        var displayManager = serviceProvider.GetRequiredService<IDisplayManager<GroupModel>>();
+        var model = new GroupModel();
+
+        var shape = await displayManager.BuildEditorAsync(model, updater: null, isNew: false);
+
+        var testZone = shape.GetProperty<IShape>(GroupDisplayDriverStub.ZoneName);
+
+        Assert.NotNull(testZone);
+        Assert.IsType<ShapeViewModel<GroupModel>>(testZone.Items[0]);
+    }
+
+    [Fact]
+    public async Task Shape_WhenObjectStateRenderPredicateReturnsTrue_RendersShape()
+    {
+        var serviceProvider = GetServiceProvider(new ObjectStateRenderPredicateDisplayDriverStub(canRender: true));
+
+        var displayManager = serviceProvider.GetRequiredService<IDisplayManager<GroupModel>>();
+        var model = new GroupModel();
+
+        var shape = await displayManager.BuildEditorAsync(model, updater: null, isNew: false);
+
+        var testZone = shape.GetProperty<IShape>(GroupDisplayDriverStub.ZoneName);
+
+        Assert.NotNull(testZone);
+        Assert.IsType<ShapeViewModel<GroupModel>>(testZone.Items[0]);
+    }
+
+    [Fact]
+    public async Task Shape_NonInterceptedStateInitializerRunsAfterMetadataIsPopulated_Succeeds()
+    {
+        var serviceProvider = GetServiceProvider(new MetadataInitializerDisplayDriverStub());
+
+        var displayManager = serviceProvider.GetRequiredService<IDisplayManager<GroupModel>>();
+        var shape = await displayManager.BuildEditorAsync(new GroupModel(), updater: null, isNew: false);
+        var testZone = shape.GetProperty<IShape>(GroupDisplayDriverStub.ZoneName);
+
+        Assert.NotNull(testZone);
+
+        var shapeModel = Assert.IsType<AttributedShapeViewModel>(testZone.Items[0]);
+
+        Assert.Equal("state:2:Edit", shapeModel.InitializerDisplayType);
+    }
+
+    private sealed class RenderPredicateDisplayDriverStub : DisplayDriver<GroupModel>
+    {
+        private readonly bool _canRender;
+
+        public RenderPredicateDisplayDriverStub(bool canRender)
+        {
+            _canRender = canRender;
+        }
+
+        public override IDisplayResult Edit(GroupModel model, BuildEditorContext context)
+            => View("test", model)
+                .Location(GroupDisplayDriverStub.ZoneName)
+                .RenderWhen(() => Task.FromResult(_canRender));
+    }
+
+    private sealed class TypedRenderPredicateDisplayDriverStub : DisplayDriver<GroupModel>
+    {
+        private readonly bool _canRender;
+
+        public TypedRenderPredicateDisplayDriverStub(bool canRender)
+        {
+            _canRender = canRender;
+        }
+
+        public override IDisplayResult Edit(GroupModel model, BuildEditorContext context)
+            => View("test", model)
+                .Location(GroupDisplayDriverStub.ZoneName)
+                .RenderWhen(static canRender => Task.FromResult(canRender), _canRender);
+    }
+
+    private sealed class ObjectStateRenderPredicateDisplayDriverStub : DisplayDriver<GroupModel>
+    {
+        private readonly bool _canRender;
+
+        public ObjectStateRenderPredicateDisplayDriverStub(bool canRender)
+        {
+            _canRender = canRender;
+        }
+
+        public override IDisplayResult Edit(GroupModel model, BuildEditorContext context)
+            => View("test", model)
+                .Location(GroupDisplayDriverStub.ZoneName)
+                .RenderWhen(static state => Task.FromResult((bool)state!), _canRender);
+    }
+
+    private sealed class MetadataInitializerDisplayDriverStub : DisplayDriver<GroupModel>
+    {
+        public override IDisplayResult Edit(GroupModel model, BuildEditorContext context)
+            => Initialize<AttributedShapeViewModel, string, int>(
+               "MetadataInitializer",
+               static (shape, state, count) => shape.InitializerDisplayType = $"{state}:{count}:{shape.Metadata.DisplayType}",
+               "state",
+               2)
+               .Location(GroupDisplayDriverStub.ZoneName);
+    }
+
+    private static ServiceProvider GetServiceProvider(IDisplayDriver<GroupModel> driver)
+    {
+        var serviceCollection = new ServiceCollection();
+
+        serviceCollection.AddScripting()
+            .AddLogging()
+            .AddScoped<ILoggerFactory, NullLoggerFactory>()
+            .AddScoped<IThemeManager, ThemeManager>()
+            .AddScoped<IShapeFactory, DefaultShapeFactory>()
+            .AddScoped<IExtensionManager, StubExtensionManager>()
+            .AddScoped<IShapeTableManager, TestShapeTableManager>()
+            .AddScoped<ILayoutAccessor, LayoutAccessor>()
+            .AddScoped(sp => driver)
+            .AddScoped(typeof(IDisplayManager<>), typeof(DisplayManager<>));
+
+        var shapeTable = new ShapeTable
+        (
+            new Dictionary<string, ShapeDescriptor>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, ShapeBinding>(StringComparer.OrdinalIgnoreCase)
+        );
+
+        serviceCollection.AddSingleton(shapeTable);
+
+        return serviceCollection.BuildServiceProvider();
+    }
+}

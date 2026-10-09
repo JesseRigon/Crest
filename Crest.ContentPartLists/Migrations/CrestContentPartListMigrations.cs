@@ -1,20 +1,20 @@
 using Crest.Models;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Metadata.Settings;
-using OrchardCore.Data.Migration;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Settings;
+using Crest.Data.Migration;
 
 namespace Crest.Migrations;
 
 // Content Part Lists - Crest's tenant-editable enum system.
 //
-// FULLY PARALLEL to Orchard's Taxonomy/Term, sharing no parts with it. Stock Taxonomy
+// FULLY PARALLEL to Crest's Taxonomy/Term, sharing no parts with it. Stock Taxonomy
 // is a CMS categorization feature: routable (AliasPart + AutoroutePart, term pages,
 // Liquid shapes), and everything carrying TaxonomyPart is listed under Configuration >
 // Taxonomies. Configuration data wants none of that, and the word is jargon to
 // tenants - so these types carry their own option storage, and Crest takes NO
-// dependency on OrchardCore.Taxonomies.
+// dependency on Crest.Taxonomies.
 //
-// Nothing here modifies OrchardCore; the types are ordinary content types built from
+// Nothing here modifies Crest; the types are ordinary content types built from
 // stock building blocks.
 public sealed class CrestContentPartListMigrations(IContentDefinitionManager contentDefinitionManager) : DataMigration
 {

@@ -1,7 +1,7 @@
 using Crest.Members.Indexes;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.Data.Migration;
-using OrchardCore.Environment.Shell.Scope;
+using Crest.Data.Migration;
+using Crest.Environment.Shell.Scope;
 using YesSql.Sql;
 
 namespace Crest.Members.Migrations;
@@ -54,19 +54,19 @@ public sealed class MembersMigrations : DataMigration
         return 1;
     }
 
-    // The member ROLE TEMPLATES are ordinary Orchard roles the tenant shapes in the
+    // The member ROLE TEMPLATES are ordinary Crest roles the tenant shapes in the
     // role editor; they must EXIST for bindings to reference. Created idempotently,
     // deferred like every content/identity write at first-time setup.
     private static void DeferEnsureMemberRoleTemplates()
     {
         ShellScope.AddDeferredTask(async scope =>
         {
-            var roleManager = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.RoleManager<OrchardCore.Security.IRole>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.RoleManager<Crest.Security.IRole>>();
             foreach (var roleName in new[] { Crest.Members.Constants.MemberRoleTemplates.Member, Crest.Members.Constants.MemberRoleTemplates.MemberAdministrator })
             {
                 if (await roleManager.FindByNameAsync(roleName) is null)
                 {
-                    await roleManager.CreateAsync(new OrchardCore.Security.Role
+                    await roleManager.CreateAsync(new Crest.Security.Role
                     {
                         RoleName = roleName,
                         RoleDescription = "Member role template - shape its permissions in the role editor.",

@@ -69,12 +69,12 @@
         @if (DisplayManager?.Manifest?.AdminSettings.DisplayThemeToggler != false)
         {
             <button type="button" class="admin-titlebar__icon-button" @onclick="ToggleThemeAsync" title="@T["Toggle dark/light mode"]" aria-label="@T["Toggle dark/light mode"]">
-                <OrchardIcon IconKey="@ThemeToggleIcon" Size="1.25rem" />
+                <PlatformIcon IconKey="@ThemeToggleIcon" Size="1.25rem" />
             </button>
         }
 
         @* Three tiers, always in this order: (1) the native, admin-editable
-           CrestMenuPlacement.User AdminMenu, gated purely by each node's own OrchardCore
+           CrestMenuPlacement.User AdminMenu, gated purely by each node's own Crest
            permission (no per-user/role targeting beyond that); (2) a hardcoded,
            permission-gated slot, currently empty but always present so future built-in
            items (e.g. impersonation/support tools) have a defined place to land; (3) the
@@ -160,9 +160,9 @@
     private RenderFragment<dynamic> CultureValueTemplate => item => builder =>
     {
         var culture = (CultureOption)item;
-        builder.OpenComponent<OrchardIcon>(0);
-        builder.AddAttribute(1, nameof(OrchardIcon.IconKey), culture.Icon);
-        builder.AddAttribute(2, nameof(OrchardIcon.Size), "1.1rem");
+        builder.OpenComponent<PlatformIcon>(0);
+        builder.AddAttribute(1, nameof(PlatformIcon.IconKey), culture.Icon);
+        builder.AddAttribute(2, nameof(PlatformIcon.Size), "1.1rem");
         builder.CloseComponent();
         if (TitleBarSettings.DisplayCultureLabel)
         {
@@ -177,9 +177,9 @@
     private RenderFragment<dynamic> CultureOptionTemplate => item => builder =>
     {
         var culture = (CultureOption)item;
-        builder.OpenComponent<OrchardIcon>(0);
-        builder.AddAttribute(1, nameof(OrchardIcon.IconKey), culture.Icon);
-        builder.AddAttribute(2, nameof(OrchardIcon.Size), "1.1rem");
+        builder.OpenComponent<PlatformIcon>(0);
+        builder.AddAttribute(1, nameof(PlatformIcon.IconKey), culture.Icon);
+        builder.AddAttribute(2, nameof(PlatformIcon.Size), "1.1rem");
         builder.CloseComponent();
         builder.OpenElement(3, "span");
         builder.AddAttribute(4, "class", "admin-titlebar__culture-option-label");
@@ -222,9 +222,9 @@
         {
             if (IsSelectedTenant(tenant))
             {
-                builder.OpenComponent<OrchardIcon>(0);
-                builder.AddAttribute(1, nameof(OrchardIcon.IconKey), "iconify.mdi/current/default/check");
-                builder.AddAttribute(2, nameof(OrchardIcon.Size), "1rem");
+                builder.OpenComponent<PlatformIcon>(0);
+                builder.AddAttribute(1, nameof(PlatformIcon.IconKey), "iconify.mdi/current/default/check");
+                builder.AddAttribute(2, nameof(PlatformIcon.Size), "1rem");
                 builder.CloseComponent();
             }
 
@@ -439,7 +439,7 @@
 
     // tenantPrefix identifies a *different* tenant than the one this shell was
     // built for, so its real, configured LoginPath is unknowable client-side
-    // without an API call - "/login" (Orchard/Crest's shared stock default) is the
+    // without an API call - "/login" (Platform/Crest's shared stock default) is the
     // best available fallback for that cross-tenant case. When switching within the
     // current tenant (tenantPrefix is null/empty), Routing.LoginPath is used instead
     // since it reflects this tenant's actual, possibly-customized LoginPath.

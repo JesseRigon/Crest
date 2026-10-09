@@ -1,0 +1,41 @@
+{
+  "name": "NotificationPreferencesTests",
+  "displayName": "NotificationPreferencesTests",
+  "description": "Testing Crest.Notifications' user-notification-preferences-part.ts (native HTML5 drag-and-drop reorder of notification methods).",
+  "author": "The Crest Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "tests" ],
+  "tags": [ "tests" ],
+
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Crest.HomeRoute",
+        "Crest.Admin",
+        "Crest.Navigation",
+        "Crest.Recipes",
+        "Crest.Resources",
+        "Crest.Roles",
+        "Crest.Security",
+        "Crest.Settings",
+        "Crest.Themes",
+        "Crest.Users",
+
+        "Crest.Notifications",
+        "Crest.Notifications.Email",
+        "Crest.Notifications.Sms",
+
+        "TheAdmin",
+        "SafeMode"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "TheAdmin",
+      "site": "TheAdmin"
+    }
+  ]
+}

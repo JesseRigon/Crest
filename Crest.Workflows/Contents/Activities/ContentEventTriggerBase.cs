@@ -5,7 +5,7 @@ using Crest.Workflows.Attributes;
 using Crest.Workflows.Models;
 using Crest.Workflows.UIHints;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.ContentManagement;
+using Crest.ContentManagement;
 using Crest.Workflows.Contents.Stimuli;
 using Crest.Workflows.Contents.UIHints;
 using Crest.Workflows.Contexts;
@@ -17,7 +17,7 @@ namespace Crest.Workflows.Contents.Activities;
 /// <see cref="RequiredPermission"/> is set, on the acting user: a user who lacks the
 /// permission ends the run on the "Denied" port without a result, so a flow can be
 /// restricted to the people whose actions may cause its effects. The check runs through
-/// Orchard's authorization with the snapshotted principal (member ceiling included).
+/// Crest's authorization with the snapshotted principal (member ceiling included).
 /// </summary>
 public abstract class ContentEventTriggerBase : Trigger<ContentItem>
 {
@@ -31,7 +31,7 @@ public abstract class ContentEventTriggerBase : Trigger<ContentItem>
 
     [Input(
         DisplayName = "Required permission",
-        Description = "Optional. Orchard permission the acting user must hold for the flow to proceed; otherwise the run ends on Denied.",
+        Description = "Optional. Crest permission the acting user must hold for the flow to proceed; otherwise the run ends on Denied.",
         UIHint = InputUIHints.SingleLine
     )]
     public Input<string?> RequiredPermission { get; set; } = null!;

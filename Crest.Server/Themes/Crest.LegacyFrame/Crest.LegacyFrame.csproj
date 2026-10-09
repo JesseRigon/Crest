@@ -1,17 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Theme.Targets\OrchardCore.Theme.Targets.props" />
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Theme.Targets\Crest.Theme.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.props" />
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <OrchardCoreCompatibilityVersion>4.0.0</OrchardCoreCompatibilityVersion>
+    <PlatformCompatibilityVersion>4.0.0</PlatformCompatibilityVersion>
     <CrestSecurityPatch>0</CrestSecurityPatch>
     <CrestBugPatch>0</CrestBugPatch>
-    <CrestVersion>$(OrchardCoreCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
-    <VersionPrefix>$(OrchardCoreCompatibilityVersion)</VersionPrefix>
-    <PackageVersion>$(OrchardCoreCompatibilityVersion)</PackageVersion>
+    <CrestVersion>$(PlatformCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
+    <VersionPrefix>$(PlatformCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(PlatformCompatibilityVersion)</PackageVersion>
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <FileVersion>4.0.0.0</FileVersion>
     <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
@@ -24,7 +24,7 @@
   <ItemGroup>
     <!-- Theme.Targets, not Module.Targets: it sets ModuleType=Theme, which becomes the
          ModuleMarkerAttribute's type string in the built assembly. IsTheme() (see
-         OrchardCore's ExtensionInfoExtensions) tests exactly that, and
+         Crest's ExtensionInfoExtensions) tests exactly that, and
          ThemeViewLocationExpanderProvider only contributes a feature's Views/ paths when
          IsTheme() is true - built as a module, this theme's Views/Layout.cshtml was
          never in the view-location list, so every legacy-frame request silently fell
@@ -32,12 +32,9 @@
          (navbar + sidebar) inside the Crest iframe. The [assembly: Theme] attribute in
          Manifest.cs alone is not sufficient: the targets-generated marker attribute is
          what ModuleInfo actually resolves to at runtime. -->
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Theme.Targets\OrchardCore.Theme.Targets.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Admin.Abstractions\OrchardCore.Admin.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.DisplayManagement\OrchardCore.DisplayManagement.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.ResourceManagement\OrchardCore.ResourceManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Theme.Targets\Crest.Theme.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
   </ItemGroup>
-
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Theme.Targets\OrchardCore.Theme.Targets.targets" />
 </Project>

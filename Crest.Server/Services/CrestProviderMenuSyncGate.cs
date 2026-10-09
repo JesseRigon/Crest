@@ -5,7 +5,7 @@ namespace Crest.Services;
 /// </summary>
 /// <remarks>
 /// The import has to run once per shell, not once per request. Registered as a singleton, whose
-/// lifetime in OrchardCore is the shell's: enabling or disabling a feature changes the shell
+/// lifetime in Crest is the shell's: enabling or disabling a feature changes the shell
 /// descriptor, which releases the shell (see <c>ShellDescriptorManager.ChangedAsync</c>), so the
 /// next shell builds a new container with a fresh instance of this gate and the import runs
 /// again - picking up exactly the features that just became available.

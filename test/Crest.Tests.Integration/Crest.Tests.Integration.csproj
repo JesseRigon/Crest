@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(CommonTargetFrameworks)</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);CA1707;EnableGenerateDocumentationFile</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Crest.FileStorage.AmazonS3\Crest.FileStorage.AmazonS3.csproj" />
+    <ProjectReference Include="..\..\Crest.FileStorage.AzureBlob\Crest.FileStorage.AzureBlob.csproj" />
+    <ProjectReference Include="..\..\Crest.Media.AmazonS3\Crest.Media.AmazonS3.csproj" />
+    <ProjectReference Include="..\..\Crest.Media.Azure\Crest.Media.Azure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Testcontainers" />
+    <PackageReference Include="Testcontainers.Azurite" />
+    <PackageReference Include="Testcontainers.LocalStack" />
+    <PackageReference Include="xunit.v3.mtp-v2" />
+  </ItemGroup>
+
+  <Import Project="..\..\Crest.Build\Crest.Commons.targets" />
+
+</Project>

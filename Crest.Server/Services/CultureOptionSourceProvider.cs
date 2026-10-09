@@ -4,7 +4,7 @@ namespace Crest.Services;
 
 /// <summary>
 /// Option source over the platform's cultures (per the standing ruling: cultures
-/// are never a seeded list — .NET/Orchard own them). The culture name ("en-US")
+/// are never a seeded list — .NET/Platform own them). The culture name ("en-US")
 /// is both the row id and the technical key. The qualifier narrows the set:
 /// blank/"specific" = specific cultures (the usual pick-a-locale dropdown),
 /// "neutral" = neutral cultures, "all" = both.

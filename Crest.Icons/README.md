@@ -1,6 +1,6 @@
 # Crest.Icons
 
-`Crest.Icons` owns icon infrastructure for Orchard Crest UI Framework:
+`Crest.Icons` owns icon infrastructure for Crest Crest UI Framework:
 
 - icon provider contracts and settings;
 - icon registry/search/pack services;

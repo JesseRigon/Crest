@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
-using OrchardCore.Security.Permissions;
+using Crest.Security.Permissions;
 
 namespace Crest.Workflows.Contexts;
 
 /// <summary>
-/// Evaluates an Orchard permission, by name, against a snapshotted user - through the
+/// Evaluates an Crest permission, by name, against a snapshotted user - through the
 /// tenant's real <see cref="IAuthorizationService"/>, so every registered handler applies.
 /// Unknown permission names and anonymous users are denied.
 /// </summary>

@@ -1,8 +1,8 @@
 using Crest.Members.Models;
 using Crest.Members.Services;
-using OrchardCore.Entities;
-using OrchardCore.Users.Handlers;
-using OrchardCore.Users.Models;
+using Crest.Entities;
+using Crest.Users.Handlers;
+using Crest.Users.Models;
 
 namespace Crest.Members.Handlers;
 
@@ -11,7 +11,7 @@ namespace Crest.Members.Handlers;
 /// UserStore.CreateAsync BEFORE the save, so the stamp persists in the same write and
 /// the class index maps it on first save. Flows that build the user themselves
 /// (MemberService) stamp BEFORE calling create and are left alone. A user created by
-/// Orchard's own registration path while the request is a portal registration or a
+/// Crest's own registration path while the request is a portal registration or a
 /// portal external login (MemberPortalLoginContext carries the organization) becomes a
 /// member of that org; everything else defaults to staff. Portal provisioning therefore
 /// never touches the stock registration/external-login code - the surface decides.

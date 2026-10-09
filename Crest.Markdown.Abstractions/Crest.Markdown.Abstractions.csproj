@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Markdown</RootNamespace>
+     <!-- NuGet properties-->
+    <Title>Crest Markdown Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for Markdown.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

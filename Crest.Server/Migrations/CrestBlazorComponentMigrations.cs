@@ -1,14 +1,14 @@
 using Crest.Models;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentManagement.Metadata.Settings;
-using OrchardCore.Data.Migration;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Settings;
+using Crest.Data.Migration;
 
 namespace Crest.Migrations;
 
 // Registers CrestBlazorComponentPart as Attachable (same as WidgetsListPart's own
 // migration) and defines a BlazorComponent content type carrying it, with a Widget
 // stereotype so it's placeable into any WidgetsListPart zone alongside stock Widgets -
-// no new tree/zone mechanism, reusing Orchard's existing one (see docs/blazor-web.md).
+// no new tree/zone mechanism, reusing Crest's existing one (see docs/blazor-web.md).
 public sealed class CrestBlazorComponentMigrations : DataMigration
 {
     private readonly IContentDefinitionManager _contentDefinitionManager;

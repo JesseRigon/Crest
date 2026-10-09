@@ -1,0 +1,60 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Crest.ContentManagement;
+using Crest.Contents;
+
+namespace Crest.Demo.Controllers;
+
+[Route("api/demo")]
+[Authorize(AuthenticationSchemes = PlatformConstants.AuthenticationSchemes.Api), IgnoreAntiforgeryToken, AllowAnonymous]
+[ApiController]
+public sealed class ContentApiController : ControllerBase
+{
+    private readonly IAuthorizationService _authorizationService;
+    private readonly IContentManager _contentManager;
+
+    public ContentApiController(
+        IAuthorizationService authorizationService,
+        IContentManager contentManager)
+    {
+        _authorizationService = authorizationService;
+        _contentManager = contentManager;
+    }
+
+    public async Task<IActionResult> GetAuthorizedById(string id)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.DemoAPIAccess))
+        {
+            return this.ChallengeOrForbid(PlatformConstants.AuthenticationSchemes.Api);
+        }
+
+        var contentItem = await _contentManager.GetAsync(id);
+
+        if (!await _authorizationService.AuthorizeAsync(User, CommonPermissions.ViewContent, contentItem))
+        {
+            return this.ChallengeOrForbid(PlatformConstants.AuthenticationSchemes.Api);
+        }
+
+        if (contentItem == null)
+        {
+            return NotFound();
+        }
+
+        return new ObjectResult(contentItem);
+    }
+
+    [HttpPost]
+    [EndpointName("ApiAddDemoContent")]
+    public async Task<IActionResult> AddContent(ContentItem contentItem)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.DemoAPIAccess))
+        {
+            return this.ChallengeOrForbid(PlatformConstants.AuthenticationSchemes.Api);
+        }
+
+        await _contentManager.CreateAsync(contentItem);
+
+        return new ObjectResult(contentItem);
+    }
+}

@@ -1,6 +1,6 @@
 // Converted from the old admin-tenants-page.js. Verifies the native Tenants page renders,
 // its API-backed catalog includes the default tenant, and that "Add tenant" still falls
-// back to Orchard's native (legacy iframe) create form.
+// back to Crest's native (legacy iframe) create form.
 module.exports = async function run(page, ctx) {
   await page.goto(`${ctx.baseUrl}/Admin/Tenants`, { waitUntil: 'domcontentloaded' });
   const tenants = page.locator('[data-testid="tenants-page"]');

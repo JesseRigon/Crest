@@ -10,22 +10,22 @@ public class ActivityIconProvider : IActivityDisplaySettingsProvider
     {
         return new Dictionary<string, ActivityDisplaySettings>
         {
-            ["OrchardCore.Content.ContentCreated"] = new(OrchardCoreColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
-            ["OrchardCore.Content.ContentDraftSaved"] = new(OrchardCoreColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
-            ["OrchardCore.Content.ContentUpdated"] = new(OrchardCoreColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
-            ["OrchardCore.Content.ContentPublished"] = new(OrchardCoreColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
-            ["OrchardCore.Content.ContentUnpublished"] = new(OrchardCoreColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
-            ["OrchardCore.Content.ContentVersioned"] = new(OrchardCoreColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
-            ["OrchardCore.Content.ContentDeleted"] = new(OrchardCoreColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
-            ["OrchardCore.Content.CreateContent"] = new(OrchardCoreColors.ContentAction, OrchardCoreIcons.Heroicons.DocumentPlus),
-            ["OrchardCore.Content.UpdateContent"] = new(OrchardCoreColors.ContentAction, OrchardCoreIcons.Tabler.Pen),
-            ["OrchardCore.Content.DeleteContent"] = new(OrchardCoreColors.ContentAction, Icons.Material.Filled.Delete),
-            ["OrchardCore.Content.GetContent"] = new(OrchardCoreColors.ContentAction, Icons.Material.Filled.FileOpen),
-            ["OrchardCore.Content.PublishContent"] = new(OrchardCoreColors.ContentAction, Icons.Material.Filled.CloudUpload),
-            ["OrchardCore.Content.UnpublishContent"] = new(OrchardCoreColors.ContentAction, Icons.Material.Filled.CloudDownload),
-            ["OrchardCore.Content.ResolveTerm"] = new(OrchardCoreColors.ContentAction, Icons.Material.Filled.ManageSearch),
-            ["OrchardCore.UI.DisplayNotification"] = new(OrchardCoreColors.UIAction, Icons.Material.Outlined.Info),
-            ["OrchardCore.Queries.RunSqlQuery"] = new(OrchardCoreColors.Queries, OrchardCoreIcons.Tabler.Database),
+            ["Crest.Content.ContentCreated"] = new(PlatformColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
+            ["Crest.Content.ContentDraftSaved"] = new(PlatformColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
+            ["Crest.Content.ContentUpdated"] = new(PlatformColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
+            ["Crest.Content.ContentPublished"] = new(PlatformColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
+            ["Crest.Content.ContentUnpublished"] = new(PlatformColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
+            ["Crest.Content.ContentVersioned"] = new(PlatformColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
+            ["Crest.Content.ContentDeleted"] = new(PlatformColors.ContentEvent, Icons.Material.Filled.ElectricBolt),
+            ["Crest.Content.CreateContent"] = new(PlatformColors.ContentAction, PlatformIcons.Heroicons.DocumentPlus),
+            ["Crest.Content.UpdateContent"] = new(PlatformColors.ContentAction, PlatformIcons.Tabler.Pen),
+            ["Crest.Content.DeleteContent"] = new(PlatformColors.ContentAction, Icons.Material.Filled.Delete),
+            ["Crest.Content.GetContent"] = new(PlatformColors.ContentAction, Icons.Material.Filled.FileOpen),
+            ["Crest.Content.PublishContent"] = new(PlatformColors.ContentAction, Icons.Material.Filled.CloudUpload),
+            ["Crest.Content.UnpublishContent"] = new(PlatformColors.ContentAction, Icons.Material.Filled.CloudDownload),
+            ["Crest.Content.ResolveTerm"] = new(PlatformColors.ContentAction, Icons.Material.Filled.ManageSearch),
+            ["Crest.UI.DisplayNotification"] = new(PlatformColors.UIAction, Icons.Material.Outlined.Info),
+            ["Crest.Queries.RunSqlQuery"] = new(PlatformColors.Queries, PlatformIcons.Tabler.Database),
         };
     }
 }

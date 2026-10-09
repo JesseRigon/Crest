@@ -7,7 +7,7 @@ using Crest.Workflows.Scheduling.Handlers;
 using Crest.Workflows.Scheduling.Services;
 using Crest.Workflows.Scheduling.TriggerPayloadValidators;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.Modules;
+using Crest.Modules;
 
 namespace Crest.Workflows.Timers.Common;
 

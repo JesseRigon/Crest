@@ -2597,18 +2597,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@orchardcore/admindashboard@workspace:src/OrchardCore.Modules/OrchardCore.AdminDashboard/Assets":
+"@crest/admindashboard@workspace:Crest.AdminDashboard/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/admindashboard@workspace:src/OrchardCore.Modules/OrchardCore.AdminDashboard/Assets"
+  resolution: "@crest/admindashboard@workspace:Crest.AdminDashboard/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/adminmenu@workspace:src/OrchardCore.Modules/OrchardCore.AdminMenu/Assets":
+"@crest/adminmenu@workspace:Crest.AdminMenu/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/adminmenu@workspace:src/OrchardCore.Modules/OrchardCore.AdminMenu/Assets"
+  resolution: "@crest/adminmenu@workspace:Crest.AdminMenu/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
@@ -2616,15 +2616,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orchardcore/alias@workspace:src/OrchardCore.Modules/OrchardCore.Alias/Assets":
+"@crest/alias@workspace:Crest.Alias/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/alias@workspace:src/OrchardCore.Modules/OrchardCore.Alias/Assets"
+  resolution: "@crest/alias@workspace:Crest.Alias/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/apis-graphql@workspace:src/OrchardCore.Modules/OrchardCore.Apis.GraphQL/Assets":
+"@crest/apis-graphql@workspace:Crest.Apis.GraphQL/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/apis-graphql@workspace:src/OrchardCore.Modules/OrchardCore.Apis.GraphQL/Assets"
+  resolution: "@crest/apis-graphql@workspace:Crest.Apis.GraphQL/Assets"
   dependencies:
     "@babel/cli": "npm:^7.22.10"
     "@babel/core": "npm:^7.22.11"
@@ -2649,9 +2649,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orchardcore/assets-manager@workspace:.scripts/assets-manager, @orchardcore/assets-manager@workspace:^":
+"@crest/assets-manager@workspace:.scripts/assets-manager, @crest/assets-manager@workspace:^":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/assets-manager@workspace:.scripts/assets-manager"
+  resolution: "@crest/assets-manager@workspace:.scripts/assets-manager"
   dependencies:
     "@parcel/config-default": "npm:2.13.3"
     "@parcel/core": "npm:2.13.3"
@@ -2701,9 +2701,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orchardcore/audittrail@workspace:src/OrchardCore.Modules/OrchardCore.AuditTrail/Assets":
+"@crest/audittrail@workspace:Crest.AuditTrail/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/audittrail@workspace:src/OrchardCore.Modules/OrchardCore.AuditTrail/Assets"
+  resolution: "@crest/audittrail@workspace:Crest.AuditTrail/Assets"
   dependencies:
     "@babel/cli": "npm:^7.22.10"
     "@babel/core": "npm:^7.22.11"
@@ -2733,27 +2733,27 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orchardcore/autoroute@workspace:src/OrchardCore.Modules/OrchardCore.Autoroute/Assets":
+"@crest/autoroute@workspace:Crest.Autoroute/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/autoroute@workspace:src/OrchardCore.Modules/OrchardCore.Autoroute/Assets"
+  resolution: "@crest/autoroute@workspace:Crest.Autoroute/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/azureai@workspace:src/OrchardCore.Modules/OrchardCore.AzureAI/Assets":
+"@crest/azureai@workspace:Crest.AzureAI/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/azureai@workspace:src/OrchardCore.Modules/OrchardCore.AzureAI/Assets"
+  resolution: "@crest/azureai@workspace:Crest.AzureAI/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/backgroundtasks@workspace:src/OrchardCore.Modules/OrchardCore.BackgroundTasks/Assets":
+"@crest/backgroundtasks@workspace:Crest.BackgroundTasks/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/backgroundtasks@workspace:src/OrchardCore.Modules/OrchardCore.BackgroundTasks/Assets"
+  resolution: "@crest/backgroundtasks@workspace:Crest.BackgroundTasks/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/bloom@workspace:.scripts/bloom":
+"@crest/bloom@workspace:.scripts/bloom":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/bloom@workspace:.scripts/bloom"
+  resolution: "@crest/bloom@workspace:.scripts/bloom"
   dependencies:
     "@microsoft/signalr": "npm:^8.0.0"
     axios: "npm:^1.7.0"
@@ -2764,179 +2764,179 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orchardcore/contentfields@workspace:src/OrchardCore.Modules/OrchardCore.ContentFields/Assets":
+"@crest/contentfields@workspace:Crest.ContentFields/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/contentfields@workspace:src/OrchardCore.Modules/OrchardCore.ContentFields/Assets"
+  resolution: "@crest/contentfields@workspace:Crest.ContentFields/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
     flatpickr: "npm:4.6.13"
-    orchardcore-media-gallery: "workspace:*"
+    crest-media-gallery: "workspace:*"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/contentpreview@workspace:src/OrchardCore.Modules/OrchardCore.ContentPreview/Assets":
+"@crest/contentpreview@workspace:Crest.ContentPreview/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/contentpreview@workspace:src/OrchardCore.Modules/OrchardCore.ContentPreview/Assets"
+  resolution: "@crest/contentpreview@workspace:Crest.ContentPreview/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/contents@workspace:src/OrchardCore.Modules/OrchardCore.Contents/Assets":
+"@crest/contents@workspace:Crest.Contents/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/contents@workspace:src/OrchardCore.Modules/OrchardCore.Contents/Assets"
+  resolution: "@crest/contents@workspace:Crest.Contents/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/contenttypes@workspace:src/OrchardCore.Modules/OrchardCore.ContentTypes/Assets":
+"@crest/contenttypes@workspace:Crest.ContentTypes/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/contenttypes@workspace:src/OrchardCore.Modules/OrchardCore.ContentTypes/Assets"
+  resolution: "@crest/contenttypes@workspace:Crest.ContentTypes/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/cors@workspace:src/OrchardCore.Modules/OrchardCore.Cors/Assets":
+"@crest/cors@workspace:Crest.Cors/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/cors@workspace:src/OrchardCore.Modules/OrchardCore.Cors/Assets"
+  resolution: "@crest/cors@workspace:Crest.Cors/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/customsettings@workspace:src/OrchardCore.Modules/OrchardCore.CustomSettings/Assets":
+"@crest/customsettings@workspace:Crest.CustomSettings/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/customsettings@workspace:src/OrchardCore.Modules/OrchardCore.CustomSettings/Assets"
+  resolution: "@crest/customsettings@workspace:Crest.CustomSettings/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/datalocalization@workspace:src/OrchardCore.Modules/OrchardCore.DataLocalization/Assets":
+"@crest/datalocalization@workspace:Crest.DataLocalization/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/datalocalization@workspace:src/OrchardCore.Modules/OrchardCore.DataLocalization/Assets"
+  resolution: "@crest/datalocalization@workspace:Crest.DataLocalization/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/deployment-remote@workspace:src/OrchardCore.Modules/OrchardCore.Deployment.Remote/Assets":
+"@crest/deployment-remote@workspace:Crest.Deployment.Remote/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/deployment-remote@workspace:src/OrchardCore.Modules/OrchardCore.Deployment.Remote/Assets"
+  resolution: "@crest/deployment-remote@workspace:Crest.Deployment.Remote/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/deployment@workspace:src/OrchardCore.Modules/OrchardCore.Deployment/Assets":
+"@crest/deployment@workspace:Crest.Deployment/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/deployment@workspace:src/OrchardCore.Modules/OrchardCore.Deployment/Assets"
+  resolution: "@crest/deployment@workspace:Crest.Deployment/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/elasticsearch@workspace:src/OrchardCore.Modules/OrchardCore.Elasticsearch/Assets":
+"@crest/elasticsearch@workspace:Crest.Elasticsearch/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/elasticsearch@workspace:src/OrchardCore.Modules/OrchardCore.Elasticsearch/Assets"
+  resolution: "@crest/elasticsearch@workspace:Crest.Elasticsearch/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/email-smtp@workspace:src/OrchardCore.Modules/OrchardCore.Email.Smtp/Assets":
+"@crest/email-smtp@workspace:Crest.Email.Smtp/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/email-smtp@workspace:src/OrchardCore.Modules/OrchardCore.Email.Smtp/Assets"
+  resolution: "@crest/email-smtp@workspace:Crest.Email.Smtp/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/email@workspace:src/OrchardCore.Modules/OrchardCore.Email/Assets":
+"@crest/email@workspace:Crest.Email/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/email@workspace:src/OrchardCore.Modules/OrchardCore.Email/Assets"
+  resolution: "@crest/email@workspace:Crest.Email/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/facebook@workspace:src/OrchardCore.Modules/OrchardCore.Facebook/Assets":
+"@crest/facebook@workspace:Crest.Facebook/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/facebook@workspace:src/OrchardCore.Modules/OrchardCore.Facebook/Assets"
+  resolution: "@crest/facebook@workspace:Crest.Facebook/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/features@workspace:src/OrchardCore.Modules/OrchardCore.Features/Assets":
+"@crest/features@workspace:Crest.Features/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/features@workspace:src/OrchardCore.Modules/OrchardCore.Features/Assets"
+  resolution: "@crest/features@workspace:Crest.Features/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/flows@workspace:src/OrchardCore.Modules/OrchardCore.Flows/Assets":
+"@crest/flows@workspace:Crest.Flows/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/flows@workspace:src/OrchardCore.Modules/OrchardCore.Flows/Assets"
+  resolution: "@crest/flows@workspace:Crest.Flows/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/forms@workspace:src/OrchardCore.Modules/OrchardCore.Forms/Assets":
+"@crest/forms@workspace:Crest.Forms/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/forms@workspace:src/OrchardCore.Modules/OrchardCore.Forms/Assets"
+  resolution: "@crest/forms@workspace:Crest.Forms/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/html@workspace:src/OrchardCore.Modules/OrchardCore.Html/Assets":
+"@crest/html@workspace:Crest.Html/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/html@workspace:src/OrchardCore.Modules/OrchardCore.Html/Assets"
+  resolution: "@crest/html@workspace:Crest.Html/Assets"
   dependencies:
-    orchardcore-media-gallery: "workspace:*"
+    crest-media-gallery: "workspace:*"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/indexing@workspace:src/OrchardCore.Modules/OrchardCore.Indexing/Assets":
+"@crest/indexing@workspace:Crest.Indexing/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/indexing@workspace:src/OrchardCore.Modules/OrchardCore.Indexing/Assets"
+  resolution: "@crest/indexing@workspace:Crest.Indexing/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/layers@workspace:src/OrchardCore.Modules/OrchardCore.Layers/Assets":
+"@crest/layers@workspace:Crest.Layers/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/layers@workspace:src/OrchardCore.Modules/OrchardCore.Layers/Assets"
+  resolution: "@crest/layers@workspace:Crest.Layers/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/liquid@workspace:src/OrchardCore.Modules/OrchardCore.Liquid/Assets":
+"@crest/liquid@workspace:Crest.Liquid/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/liquid@workspace:src/OrchardCore.Modules/OrchardCore.Liquid/Assets"
+  resolution: "@crest/liquid@workspace:Crest.Liquid/Assets"
   dependencies:
     monaco-editor: "npm:0.52.2"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/lists@workspace:src/OrchardCore.Modules/OrchardCore.Lists/Assets":
+"@crest/lists@workspace:Crest.Lists/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/lists@workspace:src/OrchardCore.Modules/OrchardCore.Lists/Assets"
+  resolution: "@crest/lists@workspace:Crest.Lists/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/localization@workspace:src/OrchardCore.Modules/OrchardCore.Localization/Assets":
+"@crest/localization@workspace:Crest.Localization/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/localization@workspace:src/OrchardCore.Modules/OrchardCore.Localization/Assets"
+  resolution: "@crest/localization@workspace:Crest.Localization/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/lucene@workspace:src/OrchardCore.Modules/OrchardCore.Lucene/Assets":
+"@crest/lucene@workspace:Crest.Lucene/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/lucene@workspace:src/OrchardCore.Modules/OrchardCore.Lucene/Assets"
+  resolution: "@crest/lucene@workspace:Crest.Lucene/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/markdown@workspace:src/OrchardCore.Modules/OrchardCore.Markdown/Assets":
+"@crest/markdown@workspace:Crest.Markdown/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/markdown@workspace:src/OrchardCore.Modules/OrchardCore.Markdown/Assets"
+  resolution: "@crest/markdown@workspace:Crest.Markdown/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
     easymde: "npm:2.18.0"
-    orchardcore-media-gallery: "workspace:*"
+    crest-media-gallery: "workspace:*"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/menu@workspace:src/OrchardCore.Modules/OrchardCore.Menu/Assets":
+"@crest/menu@workspace:Crest.Menu/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/menu@workspace:src/OrchardCore.Modules/OrchardCore.Menu/Assets"
+  resolution: "@crest/menu@workspace:Crest.Menu/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/notifications@workspace:src/OrchardCore.Modules/OrchardCore.Notifications/Assets":
+"@crest/notifications@workspace:Crest.Notifications/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/notifications@workspace:src/OrchardCore.Modules/OrchardCore.Notifications/Assets"
+  resolution: "@crest/notifications@workspace:Crest.Notifications/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/openapi-ui-auth@workspace:src/OrchardCore.Modules/OrchardCore.OpenApi/Assets/openapi-ui-auth":
+"@crest/openapi-ui-auth@workspace:Crest.OpenApi/Assets/openapi-ui-auth":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/openapi-ui-auth@workspace:src/OrchardCore.Modules/OrchardCore.OpenApi/Assets/openapi-ui-auth"
+  resolution: "@crest/openapi-ui-auth@workspace:Crest.OpenApi/Assets/openapi-ui-auth"
   dependencies:
     oidc-client-ts: "npm:^3.1.0"
     typescript: "npm:^5.7.3"
@@ -2944,39 +2944,39 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orchardcore/openid@workspace:src/OrchardCore.Modules/OrchardCore.OpenId/Assets":
+"@crest/openid@workspace:Crest.OpenId/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/openid@workspace:src/OrchardCore.Modules/OrchardCore.OpenId/Assets"
+  resolution: "@crest/openid@workspace:Crest.OpenId/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/placements@workspace:src/OrchardCore.Modules/OrchardCore.Placements/Assets":
+"@crest/placements@workspace:Crest.Placements/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/placements@workspace:src/OrchardCore.Modules/OrchardCore.Placements/Assets"
+  resolution: "@crest/placements@workspace:Crest.Placements/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/queries@workspace:src/OrchardCore.Modules/OrchardCore.Queries/Assets":
+"@crest/queries@workspace:Crest.Queries/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/queries@workspace:src/OrchardCore.Modules/OrchardCore.Queries/Assets"
+  resolution: "@crest/queries@workspace:Crest.Queries/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/rate-limits@workspace:src/OrchardCore.Modules/OrchardCore.RateLimits/Assets":
+"@crest/rate-limits@workspace:Crest.RateLimits/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/rate-limits@workspace:src/OrchardCore.Modules/OrchardCore.RateLimits/Assets"
+  resolution: "@crest/rate-limits@workspace:Crest.RateLimits/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/recipes@workspace:src/OrchardCore.Modules/OrchardCore.Recipes/Assets":
+"@crest/recipes@workspace:Crest.Recipes/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/recipes@workspace:src/OrchardCore.Modules/OrchardCore.Recipes/Assets"
+  resolution: "@crest/recipes@workspace:Crest.Recipes/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/resources@workspace:src/OrchardCore.Modules/OrchardCore.Resources/Assets":
+"@crest/resources@workspace:Crest.Resources/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/resources@workspace:src/OrchardCore.Modules/OrchardCore.Resources/Assets"
+  resolution: "@crest/resources@workspace:Crest.Resources/Assets"
   dependencies:
     "@crestapps/bootstrap-select": "npm:1.2.4"
     "@fortawesome/fontawesome-free": "npm:7.3.1"
@@ -3011,21 +3011,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orchardcore/roles@workspace:src/OrchardCore.Modules/OrchardCore.Roles/Assets":
+"@crest/roles@workspace:Crest.Roles/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/roles@workspace:src/OrchardCore.Modules/OrchardCore.Roles/Assets"
+  resolution: "@crest/roles@workspace:Crest.Roles/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/root@workspace:.":
+"@crest/root@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/root@workspace:."
+  resolution: "@crest/root@workspace:."
   dependencies:
     "@babel/core": "npm:^7.22.11"
     "@babel/preset-env": "npm:^7.22.10"
     "@babel/preset-flow": "npm:7.22.5"
     "@eslint/js": "npm:^9.21.0"
-    "@orchardcore/assets-manager": "workspace:^"
+    "@crest/assets-manager": "workspace:^"
     child_process: "npm:^1.0.2"
     es6-promise: "npm:4.2.8"
     eslint: "npm:^9.21.0"
@@ -3041,91 +3041,91 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orchardcore/rules@workspace:src/OrchardCore.Modules/OrchardCore.Rules/Assets":
+"@crest/rules@workspace:Crest.Rules/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/rules@workspace:src/OrchardCore.Modules/OrchardCore.Rules/Assets"
+  resolution: "@crest/rules@workspace:Crest.Rules/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/security@workspace:src/OrchardCore.Modules/OrchardCore.Security/Assets":
+"@crest/security@workspace:Crest.Security/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/security@workspace:src/OrchardCore.Modules/OrchardCore.Security/Assets"
+  resolution: "@crest/security@workspace:Crest.Security/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/seo@workspace:src/OrchardCore.Modules/OrchardCore.Seo/Assets":
+"@crest/seo@workspace:Crest.Seo/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/seo@workspace:src/OrchardCore.Modules/OrchardCore.Seo/Assets"
+  resolution: "@crest/seo@workspace:Crest.Seo/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/setup@workspace:src/OrchardCore.Modules/OrchardCore.Setup/Assets":
+"@crest/setup@workspace:Crest.Setup/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/setup@workspace:src/OrchardCore.Modules/OrchardCore.Setup/Assets"
+  resolution: "@crest/setup@workspace:Crest.Setup/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/shortcodes@workspace:src/OrchardCore.Modules/OrchardCore.Shortcodes/Assets":
+"@crest/shortcodes@workspace:Crest.Shortcodes/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/shortcodes@workspace:src/OrchardCore.Modules/OrchardCore.Shortcodes/Assets"
+  resolution: "@crest/shortcodes@workspace:Crest.Shortcodes/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/signalr@workspace:src/OrchardCore.Modules/OrchardCore.SignalR/Assets":
+"@crest/signalr@workspace:Crest.SignalR/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/signalr@workspace:src/OrchardCore.Modules/OrchardCore.SignalR/Assets"
+  resolution: "@crest/signalr@workspace:Crest.SignalR/Assets"
   dependencies:
     "@microsoft/signalr": "npm:10.0.0"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/sitemaps@workspace:src/OrchardCore.Modules/OrchardCore.Sitemaps/Assets":
+"@crest/sitemaps@workspace:Crest.Sitemaps/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/sitemaps@workspace:src/OrchardCore.Modules/OrchardCore.Sitemaps/Assets"
+  resolution: "@crest/sitemaps@workspace:Crest.Sitemaps/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/sms@workspace:src/OrchardCore.Modules/OrchardCore.Sms/Assets":
+"@crest/sms@workspace:Crest.Sms/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/sms@workspace:src/OrchardCore.Modules/OrchardCore.Sms/Assets"
+  resolution: "@crest/sms@workspace:Crest.Sms/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/spatial@workspace:src/OrchardCore.Modules/OrchardCore.Spatial/Assets":
+"@crest/spatial@workspace:Crest.Spatial/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/spatial@workspace:src/OrchardCore.Modules/OrchardCore.Spatial/Assets"
+  resolution: "@crest/spatial@workspace:Crest.Spatial/Assets"
   dependencies:
     leaflet: "npm:1.9.4"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/taxonomies@workspace:src/OrchardCore.Modules/OrchardCore.Taxonomies/Assets":
+"@crest/taxonomies@workspace:Crest.Taxonomies/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/taxonomies@workspace:src/OrchardCore.Modules/OrchardCore.Taxonomies/Assets"
+  resolution: "@crest/taxonomies@workspace:Crest.Taxonomies/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/templates@workspace:src/OrchardCore.Modules/OrchardCore.Templates/Assets":
+"@crest/templates@workspace:Crest.Templates/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/templates@workspace:src/OrchardCore.Modules/OrchardCore.Templates/Assets"
+  resolution: "@crest/templates@workspace:Crest.Templates/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/tenants@workspace:src/OrchardCore.Modules/OrchardCore.Tenants/Assets":
+"@crest/tenants@workspace:Crest.Tenants/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/tenants@workspace:src/OrchardCore.Modules/OrchardCore.Tenants/Assets"
+  resolution: "@crest/tenants@workspace:Crest.Tenants/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/theadmin@workspace:src/OrchardCore.Themes/TheAdmin/Assets":
+"@crest/theadmin@workspace:TheAdmin/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/theadmin@workspace:src/OrchardCore.Themes/TheAdmin/Assets"
+  resolution: "@crest/theadmin@workspace:TheAdmin/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     "@types/js-cookie": "npm:^3.0.6"
@@ -3135,85 +3135,74 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orchardcore/theagencytheme@workspace:src/OrchardCore.Themes/TheAgencyTheme/Assets":
+"@crest/theagencytheme@workspace:TheAgencyTheme/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/theagencytheme@workspace:src/OrchardCore.Themes/TheAgencyTheme/Assets"
+  resolution: "@crest/theagencytheme@workspace:TheAgencyTheme/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.2.3"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/theblogtheme@workspace:src/OrchardCore.Themes/TheBlogTheme/Assets":
+"@crest/theblogtheme@workspace:TheBlogTheme/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/theblogtheme@workspace:src/OrchardCore.Themes/TheBlogTheme/Assets"
+  resolution: "@crest/theblogtheme@workspace:TheBlogTheme/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.1.3"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/thecomingsoontheme@workspace:src/OrchardCore.Themes/TheComingSoonTheme/Assets":
+"@crest/thecomingsoontheme@workspace:TheComingSoonTheme/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/thecomingsoontheme@workspace:src/OrchardCore.Themes/TheComingSoonTheme/Assets"
+  resolution: "@crest/thecomingsoontheme@workspace:TheComingSoonTheme/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.1.3"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/themes@workspace:src/OrchardCore.Modules/OrchardCore.Themes/Assets":
+"@crest/themes@workspace:Crest.Themes/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/themes@workspace:src/OrchardCore.Modules/OrchardCore.Themes/Assets"
+  resolution: "@crest/themes@workspace:Crest.Themes/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/thetheme@workspace:src/OrchardCore.Themes/TheTheme/Assets":
+"@crest/thetheme@workspace:TheTheme/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/thetheme@workspace:src/OrchardCore.Themes/TheTheme/Assets"
+  resolution: "@crest/thetheme@workspace:TheTheme/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/title@workspace:src/OrchardCore.Modules/OrchardCore.Title/Assets":
+"@crest/title@workspace:Crest.Title/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/title@workspace:src/OrchardCore.Modules/OrchardCore.Title/Assets"
+  resolution: "@crest/title@workspace:Crest.Title/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/urlrewriting@workspace:src/OrchardCore.Modules/OrchardCore.UrlRewriting/Assets":
+"@crest/urlrewriting@workspace:Crest.UrlRewriting/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/urlrewriting@workspace:src/OrchardCore.Modules/OrchardCore.UrlRewriting/Assets"
+  resolution: "@crest/urlrewriting@workspace:Crest.UrlRewriting/Assets"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/users@workspace:src/OrchardCore.Modules/OrchardCore.Users/Assets":
+"@crest/users@workspace:Crest.Users/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/users@workspace:src/OrchardCore.Modules/OrchardCore.Users/Assets"
+  resolution: "@crest/users@workspace:Crest.Users/Assets"
   dependencies:
     qrcodejs: "npm:^1.0.0"
   languageName: unknown
   linkType: soft
 
-"@orchardcore/widgets@workspace:src/OrchardCore.Modules/OrchardCore.Widgets/Assets":
+"@crest/widgets@workspace:Crest.Widgets/Assets":
   version: 0.0.0-use.local
-  resolution: "@orchardcore/widgets@workspace:src/OrchardCore.Modules/OrchardCore.Widgets/Assets"
-  languageName: unknown
-  linkType: soft
-
-"@orchardcore/workflows@workspace:src/OrchardCore.Modules/OrchardCore.Workflows/Assets":
-  version: 0.0.0-use.local
-  resolution: "@orchardcore/workflows@workspace:src/OrchardCore.Modules/OrchardCore.Workflows/Assets"
-  dependencies:
-    "@popperjs/core": "npm:2.11.8"
-    "@types/bootstrap": "npm:5.2.7"
-    bootstrap: "npm:5.3.8"
-    jsplumb: "npm:2.15.6"
+  resolution: "@crest/widgets@workspace:Crest.Widgets/Assets"
   languageName: unknown
   linkType: soft
 
@@ -13409,9 +13398,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"orchardcore-media-gallery@workspace:*, orchardcore-media-gallery@workspace:src/OrchardCore.Modules/OrchardCore.Media/Assets/media-gallery":
+"crest-media-gallery@workspace:*, crest-media-gallery@workspace:Crest.Media/Assets/media-gallery":
   version: 0.0.0-use.local
-  resolution: "orchardcore-media-gallery@workspace:src/OrchardCore.Modules/OrchardCore.Media/Assets/media-gallery"
+  resolution: "crest-media-gallery@workspace:Crest.Media/Assets/media-gallery"
   dependencies:
     "@fortawesome/fontawesome-svg-core": "npm:^6.4.2"
     "@fortawesome/free-regular-svg-icons": "npm:^6.4.2"
@@ -13454,9 +13443,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"orchardcore-media-picker@workspace:src/OrchardCore.Modules/OrchardCore.Media/Assets/media-picker":
+"crest-media-picker@workspace:Crest.Media/Assets/media-picker":
   version: 0.0.0-use.local
-  resolution: "orchardcore-media-picker@workspace:src/OrchardCore.Modules/OrchardCore.Media/Assets/media-picker"
+  resolution: "crest-media-picker@workspace:Crest.Media/Assets/media-picker"
   dependencies:
     "@fortawesome/fontawesome-svg-core": "npm:^6.4.2"
     "@fortawesome/free-regular-svg-icons": "npm:^6.4.2"
@@ -15730,9 +15719,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"startbootstrap-agency@workspace:src/OrchardCore.Themes/TheAgencyTheme/Assets/TheAgencyTheme":
+"startbootstrap-agency@workspace:TheAgencyTheme/Assets/TheAgencyTheme":
   version: 0.0.0-use.local
-  resolution: "startbootstrap-agency@workspace:src/OrchardCore.Themes/TheAgencyTheme/Assets/TheAgencyTheme"
+  resolution: "startbootstrap-agency@workspace:TheAgencyTheme/Assets/TheAgencyTheme"
   dependencies:
     "@popperjs/core": "npm:^2.11.8"
     autoprefixer: "npm:10.4.14"
@@ -15749,9 +15738,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"startbootstrap-clean-blog@workspace:src/OrchardCore.Themes/TheBlogTheme/Assets/TheBlogTheme":
+"startbootstrap-clean-blog@workspace:TheBlogTheme/Assets/TheBlogTheme":
   version: 0.0.0-use.local
-  resolution: "startbootstrap-clean-blog@workspace:src/OrchardCore.Themes/TheBlogTheme/Assets/TheBlogTheme"
+  resolution: "startbootstrap-clean-blog@workspace:TheBlogTheme/Assets/TheBlogTheme"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     autoprefixer: "npm:10.4.4"
@@ -15768,9 +15757,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"startbootstrap-coming-soon@workspace:src/OrchardCore.Themes/TheComingSoonTheme/Assets/TheComingSoonTheme":
+"startbootstrap-coming-soon@workspace:TheComingSoonTheme/Assets/TheComingSoonTheme":
   version: 0.0.0-use.local
-  resolution: "startbootstrap-coming-soon@workspace:src/OrchardCore.Themes/TheComingSoonTheme/Assets/TheComingSoonTheme"
+  resolution: "startbootstrap-coming-soon@workspace:TheComingSoonTheme/Assets/TheComingSoonTheme"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     autoprefixer: "npm:10.4.4"

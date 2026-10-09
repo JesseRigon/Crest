@@ -1,18 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Theme.Targets\OrchardCore.Theme.Targets.props" />
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Theme.Targets\Crest.Theme.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.props" />
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <OrchardCoreCompatibilityVersion>4.0.0</OrchardCoreCompatibilityVersion>
+    <PlatformCompatibilityVersion>4.0.0</PlatformCompatibilityVersion>
     <CrestSecurityPatch>0</CrestSecurityPatch>
     <CrestBugPatch>0</CrestBugPatch>
-    <CrestVersion>$(OrchardCoreCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
-    <VersionPrefix>$(OrchardCoreCompatibilityVersion)</VersionPrefix>
-    <PackageVersion>$(OrchardCoreCompatibilityVersion)</PackageVersion>
+    <CrestVersion>$(PlatformCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
+    <VersionPrefix>$(PlatformCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(PlatformCompatibilityVersion)</PackageVersion>
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <FileVersion>4.0.0.0</FileVersion>
     <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
@@ -43,17 +43,17 @@
     <!-- Theme.Targets, not Module.Targets: sets ModuleType=Theme so IsTheme() is true at
          runtime and ThemeViewLocationExpanderProvider contributes this theme's Views/
          paths. See the same note in Crest.LegacyFrame.csproj. -->
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Theme.Targets\OrchardCore.Theme.Targets.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Admin.Abstractions\OrchardCore.Admin.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.ContentManagement\OrchardCore.ContentManagement.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.ResourceManagement\OrchardCore.ResourceManagement.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.DisplayManagement\OrchardCore.DisplayManagement.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Users.Abstractions\OrchardCore.Users.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.Users\OrchardCore.Users.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.Menu\OrchardCore.Menu.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Email.Abstractions\OrchardCore.Email.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Setup.Abstractions\OrchardCore.Setup.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.Setup\OrchardCore.Setup.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Theme.Targets\Crest.Theme.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.ContentManagement\Crest.ContentManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Users.Abstractions\Crest.Users.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Users\Crest.Users.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Menu\Crest.Menu.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Email.Abstractions\Crest.Email.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Setup.Abstractions\Crest.Setup.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Setup\Crest.Setup.csproj" />
   </ItemGroup>
 
   <!-- Crest.Server is the single Blazor Web App host (API + SSR) for every Crest theme -
@@ -79,7 +79,4 @@
     <EmbeddedResource Remove="wwwroot\package.json" />
     <EmbeddedResource Remove="wwwroot\post.html" />
   </ItemGroup>
-
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
-  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Theme.Targets\OrchardCore.Theme.Targets.targets" />
 </Project>

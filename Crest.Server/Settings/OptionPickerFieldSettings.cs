@@ -1,4 +1,4 @@
-using OrchardCore.ContentManagement.Metadata.Settings;
+using Crest.ContentManagement.Metadata.Settings;
 
 namespace Crest.Settings;
 

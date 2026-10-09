@@ -1,14 +1,14 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
-using OrchardCore.Entities;
-using OrchardCore.Users;
-using OrchardCore.Users.Models;
+using Crest.Entities;
+using Crest.Users;
+using Crest.Users.Models;
 using Crest.ViewModels;
 
 namespace Crest.Services;
 
 /// <summary>
-/// The user's own admin-menu preferences, on User.Properties the way OrchardCore.Users.
+/// The user's own admin-menu preferences, on User.Properties the way Crest.Users.
 /// Localization keeps UserLocalizationSettings there (docs/user-settings.md sketches
 /// exactly this shape). Nothing in it is tenant-wide.
 /// </summary>

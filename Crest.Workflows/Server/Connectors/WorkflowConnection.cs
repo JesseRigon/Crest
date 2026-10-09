@@ -1,4 +1,4 @@
-using OrchardCore.Data.Documents;
+using Crest.Data.Documents;
 
 namespace Crest.Workflows.Connectors;
 
@@ -32,7 +32,7 @@ public sealed class WorkflowConnection
 /// <summary>The tokens an authorization-code connection holds.</summary>
 public sealed record WorkflowConnectionTokens(string AccessToken, string? RefreshToken, DateTime ExpiresUtc);
 
-/// <summary>All of a tenant's connections: one document, few entries, cached by Orchard.</summary>
+/// <summary>All of a tenant's connections: one document, few entries, cached by Crest.</summary>
 public sealed class WorkflowConnectionsDocument : Document
 {
     public Dictionary<string, WorkflowConnection> Connections { get; set; } = new(StringComparer.OrdinalIgnoreCase);

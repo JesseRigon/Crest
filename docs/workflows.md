@@ -9,7 +9,7 @@ the flowchart of a run's life is [workflows.mmd](workflows.mmd).
 
 `Crest.Workflows` is the tenant's workflow service. It is a vendored fork of Elsa 3 (the
 engine: activities, flowcharts, bookmarks, bursts, the designer) installed as the Orchard
-workflow service by override: the stock `OrchardCore.Workflows` feature stays enabled so
+workflow service by override: the stock `Crest.Workflows.Platform` feature stays enabled so
 every Orchard module's events and tasks keep registering, and Crest replaces the services
 behind it. The engine's own HTTP API lives at `crest-workflows/api` behind the tenant
 cookie, Crest's antiforgery header and its permissions; the designer (the forked
@@ -60,7 +60,7 @@ own registry service.
         │  engine API (FastEndpoints) at ~/crest-workflows/api, tenant cookie + antiforgery,
         │  Orchard permissions mapped onto the engine's per-endpoint grants
         ▼
- Crest.Workflows  (the fifth core registry; depends on feature "OrchardCore.Workflows", overrides its services)
+ Crest.Workflows  (the fifth core registry; depends on feature "Crest.Workflows", overrides its services)
  ├─ engine/   vendored elsa-core 3.6.0 (22 projects, renamed Crest.Workflows.*)
  ├─ Server/   the Orchard integration: stores on YesSql per shell, definitions as content items,
  │            the API gate, the registry, ownership, access, connectors, approvals, stock adapters
@@ -101,16 +101,16 @@ antiforgery access) are Crest features any module can use.
 
 ## Engine
 
-**The override.** `Crest.Workflows` depends on the stock `OrchardCore.Workflows` feature
+**The override.** `Crest.Workflows` depends on the stock `Crest.Workflows.Platform` feature
 so the platform modules' workflow startups (gated on that feature id) keep registering their
 activities and event handlers, and `CoreStartup` (`Order = int.MaxValue`, last by feature
-dependency and then by order) re-registers `IWorkflowManager` as `OrchardWorkflowManager`
+dependency and then by order) re-registers `IWorkflowManager` as `PlatformWorkflowManager`
 (stimuli into the engine) and removes the stock admin menu. Nothing executes on the stock
 engine; its evaluators stay registered because stock activities resolve them. The platform's
 modules call exactly one thing, `IWorkflowManager.TriggerEventAsync`, and bind to
-`OrchardCore.Workflows.Abstractions`, not to the stock module - which is why the override
+`Crest.Workflows.Platform.Abstractions`, not to the stock module - which is why the override
 needs no platform change. Since the hard fork, the stock workflows module can instead be
-changed or removed in `src/` when it gets in the way.
+changed or removed in the platform when it gets in the way.
 
 **Tenant citizenship.** One engine per shell: every engine service, store and hosted service
 lives in the tenant container. Definitions are `WorkflowDefinition` content items
@@ -134,7 +134,8 @@ mid-run: they flush, and the burst's shell scope commits ("Units of work" below)
 
 **Fork changes worth knowing** (engine): `FindWorkflowInput<T>` (default when a key is
 absent - `GetWorkflowInput` throws, which faulted flows started from the API, a timer or a
-webhook); `LocalScheduler : IDisposable`. Designer: Radzen 11 and ASP.NET 10.0.9 (Crest's
+webhook); `LocalScheduler : IDisposable`; `BookmarkQueueWorker.Stop()` tolerates a worker
+that never started (a tenant deactivated after a failed setup). Designer: Radzen 11 and ASP.NET 10.0.9 (Crest's
 versions), the ILocalizer clash aliased, `data-testid` on Save/Publish/Run, the ClientLib
 webpack bundles built by `designer/Directory.Build.targets` when missing (gitignored).
 
@@ -314,9 +315,9 @@ A flow starts from a **trigger** node, or by hand, or as a **hook attachment**, 
   `Skipped` port), an optional required permission for the acting user (otherwise `Denied`).
   The payload and the acting user arrive as workflow input (`Payload`, `Actor`,
   `TriggerKey`, `StimulusId`).
-- **Stock Orchard events** (`OrchardEvent`): every event an Orchard module registers
+- **Stock Orchard events** (`PlatformEvent`): every event an Orchard module registers
   (content published, user logged in, ...) as a trigger with its stock filter; **stock
-  tasks** run through `OrchardTask` (inside the unit) or `OrchardExternalTask` (e-mail, SMS,
+  tasks** run through `PlatformTask` (inside the unit) or `PlatformExternalTask` (e-mail, SMS,
   notifications, HTTP - after the unit commits, see below).
 - **Content triggers** (`Crest.Workflows.Contents`): created, published, updated,
   deleted, ... with a content-type filter.
@@ -338,12 +339,12 @@ correlated to an object. Nothing is raised for a unit that failed. Every stimulu
 
 Every activity the enabled Orchard modules register through `WorkflowOptions` (Email, Users,
 Roles, Notifications, Forms, Contents, ...) is in the palette unchanged:
-`StockActivityProvider` lists each as `orchard.<Name>` on the `OrchardEvent` (events),
-`OrchardTask` (tasks inside the unit) or `OrchardExternalTask` (tasks with an effect outside
+`StockActivityProvider` lists each as `platform.<Name>` on the `PlatformEvent` (events),
+`PlatformTask` (tasks inside the unit) or `PlatformExternalTask` (tasks with an effect outside
 the database - `StockActivityRunner.External`: e-mail, SMS, notifications, HTTP - run as a
 background activity after the unit commits) adapter with the name preset, the stock category,
-`IsTrigger` for events; each adapter refuses the other's names. `OrchardWorkflowManager` turns `TriggerEventAsync(name, input, correlationId)` into
-a stimulus keyed by event name; `OrchardEvent` instantiates the stock event with the node's
+`IsTrigger` for events; each adapter refuses the other's names. `PlatformWorkflowManager` turns `TriggerEventAsync(name, input, correlationId)` into
+a stimulus keyed by event name; `PlatformEvent` instantiates the stock event with the node's
 properties and evaluates its own `CanExecute` (a non-matching content type ends on Skipped,
 the stock contract); `StockActivityRunner` runs a stock task with the two stock contexts
 built from the engine's state, mapping outcomes to ports. `StockActivityRunner.EngineNative`
@@ -496,7 +497,7 @@ background jobs share. `DurableBackgroundActivityScheduler` (replaces the engine
 idempotency key), `ShellScopedBackgroundActivityInvoker` (the engine's invoker with the
 hand-back resumed directly; engine edit: `ResumeWorkflowAsync` virtual, `BuildResumeOptionsAsync`
 factored out), recovery at tenant activation. `ConnectorActivityBase` and
-`OrchardExternalTask` are `RunAsynchronously`; `OrchardTask` refuses external task names;
+`PlatformExternalTask` are `RunAsynchronously`; `PlatformTask` refuses external task names;
 `RaiseTrigger` is not an `IUnitBoundary`. `WorkflowHookRunner` (`IWorkflowHookRunner` in Domain) runs a slot from a
 flow or a service; `WorkflowHookFailedException` → 409 through `WorkflowHookFailedExceptionFilter`
 for any module's controller; a failed `WorkflowUnitOfWork` cancels its own session through a
@@ -726,7 +727,7 @@ shipped. The checks Crest.Workflows carries:
 | Check | Covers |
 | --- | --- |
 | `workflows-api` | engine API round-trip (save, publish, execute, journal), antiforgery 400, limited role 403, anonymous 401 |
-| `workflows-orchard-activities` | stock `ContentPublishedEvent` (filtered) starts a flow; stock `CreateContentTask` with stock Liquid |
+| `workflows-platform-activities` | stock `ContentPublishedEvent` (filtered) starts a flow; stock `CreateContentTask` with stock Liquid |
 | `workflows-units` | a failed required hook attachment faults the host and discards its writes; a healthy one commits with child instances; best-effort failure journaled; long-running flows refused at attach and at republish; a trigger raised in a failed unit never fires |
 | `workflows-approvals` | request, queue, decide, 403/409; the pending API shows the parked flow for its object |
 | `workflows-designer` | the real UI: open, add node, connect, save, publish, run, journal; lazy download assertion; Connections and Approvals pages |
@@ -794,12 +795,18 @@ the design, and the open work.
 
 Built today: see [docs/workflows.md › Units of work](workflows.md#units-of-work-how-a-run-commits).
 
-- [ ] **Merge the stock workflows module into Crest.Workflows** (ruling 2026-10-09, part of
-  the platform rename). `OrchardCore.Workflows` and its abstractions stop being a separate
-  module: the activities, events, evaluators and the `IWorkflowManager` seam Crest's
-  override uses move into Crest.Workflows, the duplicate permissions (`Permissions` in both)
-  become one set, and the stock engine, admin UI and menu that Crest already overrides are
-  deleted.
+- [x] **Merge the stock workflows module into Crest.Workflows** (ruling 2026-10-09, done with
+  the platform rename). The stock module is gone. Its contract, which platform modules
+  implement, is the library `Crest.Workflows.Platform.Abstractions` (activity base classes,
+  `AddActivity`, `IActivityLibrary`, the expression and script evaluator interfaces, and
+  `ManageWorkflows`). What the engine runs it with lives in Crest.Workflows under
+  `Server/Platform/Runtime` (`PlatformActivitiesStartup`): the activity library, the Liquid and
+  JavaScript evaluators, the execution-context handlers, and three general activities (Notify,
+  Log, HTTP request). The stock engine, stores, indexes, admin UI, designer, deployment,
+  trimming, user tasks, timers, HTTP events and control-flow activities were deleted, because
+  the engine has its own. Platform modules' workflow startups now require the `Crest.Workflows`
+  feature. Still to do: the platform modules' activity display drivers and views (for the old
+  designer) are unused.
 - [ ] **Two queues, two guarantees (the full way; designed, built after the above, on engine
   parts - see the audit).** The *write side*: no two units touching one object interleave -
   first through the engine's `IDistributedLockProvider` keyed by correlation id around a

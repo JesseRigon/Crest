@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(CommonTargetFrameworks)</TargetFrameworks>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Crest.Theme.Targets\Crest.Theme.Targets.csproj" />
+    <ProjectReference Include="..\..\..\..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+  </ItemGroup>
+
+</Project>

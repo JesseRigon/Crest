@@ -1,14 +1,14 @@
-using OrchardCore.DisplayManagement.Manifest;
-using OrchardCore.Modules.Manifest;
+using Crest.DisplayManagement.Manifest;
+using Crest.Modules.Manifest;
 
 [assembly: Theme(
     Id = "Crest.LegacyFrame",
-    Name = "Orchard Crest UI Framework Legacy Frame",
+    Name = "Crest Crest UI Framework Legacy Frame",
     BaseTheme = "TheAdmin",
-    Author = "Orchard Crest UI Framework",
+    Author = "Crest Crest UI Framework",
     Website = "https://github.com/Crest/Orchard-Crest",
     Version = "4.0.0.0.0",
-    Description = "A stripped admin theme for rendering standard Orchard admin pages inside Orchard Crest UI Framework iframes.",
+    Description = "A stripped admin theme for rendering standard Crest admin pages inside Crest Crest UI Framework iframes.",
     Tags = new[] { ManifestConstants.AdminTag, "crest", "legacy-frame", "hidden" },
     // Always enabled rather than pulled in via Crest's Dependencies: a module
     // can never hard-depend on a theme without a load-order cycle, because

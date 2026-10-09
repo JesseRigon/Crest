@@ -3,7 +3,7 @@
 // render time - keyed on the item's ORIGINAL caption and scoped to the admin menu the node
 // belongs to.
 //
-// The store is read through GetStrings, the same JSON endpoint Orchard's own translations
+// The store is read through GetStrings, the same JSON endpoint Crest's own translations
 // editor (a Vue app) loads its values from. Nothing HTML-based works here: /Admin pages render
 // inside the Crest shell whose sidebar shows the renamed caption as text, the editor itself
 // sits in the legacy-frame iframe outside page.content(), and its values only arrive
@@ -11,7 +11,7 @@
 //
 // Since provider items are imported as admin menu nodes ("Primary Navigation"), promotion works
 // for them too: the imported node supplies the MenuName that scopes the IDataLocalizer context.
-// The store is verified through Orchard's own Data Localization editor (/Admin/DataLocalization),
+// The store is verified through Crest's own Data Localization editor (/Admin/DataLocalization),
 // which renders directly from TranslationsDocument and knows nothing about the Crest layout.
 const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
 
@@ -47,7 +47,7 @@ module.exports = async function run(page, ctx) {
     }, { nodeId, text, antiforgery });
   }
 
-  // The translation store, read through the same JSON endpoint Orchard's translations editor
+  // The translation store, read through the same JSON endpoint Crest's translations editor
   // loads its values from.
   async function storeHtml() {
     return page.evaluate(async (baseUrl) => {

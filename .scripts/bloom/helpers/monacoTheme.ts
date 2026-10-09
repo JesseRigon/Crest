@@ -2,7 +2,7 @@ import type * as Monaco from "monaco-editor";
 
 declare global {
     interface Window {
-        __orchardCoreMonacoThemeSyncStarted?: boolean;
+        __platformMonacoThemeSyncStarted?: boolean;
     }
 }
 
@@ -19,8 +19,8 @@ const applyTheme = (monacoInstance: typeof Monaco) => {
 // shared across them) covers however many Monaco editors end up on one page, instead of each
 // extracted view setting up its own redundant MutationObserver watching the same attribute.
 const syncMonacoTheme = (monacoInstance: typeof Monaco) => {
-    if (!window.__orchardCoreMonacoThemeSyncStarted) {
-        window.__orchardCoreMonacoThemeSyncStarted = true;
+    if (!window.__platformMonacoThemeSyncStarted) {
+        window.__platformMonacoThemeSyncStarted = true;
         new MutationObserver(() => applyTheme(monacoInstance)).observe(document.documentElement, {
             attributes: true,
         });

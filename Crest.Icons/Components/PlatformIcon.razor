@@ -1,0 +1,174 @@
+@namespace Crest.Icons.Components
+@using Microsoft.AspNetCore.Components
+@using Crest.Icons
+@inject ClientIconRegistry ClientIcons
+
+@if (!string.IsNullOrWhiteSpace(_effectiveSvgMarkup))
+{
+    <span class="@CssClass"
+          style="@CssStyle"
+          role="@Role"
+          aria-label="@AriaLabel"
+          aria-hidden="@AriaHidden"
+          data-icon-library="@_effectiveLibrary"
+          data-icon-version="@_effectiveVersion"
+          data-icon-name="@_effectiveName"
+          @attributes="AdditionalAttributes">
+        @((MarkupString)_effectiveSvgMarkup)
+    </span>
+}
+
+@code {
+    [Parameter]
+    public string? IconKey { get; set; }
+
+    [Parameter]
+    public string? Name { get; set; }
+
+    [Parameter]
+    public string? Library { get; set; }
+
+    [Parameter]
+    public string? Version { get; set; }
+
+    [Parameter]
+    public string? SvgMarkup { get; set; }
+
+    [Parameter]
+    public string? IconClass { get; set; }
+
+    [Parameter]
+    public string? Alt { get; set; }
+
+    [Parameter]
+    public string? Size { get; set; }
+
+    [Parameter]
+    public string? BoxSize { get; set; }
+
+    [Parameter]
+    public string? Color { get; set; }
+
+    [Parameter]
+    public string? Opacity { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private IconRenderState? _renderedState;
+    private bool _shouldRender = true;
+    private string? _effectiveLibrary;
+    private string? _effectiveVersion;
+    private string? _effectiveName;
+    private string? _effectiveSvgMarkup;
+
+    protected override void OnParametersSet()
+    {
+        var state = new IconRenderState(
+            IconKey,
+            Name,
+            Library,
+            Version,
+            SvgMarkup,
+            IconClass,
+            Alt,
+            Size,
+            BoxSize,
+            Color,
+            Opacity,
+            Class,
+            Style,
+            AdditionalAttributes,
+            string.IsNullOrWhiteSpace(SvgMarkup) ? ClientIcons.Version : 0);
+
+        _shouldRender = !state.Equals(_renderedState);
+        if (!_shouldRender)
+        {
+            return;
+        }
+
+        _renderedState = state;
+        var resolved = ResolveIcon();
+        _effectiveLibrary = !string.IsNullOrWhiteSpace(SvgMarkup) ? Library : resolved?.Library ?? Library;
+        _effectiveVersion = !string.IsNullOrWhiteSpace(SvgMarkup) ? Version : resolved?.Version ?? Version;
+        _effectiveName = !string.IsNullOrWhiteSpace(SvgMarkup) ? Name : resolved?.Name ?? Name;
+        _effectiveSvgMarkup = !string.IsNullOrWhiteSpace(SvgMarkup) ? SvgMarkup : resolved?.SvgMarkup;
+    }
+
+    protected override bool ShouldRender() => _shouldRender;
+
+    private ResolvedIcon? ResolveIcon()
+    {
+        if (!string.IsNullOrWhiteSpace(IconKey) && ClientIcons.TryResolve(IconKey, out var packedIcon))
+        {
+            return packedIcon;
+        }
+
+        return null;
+    }
+
+    private string CssClass => string.Join(" ", new[] { "platform-icon", Class }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private string CssStyle
+    {
+        get
+        {
+            var styles = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(Size))
+            {
+                styles.Add($"--platform-icon-size: {Size}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(BoxSize))
+            {
+                styles.Add($"--platform-icon-box-size: {BoxSize}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(Color))
+            {
+                styles.Add($"--platform-icon-color: {Color}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(Opacity))
+            {
+                styles.Add($"--platform-icon-opacity: {Opacity}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(Style))
+            {
+                styles.Add(Style.Trim().TrimEnd(';'));
+            }
+
+            return string.Join("; ", styles);
+        }
+    }
+
+    private bool HasAlt => !string.IsNullOrWhiteSpace(Alt);
+    private string? Role => HasAlt ? "img" : null;
+    private string? AriaLabel => HasAlt ? Alt : null;
+    private string? AriaHidden => HasAlt ? null : "true";
+
+    private sealed record IconRenderState(
+        string? IconKey,
+        string? Name,
+        string? Library,
+        string? Version,
+        string? SvgMarkup,
+        string? IconClass,
+        string? Alt,
+        string? Size,
+        string? BoxSize,
+        string? Color,
+        string? Opacity,
+        string? Class,
+        string? Style,
+        IReadOnlyDictionary<string, object>? AdditionalAttributes,
+        long RegistryVersion);
+}

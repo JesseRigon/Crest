@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.ContentManagement.Metadata;
-using OrchardCore.ContentTypes.Events;
-using OrchardCore.Environment.Shell.Scope;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentTypes.Events;
+using Crest.Environment.Shell.Scope;
 
 namespace Crest.Services;
 
@@ -18,7 +18,7 @@ namespace Crest.Services;
 /// </remarks>
 public sealed class CrestContentTypeTranslationCleanup : IContentDefinitionEventHandler
 {
-    private const string ContentTypesContext = OrchardCore.ContentTypes.DataLocalizationContext.ContentType;
+    private const string ContentTypesContext = Crest.ContentTypes.DataLocalizationContext.ContentType;
 
     public void ContentTypeRemoved(ContentTypeRemovedContext context)
     {

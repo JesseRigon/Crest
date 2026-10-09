@@ -1,0 +1,10 @@
+@using Crest.ReCaptcha
+@model Crest.ReCaptcha.Forms.ReCaptchaPartViewModel
+@if (Model.SettingsAreConfigured)
+{
+    <captcha mode="AlwaysShow" />
+}
+else
+{
+    <div class="alert alert-warning">@T["ReCaptcha settings are not configured."]</div>
+}

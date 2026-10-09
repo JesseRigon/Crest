@@ -1,10 +1,10 @@
 namespace Crest.Global;
 
 /// <summary>
-/// Where the tenant-less store lives. Configured under <c>OrchardCore:Crest_Global</c>
-/// with the same four fields Orchard's own <c>OrchardCore_Shells_Database</c> takes. When
+/// Where the tenant-less store lives. Configured under <c>Crest:Crest_Global</c>
+/// with the same four fields Crest's own <c>Crest_Shells_Database</c> takes. When
 /// no section is present the default is a SQLite file beside the tenants folder, which is
-/// exactly what a per-tenant SQLite Orchard install would expect; a Postgres/SQL Server
+/// exactly what a per-tenant SQLite Crest install would expect; a Postgres/SQL Server
 /// operator sets the provider and connection string here, the same way they would for
 /// the shells database.
 /// </summary>

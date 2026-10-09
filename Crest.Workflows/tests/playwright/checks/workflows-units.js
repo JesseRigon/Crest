@@ -60,7 +60,7 @@ module.exports = async function run(page, ctx) {
   const writeLine = (id, text) => ({ type: 'Crest.Workflows.WriteLine', id, version: 1, text: literal(text) });
   const failUnit = (id, reason) => ({ type: 'Crest.Workflows.FailUnit', id, version: 1, reason: literal(reason) });
   const hook = (id, slot = 'flow.hook') => ({ type: 'Crest.Workflows.Hook', id, version: 1, slot: literal(slot) });
-  const createOrg = (id, title) => ({ type: 'Crest.Workflows.OrchardTask', id, version: 1, activityName: literal('CreateContentTask'), propertiesJson: literal(JSON.stringify({ ContentType: 'Organization', Publish: true, ContentProperties: { Expression: JSON.stringify({ DisplayText: title }) } })) });
+  const createOrg = (id, title) => ({ type: 'Crest.Workflows.PlatformTask', id, version: 1, activityName: literal('CreateContentTask'), propertiesJson: literal(JSON.stringify({ ContentType: 'Organization', Publish: true, ContentProperties: { Expression: JSON.stringify({ DisplayText: title }) } })) });
   async function orgByTitle(title) {
     const response = await call('GET', `${content}?contentType=Organization&pageSize=100&search=${encodeURIComponent(title)}`);
     return (response.json?.items || []).find(i => i.displayText === title) || null;

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Crest-owned test entrypoint. Host repos (a product host, OrchardCore.Crest.Host) delegate
+# Crest-owned test entrypoint. Host repos (a product host, Crest.Crest.Host) delegate
 # here instead of walking Crest's internal subproject layout
 # themselves - this script is the one place that knows that layout.
 #

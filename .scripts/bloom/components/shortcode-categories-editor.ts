@@ -1,6 +1,6 @@
 import { getTranslations, setTranslations } from "../helpers/localizations";
 
-// OrchardCore.Shortcodes' Create.cshtml / Edit.cshtml Categories field: a static-options taggable
+// Crest.Shortcodes' Create.cshtml / Edit.cshtml Categories field: a static-options taggable
 // vue-multiselect, structurally close to multitextfield-picker.ts but adds its own `addCategory`
 // (push a freshly-typed tag into both the options list and the current selection) and exposes a
 // `getSelectedCategories()` method the surrounding form reads via a hidden input's
