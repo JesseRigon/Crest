@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+
+    <!-- NuGet properties-->
+    <Title>OrchardCore FileStorage AzureBlob</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Implementation for AzureBlob FileStorage.</Description>
+    <PackageTags>$(PackageTags) OrchardCoreFramework Azure</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" />
+    <PackageReference Include="Azure.Storage.Files.DataLake" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OrchardCore.Abstractions\OrchardCore.Abstractions.csproj" />
+    <ProjectReference Include="..\OrchardCore.FileStorage.Abstractions\OrchardCore.FileStorage.Abstractions.csproj" />
+    <ProjectReference Include="..\OrchardCore.Liquid.Abstractions\OrchardCore.Liquid.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

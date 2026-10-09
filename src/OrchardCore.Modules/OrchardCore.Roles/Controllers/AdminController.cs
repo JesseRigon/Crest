@@ -1,0 +1,517 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Localization;
+using Microsoft.Extensions.Localization;
+using OrchardCore.Admin;
+using OrchardCore.Data.Documents;
+using OrchardCore.DisplayManagement.Notify;
+using OrchardCore.Environment.Extensions;
+using OrchardCore.Environment.Extensions.Features;
+using OrchardCore.Environment.Shell;
+using OrchardCore.Roles.ViewModels;
+using OrchardCore.Security;
+using OrchardCore.Security.Permissions;
+using OrchardCore.Security.Services;
+
+namespace OrchardCore.Roles.Controllers;
+
+[Admin("Roles/{action}/{id?}", "Roles{action}")]
+public sealed class AdminController : Controller
+{
+    private readonly IDocumentStore _documentStore;
+    private readonly RoleManager<IRole> _roleManager;
+    private readonly IAuthorizationService _authorizationService;
+    private readonly IPermissionGrantingService _permissionGrantingService;
+    private readonly IEnumerable<IPermissionProvider> _permissionProviders;
+    private readonly ITypeFeatureProvider _typeFeatureProvider;
+    private readonly IShellFeaturesManager _shellFeaturesManager;
+    private readonly IRoleService _roleService;
+    private readonly INotifier _notifier;
+
+    internal readonly IStringLocalizer S;
+    internal readonly IHtmlLocalizer H;
+
+    public AdminController(
+        IDocumentStore documentStore,
+        RoleManager<IRole> roleManager,
+        IAuthorizationService authorizationService,
+        IPermissionGrantingService permissionGrantingService,
+        IEnumerable<IPermissionProvider> permissionProviders,
+        ITypeFeatureProvider typeFeatureProvider,
+        IShellFeaturesManager shellFeaturesManager,
+        IRoleService roleService,
+        INotifier notifier,
+        IStringLocalizer<AdminController> stringLocalizer,
+        IHtmlLocalizer<AdminController> htmlLocalizer)
+    {
+        _documentStore = documentStore;
+        _roleManager = roleManager;
+        _authorizationService = authorizationService;
+        _permissionGrantingService = permissionGrantingService;
+        _permissionProviders = permissionProviders;
+        _typeFeatureProvider = typeFeatureProvider;
+        _shellFeaturesManager = shellFeaturesManager;
+        _roleService = roleService;
+        _notifier = notifier;
+        S = stringLocalizer;
+        H = htmlLocalizer;
+    }
+
+    public async Task<ActionResult> Index()
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, RolesPermissions.ViewRoles))
+        {
+            return Forbid();
+        }
+
+        var roles = await _roleService.GetRolesAsync();
+
+        var model = new RolesViewModel()
+        {
+            RoleEntries = [],
+        };
+
+        foreach (var role in roles.OrderBy(r => r.RoleName))
+        {
+            var entry = new RoleEntry
+            {
+                Name = role.RoleName,
+                Description = role.RoleDescription,
+                IsSystemRole = await _roleService.IsSystemRoleAsync(role.RoleName),
+            };
+
+            if (entry.IsSystemRole)
+            {
+                entry.IsAdminRole = await _roleService.IsAdminRoleAsync(role.RoleName);
+            }
+
+            model.RoleEntries.Add(entry);
+        }
+
+        return View(model);
+    }
+
+    public async Task<IActionResult> Create()
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, RolesPermissions.ManageRoles))
+        {
+            return Forbid();
+        }
+
+        var model = new CreateRoleViewModel();
+
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(CreateRoleViewModel model)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, RolesPermissions.ManageRoles))
+        {
+            return Forbid();
+        }
+
+        if (ModelState.IsValid && await ValidateRoleNameAsync(model.RoleName))
+        {
+            var role = new Role
+            {
+                RoleName = model.RoleName,
+                RoleDescription = model.RoleDescription,
+            };
+
+            var result = await _roleManager.CreateAsync(role);
+
+            if (result.Succeeded)
+            {
+                await _notifier.SuccessAsync(H["Role created successfully."]);
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _documentStore.CancelAsync();
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+        }
+
+        // If we got this far, something failed, redisplay form.
+        return View(model);
+    }
+
+    public async Task<IActionResult> Edit(string id)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, RolesPermissions.ManageRoles))
+        {
+            return Forbid();
+        }
+
+        if (await _roleManager.FindByIdAsync(id) is not Role role)
+        {
+            return NotFound();
+        }
+
+        var model = new EditRoleViewModel
+        {
+            Role = role,
+            RoleDescription = role.RoleDescription,
+            Permissions = await GetRolePermissionsViewModelAsync(role, canEdit: true),
+        };
+
+        return View(model);
+    }
+
+    [HttpPost, ActionName(nameof(Edit))]
+    public async Task<IActionResult> EditPost(string id, string roleDescription)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, RolesPermissions.ManageRoles))
+        {
+            return Forbid();
+        }
+
+        if (await _roleManager.FindByIdAsync(id) is not Role role)
+        {
+            return NotFound();
+        }
+
+        role.RoleDescription = roleDescription;
+
+        if (!await _roleService.IsAdminRoleAsync(role.RoleName))
+        {
+            role.RoleClaims.RemoveAll(c => c.ClaimType == Permission.ClaimType);
+            role.RoleClaims.AddRange(ExtractSelectedPermissions());
+        }
+
+        await _roleManager.UpdateAsync(role);
+
+        await _notifier.SuccessAsync(H["Role updated successfully."]);
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> Display(string id)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, RolesPermissions.ViewRoles))
+        {
+            return Forbid();
+        }
+
+        if (await _roleManager.FindByIdAsync(id) is not Role role)
+        {
+            return NotFound();
+        }
+
+        var model = new DisplayRoleViewModel
+        {
+            Role = role,
+            Permissions = await GetRolePermissionsViewModelAsync(role, canEdit: false),
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Delete(string id)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, RolesPermissions.ManageRoles))
+        {
+            return Forbid();
+        }
+
+        var role = await _roleManager.FindByIdAsync(id);
+
+        if (role == null)
+        {
+            return NotFound();
+        }
+
+        if (await _roleService.IsSystemRoleAsync(role.RoleName))
+        {
+            await _notifier.ErrorAsync(H["System roles cannot be deleted."]);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _roleManager.DeleteAsync(role);
+
+        if (result.Succeeded)
+        {
+            await _notifier.SuccessAsync(H["Role deleted successfully."]);
+        }
+        else
+        {
+            await _documentStore.CancelAsync();
+
+            var errorDescriptions = result.Errors.Select(error => error.Description).ToArray();
+            if (errorDescriptions.Length > 0)
+            {
+                await _notifier.ErrorAsync(H.Plural(errorDescriptions.Length, "Could not delete this role. {1}", "Could not delete this role. Errors: {1}", string.Join(", ", errorDescriptions)));
+            }
+            else
+            {
+                await _notifier.ErrorAsync(H["Could not delete this role."]);
+            }
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<IDictionary<PermissionGroupKey, IEnumerable<Permission>>> GetInstalledPermissionsAsync()
+    {
+        var installedPermissions = new Dictionary<PermissionGroupKey, IEnumerable<Permission>>();
+        var enabledFeatures = await _shellFeaturesManager.GetEnabledFeaturesAsync();
+
+        foreach (var permissionProvider in _permissionProviders)
+        {
+            // Two features could use the same permission.
+            var feature = _typeFeatureProvider
+                .GetFeaturesForDependency(permissionProvider.GetType())
+                .LastOrDefault(feature => enabledFeatures.Any(enabledFeature => feature.Id == enabledFeature.Id));
+
+            var permissions = await permissionProvider.GetPermissionsAsync();
+
+            foreach (var permission in permissions)
+            {
+                var groupKey = GetGroupKey(feature, permission.Category);
+
+                if (installedPermissions.TryGetValue(groupKey, out var value))
+                {
+                    installedPermissions[groupKey] = value.Concat(new[] { permission });
+
+                    continue;
+                }
+
+                installedPermissions.Add(groupKey, new[] { permission });
+            }
+        }
+
+        return installedPermissions;
+    }
+
+    public async Task<IActionResult> Clone(string id)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, RolesPermissions.ManageRoles))
+        {
+            return Forbid();
+        }
+
+        if (await _roleManager.FindByIdAsync(id) is not Role role)
+        {
+            return NotFound();
+        }
+
+        var model = await GetCloneRoleViewModelAsync(role, role.RoleName, role.RoleDescription);
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ActionName(nameof(Clone))]
+    public async Task<IActionResult> ClonePost(string id, string name, string roleDescription)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, RolesPermissions.ManageRoles))
+        {
+            return Forbid();
+        }
+
+        if (await _roleManager.FindByIdAsync(id) is not Role sourceRole)
+        {
+            return NotFound();
+        }
+
+        name = name?.Trim();
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            ModelState.AddModelError(string.Empty, S["Role name is required."]);
+        }
+
+        if (ModelState.IsValid && await ValidateRoleNameAsync(name))
+        {
+            var newRole = new Role
+            {
+                RoleName = name,
+                RoleDescription = roleDescription,
+                RoleClaims = [.. ExtractSelectedPermissions()],
+            };
+
+            var result = await _roleManager.CreateAsync(newRole);
+
+            if (result.Succeeded)
+            {
+                await _notifier.SuccessAsync(H["The role was cloned successfully."]);
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _documentStore.CancelAsync();
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+        }
+
+        var model = await GetCloneRoleViewModelAsync(sourceRole, name, roleDescription);
+
+        return View(model);
+    }
+
+    private async Task<bool> ValidateRoleNameAsync(string roleName)
+    {
+        roleName = roleName.Trim();
+
+        if (roleName.Contains('/'))
+        {
+            ModelState.AddModelError(string.Empty, S["Invalid role name."]);
+
+            return false;
+        }
+
+        if (await _roleManager.FindByNameAsync(roleName) != null)
+        {
+            ModelState.AddModelError(string.Empty, S["The role name is already in use."]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private PermissionGroupKey GetGroupKey(IFeatureInfo feature, string category)
+    {
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            return new PermissionGroupKey(category, category);
+        }
+
+        var title = string.IsNullOrWhiteSpace(feature.Name)
+            ? S["{0} Feature", feature.Id]
+            : feature.Name;
+
+        return new PermissionGroupKey(feature.Id, title)
+        {
+            Source = feature.Id,
+        };
+    }
+
+    private async Task<ISet<string>> GetRoleGrantedPermissionsAsync(string roleName, IEnumerable<Permission> allPermissions)
+    {
+        var role = await _roleManager.FindByNameAsync(roleName) as Role;
+        if (role == null)
+        {
+            return new HashSet<string>(StringComparer.Ordinal);
+        }
+
+        var roleClaims = role.RoleClaims.Select(c => c.ToClaim()).ToArray();
+        var result = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var permission in allPermissions)
+        {
+            if (_permissionGrantingService.IsGranted(new PermissionRequirement(permission), roleClaims))
+            {
+                result.Add(permission.Name);
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<IDictionary<string, Permission>> GetEffectivePermissions(Role role, IEnumerable<Permission> allPermissions)
+    {
+        // Create a fake user to check the actual permissions. If the role is anonymous
+        // IsAuthenticated needs to be false.
+        var authenticationType = !string.Equals(role.RoleName, OrchardCoreConstants.Roles.Anonymous, StringComparison.OrdinalIgnoreCase)
+            ? "FakeAuthenticationType"
+            : null;
+
+        var fakeIdentity = new ClaimsIdentity([new Claim(ClaimTypes.Role, role.RoleName)], authenticationType);
+
+        // Add role claims.
+        fakeIdentity.AddClaims(role.RoleClaims.Select(c => c.ToClaim()));
+
+        var fakePrincipal = new ClaimsPrincipal(fakeIdentity);
+
+        var result = new Dictionary<string, Permission>(StringComparer.Ordinal);
+
+        foreach (var permission in allPermissions)
+        {
+            if (await _authorizationService.AuthorizeAsync(fakePrincipal, permission))
+            {
+                result[permission.Name] = permission;
+            }
+        }
+
+        return result;
+    }
+
+    private IEnumerable<RoleClaim> ExtractSelectedPermissions()
+        => Request.Form.Keys
+            .Where(key => key.StartsWith("Checkbox.", StringComparison.Ordinal) && Request.Form[key] == "true")
+            .Select(key => RoleClaim.Create(key["Checkbox.".Length..]));
+
+    private async Task<CloneRoleViewModel> GetCloneRoleViewModelAsync(Role role, string cloneRoleName, string description)
+        => new CloneRoleViewModel
+        {
+            Role = role,
+            Name = cloneRoleName,
+            RoleDescription = description,
+            Permissions = await GetRolePermissionsViewModelAsync(role, canEdit: true),
+        };
+
+    private async Task<RolePermissionsViewModel> GetRolePermissionsViewModelAsync(Role role, bool canEdit)
+    {
+        var installedPermissions = await GetInstalledPermissionsAsync();
+        var allPermissions = installedPermissions.SelectMany(x => x.Value).ToArray();
+        var isAdminRole = await _roleService.IsAdminRoleAsync(role.RoleName);
+
+        if (canEdit)
+        {
+            ViewData["DuplicatedPermissions"] = allPermissions
+                .GroupBy(p => p.Name.ToUpperInvariant())
+                .Where(g => g.Count() > 1)
+                .Select(g => g.First().Name)
+                .ToArray();
+        }
+
+        var isAnonymousRole = string.Equals(role.RoleName, OrchardCoreConstants.Roles.Anonymous, StringComparison.OrdinalIgnoreCase);
+        var isAuthenticatedRole = string.Equals(role.RoleName, OrchardCoreConstants.Roles.Authenticated, StringComparison.OrdinalIgnoreCase);
+
+        ISet<string> anonymousGrantedPermissions = new HashSet<string>(StringComparer.Ordinal);
+        ISet<string> authenticatedGrantedPermissions = new HashSet<string>(StringComparer.Ordinal);
+
+        if (!isAdminRole && !isAnonymousRole)
+        {
+            // Anonymous role permissions are always effective for authenticated users too,
+            // so show their source even when editing the Authenticated role.
+            anonymousGrantedPermissions = await GetRoleGrantedPermissionsAsync(OrchardCoreConstants.Roles.Anonymous, allPermissions);
+
+            if (!isAuthenticatedRole)
+            {
+                // Skip Authenticated role attribution when editing that role itself.
+                authenticatedGrantedPermissions = await GetRoleGrantedPermissionsAsync(OrchardCoreConstants.Roles.Authenticated, allPermissions);
+            }
+        }
+
+        return new RolePermissionsViewModel
+        {
+            IsAdminRole = isAdminRole,
+            CanEdit = canEdit,
+            AssignedPermissions = role.RoleClaims
+                .Where(c => c.ClaimType == Permission.ClaimType)
+                .Select(c => c.ClaimValue)
+                .ToHashSet(StringComparer.Ordinal),
+            RoleCategoryPermissions = isAdminRole
+                ? null
+                : installedPermissions,
+            EffectivePermissions = isAdminRole
+                ? null
+                : await GetEffectivePermissions(role, allPermissions),
+            AnonymousGrantedPermissions = anonymousGrantedPermissions,
+            AuthenticatedGrantedPermissions = authenticatedGrantedPermissions,
+        };
+    }
+}

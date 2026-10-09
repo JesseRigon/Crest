@@ -1,0 +1,71 @@
+@model OrchardCore.Seo.ViewModels.SeoMetaPartViewModel
+
+@await DisplayAsync(await New.ShortcodeModal())
+
+<div class="ocat-wrapper">
+    <div class="ocat-end-offset">
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" asp-for="Render" checked="@Model.Render" />
+            <label class="form-check-label" asp-for="Render">@T["Render"]</label>
+            <span class="hint dashed">@T["Whether to render metadata for this page."]</span>
+        </div>
+    </div>
+</div>
+
+<div class="ocat-wrapper" asp-validation-class-for="PageTitle">
+    <label asp-for="PageTitle" class="ocat-label">@T["Page Title"] </label>
+    <div class="ocat-end">
+        <input asp-for="PageTitle" class="form-control content-preview-text shortcode-modal-input" />
+        <span class="hint">@T["Override the default generated web browser page title (recommended to keep under 70 characters)."]</span>
+    </div>
+</div>
+
+<div class="ocat-wrapper" asp-validation-class-for="MetaDescription">
+    <label asp-for="MetaDescription" class="ocat-label">@T["Meta Description"] </label>
+    <div class="ocat-end">
+        <textarea asp-for="MetaDescription" class="form-control content-preview-text shortcode-modal-input"></textarea>
+        <span class="hint">@T["The meta description to render for this page."]</span>
+    </div>
+</div>
+
+@if (Model.Settings.DisplayKeywords)
+{
+    <div class="ocat-wrapper" asp-validation-class-for="MetaKeywords">
+        <label asp-for="MetaKeywords" class="ocat-label">@T["Meta Keywords"] </label>
+        <div class="ocat-end">
+            <input asp-for="MetaKeywords" class="form-control content-preview-text shortcode-modal-input" />
+            <span class="hint">@T["The meta keywords to render for this page, comma separated."]</span>
+        </div>
+    </div>
+}
+
+<div class="ocat-wrapper" asp-validation-class-for="Canonical">
+    <label asp-for="Canonical" class="ocat-label"> @T["Canonical"] </label>
+    <div class="ocat-end">
+        <input asp-for="Canonical" class="form-control content-preview-text" />
+        <span class="hint">@T["Override the default canonical url."]</span>
+    </div>
+</div>
+
+<div class="ocat-wrapper" asp-validation-class-for="MetaRobots">
+    <label asp-for="MetaRobots" class="ocat-label">@T["Meta Robots"] </label>
+    <div class="ocat-end">
+        <input asp-for="MetaRobots" class="form-control content-preview-text shortcode-modal-input" />
+        <span class="hint">@T["The robots meta to render for this page."]</span>
+    </div>
+</div>
+
+@if (Model.Settings.DisplayCustomMetaTags)
+{
+    var translations = Orchard.GetJSLocalizations("seo-meta-tags-editor");
+    var translationsJson = Json.Serialize(translations).ToString();
+
+    <style asp-src="~/OrchardCore.Seo/Styles/customMetaTagsEditor.min.css" debug-src="~/OrchardCore.Seo/Styles/customMetaTagsEditor.css"></style>
+
+    <script asp-src="~/OrchardCore.Seo/Scripts/seo-meta-part/seo-meta-part.min.js" debug-src="~/OrchardCore.Seo/Scripts/seo-meta-part/seo-meta-part.js" at="Foot" depends-on="vuejs, vue-draggable" type="module"></script>
+
+    <div id="@Html.IdFor(m => m)" class="ocat-wrapper seo-meta-part-custom-tags" data-custom-meta-tags="@Model.CustomMetaTags" data-custom-meta-tags-input-id="@Html.IdFor(m => m.CustomMetaTags)" data-custom-meta-tags-input-name="@Html.NameFor(m => m.CustomMetaTags)" data-translations="@translationsJson">
+        <label asp-for="CustomMetaTags" class="ocat-label">@T["Custom Meta Tags"]</label>
+        <div class="options-table-editor-mount"></div>
+    </div>
+}

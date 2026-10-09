@@ -1,0 +1,34 @@
+[
+  {
+    "action": "min",
+    "name": "audittrail",
+    "source": "../../../node_modules/diff/dist/diff.js",
+    "tags": ["admin", "dashboard", "js"]
+  },
+  {
+    "action": "sass",
+    "name": "audittrail",
+    "source": "Assets/scss/audittrailui.scss",
+    "tags": [ "admin", "dashboard", "css" ]
+  },
+  {
+    "action": "webpack",
+    "name": "audit-trail-diff-viewer",
+    "config": "/Assets/webpack.config.js",
+    "tags": [ "admin", "dashboard", "css" ]
+  },
+  {
+    "action": "parcel",
+    "name": "audit-trail-settings",
+    "source": "Assets/ts/audit-trail-settings.ts",
+    "dest": "wwwroot/Scripts/audit-trail-settings/",
+    "tags": ["admin", "dashboard", "js"]
+  },
+  {
+    "action": "parcel",
+    "name": "audit-trail-admin-list",
+    "source": "Assets/ts/audit-trail-admin-list.ts",
+    "dest": "wwwroot/Scripts/audit-trail-admin-list/",
+    "tags": ["admin", "dashboard", "js"]
+  }
+]

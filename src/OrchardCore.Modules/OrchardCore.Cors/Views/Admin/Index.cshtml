@@ -1,0 +1,23 @@
+@model CorsSettingsViewModel
+@using System.Text.Json
+@{
+    var translations = Orchard.GetJSLocalizations("cors-admin");
+    var translationsJson = Json.Serialize(translations).ToString();
+}
+
+<script asp-src="~/OrchardCore.Cors/Scripts/cors-admin-index/cors-admin-index.min.js" debug-src="~/OrchardCore.Cors/Scripts/cors-admin-index/cors-admin-index.js" at="Foot" depends-on="vuejs" type="module"></script>
+<style>
+    [v-cloak] {
+        display: none;
+    }
+</style>
+<div asp-validation-summary="ModelOnly"></div>
+<zone Name="Title">
+    <h1>@T["CORS Settings"]</h1>
+</zone>
+<p class="alert alert-warning">@T["The current tenant will be reloaded when the CORS is executed."]</p>
+<div class="alert alert-info">@T["CORS stands for Cross-Origin Resource Sharing. More information can be found here:"] <a target="_blank" href="https://docs.microsoft.com/en-us/aspnet/core/security/cors">https://docs.microsoft.com/en-us/aspnet/core/security/cors</a></div>
+<form id="corsForm" asp-action="Index" method="post" class="no-multisubmit">
+    <input type="hidden" name="corsSettings" id="corsSettings" value='@Html.Raw(Json.Serialize(Model.Policies))' />
+    <div id="corsAdmin" data-cors-translations="@translationsJson"></div>
+</form>

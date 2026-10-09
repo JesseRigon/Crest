@@ -1,0 +1,35 @@
+@model OrchardCore.ContentFields.ViewModels.EditTextFieldViewModel
+@using OrchardCore.ContentFields
+@using OrchardCore.Mvc.Utilities
+@using OrchardCore.Localization.Data
+@inject IDataLocalizer D
+@{
+    var settings = Model.PartFieldDefinition.GetSettings<TextFieldSettings>();
+    var monacoSettings = Model.PartFieldDefinition.GetSettings<TextFieldMonacoEditorSettings>();
+    var culture = await Orchard.GetContentCultureAsync(Model.Field.ContentItem);
+    string localizedFieldName = D[Model.PartFieldDefinition.DisplayName(), DataLocalizationContext.ContentField(Model.PartFieldDefinition.PartDefinition.Name)];
+}
+
+@if (settings.Type == FieldBehaviorType.GeneratedHidden || settings.Type == FieldBehaviorType.GeneratedDisabled)
+{
+    <input type="hidden" asp-for="Text" />
+
+    return;
+}
+
+<div class="@($"ocat-wrapper field-wrapper field-wrapper-{Model.PartFieldDefinition.PartDefinition.Name.HtmlClassify()}-{Model.PartFieldDefinition.Name.HtmlClassify()}" + (Model.PartFieldDefinition.IsNamedPart() ? $" field-wrapper-{Model.PartFieldDefinition.ContentTypePartDefinition.Name.HtmlClassify()}-{Model.PartFieldDefinition.Name.HtmlClassify()}" : string.Empty)) text-field-monaco" id="@Html.IdFor(x => x.Text)_FieldWrapper" data-options="@(string.IsNullOrWhiteSpace(monacoSettings.Options) ? "{}" : monacoSettings.Options)">
+    <label asp-for="Text" class="ocat-label @(settings.Required ? "ocat-label-required" : "")">@localizedFieldName</label>
+    <div class="ocat-end">
+        <div id="@Html.IdFor(x => x.Text)_editor" asp-for="Text" style="min-height: 400px;" class="form-control text-field-monaco-container" dir="@culture.GetLanguageDirection()"></div>
+        <textarea asp-for="Text" hidden class="text-field-monaco-value">@Html.Raw(Model.Text)</textarea>
+        <span asp-validation-for="Text"></span>
+        @if (!string.IsNullOrEmpty(settings.Hint))
+        {
+            @await DisplayAsync(await New.Hint_Admin(Hint: settings.Hint))
+        }
+    </div>
+</div>
+
+<style asp-name="monaco"></style>
+<script asp-name="monaco" at="Foot"></script>
+<script asp-src="~/OrchardCore.ContentFields/Scripts/text-field-editors/text-field-monaco.min.js" debug-src="~/OrchardCore.ContentFields/Scripts/text-field-editors/text-field-monaco.js" depends-on="monaco" at="Foot" type="module"></script>
