@@ -74,7 +74,6 @@
         "OrchardCore.Workflows",
 
         // Themes
-        "TheBlogTheme",
         "TheAdmin",
         "SafeMode"
       ]
@@ -82,7 +81,7 @@
     {
       "name": "themes",
       "admin": "TheAdmin",
-      "site": "TheBlogTheme"
+      "site": "SafeMode"
     },
     {
       "name": "settings",

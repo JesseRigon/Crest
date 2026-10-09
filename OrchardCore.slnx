@@ -209,10 +209,6 @@
   <Folder Name="/src/OrchardCore.Themes/">
     <Project Path="src/OrchardCore.Themes/SafeMode/SafeMode.csproj" />
     <Project Path="src/OrchardCore.Themes/TheAdmin/TheAdmin.csproj" />
-    <Project Path="src/OrchardCore.Themes/TheAgencyTheme/TheAgencyTheme.csproj" />
-    <Project Path="src/OrchardCore.Themes/TheBlogTheme/TheBlogTheme.csproj" />
-    <Project Path="src/OrchardCore.Themes/TheComingSoonTheme/TheComingSoonTheme.csproj" />
-    <Project Path="src/OrchardCore.Themes/TheTheme/TheTheme.csproj" />
   </Folder>
   <Folder Name="/src/OrchardCore/">
     <Project Path="src/OrchardCore/OrchardCore.Abstractions/OrchardCore.Abstractions.csproj" />

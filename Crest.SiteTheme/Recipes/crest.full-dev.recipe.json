@@ -195,11 +195,7 @@
         "OrchardCore.Workflows.Timers",
         "OrchardCore.XmlRpc",
         "SafeMode",
-        "TheAdmin",
-        "TheAgencyTheme",
-        "TheBlogTheme",
-        "TheComingSoonTheme",
-        "TheTheme"
+        "TheAdmin"
       ]
     }
   ]

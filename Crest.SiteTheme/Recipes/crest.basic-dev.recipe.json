@@ -177,11 +177,7 @@
         "OrchardCore.Workflows.Http",
         "OrchardCore.Workflows.Session",
         "OrchardCore.Workflows.Timers",
-        "OrchardCore.XmlRpc",
-        "TheAgencyTheme",
-        "TheBlogTheme",
-        "TheComingSoonTheme",
-        "TheTheme"
+        "OrchardCore.XmlRpc"
       ],
       "enable": [
         "Application.Default",
