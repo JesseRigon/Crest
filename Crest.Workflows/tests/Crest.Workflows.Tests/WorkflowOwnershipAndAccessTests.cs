@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Crest.Workflows.Tests;
 
-// Phase 5 (plans/workflows.md): ownership properties round-trip through the stored JSON
+// Phase 5 (docs/workflows.md): ownership properties round-trip through the stored JSON
 // shape, the tier rules, and the access handler's place in the authorization pipeline.
 public class WorkflowOwnershipAndAccessTests
 {

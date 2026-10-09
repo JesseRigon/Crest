@@ -4,7 +4,7 @@ using NSubstitute;
 namespace Crest.Icons.Tests;
 
 /// <summary>
-/// plans/icons.md: "custom Iconify server search uses remote HTTP and writes no persistent cache" /
+/// Crest.Icons/README.md: "custom Iconify server search uses remote HTTP and writes no persistent cache" /
 /// "custom Iconify server resolve uses remote HTTP and writes no persistent cache". A custom
 /// (non-default) BaseUrl must never route through IIconifyLocalMirrorStore, and must not reuse
 /// results across requests via any in-memory cache either - every call is a fresh remote round trip.

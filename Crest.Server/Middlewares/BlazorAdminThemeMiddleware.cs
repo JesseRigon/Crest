@@ -50,7 +50,7 @@ internal sealed class BlazorAdminThemeOptionsConfiguration(
     }
 }
 
-// Phase 8: this middleware no longer serves anything itself. The old WASM-SPA model
+// This middleware no longer serves anything itself. The old WASM-SPA model
 // (hand-serving index.html with a rewritten <base href> plus every framework/theme
 // asset out of the wasm project's build webroot) is retired - Crest.Server's
 // MapRazorComponents<App>() endpoint is the only thing that produces admin documents

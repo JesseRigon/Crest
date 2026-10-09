@@ -5,7 +5,7 @@ using Xunit;
 namespace Crest.Regions.Tests;
 
 /// <summary>
-/// plans/regions-and-locations.md phase 4: a US, a UK and a French address each enter and
+/// docs/regions.md phase 4: a US, a UK and a French address each enter and
 /// validate against the shipped map. Tree resolution (node exists, one per level) is the
 /// server's and is not exercised here.
 /// </summary>

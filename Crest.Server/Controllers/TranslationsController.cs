@@ -19,7 +19,7 @@ namespace Crest.Controllers;
 /// The stock page's Save replaces a culture's whole translation list with whatever its editor
 /// enumerated, silently deleting stored entries no provider currently enumerates (a disabled
 /// feature's strings, an old key after a caption changed - see the host's
-/// plans/upstream-orchard-proposals.md #3). This API differs on exactly the two points that
+/// docs/upstream-orchard-proposals.md #3). This API differs on exactly the two points that
 /// matter:
 /// <list type="bullet">
 /// <item>reads include ORPHANS - stored entries with no live descriptor - flagged as such, so

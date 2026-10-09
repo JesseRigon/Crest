@@ -11,7 +11,7 @@ namespace Crest.Workflows.Units;
 /// <summary>
 /// Marks an activity as a unit boundary: it waits - including for an external call that is
 /// performed after the unit commits and answers in the next burst. A flow containing one is long-running and cannot be a
-/// hook attachment (plans/workflows.md › Posting on workflows).
+/// hook attachment (docs/workflows.md › Posting on workflows).
 /// </summary>
 public interface IUnitBoundary;
 

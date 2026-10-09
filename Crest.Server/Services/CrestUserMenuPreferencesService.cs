@@ -9,7 +9,7 @@ namespace Crest.Services;
 
 /// <summary>
 /// The user's own admin-menu preferences, on User.Properties the way OrchardCore.Users.
-/// Localization keeps UserLocalizationSettings there (plans/user-settings.md sketches
+/// Localization keeps UserLocalizationSettings there (docs/user-settings.md sketches
 /// exactly this shape). Nothing in it is tenant-wide.
 /// </summary>
 public sealed class CrestUserMenuPreferences

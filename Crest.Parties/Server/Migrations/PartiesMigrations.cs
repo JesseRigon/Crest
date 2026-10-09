@@ -483,7 +483,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     //
     // DEFERRED, because AttachToContentTypeAsync resolves the target list and the
     // global lists are themselves seeded in a deferred task (content creation during
-    // first-time setup cannot run inline - see plans/global.md).
+    // first-time setup cannot run inline - see docs/global-store.md).
     // Deferred tasks run in registration order and feature dependencies put Crest's
     // migration first, so the lists exist by the time this attaches to them.
     private static void DeferAttachGlobalListPickers()

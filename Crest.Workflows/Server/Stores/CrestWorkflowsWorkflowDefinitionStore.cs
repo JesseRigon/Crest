@@ -171,7 +171,7 @@ public class CrestWorkflowsWorkflowDefinitionStore(
         var query = (await Query(filter).ListAsync(cancellationToken)).ToList();
         var count = 0;
 
-        // System and shipped flows are never deleted by a user (plans/workflows.md, phase 5).
+        // System and shipped flows are never deleted by a user (docs/workflows.md, phase 5).
         var guard = serviceProvider.GetRequiredService<WorkflowOwnershipGuard>();
         foreach (var definitionId in query.Select(c => c.ContentItemId).Distinct())
         {

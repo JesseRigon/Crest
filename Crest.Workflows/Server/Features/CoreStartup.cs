@@ -46,7 +46,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
 {
     // Last of all startups: Orchard orders them by feature dependency and then stably by
     // Order, so this is where the stock OrchardCore.Workflows services get overridden
-    // (plans/workflows.md, "Override").
+    // (docs/workflows.md, "Override").
     public override int Order => int.MaxValue;
 
     // The pipeline is a different order. With endpoint routing, the authorization
@@ -110,7 +110,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
         // async-only and would crash the process on that path (SyncDisposableTenantService).
         SyncDisposableTenantService.ReplaceIn(services);
 
-        // Units of work (plans/workflows.md › Posting on workflows): a burst is one transaction
+        // Units of work (docs/workflows.md › Posting on workflows): a burst is one transaction
         // (the stores no longer commit mid-run), stimuli fire after commit, a failed unit is
         // discarded at commit and recorded in a fresh scope. External calls (connectors, the
         // stock mail/SMS/notification/HTTP tasks) are engine background activities on a durable,
@@ -155,7 +155,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             sp.GetRequiredService<OrchardCore.Data.Documents.IDocumentStore>(),
             sp.GetRequiredService<ILogger<UnitOfWorkCommitStateHandler>>())));
 
-        // Ownership tiers, the permission set and per-definition access (plans/workflows.md,
+        // Ownership tiers, the permission set and per-definition access (docs/workflows.md,
         // phase 5). The guard sits in the publisher and store; the access handler joins
         // Orchard's authorization pipeline; the linker narrows Studio's links to what the
         // user may do, replacing the engine's static one.
@@ -167,7 +167,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, WorkflowDefinitionAccessHandler>();
         services.Replace(ServiceDescriptor.Scoped<Crest.Workflows.Api.IWorkflowDefinitionLinker, CrestWorkflowDefinitionLinker>());
 
-        // Connectors (plans/workflows.md, phase 3): per-shell HTTP client, limiters and token
+        // Connectors (docs/workflows.md, phase 3): per-shell HTTP client, limiters and token
         // cache (singletons of the tenant's container), connections in a tenant document.
         services.Configure<WorkflowConnectorOptions>(shellConfiguration.GetSection(WorkflowConnectorOptions.ConfigurationSection));
         services
@@ -182,7 +182,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<IWorkflowConnectorProvider, CrestConnectorProvider>()
             .AddScoped<IPropertyUIHandler, ConnectionOptionsProvider>();
 
-        // Approvals (plans/workflows.md, phase 4): a task per decision, a queue per user.
+        // Approvals (docs/workflows.md, phase 4): a task per decision, a queue per user.
         services
             .AddDataMigration<ApprovalTaskMigrations>()
             .AddIndexProvider<ApprovalTaskIndexProvider>()

@@ -7,11 +7,11 @@ const { createInstance } = require('../harness/instance');
 // empty body until Site gets its own @page "/" component), which is why this check is
 // currently red. Rewrite it against the Blazor homepage - assert a translated string that
 // reached the page through the Blazor/IStringLocalizer path - rather than making it pass
-// by keeping Liquid alive. See the "Site root" section of plans/blazor hybrid conversion.md.
+// by keeping Liquid alive. See the "Site root" section of docs/blazor-web.md.
 //
 // Verifies translated content actually renders on the front-end site
 // (Crest.SiteTheme) for a non-English resolved culture - the "simple component
-// just to test the translations actually work" from plans/user-localization-testing.md.
+// just to test the translations actually work" from docs/localization.md.
 // The smoke block lives in Content-Page.liquid (data-testid="localization-smoke"),
 // rendering {{ "Welcome" | t }} - a hand-written test string backed by
 // Crest.SiteTheme/Localization/{es,fr,de}.po (mirrored under

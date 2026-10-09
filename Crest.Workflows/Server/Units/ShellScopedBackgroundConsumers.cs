@@ -15,7 +15,7 @@ using OrchardCore.Environment.Shell.Scope;
 namespace Crest.Workflows.Units;
 
 /// <summary>
-/// The engine's background channels, consumed in shell scopes (plans/workflows.md › Posting
+/// The engine's background channels, consumed in shell scopes (docs/workflows.md › Posting
 /// on workflows, audit 2026-10-01). The engine registers hosted services for its
 /// <c>CommandStrategy.Background</c> commands (DispatchWorkflow, BulkDispatchWorkflows, the
 /// background stimulus and event dispatchers) and background notifications, but a tenant

@@ -58,7 +58,7 @@ async function loginAsClient(page, baseUrl, creds = {}) {
 }
 
 // Named-identity login for the multi-user localization checks (see
-// plans/user-localization-testing.md): logs a specific, already-provisioned non-admin
+// docs/localization.md): logs a specific, already-provisioned non-admin
 // user into /Admin (they may have limited/no admin permissions - the culture resolution
 // checks only need an authenticated session, not admin access to every page). Distinct
 // from loginAsAdmin (fixed admin/ADMIN_* credentials) and loginAsClient (front-end-only,

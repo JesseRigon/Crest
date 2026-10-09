@@ -3,8 +3,8 @@
 How a Crest tenant serves its three audiences as three shells, how a module contributes
 pages to a shell, and how themes declare what they host so incompatible ones are caught.
 The admin and site shells' hosting mechanics (endpoint gate, base paths, render modes) are
-in [blazor-web.md](blazor-web.md); open work is in
-[shells-and-themes.md](shells-and-themes.md).
+in [blazor-web.md](blazor-web.md); open work is under
+[Still to build](#still-to-build).
 
 ## Three shells
 
@@ -249,10 +249,35 @@ mechanism.
 
 ## Still to build
 
+- [ ] **The server provides the tenant base** (ruling 2026-10-06). The client never derives
+  it: today `CrestWebAssemblyHost` guesses by stripping "admin" or "login" off the page base,
+  which keeps `/t2/members/` under a prefixed tenant and breaks cross-shell links. The server
+  sends the tenant base path (and each shell's path) with the routing options the client
+  already fetches at startup, and the client keeps it for reference wherever a link or the
+  switcher needs it. Each shell keeps its own login.
+- [ ] **Theme compatibility matches an assembly to its module by the longest module id**
+  (ruling 2026-10-06, a bug fix). `ShellCompatibilityService` credits an assembly to a
+  module when its name starts with the module id plus a dot, so `Crest.Members.Member.BlazorWasm`
+  and `Crest.ContentPartLists.BlazorWasm` count as the always-enabled `Crest` and every tenant
+  appears to need a member theme. The assembly belongs to the module with the longest
+  matching id — the `*.BlazorWasm` naming convention the lazy loader already relies on — not
+  an attribute.
+- [ ] **A disabled module is absent for that tenant** (ruling 2026-10-06). An assembly →
+  feature map (each `*.BlazorWasm` belongs to a module) filters by the tenant's enabled
+  features: on the server, the route table and the page gate skip pages of disabled modules,
+  so their URLs give a proper 404 (the table is cached per tenant); on the client, the
+  manifest the shell receives at sign-in lists the enabled modules and the lazy loader
+  fetches only those. Today every tenant routes and downloads every module the host ships.
+- [ ] **Theme clients load per shell** (ruling 2026-10-06). The admin, site and member theme
+  clients no longer load together on first visit; each loads when its shell is opened, the
+  way module assemblies already load on demand.
+- **Every tenant reserves the member prefix (ruling 2026-10-06).** The member route table and
+  the middleware's member-prefix match stay registered whether or not Members is enabled;
+  a tenant without Members does not get that path back for site content.
+
 The three shells (admin, site, member), shell dispatch, per-assembly UI isolation, theme
-compatibility and the per-shell theme-selection UI are built and documented in
-[docs/shells-and-themes.md](shells-and-themes.md). This file holds what is not
-built yet.
+compatibility and the per-shell theme-selection UI are built and documented above. This
+section holds what is not built yet.
 
 ### Theme UIs load per shell
 
@@ -294,3 +319,20 @@ is a registry of shells, with Site as the fallback:
     rules — a shell on its own hostname, say — addable later without reshaping the selector.
 - [ ] **The auth-cookie render-mode rule is declared by the page** that sets the cookie, not
   special-cased per shell in `App.razor`.
+
+### Decisions needed
+
+- [ ] **Shells on their own hostnames, and on their own servers** (open, 2026-10-06; to discuss
+  in depth later). Today a tenant's admin, site and member shells share one hostname and one
+  server, told apart by path. Open:
+  - **Hostnames per shell** — a subdomain or custom domain for the public site, another for
+    the member portal, another for the admin (e.g. `www.`, `members.`, `admin.`), alongside
+    the tenant's own custom domains and subdomains.
+  - **Separate systems per shell** — in future, the admin, public and member shells on
+    separate servers and back ends, still sharing data, permissions and users. The aim is
+    isolation: an attack that takes down the public site must not take down the business's
+    admin; and a business could run the admin on a local server sheltered from the internet
+    without affecting the member portal or the public site.
+  - What that requires of the shared pieces — the data store, the permission system (see
+    [speed.md](speed.md) on running it on separate hardware), sign-in and sessions across
+    hosts, and which shell owns which writes.

@@ -8,7 +8,7 @@ using YesSql;
 namespace Crest.Controllers;
 
 /// <summary>
-/// Super-tenant editing of the STANDARD rows of global lists (plans/global.md › Who can
+/// Super-tenant editing of the STANDARD rows of global lists (docs/global-store.md › Who can
 /// write). Every action requires both the permission and the Default shell: an ordinary
 /// tenant gets 404, not 403, because there is no route to this there, not a hidden one.
 /// Host rows survive data-file reloads; Standard rows are the loader's.

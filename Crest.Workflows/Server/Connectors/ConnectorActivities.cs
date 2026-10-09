@@ -21,7 +21,7 @@ namespace Crest.Workflows.Connectors;
 /// <summary>
 /// What connector activities share: the connection, the request, and the response outputs.
 /// Connector activities run as engine <em>background activities</em> (`RunAsynchronously`,
-/// plans/workflows.md › Posting on workflows): the burst bookmarks the node and commits; the
+/// docs/workflows.md › Posting on workflows): the burst bookmarks the node and commits; the
 /// call is made afterwards in a unit of its own (<see cref="Units.DurableBackgroundActivityScheduler"/>)
 /// with the connection's auth, retries and rate limit and the job's <c>Idempotency-Key</c>;
 /// the flow resumes with the response as the next burst. A unit that fails never makes the

@@ -2,7 +2,7 @@
 //
 // 1. MenuName restoration. NavigationManager.Merge drops MenuName whenever the provider's
 //    instance survives the fold (registration-order roulette; entry #7 in the host's
-//    plans/upstream-orchard-proposals.md - upstreamable as a Merge copy-list completeness
+//    docs/upstream-orchard-proposals.md - upstreamable as a Merge copy-list completeness
 //    fix, though only Crest's import makes it bite at scale), so captions like "Settings" carried a
 //    stored translation that never rendered. The resolver restores the owning menu from the
 //    surviving Id (the node's UniqueId), so every stored Primary Navigation caption must now

@@ -44,6 +44,34 @@ scope after the binding write commits) and knows nothing more about its consumer
   module uses it so an unpaid membership loses access; what it loses is that module's and
   the tenant's business, not Crest's.
 
+  **When policies and the principal are evaluated (ruling 2026-10-06): one cache.** Each
+  session holds one cached state per (user, tenant, side, organization) — the built
+  principal and the policies' verdict — and the online and offline views are the same cache,
+  updated together.
+  - **The session expires as a whole after a set length — a tenant setting the tenant admin
+    edits, default 7 days**; then the user signs in again.
+  - **While online, the cache refreshes on an interval** during those 7 days, and Crest's own
+    binding and role writes and the policy modules bump a version token that refreshes it at
+    once. The interval is configurable. "Session load" means the next refresh.
+  - **Offline**, the client works from the last state it received until the session expires.
+    Nothing is offline today; this keeps the door open. **Offline security (ruling
+    2026-10-06):** permissions held on a device can never be secured against its owner, so
+    they guide the offline UI only and are never authority.
+    - The server is the only authority: offline actions are queued as intents, and on
+      reconnect the server re-authorizes each against the user's current permissions,
+      rejecting or flagging what is no longer allowed.
+    - The offline copy is a server-signed permission snapshot (permissions, organization,
+      issued, expiring with the session) bound to a registered device; it cannot be altered undetected,
+      the signature is checked on sync, and a lost device is revoked.
+    - The snapshot and offline data are encrypted at rest with a non-exportable key
+      (WebCrypto in the browser, the OS keychain in a native shell), protecting them from
+      others on the device.
+    - Reads are the real exposure: the server decides by permission, at download time, what
+      goes offline, and sends only what is needed, encrypted and expiring. Offline actions
+      are audited on sync, flagged as offline.
+  - A refusing policy removes access to that organization on the member side only; it never
+    signs the user out of the staff side.
+
 ## The two classes of user in a tenant
 
 Both classes are ORDINARY ORCHARD USERS in the tenant's own user store — same
@@ -279,7 +307,7 @@ Verified against the vendored OrchardCore source:
 ## How it is built (against the vendored source)
 
 Everything below cites verified mechanics — file paths and seams confirmed in
-/workspaces/OrchardCore.
+the OrchardCore fork (`modules/OrchardCore` in a host).
 
 ### A. Class marker foundation
 
@@ -553,11 +581,44 @@ Supersedes "one class per user" and "conversion ends the org bindings" above. A 
 hold **staff and member at once**, under one account and one credential; which side they
 sign in to decides what they see.
 
-- [ ] **Class becomes a set.** The class property holds tenant-user, org-user or both (the
-  class index gets a row per class). Conversion becomes adding or removing a class through
-  the same permission-gated action; adding staff no longer ends org bindings, and removing
+- [ ] **Class becomes a set — one index of connections** (ruling 2026-10-06). A user's
+  connections are rows keyed by the composite **`(UserId, OrgId, Class)`**, unique, with no
+  nulls: staff belong to the tenant's own organization, so staff is `(user, tenant org,
+  staff)`, and acting for an organization as a member is `(user, org, member)`. Membership
+  derives from the bindings (the record of truth); the index is a rebuildable projection of
+  the user record. One index answers "is staff", "may act for org X", "members of org X" and
+  the switcher's organization list. Being both staff and a member of the tenant's own
+  organization needs the tenant setting (default: blocked). **No user exists outside an
+  organization**: the tenant and its organizations exist before any user, so a member with
+  no organization is a failure mode — registration places the member in an organization or
+  refuses. The class property holds tenant-user, org-user or both. Conversion becomes adding or removing a class through
+  one permission-gated action that replaces today's `convert-to-staff` endpoint (ruling
+  2026-10-06), bumping the security stamp either way; adding staff no longer ends org bindings, and removing
   member does. The tenant's own organization still has no members
   ([parties.md](parties.md) › Organizations).
+- [ ] **How a request carries its side and organization** (ruling 2026-10-06). Authorization
+  handlers see only the principal, API routes are shared by both sides, and Orchard's own
+  endpoints never pass through Crest's middleware — so the side is resolved where the
+  sign-in cookie is validated, before any permission check:
+  - **Pages** carry the side in the path (the admin prefix or the member prefix), and member
+    pages carry the **organization in the path as a slug**: `/{member prefix}/{org slug}/…`.
+    Bookmarks and links open the right organization, two tabs on two organizations are
+    independent, and the switcher simply navigates to the other organization's URL.
+  - **API calls** carry the shell in an `X-Shell` header (`admin` or `member`) and, on the
+    member side, the organization in an `X-Org` header — both sent by each shell's
+    HttpClient.
+  - **A cookie-authenticated request without its `X-Shell` marker is malformed and denied**, never
+    defaulted to a side. A member-side request whose organization the user holds no binding
+    to is denied. A member with several organizations and none chosen goes to an
+    organization picker.
+  - From the side and organization the server builds that request's principal: on the
+    staff side the user's tenant roles and no organization claims; on the member side only
+    the binding's roles, with the class ceiling applied — the staff role and permission
+    claims a dual user carries are stripped (after Orchard's security-stamp refresh, which
+    copies claims), so the admin role cannot reach the portal. Side entry (holds staff; has a
+    binding to this organization) is checked here on every request, not only at sign-in.
+  - The active organization is no longer written into the cookie, so switching never
+    re-signs it (no write race) and tabs never affect each other.
 - [ ] **The side comes from the request, not the user.** Admin paths act as staff — the
   user's tenant roles, tenant-wide. Member-portal paths act as member — the active org
   binding's roles, the class permission ceiling, data scoped to that organization. One
@@ -567,6 +628,23 @@ sign in to decides what they see.
   their staff permissions in the admin. This is the security-critical change.
 - [ ] **The login gate checks the side.** The admin login accepts a user holding staff; the
   member portal's login accepts a user with at least one org binding.
+- [ ] **Tenants in the switcher are the accounts added on this device** (ruling 2026-10-06).
+  Like Google or Zoho: the user signs in to one tenant, then "adds an account" by signing in
+  to another, and can switch between them. The list of added accounts is kept **on the
+  device** (client-side), not on the server, so a tenant the user has signed out of stays in
+  the menu until removed, and no server data links accounts across tenants. The server
+  never matches accounts across tenants — today's code, which lists a tenant when anyone
+  there shares the username and starts every tenant's shell on each manifest load, is
+  removed. **Organizations are server data:** only the **active tenant's** organizations are
+  listed — all of the user's organizations there, from that tenant's bindings — not those of
+  other signed-in tenants. **E-mail is never an identity link** between accounts or tenants:
+  it can change, and a future e-mail system will need aliases. **Where the list works:**
+  tenants addressed by path (the default) or by subdomains of one site share the device
+  list; Orchard's own routing already serves tenants by host name, including several host
+  names per tenant and wildcard subdomains (`RequestUrlHost`). A tenant on an unrelated
+  custom domain cannot read another site's device list, so there Crest's switcher shows
+  only what that site can see; switching across unrelated domains is downstream.
+
 - [ ] **One switcher, the same on both sides.** The admin and the member portal show the
   same switcher, listing only what the user is registered for, in two sections: **tenants**
   on top, then a separator, then **organizations**. Choosing a tenant switches tenant (as
@@ -574,17 +652,28 @@ sign in to decides what they see.
   organization opens the member portal with that organization active.
 - [ ] **Tenant SSO stays staff-side.** A dual user gets tenant SSO on the admin side only.
 - [ ] **Audit records the side** each action came from ([audit.md](audit.md)).
+- [ ] **Impersonation under one account** (ruling 2026-10-06). An impersonated session acts on
+  the member side (staff claims stripped like any member-side request); a dual user can be
+  impersonated; stopping restores the staff session exactly as it was, including its own
+  active organization; the audit records both people.
 
 ### Relational hierarchy
 
-- [ ] **Replace the single-parent tree with manager → report relationships** (ruling
-  2026-10-05, Hierarchies). A relationship row per (manager, report) within a root (the
-  staff root or one organization), so a user can have several managers. Subtree(user) is
-  everyone reachable downward through any path; chain(user) is every path upward, for
-  escalation and approval routing. YesSql cannot express recursive SQL, so subtree and
-  chain read a maintained closure table (ancestor, descendant) rather than a materialized
-  path. Writes refuse cycles. The root-scope guard holds for reports-to: every query and
-  write carries the root and organization. Rebuilds `UserHierarchyService`.
+- [ ] **Replace the single-parent tree with manager → report relationships** (rulings
+  2026-10-05, 2026-10-06). A person can have several managers. Built **on YesSql, as a
+  closure table** — no hand-written SQL, less maintenance:
+  - Each person in a hierarchy has a small document per organization holding their direct
+    managers and their computed ancestor list.
+  - A YesSql map index emits one row per ancestor, `(AncestorId, DescendantId, OrgId)`: that
+    index is the closure table, created and queried like every other Crest index.
+  - "Everyone under me" (the subtree) and "my chain up" (every path, for escalation and
+    approval routing) are index queries; adding an edge is refused when the report is
+    already above the manager — one index lookup.
+  - Changing an edge recomputes the ancestor lists of the report and everyone below them, all
+    saved in one YesSql session; edge writes are serialized per organization so two writes
+    cannot together create a cycle. A rebuild from the edges doubles as repair.
+  - The root guard holds for reports-to: every query and write carries the organization.
+    Replaces `UserHierarchyService`'s plain-SQL tree and its path math.
 - [ ] **Association relationship types** (ruling 2026-10-05). Typed connections beside
   reports-to (sales rep → contact, account rep → organization, …) that may cross staff and
   an organization. They grant no visibility by default; what, if anything, a type grants is
@@ -592,6 +681,14 @@ sign in to decides what they see.
   code relies on them, so a tenant cannot edit or remove them; tenant types are an editable
   list on top.
 
+  **Associations are content items** (ruling 2026-10-06), kept apart from the hierarchy so
+  the root guard and the closure table never see them: an Association content type with two
+  ends (each a person and the organization they act in) and a type picker. Editing,
+  versioning, permissions and audit come from the content system. A map index on the two
+  ends and the type answers "my connections" on the hot path. A type may register a
+  visibility resolver (default: grants nothing); the reading API enforces that a rep sees
+  only their own connections and the organization's people do not see the rep side unless
+  the type allows it.
 ### Org bindings and org structure
 
 - [ ] **One home per fact: the org binding record, not a second declaration.** The rule, the same one-home-per-fact rule the field model follows: **the record is
@@ -624,9 +721,15 @@ sign in to decides what they see.
   declarative thing is content (editable, listable, permissioned, importable — which
   is what makes thousands of users tractable), and the hot path reads a flat
   projection that is rebuildable from it.
-- [ ] **The tenant's own organization has no members** (ruling 2026-10-05): no binding may
-  point at the Organization that represents the tenant ([parties.md](parties.md) ›
-  Organizations), so staff and member logins never share an organization.
+- [ ] **The tenant's own organization has no members by default** (rulings 2026-10-05,
+  2026-10-06): a tenant setting, default **block**, decides whether bindings may point at the
+  Organization that represents the tenant ([parties.md](parties.md) › Organizations), so by
+  default staff and member logins never share an organization. **Enforced through one
+  source of truth** (ruling 2026-10-06): Parties exposes "is this the tenant's organization",
+  read from the site-settings reference, and every binding write — the binding API, the
+  member stamp path, the portal register endpoint — goes through one Members service that
+  checks it with the tenant setting. No flag is stored on the organization; lists that
+  show "the tenant's organization" ask the same Parties check.
 
 ### Data separation by organization
 
@@ -658,7 +761,9 @@ subtree.
   Crest admin over Orchard's `IPermissionProvider`s (`Roles.razor` still points at it:
   "Role permissions will be added with the dedicated permission editor"). It also shows,
   per module, what each user can effectively do — the union of their roles, since a user
-  holds several.
+  holds several. The admin role shows as "everything" (Orchard grants it without permission
+  claims), and a dual user gets two summaries, staff side and member side with the ceiling
+  applied (ruling 2026-10-06).
 - [ ] **Person creation for external-login auto-registered members**
   (they get class + binding only).
 

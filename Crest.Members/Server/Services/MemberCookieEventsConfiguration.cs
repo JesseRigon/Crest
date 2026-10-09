@@ -9,7 +9,7 @@ using OrchardCore.Security;
 namespace Crest.Members.Services;
 
 /// <summary>
-/// Per-request session enrichment (design: plans/user-systems.md §D): CHAINS onto the
+/// Per-request session enrichment (design: docs/members.md §D): CHAINS onto the
 /// application cookie's OnValidatePrincipal - never replaces it, because the inner
 /// delegate is Identity's SecurityStampValidator and dropping it would silently
 /// disable stamp validation. For member sessions it contributes the ACTIVE org claim

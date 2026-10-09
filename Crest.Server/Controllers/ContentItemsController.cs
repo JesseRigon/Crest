@@ -144,7 +144,7 @@ public sealed class ContentItemsController(
     // endpoint, it's permission-shaped for whoever's asking.
     //
     // Today every requested field checks the same item-level CommonPermissions.ViewContent
-    // - OrchardCore has no built-in per-part permission (see plans/permissions.md for
+    // - OrchardCore has no built-in per-part permission (see docs/permissions.md for
     // why, and what real per-part permissions would require). That means "permitted"
     // currently means "can view this item at all," not yet differentiated per part -
     // each field's check is already its own step below so a real per-part permission

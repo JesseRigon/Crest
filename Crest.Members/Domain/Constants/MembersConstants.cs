@@ -3,25 +3,10 @@ namespace Crest.Members.Constants;
 public static class MembersConstants
 {
     public const string FeatureId = "Crest.Members";
-
-    /// <summary>
-    /// The member portal's page routes. These constants ARE the registration point:
-    /// each page declares its route as <c>@attribute [Route(MembersConstants.Routes.X)]</c>
-    /// off this one literal, so navigation between the pages resolves the same value
-    /// instead of re-typing it. They are Blazor @page templates in the ADMIN bucket
-    /// (every module *.BlazorWasm assembly is), so the served URL is the tenant's admin
-    /// prefix + this template - nothing here knows or repeats that prefix.
-    /// </summary>
-    public static class Routes
-    {
-        public const string PortalLogin = "/members/login";
-        public const string PortalRegister = "/members/register";
-        public const string PortalHome = "/members";
-    }
 }
 
 /// <summary>
-/// The two user classes (design: plans/user-systems.md). The class is a stamped
+/// The two user classes (design: docs/members.md). The class is a stamped
 /// property of the user record, never a role: it decides which login surfaces accept
 /// the account at all, so it must not be grantable through the role editor.
 /// </summary>
@@ -54,7 +39,7 @@ public static class MemberClaims
 }
 
 /// <summary>AuthenticationProperties item keys (server-side session state when a ticket
-/// store is active; see plans/user-systems.md §C).</summary>
+/// store is active; see docs/members.md §C).</summary>
 public static class MemberSessionKeys
 {
     public const string ActiveOrganization = "crest-active-org";

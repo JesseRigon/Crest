@@ -19,7 +19,7 @@ namespace Crest.Services;
 /// <para><b>Merge drops MenuName.</b> <c>NavigationManager.Merge</c> folds a provider item and
 /// its imported admin menu node into one; the higher-priority node's values win, but the
 /// SURVIVING INSTANCE is whichever came first in provider registration order, and Merge's copy
-/// list does not include <c>MenuName</c> (plans/upstream-orchard-proposals.md #7). An item that
+/// list does not include <c>MenuName</c> (docs/upstream-orchard-proposals.md #7). An item that
 /// survived as the provider's instance therefore carries the node's caption and
 /// <c>Id</c> (= <c>AdminNode.UniqueId</c>) but a null <c>MenuName</c> - and a lookup scoped by
 /// menu name lands in the generic context, missing the store entry that sits under the owning

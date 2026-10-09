@@ -27,7 +27,7 @@ public static class BackgroundJobStatuses
 }
 
 /// <summary>
-/// The durable record behind an engine background activity (plans/workflows.md › Posting on
+/// The durable record behind an engine background activity (docs/workflows.md › Posting on
 /// workflows): the engine's own scheduler keeps its jobs in memory and runs them in a bare
 /// scope; this one is written in the unit that scheduled the activity, so it commits with the
 /// bookmark or not at all, survives the process, and carries the idempotency key the
@@ -111,7 +111,7 @@ public sealed class BackgroundJobStore(ISession session)
 }
 
 /// <summary>
-/// Replaces the engine's in-memory background-activity scheduler (plans/workflows.md ›
+/// Replaces the engine's in-memory background-activity scheduler (docs/workflows.md ›
 /// Posting on workflows: external calls are boundaries). An activity marked
 /// <c>RunAsynchronously</c> - connectors, the external stock tasks - is bookmarked by the
 /// engine's middleware and handed here: <see cref="CreateAsync"/> writes the job in the

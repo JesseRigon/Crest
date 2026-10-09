@@ -22,7 +22,7 @@ public sealed record CrestLocalization(
     string DefaultCulture,
     string[] SupportedCultures,
     bool FallBackToParentCulture,
-    // Rung 3 of the client resolution chain (plans/user-localization.md's "Resolution
+    // Rung 3 of the client resolution chain (docs/localization.md's "Resolution
     // architecture") - a tenant-level default distinct from DefaultCulture above, only
     // consulted by the client when the current route is under the admin path prefix. Null
     // means "no admin-specific override" - the client falls through to rung 4/5 as if this
@@ -38,7 +38,7 @@ public sealed class CrestLocalizationSettings
 }
 
 // Culture is null when the user has no stored default (falls through to the next
-// resolution step — see plans/user-localization.md's resolution order).
+// resolution step — see docs/localization.md's resolution order).
 public sealed record CrestUserCulture(string? Culture);
 
 public sealed record CrestCulture(string Value, string Label, string NativeLabel)

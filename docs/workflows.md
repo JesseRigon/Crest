@@ -2,7 +2,7 @@
 
 How Crest's workflow service works: what a workflow is here, who may do what to one, how
 a flow gets started, how a run commits (or does not), and how a downstream module builds on
-top of it. Design not yet built, and the rulings, are in [workflows.md](workflows.md);
+top of it. Design not yet built, and the rulings, are under [Still to build](#still-to-build);
 the flowchart of a run's life is [workflows.mmd](workflows.mmd).
 
 ## What it is
@@ -463,8 +463,8 @@ uncommitted state.
   names the two honest shapes: call after commit with compensation (`Void` answers `Post`),
   or call before the unit as a precondition.
 
-The queue design that goes further (partitioned event delivery, a serial writer) is in
-[workflows.md](workflows.md).
+The queue design that goes further (partitioned event delivery, a serial writer) is under
+Still to build › Queues.
 
 **Units and hooks, as built:** the engine stores flush instead of committing
 (`FlushAsync`; the shell scope commits the burst), the trigger store treats a re-indexed
@@ -634,7 +634,9 @@ the flow on Approved or Rejected with DecidedBy/Comment as outputs; 403 outside 
 OAuth flow, HTTP invoker, token cache and rate limiting described here move into
 `Crest.Queries`' connection system, and Workflows depends on Queries; the activities and
 inbound webhook triggers stay here as consumers ([queries.md](queries.md) › Workflows on
-Queries). The section below describes what is built today.
+Queries). Retries move with them: the connection system retries at the transport level and
+connector activities default to no engine retry ([queries.md](queries.md) › Retries belong to
+the connection system). The section below describes what is built today.
 
 A **connection** is a tenant's handle on an external service: base URL, auth kind (`none`,
 `api-key`, `basic`, `bearer`, `oauth2-client-credentials`, `oauth2-authorization-code`,
@@ -712,7 +714,8 @@ InteractiveAuto a first visit runs in a server circuit where Studio's HTTP clien
 share scopes across users; the host prerenders a placeholder and reloads into WASM if an
 in-app link reached it inside a circuit.
 
-The move of the designer onto Crest components is in [workflows.md](workflows.md).
+The move of the designer onto Crest components is under Still to build › Designer: the
+transition onto Crest components.
 
 ## Testing
 
@@ -761,9 +764,9 @@ watch server or do not edit during a run. A build that fails on
 ## Still to build
 
 The workflow service, its registry, connectors, approvals, ownership, permissions, units
-of work, hooks, field dependencies and the stock-Orchard bridge are built: see
-[docs/workflows.md](workflows.md). This plan holds what is designed but not built,
-the rulings that shape the design, and the open work.
+of work, hooks, field dependencies and the stock-Orchard bridge are built: see the
+sections above. This section holds what is designed but not built, the rulings that shape
+the design, and the open work.
 
 ### Rulings
 
@@ -846,11 +849,14 @@ Built today: see [docs/workflows.md › Designer and admin pages](workflows.md#d
   - [ ] A hook-attachment page (the API exists: `HooksController`).
   - [ ] Clear, labelled sections for **webhooks** — pub/sub insight, process instances and
     history — and for **internal hooks**, with the same insight data.
+- [ ] **Run history and insight through the audit system** (ruling 2026-10-06). The engine's
+  own journal (execution logs, activity records), hook runs and inbound webhook deliveries
+  — including rejected posts, which today are only logged — are recorded as audit events;
+  the insight sections and metrics are audit feeds ([audit.md](audit.md)). Whether that
+  needs an AuditTrail fork is open there.
 - [ ] **Per-process metrics** (ruling 2026-10-05): run counts, timings and failures per flow,
   on the workflow pages, over the already-indexed instances, execution logs and activity
   records.
-- [ ] **Logic reroute.** An outline asks for "logic reroute options" in process mapping; read
-  it against the Elsa UIs and code to find what it maps to before planning.
 - [ ] **The designer UI that comes with it.** With it: the tier badge, Outdated + Reset, the access-list editor, the field-dependency
   panel, the pending state, an OAuth "Authorize" button on a connection, and a dedicated
   mapping editor for `Copy fields` (until then the rows are a JSON input).

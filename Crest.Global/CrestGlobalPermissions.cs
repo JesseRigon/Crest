@@ -6,7 +6,7 @@ namespace Crest.Global;
 /// Editing global reference data is a super-tenant act. The permission exists only so an
 /// editing surface has something to check; it is granted to no stereotype and the
 /// controllers additionally require <c>ShellSettings.IsDefaultShell()</c>, so an ordinary
-/// tenant has no route to it, not a hidden one (plans/global.md).
+/// tenant has no route to it, not a hidden one (docs/global-store.md).
 /// </summary>
 public sealed class CrestGlobalPermissions : IPermissionProvider
 {

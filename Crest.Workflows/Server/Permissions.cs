@@ -4,7 +4,7 @@ using OrchardCore.Workflows;
 namespace Crest.Workflows;
 
 /// <summary>
-/// The workflow permission set (plans/workflows.md, phase 5). The stock module's
+/// The workflow permission set (docs/workflows.md, phase 5). The stock module's
 /// <c>ManageWorkflows</c> (declared once, by <c>OrchardCore.Workflows</c>, which this feature
 /// depends on) stays as the umbrella that implies every one below, so roles configured for
 /// workflows carry over. Each finer permission is what a page, a controller or an engine

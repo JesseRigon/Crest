@@ -1,7 +1,7 @@
 const { fetchAntiforgeryToken } = require('./antiforgery');
 
 // Provisions the two non-admin identities the localization multi-user/anonymous checks
-// need (see plans/user-localization-testing.md): a "testuser" (rung 2 - stored default es)
+// need (see docs/localization.md): a "testuser" (rung 2 - stored default es)
 // and a "testuser2" (rung 2 - stored default fr, used for switch-user coverage). Created
 // idempotently via api/crest/users (CrestUsersController) against an already-logged-in
 // admin page/context - no recipe/setup changes, so this works against any already-

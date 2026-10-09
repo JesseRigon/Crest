@@ -31,7 +31,7 @@ public sealed record ContactPointWriteModel(
 /// <paramref name="Kind"/> is an option key. <paramref name="Country"/> is the level-1
 /// geo node id (ISO 3166-1 alpha-2). <paramref name="LevelNodeIds"/> is the rest of the
 /// address's geo stack, one node id per level the country's addressing map uses
-/// (plans/regions-and-locations.md); <paramref name="Locality"/> is the free-text city /
+/// (docs/regions.md); <paramref name="Locality"/> is the free-text city /
 /// post town / commune.
 /// </summary>
 public sealed record AddressModel(

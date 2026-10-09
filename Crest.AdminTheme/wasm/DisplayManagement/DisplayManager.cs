@@ -272,7 +272,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
 
                 // Write the fully-resolved value on every refresh, not just when a cookie is
                 // missing - the client is the sole source of truth for this decision (see
-                // plans/user-localization.md's "Resolution architecture" section), so the
+                // docs/localization.md's "Resolution architecture" section), so the
                 // server-side cookie must always reflect exactly what was just resolved here,
                 // never something left over from a previous, possibly-stale resolution.
                 // Prerender-safe: cookie writeback is browser-only; the interactive phase
@@ -283,7 +283,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
                 // Also hand the resolved-culture inputs to CrestAntiforgeryHandler so it can
                 // independently re-resolve and rewrite the cookie immediately before every
                 // subsequent outgoing request, not only here on manifest refresh - see
-                // plans/user-localization.md phase 15 and CrestAntiforgeryHandler.RewriteCultureCookie.
+                // docs/localization.md phase 15 and CrestAntiforgeryHandler.RewriteCultureCookie.
                 cultureCookieWriter.SetCultureCookieContext(new CultureCookieContext(User.UserName, cultureSelector, IsUnderAdminPath()));
             }
         }
@@ -293,7 +293,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         }
     }
 
-    // Client-side priority chain (plans/user-localization.md's "Resolution architecture"):
+    // Client-side priority chain (docs/localization.md's "Resolution architecture"):
     // 1. session override (explicit titlebar pick, this browser only, never persisted)
     // 2. user's stored default (UserLocalizationSettings.Culture, via the manifest)
     // 3. admin default culture, only consulted when the current route is under the admin
@@ -307,7 +307,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
     private async Task<string> ResolveCultureAsync(CultureSelector cultureSelector)
     {
         // Keyed by user name (sessionStorage, per-tab) - see crest.theme.js's
-        // setSessionCultureOverride/getSessionCultureOverride and plans/user-localization.md's
+        // setSessionCultureOverride/getSessionCultureOverride and docs/localization.md's
         // "Per-tab and per-user override scoping" section. Switching signed-in identity in
         // this tab looks up that identity's own override, never carries the previous user's.
         // Prerender-safe: sessionStorage/navigator are browser-only; during prerender both
@@ -319,7 +319,7 @@ public sealed class DisplayManager(IApi api, CrestThemeEngine themeEngine, Clien
         return ResolveCulture(cultureSelector, sessionOverride, browserLocale, IsUnderAdminPath());
     }
 
-    // Pure priority-chain logic (plans/user-localization.md's "Resolution architecture"),
+    // Pure priority-chain logic (docs/localization.md's "Resolution architecture"),
     // isolated from JS interop/NavigationManager so it's directly unit-testable:
     // 1. session override, 2. user's stored default, 3. admin default culture (admin-path
     // only), 4. browser locale, 5. tenant default. Every candidate must be one of the

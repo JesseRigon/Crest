@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace Crest.Workflows.Connectors;
 
 /// <summary>
-/// OAuth2 authorization code for a connection (plans/workflows.md › Connectors): a user who
+/// OAuth2 authorization code for a connection (docs/workflows.md › Connectors): a user who
 /// may manage connections starts the dance at <c>{key}/oauth/authorize</c> (a redirect to
 /// the provider with a sealed state), the provider sends them back to <c>oauth/callback</c>,
 /// the code is exchanged for tokens that are sealed on the connection. The browser never

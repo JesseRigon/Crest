@@ -263,8 +263,8 @@ public sealed class Startup : StartupBase
         });
 
         // Phase 3: Blazor participates in Orchard's own shape pipeline instead of a
-        // custom request-intercepting middleware - see plans/blazor hybrid
-        // conversion.md's "Orchard's routing does not fit stock Blazor Web App hosting"
+        // custom request-intercepting middleware - see docs/blazor-web.md
+        // ("Orchard's routing does not fit stock Blazor Web App hosting"
         // finding for why. CrestBlazorComponentPart is the tenant-placeable tree node
         // (mirrors WidgetsListPart/BagPart); the registry is the shared, tenant-agnostic
         // catalog of components tenants can place, scanned once from Server's own

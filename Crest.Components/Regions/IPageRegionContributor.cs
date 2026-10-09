@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components;
 namespace Crest.Components.Regions;
 
 /// <summary>
-/// The UI-injection seam (plans/taxes.md › UI injection): a page declares named regions
+/// The UI-injection seam (docs/page-regions.md): a page declares named regions
 /// with <see cref="CrestPageRegion"/>; a DOWNSTREAM module contributes a component to a
 /// region key without the page's module referencing it - the page-region analogue of
 /// IRouteComponentTableProvider. Nothing registered renders nothing, which is the correct

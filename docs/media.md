@@ -165,6 +165,10 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
       ClamAV for malware and libmagic for type detection (91); pattern-rule scanning such as YARA is an
       optional later provider. See "Scanner candidates".
 
+- [ ] **Resumable uploads land in quarantine like every upload** (ruling 2026-10-06). Every
+  upload is quarantined while pending; resuming changes nothing. Orchard's Tus completion
+  writes straight into the store (bypassing `FileCreationService`), so the Media fork routes
+  it into quarantine with a pending placement, and the verdict commits or rejects it.
 - [ ] **Module-generated files go through the same pipeline, with exemptions** (ruling
   2026-10-05). A module that generates files server-side writes them as new file objects or
   versions through the file-object API, so they are scanned like uploads. Not every write:
@@ -369,7 +373,7 @@ Entries and rules, the resolution engine and its explanation, the access index a
       that format keeps comments instead, through a per-type comment store.
 
 - [ ] **Build the access index and enforcement.**
-  75. Access is precomputed. For every object, an index holds each principal's winning grant or
+  75. Access is precomputed. For every object (every placement, for a hard-linked file), an index holds each principal's winning grant or
       block and its tier, and whether the object is public, after the resolution above. Every
       read path checks the index; nothing is resolved on access.
   76. A person's principals are resolved once per session or when they change, so a check is a
@@ -546,7 +550,7 @@ Drive browser, Share panel, Rules screens, access indicators, the user editor's 
 
 ## OrchardCore audit
 
-Audited against the Orchard fork the host packages are built from (`/workspaces/OrchardCore`,
+Audited against the Orchard fork the host packages are built from (the fork (`modules/OrchardCore` in a host),
 branch `Crest`), and against Crest as it stands. What each area gives us, and what Crest builds.
 
 ### Files and storage
@@ -652,6 +656,10 @@ change to Orchard.
   worked until a module with a hard dependency (OpenID) re-enabled the stock module. The swap
   holds only because Crest's module carries the exact feature ids and the stock module is
   absent, so nothing can re-enable it.
+
+**Keeping the fork in step: a diff check** (ruling 2026-10-06). On every OrchardCore update,
+the fork is diffed against the stock module so new features, settings and recipe steps are
+not missed. Every stock feature is kept.
 
 **Same module id, different assembly.** `Crest.Media` declares
 `[assembly: Module(Id = "OrchardCore.Media")]`. Orchard supports this (`ModuleInfo.Id` lets a

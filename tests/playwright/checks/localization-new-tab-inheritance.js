@@ -3,7 +3,7 @@ const { ensureTestUser } = require('../harness/testUsers');
 const { loginAsUser } = require('../harness/auth');
 const { createInstance } = require('../harness/instance');
 
-// Verifies plans/user-localization.md's phase 16: a same-origin new tab opened from an
+// Verifies docs/localization.md's phase 16: a same-origin new tab opened from an
 // existing session (window.open/target="_blank") should inherit the source tab's
 // sessionStorage - and therefore its session culture override - per standard browser
 // behavior, distinct from an independently-opened tab which correctly starts blank

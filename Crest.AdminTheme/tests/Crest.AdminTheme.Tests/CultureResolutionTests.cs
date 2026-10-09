@@ -5,7 +5,7 @@ using Xunit;
 namespace Crest.AdminTheme.Tests;
 
 // Table-driven coverage of DisplayManager.ResolveCulture's 5-rung priority chain
-// (plans/user-localization.md's "Resolution architecture"): session override -> user
+// (docs/localization.md's "Resolution architecture"): session override -> user
 // stored default -> admin default (admin-path only) -> browser locale -> tenant default.
 public sealed class CultureResolutionTests
 {

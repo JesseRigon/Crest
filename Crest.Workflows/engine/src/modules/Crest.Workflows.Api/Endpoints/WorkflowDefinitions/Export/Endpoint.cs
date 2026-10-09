@@ -194,7 +194,7 @@ internal class Export : CrestWorkflowsEndpoint<Request>
         await using var writer = new Utf8JsonWriter(output);
 
         writer.WriteStartObject();
-        writer.WriteString("$schema", "https://github.com/JesseRigon/Crest/blob/main/plans/workflows.md");
+        writer.WriteString("$schema", "https://github.com/JesseRigon/Crest/blob/main/docs/workflows.md");
 
         foreach (var property in rootElement.EnumerateObject())
             property.WriteTo(writer);

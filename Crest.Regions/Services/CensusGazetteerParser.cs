@@ -4,7 +4,7 @@ using Crest.Regions.Models;
 namespace Crest.Regions.Services;
 
 /// <summary>
-/// Tree population tooling (plans/regions-and-locations.md phase 6): reads a US Census
+/// Tree population tooling (docs/regions.md phase 6): reads a US Census
 /// Bureau Gazetteer file - tab separated, header row of USPS, GEOID, ANSICODE, NAME,
 /// ..., INTPTLAT, INTPTLONG - and streams one standard node per row. County files give
 /// level 3 under the state; the node id is "US-{state}-{county FIPS}" so it survives data

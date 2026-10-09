@@ -15,7 +15,7 @@ using YesSql;
 
 namespace Crest.Services;
 
-// Two kinds of list behind one contract (plans/global.md):
+// Two kinds of list behind one contract (docs/global-store.md):
 //  - TENANT lists are content items whose CrestContentPartListPart holds the Option items
 //    directly; tenants edit them like any other content.
 //  - GLOBAL-BACKED lists have their standard rows in the tenant-less global store. The

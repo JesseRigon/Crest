@@ -8,8 +8,7 @@ namespace Crest.Migrations;
 // Registers CrestBlazorComponentPart as Attachable (same as WidgetsListPart's own
 // migration) and defines a BlazorComponent content type carrying it, with a Widget
 // stereotype so it's placeable into any WidgetsListPart zone alongside stock Widgets -
-// no new tree/zone mechanism, reusing Orchard's existing one (see plans/blazor hybrid
-// conversion.md, Phase 3a).
+// no new tree/zone mechanism, reusing Orchard's existing one (see docs/blazor-web.md).
 public sealed class CrestBlazorComponentMigrations : DataMigration
 {
     private readonly IContentDefinitionManager _contentDefinitionManager;

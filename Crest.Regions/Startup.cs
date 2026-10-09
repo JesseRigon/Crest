@@ -25,7 +25,7 @@ public sealed class Startup : StartupBase
         services.AddIndexProvider<GeoNodeOverrideIndexProvider>();
         services.AddScoped<IRegionalProfileResolver, RegionalProfileResolver>();
         services.AddScoped<IGeoService, GeoService>();
-        // Provider seams (plans/regions-and-locations.md): the built-in point-in-polygon
+        // Provider seams (docs/regions.md): the built-in point-in-polygon
         // ships; geocoders are external and registered by the host.
         services.AddScoped<IGeoBoundaryResolver, NetTopologySuiteBoundaryResolver>();
         services.AddScoped<IGeoLocator, CompositeGeoLocator>();

@@ -57,7 +57,7 @@ public class CrestContentPartListPart : ContentPart
     public List<ContentItem> Options { get; set; } = [];
 
     /// <summary>
-    /// For a list whose standard rows live in the global store (plans/global.md): the
+    /// For a list whose standard rows live in the global store (docs/global-store.md): the
     /// tenant's presentation overrides of those rows, keyed by option key. Never data -
     /// a global option's Key, Value and Category are the standard's, so only label,
     /// plural, hidden and position can differ per tenant. <see cref="Options"/> then

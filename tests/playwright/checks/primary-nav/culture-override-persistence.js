@@ -108,7 +108,7 @@ module.exports = async function run(page, ctx) {
     });
 
     // Now read the SAME menu back through a browser context resolved to French (session
-    // override, the highest-priority rung - see plans/user-localization.md) and confirm
+    // override, the highest-priority rung - see docs/localization.md) and confirm
     // the override still applies to the French-labelled node. Before the fix this failed:
     // the French label hashed to a different key than the one the override was saved
     // under, so the node came back with iconClass=null under French.

@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Crest.Server.Tests;
 
-// Theme compatibility (plans/shells-and-themes.md › Theme compatibility): a feature's shell
+// Theme compatibility (docs/shells-and-themes.md › Theme compatibility): a feature's shell
 // contract is satisfied by a Crest Blazor theme or any fork of one, and a pending theme
 // change or reset is evaluated against the bucket it changes.
 public class ShellCompatibilityTests

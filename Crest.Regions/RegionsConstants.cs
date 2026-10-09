@@ -6,7 +6,7 @@ public static class RegionsConstants
 
     public static class ContentTypes
     {
-        /// <summary>A party-attached geo/regional profile. Never "Tenant" - see plans/regions-and-locations.md.</summary>
+        /// <summary>A party-attached geo/regional profile. Never "Tenant" - see docs/regions.md.</summary>
         public const string RegionalProfile = "CrestRegionalProfile";
     }
 

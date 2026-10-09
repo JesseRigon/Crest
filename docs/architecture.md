@@ -27,6 +27,30 @@ registry and a discipline, and they belong to the modules that own that business
 Members is Crest's because every business with a public face has members, customers or
 users on the other side of it, and the member portal is how a product reaches them.
 
+## Direction: Blazor or headless, nothing else
+
+Crest is taking OrchardCore in as a hard fork (ruling 2026-10-09; the plan is still to be
+written). As each Blazor replacement lands, the Liquid templates and the stock Razor/Vue
+UIs it replaces are removed, until every page is a Blazor build. Headless (the content-item
+API, GraphQL, Queries) is first class alongside Blazor. Every capability a Blazor page has
+is reachable through the API, and no feature exists only in the UI. Stock front-end assets
+and their build pipeline shrink with the UIs they serve.
+
+Everything is streamlined to Blazor: no work goes into other UI systems. There is **one
+expression engine** for the whole application: query parameters, route and title patterns,
+workflow expressions, notification and email templates. Liquid as a view engine goes with
+the stock UIs.
+
+- **For now, keep Liquid (Fluid)** for expressions, for ease of migration.
+- **Eventually, migrate to Elsa's expression system**, because it allows more than one
+  language. When that engine is built:
+  - Liquid is the default language.
+  - Admins can grant C#, JavaScript and Python scripting access. Granting is only the first
+    step toward sandboxing: those providers run code on the server and must be hardened
+    before any tenant uses them.
+
+  Details to be discussed later.
+
 ## Three shells
 
 Crest serves three audiences, each with its own shell: the **admin** shell for staff, the
@@ -103,6 +127,13 @@ unless it is proprietary or depends on proprietary code. Three exist: `OptionPic
 manifests, permission names, option-set keys (`parties.*` — already unbranded), route
 constants and test names follow.
 
+**"Crest" appears only in module naming (ruling 2026-10-06).** Modules, assemblies and
+packages carry the `Crest.` prefix; nothing inside them does — not permission names,
+types, functions, settings keys or other internal names (`ManageConnections`, not
+`ManageCrestWorkflowConnections`). The project must be renameable by renaming its modules
+alone. The same rule holds for downstream projects. OrchardCore's own names are not ours to
+change.
+
 **No downstream name appears in Crest.** Crest is open source and knows nothing of the
 products built on it — not in a namespace, an assembly name, a route, a comment, a test name
 or a fixture. That includes the vendored engine subtree:
@@ -127,7 +158,13 @@ provenance is recorded in the subtree README rather than in its type names.
   migrations. The consumer owns the interface; the host composes.
 - No literal path strings; routes flow through Orchard's own systems (see
   [agents.md](../agents.md)).
-- Pre-release: no compatibility code; restructure outright.
+- Pre-release: no compatibility code; restructure outright. Until the first public release,
+  migrations are edited in place and dev tenants are reset when shipped data changes
+  (ruling 2026-10-06); from the first public release on, every change ships an upgrade step
+  (`UpdateFrom`, backfill tasks). A plan that relies on a reset says so.
+- Blazor pages and components that depend on an Orchard module being enabled are kept
+  isolated, one place per module, so they migrate easily if that module or Orchard itself
+  is ever forked (ruling 2026-10-06).
 
 ## The rules that keep it composable
 

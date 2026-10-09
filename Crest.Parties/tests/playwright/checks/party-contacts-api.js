@@ -64,7 +64,7 @@ module.exports = async function run(page, ctx) {
     check('unknown-kind-is-400', badKind.status === 400, `HTTP ${badKind.status} ${badKind.text}`);
 
     // Addresses: the geo stack is validated on the API, not just in the editor - a level-2
-    // node must sit beneath the level-1 country (plans/regions-and-locations.md).
+    // node must sit beneath the level-1 country (docs/regions.md).
     const mismatch = await api('POST', `${base}/addresses`, { kind: 'billing', country: 'CA', levelNodeIds: { 2: 'US-ID' }, locality: 'Boise', postalCode: 'K1A 0B1' });
     check('region-must-belong-to-country', mismatch.status === 400, `HTTP ${mismatch.status} ${mismatch.text}`);
 

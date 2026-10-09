@@ -84,7 +84,7 @@ public sealed class ThemesController(
     // admin's own decision about their site. But the API carries the warning itself, not
     // just the UI - a change that would break enabled features is rejected with the report
     // unless the caller acknowledges it, so a script or recipe gets the same gate a person
-    // does. See plans/shells-and-themes.md, "The two guards".
+    // does. See docs/shells-and-themes.md, "The two guards".
     [HttpPost("{id}/current")]
     public async Task<IActionResult> SetCurrent(string id, [FromQuery] bool acknowledgeIncompatibilities = false)
     {

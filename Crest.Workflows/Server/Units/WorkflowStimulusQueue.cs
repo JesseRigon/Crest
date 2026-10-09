@@ -6,7 +6,7 @@ using OrchardCore.Environment.Shell.Scope;
 namespace Crest.Workflows.Units;
 
 /// <summary>
-/// Triggers fire after commit, never inside the raiser's transaction (plans/workflows.md ›
+/// Triggers fire after commit, never inside the raiser's transaction (docs/workflows.md ›
 /// Posting on workflows). Every stimulus a registry, a stock event or a content event wants
 /// to send goes through <see cref="WorkflowAfterCommit"/>: when the current shell scope has
 /// committed its session, each is sent in a fresh child scope - one burst, one unit, per

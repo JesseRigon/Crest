@@ -7,7 +7,7 @@ namespace Crest.Workflows.Connectors;
 public sealed record OpenApiImportResult(string? BaseUrl, string AuthKind, Dictionary<string, string> Settings, IReadOnlyList<WorkflowConnectionOperation> Operations, string? Title, IReadOnlyList<string> Warnings);
 
 /// <summary>
-/// Reads an OpenAPI 3 document (plans/workflows.md › Connectors): the first server's URL
+/// Reads an OpenAPI 3 document (docs/workflows.md › Connectors): the first server's URL
 /// becomes the base URL, the first security scheme the auth kind (http bearer → bearer,
 /// http basic → basic, apiKey in header → api-key, oauth2 clientCredentials or
 /// authorizationCode → the matching OAuth2 kind with its URLs and scopes), every path

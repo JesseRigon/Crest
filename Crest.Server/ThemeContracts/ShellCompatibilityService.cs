@@ -17,7 +17,7 @@ namespace Crest.Themes;
 /// than rendering a broken shell.
 ///
 /// Both directions are guarded, with deliberately different severity - see
-/// <c>plans/shells-and-themes.md</c>:
+/// <c>docs/shells-and-themes.md</c>:
 /// <list type="bullet">
 /// <item>enabling a feature whose contract is unsatisfiable is REFUSED: it would render
 /// nothing usable, and the admin has not asked for that outcome;</item>

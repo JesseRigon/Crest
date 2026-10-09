@@ -11,7 +11,7 @@ using YesSql;
 namespace Crest.Regions.Controllers;
 
 /// <summary>
-/// Tree population tooling, Default tenant only (plans/regions-and-locations.md ›
+/// Tree population tooling, Default tenant only (docs/regions.md ›
 /// Populating the tree): upserts standard nodes, postal codes and boundaries into the
 /// global store from the same JSON shape the embedded data files use. The cycle check
 /// runs over the whole submitted batch before anything is written.

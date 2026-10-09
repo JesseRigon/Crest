@@ -9,7 +9,7 @@ using OrchardCore.Environment.Shell;
 namespace Crest.Services;
 
 // Culture resolution happens client-side (Blazor WASM DisplayManager.RefreshManifestAsync
-// - see plans/user-localization.md's "Resolution architecture" section): the client is the
+// - see docs/localization.md's "Resolution architecture" section): the client is the
 // only party that knows the full priority chain (session override, stored user default,
 // browser locale, tenant default), so it resolves the winner itself and writes one cookie
 // with the final answer. This is deliberately NOT OrchardCore.Localization's

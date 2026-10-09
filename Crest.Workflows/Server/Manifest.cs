@@ -9,7 +9,7 @@ using OrchardCore.Modules.Manifest;
 
 // The engine. Depends on the stock OrchardCore.Workflows feature on purpose: the upstream
 // modules' workflow startups (Email, Users, Contents, ...) are gated on that feature id,
-// and the override route (plans/workflows.md) keeps them running while Crest replaces the
+// and the override route (docs/workflows.md) keeps them running while Crest replaces the
 // services behind them. No OpenID: the API rides the tenant cookie behind Crest's
 // antiforgery header and the ManageWorkflows permission (Security/CrestWorkflowsApiSecurityMiddleware).
 [assembly: Feature(

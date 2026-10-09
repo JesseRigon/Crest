@@ -17,7 +17,7 @@ public sealed record CrestTriggerStimulus(string TriggerKey);
 /// ...). The result is the payload the registry sent; the acting user rides along as the
 /// workflow input <c>Actor</c>. Optional <see cref="RequiredPermission"/> ends the run on
 /// Denied when that user lacks the Orchard permission; optional <see cref="PayloadFilter"/>
-/// ends it on Skipped when the payload does not match (plans/workflows.md, phase 5: "when a
+/// ends it on Skipped when the payload does not match (docs/workflows.md, phase 5: "when a
 /// transaction hits account X" is one node: trigger <c>transaction.account-posted</c>,
 /// filter <c>AccountCode = 1200</c>).
 /// </summary>

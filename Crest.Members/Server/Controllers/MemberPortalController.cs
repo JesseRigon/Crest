@@ -18,7 +18,7 @@ using OrchardCore.Users.Services;
 namespace Crest.Members.Controllers;
 
 /// <summary>
-/// The member portal's own sign-in surface (design: plans/user-systems.md §B/§G): the
+/// The member portal's own sign-in surface (design: docs/members.md §B/§G): the
 /// same ONE Identity cookie as the tenant (§C), the same stock ILoginFormEvent /
 /// registration sequences, but the request is marked as the PORTAL surface so the
 /// login-surface gate admits members (and refuses staff) and the creation stamp

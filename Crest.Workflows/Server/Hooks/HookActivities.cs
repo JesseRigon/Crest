@@ -12,7 +12,7 @@ namespace Crest.Workflows.Hooks;
 
 /// <summary>
 /// Runs every flow attached to a hook slot <em>inline, inside this flow's unit of work</em>
-/// (plans/workflows.md › Posting on workflows): each attachment starts as a child instance in
+/// (docs/workflows.md › Posting on workflows): each attachment starts as a child instance in
 /// the same scope and session, with this flow's payload and actor and the slot key as input.
 /// A required attachment that faults or suspends fails the unit - this flow faults, and at
 /// commit everything the burst wrote is discarded. A best-effort attachment's failure is

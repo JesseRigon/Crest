@@ -38,7 +38,7 @@ public static class PartiesConstants
         /// <summary>
         /// A place the TENANT operates from - warehouse, store, office, dock. Holds
         /// physical fact only (addresses, labelled points, floor area, storeys); tax
-        /// apportionment is a part the tax module attaches (plans/regions-and-locations.md).
+        /// apportionment is a part the tax module attaches (docs/regions.md).
         /// </summary>
         public const string Location = "Location";
 

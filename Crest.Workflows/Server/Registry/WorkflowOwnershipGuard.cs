@@ -9,7 +9,7 @@ using OrchardCore.Security.Permissions;
 
 namespace Crest.Workflows.Registry;
 
-/// <summary>What a definition's custom properties say about who owns it (plans/workflows.md, phase 5).</summary>
+/// <summary>What a definition's custom properties say about who owns it (docs/workflows.md, phase 5).</summary>
 public sealed record WorkflowOwnershipInfo(string Ownership, string? FlowKey, int? FlowVersion, bool Forked)
 {
     public static readonly WorkflowOwnershipInfo TenantOwned = new(WorkflowOwnership.Tenant, null, null, false);

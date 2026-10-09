@@ -1,5 +1,5 @@
-// Live check of the member portal surfaces (plans/user-systems.md §B/§G,
-// plans/shells-and-themes.md): the member shell's sign-in page is served to an anonymous
+// Live check of the member portal surfaces (docs/members.md §B/§G,
+// docs/shells-and-themes.md): the member shell's sign-in page is served to an anonymous
 // visitor at the member base (while a normal admin page still redirects), an admin page
 // requested inside the member shell is not found there, portal sign-in
 // admits a member and refuses staff, the tenant JSON login refuses the member, and

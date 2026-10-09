@@ -5,7 +5,7 @@ namespace Crest.Parties.PartyTypes;
 /// base parties (a role content item pointing at a Person or Organization through its
 /// Party picker - see the consuming module.s documentation); the exception is a catalogue
 /// the global store owns, which a tenant references through a shim of its own and never
-/// edits (tax authorities: plans/taxes.md › Tax authorities are parties).
+/// edits (tax authorities: docs/parties.md › Party-type registry and All Parties (global kinds)).
 /// </summary>
 public static class PartyTypeKinds
 {

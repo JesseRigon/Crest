@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Crest.Workflows.Registry;
 
 /// <summary>
-/// Raises a registered trigger from inside a flow (plans/workflows.md › Posting on
+/// Raises a registered trigger from inside a flow (docs/workflows.md › Posting on
 /// workflows): a tenant flow's hand-off, or a system flow's "after" extension point.
 /// Subscribed flows start <em>after this flow's unit commits</em>, in their own units,
 /// correlated to this flow's object unless <see cref="CorrelationId"/> says otherwise, with

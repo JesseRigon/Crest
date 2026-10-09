@@ -27,7 +27,7 @@ public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js) : Delegating
     public Uri? BaseAddress { get; set; }
 
     // Pushed by DisplayManager.RefreshManifestAsync every time it resolves culture (see
-    // plans/user-localization.md phase 15). The cookie is per-origin but a session
+    // docs/localization.md phase 15). The cookie is per-origin but a session
     // override lives in sessionStorage (per-tab) - so between two open tabs with
     // different overrides, whichever tab last wrote the cookie "wins" for both until the
     // other tab makes its own request. Re-resolving and rewriting the cookie immediately
@@ -137,7 +137,7 @@ public interface ICrestCultureCookieWriter
 public sealed record CrestAntiforgeryToken(string HeaderName, string RequestToken);
 
 // Pushed into CrestAntiforgeryHandler by DisplayManager.RefreshManifestAsync (see
-// plans/user-localization.md phase 15) so the handler can independently re-resolve and
+// docs/localization.md phase 15) so the handler can independently re-resolve and
 // rewrite the culture cookie on every outgoing request without depending on
 // DisplayManager itself (avoids a circular DI dependency - DisplayManager depends on
 // IApi, which depends on this handler's owning HttpClient).

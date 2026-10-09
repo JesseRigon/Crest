@@ -38,7 +38,7 @@ public class ContentEventHandler(Units.WorkflowStimulusQueue queue, IWorkflowUse
 
         // Fires after the current unit commits: a flow never sees an item whose write was
         // rolled back, and content written inside a workflow burst reaches its listeners only
-        // once that burst is in (plans/workflows.md › Posting on workflows).
+        // once that burst is in (docs/workflows.md › Posting on workflows).
         await queue.EnqueueAsync<TTriggerActivity>(stimulus, new()
         {
             CorrelationId = contentItem.ContentItemId,

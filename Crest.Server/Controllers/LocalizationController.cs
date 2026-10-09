@@ -129,7 +129,7 @@ public sealed class CrestLocalizationController(
 
     // Self-service: the current user's own stored default culture
     // (OrchardCore.Users.Localization's UserLocalizationSettings, on User.Properties —
-    // see plans/user-localization.md). Deliberately scoped to "current user only", not
+    // see docs/localization.md). Deliberately scoped to "current user only", not
     // gated by LocalizationPermissions.ManageCultures/user-management permissions the way
     // the stock admin "edit user" screen is, since every signed-in user manages their own
     // preference here. Shared by the culture dropdown's "Save as default" action and the
@@ -230,7 +230,7 @@ public sealed class CrestLocalizationController(
         }
 
         // AdminDefaultCulture (rung 3 of the client resolution chain - see
-        // plans/user-localization.md's "Resolution architecture") is optional and, when
+        // docs/localization.md's "Resolution architecture") is optional and, when
         // set, must still be one of the tenant's supported cultures - it is not a way to
         // force an unsupported culture onto the admin area.
         string? adminDefaultCulture = null;

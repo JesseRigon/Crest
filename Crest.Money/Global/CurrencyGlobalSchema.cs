@@ -7,7 +7,7 @@ using YesSql.Sql;
 
 namespace Crest.Money.Global;
 
-/// <summary>ISO 4217 metadata, in the global store: the minor units Amount.GetRounded() rounds to are never a tenant setting (plans/accounting.md).</summary>
+/// <summary>ISO 4217 metadata, in the global store: the minor units Amount.GetRounded() rounds to are never a tenant setting (docs/money.md).</summary>
 public sealed class CurrencyMetadata
 {
     public long Id { get; set; }

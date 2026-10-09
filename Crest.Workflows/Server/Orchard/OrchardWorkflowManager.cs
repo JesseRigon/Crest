@@ -41,7 +41,7 @@ public sealed class OrchardWorkflowManager(
             [WorkflowsConstants.InputKeys.Actor] = userContext.Capture(),
         };
 
-        // Fires after the current unit commits (plans/workflows.md › Posting on workflows).
+        // Fires after the current unit commits (docs/workflows.md › Posting on workflows).
         await queue.EnqueueAsync<OrchardEvent>(new OrchardEventStimulus(name), new() { CorrelationId = correlationId, Input = workflowInput });
         logger.LogDebug("Stock event {Event} queued for {Correlation}; it fires after commit.", name, correlationId);
         return [];

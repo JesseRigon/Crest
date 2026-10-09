@@ -2,7 +2,7 @@ const { createInstance } = require('../../../../../Crest/tests/playwright/harnes
 const { ensureTestUser } = require('../../../../../Crest/tests/playwright/harness/testUsers');
 const { fetchAntiforgeryToken } = require('../../../../../Crest/tests/playwright/harness/antiforgery');
 
-// Approvals (plans/workflows.md, phase 4): Request approval parks a flow on a task for an
+// Approvals (docs/workflows.md, phase 4): Request approval parks a flow on a task for an
 // Orchard role; the queue shows it to that role's members only; someone outside the role
 // cannot decide (403), a member can, the flow resumes on the chosen port, and a second
 // decision is refused (409). A task gated on a permission is decided by its holders.

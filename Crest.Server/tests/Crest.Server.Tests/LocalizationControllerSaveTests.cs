@@ -54,7 +54,7 @@ internal sealed class FakeSite : ISite
 }
 
 // LocalizationController.SaveAsync validates AdminDefaultCulture (rung 3 of the client
-// resolution chain - plans/user-localization.md) must be one of the tenant's supported
+// resolution chain - docs/localization.md) must be one of the tenant's supported
 // cultures, or null to clear the override. It must never let an admin default force an
 // unsupported culture onto the admin area.
 public sealed class LocalizationControllerSaveTests

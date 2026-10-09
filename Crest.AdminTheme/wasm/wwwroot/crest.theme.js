@@ -139,7 +139,7 @@ window.crestTheme = (() => {
   const sessionCultureKey = 'crest-admin-session-culture';
 
   // Culture resolution happens entirely client-side (DisplayManager.RefreshManifestAsync -
-  // see plans/user-localization.md's "Resolution architecture" section). setAdminCulture is
+  // see docs/localization.md's "Resolution architecture" section). setAdminCulture is
   // called with the fully-resolved culture on every resolution (not only when the user
   // explicitly picks one), and writes a tenant-wide cookie (CrestCultureCookie server-side,
   // NOT AdminCookieCultureProvider's admin-path-scoped one) so both the WASM app's own API
@@ -151,7 +151,7 @@ window.crestTheme = (() => {
   // source of truth. CrestAntiforgeryHandler.RewriteCultureCookie calls this same function
   // again (via getSessionCultureOverride/getBrowserLocale) immediately before every
   // outgoing Crest API request, not only on manifest refresh, so each tab's own requests
-  // always carry its own resolved culture - see plans/user-localization.md phase 15.
+  // always carry its own resolved culture - see docs/localization.md phase 15.
   function setAdminCulture(cookieName, cookiePath, culture) {
     if (!cookieName || !culture) return;
     const path = cookiePath || '/';

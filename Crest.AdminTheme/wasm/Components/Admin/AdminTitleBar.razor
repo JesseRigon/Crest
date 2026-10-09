@@ -15,7 +15,7 @@
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
 <header class="admin-titlebar">
-    @* Test-only hook (Playwright localization checks - plans/user-localization-testing.md):
+    @* Test-only hook (Playwright localization checks - docs/localization.md):
        DisplayManager.ResolvedCulture has no other reliable DOM signal, since the culture
        dropdown's visible label is optional (CrestTitleBarSettings.DisplayCultureLabel) and
        its icon alone doesn't identify a specific culture unambiguously. *@
@@ -80,7 +80,7 @@
            items (e.g. impersonation/support tools) have a defined place to land; (3) the
            hardcoded tenant/browser-session slot — the known-signed-in-users list (browser
            localStorage, so this can never be a server-defined nav item), "Sign in as
-           another user", then Logout. See plans/user-localization.md's "User Profile
+           another user", then Logout. See docs/localization.md's "User Profile
            Menu" section. *@
         <CrestProfileMenu class="admin-titlebar__avatar-menu" ShowIcon="false" ToggleAriaLabel="@T["Open user menu"]" Click="OnProfileMenuItemClickedAsync">
             <Template>
@@ -191,7 +191,7 @@
     // behavior, unchanged). This is a separate, explicit second action that persists the
     // *currently selected* culture as the user's stored default, via the same self-service
     // endpoint the Settings page's localization section uses — see
-    // plans/user-localization.md's "Culture picker: save-as-default" section.
+    // docs/localization.md's "Culture picker: save-as-default" section.
     private RenderFragment CultureFooterTemplate => builder =>
     {
         builder.OpenElement(0, "div");
@@ -342,7 +342,7 @@
             return;
         }
 
-        // Rung 1 of the resolution chain (plans/user-localization.md's "Resolution
+        // Rung 1 of the resolution chain (docs/localization.md's "Resolution
         // architecture"): record this as the explicit session override so it wins on every
         // future resolution this browser session, then write the resolved cookie immediately
         // so the reload below (and any legacy same-origin iframe page) picks it up right away

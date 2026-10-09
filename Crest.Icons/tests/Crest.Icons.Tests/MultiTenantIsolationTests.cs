@@ -3,7 +3,7 @@ using Crest.Iconify;
 namespace Crest.Icons.Tests;
 
 /// <summary>
-/// plans/icons.md: "two tenants with different public prefix settings share the same local cache
+/// Crest.Icons/README.md: "two tenants with different public prefix settings share the same local cache
 /// but see different visible libraries/results" and "two tenants with custom server settings do
 /// not share data or cache entries". Tenant scoping is entirely driven by each tenant's own
 /// IIconProviderSettingsStore (Orchard DI-scopes one per tenant) - CrestIconProvidersSettings

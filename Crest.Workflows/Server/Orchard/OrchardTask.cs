@@ -63,7 +63,7 @@ public class OrchardTask : Activity
 
 /// <summary>
 /// The stock tasks whose effect leaves the database - e-mail, SMS, notifications, HTTP - as
-/// an engine background activity (plans/workflows.md › Posting on workflows): the node is
+/// an engine background activity (docs/workflows.md › Posting on workflows): the node is
 /// bookmarked, the unit commits, the task runs in a unit of its own and the flow resumes with
 /// its outcomes. A unit that fails never sends.
 /// </summary>

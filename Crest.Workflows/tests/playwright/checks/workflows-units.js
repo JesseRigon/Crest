@@ -1,6 +1,6 @@
 const { fetchAntiforgeryToken } = require('../../../../../Crest/tests/playwright/harness/antiforgery');
 
-// Units of work and hooks (plans/workflows.md › Posting on workflows):
+// Units of work and hooks (docs/workflows.md › Posting on workflows):
 //  - a burst is one transaction: a host flow creates content, then runs a hook whose required
 //    attachment fails the unit - the host faults and the content does not exist;
 //  - the same host with a healthy attachment commits: content exists, child instances exist;

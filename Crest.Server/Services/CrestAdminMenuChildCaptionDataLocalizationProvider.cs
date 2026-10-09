@@ -14,7 +14,7 @@ namespace Crest.Services;
 /// <remarks>
 /// The stock <c>LinkAdminNodeDataLocalizationProvider</c> / <c>PlaceholderAdminNode...</c>
 /// providers build their descriptors from <c>menu.MenuItems.OfType&lt;...&gt;()</c> - the root
-/// level only, no recursion (see plans/upstream-orchard-proposals.md #2). Every child caption
+/// level only, no recursion (see docs/upstream-orchard-proposals.md #2). Every child caption
 /// is therefore invisible to the Translations editor, and - because the editor's Save replaces
 /// a culture's whole list with what was enumerated (#3) - any stored translation for a child
 /// caption is silently DELETED by any save of that culture. With the provider-menu import

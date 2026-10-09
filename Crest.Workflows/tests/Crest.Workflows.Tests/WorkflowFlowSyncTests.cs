@@ -3,7 +3,7 @@ using Xunit;
 
 namespace Crest.Workflows.Tests;
 
-// What a sync does per shipped flow (plans/workflows.md › Registry): install, re-publish a
+// What a sync does per shipped flow (docs/workflows.md › Registry): install, re-publish a
 // system flow that lost its published version, upgrade an unforked copy behind the shipped
 // version, keep a forked one - the runtime path the activation task and the sync endpoint share.
 public class WorkflowFlowSyncTests

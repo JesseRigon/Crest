@@ -141,7 +141,7 @@ public sealed class PartyContactsService(
     // (required fields, postal pattern) and the tree validates the stack (every node
     // exists, one per level, each beneath the one above). Both run server-side even
     // though the WASM client runs the same map rules, because an API write can skip the
-    // form (plans/regions-and-locations.md › Validation).
+    // form (docs/regions.md › Validation).
     private async Task<ResolvedAddress> ResolveAddressAsync(AddressWriteModel write, CancellationToken cancellationToken)
     {
         var kindId = (await optionKeys.RequireOptionAsync(PartiesOptionSets.AddressKind, write.Kind, cancellationToken)).ContentItemId;

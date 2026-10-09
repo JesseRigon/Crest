@@ -65,7 +65,7 @@ public sealed class WorkflowRegistryController(IAuthorizationService authorizati
     }
 
     /// <summary>
-    /// Re-imports a shipped flow over the tenant's copy (plans/workflows.md, phase 5): a new
+    /// Re-imports a shipped flow over the tenant's copy (docs/workflows.md, phase 5): a new
     /// version from the shipped JSON, fork mark cleared, the tenant's edits kept in history.
     /// System flows are never behind, so there is nothing to reset.
     /// </summary>

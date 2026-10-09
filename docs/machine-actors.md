@@ -15,7 +15,7 @@ machine registry. Crest's own APIs are cookie-only today and would need to accep
 bearer tokens.
 
 **How much of this is verified:** that `OrchardCore.OpenId` is in our fork
-(`/workspaces/OrchardCore`, branch Crest) and that the host's setup recipe does
+(the fork (`modules/OrchardCore` in a host), branch Crest) and that the host's setup recipe does
 not enable it. Everything else below is from knowledge of the module and has not been
 re-read in the source; confirm each point at design time.
 

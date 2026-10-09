@@ -3,9 +3,9 @@ const { loginAsUser } = require('../harness/auth');
 const { createInstance } = require('../harness/instance');
 const { fetchAntiforgeryToken } = require('../harness/antiforgery');
 
-// Drives the exact sequence requested in plans/user-localization-testing.md against a
+// Drives the exact sequence requested in docs/localization.md against a
 // running tenant: enable es/fr/de alongside en, then walk the 5-rung priority chain
-// (plans/user-localization.md's "Resolution architecture") one setting at a time -
+// (docs/localization.md's "Resolution architecture") one setting at a time -
 // tenant default -> admin default -> user default -> session override - checking the
 // resolved culture after each stage before moving to the next.
 //
@@ -101,7 +101,7 @@ module.exports = async function run(page, ctx) {
     results.push({ name: 'stage3-user-default-es', pass: user3 === 'es-ES', message: `resolved=${user3}` });
 
     // Stage 4: session override = de, via the titlebar culture picker (rung 1 - purely
-    // client-side, no API - see plans/user-localization.md's "Per-tab and per-user
+    // client-side, no API - see docs/localization.md's "Per-tab and per-user
     // override scoping"). de must win over the stored es default from stage 3.
     const trigger = userPage.locator('.admin-titlebar__culture-selector');
     await trigger.click();

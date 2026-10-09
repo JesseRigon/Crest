@@ -14,7 +14,7 @@ public sealed record CreateMemberRequest(
     IReadOnlyList<string>? Roles);
 
 /// <summary>
-/// Member accounts and org bindings (design: plans/user-systems.md). All writes keep
+/// Member accounts and org bindings (design: docs/members.md). All writes keep
 /// the three stores in step: the user aspect (+ its index rows via re-save), and the
 /// hierarchy tree (one node per binding, under the org's root).
 /// </summary>

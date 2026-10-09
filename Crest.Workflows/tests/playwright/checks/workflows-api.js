@@ -3,7 +3,7 @@ const { loginAsUser } = require('../../../../../Crest/tests/playwright/harness/a
 const { ensureTestUser } = require('../../../../../Crest/tests/playwright/harness/testUsers');
 const { fetchAntiforgeryToken } = require('../../../../../Crest/tests/playwright/harness/antiforgery');
 
-// Phase 0a of plans/workflows.md: the Crest.Workflows engine runs inside the tenant and its API is
+// Phase 0a of docs/workflows.md: the Crest.Workflows engine runs inside the tenant and its API is
 // gated by Orchard. As admin: list definitions; create + publish a one-activity flow;
 // execute it; read the journal. A content-published trigger on Item, with an acting user,
 // runs once the item is published and correlates to the item. Security: writes without

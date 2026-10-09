@@ -73,7 +73,7 @@ public sealed record WorkflowActivityDescriptor(
     IReadOnlyList<WorkflowFieldDependencyDescriptor>? FieldDependencies = null);
 
 /// <summary>
-/// A content field an activity reads or writes (plans/workflows.md › Posting on workflows:
+/// A content field an activity reads or writes (docs/workflows.md › Posting on workflows:
 /// contracts are per-activity field dependencies, not a record-level contract). The path is
 /// <c>Part.Field</c>; <see cref="Required"/> is the per-field marker - a required field that
 /// is empty at runtime ends the activity on Failed with the field named, an optional one
@@ -213,7 +213,7 @@ public interface IWorkflowConnectorProvider
 }
 
 /// <summary>
-/// A hook slot (plans/workflows.md › Posting on workflows): a named point inside a flow where
+/// A hook slot (docs/workflows.md › Posting on workflows): a named point inside a flow where
 /// attached flows run <em>inline, inside the same unit of work</em> - the invoice and what the
 /// tenant attached to its creation exist together or not at all. Declared by the module
 /// that owns the flow raising it. <see cref="AllowTenantAttachments"/> false makes the slot
@@ -308,7 +308,7 @@ public interface IWorkflowHookRunner
 public sealed record WorkflowHookRunResult(int Ran, IReadOnlyList<string> BestEffortFailures);
 
 /// <summary>
-/// Per-object serialization (plans/workflows.md › Posting on workflows, the write side): a
+/// Per-object serialization (docs/workflows.md › Posting on workflows, the write side): a
 /// unit that changes an object takes its lock first, so no two units touching one object
 /// interleave - the engine's distributed lock keyed by the object's id (the correlation id of
 /// the flows about it). Re-entrant within one async flow: a flow that already holds the

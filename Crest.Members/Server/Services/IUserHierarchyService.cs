@@ -7,7 +7,7 @@ namespace Crest.Members.Services;
 /// (<see cref="HierarchyRootKinds.Staff"/>, no org) or one organization's tree.
 /// EVERY service call carries the root and is guarded against it — the root scope is
 /// the boundary that keeps org A out of org B and members out of the staff tree
-/// (design: plans/user-systems.md § Hierarchies).
+/// (design: docs/members.md § Hierarchies).
 /// </summary>
 public sealed record HierarchyRoot(string RootKind, string? OrganizationId)
 {

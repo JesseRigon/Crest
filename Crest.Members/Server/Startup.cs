@@ -44,7 +44,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<ILoginFormEvent, MemberLoginSurfaceGate>();
 
 
-        // The class permission ceiling (plans/user-systems.md §E). The baseline set is
+        // The class permission ceiling (docs/members.md §E). The baseline set is
         // tenant-machinery permissions no member may ever hold; other modules extend it
         // with their own staff-only permissions via Configure<...> next to their
         // IPermissionProvider. Names are the owning modules' permission names verbatim

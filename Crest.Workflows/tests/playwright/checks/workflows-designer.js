@@ -2,7 +2,7 @@ const { fetchAntiforgeryToken } = require('../../../../../Crest/tests/playwright
 const { createInstance } = require('../../../../../Crest/tests/playwright/harness/instance');
 const { loginAsAdmin } = require('../../../../../Crest/tests/playwright/harness/auth');
 
-// The designer in the Crest shell (plans/workflows.md, 0c): the forked Studio, mounted as
+// The designer in the Crest shell (docs/workflows.md, 0c): the forked Studio, mounted as
 // a Crest client module, in the Crest admin chrome, over the tenant's engine API with the
 // Orchard cookie. The pass condition from the plan, driven through the real UI: open an
 // existing definition, add a node from the palette, connect it, save, publish; run it; the

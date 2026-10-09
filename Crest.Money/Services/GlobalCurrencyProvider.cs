@@ -8,7 +8,7 @@ using YesSql;
 namespace Crest.Money.Services;
 
 /// <summary>
-/// The currency table as the global store holds it (plans/accounting.md › Currency model),
+/// The currency table as the global store holds it (docs/money.md),
 /// ahead of the culture-derived <see cref="CurrencyProvider"/> in provider order so a
 /// super-tenant correction to minor units wins. ICurrencyProvider is synchronous, so the
 /// table is loaded once per tenant activation and refreshed on the next activation - a

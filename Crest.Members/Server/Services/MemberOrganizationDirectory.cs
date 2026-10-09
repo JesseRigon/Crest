@@ -10,7 +10,7 @@ namespace Crest.Members.Services;
 /// <remarks>
 /// The session hands the member shell names, not organization ids to look up. A member is
 /// bound to an organization; that does not make the organization's content item something
-/// they may read through the content APIs (see plans/media.md), so the
+/// they may read through the content APIs (see docs/media.md), so the
 /// server, which already knows the bindings, supplies the one field the shell displays.
 /// </remarks>
 public sealed class MemberOrganizationDirectory(IContentManager contentManager)

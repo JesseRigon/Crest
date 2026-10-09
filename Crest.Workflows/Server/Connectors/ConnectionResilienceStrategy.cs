@@ -7,7 +7,7 @@ using Polly.Retry;
 namespace Crest.Workflows.Connectors;
 
 /// <summary>
-/// The engine's resilience feature carrying a connection's retry policy (plans/workflows.md ›
+/// The engine's resilience feature carrying a connection's retry policy (docs/workflows.md ›
 /// Connectors): one strategy, <c>connection</c>, whose parameters come from the connection
 /// the calling node names - the connection's owner decides how many retries, not each flow.
 /// Connector activities select it by default; a tenant may pick another strategy on a node.

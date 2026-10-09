@@ -15,7 +15,7 @@ namespace Crest.Components.Theme;
 // untranslated string renders itself, and the same literal shares its translation with
 // every other pipeline keyed on it (store, shipped module .po catalogs).
 //
-// This only overrides caller-specific string keys (see plans/user-localization.md phase
+// This only overrides caller-specific string keys (see docs/localization.md phase
 // 5/6) - it deliberately does NOT shadow Crest.Components' existing CrestStrings keys, so
 // a page component and a Crest.Components primitive it hosts can each keep using their own
 // catalog without collision.

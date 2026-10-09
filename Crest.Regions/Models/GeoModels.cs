@@ -1,6 +1,6 @@
 namespace Crest.Regions.Models;
 
-// The geo tree (plans/regions-and-locations.md). One generic DAG of numbered levels
+// The geo tree (docs/regions.md). One generic DAG of numbered levels
 // labelled per country; level 1 is always the country. Standard nodes live in the global
 // store and are read-only to tenants; tenant additions and presentation overrides live
 // in the tenant's own store as the overlay documents below.

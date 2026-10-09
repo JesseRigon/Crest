@@ -178,13 +178,19 @@ holds what is not built yet.
   contact points' Preferred. **No effective dates**: a superseded name becomes the
   `former` kind. None of these is a second display name ([branding.md](branding.md)).
 - [ ] **Parent organization** (ruling 2026-10-05): a picker on Organization restricted to
-  Organization.
-- [ ] **The tenant's own organization** (ruling 2026-10-05). A site-settings reference to an
+  Organization. Its type rule and cycle refusal are a handler registered on the picker
+  ([content-items.md](content-items.md) › Picker relationship handlers).
+- [ ] **The tenant's own organization** (ruling 2026-10-05). It exists **before the first
+  user** — created during tenant setup — because staff belong to it (members.md › Class
+  becomes a set). A site-settings reference to an
   Organization party representing the tenant's legal entity: its legal names, tax id and
   addresses come from there; the display name stays `ISite.SiteName`. It is a **special
   organization that has no members** — no member binding may point at it — so staff
   (tenant-users) and members (org-users) never share an organization and their logins stay
-  separate ([members.md](members.md)).
+  separate ([members.md](members.md)). Whether members may be bound to it is a **tenant
+  setting, default: blocked** (ruling 2026-10-06), enforced by Members through a Parties
+  check, "is this the tenant's organization", read from the site-settings reference — never
+  a flag on the item.
 
 ### Tenant-defined party roles (deferred, far down the pipeline)
 
@@ -200,6 +206,22 @@ holds what is not built yet.
   modules.
 
 ### Contacts and addresses
+
+- [ ] **One bag-element service** (ruling 2026-10-06). OrchardCore stores bags (`BagPart`,
+  a list of contained items) and edits them only through its MVC editor; it has no API for
+  adding, changing or removing elements. Crest's contacts service is that API plus Crest's
+  rules (primary per kind, option keys, per-country address validation). It is generalized
+  into one service, parameterized by bag, element type and kind list, used by contact
+  points, addresses and legal entity names — never a second bag service.
+- [ ] **One map index per bag element type** (ruling 2026-10-06). Stock indexes do not look
+  inside bags, so every queryable bag facet gets its own Parties-owned index, one row per
+  element with Published and Latest — the `PartyPositionIndex` pattern: a contact-point index
+  (kind, type, preferred), an organization-name index (kind, primary).
+
+- [ ] **Contact, address and position writes publish** (ruling 2026-10-06). They are live
+  data: the write and the publish happen together, rather than saving a draft that never
+  reaches the published version. `AddressGeoNodeIndex` gains Published and Latest columns,
+  like the other Parties indexes, so consumers such as tax read published addresses.
 
 - [ ] **One kind list, with a hidden type per kind** (ruling 2026-10-06). The user picks one
   contact kind from one tenant-editable list (`parties.contact-point-kind`); landline,
@@ -237,12 +259,19 @@ holds what is not built yet.
   reseed. A vertical that needs an industry NAICS does not name just adds it. Standards
   start the vocabulary rather than bounding it.
 
+  **Full NAICS, as a global list (ruling 2026-10-06).** All levels, 2 to 6 digits, held once
+  in the global store rather than per tenant, so the 1,000+ codes are not copied into every
+  tenant's list document. NAICS is a hierarchy (sector → subsector → industry group →
+  industry → national industry), so this needs Content Part Lists' Category to handle
+  hierarchy ([content-items.md](content-items.md) › Still to build).
+- [ ] **Organization type is the legal form only (ruling 2026-10-06).** Drop "DBA" from the
+  `parties.organization-type` seed (Incorporation, LLC, Community Group, NGO, Government):
+  trade names are `dba` entries in the organization's legal entity names.
+
 ### Decisions needed
 
-- [ ] **NAICS seed depth.** NAICS is 2–6 digits across five levels and the full set is far
-  larger than a usable dropdown, so decide what depth seeds (sector, 2-digit, is the likely
-  answer) and whether deeper codes arrive on demand. Also North-America-only, which matters
-  if party industry is ever reported on internationally.
+- [ ] **NAICS outside North America.** NAICS is North-America-only, which matters if party
+  industry is ever reported on internationally.
 - [ ] **Party merge/dedupe mechanics** (survivorship rules, live-reference rewriting UI,
   audit trail) — Parties module concern, design later. The enabling rule is already
   decided: live references by id + posted-document snapshots. What a posted document

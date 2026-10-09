@@ -396,6 +396,18 @@ questions. Nothing here is scheduled unless stated.
 
 ### Not built yet
 
+- [ ] **Picker relationship handlers** (ruling 2026-10-06). Hierarchies built from content
+  pickers are common (parent organization, parent location, parent account) and built in
+  many different ways, so the picker cannot know how to walk every graph. Content pickers
+  get a hook where the owner of a picker field registers its own handler: allowed target
+  types enforced on the server (today the type restriction is UI-only) and graph rules
+  such as refusing cycles. It runs on every save path, so generic editors cannot bypass
+  it. Built in Crest beside the stock picker; Orchard is not changed.
+- [ ] **Hierarchical Category** (ruling 2026-10-06). An option's `Category` is flat today;
+  full NAICS as a global list ([parties.md](parties.md) › Industry classification) needs
+  options arranged in levels (parent option or a level path), with pickers that can browse
+  or search the hierarchy.
+
 - [ ] **Per-type designed pages.** Every menu-flagged type lands on the generic
   content-items surface. The Blazor designer is the intended replacement, per
   type, mounting at the same menu entry — the menu mechanism needs no change.

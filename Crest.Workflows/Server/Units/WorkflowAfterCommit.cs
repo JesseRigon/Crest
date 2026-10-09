@@ -4,7 +4,7 @@ using OrchardCore.Environment.Shell.Scope;
 namespace Crest.Workflows.Units;
 
 /// <summary>
-/// Work that belongs after the current unit commits (plans/workflows.md › Posting on
+/// Work that belongs after the current unit commits (docs/workflows.md › Posting on
 /// workflows): sending stimuli, performing the external calls a flow recorded. Actions are
 /// run by Orchard's deferred task once the scope's session has committed, in order; when the
 /// session is cancelled, fails to commit, or the unit failed, nothing runs - no event and no

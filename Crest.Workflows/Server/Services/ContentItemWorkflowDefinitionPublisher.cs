@@ -72,7 +72,7 @@ public class ContentItemWorkflowDefinitionPublisher(
 
     public async Task<PublishWorkflowDefinitionResult> PublishAsync(WorkflowDefinition definition, CancellationToken cancellationToken = default)
     {
-        // The ownership tier decides (plans/workflows.md, phase 5): a system flow is never
+        // The ownership tier decides (docs/workflows.md, phase 5): a system flow is never
         // published by a user, a shipped one keeps its ownership properties whatever the
         // client sent.
         await ownershipGuard.PrepareAsync(definition, WorkflowChange.Publish);

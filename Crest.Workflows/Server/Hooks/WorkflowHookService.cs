@@ -29,7 +29,7 @@ public sealed class WorkflowHookAttachmentsDocument : Document
 public sealed class WorkflowHookAttachException(string message) : Exception(message);
 
 /// <summary>
-/// Hook slots and what is attached to them (plans/workflows.md › Posting on workflows). System
+/// Hook slots and what is attached to them (docs/workflows.md › Posting on workflows). System
 /// attachments come from the registry (a module's shipped flow, by key, resolved to the
 /// tenant's definition); tenant attachments live in one document. Both are listed in slot
 /// order - system first, then tenant by position - and both must be atomic, which the

@@ -14,7 +14,7 @@ namespace Crest.Workflows.Security;
 /// <summary>
 /// The engine's definition links (what Studio reads to decide read-only: no <c>publish</c>
 /// link, no editing) narrowed to what the acting user may actually do to that definition
-/// (plans/workflows.md, phase 5): a system flow offers no write links to anyone, a shipped
+/// (docs/workflows.md, phase 5): a system flow offers no write links to anyone, a shipped
 /// one only to Manage shipped holders, a tenant one only to Edit/Publish holders, each
 /// narrowed by the definition's own access lists - the same authorization call the store
 /// makes when the write arrives, so the designer never offers what the gate refuses.

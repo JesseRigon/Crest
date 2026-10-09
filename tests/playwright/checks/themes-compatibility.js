@@ -1,4 +1,4 @@
-// Theme compatibility (plans/shells-and-themes.md › Theme compatibility): the themes API
+// Theme compatibility (docs/shells-and-themes.md › Theme compatibility): the themes API
 // reports one section per shell and each theme's shell, Crest Blazor capability and what it
 // would break; a breaking theme change is refused unless acknowledged; and the themes page
 // walks that refusal through the two-step confirmation. Nothing here applies a breaking

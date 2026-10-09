@@ -25,6 +25,30 @@ Without impersonation both answers are the same user.
 
 ## Build order
 
+**No fork: a Crest index on the stock AuditTrail (ruling 2026-10-06).** The extra
+dimensions activity feeds filter on (record, parties, owner, organization, impersonated
+member, side) are a Crest index provider on the stock `Audit` collection, and attribution
+uses `IAuditTrailEventHandler`. The admin UI is rebuilt as Crest Blazor pages. Those pages,
+and every Blazor component tied to whether a module is enabled, are kept isolated so they
+move easily if the module, or Orchard itself, is ever forked
+([architecture.md](architecture.md) › Rules that hold). Retention: Crest uses the stock
+trimming, which deletes what has expired; per-category retention policies that set an
+event's expiry are downstream.
+
+**Content history is stored as diffs (ruling 2026-10-06).** Instead of a full JSON
+snapshot on every save and publish (the stock Contents audit), each event stores what
+changed. Periodic full snapshots are kept, compressed, as checkpoints so that rebuilding
+any past version replays only a short run of diffs; the current published version is
+always kept as an uncompressed full snapshot. This replaces the stock content audit
+handler's snapshot behaviour, which bears on whether AuditTrail can stay unforked (see
+Decisions needed).
+
+**Workflow history goes to the audit system (ruling 2026-10-06).** The engine keeps its
+own run journal (execution logs, activity records); that history — runs, hook runs,
+inbound webhook deliveries including rejected ones — moves onto the audit system as
+audit events, so workflow insight pages and metrics are audit feeds and Workflows keeps
+only the wiring ([workflows.md](workflows.md)).
+
 Orchard's AuditTrail module stores events (`AuditTrailEvent`: event, category,
 correlation id, user id and name, client IP, time) and lets handlers shape each event
 before it is saved (`IAuditTrailEventHandler.CreateAsync` / `AlterAsync`). Its
@@ -88,9 +112,11 @@ unpublished, deleted and restored, with a snapshot of the item.
   data does not. Consequences:
   - **Events carry what feeds filter on**, indexed: the record, the parties it concerns,
     the category, the owner, the organization.
-  - **Attribution follows the audience.** The trail view shows who really acted (staff
-    impersonating a member); a feed shown to members shows functional attribution only,
-    so "members never see the audit trail" still holds for the trail itself.
+  - **Both attributions are stored, both first-class** (ruling 2026-10-06). Every event
+    records who really acted (staff impersonating a member) and the functional attribution
+    (the member). Neither is derived from the other, and no audience is tied to one: each
+    feed chooses what it displays. "Members never see the audit trail" still holds for the
+    trail itself.
   - **The audit API is broad but strictly secured.** Every read is filtered by the
     caller's permissions and context in the query, never after paging — the same
     fail-closed rule as the file access index. Important and difficult; designed as its
@@ -102,8 +128,10 @@ unpublished, deleted and restored, with a snapshot of the item.
 
 ## Decisions needed
 
-- [ ] **Retention.** How long events are kept per tenant, and whether some categories
-  (impersonation, permission changes) are kept longer.
+- [ ] **Fork AuditTrail after all?** The index-on-stock ruling holds unless diff storage or
+  taking over the workflow engine's journal needs changes to the stock save path; to be
+  discussed with both in view.
+
 - [ ] **Organization-scoped view.** Does a member admin get an organization-scoped audit view?
 - [ ] **Telling the member.** Should a member be told after the fact that staff impersonated
   them, for example a notice in their portal or an email?

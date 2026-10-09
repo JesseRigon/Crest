@@ -8,7 +8,7 @@ using YesSql.Services;
 namespace Crest.Workflows.Units;
 
 /// <summary>
-/// The pending state an object's page shows (plans/workflows.md › Posting on workflows: the
+/// The pending state an object's page shows (docs/workflows.md › Posting on workflows: the
 /// read-your-writes latency the event side costs): the flows about the object that are still
 /// running or waiting, and the background jobs - external calls - scheduled for them.
 /// Reading takes View.

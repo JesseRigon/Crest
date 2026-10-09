@@ -23,7 +23,7 @@
     placement data from api/crest/content-items/{id}/view (ContentItemsController.ViewAsync)
     over HttpClient instead, which works identically whether this instance is currently
     running server-side (InteractiveServer circuit) or in-browser (WASM). ViewAsync
-    returns only the parts the caller is permitted to see (see plans/permissions.md) -
+    returns only the parts the caller is permitted to see (see docs/permissions.md) -
     for an anonymous visitor viewing a published BlazorComponent widget, that's exactly
     CrestBlazorComponentPart, same as any logged-in caller who can also view this item.
 *@

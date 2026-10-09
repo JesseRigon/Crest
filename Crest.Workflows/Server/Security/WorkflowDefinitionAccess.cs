@@ -19,7 +19,7 @@ namespace Crest.Workflows.Security;
 
 /// <summary>
 /// The resource a workflow permission is evaluated against: the definition's own lists of
-/// who may edit and who may run it (plans/workflows.md, phase 5). Passed as the resource of
+/// who may edit and who may run it (docs/workflows.md, phase 5). Passed as the resource of
 /// <c>AuthorizeAsync(user, permission, resource)</c>, so the check stays one Orchard
 /// authorization call; <see cref="WorkflowDefinitionAccessHandler"/> is the part of the
 /// pipeline that reads it.

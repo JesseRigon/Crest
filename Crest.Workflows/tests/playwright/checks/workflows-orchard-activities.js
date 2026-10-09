@@ -1,6 +1,6 @@
 const { fetchAntiforgeryToken } = require('../../../../../Crest/tests/playwright/harness/antiforgery');
 
-// Stock OrchardCore workflow activities run on the Crest workflow engine (plans/workflows.md,
+// Stock OrchardCore workflow activities run on the Crest workflow engine (docs/workflows.md,
 // the override route): the upstream Contents module raises ContentPublishedEvent through
 // IWorkflowManager, the tenant's manager turns it into an OrchardEvent stimulus, the stock
 // event's own content-type filter is honoured, and a stock CreateContentTask runs with its

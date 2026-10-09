@@ -7,7 +7,7 @@ namespace Crest.Members.Services;
 
 /// <summary>
 /// The registry of permissions that are NEVER valid for member-class principals
-/// (design: plans/user-systems.md §E). Name-based on purpose: Permission equality is
+/// (design: docs/members.md §E). Name-based on purpose: Permission equality is
 /// reference-based upstream, and dynamic permissions exist only as formatted names.
 /// Modules contribute their staff-only permissions via
 /// <c>services.Configure&lt;MemberPermissionCeilingOptions&gt;(...)</c> alongside their

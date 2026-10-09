@@ -10,7 +10,7 @@ using Xunit;
 namespace Crest.Server.Tests;
 
 // CultureSelector.FromAsync must return raw inputs only - never a server-resolved
-// answer (see plans/user-localization.md's "Resolution architecture": the server cannot
+// answer (see docs/localization.md's "Resolution architecture": the server cannot
 // see the client's sessionStorage session override, so it has no way to resolve culture
 // itself; the client is the sole source of truth).
 public sealed class CultureSelectorTests

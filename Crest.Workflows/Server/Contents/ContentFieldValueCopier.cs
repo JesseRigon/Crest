@@ -32,7 +32,7 @@ public readonly record struct FieldPath(string Part, string Field)
 
 /// <summary>
 /// One row of a Copy fields / Move fields mapping: source field, target field, and the
-/// per-field required marker of the field-dependency ruling (plans/workflows.md › Posting on
+/// per-field required marker of the field-dependency ruling (docs/workflows.md › Posting on
 /// workflows). Required and empty on the source fails the activity with the field named;
 /// optional and empty is skipped - "use it if you have it".
 /// </summary>

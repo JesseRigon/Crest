@@ -4,7 +4,7 @@ const { loginAsUser, logout } = require('../harness/auth');
 const { createInstance } = require('../harness/instance');
 const { fetchAntiforgeryToken } = require('../harness/antiforgery');
 
-// Verifies plans/user-localization.md's "Multiple logins (switch-user)" requirement:
+// Verifies docs/localization.md's "Multiple logins (switch-user)" requirement:
 // switching identity within the same browser tab must resolve the NEW user's own
 // stored default/override, never carry forward the previous user's session override
 // (the override key is scoped by user name - crest-culture-override:{userName} - so a

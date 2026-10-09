@@ -9,7 +9,7 @@ namespace Crest.Workflows.Registry;
 
 /// <summary>
 /// Brings the tenant's copies of the shipped flows in line with what the modules ship
-/// (plans/workflows.md, phase 5). Runs from the deferred task that populates the activity
+/// (docs/workflows.md, phase 5). Runs from the deferred task that populates the activity
 /// registry, right after it (the definition JSON names activity types, which must be
 /// registered before it can be read). A flow is found by its key in the definition's custom
 /// properties; the shipped JSON is the engine's definition-model format.

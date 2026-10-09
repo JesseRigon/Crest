@@ -3,7 +3,7 @@ const { ensureTestUser } = require('../harness/testUsers');
 const { loginAsUser } = require('../harness/auth');
 const { createInstance } = require('../harness/instance');
 
-// Verifies the per-tab session override scoping claim in plans/user-localization.md's
+// Verifies the per-tab session override scoping claim in docs/localization.md's
 // "Per-tab and per-user override scoping": sessionStorage is genuinely per-tab, so two
 // independently-opened tabs (here: two separate browser contexts, which get their own
 // sessionStorage the same way two independently-opened tabs would) for the SAME user

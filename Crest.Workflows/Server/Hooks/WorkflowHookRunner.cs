@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace Crest.Workflows.Hooks;
 
 /// <summary>
-/// Runs a slot's attachments inline, inside the current unit of work (plans/workflows.md ›
+/// Runs a slot's attachments inline, inside the current unit of work (docs/workflows.md ›
 /// Posting on workflows): each attachment starts as a child instance in the same scope and
 /// session. Used by the <c>Hook</c> activity from inside a flow and by registry services
 /// from inside their own requests (<see cref="IWorkflowHookRunner"/>), so a tenant's

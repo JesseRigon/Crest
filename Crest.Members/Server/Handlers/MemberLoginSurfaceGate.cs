@@ -17,7 +17,7 @@ using OrchardCore.Users.Models;
 namespace Crest.Members.Handlers;
 
 /// <summary>
-/// The login-channel gate (design: plans/user-systems.md §B): each account class has
+/// The login-channel gate (design: docs/members.md §B): each account class has
 /// exactly one login surface. A member-class account is refused at the TENANT surfaces
 /// even with valid credentials; a staff-class account is refused at the member PORTAL.
 /// Which surface the request is comes from <see cref="MemberPortalLoginContext"/>.

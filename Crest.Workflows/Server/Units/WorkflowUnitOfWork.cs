@@ -9,7 +9,7 @@ using OrchardCore.Environment.Shell.Scope;
 namespace Crest.Workflows.Units;
 
 /// <summary>
-/// The unit of work a burst of workflow execution runs in (plans/workflows.md › Posting on
+/// The unit of work a burst of workflow execution runs in (docs/workflows.md › Posting on
 /// workflows): one shell scope, one YesSql session, committed as one transaction when the
 /// scope ends - no store commits mid-run. A required hook attachment that fails, or a
 /// <c>Fail unit</c> activity, marks the unit failed; at commit time every write of the burst

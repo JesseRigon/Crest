@@ -56,7 +56,7 @@ public sealed record CultureSelector(
     // can never see; only the client can weigh it against everything else. This type is
     // deliberately just raw inputs - the tenant's supported cultures + default, and the
     // signed-in user's stored default (if any) - for DisplayManager.ResolveCultureAsync to
-    // resolve from. See plans/user-localization.md's "Resolution architecture" section.
+    // resolve from. See docs/localization.md's "Resolution architecture" section.
     // (Earlier revisions of this type also carried a server-computed CurrentCulture field -
     // removed, since its mere presence invited reading it as an authoritative answer even
     // though nothing ever consumed it that way.)

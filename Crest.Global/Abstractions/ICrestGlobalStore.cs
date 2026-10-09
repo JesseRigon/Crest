@@ -6,7 +6,7 @@ namespace Crest.Global;
 /// The tenant-less YesSql store. Every use is a unit of work: outside a shell scope nothing
 /// auto-commits, so <see cref="WriteAsync"/> saves and the store never hands out a raw
 /// session. Reads and writes from any tenant's code go through this; only the loader and
-/// the Default tenant hold write paths (plans/global.md).
+/// the Default tenant hold write paths (docs/global-store.md).
 /// </summary>
 public interface ICrestGlobalStore
 {
@@ -59,7 +59,7 @@ public sealed class CrestGlobalSchemaState
 }
 
 /// <summary>
-/// Host-level cache over global reads, version-keyed (plans/global.md phase 7). An entry
+/// Host-level cache over global reads, version-keyed (docs/global-store.md phase 7). An entry
 /// is valid while the store's data version is the one it was read at; a write anywhere -
 /// this process, another host on the same database - moves the version and every entry
 /// lapses. The version is re-read from the store at most once per <see cref="CrestGlobalStoreOptions.CacheVersionCheckSeconds"/>,
