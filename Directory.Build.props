@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    The platform (src/, test/: the OrchardCore hard fork) keeps its own build settings -
+    target frameworks, StyleCop and the analysis rules. The src/*/Directory.Build.props files
+    import this file, so the platform settings are imported here, only for projects under
+    src/ and test/. Crest's modules beside them are not affected.
+  -->
+  <PropertyGroup>
+    <!-- Crest's modules reference the platform's projects through this, never by relative path. -->
+    <PlatformSrcDir>$(MSBuildThisFileDirectory)src\</PlatformSrcDir>
+    <_IsPlatformProject Condition="$(MSBuildProjectDirectory.Replace('\','/').StartsWith('$(MSBuildThisFileDirectory.Replace('\','/'))src/')) Or $(MSBuildProjectDirectory.Replace('\','/').StartsWith('$(MSBuildThisFileDirectory.Replace('\','/'))test/'))">true</_IsPlatformProject>
+  </PropertyGroup>
+  <Import Project="src\OrchardCore.Build\Platform.Build.props" Condition="'$(_IsPlatformProject)' == 'true'" />
+</Project>

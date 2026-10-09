@@ -1,25 +1,31 @@
-# Crest OrchardCore Module
+# Crest
 
-Crest is a multi-project Orchard Core module repository: an **application layer** on Orchard Core, hosting Blazor component systems and everything a business-facing application needs that is not a line of business — the admin and site shells, the content API, Parties (people, organizations, roles), Members (member accounts, organizations, the member portal) and Workflows (an Elsa-based workflow service with a registry, units of work and connectors). See [docs/architecture.md](docs/architecture.md).
-
-> **⚠ Requires a custom OrchardCore build (for now).** Crest depends on AdminNode
-> `UniqueId` modifications to OrchardCore's admin-menu system that are not yet in any
-> released OrchardCore package. The upstream pull request is
-> [OrchardCMS/OrchardCore#19771](https://github.com/OrchardCMS/OrchardCore/pull/19771)
-> — until it is merged (if ever), anyone hoping to try Crest must build OrchardCore
-> from [`jesse-forked/OrchardCore`](https://github.com/jesse-forked/OrchardCore) on
-> the custom **`Crest`** branch.
+> **Please read this first.** Crest is a personal project. I am not a good programmer, and
+> most of this code was written with AI assistance ("vibe coded"). It is not hardened, not
+> security-reviewed and not stable. **If you need safe, stable code, don't use Crest** —
+> use the original projects below, which are excellent and have wonderful communities
+> behind them. Honestly, I hope no one actually uses it.
 >
-> How the linking works: this repository's `Directory.Packages.props` pins every
-> OrchardCore package to version **`4.0.0-local`**, a version that only exists in a
-> NuGet feed packed from that fork — so a restore against nuget.org fails loudly
-> instead of silently compiling against stock OrchardCore. Crest itself declares only
-> the package ids and that version; **where** the packages come from is the HOST
-> app's decision, via its `NuGet.config` package-source mapping (`OrchardCore*` →
-> the local feed). See the
-> [OrchardCore.Crest.Host](https://github.com/JesseRigon/Crest.Host)
-> repository for a working host: its dev script clones the fork into `modules/` and
-> packs the feed automatically when no prebuilt feed is present.
+> Crest is **not affiliated with, or endorsed by,** OrchardCore, the .NET Foundation, Elsa
+> Workflows, Radzen or any other project it builds on.
+
+Crest is an **application layer**: Blazor admin, site and member shells, the content API,
+Parties (people, organizations, roles), Members (member accounts, organizations, the
+member portal) and Workflows (an Elsa-based workflow service with a registry, units of
+work and connectors). See [docs/architecture.md](docs/architecture.md).
+
+## Why Crest forks OrchardCore
+
+Crest started as a set of modules on [OrchardCore](https://github.com/OrchardCMS/OrchardCore).
+Over time I wanted a lot of opinionated changes — Blazor-only UIs, permissions injected
+into queries, a different audit and media model — that the OrchardCore community
+shouldn't have to carry. So Crest now contains a hard fork of OrchardCore under `src/` and
+`test/` and develops it on its own. It is not meant to go back upstream.
+
+Crest borrows heavily from several permissively licensed projects (MIT and BSD-3-Clause):
+OrchardCore, Elsa, Radzen Blazor, OrchardCore.Commerce and others. Their licences and
+copyright notices stay with the code — see [NOTICE.md](NOTICE.md). Crest itself is MIT, so
+anything taken from here is as freely usable as what it was built from.
 
 The repository is intentionally kept together for source management, but its projects are meant to remain independently packageable later.
 
@@ -136,6 +142,7 @@ Browser validation should use reusable Playwright scripts under the owning proje
 MIT — see [LICENSE](LICENSE).
 
 Crest vendors, forks and adapts several permissively licensed works, each of which keeps
-its own licence beside the code it covers: the workflow engine and designer (Elsa), the
-Blazor component library (Radzen Blazor), the money types (OrchardCore.Commerce) and the
-default site theme's front-end assets. [NOTICE.md](NOTICE.md) is the inventory.
+its own licence beside the code it covers: the platform under `src/` and `test/`
+(OrchardCore, BSD-3-Clause), the workflow engine and designer (Elsa), the Blazor component
+library (Radzen Blazor), the money types (OrchardCore.Commerce) and the default site
+theme's front-end assets. [NOTICE.md](NOTICE.md) is the inventory.

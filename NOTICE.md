@@ -7,11 +7,19 @@ licence file beside the code; this is the inventory.
 
 | Code | Upstream | Licence | Licence file |
 | --- | --- | --- | --- |
+| `src/`, `test/`, `.scripts/` and the root build files (`OrchardCore.slnx`, `Directory.Packages.props`, `global.json`, `package.json`, …) — the platform, a hard fork of OrchardCore | [OrchardCMS/OrchardCore](https://github.com/OrchardCMS/OrchardCore) via [jesse-forked/OrchardCore](https://github.com/jesse-forked/OrchardCore), branch `Crest` at `b0f9fdf50` | BSD-3-Clause, Copyright (c) .NET Foundation | `src/LICENSE` |
 | `Crest.Workflows/engine/` — the workflow engine (22 projects) | [elsa-workflows/elsa-core](https://github.com/elsa-workflows/elsa-core), tag 3.6.0 (`d4b69be`) | MIT, Copyright (c) 2021 Elsa Workflows | `Crest.Workflows/engine/LICENSE` |
 | `Crest.Workflows/designer/` — the workflow designer | [elsa-workflows/elsa-studio](https://github.com/elsa-workflows/elsa-studio), tag 3.6.0 (`1e293c5`) | MIT, Copyright (c) 2023 Elsa Workflows | `Crest.Workflows/designer/LICENSE` |
 | `Crest.Workflows/Server/`, `Crest.Workflows/Contents/`, `Crest.Workflows/reference/` — the Orchard integration | [elsa-workflows/elsa-orchard-core](https://github.com/elsa-workflows/elsa-orchard-core) | BSD-3-Clause, Copyright (c) 2019 Elsa Workflows | `Crest.Workflows/LICENSE` |
 
-Every identifier, namespace and assembly in these trees was renamed to `Crest.Workflows.*`
+The platform was imported as squashed subtrees (`git subtree`, so the commits record the
+source commit and upstream fixes can still be merged in). Its namespaces, assemblies and
+package ids are still `OrchardCore.*`. BSD-3-Clause requires that the copyright notice and
+licence travel with the code, and that neither the .NET Foundation's name nor its
+contributors' names be used to endorse or promote products built from it without
+permission.
+
+In the Elsa trees, every identifier, namespace and assembly was renamed to `Crest.Workflows.*`
 (`Crest.Workflows/tools/rename-upstream.py` applies the mapping). The upstream commits are
 pinned in `Crest.Workflows/engine/UPSTREAM-COMMIT` and
 `Crest.Workflows/designer/UPSTREAM-COMMIT`; `Crest.Workflows/UPSTREAM.md` explains what the

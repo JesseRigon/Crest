@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
+  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -15,10 +16,10 @@
        reference data every application shares, so they live in the global store
        (Crest.Global); a tenant chooses its default currency, never the units. -->
   <ItemGroup>
-    <PackageReference Include="OrchardCore.ContentFields" />
-    <PackageReference Include="OrchardCore.ContentManagement" />
-    <PackageReference Include="OrchardCore.Data" />
-    <PackageReference Include="OrchardCore.Module.Targets" />
+    <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.ContentFields\OrchardCore.ContentFields.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.ContentManagement\OrchardCore.ContentManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Data\OrchardCore.Data.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.csproj" />
     <PackageReference Include="YesSql.Abstractions" />
   </ItemGroup>
 
@@ -27,4 +28,6 @@
     <ProjectReference Include="../Crest.Global/Crest.Global.csproj" />
     <ProjectReference Include="Domain/Crest.Money.Domain.csproj" />
   </ItemGroup>
+
+  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
 </Project>

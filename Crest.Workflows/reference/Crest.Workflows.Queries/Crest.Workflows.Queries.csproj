@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
@@ -10,9 +11,9 @@
 
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations"/>
-        <PackageReference Include="OrchardCore.DisplayManagement" />
-        <PackageReference Include="OrchardCore.Module.Targets"/>
-        <PackageReference Include="OrchardCore.Queries" />
+        <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.DisplayManagement\OrchardCore.DisplayManagement.csproj" />
+        <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.csproj" />
+        <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.Queries\OrchardCore.Queries.csproj" />
         <PackageReference Include="YesSql.Abstractions" />
     </ItemGroup>
 
@@ -21,4 +22,5 @@
         <PackageReference Include="Crest.Workflows.Engine"/>
     </ItemGroup>
 
+  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
 </Project>

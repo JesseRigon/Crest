@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
+  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.props" />
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -16,10 +17,12 @@
        DatabaseShellsSettingsSources pattern. OrchardCore.Data.YesSql is referenced for
        the provider extensions (UseSqLite/UsePostgreSql/...) and SqliteHelper. -->
   <ItemGroup>
-    <PackageReference Include="OrchardCore.Data" />
-    <PackageReference Include="OrchardCore.Data.YesSql" />
-    <PackageReference Include="OrchardCore.Module.Targets" />
-    <PackageReference Include="OrchardCore.Security" />
+    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Data\OrchardCore.Data.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Data.YesSql\OrchardCore.Data.YesSql.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)OrchardCore.Modules\OrchardCore.Security\OrchardCore.Security.csproj" />
     <PackageReference Include="YesSql.Abstractions" />
   </ItemGroup>
+
+  <Import Project="$(PlatformSrcDir)OrchardCore\OrchardCore.Module.Targets\OrchardCore.Module.Targets.targets" />
 </Project>
