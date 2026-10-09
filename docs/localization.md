@@ -208,6 +208,13 @@ on **Crowdin** (crowdin.com) via the `OrchardCore.Translations` repo:
 3. **Packaging** — exports are packed into the `OrchardCore.Translations.{lang}` /
    `.All` NuGet packages per OrchardCore release.
 
+**After the platform rename** (ruling 2026-10-09), the platform's own names are no longer
+`OrchardCore.*`, but the Crowdin packages still are: their `msgctxt` values are OrchardCore
+type and view names. Internally, translations take a generic name (for example
+`Translations.*`, not a project name), and a mapping rewrites the packages' `OrchardCore.*`
+contexts to the renamed platform names when they are loaded, so the community translations
+keep applying.
+
 Two consequences: **coverage lag** (extraction is automatic, translation is human — new
 strings sit untranslated until a volunteer does them) and **release lag** (strings added
 upstream after the last release don't exist as msgids at all yet).

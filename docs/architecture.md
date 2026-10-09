@@ -33,9 +33,23 @@ users on the other side of it, and the member portal is how a product reaches th
 
 Crest hard-forked OrchardCore into `src/` (ruling 2026-10-09). When the platform lacks
 something, the platform is changed: no shims, no stock-id module forks, no workarounds
-kept to stay mergeable. The platform's namespaces and package ids are still
-`OrchardCore.*`; renaming them, and pruning the modules Crest will not ship, are still to
-be planned. As each Blazor replacement lands, the Liquid templates and the stock Razor/Vue
+kept to stay mergeable. **The platform is renamed from `OrchardCore` to `Crest`, fully** (ruling 2026-10-09):
+namespaces, assemblies, project and folder names, package ids, feature and module ids,
+recipes, configuration sections and static asset paths. Dev tenants are reset. Identifiers
+that carry the project name become neutral, per the naming rule (`OrchardCoreBuilder` →
+`PlatformBuilder`, `AddOrchardCore()` → `AddPlatform()`, `IOrchardHelper` →
+`IPlatformHelper`, JS globals likewise), so a later rename touches module names only. Dotted
+module, namespace and package segments become `Crest`; prose "Orchard Core" becomes "Crest".
+External URLs and the `OrchardCore.Translations` packages are left as they are. The stock
+`OrchardCore.Workflows` module is merged into `Crest.Workflows` as part of the rename, and
+the four sample site themes (TheTheme, TheBlogTheme, TheAgencyTheme, TheComingSoonTheme) are
+pruned first. Neither the platform nor Crest.Server is named just `Crest`: the
+platform's core library becomes `Crest.Core` and Crest.Server's assembly and package become
+`Crest.Server`. Where a renamed platform module or type meets existing Crest code, each clash
+is resolved case by case: delete the side Crest has already replaced, or merge Crest code
+that was written to sit over the platform into the platform module. Before the rename, only
+platform modules **already rewritten in Crest code** are pruned; modules Crest simply has
+not reached yet stay. As each Blazor replacement lands, the Liquid templates and the stock Razor/Vue
 UIs it replaces are removed, until every page is a Blazor build. Headless (the content-item
 API, GraphQL, Queries) is first class alongside Blazor. Every capability a Blazor page has
 is reachable through the API, and no feature exists only in the UI. Stock front-end assets

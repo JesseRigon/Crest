@@ -794,6 +794,12 @@ the design, and the open work.
 
 Built today: see [docs/workflows.md › Units of work](workflows.md#units-of-work-how-a-run-commits).
 
+- [ ] **Merge the stock workflows module into Crest.Workflows** (ruling 2026-10-09, part of
+  the platform rename). `OrchardCore.Workflows` and its abstractions stop being a separate
+  module: the activities, events, evaluators and the `IWorkflowManager` seam Crest's
+  override uses move into Crest.Workflows, the duplicate permissions (`Permissions` in both)
+  become one set, and the stock engine, admin UI and menu that Crest already overrides are
+  deleted.
 - [ ] **Two queues, two guarantees (the full way; designed, built after the above, on engine
   parts - see the audit).** The *write side*: no two units touching one object interleave -
   first through the engine's `IDistributedLockProvider` keyed by correlation id around a
