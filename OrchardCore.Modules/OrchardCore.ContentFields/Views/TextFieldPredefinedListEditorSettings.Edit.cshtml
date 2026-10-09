@@ -1,0 +1,29 @@
+@using OrchardCore.ContentFields.Settings
+@model OrchardCore.ContentFields.ViewModels.PredefinedListSettingsViewModel
+
+@{
+    var translations = Orchard.GetJSLocalizations("content-fields-options-editor");
+    var translationsJson = Json.Serialize(translations).ToString();
+}
+
+<script asp-src="~/OrchardCore.Resources/Scripts/vue-draggable.umd.min.js" debug-src="~/OrchardCore.Resources/Scripts/vue-draggable.umd.js" asp-name="vue-draggable" at="Foot" depends-on="vuejs"></script>
+<style asp-src="~/OrchardCore.ContentFields/Styles/optionsEditor.min.css" debug-src="~/OrchardCore.ContentFields/Styles/optionsEditor.css"></style>
+
+<script asp-src="~/OrchardCore.ContentFields/Scripts/options-editor-fields/options-editor-fields.min.js" debug-src="~/OrchardCore.ContentFields/Scripts/options-editor-fields/options-editor-fields.js" at="Foot" depends-on="vuejs, vue-draggable" type="module"></script>
+
+<div id="@Html.IdFor(m => m)" class="field-editor field-editor-predefinedlist options-editor-wrapper" data-options="@Model.Options" data-default-value="@Model.DefaultValue" data-options-input-id="@Html.IdFor(m => m.Options)" data-options-input-name="@Html.NameFor(m => m.Options)" data-translations="@translationsJson" data-default-value-input-name="@Html.NameFor(m => m.DefaultValue)">
+    <div class="ocat-limited-wrapper">
+        <label asp-for="Editor" class="ocat-label">@T["What type of list editor should be used?"]</label>
+        <div class="ocat-limited">
+            <select asp-for="Editor" class="form-select">
+                <option value="@nameof(EditorOption.Dropdown)">@T["Drop down list"]</option>
+                <option value="@nameof(EditorOption.Radio)">@T["Radio buttons"]</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="ocat-limited-wrapper">
+        <label asp-for="Options" class="ocat-label">@T["Options"]</label>
+        <div class="ocat-limited options-table-editor-mount"></div>
+    </div>
+</div>

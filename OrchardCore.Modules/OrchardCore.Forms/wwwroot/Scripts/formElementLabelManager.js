@@ -1,0 +1,2 @@
+window.formElementLabelManager={initilize:e=>{var n=e.getElementsByClassName("field-label-option-select-menu");for(let e=0;e<n.length;e++){var t=n[e];t.addEventListener("change",function(e){var n=e.target.closest(".widget-editor-body").querySelector(".label-text-container");"None"==e.target.value?n.classList.add("d-none"):n.classList.remove("d-none")}),t.dispatchEvent(new Event("change"))}}},document.addEventListener("DOMContentLoaded",function(){window.formElementLabelManager.initilize(document)});
+//# sourceMappingURL=formElementLabelManager.map

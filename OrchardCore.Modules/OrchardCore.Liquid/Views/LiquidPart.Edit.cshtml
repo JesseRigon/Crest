@@ -1,0 +1,24 @@
+@using OrchardCore.Liquid.ViewModels
+@model LiquidPartViewModel
+
+<style asp-name="codemirror"></style>
+<script asp-name="codemirror" at="Foot"></script>
+<script asp-name="codemirror-mode-javascript" at="Foot"></script>
+<script asp-name="codemirror-addon-display-autorefresh" at="Foot"></script>
+<script asp-name="codemirror-addon-mode-simple" at="Foot"></script>
+<script asp-name="codemirror-addon-mode-multiplex" at="Foot"></script>
+<script asp-name="codemirror-mode-xml" at="Foot"></script>
+<script asp-src="~/OrchardCore.Liquid/codemirror/liquid.js" at="Foot"></script>
+
+<div class="ocat-wrapper">
+    <label asp-for="Liquid" class="ocat-label">@T["Body"]</label>
+    <div class="ocat-end">
+        <textarea asp-for="Liquid" rows="5" class="form-control content-preview-text liquid-part-editor"></textarea>
+        <span class="hint">
+            @T["The body of the content item, in Liquid format."]
+            <a class="seedoc" href="@(OrchardCore.Admin.Constants.DocsUrl)reference/modules/Liquid" target="_blank">@T["See documentation"]</a>
+        </span>
+    </div>
+</div>
+
+<script asp-src="~/OrchardCore.Liquid/Scripts/liquid-part/liquid-part.min.js" debug-src="~/OrchardCore.Liquid/Scripts/liquid-part/liquid-part.js" at="Foot" type="module"></script>

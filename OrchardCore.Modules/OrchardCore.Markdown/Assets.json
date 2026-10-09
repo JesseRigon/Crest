@@ -1,0 +1,34 @@
+[
+  {
+    "action": "sass",
+    "generateRTL": true,
+    "name": "markdown-css",
+    "source": "Assets/Styles/mde.scss",
+    "tags": ["admin", "markdown", "css"]
+  },
+  {
+    "action": "copy",
+    "name": "markdown-easymde",
+    "source": "../../../node_modules/easymde/dist/easymde.min.js",
+    "tags": ["admin", "markdown", "js"]
+  },
+  {
+    "action": "parcel",
+    "name": "markdown-mediatoolbar",
+    "source": ["Assets/Scripts/mde.mediatoolbar.ts"],
+    "dest": "wwwroot/Scripts/mediatoolbar",
+    "tags": ["admin", "markdown", "js"]
+  },
+  {
+    "action": "parcel",
+    "name": "markdown-editors",
+    "source": [
+      "Assets/ts/markdown-body-part-wysiwyg-settings.ts",
+      "Assets/ts/markdown-field-wysiwyg-settings.ts",
+      "Assets/ts/markdown-body-part-wysiwyg.ts",
+      "Assets/ts/markdown-field-wysiwyg.ts"
+    ],
+    "dest": "wwwroot/Scripts/markdown-editors/",
+    "tags": ["admin", "markdown", "js"]
+  }
+]

@@ -1,0 +1,9 @@
+[
+  {
+    "action": "parcel",
+    "name": "cors-admin-index",
+    "source": "Assets/ts/cors-admin-index.ts",
+    "dest": "wwwroot/Scripts/cors-admin-index/",
+    "tags": ["admin", "dashboard", "js"]
+  }
+]
