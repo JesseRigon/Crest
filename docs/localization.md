@@ -9,9 +9,10 @@ accounting and tax plans).
 
 ## Scope and boundary
 
-This is an **optional, additive feature set** layered on top of OrchardCore's standard
-localization module — nothing else in the codebase requires it. If it were stripped out
-entirely, other modules keep working correctly using only stock OrchardCore localization
+This is an **optional, additive feature set** over the platform's standard localization
+module (`OrchardCore.Localization`) — nothing else in the codebase requires it. If it were
+stripped out entirely, other modules keep working correctly using only the platform's
+localization
 (tenant culture); they don't get a required new dependency, cascading parameter, or
 interface to implement. The per-user stored default and the client-resolved cookie are
 enhancements, not a new baseline.

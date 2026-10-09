@@ -25,13 +25,12 @@ Without impersonation both answers are the same user.
 
 ## Build order
 
-**No fork: a Crest index on the stock AuditTrail (ruling 2026-10-06).** The extra
+**A Crest index on the platform's AuditTrail (ruling 2026-10-06).** The extra
 dimensions activity feeds filter on (record, parties, owner, organization, impersonated
 member, side) are a Crest index provider on the stock `Audit` collection, and attribution
 uses `IAuditTrailEventHandler`. The admin UI is rebuilt as Crest Blazor pages. Those pages,
 and every Blazor component tied to whether a module is enabled, are kept isolated so they
-move easily if the module, or Orchard itself, is ever forked
-([architecture.md](architecture.md) › Rules that hold). Retention: Crest uses the stock
+move with the module when it is reworked ([architecture.md](architecture.md) › Rules that hold). Retention: Crest uses the stock
 trimming, which deletes what has expired; per-category retention policies that set an
 event's expiry are downstream.
 
@@ -40,7 +39,7 @@ snapshot on every save and publish (the stock Contents audit), each event stores
 changed. Periodic full snapshots are kept, compressed, as checkpoints so that rebuilding
 any past version replays only a short run of diffs; the current published version is
 always kept as an uncompressed full snapshot. This replaces the stock content audit
-handler's snapshot behaviour, which bears on whether AuditTrail can stay unforked (see
+handler's snapshot behaviour, which bears on whether AuditTrail's save path must change (see
 Decisions needed).
 
 **Workflow history goes to the audit system (ruling 2026-10-06).** The engine keeps its
@@ -123,14 +122,15 @@ unpublished, deleted and restored, with a snapshot of the item.
     own step.
   - **It leans on Crest's query system** ([queries.md](queries.md)), as reporting does: feed definitions are queries
     over the audit indexes, since the filters and criteria vary so much.
-  - The likely start is still forking OrchardCore's AuditTrail, as the file module forks
-    Media; its storage structure decides how the indexes above are built.
+  - The likely start is reworking the platform's AuditTrail module in place, as the file
+    system reworks Media; its storage structure decides how the indexes above are built.
 
 ## Decisions needed
 
-- [ ] **Fork AuditTrail after all?** The index-on-stock ruling holds unless diff storage or
-  taking over the workflow engine's journal needs changes to the stock save path; to be
-  discussed with both in view.
+- [ ] **Change AuditTrail's save path?** The index ruling holds unless diff storage or
+  taking over the workflow engine's journal needs changes to the save path. Since the hard
+  fork that is an in-place change to `src/`, not a module fork; to be discussed with both in
+  view.
 
 - [ ] **Organization-scoped view.** Does a member admin get an organization-scoped audit view?
 - [ ] **Telling the member.** Should a member be told after the fact that staff impersonated

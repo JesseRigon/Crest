@@ -203,9 +203,9 @@ Orchard has no central enum store. `TextFieldPredefinedListEditorSettings` store
 options inside ONE field's settings (copies drift, no provenance, no multi-column
 display); Taxonomies have the right data shape but are a CMS categorization
 feature whose routing apparatus (AliasPart/AutoroutePart, term pages) is noise
-for configuration data. So Crest defines a fully parallel, additive system —
-`Crest.ContentPartLists`, its own feature, no dependency on
-`OrchardCore.Taxonomies`, and **no upstream OrchardCore changes, ever**.
+for configuration data. So Crest defines its own system —
+`Crest.ContentPartLists`, its own feature, with no dependency on
+`OrchardCore.Taxonomies`.
 
 - **`ContentPartList`**: `TitlePart` + `CrestContentPartListPart` (`Key` — the
   set's stable logical key like `pricing.modifier-kind`; `Source`;

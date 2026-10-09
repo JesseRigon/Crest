@@ -1,8 +1,9 @@
 # Crest implementation issues — decisions to make
 
 A feasibility audit (2026-10-06) of the plans in these docs against the current Crest code and
-the OrchardCore fork (`venti/modules/OrchardCore`). **Nothing found needs a change to
-OrchardCore**: every hurdle is solvable in Crest through public seams.
+the OrchardCore fork, then still a separate repository. Since the hard fork (2026-10-09) that
+code is the platform under `src/`, and Crest changes it directly; items written around "no
+change to OrchardCore" are restated below.
 
 **How to use this file.** Each open issue below has the context, the options and a
 recommendation, then an **Answer** space. Answer in the file; the rulings are then moved into
@@ -18,7 +19,7 @@ their home docs and the issue leaves this file.
 | Queries | Q1 permissions injected at run time, Power Query-style builder in the tenant shell, search engines as connections, external systems keep their own permissions; Q3 permission checked everywhere; Q4 paging, streaming as a special case, column types by aspect, shape fixed at build time; Q5 one assembly, protocols as features |
 | Workflows | W1 new purpose and document names, dev tenants reset; W2 rename now (`ManageConnections`); W3 retries in the connection system; W4 connector registry to Queries; W7 and W9 dropped; W8 workflow history onto the audit system |
 | Parties | P1 (with X1); P4 one index per bag element type; P5 one bag-element service, organization type is legal form only; P7 picker relationship handlers; P9 full NAICS as a global list; P10 contact writes publish |
-| Media and audit | F6 resumable uploads land in quarantine; F7 diff check against stock; F8 cleanup done; A1 index on stock AuditTrail (fork question reopened in audit.md); A2 diffs with compressed checkpoints; A3 stock trimming, retention policies are Fruitful's; A5 both attributions first-class |
+| Media and audit | F6 resumable uploads land in quarantine; F7 diff check against stock (retired by the hard fork: Media is reworked in place); F8 cleanup done; A1 index on the platform's AuditTrail (save-path question open in audit.md); A2 diffs with compressed checkpoints; A3 stock trimming, retention policies are Fruitful's; A5 both attributions first-class |
 
 ---
 
@@ -45,27 +46,28 @@ no outside users. Component names that would collide with HTML or Blazor names (
 `Form`) keep a short neutral prefix rather than the project name, decided per component.
 
 **Answer:**
+I was only talking about the services so module rebrands are easy. Keep the ui stuff for conflict resolution. If a crest service conflicts with orchardcore service, that is the only exception to the rule
 
 
 
-### A0. Fork AuditTrail after all? (medium)
+### A0. Change AuditTrail's save path? (medium)
 
-**Context.** Ruled earlier: no fork — a Crest index on Orchard's stock AuditTrail. Two later
-rulings may need changes to the stock save path: content history stored as diffs with
+**Context.** Ruled earlier: a Crest index on the platform's AuditTrail, with no module fork. Two
+later rulings may need changes to the save path: content history stored as diffs with
 compressed checkpoints (instead of a full snapshot per save), and the workflow engine's own run
-journal moving onto the audit system.
+journal moving onto the audit system. Since the hard fork, changing AuditTrail is an in-place
+edit to `src/`, not a module fork, so the question is only which design is cleaner.
 
 **Options.**
-1. Stay unforked: replace the stock Contents audit handler with a Crest handler that writes
-   diffs, and record workflow history through the stock `IAuditTrailManager` as ordinary
-   events.
-2. Fork AuditTrail (same module id, as with Media) to own the save path and storage.
+1. Keep the save path: replace the Contents audit handler with one that writes diffs, and
+   record workflow history through `IAuditTrailManager` as ordinary events.
+2. Change AuditTrail itself (in `src/`) to own diff storage and the workflow journal.
 
-**Recommendation.** 1 until a concrete need forces the fork: both rulings fit through the
-stock handler seams.
+**Recommendation.** 1 until a concrete need forces 2: both rulings fit through the existing
+handler seams, and the module stays small.
 
 **Answer:**
-
+Leave unforked for now
 
 
 ## Shells and themes
@@ -87,7 +89,7 @@ does not boot. The cause is unknown: something other than the static-asset endpo
 **Recommendation.** 1 — a debugging session, then the fix it points to.
 
 **Answer:**
-
+we'll diagnose afterwords
 
 
 ## Queries and the connection system
@@ -96,19 +98,24 @@ does not boot. The cause is unknown: something other than the static-asset endpo
 
 **Context.** Ruled: search engines (Lucene, Elasticsearch, Azure AI Search) are connections,
 and a Search module runs through Queries the standard way. Orchard's search modules today
-implement the stock query contract (`IQuerySource`: no paging, no caller scope, results in
-one list), which lives in a library Crest cannot change.
+implement the query contract in `OrchardCore.Queries.Abstractions` (`IQuerySource`: no
+paging, no caller scope, results in one list). Only Lucene and Elasticsearch (their Core
+libraries and modules) and Crest's `QueriesController` use it. Since the hard fork, Crest can
+change that contract in place.
 
 **Options.**
-1. Crest's new contract (paged, cancellable, typed, scoped) sits beside the stock one; the
-   query manager prefers it and wraps stock sources. Each search engine gets a Crest
-   connection adapter implementing the new contract, so search is scoped like everything
-   else; the stock sources stay only for compatibility.
-2. Keep the stock search sources as they are, usable by admins only, until a search engine
-   is set up with the permission system.
+1. Change `IQuerySource` itself to the new contract (paged, cancellable, typed, scoped) and
+   update the SQL, Lucene and Elasticsearch sources with it. One contract, no adapters.
+2. Add the new contract beside the old one; the query manager prefers it and wraps old
+   sources, which stay admin-only until moved.
+3. Keep the old search sources as they are, usable by admins only, until each search engine
+   becomes a connection.
 
-**Recommendation.** 1, with 2 as the interim: until a search engine's adapter applies
-permissions, its queries are admin-only.
+**Recommendation.** 1: with only three implementations, changing the contract is cheaper
+than carrying two. Search engines whose source does not yet apply permissions stay admin-only
+until they become connections. Sub-question: keep the contract in an Abstractions library
+(the platform's pattern for extension points that other modules implement) or fold it into
+the Queries module.
 
 **Answer:**
 
@@ -290,7 +297,7 @@ media.md says links address ids, yet `/media/...` URLs come from the tree.
 
 **Options.**
 1. Paths become stable aliases: a path → placement table, with redirects on rename and move,
-   resolved inside the forked file store. Old content keeps working.
+   resolved inside the reworked file store. Old content keeps working.
 2. Placement URLs carry the id; stored paths are rewritten (dev tenants reset, per X1).
 3. Both: new content stores ids, old paths resolve through the alias table.
 
@@ -377,12 +384,12 @@ and filtering every search; each principal or rule change reindexes the affected
 
 **Context.** Stock audit listing counts every page and pages by offset, which slows at volume,
 and it is admin-only. Feeds need keyset paging (by time and event id), and permission
-injection that no caller can skip — which comes from the query fork.
+injection that no caller can skip — which comes from the Queries rework.
 
 **Options.**
 1. Build the feed API directly on YesSql now (keyset paging, scope applied), and move it onto
-   the query system when the fork exists.
-2. Wait for the query fork and build feeds only on it.
+   the query system when the rework exists.
+2. Wait for the Queries rework and build feeds only on it.
 
 **Recommendation.** 1.
 

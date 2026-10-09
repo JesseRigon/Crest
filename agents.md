@@ -2,19 +2,21 @@
 
 ## General Instructions
 
-- Crest is pre-release: do NOT write backward-compatibility code (shims, dual code paths, kept-around redundant services). Restructure outright and delete the old path in the same change. Data migrations for existing dev tenants are fine; parallel code paths are not. (Does not apply to OrchardCore itself.)
+- Crest is pre-release: do NOT write backward-compatibility code (shims, dual code paths, kept-around redundant services). Restructure outright and delete the old path in the same change. Data migrations for existing dev tenants are fine; parallel code paths are not. (Applies to the platform under `src/` too.)
 - Read all README files and all `agents.md`/`AGENTS.md` files in this repo before making substantial changes.
 - Do not use one-off inline/terminal-coded Playwright scripts for browser validation.
 - Tests live with their owning project under `<project>/tests/`. Save new tests in that project's `tests/` directory.
 
-## Orchard Integration
+## Platform Integration
 
-- Prefer native Orchard APIs before adding `api/crest/*`: Contents REST, GraphQL, Query API, OpenID/JWT, Media, Taxonomies, Users, and existing admin services/controllers.
-- Keep Crest server thin: JSON adapters over Orchard services only; do not duplicate Orchard's content-definition, permissions, display-driver, or API framework.
-- Treat Orchard as authoritative for tenant scope, permissions, feature gates, validation, lifecycle, and provider extensibility. Crest may adapt these for Blazor but must not bypass, duplicate, broaden, or persist parallel state; use provider-neutral Orchard abstractions in shared pages.
+The platform (`src/`, forked from OrchardCore, namespaces still `OrchardCore.*`) is Crest's own code. When it lacks something Crest needs, change it there rather than wrapping, shimming or copying it.
+
+- Prefer native platform APIs before adding `api/crest/*`: Contents REST, GraphQL, Query API, OpenID/JWT, Media, Taxonomies, Users, and existing admin services/controllers.
+- Keep Crest server thin: JSON adapters over platform services only; do not duplicate the platform's content-definition, permissions, display-driver, or API framework.
+- Treat the platform as authoritative for tenant scope, permissions, feature gates, validation, lifecycle, and provider extensibility. Crest may adapt these for Blazor but must not bypass, duplicate, broaden, or persist parallel state; use provider-neutral Orchard abstractions in shared pages.
 - Store tenant-scoped Crest settings in Orchard site settings whenever possible. Use a cross-tenant or hardcoded setting only when explicitly requested, and prefer Orchard's standard configuration/settings patterns for that scope.
 - Crest JSON adapters must use `ICrestRequestAccess`: authorize the real Orchard request principal with the native permission/resource before resolving a domain service. Unsafe calls use Orchard antiforgery validation; do not add Crest-local ACLs or role checks.
-- Crest wrappers are for gaps where Orchard exposes MVC/Razor admin UI, server services, or shapes/menus instead of stable Blazor-friendly JSON.
+- Crest wrappers are for gaps where the platform exposes MVC/Razor admin UI, server services, or shapes/menus instead of stable Blazor-friendly JSON.
 - No literal path strings in Crest.AdminTheme, Crest.SiteTheme, Crest.Components, or any submodule — anywhere — unless that literal is the actual place registering the endpoint with Orchard (an `IPostConfigureOptions`-sourced value like `BlazorAdminThemeOptions.AdminPath`/`LoginPath`, or a route pattern read from Orchard config). If a path needs comparing, gating, or rewriting anywhere else, it must be sourced from that one registration point, never re-typed as a second string constant. This applies to Blazor `@page` directives too when their value is used for anything beyond Blazor's own internal component matching (e.g. compared against in middleware, or read back by other code) — invented path constants for internal-only handoff (a "safe landing page" route, a "not served here" sentinel) are exactly what this rule prohibits; find the value from Orchard's own config/registration instead of making one up. **This is not Crest-specific — it applies to all routing in all submodules of this host.** All routing must go through Orchard's own systems (`AutoRoutePart`, tenant/site settings, `IPostConfigureOptions`-sourced config) so that `ShellContext` per-tenant scoping, feature gates, and shell rebuilds keep working correctly — routing built outside Orchard's system silently breaks tenant scoping, not just style.
 
 ## UI Notes

@@ -1,6 +1,6 @@
 # Crest architecture
 
-Crest is an application layer on OrchardCore. This document is its shape: what it holds, the
+Crest is a platform and the application layer built into it. This document is its shape: what it holds, the
 modules that make it up, who signs in to it, and the rules that keep downstream modules plugging
 into it rather than it reaching for them. The global store, the geographic tree and money have
 their own documents: [global-store.md](global-store.md), [regions.md](regions.md),
@@ -8,8 +8,10 @@ their own documents: [global-store.md](global-store.md), [regions.md](regions.md
 
 ## What Crest is
 
-Crest is an **application layer** on Orchard: everything a business-facing application
-needs that is not a line of business. The platform half is built — the Blazor admin and
+Crest has two halves in one repository. **The platform** (`src/`, `test/`) is a hard fork of
+OrchardCore: tenants, users, permissions, content, features, settings and the module
+system. Crest develops it as its own code. **The application layer** is everything a business-facing
+application needs that is not a line of business. Its foundation is built — the Blazor admin and
 site shells, the content-item API, icons, localization, Content Part Lists, the global
 store and the geographic tree. Three modules complete it:
 
@@ -29,8 +31,11 @@ users on the other side of it, and the member portal is how a product reaches th
 
 ## Direction: Blazor or headless, nothing else
 
-Crest is taking OrchardCore in as a hard fork (ruling 2026-10-09; the plan is still to be
-written). As each Blazor replacement lands, the Liquid templates and the stock Razor/Vue
+Crest hard-forked OrchardCore into `src/` (ruling 2026-10-09). When the platform lacks
+something, the platform is changed: no shims, no stock-id module forks, no workarounds
+kept to stay mergeable. The platform's namespaces and package ids are still
+`OrchardCore.*`; renaming them, and pruning the modules Crest will not ship, are still to
+be planned. As each Blazor replacement lands, the Liquid templates and the stock Razor/Vue
 UIs it replaces are removed, until every page is a Blazor build. Headless (the content-item
 API, GraphQL, Queries) is first class alongside Blazor. Every capability a Blazor page has
 is reachable through the API, and no feature exists only in the UI. Stock front-end assets
@@ -156,15 +161,15 @@ provenance is recorded in the subtree README rather than in its type names.
   registries Crest declares (`IPartyTypeProvider`, workflow activity/trigger/hook/flow
   providers) and attach their own parts to Crest's content types from their own
   migrations. The consumer owns the interface; the host composes.
-- No literal path strings; routes flow through Orchard's own systems (see
+- No literal path strings; routes flow through the platform's own systems (see
   [agents.md](../agents.md)).
 - Pre-release: no compatibility code; restructure outright. Until the first public release,
   migrations are edited in place and dev tenants are reset when shipped data changes
   (ruling 2026-10-06); from the first public release on, every change ships an upgrade step
   (`UpdateFrom`, backfill tasks). A plan that relies on a reset says so.
-- Blazor pages and components that depend on an Orchard module being enabled are kept
-  isolated, one place per module, so they migrate easily if that module or Orchard itself
-  is ever forked (ruling 2026-10-06).
+- Blazor pages and components that depend on a platform module being enabled are kept
+  isolated, one place per module, so they move with that module when it is reworked or
+  removed (ruling 2026-10-06).
 
 ## The rules that keep it composable
 

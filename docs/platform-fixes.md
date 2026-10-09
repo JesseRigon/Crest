@@ -1,8 +1,12 @@
-# Upstream OrchardCore proposals
+# Platform fixes
 
-**Living list, nothing filed upstream yet.** This tracks issues/limitations found in stock OrchardCore while building Crest that are worth eventually proposing back to the OrchardCore team — as opposed to workarounds that just stay internal to Crest forever. Not every workaround belongs here: only things that look like a genuine upstream gap or inefficiency, not Crest-specific design choices.
+Gaps and inefficiencies found in the platform (`src/`, forked from OrchardCore) while building
+Crest. Before the hard fork (2026-10-09) these were candidates to propose upstream, and each
+was worked around in Crest. Now the platform is Crest's own code, so each entry is a fix to
+make in `src/` directly, after which the Crest-side workaround it names is removed.
+"Upstream" in an entry means the platform's code as it came from OrchardCore.
 
-Each entry: what was found, why it matters, and (if relevant) what a fix might look like. These are proposal candidates, not commitments — write-up quality and prioritization happen if/when one is actually taken to the OrchardCore team.
+Each entry: what was found, why it matters, and (if relevant) what a fix might look like.
 
 ## Candidates
 
@@ -14,7 +18,7 @@ Each entry: what was found, why it matters, and (if relevant) what a fix might l
 
   Crest's fix was to move its own registration to `IPostConfigureOptions<T>` (guaranteed to run after every `IConfigureOptions<T>` for the same type), which sidesteps the race but only from Crest's side — any other module doing the same `IConfigureOptions<T>.Insert(0, ...)` pattern against `RequestLocalizationOptions` (or any other shared options type) is still exposed to the same non-determinism against *other* modules that haven't taken the same precaution.
 
-  Possible upstream angles: (a) document this ordering hazard explicitly wherever OrchardCore's own modules mutate shared, order-sensitive content part lists like `RequestCultureProviders`, so other module authors know to use `IPostConfigureOptions<T>` for anything order-sensitive; (b) consider whether OrchardCore's own `AdminCookieCultureProvider` registration should itself be more defensive about ordering, since it's stock code every tenant gets by default.
+  Possible platform fixes: (a) document this ordering hazard explicitly wherever OrchardCore's own modules mutate shared, order-sensitive content part lists like `RequestCultureProviders`, so other module authors know to use `IPostConfigureOptions<T>` for anything order-sensitive; (b) consider whether OrchardCore's own `AdminCookieCultureProvider` registration should itself be more defensive about ordering, since it's stock code every tenant gets by default.
 
   **Status:** understood and worked around internally; not yet written up for an actual OrchardCore issue/PR.
 
@@ -33,7 +37,7 @@ Each entry: what was found, why it matters, and (if relevant) what a fix might l
   menu's non-root captions (see [docs/admin-menu.md](admin-menu.md)), but the gap applies to every hand-built
   admin menu on every stock install.
 
-  **Status:** worked around in Crest for the imported menu; upstream fix would cover all menus.
+  **Status:** worked around in Crest for the imported menu; a platform fix would cover all menus.
 
 - [ ] **File #3: The Translations editor's Save silently deletes non-enumerated entries.**
 
@@ -131,8 +135,8 @@ Each entry: what was found, why it matters, and (if relevant) what a fix might l
   from the surviving `Id`, which equals the node's `UniqueId`, before resolving; it also adds
   hierarchical context fallback - exact menu context, then parent contexts by `':'` segment,
   then the culture's best entry for the caption anywhere - so a culture that translates a
-  caption never renders the invariant literal). **Upstream framing ruling**: proposable
-  upstream, but NOT as a data localization bug others are hitting - stock installs sit at
+  caption never renders the invariant literal). **Framing ruling** (from when this was an
+  upstream proposal): NOT a data localization bug others are hitting - stock installs sit at
   uniform default priority, where the copy block effectively never runs, and only collide if an
   admin hand-builds a DB node shadowing a provider caption; the mass-scale symptom is created
   by Crest's import (which manufactures a same-caption node per provider item and writes it at

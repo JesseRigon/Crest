@@ -167,7 +167,7 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
 
 - [ ] **Resumable uploads land in quarantine like every upload** (ruling 2026-10-06). Every
   upload is quarantined while pending; resuming changes nothing. Orchard's Tus completion
-  writes straight into the store (bypassing `FileCreationService`), so the Media fork routes
+  writes straight into the store (bypassing `FileCreationService`), so the reworked Media module routes
   it into quarantine with a pending placement, and the verdict commits or rejects it.
 - [ ] **Module-generated files go through the same pipeline, with exemptions** (ruling
   2026-10-05). A module that generates files server-side writes them as new file objects or
@@ -206,19 +206,17 @@ Documents, opaque blob keys, versions, metadata; the drive class, drive types an
     issues — such as someone with Editor on one placement changing content another
     placement's viewers see — are fixed as they are hit, not designed away up front.
 
-- [ ] **One file system: Crest replaces Orchard's Media module.**
+- [ ] **One file system, built into the platform's Media module.**
   6. Files and media are one system. Every file has one URL; there is no separate media library
      holding copies. A file is public because it is shared with Anyone, not because it was put in a
      particular place.
-  7. Crest's file module replaces Orchard's `OrchardCore.Media` module. It declares the stock
-     module's feature ids (`OrchardCore.Media` and the sub-features anything depends on) and
-     registers the services other modules resolve, so everything built on Media keeps working:
-     SEO, image fields, images in rich text and Markdown, media indexing, image processing, and
-     recipes that enable Media.
-  8. Hosts leave Orchard's stock Media module, and its Azure and S3 storage modules, out of the
-     build (a direct package reference with `ExcludeAssets="all"`). Orchard's Media libraries
-     (`OrchardCore.Media.Abstractions`, `OrchardCore.Media.Core`) stay: stored content and other
-     modules are built against their types. No change to Orchard is needed.
+  7. The platform's `OrchardCore.Media` module is reworked in place into Crest's file
+     module. Its feature ids and the services other modules resolve stay, so everything built
+     on Media keeps working: SEO, image fields, images in rich text and Markdown, media
+     indexing, image processing, and recipes that enable Media.
+  8. The Media libraries (`OrchardCore.Media.Abstractions`, `OrchardCore.Media.Core`) stay:
+     stored content and other modules are built against their types. See "Reworking the
+     Media module".
   9. `/media/...` URLs keep their form and are served by Crest from the drive tree, after the
      access check: public files cached as today, private files only to those with access.
 
@@ -548,10 +546,10 @@ Drive browser, Share panel, Rules screens, access indicators, the user editor's 
       with the relationship that grants it ("Customer, member of Acme Corp"), linking to that
       relationship, since changing it is the only way to change the role.
 
-## OrchardCore audit
+## Platform audit
 
-Audited against the Orchard fork the host packages are built from (the fork (`modules/OrchardCore` in a host),
-branch `Crest`), and against Crest as it stands. What each area gives us, and what Crest builds.
+Audited against the platform (`src/`, then the OrchardCore fork on branch `Crest`) and
+against Crest as it stands. What each area gives us, and what Crest builds.
 
 ### Files and storage
 
@@ -619,27 +617,26 @@ branch `Crest`), and against Crest as it stands. What each area gives us, and wh
   so Crest records its own (requirement 29).
 - **Email: reuse.** `IEmailService` with SMTP or Azure providers, configured per tenant.
 
-### Replacing the Media module
+### Reworking the Media module
 
-Crest's file system replaces Orchard's `OrchardCore.Media` module outright, so files and
-media are one system with one URL per file, while every module that depends on Media keeps
-working (requirements 6–11). A spike on 2026-10-05 proved it in a throwaway host, with no
-change to Orchard.
+Crest's file system is built **into the platform's `OrchardCore.Media` module**
+(`src/OrchardCore.Modules/OrchardCore.Media`), so files and media are one system with one
+URL per file while every module that depends on Media keeps working (requirements 6–11).
+Since the hard fork (2026-10-09) this is an in-place rework. The earlier plan, a
+Crest-owned copy carrying the stock module id with the stock assembly excluded from hosts
+(proved by a spike on 2026-10-05), is retired, and so are its diff check against stock and
+its asset-naming MSBuild fix.
 
-**The approach.** Orchard's Media is two layers:
+**What the module is.** Media is two layers:
 
 - **Libraries** (`OrchardCore.Media.Abstractions`, `OrchardCore.Media.Core`): `MediaField`,
   `IMediaFileStore`, `MediaOptions`, `MediaPermissions`, `DefaultMediaFileStore`, the image
   processing contract. Other modules compile against these, and stored content refers to them.
-  **Crest keeps them.**
 - **The module** (`OrchardCore.Media`: 139 source files, 8 features, about 70 service
   registrations): the feature ids, `/media` serving, API endpoints, admin UI, Secure Media, Tus
-  uploads, SignalR, Liquid filters, shortcodes, display drivers, recipes, deployment. **Crest
-  replaces it**; each host leaves the stock module out with a direct
-  `<PackageReference Include="OrchardCore.Media" ExcludeAssets="all" />`, which removes
-  `OrchardCore.Media.dll` from the output while the libraries and sibling modules stay.
+  uploads, SignalR, Liquid filters, shortcodes, display drivers, recipes, deployment.
 
-**Who depends on what.**
+**Who depends on what** (what the rework must keep working, or change alongside):
 
 - *Feature-id dependents:* `OrchardCore.Seo` depends on `OrchardCore.Media`; the media startups
   in Content Fields, HTML and Markdown are `[RequireFeatures("OrchardCore.Media")]`;
@@ -647,79 +644,29 @@ change to Orchard.
 - *Library-only dependents:* Seo, Html, Markdown, ContentFields and the two indexing modules
   (PDF, OpenXML).
 - *Module-assembly dependents:* `Media.Azure` and `Media.AmazonS3` implement `ITusTempStore`
-  from the stock module assembly, so without it Orchard's module discovery fails at startup
-  (`GetExportedTypes`, assembly not found) before anything is enabled. ImageSharp uses only the
-  processing types, which Orchard 3.0 moved into the abstractions.
-- *Bundling:* hosts reference `OrchardCore.Application.Cms.Targets`, which brings in the Media
-  module and its sibling modules through `Cms.Core.Targets`.
-- The precedent to avoid is OrchardCore issue #1023: a custom `OrchardCore.Users` replacement
-  worked until a module with a hard dependency (OpenID) re-enabled the stock module. The swap
-  holds only because Crest's module carries the exact feature ids and the stock module is
-  absent, so nothing can re-enable it.
+  from the module assembly.
+- *Services:* dependents resolve services the module registers, `IMediaFileStore` first
+  (Seo's handler needs it; without it the tenant fails to start).
 
-**Keeping the fork in step: a diff check** (ruling 2026-10-06). On every OrchardCore update,
-the fork is diffed against the stock module so new features, settings and recipe steps are
-not missed. Every stock feature is kept.
+**Decisions.**
 
-**Same module id, different assembly.** `Crest.Media` declares
-`[assembly: Module(Id = "OrchardCore.Media")]`. Orchard supports this (`ModuleInfo.Id` lets a
-module change its assembly name and keep its logical name), so areas, routes, static paths and
-every feature id stay exactly as Orchard and its dependents expect.
-
-- **Every stock sub-feature id is a contract.** Crest's module must declare whichever of the
-  stock module's eight feature ids anything depends on (`OrchardCore.Media`, `.Indexing`,
-  `.Indexing.Text`, `.Cache`, `.Slugify`, `.Security`, `.Tus`, `.SignalR`); the PDF and OpenXML
-  indexing modules, for example, need `.Indexing`.
-- **Services are a contract too.** Dependents resolve services the stock module registers —
-  `IMediaFileStore` first (Seo's handler needs it; without it the tenant fails to start).
-
-**One gap in Orchard, fixed in Crest's project file.** Orchard's module build
-(`OrchardCore.Module.Targets`) names embedded static assets and the module asset index after
-`$(AssemblyName)`, while the runtime looks them up under the logical id. With id and assembly
-name different, every `/OrchardCore.Media/...` asset returned 404. A small MSBuild target in
-`Crest.Media.csproj`, running after Orchard's embedding step, renames both to the id (handling `/`
-and `\` path separators). Worth offering upstream: let the targets use the module id.
-
-**What the spike verified** — against the 4.0.0-local feed, stock `OrchardCore.Media`,
-`OrchardCore.Media.Azure` and `OrchardCore.Media.AmazonS3` excluded, a Crest-owned copy of the
-stock module's source built as `Crest.Media`:
-
-| Behaviour | Result |
-| --- | --- |
-| Stock assemblies | Absent: only `Crest.Media` plus the Media libraries and sibling modules load |
-| Recipes enabling `OrchardCore.Media` | The stock Blank and Blog setup recipes enable Crest's feature; the Blog media step writes its images to the tenant's media store |
-| `/media/...` serving | 200, correct content types |
-| Resizing (NetVips) | 100×100 crop and WebP conversion produced; resized cache written. Needs a token unless `UseTokenizedQueryString` is off, and only configured `SupportedSizes`, as stock |
-| Admin Media library page | 200, with its scripts and styles served |
-| Media API | Listing, upload, serving the upload, folder creation: all 200 |
-| Feature by feature | Cache, Slugify, Indexing, Indexing.Text, PDF, OpenXML, SEO, ImageSharp, Tus, SignalR, Security: all enable; site, media and admin keep working after each |
-| Secure Media | Anonymous 404, signed-in admin 200, as stock |
-| Resumable uploads (Tus) | Endpoint live (`Tus-Resumable: 1.0.0`, creation, termination, expiration) |
-
-**Decisions (2026-10-05).**
-
-- **No change to the Orchard fork.** Storage is Crest's own provider interface (the icon and
-  tax provider pattern), so Orchard's `OrchardCore.Media.Azure` and `OrchardCore.Media.AmazonS3`
-  modules are left out of hosts like the stock Media module, and the `ITusTempStore` coupling
-  no longer matters. Local disk first; Azure and S3 providers later, on Orchard's storage
-  libraries. Moving `ITusTempStore` into a library was tried and reverted.
-- **The local feed is 4.0.0-local**, matching the fork's own 4.0.0, and Crest's compatibility
-  and assembly versions are 4.0.0.
+- **Storage is Crest's own provider interface** (the icon and tax provider pattern; ruling
+  2026-10-05). Local disk first; Azure and S3 providers later, on the platform's storage
+  libraries. The stock `Media.Azure` and `Media.AmazonS3` modules are reworked onto it or
+  removed.
+- **Versions.** The local feed is 4.0.0-local, and Crest's compatibility and assembly
+  versions are 4.0.0.
 
 **Still to do and to watch.**
 
-- [ ] **Inventory the rest of the stock module** — every service, route, shape, filter and
-  handler that a dependent or existing content relies on (display drivers for `MediaField`,
-  Liquid filters such as `asset_url`, shortcodes, the resizing middleware). That inventory is
-  the real size of the module.
-- [ ] **Offer upstream:** module targets that embed assets under the module id; routing Tus
-  uploads through `FileCreationService` so `IFileEventHandler` (antivirus) runs on them — a
-  security fix whatever Crest does.
-- **Risks.** Claiming `OrchardCore.Media` means tracking the stock module's public surface as
-  Orchard evolves (new features, settings, recipe steps), or dependents drift. Recipes,
-  deployment plans and admin menus that target the stock module's settings and endpoints stop
-  working unless Crest provides equivalents. Third-party modules that reference the stock
-  module assembly hit the same load failure as Azure and S3.
+- [ ] **Inventory the module** — every service, route, shape, filter and handler that a
+  dependent or existing content relies on (display drivers for `MediaField`, Liquid filters
+  such as `asset_url`, shortcodes, the resizing middleware). That inventory is the real size
+  of the rework.
+- [ ] **Route Tus uploads through `FileCreationService`** so `IFileEventHandler` (antivirus)
+  runs on them, and into quarantine (§ 2).
+- **Risks.** Recipes, deployment plans and admin menus that target the module's settings and
+  endpoints must be updated along with it.
 
 ### Crest today
 

@@ -279,7 +279,7 @@ measurement, business policy), never UI-language-driven.
 static library.** Rule *definitions* — the addressing maps above (global store),
 allowed-currency lists a downstream module attaches per Regional Profile (tenant store),
 required-field sets per document type — are Orchard-managed data, never compiled in. Both the
-Blazor WASM client and the Orchard Core server resolve the same definitions from that same
+Blazor WASM client and the server resolve the same definitions from that same
 source at runtime, so there is one place a rule is edited and both sides pick up the change
 without a redeploy. A shared compiled *engine* that interprets rules is still needed; the rule
 *data* is Orchard content, matching this codebase's preference for Orchard-as-system-of-record

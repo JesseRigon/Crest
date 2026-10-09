@@ -102,15 +102,15 @@ antiforgery access) are Crest features any module can use.
 ## Engine
 
 **The override.** `Crest.Workflows` depends on the stock `OrchardCore.Workflows` feature
-so the upstream modules' workflow startups (gated on that feature id) keep registering their
+so the platform modules' workflow startups (gated on that feature id) keep registering their
 activities and event handlers, and `CoreStartup` (`Order = int.MaxValue`, last by feature
 dependency and then by order) re-registers `IWorkflowManager` as `OrchardWorkflowManager`
 (stimuli into the engine) and removes the stock admin menu. Nothing executes on the stock
-engine; its evaluators stay registered because stock activities resolve them. Upstream calls
-exactly one thing, `IWorkflowManager.TriggerEventAsync`, and binds to
+engine; its evaluators stay registered because stock activities resolve them. The platform's
+modules call exactly one thing, `IWorkflowManager.TriggerEventAsync`, and bind to
 `OrchardCore.Workflows.Abstractions`, not to the stock module - which is why the override
-needs no upstream change. Fallback if a stock piece ever fights it: claim the feature id and
-exclude the stock assembly.
+needs no platform change. Since the hard fork, the stock workflows module can instead be
+changed or removed in `src/` when it gets in the way.
 
 **Tenant citizenship.** One engine per shell: every engine service, store and hosted service
 lives in the tenant container. Definitions are `WorkflowDefinition` content items
@@ -853,7 +853,7 @@ Built today: see [docs/workflows.md › Designer and admin pages](workflows.md#d
   own journal (execution logs, activity records), hook runs and inbound webhook deliveries
   — including rejected posts, which today are only logged — are recorded as audit events;
   the insight sections and metrics are audit feeds ([audit.md](audit.md)). Whether that
-  needs an AuditTrail fork is open there.
+  needs a change to AuditTrail's save path is open there.
 - [ ] **Per-process metrics** (ruling 2026-10-05): run counts, timings and failures per flow,
   on the workflow pages, over the already-indexed instances, execution logs and activity
   records.

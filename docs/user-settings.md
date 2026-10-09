@@ -17,13 +17,13 @@ When a user logs into the Crest admin, they currently always land on the dashboa
 served whenever a request resolves to `AdminOptions.AdminUrlPrefix` with no further
 path segment; see `Home.razor`'s authenticated branch, which redirects there).
 
-**Confirmed: stock OrchardCore has no built-in equivalent of this.** Checked
+**Confirmed: the platform has no built-in equivalent of this.** Checked
 `AccountBaseController.RedirectToLocal` (only honors a `returnUrl` query parameter or
 falls back to the site root `~/`, never `/Admin`), `AdminOptions` (only exposes
 `AdminUrlPrefix`, no landing-page concept), and `AdminController.Index()` (a bare
 `return View()`, no redirect logic). No `UserOptions`/profile property anywhere
 stores a preferred admin destination, per-user or per-tenant. So there's nothing to
-mirror or integrate with upstream — this would be a fully Crest-native feature.
+mirror or integrate with — this would be a new feature.
 
 - [ ] **Let each user pick their own default landing page.** Let each user pick their own default landing page from Crest's admin (e.g. "Content
   Items" instead of "Dashboard", or a specific saved view/filter once those exist).

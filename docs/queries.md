@@ -52,13 +52,13 @@ for whoever requests it — API, GraphQL, Liquid, feeds).
   builder on the existing Queries page and `api/crest/queries`, and basic export of a
   query's results. Sharing, scheduled delivery and full reporting are built downstream on
   it.
-- [ ] **Fork Orchard's Queries: simple querying, enough for Crest's own consumers** (ruling
-  2026-10-06), the way the file module forks Media and audit forks AuditTrail. The bar is
+- [ ] **Rework the platform's Queries: simple querying, enough for Crest's own consumers** (ruling
+  2026-10-06), in place in `src/` (since the hard fork), as the file system reworks Media. The bar is
   that stock Crest is enough for the audit system to build custom filtered activity streams
   on it ([audit.md](audit.md) › 5), and for downstream reporting to extend it. Orchard's
   contract (`IQuerySource.ExecuteQueryAsync(Query, IDictionary<string, object>)` returning
   untyped `Items`, results in one tenant `QueriesDocument`) is too thin even for that, so
-  the fork adds:
+  the rework adds:
   - **Paging and cancellation in the contract** — page tokens, a `CancellationToken`, a total
     where the source can give one.
   - **Permissions are injected at run time, for the user requesting the data** (ruling
@@ -99,7 +99,7 @@ for whoever requests it — API, GraphQL, Liquid, feeds).
   - **Caller scope** — every execution carries the tenant, the user and their context, and
     the source filters by permission inside the query, never after paging (what audit
     feeds need). Today Liquid's `query` filter, the scripting `executeQuery` and the Razor
-    helpers skip the per-query permission; the fork **checks it everywhere, with no
+    helpers skip the per-query permission; the rework **checks it everywhere, with no
     exceptions** (ruling 2026-10-06). There is always a caller: anonymous is a caller with
     the Anonymous permissions, and work the system does on its own (background jobs, system
     flows) runs as a system principal with its own permission set — two different things.

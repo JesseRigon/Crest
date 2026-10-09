@@ -281,7 +281,8 @@ the hierarchy store), diverge deliberately and document why.
   enforced by the Members module through Orchard's auth pipeline per tenant
   (the member portal endpoint
   only issues sessions for member-class users; the tenant login only for
-  staff-class), on top of Orchard's own authentication — never a fork of it.
+  staff-class), built into the platform's own authentication rather than a second
+  authentication system beside it.
 
 ## Ownership: Crest, as `Crest.Members`
 
@@ -307,7 +308,7 @@ Verified against the vendored OrchardCore source:
 ## How it is built (against the vendored source)
 
 Everything below cites verified mechanics — file paths and seams confirmed in
-the OrchardCore fork (`modules/OrchardCore` in a host).
+the platform source (`src/`, then the OrchardCore fork).
 
 ### A. Class marker foundation
 
@@ -787,8 +788,8 @@ subtree.
   working with no Orchard change. Where the discussion landed, to pick up next time:
   **groups grant access (what you can see, read) and roles grant actions (create, update,
   delete and the other verbs)**, every action requiring that you can see the record first.
-  Open with it: capability screens (settings, audit) as actions; answering Orchard's view
-  permissions from the access system without changing Orchard; business roles as derived
+  Open with it: capability screens (settings, audit) as actions; answering the platform's view
+  permissions from the access system (now changeable in place, since the hard fork); business roles as derived
   groups. Until then, sharing uses the **no-permission role shim** ([media.md](media.md) ›
   Terms).
 
