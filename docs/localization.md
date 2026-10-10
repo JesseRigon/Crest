@@ -27,11 +27,11 @@ definitions are a business-context concern, not part of this system.
 **The Blazor WASM client is the source of truth for which culture to display and which
 culture to tell the server about.** The server does not guess culture from a chain of
 independent `IRequestCultureProvider`s — that approach (multiple providers racing inside
-`RequestLocalizationMiddleware`) was tried and abandoned: two upstream providers
-(`AdminCookieCultureProvider`, `UserLocalizationRequestCultureProvider`) both prepend
-themselves via `AddInitialRequestCultureProvider`, so whichever module's
-`ConfigureServices` ran last silently won — determined by module load order, not
-anything a site admin controls.
+`RequestLocalizationMiddleware`) was tried and abandoned: providers that each prepended
+themselves via `AddInitialRequestCultureProvider` raced for the front slot, so whichever
+module's `ConfigureServices` ran last silently won — determined by module load order, not
+anything a site admin controls. Since 2026-10-10 `Crest.Localization` is the one owner of
+the provider list and assigns it rather than inserting into it.
 
 Instead:
 
@@ -50,15 +50,12 @@ Instead:
    4. **Browser locale** (`navigator.language`) — used only if it's one of the tenant's
       supported cultures.
    5. **Tenant default culture** — final fallback.
-3. **Client writes one cookie** with the fully-resolved value — Crest's own
-   `crest_culture_{shellVersionId}` — in the stock ASP.NET Core cookie format
-   (`c=<culture>|uic=<culture>`), scoped tenant-wide (not `/admin`-only). The stock
-   `CookieRequestCultureProvider` reads it back server-side.
+3. **Client writes one cookie** with the fully-resolved value — the tenant-wide
+   `culture_{shellVersionId}` cookie (`Crest.Localization.CultureCookie`) — in the stock
+   ASP.NET Core cookie format (`c=<culture>|uic=<culture>`), scoped tenant-wide (not
+   `/admin`-only). The stock `CookieRequestCultureProvider` reads it back server-side.
 4. **Server reads back exactly what the client decided.** No ordering race remains,
-   since there's a single writer by construction. `UserLocalizationRequestCultureProvider`
-   and `AdminCookieCultureProvider` stay registered (other code may expect
-   `Crest.Users.Localization` to be on) but neither is relied on to resolve
-   anything for Crest.
+   since there's a single writer by construction and a single provider list owner.
 
 ### Per-tab and per-user override scoping
 
@@ -93,20 +90,17 @@ The tenant's front-end site (`Crest.SiteTheme`) is plain server-rendered
 Razor/Liquid — no WASM client to resolve anything itself. It relies on the stock ASP.NET
 Core `RequestLocalizationOptions` pipeline instead:
 
-1. `CrestCultureCookieOptionsConfiguration` (`Crest.Server/Services/CrestCultureCookie.cs`)
-   rebuilds `RequestCultureProviders` as
+1. `Crest.Localization`'s `RequestLocalizationOptionsConfigurations` assigns
+   `RequestCultureProviders` as
    `[CookieRequestCultureProvider, AcceptLanguageHeaderRequestCultureProvider]` —
-   Crest's own tenant-wide cookie (the same one the admin's client-side chain writes)
+   the tenant-wide culture cookie (the same one the admin's client-side chain writes)
    first, then the browser's `Accept-Language` header as the fallback for a visitor who
    hasn't run the admin client yet.
-2. This runs as an `IPostConfigureOptions<RequestLocalizationOptions>`, not
-   `IConfigureOptions<T>`, deliberately: stock Crest.Localization's
-   `AdminCookieCultureProvider` also inserts itself into this same options object via its
-   own `IConfigureOptions<T>`, and ASP.NET Core does not guarantee configure-delegate
-   ordering across independent DI registrations — two competing `Insert(0, ...)` calls
-   race, and whichever ran last would win unpredictably. `IPostConfigureOptions<T>` is
-   guaranteed to run after every `IConfigureOptions<T>`, so this wins deterministically
-   instead of fighting the race.
+2. The list is assigned, not inserted into, and the platform is its only owner: ASP.NET
+   Core does not guarantee configure-delegate ordering across independent DI
+   registrations, so two modules each inserting at index 0 would race for the front slot.
+   The admin-only `AdminCookieCultureProvider` and Crest.Server's post-configure rebuild
+   are gone (fixed in place 2026-10-10).
 3. The tenant's actual supported/default cultures come from `LocalizationSettings`
    (`Crest.Localization`'s site settings, editable at `/Admin/Settings/localization`
    or via a recipe's `settings` step) — **as top-level keys of the step itself**

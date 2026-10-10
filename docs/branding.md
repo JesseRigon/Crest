@@ -1,104 +1,156 @@
-# Tenant branding — display name and logos
+# Tenant branding — display name, logos, and the login page as a page
 
-**Status: in progress.** The display name is done; logos and the Branding section are not.
-A tenant presents ITS OWN identity, not the platform's: the login page greets
-with the tenant's display name (today it says "Crest"), and the app
-chrome uses tenant-uploaded logos wherever a logo appears. Managed by the tenant
-admin from a **Branding** section at the TOP of the Design System page, above the
-design-variables section. The design-variables section it sits above is documented in
-[design-systems.md](design-systems.md).
+**Status: in progress, re-planned 2026-10-10 onto the display and query systems.** The
+display name is done; the renditions, the settings group and the login page as a designed
+page are not. A tenant presents ITS OWN identity, not the platform's: the login page greets
+with the tenant's display name (today it says "Crest"), and the app chrome uses
+tenant-uploaded logos wherever a logo appears.
+
+Three rulings shape the plan:
+
+- **Brand details are tenant settings data.** The display name, the logo renditions and
+  the design-system selection are part of the tenant's settings, wherever those are
+  stored (the platform's site settings today, `ISite` and its `Properties` sections);
+  there is no branding store beside them and no branding endpoint of its own.
+- **Every surface reads branding through the `site` system query** and binds it to
+  component slots ([queries.md](queries.md) › System queries and slot bindings); nothing
+  reads settings or media paths directly for display. ("Slot" is the display system's word
+  for a data binding on a component, so a logo placement is a **rendition** here.)
+- **The login page is a page like every other page**: an entry in the route table, rendered
+  as a tree of components from a template, with the anonymous route permission, overridable
+  per tenant in the designer ([blazor-display.md](blazor-display.md) § 6a, § 10). It is not
+  a hand-built Razor exception that fetches its own data.
+
+Visual language (tokens, type scales, presets) is the design system's and is planned in
+[design-systems.md](design-systems.md); this document covers the identity facts and the
+pages that show them.
 
 Current state:
 
-- A tenant's display name is the standard Orchard **`ISite.SiteName`**, already
-  served by `GET api/crest/site` (`siteName`) and editable on the Crest Settings
+- A tenant's display name is the platform's **`ISite.SiteName`**, served by
+  `GET api/crest/site` (`siteName`, behind `ManageSettings`) and editable on the Settings
   › General screen.
-- The login page greets with the site name, read anonymously from
-  `GET api/crest/site/branding` (`siteName` only) through `DisplayManager.Branding`.
+- The login page is a module `@page` component (`InteractiveWebAssembly`, the auth-cookie
+  render-mode rule) that greets with the site name read anonymously from
+  `GET api/crest/site/branding` (`siteName` only). Both the hand-built page and the
+  endpoint are what this plan replaces.
 - The admin and member documents' `<title>` is the site name (`App.razor`, from
   `ISiteService` during SSR).
-- `GET api/crest/site` requires `ManageSettings` and is not used by the login page.
-- The Design System page is `Crest.AdminTheme/wasm/Pages/DesignSystem.razor`
-  (route `/DesignSystem`, gated by `ManageSettings` in
-  `CrestRoutePermissionProvider`).
-- Tenant media already flows through Orchard Media elsewhere (icon overrides use
-  it — the `icon-tenant-media` suite check is the precedent).
-
-Per the standing rules: tenant-scoped settings live in **Orchard site settings**,
-files live in **Orchard Media**, no parallel stores, no invented path literals.
+- Tenant media already flows through Media elsewhere (icon overrides use it; the
+  `icon-tenant-media` suite check is the precedent).
 
 ## Display name
 
-- [x] **Use `ISite.SiteName` as the branding display name.** The branding display name IS `ISite.SiteName` — no second field. The Branding
-  section edits it through the same site-settings pipeline the General settings
-  screen uses (`ISiteService`), so the two screens can never disagree.
-- [x] **Add the anonymous branding read and render the site name on the login page.** Login page renders the site name instead of the literal. The name must be
-  readable ANONYMOUSLY: add a small `[AllowAnonymous]` branding read
-  (`GET api/crest/site/branding` on SiteController, or fold into `site/home`)
-  returning only public-safe facts: site name + logo slot URLs. Nothing else
-  from `ISite` leaks through it.
-- [x] **Use the site name in the document title.** `App.razor`'s `<title>` uses the site name too (SSR has `ISiteService`
-  available directly — no endpoint needed there).
+- [x] **`ISite.SiteName` is the display name.** No second field. Every editor of it goes
+  through the one settings pipeline (`ISiteService`), so no two screens can disagree.
+- [x] **The site name in the document title** (`App.razor`, SSR).
+- [x] **The login page greets with the site name.** Done against the interim anonymous
+  read; moves onto the `site` query with the page below.
 
-## Logos — named slots, size variants
+## Logos — named renditions
 
-- [ ] **Define the logo slots.** A logo is not one file: the app consumes specific renditions in specific
-  places. Model as **named slots**, each with its intended size, consumed by a
-  specific surface. Initial slot set (extend as surfaces appear):
+A logo is not one file: the app consumes specific renditions in specific places.
 
-  | Slot | Used by | Notes |
+- [ ] **Define the renditions.** Model as **named renditions**, each with its intended
+  size, consumed by a specific surface. Initial set (extend as surfaces appear):
+
+  | Rendition | Used by | Notes |
   | --- | --- | --- |
-  | `login` | login page header | replaces/accompanies the display name |
-  | `sidebar` | admin nav header / tenant chip | small, square-ish |
-  | `favicon` | browser tab | ICO/PNG/SVG |
+  | `login` | the login page's header component | replaces or accompanies the display name |
+  | `sidebar` | the admin and member layouts' nav header, the tenant chip in the switcher | small, square-ish |
+  | `favicon` | the document head | ICO/PNG/SVG |
   | `email` | future mail templates | reserved, not consumed yet |
 
-- [ ] **Store logo files in Orchard Media.** **Storage**: Orchard Media, under a tenant-relative media folder the service
-  owns (resolved through `IMediaFileStore`, never a hand-typed absolute path).
-  Upload goes through the existing Crest media adapter surface (same pipeline as
-  icon tenant media), so Media permissions and validation apply unchanged.
-- [ ] **Add `CrestBrandingSettings`.** **Settings**: a `CrestBrandingSettings` site-settings section
-  (`ISite.Properties` via `ISiteService`, the standard custom-section pattern)
-  holding `Slots: { name → media path }`. The setting stores the media PATH the
-  tenant uploaded; URLs are resolved through the media file store at read time.
-- [ ] **Read every slot through one shared accessor.** **"Shows up automatically"**: every consuming surface reads its slot through
-  one shared accessor (client: a small `BrandingState` loaded from the anonymous
-  branding read; server/SSR: the site settings directly). Slot empty → the
-  surface falls back (login: site name text only; sidebar: current default;
-  favicon: current static icon). Uploading a slot fills it everywhere on next
-  render — no per-surface wiring beyond reading the slot.
+  Rendition definitions are registry entries (name, label, expected size, where it is
+  used), so the settings editor and the `site` query never hard-code surface knowledge; a
+  module that adds a surface registers the rendition it consumes.
+- [ ] **Files live in Media.** Under a tenant-relative media folder the service owns
+  (resolved through `IMediaFileStore`, never a hand-typed absolute path). Upload goes
+  through the existing media adapter surface (the same pipeline as icon tenant media), so
+  Media permissions and validation apply unchanged.
+- [ ] **The branding settings group.** A settings section on the tenant's settings (the
+  standard custom-section pattern over `ISite.Properties`) holding
+  `Renditions: { name → media path }` beside the site name. The stored value is the media
+  **path**; URLs are resolved through the media file store at read time, inside the `site`
+  query. Per-theme, per-culture and dark-mode variants are extra renditions when needed;
+  the model already fits.
 
-## Branding section on the Design System page
+## How surfaces read branding
 
-At the top of `DesignSystem.razor`, before the design-variables section:
+The `site` system query answers `name`, `branding.{rendition}` (a resolved URL or empty)
+and the design-system tokens; its anonymous-readable subset is decided by the query's
+permission, so the login page reads it without a special endpoint. A surface binds a slot to
+it: the layout's nav header binds `site › branding.sidebar`, the document head binds
+`site › branding.favicon`, the login header binds `site › name` and
+`site › branding.login`. An unset rendition comes back empty and the component falls back
+(the login header shows the name as text, the sidebar shows the default mark, the head keeps
+the static icon); setting one fills every surface on the next render because every surface
+binds the same query. The client keeps the query's result in its session copy like any
+other query result; SSR runs the same query in process.
 
-- [ ] **Company display name field.** **Company display name**: textbox bound to `SiteName`, saved through the
-  site-settings pipeline (same permission the page already requires —
-  `ManageSettings`).
-- [ ] **Logo slot rows.** **Logo slots**: one row per slot — current image preview (or "not set"),
-  upload control (through the media adapter), clear button. Slot metadata
-  (label, expected size, where it's used) comes from the slot definitions so the
-  UI never hardcodes surface knowledge.
+- [ ] **The `site` query exposes `name` and `branding.*`** from the settings group, with
+  the anonymous subset (name, renditions) and the rest behind the data permission.
+- [ ] **The layouts and the document head bind renditions** through slots; the interim
+  `GET api/crest/site/branding` read and `DisplayManager.Branding` go.
+
+## The login page as a page
+
+The login page is an entry in the route table with the properties only a page has (the
+route, the shell bucket, `[AllowAnonymous]`, the auth-cookie render-mode rule declared by the
+page, the document title) and a tree from a shipped template, overridable per tenant:
+
+- [ ] **A shipped `Login` template** (Liquid, theme-qualified in the alternates chain:
+  `Login`, `Login__{shell}`, the theme's own) composed of registered components: the
+  branding header (slots bound to `site › name` and `site › branding.login`), the login form
+  component (user name, password, remember me, the external-provider buttons from the
+  `user` query's provider list), the links to registration and password reset where the
+  shell offers them. The admin shell and the member shell each have their own login page
+  record, so the surfaces stay separate by construction
+  ([shells-and-themes.md](shells-and-themes.md) › The member portal).
+- [ ] **The login form submits a workflow action**, the one sign-in operation behind the
+  gate (`CrestLoginService`'s `ILoginFormEvent` sequence as the action; see
+  [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)).
+  No component calls an endpoint of its own; a slot never binds a write.
+- [ ] **Overrides, not forks.** A tenant restyles or rearranges the login page through the
+  override model (instance and node overrides on the template's components; design-system
+  tokens for the look); the route, the bucket and the anonymous permission are the page's
+  and are not editable there. The design permission for the page is admins' by default.
+- [ ] **The hand-built login page and `DisplayManager.Branding` are removed** once the
+  template renders through the tree renderer; the registration and password-reset pages
+  follow the same shape.
+
+## Editing branding
+
+Branding is edited where the tenant's settings are edited: the settings editor is itself a
+page of components whose form binds the settings and saves through the settings action
+behind `ManageSettings`. The branding group shows the display name (bound to `SiteName`)
+and one row per registered rendition: the current image or "not set", an upload control
+through the media adapter, a clear control. Rendition metadata comes from the registry.
+The design-system editor ([design-systems.md](design-systems.md)) links to the group; it
+does not host a hand-written Branding section of its own.
+
+- [ ] **The branding group in the settings editor**, generated from the settings section
+  and the rendition registry.
 
 ## Permissions
 
-- [ ] **Anonymous read.** Read (name + logo URLs): anonymous — it renders on the login page.
-- [ ] **`ManageSettings` write.** Write: `ManageSettings` for the name (it IS a site setting); logo uploads
-  additionally pass through Media's own permission checks.
+- **Read**: the `site` query's anonymous subset is name and renditions, because the login
+  page renders them; everything else in `site` needs the data permission.
+- **Write**: `ManageSettings` for the name and the renditions (they are settings); logo
+  uploads additionally pass Media's own checks. Editing the login page's template is the
+  page's design permission; publishing it, the publish permission.
 
 ## Verification
 
-- [ ] **Unit tests.** Unit: branding settings round-trip; slot fallback rules.
-- [ ] **Suite checks.** Suite: login page shows the site name (and logo once a probe uploads one);
-  Design System page renders the Branding section, name edit persists and is
-  reflected on `api/crest/site`; anonymous branding read returns only the
-  public-safe fields.
+- [ ] **Unit:** the settings section round-trips; the `site` query resolves renditions to
+  URLs and answers empty for an unset one; the anonymous subset contains nothing else.
+- [ ] **Suite:** the login page shows the site name, and the logo once a probe uploads
+  one; the settings editor's branding group persists a name edit that `api/crest/site`
+  reflects; a tenant override of the login template renders and the route and permission
+  stay the page's.
 
 ## Out of scope / later
 
-- [ ] **Per-theme, per-culture and dark-mode logos.** Per-theme or per-culture logos; dark-mode logo variants (add as extra slots
-  when needed, the slot model already fits).
-- [ ] **Site theme branding.** The Site (front-end) theme's branding — this plan covers the admin/login
-  chrome; the public site pulls from the same settings when its theme work
-  happens.
-- [ ] **Email templates.** Email templates (slot reserved).
+- [ ] **Site theme branding.** The public site's layout binds the same renditions when its
+  theme work happens; nothing new to store.
+- [ ] **Email templates** (rendition reserved).

@@ -482,7 +482,7 @@ and the binding model this design needs, so:
 
 The remaining parts of the engine's model (how a template declares inputs, limits, the designer
 hints for zones) are built on this, not beside it. The registry, the request path, the four pipelines and
-the one access machinery are planned in [operations.md](operations.md) (2026-10-10).
+the one access machinery are planned in [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery) (2026-10-10).
 
 ## Data model
 
@@ -562,7 +562,7 @@ before porting code; WordPress is GPL and is consulted for vocabulary only):
     types there. This is where the type system meets the query system, so it sits with data,
     not with the UI.
   - `Crest.Global` becomes **`Crest.Data.Global`**: the standardized global data set imports and
-    loading ([global-store.md](global-store.md)) plus the global data registry, so no module
+    loading ([globals.md](globals.md)) plus the global data registry, so no module
     reimplements either.
   - `Crest.Components.Primitives` holds the primitive components; modules register their
     primitives there.

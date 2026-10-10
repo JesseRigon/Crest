@@ -69,7 +69,7 @@ are. Content items use the same model, with their content type in the chain.
 - **No-permission role (shim, 2026-10-05)**: a role that grants no permissions and exists
   only so people can be shared with as a set ("everyone on this drive"). It is a **shim**:
   Crest has no group concept yet, and how grouping should work is open
-  ([members.md](members.md) › Decisions needed › Grouping). The code that introduces it is
+  ([parties.md](parties.md) › Decisions needed › Grouping). The code that introduces it is
   marked as a shim, so it is found and replaced when grouping is decided.
 - **Access level**, each including the ones before it:
   - **Viewer**: read.
@@ -465,7 +465,7 @@ logged action rather than something in the admin's everyday view.
       feature displays (requirement 30). Crest adds no delivery of its own. If a notice cannot be
       sent (email not configured, portal notifications turned off), the access proceeds and the
       failure is recorded with it. Requiring an approval instead waits for the approvals system
-      ([approvals.md](approvals.md)).
+      ([permissions.md](permissions.md) › Approvals).
 
 - [ ] **Add the notice delay.**
   26. **Notice delay.** A tenant can set a delay between the notice and the access: with 30
@@ -726,4 +726,39 @@ is legal advice.
 
 ## Decisions needed
 
-None at present.
+- [ ] **Paths versus ids (F1, decide before the file system).** The platform's `MediaField`
+  stores only file **paths**, and everything around it works in paths (Liquid `asset_url`,
+  shortcodes, SEO, search indexing, GraphQL, Crest's media API). A rename or move breaks
+  stored paths, and with hard links one file has several paths; this document says links
+  address ids, yet `/media/...` URLs come from the tree. Options: (1) paths become stable
+  aliases through a path → placement table with redirects on rename and move, resolved
+  inside the reworked file store; (2) placement URLs carry the id and stored paths are
+  rewritten (dev tenants reset); (3) both. Recommendation: 2 for stored data (fields store
+  placement ids) plus 1 for incoming URLs (old and pretty paths redirect to the placement).
+- [ ] **Serving, resizing and the CDN assume public files by path (F2).** `/media/...` is
+  served by middleware that resolves the path, resizes images and serves static files, with
+  a per-top-folder role check for secure media. Private bytes must never land in the public
+  resize cache. Options: (1) the access check runs first, before resolution and resizing;
+  public files keep the fast path and CDN caching; (2) Crest's own resize cache keyed by
+  placement and size behind the same check. Recommendation: 1, with 2 for private files.
+- [ ] **Access-index size and recalculation (F3).** Access is precomputed per placement and
+  principal; rules read metadata and time, a rule high in the tree recalculates its whole
+  scope, hard-linked folders multiply inherited chains, and removing access must take effect
+  before it is reported done. Options: (1) store only explicit and rule decisions and
+  resolve inheritance through an ancestor closure (a join, not a row per inherited pair);
+  (2) recalculate in batches in the background with a deny-first fence so removals apply
+  at once; (3) hard links for files only in the first version. Recommendation: 1 and 2
+  together, with folders allowed to hard-link once 1 exists.
+- [ ] **Folder hard links and the loop gate (F4).** With folder hard links the tree is a
+  graph: the loop gate must check every placement's ancestors, two moves at once can race
+  into a loop, and folder counts and quotas become ambiguous. Options: (1) serialize
+  placements and moves per tenant; (2) check a precomputed ancestor closure inside the same
+  transaction. Recommendation: 2, with 1 as the guard against races; quotas count content
+  once, whatever its placements.
+- [ ] **Search filtering (F5).** Ruled: search engines are connections, and an engine
+  indexing Crest data is set up with the permission system, so access is written into what
+  is indexed and every search is filtered; each principal or rule change reindexes the
+  affected documents. Options: (1) one search path (the Search module through the query
+  pipeline) with the caller's scope always applied, direct index access forbidden; (2)
+  coarse filtering in the index plus an exact check afterwards, which breaks exact counts.
+  Recommendation: 1.

@@ -140,7 +140,7 @@ and data validation. It says, for that country:
 | whether a level is a fixed list or free text | State = list; City = text | County = list, optional; Post town = text | Département = list (derivable from code postal); Commune = text |
 | the postal-code pattern and label | `\d{5}(-\d{4})?`, "ZIP" | UK postcode grammar, "Postcode" | `\d{5}`, "Code postal" |
 
-The map is **global-store reference data keyed by country** ([global-store.md](global-store.md)),
+The map is **global-store reference data keyed by country** ([globals.md](globals.md)),
 loaded from data files and edited only by the Default tenant; a tenant may overlay labels.
 `addressing-maps.json` ships maps for US, GB, FR and CA plus a generic map, and postal
 patterns for 107 countries; `AddressingMap`/`AddressInput`/`AddressRules` live in
@@ -156,7 +156,7 @@ a UK delivery address, and that address is entered and validated as a UK address
 ### Storage: the global store plus a tenant overlay
 
 **The standard tree lives once, in the tenant-less global store** — see
-[global-store.md](global-store.md) for the mechanism, who may write it (the Default tenant
+[globals.md](globals.md) for the mechanism, who may write it (the Default tenant
 only) and how tenant overrides work. Nothing is copied per tenant; a 60k-node tree exists
 exactly once whatever the tenant count. Content items are the wrong primitive for it and are
 not used.

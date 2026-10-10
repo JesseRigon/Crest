@@ -3,7 +3,7 @@
 Crest is a platform and the application layer built into it. This document is its shape: what it holds, the
 modules that make it up, who signs in to it, and the rules that keep downstream modules plugging
 into it rather than it reaching for them. The global store, the geographic tree and money have
-their own documents: [global-store.md](global-store.md), [regions.md](regions.md),
+their own documents: [globals.md](globals.md), [regions.md](regions.md),
 [money.md](money.md).
 
 ## What Crest is
@@ -19,7 +19,9 @@ store and the geographic tree. Three modules complete it:
 | --- | --- |
 | `Crest.Parties` | Who an application deals with: Person and Organization content types, contact points, addresses, positions, a role registry (`IPartyTypeProvider`) that downstream modules register their party roles with (customer, vendor, employee, lead, …), and the parties UI. |
 | `Crest.Members` | The other side of the business: member accounts (ordinary Orchard users with a class marker), organization bindings with per-organization roles, a hierarchy store, the member portal (login, register, external login, pages), and impersonation for staff support. Commercial memberships (tiers, seats, groups, perks, entitlements) are a downstream module's, which hooks member lifecycle events through `IMemberLifecycleHandler`, a seam Members declares. |
-| `Crest.Workflows` | A workflow service for Orchard built on a vendored fork of Elsa 3 (MIT): a registry of activities, triggers, hook slots and flows that modules contribute; units of work (one request, one session, one transaction, with inline hooks and durable background calls); connectors with API-key, bearer, basic and OAuth2 authentication and OpenAPI import; approvals; field dependencies; ownership tiers and per-flow access; the stock-Orchard bridge; the designer bridge. |
+| `Crest.Access` ([access.md](access.md)) | The one access machinery every read and write passes through ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)): the caller built per request from the authenticated identity and server-held state (roles, permissions, organization, class ceiling) under a per-tenant permission version; one decision behind the platform's authorization service; scope providers per table compiled into every list, query and picker; the audit of decisions; the system caller for background work. Contracts in `Crest.Access.Abstractions`, below `Crest.Data`. One calculation per request, handed down the request's chain on the server, never across requests. |
+| `Crest.Queries` | The read side: the structured query model (a step list compiled through YesSql into parameterised SQL with the caller's scope conjoined for every table), the SQL source for external databases with its scope rewriter, the `System` source (`item`, `user`, `site`) that display slots bind, query descriptors and the catalog the workflow engine's registry reads. Every run is paged, cancellable, typed and caller-scoped. The connection system (external systems by protocol) is planned here ([queries.md](queries.md)). |
+| `Crest.Workflows` | The action side: a workflow service built on a vendored fork of Elsa 3 (MIT). Its registry (activities, triggers, hook slots, flows, and queries as `RunQuery` activities) is the operation registry; units of work (one burst, one session, one transaction, with inline hooks and durable background calls); the access gate as engine middleware with the actor rule (a run acts as the caller who started it, or as the system when published so); connectors with API-key, bearer, basic and OAuth2 authentication and OpenAPI import; approvals; field dependencies; ownership tiers and per-flow access; the stock bridge; the designer bridge. |
 | `Crest.Money` | The money type and the `PriceField` a tenant puts on any content type: `Amount` bound to an `ICurrency`, ISO 4217 metadata from the global store so minor units are never a per-tenant guess, and a default currency. Adapted from OrchardCore.Commerce (MIT). See [money.md](money.md). |
 
 The thesis: **all an application needs is parties, workflows and content items.** A
@@ -45,7 +47,7 @@ External URLs and the `OrchardCore.Translations` packages are left as they are. 
 `Crest.Workflows.Platform` module is merged into `Crest.Workflows` as part of the rename, and
 the four sample site themes (TheTheme, TheBlogTheme, TheAgencyTheme, TheComingSoonTheme) are
 pruned first. Neither the platform nor Crest.Server is named just `Crest`: the
-platform's core library becomes `Crest.Core` and Crest.Server's assembly and package become
+platform's implementation library is `Crest.Infrastructure` (the former `Crest.Core` merged into it 2026-10-10, since Crest is one system with no framework-versus-CMS split) and Crest.Server's assembly and package become
 `Crest.Server`. Where a renamed platform module or type meets existing Crest code, each clash
 is resolved case by case: delete the side Crest has already replaced, or merge Crest code
 that was written to sit over the platform into the platform module. Before the rename, only
@@ -73,7 +75,7 @@ the stock UIs.
   front ends for the same objects.
   - Every read and write is an **operation** in one registry (the engine's descriptors plus a
     query kind), behind one access machinery, with the API surfaces generated from it
-    ([operations.md](operations.md), ruling 2026-10-10).
+    ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery), ruling 2026-10-10).
   - Liquid is the default language.
   - Admins can grant C#, JavaScript and Python scripting access. Granting is only the first
     step toward sandboxing: those providers run code on the server and must be hardened
@@ -162,6 +164,13 @@ types, functions, settings keys or other internal names (`ManageConnections`, no
 alone. The same rule holds for downstream projects. OrchardCore's own names are not ours to
 change.
 
+**Existing names that carry "Crest" (ruling 2026-10-06, X3).** The rule is about services:
+the `Crest…` service, controller, claim, settings-key and permission names are renamed, so
+a module rebrand is a module rename. The UI component library (`CrestButton`,
+`CrestDataGrid`, …) keeps its prefix for conflict resolution with HTML and Blazor names.
+The one exception on the service side: where a Crest service would clash with a platform
+service of the same name, the Crest one keeps the prefix.
+
 **No downstream name appears in Crest.** Crest is open source and knows nothing of the
 products built on it — not in a namespace, an assembly name, a route, a comment, a test name
 or a fixture. That includes the vendored engine subtree:
@@ -186,6 +195,8 @@ provenance is recorded in the subtree README rather than in its type names.
   migrations. The consumer owns the interface; the host composes.
 - No literal path strings; routes flow through the platform's own systems (see
   [agents.md](../agents.md)).
+- Nothing reaches data except through the access machinery: a caller, a decision and a
+  scope for every read and write, in every surface ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)).
 - Pre-release: no compatibility code; restructure outright. Until the first public release,
   migrations are edited in place and dev tenants are reset when shipped data changes
   (ruling 2026-10-06); from the first public release on, every change ships an upgrade step
@@ -229,7 +240,7 @@ Built: see [docs/architecture.md](architecture.md) — Parties, Members, Workflo
 Money are here, and so is the member shell ([shells-and-themes.md](shells-and-themes.md)
 phases 1–2). This section is the checklist of what remains, in build order.
 
-The global store's host-call rough edge is in [global-store.md](global-store.md).
+The global store's host-call rough edge is in [globals.md](globals.md).
 
 ### Standing alone
 
@@ -285,8 +296,10 @@ The global store's host-call rough edge is in [global-store.md](global-store.md)
     verification and the suite entry point, as `tools/dev-lib.sh` and a `runHostSuite()`
     harness helper. Hosts pass their solution, features, ports and credentials.
 
-- [ ] **The query system and the connection system (Workflows depends on it)** — planned in
-  [queries.md](queries.md).
+- [x] **The access machinery, the query pipeline and the action pipelines** landed in their
+  first form on 2026-10-10 ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery), steps 1, 2 and 4). Open there:
+  the registry migration, the generated surfaces, the read job, the connection system
+  (Workflows' connectors move down into it, [queries.md](queries.md)), the retirements.
 
 ### Recorded for later
 

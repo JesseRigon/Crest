@@ -150,6 +150,105 @@ the identical trap, so the rule is general: **a page that sets an authentication
 renders `InteractiveWebAssembly`**. `App.razor` applies it to the admin login shell and to
 the member shell's `/login` and `/register` pages.
 
+## The member portal: login, sessions, sides
+
+The member shell is the per-organization portal members sign in through: a vendor
+organization has a vendor-flavoured portal on tenant A, a customer organization a
+customer-flavoured one on tenant B, the same class of thing. Who a member is (bindings,
+hierarchy, the member admin) is [parties.md › Members](parties.md#members-persons-who-act-for-an-organization);
+what a member may do (the class, the ceiling, the caller) is
+[workflows.md › Operations › The member caller](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery). This section is the sign-in side.
+
+**Login surfaces are separate by construction.** A member signs in at the member portal
+only, never at the tenant login; staff reach a member portal only through impersonation,
+which starts from an authenticated staff session and never passes through a login. The
+portal's login flow takes local tenant accounts and the external identity providers the
+tenant configures (the stock `Crest.Users` external authentication features, Google, GitHub,
+Microsoft, …, per tenant through site settings), with auto-provisioning creating the
+member on first sign-in; the class and the binding are assigned by the portal's
+registration flow, never by the raw external callback.
+
+**The login-channel gate.** `ILoginFormEvent.ValidatingLoginAsync(IUser)` is the one veto
+seam that can refuse an otherwise-valid credential, and it fires at all four sign-in points
+(the password login and the three external-login paths), so one handler
+(`MemberLoginSurfaceGate`) covers local and external logins: a member at the tenant surface
+is refused, staff at the portal are refused, a member without a binding to the named
+organization is refused. `MemberPortalLoginContext` (scoped) marks a portal request; an
+external-login callback carries the mark on the external cookie's properties
+(`MemberSessionKeys.PortalOrganization`, set by the portal's external-login start).
+`UserClassStampHandler` reads the same mark, so a user created by the platform's own
+`RegisterAsync` or by external-login auto-registration during a portal request is stamped
+member with the binding, and everything else stays staff. Crest's JSON login
+(`CrestLoginService`) fires the standard `ILoginFormEvent` sequence exactly as the stock
+controller does (LoggingIn → AuthenticateAsync → ValidatingLogin veto → SignIn → LoggedIn,
+LoggingInFailed on every failure path), so moderation, e-mail confirmation, audit login
+recording and the member gate all apply through the one seam; a veto's MVC result is
+translated, never executed (redirects yield their path, TempData `error_*` messages fill
+the 401 payload, anything else degrades to a generic refusal), and two-factor behaviour is
+unchanged.
+
+**One cookie, not two.** `SignInManager` is hard-wired to the application scheme; a second
+cookie scheme would mean reimplementing two-factor, lockout, the security stamp and
+external login. Portal sessions therefore ride the same per-tenant Identity cookie
+(`orchauth_<tenant>`, Path deliberately unset) and are told apart by the request, not the
+cookie. `AuthenticationProperties.Items` lives server-side when `CacheTicketStore` is
+active and is the home for the session's last active organization and for the impersonator
+identity; attaching items at sign-in needs `SignInManager.SignInAsync(user, properties,
+method)`.
+
+**The side comes from the request, not the user** (ruling 2026-10-06, landed 2026-10-10 as
+the caller of [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)). Pages carry the side in the path (the
+admin prefix or the member prefix); API calls carry it in `X-Shell` (`admin` or `member`)
+and, on the member side, the organization in `X-Org`, both sent by each shell's HttpClient
+(`CrestShellContext`). A cookie-authenticated API call without `X-Shell` is malformed and
+denied, never defaulted; a member-side request whose organization the user holds no
+binding to is denied; a marker that disagrees with the shell the path selected is denied.
+The caller is then built per request: on the staff side the user's tenant roles and no
+organization; on the member side only the binding's roles with the class ceiling applied,
+so the admin role of a dual user never reaches the portal. The active organization is no
+longer written into the cookie, so switching never re-signs it and two tabs on two
+organizations are independent; the session only remembers the last choice
+(`MemberSessionService`) for a request that names none.
+
+**Portal surfaces as built.** A `@page` component carrying `[AllowAnonymous]` yields
+`RouteComponentEntry.AllowsAnonymous`, the shell middleware skips the login redirect and
+the route gate for it, and `AdminRoutes` renders it shell-less. `api/crest/members/portal`:
+`login` (organization optional; the first binding becomes the active organization),
+`register` (creates the Person, wraps `RegisterAsync` so the tenant's registration
+settings, moderation and e-mail confirmation apply, links person ↔ user, signs in with the
+active organization), `external-providers`, `external-login` (the stock challenge with the
+organization stamped on the external properties; the platform's own callback finishes it).
+The portal login, registration, member home and account pages live in `Crest.MemberTheme`
+(routes in `MemberRoutePaths`, shell-relative under the member prefix); `Crest.Members`'
+`member-wasm` library supplies the shell's seams (`MemberAuthenticationService`,
+`MemberShellContext`, which sets the shell context's organization).
+
+**Impersonation.** Staff enter a member portal for support through an impersonation
+session (`MemberImpersonationService`: the member principal signed in with the staff
+identity kept in the authentication properties; the caller carries both as
+`ImpersonatorUserId`; stop restores the staff session). Attribution splits deliberately:
+everything **behaves** as the member (a generated invoice's CreatedBy is the member, the
+scope is the member's organization, the portal renders as that member sees it) and the
+**audit** records the staff user, "created by <staff> impersonating <member>", never the
+member alone ([audit.md](audit.md)). The session carries both identities so no write path
+knows about impersonation.
+
+**The session cache and offline (ruling 2026-10-06).** The client keeps one session copy
+per (user, tenant, side, organization), the built caller and the access policies' verdict,
+fed from the server's state cache under the tenant's permission version
+([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery) › Caller lifetime) and never authority. The session
+expires as a whole after a tenant-set length (default 7 days); while online the copy
+refreshes on a configurable interval and at once when a binding, role or policy write bumps
+the version; offline, the client works from the last copy until the session expires.
+Nothing is offline today; the rules that keep the door open: permissions on a device are
+never authority (offline actions are queued as intents and re-authorized on reconnect); the
+offline copy is a server-signed snapshot bound to a registered device, checked on sync,
+revoked with a lost device; snapshot and data are encrypted at rest with a non-exportable
+key; reads are the real exposure, so the server decides by permission at download time
+what goes offline and sends only that; offline actions are audited on sync, flagged
+offline. A refusing access policy removes access to that organization on the member side
+only; it never signs the user out of the staff side.
+
 ## Theme compatibility
 
 Themes are **not** interchangeable. A Crest shell is a Blazor Web App document plus a
@@ -271,6 +370,16 @@ mechanism.
 - [ ] **Theme clients load per shell** (ruling 2026-10-06). The admin, site and member theme
   clients no longer load together on first visit; each loads when its shell is opened, the
   way module assemblies already load on demand.
+- [ ] **`/{prefix}/_framework/dotnet.js` served with an empty MIME type** (S2, a bug, ruled
+  2026-10-06: **diagnose afterwards**, once the display and operations work is in). Under a
+  tenant addressed by path prefix the Blazor runtime file comes back with no content type,
+  so the browser refuses it and the admin shell does not boot; the workflows isolation check
+  signs in through `api/crest/auth/login` instead. The cause is unknown: something other
+  than the static-asset endpoint answers (the per-tenant static files, the host's
+  `UseStaticFiles`, or a fingerprint mismatch); `App.razor` also has no `<ImportMap/>`.
+  Diagnose by comparing response headers on prefixed and unprefixed URLs, in development
+  and published builds, then fix the actual cause; do not add `<ImportMap/>` and a
+  `_framework/{**path}` tenant endpoint blind.
 - **Every tenant reserves the member prefix (ruling 2026-10-06).** The member route table and
   the middleware's member-prefix match stay registered whether or not Members is enabled;
   a tenant without Members does not get that path back for site content.
@@ -296,6 +405,42 @@ section holds what is not built yet.
 - [ ] **Member password-reset and external-login pages.** The member shell owns the member login and registration pages at the member base; the
   member **password-reset and external-login pages** belong there too, so every staff and
   member login surface is separate by construction.
+
+### Member sessions and sides
+
+- [ ] **The login gate checks the side.** The admin login accepts a user holding staff;
+  the member portal's login accepts a user with at least one organization binding (today
+  the gate checks the class).
+- [ ] **Organization slugs in member page paths and the organization picker.** Member
+  pages carry the organization in the path, `/{member prefix}/{org slug}/…`, so bookmarks
+  open the right organization and the switcher simply navigates; a member with several
+  organizations and none chosen goes to an organization picker.
+- [ ] **Tenants in the switcher are the accounts added on this device** (ruling
+  2026-10-06). Like Google or Zoho: the user signs in to one tenant, "adds an account" by
+  signing in to another, and switches between them. The list is kept **on the device**,
+  not the server, so a tenant signed out of stays in the menu until removed and no server
+  data links accounts across tenants; today's code, which lists a tenant when anyone
+  there shares the username and starts every tenant's shell on each manifest load, is
+  removed. **Organizations are server data**: only the active tenant's organizations are
+  listed, from its bindings. **E-mail is never an identity link.** Tenants addressed by
+  path or by subdomains of one site share the device list; a tenant on an unrelated custom
+  domain sees only its own, and switching across unrelated domains is downstream.
+- [ ] **One switcher, the same on both sides**: tenants on top, a separator, then
+  organizations; choosing a tenant switches tenant, choosing an organization opens the
+  member portal with it active.
+- [ ] **Impersonation under one account** (ruling 2026-10-06): an impersonated session acts
+  on the member side (staff rights stripped like any member-side request); a dual user can
+  be impersonated; stopping restores the staff session exactly, its own active organization
+  included; the audit records both people.
+- [ ] **Tenant SSO stays staff-side.** Tenant SSO (the Default tenant as an OpenID Connect
+  IdP, the stock OpenId Server, Client and Validation features) is for tenant users across
+  a person's tenants; members are excluded by ruling, and a dual user gets it on the admin
+  side only. A member of two tenants has two member accounts.
+- [ ] **The super tenant (deferred by ruling, 2026-09-08).** Cross-tenant read access for
+  the Default tenant's users is a later design; the sanctioned mechanism is
+  `IShellHost.GetScopeAsync` into the target tenant's shell (never shared-database
+  queries), behind an opt-in per-type contract registry, fail-closed, read-only first,
+  audited. Nothing depends on it.
 
 ### A registry of shells
 
@@ -344,5 +489,5 @@ is a registry of shells, with Site as the fallback:
     admin; and a business could run the admin on a local server sheltered from the internet
     without affecting the member portal or the public site.
   - What that requires of the shared pieces — the data store, the permission system (see
-    [speed.md](speed.md) on running it on separate hardware), sign-in and sessions across
+    [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery) › Decisions on running it on separate hardware), sign-in and sessions across
     hosts, and which shell owns which writes.

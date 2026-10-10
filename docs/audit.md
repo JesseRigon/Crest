@@ -1,8 +1,8 @@
 # Audit
 
-Not started. Impersonation sessions already carry both identities (docs/members.md,
-"Staff support access = impersonation"); nothing records them yet. This plan is what
-records them. What is built for impersonation is in [members.md](members.md).
+Not started. Impersonation sessions already carry both identities
+([shells-and-themes.md › The member portal](shells-and-themes.md#the-member-portal-login-sessions-sides)
+› Impersonation); nothing records them yet. This plan is what records them.
 
 Who did what, to which record, when, from where, and on whose behalf. It is
 append-only: an event is never edited or deleted through the application, only aged out
@@ -127,10 +127,17 @@ unpublished, deleted and restored, with a snapshot of the item.
 
 ## Decisions needed
 
-- [ ] **Change AuditTrail's save path?** The index ruling holds unless diff storage or
-  taking over the workflow engine's journal needs changes to the save path. Since the hard
-  fork that is an in-place change to the platform, not a module fork; to be discussed with both in
-  view.
+- [x] **Change AuditTrail's save path?** Ruled (A0): **leave it as it is for now.** The
+  Contents audit handler is replaced by one that writes diffs with compressed checkpoints,
+  and workflow history is recorded through `IAuditTrailManager` as ordinary events; the save
+  path itself changes only when a concrete need forces it (an in-place platform change since
+  the hard fork, not a module fork).
+- [ ] **Audit feeds at volume (A4).** Stock audit listing counts every page and pages by
+  offset, which slows at volume, and it is admin-only. Feeds need keyset paging (by time and
+  event id) and the caller scope no caller can skip. Options: (1) build the feed API on
+  YesSql now with keyset paging and the `ScopeSet` applied, and move it onto the query
+  pipeline as a saved query over the audit indexes; (2) wait and build feeds only on the
+  query pipeline. Recommendation: 1.
 
 - [ ] **Organization-scoped view.** Does a member admin get an organization-scoped audit view?
 - [ ] **Telling the member.** Should a member be told after the fact that staff impersonated

@@ -7,7 +7,7 @@
 Reference data that is the same for every tenant is stored **once**, in a YesSql store that
 belongs to no tenant (`Crest.Global`). The Default tenant is its only editor. Tenants read it
 and may layer their own additions and presentation over it; they never modify it. What is not
-built yet is in [global-store.md](global-store.md).
+built yet is in [globals.md](globals.md).
 
 ## Why
 
@@ -192,7 +192,7 @@ global store.
 
 ## Still to build
 
-Built: see [docs/global-store.md](global-store.md) — the tenant-less store, the
+Built: see [docs/globals.md](globals.md) — the tenant-less store, the
 overlay, the loaders, the super-tenant permission and API, and the version-keyed cache.
 This section is the checklist of what remains.
 

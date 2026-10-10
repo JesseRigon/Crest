@@ -106,15 +106,10 @@ entry now reverts the rendered caption to the updated PO value instead of the li
 Crest's sidebar and app manifest resolve these captions against the tenant translation store
 per request culture at serialization time — the same place in the pipeline where TheAdmin's
 `NavigationItemText.cshtml` resolves at render time — through `CrestMenuCaptionResolver`,
-which fixes two defects a bare `IDataLocalizer` lookup carries:
-
-**Merge drops `MenuName`.** `NavigationManager.Merge` folds a provider item and its imported
-node into one; the node's values win via priority, but the *surviving instance* is whichever
-came first in provider registration order, and Merge's copy list omits `MenuName`
-([platform-fixes.md](platform-fixes.md) #7). An item that survived as the provider's
-instance would resolve under the generic "Admin Menus" context and miss its stored
-translation — per caption, decided by module registration order. The resolver restores the
-owning menu from the surviving `Id`, which for a merged pair is the node's `UniqueId`.
+which adds what a bare `IDataLocalizer` lookup lacks. (`NavigationManager.Merge` once dropped
+`MenuName` from the surviving instance of a merged pair, so an item could resolve under the
+generic context and miss its translation; the platform's `Merge` now copies `MenuName` with
+the other eleven properties, fixed in place 2026-10-10.)
 
 **No default context.** Contexts are strict namespaces: a translation stored under one is
 invisible to a lookup under any other, and upstream falls back to the invariant literal even
@@ -178,17 +173,18 @@ the save **merges**: only the rows the page displayed are replaced (blank delete
 else in the store is carried over untouched. Nothing the page never showed can be destroyed by
 saving.
 
-**Closed upstream trap: the Translations editor's Save was lossy for deep captions.** Orchard's
-`Save` replaces a culture's whole translation list with what the editor enumerated, and the
-stock admin node localization providers enumerate *top-level* nodes only — so saving from the
-Translations editor silently deleted stored translations for child-node captions (including
-seeded ones). Crest registers `CrestAdminMenuChildCaptionDataLocalizationProvider`, which
-enumerates every admin menu's below-root captions (roots stay upstream's, avoiding duplicate
-rows) — making child captions visible and editable in the editor, and keeping their stored
-values in the list Save round-trips instead of dropping them. The underlying upstream gaps are
-logged in [platform-fixes.md](platform-fixes.md) (#2 non-recursive enumeration,
-#3 wholesale save). Should a translation still go missing, `sync-providers` refills any seeded
-entry on demand.
+**Fixed in the platform (2026-10-10): the Translations editor's Save was lossy for deep
+captions.** The admin node localization providers enumerated top-level nodes only, and the
+editor's Save replaced a culture's whole list with what was enumerated, so a save silently
+deleted every child caption's stored translation. Now the providers walk the whole tree
+(`AdminNodeDataLocalizationProvider.AllNodes`, one row per distinct caption), Save merges
+(only the entries the editor displayed are replaced; an emptied value removes one), the
+editor's lookups tolerate a duplicate stored row, the translation cache is evicted again
+after the document commits, and the admin menu service raises `IAdminMenuEventHandler`
+events that `AdminMenuTranslationCleanup` (in `Crest.DataLocalization`) uses to drop the
+entries no node carries any more and a deleted menu's whole context;
+`ContentTypeTranslationCleanup` does the same for a removed content type's display name.
+Should a translation still go missing, `sync-providers` refills any seeded entry on demand.
 
 **Timing.** The import runs once per shell, right after tenant activation
 (`CrestProviderMenuSyncTenantEvents`): activation itself has no request, and the import

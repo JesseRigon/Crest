@@ -20,7 +20,7 @@ record it) and `GlobalCurrencyProvider` reads `Crest.Global`, which is Crest's a
 The currency reference data (`Data/currencies.json`, `CurrencyGlobalSchema`, stored under
 the schema name `Crest.Money.Currencies`) is `Crest.Money`'s, since ISO 4217 minor units are
 reference data every application needs and the global store is Crest's
-([global-store.md](global-store.md)).
+([globals.md](globals.md)).
 
 The default currency is `CurrencySettings.DefaultCurrency`, falling back to US dollars when
 unset. There is no tenant settings surface for it yet: the class is the seam a Crest settings

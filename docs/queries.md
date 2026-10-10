@@ -1,9 +1,14 @@
 # Queries — the query system and the connection system
 
-**Status: not started.** What is built today is Crest's thin management surface over
-Orchard Queries: `api/crest/queries` (CRUD and the source list, behind `ManageQueries`)
-and the Queries page (`Crest.AdminTheme/wasm/Pages/Queries.razor`). Execution still goes
-through Orchard's `api/queries/{name}`.
+**Status (2026-10-10): the query pipeline landed in its first form** as step 2 of
+[workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery): the structured query model compiled through YesSql with
+the caller's scope conjoined for every table, the SQL source with parameters only and the
+scope rewriter, the typed, paged, cancellable source contract through every caller, the
+`System` source (`item`, `user`, `site`), query descriptors and the catalog, every run
+paged. Not yet: the builder, statement caching, `ReturnContentItems` through the gate, the
+read job, the connection system. Crest's management surface (`api/crest/queries`, the
+Queries page) and the platform's `api/queries/{name}` still exist until the generated
+surfaces replace them.
 
 One module, `Crest.Queries`, with two parts:
 
@@ -38,13 +43,13 @@ public release.
 
 > **Ruling 2026-10-10:** queries are one of the two kinds of **operation** in the operation
 > registry, behind the one access machinery; the surfaces (REST, GraphQL, RPC, Liquid, pickers)
-> are generated from that registry. The build order is [operations.md](operations.md) › Tasks
+> are generated from that registry. The build order is [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery) › Tasks
 > (step 2 is this document's pipeline and connection system; step 1, `Crest.Access`, supplies
 > the caller and the ScopeSet that "permissions injected at run time" below is implemented
 > with). This document stays the design; the items below are its task list. The survey of what
 > exists today (the single choke point `DefaultQueryManager`, the Cyqwel AST rewriter that can
 > take the scope predicates, the Liquid-rendered SQL templates to remove, the missing table
-> allow-list) is recorded in operations.md › step 2.
+> allow-list) is recorded in workflows.md › Operations › step 2.
 
 ## The query system
 
@@ -87,7 +92,7 @@ for whoever requests it — API, GraphQL, Liquid, feeds).
     2026-10-06). A saved query is stored as written, with no permissions in it. Every time any
     user runs it — free SQL included — the server takes that user's shell, organization and
     principal (the per-request principal built from `X-Shell` and `X-Org`,
-    [members.md](members.md)) and adds the `WHERE` clauses their permissions require for every
+    [shells-and-themes.md](shells-and-themes.md#the-member-portal-login-sessions-sides)) and adds the `WHERE` clauses their permissions require for every
     table the query touches, before it runs. The same query returns different rows to
     different people; a member's `SELECT * FROM …` returns only what they may see, and an
     audit feed only events on records the caller may see. Each module registers, for the
@@ -130,6 +135,38 @@ for whoever requests it — API, GraphQL, Liquid, feeds).
 
   Keeps the stock query feature ids and the `api/queries` and Liquid surfaces working for
   existing callers.
+
+## System queries and slot bindings
+
+Everything a page or a component reads comes through a query; a **slot** on a component is a
+data binding `{ query, parameters, path }` ([blazor-display.md](blazor-display.md) ›
+decision 4), never a service call of its own. Three queries are built in, served by the
+in-process `System` source and memoised per request:
+
+| Query | Answers | Notes |
+| --- | --- | --- |
+| `item` | the content item the route resolved | the route parameter is the binding |
+| `user` | the caller: name, roles, side, organization, class | facts, never permissions |
+| `site` | site settings a surface may show: the site name, the branding renditions (login, sidebar, favicon, email), the design-system tokens | the anonymous-readable subset is decided by the query's permission, so the login page reads it without a special endpoint |
+
+Rules that follow:
+
+- **One accessor, no per-surface wiring.** A surface that shows the site name or a logo
+  binds a slot to `site` with the rendition name as the path (`site › branding.sidebar`);
+  the client keeps the query's result in its session copy the way it keeps any query result,
+  and SSR runs the same query in process. Nothing reads site settings or media paths
+  directly for display.
+- **Empty is a value.** A rendition that is not set comes back empty and the component
+  falls back (login: the site name as text; sidebar: the default mark; favicon: the static
+  icon). Setting a rendition fills every surface on the next render because every surface
+  binds the same query.
+- **Paths resolve inside the query.** `site` returns URLs resolved through the media file
+  store at run time; the stored value is the media path, never an absolute URL.
+- **Writes are actions.** Uploading a rendition or renaming the site is a workflow action
+  behind `ManageSettings` and Media's own checks; no slot binds a write.
+
+The branding plan itself (which renditions exist, where the files live, the settings group,
+the login page as a page) is [branding.md](branding.md).
 
 ## The connection system
 
@@ -217,5 +254,25 @@ before them.
 
 ## Decisions needed
 
+- [x] **Search sources and the old query contract (Q2).** Ruled by landing (2026-10-10,
+  option 1): `IQuerySource` itself became the new contract (typed, paged, cancellable,
+  caller-scoped) and the SQL, Lucene and Elasticsearch sources were updated with it; the
+  contract stays in `Crest.Queries.Abstractions`, the platform's pattern for extension points
+  other modules implement. A search source that does not yet apply the caller's scope stays
+  admin-only until its engine becomes a connection.
 - [ ] **What OrchardCore already offers natively** to build the connection system on — to be
   researched later, before designing, so nothing is reinvented.
+- [ ] **Host database versus external SQL connections (Q6).** The SQL connector is
+  dogfooded against the host database. That connection must use the tenant's table prefix,
+  the store's isolation level and the caller's scope; external SQL connections must not be
+  prefixed or rewritten for the tenant, and use their own credentials. Options: (1) a
+  connection kind, host or external, set by the system and not editable; (2) one kind with
+  prefixing and scope as per-connection settings. Recommendation: 1; the host connection is
+  created by Crest and cannot be pointed elsewhere, every other SQL connection is external.
+- [ ] **Crest's Queries API (Q7).** `QueriesController` writes a query's settings as raw
+  JSON without the source handlers (nothing validates them) and has no run, preview, results
+  or schema endpoints, which the builder needs. Options: (1) each source validates its own
+  settings through the contract, and run, preview, results and schema endpoints are added
+  for the builder; (2) keep raw JSON for admins and validate at run time only.
+  Recommendation: 1, as the generated surfaces of [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery) step 7
+  rather than more hand-written endpoints.

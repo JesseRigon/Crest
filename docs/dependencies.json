@@ -393,14 +393,6 @@
    "title": "Crest.Contents.TagHelpers\\nreferenced by 8, references 4, packages 0"
   },
   {
-   "id": "Crest.Core",
-   "label": "Crest.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 3,
-   "title": "Crest.Core\\nreferenced by 2, references 3, packages 3"
-  },
-  {
    "id": "Crest.Cors",
    "label": "Crest.Cors",
    "color": "#ffb703",
@@ -829,16 +821,16 @@
    "label": "Crest.Infrastructure",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 5,
-   "title": "Crest.Infrastructure\\nreferenced by 4, references 3, packages 3"
+   "value": 6,
+   "title": "Crest.Infrastructure\\nreferenced by 5, references 4, packages 6"
   },
   {
    "id": "Crest.Infrastructure.Abstractions",
    "label": "Crest.Infrastructure.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 53,
-   "title": "Crest.Infrastructure.Abstractions\\nreferenced by 52, references 3, packages 0"
+   "value": 52,
+   "title": "Crest.Infrastructure.Abstractions\\nreferenced by 51, references 3, packages 0"
   },
   {
    "id": "Crest.Layers",
@@ -2028,7 +2020,7 @@
  "edges": [
   {
    "from": "Crest.Application.Targets",
-   "to": "Crest.Core",
+   "to": "Crest.Infrastructure",
    "arrows": "to"
   },
   {
@@ -6743,7 +6735,7 @@
   },
   {
    "from": "Crest.Infrastructure",
-   "to": "Crest.Core",
+   "to": "Crest.Abstractions",
    "arrows": "to"
   },
   {
@@ -6754,6 +6746,11 @@
   {
    "from": "Crest.Infrastructure",
    "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Infrastructure",
+   "to": "Crest.Localization.Abstractions",
    "arrows": "to"
   },
   {
@@ -7774,21 +7771,6 @@
   {
    "from": "Crest.AutoSetup",
    "to": "Crest.Setup.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Core",
-   "to": "Crest.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Core",
-   "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Core",
-   "to": "Crest.Localization.Abstractions",
    "arrows": "to"
   },
   {
@@ -9102,9 +9084,12 @@
    "AWSSDK.S3"
   ],
   "Crest.Infrastructure": [
+   "Fluid.Core",
    "HtmlSanitizer",
    "MimeKit",
-   "libphonenumber-csharp"
+   "NodaTime",
+   "libphonenumber-csharp",
+   "ncrontab"
   ],
   "Crest.Server": [
    "Microsoft.AspNetCore.Components.WebAssembly.Server",
@@ -9152,11 +9137,6 @@
   ],
   "Crest.Sms.Core": [
    "Microsoft.Extensions.Http.Resilience"
-  ],
-  "Crest.Core": [
-   "Fluid.Core",
-   "NodaTime",
-   "ncrontab"
   ],
   "Crest.SourceGenerators": [
    "Microsoft.CodeAnalysis.Analyzers",
