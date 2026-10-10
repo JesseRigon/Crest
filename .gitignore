@@ -278,12 +278,12 @@ node_modules/
 #exclude parcel
 .parcel-cache
 
-/Crest.Cms.Web/wwwroot
-/Crest.Mvc.Web/wwwroot
-/Crest.AspireHost/wwwroot
+/src/Crest.Cms.Web/wwwroot
+/src/Crest.Mvc.Web/wwwroot
+/src/Crest.AspireHost/wwwroot
 /test/**/wwwroot
-/Crest.Cms.Web/Localization/**/*.po
-/Crest.Mvc.Web/Localization/**/*.po
+/src/Crest.Cms.Web/Localization/**/*.po
+/src/Crest.Mvc.Web/Localization/**/*.po
 /test/**/Localization/**/*.po
 !test/Crest.Tests/Localization/**/*.po
 /Crest.sln.GhostDoc.xml
