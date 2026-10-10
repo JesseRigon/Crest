@@ -41,7 +41,10 @@ public release.
 > are generated from that registry. The build order is [operations.md](operations.md) › Tasks
 > (step 2 is this document's pipeline and connection system; step 1, `Crest.Access`, supplies
 > the caller and the ScopeSet that "permissions injected at run time" below is implemented
-> with). This document stays the design; the items below are its task list.
+> with). This document stays the design; the items below are its task list. The survey of what
+> exists today (the single choke point `DefaultQueryManager`, the Cyqwel AST rewriter that can
+> take the scope predicates, the Liquid-rendered SQL templates to remove, the missing table
+> allow-list) is recorded in operations.md › step 2.
 
 ## The query system
 
