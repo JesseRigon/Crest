@@ -35,6 +35,8 @@ public static class StudioServices
         Forward<NavigationManager>(services, app);
         Forward<ILoggerFactory>(services, app);
         Forward<ICrestAntiforgery>(services, app);
+        // The side the admin app acts in (X-Shell), as its own client sends it.
+        if (app.GetService<CrestShellContext>() is not null) Forward<CrestShellContext>(services, app);
         if (app.GetService<IJSInProcessRuntime>() is not null) Forward<IJSInProcessRuntime>(services, app);
         if (app.GetService<IConfiguration>() is not null) Forward<IConfiguration>(services, app);
         services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
@@ -67,14 +69,24 @@ public static class StudioServices
 
 /// <summary>
 /// Studio's API clients authenticate with the tenant's Crest cookie (the engine API's
-/// gate maps the workflow permissions the user holds onto the engine's grants) and send
-/// Crest's antiforgery token on every unsafe request, as Crest's own client does.
+/// gate maps the workflow permissions the user holds onto the engine's grants), name the
+/// side they act in with <c>X-Shell</c> (the access gate answers 403 to a cookie-authenticated
+/// API call without it; the admin side, as Studio runs in the admin app) and send Crest's
+/// antiforgery token on every unsafe request, as Crest's own client does.
 /// </summary>
-public sealed class CrestCookieApiHandler(ICrestAntiforgery antiforgery) : DelegatingHandler
+public sealed class CrestCookieApiHandler(ICrestAntiforgery antiforgery, CrestShellContext? shell = null) : DelegatingHandler
 {
+    public const string ShellHeader = "X-Shell";
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        request.Headers.TryAddWithoutValidation(ShellHeader, shell?.Shell ?? CrestShellContext.Admin);
+        if (shell?.OrganizationId is { Length: > 0 } organizationId)
+        {
+            request.Headers.TryAddWithoutValidation("X-Org", organizationId);
+        }
+
         if (request.Method != HttpMethod.Get && request.Method != HttpMethod.Head && request.Method != HttpMethod.Options)
         {
             var token = await antiforgery.GetTokenAsync(cancellationToken);

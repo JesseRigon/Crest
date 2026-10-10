@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Crest.Access;
 using Crest.Routing;
 using Crest.Services;
 using Crest.Extensions;
@@ -36,8 +37,8 @@ public sealed class BlazorAdminThemeOptions
 // own copies that silently drift if a tenant customizes any of them. Runs as
 // IPostConfigureOptions so it applies after BlazorAdminThemeOptions' own
 // IConfigureOptions (currently just the no-op in Startup.cs, but this keeps the
-// override deterministic regardless of registration order - see
-// CrestCultureCookieOptionsConfiguration for the same pattern and its rationale).
+// override deterministic regardless of registration order: IConfigureOptions
+// ordering across independent registrations is not guaranteed).
 internal sealed class BlazorAdminThemeOptionsConfiguration(
     IOptions<AdminOptions> adminOptions,
     IOptions<Crest.Users.UserOptions> userOptions) : IPostConfigureOptions<BlazorAdminThemeOptions>
@@ -128,6 +129,15 @@ public sealed class BlazorAdminThemeMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // A background run of the tenant pipeline (ModularBackgroundService, to make the
+        // synthetic context endpoint-aware) carries no request to gate: its caller is the
+        // system actor the background entry point sets, never an anonymous one from here.
+        if (context.Items.ContainsKey("IsBackground"))
+        {
+            await _next(context);
+            return;
+        }
+
         if (LegacyFrameThemeSelector.IsLegacyFrameRequest(context))
         {
             await _next(context);
@@ -171,14 +181,29 @@ public sealed class BlazorAdminThemeMiddleware
         // page URL and rewritten to /legacy-host, killing the interactive circuit. No
         // theme check here - these requests only follow a document this middleware
         // already theme-gated, and a stray one merely 404s at root.
+        var memberBase = new PathString("/" + _memberOptions.Value.MemberUrlPrefix);
         if (TryStripShellPrefixForBlazorInfrastructure(
                 requestPath,
-                [adminPath, new PathString(options.LoginPath), new PathString("/" + _memberOptions.Value.MemberUrlPrefix)],
+                [adminPath, new PathString(options.LoginPath), memberBase],
                 out var infrastructurePath))
         {
             context.Request.Path = infrastructurePath;
             try
             {
+                // "{shellBase}/api/..." is an API call from that shell's document: gated like
+                // every request. The shell prefix answers the side when the client sent no
+                // X-Shell header; the header wins when present.
+                if (infrastructurePath.StartsWithSegments("/api"))
+                {
+                    var prefixSide = requestPath.StartsWithSegments(memberBase, StringComparison.OrdinalIgnoreCase)
+                        ? CallerSide.Member
+                        : CallerSide.Admin;
+                    if (!await GateApiAsync(context, prefixSide))
+                    {
+                        return;
+                    }
+                }
+
                 await _next(context);
             }
             finally
@@ -216,6 +241,17 @@ public sealed class BlazorAdminThemeMiddleware
         // pipeline, never admin-path-prefixed.
         if ((!isAdminRoute && !isLoginRoute && !isMemberRoute) || !IsPageRequest(requestPath))
         {
+            // Everything the shells did not claim: the site's pages, the tenant-root API
+            // surface, the workflow engine API. Assets (a file extension) carry no caller.
+            if (IsPageRequest(requestPath))
+            {
+                var isApi = requestPath.StartsWithSegments("/api") || requestPath.StartsWithSegments("/crest-workflows");
+                if (isApi ? !await GateApiAsync(context, fallbackSide: null) : !await GateAsync(context, CallerSide.Site, allowAnonymous: true))
+                {
+                    return;
+                }
+            }
+
             await _next(context);
             return;
         }
@@ -266,17 +302,16 @@ public sealed class BlazorAdminThemeMiddleware
         // A page marked [AllowAnonymous] (RouteComponentEntry.AllowsAnonymous) is
         // public by declaration: no login redirect, no route authorization - its own
         // API calls stay authorization-checked server-side like every other page's.
+        // Every page request authenticates once, here, and gets its caller: the admin and
+        // login shells act on the admin side, the member shell on the member side (the
+        // organization comes from the request's X-Org header or the session's choice).
+        if (!await GateAsync(context, isMemberRoute ? CallerSide.Member : CallerSide.Admin, allowAnonymous: true))
+        {
+            return;
+        }
+
         if (isBlazorPageRoute && isAdminRoute && blazorRoute?.AllowsAnonymous != true)
         {
-            // Crest gates the admin shell before Crest's later authentication
-            // middleware. Authenticate the same Crest application cookie here
-            // before making an early route decision.
-            var authentication = await context.AuthenticateAsync(IdentityConstants.ApplicationScheme);
-            if (authentication.Succeeded && authentication.Principal is not null)
-            {
-                context.User = authentication.Principal;
-            }
-
             if (context.User.Identity?.IsAuthenticated != true)
             {
                 context.Response.Redirect(requestPathBase.Add(new PathString(options.LoginPath)).Value!);
@@ -313,12 +348,6 @@ public sealed class BlazorAdminThemeMiddleware
         // reachable says nothing about which rows that member may see.
         if (isMemberBlazorRoute && memberRoute?.AllowsAnonymous != true)
         {
-            var authentication = await context.AuthenticateAsync(IdentityConstants.ApplicationScheme);
-            if (authentication.Succeeded && authentication.Principal is not null)
-            {
-                context.User = authentication.Principal;
-            }
-
             if (context.User.Identity?.IsAuthenticated != true)
             {
                 context.Response.Redirect(requestPathBase.Add(memberPath.Add(new PathString(MemberLoginRoute))).Value!);
@@ -386,6 +415,89 @@ public sealed class BlazorAdminThemeMiddleware
             context.Request.PathBase = requestPathBase;
             context.Request.Path = requestPath;
         }
+    }
+
+    /// <summary>
+    /// Steps 3 and 4 of the request path (docs/operations.md): authenticate once (the cookie,
+    /// or the Api scheme when the request carries a bearer token) and build the caller for the
+    /// side the shell selector chose. A contributor may refuse (a member-side request for an
+    /// organization the user holds no binding to): 403, never a defaulted side.
+    /// </summary>
+    private static async Task<bool> GateAsync(HttpContext context, CallerSide side, bool allowAnonymous, string? organizationId = null)
+    {
+        var scheme = context.Request.Headers.ContainsKey("Authorization")
+            ? PlatformConstants.AuthenticationSchemes.Api
+            : IdentityConstants.ApplicationScheme;
+        var authentication = await context.AuthenticateAsync(scheme);
+        if (authentication.Succeeded && authentication.Principal is not null)
+        {
+            context.User = authentication.Principal;
+        }
+
+        context.Items[AccessGate.SideItem] = side;
+        var culture = System.Globalization.CultureInfo.CurrentUICulture.Name;
+        var requestedOrganization = organizationId ?? context.Request.Headers[AccessHeaders.Organization].ToString();
+
+        try
+        {
+            var factory = context.RequestServices.GetRequiredService<ICallerContextFactory>();
+            var caller = await factory.CreateAsync(
+                new CallerRequest(context.User, side, string.IsNullOrEmpty(requestedOrganization) ? null : requestedOrganization, culture),
+                context.RequestAborted);
+            context.RequestServices.GetRequiredService<ICallerContextAccessor>().Current = caller;
+        }
+        catch (CallerDeniedException denied)
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsync(denied.Message);
+            return false;
+        }
+
+        return allowAnonymous || context.User.Identity?.IsAuthenticated == true;
+    }
+
+    /// <summary>
+    /// The shell prefix an API call was addressed through decides its side; X-Shell may only
+    /// confirm it (a disagreeing header is denied, never believed). A call with no prefix side
+    /// takes the header's side; a cookie-authenticated one without a header is malformed and
+    /// denied (docs/access.md); a bearer-authenticated or anonymous one is Site.
+    /// </summary>
+    private static async Task<bool> GateApiAsync(HttpContext context, CallerSide? fallbackSide)
+    {
+        var header = context.Request.Headers[AccessHeaders.Shell].ToString();
+        if (AccessGate.TryParseSide(header, out var side))
+        {
+            if (fallbackSide is { } prefixSide && prefixSide != side)
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsync("X-Shell disagrees with the shell the request was addressed to.");
+                return false;
+            }
+
+            return await GateAsync(context, side, allowAnonymous: true);
+        }
+
+        if (!string.IsNullOrEmpty(header))
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            await context.Response.WriteAsync("Unknown X-Shell value.");
+            return false;
+        }
+
+        // No header: find out whether the request is cookie-authenticated before choosing.
+        var hasBearer = context.Request.Headers.ContainsKey("Authorization");
+        if (!hasBearer)
+        {
+            var cookie = await context.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+            if (cookie.Succeeded && cookie.Principal?.Identity?.IsAuthenticated == true && fallbackSide is null)
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsync("A cookie-authenticated API request must carry an X-Shell header.");
+                return false;
+            }
+        }
+
+        return await GateAsync(context, fallbackSide ?? CallerSide.Site, allowAnonymous: true);
     }
 
     // shellBases is every shell's base path (admin, login, member). A shell whose

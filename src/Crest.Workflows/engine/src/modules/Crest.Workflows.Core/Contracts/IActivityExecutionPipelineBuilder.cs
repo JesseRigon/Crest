@@ -11,6 +11,11 @@ public interface IActivityExecutionPipelineBuilder
     /// The current service provider to resolve services from.
     /// </summary>
     IServiceProvider ServiceProvider { get; }
+
+    /// <summary>
+    /// The middleware components that have been installed, in order; the last one is the terminal invoker.
+    /// </summary>
+    IEnumerable<Func<ActivityMiddlewareDelegate, ActivityMiddlewareDelegate>> Components { get; }
     
     /// <summary>
     /// Installs the specified delegate as a middleware component.

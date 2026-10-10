@@ -20,6 +20,7 @@
     <ProjectReference Include="..\Crest.Data\Crest.Data.csproj" />
     <ProjectReference Include="..\Crest.Data.YesSql.Abstractions\Crest.Data.YesSql.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Access.Abstractions\Crest.Access.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

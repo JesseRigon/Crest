@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Crest;
 using Crest.Security;
-using Crest.Security.AuthorizationHandlers;
 using Crest.Security.Permissions;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -31,7 +30,6 @@ public static partial class PlatformBuilderExtensions
 
             services.AddScoped<IPermissionGrantingService, DefaultPermissionGrantingService>();
             services.AddScoped<IPermissionService, DefaultPermissionService>();
-            services.AddScoped<IAuthorizationHandler, PermissionHandler>();
         });
 
         builder.Configure(ValidatePermissionsAsync);

@@ -21,7 +21,7 @@ public class SiteContext : IDisposable
     public static IHttpContextAccessor HttpContextAccessor { get; }
     public static HttpClient DefaultTenantClient { get; }
 
-    public string RecipeName { get; set; } = "Blog";
+    public string RecipeName { get; set; } = TestRecipes.Blog;
     public string DatabaseProvider { get; set; } = "Sqlite";
     public string ConnectionString { get; set; }
     public PermissionsContext PermissionsContext { get; set; }
@@ -56,7 +56,10 @@ public class SiteContext : IDisposable
         };
 
         var createResult = await DefaultTenantClient.PostAsJsonAsync("api/tenants/create", createModel);
-        createResult.EnsureSuccessStatusCode();
+        if (!createResult.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"Tenant create with recipe '{RecipeName}' failed: {(int)createResult.StatusCode} {await createResult.Content.ReadAsStringAsync()}");
+        }
 
         var content = await createResult.Content.ReadAsStringAsync();
 
@@ -77,7 +80,10 @@ public class SiteContext : IDisposable
         };
 
         var setupResult = await DefaultTenantClient.PostAsJsonAsync("api/tenants/setup", setupModel);
-        setupResult.EnsureSuccessStatusCode();
+        if (!setupResult.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"Tenant setup with recipe '{RecipeName}' failed: {(int)setupResult.StatusCode} {await setupResult.Content.ReadAsStringAsync()}");
+        }
 
         lock (Site)
         {

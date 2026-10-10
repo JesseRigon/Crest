@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>Crest.Core</_Parameter1>
+      <_Parameter1>Crest.Infrastructure</_Parameter1>
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>Crest.Abstractions.Tests</_Parameter1>

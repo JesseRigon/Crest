@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using Crest.Access;
+using Crest.Workflows.Contexts;
 using Crest.Workflows.Registry;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
@@ -13,13 +15,13 @@ namespace Crest.Workflows.Security;
 /// FastEndpoints by <c>permissions</c> claims on the principal (one name per endpoint, any
 /// of them admits), not by Crest permissions; the upstream integration stamped
 /// <c>permissions=*</c> on every user at sign-in, which made any logged-in tenant user a
-/// workflow administrator. Here the grant is decided per request, from Crest's own
-/// authorization pipeline (roles, the super user, and every <c>IAuthorizationHandler</c> a
-/// module adds - the member permission ceiling included), and added to the principal
-/// only for the duration of the request, as exactly the engine names each Crest permission
-/// maps to (<see cref="EnginePermissions"/>):
+/// workflow administrator. Here the grant is decided per request by the one access decision
+/// (docs/operations.md step 4) for the request's caller - the one the access gate built when
+/// it admitted the request, else one built here from the authenticated principal while the
+/// gate lands - and added to the principal only for the duration of the request, as exactly
+/// the engine names each Crest permission maps to (<see cref="EnginePermissions"/>):
 /// <list type="bullet">
-/// <item>anonymous → 401;</item>
+/// <item>anonymous → 401; a request the path's gate built no caller for → 403;</item>
 /// <item>authenticated without <see cref="Permissions.ViewWorkflows"/> → 403;</item>
 /// <item>non-GET without a valid antiforgery token (the engine's endpoints validate none; a
 /// cookie-authenticated API without it is CSRF-exposed) → 400;</item>
@@ -72,7 +74,7 @@ public sealed class CrestWorkflowsApiSecurityMiddleware(RequestDelegate next, IL
         ];
     }
 
-    public async Task InvokeAsync(HttpContext context, IAuthorizationService authorizationService, IAuthorizationPolicyProvider policyProvider, IAntiforgery antiforgery, IWorkflowDefinitionAccessReader access)
+    public async Task InvokeAsync(HttpContext context, WorkflowCallerResolver callers, IAccessDecision decision, IAuthorizationService authorizationService, IAuthorizationPolicyProvider policyProvider, IAntiforgery antiforgery, IWorkflowDefinitionAccessReader access)
     {
         if (!context.Request.Path.StartsWithSegments(ApiPathPrefix, out var remaining))
         {
@@ -86,7 +88,17 @@ public sealed class CrestWorkflowsApiSecurityMiddleware(RequestDelegate next, IL
             return;
         }
 
-        if (!await authorizationService.AuthorizeAsync(context.User, Permissions.ViewWorkflows))
+        // The request path's gate built the caller before routing; a request it did not
+        // admit has none and is refused here, never given a caller of its own.
+        var caller = callers.Current;
+        if (caller is null)
+        {
+            logger.LogWarning("Workflow API request on {Path} reached the engine gate with no caller.", context.Request.Path);
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return;
+        }
+
+        if (!(await decision.DecideAsync(caller, WorkflowsConstants.Permissions.View, cancellationToken: context.RequestAborted)).IsAllowed)
         {
             logger.LogWarning("Workflow API access denied for '{User}' on {Path}.", context.User.Identity.Name, context.Request.Path);
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -106,7 +118,7 @@ public sealed class CrestWorkflowsApiSecurityMiddleware(RequestDelegate next, IL
         var granted = new List<Claim>();
         foreach (var (permission, names) in EnginePermissions.All)
         {
-            if (await authorizationService.AuthorizeAsync(context.User, permission))
+            if ((await decision.DecideAsync(caller, permission.Name, cancellationToken: context.RequestAborted)).IsAllowed)
             {
                 granted.AddRange(names.Select(name => new Claim(CrestWorkflowsPermissionsClaimType, name)));
             }
@@ -114,7 +126,7 @@ public sealed class CrestWorkflowsApiSecurityMiddleware(RequestDelegate next, IL
 
         // Starting a definition by hand is authorized against that definition (its Run list).
         var started = StartedDefinitionId(remaining);
-        if (started is not null && !await authorizationService.AuthorizeAsync(context.User, Permissions.RunWorkflows, await access.GetAsync(started) ?? new WorkflowDefinitionAccessResource(started, [], [])))
+        if (started is not null && !await MayRunAsync(caller, started, decision, access))
         {
             logger.LogWarning("Workflow run denied for '{User}' on definition {DefinitionId}.", context.User.Identity.Name, started);
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -124,8 +136,8 @@ public sealed class CrestWorkflowsApiSecurityMiddleware(RequestDelegate next, IL
 
         context.User.AddIdentity(new ClaimsIdentity(granted, "CrestWorkflows"));
 
-        // The endpoint's own policy (its permission names) is evaluated here, against the
-        // grant just made, so a missing permission is a 403 with a reason. Left to the
+        // The endpoint's own policy (the engine's permission-claim names) is evaluated here,
+        // against the grant just made, so a missing permission is a 403 with a reason. Left to the
         // authorization middleware, the cookie scheme's Forbid would redirect the API call to
         // the access-denied page (an HTML 200 to a fetch).
         var endpoint = context.GetEndpoint();
@@ -154,6 +166,13 @@ public sealed class CrestWorkflowsApiSecurityMiddleware(RequestDelegate next, IL
             context.Response.ContentType = "text/plain";
             await context.Response.WriteAsync(ex.Message);
         }
+    }
+
+    // Run on the definition: the decision for the permission, and the definition's Run list as the veto.
+    private static async Task<bool> MayRunAsync(CallerContext caller, string definitionId, IAccessDecision decision, IWorkflowDefinitionAccessReader access)
+    {
+        var resource = await access.GetAsync(definitionId) ?? new WorkflowDefinitionAccessResource(definitionId, [], []);
+        return (await decision.DecideAsync(caller, WorkflowsConstants.Permissions.Run, resource)).IsAllowed && resource.Admits(caller, WorkflowsConstants.Permissions.Run);
     }
 
     // /workflow-definitions/{definitionId}/execute|dispatch|bulk-dispatch (the engine's own routes).

@@ -482,6 +482,11 @@ public sealed class AccessController : Controller
         identity.AddClaim(new Claim(OpenIdConstants.Claims.EntityType, OpenIdConstants.EntityTypes.Application));
         identity.AddClaim(new Claim(Claims.Subject, request.ClientId));
 
+        // The application is the caller: the access machinery identifies a caller by the
+        // name identifier, and an application has no user record, so its roles ride the token.
+        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, request.ClientId)
+            .SetDestinations(Destinations.AccessToken, Destinations.IdentityToken));
+
         // Always add a "name" claim for grant_type=client_credentials in both
         // access and identity tokens even if the "name" scope wasn't requested.
         identity.AddClaim(new Claim(Claims.Name, await _applicationManager.GetDisplayNameAsync(application))

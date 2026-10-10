@@ -32,7 +32,8 @@ public sealed class Startup : StartupBase
         services.AddScoped<MemberPortalLoginContext>();
         services.AddScoped<MemberImpersonationService>();
         services.AddScoped<UserClassConversionService>();
-        services.AddTransient<Microsoft.Extensions.Options.IConfigureOptions<Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions>, MemberCookieEventsConfiguration>();
+        services.AddScoped<Crest.Access.ICallerContextContributor, MemberCallerContributor>();
+        services.AddScoped<Crest.Access.ICallerRequestResolver, MemberCallerRequestResolver>();
         services.AddPermissionProvider<MembersPermissionProvider>();
 
         // Class foundation: index for reliable SQL filtering, creation stamp, class
@@ -50,7 +51,7 @@ public sealed class Startup : StartupBase
         // IPermissionProvider. Names are the owning modules' permission names verbatim
         // (referenced as strings because the registry must also cover modules this one
         // does not reference, e.g. Crest.Tenants).
-        services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, MemberPermissionCeilingHandler>();
+        services.AddScoped<Crest.Access.IAccessCeiling, MemberClassCeiling>();
         services.Configure<MemberPermissionCeilingOptions>(options => options
             .Ceiling(
                 "ManageTenants",

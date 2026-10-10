@@ -54,8 +54,9 @@ public sealed class LuceneQuerySource : IQuerySource
     public string Name
         => SourceName;
 
-    public async Task<IQueryResults> ExecuteQueryAsync(Query query, IDictionary<string, object> parameters)
+    public async Task<IQueryResults> ExecuteQueryAsync(Query query, QueryRequest request)
     {
+        var parameters = request.Parameters;
         var result = new LuceneQueryResults()
         {
             Items = [],

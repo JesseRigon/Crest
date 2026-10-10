@@ -8,8 +8,12 @@ namespace Crest.AdminTheme.Api;
 /// Adds Crest's antiforgery request token to every unsafe same-origin Crest
 /// request. Authentication continues to use the browser's Crest cookie.
 /// </summary>
-public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js) : DelegatingHandler, ICrestAntiforgeryTokenStore, ICrestCultureCookieWriter
+public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js, Crest.Components.Modules.CrestShellContext shell) : DelegatingHandler, ICrestAntiforgeryTokenStore, ICrestCultureCookieWriter
 {
+    public const string ShellHeader = "X-Shell";
+
+    public const string OrganizationHeader = "X-Org";
+
     /// <summary>Where Crest hands out the antiforgery request token (Crest.Server's endpoint).</summary>
     public const string TokenPath = "api/crest/antiforgery/token";
 
@@ -39,6 +43,13 @@ public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js) : Delegating
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+        // The side and organization this request acts in; the server never defaults them.
+        request.Headers.TryAddWithoutValidation(ShellHeader, shell.Shell);
+        if (shell.OrganizationId is { Length: > 0 } organizationId)
+        {
+            request.Headers.TryAddWithoutValidation(OrganizationHeader, organizationId);
+        }
+
         RewriteCultureCookie();
 
         if (RequiresAntiforgeryToken(request))

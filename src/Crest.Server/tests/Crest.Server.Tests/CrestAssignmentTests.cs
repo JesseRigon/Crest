@@ -1,3 +1,4 @@
+using Crest.Access;
 using Crest.Indexing;
 using Crest.Services;
 using Xunit;
@@ -54,54 +55,71 @@ public class CrestAssignmentMatchingTests
 public class AssignmentScopeTests
 {
     [Fact]
-    public void No_assignment_constraint_leaves_the_permission_result_alone()
+    public void Unconstrained_scope_admits_every_item()
     {
-        var scope = new OptionSourceScope(["Customer"], [], "user-1");
+        // A rule that says nothing about assignment admits the item: "no requirement" is
+        // not "nothing matched".
+        var rule = ScopeRule.All;
 
-        Assert.Null(scope.AssignedIds);
-        Assert.False(scope.IsEmpty);
-        Assert.True(scope.Allows("Customer", owner: "someone-else", contentItemId: "item-1"));
+        Assert.True(rule.Admits(column => column == "ContentItemId" ? "item-1" : "Customer"));
     }
 
     [Fact]
-    public void An_assignment_constraint_that_matched_nothing_denies_everything()
+    public void Constrained_scope_with_nothing_matched_admits_nothing()
     {
-        // The inversion this guards against: a user with no assignments must see
-        // NOTHING, not everything.
-        var scope = new OptionSourceScope(["Customer"], [], "user-1") { AssignedIds = [] };
+        // The AssignmentScopeProvider drops the type's branch when nothing is assigned, so
+        // the remaining rule admits no row of that type: constrained and empty is a denial.
+        var rule = ScopeRule.Where(ScopeFilter.Of(ScopeCondition.NotIn("ContentType", ["Customer"])));
 
-        Assert.True(scope.IsEmpty);
-        Assert.False(scope.Allows("Customer", owner: "user-1", contentItemId: "item-1"));
+        Assert.False(rule.Admits(column => column == "ContentType" ? "Customer" : "item-1"));
+        Assert.True(rule.Admits(column => column == "ContentType" ? "Vendor" : "item-1"));
     }
 
     [Fact]
-    public void Assignment_narrows_to_the_assigned_items()
+    public void Assignment_scope_admits_only_assigned_ids_of_the_scoped_type()
     {
-        var scope = new OptionSourceScope(["Customer"], [], "user-1") { AssignedIds = ["item-1"] };
+        var rule = ScopeRule.Where(ScopeFilter.AnyOf(
+            ScopeFilter.Of(ScopeCondition.NotIn("ContentType", ["Customer"])),
+            ScopeFilter.AllOf(
+                ScopeFilter.Of(ScopeCondition.Equal("ContentType", "Customer")),
+                ScopeFilter.Of(ScopeCondition.In("ContentItemId", ["item-1"])))));
 
-        Assert.True(scope.Allows("Customer", owner: "anyone", contentItemId: "item-1"));
-        Assert.False(scope.Allows("Customer", owner: "anyone", contentItemId: "item-2"));
+        Assert.True(rule.Admits(column => column == "ContentType" ? "Customer" : "item-1"));
+        Assert.False(rule.Admits(column => column == "ContentType" ? "Customer" : "item-2"));
     }
 
     [Fact]
     public void Assignment_never_widens_what_the_permission_check_granted()
     {
-        // Assigned, but the user cannot view this type at all - assignment must not
-        // become an alternative route in.
-        var scope = OptionSourceScope.Nothing with { AssignedIds = ["item-1"] };
+        // Assigned, but the user cannot view this type at all: the content rule says None and
+        // the assignment rule is conjoined, so assignment is never an alternative route in.
+        var rule = ScopeRule.None.And(ScopeRule.Where(ScopeFilter.Of(ScopeCondition.In("ContentItemId", ["item-1"]))));
 
-        Assert.False(scope.Allows("Customer", owner: "user-1", contentItemId: "item-1"));
+        Assert.Equal(ScopeKind.None, rule.Kind);
+        Assert.False(rule.Admits(column => column == "ContentItemId" ? "item-1" : "Customer"));
     }
 
     [Fact]
     public void Assignment_still_requires_ownership_when_only_own_is_granted()
     {
-        var scope = new OptionSourceScope([], ["Customer"], "user-1") { AssignedIds = ["item-1"] };
+        var ownership = ScopeRule.Where(ScopeFilter.AllOf(
+            ScopeFilter.Of(ScopeCondition.In("ContentType", ["Customer"])),
+            ScopeFilter.Of(ScopeCondition.Equal("Owner", "user-1"))));
+        var assignment = ScopeRule.Where(ScopeFilter.Of(ScopeCondition.In("ContentItemId", ["item-1"])));
+        var rule = ownership.And(assignment);
 
-        Assert.True(scope.Allows("Customer", owner: "user-1", contentItemId: "item-1"));
+        object? Row(string owner, string column) => column switch
+        {
+            "ContentType" => "Customer",
+            "Owner" => owner,
+            "ContentItemId" => "item-1",
+            _ => null,
+        };
+
+        Assert.True(rule.Admits(column => Row("user-1", column)));
 
         // Assigned to them, but owned by someone else and they may only view their own.
-        Assert.False(scope.Allows("Customer", owner: "user-2", contentItemId: "item-1"));
+        Assert.False(rule.Admits(column => Row("user-2", column)));
     }
 }
 

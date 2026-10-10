@@ -28,6 +28,8 @@ using Crest.Workflows.UIHints;
 using Crest.Workflows.Stores;
 using Crest.Workflows.Units;
 using Crest.Workflows.CommitStates;
+using Crest.Workflows.Pipelines.ActivityExecution;
+using Crest.Workflows.Pipelines.WorkflowExecution;
 using Crest.Workflows.Runtime;
 using Crest.Workflows.Mediator.Extensions;
 using Microsoft.Extensions.Logging;
@@ -104,12 +106,24 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             // Connector retries ride the engine's resilience feature: the connection's policy as a strategy.
             crestWorkflows.UseResilience(resilience => resilience.AddResilienceStrategyType<ConnectionResilienceStrategy>());
             crestWorkflows.UseWorkflowsApi(api => api.AddFastEndpointsAssembly<CoreStartup>());
+
+            // The access gate as engine middleware (docs/operations.md step 4): the engine's
+            // default lists, kept by re-applying them, with the workflow gate inserted first
+            // (right after the builder's Reset) and the activity gate inserted before the
+            // terminal invoker. Inserted, not a rebuilt list, so an engine update that adds a
+            // default middleware does not silently drop the gate. These setters replace the
+            // delegate (last call wins); the AppFeature runs this configurator after the
+            // engine's own feature, so this is the last call.
+            crestWorkflows.UseWorkflows(workflows => workflows
+                .WithDefaultWorkflowExecutionPipeline(pipeline => pipeline.Insert<WorkflowAccessGateMiddleware>(0))
+                .WithDefaultActivityExecutionPipeline(pipeline => pipeline.Insert<ActivityAccessGateMiddleware>(pipeline.Components.Count() - 1)));
         });
 
         // Crest may dispose the tenant container synchronously; Crest.Workflows's tenant service is
         // async-only and would crash the process on that path (SyncDisposableTenantService).
         SyncDisposableTenantService.ReplaceIn(services);
 
+        // The two action pipelines (Units/ActionPipelines.cs names which class forms which).
         // Units of work (docs/workflows.md › Posting on workflows): a burst is one transaction
         // (the stores no longer commit mid-run), stimuli fire after commit, a failed unit is
         // discarded at commit and recorded in a fresh scope. External calls (connectors, the
@@ -137,6 +151,10 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<Fields.FieldDependencyChecker>()
             .AddScoped<IWorkflowFieldDependencyChecker>(sp => sp.GetRequiredService<Fields.FieldDependencyChecker>())
             .AddSingleton<IActivityDescriptorModifier, Fields.FieldDependencyDescriptorModifier>()
+            .AddSingleton<IActivityDescriptorModifier, RequiredPermissionDescriptorModifier>()
+            .AddScoped<WorkflowCallerResolver>()
+            // The registry's query kind: one run-query descriptor per query the catalog lists.
+            .AddScoped<IActivityProvider, Queries.QueryActivityProvider>()
             .AddNotificationHandler<Fields.FieldDependencyPublishHandler>()
             .Configure<Microsoft.AspNetCore.Mvc.MvcOptions>(options => options.Filters.Add<Hooks.WorkflowHookFailedExceptionFilter>())
             .AddScoped<IWorkflowHookSlotProvider, Hooks.WorkflowsHookSlotProvider>()
@@ -164,6 +182,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<WorkflowOwnershipGuard>()
             .AddScoped<WorkflowDefinitionAccessService>()
             .AddScoped<IWorkflowDefinitionAccessReader>(sp => sp.GetRequiredService<WorkflowDefinitionAccessService>())
+            .AddScoped<IWorkflowDefinitionAuthorizer>(sp => sp.GetRequiredService<WorkflowDefinitionAccessService>())
             .AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, WorkflowDefinitionAccessHandler>();
         services.Replace(ServiceDescriptor.Scoped<Crest.Workflows.Api.IWorkflowDefinitionLinker, CrestWorkflowDefinitionLinker>());
 

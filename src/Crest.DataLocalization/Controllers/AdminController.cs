@@ -131,7 +131,19 @@ public class AdminController : Controller
             return Forbid();
         }
 
-        // Filter out empty translations and convert to the internal model.
+        // Merge, never replace: only the entries the editor displayed are replaced by what it
+        // posted (an emptied value removes the entry). A stored translation whose descriptor was
+        // not enumerated this time (a disabled feature's provider, an entry seeded out of band)
+        // stays, instead of being deleted by a save that never showed it.
+        var displayed = model.Translations
+            .Select(t => TranslationKey(t.Context, t.Key))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var document = await _translationsManager.GetTranslationsDocumentAsync();
+        var kept = document.Translations.TryGetValue(model.Culture, out var stored)
+            ? stored.Where(t => !displayed.Contains(TranslationKey(t.Context, t.Key))).ToList()
+            : [];
+
         var translations = model.Translations
             .Where(t => !string.IsNullOrWhiteSpace(t.Value))
             .Select(t => new Translation
@@ -141,7 +153,7 @@ public class AdminController : Controller
                 Value = t.Value,
             });
 
-        await _translationsManager.UpdateTranslationAsync(model.Culture, translations);
+        await _translationsManager.UpdateTranslationAsync(model.Culture, kept.Concat(translations));
 
         return Ok(new
         {
@@ -243,7 +255,7 @@ public class AdminController : Controller
     {
         var translationsDocument = await _translationsManager.GetTranslationsDocumentAsync();
         var existingTranslations = translationsDocument.Translations.TryGetValue(culture, out var translations)
-            ? translations.ToDictionary(t => $"{t.Context}|{t.Key}", t => t.Value, StringComparer.OrdinalIgnoreCase)
+            ? ToLookup(translations)
             : [];
 
         var groups = new List<TranslatableStringGroupViewModel>();
@@ -352,7 +364,7 @@ public class AdminController : Controller
                 : cultureInfo.NativeName;
 
             var cultureTranslations = translationsDocument.Translations.TryGetValue(cultureName, out var translations)
-                ? translations.ToDictionary(t => $"{t.Context}|{t.Key}", t => t.Value, StringComparer.OrdinalIgnoreCase)
+                ? ToLookup(translations)
                 : new Dictionary<string, string>();
 
             var cultureTranslated = allDescriptors.Count(d => cultureTranslations.TryGetValue($"{d.Context}|{d.Name}", out var value) &&
@@ -391,6 +403,21 @@ public class AdminController : Controller
         };
 
         return statistics;
+    }
+
+    private static string TranslationKey(string context, string key) => $"{context}|{key}";
+
+    // First entry wins when the store holds two rows for one context and key, so a duplicate
+    // left by an older save degrades to a stale row instead of taking the editor down.
+    private static Dictionary<string, string> ToLookup(IEnumerable<Translation> translations)
+    {
+        var lookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var translation in translations)
+        {
+            lookup.TryAdd(TranslationKey(translation.Context, translation.Key), translation.Value);
+        }
+
+        return lookup;
     }
 
     private static string GetPrimaryContext(string context)

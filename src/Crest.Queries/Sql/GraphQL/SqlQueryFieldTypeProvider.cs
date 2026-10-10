@@ -175,7 +175,7 @@ public sealed class SqlQueryFieldTypeProvider : ISchemaBuilder
                 ? JConvert.DeserializeObject<Dictionary<string, object>>(parameters)
                 : [];
 
-            var result = await queryManager.ExecuteQueryAsync(iQuery, queryParameters);
+            var result = await queryManager.ExecuteQueryAsync(iQuery, QueryRequest.Of(queryParameters, context.CancellationToken));
 
             return result.Items;
         }
@@ -217,7 +217,7 @@ public sealed class SqlQueryFieldTypeProvider : ISchemaBuilder
                 ? JConvert.DeserializeObject<Dictionary<string, object>>(parameters)
                 : [];
 
-            var result = await queryManager.ExecuteQueryAsync(iQuery, queryParameters);
+            var result = await queryManager.ExecuteQueryAsync(iQuery, QueryRequest.Of(queryParameters, context.CancellationToken));
 
             return result.Items;
         }

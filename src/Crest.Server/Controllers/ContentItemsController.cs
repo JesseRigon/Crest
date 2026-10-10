@@ -7,6 +7,8 @@ using System.Text.Json.Settings;
 using Crest.ContentManagement.Records;
 using Crest.Contents;
 using Crest.Security.Permissions;
+using Crest.Access;
+using Crest.Data.Scoping;
 using YesSql;
 using YesSql.Services;
 using Crest.ViewModels;
@@ -23,7 +25,9 @@ public sealed class ContentItemsController(
     IContentManager contentManager,
     Crest.Services.CrestFieldVisibilityEnforcer visibilityEnforcer,
     Crest.ContentGroups.CrestContentGroupService contentGroups,
-    IAuthorizationService authorizationService) : ControllerBase
+    IAuthorizationService authorizationService,
+    ICallerContextAccessor callerAccessor,
+    IScopeSetProvider scopes) : ControllerBase
 {
     private static readonly string[] DefaultViewFields =
     [
@@ -58,8 +62,13 @@ public sealed class ContentItemsController(
 
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 100);
+        // The caller's content scope, from the one scope set: a list never returns a row the
+        // caller may not see, whatever else it is filtered by.
+        var caller = callerAccessor.Current ?? throw new InvalidOperationException("No caller is set for this request.");
+        var scope = (await scopes.GetAsync(caller, HttpContext.RequestAborted)).Require(nameof(ContentItemIndex));
         var query = session.Query<Crest.ContentManagement.ContentItem, ContentItemIndex>()
-            .With<ContentItemIndex>(index => index.Latest);
+            .With<ContentItemIndex>(index => index.Latest)
+            .Where(ScopeExpressions.ToPredicate<ContentItemIndex>(scope));
 
         if (!string.IsNullOrWhiteSpace(contentType))
         {

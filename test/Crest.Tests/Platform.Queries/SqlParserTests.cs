@@ -1,4 +1,5 @@
 using Crest.Queries.Sql;
+using Crest.Tests.Queries;
 using YesSql.Provider.MySql;
 using YesSql.Provider.PostgreSql;
 using YesSql.Provider.Sqlite;
@@ -31,7 +32,7 @@ public class SqlParserTests
     [InlineData("select distinct a", "SELECT DISTINCT [a];")]
     public void Parse_SelectClause_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -44,7 +45,7 @@ public class SqlParserTests
     [InlineData("select 1, 'a', true", "SELECT 1, N'a', [true];")]
     public void Parse_ColumnValues_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -56,7 +57,7 @@ public class SqlParserTests
     [InlineData("SELECT a FROM t1, t2", "SELECT [a] FROM [tp_t1], [tp_t2];")]
     public void Parse_FromClause_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -68,7 +69,7 @@ public class SqlParserTests
     [InlineData("select a where b = c and d", "SELECT [a] WHERE [b] = [c] AND [d];")]
     public void Parse_WhereClause_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -102,7 +103,7 @@ public class SqlParserTests
     [InlineData("select a where b = (select Avg(c) from d)", "SELECT [a] WHERE [b] = (SELECT Avg([c]) FROM [tp_d]);")]
     public void Parse_Expression_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -113,7 +114,7 @@ public class SqlParserTests
     [InlineData("select a where a = @b limit @limit:10", "SELECT TOP (@limit) [a] WHERE [a] = @b;")]
     public void Parse_Parameters_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -122,7 +123,7 @@ public class SqlParserTests
     public void Define_DefaultParametersValue_Succeeds()
     {
         var parameters = new Dictionary<string, object>();
-        var result = SqlParser.TryParse("select a where a = @b:10", _schema, _defaultDialect, _defaultTablePrefix, parameters, out _, out _);
+        var result = SqlParser.TryParse("select a where a = @b:10", _schema, _defaultDialect, _defaultTablePrefix, parameters, TestScopes.AllowAll, out _, out _);
         Assert.True(result);
         // The type needs to be an integral value to comply with SQL Server expectations
         Assert.Equal((long)10, parameters["b"]);
@@ -138,7 +139,7 @@ public class SqlParserTests
     [InlineData("select a from b inner join c on 1 = @param left join d on d.a = @param left join e on e.a = 'foo'", "SELECT [a] FROM [tp_b] INNER JOIN [tp_c] ON 1 = @param LEFT JOIN [tp_d] ON [tp_d].[a] = @param LEFT JOIN [tp_e] ON [tp_e].[a] = N'foo';")]
     public void Parse_JoinClause_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -152,7 +153,7 @@ public class SqlParserTests
     [InlineData("select a order by b desc", "SELECT [a] ORDER BY [b] DESC;")]
     public void Parse_OrderByClause_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -163,7 +164,7 @@ public class SqlParserTests
     [InlineData("select a offset 10", "SELECT [a] OFFSET 10 ROWS;")]
     public void Parse_LimitOffsetClause_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -176,7 +177,7 @@ public class SqlParserTests
     [InlineData("select Month(a) as m group by Month(a)", "SELECT Month([a]) AS m GROUP BY Month([a]);")]
     public void Parse_GroupByClause_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -185,7 +186,7 @@ public class SqlParserTests
     [InlineData("SELECT COUNT(CustomerID) GROUP BY Country HAVING COUNT(CustomerID) > 5", "SELECT COUNT([CustomerID]) GROUP BY [Country] HAVING COUNT([CustomerID]) > 5;")]
     public void Parse_HavingClause_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -199,7 +200,7 @@ public class SqlParserTests
     [InlineData("/* comment \n comment */SELECT /* comment \n comment */ a /* comment \n comment */;/* comment \n comment */", "SELECT [a];")]
     public void Parse_Comments_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -215,7 +216,7 @@ public class SqlParserTests
     [InlineData("select COUNT(1) over () a, MAX(b) over () c from d", "SELECT COUNT(1) OVER () AS a, MAX([b]) OVER () AS c FROM [tp_d];")]
     public void Parse_WindowFunction_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -226,7 +227,7 @@ public class SqlParserTests
     [InlineData("select a from b union all select c from d union select e from f", "SELECT [a] FROM [tp_b] UNION ALL SELECT [c] FROM [tp_d] UNION SELECT [e] FROM [tp_f];")]
     public void Parse_UnionClause_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -241,7 +242,7 @@ public class SqlParserTests
     [InlineData("with cte as (select ci.DocumentId, ROW_NUMBER() over (order by ci.CreatedUtc desc) as RowNum from ContentItemIndex ci where ci.ContentType = 'BlogPost') select DocumentId from cte where RowNum <= 6", "WITH cte AS (SELECT ci.[DocumentId], ROW_NUMBER() OVER (ORDER BY ci.[CreatedUtc] DESC) AS RowNum FROM [tp_ContentItemIndex] AS ci WHERE ci.[ContentType] = N'BlogPost') SELECT [DocumentId] FROM [cte] WHERE [RowNum] <= 6;")]
     public void Parse_Cte_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -256,7 +257,7 @@ public class SqlParserTests
     [InlineData("select * from (select d as e from (select c as d from (select b as c from (select a as b from t) as l4) as l3) as l2) as l1", "SELECT * FROM (SELECT [d] AS e FROM (SELECT [c] AS d FROM (SELECT [b] AS c FROM (SELECT [a] AS b FROM [tp_t]) AS l4) AS l3) AS l2) AS l1;")]
     public void Parse_Subquery_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
         Assert.True(result);
         Assert.Equal(expectedSql, FormatSql(rawQuery));
     }
@@ -269,7 +270,7 @@ public class SqlParserTests
     public void Order_ByRandom_Succeeds(string sql, string expectedSql)
     {
         // Arrange & Act
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out _);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out _);
 
         // Assert
         Assert.True(result);
@@ -281,7 +282,7 @@ public class SqlParserTests
     [InlineData("select a from b order by c desc limit 5", "SELECT TOP (5) [a] FROM [tp_b] ORDER BY [c] DESC;")]
     public void Parse_OrderByWithLimit_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out var messages);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out var messages);
 
         Assert.True(result, messages?.FirstOrDefault() ?? "Parse failed");
         Assert.Equal(expectedSql, FormatSql(rawQuery));
@@ -294,7 +295,7 @@ public class SqlParserTests
     [InlineData("SELECT DocumentId FROM ContentItemIndex WHERE ContentType='BlogPost' ORDER BY CreatedUtc DESC LIMIT 3", "SELECT TOP (3) [DocumentId] FROM [tp_ContentItemIndex] WHERE [ContentType] = N'BlogPost' ORDER BY [CreatedUtc] DESC;")]
     public void Parse_WhereWithOrderBy_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out var messages);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out var messages);
 
         Assert.True(result, messages?.FirstOrDefault() ?? "Parse failed");
         Assert.Equal(expectedSql, FormatSql(rawQuery));
@@ -310,7 +311,7 @@ public class SqlParserTests
     [InlineData("select count(*), now()", "SELECT count(*), getUtcDate();")]
     public void Parse_ParameterlessFunctions_Succeeds(string sql, string expectedSql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out var messages);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out var messages);
 
         Assert.True(result, messages?.FirstOrDefault() ?? "Parse failed");
         Assert.Equal(expectedSql, FormatSql(rawQuery));
@@ -331,7 +332,7 @@ public class SqlParserTests
     [InlineData("select * from ContentItemIndex; delete from ContentItemIndex")]
     public void Parse_MutationStatement_Fails(string sql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out var messages);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out var messages);
 
         Assert.False(result);
         Assert.Null(rawQuery);
@@ -344,7 +345,7 @@ public class SqlParserTests
     [InlineData("select * from ContentItemIndex where DocumentId in (delete from ContentItemIndex returning DocumentId)")]
     public void Parse_MutationInNestedQuery_Fails(string sql)
     {
-        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, out var rawQuery, out var messages);
+        var result = SqlParser.TryParse(sql, _schema, _defaultDialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out var messages);
 
         Assert.False(result);
         Assert.Null(rawQuery);
@@ -430,17 +431,17 @@ public class SqlParserTests
 
         foreach (var (dialect, expectedSql, expectedOffsetSql, expectedSetOffsetSql) in cases)
         {
-            var result = SqlParser.TryParse(sql, "app", dialect, _defaultTablePrefix, null, out var rawQuery, out var messages);
+            var result = SqlParser.TryParse(sql, "app", dialect, _defaultTablePrefix, null, TestScopes.AllowAll, out var rawQuery, out var messages);
 
             Assert.True(result, $"{dialect.Name}: {messages?.FirstOrDefault() ?? "Parse failed"}");
             Assert.Equal(expectedSql, FormatSql(rawQuery));
 
-            result = SqlParser.TryParse("select a offset 10", "app", dialect, _defaultTablePrefix, null, out rawQuery, out messages);
+            result = SqlParser.TryParse("select a offset 10", "app", dialect, _defaultTablePrefix, null, TestScopes.AllowAll, out rawQuery, out messages);
 
             Assert.True(result, $"{dialect.Name}: {messages?.FirstOrDefault() ?? "Parse failed"}");
             Assert.Equal(expectedOffsetSql, FormatSql(rawQuery));
 
-            result = SqlParser.TryParse("select a union select b offset 10", "app", dialect, _defaultTablePrefix, null, out rawQuery, out messages);
+            result = SqlParser.TryParse("select a union select b offset 10", "app", dialect, _defaultTablePrefix, null, TestScopes.AllowAll, out rawQuery, out messages);
 
             Assert.True(result, $"{dialect.Name}: {messages?.FirstOrDefault() ?? "Parse failed"}");
             Assert.Equal(expectedSetOffsetSql, FormatSql(rawQuery));

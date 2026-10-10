@@ -6,8 +6,13 @@ namespace Crest.AdminMenu.Services;
 public class AdminMenuService : IAdminMenuService
 {
     private readonly IDocumentManager<AdminMenuList> _documentManager;
+    private readonly IEnumerable<IAdminMenuEventHandler> _handlers;
 
-    public AdminMenuService(IDocumentManager<AdminMenuList> documentManager) => _documentManager = documentManager;
+    public AdminMenuService(IDocumentManager<AdminMenuList> documentManager, IEnumerable<IAdminMenuEventHandler> handlers)
+    {
+        _documentManager = documentManager;
+        _handlers = handlers;
+    }
 
     /// <summary>
     /// Loads the admin menus from the store for updating and that should not be cached.
@@ -37,6 +42,11 @@ public class AdminMenuService : IAdminMenuService
         }
 
         await _documentManager.UpdateAsync(adminMenuList);
+
+        foreach (var handler in _handlers)
+        {
+            await handler.SavedAsync(tree);
+        }
     }
 
     public Models.AdminMenu GetAdminMenuById(AdminMenuList adminMenuList, string id)
@@ -51,6 +61,14 @@ public class AdminMenuService : IAdminMenuService
         var count = adminMenuList.AdminMenu.RemoveAll(x => string.Equals(x.Id, tree.Id, StringComparison.OrdinalIgnoreCase));
 
         await _documentManager.UpdateAsync(adminMenuList);
+
+        if (count > 0)
+        {
+            foreach (var handler in _handlers)
+            {
+                await handler.RemovedAsync(tree);
+            }
+        }
 
         return count;
     }

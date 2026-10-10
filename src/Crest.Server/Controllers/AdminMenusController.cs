@@ -22,7 +22,7 @@ public sealed class AdminMenusController(
     IAdminMenuService adminMenuService,
     INavigationManager navigationManager,
     CrestAdminMenuLayoutService layoutService,
-    CrestAdminMenuTranslationService translationService,
+    Crest.DataLocalization.Services.ITranslationsManager translationsManager,
     CrestProviderMenuSyncCoordinator providerMenuSync,
     CrestProviderMenuSyncService providerMenuSyncService,
     CrestMenuPlacementService menuPlacementService,
@@ -300,21 +300,9 @@ public sealed class AdminMenusController(
             return NotFound();
         }
 
+        // The menu's translations go with it through the admin menu events.
         await adminMenuService.DeleteAsync(menu);
         await menuPlacementService.RemoveAsync(menuId);
-
-        // The menu's translations go with it: its whole context, plus the menu NAME's own
-        // entry in the generic context (that one only if no other menu still bears the name -
-        // menu names are not enforced unique).
-        await translationService.RemoveContextAsync(Crest.AdminMenu.DataLocalizationContext.AdminMenu(menu.Name));
-        var nameStillUsed = list.AdminMenu.Any(other =>
-            other.Id != menu.Id && string.Equals(other.Name, menu.Name, StringComparison.OrdinalIgnoreCase));
-        if (!nameStillUsed)
-        {
-            await translationService.RemoveKeysAsync(
-                Crest.AdminMenu.DataLocalizationContext.AdminMenu(),
-                [menu.Name]);
-        }
 
         return NoContent();
     }
@@ -595,7 +583,9 @@ public sealed class AdminMenusController(
         var layout = await layoutService.LoadAsync();
         var renamed = CrestAdminMenuLayoutService.GetRename(layout, nodeId, culture);
 
-        await translationService.SetAsync(culture, menuName, sourceText, renamed);
+        // The key is the caption the data localizer looks up within the menu context, not the
+        // item's key: callers pass the pre-override caption for that reason.
+        await translationsManager.SetTranslationAsync(culture, Crest.AdminMenu.DataLocalizationContext.AdminMenu(menuName), sourceText, renamed);
         return Ok(await GetDefaultMenuSummaryAsync());
     }
 
@@ -738,42 +728,10 @@ public sealed class AdminMenusController(
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
+        // The deleted subtree's translations go with it through the admin menu events.
         await adminMenuService.SaveAsync(menu);
 
-        // The node's translations must not outlive it as orphans. The deleted subtree's
-        // captions are removed from the menu's translation context in every culture - except
-        // any caption a surviving node in the same menu still uses, since translations are
-        // keyed on the caption and shared by every node bearing it.
-        var deletedCaptions = new HashSet<string>(StringComparer.Ordinal);
-        CollectNodeCaptions([node], deletedCaptions);
-        var survivingCaptions = new HashSet<string>(StringComparer.Ordinal);
-        CollectNodeCaptions(menu.MenuItems, survivingCaptions);
-        deletedCaptions.ExceptWith(survivingCaptions);
-        await translationService.RemoveKeysAsync(
-            Crest.AdminMenu.DataLocalizationContext.AdminMenu(menu.Name),
-            deletedCaptions);
-
         return Ok(AdminMenuSummary.From(menu));
-    }
-
-    private static void CollectNodeCaptions(IEnumerable<MenuItem> items, HashSet<string> captions)
-    {
-        foreach (var item in items)
-        {
-            var caption = item switch
-            {
-                LinkAdminNode link => link.LinkText,
-                PlaceholderAdminNode placeholder => placeholder.LinkText,
-                _ => null,
-            };
-
-            if (!string.IsNullOrWhiteSpace(caption))
-            {
-                captions.Add(caption);
-            }
-
-            CollectNodeCaptions(item.Items, captions);
-        }
     }
 
     private async Task<AdminMenuSummary> GetDefaultMenuSummaryAsync()

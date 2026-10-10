@@ -16,6 +16,8 @@ public class WorkflowDefinitionPart : ContentPart
     public bool UsableAsActivity { get; set; }
     public bool IsSystem { get; set; }
     public bool IsReadonly { get; set; }
+    /// <summary>Published as system: every burst runs as the tenant system actor (<see cref="WorkflowsConstants.RunsAsSystemProperty"/>; publishing it takes ManageShippedWorkflows).</summary>
+    public bool RunsAsSystem { get; set; }
     public Version? ToolVersion { get; set; }
     public string SerializedData { get; set; } = null!;
 }

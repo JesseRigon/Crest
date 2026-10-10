@@ -12,7 +12,6 @@ using Crest;
 using Crest.ContentManagement;
 using Crest.Security;
 using Crest.Security.Permissions;
-using Crest.Settings;
 using YesSql;
 
 namespace Crest.Workflows.Security;
@@ -30,6 +29,24 @@ public sealed record WorkflowDefinitionAccessResource(string DefinitionId, IRead
         new(definitionId, Names(properties, WorkflowsConstants.AccessEditProperty), Names(properties, WorkflowsConstants.AccessRunProperty));
 
     public WorkflowDefinitionAccessModel ToModel() => new(Edit, Run);
+
+    /// <summary>
+    /// The veto the lists express, for a built caller: an edit permission against the Edit
+    /// list, Run against the Run list; a user name admits that user, a role name its members;
+    /// an empty list admits everyone; the super user and administrators are never narrowed.
+    /// The one access decision answers the permission only, so its direct callers consult
+    /// this beside it (the authorization-service path has <see cref="WorkflowDefinitionAccessHandler"/>).
+    /// </summary>
+    public bool Admits(Crest.Access.CallerContext caller, string permissionName)
+    {
+        var list = WorkflowDefinitionAccessHandler.ListFor(permissionName, this);
+        if (list is null || list.Count == 0 || caller.IsSuperUser || caller.IsSystem)
+        {
+            return true;
+        }
+
+        return list.Any(name => string.Equals(name, caller.UserName, StringComparison.OrdinalIgnoreCase) || caller.Roles.Contains(name));
+    }
 
     /// <summary>Writes the lists onto custom properties; an empty list removes the property.</summary>
     public static void Stamp(IDictionary<string, object> properties, WorkflowDefinitionAccessModel access)
@@ -76,15 +93,15 @@ public sealed record WorkflowDefinitionAccessResource(string DefinitionId, IRead
 
 /// <summary>
 /// Vetoes a workflow permission when the definition being authorized names who may hold it
-/// and the user is none of them: an edit permission (Edit, Manage shipped, Publish) against
+/// and the caller is none of them: an edit permission (Edit, Manage shipped, Publish) against
 /// the Edit list, Run against the Run list. A user name in a list is the per-user override;
-/// a role name admits its members. A definition with no list changes nothing. Shaped like
-/// the member ceiling (a raw handler that runs despite prior successes; Fail is sticky) so
-/// the role grant, the super user and every other handler still apply in the same call -
-/// except that the super user and administrators are never narrowed by a list, as nowhere
-/// else in Crest.
+/// a role name admits its members. A definition with no list changes nothing. The answer is
+/// <see cref="WorkflowDefinitionAccessResource.Admits"/> on the request's one caller, the same
+/// answer the direct callers of the decision get; a raw handler (runs despite prior
+/// successes; Fail is sticky) so the role grant and every other handler still apply in the
+/// same call. The super user is never narrowed by a list.
 /// </summary>
-public sealed class WorkflowDefinitionAccessHandler(ISiteService siteService) : IAuthorizationHandler
+public sealed class WorkflowDefinitionAccessHandler(Crest.Access.ICallerContextAccessor callerAccessor) : IAuthorizationHandler
 {
     private static readonly HashSet<string> EditPermissions = new(StringComparer.Ordinal)
     {
@@ -106,50 +123,45 @@ public sealed class WorkflowDefinitionAccessHandler(ISiteService siteService) : 
             return;
         }
 
-        if (context.User.IsInRole(PlatformConstants.Roles.Administrator))
+        var caller = callerAccessor.Current;
+        if (caller is null)
         {
-            return;
-        }
-
-        var settings = await siteService.GetSiteSettingsAsync();
-        if (!string.IsNullOrEmpty(settings.SuperUser) && string.Equals(context.User.Identity.Name, settings.SuperUser, StringComparison.OrdinalIgnoreCase))
-        {
+            // No gated caller: nothing to admit by; the lists narrow, they never grant.
+            context.Fail(new AuthorizationFailureReason(this, $"Workflow '{resource.DefinitionId}' limits access and the request carries no caller."));
             return;
         }
 
         foreach (var requirement in requirements)
         {
-            var list = EditPermissions.Contains(requirement.Permission.Name) ? resource.Edit
-                : requirement.Permission.Name == WorkflowsConstants.Permissions.Run ? resource.Run
-                : null;
-            if (list is null || list.Count == 0 || IsNamed(context.User, list))
+            if (resource.Admits(caller, requirement.Permission.Name))
             {
                 continue;
             }
 
             context.Fail(new AuthorizationFailureReason(this, $"Workflow '{resource.DefinitionId}' limits '{requirement.Permission.Name}' to named roles and users."));
         }
+
+        await Task.CompletedTask;
     }
 
-    private static bool IsNamed(ClaimsPrincipal user, IReadOnlyList<string> names)
-    {
-        var userName = user.Identity?.Name;
-        foreach (var name in names)
-        {
-            if (string.Equals(name, userName, StringComparison.OrdinalIgnoreCase) || user.IsInRole(name))
-            {
-                return true;
-            }
-        }
+    /// <summary>The list a permission is narrowed by: Edit for the edit permissions, Run for Run, none otherwise.</summary>
+    public static IReadOnlyList<string>? ListFor(string permissionName, WorkflowDefinitionAccessResource resource) =>
+        EditPermissions.Contains(permissionName) ? resource.Edit
+        : permissionName == WorkflowsConstants.Permissions.Run ? resource.Run
+        : null;
 
-        return false;
-    }
 }
 
 /// <summary>Loads a definition's access lists (the API gate's view of the service below).</summary>
 public interface IWorkflowDefinitionAccessReader
 {
     Task<WorkflowDefinitionAccessResource?> GetAsync(string definitionId);
+}
+
+/// <summary>Authorizes a user against a definition in one Crest call (the ownership guard's view of the service below).</summary>
+public interface IWorkflowDefinitionAuthorizer
+{
+    Task<bool> AuthorizeAsync(ClaimsPrincipal user, Permission permission, WorkflowDefinitionAccessResource resource);
 }
 
 /// <summary>
@@ -162,7 +174,7 @@ public sealed class WorkflowDefinitionAccessService(
     ISession session,
     WorkflowDefinitionPartMapper partMapper,
     IWorkflowDefinitionCacheManager definitionCacheManager,
-    ICacheManager cacheManager) : IWorkflowDefinitionAccessReader
+    ICacheManager cacheManager) : IWorkflowDefinitionAccessReader, IWorkflowDefinitionAuthorizer
 {
     public async Task<WorkflowDefinitionAccessResource?> GetAsync(string definitionId)
     {

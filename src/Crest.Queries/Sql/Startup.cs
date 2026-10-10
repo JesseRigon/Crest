@@ -19,7 +19,6 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddPermissionProvider<Permissions>();
-        services.AddSingleton<SqlLiquidOutputExpressionDetector>();
         services.AddDisplayDriver<Query, SqlQueryDisplayDriver>();
         services.AddQuerySource<SqlQuerySource>(SqlQuerySource.SourceName);
 

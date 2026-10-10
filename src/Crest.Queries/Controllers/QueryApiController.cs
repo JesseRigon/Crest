@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Crest.Access;
 
 namespace Crest.Queries.Controllers;
 
@@ -66,8 +67,29 @@ public sealed class QueryApiController : ControllerBase
             JConvert.DeserializeObject<Dictionary<string, object>>(parameters)
             : [];
 
-        var result = await _queryManager.ExecuteQueryAsync(query, queryParameters);
+        var request = new QueryRequest
+        {
+            Parameters = queryParameters,
+            PageToken = Request.Query["pageToken"].FirstOrDefault(),
+            PageSize = int.TryParse(Request.Query["pageSize"].FirstOrDefault(), out var pageSize) ? pageSize : null,
+            CancellationToken = HttpContext.RequestAborted,
+        };
 
-        return new ObjectResult(result);
+        try
+        {
+            var result = await _queryManager.ExecuteQueryAsync(query, request);
+
+            return new ObjectResult(new
+            {
+                result.Items,
+                Columns = result.Columns.Select(column => new { column.Name, Type = column.Type.Name }),
+                result.Total,
+                result.NextPageToken,
+            });
+        }
+        catch (ScopeRefusedException)
+        {
+            return Forbid();
+        }
     }
 }

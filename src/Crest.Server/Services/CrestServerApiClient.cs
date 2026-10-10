@@ -2,6 +2,8 @@ using System.Net.Http.Json;
 using Crest.AdminTheme.Api;
 using Microsoft.AspNetCore.Http;
 
+using Microsoft.Extensions.DependencyInjection;
+
 namespace Crest.Services;
 
 /// <summary>
@@ -57,6 +59,32 @@ public sealed class CrestForwardedAuthHandler(IHttpContextAccessor httpContextAc
         {
             request.Headers.TryAddWithoutValidation("Cookie", _cookieHeader);
         }
+
+        // The loopback call acts for the same side and organization as the request that
+        // caused it: the incoming headers when the request carried them, else the side the
+        // shell selector stamped and the caller's organization.
+        var context = httpContextAccessor.HttpContext;
+        if (context is not null && !request.Headers.Contains(Crest.Access.AccessHeaders.Shell))
+        {
+            var shell = context.Request.Headers[Crest.Access.AccessHeaders.Shell].ToString();
+            if (string.IsNullOrEmpty(shell))
+            {
+                shell = Crest.Access.AccessGate.SideOf(context).ToString().ToLowerInvariant();
+            }
+
+            request.Headers.TryAddWithoutValidation(Crest.Access.AccessHeaders.Shell, shell);
+
+            var organization = context.Request.Headers[Crest.Access.AccessHeaders.Organization].ToString();
+            if (string.IsNullOrEmpty(organization))
+            {
+                organization = context.RequestServices.GetService<Crest.Access.ICallerContextAccessor>()?.Current?.OrganizationId ?? string.Empty;
+            }
+
+            if (!string.IsNullOrEmpty(organization))
+            {
+                request.Headers.TryAddWithoutValidation(Crest.Access.AccessHeaders.Organization, organization);
+            }
+        }
     }
 
     private async Task<CrestAntiforgeryToken> GetTokenAsync(CancellationToken cancellationToken)
@@ -101,8 +129,8 @@ public sealed class CrestForwardedAuthHandler(IHttpContextAccessor httpContextAc
 /// <summary>
 /// Server-side ICrestCultureCookieWriter: deliberately does nothing. The culture cookie
 /// is written exclusively by the browser (crest.theme.js via the WASM handler); the
-/// server only reads it, through the RequestLocalizationOptions pipeline
-/// (CrestCultureCookieOptionsConfiguration). See docs/localization.md.
+/// server only reads it, through the platform's RequestLocalizationOptions pipeline
+/// (Crest.Localization's one provider list). See docs/localization.md.
 /// </summary>
 public sealed class CrestNoOpCultureCookieWriter : ICrestCultureCookieWriter
 {

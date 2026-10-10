@@ -35,7 +35,7 @@ independently packageable.
 ```text
 Crest/
   src/                every project, platform and application alike
-    Crest.Core/, Crest.Abstractions/, Crest.ContentManagement/, Crest.Users/, Crest.Media/, ...
+    Crest.Infrastructure/, Crest.Abstractions/, Crest.ContentManagement/, Crest.Users/, Crest.Media/, ...
                       the platform, forked from OrchardCore and renamed Crest.*:
                       tenants, users, permissions, content, features, settings, the
                       module system. Listed by kind in src/Crest.Build/Platform.Projects.props.
@@ -154,7 +154,7 @@ so the page can sit inside an iframe.
 The repository stays a single git repository while publishing separate NuGet packages. The
 intended package boundaries are:
 
-- The platform's packages (`Crest.*`; the core library is `Crest.Core`).
+- The platform's packages (`Crest.*`; the implementation library is `Crest.Infrastructure`).
 - `Crest.Server`: the server module and shared server infrastructure.
 - `Crest.Components`: the component layer.
 - `Crest.Iconify`: Iconify provider API and optional full-library cache.

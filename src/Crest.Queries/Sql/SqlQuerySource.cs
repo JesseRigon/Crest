@@ -1,54 +1,53 @@
+#nullable enable
 using System.Globalization;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using Dapper;
-using Fluid;
-using Fluid.Values;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Crest.Access;
 using Crest.ContentManagement;
 using Crest.ContentManagement.Records;
 using Crest.Data;
 using Crest.Entities;
-using Crest.Json;
-using Crest.Liquid;
 using Crest.Queries.Sql.Models;
 using YesSql;
 
 namespace Crest.Queries.Sql;
 
+/// <summary>
+/// Runs an administrator-authored SQL template as written: values bind as parameters only,
+/// the caller's scope is conjoined into every select before the statement runs.
+/// </summary>
 public sealed class SqlQuerySource : IQuerySource
 {
     public const string SourceName = "Sql";
 
-    private readonly ILiquidTemplateManager _liquidTemplateManager;
     private readonly IDbConnectionAccessor _dbConnectionAccessor;
     private readonly ISession _session;
+    private readonly ICallerContextAccessor? _callerAccessor;
+    private readonly IScopeSetProvider? _scopeSetProvider;
     private readonly ILogger _logger;
-    private readonly JsonSerializerOptions _jsonSerializerOptions;
-    private readonly TemplateOptions _templateOptions;
 
     public SqlQuerySource(
-        ILiquidTemplateManager liquidTemplateManager,
         IDbConnectionAccessor dbConnectionAccessor,
         ISession session,
-        IOptions<DocumentJsonSerializerOptions> jsonSerializerOptions,
-        IOptions<TemplateOptions> templateOptions,
+        IServiceProvider serviceProvider,
         ILogger<SqlQuerySource> logger)
     {
-        _liquidTemplateManager = liquidTemplateManager;
         _dbConnectionAccessor = dbConnectionAccessor;
         _session = session;
-        _jsonSerializerOptions = jsonSerializerOptions.Value.SerializerOptions;
-        _templateOptions = templateOptions.Value;
+        _callerAccessor = serviceProvider.GetService(typeof(ICallerContextAccessor)) as ICallerContextAccessor;
+        _scopeSetProvider = serviceProvider.GetService(typeof(IScopeSetProvider)) as IScopeSetProvider;
         _logger = logger;
     }
 
     public string Name
         => SourceName;
 
-    public async Task<IQueryResults> ExecuteQueryAsync(Query query, IDictionary<string, object> parameters)
+    public async Task<IQueryResults> ExecuteQueryAsync(Query query, QueryRequest request)
     {
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(request);
+
         var template = string.Empty;
 
         if (query.TryGet<SqlQueryMetadata>(out var metadata))
@@ -56,89 +55,81 @@ public sealed class SqlQuerySource : IQuerySource
             template = metadata.Template;
         }
 
-        var sqlQueryResults = new SQLQueryResults
-        {
-            Items = [],
-        };
-
-        var tokenizedQuery = await _liquidTemplateManager.RenderStringAsync(template, NullEncoder.Default,
-            parameters.Select(x => new KeyValuePair<string, FluidValue>(x.Key, FluidValue.Create(x.Value, _templateOptions))));
-
+        var cancellationToken = request.CancellationToken;
+        var scopes = await CallerScopes.RequireAsync(_callerAccessor, _scopeSetProvider, query.Name ?? SourceName, cancellationToken);
         var configuration = _session.Store.Configuration;
+        var parameters = new Dictionary<string, object>(request.Parameters);
 
         if (!SqlParser.TryParse(
-                tokenizedQuery,
+                template,
                 configuration.Schema,
                 configuration.SqlDialect,
                 configuration.TablePrefix,
                 parameters,
+                scopes,
                 out var rawQuery,
                 out var messages))
         {
             _logger.LogError("Couldn't parse SQL query: {Messages}", string.Join(' ', messages));
 
-            return sqlQueryResults;
+            return QueryResults.Empty();
         }
 
         await using var connection = _dbConnectionAccessor.CreateConnection();
 
-        await connection.OpenAsync();
+        await connection.OpenAsync(cancellationToken);
 
-        await using var transaction = await connection.BeginTransactionAsync(configuration.IsolationLevel);
+        await using var transaction = await connection.BeginTransactionAsync(configuration.IsolationLevel, cancellationToken);
+        await using var reader = await connection.ExecuteReaderAsync(new CommandDefinition(rawQuery, parameters, transaction, cancellationToken: cancellationToken));
 
-        var queryResults = await connection.QueryAsync(rawQuery, parameters, transaction);
+        var columns = new QueryColumn[reader.FieldCount];
+
+        for (var i = 0; i < columns.Length; i++)
+        {
+            columns[i] = new QueryColumn(reader.GetName(i), reader.GetFieldType(i));
+        }
+
+        var rows = new List<JsonObject>();
+
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var row = new JsonObject();
+
+            for (var i = 0; i < columns.Length; i++)
+            {
+                row[columns[i].Name] = reader.IsDBNull(i) ? null : JsonValue.Create(reader.GetValue(i));
+            }
+
+            rows.Add(row);
+        }
 
         if (!query.ReturnContentItems)
         {
-            sqlQueryResults.Items = queryResults
-                .Select<object, JsonObject>(document => JObject.FromObject(document, _jsonSerializerOptions))
-                .ToArray();
-
-            return sqlQueryResults;
-        }
-
-        string column = null;
-
-        var documentIds = queryResults
-            .Select(row =>
+            return new QueryResults
             {
-                var rowDictionary = (IDictionary<string, object>)row;
-
-                if (column == null)
-                {
-                    if (rowDictionary.ContainsKey(nameof(ContentItemIndex.DocumentId)))
-                    {
-                        column = nameof(ContentItemIndex.DocumentId);
-                    }
-                    else
-                    {
-                        column = rowDictionary.FirstOrDefault(kv => kv.Value is long).Key
-                            ?? rowDictionary.First().Key;
-                    }
-                }
-
-                if (rowDictionary.TryGetValue(column, out var documentIdObject))
-                {
-                    return documentIdObject switch
-                    {
-                        long longValue => longValue,
-                        int intValue => intValue,
-                        { } otherObject =>
-                            long.TryParse(otherObject.ToString(), CultureInfo.InvariantCulture, out var parsedValue)
-                                ? parsedValue
-                                : 0,
-                        _ => 0,
-                    };
-                }
-
-                return 0;
-            }).ToArray();
-
-        if (documentIds.Length > 0)
-        {
-            sqlQueryResults.Items = await _session.GetAsync<ContentItem>(documentIds);
+                Items = rows,
+                Columns = columns,
+            };
         }
 
-        return sqlQueryResults;
+        var column = columns.FirstOrDefault(candidate => string.Equals(candidate.Name, nameof(ContentItemIndex.DocumentId), StringComparison.OrdinalIgnoreCase))
+            ?? columns.FirstOrDefault(candidate => candidate.Type == typeof(long) || candidate.Type == typeof(int))
+            ?? columns.FirstOrDefault();
+
+        if (column is null)
+        {
+            return QueryResults.Empty(columns);
+        }
+
+        var documentIds = rows
+            .Select(row => row[column.Name] is JsonValue value && long.TryParse(value.ToString(), CultureInfo.InvariantCulture, out var id) ? id : 0L)
+            .Where(id => id != 0)
+            .ToArray();
+
+        return new QueryResults
+        {
+            Items = documentIds.Length > 0 ? await _session.GetAsync<ContentItem>(documentIds) : [],
+            Columns = columns,
+        };
     }
 }

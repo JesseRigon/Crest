@@ -38,7 +38,7 @@ public sealed class QueryGlobalMethodProvider : IGlobalMethodProvider
             return null;
         }
 
-        var result = await queryManager.ExecuteQueryAsync(query, (IDictionary<string, object>)parameters);
+        var result = await queryManager.ExecuteQueryAsync(query, QueryRequest.Of((IDictionary<string, object>)parameters));
 
         return result.Items;
     }

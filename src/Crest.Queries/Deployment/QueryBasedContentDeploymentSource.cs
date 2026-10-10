@@ -36,7 +36,7 @@ public sealed class QueryBasedContentDeploymentSource
             return;
         }
 
-        var results = await _queryManager.ExecuteQueryAsync(query, parameters);
+        var results = await _queryManager.ExecuteQueryAsync(query, QueryRequest.Of(parameters));
 
         foreach (var contentItem in results.Items)
         {

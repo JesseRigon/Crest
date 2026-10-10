@@ -18,7 +18,7 @@ public class AzureSmsOptionsMonitorTests
     public async Task RequestUpdate_ShouldRefreshAzureSmsOptionsWithoutReleasingTenant()
     {
         using var context = new SiteContext()
-            .WithRecipe("SaaS");
+            .WithRecipe(TestRecipes.Blank);
 
         await context.InitializeAsync();
 

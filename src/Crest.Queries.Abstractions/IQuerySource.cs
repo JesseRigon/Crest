@@ -1,3 +1,4 @@
+#nullable enable
 namespace Crest.Queries;
 
 /// <summary>
@@ -11,9 +12,9 @@ public interface IQuerySource
     string Name { get; }
 
     /// <summary>
-    /// Executes a query with a given parameters.
+    /// Executes a query for the current caller, scoped before paging.
     /// </summary>
     /// <param name="query">The <see cref="Query"/> to be executed.</param>
-    /// <param name="parameters">The query parameters.</param>
-    Task<IQueryResults> ExecuteQueryAsync(Query query, IDictionary<string, object> parameters);
+    /// <param name="request">The parameters, page and cancellation of this run.</param>
+    Task<IQueryResults> ExecuteQueryAsync(Query query, QueryRequest request);
 }

@@ -8,10 +8,11 @@ namespace Crest.Workflows;
 /// platform activity abstractions, which platform modules check too) stays as the umbrella that implies every one below, so roles configured for
 /// workflows carry over. Each finer permission is what a page, a controller or an engine
 /// endpoint asks for; the engine API gate maps them onto the engine's own per-endpoint
-/// permission names (<see cref="Security.CrestWorkflowsApiSecurityMiddleware"/>). An
-/// activity runs as trusted system code once a definition is published, so authoring
-/// (Edit + Publish) is the security boundary; a definition may narrow it further with its
-/// own access lists, which are evaluated inside these permissions, not beside them.
+/// permission names (<see cref="Security.CrestWorkflowsApiSecurityMiddleware"/>). At run
+/// time a flow acts as the caller who started it (or as the system when published so), and
+/// its data activities ask the access gate with that caller (docs/operations.md step 4); a
+/// definition may narrow who may edit or run it with its own access lists, which are
+/// evaluated inside these permissions, not beside them.
 /// </summary>
 public static class Permissions
 {
@@ -23,9 +24,11 @@ public static class Permissions
     public static readonly Permission RunWorkflows = new(WorkflowsConstants.Permissions.Run, "Run workflows by hand and manage their instances", [ManageWorkflows]);
     public static readonly Permission ManageShippedWorkflows = new(WorkflowsConstants.Permissions.ManageShipped, "Manage shipped workflows: edit, fork and reset the shipped templates", [ManageWorkflows]);
     public static readonly Permission ManageConnections = new(WorkflowsConstants.Permissions.ManageConnections, "Manage workflow connections and their secrets", [ManageWorkflows]);
+    /// <summary>What the connector activities take at run time, for the burst's caller; managing a connection implies using it.</summary>
+    public static readonly Permission UseConnections = new(WorkflowsConstants.Permissions.UseConnections, "Use workflow connections: call and poll them from a running flow", [ManageConnections]);
 
     /// <summary>Everything this feature declares.</summary>
-    public static readonly IReadOnlyList<Permission> All = [ManageWorkflows, ViewWorkflows, EditWorkflows, PublishWorkflows, RunWorkflows, ManageShippedWorkflows, ManageConnections];
+    public static readonly IReadOnlyList<Permission> All = [ManageWorkflows, ViewWorkflows, EditWorkflows, PublishWorkflows, RunWorkflows, ManageShippedWorkflows, ManageConnections, UseConnections];
 }
 
 public sealed class WorkflowsPermissionProvider : IPermissionProvider

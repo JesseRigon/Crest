@@ -32,22 +32,11 @@
 
 <div class="ocat-wrapper">
     <div class="ocat-end-offset">
-        <div class="alert alert-warning" role="alert">
-            @T["SQL queries are Liquid templates. Never inject user input with Liquid output expressions like '{{ input }}'. Use SQL parameters (for example '@name' or '@name:default') passed in by the caller for user-provided values."]
+        <div class="alert alert-info" role="alert">
+            @T["The query is parsed as written; Liquid is not allowed. Values are bound as SQL parameters (for example '@name' or '@name:default') passed in by the caller, and the caller's scope is applied to every table before the query runs."]
         </div>
     </div>
 </div>
-
-@if (Model.HasLiquidOutputExpressions)
-{
-    <div class="ocat-wrapper">
-        <div class="ocat-end-offset">
-            <div class="alert alert-warning" role="alert">
-                @T["Potentially unsafe Liquid output expressions ('{{ ... }}') were detected in this query template. This can lead to SQL injection if untrusted input is rendered directly into SQL."]
-            </div>
-        </div>
-    </div>
-}
 
 <div class="ocat-wrapper" asp-validation-class-for="Query">
     <label asp-for="Query" class="ocat-label">@T["Query"]</label>

@@ -78,6 +78,8 @@ public static class WorkflowsConstants
         public const string Run = "RunCrestWorkflows";
         public const string ManageShipped = "ManageShippedCrestWorkflows";
         public const string ManageConnections = "ManageCrestWorkflowConnections";
+        /// <summary>Call or poll a connection from a running flow; implied by ManageConnections.</summary>
+        public const string UseConnections = "UseCrestWorkflowConnections";
     }
 
     /// <summary>The roles the recipe ships for the permission set (Administrator and Editor hold the stock umbrella).</summary>
@@ -122,6 +124,23 @@ public static class WorkflowsConstants
 
     /// <summary>On an engine activity descriptor: the field dependencies the activity's class declares.</summary>
     public const string FieldDependenciesDescriptorProperty = "crest:fieldDependencies";
+
+    /// <summary>On an engine activity descriptor: the permission the activity's class declares with <see cref="RequiresPermissionAttribute"/>.</summary>
+    public const string RequiredPermissionDescriptorProperty = "crest:requiredPermission";
+
+    /// <summary>On a run-query activity descriptor: the query it runs (the registry's query kind, docs/operations.md step 3).</summary>
+    public const string QueryNameDescriptorProperty = "crest:query";
+
+    /// <summary>On a run-query activity descriptor: the output schema (source, pageable, columns with their types).</summary>
+    public const string QuerySchemaDescriptorProperty = "crest:querySchema";
+
+    /// <summary>
+    /// Published as system: every burst of the definition runs as the tenant system actor
+    /// instead of the actor that started it (timer, cron and delay-started flows must carry
+    /// it). Publishing a definition with it set takes ManageShippedWorkflows; it is the only
+    /// way a workflow comes to act as the system.
+    /// </summary>
+    public const string RunsAsSystemProperty = "Crest.RunsAsSystem";
 
     /// <summary>
     /// A definition's own access lists: role names and user names allowed to edit (save,

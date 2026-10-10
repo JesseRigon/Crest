@@ -26,6 +26,7 @@
     <ProjectReference Include="..\Crest.AuditTrail.Abstractions\Crest.AuditTrail.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentFields.Core\Crest.ContentFields.Core.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.GraphQL\Crest.ContentManagement.GraphQL.csproj" />
+    <ProjectReference Include="..\Crest.Access.Abstractions\Crest.Access.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Contents.Core\Crest.Contents.Core.csproj" />
     <ProjectReference Include="..\Crest.Contents.TagHelpers\Crest.Contents.TagHelpers.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement\Crest.ContentManagement.csproj" />

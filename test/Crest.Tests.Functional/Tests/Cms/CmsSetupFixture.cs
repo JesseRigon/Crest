@@ -20,7 +20,7 @@ public sealed class CmsSetupFixture : IAsyncLifetime
     {
         await _testFixture.InitializeAsync();
 
-        // Perform the default SaaS tenant setup.
+        // Perform the default Blank tenant setup.
         var page = await CreatePageAsync();
         try
         {
@@ -31,9 +31,9 @@ public sealed class CmsSetupFixture : IAsyncLifetime
             {
                 await TenantHelper.SiteSetupAsync(page, new TenantInfo
                 {
-                    Name = "Testing SaaS",
+                    Name = "Testing Blank",
                     Prefix = string.Empty,
-                    SetupRecipe = "SaaS",
+                    SetupRecipe = "Blank",
                 });
             }
 

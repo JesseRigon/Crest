@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Access</RootNamespace>
+    <Nullable>enable</Nullable>
+    <!-- NuGet properties-->
+    <Title>Crest Access Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    The access contracts every read and write goes through: the caller, the decision, the scope and the audit.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Access Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

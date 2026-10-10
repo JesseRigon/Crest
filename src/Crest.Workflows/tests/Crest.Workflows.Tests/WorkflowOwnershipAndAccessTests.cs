@@ -80,13 +80,28 @@ public class WorkflowOwnershipAndAccessTests
     private static ClaimsPrincipal User(string name, params string[] roles) =>
         new(new ClaimsIdentity([new Claim(ClaimTypes.Name, name), .. roles.Select(r => new Claim(ClaimTypes.Role, r))], "Test", ClaimTypes.Name, ClaimTypes.Role));
 
+    // The handler answers on the request's one caller: the gate would have built it from this
+    // principal, with the super user flagged for the site's super user and the admin role.
+    private static Crest.Access.ICallerContextAccessor CallerFor(ClaimsPrincipal user, string superUser)
+    {
+        var name = user.Identity?.Name ?? string.Empty;
+        var roles = user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var accessor = Substitute.For<Crest.Access.ICallerContextAccessor>();
+        accessor.Current.Returns(new Crest.Access.CallerContext
+        {
+            Tenant = "t",
+            Side = Crest.Access.CallerSide.Admin,
+            UserId = name,
+            UserName = name,
+            IsSuperUser = name == superUser || roles.Contains("Administrator"),
+            Roles = roles,
+        });
+        return accessor;
+    }
+
     private static async Task<AuthorizationHandlerContext> HandleAsync(ClaimsPrincipal user, string permissionName, WorkflowDefinitionAccessResource resource, string superUser = "root")
     {
-        var siteService = Substitute.For<ISiteService>();
-        var settings = Substitute.For<ISite>();
-        settings.SuperUser.Returns(superUser);
-        siteService.GetSiteSettingsAsync().Returns(settings);
-        var handler = new WorkflowDefinitionAccessHandler(siteService);
+        var handler = new WorkflowDefinitionAccessHandler(CallerFor(user, superUser));
         var context = new AuthorizationHandlerContext([new PermissionRequirement(new Crest.Security.Permissions.Permission(permissionName))], user, resource);
         await handler.HandleAsync(context);
         return context;
@@ -129,9 +144,8 @@ public class WorkflowOwnershipAndAccessTests
         var resource = new WorkflowDefinitionAccessResource("d", ["Finance"], ["Finance"]);
         Assert.False((await HandleAsync(User("alice"), "ManageContent", resource)).HasFailed);
 
-        var siteService = Substitute.For<ISiteService>();
         var context = new AuthorizationHandlerContext([new PermissionRequirement(Permissions.EditWorkflows)], User("alice"), "not a definition");
-        await new WorkflowDefinitionAccessHandler(siteService).HandleAsync(context);
+        await new WorkflowDefinitionAccessHandler(CallerFor(User("alice"), "root")).HandleAsync(context);
         Assert.False(context.HasFailed);
     }
 }

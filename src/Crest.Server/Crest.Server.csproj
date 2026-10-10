@@ -55,6 +55,9 @@
     <ProjectReference Include="$(PlatformSrcDir)Crest.Menu\Crest.Menu.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Media.Abstractions\Crest.Media.Abstractions.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Media\Crest.Media.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Access\Crest.Access.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Access.Abstractions\Crest.Access.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Data.YesSql\Crest.Data.YesSql.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Recipes.Abstractions\Crest.Recipes.Abstractions.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Recipes.Core\Crest.Recipes.Core.csproj" />

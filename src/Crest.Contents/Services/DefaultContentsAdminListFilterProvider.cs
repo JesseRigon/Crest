@@ -1,4 +1,8 @@
+using System.Linq.Expressions;
 using System.Security.Claims;
+using Crest.Access;
+using Crest.Data.Scoping;
+using Crest.Contents.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +19,15 @@ namespace Crest.Contents.Services;
 
 public sealed class DefaultContentsAdminListFilterProvider : IContentsAdminListFilterProvider
 {
+    /// <summary>The caller's content scope, from the one scope set; the lists never re-derive it.</summary>
+    private static async Task<Expression<Func<ContentItemIndex, bool>>> ScopeOfAsync(IServiceProvider services)
+    {
+        var caller = services.GetRequiredService<ICallerContextAccessor>().Current
+            ?? throw new InvalidOperationException("No caller is set for this request.");
+        var scopes = await services.GetRequiredService<IScopeSetProvider>().GetAsync(caller);
+        return ScopeExpressions.ToPredicate<ContentItemIndex>(scopes.Require(ContentItemScopeProvider.TargetName));
+    }
+
     public void Build(QueryEngineBuilder<ContentItem> builder)
     {
         builder
@@ -122,98 +135,37 @@ public sealed class DefaultContentsAdminListFilterProvider : IContentsAdminListF
                 .OneCondition(async (contentType, query, ctx) =>
                 {
                     var context = (ContentQueryContext)ctx;
-                    var httpContextAccessor = context.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
-                    var authorizationService = context.ServiceProvider.GetRequiredService<IAuthorizationService>();
                     var contentDefinitionManager = context.ServiceProvider.GetRequiredService<IContentDefinitionManager>();
-                    var user = httpContextAccessor.HttpContext.User;
-                    var userNameIdentifier = user?.FindFirstValue(ClaimTypes.NameIdentifier);
+                    var scope = await ScopeOfAsync(context.ServiceProvider);
 
-                    // Filter for one or more specific types.
+                    // Filter for one or more specific types. We display a specific type even if
+                    // it's not listable so that admin pages can reuse the Content list page for
+                    // specific types; what the caller may see of them is the scope's business.
                     if (!string.IsNullOrEmpty(contentType))
                     {
-                        List<string> viewAll = null;
-                        List<string> viewOwn = null;
-
+                        var requested = new List<string>();
                         foreach (var contentTypeId in contentType.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                         {
-                            var contentTypeDefinition = await contentDefinitionManager.GetTypeDefinitionAsync(contentTypeId);
-                            if (contentTypeDefinition == null)
+                            if (await contentDefinitionManager.GetTypeDefinitionAsync(contentTypeId) is not null)
                             {
-                                continue;
+                                requested.Add(contentTypeId);
                             }
-
-                            // We display a specific type even if it's not listable so that admin pages
-                            // can reuse the Content list page for specific types.
-
-                            // It is important to pass null to the owner parameter. This will check if the user can view content that belongs to others.
-                            if (await authorizationService.AuthorizeContentTypeAsync(user, CommonPermissions.ViewContent, contentTypeDefinition.Name, owner: null))
-                            {
-                                (viewAll ??= []).Add(contentTypeDefinition.Name);
-
-                                continue;
-                            }
-
-                            (viewOwn ??= []).Add(contentTypeDefinition.Name);
                         }
 
-                        if (viewAll != null || viewOwn != null)
+                        if (requested.Count > 0)
                         {
-                            if (viewAll == null)
-                            {
-                                return query.With<ContentItemIndex>(x => x.ContentType.IsIn(viewOwn) && x.Owner == userNameIdentifier);
-                            }
-
-                            if (viewOwn == null)
-                            {
-                                return query.With<ContentItemIndex>(x => x.ContentType.IsIn(viewAll));
-                            }
-
-                            return query.With<ContentItemIndex>(x => x.ContentType.IsIn(viewAll) || (x.ContentType.IsIn(viewOwn) && x.Owner == userNameIdentifier));
+                            return query.With<ContentItemIndex>(x => x.ContentType.IsIn(requested)).Where(scope);
                         }
 
                         // At this point, the given content types are invalid. Ignore them.
                     }
 
-                    List<string> listAnyContentTypes = null;
-                    List<string> listOwnContentTypes = null;
+                    var listable = (await contentDefinitionManager.ListTypeDefinitionsAsync())
+                        .Where(definition => definition.IsListable())
+                        .Select(definition => definition.Name)
+                        .ToList();
 
-                    foreach (var ctd in await contentDefinitionManager.ListTypeDefinitionsAsync())
-                    {
-                        if (!ctd.IsListable())
-                        {
-                            continue;
-                        }
-
-                        // It is important to pass null to the owner parameter. This will check if the user can view content that belongs to others.
-                        if (await authorizationService.AuthorizeContentTypeAsync(user, CommonPermissions.ViewContent, ctd.Name, owner: null))
-                        {
-                            (listAnyContentTypes ??= []).Add(ctd.Name);
-
-                            continue;
-                        }
-
-                        // It is important to pass the current user ID to the owner parameter. This will check if the user can view their own content.
-                        if (await authorizationService.AuthorizeContentTypeAsync(user, CommonPermissions.ViewContent, ctd.Name, userNameIdentifier))
-                        {
-                            (listOwnContentTypes ??= []).Add(ctd.Name);
-
-                            continue;
-                        }
-                    }
-
-                    if (listAnyContentTypes == null)
-                    {
-                        return listOwnContentTypes == null
-                            ? query.With<ContentItemIndex>().Where(x => false)
-                            : query.With<ContentItemIndex>().Where(x => x.ContentType.IsIn(listOwnContentTypes) && x.Owner == userNameIdentifier);
-                    }
-
-                    if (listOwnContentTypes == null)
-                    {
-                        return query.With<ContentItemIndex>().Where(x => x.ContentType.IsIn(listAnyContentTypes));
-                    }
-
-                    return query.With<ContentItemIndex>().Where(x => x.ContentType.IsIn(listAnyContentTypes) || (x.ContentType.IsIn(listOwnContentTypes) && x.Owner == userNameIdentifier));
+                    return query.With<ContentItemIndex>(x => x.ContentType.IsIn(listable)).Where(scope);
                 })
                 .MapTo<ContentOptionsViewModel>((val, model) =>
                 {
@@ -237,8 +189,6 @@ public sealed class DefaultContentsAdminListFilterProvider : IContentsAdminListF
                 .OneCondition(async (stereotype, query, ctx) =>
                 {
                     var context = (ContentQueryContext)ctx;
-                    var httpContextAccessor = context.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
-                    var authorizationService = context.ServiceProvider.GetRequiredService<IAuthorizationService>();
                     var contentDefinitionManager = context.ServiceProvider.GetRequiredService<IContentDefinitionManager>();
 
                     // Filter for one or more stereotypes.
@@ -255,36 +205,8 @@ public sealed class DefaultContentsAdminListFilterProvider : IContentsAdminListF
 
                         if (contentTypeDefinitionNames.Count > 0)
                         {
-                            var user = httpContextAccessor.HttpContext.User;
-                            var userNameIdentifier = user?.FindFirstValue(ClaimTypes.NameIdentifier);
-
-                            List<string> viewAll = null;
-                            List<string> viewOwn = null;
-
-                            foreach (var contentTypeDefinitionName in contentTypeDefinitionNames)
-                            {
-                                // It is important to pass null to the owner parameter. This will check if the user can view content that belongs to others.
-                                if (await authorizationService.AuthorizeContentTypeAsync(user, CommonPermissions.ViewContent, contentTypeDefinitionName, owner: null))
-                                {
-                                    (viewAll ??= []).Add(contentTypeDefinitionName);
-
-                                    continue;
-                                }
-
-                                (viewOwn ??= []).Add(contentTypeDefinitionName);
-                            }
-
-                            if (viewAll == null)
-                            {
-                                return query.With<ContentItemIndex>(x => x.ContentType.IsIn(viewOwn) && x.Owner == userNameIdentifier);
-                            }
-
-                            if (viewOwn == null)
-                            {
-                                return query.With<ContentItemIndex>(x => x.ContentType.IsIn(viewAll));
-                            }
-
-                            return query.With<ContentItemIndex>(x => x.ContentType.IsIn(viewAll) || (x.ContentType.IsIn(viewOwn) && x.Owner == userNameIdentifier));
+                            var scope = await ScopeOfAsync(context.ServiceProvider);
+                            return query.With<ContentItemIndex>(x => x.ContentType.IsIn(contentTypeDefinitionNames)).Where(scope);
                         }
 
                         // At this point, the given stereotypes are invalid. Ignore them.

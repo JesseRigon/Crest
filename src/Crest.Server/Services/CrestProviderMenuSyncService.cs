@@ -283,7 +283,7 @@ public sealed class CrestProviderMenuSyncService(
             if (added)
             {
                 // Replaces the whole culture list, so the untouched entries were carried over
-                // above - same contract CrestAdminMenuTranslationService documents.
+                // above.
                 await translationsManager.UpdateTranslationAsync(culture, existing);
             }
         }

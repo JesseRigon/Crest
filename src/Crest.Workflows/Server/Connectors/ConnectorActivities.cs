@@ -138,6 +138,7 @@ public abstract class ConnectorActivityBase : Activity, Units.IUnitBoundary, IRe
 /// </summary>
 [Activity("Crest.Workflows", "Connectors", "Calls an external API through a tenant connection (auth, retries and rate limits from the connection), after this flow's transaction commits.", DisplayName = "Call connector", Kind = ActivityKind.Task, RunAsynchronously = true)]
 [FlowNode("Done", "Failed")]
+[RequiresPermission(WorkflowsConstants.Permissions.UseConnections)]
 public class CallConnector : ConnectorActivityBase
 {
     [Input(DisplayName = "Method", DefaultValue = "POST", Options = new[] { "GET", "POST", "PUT", "PATCH", "DELETE" }, UIHint = InputUIHints.DropDown)]
@@ -170,6 +171,7 @@ public class CallConnector : ConnectorActivityBase
 /// </summary>
 [Activity("Crest.Workflows", "Connectors", "Fetches a resource through a tenant connection and continues on Changed when it differs from the last poll.", DisplayName = "Poll connector", Kind = ActivityKind.Task, RunAsynchronously = true)]
 [FlowNode("Changed", "Unchanged", "Failed")]
+[RequiresPermission(WorkflowsConstants.Permissions.UseConnections)]
 public class PollConnector : ConnectorActivityBase
 {
     protected override async ValueTask ExecuteAsync(ActivityExecutionContext context)

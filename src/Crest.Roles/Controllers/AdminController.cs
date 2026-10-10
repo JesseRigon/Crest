@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.Extensions.Localization;
+using Crest.Access;
 using Crest.Admin;
 using Crest.Data.Documents;
 using Crest.DisplayManagement.Notify;
@@ -24,6 +25,9 @@ public sealed class AdminController : Controller
     private readonly RoleManager<IRole> _roleManager;
     private readonly IAuthorizationService _authorizationService;
     private readonly IPermissionGrantingService _permissionGrantingService;
+    private readonly IAccessDecision _accessDecision;
+    private readonly ShellSettings _shellSettings;
+    private readonly ISystemRoleProvider _systemRoleProvider;
     private readonly IEnumerable<IPermissionProvider> _permissionProviders;
     private readonly ITypeFeatureProvider _typeFeatureProvider;
     private readonly IShellFeaturesManager _shellFeaturesManager;
@@ -38,6 +42,9 @@ public sealed class AdminController : Controller
         RoleManager<IRole> roleManager,
         IAuthorizationService authorizationService,
         IPermissionGrantingService permissionGrantingService,
+        IAccessDecision accessDecision,
+        ShellSettings shellSettings,
+        ISystemRoleProvider systemRoleProvider,
         IEnumerable<IPermissionProvider> permissionProviders,
         ITypeFeatureProvider typeFeatureProvider,
         IShellFeaturesManager shellFeaturesManager,
@@ -50,6 +57,9 @@ public sealed class AdminController : Controller
         _roleManager = roleManager;
         _authorizationService = authorizationService;
         _permissionGrantingService = permissionGrantingService;
+        _accessDecision = accessDecision;
+        _shellSettings = shellSettings;
+        _systemRoleProvider = systemRoleProvider;
         _permissionProviders = permissionProviders;
         _typeFeatureProvider = typeFeatureProvider;
         _shellFeaturesManager = shellFeaturesManager;
@@ -422,24 +432,28 @@ public sealed class AdminController : Controller
 
     private async Task<IDictionary<string, Permission>> GetEffectivePermissions(Role role, IEnumerable<Permission> allPermissions)
     {
-        // Create a fake user to check the actual permissions. If the role is anonymous
-        // IsAuthenticated needs to be false.
-        var authenticationType = !string.Equals(role.RoleName, PlatformConstants.Roles.Anonymous, StringComparison.OrdinalIgnoreCase)
-            ? "FakeAuthenticationType"
-            : null;
-
-        var fakeIdentity = new ClaimsIdentity([new Claim(ClaimTypes.Role, role.RoleName)], authenticationType);
-
-        // Add role claims.
-        fakeIdentity.AddClaims(role.RoleClaims.Select(c => c.ToClaim()));
-
-        var fakePrincipal = new ClaimsPrincipal(fakeIdentity);
+        // A synthetic caller holding only this role, asked of the one decision: the same
+        // answer a signed-in holder of the role gets (super user for the admin role, implied-by
+        // chains, ceilings), without a fake principal that the gate would never produce.
+        var isAnonymous = string.Equals(role.RoleName, PlatformConstants.Roles.Anonymous, StringComparison.OrdinalIgnoreCase);
+        var caller = new CallerContext
+        {
+            Tenant = _shellSettings.Name,
+            Side = CallerSide.Admin,
+            UserId = isAnonymous ? null : "role:" + role.RoleName,
+            UserName = role.RoleName,
+            IsSuperUser = string.Equals(role.RoleName, _systemRoleProvider.GetAdminRole().RoleName, StringComparison.OrdinalIgnoreCase),
+            Roles = new HashSet<string>([role.RoleName], StringComparer.OrdinalIgnoreCase),
+            Permissions = new HashSet<string>(
+                role.RoleClaims.Where(c => string.Equals(c.ClaimType, Permission.ClaimType, StringComparison.OrdinalIgnoreCase)).Select(c => c.ClaimValue),
+                StringComparer.OrdinalIgnoreCase),
+        };
 
         var result = new Dictionary<string, Permission>(StringComparer.Ordinal);
 
         foreach (var permission in allPermissions)
         {
-            if (await _authorizationService.AuthorizeAsync(fakePrincipal, permission))
+            if ((await _accessDecision.DecideAsync(caller, permission.Name)).IsAllowed)
             {
                 result[permission.Name] = permission;
             }

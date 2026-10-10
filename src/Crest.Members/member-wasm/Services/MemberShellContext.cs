@@ -24,7 +24,7 @@ namespace Crest.Members.Member.Services;
 /// decision - the POST either succeeds for a binding this member holds or it does not.
 /// </para>
 /// </remarks>
-public sealed class MemberShellContext(HttpClient http) : IMemberShellContext
+public sealed class MemberShellContext(HttpClient http, Crest.Components.Modules.CrestShellContext shell) : IMemberShellContext
 {
     private MemberSessionModel? _session;
     private bool _loaded;
@@ -78,6 +78,9 @@ public sealed class MemberShellContext(HttpClient http) : IMemberShellContext
 
             response.EnsureSuccessStatusCode();
             _session = await response.Content.ReadFromJsonAsync<MemberSessionModel>();
+            // Every later request names this organization (X-Org); the server validates it
+            // against the member's bindings on each one.
+            shell.OrganizationId = _session?.ActiveOrganizationId;
 
             // Names come with the session, resolved by the server: an organization the
             // member is bound to is not thereby a content item they may read.

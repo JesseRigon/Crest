@@ -15,7 +15,7 @@ public class ReCaptchaOptionsMonitorTests
     public async Task RequestUpdate_ShouldRefreshReCaptchaOptionsWithoutReleasingTenant()
     {
         using var context = new SiteContext()
-            .WithRecipe("SaaS");
+            .WithRecipe(TestRecipes.Blank);
 
         await context.InitializeAsync();
 

@@ -21,7 +21,7 @@ public static class CrestAdminClientServiceCollectionExtensions
 {
     public static IServiceCollection AddCrestAdminClient(this IServiceCollection services, Uri apiBaseAddress, CrestRoutingOptions routingOptions, Uri? tenantBaseAddress = null)
     {
-        services.AddScoped(sp => new CrestAntiforgeryHandler((IJSInProcessRuntime)sp.GetRequiredService<IJSRuntime>()) { BaseAddress = apiBaseAddress });
+        services.AddScoped(sp => new CrestAntiforgeryHandler((IJSInProcessRuntime)sp.GetRequiredService<IJSRuntime>(), sp.GetRequiredService<Crest.Components.Modules.CrestShellContext>()) { BaseAddress = apiBaseAddress });
         services.AddScoped<ICrestAntiforgeryTokenStore>(sp => sp.GetRequiredService<CrestAntiforgeryHandler>());
         services.AddScoped<ICrestCultureCookieWriter>(sp => sp.GetRequiredService<CrestAntiforgeryHandler>());
         services.AddScoped(sp =>

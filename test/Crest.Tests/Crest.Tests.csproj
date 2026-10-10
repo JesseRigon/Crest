@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Apis\Recipes\blog.recipe.json" />
     <None Remove="Apis\Lucene\Recipes\luceneQueryTest.json" />
     <None Remove="Apis\GraphQL\ContentManagement\Recipes\DynamicContentTypeQueryTest.json" />
     <None Remove="Modules\Crest.OpenId\RecipeFiles\app-recipe1.json" />
@@ -36,6 +37,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Localization\PoFiles\*.po" />
+    <EmbeddedResource Include="Apis\Recipes\blog.recipe.json" />
     <EmbeddedResource Include="Apis\Lucene\Recipes\luceneQueryTest.json" />
     <EmbeddedResource Include="Apis\GraphQL\ContentManagement\Recipes\DynamicContentTypeQueryTest.json" />
     <EmbeddedResource Include="Modules\Crest.OpenId\RecipeFiles\app-recipe3.json" />
@@ -63,6 +65,8 @@
     <ProjectReference Include="..\..\src\Crest.SourceGenerators\Crest.SourceGenerators.csproj" OutputItemType="Analyzer" />
     <ProjectReference Include="..\..\src\Crest.Autoroute\Crest.Autoroute.csproj" />
     <ProjectReference Include="..\..\src\Crest.ContentManagement\Crest.ContentManagement.csproj" />
+    <ProjectReference Include="..\..\src\Crest.Access\Crest.Access.csproj" />
+    <ProjectReference Include="..\..\src\Crest.Data.YesSql\Crest.Data.YesSql.csproj" />
   </ItemGroup>
 
   <ItemGroup>

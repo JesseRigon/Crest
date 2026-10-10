@@ -13,7 +13,7 @@ public sealed class GraphQLTests : CmsTestBase, IClassFixture<CmsSetupFixture>
 
     public GraphQLTests(CmsSetupFixture fixture) : base(fixture) { }
 
-    protected override string RecipeName => "Blog";
+    protected override string RecipeName => "Crest Crest UI Framework";
 
     [Fact]
     public async Task NamedQuery_RequiresQueryPermission()

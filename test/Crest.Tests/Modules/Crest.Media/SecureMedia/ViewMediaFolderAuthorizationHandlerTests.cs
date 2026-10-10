@@ -5,7 +5,6 @@ using Crest.FileStorage;
 using Crest.Media;
 using Crest.Media.Services;
 using Crest.Security;
-using Crest.Security.AuthorizationHandlers;
 using Crest.Security.Permissions;
 using Crest.Tests.Security;
 
@@ -527,15 +526,22 @@ public class ViewMediaFolderAuthorizationHandlerTests
         var mockAuthorizationService = new Mock<IAuthorizationService>();
         mockAuthorizationService
             .Setup(authorizeService => authorizeService.AuthorizeAsync(It.IsAny<ClaimsPrincipal>(), It.IsAny<object>(), It.IsAny<IEnumerable<IAuthorizationRequirement>>()))
-            .Returns<ClaimsPrincipal, object, IEnumerable<IAuthorizationRequirement>>(async (user, resource, requirements) =>
+            .Returns<ClaimsPrincipal, object, IEnumerable<IAuthorizationRequirement>>((user, resource, requirements) =>
             {
+                // The claims-based grant the one decision makes from a caller's permissions,
+                // reduced to what these tests need: the principal's Permission claims, with
+                // implied permissions resolved.
                 var context = new AuthorizationHandlerContext(requirements, user, resource);
                 var permissionGrantingService = new DefaultPermissionGrantingService();
-                var handler = new PermissionHandler(permissionGrantingService);
+                foreach (var requirement in requirements.OfType<PermissionRequirement>())
+                {
+                    if (user.Identity?.IsAuthenticated == true && permissionGrantingService.IsGranted(requirement, user.Claims))
+                    {
+                        context.Succeed(requirement);
+                    }
+                }
 
-                await handler.HandleAsync(context);
-
-                return new DefaultAuthorizationEvaluator().Evaluate(context);
+                return Task.FromResult(new DefaultAuthorizationEvaluator().Evaluate(context));
             });
 
         var services = new ServiceCollection();

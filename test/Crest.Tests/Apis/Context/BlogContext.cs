@@ -1,24 +1,12 @@
-using Crest.Recipes;
-
 namespace Crest.Tests.Apis.Context;
 
 public class BlogContext : SiteContext
 {
-    public const string luceneRecipePath = "Fixtures/BlogRecipes";
-    public const string luceneRecipeName = $"blog.lucene.query{RecipesConstants.RecipeExtension}";
-    public const string luceneIndexName = "Search";
-
     public string BlogContentItemId { get; private set; }
-
-    static BlogContext()
-    {
-    }
 
     public override async Task InitializeAsync()
     {
         await base.InitializeAsync();
-        await RunRecipeAsync(luceneRecipeName, luceneRecipePath);
-        // await ResetLuceneIndexesAsync(luceneIndexName);
 
         var result = await GraphQLClient
             .Content

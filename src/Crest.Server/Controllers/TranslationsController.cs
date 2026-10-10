@@ -16,10 +16,9 @@ namespace Crest.Controllers;
 /// write discipline every other Crest writer already follows.
 /// </summary>
 /// <remarks>
-/// The stock page's Save replaces a culture's whole translation list with whatever its editor
-/// enumerated, silently deleting stored entries no provider currently enumerates (a disabled
-/// feature's strings, an old key after a caption changed - see the host's
-/// docs/platform-fixes.md #3). This API differs on exactly the two points that
+/// The stock page's Save once replaced a culture's whole translation list with whatever its
+/// editor enumerated (fixed in the platform 2026-10-10: it merges now). This API differs on
+/// exactly the two points that
 /// matter:
 /// <list type="bullet">
 /// <item>reads include ORPHANS - stored entries with no live descriptor - flagged as such, so

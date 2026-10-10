@@ -9,7 +9,7 @@ public sealed class OpenApiTests : CmsTestBase, IClassFixture<CmsSetupFixture>
 {
     public OpenApiTests(CmsSetupFixture fixture) : base(fixture) { }
 
-    protected override string RecipeName => "Blog";
+    protected override string RecipeName => "Crest Crest UI Framework";
 
     // The checkbox is rendered by a site-settings display driver, so its element id carries the
     // shape's model prefix. Target the accessible name instead, which is stable.

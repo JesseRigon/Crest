@@ -3,6 +3,8 @@ using Crest.Workflows.Models;
 using Crest.Workflows.Runtime;
 using Crest.Workflows.Runtime.Options;
 using Crest.Workflows.Runtime.Requests;
+using Crest.Access;
+using Crest.Workflows.Contexts;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Crest.Data.Migration;
@@ -191,7 +193,10 @@ public sealed class DurableBackgroundActivityScheduler(IShellHost shellHost, She
     /// leaves a recoverable record), execute the activity - the only writes in that scope are
     /// the activity's own, and the hand-back to the flow is deferred to after it commits - and
     /// record the outcome. Nested write scopes would hold two transactions at once, which a
-    /// single-writer database (SQLite in dev) answers with a lock timeout.
+    /// single-writer database (SQLite in dev) answers with a lock timeout. The activity runs
+    /// as the caller its instance names (the system actor for a definition published as
+    /// system, else the persisted actor), resolved from the child scope: the invoker runs the
+    /// activity outside the workflow pipeline, so the workflow gate does not cover it.
     /// </summary>
     public static async Task RunAsync(string jobId)
     {
@@ -222,9 +227,13 @@ public sealed class DurableBackgroundActivityScheduler(IShellHost shellHost, She
         {
             await ShellScope.UsingChildScopeAsync(async scope =>
             {
-                var job = (await scope.ServiceProvider.GetRequiredService<BackgroundJobStore>().FindAsync(jobId))!;
-                scope.ServiceProvider.GetRequiredService<BackgroundJobContext>().Current = job;
-                await scope.ServiceProvider.GetRequiredService<IBackgroundActivityInvoker>().ExecuteAsync(new ScheduledBackgroundActivity(job.WorkflowInstanceId, job.ActivityNodeId, job.BookmarkId));
+                var services = scope.ServiceProvider;
+                var job = (await services.GetRequiredService<BackgroundJobStore>().FindAsync(jobId))!;
+                services.GetRequiredService<BackgroundJobContext>().Current = job;
+                var caller = await services.GetRequiredService<WorkflowCallerResolver>().ForInstanceAsync(job.WorkflowInstanceId)
+                    ?? throw new WorkflowAccessRefusedException($"Background job {jobId}: instance {job.WorkflowInstanceId} or its definition no longer exists.");
+                await services.GetRequiredService<IAccessRunner>().RunAsAsync(caller, () =>
+                    services.GetRequiredService<IBackgroundActivityInvoker>().ExecuteAsync(new ScheduledBackgroundActivity(job.WorkflowInstanceId, job.ActivityNodeId, job.BookmarkId)));
             }, activateShell: false);
         }
         catch (Exception ex)

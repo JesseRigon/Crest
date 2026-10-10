@@ -37,7 +37,6 @@ public sealed class Startup : StartupBase
         services.AddPermissionProvider<Permissions>();
 
         services.AddRolesCoreServices()
-            .AddScoped<IAuthorizationHandler, SuperUserHandler>()
             .AddScoped<IAuthorizationHandler, SiteSettingsAuthorizationHandler>();
 
         services.AddRecipeExecutionStep<SettingsStep>();

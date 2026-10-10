@@ -76,7 +76,6 @@ public sealed class Startup : StartupBase
         services.AddScoped<CrestAdminMenuLayoutService>();
         services.AddScoped<CrestUserMenuPreferencesService>();
         services.AddScoped<CrestAdminMenuBuilder>();
-        services.AddScoped<CrestAdminMenuTranslationService>();
         // Shell-lifetime, so the provider-menu import runs once per shell. A feature change
         // releases the shell, which is what makes the next shell re-import.
         services.AddSingleton<CrestProviderMenuSyncGate>();
@@ -85,17 +84,9 @@ public sealed class Startup : StartupBase
         // Runs that import right after shell activation, before any admin request, so a fresh
         // or reset tenant never renders its first admin menu from un-imported provider items.
         services.AddScoped<IModularTenantEvents, CrestProviderMenuSyncTenantEvents>();
-        // Upstream's admin node localization providers enumerate root nodes only, which both
-        // hides child captions from the Translations editor and lets its wholesale Save delete
-        // their stored translations - see the host's upstream-proposals plan #2/#3.
-        services.AddScoped<Crest.Localization.Data.ILocalizationDataProvider, CrestAdminMenuChildCaptionDataLocalizationProvider>();
-        // Deleting a content type deletes its display-name translations (unless another type
-        // shares the name), so the store doesn't accumulate orphans no editor row can reach.
-        services.AddScoped<Crest.ContentTypes.Events.IContentDefinitionEventHandler, CrestContentTypeTranslationCleanup>();
-        // Caption resolution for the sidebar and app manifest: restores the MenuName that
-        // NavigationManager.Merge drops and walks parent/sibling translation contexts before
-        // falling back to the invariant literal - see the resolver's remarks and
-        // the host's upstream-proposals plan #7.
+        // Caption resolution for the sidebar and app manifest: walks parent and sibling
+        // translation contexts, then the shipped PO catalogs, before falling back to the
+        // invariant literal - see the resolver's remarks.
         services.AddScoped<CrestMenuCaptionResolver>();
         services.AddScoped<CrestMenuPlacementService>();
         services.AddScoped<CrestProfileMenuService>();
@@ -151,7 +142,6 @@ public sealed class Startup : StartupBase
         // Core's endpoint selection pipeline discovers policies by (it enumerates every
         // registered MatcherPolicy, not just IEndpointSelectorPolicy directly).
         services.AddSingleton<Microsoft.AspNetCore.Routing.MatcherPolicy, Crest.Routing.RouteGateMatcherPolicy>();
-        services.AddCrestCultureCookieProvider();
 
         // Crest.Server is the single Blazor Web App host for both API and SSR - the only
         // server needed for any Blazor-capable Crest theme (Site, Admin once Phase 8
@@ -234,8 +224,8 @@ public sealed class Startup : StartupBase
         // BlazorAdminThemeOptions, which BlazorAdminThemeOptionsConfiguration already
         // post-configures from AdminOptions.AdminUrlPrefix/UserOptions.LoginPath.
         // Culture needs no explicit registration: CultureInfo.CurrentUICulture is
-        // already resolved per-request by CrestCultureCookieOptionsConfiguration's
-        // RequestLocalizationOptions pipeline, which CrestApiLocalizer picks up.
+        // already resolved per-request by the platform's request localization pipeline
+        // (the tenant-wide culture cookie, then Accept-Language), which CrestApiLocalizer picks up.
         services.AddScoped<Crest.AdminTheme.Api.IApi, Crest.AdminTheme.Api.Api>();
         services.AddScoped<Crest.AdminTheme.DisplayManagement.DisplayManager>();
         services.AddScoped<Crest.AdminTheme.Theme.CrestThemeEngine>();
@@ -300,7 +290,14 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<CrestAssignmentIndexMigrations>();
         services.AddContentPart<CrestAssignmentPart>();
 
-        services.AddScoped<IOptionSourceScopeResolver, OptionSourceScopeResolver>();
+        services.AddScoped<Crest.Access.IScopeProvider, AssignmentScopeProvider>();
+        // Organization ownership on the row (docs/operations.md: owner part + index; assignments
+        // are grants). OrganizationScopedTypes is the same kind of deployment-time registry.
+        services.AddSingleton<OrganizationScopedTypes>();
+        services.AddScoped<Crest.Access.IScopeProvider, OrganizationScopeProvider>();
+        services.AddSingleton<IIndexProvider, CrestOrganizationIndexProvider>();
+        services.AddDataMigration<CrestOrganizationIndexMigrations>();
+        services.AddContentPart<CrestOrganizationPart>();
         services.AddScoped<IOptionSourceProvider, UserOptionSourceProvider>();
         services.AddScoped<IOptionSourceProvider, ContentItemOptionSourceProvider>();
         services.AddScoped<IOptionSourceProvider, TimeZoneOptionSourceProvider>();

@@ -19,7 +19,7 @@ public class AzureAISearchDefaultOptionsMonitorTests
     public async Task RequestUpdate_ShouldRefreshAzureAISearchOptionsWithoutReleasingTenant()
     {
         using var context = new SiteContext()
-            .WithRecipe("SaaS");
+            .WithRecipe(TestRecipes.Blank);
 
         await context.InitializeAsync();
 

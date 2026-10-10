@@ -15,9 +15,9 @@ namespace Crest.Controllers;
 // components always have a real, navigable path the instant they render.
 [ApiController]
 [Route("api/crest/routing")]
-public sealed class CrestRoutingController(IOptions<BlazorAdminThemeOptions> options) : ControllerBase
+public sealed class CrestRoutingController(IOptions<BlazorAdminThemeOptions> options, IOptions<Crest.Routing.MemberOptions> memberOptions) : ControllerBase
 {
     [HttpGet]
     public ActionResult<CrestRoutingResponse> Get()
-        => Ok(new CrestRoutingResponse(options.Value.AdminPath, options.Value.LoginPath));
+        => Ok(new CrestRoutingResponse(options.Value.AdminPath, options.Value.LoginPath, "/" + memberOptions.Value.MemberUrlPrefix));
 }

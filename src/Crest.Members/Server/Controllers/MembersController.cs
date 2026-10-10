@@ -13,7 +13,7 @@ public sealed record SetActiveOrgRequest(string OrganizationId);
 public sealed record ImpersonateRequest(string UserId);
 
 [ApiController]
-[IgnoreAntiforgeryToken]
+[AutoValidateAntiforgeryToken]
 [Route("api/crest/members")]
 public sealed class MembersController(
     IMemberService memberService,
@@ -21,7 +21,8 @@ public sealed class MembersController(
     MemberOrganizationDirectory organizationDirectory,
     MemberImpersonationService impersonationService,
     UserClassConversionService conversionService,
-    IAuthorizationService authorizationService) : ControllerBase
+    IAuthorizationService authorizationService,
+    Crest.Access.ICallerContextAccessor callerAccessor) : ControllerBase
 {
     [HttpGet("me")]
     [Authorize]
@@ -29,8 +30,11 @@ public sealed class MembersController(
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var member = userId is null ? null : await memberService.GetAsync(userId);
-        var activeOrg = await sessionService.GetActiveOrganizationAsync(HttpContext);
-        var impersonator = User.FindFirst(MemberClaims.Impersonator)?.Value;
+        // The caller is the authority on the organization and the impersonator; the session
+        // only remembers the member's last choice for requests that do not name one.
+        var caller = callerAccessor.Current;
+        var activeOrg = caller?.OrganizationId ?? await sessionService.GetActiveOrganizationAsync(HttpContext);
+        var impersonator = caller?.ImpersonatorUserId;
 
         return Ok(new MemberSessionModel(member, activeOrg, impersonator, await organizationDirectory.GetAsync(member)));
     }

@@ -18,6 +18,12 @@ public class RunWorkflowTask : ITask
     {
         _request = request;
     }
+
+    /// <summary>
+    /// The request this task will run: the definition and the input. A host reads it to decide
+    /// who the run acts as before the engine starts.
+    /// </summary>
+    public ScheduleNewWorkflowInstanceRequest Request => _request;
     
     /// <inheritdoc />
     public async ValueTask ExecuteAsync(TaskExecutionContext context)

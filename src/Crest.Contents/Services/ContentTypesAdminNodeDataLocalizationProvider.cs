@@ -15,9 +15,10 @@ public class ContentTypesAdminNodeDataLocalizationProvider : AdminNodeDataLocali
     {
         var adminMenuList = await GetAdminMenusAsync();
 
-        return adminMenuList.SelectMany(m => m.MenuItems.OfType<ContentTypesAdminNode>()
-            .SelectMany(n => n.ContentTypes)
-            .Select(e => new DataLocalizedString(Crest.AdminMenu.DataLocalizationContext.AdminMenu(m.Name), e.ContentTypeDisplayName, string.Empty))
-        );
+        return adminMenuList.SelectMany(m => Descriptors(
+            Crest.AdminMenu.DataLocalizationContext.AdminMenu(m.Name),
+            AllNodes(m.MenuItems).OfType<ContentTypesAdminNode>()
+                .SelectMany(n => n.ContentTypes)
+                .Select(e => e.ContentTypeDisplayName)));
     }
 }

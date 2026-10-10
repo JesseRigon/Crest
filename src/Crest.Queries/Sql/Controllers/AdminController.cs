@@ -1,14 +1,11 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Dapper;
-using Fluid;
-using Fluid.Values;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Options;
+using Crest.Access;
 using Crest.Admin;
-using Crest.Liquid;
 using Crest.Modules;
 using Crest.Queries.Sql.ViewModels;
 using YesSql;
@@ -20,24 +17,22 @@ public sealed class AdminController : Controller
 {
     private readonly IAuthorizationService _authorizationService;
     private readonly IStore _store;
-    private readonly ILiquidTemplateManager _liquidTemplateManager;
-    private readonly TemplateOptions _templateOptions;
+    private readonly ICallerContextAccessor _callerAccessor;
+    private readonly IScopeSetProvider _scopeSetProvider;
 
     internal readonly IStringLocalizer S;
 
     public AdminController(
         IAuthorizationService authorizationService,
         IStore store,
-        ILiquidTemplateManager liquidTemplateManager,
-        IStringLocalizer<AdminController> stringLocalizer,
-        IOptions<TemplateOptions> templateOptions)
-
+        IServiceProvider serviceProvider,
+        IStringLocalizer<AdminController> stringLocalizer)
     {
         _authorizationService = authorizationService;
         _store = store;
-        _liquidTemplateManager = liquidTemplateManager;
+        _callerAccessor = serviceProvider.GetService(typeof(ICallerContextAccessor)) as ICallerContextAccessor;
+        _scopeSetProvider = serviceProvider.GetService(typeof(IScopeSetProvider)) as IScopeSetProvider;
         S = stringLocalizer;
-        _templateOptions = templateOptions.Value;
     }
 
     [Admin("Queries/Sql/Query", "QueriesRunSql")]
@@ -74,39 +69,55 @@ public sealed class AdminController : Controller
             model.Parameters = "{ }";
         }
 
+        var validationMessages = SqlParser.Validate(model.DecodedQuery);
+
+        if (validationMessages.Count > 0)
+        {
+            foreach (var message in validationMessages)
+            {
+                ModelState.AddModelError(nameof(model.DecodedQuery), message);
+            }
+
+            return View(model);
+        }
+
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
         var dialect = _store.Configuration.SqlDialect;
-
         var parameters = JConvert.DeserializeObject<Dictionary<string, object>>(model.Parameters);
 
-        var tokenizedQuery = await _liquidTemplateManager.RenderStringAsync(model.DecodedQuery, NullEncoder.Default, parameters.Select(x => new KeyValuePair<string, FluidValue>(x.Key, FluidValue.Create(x.Value, _templateOptions))));
-
-        if (SqlParser.TryParse(tokenizedQuery, _store.Configuration.Schema, dialect, _store.Configuration.TablePrefix, parameters, out var rawQuery, out var messages))
+        try
         {
-            model.RawSql = rawQuery;
-            model.Parameters = JConvert.SerializeObject(parameters, JOptions.Indented);
+            var scopes = await CallerScopes.RequireAsync(_callerAccessor, _scopeSetProvider, SqlQuerySource.SourceName, HttpContext.RequestAborted);
 
-            try
+            if (SqlParser.TryParse(model.DecodedQuery, _store.Configuration.Schema, dialect, _store.Configuration.TablePrefix, parameters, scopes, out var rawQuery, out var messages))
             {
-                await using var connection = _store.Configuration.ConnectionFactory.CreateConnection();
-                await connection.OpenAsync();
-                model.Documents = await connection.QueryAsync(rawQuery, parameters);
+                model.RawSql = rawQuery;
+                model.Parameters = JConvert.SerializeObject(parameters, JOptions.Indented);
+
+                try
+                {
+                    await using var connection = _store.Configuration.ConnectionFactory.CreateConnection();
+                    await connection.OpenAsync();
+                    model.Documents = await connection.QueryAsync(rawQuery, parameters);
+                }
+                catch (Exception e)
+                {
+                    ModelState.AddModelError("", S["An error occurred while executing the SQL query: {0}", e.Message]);
+                }
             }
-            catch (Exception e)
+            else
             {
-                ModelState.AddModelError("", S["An error occurred while executing the SQL query: {0}", e.Message]);
+                foreach (var message in messages)
+                {
+                    ModelState.AddModelError(nameof(model.DecodedQuery), message);
+                }
             }
         }
-        else
+        catch (ScopeRefusedException e)
         {
-            var validationMessages = SqlParser.Validate(tokenizedQuery);
-
-            foreach (var message in validationMessages.Count > 0 ? validationMessages : messages)
-            {
-                ModelState.AddModelError(nameof(model.DecodedQuery), message);
-            }
+            ModelState.AddModelError(nameof(model.DecodedQuery), S["The query was refused: {0}", e.Message]);
         }
 
         model.Elapsed = stopwatch.Elapsed;

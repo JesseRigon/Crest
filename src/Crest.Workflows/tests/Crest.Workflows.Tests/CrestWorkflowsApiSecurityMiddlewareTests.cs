@@ -1,4 +1,7 @@
 using System.Security.Claims;
+using Crest.Access;
+using Crest.Workflows.Contexts;
+using Crest.Workflows.Management;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -6,16 +9,15 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Crest.Workflows.Security;
 using Crest.Security;
-using Crest.Security.Permissions;
 using Xunit;
 
 namespace Crest.Workflows.Tests;
 
 // The API gate, decision by decision. The middleware is the only thing between a tenant
 // cookie and the engine's endpoints, so each branch is pinned: path scope, 401, 403 (through
-// IAuthorizationService, i.e. every registered handler), antiforgery on writes, the
-// per-request grant mapped permission by permission onto the engine's names, the per-
-// definition Run check, and the 403 a refused change surfaces as.
+// the one access decision for the request's caller), antiforgery on writes, the per-request
+// grant mapped permission by permission onto the engine's names, the per-definition Run
+// check, and the 403 a refused change surfaces as.
 public class CrestWorkflowsApiSecurityMiddlewareTests
 {
     private static ClaimsPrincipal User(bool authenticated) => authenticated
@@ -26,8 +28,21 @@ public class CrestWorkflowsApiSecurityMiddlewareTests
     // No endpoint is matched on a bare DefaultHttpContext, so the provider is never asked.
     private static readonly IAuthorizationPolicyProvider Policies = Substitute.For<IAuthorizationPolicyProvider>();
 
-    private static (CrestWorkflowsApiSecurityMiddleware Middleware, DefaultHttpContext Context, IAuthorizationService Authorization, IAntiforgery Antiforgery, List<bool> Reached)
-        Build(string path, string method, bool authenticated, bool permitted, bool antiforgeryValid, Func<HttpContext, Task>? endpoint = null, params string[] onlyPermissions)
+    private static readonly CallerContext Alice = new() { Tenant = "acme", Side = CallerSide.Admin, UserId = "u-1", UserName = "alice" };
+
+    private sealed record Gate(CrestWorkflowsApiSecurityMiddleware Middleware, DefaultHttpContext Context, IAccessDecision Decision, IAntiforgery Antiforgery, List<bool> Reached)
+    {
+        // The caller is the gated one (set by the request path), as in production.
+        public Task InvokeAsync(IWorkflowDefinitionAccessReader lists)
+        {
+            var accessor = Substitute.For<ICallerContextAccessor>();
+            accessor.Current.Returns(Context.User.Identity?.IsAuthenticated == true ? Alice : null);
+            var callers = new WorkflowCallerResolver(Substitute.For<ICallerContextFactory>(), accessor, Substitute.For<IHttpContextAccessor>(), Substitute.For<IWorkflowInstanceStore>(), Substitute.For<IWorkflowDefinitionService>());
+            return Middleware.InvokeAsync(Context, callers, Decision, Substitute.For<IAuthorizationService>(), Policies, Antiforgery, lists);
+        }
+    }
+
+    private static Gate Build(string path, string method, bool authenticated, bool permitted, bool antiforgeryValid, Func<HttpContext, Task>? endpoint = null, params string[] onlyPermissions)
     {
         var reached = new List<bool>();
         var middleware = new CrestWorkflowsApiSecurityMiddleware(async context => { reached.Add(true); if (endpoint is not null) await endpoint(context); }, NullLogger<CrestWorkflowsApiSecurityMiddleware>.Instance);
@@ -37,19 +52,18 @@ public class CrestWorkflowsApiSecurityMiddlewareTests
         context.User = User(authenticated);
 
         // permitted: every workflow permission; onlyPermissions narrows it to the named ones.
-        var authorization = Substitute.For<IAuthorizationService>();
-        authorization.AuthorizeAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<object?>(), Arg.Any<IEnumerable<IAuthorizationRequirement>>())
+        var decision = Substitute.For<IAccessDecision>();
+        decision.DecideAsync(Arg.Any<CallerContext>(), Arg.Any<string>(), Arg.Any<object?>(), Arg.Any<CancellationToken>())
             .Returns(call =>
             {
-                var names = (call.Arg<IEnumerable<IAuthorizationRequirement>>() ?? []).OfType<PermissionRequirement>().Select(r => r.Permission.Name).ToList();
-                var granted = permitted && (onlyPermissions.Length == 0 || names.All(onlyPermissions.Contains));
-                return granted ? AuthorizationResult.Success() : AuthorizationResult.Failed();
+                var granted = permitted && (onlyPermissions.Length == 0 || onlyPermissions.Contains(call.Arg<string>()));
+                return Task.FromResult(granted ? AccessDecision.Allowed : AccessDecision.Denied("no"));
             });
 
         var antiforgery = Substitute.For<IAntiforgery>();
         antiforgery.IsRequestValidAsync(Arg.Any<HttpContext>()).Returns(antiforgeryValid);
 
-        return (middleware, context, authorization, antiforgery, reached);
+        return new(middleware, context, decision, antiforgery, reached);
     }
 
     private static bool IsRunResource(object? resource, string definitionId, string runner) =>
@@ -60,78 +74,75 @@ public class CrestWorkflowsApiSecurityMiddlewareTests
     [Fact]
     public async Task Requests_outside_the_api_path_pass_through_untouched()
     {
-        var (middleware, context, authorization, antiforgery, reached) = Build("/api/crest/parties", "POST", authenticated: false, permitted: false, antiforgeryValid: false);
+        var gate = Build("/api/crest/parties", "POST", authenticated: false, permitted: false, antiforgeryValid: false);
 
-        await middleware.InvokeAsync(context, authorization, Policies, antiforgery, NoLists);
+        await gate.InvokeAsync(NoLists);
 
-        Assert.Single(reached);
-        Assert.Equal(200, context.Response.StatusCode);
-        Assert.DoesNotContain(context.User.Claims, claim => claim.Type == CrestWorkflowsApiSecurityMiddleware.CrestWorkflowsPermissionsClaimType);
+        Assert.Single(gate.Reached);
+        Assert.Equal(200, gate.Context.Response.StatusCode);
+        Assert.DoesNotContain(gate.Context.User.Claims, claim => claim.Type == CrestWorkflowsApiSecurityMiddleware.CrestWorkflowsPermissionsClaimType);
     }
 
     [Fact]
     public async Task Anonymous_gets_401()
     {
-        var (middleware, context, authorization, antiforgery, reached) = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: false, permitted: true, antiforgeryValid: true);
+        var gate = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: false, permitted: true, antiforgeryValid: true);
 
-        await middleware.InvokeAsync(context, authorization, Policies, antiforgery, NoLists);
+        await gate.InvokeAsync(NoLists);
 
-        Assert.Empty(reached);
-        Assert.Equal(401, context.Response.StatusCode);
+        Assert.Empty(gate.Reached);
+        Assert.Equal(401, gate.Context.Response.StatusCode);
     }
 
     [Fact]
     public async Task Authenticated_without_ViewWorkflows_gets_403()
     {
-        var (middleware, context, authorization, antiforgery, reached) = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: true, permitted: false, antiforgeryValid: true);
+        var gate = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: true, permitted: false, antiforgeryValid: true);
 
-        await middleware.InvokeAsync(context, authorization, Policies, antiforgery, NoLists);
+        await gate.InvokeAsync(NoLists);
 
-        Assert.Empty(reached);
-        Assert.Equal(403, context.Response.StatusCode);
-        await authorization.Received(1).AuthorizeAsync(
-            Arg.Any<ClaimsPrincipal>(),
-            Arg.Any<object?>(),
-            Arg.Is<IEnumerable<IAuthorizationRequirement>>(requirements => requirements!.OfType<PermissionRequirement>().Any(requirement => requirement.Permission.Name == WorkflowsConstants.Permissions.View)));
+        Assert.Empty(gate.Reached);
+        Assert.Equal(403, gate.Context.Response.StatusCode);
+        await gate.Decision.Received(1).DecideAsync(Alice, WorkflowsConstants.Permissions.View, Arg.Any<object?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Write_without_antiforgery_gets_400_even_when_permitted()
     {
-        var (middleware, context, authorization, antiforgery, reached) = Build("/crest-workflows/api/workflow-definitions", "POST", authenticated: true, permitted: true, antiforgeryValid: false);
+        var gate = Build("/crest-workflows/api/workflow-definitions", "POST", authenticated: true, permitted: true, antiforgeryValid: false);
 
-        await middleware.InvokeAsync(context, authorization, Policies, antiforgery, NoLists);
+        await gate.InvokeAsync(NoLists);
 
-        Assert.Empty(reached);
-        Assert.Equal(400, context.Response.StatusCode);
+        Assert.Empty(gate.Reached);
+        Assert.Equal(400, gate.Context.Response.StatusCode);
     }
 
     [Fact]
     public async Task Read_by_a_permitted_user_needs_no_antiforgery_and_gets_the_engine_grant()
     {
-        var (middleware, context, authorization, antiforgery, reached) = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: true, permitted: true, antiforgeryValid: false);
+        var gate = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: true, permitted: true, antiforgeryValid: false);
 
-        await middleware.InvokeAsync(context, authorization, Policies, antiforgery, NoLists);
+        await gate.InvokeAsync(NoLists);
 
-        Assert.Single(reached);
-        var grants = Grants(context).ToList();
+        Assert.Single(gate.Reached);
+        var grants = Grants(gate.Context).ToList();
         Assert.Contains("read:workflow-definitions", grants);
         Assert.Contains("write:workflow-definitions", grants);
         Assert.Contains("publish:workflow-definitions", grants);
         Assert.Contains("exec:workflow-definitions", grants);
         Assert.DoesNotContain(CrestWorkflowsApiSecurityMiddleware.CrestWorkflowsAllPermissions, grants);
-        await antiforgery.DidNotReceive().IsRequestValidAsync(Arg.Any<HttpContext>());
+        await gate.Antiforgery.DidNotReceive().IsRequestValidAsync(Arg.Any<HttpContext>());
     }
 
     [Fact]
     public async Task A_view_only_user_gets_read_grants_and_nothing_else()
     {
-        var (middleware, context, authorization, antiforgery, reached) = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: true, permitted: true, antiforgeryValid: false, null, WorkflowsConstants.Permissions.View);
+        var gate = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: true, permitted: true, antiforgeryValid: false, null, WorkflowsConstants.Permissions.View);
 
-        await middleware.InvokeAsync(context, authorization, Policies, antiforgery, NoLists);
+        await gate.InvokeAsync(NoLists);
 
-        Assert.Single(reached);
-        var grants = Grants(context).ToList();
+        Assert.Single(gate.Reached);
+        var grants = Grants(gate.Context).ToList();
         Assert.Contains("read:workflow-definitions", grants);
         Assert.Contains("read:workflow-instances", grants);
         Assert.DoesNotContain("write:workflow-definitions", grants);
@@ -143,53 +154,63 @@ public class CrestWorkflowsApiSecurityMiddlewareTests
     [Fact]
     public async Task Starting_a_definition_is_authorized_against_that_definition()
     {
-        var (middleware, context, authorization, antiforgery, reached) = Build("/crest-workflows/api/workflow-definitions/def-1/execute", "POST", authenticated: true, permitted: true, antiforgeryValid: true);
+        var gate = Build("/crest-workflows/api/workflow-definitions/def-1/execute", "POST", authenticated: true, permitted: true, antiforgeryValid: true);
+        var lists = Substitute.For<IWorkflowDefinitionAccessReader>();
+        lists.GetAsync("def-1").Returns(new WorkflowDefinitionAccessResource("def-1", [], ["Operators", "alice"]));
+
+        await gate.InvokeAsync(lists);
+
+        Assert.Single(gate.Reached);
+        await gate.Decision.Received().DecideAsync(Alice, WorkflowsConstants.Permissions.Run, Arg.Is<object?>(resource => IsRunResource(resource, "def-1", "Operators")), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Starting_a_definition_whose_Run_list_excludes_the_caller_gets_403_despite_the_permission()
+    {
+        var gate = Build("/crest-workflows/api/workflow-definitions/def-1/execute", "POST", authenticated: true, permitted: true, antiforgeryValid: true);
         var lists = Substitute.For<IWorkflowDefinitionAccessReader>();
         lists.GetAsync("def-1").Returns(new WorkflowDefinitionAccessResource("def-1", [], ["Operators"]));
 
-        await middleware.InvokeAsync(context, authorization, Policies, antiforgery, lists);
+        await gate.InvokeAsync(lists);
 
-        Assert.Single(reached);
-        await authorization.Received().AuthorizeAsync(
-            Arg.Any<ClaimsPrincipal>(),
-            Arg.Is<object?>(resource => IsRunResource(resource, "def-1", "Operators")),
-            Arg.Is<IEnumerable<IAuthorizationRequirement>>(requirements => requirements!.OfType<PermissionRequirement>().Any(requirement => requirement.Permission.Name == WorkflowsConstants.Permissions.Run)));
+        Assert.Empty(gate.Reached);
+        Assert.Equal(403, gate.Context.Response.StatusCode);
     }
 
     [Fact]
     public async Task Starting_a_definition_without_Run_gets_403_before_the_engine()
     {
-        var (middleware, context, authorization, antiforgery, reached) = Build("/crest-workflows/api/workflow-definitions/def-1/dispatch", "POST", authenticated: true, permitted: true, antiforgeryValid: true, null, WorkflowsConstants.Permissions.View, WorkflowsConstants.Permissions.Edit);
+        var gate = Build("/crest-workflows/api/workflow-definitions/def-1/dispatch", "POST", authenticated: true, permitted: true, antiforgeryValid: true, null, WorkflowsConstants.Permissions.View, WorkflowsConstants.Permissions.Edit);
 
-        await middleware.InvokeAsync(context, authorization, Policies, antiforgery, NoLists);
+        await gate.InvokeAsync(NoLists);
 
-        Assert.Empty(reached);
-        Assert.Equal(403, context.Response.StatusCode);
+        Assert.Empty(gate.Reached);
+        Assert.Equal(403, gate.Context.Response.StatusCode);
     }
 
     [Fact]
     public async Task A_change_the_ownership_tier_refuses_surfaces_as_403_with_the_reason()
     {
-        var (middleware, context, authorization, antiforgery, reached) = Build("/crest-workflows/api/workflow-definitions/def-1/publish", "POST", authenticated: true, permitted: true, antiforgeryValid: true,
+        var gate = Build("/crest-workflows/api/workflow-definitions/def-1/publish", "POST", authenticated: true, permitted: true, antiforgeryValid: true,
             _ => throw new Registry.WorkflowChangeDeniedException("system workflow"));
         var body = new MemoryStream();
-        context.Response.Body = body;
+        gate.Context.Response.Body = body;
 
-        await middleware.InvokeAsync(context, authorization, Policies, antiforgery, NoLists);
+        await gate.InvokeAsync(NoLists);
 
-        Assert.Single(reached);
-        Assert.Equal(403, context.Response.StatusCode);
+        Assert.Single(gate.Reached);
+        Assert.Equal(403, gate.Context.Response.StatusCode);
         Assert.Contains("system workflow", System.Text.Encoding.UTF8.GetString(body.ToArray()));
     }
 
     [Fact]
     public async Task Write_by_a_permitted_user_with_a_valid_token_proceeds()
     {
-        var (middleware, context, authorization, antiforgery, reached) = Build("/crest-workflows/api/workflow-definitions/abc/publish", "POST", authenticated: true, permitted: true, antiforgeryValid: true);
+        var gate = Build("/crest-workflows/api/workflow-definitions/abc/publish", "POST", authenticated: true, permitted: true, antiforgeryValid: true);
 
-        await middleware.InvokeAsync(context, authorization, Policies, antiforgery, NoLists);
+        await gate.InvokeAsync(NoLists);
 
-        Assert.Single(reached);
-        Assert.Equal(200, context.Response.StatusCode);
+        Assert.Single(gate.Reached);
+        Assert.Equal(200, gate.Context.Response.StatusCode);
     }
 }

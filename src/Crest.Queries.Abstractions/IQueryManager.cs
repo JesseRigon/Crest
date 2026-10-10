@@ -33,9 +33,9 @@ public interface IQueryManager
     /// Executes a query.
     /// </summary>
     /// <param name="query">The query to execute.</param>
-    /// <param name="parameters">The parameters for the query.</param>
+    /// <param name="request">The parameters, page and cancellation of this run.</param>
     /// <returns>The result of the query.</returns>
-    Task<IQueryResults> ExecuteQueryAsync(Query query, IDictionary<string, object> parameters);
+    Task<IQueryResults> ExecuteQueryAsync(Query query, QueryRequest request);
 
     /// <summary>
     /// Returns an unique identifier that is updated when queries have changed.

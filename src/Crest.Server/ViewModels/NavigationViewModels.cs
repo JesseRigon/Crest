@@ -51,10 +51,9 @@ public sealed record NavigationItem(
     // resolves every caption through IDataLocalizer at render time (TheAdmin's
     // NavigationItemText.cshtml, keyed on the displayed caption); serialization here is Crest's
     // render time, so resolution happens in the same place, unconditionally - but through
-    // CrestMenuCaptionResolver, which additionally restores a MenuName that
-    // NavigationManager.Merge dropped (via the surviving node UniqueId) and falls back through
-    // parent and sibling contexts before surrendering to the invariant literal - see the
-    // resolver's remarks. A total miss returns the caption unchanged, so provider items keep
+    // CrestMenuCaptionResolver, which falls back through parent and sibling contexts and the
+    // shipped PO catalogs before surrendering to the invariant literal - see the resolver's
+    // remarks. A total miss returns the caption unchanged, so provider items keep
     // their PO-translated Text.Value.
     public static NavigationItem From(MenuItem item, CrestMenuCaptionResolver? captionResolver)
     {

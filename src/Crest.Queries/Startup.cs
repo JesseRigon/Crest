@@ -6,11 +6,14 @@ using Crest.DisplayManagement.Handlers;
 using Crest.Liquid;
 using Crest.Modules;
 using Crest.Navigation;
+using Crest.Queries.Core;
 using Crest.Queries.Core.Services;
 using Crest.Queries.Deployment;
 using Crest.Queries.Drivers;
 using Crest.Queries.Liquid;
 using Crest.Queries.Recipes;
+using Crest.Queries.Structured;
+using Crest.Queries.Builtin;
 using Crest.Recipes;
 using Crest.Scripting;
 using Crest.Security.Permissions;
@@ -35,7 +38,7 @@ public sealed class CoreStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddRecipeExecutionStep<QueryStep>();
+        services.AddRecipeExecutionStep<Recipes.QueryStep>();
         services.AddDeployment<AllQueriesDeploymentSource, AllQueriesDeploymentStep, AllQueriesDeploymentStepDriver>();
         services.AddSingleton<IGlobalMethodProvider, QueryGlobalMethodProvider>();
 
@@ -55,6 +58,13 @@ public sealed class CoreStartup : StartupBase
         .AddLiquidFilter<QueryFilter>("query");
 
         services.AddScoped<IQueryManager, DefaultQueryManager>();
+        services.AddScoped<IQueryCatalog, DefaultQueryCatalog>();
+
+        services.AddScoped<IIndexTableCatalog, IndexTableCatalog>();
+        services.AddQuerySource<StructuredQuerySource>(StructuredQuerySource.SourceName);
+        services.AddScoped<IQueryHandler, StructuredQueryHandler>();
+
+        services.AddQuerySource<SystemQuerySource>(SystemQuerySource.SourceName);
     }
 }
 

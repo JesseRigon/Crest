@@ -13,12 +13,8 @@ public class LinkAdminNodeDataLocalizationProvider : AdminNodeDataLocalizationPr
     {
         var adminMenuList = await GetAdminMenusAsync();
 
-        return adminMenuList.SelectMany(m =>
-        {
-            var context = DataLocalizationContext.AdminMenu(m.Name);
-
-            return m.MenuItems.OfType<LinkAdminNode>()
-                .Select(n => new DataLocalizedString(context, n.LinkText, string.Empty));
-        });
+        return adminMenuList.SelectMany(m => Descriptors(
+            DataLocalizationContext.AdminMenu(m.Name),
+            AllNodes(m.MenuItems).OfType<LinkAdminNode>().Select(n => n.LinkText)));
     }
 }

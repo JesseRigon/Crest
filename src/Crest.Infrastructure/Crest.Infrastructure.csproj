@@ -3,10 +3,9 @@
   <PropertyGroup>
     <!-- NuGet properties-->
     <Title>Crest Infrastructure</Title>
-    <Description>$(OCCMSDescription)
-
-    Implementation for PlatformCMS Infrastructure </Description>
-    <PackageTags>$(PackageTags) PlatformCMS Infrastructure</PackageTags>
+    <Description>The platform's implementation library: the modular multi-tenant shell host, module
+    loading, background tasks, caching, locking, documents, entities, security, settings, email and HTML.</Description>
+    <PackageTags>$(PackageTags) Infrastructure</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,15 +13,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Fluid.Core" />
     <PackageReference Include="HtmlSanitizer" />
     <PackageReference Include="libphonenumber-csharp" />
     <PackageReference Include="MimeKit" />
+    <PackageReference Include="ncrontab" />
+    <PackageReference Include="NodaTime" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Crest.Core\Crest.Core.csproj" />
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Data.YesSql\Crest.Data.YesSql.csproj" />
     <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Localization.Abstractions\Crest.Localization.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

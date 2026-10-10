@@ -29,14 +29,14 @@ public sealed class SaasFixture : IAsyncLifetime
             {
                 await page.SiteSetupAsync(new TenantInfo
                 {
-                    Name = "Testing SaaS",
+                    Name = "Testing Blank",
                     Prefix = string.Empty,
-                    SetupRecipe = "SaaS",
+                    SetupRecipe = "Blank",
                 });
             }
 
             // Create a test tenant to verify multi-tenancy.
-            Tenant = TestUtils.GenerateTenantInfo("SaaS");
+            Tenant = TestUtils.GenerateTenantInfo("Blank");
             await page.LoginAsync();
             await page.SetPageSizeAsync(string.Empty, "100");
             await page.CreateTenantAsync(Tenant);

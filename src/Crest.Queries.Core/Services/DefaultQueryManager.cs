@@ -13,15 +13,18 @@ public sealed class DefaultQueryManager : IQueryManager
     private readonly IEnumerable<IQueryHandler> _queryHandlers;
     private readonly ILogger<DefaultQueryManager> _logger;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IEnumerable<IQueryDescriber> _describers;
 
     public DefaultQueryManager(
         IDocumentManager<QueriesDocument> documentManager,
         IEnumerable<IQueryHandler> queryHandlers,
+        IEnumerable<IQueryDescriber> describers,
         ILogger<DefaultQueryManager> logger,
         IServiceProvider serviceProvider)
     {
         _documentManager = documentManager;
         _queryHandlers = queryHandlers;
+        _describers = describers;
         _logger = logger;
         _serviceProvider = serviceProvider;
     }
@@ -67,13 +70,14 @@ public sealed class DefaultQueryManager : IQueryManager
         return false;
     }
 
-    public Task<IQueryResults> ExecuteQueryAsync(Query query, IDictionary<string, object> parameters)
+    public Task<IQueryResults> ExecuteQueryAsync(Query query, QueryRequest request)
     {
         ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(request);
 
         var source = _serviceProvider.GetRequiredKeyedService<IQuerySource>(query.Source);
 
-        return source.ExecuteQueryAsync(query, parameters);
+        return source.ExecuteQueryAsync(query, request);
     }
 
     public async Task<string> GetIdentifierAsync()
@@ -88,9 +92,24 @@ public sealed class DefaultQueryManager : IQueryManager
         if (document.Queries.TryGetValue(name, out var query))
         {
             await LoadAsync(query);
+
+            return query;
         }
 
-        return query;
+        // A built-in query (the system queries) has no saved definition; its source serves it by name.
+        foreach (var describer in _describers)
+        {
+            if (describer.BuiltInQueries.Any(descriptor => string.Equals(descriptor.Name, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                return new Query
+                {
+                    Name = name,
+                    Source = describer.Source,
+                };
+            }
+        }
+
+        return null;
     }
 
     public async Task<IEnumerable<Query>> ListQueriesAsync(QueryContext context = null)

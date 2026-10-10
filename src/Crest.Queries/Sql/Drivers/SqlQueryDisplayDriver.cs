@@ -1,7 +1,5 @@
-using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.Extensions.Localization;
 using Crest.DisplayManagement.Handlers;
-using Crest.DisplayManagement.Notify;
 using Crest.DisplayManagement.Views;
 using Crest.Entities;
 using Crest.Mvc.ModelBinding;
@@ -12,18 +10,10 @@ namespace Crest.Queries.Sql.Drivers;
 
 public sealed class SqlQueryDisplayDriver : DisplayDriver<Query>
 {
-    private readonly INotifier _notifier;
-    private readonly SqlLiquidOutputExpressionDetector _outputExpressionDetector;
-
     internal readonly IStringLocalizer S;
 
-    public SqlQueryDisplayDriver(
-        INotifier notifier,
-        SqlLiquidOutputExpressionDetector outputExpressionDetector,
-        IStringLocalizer<SqlQueryDisplayDriver> stringLocalizer)
+    public SqlQueryDisplayDriver(IStringLocalizer<SqlQueryDisplayDriver> stringLocalizer)
     {
-        _notifier = notifier;
-        _outputExpressionDetector = outputExpressionDetector;
         S = stringLocalizer;
     }
 
@@ -72,7 +62,6 @@ public sealed class SqlQueryDisplayDriver : DisplayDriver<Query>
         {
             model.ReturnDocuments = query.ReturnContentItems;
             model.Query = template;
-            model.HasLiquidOutputExpressions = _outputExpressionDetector.ContainsOutputStatement(model.Query);
         }).Location("Content:5");
     }
 
@@ -92,23 +81,13 @@ public sealed class SqlQueryDisplayDriver : DisplayDriver<Query>
         {
             context.Updater.ModelState.AddModelError(Prefix, nameof(viewModel.Query), S["The query field is required"]);
         }
-        else if (!ContainsLiquidSyntax(viewModel.Query))
+        else
         {
+            // Liquid is rejected here, at save: the template is parsed as written.
             foreach (var message in SqlParser.Validate(viewModel.Query))
             {
                 context.Updater.ModelState.AddModelError(Prefix, nameof(viewModel.Query), message);
             }
-        }
-
-        viewModel.HasLiquidOutputExpressions = _outputExpressionDetector.ContainsOutputStatement(viewModel.Query);
-
-        if (viewModel.HasLiquidOutputExpressions)
-        {
-            await _notifier.AddAsync(
-                NotifyType.Warning,
-                new LocalizedHtmlString(
-                    nameof(SqlQueryDisplayDriver),
-                    S["Potentially unsafe Liquid output expressions ('{{ ... }}') were detected in this SQL query. Avoid injecting user input with Liquid output and use SQL parameters instead."].Value));
         }
 
         query.ReturnContentItems = viewModel.ReturnDocuments;
@@ -119,8 +98,4 @@ public sealed class SqlQueryDisplayDriver : DisplayDriver<Query>
 
         return await EditAsync(query, context);
     }
-
-    private static bool ContainsLiquidSyntax(string query) =>
-        query.Contains("{{", StringComparison.Ordinal) ||
-        query.Contains("{%", StringComparison.Ordinal);
 }

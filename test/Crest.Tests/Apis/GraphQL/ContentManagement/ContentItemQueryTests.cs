@@ -13,7 +13,7 @@ public class ContentItemQueryTests
     public async Task Return_ViewContentPermissionIsGranted_Succeeds()
     {
         using var context = new SiteContext()
-            .WithRecipe("Blog")
+            .WithRecipe(TestRecipes.Blog)
             .WithPermissionsContext(new PermissionsContext
             {
                 UsePermissionsContext = true,
@@ -40,7 +40,7 @@ public class ContentItemQueryTests
     public async Task Not_ReturnContentItemWithoutViewContentPermission_Succeeds()
     {
         using var context = new SiteContext()
-            .WithRecipe("Blog")
+            .WithRecipe(TestRecipes.Blog)
             .WithPermissionsContext(new PermissionsContext
             {
                 UsePermissionsContext = true,

@@ -15,7 +15,7 @@ public sealed class ApiAuthenticationTests : CmsTestBase, IClassFixture<CmsSetup
 {
     public ApiAuthenticationTests(CmsSetupFixture fixture) : base(fixture) { }
 
-    protected override string RecipeName => "Blog";
+    protected override string RecipeName => "Crest Crest UI Framework";
 
     /// <summary>
     /// Even when no token scheme is registered (OpenID Token Validation disabled), the "Api"

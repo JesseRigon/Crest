@@ -212,6 +212,10 @@ public class HttpWorkflowsMiddleware(RequestDelegate next, IOptions<HttpActivity
             return;
         }
 
+        // The host adds what the run must carry from the request (the acting caller, ...).
+        foreach (var contributor in serviceProvider.GetServices<IHttpWorkflowInputContributor>())
+            await contributor.ContributeAsync(httpContext, input, cancellationToken);
+
         var workflowRunner = serviceProvider.GetRequiredService<IWorkflowRunner>();
         var result = await ExecuteWithinTimeoutAsync(async ct =>
         {

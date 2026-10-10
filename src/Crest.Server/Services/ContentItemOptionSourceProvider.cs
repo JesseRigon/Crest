@@ -6,6 +6,8 @@ using Crest.ContentFields.Indexing.SQL;
 using Crest.ContentManagement;
 using Crest.ContentManagement.Metadata;
 using Crest.ContentManagement.Records;
+using Crest.Access;
+using Crest.Data.Scoping;
 using YesSql;
 using YesSql.Services;
 
@@ -39,9 +41,36 @@ namespace Crest.Services;
 /// </remarks>
 public sealed class ContentItemOptionSourceProvider(
     ISession session,
-    IOptionSourceScopeResolver scopeResolver,
+    ICallerContextAccessor callerAccessor,
+    IScopeSetProvider scopes,
     IContentDefinitionManager contentDefinitionManager) : IOptionSourceProvider
 {
+    /// <summary>The caller's content scope, from the one scope set: what this USER may see,
+    /// as opposed to what the dropdown is configured to offer.</summary>
+    private async Task<ScopeRule> ScopeAsync(CancellationToken cancellationToken)
+    {
+        var caller = callerAccessor.Current;
+        // No caller means no grant. Failing closed here matters: an unauthenticated path that
+        // fell through to "unrestricted" would expose every record.
+        if (caller is null)
+        {
+            return ScopeRule.None;
+        }
+
+        return (await scopes.GetAsync(caller, cancellationToken)).Require(nameof(ContentItemIndex));
+    }
+
+    private static object? IndexColumn(ContentItem item, string column) => column switch
+    {
+        nameof(ContentItemIndex.ContentType) => item.ContentType,
+        nameof(ContentItemIndex.Owner) => item.Owner,
+        nameof(ContentItemIndex.Author) => item.Author,
+        nameof(ContentItemIndex.ContentItemId) => item.ContentItemId,
+        nameof(ContentItemIndex.Latest) => item.Latest,
+        nameof(ContentItemIndex.Published) => item.Published,
+        _ => null,
+    };
+
     public const string ProviderKey = "contentitem";
 
     public string Key => ProviderKey;
@@ -85,8 +114,8 @@ public sealed class ContentItemOptionSourceProvider(
 
         // Authorization BEFORE configuration: what this user may see bounds what the
         // dropdown may offer, never the other way round.
-        var scope = await scopeResolver.ResolveAsync(query.Qualifier, cancellationToken);
-        if (scope.IsEmpty)
+        var scope = await ScopeAsync(cancellationToken);
+        if (scope.Kind == ScopeKind.None)
         {
             // Fail closed. Skipping the restriction here would hand every record to a
             // user entitled to none.
@@ -176,12 +205,12 @@ public sealed class ContentItemOptionSourceProvider(
         // the record were merely unnamed. Missing data is honest; fabricated data is
         // not. The referencing document is then itself in violation and its own
         // scope check drops it - see OptionSourceReferenceGuard.
-        var scope = await scopeResolver.ResolveAsync(qualifier, cancellationToken);
+        var scope = await ScopeAsync(cancellationToken);
 
         return
         [
             .. items
-                .Where(item => scope.Allows(item.ContentType, item.Owner, item.ContentItemId))
+                .Where(item => scope.Admits(column => IndexColumn(item, column)))
                 .Select(item => ToRow(item, columns)),
         ];
     }
@@ -196,27 +225,14 @@ public sealed class ContentItemOptionSourceProvider(
         string contentType,
         IReadOnlyList<ResolvedOptionFilter> indexed,
         string? searchText,
-        OptionSourceScope scope)
+        ScopeRule scope)
     {
         var query = session.Query<ContentItem, ContentItemIndex>(index =>
             index.ContentType == contentType && index.Latest);
 
-        // The scope predicate is AND-ed on and cannot be opted out of by any
-        // attachment. Owner-only access narrows to the user's own items, mirroring
-        // DefaultContentsAdminListFilterProvider's own/any bucketing.
-        if (!scope.IsUnrestricted && scope.ViewAny.Count == 0)
-        {
-            var userId = scope.UserId;
-            query = query.Where(index => index.Owner == userId);
-        }
-
-        // Assignment narrows further, and pushes into SQL rather than filtering after
-        // the fact - the whole reason assignments carry their own index. (An empty
-        // AssignedIds set never reaches here: scope.IsEmpty short-circuits first.)
-        if (scope.AssignedIds is { Count: > 0 } assignedIds)
-        {
-            query = query.Where(index => index.ContentItemId.IsIn(assignedIds));
-        }
+        // The scope predicate is AND-ed on and cannot be opted out of by any attachment:
+        // ownership, assignment and organization, in one rule, pushed into SQL.
+        query = query.Where(ScopeExpressions.ToPredicate<ContentItemIndex>(scope));
 
         foreach (var filter in indexed)
         {

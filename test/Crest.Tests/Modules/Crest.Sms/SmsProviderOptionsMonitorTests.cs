@@ -18,7 +18,7 @@ public class SmsProviderOptionsMonitorTests
     public async Task RequestUpdate_ShouldRefreshSmsProviderOptionsWithoutReleasingTenant()
     {
         using var context = new SiteContext()
-            .WithRecipe("SaaS");
+            .WithRecipe(TestRecipes.Blank);
 
         await context.InitializeAsync();
 

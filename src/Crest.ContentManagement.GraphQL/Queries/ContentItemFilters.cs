@@ -1,62 +1,48 @@
-using System.Security.Claims;
 using GraphQL;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Crest.ContentManagement.Metadata;
-using Crest.ContentManagement.Metadata.Models;
+using Crest.Access;
 using Crest.ContentManagement.Records;
 using Crest.Contents;
-using Crest.Contents.Security;
-using Crest.Security.Permissions;
+using Crest.Data.Scoping;
 using YesSql;
 
 namespace Crest.ContentManagement.GraphQL.Queries;
 
+/// <summary>
+/// Applies the caller's content scope (the one scope set) to every content query, and keeps
+/// the per-item check after the query as insurance.
+/// </summary>
 public sealed class ContentItemFilters : GraphQLFilter<ContentItem>
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IContentDefinitionManager _contentDefinitionManager;
+    private readonly ICallerContextAccessor _callerAccessor;
+    private readonly IScopeSetProvider _scopes;
     private readonly IAuthorizationService _authorizationService;
 
     public ContentItemFilters(
         IHttpContextAccessor httpContextAccessor,
-        IContentDefinitionManager contentDefinitionManager,
+        ICallerContextAccessor callerAccessor,
+        IScopeSetProvider scopes,
         IAuthorizationService authorizationService)
     {
         _httpContextAccessor = httpContextAccessor;
-        _contentDefinitionManager = contentDefinitionManager;
+        _callerAccessor = callerAccessor;
+        _scopes = scopes;
         _authorizationService = authorizationService;
     }
 
     public override async Task<IQuery<ContentItem>> PreQueryAsync(IQuery<ContentItem> query, IResolveFieldContext context)
     {
         var contentType = ((ListGraphType)context.FieldDefinition.ResolvedType!).ResolvedType!.Name;
-        var user = _httpContextAccessor.HttpContext?.User;
+        var caller = _callerAccessor.Current
+            ?? throw new InvalidOperationException("No caller is set for this request.");
+        var scope = (await _scopes.GetAsync(caller)).Require(nameof(ContentItemIndex));
 
-        if (await _authorizationService.AuthorizeAsync(user, CommonPermissions.ViewContent))
-        {
-            // No additional check when the user has permission to view all contents
-            return query;
-        }
-
-        var contentTypeDefinition = await _contentDefinitionManager.GetTypeDefinitionAsync(contentType);
-
-        if (await AuthorizeDynamicPermissionAsync(user, CommonPermissions.ViewContent, contentTypeDefinition))
-        {
-            // User has access to view any content item of the given type.
-            return query;
-        }
-
-        var userId = user?.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (await AuthorizeDynamicPermissionAsync(user, CommonPermissions.ViewOwnContent, contentTypeDefinition, userId))
-        {
-            return query.With<ContentItemIndex>(x => x.ContentType == contentType && x.Owner == userId);
-        }
-
-        // Since the user has no permission to this content type, return a query that returns no record.
-        return query.With<ContentItemIndex>(x => true == false);
+        return query
+            .With<ContentItemIndex>(x => x.ContentType == contentType)
+            .Where(ScopeExpressions.ToPredicate<ContentItemIndex>(scope));
     }
 
     public override async Task<IEnumerable<ContentItem>> PostQueryAsync(IEnumerable<ContentItem> contentItems, IResolveFieldContext context)
@@ -76,17 +62,5 @@ public sealed class ContentItemFilters : GraphQLFilter<ContentItem>
         }
 
         return filtered;
-    }
-
-    private Task<bool> AuthorizeDynamicPermissionAsync(
-        ClaimsPrincipal user,
-        Permission basePermission,
-        ContentTypeDefinition contentTypeDefinition,
-        string userId = null)
-    {
-        var template = ContentTypePermissionsHelper.ConvertToDynamicPermission(basePermission);
-        var dynamicPermission = ContentTypePermissionsHelper.CreateDynamicPermission(template, contentTypeDefinition);
-
-        return _authorizationService.AuthorizeContentTypeAsync(user, dynamicPermission, contentTypeDefinition, userId);
     }
 }

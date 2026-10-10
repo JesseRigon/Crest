@@ -23,7 +23,7 @@ public static class QueryPlatformRazorHelperExtensions
             return null;
         }
 
-        var result = await queryManager.ExecuteQueryAsync(query, parameters);
+        var result = await queryManager.ExecuteQueryAsync(query, QueryRequest.Of(parameters, platformHelper.HttpContext.RequestAborted));
 
         return result.Items;
     }
@@ -39,7 +39,7 @@ public static class QueryPlatformRazorHelperExtensions
             return null;
         }
 
-        var result = await queryManager.ExecuteQueryAsync(query, parameters);
+        var result = await queryManager.ExecuteQueryAsync(query, QueryRequest.Of(parameters, platformHelper.HttpContext.RequestAborted));
 
         return result;
     }

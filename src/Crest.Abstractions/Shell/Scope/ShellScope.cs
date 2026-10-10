@@ -171,30 +171,54 @@ public sealed class ShellScope : IServiceScope, IAsyncDisposable
     public static T GetOrCreateFeature<T>() where T : class, new() => GetOrCreate<T>(typeof(T));
 
     /// <summary>
-    /// Creates a child scope from the current one.
+    /// Creates a child scope from the current one, inheriting its <see cref="IInheritedShellScopeFeature"/>s.
     /// </summary>
-    public static Task<ShellScope> CreateChildScopeAsync()
+    public static async Task<ShellScope> CreateChildScopeAsync()
     {
         var shellHost = Services.GetRequiredService<IShellHost>();
-        return shellHost.GetScopeAsync(Context.Settings);
+        return Inherit(await shellHost.GetScopeAsync(Context.Settings), Current);
     }
 
     /// <summary>
-    /// Creates a child scope from the current one.
+    /// Creates a child scope from the current one, inheriting its <see cref="IInheritedShellScopeFeature"/>s.
     /// </summary>
-    public static Task<ShellScope> CreateChildScopeAsync(ShellSettings settings)
+    public static async Task<ShellScope> CreateChildScopeAsync(ShellSettings settings)
     {
         var shellHost = Services.GetRequiredService<IShellHost>();
-        return shellHost.GetScopeAsync(settings);
+        return Inherit(await shellHost.GetScopeAsync(settings), Current);
     }
 
     /// <summary>
-    /// Creates a child scope from the current one.
+    /// Creates a child scope from the current one, inheriting its <see cref="IInheritedShellScopeFeature"/>s.
     /// </summary>
-    public static Task<ShellScope> CreateChildScopeAsync(string tenant)
+    public static async Task<ShellScope> CreateChildScopeAsync(string tenant)
     {
         var shellHost = Services.GetRequiredService<IShellHost>();
-        return shellHost.GetScopeAsync(tenant);
+        return Inherit(await shellHost.GetScopeAsync(tenant), Current);
+    }
+
+    /// <summary>
+    /// Copies the parent's inheritable features onto a scope created from it. Only features
+    /// that implement <see cref="IInheritedShellScopeFeature"/> travel; everything else a scope
+    /// shares stays with that scope.
+    /// </summary>
+    private static ShellScope Inherit(ShellScope child, ShellScope parent)
+    {
+        if (parent?._items is null || ReferenceEquals(child, parent))
+        {
+            return child;
+        }
+
+        foreach (var (key, value) in parent._items)
+        {
+            if (value is IInheritedShellScopeFeature)
+            {
+                child._items ??= [];
+                child._items.TryAdd(key, value);
+            }
+        }
+
+        return child;
     }
 
     /// <summary>
@@ -471,7 +495,8 @@ public sealed class ShellScope : IServiceScope, IAsyncDisposable
 
             foreach (var task in _deferredTasks)
             {
-                // Create a new scope (maybe based on a new shell) for each task.
+                // Create a new scope (maybe based on a new shell) for each task; it inherits
+                // this scope's inheritable features (the caller that queued the task).
                 ShellScope scope;
                 try
                 {
@@ -483,6 +508,8 @@ public sealed class ShellScope : IServiceScope, IAsyncDisposable
                     // Fallback to a scope based on the current shell that is not yet disposed.
                     scope = new ShellScope(ShellContext);
                 }
+
+                Inherit(scope, this);
 
                 // Use 'UsingAsync()' in place of 'UsingServiceScopeAsync()' to allow a deferred task to
                 // trigger another one, but still prevent the shell to be activated in a deferred task.

@@ -15,12 +15,8 @@ public class ListsAdminNodeDataLocalizationProvider : AdminNodeDataLocalizationP
     {
         var adminMenuList = await GetAdminMenusAsync();
 
-        return adminMenuList.SelectMany(m =>
-        {
-            var context = DataLocalizationContext.AdminMenu(m.Name);
-
-            return m.MenuItems.OfType<ListsAdminNode>()
-                .Select(n => new DataLocalizedString(context, n.ContentType, string.Empty));
-        });
+        return adminMenuList.SelectMany(m => Descriptors(
+            DataLocalizationContext.AdminMenu(m.Name),
+            AllNodes(m.MenuItems).OfType<ListsAdminNode>().Select(n => n.ContentType)));
     }
 }

@@ -30,6 +30,12 @@ public class MemberSessionService
         return result.Properties?.Items.TryGetValue(MemberSessionKeys.ActiveOrganization, out var orgId) == true ? orgId : null;
     }
 
+    public async Task<string?> GetImpersonatorAsync(HttpContext httpContext)
+    {
+        var result = await httpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+        return result.Properties?.Items.TryGetValue(MemberSessionKeys.ImpersonatorUserId, out var userId) == true ? userId : null;
+    }
+
     /// <summary>Re-issues the session with a new active organization. The caller has
     /// already validated the binding. The principal is re-signed WITHOUT this module's
     /// enrichment claims - the next request's enrichment rebuilds them for the new org.</summary>

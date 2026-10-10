@@ -7,6 +7,8 @@ using Crest.Workflows.Runtime;
 using Crest.Workflows.Runtime.Extensions;
 using Crest.Workflows.Management;
 using Crest.Workflows;
+using Crest.Access;
+using Crest.Workflows.Contexts;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Crest.Environment.Shell;
@@ -23,7 +25,10 @@ namespace Crest.Workflows.Units;
 /// run each message in a bare service scope where no Crest transaction commits. This reads
 /// the same channels and runs each message in a shell scope of its own - one unit, with the
 /// after-commit queue, hooks and background jobs all working. Started when the tenant
-/// activates, stopped when it terminates.
+/// activates, stopped when it terminates. A message here fans out to definitions the consumer
+/// cannot know in advance (a stimulus, a bulk dispatch), so no caller is set for the scope:
+/// the workflow gate resolves the caller per burst from the definition's system flag or the
+/// instance input, and refuses a burst with neither.
 /// </summary>
 public sealed class ShellScopedBackgroundConsumers(
     ICommandsChannel commands,
@@ -105,7 +110,8 @@ public sealed class ShellScopedBackgroundConsumers(
 /// The engine's bookmark-queue worker, processing in shell scopes: each queued item is
 /// resumed in a scope - a unit - of its own, so one long transaction never spans many
 /// resumes, and an item whose instance is gone or no longer running is dropped instead of
-/// being retried on every tick.
+/// being retried on every tick. The resume runs as the caller the instance's definition or
+/// persisted actor names, resolved from the scope before the engine starts.
 /// </summary>
 public sealed class ShellScopedBookmarkQueueWorker(IBookmarkQueueSignaler signaler, IServiceScopeFactory scopeFactory, IShellHost shellHost, ShellSettings shellSettings, ILogger<BookmarkQueueWorker> logger)
     : BookmarkQueueWorker(signaler, scopeFactory, logger)
@@ -143,10 +149,24 @@ public sealed class ShellScopedBookmarkQueueWorker(IBookmarkQueueSignaler signal
                     }
                 }
 
-                var responses = (await services.GetRequiredService<IWorkflowResumer>().ResumeAsync(item.CreateBookmarkFilter(), item.Options, cancellationToken)).ToList();
-                if (responses.Count > 0)
+                var caller = item.WorkflowInstanceId is not null ? await services.GetRequiredService<WorkflowCallerResolver>().ForInstanceAsync(item.WorkflowInstanceId, cancellationToken) : null;
+                async Task ResumeAsync()
                 {
-                    await store.DeleteAsync(new Crest.Workflows.Runtime.Filters.BookmarkQueueFilter { Id = item.Id }, cancellationToken);
+                    var responses = (await services.GetRequiredService<IWorkflowResumer>().ResumeAsync(item.CreateBookmarkFilter(), item.Options, cancellationToken)).ToList();
+                    if (responses.Count > 0)
+                    {
+                        await store.DeleteAsync(new Crest.Workflows.Runtime.Filters.BookmarkQueueFilter { Id = item.Id }, cancellationToken);
+                    }
+                }
+
+                if (caller is null)
+                {
+                    // An item with no instance id matches by correlation or hash; the gate decides per burst.
+                    await ResumeAsync();
+                }
+                else
+                {
+                    await services.GetRequiredService<IAccessRunner>().RunAsAsync(caller, ResumeAsync);
                 }
             });
         }

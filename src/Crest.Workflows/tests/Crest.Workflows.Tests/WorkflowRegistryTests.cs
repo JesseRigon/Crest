@@ -54,7 +54,7 @@ public class WorkflowRegistryTests
         sender.SendAsync(Arg.Any<string>(), Arg.Any<object>(), Arg.Any<StimulusMetadata?>(), Arg.Any<CancellationToken>())
             .Returns(new SendStimulusResult([]));
         var user = Substitute.For<IWorkflowUserContextAccessor>();
-        user.Capture().Returns(new WorkflowUserContext { IsAuthenticated = true, UserName = "alice", Tenant = "acme" });
+        user.Capture().Returns(new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme" });
         var publisher = new WorkflowTriggerPublisher(new WorkflowRegistryCatalog([provider], [], [], [], [], []), Queue(sender), user, NullLogger<WorkflowTriggerPublisher>.Instance);
 
         await publisher.PublishAsync("Transaction.Posted", "doc-1", new Dictionary<string, object> { ["Number"] = "Q-00001" }, TestContext.Current.CancellationToken);

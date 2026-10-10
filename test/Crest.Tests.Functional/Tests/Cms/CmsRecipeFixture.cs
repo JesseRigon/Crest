@@ -56,19 +56,9 @@ public abstract class CmsRecipeFixture : IAsyncLifetime
     }
 }
 
-public sealed class AgencyFixture : CmsRecipeFixture
-{
-    protected override string RecipeName => "Agency";
-}
-
 public sealed class BlogFixture : CmsRecipeFixture
 {
-    protected override string RecipeName => "Blog";
-}
-
-public sealed class ComingSoonFixture : CmsRecipeFixture
-{
-    protected override string RecipeName => "ComingSoon";
+    protected override string RecipeName => "Crest Crest UI Framework";
 }
 
 public sealed class HeadlessFixture : CmsRecipeFixture

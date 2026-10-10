@@ -82,8 +82,8 @@ public sealed record CultureSelector(
                 .Select(CultureInfo.GetCultureInfo)
                 .Select(culture => new CultureOption(culture.Name, culture.NativeName, GetIcon(culture)))
                 .ToArray(),
-            CrestCultureCookie.MakeCookieName(shellSettings),
-            CrestCultureCookie.MakeCookiePath(httpContext));
+            CultureCookie.MakeCookieName(shellSettings),
+            CultureCookie.MakeCookiePath(httpContext));
     }
 
     private static string GetIcon(CultureInfo culture)

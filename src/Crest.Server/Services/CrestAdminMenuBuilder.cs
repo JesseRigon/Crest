@@ -34,7 +34,7 @@ public sealed class CrestAdminMenuBuilder(
 
         // Resolves each admin menu node's caption against the tenant translation store for the
         // request culture - see NavigationItem.From and CrestMenuCaptionResolver for the
-        // MenuName restoration and hierarchical context fallback. With the data localization
+        // hierarchical context fallback. With the data localization
         // feature absent the resolver leaves captions untouched, so the menu renders rather
         // than fails.
         await captionResolver.EnsureLoadedAsync();

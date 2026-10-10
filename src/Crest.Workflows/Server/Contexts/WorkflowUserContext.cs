@@ -1,15 +1,16 @@
 using System.Security.Claims;
+using Crest.Access;
 
 namespace Crest.Workflows.Contexts;
 
 /// <summary>
-/// The acting user at the moment a workflow was triggered, carried as workflow input under
-/// <see cref="InputKey"/>. Activities run on a background job with no HttpContext, so the
-/// principal is snapshotted as its claims (type + value) and rebuilt on demand: Crest's
-/// authorization pipeline - role permissions, the super user, the member class
-/// ceiling (which reads the class claim), the active-organization claim - then evaluates
-/// exactly as it would have in the request. Tenant name is included for logs and journals
-/// only; the engine itself is per shell, so no activity can address another tenant's store.
+/// The actor of a workflow run: who started it, carried as workflow input under
+/// <see cref="InputKey"/> and persisted with the instance. Identity and shell only, never
+/// rights: the caller is built again from this identity at the start of every burst
+/// (docs/operations.md › Caller lifetime), so a right lost between bursts fails the next
+/// one, and nothing serialized into an instance can grant anything. <see cref="IsSystem"/>
+/// records that the system was acting when the run was captured; it never produces the
+/// system caller on its own (only a definition published as system does).
 /// </summary>
 public sealed class WorkflowUserContext
 {
@@ -17,46 +18,60 @@ public sealed class WorkflowUserContext
 
     public string? UserId { get; set; }
     public string? UserName { get; set; }
-    public bool IsAuthenticated { get; set; }
-    public string? AuthenticationType { get; set; }
     public string Tenant { get; set; } = string.Empty;
-    public List<WorkflowUserClaim> Claims { get; set; } = [];
+    public CallerSide Side { get; set; }
+    public string? OrganizationId { get; set; }
+    public bool IsSystem { get; set; }
 
-    public static WorkflowUserContext Anonymous(string tenant) => new() { Tenant = tenant };
+    public bool IsAuthenticated => UserId is not null;
 
-    public static WorkflowUserContext From(ClaimsPrincipal? principal, string tenant)
+    public static WorkflowUserContext Anonymous(string tenant, CallerSide side = CallerSide.Site) => new() { Tenant = tenant, Side = side };
+
+    /// <summary>The identity of a built caller: what the gate set for the request or burst that captures this actor.</summary>
+    public static WorkflowUserContext From(CallerContext caller) => new()
+    {
+        UserId = caller.UserId,
+        UserName = caller.UserName,
+        Tenant = caller.Tenant,
+        Side = caller.Side,
+        OrganizationId = caller.OrganizationId,
+        IsSystem = caller.IsSystem,
+    };
+
+    /// <summary>The identity of an authenticated principal (its name identifier and name), or the anonymous actor.</summary>
+    public static WorkflowUserContext From(ClaimsPrincipal? principal, string tenant, CallerSide side = CallerSide.Site)
     {
         if (principal?.Identity?.IsAuthenticated != true)
         {
-            return Anonymous(tenant);
+            return Anonymous(tenant, side);
         }
 
         return new()
         {
-            IsAuthenticated = true,
+            UserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? principal.Identity.Name,
             UserName = principal.Identity.Name,
-            UserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value,
-            AuthenticationType = principal.Identity.AuthenticationType,
             Tenant = tenant,
-            Claims = principal.Claims.Select(claim => new WorkflowUserClaim(claim.Type, claim.Value)).ToList(),
+            Side = side,
         };
     }
 
-    public ClaimsPrincipal ToPrincipal()
+    /// <summary>
+    /// Identity only, for <see cref="ICallerContextFactory.CreateAsync"/>: the factory reads
+    /// the name identifier and the name and builds the rights from the server-side state.
+    /// </summary>
+    public ClaimsPrincipal ToIdentityPrincipal()
     {
         if (!IsAuthenticated)
         {
             return new ClaimsPrincipal(new ClaimsIdentity());
         }
 
-        var identity = new ClaimsIdentity(
-            Claims.Select(claim => new Claim(claim.Type, claim.Value)),
-            AuthenticationType ?? "CrestWorkflows",
-            ClaimTypes.Name,
-            ClaimTypes.Role);
+        var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, UserId!) };
+        if (UserName is not null)
+        {
+            claims.Add(new Claim(ClaimTypes.Name, UserName));
+        }
 
-        return new ClaimsPrincipal(identity);
+        return new ClaimsPrincipal(new ClaimsIdentity(claims, "CrestWorkflows", ClaimTypes.Name, ClaimTypes.Role));
     }
 }
-
-public sealed record WorkflowUserClaim(string Type, string Value);

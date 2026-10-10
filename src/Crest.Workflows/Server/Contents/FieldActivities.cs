@@ -7,6 +7,7 @@ using Crest.Workflows.UIHints;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Crest.Access;
 using Crest.ContentManagement;
 
 namespace Crest.Workflows.Contents;
@@ -17,8 +18,11 @@ namespace Crest.Workflows.Contents;
 /// with its required marker, and the result on the outputs. Failures end on Failed with the
 /// row named, never as an exception. Writes happen in the flow's unit: inside a hook
 /// attachment to <c>transaction.created</c> the copied fields exist with the invoice or not
-/// at all.
+/// at all. The activity takes <c>EditContent</c> (the gate asks it for the burst's caller
+/// before it runs) and asks the decision again per item written, with the item as the
+/// resource, so the per-type and owner variations apply.
 /// </summary>
+[RequiresPermission(EditContentPermission)]
 public abstract class FieldActivityBase : Activity, IFieldDependencySource
 {
     [Input(DisplayName = "Source item id", Description = "The content item to read from.", UIHint = InputUIHints.SingleLine)]
@@ -38,6 +42,8 @@ public abstract class FieldActivityBase : Activity, IFieldDependencySource
 
     [Output(Description = "Why the activity ended on Failed, when it did.")]
     public Output<string?> Failure { get; set; } = null!;
+
+    public const string EditContentPermission = "EditContent";
 
     protected abstract bool Move { get; }
 
@@ -119,15 +125,29 @@ public abstract class FieldActivityBase : Activity, IFieldDependencySource
 
         if (result.Copied > 0)
         {
+            await RequireEditAsync(context, target);
             await contentManager.UpdateAsync(target);
             if (Move && !ReferenceEquals(source, target))
             {
+                await RequireEditAsync(context, source);
                 await contentManager.UpdateAsync(source);
             }
         }
 
         context.JournalData["Copied"] = result.Outcomes.Where(o => o.Copied).Select(o => $"{o.From} → {o.To}").ToList();
         await context.CompleteActivityWithOutcomesAsync("Done");
+    }
+
+    /// <summary>The decision for EditContent on the item itself; a denial faults the activity like the gate does.</summary>
+    private static async Task RequireEditAsync(ActivityExecutionContext context, ContentItem item)
+    {
+        var caller = context.GetRequiredService<ICallerContextAccessor>().Current
+            ?? throw new Contexts.WorkflowAccessRefusedException($"Writing '{item.ContentItemId}' takes {EditContentPermission} but the burst has no caller.");
+        var decision = await context.GetRequiredService<IAccessDecision>().DecideAsync(caller, EditContentPermission, item, context.CancellationToken);
+        if (!decision.IsAllowed)
+        {
+            throw new Contexts.WorkflowAccessRefusedException($"'{caller.UserName ?? "anonymous"}' may not edit '{item.ContentItemId}' ({item.ContentType}){(decision.Reason is null ? string.Empty : $": {decision.Reason}")}.");
+        }
     }
 
     private async ValueTask FailAsync(ActivityExecutionContext context, string reason)

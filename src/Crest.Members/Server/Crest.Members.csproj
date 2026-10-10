@@ -11,6 +11,7 @@
     <ProjectReference Include="$(PlatformSrcDir)Crest.ContentManagement\Crest.ContentManagement.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Contents\Crest.Contents.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Data\Crest.Data.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Access.Abstractions\Crest.Access.Abstractions.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Roles.Core\Crest.Roles.Core.csproj" />

@@ -32,7 +32,7 @@ public sealed class CultureSelectorTests
         Assert.Equal("fr-FR", selector.AdminDefaultCulture);
         Assert.Equal(3, selector.Cultures.Length);
         Assert.Contains(selector.Cultures, c => c.Value == "es-ES");
-        Assert.Equal(CrestCultureCookie.MakeCookieName(shellSettings), selector.CookieName);
+        Assert.Equal(CultureCookie.MakeCookieName(shellSettings), selector.CookieName);
     }
 
     [Fact]
@@ -56,9 +56,9 @@ public sealed class CultureSelectorTests
     {
         var shellSettings = new ShellSettings { VersionId = "abc123" };
 
-        var name = CrestCultureCookie.MakeCookieName(shellSettings);
+        var name = CultureCookie.MakeCookieName(shellSettings);
 
-        Assert.Equal("crest_culture_abc123", name);
+        Assert.Equal("culture_abc123", name);
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public sealed class CultureSelectorTests
     {
         var httpContext = new DefaultHttpContext();
 
-        var path = CrestCultureCookie.MakeCookiePath(httpContext);
+        var path = CultureCookie.MakeCookiePath(httpContext);
 
         Assert.Equal("/", path);
     }
@@ -77,7 +77,7 @@ public sealed class CultureSelectorTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.PathBase = "/my-tenant";
 
-        var path = CrestCultureCookie.MakeCookiePath(httpContext);
+        var path = CultureCookie.MakeCookiePath(httpContext);
 
         Assert.Equal("/my-tenant", path);
     }

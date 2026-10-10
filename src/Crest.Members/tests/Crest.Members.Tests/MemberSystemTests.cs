@@ -3,7 +3,6 @@ using Crest.Members.Constants;
 using Crest.Members.Indexes;
 using Crest.Members.Models;
 using Crest.Members.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Crest.Entities;
 using Crest.Security;
@@ -45,96 +44,43 @@ public class HierarchyPathMathTests
         => Assert.Equal("/99/45/78/", HierarchyPathMath.Reroot("/12/45/78/", "/12/45/", "/99/45/"));
 }
 
-public class MemberPermissionCeilingTests
+public class MemberClassCeilingTests
 {
-    private static MemberPermissionCeilingHandler Handler(Action<MemberPermissionCeilingOptions>? configure = null)
+    private static MemberClassCeiling Ceiling()
     {
         var options = new MemberPermissionCeilingOptions()
             .Ceiling("ManageTenants", "ManageSettings")
             .CeilingPrefix("ManageUsersInRole_");
-        configure?.Invoke(options);
-        return new MemberPermissionCeilingHandler(Options.Create(options));
+        return new MemberClassCeiling(Options.Create(options));
     }
 
-    private static AuthorizationHandlerContext Context(string userClass, params string[] permissionNames)
+    private static Crest.Access.CallerContext Caller(string? userClass) => new()
     {
-        var identity = new ClaimsIdentity("Test");
-        identity.AddClaim(new Claim(MemberClaims.UserClass, userClass));
-        var requirements = permissionNames
-            .Select(name => new PermissionRequirement(new Crest.Security.Permissions.Permission(name)))
-            .Cast<IAuthorizationRequirement>()
-            .ToArray();
-        return new AuthorizationHandlerContext(requirements, new ClaimsPrincipal(identity), resource: null);
-    }
+        Tenant = "Default",
+        Side = Crest.Access.CallerSide.Member,
+        UserId = "user-1",
+        UserClass = userClass,
+    };
 
     [Fact]
-    public async Task Member_CeilingedPermission_Fails()
-    {
-        var context = Context(UserClasses.Member, "ManageTenants");
-        await Handler().HandleAsync(context);
-        Assert.True(context.HasFailed);
-    }
+    public void Member_CeilingedPermission_IsDenied()
+        => Assert.NotNull(Ceiling().Deny(Caller(UserClasses.Member), "ManageTenants"));
 
     [Fact]
-    public async Task Member_CeilingedPermission_FailsEvenAfterAnotherHandlerSucceeded()
-    {
-        // The SuperUserHandler scenario: a blanket Succeed must not survive the veto.
-        var context = Context(UserClasses.Member, "ManageSettings");
-        foreach (var requirement in context.Requirements.OfType<PermissionRequirement>())
-        {
-            context.Succeed(requirement);
-        }
-
-        await Handler().HandleAsync(context);
-        Assert.True(context.HasFailed);
-    }
+    public void Member_DynamicVariant_IsDeniedViaPrefix()
+        => Assert.NotNull(Ceiling().Deny(Caller(UserClasses.Member), "ManageUsersInRole_Editor"));
 
     [Fact]
-    public async Task Member_DynamicVariant_FailsViaPrefix()
-    {
-        var context = Context(UserClasses.Member, "ManageUsersInRole_Editor");
-        await Handler().HandleAsync(context);
-        Assert.True(context.HasFailed);
-    }
+    public void Member_UnceilingedPermission_Unaffected()
+        => Assert.Null(Ceiling().Deny(Caller(UserClasses.Member), "ListContent"));
 
     [Fact]
-    public async Task Member_UnceilingedPermission_Unaffected()
-    {
-        var context = Context(UserClasses.Member, "ListContent");
-        await Handler().HandleAsync(context);
-        Assert.False(context.HasFailed);
-    }
+    public void Staff_CeilingedPermission_Unaffected()
+        => Assert.Null(Ceiling().Deny(Caller(UserClasses.Staff), "ManageTenants"));
 
     [Fact]
-    public async Task Staff_CeilingedPermission_Unaffected()
-    {
-        var context = Context(UserClasses.Staff, "ManageTenants");
-        await Handler().HandleAsync(context);
-        Assert.False(context.HasFailed);
-    }
-
-    [Fact]
-    public async Task MissingClassClaim_TreatedAsStaff()
-    {
-        var identity = new ClaimsIdentity("Test");
-        var context = new AuthorizationHandlerContext(
-            [new PermissionRequirement(new Crest.Security.Permissions.Permission("ManageTenants"))],
-            new ClaimsPrincipal(identity),
-            resource: null);
-        await Handler().HandleAsync(context);
-        Assert.False(context.HasFailed);
-    }
-
-    [Fact]
-    public async Task Unauthenticated_Unaffected()
-    {
-        var context = new AuthorizationHandlerContext(
-            [new PermissionRequirement(new Crest.Security.Permissions.Permission("ManageTenants"))],
-            new ClaimsPrincipal(new ClaimsIdentity()),
-            resource: null);
-        await Handler().HandleAsync(context);
-        Assert.False(context.HasFailed);
-    }
+    public void MissingClass_TreatedAsStaff()
+        => Assert.Null(Ceiling().Deny(Caller(null), "ManageTenants"));
 }
 
 public class UserIndexProviderTests

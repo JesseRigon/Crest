@@ -11,6 +11,12 @@ namespace Crest.Workflows.Scheduling.Tasks;
 /// </summary>
 public class ResumeWorkflowTask(ScheduleExistingWorkflowInstanceRequest request) : ITask
 {
+    /// <summary>
+    /// The request this task will run: the instance to resume. A host reads it to decide who
+    /// the run acts as before the engine starts.
+    /// </summary>
+    public ScheduleExistingWorkflowInstanceRequest Request => request;
+
     /// <inheritdoc />
     public async ValueTask ExecuteAsync(TaskExecutionContext context)
     {

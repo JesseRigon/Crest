@@ -17,7 +17,7 @@ public class SmtpOptionsMonitorTests
     public async Task RequestUpdate_ShouldRefreshSmtpOptionsWithoutReleasingTenant()
     {
         using var context = new SiteContext()
-            .WithRecipe("SaaS");
+            .WithRecipe(TestRecipes.Blank);
 
         await context.InitializeAsync();
 

@@ -3,6 +3,9 @@ using Crest.AdminTheme.Options;
 using Crest.Components.Primitives;
 using Crest.Icons;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+
+using Crest.Components.Modules;
 
 namespace Crest.AdminTheme;
 
@@ -53,14 +56,20 @@ public static class CrestWebAssemblyHost
         // tenantBase ("/t2/Login/" minus "/Login" -> "/t2"). Server-side DI mirrors this
         // composition from Request.PathBase (see Startup.cs's CrestRoutingOptions factory).
         var basePath = appBaseAddress.AbsolutePath.TrimEnd('/');
-        var tenantBase = basePath switch
+        // The shell this document was served by, from the base path: it is what every API
+        // call declares in its X-Shell header, so the server builds the caller for that side
+        // and never defaults one.
+        var (tenantBase, shell) = basePath switch
         {
             _ when basePath.EndsWith(routingOptions.AdminPath, StringComparison.OrdinalIgnoreCase)
-                => basePath[..^routingOptions.AdminPath.Length],
+                => (basePath[..^routingOptions.AdminPath.Length], CrestShellContext.Admin),
             _ when basePath.EndsWith(routingOptions.LoginPath, StringComparison.OrdinalIgnoreCase)
-                => basePath[..^routingOptions.LoginPath.Length],
-            _ => basePath,
+                => (basePath[..^routingOptions.LoginPath.Length], CrestShellContext.Admin),
+            _ when basePath.EndsWith(routingOptions.MemberPath, StringComparison.OrdinalIgnoreCase)
+                => (basePath[..^routingOptions.MemberPath.Length], CrestShellContext.Member),
+            _ => (basePath, CrestShellContext.Site),
         };
+        builder.Services.AddSingleton(new CrestShellContext { Shell = shell });
         routingOptions.AdminPath = tenantBase + routingOptions.AdminPath;
         routingOptions.LoginPath = tenantBase + routingOptions.LoginPath;
 
@@ -81,7 +90,7 @@ public static class CrestWebAssemblyHost
             var response = await client.GetFromJsonAsync<CrestRoutingResponse>("api/crest/routing");
             if (response is not null)
             {
-                return new CrestRoutingOptions { AdminPath = response.AdminPath, LoginPath = response.LoginPath };
+                return new CrestRoutingOptions { AdminPath = response.AdminPath, LoginPath = response.LoginPath, MemberPath = response.MemberPath };
             }
         }
         catch (HttpRequestException)
@@ -91,5 +100,5 @@ public static class CrestWebAssemblyHost
         return new CrestRoutingOptions();
     }
 
-    private sealed record CrestRoutingResponse(string AdminPath, string LoginPath);
+    private sealed record CrestRoutingResponse(string AdminPath, string LoginPath, string MemberPath);
 }

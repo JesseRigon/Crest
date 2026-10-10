@@ -89,13 +89,16 @@ public sealed class WorkflowChangeDeniedException(string message) : InvalidOpera
 /// the change needs, with the definition's access lists as the resource - so the role grant,
 /// the super user, the member ceiling and the per-flow lists all decide together. The
 /// importer's own writes run inside <see cref="WorkflowSystemScope"/> and are exempt: that
-/// is how system flows get written at all.
+/// is how system flows get written at all. Publishing a definition as system
+/// (<see cref="WorkflowsConstants.RunsAsSystemProperty"/>) takes
+/// <see cref="Permissions.ManageShippedWorkflows"/> on top of Publish, whatever the tier: it
+/// is the only way a workflow comes to act as the system (docs/operations.md › Decisions).
 /// </summary>
 public sealed class WorkflowOwnershipGuard(
     IContentManager contentManager,
     WorkflowDefinitionPartMapper partMapper,
     IHttpContextAccessor httpContextAccessor,
-    WorkflowDefinitionAccessService access)
+    IWorkflowDefinitionAuthorizer access)
 {
     public async Task<WorkflowOwnershipInfo> GetStoredAsync(string? definitionId) => WorkflowOwnershipInfo.From(await GetStoredPropertiesAsync(definitionId));
 
@@ -116,7 +119,10 @@ public sealed class WorkflowOwnershipGuard(
     /// returns the ownership the saved definition must carry: the stored one, forked when a
     /// user saves a shipped flow.
     /// </summary>
-    public async Task<WorkflowOwnershipInfo> AuthorizeChangeAsync(string? definitionId, WorkflowChange change)
+    public Task<WorkflowOwnershipInfo> AuthorizeChangeAsync(string? definitionId, WorkflowChange change) => AuthorizeChangeAsync(definitionId, change, runsAsSystem: false);
+
+    /// <summary>The full form: <paramref name="runsAsSystem"/> says the definition about to be published carries the system flag.</summary>
+    public async Task<WorkflowOwnershipInfo> AuthorizeChangeAsync(string? definitionId, WorkflowChange change, bool runsAsSystem)
     {
         var properties = await GetStoredPropertiesAsync(definitionId);
         var stored = WorkflowOwnershipInfo.From(properties);
@@ -144,6 +150,15 @@ public sealed class WorkflowOwnershipGuard(
             {
                 throw new WorkflowChangeDeniedException($"'{user.Identity.Name}' may not have this workflow {Verb(change)}: it takes {permission.Name}{(resource.Edit.Count > 0 ? " and the workflow names who may edit it" : string.Empty)}.");
             }
+
+            if (runsAsSystem && change == WorkflowChange.Publish && !await access.AuthorizeAsync(user, Permissions.ManageShippedWorkflows, resource))
+            {
+                throw new WorkflowChangeDeniedException($"'{user.Identity.Name}' may not publish this workflow as system: it takes {Permissions.ManageShippedWorkflows.Name}.");
+            }
+        }
+        else if (runsAsSystem && change == WorkflowChange.Publish)
+        {
+            throw new WorkflowChangeDeniedException($"Publishing a workflow as system takes {Permissions.ManageShippedWorkflows.Name}; no user is signed in.");
         }
 
         return stored.IsShipped && change == WorkflowChange.Save ? stored with { Forked = true } : stored;
@@ -168,7 +183,7 @@ public sealed class WorkflowOwnershipGuard(
         }
         else
         {
-            ownership = await AuthorizeChangeAsync(definition.DefinitionId, change);
+            ownership = await AuthorizeChangeAsync(definition.DefinitionId, change, Contexts.WorkflowCallerResolver.RunsAsSystem(definition.CustomProperties));
             ownership.Stamp(definition.CustomProperties);
         }
 

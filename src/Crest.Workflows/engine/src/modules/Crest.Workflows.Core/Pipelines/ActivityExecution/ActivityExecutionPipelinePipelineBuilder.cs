@@ -9,6 +9,9 @@ public class ActivityExecutionPipelinePipelineBuilder(IServiceProvider servicePr
     public IServiceProvider ServiceProvider { get; } = serviceProvider;
 
     /// <inheritdoc />
+    public IEnumerable<Func<ActivityMiddlewareDelegate, ActivityMiddlewareDelegate>> Components => _components.ToList();
+
+    /// <inheritdoc />
     public IActivityExecutionPipelineBuilder Use(Func<ActivityMiddlewareDelegate, ActivityMiddlewareDelegate> middleware)
     {
         _components.Add(middleware);

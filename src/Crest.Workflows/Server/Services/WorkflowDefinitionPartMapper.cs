@@ -69,6 +69,7 @@ public class WorkflowDefinitionPartMapper(IApiSerializer apiSerializer, Workflow
         target.Description = source.Description;
         target.IsReadonly = source.IsReadonly;
         target.IsSystem = source.IsSystem;
+        target.RunsAsSystem = Contexts.WorkflowCallerResolver.RunsAsSystem(source.CustomProperties);
         target.UsableAsActivity = source.Options?.UsableAsActivity == true;
         target.SerializedData = apiSerializer.Serialize(source);
     }

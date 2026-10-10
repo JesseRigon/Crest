@@ -43,6 +43,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Crest.Workflows.Domain.csproj" />
+    <ProjectReference Include="..\..\Crest.Access.Abstractions\Crest.Access.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Crest.Queries.Abstractions\Crest.Queries.Abstractions.csproj" />
     <ProjectReference Include="..\..\Crest.Server\Crest.Server.csproj" />
   </ItemGroup>
 </Project>

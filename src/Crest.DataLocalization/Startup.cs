@@ -26,6 +26,9 @@ public class Startup : StartupBase
         services.AddLiquidFilter<DataLocalizationFilter>("d");
 
         services.AddScoped<TranslationsManager>();
+        services.AddScoped<ITranslationsManager>(sp => sp.GetRequiredService<TranslationsManager>());
+        services.AddScoped<Crest.AdminMenu.IAdminMenuEventHandler, AdminMenuTranslationCleanup>();
+        services.AddScoped<Crest.ContentTypes.Events.IContentDefinitionEventHandler, ContentTypeTranslationCleanup>();
         services.AddRecipeExecutionStep<TranslationsStep>();
 
         services.AddDeployment<TranslationsDeploymentSource, TranslationsDeploymentStep, TranslationsDeploymentStepDriver>();

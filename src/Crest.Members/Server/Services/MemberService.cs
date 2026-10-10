@@ -19,10 +19,12 @@ public class MemberService : IMemberService
     private readonly IUserHierarchyService _hierarchy;
     private readonly IPartyUserLinkService _partyUserLink;
     private readonly MemberStampService _stamps;
+    private readonly Crest.Access.IPermissionVersion _permissionVersion;
 
-    public MemberService(ISession session, IUserService userService, IUserHierarchyService hierarchy, IPartyUserLinkService partyUserLink, MemberStampService stamps)
+    public MemberService(ISession session, IUserService userService, IUserHierarchyService hierarchy, IPartyUserLinkService partyUserLink, MemberStampService stamps, Crest.Access.IPermissionVersion permissionVersion)
     {
         _session = session;
+        _permissionVersion = permissionVersion;
         _userService = userService;
         _hierarchy = hierarchy;
         _partyUserLink = partyUserLink;
@@ -100,6 +102,8 @@ public class MemberService : IMemberService
         user.Put(memberInfo);
 
         await _session.SaveAsync(user);
+        // A binding is a rights write: every cached caller of this tenant is stale now.
+        await _permissionVersion.BumpAsync(cancellationToken);
         MemberStampService.DeferAddHierarchyNode(organizationId, user);
 
         // Same seam as the creation path: the binding is reported once it has committed,
@@ -122,6 +126,7 @@ public class MemberService : IMemberService
 
         user.Put(memberInfo);
         await _session.SaveAsync(user);
+        await _permissionVersion.BumpAsync(cancellationToken);
 
         DeferRemoveHierarchyNodes(organizationId, user.UserId);
         DeferMemberUnbound(organizationId, user.UserId);

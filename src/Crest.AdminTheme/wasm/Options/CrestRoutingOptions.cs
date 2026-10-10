@@ -16,6 +16,9 @@ public sealed class CrestRoutingOptions
     public const string CanonicalAdminPath = "/Admin";
     public const string CanonicalLoginPath = "/login";
 
+    public const string CanonicalMemberPath = "/members";
+
     public string AdminPath { get; set; } = CanonicalAdminPath;
     public string LoginPath { get; set; } = CanonicalLoginPath;
+    public string MemberPath { get; set; } = CanonicalMemberPath;
 }

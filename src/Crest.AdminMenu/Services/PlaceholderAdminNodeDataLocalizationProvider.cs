@@ -13,8 +13,8 @@ public class PlaceholderAdminNodeDataLocalizationProvider : AdminNodeDataLocaliz
     {
         var adminMenuList = await GetAdminMenusAsync();
 
-        return adminMenuList.SelectMany(m => m.MenuItems.OfType<PlaceholderAdminNode>()
-            .Select(n => new DataLocalizedString(DataLocalizationContext.AdminMenu(m.Name), n.LinkText, string.Empty))
-        );
+        return adminMenuList.SelectMany(m => Descriptors(
+            DataLocalizationContext.AdminMenu(m.Name),
+            AllNodes(m.MenuItems).OfType<PlaceholderAdminNode>().Select(n => n.LinkText)));
     }
 }

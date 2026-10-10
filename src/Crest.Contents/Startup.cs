@@ -1,5 +1,6 @@
 using Fluid;
 using Fluid.Values;
+using Crest.Access;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -144,7 +145,8 @@ public sealed class Startup : StartupBase
         services.AddContentManagementDisplay();
         services.AddPermissionProvider<Permissions>();
         services.AddPermissionProvider<ContentTypePermissions>();
-        services.AddScoped<IAuthorizationHandler, ContentTypeAuthorizationHandler>();
+        services.AddScoped<IResourcePermissionMapper, ContentResourcePermissionMapper>();
+        services.AddScoped<IScopeProvider, ContentItemScopeProvider>();
         services.AddShapeTableProvider<Shapes>();
         services.AddShapeTableProvider<AdminDashboardShapeTableProvider>();
         services.AddNavigationProvider<AdminMenu>();
