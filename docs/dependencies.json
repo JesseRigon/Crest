@@ -5,8 +5,8 @@
    "label": "Crest.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 37,
-   "title": "Crest.Abstractions\\nreferenced by 36, references 0, packages 4"
+   "value": 30,
+   "title": "Crest.Abstractions\\nreferenced by 29, references 0, packages 4"
   },
   {
    "id": "Crest.Access",
@@ -829,8 +829,8 @@
    "label": "Crest.Infrastructure.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 52,
-   "title": "Crest.Infrastructure.Abstractions\\nreferenced by 51, references 3, packages 0"
+   "value": 59,
+   "title": "Crest.Infrastructure.Abstractions\\nreferenced by 58, references 2, packages 0"
   },
   {
    "id": "Crest.Layers",
@@ -1262,7 +1262,7 @@
    "color": "#219ebc",
    "kind": "core",
    "value": 4,
-   "title": "Crest.Queries.Core\\nreferenced by 3, references 1, packages 1"
+   "title": "Crest.Queries.Core\\nreferenced by 3, references 2, packages 1"
   },
   {
    "id": "Crest.RateLimits",
@@ -2280,7 +2280,7 @@
   },
   {
    "from": "Crest.Mvc.Core",
-   "to": "Crest.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -2615,7 +2615,7 @@
   },
   {
    "from": "Crest.Redis.Abstractions",
-   "to": "Crest.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -3010,7 +3010,7 @@
   },
   {
    "from": "Crest.Logging.NLog",
-   "to": "Crest.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -3105,7 +3105,7 @@
   },
   {
    "from": "Crest.Module.Targets",
-   "to": "Crest.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -3820,7 +3820,7 @@
   },
   {
    "from": "Crest.Data.Abstractions",
-   "to": "Crest.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -3990,7 +3990,7 @@
   },
   {
    "from": "Crest.Liquid.Abstractions",
-   "to": "Crest.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -4925,7 +4925,7 @@
   },
   {
    "from": "Crest.Logging.Serilog",
-   "to": "Crest.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -6970,11 +6970,6 @@
   },
   {
    "from": "Crest.Infrastructure.Abstractions",
-   "to": "Crest.Data.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Infrastructure.Abstractions",
    "to": "Crest.ResourceManagement.Abstractions",
    "arrows": "to"
   },
@@ -7891,6 +7886,11 @@
   {
    "from": "Crest.Indexing",
    "to": "Crest.ResourceManagement",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Queries.Core",
+   "to": "Crest.Data.Abstractions",
    "arrows": "to"
   },
   {

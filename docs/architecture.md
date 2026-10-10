@@ -47,7 +47,7 @@ External URLs and the `OrchardCore.Translations` packages are left as they are. 
 `Crest.Workflows.Platform` module is merged into `Crest.Workflows` as part of the rename, and
 the four sample site themes (TheTheme, TheBlogTheme, TheAgencyTheme, TheComingSoonTheme) are
 pruned first. Neither the platform nor Crest.Server is named just `Crest`: the
-platform's implementation library is `Crest.Infrastructure` (the former `Crest.Core` merged into it 2026-10-10, since Crest is one system with no framework-versus-CMS split) and Crest.Server's assembly and package become
+platform's implementation library is `Crest.Infrastructure` (the former `Crest.Core` merged into it 2026-10-10, since Crest is one system with no framework-versus-CMS split), its contracts are `Crest.Infrastructure.Abstractions` (the shell host, modules, extensions, caching, locking, background tasks and options-invalidation contracts moved there from `Crest.Abstractions` the same day; `Crest.Abstractions` keeps only primitives: JSON, routing, localization, setup and helpers; the document-manager contracts sit in `Crest.Data.Abstractions`, which depends on Infrastructure.Abstractions and not the reverse) and Crest.Server's assembly and package become
 `Crest.Server`. Where a renamed platform module or type meets existing Crest code, each clash
 is resolved case by case: delete the side Crest has already replaced, or merge Crest code
 that was written to sit over the platform into the platform module. Before the rename, only

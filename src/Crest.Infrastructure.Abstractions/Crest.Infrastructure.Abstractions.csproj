@@ -15,8 +15,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Crest.Infrastructure" />
+    <InternalsVisibleTo Include="Crest.Tests" />
+    <InternalsVisibleTo Include="Crest.Abstractions.Tests" />
+    <InternalsVisibleTo Include="Crest.Data.YesSql" />
+    <InternalsVisibleTo Include="Crest.ContentManagement.GraphQL" />
+    <InternalsVisibleTo Include="Crest.DisplayManagement" />
+    <InternalsVisibleTo Include="Crest.DynamicCache" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement.Abstractions\Crest.ResourceManagement.Abstractions.csproj" />
   </ItemGroup>
 
