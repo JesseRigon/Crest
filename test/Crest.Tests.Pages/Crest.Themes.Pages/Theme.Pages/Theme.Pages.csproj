@@ -10,8 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Crest.Theme.Targets\Crest.Theme.Targets.csproj" />
-    <ProjectReference Include="..\..\..\..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Crest.Theme.Targets\Crest.Theme.Targets.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
   </ItemGroup>
 
 </Project>

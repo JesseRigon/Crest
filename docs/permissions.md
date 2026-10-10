@@ -2,6 +2,11 @@
 
 **Deferred future work.** Not implemented. Item-level permission checks (`CommonPermissions.ViewContent`/`EditContent`) are what's actually enforced today. This document exists so the gap is a deliberate, tracked decision instead of a silent limitation someone rediscovers later. The content-items API that enforces item-level checks today is in [content-items.md](content-items.md).
 
+> **Ruling 2026-10-10:** per-part permissions become **scope providers** on content fields in
+> `Crest.Access` ([operations.md](operations.md) › Decisions): the seam in step 1, the first
+> rule when a type needs it. The provider and controller changes below describe the stock
+> shape and are superseded by that.
+
 ## Per-part permissions
 
 OrchardCore's built-in permission model is **content-type/item level**, not part level. `Crest.Contents.Security.ContentTypePermissions` (`Crest.Contents/Security/ContentTypePermissions.cs`) generates permissions per content type via `ContentTypePermissionsHelper.PermissionTemplates` (e.g. `Editable_<ContentType>`, `Viewable_<ContentType>`) — there is no native concept of "can view `CrestBlazorComponentPart` on this item but not `TitlePart` on the same item." A role either can or can't act on the whole item.

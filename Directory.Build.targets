@@ -19,8 +19,8 @@
     Crest's own modules and themes import the platform's module/theme props at the top of their
     project file; the matching targets must come here, after the language targets, because they
     read $(DefaultLanguageSourceExtension) (imported at the end of a project body it is still
-    empty, the "**\*.cs" exclusion becomes "**\*" and nothing is embedded). Platform projects
-    under src/ and test/ import them from their own Directory.Build.targets.
+    empty, the "**\*.cs" exclusion becomes "**\*" and nothing is embedded). The platform projects
+    get theirs from the imports below.
   -->
   <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.targets"
           Condition="'$(ModuleType)' != '' And '$(_IsPlatformProject)' != 'true'" />
@@ -28,6 +28,6 @@
           Condition="'$(ModuleType)' == 'Theme' And '$(_IsPlatformProject)' != 'true'" />
 
   <!-- The platform projects: what the former src/*/Directory.Build.targets files imported. -->
-  <Import Project="Crest.Build\Crest.Commons.targets" Condition="'$(_PlatformKind)' == 'Library' Or '$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
-  <Import Project="Crest.Module.Targets\Crest.Module.Targets.targets" Condition="'$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
+  <Import Project="src\Crest.Build\Crest.Commons.targets" Condition="'$(_PlatformKind)' == 'Library' Or '$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
+  <Import Project="src\Crest.Module.Targets\Crest.Module.Targets.targets" Condition="'$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
 </Project>

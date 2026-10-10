@@ -1,5 +1,9 @@
 # Page regions — UI injection across modules
 
+> Audit note (2026-10-09): under the fluid display model this seam is the first implementation
+> of a *slot with a contribution key* and folds into it; see
+> [blazor-display.md](blazor-display.md) › Audit, contradiction 2 and decision 6.
+
 How a downstream module puts UI on a page owned by a module it must not be referenced by.
 
 Implemented as `IPageRegionContributor` / `PageRegionRegistry` / `<CrestPageRegion>` in

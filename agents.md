@@ -9,7 +9,7 @@
 
 ## Platform Integration
 
-The platform (the projects forked from OrchardCore and renamed `Crest.*`, listed in `Crest.Build/Platform.Projects.props`) is Crest's own code. When it lacks something Crest needs, change it there rather than wrapping, shimming or copying it.
+The platform (the projects forked from OrchardCore and renamed `Crest.*`, listed in `src/Crest.Build/Platform.Projects.props`) is Crest's own code. When it lacks something Crest needs, change it there rather than wrapping, shimming or copying it.
 
 - Prefer native platform APIs before adding `api/crest/*`: Contents REST, GraphQL, Query API, OpenID/JWT, Media, Taxonomies, Users, and existing admin services/controllers.
 - Keep Crest server thin: JSON adapters over platform services only; do not duplicate the platform's content-definition, permissions, display-driver, or API framework.

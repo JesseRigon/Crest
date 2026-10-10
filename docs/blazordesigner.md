@@ -1,5 +1,9 @@
 # Blazor Component Workbench & WYSIWYG Editor
 
+> Audit note (2026-10-09): § 3's registry, attributes and `ComponentNode` are superseded by the
+> one component registry and `Template.Tree` in [blazor-display.md](blazor-display.md) (Audit,
+> contradictions 3 and 4); Phase 1 is rewritten to consume them once the open rulings land.
+
 **Status: not started.** This is a stored plan only — nothing here has been implemented.
 
 **Builds on [blazor-display.md](blazor-display.md)** (2026-10-09): the backend comes first. The
@@ -256,7 +260,7 @@ public class DesignSnapshot
 ## Phase 4: Convert an existing Crest component as the pilot
 
 - [ ] **Register a real Crest component as the pilot.** Pick one real, already-built Crest component (a good candidate: something in
-  `modules/Crest/Crest.Components/`) and register it via
+  `modules/Crest/src/Crest.Components/`) and register it via
   `[WorkbenchComponent]` as the first end-to-end proof — palette → canvas → property pane
   → snapshot, no synthetic test-only component.
 

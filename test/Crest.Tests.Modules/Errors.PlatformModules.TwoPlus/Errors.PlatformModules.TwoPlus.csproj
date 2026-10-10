@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\..\Crest.Build\Crest.Commons.props" />
-  <Import Project="..\..\..\Crest.Module.Targets\Crest.Module.Targets.props" />
+  <Import Project="..\..\..\src\Crest.Build\Crest.Commons.props" />
+  <Import Project="..\..\..\src\Crest.Module.Targets\Crest.Module.Targets.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(CommonTargetFrameworks)</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Crest.Abstractions\Crest.Abstractions.csproj" />
-    <ProjectReference Include="..\..\..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
+    <ProjectReference Include="..\..\..\src\Crest.Abstractions\Crest.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\src\Crest.Module.Targets\Crest.Module.Targets.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,8 +37,8 @@
                            Tags="eleven;twelve;thirteen" />
   </ItemGroup>
 
-  <Import Project="..\..\..\Crest.Module.Targets\Crest.Module.Targets.targets" />
-  <Import Project="..\..\..\Crest.Build\Crest.Commons.targets" />
+  <Import Project="..\..\..\src\Crest.Module.Targets\Crest.Module.Targets.targets" />
+  <Import Project="..\..\..\src\Crest.Build\Crest.Commons.targets" />
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

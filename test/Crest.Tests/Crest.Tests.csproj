@@ -14,9 +14,9 @@
 
   <ItemGroup>
     <None Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\Crest.Cms.Web\NLog.config" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\Crest.Cms.Web\*.json" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\Crest.Cms.Web\wwwroot\**\*" Link="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Crest.Cms.Web\NLog.config" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Crest.Cms.Web\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Crest.Cms.Web\wwwroot\**\*" Link="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -51,18 +51,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Crest.Cms.Web\Crest.Cms.Web.csproj" />
-    <ProjectReference Include="..\..\Crest.Antivirus\Crest.Antivirus.csproj" />
-    <ProjectReference Include="..\..\Crest.DynamicCache\Crest.DynamicCache.csproj" />
-    <ProjectReference Include="..\..\Crest.RateLimits\Crest.RateLimits.csproj" />
-    <ProjectReference Include="..\..\Crest.SignalR.Azure\Crest.SignalR.Azure.csproj" />
-    <ProjectReference Include="..\..\Crest.SignalR.Redis\Crest.SignalR.Redis.csproj" />
-    <ProjectReference Include="..\..\Crest.Apis.GraphQL.Abstractions\Crest.Apis.GraphQL.Abstractions.csproj" />
-    <ProjectReference Include="..\..\Crest.Apis.GraphQL.Client\Crest.Apis.GraphQL.Client.csproj" />
-    <ProjectReference Include="..\..\Crest.Media.Core\Crest.Media.Core.csproj" />
-    <ProjectReference Include="..\..\Crest.SourceGenerators\Crest.SourceGenerators.csproj" OutputItemType="Analyzer" />
-    <ProjectReference Include="..\..\Crest.Autoroute\Crest.Autoroute.csproj" />
-    <ProjectReference Include="..\..\Crest.ContentManagement\Crest.ContentManagement.csproj" />
+    <ProjectReference Include="..\..\src\Crest.Cms.Web\Crest.Cms.Web.csproj" />
+    <ProjectReference Include="..\..\src\Crest.Antivirus\Crest.Antivirus.csproj" />
+    <ProjectReference Include="..\..\src\Crest.DynamicCache\Crest.DynamicCache.csproj" />
+    <ProjectReference Include="..\..\src\Crest.RateLimits\Crest.RateLimits.csproj" />
+    <ProjectReference Include="..\..\src\Crest.SignalR.Azure\Crest.SignalR.Azure.csproj" />
+    <ProjectReference Include="..\..\src\Crest.SignalR.Redis\Crest.SignalR.Redis.csproj" />
+    <ProjectReference Include="..\..\src\Crest.Apis.GraphQL.Abstractions\Crest.Apis.GraphQL.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\Crest.Apis.GraphQL.Client\Crest.Apis.GraphQL.Client.csproj" />
+    <ProjectReference Include="..\..\src\Crest.Media.Core\Crest.Media.Core.csproj" />
+    <ProjectReference Include="..\..\src\Crest.SourceGenerators\Crest.SourceGenerators.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\..\src\Crest.Autoroute\Crest.Autoroute.csproj" />
+    <ProjectReference Include="..\..\src\Crest.ContentManagement\Crest.ContentManagement.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -92,7 +92,7 @@
     </None>
   </ItemGroup>
 
-  <Import Project="..\..\Crest.Build\Crest.Commons.targets" />
+  <Import Project="..\..\src\Crest.Build\Crest.Commons.targets" />
 
   <Target Name="EnsureTestWwwRootExists" BeforeTargets="Build">
     <MakeDir Directories="$(OutputPath)wwwroot" />

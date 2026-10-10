@@ -34,25 +34,29 @@ independently packageable.
 
 ```text
 Crest/
-  Crest.Core/, Crest.Abstractions/, Crest.ContentManagement/, Crest.Users/, Crest.Media/, ...
+  src/                every project, platform and application alike
+    Crest.Core/, Crest.Abstractions/, Crest.ContentManagement/, Crest.Users/, Crest.Media/, ...
                       the platform, forked from OrchardCore and renamed Crest.*:
                       tenants, users, permissions, content, features, settings, the
-                      module system. Listed by kind in Crest.Build/Platform.Projects.props.
-  Crest.Build/        the platform's build settings
-  test/               the platform's tests
-  Crest.Server/       the application layer's server module
-  Crest.Components/   the Blazor component library
-  Crest.Iconify/      Iconify provider
-  Crest.Icons/        icon registry and UI
-  Crest.Parties/ Crest.Members/ Crest.Workflows/ Crest.Money/ ...
-  Crest.AdminTheme/ Crest.SiteTheme/ Crest.MemberTheme/
+                      module system. Listed by kind in src/Crest.Build/Platform.Projects.props.
+    Crest.Build/      the platform's build settings
+    Crest.Server/     the application layer's server module
+    Crest.Components/ the Blazor component library
+    Crest.Iconify/    Iconify provider
+    Crest.Icons/      icon registry and UI
+    Crest.Parties/ Crest.Members/ Crest.Workflows/ Crest.Money/ ...
+    Crest.AdminTheme/ Crest.SiteTheme/ Crest.MemberTheme/
+  test/               the platform's tests (Crest's modules keep theirs in their own tests/ folders)
+  tests/              the browser suites
+  tools/              build tools (Crest.LazyModules)
   docs/               design docs and decisions
 ```
 
 `Crest.Platform.slnx` builds the platform; `Crest.slnx` builds the Crest modules, which
-reference the platform's projects directly (`$(PlatformSrcDir)`, the repository root). Platform
-and application projects sit in one tier; `Crest.Build/Platform.Projects.props` says which is
-which, and `Directory.Build.props` gives the platform projects their own build settings.
+reference the platform's projects directly (`$(PlatformSrcDir)`, the `src/` folder). Platform
+and application projects sit side by side under `src/`; `src/Crest.Build/Platform.Projects.props`
+says which is which, and `Directory.Build.props` gives the platform projects their own build
+settings.
 
 ## Project roles
 

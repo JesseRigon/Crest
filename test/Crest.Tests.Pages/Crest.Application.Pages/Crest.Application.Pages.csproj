@@ -1,7 +1,7 @@
 <Project ToolsVersion="15.0" Sdk="Microsoft.NET.Sdk.Web">
 
   <!-- Necessary as we reference the Project and not the Package -->
-  <Import Project="..\..\..\Crest.Application.Cms.Core.Targets\Crest.Application.Cms.Core.Targets.props" />
+  <Import Project="..\..\..\src\Crest.Application.Cms.Core.Targets\Crest.Application.Cms.Core.Targets.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(CommonTargetFrameworks)</TargetFrameworks>
@@ -24,15 +24,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Crest.Application.Cms.Core.Targets\Crest.Application.Cms.Core.Targets.csproj" />
+    <ProjectReference Include="..\..\..\src\Crest.Application.Cms.Core.Targets\Crest.Application.Cms.Core.Targets.csproj" />
     <ProjectReference Include="..\Crest.Modules.Pages\Module.Pages\Module.Pages.csproj" />
     <ProjectReference Include="..\Crest.Themes.Pages\Theme.Pages\Theme.Pages.csproj" />
   </ItemGroup>
 
   <!-- Necessary as we reference the Project and not the Package -->
-  <Import Project="..\..\..\Crest.Application.Cms.Core.Targets\Crest.Application.Cms.Core.Targets.targets" />
-  <Import Project="..\..\..\Crest.Application.Targets\Crest.Application.Targets.targets" />
+  <Import Project="..\..\..\src\Crest.Application.Cms.Core.Targets\Crest.Application.Cms.Core.Targets.targets" />
+  <Import Project="..\..\..\src\Crest.Application.Targets\Crest.Application.Targets.targets" />
 
-  <Import Project="..\..\..\Crest.Build\Crest.Commons.targets" />
+  <Import Project="..\..\..\src\Crest.Build\Crest.Commons.targets" />
 
 </Project>

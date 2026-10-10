@@ -322,6 +322,16 @@ is a registry of shells, with Site as the fallback:
 
 ### Decisions needed
 
+- [ ] **The theme system is reworked as structure plus design system** (ruling 2026-10-09,
+  [blazor-display.md](blazor-display.md) › decision 8; a separate plan after the display
+  system). A theme becomes its page structures (templates, composites, zone settings) with the
+  design system (branding) layered on top, so either can be swapped or imported alone; data
+  themes and compiled module themes register through one mechanism; a public marketplace carries
+  data themes only. The admin, site and member themes may then stop changing the way OrchardCore
+  themes change, with only the selections inside them changing. The theme registry and the
+  selection UI are reworked for that, and nothing in this document's shell injection model
+  (buckets, `crest-blazor`, contracts, the two guards, the route gate) may be lost.
+
 - [ ] **Shells on their own hostnames, and on their own servers** (open, 2026-10-06; to discuss
   in depth later). Today a tenant's admin, site and member shells share one hostname and one
   server, told apart by path. Open:

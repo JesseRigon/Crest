@@ -1,15 +1,15 @@
 <Project>
   <!--
-    One tier: the platform (the projects imported from OrchardCore) and Crest's own modules sit
-    side by side. Crest.Build/Platform.Projects.props lists the platform projects by kind, and
+    Every project lives under src/: the platform (the projects imported from OrchardCore) and
+    Crest's own modules side by side. src/Crest.Build/Platform.Projects.props lists the platform projects by kind, and
     this file gives them the platform's build settings: Commons (versioning, package metadata,
     the source generators), the analyzer configuration, and the module or theme targets. Crest's
     own projects import the module/theme props themselves and get none of the platform settings.
   -->
-  <Import Project="Crest.Build\Platform.Projects.props" />
+  <Import Project="src\Crest.Build\Platform.Projects.props" />
   <PropertyGroup>
     <!-- Crest's modules reference the platform's projects through this, never by relative path. -->
-    <PlatformSrcDir>$(MSBuildThisFileDirectory)</PlatformSrcDir>
+    <PlatformSrcDir>$(MSBuildThisFileDirectory)src\</PlatformSrcDir>
     <_ProjectKey>;$(MSBuildProjectName);</_ProjectKey>
     <_PlatformKind Condition="$(PlatformLibraryProjects.Contains('$(_ProjectKey)'))">Library</_PlatformKind>
     <_PlatformKind Condition="$(PlatformModuleProjects.Contains('$(_ProjectKey)'))">Module</_PlatformKind>
@@ -18,13 +18,13 @@
     <_PlatformKind Condition="'$(_PlatformKind)' == '' And $(MSBuildProjectDirectory.Replace('\','/').StartsWith('$(MSBuildThisFileDirectory.Replace('\','/'))test/'))">Test</_PlatformKind>
     <_IsPlatformProject Condition="'$(_PlatformKind)' != ''">true</_IsPlatformProject>
   </PropertyGroup>
-  <Import Project="Crest.Build\Platform.Build.props" Condition="'$(_IsPlatformProject)' == 'true'" />
+  <Import Project="src\Crest.Build\Platform.Build.props" Condition="'$(_IsPlatformProject)' == 'true'" />
   <ItemGroup Condition="'$(_IsPlatformProject)' == 'true'">
-    <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)Crest.Build\Platform.globalconfig" />
+    <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)src\Crest.Build\Platform.globalconfig" />
   </ItemGroup>
-  <Import Project="Crest.Build\Crest.Commons.props" Condition="'$(_PlatformKind)' == 'Library' Or '$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
-  <Import Project="Crest.Theme.Targets\Crest.Theme.Targets.props" Condition="'$(_PlatformKind)' == 'Theme'" />
-  <Import Project="Crest.Module.Targets\Crest.Module.Targets.props" Condition="'$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
+  <Import Project="src\Crest.Build\Crest.Commons.props" Condition="'$(_PlatformKind)' == 'Library' Or '$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
+  <Import Project="src\Crest.Theme.Targets\Crest.Theme.Targets.props" Condition="'$(_PlatformKind)' == 'Theme'" />
+  <Import Project="src\Crest.Module.Targets\Crest.Module.Targets.props" Condition="'$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
   <PropertyGroup Condition="'$(_PlatformKind)' == 'Library' Or '$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'">
     <TargetFrameworks>$(CommonTargetFrameworks)</TargetFrameworks>
   </PropertyGroup>

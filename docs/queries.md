@@ -29,6 +29,20 @@ public release.
 > query system reads it. The data-layer module chain (`Crest.Data`, connectors, query, API
 > surfaces) is still to be decided; see [blazor-display.md](blazor-display.md) › Rulings.
 
+> **Ruling 2026-10-09 (sequencing):** the display system binds everything it reads through
+> queries ([blazor-display.md](blazor-display.md) › decision 4): `Item`, `User` and `Tenant`
+> are built-in system queries from an in-process source, and a slot is `{ query, parameters,
+> path }`. The query **contract** (typed, paged, caller-scoped source; the system sources;
+> parameters as bindings) therefore moves ahead of the Templates rework; the SQL rewriter, the
+> builder and the connectors follow it.
+
+> **Ruling 2026-10-10:** queries are one of the two kinds of **operation** in the operation
+> registry, behind the one access machinery; the surfaces (REST, GraphQL, RPC, Liquid, pickers)
+> are generated from that registry. The build order is [operations.md](operations.md) › Tasks
+> (step 2 is this document's pipeline and connection system; step 1, `Crest.Access`, supplies
+> the caller and the ScopeSet that "permissions injected at run time" below is implemented
+> with). This document stays the design; the items below are its task list.
+
 ## The query system
 
 Every question about queries is answered from **two aspects**, kept apart: **the builder**

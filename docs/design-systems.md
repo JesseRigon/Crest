@@ -238,10 +238,42 @@ direction-aware, logical values; the shell root sets `dir` from the culture. A M
 raw CSS and physical properties, with a notice on every such edit that it breaks localization.
 Detail in [blazor-display.md](blazor-display.md) › Design systems.
 
+## Token taxonomy (ruling 2026-10-09)
+
+A design system is the **visual language and the branding**: tokens, type scales, heading
+settings, presets. It is separate from the theme, which is structure
+([blazor-display.md](blazor-display.md) › decision 8).
+
+- **Two layers.** A **reference palette** (raw values: `blue.500`, `space.4`) feeds the
+  **semantic tokens**, so `color.bg.dark` and `color.accent.shadow` can point at the same palette
+  entry and change together. Templates and primitives bind semantic tokens only; the palette is
+  internal to the design system and its editor.
+- **One flat semantic namespace.** `color.surface.1`, `radius.md`, `button.radius` and
+  `nav.width` are all semantic tokens and live side by side, keyed by name, with no duplicates in
+  the layer. "Component tokens" are not a layer of the design system: at the component layer a
+  primitive *declares* which semantic tokens its style parameters default to.
+- **Categories:** `color` (surface, text, border, accent, status: success, warning, danger,
+  info), `font` (family, size, weight, line height), `heading` (one group per level 1–6),
+  `space`, `radius`, `border.size`, `shadow`, `motion` (duration, easing), `breakpoint`. All
+  logical and direction-free.
+- **Scales:** numeric for ordered sets without a natural middle (`surface.1`, `accent.2`),
+  t-shirt sizes (`xs`–`xl`) for sizes.
+- **Extensible, keyed by name.** Modules register tokens through the registry, with a default
+  expressed in existing tokens. Token keys are the same across tenants; values have per-tenant and
+  per-user overrides (the override model of blazor-display.md § 5a). Crest and registering modules
+  provide common-sense defaults for the tokens and pages they register. **A module does not
+  change another module's defaults**, unless a Crest build-time setting lets the instance owner
+  allow it, knowing it can break existing pages.
+- **Presets** are switchable token sets a user picks between. **Who may override which tokens is
+  a tenant-level setting**, per audience: for example admin-shell users get presets that change
+  almost every token, members may change colour themes only (not spacing), site visitors get
+  light and dark presets only.
+- **Inheritance, compiled at publish.** A design system is a node definition under the override
+  model: a tenant's or user's system is overrides over a base, and the compiled token set is
+  produced on publish, which gives drafts and preview for branding.
+
 ## Decisions needed
 
-- [ ] **Token taxonomy.** Exact token taxonomy: semantic names first, component slots second.
 - [ ] **Part, fields or hybrid.** Whether design system content should use a custom part only, fields only, or a hybrid.
 - [ ] **Where the user default is stored.** Whether user default selection is stored on the User object, User profile content item, or as a small user-scoped Orchard setting.
 - [ ] **Where the tenant default is stored.** Whether tenant default selection should be stored in Site Settings or as a flag on the design system content item. Prefer Site Settings if the setting is tenant-wide.
-- [ ] **Inheritance or compiled sets.** Whether design systems should support inheritance/patching or always store a fully compiled token set.

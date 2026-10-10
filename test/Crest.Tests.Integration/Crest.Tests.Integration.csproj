@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Crest.FileStorage.AmazonS3\Crest.FileStorage.AmazonS3.csproj" />
-    <ProjectReference Include="..\..\Crest.FileStorage.AzureBlob\Crest.FileStorage.AzureBlob.csproj" />
-    <ProjectReference Include="..\..\Crest.Media.AmazonS3\Crest.Media.AmazonS3.csproj" />
-    <ProjectReference Include="..\..\Crest.Media.Azure\Crest.Media.Azure.csproj" />
+    <ProjectReference Include="..\..\src\Crest.FileStorage.AmazonS3\Crest.FileStorage.AmazonS3.csproj" />
+    <ProjectReference Include="..\..\src\Crest.FileStorage.AzureBlob\Crest.FileStorage.AzureBlob.csproj" />
+    <ProjectReference Include="..\..\src\Crest.Media.AmazonS3\Crest.Media.AmazonS3.csproj" />
+    <ProjectReference Include="..\..\src\Crest.Media.Azure\Crest.Media.Azure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,6 +22,6 @@
     <PackageReference Include="xunit.v3.mtp-v2" />
   </ItemGroup>
 
-  <Import Project="..\..\Crest.Build\Crest.Commons.targets" />
+  <Import Project="..\..\src\Crest.Build\Crest.Commons.targets" />
 
 </Project>

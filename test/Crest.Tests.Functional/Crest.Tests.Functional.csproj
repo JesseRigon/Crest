@@ -23,10 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Crest.Cms.Web\Crest.Cms.Web.csproj" />
-    <ProjectReference Include="..\..\Crest.Mvc.Web\Crest.Mvc.Web.csproj" />
+    <ProjectReference Include="..\..\src\Crest.Cms.Web\Crest.Cms.Web.csproj" />
+    <ProjectReference Include="..\..\src\Crest.Mvc.Web\Crest.Mvc.Web.csproj" />
   </ItemGroup>
 
-  <Import Project="..\..\Crest.Build\Crest.Commons.targets" />
+  <Import Project="..\..\src\Crest.Build\Crest.Commons.targets" />
 
 </Project>

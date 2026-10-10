@@ -9,7 +9,7 @@ their own documents: [global-store.md](global-store.md), [regions.md](regions.md
 ## What Crest is
 
 Crest has two halves in one repository. **The platform** (the projects listed in
-`Crest.Build/Platform.Projects.props`, and `test/`) is a hard fork of OrchardCore: tenants, users, permissions, content, features, settings and the module
+`src/Crest.Build/Platform.Projects.props`, and `test/`) is a hard fork of OrchardCore: tenants, users, permissions, content, features, settings and the module
 system. Crest develops it as its own code. **The application layer** is everything a business-facing
 application needs that is not a line of business. Its foundation is built — the Blazor admin and
 site shells, the content-item API, icons, localization, Content Part Lists, the global
@@ -31,8 +31,8 @@ users on the other side of it, and the member portal is how a product reaches th
 
 ## Direction: Blazor or headless, nothing else
 
-Crest hard-forked OrchardCore (ruling 2026-10-09); its projects sit beside Crest's own, in
-one tier. When the platform lacks
+Crest hard-forked OrchardCore (ruling 2026-10-09); its projects sit beside Crest's own under
+`src/`. When the platform lacks
 something, the platform is changed: no shims, no stock-id module forks, no workarounds
 kept to stay mergeable. **The platform is renamed from `OrchardCore` to `Crest`, fully** (ruling 2026-10-09):
 namespaces, assemblies, project and folder names, package ids, feature and module ids,
@@ -65,14 +65,19 @@ workflow expressions, notification and email templates. Liquid as a view engine 
 the stock UIs.
 
 - **For now, keep Liquid (Fluid)** for expressions, for ease of migration.
-- **Eventually, migrate to Elsa's expression system**, because it allows more than one
-  language. When that engine is built:
+- **The workflow engine's expression system is the one engine** (ruling 2026-10-09, plan in
+  [blazor-display.md](blazor-display.md) § 12): its expression model, descriptors and input
+  metadata are the contract for workflows and for display; the platform's Liquid becomes its
+  Liquid implementation; the platform-side evaluators and **`Crest.Scripting` are removed**,
+  replaced by workflows. A workflow is written as a script or edited as a flow diagram; both are
+  front ends for the same objects.
+  - Every read and write is an **operation** in one registry (the engine's descriptors plus a
+    query kind), behind one access machinery, with the API surfaces generated from it
+    ([operations.md](operations.md), ruling 2026-10-10).
   - Liquid is the default language.
   - Admins can grant C#, JavaScript and Python scripting access. Granting is only the first
     step toward sandboxing: those providers run code on the server and must be hardened
-    before any tenant uses them.
-
-  Details to be discussed later.
+    before any tenant uses them. Neither C# nor Python exists in the vendored engine yet.
 
 ## Three shells
 

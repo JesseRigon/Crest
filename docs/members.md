@@ -597,7 +597,9 @@ sign in to decides what they see.
   2026-10-06), bumping the security stamp either way; adding staff no longer ends org bindings, and removing
   member does. The tenant's own organization still has no members
   ([parties.md](parties.md) › Organizations).
-- [ ] **How a request carries its side and organization** (ruling 2026-10-06). Authorization
+- [ ] **How a request carries its side and organization** (ruling 2026-10-06). Implemented
+  by `Crest.Access` step 1 ([operations.md](operations.md)): the caller context built at
+  step 4 of the one request path. Authorization
   handlers see only the principal, API routes are shared by both sides, and Orchard's own
   endpoints never pass through Crest's middleware — so the side is resolved where the
   sign-in cookie is validated, before any permission check:

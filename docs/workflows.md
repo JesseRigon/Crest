@@ -762,6 +762,27 @@ watch server or do not edit during a run. A build that fails on
 - Admin pages: Workflows › Definitions, Instances, Connections, Approvals, under the Crest
   admin; the designer opens from a definition.
 
+## Operations and the access gate
+
+(ruling 2026-10-10) Workflows are the **action** kind of operation in the operation registry;
+queries are the read kind; both run behind one access machinery. The two action pipelines
+(unit of work, durable background) are two of the four in [operations.md](operations.md).
+Tasks, in that document's step 4:
+
+- [ ] `AccessGate` as engine middleware before the activity invoker.
+- [ ] The actor rule: run as caller; published-as-system explicit and permissioned;
+  HTTP-endpoint workflows as the request's caller. `WorkflowUserContext` keeps identity and
+  shell only; the caller is rebuilt per burst.
+- [ ] Data activities through the gate (run query, content operations, call connector);
+  `CopyFields` and `MoveFields` reworked onto content operations.
+- [ ] The unit-of-work and durable-background pipelines named and hosted as such, with the
+  queue hardening from › Queues.
+- [ ] Connectors move into the connection system (queries.md); the activities stay as
+  consumers.
+- [ ] Expressions on the one engine: the platform's Liquid as the engine's Liquid handler,
+  the platform-side evaluators deleted, limits in one place (blazor-display.md § 12).
+- [ ] A workflow never runs a synchronous read for a page; reads are queries.
+
 ## Still to build
 
 The workflow service, its registry, connectors, approvals, ownership, permissions, units
