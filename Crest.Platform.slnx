@@ -75,6 +75,7 @@
   </Folder>
   <Folder Name="/platform/libraries/">
     <Project Path="src/Crest.Abstractions/Crest.Abstractions.csproj" />
+    <Project Path="src/Crest.Access.Abstractions/Crest.Access.Abstractions.csproj" />
     <Project Path="src/Crest.Admin.Abstractions/Crest.Admin.Abstractions.csproj" />
     <Project Path="src/Crest.AdminMenu.Abstractions/Crest.AdminMenu.Abstractions.csproj" />
     <Project Path="src/Crest.Apis.GraphQL.Abstractions/Crest.Apis.GraphQL.Abstractions.csproj" />
@@ -97,7 +98,6 @@
     <Project Path="src/Crest.ContentTypes.Abstractions/Crest.ContentTypes.Abstractions.csproj" />
     <Project Path="src/Crest.Contents.Core/Crest.Contents.Core.csproj" />
     <Project Path="src/Crest.Contents.TagHelpers/Crest.Contents.TagHelpers.csproj" />
-    <Project Path="src/Crest.Core/Crest.Core.csproj" />
     <Project Path="src/Crest.Data.Abstractions/Crest.Data.Abstractions.csproj" />
     <Project Path="src/Crest.Data.YesSql.Abstractions/Crest.Data.YesSql.Abstractions.csproj" />
     <Project Path="src/Crest.Data.YesSql/Crest.Data.YesSql.csproj" />
@@ -179,6 +179,7 @@
     <Project Path="src/Crest.XmlRpc.Abstractions/Crest.XmlRpc.Abstractions.csproj" />
   </Folder>
   <Folder Name="/platform/modules/">
+    <Project Path="src/Crest.Access/Crest.Access.csproj" />
     <Project Path="src/Crest.Admin/Crest.Admin.csproj" />
     <Project Path="src/Crest.AdminDashboard/Crest.AdminDashboard.csproj" />
     <Project Path="src/Crest.AdminMenu/Crest.AdminMenu.csproj" />
@@ -319,8 +320,5 @@
     <Project Path="test/Crest.Tests.Themes/Examples.Themes.AssyAttrib.Bravo/Examples.Themes.AssyAttrib.Bravo.csproj" />
     <Project Path="test/Crest.Tests.Themes/Examples.Themes.AssyAttrib.Charlie/Examples.Themes.AssyAttrib.Charlie.csproj" />
     <Project Path="test/Crest.Tests/Crest.Tests.csproj" />
-  </Folder>
-  <Folder Name="/docs/">
-    <Project Path="docs/platform/Crest.Docs.csproj" />
   </Folder>
 </Solution>
