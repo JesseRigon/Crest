@@ -67,7 +67,7 @@ public class ImageShortcodeTests
 
         var options = Options.Create(new ResourceManagementOptions { CdnBaseUrl = cdnBaseUrl });
 
-        var imageProvider = new ImageShortcodeProvider(fileStore, sanitizer, httpContextAccessor, options, fileVersionProvider);
+        var imageProvider = new ImageShortcodeProvider(LegacyMediaResolver.For(fileStore, httpContextAccessor), sanitizer, httpContextAccessor, options, fileVersionProvider);
 
         var processor = new ShortcodeService(new IShortcodeProvider[] { imageProvider }, []);
 

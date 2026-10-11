@@ -1,3 +1,4 @@
+using Crest.Media.Library;
 using GraphQL;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
@@ -67,13 +68,28 @@ public sealed class MediaAssetQuery : ISchemaBuilder
 
         var allFiles = mediaFileStore.GetDirectoryContentAsync(path, includeSubDirectories);
 
-        if (includeSubDirectories)
+        var entries = includeSubDirectories
+            ? await allFiles.ToListAsync()
+            : await allFiles.Where(x => !x.IsDirectory).ToListAsync();
+
+        // Once the media library is active, only what the caller may view (ruling F1): each entry
+        // is a placement, opened through the access check.
+        var library = resolveContext.RequestServices.GetService<IMediaLibrary>();
+        if (library is null || !await library.IsActiveAsync())
         {
-            return await allFiles.ToListAsync();
+            return entries;
         }
-        else
+
+        var references = resolveContext.RequestServices.GetRequiredService<IMediaReferenceResolver>();
+        var visible = new List<IFileStoreEntry>(entries.Count);
+        foreach (var entry in entries)
         {
-            return await allFiles.Where(x => !x.IsDirectory).ToListAsync();
+            if (await references.ResolveAsync(MediaReference.ForPath(entry.Path), MediaUrlOptions.Unsigned) is not null)
+            {
+                visible.Add(entry);
+            }
         }
+
+        return visible;
     }
 }

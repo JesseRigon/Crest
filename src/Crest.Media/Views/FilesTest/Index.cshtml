@@ -1,0 +1,82 @@
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var tokens = Antiforgery.GetAndStoreTokens(Context);
+    var api = Url.Content("~/api/files");
+}
+<h1>Files: end-to-end check</h1>
+<p>Drives the file-object API from the browser. No styling; not the drive browser.</p>
+
+<h2>Drives</h2>
+<button type="button" id="load-drives">List my drives</button>
+<ul id="drives"></ul>
+
+<h2>Folder</h2>
+<p>Selected: <code id="selected">none</code></p>
+<input id="folder-name" placeholder="New folder name" />
+<button type="button" id="create-folder">Create folder</button>
+<input id="upload" type="file" />
+<button type="button" id="upload-file">Upload</button>
+<button type="button" id="list-children">List children</button>
+<ul id="children"></ul>
+
+<h2>Log</h2>
+<pre id="log"></pre>
+
+<script>
+    (function () {
+        const api = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(api));
+        const header = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(tokens.HeaderName ?? "RequestVerificationToken"));
+        const token = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(tokens.RequestToken ?? ""));
+        let selected = null;
+        const $ = id => document.getElementById(id);
+        const log = text => { $("log").textContent = new Date().toISOString() + " " + text + "\n" + $("log").textContent; };
+
+        async function call(method, path, body) {
+            const init = { method, headers: { [header]: token }, credentials: "same-origin" };
+            if (body instanceof FormData) { init.body = body; }
+            else if (body !== undefined) { init.body = JSON.stringify(body); init.headers["Content-Type"] = "application/json"; }
+            const response = await fetch(api + path, init);
+            const text = await response.text();
+            log(method + " " + path + " -> " + response.status + (text ? " " + text.substring(0, 300) : ""));
+            if (!response.ok) { throw new Error(response.status); }
+            return text ? JSON.parse(text) : null;
+        }
+
+        function select(item) { selected = item; $("selected").textContent = item.name + " (" + item.id + ")"; }
+
+        function render(list, items) {
+            list.innerHTML = "";
+            for (const item of items) {
+                const li = document.createElement("li");
+                const open = document.createElement("button");
+                open.type = "button";
+                open.textContent = (item.kind === 0 ? "file" : item.kind === 1 ? "folder" : "drive") + ": " + item.name;
+                open.onclick = () => item.kind === 0 ? download(item) : select(item);
+                li.appendChild(open);
+                if (item.kind === 0) { li.append(" v" + (item.publishedVersion ?? "-") + " " + (item.versions[0]?.state ?? "")); }
+                list.appendChild(li);
+            }
+        }
+
+        async function download(item) {
+            const url = await call("GET", "/" + item.id + "/url");
+            window.open(url.url, "_blank");
+        }
+
+        $("load-drives").onclick = async () => render($("drives"), await call("GET", "/drives"));
+        $("create-folder").onclick = async () => {
+            if (!selected) { return log("select a drive or folder first"); }
+            await call("POST", "/" + selected.id + "/folders", { name: $("folder-name").value });
+        };
+        $("upload-file").onclick = async () => {
+            if (!selected || !$("upload").files.length) { return log("select a folder and a file first"); }
+            const form = new FormData();
+            form.append("file", $("upload").files[0]);
+            await call("POST", "/" + selected.id + "/files", form);
+        };
+        $("list-children").onclick = async () => {
+            if (!selected) { return log("select a drive or folder first"); }
+            render($("children"), (await call("GET", "/" + selected.id + "/children")).items);
+        };
+    })();
+</script>

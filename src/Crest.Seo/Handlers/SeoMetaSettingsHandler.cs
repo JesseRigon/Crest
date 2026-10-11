@@ -6,7 +6,10 @@ using Crest.ContentManagement;
 using Crest.ContentManagement.Handlers;
 using Crest.DisplayManagement.Extensions;
 using Crest.Entities;
+using System.Text.Json.Nodes;
 using Crest.Media;
+using Crest.Media.Fields;
+using Crest.Media.Library;
 using Crest.Mvc.Utilities;
 using Crest.Seo.Models;
 using Crest.Settings;
@@ -15,20 +18,20 @@ namespace Crest.Seo.Drivers;
 
 public class SeoMetaSettingsHandler : ContentHandlerBase
 {
-    private readonly IMediaFileStore _mediaFileStore;
+    private readonly IMediaReferenceResolver _references;
     private readonly ISiteService _siteService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IUrlHelperFactory _urlHelperFactory;
     private IContentManager _contentManager;
 
     public SeoMetaSettingsHandler(
-        IMediaFileStore mediaFileStore,
+        IMediaReferenceResolver references,
         ISiteService siteService,
         IHttpContextAccessor httpContextAccessor,
         IUrlHelperFactory urlHelperFactory
         )
     {
-        _mediaFileStore = mediaFileStore;
+        _references = references;
         _siteService = siteService;
         _httpContextAccessor = httpContextAccessor;
         _urlHelperFactory = urlHelperFactory;
@@ -55,9 +58,9 @@ public class SeoMetaSettingsHandler : ContentHandlerBase
             // Logic is this happens last after the part settings.
             // so if values are not set it is responsible for settings them.
 
-            var defaultImage = string.Empty;
-            var openGraphImage = string.Empty;
-            var twitterImage = string.Empty;
+            MediaReference? defaultImage = null;
+            MediaReference? openGraphImage = null;
+            MediaReference? twitterImage = null;
 
             var defaultAltText = string.Empty;
             var openGraphAltText = string.Empty;
@@ -80,20 +83,11 @@ public class SeoMetaSettingsHandler : ContentHandlerBase
 
                 if (socialMetaSettings is not null)
                 {
-                    if (socialMetaSettings.DefaultSocialImage?.Paths?.Count > 0)
-                    {
-                        defaultImage = socialMetaSettings.DefaultSocialImage.Paths[0];
-                    }
+                    defaultImage = FirstMedia(socialMetaSettings.DefaultSocialImage);
 
-                    if (socialMetaSettings.OpenGraphImage?.Paths?.Count > 0)
-                    {
-                        openGraphImage = socialMetaSettings.OpenGraphImage.Paths[0];
-                    }
+                    openGraphImage = FirstMedia(socialMetaSettings.OpenGraphImage);
 
-                    if (socialMetaSettings.TwitterImage?.Paths?.Count > 0)
-                    {
-                        twitterImage = socialMetaSettings.TwitterImage.Paths[0];
-                    }
+                    twitterImage = FirstMedia(socialMetaSettings.TwitterImage);
 
                     if (socialMetaSettings.DefaultSocialImage?.MediaTexts?.Count > 0)
                     {
@@ -202,16 +196,16 @@ public class SeoMetaSettingsHandler : ContentHandlerBase
 
             if (string.IsNullOrEmpty(aspect.OpenGraphImage))
             {
-                if (string.IsNullOrEmpty(openGraphImage))
+                if (openGraphImage is null)
                 {
-                    if (!string.IsNullOrEmpty(defaultImage))
+                    if (defaultImage is not null)
                     {
-                        aspect.OpenGraphImage = urlHelper.ToAbsoluteUrl(_mediaFileStore.MapPathToPublicUrl(defaultImage));
+                        aspect.OpenGraphImage = await SocialImageUrlAsync(urlHelper, defaultImage);
                     }
                 }
                 else
                 {
-                    aspect.OpenGraphImage = urlHelper.ToAbsoluteUrl(_mediaFileStore.MapPathToPublicUrl(openGraphImage));
+                    aspect.OpenGraphImage = await SocialImageUrlAsync(urlHelper, openGraphImage);
                 }
             }
 
@@ -257,16 +251,16 @@ public class SeoMetaSettingsHandler : ContentHandlerBase
 
             if (string.IsNullOrEmpty(aspect.TwitterImage))
             {
-                if (string.IsNullOrEmpty(twitterImage))
+                if (twitterImage is null)
                 {
-                    if (!string.IsNullOrEmpty(defaultImage))
+                    if (defaultImage is not null)
                     {
-                        aspect.TwitterImage = urlHelper.ToAbsoluteUrl(_mediaFileStore.MapPathToPublicUrl(defaultImage));
+                        aspect.TwitterImage = await SocialImageUrlAsync(urlHelper, defaultImage);
                     }
                 }
                 else
                 {
-                    aspect.TwitterImage = urlHelper.ToAbsoluteUrl(_mediaFileStore.MapPathToPublicUrl(twitterImage));
+                    aspect.TwitterImage = await SocialImageUrlAsync(urlHelper, twitterImage);
                 }
             }
 
@@ -288,4 +282,20 @@ public class SeoMetaSettingsHandler : ContentHandlerBase
             }
         });
     }
+
+    /// <summary>The first item of a media field in the settings JSON (ruling F1).</summary>
+    private static MediaReference? FirstMedia(object field)
+    {
+        var json = field switch
+        {
+            JsonObject obj => obj,
+            System.Text.Json.Dynamic.JsonDynamicObject dynamicObject => (JsonObject)dynamicObject,
+            _ => null,
+        };
+
+        return MediaFieldReferences.FromJson(json)?.FirstReference();
+    }
+
+    private Task<string> SocialImageUrlAsync(IUrlHelper urlHelper, MediaReference? reference) =>
+        SeoMediaUrls.UrlAsync(_references, urlHelper, reference);
 }

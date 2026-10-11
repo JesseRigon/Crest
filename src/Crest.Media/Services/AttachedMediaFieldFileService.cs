@@ -182,8 +182,7 @@ public class AttachedMediaFieldFileService
             }
 
             var targetDir = GetContentItemFolder(contentItem);
-            var finalFileName = (await GetFileHashAsync(item.Path)) + GetFileExtension(item.Path);
-            var finalFilePath = _fileStore.Combine(targetDir, finalFileName);
+            var finalFilePath = await GetFinalFilePathAsync(targetDir, item.Path);
 
             await _fileStore.TryCreateDirectoryAsync(targetDir);
 
@@ -202,6 +201,32 @@ public class AttachedMediaFieldFileService
             await DeleteDirIfEmptyAsync(previousDirPath);
         }
 
+    }
+
+    /// <summary>
+    /// The file's name in the content item's folder: its hash, so the same bytes are stored once.
+    /// A file still in quarantine (the media library, docs/media.md § 2) cannot be read yet: it
+    /// keeps its own name, made unique in the folder. The field stores its placement id, which a
+    /// move does not change.
+    /// </summary>
+    private async Task<string> GetFinalFilePathAsync(string targetDir, string path)
+    {
+        try
+        {
+            return _fileStore.Combine(targetDir, (await GetFileHashAsync(path)) + GetFileExtension(path));
+        }
+        catch (FileStoreException)
+        {
+            var extension = GetFileExtension(path);
+            var name = Path.GetFileNameWithoutExtension(path);
+            var candidate = _fileStore.Combine(targetDir, name + extension);
+            for (var index = 1; await _fileStore.GetFileInfoAsync(candidate) is not null; index++)
+            {
+                candidate = _fileStore.Combine(targetDir, $"{name}-{index}{extension}");
+            }
+
+            return candidate;
+        }
     }
 
     private async Task<string> GetFileHashAsync(string filePath)

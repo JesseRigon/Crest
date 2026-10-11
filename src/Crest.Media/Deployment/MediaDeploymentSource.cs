@@ -1,3 +1,4 @@
+using Crest.FileStorage;
 using System.Text.Json.Nodes;
 using Crest.Deployment;
 
@@ -33,13 +34,28 @@ public sealed class MediaDeploymentSource
             paths = paths.OrderBy(p => p);
         }
 
-        var output = await paths.Select(p => new MediaDeploymentStepModel { SourcePath = p, TargetPath = p }).ToArrayAsync();
+        var candidates = await paths.Select(p => new MediaDeploymentStepModel { SourcePath = p, TargetPath = p }).ToArrayAsync();
+        var output = new List<MediaDeploymentStepModel>(candidates.Length);
 
-        foreach (var path in output)
+        foreach (var path in candidates)
         {
-            using var stream = await _mediaFileStore.GetFileStreamAsync(path.SourcePath);
+            // A file of the media library still in quarantine, or rejected, has no bytes to export.
+            Stream stream;
+            try
+            {
+                stream = await _mediaFileStore.GetFileStreamAsync(path.SourcePath);
+            }
+            catch (FileStoreException)
+            {
+                continue;
+            }
 
-            await result.FileBuilder.SetFileAsync(path.SourcePath, stream);
+            using (stream)
+            {
+                await result.FileBuilder.SetFileAsync(path.SourcePath, stream);
+            }
+
+            output.Add(path);
         }
 
         // Adding media files

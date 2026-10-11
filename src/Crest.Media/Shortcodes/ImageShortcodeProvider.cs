@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using Crest.Media.Library;
 using Crest.Infrastructure.Html;
 using Crest.Media.Models;
 using Crest.ResourceManagement;
@@ -11,39 +12,38 @@ namespace Crest.Media.Shortcodes;
 
 public class ImageShortcodeProvider : IShortcodeProvider
 {
-    private static ValueTask<string> Null => new((string)null);
-    private static ValueTask<string> ImageShortcode => new("[image]");
+    private const string ImageShortcode = "[image]";
     private static readonly HashSet<string> s_shortcodes = new(StringComparer.OrdinalIgnoreCase)
     {
         "image",
         "media", // [media] is a deprecated shortcode, and can be removed in a future release.
     };
 
-    private readonly IMediaFileStore _mediaFileStore;
+    private readonly IMediaReferenceResolver _references;
     private readonly IHtmlSanitizerService _htmlSanitizerService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ResourceManagementOptions _options;
     private readonly IFileVersionProvider _fileVersionProvider;
 
     public ImageShortcodeProvider(
-        IMediaFileStore mediaFileStore,
+        IMediaReferenceResolver references,
         IHtmlSanitizerService htmlSanitizerService,
         IHttpContextAccessor httpContextAccessor,
         IOptions<ResourceManagementOptions> options,
         IFileVersionProvider fileVersionProvider)
     {
-        _mediaFileStore = mediaFileStore;
+        _references = references;
         _htmlSanitizerService = htmlSanitizerService;
         _httpContextAccessor = httpContextAccessor;
         _options = options.Value;
         _fileVersionProvider = fileVersionProvider;
     }
 
-    public ValueTask<string> EvaluateAsync(string identifier, Arguments arguments, string content, Context context)
+    public async ValueTask<string> EvaluateAsync(string identifier, Arguments arguments, string content, Context context)
     {
         if (!s_shortcodes.Contains(identifier))
         {
-            return Null;
+            return null;
         }
 
         // Handle self closing shortcodes.
@@ -70,8 +70,8 @@ public class ImageShortcodeProvider : IShortcodeProvider
             }
             else
             {
-                content = content.RemoveQueryString(out var queryString);
-                content = _mediaFileStore.MapPathToPublicUrl(content) + queryString;
+                // A placement id, a /files or /media URL, or a media library path (ruling F1).
+                content = await _references.GetUrlAsync(content);
             }
         }
         var className = string.Empty;
@@ -135,6 +135,6 @@ public class ImageShortcodeProvider : IShortcodeProvider
         content = "<img " + altText + className + "src=\"" + content + "\">";
         content = _htmlSanitizerService.Sanitize(content);
 
-        return ValueTask.FromResult(content);
+        return content;
     }
 }

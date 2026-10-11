@@ -322,3 +322,25 @@ public sealed class DataLocalizationAdminMenuStartup : StartupBase
         services.AddScoped<ILocalizationDataProvider, ContentTypesAdminNodeDataLocalizationProvider>();
     }
 }
+
+/// <summary>
+/// Content items and content types as shareable kinds while the Sharing feature is on
+/// (docs/sharing.md § 6): sharing becomes the authority for content items and their lists;
+/// <see cref="ContentItemScopeProvider"/> keeps only the version rule, and the role-based content
+/// mapper still answers the permissions sharing does not map. Off, nothing here is registered.
+/// </summary>
+[RequireFeatures("Crest.Sharing")]
+public sealed class ContentSharingStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddScoped<Crest.Contents.Sharing.IContentShareLookup, Crest.Contents.Sharing.ContentShareLookup>();
+        services.AddScoped<Crest.Contents.Sharing.ContentTypeShareableKind>();
+        services.AddScoped<Crest.Contents.Sharing.ContentShareableKind>();
+        services.AddScoped<Crest.Sharing.IShareableKind>(provider => provider.GetRequiredService<Crest.Contents.Sharing.ContentTypeShareableKind>());
+        services.AddScoped<Crest.Sharing.IShareableKind>(provider => provider.GetRequiredService<Crest.Contents.Sharing.ContentShareableKind>());
+        services.AddScoped<IContentHandler, Crest.Contents.Sharing.ContentSharingHandler>();
+        services.AddScoped<Crest.ContentTypes.Events.IContentDefinitionEventHandler, Crest.Contents.Sharing.ContentTypeSharingHandler>();
+        services.AddScoped<Crest.Environment.Shell.IFeatureEventHandler, Crest.Contents.Sharing.DefaultViewGrantsRemover>();
+    }
+}

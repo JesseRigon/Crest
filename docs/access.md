@@ -134,7 +134,12 @@ user, roles, permissions, permission version, culture, scope signature), `Caller
 (Site, Admin, Member, System), `ICallerContextAccessor`, `ICallerContextFactory` with
 `CallerRequest`, `CallerContextBuilder` and `ICallerContextContributor`, `IAccessRunner`,
 `AccessHeaders`, `AccessDecision` and `IAccessDecision`, `IResourcePermissionMapper`,
-`IAccessCeiling`, `ScopeRule`, `ScopeFilter`, `ScopeCondition`, `IScopeProvider`, `ScopeSet`,
+`IAccessCeiling`, `ScopeRule`, `ScopeFilter`, `ScopeCondition` (equals, in, not in, the
+comparisons `<` `<=` `>` `>=`, is null, and semi-joins: a column in, or not in, a set
+`ScopeSelect` selects from another index table under its own filter; compiled by the YesSql
+expression compiler, the structured compiler and the SQL rewriter, refused in memory, 2026-10-11),
+`IScopeProvider`, `IScopeProviderSource` (providers whose targets are known at run time:
+sharing's, one per shareable kind with an index table), `ScopeSet`,
 `IScopeSetProvider`, `ScopedExecution`, `ScopeRefusedException`, `IAccessAuditor` and
 `AccessEvent`, `IPermissionVersion`, `AccessGate` (the side item and header parsing).
 

@@ -33,9 +33,11 @@ using Crest.Media.Drivers;
 using Crest.Media.Endpoints.Api;
 using Crest.Media.Events;
 using Crest.Media.Fields;
+using Crest.Media.Files;
 using Crest.Media.Filters;
 using Crest.Media.Handlers;
 using Crest.Media.Hubs;
+using Crest.Media.Library;
 using Crest.Media.Indexing;
 using Crest.Media.Liquid;
 using Crest.Media.Middleware;
@@ -80,6 +82,7 @@ public sealed class Startup : StartupBase
             {
                 o.MemberAccessStrategy.Register<DisplayMediaFieldViewModel>();
                 o.MemberAccessStrategy.Register<Anchor>();
+                o.MemberAccessStrategy.Register<MediaFieldDisplayItem>();
 
                 o.Filters.AddFilter("img_tag", MediaFilters.ImgTag);
             })
@@ -117,6 +120,15 @@ public sealed class Startup : StartupBase
             serviceProvider.GetRequiredService<IMediaFileProvider>()
         );
 
+        services.AddSingleton(serviceProvider =>
+        {
+            var shellOptions = serviceProvider.GetRequiredService<IOptions<ShellOptions>>();
+            var shellSettings = serviceProvider.GetRequiredService<ShellSettings>();
+            var mediaOptions = serviceProvider.GetRequiredService<IOptions<MediaOptions>>().Value;
+            var mediaPath = GetMediaPath(shellOptions.Value, shellSettings, mediaOptions.AssetsPath);
+            return new LibraryFileStore(new FileSystemStore(mediaPath, serviceProvider.GetRequiredService<ILogger<FileSystemStore>>()));
+        });
+
         services.AddSingleton<IMediaFileStore>(serviceProvider =>
         {
             var shellOptions = serviceProvider.GetRequiredService<IOptions<ShellOptions>>();
@@ -126,19 +138,13 @@ public sealed class Startup : StartupBase
             var fileSizeHelper = serviceProvider.GetService<FileSizeHelper>();
             var mediaCreatingEventHandlers =
                 serviceProvider.GetServices<IMediaCreatingEventHandler>();
-            var fileSystemStoreLogger = serviceProvider.GetRequiredService<
-                ILogger<FileSystemStore>
-            >();
             var defaultMediaFileStoreLogger = serviceProvider.GetRequiredService<
                 ILogger<DefaultMediaFileStore>
             >();
 
-            var mediaPath = GetMediaPath(
-                shellOptions.Value,
-                shellSettings,
-                mediaOptions.AssetsPath
-            );
-            var fileStore = new FileSystemStore(mediaPath, fileSystemStoreLogger);
+            // The media library's paths (ruling F1): the library drive once its import finished,
+            // the media folder on disk until then.
+            var fileStore = serviceProvider.GetRequiredService<LibraryFileStore>();
 
             var mediaUrlBase =
                 "/"
@@ -169,6 +175,12 @@ public sealed class Startup : StartupBase
 
         services.AddPermissionProvider<PermissionProvider>();
         services.AddScoped<Crest.Access.IResourcePermissionMapper, ManageMediaFolderPermissionMapper>();
+
+        // File objects and drives (docs/media.md § 3).
+        services.AddFileObjects();
+
+        // The media library drive behind /media paths and media fields (ruling F1).
+        services.AddMediaLibrary();
         services.AddNavigationProvider<AdminMenu>();
 
         // Image processing pipeline (NetVips-based)
@@ -251,9 +263,15 @@ public sealed class Startup : StartupBase
             .AddCreateFolderEndpoint()
             .AddUploadMediaEndpoint();
 
+        routes.MapFileServing();
+
         var mediaFileProvider = serviceProvider.GetRequiredService<IMediaFileProvider>();
         var mediaOptions = serviceProvider.GetRequiredService<IOptions<MediaOptions>>().Value;
         var mediaFileStoreCache = serviceProvider.GetService<IMediaFileStoreCache>();
+
+        // /media from the library drive, after the access check, and resizing of file objects
+        // (rulings F1 and F2). Before the library is active it passes /media on to the pipeline below.
+        app.UseMiddleware<MediaLibraryRequestMiddleware>();
 
         // FileStore middleware before image processing, but only if a remote storage module has registered a cache provider.
         if (mediaFileStoreCache != null)
@@ -422,7 +440,8 @@ public sealed class SecureMediaStartup : StartupBase
 
 /// <summary>
 /// Media registers itself with sharing while the Sharing feature is on: sharing becomes the
-/// authority for media paths (docs/sharing.md). Off, the media folder permissions decide.
+/// authority for media paths and for file objects' placements (docs/sharing.md). Off, the
+/// media folder permissions and the media permissions decide.
 /// </summary>
 [RequireFeatures("Crest.Sharing")]
 public sealed class MediaSharingStartup : StartupBase
@@ -430,6 +449,7 @@ public sealed class MediaSharingStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddScoped<Crest.Sharing.IShareableKind, Sharing.MediaShareableKind>();
+        services.AddScoped<Crest.Sharing.IShareableKind, Sharing.MediaFileShareableKind>();
     }
 }
 
@@ -586,6 +606,19 @@ public sealed class MediaTusStartup : StartupBase
                                 return;
                             }
 
+                            // A file-object upload: the folder must exist for the caller; the
+                            // edit check runs again when the upload completes.
+                            if (metadata.TryGetValue("parentPlacementId", out var parentMeta))
+                            {
+                                var files = httpContext.RequestServices.GetRequiredService<IMediaObjectService>();
+                                if (await files.GetAsync(parentMeta.GetString(System.Text.Encoding.UTF8), ctx.CancellationToken) is null)
+                                {
+                                    ctx.FailRequest("The folder was not found.");
+                                }
+
+                                return;
+                            }
+
                             // Validate folder permissions if destinationPath is provided.
                             if (metadata.TryGetValue("destinationPath", out var destMeta))
                             {
@@ -636,6 +669,9 @@ public sealed class MediaTusStartup : StartupBase
                                 {
                                     DestinationPath = destinationPath,
                                     FileName = fileName,
+                                    ParentPlacementId = metadata.TryGetValue("parentPlacementId", out var parentMeta)
+                                        ? parentMeta.GetString(System.Text.Encoding.UTF8)
+                                        : null,
                                 },
                                 ctx.CancellationToken
                             );
@@ -656,6 +692,38 @@ public sealed class MediaTusStartup : StartupBase
                                 return;
                             }
 
+                            // A file-object upload goes through the file-object API, so it lands in
+                            // quarantine like every upload (docs/media.md § 2, ruling 2026-10-06).
+                            if (!string.IsNullOrEmpty(entry.ParentPlacementId))
+                            {
+                                var files = httpContext.RequestServices.GetRequiredService<IMediaObjectService>();
+                                var claimedType = await ClaimedTypeAsync(ctx);
+                                try
+                                {
+                                    using var upload = store.OpenReadStream(ctx.FileId);
+                                    var item = await files.UploadAsync(
+                                        new Crest.Media.Files.MediaUpload(entry.ParentPlacementId, entry.FileName, upload, claimedType),
+                                        ctx.CancellationToken);
+                                    entry.PlacementId = item.Placement.Id;
+                                    await metadataStore.SetAsync(ctx.FileId, entry, ctx.CancellationToken);
+                                }
+                                catch (Exception exception) when (exception is Crest.Access.AccessDeniedException or Crest.Media.Files.MediaObjectNotFoundException or Crest.Media.Files.MediaObjectConflictException or ArgumentException)
+                                {
+                                    httpContext.Response.StatusCode = exception is Crest.Media.Files.MediaObjectNotFoundException
+                                        ? StatusCodes.Status404NotFound
+                                        : StatusCodes.Status403Forbidden;
+                                }
+                                finally
+                                {
+                                    await store.DeleteFileAsync(ctx.FileId, ctx.CancellationToken);
+                                }
+
+                                return;
+                            }
+
+                            // An upload into the media library by path (ruling F1): the destination is
+                            // resolved to its folder placement in the library drive and the file goes
+                            // through the file-object API, so it lands in quarantine like every upload.
                             if (
                                 !await authService.AuthorizeAsync(
                                     httpContext.User,
@@ -669,33 +737,75 @@ public sealed class MediaTusStartup : StartupBase
                             )
                             {
                                 httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+                                await store.DeleteFileAsync(ctx.FileId, ctx.CancellationToken);
                                 return;
                             }
 
-                            var mediaFilePath = await GetAvailableMediaFilePathAsync(
-                                mediaFileStore,
-                                entry.DestinationPath,
-                                entry.FileName
-                            );
+                            var library = httpContext.RequestServices.GetRequiredService<IMediaLibrary>();
+                            try
+                            {
+                                var mediaFilePath = await GetAvailableMediaFilePathAsync(
+                                    mediaFileStore,
+                                    entry.DestinationPath,
+                                    entry.FileName
+                                );
 
-                            using var stream = store.OpenReadStream(ctx.FileId);
-                            var finalPath = await mediaFileStore.CreateFileFromStreamAsync(
-                                mediaFilePath,
-                                stream
-                            );
-                            entry.MediaFilePath = finalPath;
+                                using var stream = store.OpenReadStream(ctx.FileId);
+                                var item = await MediaLibraryUploads.UploadAsync(
+                                    library,
+                                    httpContext.RequestServices.GetRequiredService<IMediaObjectService>(),
+                                    mediaFileStore.TryCreateDirectoryAsync,
+                                    mediaFilePath,
+                                    stream,
+                                    await ClaimedTypeAsync(ctx),
+                                    ctx.CancellationToken);
 
-                            // Persist the updated entry (with MediaFilePath) back to the distributed cache
-                            // so GetTusFileInfo can retrieve it.
-                            await metadataStore.SetAsync(ctx.FileId, entry, ctx.CancellationToken);
+                                if (item is not null)
+                                {
+                                    entry.PlacementId = item.Placement.Id;
+                                    entry.MediaFilePath = mediaFilePath;
+                                }
+                                else
+                                {
+                                    // Until the library takes over, the media folder on disk, through the
+                                    // file event pipeline (antivirus); the library import scans it again.
+                                    entry.MediaFilePath = await mediaFileStore.CreateFileFromStreamAsync(
+                                        httpContext.RequestServices.GetRequiredService<FileCreationService>(),
+                                        mediaFilePath,
+                                        stream,
+                                        cancellationToken: ctx.CancellationToken);
+                                }
 
-                            // Clean up the temp file.
-                            await store.DeleteFileAsync(ctx.FileId, ctx.CancellationToken);
+                                // Persist the updated entry (with MediaFilePath) back to the distributed cache
+                                // so GetTusFileInfo can retrieve it.
+                                await metadataStore.SetAsync(ctx.FileId, entry, ctx.CancellationToken);
+                            }
+                            catch (Exception exception) when (exception is Crest.Access.AccessDeniedException or Crest.Media.Files.MediaObjectNotFoundException or Crest.Media.Files.MediaObjectConflictException or ArgumentException or FileStoreException)
+                            {
+                                httpContext.Response.StatusCode = exception is Crest.Media.Files.MediaObjectNotFoundException
+                                    ? StatusCodes.Status404NotFound
+                                    : StatusCodes.Status403Forbidden;
+                            }
+                            finally
+                            {
+                                // Clean up the temp file.
+                                await store.DeleteFileAsync(ctx.FileId, ctx.CancellationToken);
+                            }
                         },
                     },
                 };
             }
         );
+    }
+
+    /// <summary>The type the client claimed in the upload's metadata; the scan detects the real one.</summary>
+    private static async Task<string> ClaimedTypeAsync(tusdotnet.Models.Configuration.FileCompleteContext context)
+    {
+        var fileInfo = await context.GetFileAsync();
+        var metadata = fileInfo is null ? null : await fileInfo.GetMetadataAsync(context.CancellationToken);
+        return metadata is not null && metadata.TryGetValue("fileType", out var type)
+            ? type.GetString(System.Text.Encoding.UTF8)
+            : null;
     }
 
     private static async Task<string> GetAvailableMediaFilePathAsync(

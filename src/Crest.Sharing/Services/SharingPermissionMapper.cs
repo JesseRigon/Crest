@@ -17,7 +17,7 @@ public sealed class SharingPermissionMapper(IEnumerable<IShareableKind> register
 {
     public async ValueTask<IReadOnlyList<PermissionCandidate>?> MapAsync(string permission, object resource, CallerContext caller, CancellationToken cancellationToken = default)
     {
-        if (!kinds.TryIdentify(registered, resource, out var target, out var kind))
+        if (!kinds.TryIdentify(registered, resource, permission, out var target, out var kind))
         {
             return null;
         }

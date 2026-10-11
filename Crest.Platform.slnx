@@ -212,6 +212,7 @@
     <Project Path="src/Crest.Media.ImageSharpV3/Crest.Media.ImageSharpV3.csproj" />
     <Project Path="src/Crest.Media.Indexing.OpenXML/Crest.Media.Indexing.OpenXML.csproj" />
     <Project Path="src/Crest.Media.Indexing.Pdf/Crest.Media.Indexing.Pdf.csproj" />
+    <Project Path="src/Crest.Media.Scanning/Crest.Media.Scanning.csproj" />
     <Project Path="src/Crest.Media/Crest.Media.csproj" />
     <Project Path="src/Crest.Menu/Crest.Menu.csproj" />
     <Project Path="src/Crest.Microsoft.Authentication/Crest.Microsoft.Authentication.csproj" />

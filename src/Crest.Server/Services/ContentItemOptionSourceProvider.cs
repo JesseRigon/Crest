@@ -60,17 +60,6 @@ public sealed class ContentItemOptionSourceProvider(
         return (await scopes.GetAsync(caller, cancellationToken)).Require(nameof(ContentItemIndex));
     }
 
-    private static object? IndexColumn(ContentItem item, string column) => column switch
-    {
-        nameof(ContentItemIndex.ContentType) => item.ContentType,
-        nameof(ContentItemIndex.Owner) => item.Owner,
-        nameof(ContentItemIndex.Author) => item.Author,
-        nameof(ContentItemIndex.ContentItemId) => item.ContentItemId,
-        nameof(ContentItemIndex.Latest) => item.Latest,
-        nameof(ContentItemIndex.Published) => item.Published,
-        _ => null,
-    };
-
     public const string ProviderKey = "contentitem";
 
     public string Key => ProviderKey;
@@ -189,9 +178,14 @@ public sealed class ContentItemOptionSourceProvider(
         // let a caller resolve ids of ANY type through a source qualified as one -
         // scope is computed for the qualifier, so an unconstrained lookup would be
         // asking about one type while returning another.
+        var scope = await ScopeAsync(cancellationToken);
+
+        // The scope goes into the query: it may hold semi-joins (sharing), which only the
+        // store evaluates.
         var items = await session
             .Query<ContentItem, ContentItemIndex>(index =>
                 index.ContentItemId.IsIn(ids) && index.ContentType == qualifier && index.Latest)
+            .Where(ScopeExpressions.ToPredicate<ContentItemIndex>(scope))
             .ListAsync();
 
         // AUTHORIZATION is the exception, and this is where the bypass would otherwise
@@ -205,14 +199,7 @@ public sealed class ContentItemOptionSourceProvider(
         // the record were merely unnamed. Missing data is honest; fabricated data is
         // not. The referencing document is then itself in violation and its own
         // scope check drops it - see OptionSourceReferenceGuard.
-        var scope = await ScopeAsync(cancellationToken);
-
-        return
-        [
-            .. items
-                .Where(item => scope.Admits(column => IndexColumn(item, column)))
-                .Select(item => ToRow(item, columns)),
-        ];
+        return [.. items.Select(item => ToRow(item, columns))];
     }
 
     // Residual filters are matched after the query, so the page has to be drawn from a

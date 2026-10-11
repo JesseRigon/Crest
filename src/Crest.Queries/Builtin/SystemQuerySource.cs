@@ -152,7 +152,16 @@ public sealed class SystemQuerySource : IQuerySource, IQueryDescriber
             rule = rule.And(typeRule);
         }
 
-        if (!rule.Admits(column => ItemColumn(item, column)))
+        // A semi-join (sharing's scope) needs the store: the item is checked with the query.
+        if (rule.Filter?.HasSelect == true)
+        {
+            if (_serviceProvider.GetService(typeof(YesSql.ISession)) is not YesSql.ISession session
+                || (await ScopedContentItems.LoadVersionsAsync(session, [item.ContentItemVersionId], rule, request.CancellationToken)).Count == 0)
+            {
+                return QueryResults.Empty(s_itemColumns);
+            }
+        }
+        else if (!rule.Admits(column => ItemColumn(item, column)))
         {
             return QueryResults.Empty(s_itemColumns);
         }

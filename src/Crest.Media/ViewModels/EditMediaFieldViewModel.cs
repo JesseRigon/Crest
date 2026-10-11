@@ -36,6 +36,10 @@ public class EditMediaFieldViewModel
 public class EditMediaFieldItemInfo
 {
     public string Path { get; set; }
+
+    /// <summary>The placement the item refers to (ruling F1); kept while <see cref="Path"/> is unchanged.</summary>
+    public string PlacementId { get; set; }
+
     public string AttachedFileName { get; set; }
 
     // It will be true if the media item is a new upload from a attached media field.

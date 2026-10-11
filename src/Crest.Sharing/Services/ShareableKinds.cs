@@ -36,10 +36,25 @@ public sealed class ShareableKinds
 
     /// <summary>The kind in force that recognises <paramref name="resource"/>; a conflicted name's
     /// resources are claimed with no kind, so they are denied rather than decided elsewhere.</summary>
-    public bool TryIdentify(IEnumerable<IShareableKind> registered, object resource, out ShareableRef target, out IShareableKind? kind)
+    public bool TryIdentify(IEnumerable<IShareableKind> registered, object resource, out ShareableRef target, out IShareableKind? kind) =>
+        TryIdentify(registered, resource, permission: null, out target, out kind);
+
+    /// <summary>
+    /// The kind in force that recognises <paramref name="resource"/> and maps
+    /// <paramref name="permission"/> to a level: two kinds may recognise the same kind of
+    /// resource (a string is a media path to Media and a content type name to Contents), and
+    /// the permission tells which one it is about. A conflicted name claims its resources with
+    /// no kind.
+    /// </summary>
+    public bool TryIdentify(IEnumerable<IShareableKind> registered, object resource, string? permission, out ShareableRef target, out IShareableKind? kind)
     {
         foreach (var candidate in registered)
         {
+            if (permission is not null && Find(candidate.Name) is { } inForce && inForce.LevelFor(permission) is null)
+            {
+                continue;
+            }
+
             if (candidate.TryIdentify(resource, out var id))
             {
                 target = new ShareableRef(candidate.Name, id);

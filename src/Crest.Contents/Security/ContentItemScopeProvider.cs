@@ -1,6 +1,7 @@
 using Crest.Access;
 using Crest.ContentManagement.Metadata;
 using Crest.ContentManagement.Records;
+using Crest.Sharing;
 
 namespace Crest.Contents.Security;
 
@@ -9,9 +10,20 @@ namespace Crest.Contents.Security;
 /// where they may view it, the published or latest (draft) version where they may preview or
 /// edit it; the own variants of either limited to the items they own. Replaces the four places
 /// that re-derived this per surface (admin lists, GraphQL, pickers, the content-items API).
+/// <para>
+/// With sharing on for content (docs/sharing.md § 6) this provider yields: sharing registers its
+/// own provider for <see cref="ContentItemIndex"/> (the items the caller may view, from the
+/// access index), and the two are AND-ed, so a rule built from role permissions here would take
+/// away items sharing grants. Instead it keeps only the version rule, decided by sharing too:
+/// the published version of every item, and drafts (the latest version) of the items on which
+/// the caller is at least an Editor. Which items is sharing's provider's to say.
+/// </para>
 /// </summary>
-public sealed class ContentItemScopeProvider(IContentDefinitionManager contentDefinitions, IAccessDecision decision) : IScopeProvider
+public sealed class ContentItemScopeProvider(IContentDefinitionManager contentDefinitions, IAccessDecision decision, IShareScopes? shares = null) : IScopeProvider
 {
+    /// <summary>The shareable kind content items are registered as (Contents' sharing startup).</summary>
+    public const string SharedKind = "content";
+
     public const string TargetName = nameof(ContentItemIndex);
 
     private static readonly string[] s_draftPermissions = [CommonPermissions.PreviewContent.Name, CommonPermissions.EditContent.Name];
@@ -19,13 +31,26 @@ public sealed class ContentItemScopeProvider(IContentDefinitionManager contentDe
     public string Target => TargetName;
 
     // 2: versions are scoped (Published, or Published or Latest for previewers and editors).
-    public int Version => 2;
+    // 3: yields to sharing when sharing decides content.
+    public int Version => 3;
 
     public async Task<ScopeRule> BuildAsync(CallerContext caller, CancellationToken cancellationToken = default)
     {
         if (caller.IsSuperUser)
         {
             return ScopeRule.All;
+        }
+
+        if (shares?.RuleFor(caller, SharedKind, AccessLevel.Editor) is { } editable)
+        {
+            return editable.Kind switch
+            {
+                ScopeKind.All => ScopeRule.Where(PublishedOrLatest()),
+                ScopeKind.None => ScopeRule.Where(Published()),
+                _ => ScopeRule.Where(ScopeFilter.AnyOf(
+                    Published(),
+                    ScopeFilter.AllOf(ScopeFilter.Of(ScopeCondition.Equal(nameof(ContentItemIndex.Latest), true)), editable.Filter!))),
+            };
         }
 
         var publishedAll = new List<object?>();

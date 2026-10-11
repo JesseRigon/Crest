@@ -305,6 +305,7 @@ public class SqlParser
         HashSet<string> tableAliases) : SqlRewriter
     {
         private int _scopeParameters;
+        private int _scopeSelects;
         private readonly IDictionary<string, object> _scopeValues = parameters ?? new Dictionary<string, object>();
 
         // The CTE names in scope, one frame per WITH being visited: a name resolves to a CTE
@@ -661,6 +662,40 @@ public class SqlParser
                         return value is null
                             ? new IsNullExpression(column)
                             : new BinaryExpression(column, BinaryOperator.Equal, Bind(value));
+
+                    case ScopeOperator.IsNull:
+                        return new IsNullExpression(column);
+
+                    case ScopeOperator.LessThan:
+                    case ScopeOperator.LessThanOrEqual:
+                    case ScopeOperator.GreaterThan:
+                    case ScopeOperator.GreaterThanOrEqual:
+                        var operand = condition.Values.Count > 0 ? condition.Values[0] : null;
+
+                        // A comparison with null admits nothing, as in SQL.
+                        return operand is null
+                            ? False()
+                            : new BinaryExpression(column, condition.Operator switch
+                            {
+                                ScopeOperator.LessThan => BinaryOperator.LessThan,
+                                ScopeOperator.LessThanOrEqual => BinaryOperator.LessThanOrEqual,
+                                ScopeOperator.GreaterThan => BinaryOperator.GreaterThan,
+                                _ => BinaryOperator.GreaterThanOrEqual,
+                            }, Bind(operand is DateTimeOffset offset ? offset.UtcDateTime : operand));
+
+                    case ScopeOperator.InSelect:
+                    case ScopeOperator.NotInSelect:
+                        // The selected table is part of the scope, written after the template
+                        // was visited: it is never itself scoped, and it gets the tenant's prefix
+                        // and an alias of its own so its columns never resolve to the outer table.
+                        var select = condition.RequireSelect();
+                        IReadOnlyList<SqlIdentifier> inner = [new SqlIdentifier("__scope_select" + _scopeSelects++)];
+                        var query = new SelectStatement(
+                            [new SelectItem(new ColumnExpression([.. inner, Quote(select.Column)]))],
+                            new NamedTable(new TableName(GetTableNameParts(tablePrefix + select.Table)), inner[0]),
+                            Render(select.Filter, inner));
+
+                        return new InExpression(column, query, condition.Operator == ScopeOperator.NotInSelect);
 
                     case ScopeOperator.In:
                     case ScopeOperator.NotIn:

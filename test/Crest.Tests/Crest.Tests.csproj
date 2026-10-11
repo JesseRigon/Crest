@@ -67,6 +67,7 @@
     <ProjectReference Include="..\..\src\Crest.ContentManagement\Crest.ContentManagement.csproj" />
     <ProjectReference Include="..\..\src\Crest.Access\Crest.Access.csproj" />
     <ProjectReference Include="..\..\src\Crest.Sharing\Crest.Sharing.csproj" />
+    <ProjectReference Include="..\..\src\Crest.Media.Scanning\Crest.Media.Scanning.csproj" />
     <ProjectReference Include="..\..\src\Crest.Data.YesSql\Crest.Data.YesSql.csproj" />
   </ItemGroup>
 

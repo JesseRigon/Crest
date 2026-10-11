@@ -2,11 +2,11 @@ namespace Crest.Access.Services;
 
 /// <summary>
 /// Builds a caller's <see cref="ScopeSet"/> once per request (the provider is scoped), conjoining
-/// every provider registered for a target. Nothing is kept across requests: a scope is part of
+/// every provider registered for a target, directly or through an <see cref="IScopeProviderSource"/>. Nothing is kept across requests: a scope is part of
 /// the one access calculation a request makes, handed down with the caller and discarded with
 /// it (docs/access.md › One calculation per request).
 /// </summary>
-public sealed class ScopeSetProvider(IEnumerable<IScopeProvider> providers) : IScopeSetProvider
+public sealed class ScopeSetProvider(IEnumerable<IScopeProvider> providers, IEnumerable<IScopeProviderSource>? sources = null) : IScopeSetProvider
 {
     private readonly Dictionary<string, ScopeSet> _built = new(StringComparer.Ordinal);
 
@@ -19,7 +19,7 @@ public sealed class ScopeSetProvider(IEnumerable<IScopeProvider> providers) : IS
         }
 
         var rules = new Dictionary<string, ScopeRule>(StringComparer.OrdinalIgnoreCase);
-        foreach (var group in providers.GroupBy(provider => provider.Target, StringComparer.OrdinalIgnoreCase))
+        foreach (var group in providers.Concat((sources ?? []).SelectMany(source => source.GetProviders())).GroupBy(provider => provider.Target, StringComparer.OrdinalIgnoreCase))
         {
             ScopeRule? rule = null;
             foreach (var provider in group)

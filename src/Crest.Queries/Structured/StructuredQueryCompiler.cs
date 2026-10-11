@@ -61,6 +61,7 @@ public static class StructuredQueryCompiler
         builder.Select();
 
         var isEmpty = false;
+        var selects = new SelectAliases();
 
         // Scope is a step: every table of the plan is narrowed to what the caller may see. The
         // joins are written here (not by the builder's Join) so a left-joined table's predicate
@@ -77,7 +78,7 @@ public static class StructuredQueryCompiler
             var predicate = rule.Kind switch
             {
                 ScopeKind.None => "1 = 0",
-                ScopeKind.Filter => Render(rule.Filter!, table.Alias, builder, dialect, schema, parameters),
+                ScopeKind.Filter => Render(rule.Filter!, table.Alias, builder, dialect, schema, parameters, selects),
                 _ => null,
             };
 
@@ -189,7 +190,15 @@ public static class StructuredQueryCompiler
         return "@" + name;
     }
 
-    private static string Render(ScopeFilter filter, string alias, ISqlBuilder builder, ISqlDialect dialect, string schema, Dictionary<string, object> parameters)
+    /// <summary>Names the tables a scope's semi-joins select from, one alias each per statement.</summary>
+    private sealed class SelectAliases
+    {
+        private int _next;
+
+        public string Next() => "__scope_select" + (_next++).ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static string Render(ScopeFilter filter, string alias, ISqlBuilder builder, ISqlDialect dialect, string schema, Dictionary<string, object> parameters, SelectAliases selects)
     {
         if (filter.Condition is { } condition)
         {
@@ -201,6 +210,26 @@ public static class StructuredQueryCompiler
                     var value = condition.Values.Count > 0 ? condition.Values[0] : null;
 
                     return value is null ? $"{column} IS NULL" : $"{column} = {Bind(parameters, value)}";
+
+                case ScopeOperator.IsNull:
+                    return $"{column} IS NULL";
+
+                case ScopeOperator.LessThan:
+                case ScopeOperator.LessThanOrEqual:
+                case ScopeOperator.GreaterThan:
+                case ScopeOperator.GreaterThanOrEqual:
+                    var operand = condition.Values.Count > 0 ? condition.Values[0] : null;
+
+                    // A comparison with null admits nothing, as in SQL.
+                    return operand is null ? "1 = 0" : $"{column} {condition.ComparisonSql} {Bind(parameters, ScopeValue(operand))}";
+
+                case ScopeOperator.InSelect:
+                case ScopeOperator.NotInSelect:
+                    var select = condition.RequireSelect();
+                    var inner = selects.Next();
+                    var where = Render(select.Filter, inner, builder, dialect, schema, parameters, selects);
+
+                    return $"{column} {(condition.Operator == ScopeOperator.NotInSelect ? "NOT IN" : "IN")} (SELECT {Column(builder, inner, select.Column, schema)} FROM {builder.FormatTable(select.Table, schema)} AS {dialect.QuoteForAliasName(inner)} WHERE {where})";
 
                 case ScopeOperator.In:
                 case ScopeOperator.NotIn:
@@ -233,16 +262,19 @@ public static class StructuredQueryCompiler
 
         if (filter.All is { Count: > 0 } all)
         {
-            return "(" + string.Join(" AND ", all.Select(child => Render(child, alias, builder, dialect, schema, parameters))) + ")";
+            return "(" + string.Join(" AND ", all.Select(child => Render(child, alias, builder, dialect, schema, parameters, selects))) + ")";
         }
 
         if (filter.Any is { Count: > 0 } any)
         {
-            return "(" + string.Join(" OR ", any.Select(child => Render(child, alias, builder, dialect, schema, parameters))) + ")";
+            return "(" + string.Join(" OR ", any.Select(child => Render(child, alias, builder, dialect, schema, parameters, selects))) + ")";
         }
 
         return "1 = 0";
     }
+
+    /// <summary>A scope value as bound: an instant as a UTC date and time, as YesSql stores one.</summary>
+    internal static object ScopeValue(object value) => value is DateTimeOffset offset ? offset.UtcDateTime : value;
 
     private static string Render(PlanFilter filter, ISqlBuilder builder, ISqlDialect dialect, string schema, Dictionary<string, object> parameters, IDictionary<string, object>? boundParameters)
     {

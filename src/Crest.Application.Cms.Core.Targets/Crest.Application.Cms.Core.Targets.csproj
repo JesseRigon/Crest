@@ -88,6 +88,7 @@
     <ProjectReference Include="..\Crest.Media.ImageSharpV3\Crest.Media.ImageSharpV3.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Media.Indexing.OpenXML\Crest.Media.Indexing.OpenXML.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Media.Indexing.Pdf\Crest.Media.Indexing.Pdf.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Media.Scanning\Crest.Media.Scanning.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Microsoft.Authentication\Crest.Microsoft.Authentication.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.MiniProfiler\Crest.MiniProfiler.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Menu\Crest.Menu.csproj" PrivateAssets="none" />
@@ -121,6 +122,7 @@
     <ProjectReference Include="..\Crest.SignalR.Azure\Crest.SignalR.Azure.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.SignalR.Redis\Crest.SignalR.Redis.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Sitemaps\Crest.Sitemaps.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Sharing\Crest.Sharing.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Shortcodes\Crest.Shortcodes.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Sms\Crest.Sms.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Sms.Azure\Crest.Sms.Azure.csproj" PrivateAssets="none" />

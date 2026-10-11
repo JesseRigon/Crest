@@ -23,7 +23,14 @@ public enum SharePrincipalKind
     User = 4,
 }
 
-public readonly record struct SharePrincipal(SharePrincipalKind Kind, string? Id = null)
+/// <summary>
+/// A principal. A <see cref="SharePrincipalKind.Role"/> principal may carry an
+/// <see cref="OrganizationId"/>: the role's holders acting for that one organization ("Admin
+/// of Acme"), so a member's role reaches only their own organization's items. It sits in the
+/// Role tier with plain roles, and a caller matches it when they hold the role and act for the
+/// organization (requirement 38).
+/// </summary>
+public readonly record struct SharePrincipal(SharePrincipalKind Kind, string? Id = null, string? OrganizationId = null)
 {
     public static readonly SharePrincipal Anyone = new(SharePrincipalKind.Anyone);
 
@@ -33,9 +40,17 @@ public readonly record struct SharePrincipal(SharePrincipalKind Kind, string? Id
 
     public static SharePrincipal Role(string name) => new(SharePrincipalKind.Role, name);
 
+    /// <summary>The holders of <paramref name="name"/> while acting for <paramref name="organizationId"/>.</summary>
+    public static SharePrincipal Role(string name, string organizationId) => new(SharePrincipalKind.Role, name, organizationId);
+
     public static SharePrincipal User(string id) => new(SharePrincipalKind.User, id);
 
-    public override string ToString() => Id is null ? Kind.ToString().ToLowerInvariant() : $"{Kind.ToString().ToLowerInvariant()}:{Id}";
+    public override string ToString()
+    {
+        var kind = Kind.ToString().ToLowerInvariant();
+        var text = Id is null ? kind : $"{kind}:{Id}";
+        return OrganizationId is null ? text : $"{text}@{OrganizationId}";
+    }
 }
 
 /// <summary>What a grant allows; each level includes the ones before it.</summary>

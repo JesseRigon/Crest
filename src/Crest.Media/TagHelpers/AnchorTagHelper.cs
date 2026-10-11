@@ -1,3 +1,4 @@
+using Crest.Media.Library;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
@@ -12,7 +13,7 @@ public class AnchorTagHelper : TagHelper
     private const string HrefAttributeName = "href";
     private const string AppendVersionAttributeName = "asp-append-version";
 
-    private readonly IMediaFileStore _mediaFileStore;
+    private readonly IMediaReferenceResolver _references;
     private readonly IFileVersionProvider _fileVersionProvider;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -31,25 +32,25 @@ public class AnchorTagHelper : TagHelper
     public bool AppendVersion { get; set; }
 
     public AnchorTagHelper(
-        IMediaFileStore mediaFileStore,
+        IMediaReferenceResolver references,
         IHttpContextAccessor httpContextAccessor,
         IFileVersionProvider fileVersionProvider
         )
     {
-        _mediaFileStore = mediaFileStore;
+        _references = references;
         _httpContextAccessor = httpContextAccessor;
         _fileVersionProvider = fileVersionProvider;
     }
 
-    public override void Process(TagHelperContext context, TagHelperOutput output)
+    public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
     {
         if (string.IsNullOrEmpty(AssetHref))
         {
             return;
         }
 
-        AssetHref = AssetHref.RemoveQueryString(out string queryString);
-        var resolvedUrl = _mediaFileStore != null ? _mediaFileStore.MapPathToPublicUrl(AssetHref) + queryString : AssetHref + queryString;
+        // A placement id, a /files or /media URL, or a media library path (ruling F1).
+        var resolvedUrl = await _references.GetUrlAsync(AssetHref);
 
         if (AppendVersion && _fileVersionProvider != null)
         {

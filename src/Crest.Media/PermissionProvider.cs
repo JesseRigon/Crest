@@ -7,6 +7,9 @@ public sealed class PermissionProvider : IPermissionProvider
     private readonly IEnumerable<Permission> _allPermissions =
     [
         MediaPermissions.ManageMedia,
+        MediaPermissions.EditMedia,
+        MediaPermissions.ManageSharedDrives,
+        MediaPermissions.OverridePersonalDriveNoticeDelay,
         MediaPermissions.ManageMediaFolder,
         MediaPermissions.ManageOthersMedia,
         MediaPermissions.ManageOwnMedia,
@@ -32,6 +35,7 @@ public sealed class PermissionProvider : IPermissionProvider
             Permissions =
             [
                 MediaPermissions.ManageMediaFolder,
+                MediaPermissions.ManageSharedDrives,
                 MediaPermissions.UploadRestrictedMedia,
                 MediaPermissions.ManageMediaProfiles,
                 MediaPermissions.ViewMediaOptions,

@@ -218,7 +218,7 @@ internal sealed class MediaImageProcessingMiddleware : IMiddleware
         }
     }
 
-    private static string ExtensionToFormat(string ext) => ext.TrimStart('.').ToLowerInvariant() switch
+    internal static string ExtensionToFormat(string ext) => ext.TrimStart('.').ToLowerInvariant() switch
     {
         "jpeg" => "jpg",
         "png"  => "png",
@@ -230,7 +230,7 @@ internal sealed class MediaImageProcessingMiddleware : IMiddleware
     // Maps the validated, string-based request commands to the engine-agnostic, typed command set
     // consumed by IImageProcessingEngine. Parsing happens once here so engines never touch raw
     // query values.
-    private static ImageProcessingCommands BuildEngineCommands(MediaCommands commands, Format format)
+    internal static ImageProcessingCommands BuildEngineCommands(MediaCommands commands, Format format)
     {
         var engineCommands = new ImageProcessingCommands
         {

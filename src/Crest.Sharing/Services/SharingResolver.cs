@@ -17,9 +17,11 @@ public static class SharePrincipals
 
         principals.AddRange(caller.Roles.Select(SharePrincipal.Role));
 
-        // A member counts for the one organization they act for (requirement 38).
+        // A member counts for the one organization they act for (requirement 38), and so do
+        // their roles scoped to it.
         if (caller.OrganizationId is not null)
         {
+            principals.AddRange(caller.Roles.Select(role => SharePrincipal.Role(role, caller.OrganizationId)));
             principals.Add(SharePrincipal.Organization(caller.OrganizationId));
         }
 
@@ -35,7 +37,15 @@ public static class SharePrincipals
 
     public static bool Matches(IReadOnlyList<SharePrincipal> principals, SharePrincipal principal) =>
         principals.Any(candidate => candidate.Kind == principal.Kind &&
-            string.Equals(candidate.Id, principal.Id, principal.Kind == SharePrincipalKind.Role ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
+            string.Equals(candidate.Id, principal.Id, principal.Kind == SharePrincipalKind.Role ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) &&
+            string.Equals(candidate.OrganizationId, principal.OrganizationId, StringComparison.Ordinal));
+}
+
+/// <summary>A decision with the window it is active in (both bounds from the entry or the rule
+/// and its effect; null is open).</summary>
+public sealed record TimedDecision(ShareDecision Decision, DateTimeOffset? Starts, DateTimeOffset? Ends)
+{
+    public bool IsActiveAt(DateTimeOffset now) => (Starts is null || Starts <= now) && (Ends is null || now < Ends);
 }
 
 /// <summary>
@@ -87,7 +97,6 @@ public sealed class SharingResolver(
 
         var decisions = await DecisionsAsync(chain);
         var principals = SharePrincipals.Of(caller);
-        var subject = chain[^1];
 
         // Public: the Anyone tier alone, by depth then order.
         var isPublic = Decide(decisions.Where(d => d.Principal.Kind == SharePrincipalKind.Anyone).ToList()) is { IsBlock: false };
@@ -113,16 +122,10 @@ public sealed class SharingResolver(
             level = AccessLevel.Viewer;
         }
 
-        var isOwner = caller.UserId is not null && string.Equals(subject.OwnerUserId, caller.UserId, StringComparison.Ordinal);
-        if (isOwner)
+        var isOwner = false;
+        if (caller.UserId is not null && OwnerLevels(chain).TryGetValue(caller.UserId, out var owned))
         {
-            level = Max(level, subject.IsRoot ? AccessLevel.Admin : AccessLevel.Manager);
-        }
-
-        // The owner of the root administers the whole tree (a personal drive's owner).
-        if (caller.UserId is not null && string.Equals(chain[0].OwnerUserId, caller.UserId, StringComparison.Ordinal))
-        {
-            level = AccessLevel.Admin;
+            level = Max(level, owned);
             isOwner = true;
         }
 
@@ -157,6 +160,27 @@ public sealed class SharingResolver(
     }
 
     /// <summary>
+    /// The owners of the target and what owning gives them: the target's owner holds Manager on
+    /// it (Admin when it is a root), and the root's owner administers the whole tree (a personal
+    /// drive's owner). By user id.
+    /// </summary>
+    public static IReadOnlyDictionary<string, AccessLevel> OwnerLevels(IReadOnlyList<ShareableObject> chain)
+    {
+        var owners = new Dictionary<string, AccessLevel>(StringComparer.Ordinal);
+        if (chain[^1].OwnerUserId is { } owner)
+        {
+            owners[owner] = chain[^1].IsRoot ? AccessLevel.Admin : AccessLevel.Manager;
+        }
+
+        if (chain[0].OwnerUserId is { } rootOwner)
+        {
+            owners[rootOwner] = AccessLevel.Admin;
+        }
+
+        return owners;
+    }
+
+    /// <summary>
     /// Every decision on the chain about the target, from the tenant (depth 0) down: at each
     /// depth the rules defined there that match the target (rules apply below the object they
     /// are defined on; the tenant's apply everywhere) in listed order, then the object's own
@@ -165,19 +189,39 @@ public sealed class SharingResolver(
     public async Task<IReadOnlyList<ShareDecision>> DecisionsAsync(IReadOnlyList<ShareableObject> chain)
     {
         var now = new DateTimeOffset(clock.UtcNow, TimeSpan.Zero);
-        var target = chain[^1];
-        var decisions = new List<ShareDecision>();
+        return [.. (await TimedDecisionsAsync(chain)).Where(decision => decision.IsActiveAt(now)).Select(decision => decision.Decision)];
+    }
 
-        await AddAsync(ShareableRef.TenantRoot, depth: 0, rulesApply: true, isRoot: false);
+    /// <summary>
+    /// Every decision on the chain, in the order of <see cref="DecisionsAsync"/>, active or not,
+    /// each with the window it is active in (a rule effect's is the rule's window intersected
+    /// with the effect's). The access index resolves these over time; the resolver over now.
+    /// </summary>
+    public async Task<IReadOnlyList<TimedDecision>> TimedDecisionsAsync(IReadOnlyList<ShareableObject> chain)
+    {
+        var target = chain[^1];
+        var decisions = new List<TimedDecision>();
+
+        await AddAsync(ShareableRef.TenantRoot, depth: 0, rulesApply: true, isRoot: false, null);
         for (var i = 0; i < chain.Count; i++)
         {
-            await AddAsync(chain[i].Ref, depth: i + 1, rulesApply: i < chain.Count - 1, isRoot: chain[i].IsRoot);
+            await AddAsync(chain[i].Ref, depth: i + 1, rulesApply: i < chain.Count - 1, isRoot: chain[i].IsRoot, chain[i]);
         }
 
         return decisions;
 
-        async Task AddAsync(ShareableRef on, int depth, bool rulesApply, bool isRoot)
+        async Task AddAsync(ShareableRef on, int depth, bool rulesApply, bool isRoot, ShareableObject? item)
         {
+            // Admin on a root only for those its kind lets hold it (requirement 19).
+            var eligibility = item is not null && isRoot ? kinds.Find(on.Kind) as IShareableAdminEligibility : null;
+            ShareEntry Clamp(ShareEntry entry, bool isRoot)
+            {
+                var clamped = SharingResolver.Clamp(entry, isRoot);
+                return clamped.Level == AccessLevel.Admin && !clamped.IsBlock && eligibility is not null && !eligibility.MayHoldAdmin(item!, clamped.Principal)
+                    ? clamped with { Level = AccessLevel.Manager }
+                    : clamped;
+            }
+
             // The stored sharing first, then each source's contribution: rules, then entries.
             var layers = new List<(string? Source, IReadOnlyList<ShareEntry> Entries, IReadOnlyList<ShareRule> Rules)>();
             if (await store.GetAsync(on) is { } document)
@@ -197,16 +241,19 @@ public sealed class SharingResolver(
             {
                 foreach (var (sourceName, _, rules) in layers)
                 {
-                    foreach (var rule in rules.Where(rule => rule.IsActiveAt(now) && rule.Matches(target.Facts)))
+                    foreach (var rule in rules.Where(rule => rule.Matches(target.Facts)))
                     {
-                        decisions.AddRange(rule.Effects.Where(effect => effect.IsActiveAt(now)).Select(effect => new ShareDecision(on, depth, effect.Principal, Clamp(effect, isRoot), rule.Id, sourceName)));
+                        decisions.AddRange(rule.Effects.Select(effect => new TimedDecision(
+                            new ShareDecision(on, depth, effect.Principal, Clamp(effect, isRoot), rule.Id, sourceName),
+                            Later(rule.Starts, effect.Starts),
+                            Earlier(rule.Ends, effect.Ends))));
                     }
                 }
             }
 
             foreach (var (sourceName, entries, _) in layers)
             {
-                decisions.AddRange(entries.Where(entry => entry.IsActiveAt(now)).Select(entry => new ShareDecision(on, depth, entry.Principal, Clamp(entry, isRoot), null, sourceName)));
+                decisions.AddRange(entries.Select(entry => new TimedDecision(new ShareDecision(on, depth, entry.Principal, Clamp(entry, isRoot), null, sourceName), entry.Starts, entry.Ends)));
             }
         }
     }
@@ -225,6 +272,30 @@ public sealed class SharingResolver(
         }
 
         return entry.Level == AccessLevel.Admin && !isRoot ? entry with { Level = AccessLevel.Manager } : entry;
+    }
+
+    private static DateTimeOffset? Later(DateTimeOffset? left, DateTimeOffset? right) =>
+        left is null ? right : right is null ? left : left > right ? left : right;
+
+    private static DateTimeOffset? Earlier(DateTimeOffset? left, DateTimeOffset? right) =>
+        left is null ? right : right is null ? left : left < right ? left : right;
+
+    /// <summary>
+    /// One principal's decision among its own (the access index's per-principal row): the
+    /// deepest, and at that depth the last in order. Null for none.
+    /// </summary>
+    public static ShareDecision? DecideFor(IEnumerable<ShareDecision> decisions)
+    {
+        ShareDecision? winner = null;
+        foreach (var decision in decisions)
+        {
+            if (winner is null || decision.Depth >= winner.Depth)
+            {
+                winner = decision;
+            }
+        }
+
+        return winner;
     }
 
     /// <summary>Depth, then order per principal, then grant over block with the highest level.</summary>

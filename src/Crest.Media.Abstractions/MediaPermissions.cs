@@ -14,6 +14,17 @@ public static class MediaPermissions
 
     public static readonly Permission ManageMedia = new("ManageMediaContent", "Manage Media", [ManageOwnMedia, ManageAttachedMediaFieldsFolder]);
 
+    /// <summary>Create and update file objects (sharing's Editor level); implied by managing them.</summary>
+    public static readonly Permission EditMedia = new("EditMediaContent", "Create and edit media content", [ManageMedia]);
+
+    /// <summary>Creating shared drives and assigning their Drive Admins (docs/media.md, requirement 31).
+    /// Gives no access to a drive's contents.</summary>
+    public static readonly Permission ManageSharedDrives = new("ManageSharedDrives", "Manage shared drives", isSecurityCritical: true);
+
+    /// <summary>Opening another user's personal drive at once, skipping the tenant's notice delay,
+    /// with a reason (requirement 27).</summary>
+    public static readonly Permission OverridePersonalDriveNoticeDelay = new("OverridePersonalDriveNoticeDelay", "Override the personal drive notice delay", isSecurityCritical: true);
+
     public static readonly Permission UploadRestrictedMedia = new(
         "UploadRestrictedMedia",
         "Upload media file extensions requiring additional permission",

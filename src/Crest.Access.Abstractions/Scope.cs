@@ -5,16 +5,80 @@ public enum ScopeOperator
     Equals,
     In,
     NotIn,
+
+    /// <summary>The column is less than the value (time bounds: an end not yet passed is
+    /// <see cref="GreaterThan"/> now).</summary>
+    LessThan,
+    LessThanOrEqual,
+    GreaterThan,
+    GreaterThanOrEqual,
+
+    /// <summary>The column is null (an open time bound). Takes no value.</summary>
+    IsNull,
+
+    /// <summary>A semi-join: the column's value is in the set <see cref="ScopeCondition.Select"/>
+    /// selects from another index table. Compiled into SQL only; refused in memory.</summary>
+    InSelect,
+
+    /// <summary>The column's value is not in the set <see cref="ScopeCondition.Select"/> selects.
+    /// A null column is not admitted (SQL's <c>NOT IN</c>). Compiled into SQL only.</summary>
+    NotInSelect,
 }
 
-/// <summary>One condition on one column of the scoped target.</summary>
-public sealed record ScopeCondition(string Column, ScopeOperator Operator, IReadOnlyList<object?> Values)
+/// <summary>
+/// The set side of a semi-join: <c>SELECT <see cref="Column"/> FROM <see cref="Table"/> WHERE
+/// <see cref="Filter"/></c>. The table is an index table name without the tenant's prefix; the
+/// filter is over that table's own columns and may itself hold semi-joins. The selected table is
+/// read as part of the scope, not as a target: it needs no scope provider of its own, and the
+/// selected column must never be null.
+/// </summary>
+public sealed record ScopeSelect(string Table, string Column, ScopeFilter Filter);
+
+/// <summary>One condition on one column of the scoped target. Comparisons and
+/// <see cref="ScopeOperator.Equals"/> take one value, <see cref="ScopeOperator.In"/> and
+/// <see cref="ScopeOperator.NotIn"/> a list, <see cref="ScopeOperator.IsNull"/> none, and the
+/// semi-joins a <see cref="Select"/>.</summary>
+public sealed record ScopeCondition(string Column, ScopeOperator Operator, IReadOnlyList<object?> Values, ScopeSelect? Select = null)
 {
     public static ScopeCondition Equal(string column, object? value) => new(column, ScopeOperator.Equals, [value]);
 
     public static ScopeCondition In(string column, IEnumerable<object?> values) => new(column, ScopeOperator.In, values.ToArray());
 
     public static ScopeCondition NotIn(string column, IEnumerable<object?> values) => new(column, ScopeOperator.NotIn, values.ToArray());
+
+    public static ScopeCondition LessThan(string column, object value) => new(column, ScopeOperator.LessThan, [value]);
+
+    public static ScopeCondition LessThanOrEqual(string column, object value) => new(column, ScopeOperator.LessThanOrEqual, [value]);
+
+    public static ScopeCondition GreaterThan(string column, object value) => new(column, ScopeOperator.GreaterThan, [value]);
+
+    public static ScopeCondition GreaterThanOrEqual(string column, object value) => new(column, ScopeOperator.GreaterThanOrEqual, [value]);
+
+    public static ScopeCondition IsNull(string column) => new(column, ScopeOperator.IsNull, []);
+
+    /// <summary><paramref name="column"/> IN (SELECT <paramref name="selected"/> FROM
+    /// <paramref name="table"/> WHERE <paramref name="where"/>).</summary>
+    public static ScopeCondition InSelect(string column, string table, string selected, ScopeFilter where) =>
+        new(column, ScopeOperator.InSelect, [], new ScopeSelect(table, selected, where));
+
+    /// <summary><paramref name="column"/> NOT IN (SELECT <paramref name="selected"/> FROM
+    /// <paramref name="table"/> WHERE <paramref name="where"/>).</summary>
+    public static ScopeCondition NotInSelect(string column, string table, string selected, ScopeFilter where) =>
+        new(column, ScopeOperator.NotInSelect, [], new ScopeSelect(table, selected, where));
+
+    /// <summary>The comparison's SQL operator, or null when the operator is not a comparison.</summary>
+    public string? ComparisonSql => Operator switch
+    {
+        ScopeOperator.LessThan => "<",
+        ScopeOperator.LessThanOrEqual => "<=",
+        ScopeOperator.GreaterThan => ">",
+        ScopeOperator.GreaterThanOrEqual => ">=",
+        _ => null,
+    };
+
+    /// <summary>The selected set, or throws when a semi-join has none.</summary>
+    public ScopeSelect RequireSelect() =>
+        Select ?? throw new InvalidOperationException($"The semi-join on '{Column}' has no select.");
 }
 
 /// <summary>
@@ -37,29 +101,58 @@ public sealed class ScopeFilter
 
     public static ScopeFilter AnyOf(params ScopeFilter[] filters) => new() { Any = filters };
 
-    /// <summary>Evaluates the filter in memory against a row reader.</summary>
+    /// <summary>True when the filter (or a part of it) is a semi-join, which only a store can
+    /// evaluate.</summary>
+    public bool HasSelect =>
+        Condition is { Operator: ScopeOperator.InSelect or ScopeOperator.NotInSelect }
+        || (All?.Any(filter => filter.HasSelect) ?? false)
+        || (Any?.Any(filter => filter.HasSelect) ?? false);
+
+    /// <summary>
+    /// Evaluates the filter in memory against a row reader. A semi-join cannot be evaluated
+    /// without the other table's rows, so a filter that holds one throws
+    /// <see cref="NotSupportedException"/> (whether or not the semi-join would be reached): an
+    /// in-memory source must refuse such a scope, never guess it. Check <see cref="HasSelect"/>
+    /// first to refuse up front. A comparison with a null side admits nothing, as in SQL.
+    /// </summary>
     public bool Matches(Func<string, object?> column)
+    {
+        if (HasSelect)
+        {
+            throw new NotSupportedException("A scope with a semi-join (InSelect, NotInSelect) is evaluated by the store only, never in memory.");
+        }
+
+        return Evaluate(column);
+    }
+
+    private bool Evaluate(Func<string, object?> column)
     {
         if (Condition is { } condition)
         {
             var value = column(condition.Column);
+            var operand = condition.Values.Count > 0 ? condition.Values[0] : null;
             return condition.Operator switch
             {
-                ScopeOperator.Equals => ScopeValues.Equal(value, condition.Values.Count > 0 ? condition.Values[0] : null),
+                ScopeOperator.Equals => ScopeValues.Equal(value, operand),
                 ScopeOperator.In => condition.Values.Any(candidate => ScopeValues.Equal(value, candidate)),
                 ScopeOperator.NotIn => !condition.Values.Any(candidate => ScopeValues.Equal(value, candidate)),
+                ScopeOperator.IsNull => value is null,
+                ScopeOperator.LessThan => ScopeValues.Compare(value, operand) is < 0,
+                ScopeOperator.LessThanOrEqual => ScopeValues.Compare(value, operand) is <= 0,
+                ScopeOperator.GreaterThan => ScopeValues.Compare(value, operand) is > 0,
+                ScopeOperator.GreaterThanOrEqual => ScopeValues.Compare(value, operand) is >= 0,
                 _ => false,
             };
         }
 
         if (All is { } all)
         {
-            return all.All(filter => filter.Matches(column));
+            return all.All(filter => filter.Evaluate(column));
         }
 
         if (Any is { } any)
         {
-            return any.Any(filter => filter.Matches(column));
+            return any.Any(filter => filter.Evaluate(column));
         }
 
         return false;
@@ -82,6 +175,50 @@ internal static class ScopeValues
 
         return Equals(left, right) || string.Equals(left.ToString(), right.ToString(), StringComparison.Ordinal);
     }
+
+    /// <summary>Orders two values; null when either is null or they cannot be compared. Dates
+    /// compare as instants (a <see cref="DateTimeOffset"/> with a UTC <see cref="DateTime"/>);
+    /// numbers of different types compare as decimals.</summary>
+    public static int? Compare(object? left, object? right)
+    {
+        if (left is null || right is null)
+        {
+            return null;
+        }
+
+        if (left is DateTimeOffset || right is DateTimeOffset || left is DateTime || right is DateTime)
+        {
+            return Instant(left) is { } l && Instant(right) is { } r ? l.CompareTo(r) : null;
+        }
+
+        if (left is string ls && right is string rs)
+        {
+            return string.CompareOrdinal(ls, rs);
+        }
+
+        if (left.GetType() == right.GetType() && left is IComparable comparable)
+        {
+            return comparable.CompareTo(right);
+        }
+
+        try
+        {
+            return Convert.ToDecimal(left, System.Globalization.CultureInfo.InvariantCulture)
+                .CompareTo(Convert.ToDecimal(right, System.Globalization.CultureInfo.InvariantCulture));
+        }
+        catch (Exception exception) when (exception is FormatException or InvalidCastException or OverflowException)
+        {
+            return null;
+        }
+    }
+
+    private static DateTimeOffset? Instant(object value) => value switch
+    {
+        DateTimeOffset offset => offset,
+        DateTime { Kind: DateTimeKind.Local } local => new DateTimeOffset(local),
+        DateTime time => new DateTimeOffset(DateTime.SpecifyKind(time, DateTimeKind.Utc)),
+        _ => null,
+    };
 }
 
 public enum ScopeKind
@@ -152,6 +289,16 @@ public interface IScopeProvider
     int Version { get; }
 
     Task<ScopeRule> BuildAsync(CallerContext caller, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Scope providers whose targets are known only at run time: a domain that registers one
+/// provider per registered item kind (sharing, for each shareable kind with an index table).
+/// The scope set conjoins them with the <see cref="IScopeProvider"/>s registered directly.
+/// </summary>
+public interface IScopeProviderSource
+{
+    IEnumerable<IScopeProvider> GetProviders();
 }
 
 /// <summary>

@@ -1,7 +1,7 @@
 # Sharing: who may reach an item, on any kind of item
 
-Status: ruled 2026-10-11; phase 1 built (the engine and its registration with Access), phases
-2-4 to come. Sharing is grants and blocks on objects that flow down a tree, as in Google Drive,
+Status: ruled 2026-10-11; phases 1 (the engine and its registration with Access) and 2 (the
+access index and list scopes) built, phases 3-4 to come. Sharing is grants and blocks on objects that flow down a tree, as in Google Drive,
 plus ordered rules. It was designed for files ([media.md](media.md)) and is now its own module
 so any module's items can be shared.
 
@@ -42,7 +42,8 @@ so any module's items can be shared.
     priority;
   - **replace a kind** by registering one with the same name at a higher priority
     (`ShareableKinds` picks one per name; two at one priority conflict and allow nothing).
-  Contributed grants do not appear in "shared with me" yet (it reads the stored index); phase 2.
+  Since phase 2 "shared with me" reads the access index, so contributed grants on an object
+  appear in it like stored ones.
 - **Content-item sharing** lives in neither Media nor Contents: Contents registers its kind.
 
 ## Module
@@ -87,12 +88,126 @@ so any module's items can be shared.
    phase 2: the media library's listings are not yet filtered by sharing, and media served
    without Secure Media is not checked at all (decision F2 in [media.md](media.md)). Tests:
    `test/Crest.Tests/Sharing/MediaShareableKindTests.cs`.
-2. **Lists and search**: the scope model gains a semi-join condition (a column in a set
-   selected from another index table) and time comparisons, compiled by all three scope
-   compilers (YesSql expressions, the structured compiler, the SQL rewriter); the access index
-   (requirement 75) and its recalculation (78, 80) with the time registry and job (79); the
-   sharing `IScopeProvider`s. Then **Contents registers content items** (§ 6), and the default
-   view grants go (84). This is decision F3.
+2. **Lists and search** (built 2026-10-11, compiled, tests written and not run). Decision F3
+   is taken below.
+   - **Scope model** (`Crest.Access.Abstractions/Scope.cs`): `ScopeCondition` gains the
+     comparisons (`<`, `<=`, `>`, `>=`), `IsNull`, and semi-joins (`InSelect`, `NotInSelect`:
+     a column in a set a `ScopeSelect` selects from another index table under its own
+     `ScopeFilter`). All three compilers compile them with the tenant prefix, dialect quoting,
+     an alias per selected table and bound values: `ScopeExpressions` (YesSql's
+     `IsIn<TIndex>`/`IsNotIn<TIndex>`, the index type found by table name),
+     `StructuredQueryCompiler`, and the SQL rewriter's scope predicate. In memory a semi-join
+     cannot be evaluated: `ScopeFilter.Matches` throws `NotSupportedException` for a filter
+     holding one (`HasSelect` lets a source refuse up front). `IScopeProviderSource` lets a
+     domain register providers whose targets are known only at run time.
+   - **Contracts a kind implements** (`Crest.Sharing.Abstractions/Lists.cs`), both optional:
+     `IShareableTree` (`ChildrenAsync`: what a change recalculates below an object) and
+     `IShareableScopeTarget` (`ShareScopeTarget`: the index table its objects are rows of and
+     the object-id column). They are separate interfaces rather than members of
+     `IShareableKind`, so phase 1 kinds compile unchanged and "has no tree" is distinguishable
+     from "has no children". `IShareAccessIndex` is what a module calls when something other
+     than sharing changes an object's access: created, moved, deleted, or a fact a rule reads
+     (requirement 78). An object never calculated is in no list (82).
+   - **Access index** (`Crest.Sharing`: `ShareAccessDocument` with `ShareAccessIndex`,
+     `ShareRoleShadowIndex`, `ShareAccessObjectIndex`; migration 2; `ShareAccessIndexer`). Per
+     object, per principal with a decision: the principal's winning decision after depth and
+     order (its kind is the tier), effect, level, depth, and its window. Each principal gets a
+     row per window between the chain's start and end times, so a read at any instant picks the
+     right row: when a deeper time-bound block ends, the shallower decision's row starts at that
+     instant, without waiting for the job. Owners get an owner row; an inactive object gets
+     none. Within the role tier a caller's roles disagree by depth (requirement 60), which a
+     per-principal row cannot settle alone: a role denial deeper than another role's grant is
+     stored as a shadow row, and the list scope drops a role grant a shadow of the caller's
+     roles covers. The public flag is the Anyone row (and `IsPublic` on the document).
+   - **Recalculation**: a change to entries or rules recalculates the object and everything
+     below it. A change that may remove access (removing a grant, a block, a shorter grant, any
+     rule change) is applied before the call returns, in batches; one that only adds access is
+     applied at once up to 200 objects and otherwise queued (`ShareRecalculation`) for the job.
+     Tenant-level changes recalculate every indexed object.
+   - **Time**: each document registers its next boundary (`ShareAccessObjectIndex.NextBoundaryUtc`,
+     indexed: the time registry); `ShareAccessBackgroundTask` runs every minute per tenant, reads
+     only the rows due and recalculates them (dropping passed windows), then the queued
+     subtrees. Reads compare windows with now, so access starts and ends on time between runs.
+   - **List scopes** (`SharingScopeProvider`, through `SharingScopeProviderSource`), one per
+     kind with a scope target: visible iff public, or the user row grants, or (no user row) a
+     role row grants with no deeper role denial, or (no role row) the organization grants, or
+     (none of those) the tenant grants; rows active now only; the tenant administrator sees
+     everything. Phase 1's mapper still decides single objects.
+   - **Consistency** (81): the index is calculated from the resolver's own chain and decisions
+     (`SharingResolver.TimedDecisionsAsync`, `OwnerLevels`); `ShareAccessIndexer.VerifyAsync`
+     recalculates an object and lists any difference from its stored rows. "Shared with me"
+     reads the index (rows decided on the object itself), so contributed entries count.
+   - Tests: `test/Crest.Tests/Queries/ScopeSemiJoinTests.cs` (each compiler, SQLite and SQL
+     Server text, refusal in memory), `test/Crest.Tests/Sharing/ShareAccessIndexTests.cs` (the
+     example's rows, owners, windows and the registry, recalculation on change, removals before
+     returning, queued additions, "shared with me"), `test/Crest.Tests/Sharing/ShareListScopeTests.cs`
+     (on SQLite, every example caller's list through each compiler equals what the resolver
+     allows, at instants around the time boundaries, before and after the job; verification).
+   - **Content items registered** (2026-10-11, compiled, tests written and not run), in
+     `Crest.Contents/Sharing` through `ContentSharingStartup` (`[RequireFeatures("Crest.Sharing")]`):
+     - Two kinds: `contenttype` (a type is a root; its entries flow to its items; a content
+       permission asked against a type name or a `ContentTypeProbe` is about the type, so
+       creating an item takes Editor on its type) and `content` (parent: its type; owner: the
+       item's owner; fact `contenttype`; scope target `ContentItemIndex.ContentItemId`). An item
+       not saved yet has no owner, so the creator's ownership does not authorise creating it.
+     - Levels (`ContentShareLevels`): View → Viewer; Preview and Edit → Editor; **Publish →
+       Manager**, because the platform already ranks publishing above editing (`PublishContent`
+       implies `EditContent`) and publishing is what shows an item to its Viewers and the
+       public, so writers and publishers stay distinct; Delete → Manager. Each permission's own
+       variant and per-type variants (`View_{Type}`, `EditOwn_{Type}`) take the same level.
+       Clone, List and EditContentOwner are not mapped: role permissions decide them.
+     - Recalculation (`ContentSharingHandler`): on create, update (owner changes), publish,
+       unpublish and import; removal drops the item's rows when no version is left. A type
+       created, changed or removed recalculates the type (and its items on a change).
+     - **Lists**: the content scope and sharing's are AND-ed for `ContentItemIndex`, so with
+       sharing on `ContentItemScopeProvider` yields instead of narrowing by role permissions:
+       it keeps only the version rule, decided by sharing (`IShareScopes`): every item's
+       published version, and the latest version of items where the caller is at least an
+       Editor. Which items is sharing's own provider's to say (Viewer and up). Crest.Server's
+       organization and assignment providers still AND on top: they are separate policy.
+       Feature off, both content providers are as before. Two in-memory scope evaluations of
+       content were moved into the query, because a sharing scope holds semi-joins:
+       `SystemQuerySource` (one item) and `ContentItemOptionSourceProvider` (resolving ids).
+     - **Requirement 84** (`DefaultViewGrantsRemover`): when Sharing is enabled, the Anonymous
+       and Authenticated roles lose `ViewContent`, `ViewOwnContent`, `View_{Type}` and
+       `ViewOwn_{Type}`. Effect: public content needs an Anyone grant (on the type or the item),
+       signed-in visitors a Tenant grant; checks asked without an item no longer pass for
+       visitors. Turning sharing off does not restore the grants. A recipe that enables sharing
+       and then grants these by a Roles step puts them back: shipped recipes must not.
+     - Type entries in recipes: the `Sharing` recipe step (any kind, the tenant included)
+       replaces an object's entries and recalculates what they reach. Editing them in type
+       settings is the Share panel (phase 4).
+     - Requirement 74 (an item in a folder follows the folder's chain) waits until content
+       items and media placements are linked.
+   - **Rebuild**: kinds may list their roots (`IShareableRoots`); enabling Sharing queues a
+     rebuild (`IShareAccessIndex.QueueRebuildAsync`, also callable on demand), which the job
+     turns into one queued subtree per root and runs a few per pass.
+   - **Admin assignment by a tenant permission** (media requirement 31): a kind implementing
+     `IShareableAdminAssignment` names a tenant permission whose holders may add and remove
+     Admin grants on the kind's roots without being Admin there, and see only those grants;
+     every other entry, and Admin below a root, still takes the tree's Admin. Each change is
+     audited with "(through <permission>)".
+   - **Organization-scoped roles**: `SharePrincipal` gains `OrganizationId`, for roles only
+     (`SharePrincipal.Role("MemberAdmin", "acme")`, `role:MemberAdmin@acme` in recipes). It is
+     in the Role tier; a caller matches it when they hold the role and act for that
+     organization (requirement 38). The index stores it as `role@org:id`.
+   - The list scope takes a level (`Build(caller, minimum)`): role shadows carry the deeper
+     row's level, so a deeper Viewer row caps a shallower Editor grant within the role tier.
+     The mapper picks, among kinds that recognise a resource, the one that maps the permission
+     (a string is a media path to Media and a type name to Contents).
+   - Tests added: `test/Crest.Tests/Sharing/ContentShareableKindTests.cs` and
+     `SharingPhaseTwoExtensionsTests.cs`, plus level and organization-role cases in
+     `ShareListScopeTests.cs`.
+   - **Left for later**: the Share panel's pending indicator and type-settings editor (phase 4);
+     requirement 74. (Media registered its placements' scope target, tree, roots and admin
+     assignment on 2026-10-11.)
+   - **Media's edits** (2026-10-11, for media requirement 19):
+     - `IShareableAdminAssignment.AppliesTo(root)` (a default method, every root): the
+       assignment permission applies per root, so Media limits it to shared drives.
+     - New optional `IShareableAdminEligibility.MayHoldAdmin(root, principal)`: `SharingService`
+       refuses an Admin grant to a principal the kind rules out, whoever asks.
+       `SharingResolver` counts such a grant, stored or contributed, as Manager. Media uses it
+       so that only a personal drive's owner holds Admin there.
 3. **Principals**: business roles and the role registry (§ 5, requirements 39-48).
 4. **Interface**: the Share panel, Rules screens, access indicators, pickers (§ 8); and Media's
    file objects register when they exist ([media.md](media.md) § 3).
@@ -190,7 +305,7 @@ The content sharing feature and its settings; system accounts (tenant and organi
       Like Orchard's own assignable-role filter, it also leaves out system roles (Anyone,
       Authenticated).
 
-- [ ] **Remove default Anyone and Tenant view grants.**
+- [x] **Remove default Anyone and Tenant view grants.** Built 2026-10-11 (Phases › 2).
   84. No recipe shipped with Crest or a host built on it grants anything to Anyone or Tenant
       unless it means to.
 
@@ -337,7 +452,7 @@ The provider interface, per-request derived role claims, session invalidation on
 
 Content types and items on the same model; the content items API's listing, creation and view checks.
 
-- [ ] **Put content items on the same model.**
+- [x] **Put content items on the same model.** Built 2026-10-11 (Phases › 2), 74 still to do.
   73. Content items use the same principals, levels, entries and rules. Their chain is tenant →
       content type → item: a content type carries entries (set in its settings and in recipes),
       and an item adds its own.
@@ -414,7 +529,7 @@ Content types and items on the same model; the content items API's listing, crea
 
 ## Decisions needed
 
-- [ ] **Access-index size and recalculation (F3).** Access is precomputed per placement and
+- [x] **Access-index size and recalculation (F3).** Access is precomputed per placement and
   principal; rules read metadata and time, a rule high in the tree recalculates its whole
   scope, hard-linked folders multiply inherited chains, and removing access must take effect
   before it is reported done. Options: (1) store only explicit and rule decisions and
@@ -422,6 +537,16 @@ Content types and items on the same model; the content items API's listing, crea
   (2) recalculate in batches in the background with a deny-first fence so removals apply
   at once; (3) hard links for files only in the first version. Recommendation: 1 and 2
   together, with folders allowed to hard-link once 1 exists.
+  **Taken 2026-10-11 (phase 2): 2 and 3, not 1.** One document per object (per placement)
+  holds each principal's winning decision, inherited ones included, with its window; lists
+  semi-join it. Option 1 was set aside because the winner within a tier depends on depth and
+  order across the whole chain, and rules match per object, so an ancestor closure would move
+  the resolution into every list query (aggregates and correlated subqueries the scope model
+  and three compilers would all need) and could not agree with the resolver by construction.
+  The cost is rows per inherited pair and recalculating subtrees, bounded by option 2: a
+  change that may remove access is applied before returning, in batches; one that only adds
+  access is applied at once up to 200 objects and otherwise by the job. Hard links stay
+  file-only (3) until subtree sizes are measured.
 - [ ] **Search filtering (F5).** Ruled: search engines are connections, and an engine
   indexing Crest data is set up with the permission system, so access is written into what
   is indexed and every search is filtered; each principal or rule change reindexes the

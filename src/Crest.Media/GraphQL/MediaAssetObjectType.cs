@@ -1,3 +1,4 @@
+using Crest.Media.Library;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -15,11 +16,11 @@ public class MediaAssetObjectType : ObjectGraphType<IFileStoreEntry>
 
         Field<StringGraphType>("path")
             .Description(S["The url to the asset."])
-            .Resolve(x =>
+            .ResolveAsync(async x =>
             {
-                var path = x.Source.Path;
-                var mediaFileStore = x.RequestServices.GetService<IMediaFileStore>();
-                return mediaFileStore.MapPathToPublicUrl(path);
+                // The /files URL of the asset's placement in the media library (ruling F1).
+                var references = x.RequestServices.GetRequiredService<IMediaReferenceResolver>();
+                return await references.GetUrlAsync(x.Source.Path);
             });
 
         Field(file => file.Length)

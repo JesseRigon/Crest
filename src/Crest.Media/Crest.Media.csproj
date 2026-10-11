@@ -45,6 +45,10 @@
     <ProjectReference Include="..\Crest.Media.Abstractions\Crest.Media.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Access.Abstractions\Crest.Access.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Sharing.Abstractions\Crest.Sharing.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Roles.Abstractions\Crest.Roles.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Data.YesSql\Crest.Data.YesSql.csproj" />
+    <ProjectReference Include="..\Crest.Notifications.Abstractions\Crest.Notifications.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Users.Abstractions\Crest.Users.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

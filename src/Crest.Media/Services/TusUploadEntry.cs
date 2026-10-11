@@ -17,4 +17,13 @@ public sealed class TusUploadEntry
     /// Set by <c>OnFileCompleteAsync</c>.
     /// </summary>
     public string MediaFilePath { get; set; }
+
+    /// <summary>
+    /// The folder or drive placement a file-object upload lands in (docs/media.md § 3); null
+    /// for an upload into the media library by path.
+    /// </summary>
+    public string ParentPlacementId { get; set; }
+
+    /// <summary>The file object's placement once the upload completed. Set by <c>OnFileCompleteAsync</c>.</summary>
+    public string PlacementId { get; set; }
 }

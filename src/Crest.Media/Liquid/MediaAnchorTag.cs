@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
 using Crest.DisplayManagement.Liquid.Tags;
 using Crest.Liquid;
+using Crest.Media.Library;
 
 namespace Crest.Media.Liquid;
 
@@ -20,7 +21,9 @@ public class MediaAnchorTag : IAnchorTag
         {
             switch (argument.Name)
             {
-                case "asset-href": return true;
+                case "asset-href":
+                case "asset_href":
+                    return true;
             }
         }
 
@@ -30,7 +33,7 @@ public class MediaAnchorTag : IAnchorTag
     public async ValueTask<Completion> WriteToAsync(IReadOnlyList<FilterArgument> argumentsList, IReadOnlyList<Statement> statements, TextWriter writer, TextEncoder encoder, LiquidTemplateContext context)
     {
         var services = context.Services;
-        var mediaFileStore = services.GetRequiredService<IMediaFileStore>();
+        var references = services.GetRequiredService<IMediaReferenceResolver>();
         var fileVersionProvider = services.GetRequiredService<IFileVersionProvider>();
         var httpContextAccessor = services.GetRequiredService<IHttpContextAccessor>();
 
@@ -60,8 +63,9 @@ public class MediaAnchorTag : IAnchorTag
             return Completion.Normal;
         }
 
-        assetHref = assetHref.RemoveQueryString(out string queryString);
-        var resolvedUrl = mediaFileStore != null ? mediaFileStore.MapPathToPublicUrl(assetHref) + queryString : assetHref + queryString;
+        // A placement id, a /files or /media URL, or a media library path (ruling F1).
+        var resolvedUrl = await references.GetUrlAsync(assetHref);
+        customAttributes ??= [];
 
         if (appendVersion != null && fileVersionProvider != null)
         {

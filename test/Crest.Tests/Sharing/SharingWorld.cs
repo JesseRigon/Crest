@@ -23,6 +23,94 @@ public sealed class SharingWorld
 
     public SharingResolver Resolver() => new(Kinds(), Store, Clock);
 
+    public MemoryAccessStore AccessStore { get; } = new();
+
+    /// <summary>The access index over <see cref="AccessStore"/> (or another store: SQLite in the
+    /// list tests).</summary>
+    public ShareAccessIndexer Indexer(IShareAccessStore store = null) => new(Kinds(), Resolver(), store ?? AccessStore, Clock);
+
+    /// <summary>Calculates every object of the tree into the access index.</summary>
+    public async Task IndexAllAsync(IShareAccessStore store = null)
+    {
+        var indexer = Indexer(store);
+        foreach (var id in Files.Nodes.Keys)
+        {
+            await indexer.RecalculateAsync(Ref(id));
+        }
+    }
+
+    /// <summary>The access index documents in memory, with the time registry and the queue.</summary>
+    public sealed class MemoryAccessStore : IShareAccessStore
+    {
+        public Dictionary<ShareableRef, ShareAccessDocument> Documents { get; } = [];
+
+        public List<ShareRecalculation> Queue { get; } = [];
+
+        private readonly List<ShareableRef> _order = [];
+
+        public Task<ShareAccessDocument> GetAsync(ShareableRef target) => Task.FromResult(Documents.GetValueOrDefault(target));
+
+        public Task SaveAsync(ShareAccessDocument document)
+        {
+            if (!Documents.ContainsKey(document.Ref))
+            {
+                _order.Add(document.Ref);
+            }
+
+            Documents[document.Ref] = document;
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteAsync(ShareableRef target)
+        {
+            Documents.Remove(target);
+            _order.Remove(target);
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<ShareableRef>> DueAsync(DateTime utc, int max) =>
+            Task.FromResult<IReadOnlyList<ShareableRef>>([.. Documents.Values
+                .Where(document => document.NextBoundaryUtc <= utc)
+                .OrderBy(document => document.NextBoundaryUtc)
+                .Take(max)
+                .Select(document => document.Ref)]);
+
+        public Task<(IReadOnlyList<ShareableRef> Page, long Cursor)> PageAsync(long afterId, int max)
+        {
+            var page = _order.Skip((int)afterId).Take(max).ToList();
+            return Task.FromResult<(IReadOnlyList<ShareableRef>, long)>((page, afterId + page.Count));
+        }
+
+        public Task<IReadOnlyList<ShareableRef>> FindGrantedAsync(IReadOnlyCollection<SharePrincipal> principals, DateTime utc) =>
+            Task.FromResult<IReadOnlyList<ShareableRef>>([.. Documents.Values
+                .Where(document => document.Rows.Any(row =>
+                    row.IsDirect && row.Admits && row.IsActiveAt(utc) &&
+                    SharePrincipals.Matches([.. principals], new SharePrincipal(row.PrincipalKind, row.PrincipalKind is SharePrincipalKind.Anyone or SharePrincipalKind.Tenant ? null : row.PrincipalId))))
+                .Select(document => document.Ref)]);
+
+        public Task QueueAsync(ShareableRef subtree, DateTime utc)
+        {
+            if (!Queue.Any(queued => queued.Ref == subtree))
+            {
+                Queue.Add(new ShareRecalculation { Kind = subtree.Kind, ObjectId = subtree.Id, RequestedUtc = utc });
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<ShareRecalculation>> QueuedAsync(int max) => Task.FromResult<IReadOnlyList<ShareRecalculation>>([.. Queue.Take(max)]);
+
+        public Task DequeueAsync(ShareRecalculation recalculation)
+        {
+            Queue.Remove(recalculation);
+            return Task.CompletedTask;
+        }
+
+        public Task FlushAsync() => Task.CompletedTask;
+
+        public Task CommitAsync() => Task.CompletedTask;
+    }
+
     public sealed class MemoryStore : IShareStore
     {
         public Dictionary<ShareableRef, ShareDocument> Documents { get; } = [];
@@ -42,8 +130,22 @@ public sealed class SharingWorld
     }
 
     /// <summary>A file tree: drives, folders and files by id, with a parent and facts.</summary>
-    public sealed class TestKind : IShareableKind
+    public sealed class TestKind : IShareableKind, IShareableTree, IShareableScopeTarget, IShareableRoots, IShareableAdminAssignment
     {
+        /// <summary>The tenant permission that assigns Admins on roots (drives).</summary>
+        public const string ManageDrives = "ManageSharedDrives";
+
+        public string AdminAssignmentPermission => ManageDrives;
+
+        public Task<IReadOnlyList<ShareableRef>> RootsAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<ShareableRef>>([.. Nodes.Values.Where(node => node.ParentId is null).Select(node => new ShareableRef(Kind, node.Id))]);
+
+        /// <summary>Where the list tests keep the files: one row per file.</summary>
+        public ShareScopeTarget ScopeTarget { get; } = new("SharedFileIndex", "FileId");
+
+        public Task<IReadOnlyList<ShareableRef>> ChildrenAsync(string id, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<ShareableRef>>([.. Nodes.Values.Where(node => node.ParentId == id).Select(node => new ShareableRef(Kind, node.Id))]);
+
         public sealed record Node(string Id, string? ParentId, string? Owner = null, bool Inactive = false, Dictionary<string, IReadOnlyList<string>>? Facts = null);
 
         public Dictionary<string, Node> Nodes { get; } = new(StringComparer.Ordinal);

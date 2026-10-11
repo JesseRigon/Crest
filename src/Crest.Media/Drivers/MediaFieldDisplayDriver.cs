@@ -6,6 +6,7 @@ using Crest.ContentManagement.Display.Models;
 using Crest.ContentManagement.Metadata.Models;
 using Crest.DisplayManagement.Views;
 using Crest.Media.Fields;
+using Crest.Media.Library;
 using Crest.Media.Services;
 using Crest.Media.Settings;
 using Crest.Media.ViewModels;
@@ -16,38 +17,70 @@ namespace Crest.Media.Drivers;
 public sealed class MediaFieldDisplayDriver : ContentFieldDisplayDriver<MediaField>
 {
     private readonly AttachedMediaFieldFileService _attachedMediaFieldFileService;
+    private readonly IMediaReferenceResolver _references;
     private readonly ILogger _logger;
 
     internal readonly IStringLocalizer S;
 
     public MediaFieldDisplayDriver(AttachedMediaFieldFileService attachedMediaFieldFileService,
+        IMediaReferenceResolver references,
         IStringLocalizer<MediaFieldDisplayDriver> localizer,
         ILogger<MediaFieldDisplayDriver> logger)
     {
         _attachedMediaFieldFileService = attachedMediaFieldFileService;
+        _references = references;
         S = localizer;
         _logger = logger;
     }
 
+    /// <summary>
+    /// The items the viewer may see (ruling F1): each placement id, or the path of content not
+    /// yet migrated, opened through the access check, with its <c>/files</c> URL.
+    /// </summary>
     public override IDisplayResult Display(MediaField field, BuildFieldDisplayContext context)
     {
-        return Initialize<DisplayMediaFieldViewModel>(GetDisplayShapeType(context), model =>
+        return Initialize<DisplayMediaFieldViewModel>(GetDisplayShapeType(context), async model =>
         {
             model.Field = field;
             model.Part = context.ContentPart;
             model.PartFieldDefinition = context.PartFieldDefinition;
+
+            var anchors = field.GetAnchors();
+            model.Items = [.. (await _references.ResolveAsync(field))
+                .Where(entry => entry.Resolved is not null)
+                .Select(entry => new MediaFieldDisplayItem
+                {
+                    PlacementId = entry.Resolved.Item.Placement.Id,
+                    Path = entry.Path,
+                    Url = entry.Resolved.Url,
+                    Name = entry.Name,
+                    IsImage = entry.IsImage,
+                    IsPublic = entry.Resolved.IsPublic,
+                    MediaText = field.MediaTexts?.ElementAtOrDefault(entry.Index) ?? string.Empty,
+                    Anchor = anchors.ElementAtOrDefault(entry.Index),
+                })];
         })
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");
     }
 
+    /// <summary>
+    /// The media picker works with library paths: each item is given its placement's current path
+    /// (so a moved or renamed file shows where it is now) and its placement id, which the editor
+    /// keeps when the path comes back unchanged.
+    /// </summary>
     public override IDisplayResult Edit(MediaField field, BuildFieldEditorContext context)
     {
-        var itemPaths = field.Paths?.ToList().Select(p => new EditMediaFieldItemInfo { Path = p }).ToArray() ?? [];
-
-        return Initialize<EditMediaFieldViewModel>(GetEditorShapeType(context), model =>
+        return Initialize<EditMediaFieldViewModel>(GetEditorShapeType(context), async model =>
         {
             var settings = context.PartFieldDefinition.GetSettings<MediaFieldSettings>();
+            var itemPaths = (await _references.ResolveAsync(field, new MediaUrlOptions(SignPrivate: false, IncludePath: true)))
+                .Select(entry => new EditMediaFieldItemInfo
+                {
+                    Path = entry.Path ?? string.Empty,
+                    PlacementId = entry.Resolved?.Item.Placement.Id ?? entry.Reference.PlacementId,
+                })
+                .ToArray();
 
             for (var i = 0; i < itemPaths.Length; i++)
             {
@@ -133,7 +166,34 @@ public sealed class MediaFieldDisplayDriver : ContentFieldDisplayDriver<MediaFie
             }
         }
 
-        field.Paths = items.Where(p => !p.IsRemoved).Select(p => p.Path).ToArray();
+        // Ids are stored (ruling F1): an item keeps the placement it was opened with while its path
+        // is unchanged; a new or changed path is resolved to its placement in the media library.
+        // A path that resolves to nothing the editor may view is kept as a path only.
+        var kept = items.Where(p => !p.IsRemoved).ToList();
+        var previous = (await _references.ResolveAsync(field, new MediaUrlOptions(SignPrivate: false, IncludePath: true)))
+            .Where(entry => entry.Resolved is not null && entry.Path is not null)
+            .GroupBy(entry => MediaLibraryPaths.Normalize(entry.Path), StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First().Resolved.Item.Placement.Id, StringComparer.Ordinal);
+
+        var references = new List<MediaReference>(kept.Count);
+        foreach (var item in kept)
+        {
+            var path = MediaLibraryPaths.Normalize(item.Path);
+            if (previous.TryGetValue(path, out var placementId) &&
+                (string.IsNullOrEmpty(item.PlacementId) || item.PlacementId == placementId))
+            {
+                references.Add(new MediaReference(placementId, item.Path));
+                continue;
+            }
+
+            var resolved = !string.IsNullOrEmpty(item.PlacementId)
+                ? await _references.ResolveAsync(MediaReference.ForPlacement(item.PlacementId), MediaUrlOptions.Unsigned)
+                : null;
+            resolved ??= string.IsNullOrEmpty(item.Path) ? null : await _references.ResolveAsync(MediaReference.ForPath(item.Path), MediaUrlOptions.Unsigned);
+            references.Add(new MediaReference(resolved?.Item.Placement.Id, item.Path));
+        }
+
+        field.SetReferences(references);
 
         var settings = context.PartFieldDefinition.GetSettings<MediaFieldSettings>();
 
@@ -141,6 +201,11 @@ public sealed class MediaFieldDisplayDriver : ContentFieldDisplayDriver<MediaFie
         {
             for (var i = 0; i < field.Paths.Length; i++)
             {
+                if (string.IsNullOrEmpty(field.Paths[i]))
+                {
+                    continue;
+                }
+
                 var extension = Path.GetExtension(field.Paths[i]);
 
                 if (!settings.AllowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))

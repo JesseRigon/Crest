@@ -38,6 +38,20 @@ public static class MediaPlatformRazorHelperExtensions
     }
 
     /// <summary>
+    /// The <c>/files/{placementId}</c> URL of a placement id, a <c>/files</c> or <c>/media</c> URL or
+    /// a media library path, through the access check and signed when private (ruling F1), with
+    /// optional resizing parameters. <see cref="AssetUrl"/> keeps the <c>/media</c> form, which
+    /// resolves to the same placement when requested.
+    /// </summary>
+    public static async Task<string> AssetUrlAsync(this IPlatformHelper platformHelper, string asset, int? width = null, int? height = null, ResizeMode resizeMode = ResizeMode.Undefined, int? quality = null, Format format = Format.Undefined, Anchor anchor = null, string bgColor = null, bool? autoorient = null)
+    {
+        var references = platformHelper.HttpContext.RequestServices.GetService<Crest.Media.Library.IMediaReferenceResolver>();
+        var url = references is null ? asset : await references.GetUrlAsync(asset);
+
+        return platformHelper.ImageResizeUrl(url, width, height, resizeMode, quality, format, anchor, bgColor, autoorient);
+    }
+
+    /// <summary>
     /// Returns the relative URL of the specified asset path for a media profile with optional resizing parameters.
     /// </summary>
     public static Task<string> AssetProfileUrlAsync(this IPlatformHelper platformHelper, string assetPath, string imageProfile, int? width = null, int? height = null, ResizeMode resizeMode = ResizeMode.Undefined, bool appendVersion = false, int? quality = null, Format format = Format.Undefined, Anchor anchor = null, string bgcolor = null, bool? autoorient = null)

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using Crest.Media.Library;
 using Crest.Media.Models;
 using Crest.ResourceManagement;
 using Shortcodes;
@@ -9,25 +10,25 @@ namespace Crest.Media.Shortcodes;
 
 public class AssetUrlShortcodeProvider : IShortcodeProvider
 {
-    private readonly IMediaFileStore _mediaFileStore;
+    private readonly IMediaReferenceResolver _references;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ResourceManagementOptions _options;
 
     public AssetUrlShortcodeProvider(
-        IMediaFileStore mediaFileStore,
+        IMediaReferenceResolver references,
         IHttpContextAccessor httpContextAccessor,
         IOptions<ResourceManagementOptions> options)
     {
-        _mediaFileStore = mediaFileStore;
+        _references = references;
         _httpContextAccessor = httpContextAccessor;
         _options = options.Value;
     }
 
-    public ValueTask<string> EvaluateAsync(string identifier, Arguments arguments, string content, Context context)
+    public async ValueTask<string> EvaluateAsync(string identifier, Arguments arguments, string content, Context context)
     {
         if (!string.Equals(identifier, "asset_url", StringComparison.OrdinalIgnoreCase))
         {
-            return ValueTask.FromResult<string>(null);
+            return null;
         }
 
         // Handle self closing shortcodes.
@@ -36,7 +37,7 @@ public class AssetUrlShortcodeProvider : IShortcodeProvider
             content = arguments.NamedOrDefault("src");
             if (string.IsNullOrEmpty(content))
             {
-                return ValueTask.FromResult("[asset_url]");
+                return "[asset_url]";
             }
         }
 
@@ -53,8 +54,8 @@ public class AssetUrlShortcodeProvider : IShortcodeProvider
             }
             else
             {
-                content = content.RemoveQueryString(out var queryString);
-                content = _mediaFileStore.MapPathToPublicUrl(content) + queryString;
+                // A placement id, a /files or /media URL, or a media library path (ruling F1).
+                content = await _references.GetUrlAsync(content);
             }
         }
 
@@ -104,6 +105,6 @@ public class AssetUrlShortcodeProvider : IShortcodeProvider
 
         // This does not produce a tag, so sanitization is performed by the consumer (html body or markdown).
 
-        return ValueTask.FromResult(content);
+        return content;
     }
 }

@@ -1,3 +1,4 @@
+using Crest.Media.Library;
 using GraphQL;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,18 +44,13 @@ public class MediaFieldQueryObjectType : ObjectGraphType<MediaField>
                 });
 
             Field<ListGraphType<StringGraphType>, IEnumerable<string>>("urls")
-                .Description(S["the absolute urls of the media items"])
+                .Description(S["the urls of the media items the caller may view"])
                 .PagingArguments()
-                .Resolve(x =>
+                .ResolveAsync(async x =>
                 {
-                    if (x.Source?.Paths is null)
-                    {
-                        return Array.Empty<string>();
-                    }
-                    var paths = x.Page(x.Source.Paths);
-                    var mediaFileStore = x.RequestServices.GetService<IMediaFileStore>();
-
-                    return paths.Select(p => mediaFileStore.MapPathToPublicUrl(p));
+                    var references = x.RequestServices.GetRequiredService<IMediaReferenceResolver>();
+                    var entries = await references.ResolveAsync(x.Source);
+                    return x.Page(entries).Select(entry => entry.Resolved?.Url ?? string.Empty).ToArray();
                 });
 
             Field<ListGraphType<StringGraphType>, IEnumerable<string>>("mediatexts")
@@ -70,34 +66,38 @@ public class MediaFieldQueryObjectType : ObjectGraphType<MediaField>
             });
         }
 
+        Field<ListGraphType<StringGraphType>, IEnumerable<string>>("placementIds")
+            .Description(S["the placement ids of the media items (empty for an item stored only by path)"])
+            .PagingArguments()
+            .Resolve(x => x.Source is null ? [] : x.Page(x.Source.GetReferences()).Select(reference => reference.PlacementId ?? string.Empty).ToArray());
+
+        // The items the caller may view, resolved through the access check (ruling F1): ids
+        // first, paths for content not yet migrated.
         Field<ListGraphType<MediaFileItemType>, IEnumerable<MediaFileItem>>("files")
             .Description(S["the files of the media items"])
             .PagingArguments()
-            .Resolve(x =>
+            .ResolveAsync(async x =>
             {
-                if (x.Source?.Paths is null)
+                if (x.Source is null)
                 {
                     return [];
                 }
 
-                var paths = x.Page(x.Source.Paths).ToArray();
-                var mediaFileStore = x.RequestServices.GetService<IMediaFileStore>();
-                var urls = paths.Select(p => mediaFileStore.MapPathToPublicUrl(p)).ToArray();
-                var fileNames = x.Page(x.Source?.GetAttachedFileNames()).ToArray();
-                var items = new List<MediaFileItem>();
-                var mediaTexts = x.Source?.MediaTexts ?? [];
-                for (int i = 0; i < paths.Length; i++)
-                {
-                    items.Add(new MediaFileItem
+                var references = x.RequestServices.GetRequiredService<IMediaReferenceResolver>();
+                var entries = x.Page(await references.ResolveAsync(x.Source)).ToArray();
+                var fileNames = x.Source.GetAttachedFileNames();
+                var mediaTexts = x.Source.MediaTexts ?? [];
+                return entries
+                    .Where(entry => entry.Resolved is not null)
+                    .Select(entry => new MediaFileItem
                     {
-                        Path = paths[i],
-                        FileName = fileNames.Length > i ? fileNames[i] : string.Empty,
-                        Url = urls.Length > i ? urls[i] : string.Empty,
-                        MediaText = mediaTexts.Length > i ? mediaTexts[i] : string.Empty,
-                    });
-                }
-
-                return items;
+                        PlacementId = entry.Resolved.Item.Placement.Id,
+                        Path = entry.Path ?? string.Empty,
+                        FileName = fileNames.Length > entry.Index && !string.IsNullOrEmpty(fileNames[entry.Index]) ? fileNames[entry.Index] : entry.Name,
+                        Url = entry.Resolved.Url,
+                        MediaText = mediaTexts.Length > entry.Index ? mediaTexts[entry.Index] : string.Empty,
+                    })
+                    .ToArray();
             });
     }
 }
@@ -110,8 +110,12 @@ public sealed class MediaFileItemType : ObjectGraphType<MediaFileItem>
             .Description(S["the file name of the media file item"])
             .Resolve(x => x.Source.FileName);
 
+        Field<StringGraphType>("placementId")
+            .Description(S["the placement id of the media file item"])
+            .Resolve(x => x.Source.PlacementId);
+
         Field<StringGraphType>("path")
-            .Description(S["the path of the media file item"])
+            .Description(S["the media library path of the media file item, when it has one"])
             .Resolve(x => x.Source.Path);
 
         Field<StringGraphType>("url")
@@ -130,7 +134,7 @@ public sealed class MediaFileItemType : ObjectGraphType<MediaFileItem>
             .Argument<BooleanGraphType>("autoorient", arg => arg.Description = S["auto-orient the image based on EXIF data (defaults to true)"])
             .ResolveAsync(async x =>
             {
-                if (string.IsNullOrEmpty(x.Source.Path))
+                if (string.IsNullOrEmpty(x.Source.Url))
                 {
                     return x.Source.Url;
                 }
@@ -154,16 +158,16 @@ public sealed class MediaFileItemType : ObjectGraphType<MediaFileItem>
                     ? parsedFormat
                     : Format.Undefined;
 
+                // The resolved /files URL; resizing runs there after the access check (ruling F2).
                 string assetUrl;
                 if (!string.IsNullOrEmpty(profile))
                 {
-                    assetUrl = await platformHelper.AssetProfileUrlAsync(
-                        x.Source.Path,
+                    assetUrl = await platformHelper.ImageProfileResizeUrlAsync(
+                        x.Source.Url,
                         profile,
                         width,
                         height,
                         resizeMode,
-                        appendVersion: true,
                         quality,
                         imageFormat,
                         bgcolor: bgcolor,
@@ -171,15 +175,14 @@ public sealed class MediaFileItemType : ObjectGraphType<MediaFileItem>
                 }
                 else
                 {
-                    assetUrl = platformHelper.AssetUrl(
-                        x.Source.Path,
+                    assetUrl = platformHelper.ImageResizeUrl(
+                        x.Source.Url,
                         width,
                         height,
                         resizeMode,
-                        appendVersion: true,
                         quality,
                         imageFormat,
-                        bgColor: bgcolor,
+                        bgcolor: bgcolor,
                         autoorient: autoorient);
                 }
 
@@ -195,6 +198,7 @@ public sealed class MediaFileItemType : ObjectGraphType<MediaFileItem>
 
 public sealed class MediaFileItem
 {
+    public string PlacementId { get; set; }
     public string FileName { get; set; }
     public string Path { get; set; }
     public string Url { get; set; }

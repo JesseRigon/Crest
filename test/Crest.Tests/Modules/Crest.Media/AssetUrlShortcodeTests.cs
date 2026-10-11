@@ -52,7 +52,7 @@ public class AssetUrlShortcodeTests
 
         var options = Options.Create(new ResourceManagementOptions { CdnBaseUrl = cdnBaseUrl });
 
-        var assetUrlProvider = new AssetUrlShortcodeProvider(fileStore, httpContextAccessor, options);
+        var assetUrlProvider = new AssetUrlShortcodeProvider(LegacyMediaResolver.For(fileStore, httpContextAccessor), httpContextAccessor, options);
 
         var processor = new ShortcodeService(new IShortcodeProvider[] { assetUrlProvider }, []);
 
