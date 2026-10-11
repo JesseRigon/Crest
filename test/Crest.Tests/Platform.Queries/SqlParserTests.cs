@@ -90,7 +90,7 @@ public class SqlParserTests
     [InlineData("select a where a = b or c = d", "SELECT [a] WHERE [a] = [b] OR [c] = [d];")]
     [InlineData("select a where (a = b) or (c = d)", "SELECT [a] WHERE ([a] = [b]) OR ([c] = [d]);")]
     [InlineData("select a where (a = b) or (c = d) and e", "SELECT [a] WHERE ([a] = [b]) OR ([c] = [d]) AND [e];")]
-    [InlineData("select a where test(arg)", "SELECT [a] WHERE test([arg]);")]
+    [InlineData("select a where lower(arg)", "SELECT [a] WHERE lower([arg]);")]
     [InlineData("select a where b in (1,2,3)", "SELECT [a] WHERE [b] IN (1, 2, 3);")]
     [InlineData("select a where b in (select b)", "SELECT [a] WHERE [b] IN (SELECT [b]);")]
     [InlineData("select a where b not in (1,2,3)", "SELECT [a] WHERE [b] NOT IN (1, 2, 3);")]

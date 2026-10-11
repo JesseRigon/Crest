@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using Crest.Access;
 using Crest.Workflows.Extensions;
 using Crest.Workflows;
 using Crest.Workflows.Activities.Flowchart.Attributes;
@@ -19,7 +21,9 @@ public class PublishContent : CodeActivity<ContentItem>
     {
         var contentManager = context.GetRequiredService<IContentManager>();
         var contentItemId = ContentItemId.Get(context);
-        var contentItem = await contentManager.GetAsync(contentItemId, VersionOptions.DraftRequired);
+        // Latest, not DraftRequired: asking for a draft would make one, and every item would
+        // look unpublished.
+        var contentItem = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
         string outcome;
 
         context.SetResult(contentItem);
@@ -34,6 +38,7 @@ public class PublishContent : CodeActivity<ContentItem>
         }
         else
         {
+            await context.GetRequiredService<IAccessDecision>().RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, "PublishContent", contentItem, context.CancellationToken);
             outcome = "Published";
             await contentManager.PublishAsync(contentItem);
         }

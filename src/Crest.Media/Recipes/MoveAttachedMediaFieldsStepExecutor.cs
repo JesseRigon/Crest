@@ -81,13 +81,15 @@ public sealed class MoveAttachedMediaFieldsStepExecutor
     {
         var documentId = 0L;
 
-        for (var skip = 0; ; skip += BatchSize)
+        // Keyset paging on DocumentId: each batch starts after the last id seen, so no
+        // Skip (combining both skipped rows from the second batch on). One short-lived
+        // session per batch keeps the identity map and each commit small.
+        while (true)
         {
-            using var session = _store.CreateSession();
+            await using var session = _store.CreateSession();
 
             var latestIndexes = await session.QueryIndex<ContentItemIndex>(x => x.ContentType == contentType && x.DocumentId > documentId && (x.Latest || x.Published))
                 .OrderBy(x => x.DocumentId)
-                .Skip(skip)
                 .Take(BatchSize)
                 .ListAsync();
 

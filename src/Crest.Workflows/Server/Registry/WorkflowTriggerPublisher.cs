@@ -28,7 +28,7 @@ public sealed class WorkflowTriggerPublisher(
         {
             [WorkflowsConstants.InputKeys.TriggerKey] = key,
             [WorkflowsConstants.InputKeys.Payload] = payload ?? new Dictionary<string, object>(),
-            [WorkflowsConstants.InputKeys.Actor] = userContext.Capture(),
+            [WorkflowsConstants.InputKeys.Actor] = userContext.CaptureSealed(),
         };
 
         await queue.EnqueueAsync<RegistryTrigger>(new RegistryTriggerStimulus(key), new() { CorrelationId = correlationId, Input = input });

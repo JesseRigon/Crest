@@ -8,4 +8,5 @@ public static class WorkflowCollections
     public const string ActivityExecutionRecords = "CrestWorkflows_ActivityExecutionRecords";
     public const string StoredTriggers = "CrestWorkflows_Triggers";
     public const string StoredBookmarks = "CrestWorkflows_Bookmarks";
+    public const string BookmarkQueue = "Workflows_BookmarkQueue";
 }

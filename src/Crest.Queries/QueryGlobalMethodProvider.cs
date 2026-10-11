@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Crest.Scripting;
 
@@ -38,7 +39,8 @@ public sealed class QueryGlobalMethodProvider : IGlobalMethodProvider
             return null;
         }
 
-        var result = await queryManager.ExecuteQueryAsync(query, QueryRequest.Of((IDictionary<string, object>)parameters));
+        var cancellationToken = serviceProvider.GetService<IHttpContextAccessor>()?.HttpContext?.RequestAborted ?? CancellationToken.None;
+        var result = await queryManager.ExecuteQueryAsync(query, QueryRequest.Of((IDictionary<string, object>)parameters, cancellationToken));
 
         return result.Items;
     }

@@ -1,29 +1,42 @@
+using System.Data.Common;
 using Dapper;
 using Crest.Members.Models;
-using Crest.Data;
 using YesSql;
 
 namespace Crest.Members.Services;
 
 /// <summary>
-/// Raw-table implementation over IDbConnectionAccessor, following the stock
-/// IndexingTaskManager pattern: own connection + own transaction (OUTSIDE the ambient
-/// ISession), table name composed from the store's TablePrefix, identifiers quoted
-/// through the ISqlDialect so SQLite/SqlServer/Postgres/MySql all work. The root
-/// guard is structural: every statement filters on RootKind + OrganizationId.
+/// Raw-table implementation that runs on the request's YesSql <see cref="ISession"/>:
+/// the session's own connection and transaction, so every hierarchy write commits or
+/// rolls back together with the documents the same unit of work saves (no second
+/// connection, hence no SQLite write-lock conflict and no deferred task). The table
+/// stays a plain table rather than a YesSql index because the node id is an identity
+/// embedded in the materialized path and subtree reads are LIKE 'path%' matches.
+/// Table name composed from the store's TablePrefix, identifiers quoted through the
+/// ISqlDialect so SQLite/SqlServer/Postgres/MySql all work. The root guard is
+/// structural: every statement filters on RootKind + OrganizationId.
 /// </summary>
 public class UserHierarchyService : IUserHierarchyService
 {
     public const string TableName = "CrestUserHierarchy";
 
-    private readonly IDbConnectionAccessor _dbConnectionAccessor;
+    private readonly ISession _session;
     private readonly IStore _store;
 
-    public UserHierarchyService(IDbConnectionAccessor dbConnectionAccessor, IStore store)
+    public UserHierarchyService(ISession session)
     {
-        _dbConnectionAccessor = dbConnectionAccessor;
-        _store = store;
+        _session = session;
+        _store = session.Store;
     }
+
+    // Writes join (or open) the unit of work's transaction; the session commits it.
+    private Task<DbTransaction> WriteTransactionAsync(CancellationToken cancellationToken)
+        => _session.BeginTransactionAsync(cancellationToken);
+
+    // Reads use the session's connection and whatever transaction it already holds, the
+    // same way YesSql's own queries do, so they see this unit's uncommitted writes.
+    private async Task<(DbConnection Connection, DbTransaction? Transaction)> ReadContextAsync(CancellationToken cancellationToken)
+        => (await _session.CreateConnectionAsync(cancellationToken), _session.CurrentTransaction);
 
     private string QuotedTable()
         => _store.Configuration.SqlDialect.QuoteForTableName(
@@ -39,9 +52,8 @@ public class UserHierarchyService : IUserHierarchyService
     {
         ArgumentException.ThrowIfNullOrEmpty(userId);
 
-        await using var connection = _dbConnectionAccessor.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
-        await using var transaction = await connection.BeginTransactionAsync(_store.Configuration.IsolationLevel, cancellationToken);
+        var transaction = await WriteTransactionAsync(cancellationToken);
+        var connection = transaction.Connection!;
 
         string? parentPath = null;
         if (parentNodeId is not null)
@@ -67,16 +79,13 @@ public class UserHierarchyService : IUserHierarchyService
             $"UPDATE {QuotedTable()} SET {Col("Path")} = @Path WHERE {Col("Id")} = @Id",
             new { Path = path, Id = id }, transaction);
 
-        await transaction.CommitAsync(cancellationToken);
-
         return new HierarchyNodeModel(id, userId, parentNodeId, root.RootKind, root.OrganizationId, path, 0);
     }
 
     public async Task MoveAsync(HierarchyRoot root, long nodeId, long? newParentNodeId, CancellationToken cancellationToken = default)
     {
-        await using var connection = _dbConnectionAccessor.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
-        await using var transaction = await connection.BeginTransactionAsync(_store.Configuration.IsolationLevel, cancellationToken);
+        var transaction = await WriteTransactionAsync(cancellationToken);
+        var connection = transaction.Connection!;
 
         var node = await connection.QuerySingleOrDefaultAsync<HierarchyRow>(
             $"SELECT * FROM {QuotedTable()} WHERE {Col("Id")} = @Id AND {RootFilter()}",
@@ -116,15 +125,12 @@ public class UserHierarchyService : IUserHierarchyService
         await connection.ExecuteAsync(
             $"UPDATE {QuotedTable()} SET {Col("ParentId")} = @ParentId WHERE {Col("Id")} = @Id",
             new { ParentId = newParentNodeId, Id = node.Id }, transaction);
-
-        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task RemoveAsync(HierarchyRoot root, long nodeId, CancellationToken cancellationToken = default)
     {
-        await using var connection = _dbConnectionAccessor.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
-        await using var transaction = await connection.BeginTransactionAsync(_store.Configuration.IsolationLevel, cancellationToken);
+        var transaction = await WriteTransactionAsync(cancellationToken);
+        var connection = transaction.Connection!;
 
         var node = await connection.QuerySingleOrDefaultAsync<HierarchyRow>(
             $"SELECT * FROM {QuotedTable()} WHERE {Col("Id")} = @Id AND {RootFilter()}",
@@ -142,30 +148,26 @@ public class UserHierarchyService : IUserHierarchyService
         await connection.ExecuteAsync(
             $"DELETE FROM {QuotedTable()} WHERE {Col("Id")} = @Id",
             new { Id = nodeId }, transaction);
-
-        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<HierarchyNodeModel>> GetNodesAsync(HierarchyRoot root, CancellationToken cancellationToken = default)
     {
-        await using var connection = _dbConnectionAccessor.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
+        var (connection, transaction) = await ReadContextAsync(cancellationToken);
 
         var rows = await connection.QueryAsync<HierarchyRow>(
             $"SELECT * FROM {QuotedTable()} WHERE {RootFilter()} ORDER BY {Col("Path")}",
-            new { root.RootKind, root.OrganizationId });
+            new { root.RootKind, root.OrganizationId }, transaction);
 
         return rows.Select(ToModel).ToArray();
     }
 
     public async Task<IReadOnlyList<string>> GetSubtreeUserIdsAsync(HierarchyRoot root, string userId, CancellationToken cancellationToken = default)
     {
-        await using var connection = _dbConnectionAccessor.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
+        var (connection, transaction) = await ReadContextAsync(cancellationToken);
 
         var ownNodes = (await connection.QueryAsync<HierarchyRow>(
             $"SELECT * FROM {QuotedTable()} WHERE {Col("UserId")} = @UserId AND {RootFilter()}",
-            new { UserId = userId, root.RootKind, root.OrganizationId })).ToArray();
+            new { UserId = userId, root.RootKind, root.OrganizationId }, transaction)).ToArray();
 
         if (ownNodes.Length == 0)
         {
@@ -179,7 +181,7 @@ public class UserHierarchyService : IUserHierarchyService
         {
             var rows = await connection.QueryAsync<HierarchyRow>(
                 $"SELECT * FROM {QuotedTable()} WHERE {Col("Path")} LIKE @PathPrefix AND {RootFilter()}",
-                new { PathPrefix = node.Path + "%", root.RootKind, root.OrganizationId });
+                new { PathPrefix = node.Path + "%", root.RootKind, root.OrganizationId }, transaction);
             foreach (var row in rows)
             {
                 userIds.Add(row.UserId);
@@ -191,12 +193,11 @@ public class UserHierarchyService : IUserHierarchyService
 
     public async Task<IReadOnlyList<string>> GetChainUserIdsAsync(HierarchyRoot root, string userId, CancellationToken cancellationToken = default)
     {
-        await using var connection = _dbConnectionAccessor.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
+        var (connection, transaction) = await ReadContextAsync(cancellationToken);
 
         var node = (await connection.QueryAsync<HierarchyRow>(
             $"SELECT * FROM {QuotedTable()} WHERE {Col("UserId")} = @UserId AND {RootFilter()}",
-            new { UserId = userId, root.RootKind, root.OrganizationId })).FirstOrDefault();
+            new { UserId = userId, root.RootKind, root.OrganizationId }, transaction)).FirstOrDefault();
         if (node is null)
         {
             return [];
@@ -205,7 +206,7 @@ public class UserHierarchyService : IUserHierarchyService
         var chainIds = HierarchyPathMath.Chain(node.Path);
         var rows = await connection.QueryAsync<HierarchyRow>(
             $"SELECT * FROM {QuotedTable()} WHERE {Col("Id")} IN @Ids",
-            new { Ids = chainIds });
+            new { Ids = chainIds }, transaction);
 
         var byId = rows.ToDictionary(row => row.Id);
         return chainIds.Where(byId.ContainsKey).Select(id => byId[id].UserId).ToArray();
@@ -213,12 +214,11 @@ public class UserHierarchyService : IUserHierarchyService
 
     public async Task<IReadOnlyList<HierarchyNodeModel>> GetNodesForUserAsync(string userId, CancellationToken cancellationToken = default)
     {
-        await using var connection = _dbConnectionAccessor.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
+        var (connection, transaction) = await ReadContextAsync(cancellationToken);
 
         var rows = await connection.QueryAsync<HierarchyRow>(
             $"SELECT * FROM {QuotedTable()} WHERE {Col("UserId")} = @UserId",
-            new { UserId = userId });
+            new { UserId = userId }, transaction);
 
         return rows.Select(ToModel).ToArray();
     }

@@ -260,6 +260,22 @@ Crest and content triggers and the `Require permission` activity ask the one
 system actor instead; timers, cron runs, the bookmark queue and background jobs resolve the
 same way, and a flow with neither an actor nor the system property is refused by the gate.
 An HTTP-endpoint workflow runs as the request's caller (`IHttpWorkflowInputContributor`).
+
+**The actor is sealed** (2026-10-11). The `Actor` input is never read as the client wrote it:
+every capture site (trigger publisher, content events, hooks, HTTP endpoints, webhooks)
+writes it through `WorkflowActorSeal` (tenant data protection), fresh for a day; the gate
+binds it to the instance on the run's first burst, and every later burst opens only the actor
+bound to its own instance. A dispatch (`ActorStampingWorkflowDispatcher`, wrapping the
+engine's dispatcher) stamps the dispatching caller's actor on a new run and strips any actor
+from a resume. So an actor supplied through the API's dispatch, an author's
+`DispatchWorkflow` input, an instance import or a resume's input is refused, and a sealed
+actor copied from one run opens for no other. Per burst: a run's **first** burst inherits a
+caller already set for the scope (a request, a hook child's parent), **except the system
+caller**, which only a definition published as system may run as (a flow triggered by a
+background task or by a system flow does not become the tenant super user); every **later**
+burst runs as the run's bound actor, never as whoever resumed it (an approver, an HTTP
+resume). `IWorkflowAuthorizer`, `Require permission`, `Validate user` and the trigger
+permission checks read the burst's caller, not the input.
 Rulings kept: the security token (`ICrestAntiforgery`, the API behind the Orchard cookie)
 stays until the UI merge onto Crest components; machine identities (client credentials, API
 keys) are a separate plan, [machine-actors.md](machine-actors.md).
@@ -890,7 +906,7 @@ policy write and compared on every use, so a decision is always against current 
 | --- | --- | --- |
 | HTTP request | once, at step 4 | per operation |
 | Interactive circuit or websocket (Blazor Server, SignalR) | per operation, since the connection outlives any one instant; full revalidation on the security-stamp interval; torn down on sign-out or a stamp change | per operation |
-| Workflow burst | the actor snapshot says **who**; the caller is built again at the start of every burst, so a right lost between bursts fails the next one | per data activity |
+| Workflow burst | the sealed actor bound to the instance says **who**; the caller is built again at the start of every burst, so a right lost between bursts fails the next one; only the first burst may inherit a caller from its scope, and never the system caller unless the definition is published as system | per data activity |
 | Background job | enters the path at step 1 as the actor it was written with; built then, never from the job payload | per operation |
 
 Nothing serialized into a workflow instance, a job or a client carries rights; only identity.
@@ -1072,10 +1088,21 @@ per binding and assignments, nothing on the data.
 - [ ] **The conformance suite**: fixtures (callers, organizations, roles, policies, rows) and
   expected verdicts, run against every pipeline and every generated surface; a differing
   answer fails the build. Its first fixtures are the four scope places above, so nothing
-  loosens when they are deleted.
+  loosens when they are deleted. **Written 2026-10-11, not yet run** (the system does not run):
+  `test/Crest.Tests/Access/Conformance/` - `AccessWorld` (the fixture tenant and verdict
+  table), `AccessConformanceTests` (the table against the decision and
+  `IAuthorizationService`, audit, monotonicity), `CallerContextFactoryTests` (revocation
+  between two requests, roles, super user, applications, disabled and deleted users,
+  contributors, cache), `AccessGateTests` (sides, one authentication, refusals),
+  `HandDownTests` (no second caller, runner restore, scope per request and per user),
+  `DataAccessBoundaryTests` (the analyzer's rules over the source; fails today on the known
+  bypasses, by design). Workflow side: `AccessGateTests`, `WorkflowCallerLifetimeTests`,
+  `ActorStampingDispatcherTests` in `Crest.Workflows.Tests`. Still to add: organizations and
+  policies as fixtures, the workflow activity gate and the query pipeline running the table.
 - [ ] **Caller lifetime rules** for circuits and websockets (per-operation build, stamp
-  revalidation, teardown) and for workflow bursts (rebuilt per burst; `WorkflowUserContext`
-  keeps identity and shell, drops the principal).
+  revalidation, teardown). Workflow bursts landed 2026-10-11: rebuilt per burst from the
+  sealed, instance-bound actor (§ Running identity); tests in
+  `Crest.Workflows.Tests/WorkflowCallerLifetimeTests.cs`.
 - [x] **Two projects**: `Crest.Access.Abstractions` (contracts and `ScopeSet`) below
   `Crest.Data`, `Crest.Access` (caller builder, decision, cache, gate) beside `Crest.Queries`.
   Confirmed 2026-10-10 as a module that stays; the audit, defects, the one-calculation

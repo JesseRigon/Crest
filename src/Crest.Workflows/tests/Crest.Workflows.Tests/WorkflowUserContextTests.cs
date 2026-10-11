@@ -18,7 +18,7 @@ public class WorkflowUserContextTests
     {
         var accessor = Substitute.For<ICallerContextAccessor>();
         accessor.Current.Returns(current);
-        return new WorkflowCallerResolver(factory, accessor, Substitute.For<IHttpContextAccessor>(), Substitute.For<IWorkflowInstanceStore>(), Substitute.For<IWorkflowDefinitionService>());
+        return new WorkflowCallerResolver(factory, accessor, AccessGateTests.Seal, Substitute.For<IWorkflowInstanceStore>(), Substitute.For<IWorkflowDefinitionService>());
     }
 
     [Fact]
@@ -72,17 +72,28 @@ public class WorkflowUserContextTests
     }
 
     [Fact]
-    public void A_persisted_actor_reads_back_from_json()
+    public void A_sealed_actor_reads_back_and_anything_else_reads_as_none()
     {
-        var json = System.Text.Json.JsonSerializer.SerializeToElement(new { userId = "u-1", userName = "alice", tenant = "acme", side = "Member", organizationId = "org-9", isSystem = false });
+        var actor = new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme", Side = CallerSide.Member, OrganizationId = "org-9" };
 
-        var actor = WorkflowCallerResolver.Actor(json)!;
+        var opened = AccessGateTests.Seal.Open(AccessGateTests.Seal.Seal(actor), instanceId: null, acceptFresh: true)!;
 
-        Assert.Equal("u-1", actor.UserId);
-        Assert.Equal(CallerSide.Member, actor.Side);
-        Assert.Equal("org-9", actor.OrganizationId);
-        Assert.Null(WorkflowCallerResolver.Actor(null));
-        Assert.Null(WorkflowCallerResolver.Actor("not an actor"));
+        Assert.Equal("u-1", opened.UserId);
+        Assert.Equal(CallerSide.Member, opened.Side);
+        Assert.Equal("org-9", opened.OrganizationId);
+        Assert.Null(AccessGateTests.Seal.Open(null, null, acceptFresh: true));
+        Assert.Null(AccessGateTests.Seal.Open("not an actor", null, acceptFresh: true));
+        Assert.Null(AccessGateTests.Seal.Open(System.Text.Json.JsonSerializer.SerializeToElement(actor), null, acceptFresh: true));
+        Assert.Null(AccessGateTests.Seal.Open(actor, null, acceptFresh: true));
+    }
+
+    [Fact]
+    public void A_fresh_actor_opens_only_on_a_first_burst()
+    {
+        var sealedActor = AccessGateTests.Seal.Seal(new WorkflowUserContext { UserId = "u-1", Tenant = "acme" });
+
+        Assert.NotNull(AccessGateTests.Seal.Open(sealedActor, "i-1", acceptFresh: true));
+        Assert.Null(AccessGateTests.Seal.Open(sealedActor, "i-1", acceptFresh: false));
     }
 
     [Fact]
@@ -106,37 +117,37 @@ public class WorkflowUserContextTests
         await factory.DidNotReceive().CreateSystemAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
+    private sealed class Accessor(CallerContext? current) : ICallerContextAccessor
+    {
+        public CallerContext? Current { get; set; } = current;
+    }
+
     [Fact]
-    public async Task Authorizer_denies_anonymous_blank_and_unknown_permissions_without_asking_the_decision()
+    public async Task Authorizer_denies_no_caller_anonymous_blank_and_unknown_permissions_without_asking_the_decision()
     {
         var decision = Substitute.For<IAccessDecision>();
         var permissions = Substitute.For<IPermissionService>();
         permissions.FindByNameAsync("Nope").Returns(new ValueTask<Permission>((Permission)null!));
-        var authorizer = new WorkflowAuthorizer(Resolver(Substitute.For<ICallerContextFactory>()), decision, permissions);
-        var user = new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme" };
+        var alice = new CallerContext { Tenant = "acme", Side = CallerSide.Admin, UserId = "u-1", UserName = "alice" };
 
-        Assert.False(await authorizer.AuthorizeAsync(null, "ManageWorkflows", TestContext.Current.CancellationToken));
-        Assert.False(await authorizer.AuthorizeAsync(WorkflowUserContext.Anonymous("acme"), "ManageWorkflows", TestContext.Current.CancellationToken));
-        Assert.False(await authorizer.AuthorizeAsync(user, " ", TestContext.Current.CancellationToken));
-        Assert.False(await authorizer.AuthorizeAsync(user, "Nope", TestContext.Current.CancellationToken));
+        Assert.False(await new WorkflowAuthorizer(new Accessor(null), decision, permissions).AuthorizeAsync("ManageWorkflows", TestContext.Current.CancellationToken));
+        Assert.False(await new WorkflowAuthorizer(new Accessor(CallerContext.Anonymous("acme", CallerSide.Site)), decision, permissions).AuthorizeAsync("ManageWorkflows", TestContext.Current.CancellationToken));
+        Assert.False(await new WorkflowAuthorizer(new Accessor(alice), decision, permissions).AuthorizeAsync(" ", TestContext.Current.CancellationToken));
+        Assert.False(await new WorkflowAuthorizer(new Accessor(alice), decision, permissions).AuthorizeAsync("Nope", TestContext.Current.CancellationToken));
         await decision.DidNotReceive().DecideAsync(Arg.Any<CallerContext>(), Arg.Any<string>(), Arg.Any<object?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task Authorizer_asks_the_decision_for_the_rebuilt_caller()
+    public async Task Authorizer_asks_the_decision_for_the_bursts_caller()
     {
         var permission = new Permission("PublishContent", "Publish content");
         var permissions = Substitute.For<IPermissionService>();
         permissions.FindByNameAsync("PublishContent").Returns(new ValueTask<Permission>(permission));
-        var factory = Substitute.For<ICallerContextFactory>();
-        factory.CreateAsync(Arg.Any<CallerRequest>(), Arg.Any<CancellationToken>())
-            .Returns(call => Task.FromResult(new CallerContext { Tenant = "acme", Side = CallerSide.Admin, UserId = call.Arg<CallerRequest>()!.Principal!.FindFirstValue(ClaimTypes.NameIdentifier) }));
         var decision = Substitute.For<IAccessDecision>();
         decision.DecideAsync(Arg.Any<CallerContext>(), "PublishContent", Arg.Any<object?>(), Arg.Any<CancellationToken>())
             .Returns(call => Task.FromResult(call.Arg<CallerContext>()!.UserId == "u-1" ? AccessDecision.Allowed : AccessDecision.Denied("not alice")));
-        var authorizer = new WorkflowAuthorizer(Resolver(factory), decision, permissions);
 
-        Assert.True(await authorizer.AuthorizeAsync(new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme" }, "PublishContent", TestContext.Current.CancellationToken));
-        Assert.False(await authorizer.AuthorizeAsync(new WorkflowUserContext { UserId = "u-2", UserName = "bob", Tenant = "acme" }, "PublishContent", TestContext.Current.CancellationToken));
+        Assert.True(await new WorkflowAuthorizer(new Accessor(new CallerContext { Tenant = "acme", Side = CallerSide.Admin, UserId = "u-1" }), decision, permissions).AuthorizeAsync("PublishContent", TestContext.Current.CancellationToken));
+        Assert.False(await new WorkflowAuthorizer(new Accessor(new CallerContext { Tenant = "acme", Side = CallerSide.Admin, UserId = "u-2" }), decision, permissions).AuthorizeAsync("PublishContent", TestContext.Current.CancellationToken));
     }
 }

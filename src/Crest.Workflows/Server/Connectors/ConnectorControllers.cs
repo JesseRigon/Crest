@@ -106,6 +106,7 @@ public sealed class WorkflowWebhooksController(
     IStimulusSender stimulusSender,
     IOptions<WorkflowConnectorOptions> options,
     ShellSettings shellSettings,
+    WorkflowActorSeal seal,
     ILogger<WorkflowWebhooksController> logger) : ControllerBase
 {
     [HttpPost("{connection}/{hook}")]
@@ -162,7 +163,7 @@ public sealed class WorkflowWebhooksController(
         var input = new Dictionary<string, object>
         {
             [WorkflowsConstants.InputKeys.Payload] = payload,
-            [WorkflowsConstants.InputKeys.Actor] = WorkflowUserContext.Anonymous(shellSettings.Name),
+            [WorkflowsConstants.InputKeys.Actor] = seal.Seal(WorkflowUserContext.Anonymous(shellSettings.Name)),
         };
 
         var result = await stimulusSender.SendAsync<WebhookReceived>(WebhookReceived.Stimulus(found.Key, hook), new() { Input = input }, cancellationToken);

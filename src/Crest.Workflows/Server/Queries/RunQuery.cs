@@ -18,7 +18,7 @@ namespace Crest.Workflows.Queries;
 [Activity("Crest.Workflows", "Queries", "Runs a query of the registry with the flow's caller and outputs its rows.", DisplayName = "Run query")]
 public class RunQuery : Activity
 {
-    /// <summary>The query this node runs; set by the descriptor's constructor, not by the author.</summary>
+    /// <summary>The query this node was created for; informational only: the run reads the query name from the descriptor, never from the node.</summary>
     public string QueryName { get; set; } = string.Empty;
 
     [Input(DisplayName = "Page token", Description = "The token a previous run handed back as Next page token; empty for the first page.", UIHint = InputUIHints.SingleLine)]
@@ -38,11 +38,21 @@ public class RunQuery : Activity
 
     protected override async ValueTask ExecuteAsync(ActivityExecutionContext context)
     {
+        // The descriptor names the query and the permission the gate decided; the node's own
+        // QueryName is author-writable and never chooses what runs.
         var descriptor = context.ActivityDescriptor;
-        var queryName = QueryName is { Length: > 0 } ? QueryName : descriptor.CustomProperties.TryGetValue(WorkflowsConstants.QueryNameDescriptorProperty, out var named) ? named?.ToString() ?? string.Empty : string.Empty;
+        var queryName = descriptor.CustomProperties.TryGetValue(WorkflowsConstants.QueryNameDescriptorProperty, out var named) ? named?.ToString() ?? string.Empty : string.Empty;
         if (queryName.Length == 0)
         {
             throw new InvalidOperationException("The run-query activity names no query; it is created from a query descriptor, never by hand.");
+        }
+
+        var expectedPermission = QueryPermissions.CreatePermissionForQuery(queryName).Name;
+        if (!descriptor.CustomProperties.TryGetValue(WorkflowsConstants.RequiredPermissionDescriptorProperty, out var permission)
+            || permission is not string permissionName
+            || !string.Equals(permissionName, expectedPermission, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"The run-query activity for '{queryName}' does not require '{expectedPermission}'; it is not run.");
         }
 
         var parameters = new Dictionary<string, object>();
@@ -58,7 +68,7 @@ public class RunQuery : Activity
 
         var queryManager = context.GetRequiredService<IQueryManager>();
         var query = await queryManager.GetQueryAsync(queryName)
-            ?? new Query { Name = queryName, Source = descriptor.CustomProperties.TryGetValue(QueryActivityProvider.SourceProperty, out var source) ? source?.ToString() ?? string.Empty : string.Empty };
+            ?? throw new InvalidOperationException($"The query '{queryName}' was not found.");
         var results = await queryManager.ExecuteQueryAsync(query, new QueryRequest
         {
             Parameters = parameters,

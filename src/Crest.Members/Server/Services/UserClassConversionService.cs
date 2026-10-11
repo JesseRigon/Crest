@@ -1,8 +1,6 @@
 using Crest.Members.Constants;
 using Crest.Members.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.DependencyInjection;
-using Crest.Environment.Shell.Scope;
 using Crest.Entities;
 using Crest.Users;
 using Crest.Users.Models;
@@ -23,13 +21,13 @@ public class UserClassConversionService
 {
     private readonly ISession _session;
     private readonly UserManager<IUser> _userManager;
-    private readonly IUserHierarchyService _hierarchy;
+    private readonly MemberStampService _stamps;
 
-    public UserClassConversionService(ISession session, UserManager<IUser> userManager, IUserHierarchyService hierarchy)
+    public UserClassConversionService(ISession session, UserManager<IUser> userManager, MemberStampService stamps)
     {
         _session = session;
         _userManager = userManager;
-        _hierarchy = hierarchy;
+        _stamps = stamps;
     }
 
     public async Task ConvertMemberToStaffAsync(string userId, CancellationToken cancellationToken = default)
@@ -49,22 +47,13 @@ public class UserClassConversionService
         await _session.SaveAsync(user);
 
         // The hierarchy nodes leave the org subtrees (leaves only; a converted manager
-        // whose node still has children surfaces as an error to resolve deliberately).
-        // Deferred: the raw hierarchy write must run after the session commits (SQLite
-        // write-lock conflict otherwise - see MemberService).
-        ShellScope.AddDeferredTask(async scope =>
+        // whose node still has children throws and cancels the whole conversion, to be
+        // resolved deliberately). Inline: the hierarchy table shares the session's
+        // transaction, so the conversion commits or rolls back as one unit.
+        foreach (var organizationId in boundOrgs)
         {
-            var hierarchy = scope.ServiceProvider.GetRequiredService<IUserHierarchyService>();
-            foreach (var organizationId in boundOrgs)
-            {
-                var root = HierarchyRoot.ForOrganization(organizationId);
-                foreach (var node in (await hierarchy.GetNodesForUserAsync(userId))
-                    .Where(node => node.RootKind == HierarchyRootKinds.Organization && node.OrganizationId == organizationId))
-                {
-                    await hierarchy.RemoveAsync(root, node.Id);
-                }
-            }
-        });
+            await _stamps.RemoveHierarchyNodesAsync(organizationId, userId, cancellationToken);
+        }
 
         // Kills existing sessions: the next request fails stamp validation and the
         // account signs in again - now through the STAFF surface, per its new class.

@@ -1,13 +1,15 @@
 using System.Diagnostics;
 using System.Text.Json;
-using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using Crest.Access;
 using Crest.Admin;
+using Crest.Entities;
 using Crest.Modules;
+using Crest.Queries.Sql.Models;
 using Crest.Queries.Sql.ViewModels;
+using Crest.Queries.Structured;
 using YesSql;
 
 namespace Crest.Queries.Sql.Controllers;
@@ -17,6 +19,7 @@ public sealed class AdminController : Controller
 {
     private readonly IAuthorizationService _authorizationService;
     private readonly IStore _store;
+    private readonly IQueryManager _queryManager;
     private readonly ICallerContextAccessor _callerAccessor;
     private readonly IScopeSetProvider _scopeSetProvider;
 
@@ -25,11 +28,13 @@ public sealed class AdminController : Controller
     public AdminController(
         IAuthorizationService authorizationService,
         IStore store,
+        IQueryManager queryManager,
         IServiceProvider serviceProvider,
         IStringLocalizer<AdminController> stringLocalizer)
     {
         _authorizationService = authorizationService;
         _store = store;
+        _queryManager = queryManager;
         _callerAccessor = serviceProvider.GetService(typeof(ICallerContextAccessor)) as ICallerContextAccessor;
         _scopeSetProvider = serviceProvider.GetService(typeof(IScopeSetProvider)) as IScopeSetProvider;
         S = stringLocalizer;
@@ -84,25 +89,39 @@ public sealed class AdminController : Controller
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
-        var dialect = _store.Configuration.SqlDialect;
-        var parameters = JConvert.DeserializeObject<Dictionary<string, object>>(model.Parameters);
+        var parameters = new Dictionary<string, object>(JConvert.DeserializeObject<Dictionary<string, object>>(model.Parameters) ?? [], StringComparer.OrdinalIgnoreCase);
 
         try
         {
             var scopes = await CallerScopes.RequireAsync(_callerAccessor, _scopeSetProvider, SqlQuerySource.SourceName, HttpContext.RequestAborted);
 
-            if (SqlParser.TryParse(model.DecodedQuery, _store.Configuration.Schema, dialect, _store.Configuration.TablePrefix, parameters, scopes, out var rawQuery, out var messages))
+            // Parsed here only to show the statement and the defaulted parameters; it runs
+            // through the query pipeline like any saved Sql query: scoped, paged and capped,
+            // in a transaction that is never committed.
+            var shown = new Dictionary<string, object>(parameters, StringComparer.OrdinalIgnoreCase);
+
+            if (SqlParser.TryParsePage(model.DecodedQuery, _store.Configuration.Schema, _store.Configuration.SqlDialect, _store.Configuration.TablePrefix, shown, scopes, out var pageQuery, out _, out var messages))
             {
-                model.RawSql = rawQuery;
-                model.Parameters = JConvert.SerializeObject(parameters, JOptions.Indented);
+                shown.Remove(SqlParser.SkipParameter);
+                shown.Remove(SqlParser.TakeParameter);
+                model.RawSql = pageQuery;
+                model.Parameters = JConvert.SerializeObject(shown.Where(pair => !pair.Key.StartsWith("__scope", StringComparison.Ordinal)).ToDictionary(), JOptions.Indented);
+
+                var query = new Query { Name = SqlQuerySource.SourceName, Source = SqlQuerySource.SourceName };
+                query.Put(new SqlQueryMetadata { Template = model.DecodedQuery });
 
                 try
                 {
-                    await using var connection = _store.Configuration.ConnectionFactory.CreateConnection();
-                    await connection.OpenAsync();
-                    model.Documents = await connection.QueryAsync(rawQuery, parameters);
+                    var results = await _queryManager.ExecuteQueryAsync(query, new QueryRequest
+                    {
+                        Parameters = parameters,
+                        PageSize = StructuredQueryCompiler.MaxPageSize,
+                        CancellationToken = HttpContext.RequestAborted,
+                    });
+
+                    model.Documents = results.Items.ToList();
                 }
-                catch (Exception e)
+                catch (Exception e) when (e is not ScopeRefusedException)
                 {
                     ModelState.AddModelError("", S["An error occurred while executing the SQL query: {0}", e.Message]);
                 }

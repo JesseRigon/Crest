@@ -255,8 +255,6 @@ public class WorkflowManagementFeature(IModule module) : FeatureBase(module)
     public override void Apply()
     {
         Services
-             .AddMemoryStore<WorkflowDefinition, MemoryWorkflowDefinitionStore>()
-             .AddMemoryStore<WorkflowInstance, MemoryWorkflowInstanceStore>()
              .AddActivityProvider<TypedActivityProvider>()
              .AddActivityProvider<WorkflowDefinitionActivityProvider>()
              .AddActivityProvider<HostMethodActivityProvider>()

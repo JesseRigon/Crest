@@ -50,11 +50,12 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
     public override int Order => int.MaxValue;
 
     // The pipeline is a different order. With endpoint routing, the authorization
-    // middleware (Users module, default order) evaluates the matched Crest.Workflows endpoint's policy
-    // when it runs, so the Crest.Workflows grant must already be on the principal by then. This
-    // startup's middleware is therefore slotted ahead of the authentication order; the
-    // Crest.Workflows branch authenticates the request itself (see ConfigureAsync) so the gate sees
-    // the real principal, then the grant is in place before UseAuthorization.
+    // middleware (Users module, default order) evaluates the matched engine endpoint's policy
+    // when it runs, so the engine grant must already be on the principal by then. This
+    // startup's middleware is therefore slotted ahead of the authentication order. It does no
+    // authentication of its own: the shell selector admitted the request through the access
+    // gate before the tenant pipeline ran (the engine API is one of the paths it gates), so the
+    // caller is already set; a request that reached here without one is refused.
     public override int ConfigureOrder => PlatformConstants.ConfigureOrder.Authentication - 1;
 
     public override void ConfigureServices(IServiceCollection services)
@@ -84,6 +85,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             {
                 workflowRuntime.TriggerStore = sp => ActivatorUtilities.CreateInstance<YesSqlTriggerStore>(sp);
                 workflowRuntime.BookmarkStore = sp => ActivatorUtilities.CreateInstance<YesSqlBookmarkStore>(sp);
+                workflowRuntime.BookmarkQueueStore = sp => ActivatorUtilities.CreateInstance<YesSqlBookmarkQueueStore>(sp);
                 workflowRuntime.WorkflowExecutionLogStore = sp => ActivatorUtilities.CreateInstance<YesSqlWorkflowExecutionLogStore>(sp);
                 workflowRuntime.ActivityExecutionLogStore = sp => ActivatorUtilities.CreateInstance<YesSqlActivityExecutionRecordStore>(sp);
                 workflowRuntime.DistributedLockProvider = _ =>
@@ -97,6 +99,9 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
                 // commits; the bookmark queue is processed in a shell scope too (Server/Units).
                 workflowRuntime.BackgroundActivityScheduler = sp => ActivatorUtilities.CreateInstance<DurableBackgroundActivityScheduler>(sp);
                 workflowRuntime.BookmarkQueueWorker = sp => ActivatorUtilities.CreateInstance<ShellScopedBookmarkQueueWorker>(sp);
+                // Every dispatch carries the dispatcher's caller as the sealed actor (Security).
+                var dispatcher = workflowRuntime.WorkflowDispatcher;
+                workflowRuntime.WorkflowDispatcher = sp => ActivatorUtilities.CreateInstance<ActorStampingWorkflowDispatcher>(sp, dispatcher(sp));
             });
             crestWorkflows.UseScheduling();
             crestWorkflows.UseJavaScript();
@@ -151,6 +156,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddSingleton<IActivityDescriptorModifier, Fields.FieldDependencyDescriptorModifier>()
             .AddSingleton<IActivityDescriptorModifier, RequiredPermissionDescriptorModifier>()
             .AddScoped<WorkflowCallerResolver>()
+            .AddSingleton<WorkflowActorSeal>()
             // The registry's query kind: one run-query descriptor per query the catalog lists.
             .AddScoped<IActivityProvider, Queries.QueryActivityProvider>()
             .AddNotificationHandler<Fields.FieldDependencyPublishHandler>()
@@ -221,6 +227,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             o.Collections.Add(WorkflowCollections.WorkflowInstances);
             o.Collections.Add(WorkflowCollections.StoredTriggers);
             o.Collections.Add(WorkflowCollections.StoredBookmarks);
+            o.Collections.Add(WorkflowCollections.BookmarkQueue);
             o.Collections.Add(WorkflowCollections.WorkflowExecutionLogRecords);
             o.Collections.Add(WorkflowCollections.ActivityExecutionRecords);
         });
@@ -230,6 +237,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddDataMigration<WorkflowInstanceMigrations>()
             .AddDataMigration<StoredTriggerMigrations>()
             .AddDataMigration<StoredBookmarkMigrations>()
+            .AddDataMigration<BookmarkQueueItemMigrations>()
             .AddDataMigration<WorkflowExecutionLogRecordMigrations>()
             .AddDataMigration<ActivityExecutionRecordMigrations>()
             .AddSingleton<JobRunnerHostedService>()
@@ -254,6 +262,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddIndexProvider<WorkflowInstanceIndexProvider>()
             .AddIndexProvider<StoredTriggerIndexProvider>()
             .AddIndexProvider<StoredBookmarkIndexProvider>()
+            .AddIndexProvider<BookmarkQueueItemIndexProvider>()
             .AddIndexProvider<WorkflowExecutionLogRecordIndexProvider>()
             .AddIndexProvider<ActivityExecutionRecordIndexProvider>();
     }

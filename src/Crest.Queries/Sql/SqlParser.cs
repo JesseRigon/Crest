@@ -27,6 +27,20 @@ public class SqlParser
         .ConfigureParser(static options => options with { SupportsParameterDefaults = true })
         .Build();
 
+    /// <summary>The parameter a paged statement binds to the number of rows to skip.</summary>
+    public const string SkipParameter = "__skip";
+
+    /// <summary>The parameter a paged statement binds to the number of rows to take.</summary>
+    public const string TakeParameter = "__take";
+
+    // The shells a page and a count are built in: the rewritten statement becomes the derived
+    // table, its WITH is hoisted onto the shell (SQL Server allows no WITH in a derived table).
+    private static readonly SelectStatement PageShell = ParseShell($"SELECT * FROM (SELECT 1) q LIMIT @{TakeParameter} OFFSET @{SkipParameter}");
+
+    private static readonly SelectStatement OrderedPageShell = ParseShell($"SELECT * FROM (SELECT 1) q ORDER BY (SELECT NULL) LIMIT @{TakeParameter} OFFSET @{SkipParameter}");
+
+    private static readonly SelectStatement CountShell = ParseShell("SELECT COUNT(*) FROM (SELECT 1) q");
+
     public const string LiquidNotAllowedMessage = "Liquid ('{{' or '{%') is not allowed in a SQL query; the template is parsed as written and values bind as parameters (@name).";
 
     public static bool ContainsLiquid(string sql) =>
@@ -76,18 +90,114 @@ public class SqlParser
         out string query,
         out IEnumerable<string> messages)
     {
+        if (!TryRewrite(sql, schema, dialect, tablePrefix, parameters, scopes, out var rewritten, out messages))
+        {
+            query = null;
+            return false;
+        }
+
+        query = new PlatformSqlDialect(dialect).Generate(rewritten, GenerationOptions) + ";";
+        return true;
+    }
+
+    /// <summary>
+    /// Parses and scopes a template like <see cref="TryParse"/>, then wraps its one statement
+    /// as a derived table: a page (<c>@__skip</c>, <c>@__take</c>) and a count of all its rows.
+    /// The statement's own ORDER BY orders the page on every provider but SQL Server, where an
+    /// ORDER BY inside a derived table is kept (with OFFSET 0 ROWS) but not guaranteed to order
+    /// the outer page.
+    /// </summary>
+    public static bool TryParsePage(
+        string sql,
+        string schema,
+        ISqlDialect dialect,
+        string tablePrefix,
+        IDictionary<string, object> parameters,
+        ScopeSet scopes,
+        out string pageQuery,
+        out string countQuery,
+        out IEnumerable<string> messages)
+    {
+        pageQuery = null;
+        countQuery = null;
+
+        if (!TryRewrite(sql, schema, dialect, tablePrefix, parameters, scopes, out var rewritten, out messages))
+        {
+            return false;
+        }
+
+        if (rewritten is not SqlDocument { Statements: [SqlQuery statement] })
+        {
+            messages = ["Only one statement is allowed."];
+            return false;
+        }
+
+        var isSqlServer = dialect is SqlServerDialect;
+        var generator = new PlatformSqlDialect(dialect);
+
+        pageQuery = generator.Generate(new SqlDocument(Wrap(isSqlServer ? OrderedPageShell : PageShell, statement, isSqlServer)), GenerationOptions) + ";";
+        countQuery = generator.Generate(new SqlDocument(Wrap(CountShell, statement, isSqlServer)), GenerationOptions) + ";";
+        return true;
+    }
+
+    private static SelectStatement Wrap(SelectStatement shell, SqlQuery statement, bool isSqlServer)
+    {
+        var (ctes, isRecursive, inner) = statement switch
+        {
+            SelectStatement select => (select.CommonTableExpressions, select.IsRecursive, (SqlQuery)(select with { CommonTableExpressions = null, IsRecursive = false })),
+            SetOperationStatement set => (set.CommonTableExpressions, set.IsRecursive, set with { CommonTableExpressions = null, IsRecursive = false }),
+            ValuesStatement values => (values.CommonTableExpressions, values.IsRecursive, values with { CommonTableExpressions = null, IsRecursive = false }),
+            _ => throw new NotSupportedException($"The statement '{statement.GetType().Name}' cannot be paged."),
+        };
+
+        // SQL Server refuses an ORDER BY in a derived table unless it also pages.
+        if (isSqlServer)
+        {
+            inner = inner switch
+            {
+                SelectStatement { OrderBy.Count: > 0, Limit: null, Offset: null, Top: null } select => select with { Offset = new LiteralExpression(0L) },
+                SetOperationStatement { OrderBy.Count: > 0, Limit: null, Offset: null } set => set with { Offset = new LiteralExpression(0L) },
+                _ => inner,
+            };
+        }
+
+        var derived = (DerivedTable)shell.From;
+
+        return shell with
+        {
+            From = derived with { Query = inner },
+            CommonTableExpressions = ctes is { Count: > 0 } ? ctes : null,
+            IsRecursive = isRecursive,
+        };
+    }
+
+    private static SelectStatement ParseShell(string sql) =>
+        ParserDialect.TryParse(sql, out var document, out var error) && document!.Statements is [SelectStatement shell]
+            ? shell
+            : throw new InvalidOperationException($"The paging shell '{sql}' does not parse: {error?.Message}");
+
+    private static bool TryRewrite(
+        string sql,
+        string schema,
+        ISqlDialect dialect,
+        string tablePrefix,
+        IDictionary<string, object> parameters,
+        ScopeSet scopes,
+        out SqlNode rewritten,
+        out IEnumerable<string> messages)
+    {
         ArgumentNullException.ThrowIfNull(scopes);
+
+        rewritten = null;
 
         if (ContainsLiquid(sql))
         {
-            query = null;
             messages = [LiquidNotAllowedMessage];
             return false;
         }
 
         if (!ParserDialect.TryParse(sql, out var document, out var error))
         {
-            query = null;
             messages = error is null
                 ? ["Parse error: Unknown parsing error"]
                 : [$"Parse error: {error.Message} at position {error.Offset}"];
@@ -96,7 +206,6 @@ public class SqlParser
 
         if (ContainsNonQueryStatement(document!))
         {
-            query = null;
             messages = ["Only SELECT statements are supported."];
             return false;
         }
@@ -112,11 +221,9 @@ public class SqlParser
                 dialect,
                 parameters,
                 scopes,
-                names.TableAliases,
-                names.CommonTableExpressions);
+                names.TableAliases);
 
-            var rewritten = rewriter.Visit(document);
-            query = new PlatformSqlDialect(dialect).Generate(rewritten, GenerationOptions) + ";";
+            rewritten = rewriter.Visit(document);
             messages = [];
             return true;
         }
@@ -127,26 +234,50 @@ public class SqlParser
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or NotSupportedException)
         {
-            query = null;
             messages = [exception.Message];
             return false;
         }
         catch (Exception exception)
         {
-            query = null;
             messages = ["Unexpected error: " + exception.Message];
             return false;
         }
     }
 
+    // SELECT ... INTO is not in the parser's grammar (the select AST has no INTO target), so it
+    // never parses; every statement that does parse and is not a query is refused here.
     private static bool ContainsNonQueryStatement(SqlNode node) =>
         node.DescendantsAndSelf().OfType<SqlStatement>().Any(static statement => statement is not SqlQuery);
+
+    /// <summary>
+    /// The functions a template may call. Anything else (file, network, catalog or admin
+    /// functions of a provider) is refused before the statement reaches the database.
+    /// </summary>
+    private static readonly HashSet<string> AllowedFunctions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // Aggregates.
+        "count", "sum", "avg", "min", "max", "group_concat", "string_agg",
+        // Window functions.
+        "row_number", "rank", "dense_rank", "ntile", "lag", "lead", "first_value", "last_value",
+        // Strings.
+        "lower", "upper", "length", "len", "char_length", "substr", "substring", "trim", "ltrim", "rtrim",
+        "replace", "concat", "concat_ws", "left", "right", "instr", "charindex", "position",
+        // Nulls and types.
+        "coalesce", "ifnull", "isnull", "nullif", "cast", "convert",
+        // Numbers.
+        "abs", "round", "floor", "ceiling", "ceil",
+        // Dates, including the parts the store's dialect translates (second, minute, hour).
+        "date", "datetime", "strftime", "julianday", "getdate", "getutcdate", "now", "current_timestamp",
+        "dateadd", "datediff", "datepart", "year", "month", "day", "hour", "minute", "second", "date_trunc", "extract",
+        // Random.
+        "random", "rand", "newid",
+        // Emitted by the rewriter itself for ORDER BY random().
+        RandomFunctionName,
+    };
 
     private sealed class SqlNameCollector : SqlVisitor
     {
         public HashSet<string> TableAliases { get; } = [];
-
-        public HashSet<string> CommonTableExpressions { get; } = [];
 
         protected override void VisitNamedTable(NamedTable node)
         {
@@ -163,12 +294,6 @@ public class SqlParser
             TableAliases.Add(node.Alias.Value);
             base.VisitDerivedTable(node);
         }
-
-        protected override void VisitCommonTableExpression(CommonTableExpression node)
-        {
-            CommonTableExpressions.Add(node.Name.Value);
-            base.VisitCommonTableExpression(node);
-        }
     }
 
     private sealed class PlatformSqlRewriter(
@@ -177,13 +302,112 @@ public class SqlParser
         ISqlDialect dialect,
         IDictionary<string, object> parameters,
         ScopeSet scopes,
-        HashSet<string> tableAliases,
-        HashSet<string> commonTableExpressions) : SqlRewriter
+        HashSet<string> tableAliases) : SqlRewriter
     {
         private int _scopeParameters;
         private readonly IDictionary<string, object> _scopeValues = parameters ?? new Dictionary<string, object>();
 
+        // The CTE names in scope, one frame per WITH being visited: a name resolves to a CTE
+        // only inside the statement that declares it, never document-wide.
+        private readonly Stack<HashSet<string>> _commonTableExpressions = new();
+
+        private bool IsCommonTableExpression(string name) =>
+            _commonTableExpressions.Any(frame => frame.Contains(name));
+
         protected override SqlNode VisitSelect(SelectStatement node)
+        {
+            if (node.CommonTableExpressions is not { Count: > 0 })
+            {
+                return ScopeSelect(node);
+            }
+
+            return WithCommonTableExpressions(
+                node.CommonTableExpressions,
+                node.IsRecursive,
+                () => ScopeSelect(node with { CommonTableExpressions = null }),
+                (rewritten, ctes) => ((SelectStatement)rewritten) with { CommonTableExpressions = ctes });
+        }
+
+        protected override SqlNode VisitSetOperation(SetOperationStatement node)
+        {
+            if (node.CommonTableExpressions is not { Count: > 0 })
+            {
+                return LimitSetOperation(node);
+            }
+
+            return WithCommonTableExpressions(
+                node.CommonTableExpressions,
+                node.IsRecursive,
+                () => LimitSetOperation(node with { CommonTableExpressions = null }),
+                (rewritten, ctes) => ((SetOperationStatement)rewritten) with { CommonTableExpressions = ctes });
+        }
+
+        protected override SqlNode VisitValues(ValuesStatement node)
+        {
+            if (node.CommonTableExpressions is not { Count: > 0 })
+            {
+                return base.VisitValues(node);
+            }
+
+            return WithCommonTableExpressions(
+                node.CommonTableExpressions,
+                node.IsRecursive,
+                () => base.VisitValues(node with { CommonTableExpressions = null }),
+                (rewritten, ctes) => ((ValuesStatement)rewritten) with { CommonTableExpressions = ctes });
+        }
+
+        /// <summary>
+        /// Visits the CTEs of a WITH, then the statement, with the CTE names in scope. A
+        /// non-recursive CTE's body is visited before its own name is in scope, so a body that
+        /// reads a table of the same name reads (and is scoped as) the real table; a recursive
+        /// WITH brings every name into scope first.
+        /// </summary>
+        private SqlNode WithCommonTableExpressions(
+            IReadOnlyList<CommonTableExpression> ctes,
+            bool isRecursive,
+            Func<SqlNode> visitStatement,
+            Func<SqlNode, IReadOnlyList<CommonTableExpression>, SqlNode> attach)
+        {
+            var frame = new HashSet<string>(StringComparer.Ordinal);
+            _commonTableExpressions.Push(frame);
+
+            try
+            {
+                if (isRecursive)
+                {
+                    foreach (var cte in ctes)
+                    {
+                        frame.Add(cte.Name.Value);
+                    }
+                }
+
+                var rewrittenCtes = new CommonTableExpression[ctes.Count];
+
+                for (var i = 0; i < ctes.Count; i++)
+                {
+                    rewrittenCtes[i] = (CommonTableExpression)Visit(ctes[i]);
+                    frame.Add(ctes[i].Name.Value);
+                }
+
+                return attach(visitStatement(), rewrittenCtes);
+            }
+            finally
+            {
+                _commonTableExpressions.Pop();
+            }
+        }
+
+        protected override SqlNode VisitFunctionCall(FunctionCallExpression node)
+        {
+            if (!AllowedFunctions.Contains(node.Name.Value))
+            {
+                throw new NotSupportedException($"The function '{node.Name.Value}' is not allowed.");
+            }
+
+            return base.VisitFunctionCall(node);
+        }
+
+        private SqlNode ScopeSelect(SelectStatement node)
         {
             var rewritten = (SelectStatement)base.VisitSelect(node);
 
@@ -229,7 +453,7 @@ public class SqlParser
                 : rewritten with { Projections = projections, Limit = limit };
         }
 
-        protected override SqlNode VisitSetOperation(SetOperationStatement node)
+        private SqlNode LimitSetOperation(SetOperationStatement node)
         {
             var rewritten = (SetOperationStatement)base.VisitSetOperation(node);
             var limit = GetLimit(rewritten.Limit, rewritten.Offset);
@@ -241,29 +465,19 @@ public class SqlParser
 
         protected override SqlNode VisitTableName(TableName node)
         {
-            if (node.Parts.Count == 0)
+            // The tenant's prefix and schema are applied here; a schema or database part written
+            // in the template would reach past them.
+            if (node.Parts.Count != 1)
             {
-                return node;
+                throw new NotSupportedException("Only a single-part table name is allowed.");
             }
 
-            var parts = new List<SqlIdentifier>(node.Parts.Count + 1);
-            var first = node.Parts[0];
+            var name = node.Parts[0].Value;
 
-            if (commonTableExpressions.Contains(first.Value))
+            return node with
             {
-                parts.Add(Quote(first.Value));
-            }
-            else
-            {
-                parts.AddRange(GetTableNameParts(tablePrefix + first.Value));
-            }
-
-            for (var i = 1; i < node.Parts.Count; i++)
-            {
-                parts.Add(Quote(node.Parts[i].Value));
-            }
-
-            return node with { Parts = parts };
+                Parts = IsCommonTableExpression(name) ? [Quote(name)] : GetTableNameParts(tablePrefix + name),
+            };
         }
 
         protected override SqlNode VisitColumn(ColumnExpression node)
@@ -285,6 +499,10 @@ public class SqlParser
             {
                 parts.Add(qualifier with { IsQuoted = false });
             }
+            else if (IsCommonTableExpression(qualifier.Value))
+            {
+                parts.Add(Quote(qualifier.Value));
+            }
             else
             {
                 parts.AddRange(GetTableNameParts(tablePrefix + qualifier.Value));
@@ -300,7 +518,17 @@ public class SqlParser
 
         protected override SqlNode VisitParameter(ParameterExpression node)
         {
-            if (parameters is not null && !parameters.ContainsKey(node.Name))
+            if (parameters is null)
+            {
+                return node;
+            }
+
+            // A bound value matches its parameter ignoring case; the statement then names it as
+            // it was bound, so a provider that binds by exact name finds it.
+            var bound = parameters.Keys.FirstOrDefault(key => string.Equals(key, node.Name, StringComparison.Ordinal))
+                ?? parameters.Keys.FirstOrDefault(key => string.Equals(key, node.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (bound is null)
             {
                 parameters[node.Name] = node.DefaultValue switch
                 {
@@ -308,9 +536,11 @@ public class SqlParser
                     null => throw new InvalidOperationException($"Missing parameter: {node.Name}"),
                     _ => throw new InvalidOperationException("Unsupported default parameter value type"),
                 };
+
+                return node;
             }
 
-            return node;
+            return string.Equals(bound, node.Name, StringComparison.Ordinal) ? node : node with { Name = bound };
         }
 
         protected override SqlNode VisitOrderByItem(OrderByItem node)
@@ -378,22 +608,25 @@ public class SqlParser
                         ? rewrittenJoin
                         : rewrittenJoin with { Left = left, Right = right, Condition = condition };
 
-                default:
+                case DerivedTable when rewritten is DerivedTable:
                     // A derived table is a select of its own and was scoped when visited.
                     return rewritten;
+
+                default:
+                    throw new NotSupportedException($"The table source '{original.GetType().Name}' is not supported.");
             }
         }
 
         private SqlExpression ScopePredicate(NamedTable table)
         {
-            if (table.Name.Parts.Count == 0)
+            if (table.Name.Parts.Count != 1)
             {
-                return null;
+                throw new NotSupportedException("Only a single-part table name is allowed.");
             }
 
-            var name = table.Name.Parts[^1].Value;
+            var name = table.Name.Parts[0].Value;
 
-            if (table.Name.Parts.Count == 1 && commonTableExpressions.Contains(name))
+            if (IsCommonTableExpression(name))
             {
                 return null;
             }

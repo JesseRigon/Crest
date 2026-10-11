@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using Crest.Access;
 using System.Text.Json.Nodes;
 using Crest.Workflows.Extensions;
 using Crest.Workflows;
@@ -53,8 +55,17 @@ public class CreateContent : CodeActivity<ContentItem>
 
         if (result.Succeeded)
         {
-            await contentManager.CreateAsync(contentItem, VersionOptions.Draft);
+            // The one decision for the burst's caller, against the item (its type decides the
+            // per-type variation); publishing takes its own right.
             var publish = Publish.Get(context);
+            var decision = context.GetRequiredService<IAccessDecision>();
+            await decision.RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, "EditContent", contentItem, context.CancellationToken);
+            if (publish)
+            {
+                await decision.RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, "PublishContent", contentItem, context.CancellationToken);
+            }
+
+            await contentManager.CreateAsync(contentItem, VersionOptions.Draft);
 
             if (publish)
                 await contentManager.PublishAsync(contentItem);

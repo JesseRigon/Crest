@@ -13,7 +13,7 @@ public class WorkflowDefinitionsFeature(IModule module) : FeatureBase(module)
     /// <summary>
     /// The factory to create new instances of <see cref="IWorkflowDefinitionStore"/>.
     /// </summary>
-    public Func<IServiceProvider, IWorkflowDefinitionStore> WorkflowDefinitionStore { get; set; } = sp => sp.GetRequiredService<MemoryWorkflowDefinitionStore>();
+    public Func<IServiceProvider, IWorkflowDefinitionStore> WorkflowDefinitionStore { get; set; } = sp => throw new InvalidOperationException("No IWorkflowDefinitionStore configured. The host must supply one (Crest.Workflows wires the YesSql stores).");
 
     /// <inheritdoc />
     public override void Apply()

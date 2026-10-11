@@ -53,6 +53,7 @@ public class ShellContainerFactory : IShellContainerFactory
 
         tenantServiceCollection.AddSingleton(blueprint.Descriptor);
         tenantServiceCollection.AddSingleton(blueprint);
+        tenantServiceCollection.AddSingleton<Crest.Environment.Extensions.Features.IProviderPriority, BlueprintProviderPriority>();
 
         // Execute IStartup registrations
         foreach (var dependency in blueprint.Dependencies.Where(t => typeof(IStartup).IsAssignableFrom(t.Key)))

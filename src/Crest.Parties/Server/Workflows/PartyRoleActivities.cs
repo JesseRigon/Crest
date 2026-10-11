@@ -1,3 +1,4 @@
+using Crest.Access;
 using Crest.Parties.Constants;
 using Crest.Parties.PartyTypes;
 using Crest.Parties.Services;
@@ -78,7 +79,12 @@ public class CreatePartyRole : Activity
             return;
         }
 
+        // Creating the role is a content write by the burst's caller: viewing the party and
+        // publishing the role item (its type decides the per-type variation).
+        var decision = context.GetRequiredService<IAccessDecision>();
+        await decision.RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, "ViewContent", party, context.CancellationToken);
         var role = await contentManager.NewAsync(type.ContentType);
+        await decision.RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, "PublishContent", role, context.CancellationToken);
         role.DisplayText = party.DisplayText;
         role.Alter<ContentPart>(type.ContentType, part => part.Alter<ContentPickerField>("Party", field => field.ContentItemIds = [party.ContentItemId]));
         await contentManager.CreateAsync(role, VersionOptions.Published);
@@ -147,6 +153,13 @@ public class ResolveParty : Activity
 
         var contentManager = context.GetRequiredService<IContentManager>();
         var item = string.IsNullOrWhiteSpace(partyId) ? null : await contentManager.GetAsync(partyId, VersionOptions.Latest);
+
+        // A party the caller may not view is not found.
+        if (item is not null && !await context.GetRequiredService<IAccessDecision>().AllowsAsync(context.GetRequiredService<ICallerContextAccessor>().Current, "ViewContent", item, context.CancellationToken))
+        {
+            item = null;
+        }
+
         if (item is null)
         {
             await FailAsync(context, $"Party '{partyId}' was not found.");

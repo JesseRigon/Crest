@@ -16,6 +16,8 @@ public sealed class WorkflowUserContext
 {
     public const string InputKey = WorkflowsConstants.InputKeys.Actor;
 
+    public const string ActorAuthenticationType = "Identity.WorkflowActor";
+
     public string? UserId { get; set; }
     public string? UserName { get; set; }
     public string Tenant { get; set; } = string.Empty;
@@ -72,6 +74,8 @@ public sealed class WorkflowUserContext
             claims.Add(new Claim(ClaimTypes.Name, UserName));
         }
 
-        return new ClaimsPrincipal(new ClaimsIdentity(claims, "CrestWorkflows", ClaimTypes.Name, ClaimTypes.Role));
+        // An "Identity." authentication type: the factory reads it as a user, so an actor whose
+        // account is gone is never mistaken for an application.
+        return new ClaimsPrincipal(new ClaimsIdentity(claims, ActorAuthenticationType, ClaimTypes.Name, ClaimTypes.Role));
     }
 }

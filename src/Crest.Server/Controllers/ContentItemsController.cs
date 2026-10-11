@@ -196,12 +196,20 @@ public sealed class ContentItemsController(
     [HttpPost]
     public async Task<ActionResult<ContentItem>> CreateAsync([FromBody] ContentItemWriteRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.ContentType) || !await authorizationService.AuthorizeAsync(User, CommonPermissions.EditContent))
+        if (string.IsNullOrWhiteSpace(request.ContentType))
         {
             return Forbid();
         }
 
+        // Decided against the new item, so the per-type variation applies (EditContent_{type}),
+        // and publishing takes its own right.
         var item = await contentManager.NewAsync(request.ContentType);
+        if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.EditContent, item) ||
+            (request.Publish && !await authorizationService.AuthorizeAsync(User, CommonPermissions.PublishContent, item)))
+        {
+            return Forbid();
+        }
+
         item.DisplayText = request.DisplayText?.Trim() ?? string.Empty;
         ReplaceContent(item, request.Content);
         // Clear-on-save: a field whose visibility condition is false must not keep a
@@ -219,6 +227,7 @@ public sealed class ContentItemsController(
         var item = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
         if (item is null) return NotFound();
         if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.EditContent, item)) return Forbid();
+        if (request.Publish && !item.Published && !await authorizationService.AuthorizeAsync(User, CommonPermissions.PublishContent, item)) return Forbid();
 
         item.DisplayText = request.DisplayText?.Trim() ?? string.Empty;
         ReplaceContent(item, request.Content);

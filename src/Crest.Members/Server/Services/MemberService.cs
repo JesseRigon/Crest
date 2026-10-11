@@ -69,6 +69,9 @@ public class MemberService : IMemberService
             return null;
         }
 
+        // The user has its id now; the node joins the same unit of work.
+        await _stamps.AddHierarchyNodeAsync(request.OrganizationId, user.UserId, cancellationToken);
+
         // The other half of the party <-> user link: the member records its person,
         // the person records its portal user. An unknown person id is a caller error.
         if (!string.IsNullOrWhiteSpace(request.PersonId)
@@ -104,7 +107,7 @@ public class MemberService : IMemberService
         await _session.SaveAsync(user);
         // A binding is a rights write: every cached caller of this tenant is stale now.
         await _permissionVersion.BumpAsync(cancellationToken);
-        MemberStampService.DeferAddHierarchyNode(organizationId, user);
+        await _stamps.AddHierarchyNodeAsync(organizationId, user.UserId, cancellationToken);
 
         // Same seam as the creation path: the binding is reported once it has committed,
         // flagged when this member is the organization's first admin.
@@ -128,7 +131,7 @@ public class MemberService : IMemberService
         await _session.SaveAsync(user);
         await _permissionVersion.BumpAsync(cancellationToken);
 
-        DeferRemoveHierarchyNodes(organizationId, user.UserId);
+        await _stamps.RemoveHierarchyNodesAsync(organizationId, user.UserId, cancellationToken);
         DeferMemberUnbound(organizationId, user.UserId);
     }
 
@@ -139,9 +142,8 @@ public class MemberService : IMemberService
     /// untouched: each is a different composite key.
     /// </summary>
     /// <remarks>
-    /// Deferred for the same reason the hierarchy removal is: this runs inside the
-    /// ambient session's write, and a handler goes through the content manager, which
-    /// must not re-enter an uncommitted session.
+    /// Deferred: this runs inside the ambient session's write, and a handler goes
+    /// through the content manager, which must not re-enter an uncommitted session.
     /// </remarks>
     private static void DeferMemberUnbound(string organizationId, string userId)
     {
@@ -151,20 +153,6 @@ public class MemberService : IMemberService
             foreach (var handler in scope.ServiceProvider.GetServices<IMemberLifecycleHandler>())
             {
                 await handler.MemberUnboundAsync(context);
-            }
-        });
-    }
-
-    private static void DeferRemoveHierarchyNodes(string organizationId, string userId)
-    {
-        ShellScope.AddDeferredTask(async scope =>
-        {
-            var hierarchy = scope.ServiceProvider.GetRequiredService<IUserHierarchyService>();
-            var root = HierarchyRoot.ForOrganization(organizationId);
-            foreach (var node in (await hierarchy.GetNodesForUserAsync(userId))
-                .Where(node => node.RootKind == HierarchyRootKinds.Organization && node.OrganizationId == organizationId))
-            {
-                await hierarchy.RemoveAsync(root, node.Id);
             }
         });
     }

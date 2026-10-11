@@ -55,9 +55,8 @@ public class RegistryTrigger : Trigger<IDictionary<string, object>>
         var requiredPermission = RequiredPermission.GetOrDefault(context);
         if (!string.IsNullOrWhiteSpace(requiredPermission))
         {
-            var user = context.FindWorkflowInput<WorkflowUserContext>(WorkflowsConstants.InputKeys.Actor);
             var authorizer = context.GetRequiredService<IWorkflowAuthorizer>();
-            if (!await authorizer.AuthorizeAsync(user, requiredPermission, context.CancellationToken))
+            if (!await authorizer.AuthorizeAsync(requiredPermission, context.CancellationToken))
             {
                 await context.CompleteActivityWithOutcomesAsync("Denied");
                 return;

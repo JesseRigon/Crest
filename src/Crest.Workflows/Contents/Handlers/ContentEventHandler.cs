@@ -45,7 +45,7 @@ public class ContentEventHandler(Units.WorkflowStimulusQueue queue, IWorkflowUse
             Input = new Dictionary<string, object>
             {
                 ["ContentItem"] = contentItem,
-                [WorkflowUserContext.InputKey] = userContext.Capture(),
+                [WorkflowUserContext.InputKey] = userContext.CaptureSealed(),
             },
         });
     }

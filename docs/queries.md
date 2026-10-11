@@ -252,6 +252,93 @@ before them.
   Workflows lists connector operations from Queries for its palette, and inbound webhooks
   verify signatures through a narrow verifier without ever reading the secret.
 
+## Hardening (2026-10-11)
+
+An audit of the pipeline against the scope rule found ways round it; all fixed the same day
+(compiled, tests in `test/Crest.Tests/Queries`, not run):
+
+- **The SQL rewriter** (`Sql/SqlParser.cs`): CTE names are scoped lexically (a non-recursive
+  CTE's body sees the real table, so `WITH Document AS (SELECT * FROM Document)` is refused);
+  table names are single-part only (a schema or database qualifier read another tenant);
+  functions come from an allow-list (no `query_to_xml`, `pg_read_file`, `dblink`,
+  `LOAD_FILE`, `OPENROWSET`); a table source other than a named, derived or joined table is
+  refused; `SELECT … INTO` does not parse; one statement per query.
+- **`ReturnContentItems`** loads through the scoped `ContentItemIndex`
+  (`Scoping/ScopedContentItems.cs`): an id the scoped index did not return is never loaded,
+  and the Sql source requires a `DocumentId` column (`SELECT 42 AS DocumentId` loaded any
+  document before).
+- **Lucene and Elasticsearch sources** take the caller's scope: content hits load through the
+  scoped index; raw documents only for a caller whose content rule is All; paged like the rest.
+- **Every source pages** (default 100, cap 500, total and page token): the Sql source wraps the
+  statement as a derived table with dialect paging (on SQL Server an inner `ORDER BY` is kept
+  legal but its order is not guaranteed).
+- **The admin SQL runner** runs through `IQueryManager`, never committing, with cancellation.
+- **Structured left joins** carry the joined table's scope in `ON`, so an out-of-scope match no
+  longer drops the left row; a None rule there is `AND 1 = 0`, not an empty query.
+- **Drafts**: `ContentItemScopeProvider` (version 2) gives a view-only type `Published` rows
+  only, and `Published OR Latest` with preview or edit.
+- Smaller: parameters bind case-insensitively; a parse failure is an error (400 on the API),
+  not an empty result; the System source checks scope before loading and its memo key
+  includes `ReturnContentItems`; Liquid, scripting and deployment pass cancellation, and
+  deployment exports every page; `RunQuery` runs only its descriptor's query and refuses when
+  the descriptor's permission is not that query's.
+
+Behaviour that changes for callers: a raw-document Lucene or Elasticsearch query is a 403 for
+anyone without the All rule; a Liquid or scripting query with a parse error throws.
+
+## Persistence: one system
+
+Ruling direction (2026-10-11): Crest data goes through one data-access system, YesSql on the
+tenant's `ISession` and its unit of work. This is the state after the first consolidation pass.
+
+**Folded into the unit of work**
+
+- Members' user hierarchy (`UserHierarchyService`, table `CrestUserHierarchy`): it used to run
+  Dapper on its own connection and transaction, as deferred tasks that swallowed failures. It
+  now runs on the session's connection and transaction (`ISession.BeginTransactionAsync()` for
+  writes, `CreateConnectionAsync()` plus `CurrentTransaction` for reads). The writes run inline
+  in member creation, binding add and remove, portal registration and class conversion; a
+  failure cancels the whole unit. The table stays a plain table, not a YesSql index: the node
+  id is an identity embedded in the materialized path. No schema change, so no migration.
+- Workflow engine stores (already done): every store (definitions, instances, triggers, bookmarks, bookmark
+  queue, execution log, activity execution records) is YesSql-backed in `Crest.Workflows`.
+
+**Removed as dead**
+
+- `src/Crest.Workflows/reference/`, which was in no solution or project.
+- The engine `Crest.Workflows.KeyValues` module.
+- The engine's tenant management: `ITenantStore`, `MemoryTenantStore`, `StoreTenantsProvider`,
+  the management features and the `Tenants` endpoints. `TenantsFeature` and `TenantHeaders`
+  stay, because the runtime dispatchers use them.
+- The engine's in-memory and no-op stores, `MemoryStore<T>` and `AddMemoryStore`. The store
+  factories now throw "No X configured" unless the host supplies a store.
+- EF Core, Sqlite, Npgsql, MySql, Oracle, Pomelo, SqlClient, Elastic, Redis, Azure identity
+  and Testcontainers package versions in the engine's `Directory.Packages.props`.
+
+**Deliberately outside the session**
+
+- `IndexingTaskManager` keeps its own connection. It is the upstream queue design: a deferred
+  task appends the queue after the request's commit, so only committed changes are queued, and
+  background indexers read it independently. A bug that inserted the whole queue once per
+  category is fixed.
+- Read-only or batched side sessions: `ContentIndexingService` (a non-tracking read session
+  across indexing batches, now disposed with the service), the sitemap
+  `DefaultContentItemsQueryProvider` (a non-tracking read whose items are cached) and
+  `MoveAttachedMediaFieldsStepExecutor` (one session per batch in a bulk recipe migration;
+  its keyset paging no longer also skips rows).
+
+**Open rulings**
+
+- [x] `Crest.Global` and its own store. **Ruled 2026-10-11: kept as the one exception** - the
+  only store outside a tenant, for host-wide reference data (geo, currencies, global lists).
+  To do: its schema versioning (`ICrestGlobalSchema`, `CrestGlobalSchemaState`) moves onto
+  `DataMigration`, so there is one migration system.
+- [ ] The file-based stores (`IFileDocumentStore`, `FileContentDefinitionStore`,
+  `FilePlacementsStore`). To discuss in depth (2026-10-11).
+- [ ] `IVolatileDocumentManager` (distributed-cache documents). To discuss in depth.
+- [ ] The search modules' stores (Lucene, Elasticsearch). To discuss in depth.
+- [ ] `tenants.json` (shell settings outside the database). To discuss in depth.
+
 ## Decisions needed
 
 - [x] **Search sources and the old query contract (Q2).** Ruled by landing (2026-10-10,

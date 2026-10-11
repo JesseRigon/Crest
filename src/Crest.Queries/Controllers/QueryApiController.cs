@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Crest.Access;
+using Crest.Queries.Sql;
+using Crest.Queries.Structured;
 
 namespace Crest.Queries.Controllers;
 
@@ -90,6 +92,14 @@ public sealed class QueryApiController : ControllerBase
         catch (ScopeRefusedException)
         {
             return Forbid();
+        }
+        catch (SqlQueryException exception)
+        {
+            return BadRequest(new { errors = exception.Messages });
+        }
+        catch (StructuredQueryException exception)
+        {
+            return BadRequest(new { errors = new[] { exception.Message } });
         }
     }
 }

@@ -1,4 +1,6 @@
+using Crest.Access;
 using Crest.ContentManagement;
+using Crest.Users;
 using Crest.Users.Indexes;
 using Crest.Users.Models;
 using YesSql;
@@ -20,7 +22,12 @@ namespace Crest.Services;
 /// display whatever their user profile carries without this provider knowing about
 /// it.
 /// </remarks>
-public sealed class UserOptionSourceProvider(ISession session) : IOptionSourceProvider
+/// <para>
+/// Access: listing users takes <c>ListUsers</c> for the caller; the columns beyond the user
+/// name (email, phone, profile properties) take <c>ViewUsers</c>. A user referenced from a
+/// document the caller may see keeps its name either way.
+/// </para>
+public sealed class UserOptionSourceProvider(ISession session, ICallerContextAccessor callers, IAccessDecision decision) : IOptionSourceProvider
 {
     /// <summary>Source key for users; the qualifier is unused.</summary>
     public const string ProviderKey = "users";
@@ -50,8 +57,14 @@ public sealed class UserOptionSourceProvider(ISession session) : IOptionSourcePr
 
     public async Task<IReadOnlyList<OptionRow>> QueryAsync(OptionSourceQuery query, CancellationToken cancellationToken = default)
     {
+        if (!await decision.AllowsAsync(callers.Current, UsersPermissions.ListUsers.Name, cancellationToken: cancellationToken))
+        {
+            return [];
+        }
+
+        var columns = await VisibleColumnsAsync(query.Columns, cancellationToken);
         var users = await session.Query<User, UserIndex>().ListAsync();
-        var rows = users.Select(user => ToRow(user, query.Columns));
+        var rows = users.Select(user => ToRow(user, columns));
 
         rows = OptionFilterMatcher.Apply(rows, query.Filters);
         rows = OptionFilterMatcher.Search(rows, query.SearchText, query.SearchColumns is { Count: > 0 }
@@ -82,7 +95,20 @@ public sealed class UserOptionSourceProvider(ISession session) : IOptionSourcePr
         var wanted = new HashSet<string>(ids, StringComparer.OrdinalIgnoreCase);
         var users = await session.Query<User, UserIndex>().ListAsync();
 
-        return [.. users.Where(user => wanted.Contains(user.UserId)).Select(user => ToRow(user, columns))];
+        var visible = await VisibleColumnsAsync(columns, cancellationToken);
+        return [.. users.Where(user => wanted.Contains(user.UserId)).Select(user => ToRow(user, visible))];
+    }
+
+    /// <summary>The requested columns the caller may read: the user name always, the rest with ViewUsers.</summary>
+    private async Task<IReadOnlyList<string>> VisibleColumnsAsync(IReadOnlyList<string> requested, CancellationToken cancellationToken)
+    {
+        if (requested is not { Count: > 0 } || requested.All(column => column == Columns.UserName) ||
+            await decision.AllowsAsync(callers.Current, UsersPermissions.ViewUsers.Name, cancellationToken: cancellationToken))
+        {
+            return requested;
+        }
+
+        return [Columns.UserName];
     }
 
     // Internal so the multi-column projection can be unit-tested directly - it is the

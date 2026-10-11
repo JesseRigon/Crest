@@ -1,5 +1,6 @@
 using Fluid;
 using Fluid.Values;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Crest.Liquid;
 
@@ -32,7 +33,8 @@ public class QueryFilter : ILiquidFilter
 
         var queryManager = _serviceProvider.GetRequiredService<IQueryManager>();
 
-        var result = await queryManager.ExecuteQueryAsync(query, QueryRequest.Of(parameters));
+        var cancellationToken = _serviceProvider.GetService<IHttpContextAccessor>()?.HttpContext?.RequestAborted ?? CancellationToken.None;
+        var result = await queryManager.ExecuteQueryAsync(query, QueryRequest.Of(parameters, cancellationToken));
 
         return FluidValue.Create(result.Items, ctx.Options);
     }

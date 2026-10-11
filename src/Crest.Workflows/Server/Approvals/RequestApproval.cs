@@ -1,3 +1,4 @@
+using Crest.Access;
 using System.Reflection;
 using Crest.Workflows.Activities.Flowchart.Attributes;
 using Crest.Workflows.Attributes;
@@ -68,7 +69,7 @@ public class RequestApproval : Activity, IUnitBoundary
             WorkflowInstanceId = workflow.Id,
             WorkflowDefinitionId = workflow.Workflow.Identity.DefinitionId,
             CorrelationId = workflow.CorrelationId,
-            RequestedBy = context.FindWorkflowInput<WorkflowUserContext>(WorkflowUserContext.InputKey)?.UserName,
+            RequestedBy = context.GetRequiredService<ICallerContextAccessor>().Current?.UserName,
             CreatedUtc = DateTime.UtcNow,
         };
 

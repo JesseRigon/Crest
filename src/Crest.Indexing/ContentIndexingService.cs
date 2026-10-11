@@ -10,7 +10,7 @@ using YesSql.Services;
 
 namespace Crest.Indexing;
 
-public sealed class ContentIndexingService : NamedIndexingService
+public sealed class ContentIndexingService : NamedIndexingService, IAsyncDisposable
 {
     private readonly IStore _store;
     private readonly IContentManager _contentManager;
@@ -40,6 +40,21 @@ public sealed class ContentIndexingService : NamedIndexingService
     {
         _store = store;
         _contentManager = contentManager;
+    }
+
+    /// <summary>
+    /// The read-only, non-tracking session is deliberately separate from the scope's
+    /// unit of work: indexing only reads, across many batches, and must not grow the
+    /// scope session's identity map or take part in its commit. It is still owned here,
+    /// so it is disposed with this scoped service.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (_readonlySession is not null)
+        {
+            await _readonlySession.DisposeAsync();
+            _readonlySession = null;
+        }
     }
 
     protected override async Task BeforeProcessingTasksAsync(IEnumerable<RecordIndexingTask> tasks, IEnumerable<IndexProfileEntryContext> contexts)

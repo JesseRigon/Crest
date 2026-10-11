@@ -10,11 +10,18 @@ using Crest.Indexing;
 using Crest.Liquid;
 using Crest.Queries;
 using Crest.Elasticsearch.Models;
+using Crest.Access;
+using Crest.Queries.Structured;
 using YesSql;
 using YesSql.Services;
 
 namespace Crest.Elasticsearch.Services;
 
+/// <summary>
+/// Runs an Elasticsearch query template. Hits that are content items load through the
+/// caller's <c>ContentItemIndex</c> scope; raw documents carry no scope and are served only to
+/// a caller who may read every content item. Results are paged like a structured query.
+/// </summary>
 public sealed class ElasticsearchQuerySource : IQuerySource
 {
     public const string SourceName = ElasticsearchConstants.ProviderName;
@@ -25,6 +32,8 @@ public sealed class ElasticsearchQuerySource : IQuerySource
     private readonly ISession _session;
     private readonly JavaScriptEncoder _javaScriptEncoder;
     private readonly TemplateOptions _templateOptions;
+    private readonly ICallerContextAccessor _callerAccessor;
+    private readonly IScopeSetProvider _scopeSetProvider;
 
     public ElasticsearchQuerySource(
         ElasticsearchQueryService queryService,
@@ -32,7 +41,8 @@ public sealed class ElasticsearchQuerySource : IQuerySource
         IIndexProfileStore indexProfileStore,
         ISession session,
         JavaScriptEncoder javaScriptEncoder,
-        IOptions<TemplateOptions> templateOptions)
+        IOptions<TemplateOptions> templateOptions,
+        IServiceProvider serviceProvider)
     {
         _queryService = queryService;
         _liquidTemplateManager = liquidTemplateManager;
@@ -40,6 +50,8 @@ public sealed class ElasticsearchQuerySource : IQuerySource
         _session = session;
         _javaScriptEncoder = javaScriptEncoder;
         _templateOptions = templateOptions.Value;
+        _callerAccessor = serviceProvider.GetService(typeof(ICallerContextAccessor)) as ICallerContextAccessor;
+        _scopeSetProvider = serviceProvider.GetService(typeof(IScopeSetProvider)) as IScopeSetProvider;
     }
 
     public string Name
@@ -47,16 +59,25 @@ public sealed class ElasticsearchQuerySource : IQuerySource
 
     public async Task<IQueryResults> ExecuteQueryAsync(Query query, QueryRequest request)
     {
-        var parameters = request.Parameters;
-        var elasticQueryResults = new ElasticsearchQueryResults()
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(request);
+
+        var cancellationToken = request.CancellationToken;
+        var scopes = await CallerScopes.RequireAsync(_callerAccessor, _scopeSetProvider, query.Name ?? SourceName, cancellationToken);
+        var rule = scopes.Require(nameof(ContentItemIndex));
+
+        if (!query.ReturnContentItems && rule.Kind != ScopeKind.All)
         {
-            // We always return an empty collection if the bottom lines queries have no results.
-            Items = [],
-        };
+            throw new ScopeRefusedException($"{SourceName} documents");
+        }
+
+        var pageSize = StructuredQueryCompiler.PageSize(request.PageSize);
+        var offset = PageTokens.Decode(request.PageToken);
+        var parameters = request.Parameters;
 
         if (!query.TryGet<ElasticsearchQueryMetadata>(out var metadata) || string.IsNullOrEmpty(metadata.Index))
         {
-            return elasticQueryResults;
+            return QueryResults.Empty();
         }
 
         var tokenizedContent = await _liquidTemplateManager.RenderStringAsync(metadata.Template, _javaScriptEncoder, parameters.Select(x => new KeyValuePair<string, FluidValue>(x.Key, FluidValue.Create(x.Value, _templateOptions))));
@@ -65,48 +86,32 @@ public sealed class ElasticsearchQuerySource : IQuerySource
 
         if (index is null || index.ProviderName != ElasticsearchConstants.ProviderName)
         {
-            return elasticQueryResults;
+            return QueryResults.Empty();
         }
 
         var docs = await _queryService.SearchAsync(index, tokenizedContent);
-        elasticQueryResults.Count = docs.Count;
 
-        if (elasticQueryResults.Count == 0 || docs.TopDocs == null || docs.TopDocs.Count == 0)
+        if (docs.Count == 0 || docs.TopDocs == null || docs.TopDocs.Count == 0)
         {
-            return elasticQueryResults;
+            return QueryResults.Empty();
         }
+
+        IReadOnlyList<object> items;
 
         if (query.ReturnContentItems)
         {
-            // Load corresponding content item versions.
-            var topDocs = docs.TopDocs.Where(x => x != null).ToList();
+            // Load the hits' content item versions through the caller's scope, in hit order.
+            var indexedContentItemVersionIds = new List<string>();
 
-            if (topDocs.Count > 0)
+            foreach (var topDoc in docs.TopDocs.Where(x => x != null))
             {
-                var indexedContentItemVersionIds = new List<string>();
-
-                foreach (var topDoc in topDocs)
+                if (topDoc.Value.TryGetPropertyValue(nameof(ContentItem.ContentItemVersionId), out var versionId) && versionId is not null)
                 {
-                    if (!topDoc.Value.TryGetPropertyValue(nameof(ContentItem.ContentItemVersionId), out var versionId))
-                    {
-                        continue;
-                    }
-
                     indexedContentItemVersionIds.Add(versionId.GetValue<string>());
-                }
-
-                var dbContentItems = await _session.Query<ContentItem, ContentItemIndex>(x => x.ContentItemVersionId.IsIn(indexedContentItemVersionIds)).ListAsync();
-
-                // Reorder the result to preserve the one from the Elasticsearch query.
-                if (dbContentItems.Any())
-                {
-                    var dbContentItemVersionIds = dbContentItems.ToDictionary(x => x.ContentItemVersionId, x => x);
-                    var indexedAndInDB = indexedContentItemVersionIds.Where(dbContentItemVersionIds.ContainsKey);
-                    elasticQueryResults.Items = indexedAndInDB.Select(x => dbContentItemVersionIds[x]).ToArray();
                 }
             }
 
-            // TODO : get ContentItemVersionId from docs.Fields
+            items = await ScopedContentItems.LoadVersionsAsync(_session, indexedContentItemVersionIds, rule, cancellationToken);
         }
         else
         {
@@ -119,9 +124,14 @@ public sealed class ElasticsearchQuerySource : IQuerySource
                     .Select(x => KeyValuePair.Create(x.Key, x.Value.DeepClone()))));
             }
 
-            elasticQueryResults.Items = results;
+            items = results;
         }
 
-        return elasticQueryResults;
+        return new QueryResults
+        {
+            Items = items.Skip(offset).Take(pageSize).ToArray(),
+            Total = items.Count,
+            NextPageToken = offset + pageSize < items.Count ? PageTokens.Encode(offset + pageSize) : null,
+        };
     }
 }

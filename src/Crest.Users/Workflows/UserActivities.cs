@@ -1,13 +1,16 @@
+using Crest.Access;
 using Crest.Email;
 using Crest.Mvc.Utilities;
+using Crest.Security;
 using Crest.Users.Models;
 using Crest.Users.Services;
-using Crest.Workflows;
+using Crest.Users;
 using Crest.Workflows.Activities.Flowchart.Attributes;
 using Crest.Workflows.Attributes;
 using Crest.Workflows.Extensions;
 using Crest.Workflows.Models;
 using Crest.Workflows.UIHints;
+using Crest.Workflows;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
@@ -69,6 +72,10 @@ public class CreateUser : Activity
             userName = email.Replace('@', '+');
         }
 
+        // The burst's caller must be allowed to create users: a flow started by an anonymous
+        // visitor creates one only when its definition is published as system.
+        await context.GetRequiredService<IAccessDecision>().RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, UsersPermissions.EditUsers.Name, cancellationToken: context.CancellationToken);
+
         var errors = new List<string>();
         var created = await context.GetRequiredService<IUserService>().CreateUserAsync(new User
         {
@@ -123,10 +130,10 @@ public class CreateUser : Activity
 }
 
 /// <summary>
-/// Branches on the request's user: Anonymous, Authenticated, or InRole when they hold one of
-/// the given roles. Reads the request principal, so it is meant for request-started flows.
+/// Branches on the run's caller: Anonymous, Authenticated, or InRole when they hold one of
+/// the given roles. The caller is the one the access gate built for the burst.
 /// </summary>
-[Activity("Crest.Users", "User", "Branches on whether the request's user is anonymous, authenticated or in one of the given roles.", DisplayName = "Validate user")]
+[Activity("Crest.Users", "User", "Branches on whether the run's caller is anonymous, authenticated or in one of the given roles.", DisplayName = "Validate user")]
 [FlowNode("Anonymous", "Authenticated", "InRole")]
 public class ValidateUser : Activity
 {
@@ -141,17 +148,18 @@ public class ValidateUser : Activity
 
     protected override async ValueTask ExecuteAsync(ActivityExecutionContext context)
     {
-        var principal = context.GetService<IHttpContextAccessor>()?.HttpContext?.User;
-        if (principal?.Identity?.IsAuthenticated != true)
+        // The burst's caller, as the gate built it: its roles are server-held, the member
+        // binding's included, and it is there in a background burst too.
+        var caller = context.GetService<ICallerContextAccessor>()?.Current;
+        if (caller is not { IsAuthenticated: true })
         {
             await context.CompleteActivityWithOutcomesAsync("Anonymous");
             return;
         }
 
-        UserName.Set(context, principal.Identity.Name);
+        UserName.Set(context, caller.UserName);
 
-        var roleClaimType = context.GetRequiredService<IOptions<IdentityOptions>>().Value.ClaimsIdentity.RoleClaimType;
-        var userRoles = principal.FindAll(claim => claim.Type == roleClaimType).Select(claim => claim.Value).ToList();
+        var userRoles = caller.Roles.ToList();
         UserRoles.Set(context, userRoles);
 
         var roles = Roles.GetOrDefault(context) ?? [];
@@ -194,6 +202,15 @@ public class AssignUserRole : Activity
             await FailAsync(context, $"No user '{userName}'.");
             return;
         }
+
+        // Assigning takes the right for that role (AssignRoleToUsers_{role}, or the base one).
+        if (await context.GetRequiredService<RoleManager<IRole>>().FindByNameAsync(roleName) is not { } role)
+        {
+            await FailAsync(context, $"No role '{roleName}'.");
+            return;
+        }
+
+        await context.GetRequiredService<IAccessDecision>().RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, UsersPermissions.AssignRoleToUsers.Name, role, context.CancellationToken);
 
         if (!user.RoleNames.Contains(roleName, StringComparer.OrdinalIgnoreCase))
         {
@@ -241,11 +258,14 @@ public class UnassignUserRole : Activity
         }
 
         var userManager = context.GetRequiredService<UserManager<IUser>>();
+        var roleManager = context.GetRequiredService<RoleManager<IRole>>();
+        var decision = context.GetRequiredService<IAccessDecision>();
         var removed = false;
         foreach (var role in Roles.GetOrDefault(context) ?? [])
         {
             if (user.RoleNames.Contains(role, StringComparer.OrdinalIgnoreCase))
             {
+                await decision.RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, UsersPermissions.AssignRoleToUsers.Name, await roleManager.FindByNameAsync(role) ?? (object)role, context.CancellationToken);
                 await userManager.RemoveFromRoleAsync(user, role);
                 removed = true;
             }
@@ -285,9 +305,19 @@ public class GetUsersByRole : Activity
     protected override async ValueTask ExecuteAsync(ActivityExecutionContext context)
     {
         var userManager = context.GetRequiredService<UserManager<IUser>>();
+        var roleManager = context.GetRequiredService<RoleManager<IRole>>();
+        var decision = context.GetRequiredService<IAccessDecision>();
+        var caller = context.GetRequiredService<ICallerContextAccessor>().Current;
         var users = new Dictionary<string, string>();
         foreach (var role in Roles.GetOrDefault(context) ?? [])
         {
+            // Listing a role's members takes ListUsers for that role; a role the caller may not
+            // list contributes nothing.
+            if (await roleManager.FindByNameAsync(role) is not { } found || !await decision.AllowsAsync(caller, UsersPermissions.ListUsers.Name, found, context.CancellationToken))
+            {
+                continue;
+            }
+
             foreach (var member in await userManager.GetUsersInRoleAsync(role))
             {
                 if (member is User user)

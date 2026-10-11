@@ -90,7 +90,7 @@ public sealed class WorkflowHookService(
     /// access lists apply; the controller checked the permission). Required is forced on when
     /// the slot says RequiredOnly.
     /// </summary>
-    public async Task<WorkflowHookAttachmentModel> AttachAsync(ClaimsPrincipal user, WorkflowHookAttachRequest request, CancellationToken cancellationToken = default)
+    public async Task<WorkflowHookAttachmentModel> AttachAsync(WorkflowHookAttachRequest request, CancellationToken cancellationToken = default)
     {
         var slot = catalog.FindHookSlot(request.Slot) ?? throw new WorkflowHookAttachException($"'{request.Slot}' is not a registered hook slot.");
         if (!slot.AllowTenantAttachments)
@@ -101,7 +101,7 @@ public sealed class WorkflowHookService(
         var definition = await definitions.FindAsync(new WorkflowDefinitionFilter { DefinitionId = request.DefinitionId, VersionOptions = VersionOptions.Published }, cancellationToken)
             ?? throw new WorkflowHookAttachException("The flow must be published before it is attached to a hook.");
 
-        if (!await access.AuthorizeAsync(user, WorkflowOwnershipGuard.PermissionFor(WorkflowChange.Save, WorkflowOwnershipInfo.From(definition.CustomProperties)), request.DefinitionId))
+        if (!await access.AuthorizeAsync(WorkflowOwnershipGuard.PermissionFor(WorkflowChange.Save, WorkflowOwnershipInfo.From(definition.CustomProperties)), request.DefinitionId))
         {
             throw new WorkflowHookAttachException("You may not attach a flow you cannot edit.");
         }
@@ -128,7 +128,7 @@ public sealed class WorkflowHookService(
         return new(attachment.Id, slot.Key, attachment.DefinitionId, definition.Name, null, attachment.Position, attachment.Required, WorkflowOwnership.Tenant);
     }
 
-    public async Task<bool> DetachAsync(ClaimsPrincipal user, string attachmentId, CancellationToken cancellationToken = default)
+    public async Task<bool> DetachAsync(string attachmentId, CancellationToken cancellationToken = default)
     {
         var document = await documents.GetOrCreateMutableAsync();
         var attachment = document.Attachments.FirstOrDefault(a => a.Id == attachmentId);
@@ -138,7 +138,7 @@ public sealed class WorkflowHookService(
         }
 
         var definition = await definitions.FindAsync(new WorkflowDefinitionFilter { DefinitionId = attachment.DefinitionId, VersionOptions = VersionOptions.Latest }, cancellationToken);
-        if (definition is not null && !await access.AuthorizeAsync(user, WorkflowOwnershipGuard.PermissionFor(WorkflowChange.Save, WorkflowOwnershipInfo.From(definition.CustomProperties)), attachment.DefinitionId))
+        if (definition is not null && !await access.AuthorizeAsync(WorkflowOwnershipGuard.PermissionFor(WorkflowChange.Save, WorkflowOwnershipInfo.From(definition.CustomProperties)), attachment.DefinitionId))
         {
             throw new WorkflowHookAttachException("You may not detach a flow you cannot edit.");
         }

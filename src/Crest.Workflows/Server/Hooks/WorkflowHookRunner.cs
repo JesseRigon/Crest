@@ -30,7 +30,7 @@ public sealed class WorkflowHookRunner(
         var input = new Dictionary<string, object>
         {
             [WorkflowsConstants.InputKeys.Payload] = payload ?? new Dictionary<string, object>(),
-            [WorkflowsConstants.InputKeys.Actor] = userContext.Capture(),
+            [WorkflowsConstants.InputKeys.Actor] = userContext.CaptureSealed(),
         };
         return RunAsync(slotKey, correlationId, input, parentInstanceId: null, failingActivityId: null, cancellationToken);
     }

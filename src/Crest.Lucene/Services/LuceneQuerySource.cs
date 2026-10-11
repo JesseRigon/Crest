@@ -13,11 +13,18 @@ using Crest.Lucene;
 using Crest.Queries;
 using Crest.Lucene.Models;
 using Crest.Lucene.Services;
+using Crest.Access;
+using Crest.Queries.Structured;
 using YesSql;
 using YesSql.Services;
 
 namespace Crest.Lucene;
 
+/// <summary>
+/// Runs a Lucene query template. Hits that are content items load through the caller's
+/// <c>ContentItemIndex</c> scope; raw documents carry no scope and are served only to a caller
+/// who may read every content item. Results are paged like a structured query.
+/// </summary>
 public sealed class LuceneQuerySource : IQuerySource
 {
     public const string SourceName = LuceneConstants.ProviderName;
@@ -30,6 +37,8 @@ public sealed class LuceneQuerySource : IQuerySource
     private readonly ISession _session;
     private readonly JavaScriptEncoder _javaScriptEncoder;
     private readonly TemplateOptions _templateOptions;
+    private readonly ICallerContextAccessor _callerAccessor;
+    private readonly IScopeSetProvider _scopeSetProvider;
 
     public LuceneQuerySource(
         ILuceneIndexStore luceneIndexStore,
@@ -39,7 +48,8 @@ public sealed class LuceneQuerySource : IQuerySource
         ILiquidTemplateManager liquidTemplateManager,
         ISession session,
         JavaScriptEncoder javaScriptEncoder,
-        IOptions<TemplateOptions> templateOptions)
+        IOptions<TemplateOptions> templateOptions,
+        IServiceProvider serviceProvider)
     {
         _luceneIndexStore = luceneIndexStore;
         _indexStore = indexStore;
@@ -49,6 +59,8 @@ public sealed class LuceneQuerySource : IQuerySource
         _session = session;
         _javaScriptEncoder = javaScriptEncoder;
         _templateOptions = templateOptions.Value;
+        _callerAccessor = serviceProvider.GetService(typeof(ICallerContextAccessor)) as ICallerContextAccessor;
+        _scopeSetProvider = serviceProvider.GetService(typeof(IScopeSetProvider)) as IScopeSetProvider;
     }
 
     public string Name
@@ -56,23 +68,35 @@ public sealed class LuceneQuerySource : IQuerySource
 
     public async Task<IQueryResults> ExecuteQueryAsync(Query query, QueryRequest request)
     {
-        var parameters = request.Parameters;
-        var result = new LuceneQueryResults()
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(request);
+
+        var cancellationToken = request.CancellationToken;
+        var scopes = await CallerScopes.RequireAsync(_callerAccessor, _scopeSetProvider, query.Name ?? SourceName, cancellationToken);
+        var rule = scopes.Require(nameof(ContentItemIndex));
+
+        if (!query.ReturnContentItems && rule.Kind != ScopeKind.All)
         {
-            Items = [],
-        };
+            throw new ScopeRefusedException($"{SourceName} documents");
+        }
+
+        var pageSize = StructuredQueryCompiler.PageSize(request.PageSize);
+        var offset = PageTokens.Decode(request.PageToken);
+        var parameters = request.Parameters;
 
         if (!query.TryGet<LuceneQueryMetadata>(out var metadata) || string.IsNullOrEmpty(metadata.Index))
         {
-            return result;
+            return QueryResults.Empty();
         }
 
         var index = await _indexStore.FindByNameAsync(metadata.Index);
 
         if (index is null || index.ProviderName != LuceneConstants.ProviderName)
         {
-            return result;
+            return QueryResults.Empty();
         }
+
+        IReadOnlyList<object> items = [];
 
         await _luceneIndexStore.SearchAsync(index, async searcher =>
         {
@@ -98,24 +122,16 @@ public sealed class LuceneQuerySource : IQuerySource
 
             var context = new LuceneQueryContext(searcher, defaultVersion, analyzer);
             var docs = await _queryService.SearchAsync(context, parameterizedQuery);
-            result.Count = docs.Count;
 
             if (query.ReturnContentItems)
             {
-                // We always return an empty collection if the bottom lines queries have no results.
-                result.Items = [];
+                // Load the hits' content item versions through the caller's scope, in hit order.
+                var indexedContentItemVersionIds = docs.TopDocs.ScoreDocs
+                    .Select(x => searcher.Doc(x.Doc).Get("ContentItemVersionId"))
+                    .Where(id => !string.IsNullOrEmpty(id))
+                    .ToArray();
 
-                // Load corresponding content item versions.
-                var indexedContentItemVersionIds = docs.TopDocs.ScoreDocs.Select(x => searcher.Doc(x.Doc).Get("ContentItemVersionId")).ToArray();
-                var dbContentItems = await _session.Query<ContentItem, ContentItemIndex>(x => x.ContentItemVersionId.IsIn(indexedContentItemVersionIds)).ListAsync();
-
-                // Reorder the result to preserve the one from the Lucene query.
-                if (dbContentItems.Any())
-                {
-                    var dbContentItemVersionIds = dbContentItems.ToDictionary(x => x.ContentItemVersionId, x => x);
-                    var indexedAndInDB = indexedContentItemVersionIds.Where(dbContentItemVersionIds.ContainsKey);
-                    result.Items = indexedAndInDB.Select(x => dbContentItemVersionIds[x]).ToArray();
-                }
+                items = await ScopedContentItems.LoadVersionsAsync(_session, indexedContentItemVersionIds, rule, cancellationToken);
             }
             else
             {
@@ -127,10 +143,15 @@ public sealed class LuceneQuerySource : IQuerySource
                         KeyValuePair.Create(x.Name, (JsonNode)JsonValue.Create(x.GetStringValue())))));
                 }
 
-                result.Items = results;
+                items = results;
             }
         });
 
-        return result;
+        return new QueryResults
+        {
+            Items = items.Skip(offset).Take(pageSize).ToArray(),
+            Total = items.Count,
+            NextPageToken = offset + pageSize < items.Count ? PageTokens.Encode(offset + pageSize) : null,
+        };
     }
 }

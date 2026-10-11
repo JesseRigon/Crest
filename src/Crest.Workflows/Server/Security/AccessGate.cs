@@ -13,15 +13,19 @@ namespace Crest.Workflows.Security;
 /// The access gate at the workflow level (docs/operations.md step 4): once per burst, the
 /// run's caller. Inserted first in the engine's workflow pipeline (after the builder's
 /// <c>Reset</c>, before the heartbeat and the exception handlers), so everything the burst
-/// does runs as that caller. When a caller is already set for the scope (a request the gate
-/// admitted, a host that ran the burst as a caller, a hook child inside its parent's burst)
-/// the burst inherits it, and on the instance's first burst that identity is recorded as the
-/// actor, so a client cannot name another actor through the API's input; a later burst
-/// keeps the instance's actor (a request-driven resume is journaled by its activity, it does
-/// not become the run's actor). Otherwise the caller comes from
-/// the definition (published as system) or from the actor persisted in the instance input,
-/// rebuilt with current rights; a burst with neither is refused with the reason. The previous
-/// value is restored after the burst.
+/// does runs as that caller.
+/// <list type="bullet">
+/// <item>A run's first burst inherits a caller already set for the scope (a request the gate
+/// admitted, a hook child inside its parent's burst) - except the system caller, which only a
+/// definition published as system may run as: a flow triggered by a background task or a
+/// system flow does not become the tenant super user.</item>
+/// <item>Otherwise, and on every later burst, the caller comes from the definition (published
+/// as system) or from the sealed actor in the instance input, rebuilt with current rights: a
+/// resume runs as the run's actor, never as whoever resumed it.</item>
+/// <item>On the first burst the actor is bound to the instance (<see cref="WorkflowActorSeal"/>),
+/// so no input a client or an author supplies later can replace it.</item>
+/// </list>
+/// A burst with no caller is refused with the reason. The previous caller is restored after.
 /// </summary>
 public sealed class WorkflowAccessGateMiddleware(WorkflowMiddlewareDelegate next, ILogger<WorkflowAccessGateMiddleware> logger) : WorkflowExecutionMiddleware(next)
 {
@@ -29,19 +33,26 @@ public sealed class WorkflowAccessGateMiddleware(WorkflowMiddlewareDelegate next
     {
         // The scope the burst runs in: a child shell scope has its own accessor.
         var accessor = context.GetRequiredService<ICallerContextAccessor>();
+        var seal = context.GetRequiredService<WorkflowActorSeal>();
         var inherited = accessor.Current;
-        if (inherited is not null)
-        {
-            if (context.SubStatus == WorkflowSubStatus.Pending)
-            {
-                context.Input[WorkflowsConstants.InputKeys.Actor] = WorkflowUserContext.From(inherited);
-            }
+        var firstBurst = context.SubStatus == WorkflowSubStatus.Pending;
+        var runsAsSystem = WorkflowCallerResolver.RunsAsSystem(context.Workflow);
 
+        var caller = firstBurst && inherited is not null && (!inherited.IsSystem || runsAsSystem)
+            ? inherited
+            : await context.GetRequiredService<WorkflowCallerResolver>().ForRunAsync(context.Workflow, context.Input, context.Id, firstBurst, context.CancellationToken);
+
+        if (firstBurst && !caller.IsSystem)
+        {
+            context.Input[WorkflowsConstants.InputKeys.Actor] = seal.Bind(WorkflowUserContext.From(caller), context.Id);
+        }
+
+        if (ReferenceEquals(caller, inherited))
+        {
             await Next(context);
             return;
         }
 
-        var caller = await context.GetRequiredService<WorkflowCallerResolver>().ForRunAsync(context.Workflow, context.Input, context.CancellationToken);
         logger.LogDebug("Workflow {Definition} burst runs as {Caller}.", context.Workflow.Identity.DefinitionId, caller.IsSystem ? "system" : caller.UserName ?? "anonymous");
         accessor.Current = caller;
         try

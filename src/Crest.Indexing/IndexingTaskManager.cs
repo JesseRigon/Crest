@@ -175,10 +175,12 @@ public sealed class IndexingTaskManager : IIndexingTaskManager
                             Ids = pageOfIds,
                         }, transaction);
                 }
-
-                var insertCmd = $"insert into {dialect.QuoteForTableName(table, store.Configuration.Schema)} ({dialect.QuoteForColumnName("CreatedUtc")}, {dialect.QuoteForColumnName("RecordId")}, {dialect.QuoteForColumnName("Category")}, {dialect.QuoteForColumnName("Type")}) values (@CreatedUtc, @RecordId, @Category, @Type);";
-                await transaction.Connection.ExecuteAsync(insertCmd, localQueue, transaction);
             }
+
+            // Once, after every category's stale rows are gone: the de-duplicated queue
+            // spans all categories, so inserting it per category multiplied every task.
+            var insertCmd = $"insert into {dialect.QuoteForTableName(table, store.Configuration.Schema)} ({dialect.QuoteForColumnName("CreatedUtc")}, {dialect.QuoteForColumnName("RecordId")}, {dialect.QuoteForColumnName("Category")}, {dialect.QuoteForColumnName("Type")}) values (@CreatedUtc, @RecordId, @Category, @Type);";
+            await transaction.Connection.ExecuteAsync(insertCmd, localQueue, transaction);
 
             await transaction.CommitAsync();
         }

@@ -187,9 +187,10 @@ organization or the staff root).
 
 As built: `CrestUserHierarchy`, a plain table (adjacency plus a materialized path, created
 by a data migration) behind the root-guarded `UserHierarchyService` over
-`IDbConnectionAccessor` with dialect quoting; multi-organization members get one node per
-binding; hierarchy writes run as deferred tasks after commit (the raw transaction deadlocked
-SQLite against the ambient session). It is superseded by the closure table under Still to
+the request's YesSql session (its connection and transaction) with dialect quoting;
+multi-organization members get one node per binding; hierarchy writes run inline in the same
+unit of work as the user record, and a failure cancels the whole unit (they used to be
+deferred tasks on a second connection, which deadlocked SQLite and swallowed failures). It is superseded by the closure table under Still to
 build › Relational hierarchy, and the subtree expansion is not wired into the scope
 machinery yet.
 
@@ -199,7 +200,7 @@ machinery yet.
   (first member of an organization becomes its member admin), the binding endpoints
   (`api/crest/members`: me, active-org, list-by-org, create, bindings add/remove).
 - Provisioning: member creation and `MemberStampService` (shared by `CreateMemberAsync`
-  and the portal's registration path: class, binding, deferred hierarchy node); member
+  and the portal's registration path: class, binding, then the hierarchy node inline once the user has its id); member
   role templates ensured by a deferred, idempotent migration.
 - The hierarchy store above.
 - Ordering rule the build found: inline vocabulary seeding in Parties' `CreateAsync`

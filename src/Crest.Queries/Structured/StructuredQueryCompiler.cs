@@ -24,7 +24,7 @@ public sealed record CompiledStatement(
 
 /// <summary>
 /// Compiles a <see cref="QueryPlan"/> through the store's dialect: the scope rule of every
-/// table conjoined into the WHERE, every value bound as a parameter, a stable order added when
+/// table conjoined into the WHERE (into the ON clause for a left-joined table), every value bound as a parameter, a stable order added when
 /// the plan has none, paging written by the dialect.
 /// </summary>
 public static class StructuredQueryCompiler
@@ -37,6 +37,10 @@ public static class StructuredQueryCompiler
 
     /// <summary>The largest page a request may ask for.</summary>
     public const int MaxPageSize = 500;
+
+    /// <summary>The page a run reads: the request's size, else the query's, else the default; never past the cap.</summary>
+    public static int PageSize(int? requested, int? querySize = null) =>
+        Math.Min(requested is > 0 ? requested.Value : querySize ?? DefaultPageSize, MaxPageSize);
 
     public static CompiledStatement Compile(
         QueryPlan plan,
@@ -55,26 +59,12 @@ public static class StructuredQueryCompiler
         var parameters = new Dictionary<string, object>();
         var builder = dialect.CreateBuilder(tablePrefix);
         builder.Select();
-        builder.Table(plan.From.Table.Name, plan.From.Alias, schema);
 
         var isEmpty = false;
-        var leftScoped = new List<string>();
 
-        foreach (var table in plan.Tables.Skip(1))
-        {
-            builder.Join(
-                table.Join == JoinKind.Left ? JoinType.Left : JoinType.Inner,
-                table.Table.Name,
-                table.JoinToColumn!.Alias,
-                table.JoinToColumn.Column.Name,
-                table.Table.Name,
-                table.JoinColumn!.Column.Name,
-                schema,
-                table.Alias,
-                table.Alias);
-        }
-
-        // Scope is a step: every table of the plan is narrowed to what the caller may see.
+        // Scope is a step: every table of the plan is narrowed to what the caller may see. The
+        // joins are written here (not by the builder's Join) so a left-joined table's predicate
+        // goes into its ON clause.
         foreach (var table in plan.Tables)
         {
             var rule = scopes.Require(table.Table.Name);
@@ -84,21 +74,41 @@ public static class StructuredQueryCompiler
                 rule = rule.And(typeRule);
             }
 
-            switch (rule.Kind)
+            var predicate = rule.Kind switch
             {
-                case ScopeKind.None:
-                    isEmpty = true;
-                    break;
+                ScopeKind.None => "1 = 0",
+                ScopeKind.Filter => Render(rule.Filter!, table.Alias, builder, dialect, schema, parameters),
+                _ => null,
+            };
 
-                case ScopeKind.Filter:
-                    var predicate = Render(rule.Filter!, table.Alias, builder, dialect, schema, parameters);
+            if (table.Join is null)
+            {
+                builder.Table(table.Table.Name, table.Alias, schema);
+            }
+            else
+            {
+                var isLeft = table.Join == JoinKind.Left;
+                var on = $"{Column(builder, table.JoinToColumn!.Alias, table.JoinToColumn.Column.Name, schema)} = {Column(builder, table.Alias, table.JoinColumn!.Column.Name, schema)}";
 
-                    // The right side of a left join keeps its unmatched rows; an out-of-scope
-                    // match drops the row rather than reaching the caller.
-                    builder.WhereAnd(table.Join == JoinKind.Left
-                        ? $"({predicate} OR {Column(builder, table.Alias, table.StableColumn.Name, schema)} IS NULL)"
-                        : predicate);
-                    break;
+                // The right side of a left join keeps its unmatched rows: an out-of-scope match
+                // becomes a null row, never a row the caller may not see.
+                if (isLeft && predicate is not null)
+                {
+                    // A rendered filter is a single comparison or parenthesised: AND-safe as is.
+                    on += " AND " + predicate;
+                    predicate = null;
+                }
+
+                builder.From($" {(isLeft ? "LEFT" : "INNER")} JOIN {builder.FormatTable(table.Table.Name, schema)} AS {dialect.QuoteForAliasName(table.Alias)} ON {on}");
+            }
+
+            if (rule.Kind == ScopeKind.None && predicate is not null)
+            {
+                isEmpty = true;
+            }
+            else if (predicate is not null)
+            {
+                builder.WhereAnd(predicate);
             }
         }
 
@@ -147,7 +157,7 @@ public static class StructuredQueryCompiler
         }
 
         // Every run is paged: the query's own size, else the default; a request may narrow it, never past the cap.
-        var pageSize = Math.Min(pageSizeOverride is > 0 ? pageSizeOverride.Value : plan.PageSize ?? DefaultPageSize, MaxPageSize);
+        var pageSize = PageSize(pageSizeOverride, plan.PageSize);
         var offset = PageTokens.Decode(pageToken ?? plan.PageToken);
         parameters[SkipParameter] = offset;
         parameters[TakeParameter] = pageSize;

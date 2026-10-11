@@ -1,4 +1,5 @@
 using Crest.Abstractions.Setup;
+using Crest.Access;
 using Crest.Email;
 using Crest.Environment.Shell;
 using Crest.Environment.Shell.Scope;
@@ -11,13 +12,19 @@ using Crest.Workflows.Extensions;
 using Crest.Workflows.Models;
 using Crest.Workflows.UIHints;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Crest.Tenants.Workflows;
 
-/// <summary>What the tenant activities share: the tenant name and the default-shell rule.</summary>
-public abstract class TenantActivityBase : Activity
+/// <summary>
+/// What the tenant activities share: the tenant name, the default-shell rule and the
+/// <c>ManageTenants</c> decision for the burst's caller. A tenant's shell settings and database
+/// are outside the flow's unit of work, so each activity is a unit boundary: it runs after the
+/// unit that reached it commits.
+/// </summary>
+public abstract class TenantActivityBase : Activity, IUnitBoundary
 {
     [Input(DisplayName = "Tenant name", UIHint = InputUIHints.SingleLine)]
     public Input<string> TenantName { get; set; } = null!;
@@ -41,6 +48,8 @@ public abstract class TenantActivityBase : Activity
             return null;
         }
 
+        await context.GetRequiredService<IAccessDecision>().RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, Permissions.ManageTenants.Name, cancellationToken: context.CancellationToken);
+
         return tenantName;
     }
 
@@ -53,7 +62,7 @@ public abstract class TenantActivityBase : Activity
 }
 
 /// <summary>Creates a tenant's settings, uninitialized, for a later setup.</summary>
-[Activity("Crest.Tenants", "Tenant", "Creates a tenant (its shell settings, uninitialized) from the default tenant.", DisplayName = "Create tenant")]
+[Activity("Crest.Tenants", "Tenant", "Creates a tenant (its shell settings, uninitialized) from the default tenant.", DisplayName = "Create tenant", RunAsynchronously = true)]
 [FlowNode("Done", "Failed")]
 public class CreateTenant : TenantActivityBase
 {
@@ -142,7 +151,7 @@ public class CreateTenant : TenantActivityBase
 }
 
 /// <summary>Runs setup on an uninitialized tenant.</summary>
-[Activity("Crest.Tenants", "Tenant", "Sets up an uninitialized tenant: site name, administrator, database and recipe.", DisplayName = "Setup tenant")]
+[Activity("Crest.Tenants", "Tenant", "Sets up an uninitialized tenant: site name, administrator, database and recipe.", DisplayName = "Setup tenant", RunAsynchronously = true)]
 [FlowNode("Done", "Failed")]
 public class SetupTenant : TenantActivityBase
 {
@@ -250,7 +259,7 @@ public class SetupTenant : TenantActivityBase
 }
 
 /// <summary>Enables a disabled tenant.</summary>
-[Activity("Crest.Tenants", "Tenant", "Enables a disabled tenant.", DisplayName = "Enable tenant")]
+[Activity("Crest.Tenants", "Tenant", "Enables a disabled tenant.", DisplayName = "Enable tenant", RunAsynchronously = true)]
 [FlowNode("Done", "Failed")]
 public class EnableTenant : TenantActivityBase
 {
@@ -281,7 +290,7 @@ public class EnableTenant : TenantActivityBase
 }
 
 /// <summary>Disables a running tenant.</summary>
-[Activity("Crest.Tenants", "Tenant", "Disables a running tenant.", DisplayName = "Disable tenant")]
+[Activity("Crest.Tenants", "Tenant", "Disables a running tenant.", DisplayName = "Disable tenant", RunAsynchronously = true)]
 [FlowNode("Done", "Failed")]
 public class DisableTenant : TenantActivityBase
 {

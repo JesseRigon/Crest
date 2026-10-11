@@ -76,6 +76,7 @@
   <Folder Name="/platform/libraries/">
     <Project Path="src/Crest.Abstractions/Crest.Abstractions.csproj" />
     <Project Path="src/Crest.Access.Abstractions/Crest.Access.Abstractions.csproj" />
+    <Project Path="src/Crest.Sharing.Abstractions/Crest.Sharing.Abstractions.csproj" />
     <Project Path="src/Crest.Admin.Abstractions/Crest.Admin.Abstractions.csproj" />
     <Project Path="src/Crest.AdminMenu.Abstractions/Crest.AdminMenu.Abstractions.csproj" />
     <Project Path="src/Crest.Apis.GraphQL.Abstractions/Crest.Apis.GraphQL.Abstractions.csproj" />
@@ -148,6 +149,7 @@
   </Folder>
   <Folder Name="/platform/modules/">
     <Project Path="src/Crest.Access/Crest.Access.csproj" />
+    <Project Path="src/Crest.Sharing/Crest.Sharing.csproj" />
     <Project Path="src/Crest.Admin/Crest.Admin.csproj" />
     <Project Path="src/Crest.AdminDashboard/Crest.AdminDashboard.csproj" />
     <Project Path="src/Crest.AdminMenu/Crest.AdminMenu.csproj" />

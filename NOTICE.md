@@ -10,7 +10,7 @@ licence file beside the code; this is the inventory.
 | The platform projects (listed in `Crest.Build/Platform.Projects.props`), `test/`, `.scripts/` and the root build files (`Crest.Platform.slnx`, `Directory.Packages.props`, `global.json`, `package.json`, …) — the platform, a hard fork of OrchardCore | [OrchardCMS/OrchardCore](https://github.com/OrchardCMS/OrchardCore) via [jesse-forked/OrchardCore](https://github.com/jesse-forked/OrchardCore), branch `Crest` at `b0f9fdf50` | BSD-3-Clause, Copyright (c) .NET Foundation | `LICENSE.platform` |
 | `Crest.Workflows/engine/` — the workflow engine (22 projects) | [elsa-workflows/elsa-core](https://github.com/elsa-workflows/elsa-core), tag 3.6.0 (`d4b69be`) | MIT, Copyright (c) 2021 Elsa Workflows | `Crest.Workflows/engine/LICENSE` |
 | `Crest.Workflows/designer/` — the workflow designer | [elsa-workflows/elsa-studio](https://github.com/elsa-workflows/elsa-studio), tag 3.6.0 (`1e293c5`) | MIT, Copyright (c) 2023 Elsa Workflows | `Crest.Workflows/designer/LICENSE` |
-| `Crest.Workflows/Server/`, `Crest.Workflows/Contents/`, `Crest.Workflows/reference/` — the Orchard integration | [elsa-workflows/elsa-orchard-core](https://github.com/elsa-workflows/elsa-orchard-core) | BSD-3-Clause, Copyright (c) 2019 Elsa Workflows | `Crest.Workflows/LICENSE` |
+| `Crest.Workflows/Server/`, `Crest.Workflows/Contents/` — the Orchard integration | [elsa-workflows/elsa-orchard-core](https://github.com/elsa-workflows/elsa-orchard-core) | BSD-3-Clause, Copyright (c) 2019 Elsa Workflows | `Crest.Workflows/LICENSE` |
 
 The platform was imported as squashed subtrees (`git subtree`; the commits record the
 source commit). After the rename, upstream fixes are ported by hand. Its namespaces, assemblies and

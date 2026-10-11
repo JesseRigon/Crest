@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using Crest.Access;
 using System.Text.Json.Nodes;
 using Crest.Workflows.Extensions;
 using Crest.Workflows;
@@ -39,6 +41,16 @@ public class UpdateContent : CodeActivity<ContentItem>
         var contentManager = context.GetRequiredService<IContentManager>();
         var contentProperties = ContentProperties.GetOrDefault(context);
         var contentItemId = ContentItemId.Get(context);
+        // Decided against the item as it stands, before a draft is made for the change.
+        var current = await contentManager.GetAsync(contentItemId, VersionOptions.Latest)
+            ?? throw new InvalidOperationException($"Content item '{contentItemId}' was not found.");
+        var decision = context.GetRequiredService<IAccessDecision>();
+        await decision.RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, "EditContent", current, context.CancellationToken);
+        if (Publish.Get(context))
+        {
+            await decision.RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, "PublishContent", current, context.CancellationToken);
+        }
+
         var contentItem = await contentManager.GetAsync(contentItemId, VersionOptions.DraftRequired);
 
         if (contentProperties != null) 

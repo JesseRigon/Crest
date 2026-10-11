@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
+using Crest.Access;
 using Crest.Environment.Shell;
 using Crest.Environment.Shell.Scope;
 using Crest.Modules;
@@ -159,12 +160,22 @@ public class RecipeExecutor : IRecipeExecutor
 
     private async Task ExecuteStepAsync(RecipeExecutionContext recipeStep)
     {
+        // A recipe step is an access entry point: it acts as the caller that started the
+        // recipe (an admin's import), or as the tenant system actor when none did (setup, a
+        // startup recipe), so nothing in a step runs without a caller.
+        var startedBy = ShellScope.Current?.ServiceProvider.GetService<ICallerContextAccessor>()?.Current;
         var shellScope = recipeStep.RecipeDescriptor.RequireNewScope
             ? await _shellHost.GetScopeAsync(_shellSettings)
             : ShellScope.Current;
 
         await shellScope.UsingAsync(async scope =>
         {
+            if (scope.ServiceProvider.GetService<ICallerContextAccessor>() is { Current: null } callers &&
+                scope.ServiceProvider.GetService<ICallerContextFactory>() is { } factory)
+            {
+                callers.Current = startedBy ?? await factory.CreateSystemAsync();
+            }
+
             var recipeStepHandlers = scope.ServiceProvider.GetServices<IRecipeStepHandler>();
             var scriptingManager = scope.ServiceProvider.GetRequiredService<IScriptingManager>();
 

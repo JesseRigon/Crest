@@ -60,9 +60,8 @@ public abstract class ContentEventTriggerBase : Trigger<ContentItem>
         var requiredPermission = RequiredPermission.GetOrDefault(context);
         if (!string.IsNullOrWhiteSpace(requiredPermission))
         {
-            var user = context.FindWorkflowInput<WorkflowUserContext>(WorkflowUserContext.InputKey);
             var authorizer = context.GetRequiredService<IWorkflowAuthorizer>();
-            if (!await authorizer.AuthorizeAsync(user, requiredPermission, context.CancellationToken))
+            if (!await authorizer.AuthorizeAsync(requiredPermission, context.CancellationToken))
             {
                 await context.CompleteActivityWithOutcomesAsync("Denied");
                 return;

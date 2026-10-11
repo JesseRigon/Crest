@@ -66,27 +66,27 @@ public class WorkflowRuntimeFeature(IModule module) : FeatureBase(module)
     /// <summary>
     /// A factory that instantiates an <see cref="IBookmarkStore"/>.
     /// </summary>
-    public Func<IServiceProvider, IBookmarkStore> BookmarkStore { get; set; } = sp => sp.GetRequiredService<MemoryBookmarkStore>();
+    public Func<IServiceProvider, IBookmarkStore> BookmarkStore { get; set; } = sp => throw new InvalidOperationException("No IBookmarkStore configured. The host must supply one (Crest.Workflows wires the YesSql stores).");
 
     /// <summary>
     /// A factory that instantiates an <see cref="IBookmarkQueueStore"/>.
     /// </summary>
-    public Func<IServiceProvider, IBookmarkQueueStore> BookmarkQueueStore { get; set; } = sp => sp.GetRequiredService<MemoryBookmarkQueueStore>();
+    public Func<IServiceProvider, IBookmarkQueueStore> BookmarkQueueStore { get; set; } = sp => throw new InvalidOperationException("No IBookmarkQueueStore configured. The host must supply one (Crest.Workflows wires the YesSql stores).");
 
     /// <summary>
     /// A factory that instantiates an <see cref="ITriggerStore"/>.
     /// </summary>
-    public Func<IServiceProvider, ITriggerStore> TriggerStore { get; set; } = sp => sp.GetRequiredService<MemoryTriggerStore>();
+    public Func<IServiceProvider, ITriggerStore> TriggerStore { get; set; } = sp => throw new InvalidOperationException("No ITriggerStore configured. The host must supply one (Crest.Workflows wires the YesSql stores).");
 
     /// <summary>
     /// A factory that instantiates an <see cref="IWorkflowExecutionLogStore"/>.
     /// </summary>
-    public Func<IServiceProvider, IWorkflowExecutionLogStore> WorkflowExecutionLogStore { get; set; } = sp => sp.GetRequiredService<MemoryWorkflowExecutionLogStore>();
+    public Func<IServiceProvider, IWorkflowExecutionLogStore> WorkflowExecutionLogStore { get; set; } = sp => throw new InvalidOperationException("No IWorkflowExecutionLogStore configured. The host must supply one (Crest.Workflows wires the YesSql stores).");
 
     /// <summary>
     /// A factory that instantiates an <see cref="IActivityExecutionStore"/>.
     /// </summary>
-    public Func<IServiceProvider, IActivityExecutionStore> ActivityExecutionLogStore { get; set; } = sp => sp.GetRequiredService<MemoryActivityExecutionStore>();
+    public Func<IServiceProvider, IActivityExecutionStore> ActivityExecutionLogStore { get; set; } = sp => throw new InvalidOperationException("No IActivityExecutionStore configured. The host must supply one (Crest.Workflows wires the YesSql stores).");
 
     /// <summary>
     /// A factory that instantiates an <see cref="IDistributedLockProvider"/>.
@@ -314,17 +314,6 @@ public class WorkflowRuntimeFeature(IModule module) : FeatureBase(module)
             .AddScoped<Func<IEnumerable<IWorkflowsProvider>>>(sp => sp.GetServices<IWorkflowsProvider>)
             .AddScoped<Func<IEnumerable<IWorkflowMaterializer>>>(sp => sp.GetServices<IWorkflowMaterializer>)
 
-            // Noop stores.
-            .AddScoped<MemoryWorkflowExecutionLogStore>()
-            .AddScoped<MemoryActivityExecutionStore>()
-
-            // Memory stores.
-            .AddMemoryStore<StoredBookmark, MemoryBookmarkStore>()
-            .AddMemoryStore<StoredTrigger, MemoryTriggerStore>()
-            .AddMemoryStore<BookmarkQueueItem, MemoryBookmarkQueueStore>()
-            .AddMemoryStore<WorkflowExecutionLogRecord, MemoryWorkflowExecutionLogStore>()
-            .AddMemoryStore<ActivityExecutionRecord, MemoryActivityExecutionStore>()
-            
             // Startup tasks, background tasks, and recurring tasks.
             .AddStartupTask<PopulateRegistriesStartupTask>()
             .AddRecurringTask<TriggerBookmarkQueueRecurringTask>(TimeSpan.FromMinutes(1))

@@ -5,17 +5,21 @@ using Crest.ContentManagement.Records;
 namespace Crest.Contents.Security;
 
 /// <summary>
-/// What a caller may see of <see cref="ContentItemIndex"/>: every type they may view in full,
-/// plus their own items of the types they may view as owner. Replaces the four places that
-/// re-derived this per surface (admin lists, GraphQL, pickers, the content-items API).
+/// What a caller may see of <see cref="ContentItemIndex"/>, per type: the published version
+/// where they may view it, the published or latest (draft) version where they may preview or
+/// edit it; the own variants of either limited to the items they own. Replaces the four places
+/// that re-derived this per surface (admin lists, GraphQL, pickers, the content-items API).
 /// </summary>
 public sealed class ContentItemScopeProvider(IContentDefinitionManager contentDefinitions, IAccessDecision decision) : IScopeProvider
 {
     public const string TargetName = nameof(ContentItemIndex);
 
+    private static readonly string[] s_draftPermissions = [CommonPermissions.PreviewContent.Name, CommonPermissions.EditContent.Name];
+
     public string Target => TargetName;
 
-    public int Version => 1;
+    // 2: versions are scoped (Published, or Published or Latest for previewers and editors).
+    public int Version => 2;
 
     public async Task<ScopeRule> BuildAsync(CallerContext caller, CancellationToken cancellationToken = default)
     {
@@ -24,16 +28,24 @@ public sealed class ContentItemScopeProvider(IContentDefinitionManager contentDe
             return ScopeRule.All;
         }
 
-        var viewAll = new List<object?>();
-        var viewOwn = new List<object?>();
+        var publishedAll = new List<object?>();
+        var draftsAll = new List<object?>();
+        var publishedOwn = new List<object?>();
+        var draftsOwn = new List<object?>();
 
         foreach (var definition in await contentDefinitions.ListTypeDefinitionsAsync())
         {
-            var any = await decision.DecideAsync(caller, CommonPermissions.ViewContent.Name, new ContentTypeProbe(definition.Name, AsOwner: false), cancellationToken);
-            if (any.IsAllowed)
+            var any = await LevelAsync(caller, definition.Name, asOwner: false, cancellationToken);
+
+            if (any == Level.Drafts)
             {
-                viewAll.Add(definition.Name);
+                draftsAll.Add(definition.Name);
                 continue;
+            }
+
+            if (any == Level.Published)
+            {
+                publishedAll.Add(definition.Name);
             }
 
             if (caller.UserId is null)
@@ -41,33 +53,82 @@ public sealed class ContentItemScopeProvider(IContentDefinitionManager contentDe
                 continue;
             }
 
-            var own = await decision.DecideAsync(caller, CommonPermissions.ViewContent.Name, new ContentTypeProbe(definition.Name, AsOwner: true), cancellationToken);
-            if (own.IsAllowed)
+            // The own variant matters only where it widens what the any-level grants.
+            var own = await LevelAsync(caller, definition.Name, asOwner: true, cancellationToken);
+
+            if (own == Level.Drafts)
             {
-                viewOwn.Add(definition.Name);
+                draftsOwn.Add(definition.Name);
+            }
+            else if (own == Level.Published && any == Level.None)
+            {
+                publishedOwn.Add(definition.Name);
             }
         }
 
-        if (viewAll.Count == 0 && viewOwn.Count == 0)
+        var members = new List<ScopeFilter>();
+
+        if (publishedAll.Count > 0)
         {
-            return ScopeRule.None;
+            members.Add(ScopeFilter.AllOf(OfTypes(publishedAll), Published()));
         }
 
-        var anyType = ScopeFilter.Of(ScopeCondition.In(nameof(ContentItemIndex.ContentType), viewAll));
-        var ownType = ScopeFilter.AllOf(
-            ScopeFilter.Of(ScopeCondition.In(nameof(ContentItemIndex.ContentType), viewOwn)),
-            ScopeFilter.Of(ScopeCondition.Equal(nameof(ContentItemIndex.Owner), caller.UserId)));
-
-        if (viewOwn.Count == 0)
+        if (draftsAll.Count > 0)
         {
-            return ScopeRule.Where(anyType);
+            members.Add(ScopeFilter.AllOf(OfTypes(draftsAll), PublishedOrLatest()));
         }
 
-        if (viewAll.Count == 0)
+        if (publishedOwn.Count > 0)
         {
-            return ScopeRule.Where(ownType);
+            members.Add(ScopeFilter.AllOf(OfTypes(publishedOwn), Owned(caller), Published()));
         }
 
-        return ScopeRule.Where(ScopeFilter.AnyOf(anyType, ownType));
+        if (draftsOwn.Count > 0)
+        {
+            members.Add(ScopeFilter.AllOf(OfTypes(draftsOwn), Owned(caller), PublishedOrLatest()));
+        }
+
+        return members.Count switch
+        {
+            0 => ScopeRule.None,
+            1 => ScopeRule.Where(members[0]),
+            _ => ScopeRule.Where(ScopeFilter.AnyOf([.. members])),
+        };
+    }
+
+    private async Task<Level> LevelAsync(CallerContext caller, string contentType, bool asOwner, CancellationToken cancellationToken)
+    {
+        var probe = new ContentTypeProbe(contentType, asOwner);
+
+        foreach (var permission in s_draftPermissions)
+        {
+            if ((await decision.DecideAsync(caller, permission, probe, cancellationToken)).IsAllowed)
+            {
+                return Level.Drafts;
+            }
+        }
+
+        return (await decision.DecideAsync(caller, CommonPermissions.ViewContent.Name, probe, cancellationToken)).IsAllowed
+            ? Level.Published
+            : Level.None;
+    }
+
+    private static ScopeFilter OfTypes(List<object?> types) =>
+        ScopeFilter.Of(ScopeCondition.In(nameof(ContentItemIndex.ContentType), types));
+
+    private static ScopeFilter Owned(CallerContext caller) =>
+        ScopeFilter.Of(ScopeCondition.Equal(nameof(ContentItemIndex.Owner), caller.UserId));
+
+    private static ScopeFilter Published() =>
+        ScopeFilter.Of(ScopeCondition.Equal(nameof(ContentItemIndex.Published), true));
+
+    private static ScopeFilter PublishedOrLatest() =>
+        ScopeFilter.AnyOf(Published(), ScopeFilter.Of(ScopeCondition.Equal(nameof(ContentItemIndex.Latest), true)));
+
+    private enum Level
+    {
+        None,
+        Published,
+        Drafts,
     }
 }

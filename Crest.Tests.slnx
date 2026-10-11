@@ -85,7 +85,6 @@
     <Project Path="src/Crest.Workflows/engine/src/modules/Crest.Workflows.Expressions.Liquid/Crest.Workflows.Expressions.Liquid.csproj" />
     <Project Path="src/Crest.Workflows/engine/src/modules/Crest.Workflows.Expressions/Crest.Workflows.Expressions.csproj" />
     <Project Path="src/Crest.Workflows/engine/src/modules/Crest.Workflows.Http/Crest.Workflows.Http.csproj" />
-    <Project Path="src/Crest.Workflows/engine/src/modules/Crest.Workflows.KeyValues/Crest.Workflows.KeyValues.csproj" />
     <Project Path="src/Crest.Workflows/engine/src/modules/Crest.Workflows.Management/Crest.Workflows.Management.csproj" />
     <Project Path="src/Crest.Workflows/engine/src/modules/Crest.Workflows.Resilience.Core/Crest.Workflows.Resilience.Core.csproj" />
     <Project Path="src/Crest.Workflows/engine/src/modules/Crest.Workflows.Resilience/Crest.Workflows.Resilience.csproj" />

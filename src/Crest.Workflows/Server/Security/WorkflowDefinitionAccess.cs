@@ -1,3 +1,4 @@
+using Crest.Access;
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
@@ -135,18 +136,20 @@ public interface IWorkflowDefinitionAccessReader
     Task<WorkflowDefinitionAccessResource?> GetAsync(string definitionId);
 }
 
-/// <summary>Authorizes a user against a definition in one Crest call (the ownership guard's view of the service below).</summary>
+/// <summary>Authorizes the gated caller against a definition in one decision (the ownership guard's view of the service below).</summary>
 public interface IWorkflowDefinitionAuthorizer
 {
-    Task<bool> AuthorizeAsync(ClaimsPrincipal user, Permission permission, WorkflowDefinitionAccessResource resource);
+    /// <summary>False when no gate set a caller: outside a request or a burst nothing is authorized.</summary>
+    Task<bool> AuthorizeAsync(Permission permission, WorkflowDefinitionAccessResource resource);
 }
 
 /// <summary>
-/// Reads and writes a definition's access lists, and authorizes a user against a definition
-/// in one Crest call (permission + the definition as resource).
+/// Reads and writes a definition's access lists, and authorizes the gated caller against a
+/// definition in one decision (permission + the definition as resource).
 /// </summary>
 public sealed class WorkflowDefinitionAccessService(
-    IAuthorizationService authorizationService,
+    ICallerContextAccessor callers,
+    IAccessDecision decision,
     IContentManager contentManager,
     ISession session,
     WorkflowDefinitionPartMapper partMapper,
@@ -160,13 +163,13 @@ public sealed class WorkflowDefinitionAccessService(
         return part is null || part.SerializedData is null ? null : WorkflowDefinitionAccessResource.From(definitionId, partMapper.MapModel(part).CustomProperties);
     }
 
-    public Task<bool> AuthorizeAsync(ClaimsPrincipal user, Permission permission, WorkflowDefinitionAccessResource resource) =>
-        authorizationService.AuthorizeAsync(user, permission, resource);
+    public async Task<bool> AuthorizeAsync(Permission permission, WorkflowDefinitionAccessResource resource) =>
+        callers.Current is { } caller && (await decision.DecideAsync(caller, permission.Name, resource)).IsAllowed;
 
-    public async Task<bool> AuthorizeAsync(ClaimsPrincipal user, Permission permission, string definitionId)
+    public async Task<bool> AuthorizeAsync(Permission permission, string definitionId)
     {
         var resource = await GetAsync(definitionId) ?? new WorkflowDefinitionAccessResource(definitionId, [], []);
-        return await AuthorizeAsync(user, permission, resource);
+        return await AuthorizeAsync(permission, resource);
     }
 
     /// <summary>
@@ -232,7 +235,7 @@ public sealed class WorkflowDefinitionAccessController(WorkflowDefinitionAccessS
         }
 
         var permission = tier.IsShipped ? Permissions.ManageShippedWorkflows : Permissions.EditWorkflows;
-        if (!await access.AuthorizeAsync(User, permission, resource))
+        if (!await access.AuthorizeAsync(permission, resource))
         {
             return Forbid();
         }

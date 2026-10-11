@@ -40,11 +40,6 @@ public class TenantsFeature(IModule serviceConfiguration) : FeatureBase(serviceC
         ConfigureTenants(configure);
         Module.Configure<MultitenancyFeature>(feature => feature.UseTenantsProvider<ConfigurationTenantsProvider>());
     }
-    
-    public void UseStoreBasedTenantsProvider()
-    {
-        Module.Configure<MultitenancyFeature>(feature => feature.UseTenantsProvider<StoreTenantsProvider>());
-    }
 
     public override void ConfigureHostedServices()
     {

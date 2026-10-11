@@ -152,7 +152,7 @@ public sealed class StructuredQuerySource : IQuerySource, IQueryDescriber
 
         return new QueryResults
         {
-            Items = documentIds.Length > 0 ? await _session.GetAsync<ContentItem>(documentIds) : [],
+            Items = await ScopedContentItems.LoadAsync(_session, documentIds, scopes.Require(QueryPlan.ContentIndexName), cancellationToken),
             Columns = columns,
             Total = total,
             NextPageToken = nextPageToken,

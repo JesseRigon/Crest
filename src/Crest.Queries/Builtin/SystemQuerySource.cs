@@ -84,7 +84,7 @@ public sealed class SystemQuerySource : IQuerySource, IQueryDescriber
         ArgumentNullException.ThrowIfNull(query);
         ArgumentNullException.ThrowIfNull(request);
 
-        var key = query.Name.ToLowerInvariant() + "|" + JsonSerializer.Serialize(request.Parameters.OrderBy(pair => pair.Key, StringComparer.Ordinal).ToDictionary(pair => pair.Key, pair => pair.Value?.ToString()));
+        var key = query.Name.ToLowerInvariant() + "|" + (query.ReturnContentItems ? "items" : "rows") + "|" + JsonSerializer.Serialize(request.Parameters.OrderBy(pair => pair.Key, StringComparer.Ordinal).ToDictionary(pair => pair.Key, pair => pair.Value?.ToString()));
 
         if (_memo.TryGetValue(key, out var memoised))
         {
@@ -119,9 +119,23 @@ public sealed class SystemQuerySource : IQuerySource, IQueryDescriber
             }
         }
 
-        id ??= path;
-
+        // A path that Autoroute does not resolve names no item; it is never tried as an id.
         if (string.IsNullOrEmpty(id) || _serviceProvider.GetService(typeof(IContentManager)) is not IContentManager contentManager)
+        {
+            return QueryResults.Empty(s_itemColumns);
+        }
+
+        // The caller's scope is settled before anything is loaded: a caller with no scope (or
+        // none of the content index) is refused without touching the item.
+        var scopes = await CallerScopes.RequireAsync(
+            _serviceProvider.GetService(typeof(ICallerContextAccessor)) as ICallerContextAccessor,
+            _serviceProvider.GetService(typeof(IScopeSetProvider)) as IScopeSetProvider,
+            QueryPlan.ContentIndexName,
+            request.CancellationToken);
+
+        var rule = scopes.Require(QueryPlan.ContentIndexName);
+
+        if (rule.Kind == ScopeKind.None)
         {
             return QueryResults.Empty(s_itemColumns);
         }
@@ -132,14 +146,6 @@ public sealed class SystemQuerySource : IQuerySource, IQueryDescriber
         {
             return QueryResults.Empty(s_itemColumns);
         }
-
-        var scopes = await CallerScopes.RequireAsync(
-            _serviceProvider.GetService(typeof(ICallerContextAccessor)) as ICallerContextAccessor,
-            _serviceProvider.GetService(typeof(IScopeSetProvider)) as IScopeSetProvider,
-            QueryPlan.ContentIndexName,
-            request.CancellationToken);
-
-        var rule = scopes.Require(QueryPlan.ContentIndexName);
 
         if (scopes.TryGet(item.ContentType, out var typeRule))
         {

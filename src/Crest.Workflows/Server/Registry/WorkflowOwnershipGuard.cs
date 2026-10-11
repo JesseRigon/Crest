@@ -3,7 +3,7 @@ using Crest.Workflows.Management.Entities;
 using Crest.Workflows.Parts;
 using Crest.Workflows.Security;
 using Crest.Workflows.Services;
-using Microsoft.AspNetCore.Http;
+using Crest.Access;
 using Crest.ContentManagement;
 using Crest.Security.Permissions;
 
@@ -97,7 +97,7 @@ public sealed class WorkflowChangeDeniedException(string message) : InvalidOpera
 public sealed class WorkflowOwnershipGuard(
     IContentManager contentManager,
     WorkflowDefinitionPartMapper partMapper,
-    IHttpContextAccessor httpContextAccessor,
+    ICallerContextAccessor callers,
     IWorkflowDefinitionAuthorizer access)
 {
     public async Task<WorkflowOwnershipInfo> GetStoredAsync(string? definitionId) => WorkflowOwnershipInfo.From(await GetStoredPropertiesAsync(definitionId));
@@ -141,24 +141,21 @@ public sealed class WorkflowOwnershipGuard(
             throw new WorkflowChangeDeniedException($"Workflow '{stored.FlowKey}' is a shipped workflow: it can be edited, published or reset to the shipped version, not deleted.");
         }
 
-        var user = httpContextAccessor.HttpContext?.User;
-        if (user?.Identity?.IsAuthenticated == true)
+        // The gated caller of the request or burst making the change; with none (a scope no
+        // gate ran for, outside the system scope) nothing may change a definition.
+        var caller = callers.Current
+            ?? throw new WorkflowChangeDeniedException($"No caller may have this workflow {Verb(change)}: the change was made outside a request or a run.");
+        var name = caller.UserName ?? "anonymous";
+        var permission = PermissionFor(change, stored);
+        var resource = WorkflowDefinitionAccessResource.From(definitionId ?? string.Empty, properties);
+        if (!await access.AuthorizeAsync(permission, resource))
         {
-            var permission = PermissionFor(change, stored);
-            var resource = WorkflowDefinitionAccessResource.From(definitionId ?? string.Empty, properties);
-            if (!await access.AuthorizeAsync(user, permission, resource))
-            {
-                throw new WorkflowChangeDeniedException($"'{user.Identity.Name}' may not have this workflow {Verb(change)}: it takes {permission.Name}{(resource.Edit.Count > 0 ? " and the workflow names who may edit it" : string.Empty)}.");
-            }
-
-            if (runsAsSystem && change == WorkflowChange.Publish && !await access.AuthorizeAsync(user, Permissions.ManageShippedWorkflows, resource))
-            {
-                throw new WorkflowChangeDeniedException($"'{user.Identity.Name}' may not publish this workflow as system: it takes {Permissions.ManageShippedWorkflows.Name}.");
-            }
+            throw new WorkflowChangeDeniedException($"'{name}' may not have this workflow {Verb(change)}: it takes {permission.Name}{(resource.Edit.Count > 0 ? " and the workflow names who may edit it" : string.Empty)}.");
         }
-        else if (runsAsSystem && change == WorkflowChange.Publish)
+
+        if (runsAsSystem && change == WorkflowChange.Publish && !await access.AuthorizeAsync(Permissions.ManageShippedWorkflows, resource))
         {
-            throw new WorkflowChangeDeniedException($"Publishing a workflow as system takes {Permissions.ManageShippedWorkflows.Name}; no user is signed in.");
+            throw new WorkflowChangeDeniedException($"'{name}' may not publish this workflow as system: it takes {Permissions.ManageShippedWorkflows.Name}.");
         }
 
         return stored.IsShipped && change == WorkflowChange.Save ? stored with { Forked = true } : stored;

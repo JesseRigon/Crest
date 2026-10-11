@@ -1,13 +1,9 @@
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using Crest.Access;
 using Crest.Workflows.Activities;
 using Crest.Workflows.Management;
 using Crest.Workflows.Management.Filters;
 using Crest.Workflows.Models;
 using Crest.Workflows.Registry;
-using Microsoft.AspNetCore.Http;
 
 namespace Crest.Workflows.Contexts;
 
@@ -26,7 +22,7 @@ public sealed class WorkflowAccessRefusedException(string message) : InvalidOper
 public sealed class WorkflowCallerResolver(
     ICallerContextFactory factory,
     ICallerContextAccessor accessor,
-    IHttpContextAccessor httpContextAccessor,
+    WorkflowActorSeal seal,
     IWorkflowInstanceStore instanceStore,
     IWorkflowDefinitionService definitionService)
 {
@@ -36,18 +32,23 @@ public sealed class WorkflowCallerResolver(
     public static bool RunsAsSystem(IDictionary<string, object>? properties) =>
         properties is not null && bool.TryParse(WorkflowOwnershipInfo.Text(properties, WorkflowsConstants.RunsAsSystemProperty), out var runsAsSystem) && runsAsSystem;
 
-    /// <summary>The caller a burst of <paramref name="workflow"/> with <paramref name="input"/> acts as; throws <see cref="WorkflowAccessRefusedException"/> when there is none.</summary>
-    public async Task<CallerContext> ForRunAsync(Workflow workflow, IDictionary<string, object>? input, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// The caller a burst of <paramref name="workflow"/> with <paramref name="input"/> acts as;
+    /// throws <see cref="WorkflowAccessRefusedException"/> when there is none. The actor is read
+    /// only through the seal: bound to <paramref name="instanceId"/>, or fresh on the run's
+    /// first burst (<paramref name="firstBurst"/>).
+    /// </summary>
+    public async Task<CallerContext> ForRunAsync(Workflow workflow, IDictionary<string, object>? input, string? instanceId, bool firstBurst, CancellationToken cancellationToken = default)
     {
         if (RunsAsSystem(workflow))
         {
             return await factory.CreateSystemAsync(cancellationToken: cancellationToken);
         }
 
-        var actor = input is not null && input.TryGetValue(WorkflowsConstants.InputKeys.Actor, out var value) ? Actor(value) : null;
+        var actor = input is not null && input.TryGetValue(WorkflowsConstants.InputKeys.Actor, out var value) ? seal.Open(value, instanceId, firstBurst) : null;
         if (actor is null)
         {
-            throw new WorkflowAccessRefusedException($"Workflow '{workflow.WorkflowMetadata.Name ?? workflow.Identity.DefinitionId}' has no actor to run as: it was started without one (a timer, a cron or a delay) and is not published as system. Publish it as system, or start it from a request or a trigger.");
+            throw new WorkflowAccessRefusedException($"Workflow '{workflow.WorkflowMetadata.Name ?? workflow.Identity.DefinitionId}' has no actor to run as: it was started without one (a timer, a cron or a delay), or with one the server did not seal for this run, and is not published as system. Publish it as system, or start it from a request or a trigger.");
         }
 
         return await FromActorAsync(actor, cancellationToken);
@@ -55,8 +56,8 @@ public sealed class WorkflowCallerResolver(
 
     /// <summary>
     /// The caller of the burst that will resume <paramref name="workflowInstanceId"/>: the
-    /// definition's system flag, else the actor persisted in the instance input. Null when the
-    /// instance is unknown (the engine then refuses the resume itself).
+    /// definition's system flag, else the actor bound to the instance. Null when the instance
+    /// is unknown (the engine then refuses the resume itself).
     /// </summary>
     public async Task<CallerContext?> ForInstanceAsync(string workflowInstanceId, CancellationToken cancellationToken = default)
     {
@@ -67,14 +68,14 @@ public sealed class WorkflowCallerResolver(
         }
 
         var graph = await definitionService.FindWorkflowGraphAsync(instance.DefinitionVersionId, cancellationToken);
-        return graph is null ? null : await ForRunAsync(graph.Workflow, instance.WorkflowState.Input, cancellationToken);
+        return graph is null ? null : await ForRunAsync(graph.Workflow, instance.WorkflowState.Input, instance.Id, firstBurst: false, cancellationToken);
     }
 
     /// <summary>The caller of a new run of <paramref name="definitionHandle"/> with <paramref name="input"/>; null when the definition is unknown.</summary>
     public async Task<CallerContext?> ForDefinitionAsync(WorkflowDefinitionHandle definitionHandle, IDictionary<string, object>? input, CancellationToken cancellationToken = default)
     {
         var graph = await definitionService.FindWorkflowGraphAsync(definitionHandle, cancellationToken);
-        return graph is null ? null : await ForRunAsync(graph.Workflow, input, cancellationToken);
+        return graph is null ? null : await ForRunAsync(graph.Workflow, input, instanceId: null, firstBurst: true, cancellationToken);
     }
 
     /// <summary>
@@ -95,35 +96,10 @@ public sealed class WorkflowCallerResolver(
     /// <summary>The caller the request path's gate set for this request, if any.</summary>
     public CallerContext? Current => accessor.Current;
 
-    /// <summary>The caller of the current request: the gated one, else built from the request's principal on <paramref name="side"/>; null with no request.</summary>
-    public async Task<CallerContext?> ForRequestAsync(CallerSide side, CancellationToken cancellationToken = default)
-    {
-        if (accessor.Current is { } current)
-        {
-            return current;
-        }
-
-        var httpContext = httpContextAccessor.HttpContext;
-        if (httpContext is null)
-        {
-            return null;
-        }
-
-        return await factory.CreateAsync(new CallerRequest(httpContext.User, side, null, null), cancellationToken);
-    }
-
-    /// <summary>The actor stored in a workflow input: the object as captured in this process, or its persisted JSON.</summary>
-    public static WorkflowUserContext? Actor(object? value) => value switch
-    {
-        null => null,
-        WorkflowUserContext actor => actor,
-        JsonElement element when element.ValueKind == JsonValueKind.Object => element.Deserialize<WorkflowUserContext>(ActorJson),
-        JsonObject node => node.Deserialize<WorkflowUserContext>(ActorJson),
-        _ => null,
-    };
-
-    private static readonly JsonSerializerOptions ActorJson = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() },
-    };
+    /// <summary>
+    /// The caller of the current request: the one the gate built. Null when no gate ran; the
+    /// principal is never read here (docs/access.md › One place reads the principal).
+    /// </summary>
+    public Task<CallerContext?> ForRequestAsync(CallerSide side, CancellationToken cancellationToken = default) =>
+        Task.FromResult(accessor.Current);
 }

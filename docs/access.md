@@ -9,6 +9,9 @@ operations model it serves (one request path, four pipelines) is
 [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery);
 the member caller is described there too.
 
+Who may do what, per kind of caller, for pages and for data and workflows (the reference for
+tests and audits): [user-stories.md](user-stories.md).
+
 ## Rulings
 
 - **Access stays its own module** (ruling 2026-10-10, final; a same-day ruling to fold it
@@ -37,6 +40,33 @@ the member caller is described there too.
 - **Identity in the cookie and in tokens; rights on the server.** Cookies and bearer tokens
   carry who the caller is. Roles, permissions, class, organization and ceiling are read from
   the store under the tenant's permission version, never from claims.
+
+- **Opinionated, but every feature can be turned off** (ruling 2026-10-11). Crest ships as a
+  pre-built system with most features enabled by default, unlike Orchard's pick-your-own
+  model; every feature still stays disable-able, and the access machinery works with any
+  domain feature off: a feature registers its access extensions only while enabled, and
+  nothing in `Crest.Access` names a domain module.
+- **Access is extended, never rewritten** (ruling 2026-10-11). The gate, the caller, the
+  decision and the scope are one system that does all permission processing; domain modules
+  keep their own access logic in their own projects and **register it** through the
+  contracts in `Crest.Access.Abstractions`, so adding a domain never means editing the gate:
+  - resource mappers, in two roles (§ Mapper roles below): `IResourcePermissionMapper` (a
+    module's own) and `IAuthoritativeResourcePermissionMapper` (replaces every other answer for
+    what it claims);
+  - `IAccessCeiling` - final denials no grant overrides;
+  - `IScopeProvider` - which rows of the module's index tables a caller may list or search;
+  - `ICallerContextContributor` / `ICallerRequestResolver` - what the module adds to the
+    caller (an acting organization, business roles);
+  - `IPermissionVersion` and the auditor - invalidation and the record.
+  **The access gate owns the pipeline** (ruling 2026-10-11): pages and data alike. Every
+  domain - media sharing, **Members**, **Parties**, and each module after them - plugs into it
+  through these contracts and decides nothing on its own. That includes the page route table:
+  its contract moves from `Crest.Server` (`ICrestRoutePermissionProvider`) into
+  `Crest.Access.Abstractions` under a generic name, with modules registering their routes.
+  The first such domain is **sharing**: its own module, `Crest.Sharing` and
+  `Crest.Sharing.Abstractions` ([sharing.md](sharing.md), ruled 2026-10-11), which any module
+  uses to make its items shareable (Media's files, Contents' items) and which registers one
+  authoritative mapper and its scope providers with Access.
 
 ## The systems today
 
@@ -205,6 +235,139 @@ implied-by chains are resolved by registered name, so a runtime permission insta
 its chain; deferred shell tasks and remote import have no caller, so any scoped query
 there throws; search sources are unscoped; the authorization handler does not audit; the
 stamp refresh keeps stale claims.
+
+## Defects found (2026-10-11): workflows, writes and the caller
+
+A second audit, of the workflow wiring and the data paths against the access machinery.
+Fixed the same day (compiled, tests written, not run):
+
+1. **A caller leaked from one run into the next.** Clearing the accessor left the scope's
+   caller feature in place, so a scope running several bursts answered the next with the
+   previous caller. Clearing now clears the feature.
+2. **The run's actor could be forged** through the API's dispatch input, an author's
+   `DispatchWorkflow` input, an instance import or a resume's input. The actor is sealed and
+   bound to its instance ([workflows.md](workflows.md) § Running identity).
+3. **The system caller leaked into ordinary flows** (a flow triggered by a background task
+   ran as the tenant super user). Only a definition published as system runs as system.
+4. **A resume ran as whoever resumed it** (an approver, an HTTP caller). Every burst after the
+   first runs as the run's own actor.
+5. **Most data activities asked nothing.** The content activities, the user activities
+   (create, assign and unassign roles, list by role), the tenant activities and the party
+   activities now ask the decision against the item, role or user
+   (`IAccessDecision.RequireAsync`/`AllowsAsync`); a read the caller may not make is "not
+   found". Tenant activities are unit boundaries.
+6. **The ownership guard passed with no signed-in user.** It decides for the gated caller and
+   refuses a change with none; recipe steps now run as the caller that started the recipe, or
+   as the system actor when none did (setup).
+7. **A disabled user kept their rights**, and a deleted user's cookie or workflow actor became
+   an "application" caller holding the roles its claims listed (the Administrator role made it
+   a super user). Neither keeps any rights now; only a non-identity credential (a token, a
+   remote deployment key) is read as an application.
+8. **The engine API** kept engine permission claims already on the principal, allowed the GET
+   form of execute, put activity tests under Run, and checked the Run list only when starting a
+   flow. Claims are stripped before the grant, GET execute is 405, tests take Edit, and
+   changing an instance takes Run on its definition.
+9. **`ContentItemsController` published without `PublishContent`** and created against the
+   base `EditContent` only; the user option source returned every user's email and phone to
+   any picker user. Both decide per item, type and column now.
+10. **`ValidateUser` read role claims** the cookie no longer carries; it reads the caller.
+
+Still open from this audit:
+
+- [x] **Anonymous actors.** Ruled 2026-10-11:
+  - **Webhooks** run as the connection's **application caller**: each connection carries a
+    machine identity with roles assigned on the connection (a billing integration may edit
+    orders); the signature check stays as its authentication. Never anonymous.
+  - **Login and registration triggers** capture the user the event names (the user just
+    signed in, the user just created), not the anonymous request.
+  - **Anonymous runs are opt-in per definition** ("accepts anonymous runs", set with
+    `ManageShippedWorkflows` like run-as-system) and **only for page-URL HTTP endpoints**: a
+    public page, and the public endpoints that serve specific public media and content. A
+    backend API endpoint never accepts an anonymous run, except those public media and content
+    endpoints for items marked public. A privileged step in an anonymous flow means publishing
+    it as system. Every other anonymous run is refused with the reason.
+  - **Pages are the request path's rule, not a workflow's**: in every theme shell (site, admin,
+    member) the login, sign-up, password-reset and error pages admit the anonymous caller as
+    page permissions.
+- [ ] **The activity gate fails open** for an activity that declares no permission. Fail closed
+  with an allow-list of control-flow activities? Asked 2026-10-11: no preference given; to discuss.
+- [ ] **Messaging activities** (e-mail, SMS, Twitter, Meta, notifications) and the engine's
+  HTTP activities run for any caller; the HTTP ones have no SSRF guard and are not unit
+  boundaries (`DownloadHttpFile` is now in the atomicity analyzer's list).
+- [ ] **Engine API instance reads** (list, journal, variables, export) take View only, with no
+  per-definition narrowing; bulk instance actions, bookmark resume, task completion and event
+  triggers are not checked against the Run list; antiforgery on every write blocks bearer
+  callers.
+- [ ] **The member class ceiling denies nothing**: `MemberClassCeiling` is registered but
+  `MemberPermissionCeilingOptions` is never configured, so a member role granted a tenant
+  permission would hold it. Which permissions to ceiling is a ruling
+  ([user-stories.md](user-stories.md) § 4).
+- [ ] **`ApprovalService.CanDecideAsync`** compares role names instead of asking the decision.
+- [ ] **`UsersController`** lists every user under one `ListUsers` check (with the Server
+  extraction, [server.md](server.md)).
+
+## Domains onto the extension system (2026-10-11)
+
+What each domain still decides on its own, and what it registers instead. Each moves by hand,
+module by module (abstractions placed per file, not by script).
+
+**Members** (`Crest.Members`)
+- Already registered: `MemberCallerContributor` (class, acting organization, binding roles,
+  impersonator), `MemberCallerRequestResolver`, `MemberClassCeiling` (configured with no
+  permissions - ceiling list is a ruling, [user-stories.md](user-stories.md) § 4).
+- To move: `MembersController` asks a global `ManageMembers` for every organization's members,
+  bindings, impersonation and conversion; it becomes `ManageMembers` asked **against the
+  organization or binding** as the resource, decided by a members `IResourcePermissionMapper`
+  that applies the member-admin template and the hierarchy root guard (who), so a member admin
+  manages their own organization and nobody else's.
+- To move: member reads (`MemberService`, `MemberAccess` lookups) go through scope - an
+  `IScopeProvider` on `MemberOrgBindingIndex` - instead of permission-only checks.
+- To move here: `OrganizationScopeProvider` (in `Crest.Server` today), the organization row
+  scope, which reads the caller's acting organization Members supplies (ties to
+  [server.md](server.md) ruling S3).
+
+**Parties** (`Crest.Parties`)
+- Already: controllers ask `IAuthorizationService` per party item (routed to the decision).
+- To move: `ILocationService` and `IPartyPositionsService` read without scope; they go through a
+  parties `IScopeProvider` (and the organization scope for organization-owned parties).
+- To move: party-specific rules (a person's own record, an organization's contacts) become a
+  parties `IResourcePermissionMapper` rather than plain content permissions in each controller.
+- To move: `PartiesRoutePermissionProvider` registers through the Access route contract.
+
+**Pages** (`Crest.Server` today)
+- `ICrestRoutePermissionProvider`, `CrestRoutePermission` and `CrestRouteAuthorizationService`
+  move to Access (contract in `Crest.Access.Abstractions`, service in `Crest.Access`) under
+  generic names; Server, Workflows and Parties register their routes; `AdminFilter` goes with
+  the MVC admin.
+- `AssignmentScopeProvider` (Server) moves to the module that owns assignments
+  ([server.md](server.md) ruling S3).
+
+### Mapper roles and priority (ruled 2026-10-11)
+
+Who answers for a resource is decided by role and by the **module priority system** (the
+manifest's `Priority` on a feature or module, read at run time through `IProviderPriority`
+from the shell blueprint), never by the order modules registered their services in:
+
+- **Authoritative** (`IAuthoritativeResourcePermissionMapper`): for a resource it claims, the
+  only answer; no module mapper is consulted. Among authorities claiming one resource, the
+  highest-priority feature's wins, so a module that is not built into Crest **replaces** an
+  authority for exactly the resources it claims by declaring a higher priority; the lower one
+  still answers for everything else. Two authorities claiming one resource **at the same
+  priority** are a configuration conflict: the decision denies (finally), audits and logs it.
+- **Module** (plain `IResourcePermissionMapper`): when no authority claims the resource, the
+  highest-priority one that answers (registration order only between equal priorities).
+- **No additive role** (ruled 2026-10-11): a mapper able to grant past the authority would be
+  the authority for that resource. A module that wants to **add** to a domain's decisions feeds
+  the authority instead - for sharing, an `IShareEntrySource` whose entries and rules the engine
+  resolves with its own under the same precedence ([sharing.md](sharing.md)) - so a
+  contribution wins only where the authority's rules let it. To take over, ship a
+  higher-priority authority; to narrow, a ceiling.
+- Tenant administrators pass before any mapper, so neither a conflict nor an authority stands
+  in their way.
+
+The same rule picks between modules inside a domain: two shareable kinds registered for one
+name are decided by priority, and at the same priority the name is conflicted and allows
+nothing ([sharing.md](sharing.md)). Tests: `test/Crest.Tests/Access/Conformance/MapperRolesTests.cs`.
 
 ## Overlaps to remove
 

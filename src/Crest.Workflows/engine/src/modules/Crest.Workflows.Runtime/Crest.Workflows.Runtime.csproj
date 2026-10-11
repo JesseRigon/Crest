@@ -17,7 +17,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Crest.Workflows.Caching\Crest.Workflows.Caching.csproj" />
-        <ProjectReference Include="..\Crest.Workflows.KeyValues\Crest.Workflows.KeyValues.csproj" />
         <ProjectReference Include="..\Crest.Workflows.Tenants\Crest.Workflows.Tenants.csproj" />
         <ProjectReference Include="..\Crest.Workflows.Core\Crest.Workflows.Core.csproj" />
         <ProjectReference Include="..\Crest.Workflows.Management\Crest.Workflows.Management.csproj" />

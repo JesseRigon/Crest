@@ -132,6 +132,10 @@ public sealed class CallerContextFactory(
         };
     }
 
+    /// <summary>A user's identity (the cookie, a workflow actor): never read as an application.</summary>
+    private static bool IsIdentityCookie(ClaimsPrincipal principal) =>
+        principal.Identities.Any(identity => identity.AuthenticationType is { } type && type.StartsWith("Identity.", StringComparison.Ordinal));
+
     private async Task AddRolesAndPermissionsAsync(CallerContextBuilder builder, string? userId, ClaimsPrincipal? principal, CancellationToken cancellationToken)
     {
         var roleNames = new List<string> { PlatformConstants.Roles.Anonymous };
@@ -140,6 +144,14 @@ public sealed class CallerContextFactory(
         {
             roleNames.Add(PlatformConstants.Roles.Authenticated);
             var user = await userManager.FindByIdAsync(userId);
+            var exists = user is not null;
+            if (user is Crest.Users.Models.User { IsEnabled: false })
+            {
+                // A disabled account keeps its session until the stamp check, and a workflow
+                // run keeps its actor: neither keeps the account's rights.
+                user = null;
+            }
+
             if (user is not null)
             {
                 builder.UserName ??= user.UserName;
@@ -149,11 +161,13 @@ public sealed class CallerContextFactory(
                     builder.Roles.Add(roleName);
                 }
             }
-            else if (principal is not null)
+            else if (!exists && principal is not null && !IsIdentityCookie(principal))
             {
                 // An application (a client-credentials token, a remote deployment client): no
                 // user record, the application's roles come with the identity, the permissions
-                // from the roles (and from contributors, for a credential without roles).
+                // from the roles (and from contributors, for a credential without roles). The
+                // identity cookie never qualifies: a cookie with no user behind it belongs to a
+                // user deleted since sign-in, and the roles it lists are not to be trusted.
                 builder.UserClass = CallerClasses.Application;
                 foreach (var roleName in principal.FindAll(ClaimTypes.Role).Concat(principal.FindAll("role")).Select(claim => claim.Value).Distinct(StringComparer.OrdinalIgnoreCase))
                 {
@@ -162,12 +176,14 @@ public sealed class CallerContextFactory(
                 }
             }
 
-            var adminRole = systemRoles.GetAdminRole();
-            if (builder.Roles.Contains(adminRole.RoleName))
+            // A deleted or disabled user's cookie or workflow actor is neither: it keeps the
+            // Authenticated role until the stamp check signs it out, and is never the super user.
+            var known = user is not null || builder.UserClass == CallerClasses.Application;
+            if (known && builder.Roles.Contains(systemRoles.GetAdminRole().RoleName))
             {
                 builder.IsSuperUser = true;
             }
-            else
+            else if (known)
             {
                 var site = await siteService.GetSiteSettingsAsync();
                 builder.IsSuperUser = string.Equals(userId, site.SuperUser, StringComparison.OrdinalIgnoreCase);

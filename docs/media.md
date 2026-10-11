@@ -1,4 +1,4 @@
-# Media: files, drives and access control
+# Media: files and drives
 
 Status: requirements agreed and audited, not started. Next: phase 1. This plan covers Crest's
 file system, drives and access control, in build order; nothing of it is built yet, and the
@@ -7,37 +7,7 @@ Each phase ends with the full suite green and its own checks.
 
 ## Example
 
-A shared drive of product information. Customer is a business role, Staff and Marketing are
-staff roles, Sam is a staff user, and Dana is an external contractor with a user account.
-
-```
-Product Info (shared drive)  Customer: Viewer, Staff: Viewer, Sam: Blocked
-├── Spec sheets/             Tenant: Viewer
-└── Images/                  Marketing: Editor
-    │  rule 1: extension is .psd → Customer: Blocked, Dana: Editor
-    │  rule 2: tag is "final"    → Anyone: Viewer
-    ├── chair-original.jpg   customers, staff, marketing
-    ├── chair.psd            staff, marketing, Dana - not customers
-    └── chair-final.jpg      everyone, signed in or not: public
-```
-
-- The drive is owned by the tenant account and grants Customer and Staff. Access is denied by
-  default, so nobody else gets in and no blocks are needed to keep them out.
-- Spec sheets is open to the whole tenant, so Dana can see it too. Sam cannot: his block is
-  about his user, which outranks a tenant grant at any depth. Only "Sam: Viewer" on Spec sheets
-  would let him in.
-- Everything under Images inherits customers and staff and adds marketing.
-- Rule 1 lives on Images, the highest folder it should cover. On every Photoshop file under
-  Images it blocks the inherited Customer grant and grants Dana. A Photoshop file in Spec sheets
-  is untouched, and elsewhere under Images Dana has no grant.
-- Rule 2 makes final images public. Public is absolute for viewing, so Sam can view
-  chair-final.jpg despite his block, but his block still stops him commenting on or editing it.
-- A customer opening chair-final.jpg sees the file, not how it is shared. A Drive Admin
-  sees the whole chain. A customer never sees chair.psd: it is in none of their listings, searches
-  or counts.
-- The rules list for Product Info shows rules on Product Info and above, not rules 1 and 2.
-- A marketer deleting Images is refused if they may not delete chair.psd, and the refusal does
-  not mention it.
+The sharing example (a shared drive with grants, blocks and rules) is in [sharing.md](sharing.md) › Example.
 
 ## Goal
 
@@ -45,10 +15,10 @@ Crest gets a file system with sharing modelled on Google Drive's behaviour, in i
 implementation and under its own names, and applied the way a Unix file system applies
 permissions: every file, folder and drive is a file object, and access is overlaid on it.
 
-Access has two layers: **sharing**, grants and blocks on objects that flow down the tree as in
-Drive, and **rules**, ordered "conditions → effect" lists that Drive does not have, so "every
-PDF here is public, but not the Word files they come from" is one rule. Conflicts are allowed;
-unexplained access is not.
+Access to files is **sharing**, which is its own module since 2026-10-11 ([sharing.md](sharing.md)):
+file objects are one shareable kind, registered by Media. Until file objects exist Media registers
+its paths as the kind (`MediaShareableKind`, while the Sharing feature is on; [sharing.md](sharing.md)
+› Phases).
 
 Publishing is separate. Published says which version readers get; access says who the readers
 are. Content items use the same model, with their content type in the chain.
@@ -94,39 +64,7 @@ are. Content items use the same model, with their content type in the chain.
 
 ## 1. Foundations
 
-The content sharing feature and its settings; system accounts (tenant and organization); the role registry with role kind, and assignment restricted to assigned roles; default Anyone and Tenant view grants removed when sharing is on.
-
-- [ ] **Make content sharing a tenant feature.**
-  1. Content sharing is a feature each tenant enables. Without it a tenant has no drives, sharing
-     or rules, and its content items keep Orchard's standard permissions. Nothing about it
-     crosses tenants.
-
-- [ ] **Add system accounts.**
-  33. Each tenant has one tenant account, created with the tenant, and each organization has one
-      organization account, created with the organization. They own what their tenant or
-      organization owns, such as shared and organization drives.
-  34. A system account cannot sign in, cannot be impersonated, and does not appear in user lists
-      or pickers.
-  35. A system account is never counted as a user, member or seat by subscriptions, memberships,
-      pricing or plan limits. Counting excludes system accounts by construction, not by a filter
-      each count must remember.
-  36. Actions the system takes on a tenant's or organization's behalf are attributed to its
-      account in the audit trail, distinct from people and machine actors
-      ([machine-actors.md](machine-actors.md)).
-
-- [ ] **Add the role registry with role kind.**
-  44. Each role has a **kind**, kept in Crest's role registry: **Assigned** (stored on users, the
-      ordinary Orchard kind) or **Derived** (computed, with the provider that computes it).
-      Orchard's role model has no field for this, and its built-in "system role" mechanism covers
-      only its own fixed roles.
-  45. Derived roles cannot be assigned. Every assignment path (the user editor, the users API,
-      recipes, bulk assignment) offers Assigned roles only and refuses Derived ones on the server.
-      Like Orchard's own assignable-role filter, it also leaves out system roles (Anyone,
-      Authenticated).
-
-- [ ] **Remove default Anyone and Tenant view grants.**
-  84. No recipe shipped with Crest or a host built on it grants anything to Anyone or Tenant
-      unless it means to.
+Moved to [sharing.md](sharing.md) § 1 (the sharing feature, system accounts, the role registry, default grants).
 
 ## 2. Upload security
 
@@ -291,153 +229,15 @@ Documents, opaque blob keys, versions, metadata; the drive class, drive types an
 
 ## 4. Access
 
-Entries and rules, the resolution engine and its explanation, the access index and recalculation, the time registry and job, enforcement on every read path, list and search filtering.
-
-- [ ] **Resolve principals.**
-  37. Tenant means everyone signed in to that one tenant, staff and members, and never anyone
-      from another tenant on the same instance.
-  38. A member acts for one organization at a time, and only that organization's entries count
-      for them.
-
-- [ ] **Add sharing entries.**
-  49. **Default deny.** Nobody has access unless granted, except the owner. No decision is not a
-      block; it is simply no access, so a new user or role sees nothing and nothing needs updating
-      when one is added.
-  50. Grants and blocks flow down the tree. Each object inherits its parent's and adds its own.
-  51. Blocks are optional: they carve an exception out of an inherited grant, such as one user or
-      role that must not see a folder under a tenant-wide grant. There is no "stop inheriting"
-      switch; narrowing is a block on the inherited principal plus grants for whoever keeps access.
-  52. An object shared with someone is reachable through its link even if they cannot open its
-      parent folder, as in Drive.
-  53. An entry can have a start and an end.
-
-- [ ] **Add rules.**
-  54. A rule applies only to objects below the folder, drive or tenant it is defined on that
-      match all its conditions.
-  55. A rule belongs at the highest folder whose contents it should cover, so one rule replaces
-      many individual shares.
-  56. Conditions cover at least file type, extension, named group ("Documents", "Images"), content
-      type, metadata and tags, and time (a window, a schedule, an age). Modules can add their own.
-  57. A rule's effects are grants and blocks, the same as entries.
-
-- [ ] **Build the resolution engine.**
-  Precedence runs from general to specific on two axes:
-
-  - **Principal**: Anyone → Tenant → Organization → Role → User.
-  - **Depth**: tenant → drive → each folder → the object.
-
-  58. Every entry and every matching rule effect on an object's path is a decision: a principal,
-      a grant or block, its depth, and its position in that level's order. Only decisions about
-      principals a person matches count for them: their user, their roles (business roles
-      included), their acting organization, the tenant and Anyone.
-  59. **Principal first.** The most specific principal tier with any decision for the person
-      decides. A user decision beats any role decision, a role decision beats any organization
-      decision, and so on, at any depth. With no decision in any tier, access is denied.
-  60. **Then depth.** Within the deciding tier, the deepest decision wins. A user blocked on a
-      folder and granted on a file inside it can open that file. A user with the Customer and
-      Vendor roles, both blocked on a folder, can open a subfolder that grants Vendor.
-  61. **Then order, then grant.** Within one tier at one depth, rules apply in their listed order
-      with equal priority, so a later rule overrides an earlier one about the same principal.
-      If the person's different principals in that tier still disagree at that depth (one of
-      their roles granted, another blocked), the grant wins, and grants stack to the highest
-      level.
-  62. **Public is absolute for viewing.** When an object's Anyone decision, resolved by depth and
-      order within the Anyone tier, is a grant, everyone can view it and no block removes that.
-      Everything beyond viewing is still decided by 59–61: a user blocked on a public file can
-      view it but not comment on, edit or delete it.
-  63. Anyone can only be granted Viewer.
-  64. Public follows the tree like any grant: children of a public folder are public, and a child
-      leaves public view only by a deeper "Anyone: Blocked".
-  65. Resolution is fully determined by the path, the person's principals and rule order.
-
-- [ ] **Show the sharing to Drive Admins only.**
-  66. Only a Drive Admin of an object's drive, or a tenant administrator, sees how it is shared: every entry, block and matching rule from
-      the tenant down, in order, which decision won, and who has access as a result. Everyone
-      else sees nothing of it. Changing a tenant-level step needs the tenant permission in 85.
-  67. A folder's rules list shows rules from the tenant down to that folder, not below it.
-  68. An object a person cannot view does not exist for them: it is in no listing, search, picker,
-      count, explanation or error message.
-
-- [ ] **Check deleting and moving.**
-  69. Deleting needs Manager. Deleting a folder needs Manager on it and everything below it, including objects
-      the person cannot see. If any fail, nothing is deleted, and the refusal says the folder
-      contains items they cannot delete, without naming or counting them.
-  70. Moving changes the access of everything moved, so it needs Manager over everything moved,
-      plus Editor on the destination, with the same refusal.
-
-- [ ] **Add comments.**
-  71. A Commenter can add comments and do nothing else.
-  72. Comments are stored in the object's metadata by default. A file type can keep them where
-      that format keeps comments instead, through a per-type comment store.
-
-- [ ] **Build the access index and enforcement.**
-  75. Access is precomputed. For every object (every placement, for a hard-linked file), an index holds each principal's winning grant or
-      block and its tier, and whether the object is public, after the resolution above. Every
-      read path checks the index; nothing is resolved on access.
-  76. A person's principals are resolved once per session or when they change, so a check is a
-      lookup of their most specific principal with an entry on the object, or of the public flag.
-  77. Every read path enforces access: object endpoints, folder listings, search, pickers,
-      Orchard's display routes and file bytes. Listings and search filter in the database query,
-      never by dropping rows after paging.
-  78. The index is recalculated for only the affected objects when an input changes: an entry, a
-      rule or its order, a move or rename, metadata a rule reads, a content type's entries, a role
-      or relationship, an organization binding. A rule change recalculates its scope; a move, the
-      moved subtree.
-  79. Every time-bound entry and time-based rule registers its next boundary in a time registry,
-      indexed by time. A per-tenant job runs every minute, reads only the registry entries now
-      due, recalculates the objects they affect and registers their next boundaries. It never
-      scans every object. Index entries with a known end carry it, and reads ignore them once it
-      passes, so access ends on time even between runs.
-  80. Removing access takes effect before the change is reported as done. Adding access may wait
-      for its recalculation, and the Share panel shows it as pending.
-  81. The explanation (66) and the index come from the same entries and rules and always agree.
-      Crest can verify any scope by recalculating and comparing.
-  82. Failure is closed: an object with no resolvable access or no index entry is not visible.
-  83. Public bytes are cacheable. Private bytes are served only after the access check.
-
-- [ ] **Gate changes to sharing and rules.**
-  85. Changing sharing or rules inside a drive needs Drive Admin of that drive. Tenant-level rules and
-      entries, which reach every drive, need a dedicated tenant permission. Granting Anyone also
-      needs a dedicated permission, so not every Drive Admin can make content public.
-
-- [ ] **Audit sharing and rule changes.**
-  99. Every sharing and rule change is recorded in the audit trail ([audit.md](audit.md)) with who
-      made it, including while impersonating.
+Moved to [sharing.md](sharing.md) § 4: sharing is its own module (`Crest.Sharing`), and file objects are one shareable kind.
 
 ## 5. Business roles
 
-The provider interface, per-request derived role claims, session invalidation on relationship change, the party-role index and provider.
-
-- [ ] **Compute business roles.**
-  39. Business relationships are roles: a user linked to a customer, vendor or lead party, or a
-      member of an organization, holds the matching role (Customer, Vendor, Lead, Member).
-  40. Each business role is a real Orchard role: it has a stable identity, appears in sharing
-      pickers and permission screens, and is stored in the access index like any role.
-  41. Membership is never stored on the user. It is computed from the relationship records when a
-      session's principals are resolved (requirement 76) and attached to the session as role
-      claims, which Orchard's permission checks already read. The relationship records are the
-      only source of truth, so there is nothing to keep in sync.
-  42. Membership follows the organization the person is acting for: a member of two organizations
-      holds each organization's business roles only while acting for it.
-  43. Changing a relationship invalidates the affected user's sessions, so their principals are
-      recomputed on their next request and a removed role stops counting immediately.
-
-- [ ] **Add derived role providers.**
-  48. Derived roles are computed by providers behind a Crest interface: given a user and the
-      organization they are acting for, a provider answers which business roles they hold.
-      Party relationships are one provider, so the file system never needs to know what a party
-      is.
+Moved to [sharing.md](sharing.md) § 5.
 
 ## 6. Content items
 
-Content types and items on the same model; the content items API's listing, creation and view checks.
-
-- [ ] **Put content items on the same model.**
-  73. Content items use the same principals, levels, entries and rules. Their chain is tenant →
-      content type → item: a content type carries entries (set in its settings and in recipes),
-      and an item adds its own.
-  74. A content item that belongs in a folder, such as a document page in a client folder, follows
-      that folder's chain instead, with its content type as its type for rules.
+Moved to [sharing.md](sharing.md) § 6.
 
 ## 7. Administrator access to personal drives
 
@@ -521,30 +321,15 @@ logged action rather than something in the admin's everyday view.
 
 Drive browser, Share panel, Rules screens, access indicators, the user editor's derived roles.
 
+The Share panel, Rules screens, access indicators and pickers are sharing's
+([sharing.md](sharing.md) § 8).
+
 - [ ] **Build the viewer pane and its add-on seam** (ruling 2026-10-06). The drive browser
   has a viewer pane for the selected file. Add-ons register against file types and hook
   into it, so a file can be edited **in place** — simple edits to a document or an image
   right in the pane, without opening a separate app — or opened full in the add-on's own
   editor. With no add-on for a type, the pane previews. Add-ons can come from any module
   or third party; the pane and the seam are Crest's.
-
-- [ ] **Build the Share panel.**
-  96. Every object has a Share panel for its drive's Drive Admins: who has access and why, grants and blocks
-      to add, change or remove, and the public link when it is public.
-
-- [ ] **Build the Rules screens.**
-  97. Each folder, drive and the tenant has a Rules screen, for the drive's Drive Admins or, at the
-      tenant, for holders of the tenant permission (85): rules in run order as
-      "conditions → effect", reorderable, filterable and editable, scoped as in 67.
-
-- [ ] **Show access indicators.**
-  98. Lists show an access indicator (private, shared, public) and filter by it.
-
-- [ ] **Show derived roles in pickers and the user editor.**
-  46. Sharing pickers offer both kinds, with derived roles labelled.
-  47. The user editor shows a user's derived roles read-only beneath their assigned ones, each
-      with the relationship that grants it ("Customer, member of Acme Corp"), linking to that
-      relationship, since changing it is the only way to change the role.
 
 ## Platform audit
 
@@ -577,33 +362,7 @@ against Crest as it stands. What each area gives us, and what Crest builds.
 
 ### Authorization and data
 
-- **Per-object checks: reuse the hook.** Orchard's authorization runs every
-  `IAuthorizationHandler`, and one that calls `Fail()` overrides every grant, including the
-  administrator's. Crest's access handler answers from the access index for file objects and
-  content items; it never fails a tenant administrator (the standing rule), because a `Fail()`
-  would override even them.
-- **Default view grants: neutralise.** Orchard gives Anonymous and Authenticated `ViewContent`
-  by default, and Crest's setup recipe grants Anonymous `ViewContent` again. With content
-  sharing on, that would make every published item public; the feature removes those grants
-  (requirement 84).
-- **Per-type permissions: reuse.** Securable content types get `View_{Type}`-style permissions;
-  the per-type entries (requirement 73) build on the type, not on those role permissions.
-- **Filtered lists: build.** Orchard filters content lists in SQL by content type and owner
-  only. YesSql joins indexes that come from the same document, so each object's resolved access
-  is stored on its own document and mapped to an access index (one row per principal with a
-  decision); list queries join it, keeping filtering in the database. Recalculating an object
-  re-saves its document.
-- **Search: build.** Orchard search (Lucene, Elasticsearch, Azure AI Search) checks only which
-  index the caller may query, never each result. Crest writes access into its index documents
-  and filters at query time.
-- **Roles and sessions: reuse, with care.** Roles are names plus permission claims; there is
-  no role kind, so Crest keeps its own role registry (requirement 44). Orchard adds claims only
-  at sign-in (`IUserClaimsProvider`) and keeps old claims when a session refreshes, so derived
-  business roles are added per request instead, where Crest.Members already enriches the
-  session (`MemberCookieEventsConfiguration`). The security stamp still signs users out where
-  needed.
-- **Storage engine.** YesSql over a relational database (SQLite, PostgreSQL, SQL Server, MySQL);
-  no document database.
+Moved to [sharing.md](sharing.md) › Platform audit.
 
 ### Scheduling, notifications, audit, email
 
@@ -741,24 +500,12 @@ is legal advice.
   resize cache. Options: (1) the access check runs first, before resolution and resizing;
   public files keep the fast path and CDN caching; (2) Crest's own resize cache keyed by
   placement and size behind the same check. Recommendation: 1, with 2 for private files.
-- [ ] **Access-index size and recalculation (F3).** Access is precomputed per placement and
-  principal; rules read metadata and time, a rule high in the tree recalculates its whole
-  scope, hard-linked folders multiply inherited chains, and removing access must take effect
-  before it is reported done. Options: (1) store only explicit and rule decisions and
-  resolve inheritance through an ancestor closure (a join, not a row per inherited pair);
-  (2) recalculate in batches in the background with a deny-first fence so removals apply
-  at once; (3) hard links for files only in the first version. Recommendation: 1 and 2
-  together, with folders allowed to hard-link once 1 exists.
+- [x] **Access-index size and recalculation (F3).** Moved to [sharing.md](sharing.md) › Decisions needed.
+
 - [ ] **Folder hard links and the loop gate (F4).** With folder hard links the tree is a
   graph: the loop gate must check every placement's ancestors, two moves at once can race
   into a loop, and folder counts and quotas become ambiguous. Options: (1) serialize
   placements and moves per tenant; (2) check a precomputed ancestor closure inside the same
   transaction. Recommendation: 2, with 1 as the guard against races; quotas count content
   once, whatever its placements.
-- [ ] **Search filtering (F5).** Ruled: search engines are connections, and an engine
-  indexing Crest data is set up with the permission system, so access is written into what
-  is indexed and every search is filtered; each principal or rule change reindexes the
-  affected documents. Options: (1) one search path (the Search module through the query
-  pipeline) with the caller's scope always applied, direct index access forbidden; (2)
-  coarse filtering in the index plus an exact check afterwards, which breaks exact counts.
-  Recommendation: 1.
+- [x] **Search filtering (F5).** Moved to [sharing.md](sharing.md) › Decisions needed.

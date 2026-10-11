@@ -22,11 +22,10 @@ public sealed class CallerContextAccessor : ICallerContextAccessor
         get => _current ??= ShellScope.GetFeature<CallerFeature>()?.Caller;
         set
         {
+            // Clearing clears the scope's feature too: a scope that runs several bursts or
+            // jobs one after another must not answer the next with the previous caller.
             _current = value;
-            if (value is not null)
-            {
-                ShellScope.SetFeature(new CallerFeature(value));
-            }
+            ShellScope.SetFeature(value is null ? null : new CallerFeature(value));
         }
     }
 }

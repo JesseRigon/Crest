@@ -9,6 +9,7 @@ using Crest.Workflows.Models;
 using Crest.Workflows.Registry;
 using Crest.Workflows.Security;
 using Crest.Workflows.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -30,6 +31,8 @@ public class AccessGateTests
         public CallerContext? Current { get; set; }
     }
 
+    internal static readonly WorkflowActorSeal Seal = new(new EphemeralDataProtectionProvider());
+
     private static readonly CallerContext Alice = new() { Tenant = "acme", Side = CallerSide.Admin, UserId = "u-1", UserName = "alice" };
     private static readonly CallerContext System = new() { Tenant = "acme", Side = CallerSide.System, IsSystem = true, IsSuperUser = true, UserName = "system" };
 
@@ -47,7 +50,8 @@ public class AccessGateTests
 
         var services = new ServiceCollection();
         services.AddSingleton<ICallerContextAccessor>(accessor);
-        services.AddSingleton(sp => new WorkflowCallerResolver(factory, accessor, Substitute.For<IHttpContextAccessor>(), Substitute.For<IWorkflowInstanceStore>(), Substitute.For<IWorkflowDefinitionService>()));
+        services.AddSingleton(Seal);
+        services.AddSingleton(sp => new WorkflowCallerResolver(factory, accessor, Seal, Substitute.For<IWorkflowInstanceStore>(), Substitute.For<IWorkflowDefinitionService>()));
         services.AddSingleton(Substitute.For<ISystemClock>());
         services.AddSingleton(Substitute.For<IActivityRegistry>());
         services.AddSingleton(Substitute.For<IActivityRegistryLookupService>());
@@ -84,7 +88,7 @@ public class AccessGateTests
     [Fact]
     public async Task A_burst_runs_as_the_actor_in_its_input_and_restores_the_scope_after()
     {
-        var input = new Dictionary<string, object> { [WorkflowsConstants.InputKeys.Actor] = new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme", Side = CallerSide.Admin } };
+        var input = new Dictionary<string, object> { [WorkflowsConstants.InputKeys.Actor] = Seal.Seal(new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme", Side = CallerSide.Admin }) };
         var (context, accessor) = await BurstAsync(runsAsSystem: false, input);
         CallerContext? seen = null;
         var gate = new WorkflowAccessGateMiddleware(_ => { seen = accessor.Current; return ValueTask.CompletedTask; }, NullLogger<WorkflowAccessGateMiddleware>.Instance);
@@ -122,8 +126,100 @@ public class AccessGateTests
 
         Assert.Same(Alice, seen);
         Assert.Same(Alice, accessor.Current);
-        Assert.Equal("u-1", ((WorkflowUserContext)context.Input[WorkflowsConstants.InputKeys.Actor]).UserId);
+        Assert.Equal("u-1", Seal.Open(context.Input[WorkflowsConstants.InputKeys.Actor], context.Id, acceptFresh: false)!.UserId);
     }
+
+    [Fact]
+    public async Task An_actor_the_server_did_not_seal_is_refused()
+    {
+        // What a client puts in the input of a dispatch, an import or a resume: plain JSON or an object.
+        var forged = global::System.Text.Json.JsonSerializer.SerializeToElement(new WorkflowUserContext { UserId = "u-admin", UserName = "admin", Tenant = "acme", Side = CallerSide.Admin });
+        foreach (var value in new object[] { forged, new WorkflowUserContext { UserId = "u-admin" }, "not-a-seal" })
+        {
+            var (context, accessor) = await BurstAsync(runsAsSystem: false, new Dictionary<string, object> { [WorkflowsConstants.InputKeys.Actor] = value });
+            var gate = new WorkflowAccessGateMiddleware(_ => ValueTask.CompletedTask, NullLogger<WorkflowAccessGateMiddleware>.Instance);
+
+            await Assert.ThrowsAsync<WorkflowAccessRefusedException>(async () => await gate.InvokeAsync(context));
+            Assert.Null(accessor.Current);
+        }
+    }
+
+    [Fact]
+    public async Task The_first_burst_binds_the_actor_to_its_instance()
+    {
+        var input = new Dictionary<string, object> { [WorkflowsConstants.InputKeys.Actor] = Seal.Seal(new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme", Side = CallerSide.Admin }) };
+        var (context, _) = await BurstAsync(runsAsSystem: false, input);
+        var gate = new WorkflowAccessGateMiddleware(_ => ValueTask.CompletedTask, NullLogger<WorkflowAccessGateMiddleware>.Instance);
+
+        await gate.InvokeAsync(context);
+
+        var bound = context.Input[WorkflowsConstants.InputKeys.Actor];
+        Assert.Equal("u-1", Seal.Open(bound, context.Id, acceptFresh: false)!.UserId);
+        // Copied into another run, it opens for nobody.
+        Assert.Null(Seal.Open(bound, "another-instance", acceptFresh: true));
+    }
+
+    [Fact]
+    public async Task A_later_burst_accepts_only_the_actor_bound_to_its_instance()
+    {
+        // A fresh actor (or one bound elsewhere) put into a resume's input does not replace the run's.
+        var fresh = Seal.Seal(new WorkflowUserContext { UserId = "u-admin", UserName = "admin", Tenant = "acme", Side = CallerSide.Admin });
+        var (context, accessor) = await BurstAsync(runsAsSystem: false, new Dictionary<string, object> { [WorkflowsConstants.InputKeys.Actor] = fresh });
+        Resumed(context);
+        var gate = new WorkflowAccessGateMiddleware(_ => ValueTask.CompletedTask, NullLogger<WorkflowAccessGateMiddleware>.Instance);
+
+        await Assert.ThrowsAsync<WorkflowAccessRefusedException>(async () => await gate.InvokeAsync(context));
+
+        context.Input[WorkflowsConstants.InputKeys.Actor] = Seal.Bind(new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme", Side = CallerSide.Admin }, context.Id);
+        CallerContext? seen = null;
+        gate = new WorkflowAccessGateMiddleware(_ => { seen = accessor.Current; return ValueTask.CompletedTask; }, NullLogger<WorkflowAccessGateMiddleware>.Instance);
+        await gate.InvokeAsync(context);
+        Assert.Equal("u-1", seen!.UserId);
+    }
+
+    [Fact]
+    public async Task A_resume_runs_as_the_runs_actor_not_as_whoever_resumed_it()
+    {
+        var actor = new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme", Side = CallerSide.Admin };
+        var resumer = new CallerContext { Tenant = "acme", Side = CallerSide.Admin, UserId = "u-7", UserName = "approver" };
+        var (context, accessor) = await BurstAsync(runsAsSystem: false, new Dictionary<string, object>(), current: resumer);
+        context.Input[WorkflowsConstants.InputKeys.Actor] = Seal.Bind(actor, context.Id);
+        Resumed(context);
+        CallerContext? seen = null;
+        var gate = new WorkflowAccessGateMiddleware(_ => { seen = accessor.Current; return ValueTask.CompletedTask; }, NullLogger<WorkflowAccessGateMiddleware>.Instance);
+
+        await gate.InvokeAsync(context);
+
+        Assert.Equal("u-1", seen!.UserId);
+        Assert.Same(resumer, accessor.Current);
+    }
+
+    [Fact]
+    public async Task The_system_caller_is_not_inherited_by_a_flow_not_published_as_system()
+    {
+        // A background task (publish later) changed content; the subscribed flow has no actor
+        // of its own and must not run as the tenant super user.
+        var (context, accessor) = await BurstAsync(runsAsSystem: false, input: null, current: System);
+        var gate = new WorkflowAccessGateMiddleware(_ => ValueTask.CompletedTask, NullLogger<WorkflowAccessGateMiddleware>.Instance);
+
+        await Assert.ThrowsAsync<WorkflowAccessRefusedException>(async () => await gate.InvokeAsync(context));
+        Assert.Same(System, accessor.Current);
+    }
+
+    [Fact]
+    public async Task A_flow_published_as_system_inherits_the_system_caller()
+    {
+        var (context, accessor) = await BurstAsync(runsAsSystem: true, input: null, current: System);
+        CallerContext? seen = null;
+        var gate = new WorkflowAccessGateMiddleware(_ => { seen = accessor.Current; return ValueTask.CompletedTask; }, NullLogger<WorkflowAccessGateMiddleware>.Instance);
+
+        await gate.InvokeAsync(context);
+
+        Assert.Same(System, seen);
+    }
+
+    private static void Resumed(WorkflowExecutionContext context) =>
+        typeof(WorkflowExecutionContext).GetProperty(nameof(WorkflowExecutionContext.SubStatus))!.SetValue(context, WorkflowSubStatus.Suspended);
 
     [Fact]
     public void The_declared_permission_rides_on_the_descriptor()
@@ -146,13 +242,11 @@ public class AccessGateTests
     {
         var contentManager = Substitute.For<IContentManager>();
         contentManager.GetAsync(Arg.Any<string>(), Arg.Any<VersionOptions>()).Returns(Task.FromResult<ContentItem>(null!));
-        var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "alice")], "Test")) };
-        var httpContextAccessor = Substitute.For<IHttpContextAccessor>();
-        httpContextAccessor.HttpContext.Returns(httpContext);
+        var callers = new Accessor { Current = Alice };
         var authorizer = Substitute.For<IWorkflowDefinitionAuthorizer>();
-        authorizer.AuthorizeAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<Crest.Security.Permissions.Permission>(), Arg.Any<WorkflowDefinitionAccessResource>())
+        authorizer.AuthorizeAsync(Arg.Any<Crest.Security.Permissions.Permission>(), Arg.Any<WorkflowDefinitionAccessResource>())
             .Returns(call => Task.FromResult(call.Arg<Crest.Security.Permissions.Permission>()!.Name != WorkflowsConstants.Permissions.ManageShipped));
-        var guard = new WorkflowOwnershipGuard(contentManager, null!, httpContextAccessor, authorizer);
+        var guard = new WorkflowOwnershipGuard(contentManager, null!, callers, authorizer);
         var definition = new Management.Entities.WorkflowDefinition { DefinitionId = "def-1", CustomProperties = new Dictionary<string, object> { [WorkflowsConstants.RunsAsSystemProperty] = true } };
 
         var denied = await Assert.ThrowsAsync<WorkflowChangeDeniedException>(() => guard.PrepareAsync(definition, WorkflowChange.Publish));
@@ -160,9 +254,23 @@ public class AccessGateTests
 
         // Without the flag, Publish alone is enough; with the flag and the permission, it goes through.
         await guard.PrepareAsync(new Management.Entities.WorkflowDefinition { DefinitionId = "def-1", CustomProperties = new Dictionary<string, object>() }, WorkflowChange.Publish);
-        authorizer.AuthorizeAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<Crest.Security.Permissions.Permission>(), Arg.Any<WorkflowDefinitionAccessResource>()).Returns(Task.FromResult(true));
+        authorizer.AuthorizeAsync(Arg.Any<Crest.Security.Permissions.Permission>(), Arg.Any<WorkflowDefinitionAccessResource>()).Returns(Task.FromResult(true));
         await guard.PrepareAsync(definition, WorkflowChange.Publish);
         Assert.True(WorkflowCallerResolver.RunsAsSystem(definition.CustomProperties));
+    }
+
+    [Fact]
+    public async Task A_change_with_no_caller_is_refused()
+    {
+        // Outside a request or a burst (and outside the importer's system scope) nobody may
+        // change a definition: the guard no longer passes when it finds no signed-in user.
+        var contentManager = Substitute.For<IContentManager>();
+        contentManager.GetAsync(Arg.Any<string>(), Arg.Any<VersionOptions>()).Returns(Task.FromResult<ContentItem>(null!));
+        var authorizer = Substitute.For<IWorkflowDefinitionAuthorizer>();
+        authorizer.AuthorizeAsync(Arg.Any<Crest.Security.Permissions.Permission>(), Arg.Any<WorkflowDefinitionAccessResource>()).Returns(Task.FromResult(true));
+        var guard = new WorkflowOwnershipGuard(contentManager, null!, new Accessor(), authorizer);
+
+        await Assert.ThrowsAsync<WorkflowChangeDeniedException>(() => guard.PrepareAsync(new Management.Entities.WorkflowDefinition { DefinitionId = "def-1", CustomProperties = new Dictionary<string, object>() }, WorkflowChange.Save));
     }
 }
 

@@ -1,10 +1,13 @@
+using Crest.Environment.Extensions.Features;
+using Microsoft.Extensions.Logging;
 using Crest.Security.Permissions;
 
 namespace Crest.Access.Services;
 
 /// <summary>
 /// The one decision: ceilings first (a single deny wins), then the super user, then the
-/// resource mapping (a candidate may re-ask the question for another resource), then the
+/// resource mapping (the authority that claims the resource, by feature priority, else the
+/// module's own mapper; a candidate may re-ask the question for another resource), then the
 /// caller's permissions with the implied-by chain resolved. Every denial is recorded; an
 /// allow is the operation's to record, since only it knows whether it is a read.
 /// </summary>
@@ -12,9 +15,31 @@ public sealed class AccessDecisionService(
     IPermissionService permissions,
     IEnumerable<IAccessCeiling> ceilings,
     IEnumerable<IResourcePermissionMapper> mappers,
-    IAccessAuditor auditor) : IAccessDecision
+    IAccessAuditor auditor,
+    IProviderPriority? priority = null,
+    ILogger<AccessDecisionService>? logger = null) : IAccessDecision
 {
     private const int MaxDepth = 4;
+
+    // The two mapper roles, each in feature-priority order (highest first): authorities grouped
+    // by priority, so two claimants at one priority are seen as the conflict they are. There is
+    // no additive role: a mapper that could grant past the authority would be the authority;
+    // a domain that wants contributions takes them inside its authority (sharing's entry
+    // sources), and narrowing is a ceiling.
+    private readonly IResourcePermissionMapper[][] _authorities = [.. mappers
+        .OfType<IAuthoritativeResourcePermissionMapper>()
+        .GroupBy(mapper => PriorityOf(priority, mapper))
+        .OrderByDescending(group => group.Key)
+        .Select(group => group.Cast<IResourcePermissionMapper>().ToArray())];
+
+    private readonly IResourcePermissionMapper[] _modules = [.. mappers
+        .Where(mapper => mapper is not IAuthoritativeResourcePermissionMapper)
+        .Select((mapper, index) => (mapper, index))
+        .OrderByDescending(entry => PriorityOf(priority, entry.mapper))
+        .ThenBy(entry => entry.index)
+        .Select(entry => entry.mapper)];
+
+    private static int PriorityOf(IProviderPriority? priority, IResourcePermissionMapper mapper) => priority?.PriorityOf(mapper.GetType()) ?? 0;
 
     public async Task<AccessDecision> DecideAsync(CallerContext caller, string permission, object? resource = null, CancellationToken cancellationToken = default)
     {
@@ -54,14 +79,13 @@ public sealed class AccessDecisionService(
         IReadOnlyList<PermissionCandidate> candidates = [permission];
         if (resource is not null)
         {
-            foreach (var mapper in mappers)
+            var mapped = await MapAsync(permission, resource, caller, cancellationToken);
+            if (mapped.Conflict is { } conflict)
             {
-                if (await mapper.MapAsync(permission, resource, caller, cancellationToken) is { } mapped)
-                {
-                    candidates = mapped;
-                    break;
-                }
+                return AccessDecision.Ceilinged(conflict);
             }
+
+            candidates = mapped.Candidates ?? candidates;
         }
 
         foreach (var candidate in candidates)
@@ -99,6 +123,56 @@ public sealed class AccessDecisionService(
         }
 
         return AccessDecision.Denied($"'{permission}' is not granted.");
+    }
+
+    /// <summary>
+    /// The candidates for a resource-bound request: the authority that claims it (highest
+    /// priority; two at one priority conflict), else the first module mapper that answers, else
+    /// none (the plain permission).
+    /// </summary>
+    private async Task<(IReadOnlyList<PermissionCandidate>? Candidates, string? Conflict)> MapAsync(string permission, object resource, CallerContext caller, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<PermissionCandidate>? candidates = null;
+        foreach (var group in _authorities)
+        {
+            IResourcePermissionMapper? claimant = null;
+            foreach (var mapper in group)
+            {
+                if (await mapper.MapAsync(permission, resource, caller, cancellationToken) is not { } answer)
+                {
+                    continue;
+                }
+
+                if (claimant is not null)
+                {
+                    var reason = $"'{permission}' on {resource} is claimed by two authorities at the same priority ({claimant.GetType().Name}, {mapper.GetType().Name}); give one feature a higher priority.";
+                    logger?.LogError("Access configuration conflict: {Reason}", reason);
+                    return (null, reason);
+                }
+
+                claimant = mapper;
+                candidates = answer;
+            }
+
+            if (claimant is not null)
+            {
+                break;
+            }
+        }
+
+        if (candidates is null)
+        {
+            foreach (var mapper in _modules)
+            {
+                if (await mapper.MapAsync(permission, resource, caller, cancellationToken) is { } answer)
+                {
+                    candidates = answer;
+                    break;
+                }
+            }
+        }
+
+        return (candidates, null);
     }
 
     private async Task<bool> IsGrantedAsync(CallerContext caller, string permissionName)

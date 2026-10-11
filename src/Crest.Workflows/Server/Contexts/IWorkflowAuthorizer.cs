@@ -4,20 +4,20 @@ using Crest.Security.Permissions;
 namespace Crest.Workflows.Contexts;
 
 /// <summary>
-/// Evaluates a Crest permission, by name, for a run's actor: the actor is rebuilt into a
-/// caller with current rights and the one access decision answers. Unknown permission names,
-/// a missing actor and the anonymous actor are denied.
+/// Evaluates a permission, by name, for the burst's caller - the one the access gate set from
+/// the run's sealed actor or the definition - through the one access decision. Unknown
+/// permission names, no caller and the anonymous caller are denied.
 /// </summary>
 public interface IWorkflowAuthorizer
 {
-    Task<bool> AuthorizeAsync(WorkflowUserContext? user, string permissionName, CancellationToken cancellationToken = default);
+    Task<bool> AuthorizeAsync(string permissionName, CancellationToken cancellationToken = default);
 }
 
-public sealed class WorkflowAuthorizer(WorkflowCallerResolver callers, IAccessDecision decision, IPermissionService permissionService) : IWorkflowAuthorizer
+public sealed class WorkflowAuthorizer(ICallerContextAccessor callers, IAccessDecision decision, IPermissionService permissionService) : IWorkflowAuthorizer
 {
-    public async Task<bool> AuthorizeAsync(WorkflowUserContext? user, string permissionName, CancellationToken cancellationToken = default)
+    public async Task<bool> AuthorizeAsync(string permissionName, CancellationToken cancellationToken = default)
     {
-        if (user is not { IsAuthenticated: true } || string.IsNullOrWhiteSpace(permissionName))
+        if (callers.Current is not { } caller || (!caller.IsAuthenticated && !caller.IsSystem) || string.IsNullOrWhiteSpace(permissionName))
         {
             return false;
         }
@@ -28,7 +28,6 @@ public sealed class WorkflowAuthorizer(WorkflowCallerResolver callers, IAccessDe
             return false;
         }
 
-        var caller = await callers.FromActorAsync(user, cancellationToken);
         return (await decision.DecideAsync(caller, permission.Name, cancellationToken: cancellationToken)).IsAllowed;
     }
 }

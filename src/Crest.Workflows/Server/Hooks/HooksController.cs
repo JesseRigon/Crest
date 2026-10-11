@@ -38,7 +38,7 @@ public sealed class HooksController(IAuthorizationService authorizationService, 
 
         try
         {
-            return Ok(await hooks.AttachAsync(User, request, cancellationToken));
+            return Ok(await hooks.AttachAsync(request, cancellationToken));
         }
         catch (WorkflowHookAttachException ex)
         {
@@ -56,7 +56,7 @@ public sealed class HooksController(IAuthorizationService authorizationService, 
 
         try
         {
-            return await hooks.DetachAsync(User, attachmentId, cancellationToken) ? NoContent() : NotFound();
+            return await hooks.DetachAsync(attachmentId, cancellationToken) ? NoContent() : NotFound();
         }
         catch (WorkflowHookAttachException ex)
         {

@@ -20,27 +20,4 @@ public static class ModuleExtensions
         module.Configure(configure);
         return module;
     }
-
-    extension(TenantsFeature feature)
-    {
-        /// <summary>
-        /// Installs and configures the <see cref="TenantManagementEndpointsFeature"/> feature.
-        /// </summary>
-        [UsedImplicitly]
-        public TenantsFeature UseTenantManagementEndpoints(Action<TenantManagementEndpointsFeature>? configure = null)
-        {
-            feature.Module.Configure(configure);
-            return feature;
-        }
-
-        /// <summary>
-        /// Installs and configures the <see cref="TenantManagementFeature"/> feature.
-        /// </summary>
-        [UsedImplicitly]
-        public TenantsFeature UseTenantManagement(Action<TenantManagementFeature>? configure = null)
-        {
-            feature.Module.Configure(configure);
-            return feature;
-        }
-    }
 }

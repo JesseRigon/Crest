@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Crest.Access;
 using Crest.Workflows.Contexts;
+using Crest.Workflows.Management;
 using Crest.Workflows.Registry;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
@@ -25,8 +26,9 @@ namespace Crest.Workflows.Security;
 /// <item>authenticated without <see cref="Permissions.ViewWorkflows"/> → 403;</item>
 /// <item>non-GET without a valid antiforgery token (the engine's endpoints validate none; a
 /// cookie-authenticated API without it is CSRF-exposed) → 400;</item>
-/// <item>starting a definition by hand (execute, dispatch) without Run for that definition -
-/// its Run list counts - → 403;</item>
+/// <item>starting a definition by hand (execute, dispatch), or changing one of its instances,
+/// without Run for that definition - its Run list counts - → 403; the GET form of execute → 405;</item>
+/// <item>engine permission claims already on the principal are dropped before the grant;</item>
 /// <item>otherwise the request proceeds; a change the definition's ownership tier or access
 /// lists refuse deeper down (<see cref="WorkflowChangeDeniedException"/>) → 403 with the reason.</item>
 /// </list>
@@ -40,6 +42,9 @@ public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecur
     public const string PermissionsClaimType = "permissions";
     public const string AllPermissionsClaim = "*";
 
+    /// <summary>The authentication type of the per-request grant identity.</summary>
+    public const string GrantAuthenticationType = "WorkflowsApiGrant";
+
     /// <summary>The engine endpoint permission names each Crest permission grants.</summary>
     public static class EnginePermissions
     {
@@ -51,17 +56,18 @@ public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecur
             "read:incident-strategies", "read:log-persistence-strategies", "read:workflow-activation-strategies",
         ];
 
+        // Testing an activity runs any definition's draft: an author's operation, not a run.
         public static readonly string[] Edit =
         [
             "write:workflow-definitions", "delete:workflow-definitions",
-            "actions:workflow-definitions:refresh", "actions:workflow-definitions:reload",
+            "actions:workflow-definitions:refresh", "actions:workflow-definitions:reload", "exec:tests",
         ];
 
         public static readonly string[] Publish = ["publish:workflow-definitions", "retract:workflow-definitions"];
 
         public static readonly string[] Run =
         [
-            "exec:workflow-definitions", "exec:tests", "trigger:event", "tasks:complete",
+            "exec:workflow-definitions", "trigger:event", "tasks:complete",
             "write:workflow-instances", "cancel:workflow-instances", "delete:workflow-instances",
         ];
 
@@ -74,7 +80,7 @@ public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecur
         ];
     }
 
-    public async Task InvokeAsync(HttpContext context, WorkflowCallerResolver callers, IAccessDecision decision, IAuthorizationService authorizationService, IAuthorizationPolicyProvider policyProvider, IAntiforgery antiforgery, IWorkflowDefinitionAccessReader access)
+    public async Task InvokeAsync(HttpContext context, WorkflowCallerResolver callers, IAccessDecision decision, IAuthorizationService authorizationService, IAuthorizationPolicyProvider policyProvider, IAntiforgery antiforgery, IWorkflowDefinitionAccessReader access, IWorkflowInstanceStore instances)
     {
         if (!context.Request.Path.StartsWithSegments(ApiPathPrefix, out var remaining))
         {
@@ -105,6 +111,14 @@ public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecur
             return;
         }
 
+        // The engine's GET form of execute starts a run: a state change no GET may make (a link
+        // or an image tag would make it for the signed-in user).
+        if (HttpMethods.IsGet(context.Request.Method) && StartedDefinitionId(remaining) is not null)
+        {
+            context.Response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+            return;
+        }
+
         if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method) && !HttpMethods.IsOptions(context.Request.Method))
         {
             if (!await antiforgery.IsRequestValidAsync(context))
@@ -124,8 +138,15 @@ public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecur
             }
         }
 
-        // Starting a definition by hand is authorized against that definition (its Run list).
+        // Starting a definition by hand, and changing one of its instances (cancel, delete,
+        // variables, import), are authorized against that definition (its Run list).
         var started = StartedDefinitionId(remaining);
+        if (started is null && !HttpMethods.IsGet(context.Request.Method) && ChangedInstanceId(remaining) is { } instanceId)
+        {
+            var instance = await instances.FindAsync(new Management.Filters.WorkflowInstanceFilter { Id = instanceId }, context.RequestAborted);
+            started = instance?.DefinitionId;
+        }
+
         if (started is not null && !await MayRunAsync(caller, started, decision, access))
         {
             logger.LogWarning("Workflow run denied for '{User}' on definition {DefinitionId}.", context.User.Identity.Name, started);
@@ -134,7 +155,14 @@ public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecur
             return;
         }
 
-        context.User.AddIdentity(new ClaimsIdentity(granted, "CrestWorkflows"));
+        // Only this grant counts: an engine permission claim the principal already carries (a
+        // token minted with one, the wildcard included) is dropped first.
+        context.User = new ClaimsPrincipal(context.User.Identities.Select(identity => new ClaimsIdentity(
+            identity.Claims.Where(claim => claim.Type != PermissionsClaimType),
+            identity.AuthenticationType,
+            identity.NameClaimType,
+            identity.RoleClaimType)));
+        context.User.AddIdentity(new ClaimsIdentity(granted, GrantAuthenticationType));
 
         // The endpoint's own policy (the engine's permission-claim names) is evaluated here,
         // against the grant just made, so a missing permission is a 403 with a reason. Left to the
@@ -173,6 +201,16 @@ public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecur
     {
         var resource = await access.GetAsync(definitionId) ?? new WorkflowDefinitionAccessResource(definitionId, [], []);
         return (await decision.DecideAsync(caller, WorkflowsConstants.Permissions.Run, resource)).IsAllowed && resource.Admits(caller, WorkflowsConstants.Permissions.Run);
+    }
+
+    // /workflow-instances/{instanceId}[/...] (cancel, delete, variables, import of one instance).
+    private static string? ChangedInstanceId(PathString path)
+    {
+        var segments = path.Value?.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return segments is { Length: >= 2 } && string.Equals(segments[0], "workflow-instances", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(segments[1], "bulk", StringComparison.OrdinalIgnoreCase)
+            ? Uri.UnescapeDataString(segments[1])
+            : null;
     }
 
     // /workflow-definitions/{definitionId}/execute|dispatch|bulk-dispatch (the engine's own routes).

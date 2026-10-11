@@ -8,17 +8,17 @@ namespace Crest.Workflows.Security;
 
 /// <summary>
 /// An HTTP-endpoint workflow acts as the request's caller (docs/operations.md step 4): the
-/// actor goes into the run input before the engine's HTTP middleware runs or resumes the
-/// flow, from the gated caller when the request path admitted the request, else from the
-/// request's principal.
+/// actor goes into the run input, sealed, before the engine's HTTP middleware runs the flow,
+/// from the gated caller (anonymous when no gate ran; the principal is never read here). A
+/// resume keeps the instance's own actor: the gate opens only the one bound to it.
 /// </summary>
-public sealed class HttpWorkflowActorContributor(ICallerContextAccessor callerContextAccessor, Crest.Environment.Shell.ShellSettings shellSettings) : IHttpWorkflowInputContributor
+public sealed class HttpWorkflowActorContributor(ICallerContextAccessor callerContextAccessor, WorkflowActorSeal seal, Crest.Environment.Shell.ShellSettings shellSettings) : IHttpWorkflowInputContributor
 {
     public Task ContributeAsync(HttpContext httpContext, IDictionary<string, object> input, CancellationToken cancellationToken = default)
     {
-        input[WorkflowsConstants.InputKeys.Actor] = callerContextAccessor.Current is { } caller
+        input[WorkflowsConstants.InputKeys.Actor] = seal.Seal(callerContextAccessor.Current is { } caller
             ? WorkflowUserContext.From(caller)
-            : WorkflowUserContext.From(httpContext.User, shellSettings.Name);
+            : WorkflowUserContext.Anonymous(shellSettings.Name));
         return Task.CompletedTask;
     }
 }

@@ -134,11 +134,56 @@ public class StructuredQueryCompilerTests
 
         var statement = Compile(query, scopes);
 
-        Assert.Contains("LEFT JOIN [tp_PathPartIndex] AS p ON [c].[DocumentId] = p.[DocumentId]", statement.Sql);
-        Assert.Contains("WHERE ((p.[Path] = @p0 OR p.[Path] IS NULL) OR p.[DocumentId] IS NULL)", statement.Sql);
+        Assert.Contains("LEFT JOIN [tp_PathPartIndex] AS p ON c.[DocumentId] = p.[DocumentId] AND (p.[Path] = @p0 OR p.[Path] IS NULL) ORDER BY", statement.Sql);
+        Assert.DoesNotContain("WHERE", statement.Sql);
         Assert.EndsWith("ORDER BY c.[DocumentId] LIMIT @__take OFFSET @__skip", statement.Sql);
         Assert.Equal(StructuredQueryCompiler.DefaultPageSize, statement.PageSize);
         Assert.NotNull(statement.CountSql);
+    }
+
+    [Fact]
+    public void Compile_LeftJoinNoneRuleNullsTheJoinInsteadOfEmptyingTheQuery()
+    {
+        var query = new StructuredQuery
+        {
+            Steps =
+            [
+                new FromStep { Source = "ContentItemIndex", Alias = "c" },
+                new JoinStep { Index = "PathPartIndex", Alias = "p", Kind = JoinKind.Left, Column = "DocumentId", ToColumn = "c.DocumentId" },
+                new ProjectStep { Columns = [new ProjectedColumn("c.ContentItemId"), new ProjectedColumn("p.Path")] },
+            ],
+        };
+
+        var scopes = TestScopes.Of(
+            ("ContentItemIndex", ScopeRule.Where(ScopeFilter.Of(ScopeCondition.Equal("Owner", "u")))),
+            ("PathPartIndex", ScopeRule.None));
+
+        var statement = Compile(query, scopes);
+
+        Assert.False(statement.IsEmpty);
+        Assert.Contains("FROM [tp_ContentItemIndex] AS c LEFT JOIN [tp_PathPartIndex] AS p ON c.[DocumentId] = p.[DocumentId] AND 1 = 0 WHERE c.[Owner] = @p0", statement.Sql);
+    }
+
+    [Fact]
+    public void Compile_InnerJoinScopeStaysInWhere()
+    {
+        var query = new StructuredQuery
+        {
+            Steps =
+            [
+                new FromStep { Source = "ContentItemIndex", Alias = "c" },
+                new JoinStep { Index = "PathPartIndex", Alias = "p", Kind = JoinKind.Inner, Column = "DocumentId", ToColumn = "c.DocumentId" },
+                new ProjectStep { Columns = [new ProjectedColumn("c.ContentItemId"), new ProjectedColumn("p.Path")] },
+            ],
+        };
+
+        var scopes = TestScopes.Of(
+            ("ContentItemIndex", ScopeRule.All),
+            ("PathPartIndex", ScopeRule.Where(ScopeFilter.Of(ScopeCondition.Equal("Path", "/a")))));
+
+        var statement = Compile(query, scopes);
+
+        Assert.Contains("INNER JOIN [tp_PathPartIndex] AS p ON c.[DocumentId] = p.[DocumentId] WHERE p.[Path] = @p0", statement.Sql);
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using Crest.Access;
 using Crest.Workflows.Extensions;
 using Crest.Workflows;
 using Crest.Workflows.Activities.Flowchart.Attributes;
@@ -29,12 +30,11 @@ public class RequirePermission : Activity
 
     protected override async ValueTask ExecuteAsync(ActivityExecutionContext context)
     {
-        var user = context.FindWorkflowInput<WorkflowUserContext>(WorkflowUserContext.InputKey);
         var permission = Permission.Get(context);
         var authorizer = context.GetRequiredService<IWorkflowAuthorizer>();
-        var allowed = await authorizer.AuthorizeAsync(user, permission, context.CancellationToken);
+        var allowed = await authorizer.AuthorizeAsync(permission, context.CancellationToken);
 
-        UserName.Set(context, user?.UserName);
+        UserName.Set(context, context.GetRequiredService<ICallerContextAccessor>().Current?.UserName);
         await context.CompleteActivityWithOutcomesAsync(allowed ? "Allowed" : "Denied");
     }
 }

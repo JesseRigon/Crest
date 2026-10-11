@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+using Crest.Access;
 using Crest.Workflows.Extensions;
 using Crest.Workflows;
 using Crest.Workflows.Activities.Flowchart.Attributes;
@@ -19,7 +21,7 @@ public class UnpublishContent : CodeActivity<ContentItem>
     {
         var contentManager = context.GetRequiredService<IContentManager>();
         var contentItemId = ContentItemId.Get(context);
-        var contentItem = await contentManager.GetAsync(contentItemId, VersionOptions.DraftRequired);
+        var contentItem = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
         string outcome;
 
         context.SetResult(contentItem);
@@ -30,6 +32,7 @@ public class UnpublishContent : CodeActivity<ContentItem>
         }
         else
         {
+            await context.GetRequiredService<IAccessDecision>().RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, "PublishContent", contentItem, context.CancellationToken);
             outcome = "Unpublished";
             await contentManager.UnpublishAsync(contentItem);
         }

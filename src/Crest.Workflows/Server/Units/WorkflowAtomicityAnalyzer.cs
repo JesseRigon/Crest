@@ -33,6 +33,7 @@ public sealed class WorkflowAtomicityAnalyzer(IWorkflowDefinitionService definit
         "Crest.Workflows.Delay",
         "Crest.Workflows.SendHttpRequest",
         "Crest.Workflows.FlowSendHttpRequest",
+        "Crest.Workflows.DownloadHttpFile",
         "Crest.Workflows.DispatchWorkflow",
         "Crest.Workflows.BulkDispatchWorkflows",
     };

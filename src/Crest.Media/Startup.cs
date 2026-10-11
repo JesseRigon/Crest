@@ -420,6 +420,19 @@ public sealed class SecureMediaStartup : StartupBase
     }
 }
 
+/// <summary>
+/// Media registers itself with sharing while the Sharing feature is on: sharing becomes the
+/// authority for media paths (docs/sharing.md). Off, the media folder permissions decide.
+/// </summary>
+[RequireFeatures("Crest.Sharing")]
+public sealed class MediaSharingStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddScoped<Crest.Sharing.IShareableKind, Sharing.MediaShareableKind>();
+    }
+}
+
 // This startup is required to ensure that the SecureMediaFeatureEventHandler is registered all the time.
 [RequiredStartup]
 public sealed class FeatureEventHandlerStartup : StartupBase

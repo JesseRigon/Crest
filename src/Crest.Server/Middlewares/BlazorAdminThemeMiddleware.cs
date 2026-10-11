@@ -191,8 +191,8 @@ public sealed class BlazorAdminThemeMiddleware
             try
             {
                 // "{shellBase}/api/..." is an API call from that shell's document: gated like
-                // every request. The shell prefix answers the side when the client sent no
-                // X-Shell header; the header wins when present.
+                // every request. The shell prefix decides the side; an X-Shell header may only
+                // confirm it (docs/access.md, defect 5).
                 if (infrastructurePath.StartsWithSegments("/api"))
                 {
                     var prefixSide = requestPath.StartsWithSegments(memberBase, StringComparison.OrdinalIgnoreCase)
