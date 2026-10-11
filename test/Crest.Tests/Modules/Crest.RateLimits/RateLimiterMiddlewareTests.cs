@@ -21,7 +21,7 @@ using Crest.Entities;
 using Crest.Modules;
 using Crest.Modules.FileProviders;
 using Crest.RateLimits;
-using Crest.RateLimits.Core;
+using Crest.RateLimits;
 using Crest.RateLimits.Models;
 using Crest.RateLimits.Services;
 using Crest.Seo;

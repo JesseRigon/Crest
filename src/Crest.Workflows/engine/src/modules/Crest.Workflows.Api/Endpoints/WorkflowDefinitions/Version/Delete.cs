@@ -13,7 +13,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Version;
 /// Deletes a specific version of a workflow definition.
 /// </summary>
 [PublicAPI]
-public class DeleteVersion(IWorkflowDefinitionManager workflowDefinitionManager, IWorkflowDefinitionStore store, IAuthorizationService authorizationService) : CrestWorkflowsEndpointWithoutRequest
+public class DeleteVersion(IWorkflowDefinitionManager workflowDefinitionManager, IWorkflowDefinitionStore store, IAuthorizationService authorizationService) : WorkflowsEndpointWithoutRequest
 {
     /// <inheritdoc />
     public override void Configure()

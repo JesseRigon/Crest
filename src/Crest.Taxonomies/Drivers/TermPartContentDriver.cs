@@ -9,7 +9,7 @@ using Crest.DisplayManagement.Handlers;
 using Crest.DisplayManagement.ModelBinding;
 using Crest.DisplayManagement.Views;
 using Crest.Navigation;
-using Crest.Taxonomies.Core;
+using Crest.Taxonomies;
 using Crest.Taxonomies.Models;
 using Crest.Taxonomies.ViewModels;
 

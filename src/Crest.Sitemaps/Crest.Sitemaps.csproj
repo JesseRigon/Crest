@@ -22,7 +22,7 @@
     <ProjectReference Include="..\Crest.Deployment.Abstractions\Crest.Deployment.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Liquid.Abstractions\Crest.Liquid.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
     <ProjectReference Include="..\Crest.Seo.Abstractions\Crest.Seo.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Sitemaps.Abstractions\Crest.Sitemaps.Abstractions.csproj" />

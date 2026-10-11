@@ -36,9 +36,9 @@ public static class DependencyInjectionExtensions
     /// <summary>
     /// Adds default Crest.Workflows API clients configured to use an API key.
     /// </summary>
-    public static IServiceCollection AddDefaultApiClientsUsingApiKey(this IServiceCollection services, Action<CrestWorkflowsClientOptions> configureOptions)
+    public static IServiceCollection AddDefaultApiClientsUsingApiKey(this IServiceCollection services, Action<WorkflowsClientOptions> configureOptions)
     {
-        var options = new CrestWorkflowsClientOptions();
+        var options = new WorkflowsClientOptions();
         configureOptions(options);
 
         return services.AddDefaultApiClients(client =>
@@ -52,11 +52,11 @@ public static class DependencyInjectionExtensions
     /// <summary>
     /// Adds default Crest.Workflows API clients.
     /// </summary>
-    public static IServiceCollection AddDefaultApiClients(this IServiceCollection services, Action<CrestWorkflowsClientBuilderOptions>? configureClient = null)
+    public static IServiceCollection AddDefaultApiClients(this IServiceCollection services, Action<WorkflowsClientBuilderOptions>? configureClient = null)
     {
         return services.AddApiClients(configureClient, builderOptions =>
         {
-            var builderOptionsWithoutRetryPolicy = new CrestWorkflowsClientBuilderOptions
+            var builderOptionsWithoutRetryPolicy = new WorkflowsClientBuilderOptions
             {
                 ApiKey = builderOptions.ApiKey,
                 AuthenticationHandler = builderOptions.AuthenticationHandler,
@@ -94,7 +94,7 @@ public static class DependencyInjectionExtensions
     /// <summary>
     /// Adds an API client to the service collection. Requires AddCrestWorkflowsClient to be called exactly once.
     /// </summary>
-    public static IServiceCollection AddApiClient<T>(this IServiceCollection services, Action<CrestWorkflowsClientBuilderOptions>? configureClient = null) where T : class
+    public static IServiceCollection AddApiClient<T>(this IServiceCollection services, Action<WorkflowsClientBuilderOptions>? configureClient = null) where T : class
     {
         return services.AddApiClients(configureClient, builderOptions => services.AddApi<T>(builderOptions));
     }
@@ -102,15 +102,15 @@ public static class DependencyInjectionExtensions
     /// <summary>
     /// Adds the Crest.Workflows client to the service collection.
     /// </summary>
-    public static IServiceCollection AddApiClients(this IServiceCollection services, Action<CrestWorkflowsClientBuilderOptions>? configureClient = null, Action<CrestWorkflowsClientBuilderOptions>? configureServices = null)
+    public static IServiceCollection AddApiClients(this IServiceCollection services, Action<WorkflowsClientBuilderOptions>? configureClient = null, Action<WorkflowsClientBuilderOptions>? configureServices = null)
     {
-        var builderOptions = new CrestWorkflowsClientBuilderOptions();
+        var builderOptions = new WorkflowsClientBuilderOptions();
         configureClient?.Invoke(builderOptions);
         builderOptions.ConfigureHttpClientBuilder += builder => builder.AddHttpMessageHandler(sp => (DelegatingHandler)sp.GetRequiredService(builderOptions.AuthenticationHandler));
 
         services.TryAddScoped(builderOptions.AuthenticationHandler);
 
-        services.Configure<CrestWorkflowsClientOptions>(options =>
+        services.Configure<WorkflowsClientOptions>(options =>
         {
             options.BaseAddress = builderOptions.BaseAddress;
             options.ConfigureHttpClient = builderOptions.ConfigureHttpClient;
@@ -127,7 +127,7 @@ public static class DependencyInjectionExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="httpClientBuilderOptions">An options object that can be used to configure the HTTP client builder.</param>
     /// <typeparam name="T">The type representing the API.</typeparam>
-    public static IServiceCollection AddApi<T>(this IServiceCollection services, CrestWorkflowsClientBuilderOptions? httpClientBuilderOptions = default) where T : class
+    public static IServiceCollection AddApi<T>(this IServiceCollection services, WorkflowsClientBuilderOptions? httpClientBuilderOptions = default) where T : class
     {
         return services.AddApi(typeof(T), httpClientBuilderOptions);
     }
@@ -138,7 +138,7 @@ public static class DependencyInjectionExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="apiType">The type representing the API</param>
     /// <param name="httpClientBuilderOptions">An options object that can be used to configure the HTTP client builder.</param>
-    public static IServiceCollection AddApi(this IServiceCollection services, Type apiType, CrestWorkflowsClientBuilderOptions? httpClientBuilderOptions = default)
+    public static IServiceCollection AddApi(this IServiceCollection services, Type apiType, WorkflowsClientBuilderOptions? httpClientBuilderOptions = default)
     {
         var builder = services.AddRefitClient(apiType, sp => CreateRefitSettings(sp, httpClientBuilderOptions?.ConfigureJsonSerializerOptions), apiType.Name).ConfigureHttpClient(ConfigureCrestWorkflowsApiHttpClient);
         httpClientBuilderOptions?.ConfigureHttpClientBuilder(builder);
@@ -152,7 +152,7 @@ public static class DependencyInjectionExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="httpClientBuilderOptions">An options object that can be used to configure the HTTP client builder.</param>
     /// <typeparam name="T">The type representing the API.</typeparam>
-    public static void AddApiWithoutRetryPolicy<T>(this IServiceCollection services, CrestWorkflowsClientBuilderOptions? httpClientBuilderOptions = default) where T : class
+    public static void AddApiWithoutRetryPolicy<T>(this IServiceCollection services, WorkflowsClientBuilderOptions? httpClientBuilderOptions = default) where T : class
     {
         var builder = services
             .AddRefitClient<T>(sp => CreateRefitSettings(sp), typeof(T).Name)
@@ -181,7 +181,7 @@ public static class DependencyInjectionExtensions
 
     private static void ConfigureCrestWorkflowsApiHttpClient(IServiceProvider serviceProvider, HttpClient httpClient)
     {
-        var options = serviceProvider.GetRequiredService<IOptions<CrestWorkflowsClientOptions>>().Value;
+        var options = serviceProvider.GetRequiredService<IOptions<WorkflowsClientOptions>>().Value;
         httpClient.BaseAddress = options.BaseAddress;
         options.ConfigureHttpClient?.Invoke(serviceProvider, httpClient);
     }

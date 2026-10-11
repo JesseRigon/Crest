@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Delete;
 
 internal class Delete(IWorkflowDefinitionManager workflowDefinitionManager, IAuthorizationService authorizationService, IWorkflowDefinitionStore store)
-    : CrestWorkflowsEndpoint<Request>
+    : WorkflowsEndpoint<Request>
 {
     public override void Configure()
     {

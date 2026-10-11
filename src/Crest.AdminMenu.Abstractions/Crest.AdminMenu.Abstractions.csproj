@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
   </ItemGroup>
 
 </Project>

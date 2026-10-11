@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Crest.RateLimits.Core;
+using Crest.RateLimits;
 using Crest.RateLimits.Models;
 
 namespace Crest.RateLimits;

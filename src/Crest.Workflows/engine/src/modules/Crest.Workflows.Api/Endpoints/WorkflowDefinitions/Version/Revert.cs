@@ -12,7 +12,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Version;
 
 [PublicAPI]
 internal class RevertVersion(IWorkflowDefinitionManager workflowDefinitionManager, IAuthorizationService authorizationService, IWorkflowDefinitionStore store)
-    : CrestWorkflowsEndpointWithoutRequest
+    : WorkflowsEndpointWithoutRequest
 {
     public override void Configure()
     {

@@ -7,7 +7,7 @@ using Crest.Workflows.Models;
 
 namespace Crest.Workflows.Tenants.Endpoints.Tenants.List;
 
-public class Endpoint(ITenantService tenantService) : CrestWorkflowsEndpointWithoutRequest<ListResponse<Tenant>>
+public class Endpoint(ITenantService tenantService) : WorkflowsEndpointWithoutRequest<ListResponse<Tenant>>
 {
     public override void Configure()
     {

@@ -4,7 +4,7 @@ using Crest.DisplayManagement.Views;
 using Crest.Indexing;
 using Crest.Elasticsearch.ViewModels;
 
-namespace Crest.Elasticsearch.Core.Deployment;
+namespace Crest.Elasticsearch.Deployment;
 
 public sealed class ElasticIndexRebuildDeploymentStepDriver : DisplayDriver<DeploymentStep, ElasticsearchIndexRebuildDeploymentStep>
 {

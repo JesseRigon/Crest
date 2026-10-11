@@ -15,7 +15,7 @@ internal class PostEndpoint(
     IWorkflowRuntime workflowRuntime,
     IWorkflowStarter workflowStarter,
     IApiSerializer apiSerializer)
-    : CrestWorkflowsEndpointWithoutRequest<Response>
+    : WorkflowsEndpointWithoutRequest<Response>
 {
     /// <inheritdoc />
     public override void Configure()

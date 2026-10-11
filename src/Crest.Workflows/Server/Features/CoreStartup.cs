@@ -15,9 +15,7 @@ using Crest.ContentManagement.Handlers;
 using Crest.Workflows.Approvals;
 using Crest.Workflows.Connectors;
 using Crest.Workflows.Contexts;
-using Crest.Workflows.Platform;
 using Crest.Workflows.Registry;
-using Crest.Workflows.Platform.Services;
 using Crest.Workflows.Handlers.Content;
 using Crest.Workflows.Indexes;
 using Crest.Workflows.Migrations;
@@ -48,7 +46,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
 {
     // Last of all startups: Crest orders them by feature dependency and then stably by
     // Order, so registrations here win over any a platform module makes for the same
-    // service (IWorkflowManager in particular; docs/workflows.md, "Override").
+    // service (docs/workflows.md › Engine).
     public override int Order => int.MaxValue;
 
     // The pipeline is a different order. With endpoint routing, the authorization
@@ -78,16 +76,16 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             crestWorkflows.UseWorkflowManagement(workflowManagement =>
             {
                 workflowManagement.UseWorkflowDefinitionPublisher(sp => ActivatorUtilities.CreateInstance<ContentItemWorkflowDefinitionPublisher>(sp));
-                workflowManagement.UseWorkflowDefinitions(workflowDefinitions => workflowDefinitions.WorkflowDefinitionStore = sp => ActivatorUtilities.CreateInstance<CrestWorkflowsWorkflowDefinitionStore>(sp));
-                workflowManagement.UseWorkflowInstances(workflowInstances => workflowInstances.WorkflowInstanceStore = sp => ActivatorUtilities.CreateInstance<CrestWorkflowsWorkflowInstanceStore>(sp));
+                workflowManagement.UseWorkflowDefinitions(workflowDefinitions => workflowDefinitions.WorkflowDefinitionStore = sp => ActivatorUtilities.CreateInstance<YesSqlWorkflowDefinitionStore>(sp));
+                workflowManagement.UseWorkflowInstances(workflowInstances => workflowInstances.WorkflowInstanceStore = sp => ActivatorUtilities.CreateInstance<YesSqlWorkflowInstanceStore>(sp));
                 workflowManagement.UseCache();
             });
             crestWorkflows.UseWorkflowRuntime(workflowRuntime =>
             {
-                workflowRuntime.TriggerStore = sp => ActivatorUtilities.CreateInstance<CrestWorkflowsTriggerStore>(sp);
-                workflowRuntime.BookmarkStore = sp => ActivatorUtilities.CreateInstance<CrestWorkflowsBookmarkStore>(sp);
-                workflowRuntime.WorkflowExecutionLogStore = sp => ActivatorUtilities.CreateInstance<CrestWorkflowsWorkflowExecutionLogStore>(sp);
-                workflowRuntime.ActivityExecutionLogStore = sp => ActivatorUtilities.CreateInstance<CrestWorkflowsActivityExecutionRecordStore>(sp);
+                workflowRuntime.TriggerStore = sp => ActivatorUtilities.CreateInstance<YesSqlTriggerStore>(sp);
+                workflowRuntime.BookmarkStore = sp => ActivatorUtilities.CreateInstance<YesSqlBookmarkStore>(sp);
+                workflowRuntime.WorkflowExecutionLogStore = sp => ActivatorUtilities.CreateInstance<YesSqlWorkflowExecutionLogStore>(sp);
+                workflowRuntime.ActivityExecutionLogStore = sp => ActivatorUtilities.CreateInstance<YesSqlActivityExecutionRecordStore>(sp);
                 workflowRuntime.DistributedLockProvider = _ =>
                 {
                     Directory.CreateDirectory(lockDirectory);
@@ -183,8 +181,8 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<WorkflowDefinitionAccessService>()
             .AddScoped<IWorkflowDefinitionAccessReader>(sp => sp.GetRequiredService<WorkflowDefinitionAccessService>())
             .AddScoped<IWorkflowDefinitionAuthorizer>(sp => sp.GetRequiredService<WorkflowDefinitionAccessService>())
-            .AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, WorkflowDefinitionAccessHandler>();
-        services.Replace(ServiceDescriptor.Scoped<Crest.Workflows.Api.IWorkflowDefinitionLinker, CrestWorkflowDefinitionLinker>());
+            .AddScoped<Crest.Access.IAccessCeiling, WorkflowDefinitionAccessCeiling>();
+        services.Replace(ServiceDescriptor.Scoped<Crest.Workflows.Api.IWorkflowDefinitionLinker, WorkflowDefinitionLinker>());
 
         // Connectors (docs/workflows.md, phase 3): per-shell HTTP client, limiters and token
         // cache (singletons of the tenant's container), connections in a tenant document.
@@ -198,7 +196,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<ConnectorOAuthClient>()
             .AddScoped<IWorkflowActivityProvider, ConnectionOperationActivityProvider>()
             .AddScoped<Crest.Workflows.Resilience.IResilienceStrategySource, ConnectionResilienceStrategySource>()
-            .AddScoped<IWorkflowConnectorProvider, CrestConnectorProvider>()
+            .AddScoped<IWorkflowConnectorProvider, GenericConnectorProvider>()
             .AddScoped<IPropertyUIHandler, ConnectionOptionsProvider>();
 
         // Approvals (docs/workflows.md, phase 4): a task per decision, a queue per user.
@@ -220,11 +218,11 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
 
         services.Configure<StoreCollectionOptions>(o =>
         {
-            o.Collections.Add(CrestWorkflowsCollections.WorkflowInstances);
-            o.Collections.Add(CrestWorkflowsCollections.StoredTriggers);
-            o.Collections.Add(CrestWorkflowsCollections.StoredBookmarks);
-            o.Collections.Add(CrestWorkflowsCollections.WorkflowExecutionLogRecords);
-            o.Collections.Add(CrestWorkflowsCollections.ActivityExecutionRecords);
+            o.Collections.Add(WorkflowCollections.WorkflowInstances);
+            o.Collections.Add(WorkflowCollections.StoredTriggers);
+            o.Collections.Add(WorkflowCollections.StoredBookmarks);
+            o.Collections.Add(WorkflowCollections.WorkflowExecutionLogRecords);
+            o.Collections.Add(WorkflowCollections.ActivityExecutionRecords);
         });
 
         services
@@ -249,17 +247,9 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<IWorkflowTriggerPublisher, WorkflowTriggerPublisher>()
             .AddScoped<IWorkflowTriggerProvider, WorkflowsTriggerProvider>()
             .AddScoped<WorkflowFlowImporter>()
-            // Stock Crest activities run on this engine: the upstream modules' events
-            // arrive through IWorkflowManager (this registration is last, so it wins) and their
-            // tasks run through StockActivityRunner.
-            .AddScoped<StockActivityRunner>()
-            .AddScoped<IWorkflowActivityProvider, StockActivityProvider>()
             // Drop-down options for the designer's property panel.
             .AddScoped<IPropertyUIHandler, PermissionOptionsProvider>()
             .AddScoped<IPropertyUIHandler, WorkflowTriggerOptionsProvider>()
-            .AddScoped<IPropertyUIHandler, StockEventOptionsProvider>()
-            .AddScoped<IPropertyUIHandler, StockTaskOptionsProvider>()
-            .AddScoped<IWorkflowManager, PlatformWorkflowManager>()
             .AddIndexProvider<WorkflowDefinitionIndexProvider>()
             .AddIndexProvider<WorkflowInstanceIndexProvider>()
             .AddIndexProvider<StoredTriggerIndexProvider>()
@@ -270,18 +260,13 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
 
     public override ValueTask ConfigureAsync(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
     {
-        // Placed before the Users module's UseAuthentication/UseAuthorization pair (see
-        // ConfigureOrder). The gate authenticates the request itself for the Crest.Workflows path so
-        // it sees the real principal, then adds the Crest.Workflows grant before the authorization
-        // middleware evaluates the endpoint's policy. Running the cookie scheme twice on a
-        // request is harmless: same scheme, same ticket, no second sign-in.
+        // Placed before the Users module's UseAuthorization (see ConfigureOrder). The request
+        // path's gate authenticated the request and built its caller before routing; this
+        // branch maps the caller's permissions onto the engine's grant before the
+        // authorization middleware evaluates the endpoint's policy.
         app.UseWhen(
-            context => context.Request.Path.StartsWithSegments(CrestWorkflowsApiSecurityMiddleware.ApiPathPrefix),
-            branch =>
-            {
-                branch.UseAuthentication();
-                branch.UseMiddleware<CrestWorkflowsApiSecurityMiddleware>();
-            });
+            context => context.Request.Path.StartsWithSegments(ApiSecurityMiddleware.ApiPathPrefix),
+            branch => branch.UseMiddleware<ApiSecurityMiddleware>());
         routes.MapWorkflowsApi();
         return ValueTask.CompletedTask;
     }

@@ -1,7 +1,6 @@
 using System.IO.Compression;
 using System.Net;
-using System.Text;
-using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.Extensions.FileProviders;
@@ -18,11 +17,10 @@ namespace Crest.Deployment.Remote.Controllers;
 
 public sealed class ImportRemoteInstanceController : Controller
 {
-    private readonly RemoteClientService _remoteClientService;
+    private readonly IAuthorizationService _authorizationService;
     private readonly IDeploymentManager _deploymentManager;
     private readonly INotifier _notifier;
     private readonly ILogger _logger;
-    private readonly IDataProtector _dataProtector;
     private readonly FileCreationService _fileCreationService;
     private readonly ITempDirectoryProvider _tempDirectoryProvider;
 
@@ -30,8 +28,7 @@ public sealed class ImportRemoteInstanceController : Controller
     internal readonly IStringLocalizer S;
 
     public ImportRemoteInstanceController(
-        IDataProtectionProvider dataProtectionProvider,
-        RemoteClientService remoteClientService,
+        IAuthorizationService authorizationService,
         IDeploymentManager deploymentManager,
         FileCreationService fileCreationService,
         ITempDirectoryProvider tempDirectoryProvider,
@@ -45,34 +42,30 @@ public sealed class ImportRemoteInstanceController : Controller
         _tempDirectoryProvider = tempDirectoryProvider;
         _notifier = notifier;
         _logger = logger;
-        _remoteClientService = remoteClientService;
+        _authorizationService = authorizationService;
         H = htmlLocalizer;
         S = stringLocalizer;
-        _dataProtector = dataProtectionProvider.CreateProtector("Crest.Deployment").ToTimeLimitedDataProtector();
     }
 
     /// <remarks>
-    /// We ignore the AFT as the service is called from external applications (they can't have valid ones) and
-    /// we use a private API key to secure its calls.
+    /// A bearer call from another instance (the remote deployment key, authenticated by the
+    /// request path's gate through the Api forwarder), so antiforgery does not apply; the
+    /// import runs as the remote client's caller, which holds exactly
+    /// <see cref="DeploymentPermissions.ImportRemoteInstances"/>.
     /// </remarks>
     [HttpPost]
+    [Authorize]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Import(ImportViewModel model)
     {
-        var remoteClientList = await _remoteClientService.GetRemoteClientListAsync();
-
-        var remoteClient = remoteClientList.RemoteClients.FirstOrDefault(x => x.ClientName == model.ClientName);
-
-        if (remoteClient == null)
+        if (!await _authorizationService.AuthorizeAsync(User, DeploymentPermissions.ImportRemoteInstances))
         {
-            return StatusCode((int)HttpStatusCode.BadRequest, "The remote client was not provided");
+            return Forbid();
         }
 
-        var apiKey = Encoding.UTF8.GetString(_dataProtector.Unprotect(remoteClient.ProtectedApiKey));
-
-        if (model.ApiKey != apiKey || model.ClientName != remoteClient.ClientName)
+        if (model.Content is null)
         {
-            return StatusCode((int)HttpStatusCode.BadRequest, "The Api Key was not recognized");
+            return StatusCode((int)HttpStatusCode.BadRequest, "No package was provided");
         }
 
         // Create a temporary filename to save the archive

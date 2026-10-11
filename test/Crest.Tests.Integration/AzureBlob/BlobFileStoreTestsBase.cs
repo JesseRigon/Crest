@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Crest.FileStorage;
 using Crest.FileStorage.AzureBlob;
-using Crest.Media.Core;
+using Crest.Media;
 using Crest.Modules;
 using Xunit;
 

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Crest.Media.Core.Processing;
+using Crest.Media.Processing;
 
 namespace Crest.Media.ViewModels;
 

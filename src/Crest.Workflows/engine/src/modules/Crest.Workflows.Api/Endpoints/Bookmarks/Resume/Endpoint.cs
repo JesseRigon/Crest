@@ -11,7 +11,7 @@ namespace Crest.Workflows.Api.Endpoints.Bookmarks.Resume;
 /// Resumes a bookmarked workflow instance with the bookmark ID specified in the provided SAS token.
 /// </summary>
 [PublicAPI]
-internal class Resume(ITokenService tokenService, IWorkflowResumer workflowResumer, IBookmarkQueue bookmarkQueue, IPayloadSerializer serializer) : CrestWorkflowsEndpoint<Request>
+internal class Resume(ITokenService tokenService, IWorkflowResumer workflowResumer, IBookmarkQueue bookmarkQueue, IPayloadSerializer serializer) : WorkflowsEndpoint<Request>
 {
     /// <inheritdoc />
     public override void Configure()

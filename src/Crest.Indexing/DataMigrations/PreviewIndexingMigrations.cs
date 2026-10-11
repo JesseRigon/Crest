@@ -3,7 +3,7 @@ using Crest.Data.Migration;
 using Crest.Documents;
 using Crest.Environment.Shell;
 using Crest.Environment.Shell.Scope;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Indexing.Models;
 using YesSql;
 

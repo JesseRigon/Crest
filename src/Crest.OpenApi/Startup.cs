@@ -117,22 +117,8 @@ public sealed class Startup : StartupBase
                         {
                             var user = context.User;
 
-                            if (user?.Identity?.IsAuthenticated != true)
-                            {
-                                // The ambient principal only covers cookie-authenticated
-                                // browsers; authenticate through the "Api" scheme as well so
-                                // external tools can use Bearer tokens, as the settings UI
-                                // documents. This call also records the authentication failure
-                                // (e.g. missing token) that a subsequent challenge reports as
-                                // a 401 — a cold challenge without it defaults to
-                                // insufficient_access and a 403 when OpenIddict handles it.
-                                var result = await context.AuthenticateAsync(PlatformConstants.AuthenticationSchemes.Api);
-                                if (result.Succeeded)
-                                {
-                                    user = result.Principal;
-                                }
-                            }
-
+                            // The request path's gate authenticated the request (the Api
+                            // scheme when it carries a bearer token); the principal is the gate's.
                             if (user?.Identity?.IsAuthenticated != true)
                             {
                                 // Challenge through the "Api" scheme rather than writing a bare

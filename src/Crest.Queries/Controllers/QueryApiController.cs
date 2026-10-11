@@ -10,7 +10,7 @@ namespace Crest.Queries.Controllers;
 
 [Route("api/queries")]
 [ApiController]
-[Authorize(AuthenticationSchemes = PlatformConstants.AuthenticationSchemes.Api)]
+[Authorize]
 [IgnoreAntiforgeryToken]
 [AllowAnonymous]
 public sealed class QueryApiController : ControllerBase

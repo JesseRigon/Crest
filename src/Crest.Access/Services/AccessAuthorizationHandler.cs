@@ -14,7 +14,6 @@ public sealed class AccessAuthorizationHandler(
     ICallerContextAccessor accessor,
     ICallerContextFactory factory,
     IAccessDecision decision,
-    IAccessAuditor auditor,
     IHttpContextAccessor httpContextAccessor) : IAuthorizationHandler
 {
     public async Task HandleAsync(AuthorizationHandlerContext context)
@@ -40,15 +39,8 @@ public sealed class AccessAuthorizationHandler(
                 continue;
             }
 
-            // Denials are always recorded (docs/access.md); allows are the operation's to
+            // The decision recorded the denial (docs/access.md); allows are the operation's to
             // record, since only it knows whether it is a read.
-            await auditor.RecordAsync(new AccessEvent(
-                AccessEventKind.Decision,
-                requirement.Permission.Name,
-                caller,
-                verdict.Verdict,
-                Resource: context.Resource?.ToString(),
-                Reason: verdict.Reason));
 
             if (verdict.IsFinal)
             {

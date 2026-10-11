@@ -11,11 +11,13 @@ namespace Crest.Settings.Recipes;
 public sealed class SettingsStep : NamedRecipeStepHandler
 {
     private readonly ISiteService _siteService;
+    private readonly Crest.Access.IPermissionVersion _permissionVersion;
 
-    public SettingsStep(ISiteService siteService)
+    public SettingsStep(ISiteService siteService, Crest.Access.IPermissionVersion permissionVersion)
         : base("Settings")
     {
         _siteService = siteService;
+        _permissionVersion = permissionVersion;
     }
 
     protected override async Task HandleAsync(RecipeExecutionContext context)
@@ -87,6 +89,8 @@ public sealed class SettingsStep : NamedRecipeStepHandler
 
                 case "SuperUser":
                     site.SuperUser = property.Value.ToString();
+                    // A rights write: every cached caller re-reads who the super user is.
+                    await _permissionVersion.BumpAsync();
                     break;
 
                 case "TimeZoneId":

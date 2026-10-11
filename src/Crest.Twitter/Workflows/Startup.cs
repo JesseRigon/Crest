@@ -1,15 +1,16 @@
 using Microsoft.Extensions.DependencyInjection;
 using Crest.Modules;
-using Crest.Twitter.Workflows.Activities;
-using Crest.Workflows.Platform.Helpers;
+using Crest.Workflows;
+using Crest.Workflows.Extensions;
 
 namespace Crest.Twitter.Workflows;
 
-[RequireFeatures("Crest.Workflows")]
+[RequireFeatures(WorkflowsConstants.FeatureId)]
 public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddActivity<UpdateTwitterStatusTask>();
+        services.AddScoped<IWorkflowActivityProvider, TwitterWorkflowProvider>();
+        services.ConfigureCrestWorkflows(workflows => workflows.AddActivitiesFrom<Startup>());
     }
 }

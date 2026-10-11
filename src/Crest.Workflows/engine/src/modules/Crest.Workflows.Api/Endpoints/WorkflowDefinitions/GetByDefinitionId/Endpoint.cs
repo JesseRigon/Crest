@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.GetByDefinitionId;
 
 [PublicAPI]
-internal class GetByDefinitionId(IWorkflowDefinitionStore store, IWorkflowDefinitionLinker linker) : CrestWorkflowsEndpoint<Request>
+internal class GetByDefinitionId(IWorkflowDefinitionStore store, IWorkflowDefinitionLinker linker) : WorkflowsEndpoint<Request>
 {
     public override void Configure()
     {

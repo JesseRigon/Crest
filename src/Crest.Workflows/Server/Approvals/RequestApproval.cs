@@ -23,7 +23,7 @@ public sealed record ApprovalStimulus(string ApprovalId);
 /// </summary>
 [Activity("Crest.Workflows", "Approvals", "Waits for a member of an Crest role (or a holder of a permission) to approve or reject.", DisplayName = "Request approval")]
 [FlowNode("Approved", "Rejected")]
-public class RequestApproval : Activity, Units.IUnitBoundary
+public class RequestApproval : Activity, IUnitBoundary
 {
     private const string ApprovalIdProperty = "Crest.ApprovalId";
 

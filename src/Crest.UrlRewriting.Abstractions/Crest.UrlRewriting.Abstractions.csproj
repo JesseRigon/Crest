@@ -20,4 +20,8 @@
     <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

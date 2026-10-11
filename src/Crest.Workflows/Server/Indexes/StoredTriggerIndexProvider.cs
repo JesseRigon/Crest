@@ -9,7 +9,7 @@ public class StoredTriggerIndexProvider : IndexProvider<StoredTriggerDocument>
 {
     public StoredTriggerIndexProvider()
     {
-        CollectionName = CrestWorkflowsCollections.StoredTriggers;
+        CollectionName = WorkflowCollections.StoredTriggers;
     }
 
     public override void Describe(DescribeContext<StoredTriggerDocument> context)

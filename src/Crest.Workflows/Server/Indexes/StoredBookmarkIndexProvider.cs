@@ -9,7 +9,7 @@ public class StoredBookmarkIndexProvider : IndexProvider<StoredBookmarkDocument>
 {
     public StoredBookmarkIndexProvider()
     {
-        CollectionName = CrestWorkflowsCollections.StoredBookmarks;
+        CollectionName = WorkflowCollections.StoredBookmarks;
     }
 
     public override void Describe(DescribeContext<StoredBookmarkDocument> context)

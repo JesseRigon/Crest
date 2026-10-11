@@ -1,14 +1,12 @@
 using Crest.Security.Permissions;
-using Crest.Workflows.Platform;
 
 namespace Crest.Workflows;
 
 /// <summary>
-/// The workflow permission set (docs/workflows.md, phase 5). <c>ManageWorkflows</c> (from the
-/// platform activity abstractions, which platform modules check too) stays as the umbrella that implies every one below, so roles configured for
-/// workflows carry over. Each finer permission is what a page, a controller or an engine
+/// The workflow permission set (docs/workflows.md, phase 5). <c>ManageWorkflows</c> stays as
+/// the umbrella that implies every one below, so roles configured for workflows carry over. Each finer permission is what a page, a controller or an engine
 /// endpoint asks for; the engine API gate maps them onto the engine's own per-endpoint
-/// permission names (<see cref="Security.CrestWorkflowsApiSecurityMiddleware"/>). At run
+/// permission names (<see cref="Security.ApiSecurityMiddleware"/>). At run
 /// time a flow acts as the caller who started it (or as the system when published so), and
 /// its data activities ask the access gate with that caller (docs/operations.md step 4); a
 /// definition may narrow who may edit or run it with its own access lists, which are
@@ -16,7 +14,7 @@ namespace Crest.Workflows;
 /// </summary>
 public static class Permissions
 {
-    public static readonly Permission ManageWorkflows = WorkflowsPermissions.ManageWorkflows;
+    public static readonly Permission ManageWorkflows = new("ManageWorkflows", "Manage workflows", isSecurityCritical: true);
 
     public static readonly Permission ViewWorkflows = new(WorkflowsConstants.Permissions.View, "View workflows: definitions, instances, journals and the registry", [ManageWorkflows]);
     public static readonly Permission EditWorkflows = new(WorkflowsConstants.Permissions.Edit, "Edit workflows: create and change the tenant's own flows", [ManageWorkflows]);

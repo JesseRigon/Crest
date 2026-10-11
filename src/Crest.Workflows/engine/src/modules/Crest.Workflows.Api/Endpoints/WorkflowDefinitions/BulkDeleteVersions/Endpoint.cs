@@ -9,7 +9,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.BulkDeleteVersions;
 
 [PublicAPI]
 internal class BulkDeleteVersions(IWorkflowDefinitionManager workflowDefinitionManager, IAuthorizationService authorizationService)
-    : CrestWorkflowsEndpoint<Request, Response>
+    : WorkflowsEndpoint<Request, Response>
 {
     public override void Configure()
     {

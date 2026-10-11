@@ -9,7 +9,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.DeleteVersion;
 
 [PublicAPI]
 internal class DeleteVersion(IWorkflowDefinitionManager workflowDefinitionManager, IAuthorizationService authorizationService)
-    : CrestWorkflowsEndpoint<Request>
+    : WorkflowsEndpoint<Request>
 {
     public override void Configure()
     {

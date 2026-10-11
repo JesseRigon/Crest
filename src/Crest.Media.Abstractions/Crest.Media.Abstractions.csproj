@@ -19,4 +19,8 @@
     <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.FileStorage.Abstractions\Crest.FileStorage.Abstractions.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -21,8 +21,8 @@
     <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
     <ProjectReference Include="..\Crest.Email.Abstractions\Crest.Email.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Email.Core\Crest.Email.Core.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Email\Crest.Email.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
   </ItemGroup>

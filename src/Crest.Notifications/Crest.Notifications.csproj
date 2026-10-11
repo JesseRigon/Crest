@@ -21,14 +21,19 @@
   <ItemGroup>
     <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Display\Crest.ContentManagement.Display.csproj" />
+    <ProjectReference Include="..\Crest.Contents.Abstractions\Crest.Contents.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement\Crest.ContentManagement.csproj" />
-    <ProjectReference Include="..\Crest.Contents.Core\Crest.Contents.Core.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
-    <ProjectReference Include="..\Crest.Notifications.Core\Crest.Notifications.Core.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
-    <ProjectReference Include="..\Crest.Users.Core\Crest.Users.Core.csproj" />
-    <ProjectReference Include="..\Crest.Workflows.Platform.Abstractions\Crest.Workflows.Platform.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Users\Crest.Users.csproj" />
+    <ProjectReference Include="..\Crest.Workflows\Abstractions\Crest.Workflows.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Workflows\engine\src\modules\Crest.Workflows.Core\Crest.Workflows.Core.csproj" />
+    <ProjectReference Include="..\Crest.Workflows\engine\src\modules\Crest.Workflows.Engine\Crest.Workflows.Engine.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Email.Abstractions\Crest.Email.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Infrastructure\Crest.Infrastructure.csproj" />
+    <ProjectReference Include="..\Crest.Notifications.Abstractions\Crest.Notifications.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

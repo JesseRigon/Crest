@@ -492,25 +492,15 @@ public sealed class AccessController : Controller
         identity.AddClaim(new Claim(Claims.Name, await _applicationManager.GetDisplayNameAsync(application))
             .SetDestinations(Destinations.AccessToken, Destinations.IdentityToken));
 
-        // If the role service is available, add all the role claims
-        // associated with the application roles in the database.
-        var roleService = HttpContext.RequestServices.GetService<IRoleService>();
-
+        // The application's roles, as identity: the token carries no Permission claims. The
+        // access gate's caller factory resolves an application caller's permissions from the
+        // role store under the permission version (docs/access.md § Machine callers).
         foreach (var role in await _applicationManager.GetRolesAsync(application))
         {
             // Since the claims added in this block have a dynamic name, directly set the destinations
             // here instead of relying on the GetDestination() helper that only works with static claims.
-
             identity.AddClaim(new Claim(identity.RoleClaimType, role)
                 .SetDestinations(Destinations.AccessToken, Destinations.IdentityToken));
-
-            if (roleService is not null)
-            {
-                foreach (var claim in await roleService.GetRoleClaimsAsync(role))
-                {
-                    identity.AddClaim(claim.SetDestinations(Destinations.AccessToken, Destinations.IdentityToken));
-                }
-            }
         }
 
         identity.SetScopes(request.GetScopes());

@@ -99,53 +99,46 @@ public class WorkflowOwnershipAndAccessTests
         return accessor;
     }
 
-    private static async Task<AuthorizationHandlerContext> HandleAsync(ClaimsPrincipal user, string permissionName, WorkflowDefinitionAccessResource resource, string superUser = "root")
+    /// <summary>Whether the lists veto the permission for the user, as the one decision's ceiling answers it.</summary>
+    private static bool Denied(ClaimsPrincipal user, string permissionName, object resource, string superUser = "root")
+        => new WorkflowDefinitionAccessCeiling().Deny(CallerFor(user, superUser).Current!, permissionName, resource) is not null;
+
+    [Fact]
+    public void A_definition_with_no_lists_changes_nothing()
     {
-        var handler = new WorkflowDefinitionAccessHandler(CallerFor(user, superUser));
-        var context = new AuthorizationHandlerContext([new PermissionRequirement(new Crest.Security.Permissions.Permission(permissionName))], user, resource);
-        await handler.HandleAsync(context);
-        return context;
+        Assert.False(Denied(User("alice", "Editor"), WorkflowsConstants.Permissions.Edit, new WorkflowDefinitionAccessResource("d", [], [])));
     }
 
     [Fact]
-    public async Task A_definition_with_no_lists_changes_nothing()
-    {
-        var context = await HandleAsync(User("alice", "Editor"), WorkflowsConstants.Permissions.Edit, new("d", [], []));
-        Assert.False(context.HasFailed);
-    }
-
-    [Fact]
-    public async Task Edit_permissions_are_vetoed_for_users_outside_the_edit_list_and_admitted_by_role_or_name()
+    public void Edit_permissions_are_vetoed_for_users_outside_the_edit_list_and_admitted_by_role_or_name()
     {
         var resource = new WorkflowDefinitionAccessResource("d", ["Finance", "bob"], []);
 
-        Assert.True((await HandleAsync(User("alice", "Editor"), WorkflowsConstants.Permissions.Edit, resource)).HasFailed);
-        Assert.True((await HandleAsync(User("alice", "Editor"), WorkflowsConstants.Permissions.Publish, resource)).HasFailed);
-        Assert.True((await HandleAsync(User("alice", "Editor"), WorkflowsConstants.Permissions.ManageShipped, resource)).HasFailed);
-        Assert.False((await HandleAsync(User("alice", "Finance"), WorkflowsConstants.Permissions.Edit, resource)).HasFailed);
-        Assert.False((await HandleAsync(User("bob", "Editor"), WorkflowsConstants.Permissions.Edit, resource)).HasFailed);
+        Assert.True(Denied(User("alice", "Editor"), WorkflowsConstants.Permissions.Edit, resource));
+        Assert.True(Denied(User("alice", "Editor"), WorkflowsConstants.Permissions.Publish, resource));
+        Assert.True(Denied(User("alice", "Editor"), WorkflowsConstants.Permissions.ManageShipped, resource));
+        Assert.False(Denied(User("alice", "Finance"), WorkflowsConstants.Permissions.Edit, resource));
+        Assert.False(Denied(User("bob", "Editor"), WorkflowsConstants.Permissions.Edit, resource));
         // The edit list says nothing about running.
-        Assert.False((await HandleAsync(User("alice", "Editor"), WorkflowsConstants.Permissions.Run, resource)).HasFailed);
+        Assert.False(Denied(User("alice", "Editor"), WorkflowsConstants.Permissions.Run, resource));
     }
 
     [Fact]
-    public async Task The_super_user_and_administrators_are_never_narrowed()
+    public void The_super_user_and_administrators_are_never_narrowed()
     {
         var resource = new WorkflowDefinitionAccessResource("d", ["Finance"], ["Finance"]);
 
-        Assert.False((await HandleAsync(User("root"), WorkflowsConstants.Permissions.Edit, resource)).HasFailed);
-        Assert.False((await HandleAsync(User("carol", "Administrator"), WorkflowsConstants.Permissions.Run, resource)).HasFailed);
-        Assert.True((await HandleAsync(User("dave", "Editor"), WorkflowsConstants.Permissions.Run, resource)).HasFailed);
+        Assert.False(Denied(User("root"), WorkflowsConstants.Permissions.Edit, resource));
+        Assert.False(Denied(User("carol", "Administrator"), WorkflowsConstants.Permissions.Run, resource));
+        Assert.True(Denied(User("dave", "Editor"), WorkflowsConstants.Permissions.Run, resource));
     }
 
     [Fact]
-    public async Task Other_permissions_and_other_resources_are_ignored()
+    public void Other_permissions_and_other_resources_are_ignored()
     {
         var resource = new WorkflowDefinitionAccessResource("d", ["Finance"], ["Finance"]);
-        Assert.False((await HandleAsync(User("alice"), "ManageContent", resource)).HasFailed);
+        Assert.False(Denied(User("alice"), "ManageContent", resource));
 
-        var context = new AuthorizationHandlerContext([new PermissionRequirement(Permissions.EditWorkflows)], User("alice"), "not a definition");
-        await new WorkflowDefinitionAccessHandler(CallerFor(User("alice"), "root")).HandleAsync(context);
-        Assert.False(context.HasFailed);
+        Assert.False(Denied(User("alice"), Permissions.EditWorkflows.Name, "not a definition"));
     }
 }

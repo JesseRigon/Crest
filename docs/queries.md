@@ -248,7 +248,7 @@ before them.
 - [ ] **Plugin registry for connectors.** Connectors for specific platforms register as
   plugins against a protocol layer; any module can add one. The registry is Crest's; the
   connectors themselves are downstream. Workflows' connector descriptors and
-  `IWorkflowConnectorProvider` move here from `Crest.Workflows.Domain` (ruling 2026-10-06);
+  `IWorkflowConnectorProvider` move here from `Crest.Workflows.Abstractions` (ruling 2026-10-06);
   Workflows lists connector operations from Queries for its palette, and inbound webhooks
   verify signatures through a narrow verifier without ever reading the secret.
 

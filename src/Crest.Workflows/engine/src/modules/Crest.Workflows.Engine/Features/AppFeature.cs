@@ -7,7 +7,7 @@ namespace Crest.Workflows.Features;
 /// <summary>
 /// A wrapper for invoking application-specific configuration, ensuring it is invoked lastly.
 /// </summary>
-[DependsOn(typeof(CrestWorkflowsFeature))]
+[DependsOn(typeof(EngineFeature))]
 public class AppFeature(IModule module) : FeatureBase(module)
 {
     /// <summary>

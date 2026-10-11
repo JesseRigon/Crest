@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Crest.Services;
 using Crest.Indexing;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Indexing.Models;
 
 namespace Crest.ViewModels;

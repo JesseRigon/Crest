@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Crest.Media;
-using Crest.Media.Core.Processing;
+using Crest.Media.Processing;
 using Crest.Media.Models;
 using Crest.Media.Services;
 using Crest.ViewModels;

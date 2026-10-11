@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Project dependency graph for src/: parses every csproj (vendored engine trees excluded),
+"""Project dependency graph for src/: parses every csproj (the reference/ diff-only trees excluded),
 resolves ProjectReference paths (backslashes and $(PlatformSrcDir)), and writes an
 interactive HTML graph (vis-network) plus a JSON edge list.
 
@@ -13,7 +13,8 @@ root = Path(__file__).resolve().parents[1]
 src = root / "src"
 out = Path(sys.argv[sys.argv.index("--out") + 1]) if "--out" in sys.argv else root / "docs" / "dependencies.html"
 include_tests = "--include-tests" in sys.argv
-EXCLUDE = ("/engine/", "/designer/", "/reference/", "/bin/", "/obj/", "/node_modules/")
+EXCLUDE = ("/reference/", "/bin/", "/obj/", "/node_modules/")
+VENDORED = ("/engine/", "/designer/")
 
 def norm(p: str) -> Path:
     p = p.replace("$(PlatformSrcDir)", str(src) + "/").replace("$(MSBuildThisFileDirectory)", "")
@@ -27,6 +28,7 @@ for csproj in src.rglob("*.csproj"):
     if not include_tests and ("/tests/" in s or "/test/" in s or csproj.stem.endswith(".Tests")):
         continue
     projects[csproj.resolve()] = csproj.stem
+vendored = {name for path, name in projects.items() if any(x in str(path) for x in VENDORED)}
 
 edges, packages = [], {}
 for path, name in projects.items():
@@ -55,12 +57,13 @@ names = sorted(set(projects.values()) | {t for _, t in edges})
 kind = {}
 for n in names:
     if n.endswith("(?)"): kind[n] = "missing"
+    elif n in vendored: kind[n] = "engine"
     elif n.endswith(".Abstractions"): kind[n] = "abstractions"
     elif n.endswith(".Core"): kind[n] = "core"
     elif ".Targets" in n or n.endswith(".Build"): kind[n] = "targets"
     elif n.startswith("Crest.") and (src / n).exists() and (src / n / "Manifest.cs").exists(): kind[n] = "module"
     else: kind[n] = "library"
-colors = {"abstractions": "#8ecae6", "core": "#219ebc", "module": "#ffb703", "library": "#adb5bd", "targets": "#e9c46a", "missing": "#e76f51"}
+colors = {"abstractions": "#8ecae6", "core": "#219ebc", "module": "#ffb703", "library": "#adb5bd", "engine": "#b5a2d8", "targets": "#e9c46a", "missing": "#e76f51"}
 indeg = {n: 0 for n in names}; outdeg = {n: 0 for n in names}
 for a, b in edges: outdeg[a] += 1; indeg[b] += 1
 nodes = [{"id": n, "label": n, "color": colors[kind[n]], "kind": kind[n], "value": 1 + indeg[n], "title": f"{n}\\nreferenced by {indeg[n]}, references {outdeg[n]}, packages {len(packages.get(n, ()))}"} for n in names]

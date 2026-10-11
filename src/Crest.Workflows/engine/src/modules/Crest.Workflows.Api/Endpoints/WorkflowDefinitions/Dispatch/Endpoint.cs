@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Dispatch;
 
 [UsedImplicitly]
-internal class Endpoint(IWorkflowDefinitionService workflowDefinitionService, IWorkflowDispatcher workflowDispatcher, IIdentityGenerator identityGenerator) : CrestWorkflowsEndpoint<Request, Response>
+internal class Endpoint(IWorkflowDefinitionService workflowDefinitionService, IWorkflowDispatcher workflowDispatcher, IIdentityGenerator identityGenerator) : WorkflowsEndpoint<Request, Response>
 {
     public override void Configure()
     {

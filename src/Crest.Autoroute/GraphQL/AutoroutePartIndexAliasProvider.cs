@@ -1,4 +1,4 @@
-using Crest.Autoroute.Core.Indexes;
+using Crest.Autoroute.Indexes;
 using Crest.ContentManagement.GraphQL.Queries;
 
 namespace Crest.Autoroute.GraphQL;

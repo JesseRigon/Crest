@@ -12,7 +12,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.Journal.GetLastEntry;
 /// Return the last log entry for the specified workflow instance and activity ID.
 /// </summary>
 [PublicAPI]
-public class Get(IWorkflowExecutionLogStore store) : CrestWorkflowsEndpoint<Request, WorkflowExecutionLogRecord>
+public class Get(IWorkflowExecutionLogStore store) : WorkflowsEndpoint<Request, WorkflowExecutionLogRecord>
 {
     /// <inheritdoc />
     public override void Configure()

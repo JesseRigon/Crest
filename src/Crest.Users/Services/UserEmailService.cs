@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using Crest.DisplayManagement;
 using Crest.Email;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.Users.Controllers;
 using Crest.Users.Models;
 using Crest.Users.ViewModels;

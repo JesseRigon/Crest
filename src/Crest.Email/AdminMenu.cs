@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using Crest.Email.Controllers;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.Navigation;
 
 namespace Crest.Email;

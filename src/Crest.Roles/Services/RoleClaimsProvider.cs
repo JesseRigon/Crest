@@ -10,19 +10,13 @@ namespace Crest.Roles;
 public class RoleClaimsProvider : IUserClaimsProvider
 {
     private readonly UserManager<IUser> _userManager;
-    private readonly RoleManager<IRole> _roleManager;
-    private readonly ISystemRoleProvider _systemRoleProvider;
     private readonly IdentityOptions _identityOptions;
 
     public RoleClaimsProvider(
         UserManager<IUser> userManager,
-        RoleManager<IRole> roleManager,
-        ISystemRoleProvider systemRoleProvider,
         IOptions<IdentityOptions> identityOptions)
     {
         _userManager = userManager;
-        _roleManager = roleManager;
-        _systemRoleProvider = systemRoleProvider;
         _identityOptions = identityOptions.Value;
     }
 
@@ -33,36 +27,12 @@ public class RoleClaimsProvider : IUserClaimsProvider
             return;
         }
 
-        var isAdministrator = false;
-
-        var roleNames = await _userManager.GetRolesAsync(user);
-
-        foreach (var roleName in roleNames)
-        {
-            if (_systemRoleProvider.IsAdminRole(roleName))
-            {
-                isAdministrator = true;
-                break;
-            }
-        }
-
-        foreach (var roleName in roleNames)
+        // Roles only: a Permission claim per role used to be stamped here, which made the
+        // cookie a second permission store. The access gate's caller factory reads the
+        // roles' permissions from the role store under the permission version (docs/access.md).
+        foreach (var roleName in await _userManager.GetRolesAsync(user))
         {
             claims.AddClaim(new Claim(_identityOptions.ClaimsIdentity.RoleClaimType, roleName));
-
-            if (isAdministrator || !_roleManager.SupportsRoleClaims)
-            {
-                continue;
-            }
-
-            var role = await _roleManager.FindByNameAsync(roleName);
-
-            if (role == null)
-            {
-                continue;
-            }
-
-            claims.AddClaims(await _roleManager.GetClaimsAsync(role));
         }
     }
 }

@@ -7,7 +7,6 @@ using Crest.Workflows.Attributes;
 using Crest.Workflows.Expressions.Models;
 using Crest.Workflows.Extensions;
 using Crest.Workflows.Models;
-using Crest.Workflows.Platform;
 using Crest.Workflows.Resilience;
 using Crest.Workflows.Resilience.Models;
 using Crest.Workflows.UIHints;
@@ -27,7 +26,7 @@ namespace Crest.Workflows.Connectors;
 /// the flow resumes with the response as the next burst. A unit that fails never makes the
 /// call.
 /// </summary>
-public abstract class ConnectorActivityBase : Activity, Units.IUnitBoundary, IResilientActivity
+public abstract class ConnectorActivityBase : Activity, IUnitBoundary, IResilientActivity
 {
     public const string IdempotencyHeader = "Idempotency-Key";
     private const string ResilienceStrategyProperty = "resilienceStrategy";
@@ -120,7 +119,7 @@ public abstract class ConnectorActivityBase : Activity, Units.IUnitBoundary, IRe
         try
         {
             using var json = JsonDocument.Parse(body);
-            return StockActivityRunner.ToPlain(json.RootElement.Clone());
+            return Services.JsonPlain.ToPlain(json.RootElement.Clone());
         }
         catch (JsonException)
         {

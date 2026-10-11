@@ -20,7 +20,7 @@ internal class Endpoint(
     IWorkflowDefinitionService workflowDefinitionService,
     IActivityTestRunner activityTestRunner,
     IActivityExecutionMapper activityExecutionMapper)
-    : CrestWorkflowsEndpoint<Request>
+    : WorkflowsEndpoint<Request>
 {
     /// <inheritdoc />
     public override void Configure()

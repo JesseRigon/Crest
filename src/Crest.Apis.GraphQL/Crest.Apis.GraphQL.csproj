@@ -30,7 +30,7 @@
     <ProjectReference Include="..\Crest.Apis.GraphQL.Abstractions\Crest.Apis.GraphQL.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
   </ItemGroup>
 

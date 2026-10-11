@@ -6,7 +6,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using Crest.DisplayManagement.Notify;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.Settings;
 using Crest.Users.Events;
 using Crest.Users.Models;

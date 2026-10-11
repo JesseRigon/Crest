@@ -8,7 +8,7 @@ using Crest.Deployment;
 using Crest.DisplayManagement.Handlers;
 using Crest.Modules;
 using Crest.Navigation;
-using Crest.RateLimits.Core;
+using Crest.RateLimits;
 using Crest.RateLimits.Deployment;
 using Crest.RateLimits.Drivers;
 using Crest.RateLimits.Migrations;

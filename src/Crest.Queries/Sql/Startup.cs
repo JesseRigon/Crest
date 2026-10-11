@@ -3,7 +3,7 @@ using Crest.Data.Migration;
 using Crest.DisplayManagement.Handlers;
 using Crest.Modules;
 using Crest.Navigation;
-using Crest.Queries.Core;
+using Crest.Queries;
 using Crest.Queries.Sql.Drivers;
 using Crest.Queries.Sql.Migrations;
 using Crest.Security.Permissions;

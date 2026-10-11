@@ -13,7 +13,7 @@ namespace Crest.Workflows.Api.Endpoints.ActivityExecutionSummaries.ListSummaries
 /// Lists a summary view of the executions for a given activity.
 /// </summary>
 [PublicAPI]
-internal class Endpoint(IActivityExecutionStore store) : CrestWorkflowsEndpoint<Request, ListResponse<ActivityExecutionRecordSummary>>
+internal class Endpoint(IActivityExecutionStore store) : WorkflowsEndpoint<Request, ListResponse<ActivityExecutionRecordSummary>>
 {
     /// <inheritdoc />
     public override void Configure()

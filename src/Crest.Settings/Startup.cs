@@ -37,7 +37,7 @@ public sealed class Startup : StartupBase
         services.AddPermissionProvider<Permissions>();
 
         services.AddRolesCoreServices()
-            .AddScoped<IAuthorizationHandler, SiteSettingsAuthorizationHandler>();
+            .AddScoped<Crest.Access.IResourcePermissionMapper, SiteSettingsPermissionMapper>();
 
         services.AddRecipeExecutionStep<SettingsStep>();
         services.AddSingleton<ISiteService, SiteService>();

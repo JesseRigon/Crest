@@ -5,7 +5,7 @@ namespace Crest.Workflows.Abstractions;
 /// <summary>
 /// An endpoint that maps a request to a response.
 /// </summary>
-public abstract class CrestWorkflowsEndpointWithMapper<TRequest, TMapper> : EndpointWithMapper<TRequest, TMapper> where TMapper : class, IRequestMapper where TRequest : notnull
+public abstract class WorkflowsEndpointWithMapper<TRequest, TMapper> : EndpointWithMapper<TRequest, TMapper> where TMapper : class, IRequestMapper where TRequest : notnull
 {
     protected void ConfigurePermissions(params string[] permissions)
     {
@@ -16,7 +16,7 @@ public abstract class CrestWorkflowsEndpointWithMapper<TRequest, TMapper> : Endp
     }
 }
 
-public abstract class CrestWorkflowsEndpointWithoutRequest : EndpointWithoutRequest
+public abstract class WorkflowsEndpointWithoutRequest : EndpointWithoutRequest
 {
     protected void ConfigurePermissions(params string[] permissions)
     {
@@ -27,7 +27,7 @@ public abstract class CrestWorkflowsEndpointWithoutRequest : EndpointWithoutRequ
     }
 }
 
-public abstract class CrestWorkflowsEndpointWithoutRequest<TResponse> : EndpointWithoutRequest<TResponse> where TResponse : notnull
+public abstract class WorkflowsEndpointWithoutRequest<TResponse> : EndpointWithoutRequest<TResponse> where TResponse : notnull
 {
     protected void ConfigurePermissions(params string[] permissions)
     {
@@ -38,7 +38,7 @@ public abstract class CrestWorkflowsEndpointWithoutRequest<TResponse> : Endpoint
     }
 }
 
-public class CrestWorkflowsEndpoint<TRequest, TResponse> : Endpoint<TRequest, TResponse> where TRequest : notnull, new() where TResponse : notnull
+public class WorkflowsEndpoint<TRequest, TResponse> : Endpoint<TRequest, TResponse> where TRequest : notnull, new() where TResponse : notnull
 {
     protected void ConfigurePermissions(params string[] permissions)
     {
@@ -49,7 +49,7 @@ public class CrestWorkflowsEndpoint<TRequest, TResponse> : Endpoint<TRequest, TR
     }
 }
 
-public class CrestWorkflowsEndpoint<TRequest, TResponse, TMapper> : Endpoint<TRequest, TResponse, TMapper> where TRequest : notnull, new() where TResponse : notnull where TMapper : class, IMapper, new()
+public class WorkflowsEndpoint<TRequest, TResponse, TMapper> : Endpoint<TRequest, TResponse, TMapper> where TRequest : notnull, new() where TResponse : notnull where TMapper : class, IMapper, new()
 {
     protected void ConfigurePermissions(params string[] permissions)
     {
@@ -60,7 +60,7 @@ public class CrestWorkflowsEndpoint<TRequest, TResponse, TMapper> : Endpoint<TRe
     }
 }
 
-public class CrestWorkflowsEndpoint<TRequest> : Endpoint<TRequest> where TRequest : notnull, new()
+public class WorkflowsEndpoint<TRequest> : Endpoint<TRequest> where TRequest : notnull, new()
 {
     protected void ConfigurePermissions(params string[] permissions)
     {

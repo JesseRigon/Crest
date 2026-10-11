@@ -60,8 +60,8 @@ public class WorkflowRegistryTests
         await publisher.PublishAsync("Transaction.Posted", "doc-1", new Dictionary<string, object> { ["Number"] = "Q-00001" }, TestContext.Current.CancellationToken);
 
         await sender.Received(1).SendAsync(
-            "Crest.Workflows.CrestTrigger",
-            Arg.Is<object>(s => s is CrestTriggerStimulus && ((CrestTriggerStimulus)s).TriggerKey == "transaction.posted"),
+            "Crest.Workflows.RegistryTrigger",
+            Arg.Is<object>(s => s is RegistryTriggerStimulus && ((RegistryTriggerStimulus)s).TriggerKey == "transaction.posted"),
             Arg.Is<StimulusMetadata?>(m => m!.CorrelationId == "doc-1"
                 && (string)m.Input![WorkflowsConstants.InputKeys.TriggerKey] == "transaction.posted"
                 && ((IDictionary<string, object>)m.Input[WorkflowsConstants.InputKeys.Payload])["Number"].Equals("Q-00001")

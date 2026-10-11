@@ -21,4 +21,7 @@
     <ProjectReference Include="..\Crest.Recipes.Abstractions\Crest.Recipes.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+  </ItemGroup>
+
 </Project>

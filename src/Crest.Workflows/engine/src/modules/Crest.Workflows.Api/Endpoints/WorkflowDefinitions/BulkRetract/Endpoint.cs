@@ -11,7 +11,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.BulkRetract;
 
 [PublicAPI]
 internal class BulkRetract(IWorkflowDefinitionStore store, IWorkflowDefinitionPublisher workflowDefinitionPublisher, IAuthorizationService authorizationService)
-    : CrestWorkflowsEndpoint<Request, Response>
+    : WorkflowsEndpoint<Request, Response>
 {
     public override void Configure()
     {

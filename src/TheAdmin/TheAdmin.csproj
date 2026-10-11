@@ -25,7 +25,7 @@
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
     <ProjectReference Include="..\Crest.Admin\Crest.Admin.csproj" />
     <ProjectReference Include="..\Crest.Themes\Crest.Themes.csproj" />
-    <ProjectReference Include="..\Crest.Users.Core\Crest.Users.Core.csproj" />
+    <ProjectReference Include="..\Crest.Users\Crest.Users.csproj" />
   </ItemGroup>
 
 </Project>

@@ -19,7 +19,7 @@ public sealed class ApprovalsController(ApprovalService approvals, IAuthorizatio
             return Forbid();
         }
 
-        return Ok(await approvals.ListAsync(User, status, all));
+        return Ok(await approvals.ListAsync(status, all));
     }
 
     [HttpGet("{id}")]
@@ -27,7 +27,7 @@ public sealed class ApprovalsController(ApprovalService approvals, IAuthorizatio
     {
         var task = await approvals.FindAsync(id);
         if (task is null) return NotFound();
-        var canDecide = await approvals.CanDecideAsync(User, task);
+        var canDecide = await approvals.CanDecideAsync(task);
         if (!canDecide && !await authorizationService.AuthorizeAsync(User, Permissions.ManageWorkflows)) return NotFound();
         return Ok(ApprovalService.ToModel(task, canDecide && task.Status == ApprovalStatuses.Pending));
     }
@@ -35,7 +35,7 @@ public sealed class ApprovalsController(ApprovalService approvals, IAuthorizatio
     [HttpPost("{id}/decide")]
     public async Task<IActionResult> DecideAsync(string id, [FromBody] ApprovalDecisionRequest request, CancellationToken cancellationToken)
     {
-        var (result, task) = await approvals.DecideAsync(id, User, request, cancellationToken);
+        var (result, task) = await approvals.DecideAsync(id, request, cancellationToken);
         return result switch
         {
             ApprovalDecisionResult.Decided => Ok(ApprovalService.ToModel(task!, false)),

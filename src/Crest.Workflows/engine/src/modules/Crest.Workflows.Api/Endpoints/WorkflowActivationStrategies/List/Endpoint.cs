@@ -11,7 +11,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowActivationStrategies.List;
 /// <summary>
 /// Returns list of available <see cref="IWorkflowActivationStrategy" /> implementations.
 /// </summary>
-internal class List(IEnumerable<IWorkflowActivationStrategy> strategies) : CrestWorkflowsEndpointWithoutRequest<ListResponse<WorkflowActivationStrategyDescriptor>>
+internal class List(IEnumerable<IWorkflowActivationStrategy> strategies) : WorkflowsEndpointWithoutRequest<ListResponse<WorkflowActivationStrategyDescriptor>>
 {
     public override void Configure()
     {

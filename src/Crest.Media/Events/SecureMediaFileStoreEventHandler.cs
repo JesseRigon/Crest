@@ -1,5 +1,5 @@
 using Crest.Environment.Cache;
-using Crest.Media.Core.Events;
+using Crest.Media.Events;
 
 namespace Crest.Media.Events;
 

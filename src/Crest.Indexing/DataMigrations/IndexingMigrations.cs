@@ -1,5 +1,5 @@
 using Crest.Data.Migration;
-using Crest.Indexing.Core.Indexes;
+using Crest.Indexing.Indexes;
 using YesSql.Sql;
 
 namespace Crest.Indexing.DataMigrations;

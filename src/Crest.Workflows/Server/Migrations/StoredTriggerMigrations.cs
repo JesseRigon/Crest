@@ -8,7 +8,7 @@ namespace Crest.Workflows.Migrations;
 [UsedImplicitly]
 public class StoredTriggerMigrations : DataMigration
 {
-    private const string Collection = CrestWorkflowsCollections.StoredTriggers;
+    private const string Collection = WorkflowCollections.StoredTriggers;
     
     [UsedImplicitly]
     public async Task<int> CreateAsync()

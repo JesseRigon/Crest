@@ -1,7 +1,7 @@
 using Crest.FileStorage;
 using Crest.Media;
-using Crest.Media.Core;
-using Crest.Media.Core.Helpers;
+using Crest.Media;
+using Crest.Media.Helpers;
 using Crest.Media.Services;
 
 namespace Crest.Tests.Modules.Crest.Media;

@@ -13,7 +13,7 @@ using Crest.Locking;
 using Crest.Locking.Distributed;
 using Crest.Recipes.Services;
 using Crest.Scripting;
-using Crest.Elasticsearch.Core.Models;
+using Crest.Elasticsearch.Models;
 using Crest.Elasticsearch.Drivers;
 using Crest.Tests.Modules.Crest.ContentFields.Settings;
 using Crest.Tests.Stubs;

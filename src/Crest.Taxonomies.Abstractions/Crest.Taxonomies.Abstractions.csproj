@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Taxonomies</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest Taxonomies Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for the Taxonomies module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YesSql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Navigation.Abstractions\Crest.Navigation.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Notifications.Abstractions\Crest.Notifications.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

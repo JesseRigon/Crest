@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.Delete;
 
 [PublicAPI]
-internal class Delete(IWorkflowRuntime workflowRuntime) : CrestWorkflowsEndpoint<Request>
+internal class Delete(IWorkflowRuntime workflowRuntime) : WorkflowsEndpoint<Request>
 {
     public override void Configure()
     {

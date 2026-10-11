@@ -1,4 +1,4 @@
-using Crest.Media.Core.Processing;
+using Crest.Media.Processing;
 using Crest.Media.Models;
 
 namespace Crest.Media.Services;

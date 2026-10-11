@@ -27,7 +27,7 @@ using Crest.Environment.Shell.Configuration;
 using Crest.Environment.Shell.Scope;
 using Crest.Liquid;
 using Crest.Modules;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.Navigation;
 using Crest.RateLimits;
 using Crest.Recipes;
@@ -38,7 +38,7 @@ using Crest.Settings.Deployment;
 using Crest.Setup.Events;
 using Crest.Users.Commands;
 using Crest.Users.Controllers;
-using Crest.Users.Core.Services;
+using Crest.Users.Services;
 using Crest.Users.DataMigrations;
 using Crest.Users.Deployment;
 using Crest.Users.Drivers;
@@ -341,7 +341,7 @@ public sealed class RolesStartup : StartupBase
         services.AddScoped<IRoleUpdatedEventHandler, UserRoleUpdatedEventHandler>();
         services.AddIndexProvider<UserByRoleNameIndexProvider>();
         services.AddDisplayDriver<User, UserRoleDisplayDriver>();
-        services.AddScoped<IAuthorizationHandler, RoleAuthorizationHandler>();
+        services.AddScoped<Crest.Access.IResourcePermissionMapper, RolePermissionMapper>();
         services.AddPermissionProvider<UserRolePermissions>();
         services.AddSingleton<IUsersAdminListFilterProvider, RolesAdminListFilterProvider>();
     }

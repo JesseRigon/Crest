@@ -1,44 +1,22 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
+using Crest.Access;
 using Crest.Rules.Models;
 
 namespace Crest.Rules.Services;
 
-public class RoleConditionEvaluator : ConditionEvaluator<RoleCondition>
+/// <summary>Evaluates a role condition against the request's caller, never the principal.</summary>
+public class RoleConditionEvaluator(ICallerContextAccessor callers, IConditionOperatorResolver operatorResolver) : ConditionEvaluator<RoleCondition>
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IdentityOptions _options;
-    private readonly IConditionOperatorResolver _operatorResolver;
-
-    public RoleConditionEvaluator(
-        IHttpContextAccessor httpContextAccessor,
-        IOptions<IdentityOptions> options,
-        IConditionOperatorResolver operatorResolver)
-    {
-        _httpContextAccessor = httpContextAccessor;
-        _options = options.Value;
-        _operatorResolver = operatorResolver;
-    }
-
     public override ValueTask<bool> EvaluateAsync(RoleCondition condition)
     {
-        var roleClaimType = _options.ClaimsIdentity.RoleClaimType;
-
-        // IsInRole() & HasClaim() are case sensitive.
-        var operatorComparer = _operatorResolver.GetOperatorComparer(condition.Operation);
+        IEnumerable<string> roles = callers.Current?.Roles ?? Enumerable.Empty<string>();
+        var operatorComparer = operatorResolver.GetOperatorComparer(condition.Operation);
 
         // Claim all if the operator is negative
         if (condition.Operation is INegateOperator)
         {
-            return (_httpContextAccessor.HttpContext.User?.Claims.Where(c => c.Type == roleClaimType).All(claim =>
-                operatorComparer.Compare(condition.Operation, claim.Value, condition.Value))
-            ).GetValueOrDefault() ? True : False;
+            return roles.All(role => operatorComparer.Compare(condition.Operation, role, condition.Value)) ? True : False;
         }
 
-        return (_httpContextAccessor.HttpContext.User?.Claims.Any(claim =>
-            claim.Type == roleClaimType &&
-            operatorComparer.Compare(condition.Operation, claim.Value, condition.Value))
-        ).GetValueOrDefault() ? True : False;
+        return roles.Any(role => operatorComparer.Compare(condition.Operation, role, condition.Value)) ? True : False;
     }
 }

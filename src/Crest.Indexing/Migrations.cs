@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Crest.Data;
 using Crest.Data.Migration;
 using Crest.Environment.Shell.Scope;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using YesSql;
 
 namespace Crest.Indexing;

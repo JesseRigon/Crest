@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Crest.Workflows.Api.Endpoints.ActivityDescriptors.List;
 
 [PublicAPI]
-internal class List(IActivityRegistry registry, IActivityRegistryPopulator registryPopulator) : CrestWorkflowsEndpointWithoutRequest<Response>
+internal class List(IActivityRegistry registry, IActivityRegistryPopulator registryPopulator) : WorkflowsEndpointWithoutRequest<Response>
 {
     public override void Configure()
     {

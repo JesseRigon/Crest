@@ -1,7 +1,7 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Localization;
-using Crest.RateLimits.Core.Models;
+using Crest.RateLimits.Models;
 using Crest.RateLimits.Models;
 
 namespace Crest.RateLimits.Services;

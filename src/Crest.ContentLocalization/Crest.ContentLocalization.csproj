@@ -20,7 +20,8 @@
     <ProjectReference Include="..\Crest.ContentLocalization.Abstractions\Crest.ContentLocalization.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.GraphQL\Crest.ContentManagement.GraphQL.csproj" />
-    <ProjectReference Include="..\Crest.Contents.Core\Crest.Contents.Core.csproj" />
+    <ProjectReference Include="..\Crest.Contents.Abstractions\Crest.Contents.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement\Crest.ContentManagement.csproj" />
     <ProjectReference Include="..\Crest.ContentTypes.Abstractions\Crest.ContentTypes.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
@@ -29,7 +30,8 @@
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
     <ProjectReference Include="..\Crest.Sitemaps.Abstractions\Crest.Sitemaps.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
+    <ProjectReference Include="..\Crest.Access.Abstractions\Crest.Access.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

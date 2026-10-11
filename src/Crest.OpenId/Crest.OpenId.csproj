@@ -24,13 +24,15 @@
     <ProjectReference Include="..\Crest.Deployment.Abstractions\Crest.Deployment.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
-    <ProjectReference Include="..\Crest.OpenId.Core\Crest.OpenId.Core.csproj" />
-    <ProjectReference Include="..\Crest.RateLimits.Core\Crest.RateLimits.Core.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
+    <ProjectReference Include="..\Crest.RateLimits\Crest.RateLimits.csproj" />
     <ProjectReference Include="..\Crest.Recipes.Abstractions\Crest.Recipes.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
-    <ProjectReference Include="..\Crest.Roles.Core\Crest.Roles.Core.csproj" />
+    <ProjectReference Include="..\Crest.Roles\Crest.Roles.csproj" />
     <ProjectReference Include="..\Crest.Users.Abstractions\Crest.Users.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Data.YesSql\Crest.Data.YesSql.csproj" />
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.OpenId.Abstractions\Crest.OpenId.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,6 +43,7 @@
     <PackageReference Include="OpenIddict.Validation.AspNetCore" />
     <PackageReference Include="OpenIddict.Validation.DataProtection" />
     <PackageReference Include="OpenIddict.Validation.SystemNetHttp" />
+    <PackageReference Include="OpenIddict.Core" />
   </ItemGroup>
 
 </Project>

@@ -5,10 +5,11 @@ using Crest.Modules;
 using Crest.Navigation;
 using Crest.Notifications;
 using Crest.Security.Permissions;
-using Crest.Sms.Activities;
 using Crest.Sms.Drivers;
 using Crest.Sms.Services;
-using Crest.Workflows.Platform.Helpers;
+using Crest.Sms.Workflows;
+using Crest.Workflows;
+using Crest.Workflows.Extensions;
 
 namespace Crest.Sms;
 
@@ -48,11 +49,12 @@ public sealed class NotificationsStartup : StartupBase
     }
 }
 
-[RequireFeatures("Crest.Workflows")]
+[RequireFeatures(WorkflowsConstants.FeatureId)]
 public sealed class WorkflowsStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddActivity<SmsTask>();
+        services.AddScoped<IWorkflowActivityProvider, SmsWorkflowProvider>();
+        services.ConfigureCrestWorkflows(workflows => workflows.AddActivitiesFrom<WorkflowsStartup>());
     }
 }

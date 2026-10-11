@@ -19,4 +19,12 @@
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="YesSql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

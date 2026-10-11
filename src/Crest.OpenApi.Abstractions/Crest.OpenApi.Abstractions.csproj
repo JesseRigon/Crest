@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.OpenApi</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest OpenApi Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for the OpenApi module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

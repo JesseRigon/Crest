@@ -25,7 +25,7 @@ internal class Post(
     IDistributedLockProvider distributedLockProvider,
     IWorkflowDefinitionLinker linker,
     IAuthorizationService authorizationService)
-    : CrestWorkflowsEndpoint<SaveWorkflowDefinitionRequest, LinkedWorkflowDefinitionModel>
+    : WorkflowsEndpoint<SaveWorkflowDefinitionRequest, LinkedWorkflowDefinitionModel>
 {
     public override void Configure()
     {

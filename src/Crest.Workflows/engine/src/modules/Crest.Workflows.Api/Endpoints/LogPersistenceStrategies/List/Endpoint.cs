@@ -12,7 +12,7 @@ namespace Crest.Workflows.Api.Endpoints.LogPersistenceStrategies.List;
 /// <summary>
 /// Returns list of available <see cref="ILogPersistenceStrategy" /> implementations.
 /// </summary>
-internal class Endpoint(ILogPersistenceStrategyService logPersistenceStrategyService) : CrestWorkflowsEndpointWithoutRequest<ListResponse<LogPersistenceStrategyDescriptor>>
+internal class Endpoint(ILogPersistenceStrategyService logPersistenceStrategyService) : WorkflowsEndpointWithoutRequest<ListResponse<LogPersistenceStrategyDescriptor>>
 {
     public override void Configure()
     {

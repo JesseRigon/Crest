@@ -9,7 +9,7 @@ public class WorkflowInstanceIndexProvider : IndexProvider<WorkflowInstanceDocum
 {
     public WorkflowInstanceIndexProvider()
     {
-        CollectionName = CrestWorkflowsCollections.WorkflowInstances;
+        CollectionName = WorkflowCollections.WorkflowInstances;
     }
 
     public override void Describe(DescribeContext<WorkflowInstanceDocument> context)

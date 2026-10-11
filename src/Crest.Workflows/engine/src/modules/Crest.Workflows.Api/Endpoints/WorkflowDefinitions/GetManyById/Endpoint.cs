@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.GetManyById;
 
 [PublicAPI]
-internal class GetManyById(IWorkflowDefinitionStore store, IWorkflowDefinitionLinker linker) : CrestWorkflowsEndpoint<Request>
+internal class GetManyById(IWorkflowDefinitionStore store, IWorkflowDefinitionLinker linker) : WorkflowsEndpoint<Request>
 {
     public override void Configure()
     {

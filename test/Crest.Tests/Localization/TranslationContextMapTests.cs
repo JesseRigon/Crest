@@ -6,7 +6,7 @@ public class TranslationContextMapTests
 {
     [Theory]
     [InlineData("OrchardCore.Users.Controllers.AccountController", "Crest.Users.Controllers.AccountController")]
-    [InlineData("OrchardCore.Workflows.Activities.NotifyTask", "Crest.Workflows.Platform.Activities.NotifyTask")]
+    [InlineData("OrchardCore.Workflows.Activities.NotifyTask", "Crest.Workflows.Activities.NotifyTask")]
     [InlineData("OrchardCore.ReCaptcha.Workflows.ValidateReCaptchaTask", "Crest.ReCaptcha.Workflows.ValidateReCaptchaTask")]
     [InlineData("OrchardCore.DisplayManagement.IOrchardHelper", "Crest.DisplayManagement.IPlatformHelper")]
     [InlineData("OrchardCore", "Crest")]

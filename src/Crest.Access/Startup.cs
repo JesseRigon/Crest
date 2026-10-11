@@ -6,6 +6,8 @@ using Crest.Modules;
 using Crest.Security;
 using Crest.Users.Handlers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -19,8 +21,12 @@ public sealed class Startup : StartupBase
     // keeps the common case (a plain permission) answered without running the rest.
     public override int Order => PlatformConstants.ConfigureOrder.InfrastructureService;
 
+    // The gate takes the authentication slot the platform's UseAuthentication held.
+    public override int ConfigureOrder => PlatformConstants.ConfigureOrder.Authentication;
+
     public override void ConfigureServices(IServiceCollection services)
     {
+        services.AddScoped<IAccessGate, AccessGateService>();
         services.AddScoped<ICallerContextAccessor, CallerContextAccessor>();
         services.AddScoped<ICallerContextFactory, CallerContextFactory>();
         services.AddScoped<IAccessDecision, AccessDecisionService>();
@@ -44,5 +50,14 @@ public sealed class Startup : StartupBase
 
         services.AddTransient<IConfigureOptions<AuditTrailOptions>, AccessAuditTrailEventConfiguration>();
         services.Configure<AccessAuditOptions>(options => { });
+        // Invalidation (docs/access.md § Invalidation): rights travel through the permission
+        // version; the security stamp stays for sign-out and credential change, re-validated
+        // at this explicit interval.
+        services.Configure<Microsoft.AspNetCore.Identity.SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.FromMinutes(30));
+    }
+
+    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
+    {
+        app.UseMiddleware<AccessGateMiddleware>();
     }
 }

@@ -1,6 +1,6 @@
 #nullable enable
 
-using Crest.Media.Core.Processing;
+using Crest.Media.Processing;
 using Crest.Media.ImageSharpV3.Engine;
 using Crest.Media.Processing;
 using SixLabors.ImageSharp;

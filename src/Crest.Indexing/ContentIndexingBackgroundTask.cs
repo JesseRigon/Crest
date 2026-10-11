@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Crest.BackgroundTasks;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 
 namespace Crest.Search.Indexing.Core;
 

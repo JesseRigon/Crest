@@ -9,7 +9,7 @@ namespace Crest.Workflows.Api.Endpoints.Events.TriggerAuthenticated;
 /// Triggers all workflows that are waiting for the specified event.
 /// </summary>
 [PublicAPI]
-internal class Trigger : CrestWorkflowsEndpoint<Request>
+internal class Trigger : WorkflowsEndpoint<Request>
 {
     private readonly IEventPublisher _eventPublisher;
 

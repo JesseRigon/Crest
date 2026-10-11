@@ -25,13 +25,12 @@
     <PackageVersion Include="Crest.Module.Targets" Version="4.0.0-local" />
     <PackageVersion Include="Crest.Theme.Targets" Version="4.0.0-local" />
     <PackageVersion Include="Crest.Recipes.Abstractions" Version="4.0.0-local" />
-    <PackageVersion Include="Crest.Recipes.Core" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Recipes" Version="4.0.0-local" />
     <PackageVersion Include="Crest.Queries" Version="4.0.0-local" />
-    <PackageVersion Include="Crest.Localization.Core" Version="4.0.0-local" />
     <PackageVersion Include="Crest.Localization" Version="4.0.0-local" />
     <PackageVersion Include="Crest.Indexing.Abstractions" Version="4.0.0-local" />
-    <PackageVersion Include="Crest.Indexing.Core" Version="4.0.0-local" />
-    <PackageVersion Include="Crest.Lucene.Core" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Indexing" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Lucene" Version="4.0.0-local" />
     <PackageVersion Include="Crest.ResourceManagement" Version="4.0.0-local" />
     <PackageVersion Include="Crest.Roles.Abstractions" Version="4.0.0-local" />
     <PackageVersion Include="Crest.Setup" Version="4.0.0-local" />
@@ -41,7 +40,7 @@
     <PackageVersion Include="Crest.Tenants" Version="4.0.0-local" />
     <PackageVersion Include="Crest.Security" Version="4.0.0-local" />
     <PackageVersion Include="Crest.Users" Version="4.0.0-local" />
-    <PackageVersion Include="Crest.Workflows.Platform.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Crest.Workflows.Abstractions" Version="4.0.0-local" />
     <PackageVersion Include="Crest.Users.Abstractions" Version="4.0.0-local" />
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.50.3" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />

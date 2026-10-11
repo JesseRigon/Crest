@@ -10,10 +10,10 @@ using Crest.DisplayManagement.Descriptors;
 using Crest.DisplayManagement.Handlers;
 using Crest.Environment.Shell;
 using Crest.Environment.Shell.Scope;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Indexing.Models;
-using Crest.Lucene.Core;
-using Crest.Lucene.Core.Handlers;
+using Crest.Lucene;
+using Crest.Lucene.Handlers;
 using Crest.Lucene.Deployment;
 using Crest.Lucene.Drivers;
 using Crest.Lucene.Recipes;
@@ -22,7 +22,7 @@ using Crest.Lucene.Settings;
 using Crest.Modules;
 using Crest.Navigation;
 using Crest.Queries;
-using Crest.Queries.Core;
+using Crest.Queries;
 using Crest.Queries.Sql.Migrations;
 using Crest.Recipes;
 using Crest.Search;
@@ -35,7 +35,7 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDataMigration<Migrations>();
+        services.AddDataMigration<Crest.Search.Lucene.Migrations>();
         services.TryAddSingleton<ILuceneIndexStore, LuceneIndexStore>();
         services.TryAddSingleton<ILuceneIndexingState, LuceneIndexingState>();
         services.TryAddSingleton<LuceneAnalyzerManager>();

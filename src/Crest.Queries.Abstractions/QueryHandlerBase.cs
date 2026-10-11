@@ -1,4 +1,4 @@
-namespace Crest.Queries.Core;
+namespace Crest.Queries;
 
 public abstract class QueryHandlerBase : IQueryHandler
 {

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Crest.Admin;
 using Crest.Modules;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 
 namespace Crest.Users.Controllers;
 

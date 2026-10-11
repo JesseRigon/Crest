@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Crest.ViewModels;
+using SiteSettings = Crest.ViewModels.SiteSettings;
 
 namespace Crest.Controllers;
 

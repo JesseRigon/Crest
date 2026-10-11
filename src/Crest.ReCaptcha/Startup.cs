@@ -3,7 +3,7 @@ using Crest.DisplayManagement.Handlers;
 using Crest.Modules;
 using Crest.Navigation;
 using Crest.ReCaptcha.Configuration;
-using Crest.ReCaptcha.Core;
+using Crest.ReCaptcha;
 using Crest.ReCaptcha.Drivers;
 using Crest.ReCaptcha.Users.Handlers;
 using Crest.Security.Permissions;

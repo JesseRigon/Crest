@@ -10,7 +10,7 @@ using Crest.Admin;
 using Crest.DisplayManagement;
 using Crest.DisplayManagement.ModelBinding;
 using Crest.DisplayManagement.Notify;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Indexing.Models;
 using Crest.Indexing.ViewModels;
 using Crest.Infrastructure.Entities;

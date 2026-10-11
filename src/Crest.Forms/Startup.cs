@@ -5,14 +5,12 @@ using Crest.ContentManagement;
 using Crest.ContentManagement.Display.ContentDisplay;
 using Crest.Data.Migration;
 using Crest.DisplayManagement;
-using Crest.Forms.Activities;
 using Crest.Forms.Drivers;
 using Crest.Forms.Filters;
 using Crest.Forms.Models;
 using Crest.Forms.Services;
 using Crest.Localization;
 using Crest.Modules;
-using Crest.Workflows.Platform.Helpers;
 
 namespace Crest.Forms;
 
@@ -83,14 +81,5 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<Migrations>();
         services.AddShapeTableProvider<FormShapeTableProvider>();
         services.AddScoped<IJSLocalizer, FormsJSLocalizer>();
-    }
-}
-
-[RequireFeatures("Crest.Workflows")]
-public sealed class WorkflowStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddActivity<HttpRedirectToFormLocationTask>();
     }
 }

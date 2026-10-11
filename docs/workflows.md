@@ -12,10 +12,10 @@ rulings, are under [Still to build](#still-to-build); the flowchart of a run's l
 ## What it is
 
 `Crest.Workflows` is the tenant's workflow service. It is a vendored fork of Elsa 3 (the
-engine: activities, flowcharts, bookmarks, bursts, the designer) installed as the Orchard
-workflow service by override: the stock `Crest.Workflows.Platform` feature stays enabled so
-every Orchard module's events and tasks keep registering, and Crest replaces the services
-behind it. The engine's own HTTP API lives at `crest-workflows/api` behind the tenant
+engine: activities, flowcharts, bookmarks, bursts, the designer) and the tenant's only
+workflow engine: the stock OrchardCore workflow module is gone (2026-10-10); platform
+modules register engine activities and raise registry triggers like any Crest module. The
+engine's own HTTP API lives at `crest-workflows/api` behind the tenant
 cookie, Crest's antiforgery header and its permissions; the designer (the forked
 Studio, Blazor WebAssembly) is loaded on demand into the Crest admin.
 
@@ -41,7 +41,7 @@ shipped flows are that module's own.
 
 Workflows is a **registry** like Parties and the other core registries: modules register
 what they contribute - triggers, activities, hook slots, shipped flows, connectors - through
-contracts in `Crest.Workflows.Domain`, and never reference the engine module. The
+contracts in `Crest.Workflows.Abstractions`, and never reference the engine module. The
 registry is read at `GET api/crest/workflows/registry`.
 
 | A module registers | Through | Example |
@@ -67,9 +67,9 @@ own registry service.
  Crest.Workflows  (the fifth core registry; depends on feature "Crest.Workflows", overrides its services)
  ├─ engine/   vendored elsa-core 3.6.0 (22 projects, renamed Crest.Workflows.*)
  ├─ Server/   the Orchard integration: stores on YesSql per shell, definitions as content items,
- │            the API gate, the registry, ownership, access, connectors, approvals, stock adapters
+ │            the API gate, the registry, ownership, access, connectors, approvals
  ├─ Contents/ content triggers and tasks (feature Crest.Workflows.Contents)
- ├─ Domain/   the contracts modules bind to (descriptors, IWorkflowTriggerPublisher, constants)
+ ├─ Abstractions/ the contracts modules bind to (descriptors, IWorkflowTriggerPublisher, constants)
  ├─ blazor-wasm/ + studio-host/   the admin pages and the lazily loaded Studio container
  └─ designer/ vendored elsa-studio 3.6.0 (15 projects)
 ```
@@ -93,8 +93,8 @@ antiforgery access) are Crest features any module can use.
 
 | Piece | Where |
 | --- | --- |
-| Contracts modules bind to: `WorkflowTriggerDescriptor`, `WorkflowFlowDescriptor` (+ `WorkflowOwnership`), `WorkflowActivityDescriptor`, `WorkflowConnectorDescriptor`, the provider interfaces, `IWorkflowTriggerPublisher`, `WorkflowsConstants` (routes, permissions, roles, property keys) | `Domain/` |
-| Engine wiring, stores, publisher, API gate, permissions, ownership guard, access handler and API, registry catalog/importer/controller, triggers, stock adapters, connectors, approvals, navigation | `Server/` |
+| Contracts modules bind to: `WorkflowTriggerDescriptor`, `WorkflowFlowDescriptor` (+ `WorkflowOwnership`), `WorkflowActivityDescriptor`, `WorkflowConnectorDescriptor`, the provider interfaces, `IWorkflowTriggerPublisher`, `IUnitBoundary`, `WorkflowsConstants` (routes, permissions, roles, property keys) | `Abstractions/` |
+| Engine wiring, stores, publisher, API gate, permissions, ownership guard, access handler and API, registry catalog/importer/controller, triggers, connectors, approvals, navigation | `Server/` |
 | Content triggers and tasks | `Contents/` |
 | Admin pages, `StudioHost`, the canvas node stand-in, `crest-lazy-assemblies.txt` | `blazor-wasm/` (always loaded, thin) |
 | Studio's own container (`StudioServices.BuildAsync`), cookie API handler, views | `studio-host/` (lazy) |
@@ -105,16 +105,18 @@ antiforgery access) are Crest features any module can use.
 
 ## Engine
 
-**The override.** `Crest.Workflows` depends on the stock `Crest.Workflows.Platform` feature
-so the platform modules' workflow startups (gated on that feature id) keep registering their
-activities and event handlers, and `CoreStartup` (`Order = int.MaxValue`, last by feature
-dependency and then by order) re-registers `IWorkflowManager` as `PlatformWorkflowManager`
-(stimuli into the engine) and removes the stock admin menu. Nothing executes on the stock
-engine; its evaluators stay registered because stock activities resolve them. The platform's
-modules call exactly one thing, `IWorkflowManager.TriggerEventAsync`, and bind to
-`Crest.Workflows.Platform.Abstractions`, not to the stock module - which is why the override
-needs no platform change. Since the hard fork, the stock workflows module can instead be
-changed or removed in the platform when it gets in the way.
+**One engine.** `CoreStartup` (`Order = int.MaxValue`, last by feature dependency and then
+by order) wires the engine into the tenant container. A platform module that contributes
+activities or triggers references `Crest.Workflows.Abstractions` (the contracts) and the
+engine's `Crest.Workflows.Core` and `.Engine` (the activity base classes and the module
+builder), and from a startup gated on the `Crest.Workflows` feature registers an
+`IWorkflowActivityProvider` / `IWorkflowTriggerProvider` for the registry and calls
+`services.ConfigureCrestWorkflows(w => w.AddActivitiesFrom<Startup>())`. Triggers are
+raised through `IWorkflowTriggerPublisher` from the module's own handlers. The stock
+OrchardCore workflow module, its bridge (`PlatformEvent`, `PlatformTask`,
+`StockActivityRunner`, the `IWorkflowManager` override, the stock Liquid and JavaScript
+evaluators) and its activity contracts (`Crest.Workflows.Platform.*`) were deleted on
+2026-10-10 once the stock activities were ported (§ Platform activities).
 
 **Tenant citizenship.** One engine per shell: every engine service, store and hosted service
 lives in the tenant container. Definitions are `WorkflowDefinition` content items
@@ -128,7 +130,7 @@ released shell's timers stop. Orchard disposes containers synchronously, so the 
 async-only tenant service is replaced (`SyncDisposableTenantService`) and a scan test pins
 the async-only surface of the engine assemblies.
 
-**Definitions store and publisher.** `CrestWorkflowsWorkflowDefinitionStore` maps
+**Definitions store and publisher.** `YesSqlWorkflowDefinitionStore` maps
 `WorkflowDefinitionPart` ↔ `WorkflowDefinition`; `ContentItemWorkflowDefinitionPublisher`
 publishes through the content manager (a save with `publish: true` on a new definition
 stores the draft first). The engine's definition notifications are raised once, by
@@ -175,7 +177,7 @@ Every definition has an **ownership tier**, kept in its custom properties:
   the version history. A flow shipped as a draft is turned on by publishing it.
 - **tenant** - the tenant's own.
 
-Permissions are Orchard permissions, implied by the stock `ManageWorkflows`:
+Permissions are Orchard permissions, implied by the `ManageWorkflows` umbrella:
 `ViewCrestWorkflows`, `EditCrestWorkflows`, `PublishCrestWorkflows`,
 `RunCrestWorkflows`, `ManageShippedCrestWorkflows`, `ManageCrestWorkflowConnections`.
 The engine API maps each endpoint to one of them and answers 403, never a login redirect.
@@ -185,7 +187,7 @@ api/crest/workflows/definitions/{id}/access`); the super user and Administrator 
 narrowed. `WorkflowOwnershipGuard` enforces the tier on every change path, including the
 engine's own endpoints.
 
-**The API gate** (`Security/CrestWorkflowsApiSecurityMiddleware`, on the API path
+**The API gate** (`Security/ApiSecurityMiddleware`, on the API path
 branch, slotted before the Users module's authentication/authorization pair and
 authenticating the branch itself): anonymous → 401; without *View workflows* → 403; a
 non-GET without Orchard's antiforgery token → 400 (the engine's endpoints validate none);
@@ -203,7 +205,7 @@ the member permission ceiling applies (it runs inside `IAuthorizationService`).
 
 **Permission set** (`Server/Permissions.cs`; names in `WorkflowsConstants.Permissions`):
 *View*, *Edit*, *Publish*, *Run*, *Manage shipped workflows*, *Manage connections*, each
-implied by the stock `ManageWorkflows`, which stays the umbrella so existing roles keep
+implied by the `ManageWorkflows` umbrella, which stays the umbrella so existing roles keep
 working. Approvals are decided per task by role or permission (`all=true` listing needs
 `ManageWorkflows`). Pages and controllers take the specific permission: Definitions and
 Instances pages, the registry and the triggers list → View; Connections page and API →
@@ -232,18 +234,15 @@ version.
 
 **Per-flow access, in the same pipeline.** Custom properties `Crest.Access.Edit` and
 `Crest.Access.Run` list role names and user names (a user name is the per-user
-override). `WorkflowDefinitionAccessHandler` is a raw `IAuthorizationHandler` (the member
-ceiling's shape) that fails a `PermissionRequirement` for Edit/Manage shipped/Publish when
-the Edit list is non-empty and names neither the user nor one of their roles, and Run
-against the Run list; it acts only when the resource is a `WorkflowDefinitionAccessResource`,
-so `AuthorizeAsync(user, permission, resource)` is the one call everywhere (guard, gate,
-linker, access API) and role grants, the super user, the member ceiling and every other
-handler decide together. The super user and Administrators are never narrowed by a list.
-`GET/PUT api/crest/workflows/definitions/{id}/access` reads (View) and writes (the right to
-edit that definition: Manage shipped for a shipped flow, Edit for a tenant one; system flows
-refuse); writes update the latest and published versions in place, no new draft.
+override). `WorkflowDefinitionAccessCeiling` (2026-10-10; it was a raw
+authorization handler) is a ceiling inside the one decision: it vetoes Edit, Manage shipped
+and Publish when the Edit list is non-empty and names neither the caller nor one of their
+roles, and Run against the Run list; it acts only when the resource is a
+`WorkflowDefinitionAccessResource`, so `AuthorizeAsync(user, permission, resource)` and a
+direct `DecideAsync` give the same answer everywhere (guard, gate, linker, access API), and
+the super user and the system are never narrowed.
 
-**Studio follows the same decisions.** `CrestWorkflowDefinitionLinker` replaces the
+**Studio follows the same decisions.** `WorkflowDefinitionLinker` replaces the
 engine's static linker: a definition's write links (`publish`, `retract`, `delete`, `import`,
 `update-references`) are present only for what the acting user may do to that definition,
 and Studio's read-only decision is "no `publish` link". Nuance until the UI transition:
@@ -269,8 +268,8 @@ keys) are a separate plan, [machine-actors.md](machine-actors.md).
 
 The fifth registry, shaped like Parties: providers contribute descriptors, the catalog
 merges them by key (first registration wins, ordered by position then key), the API and
-pages read the catalog. The catalog merges lazily: stock activity constructors reach content
-handlers that raise triggers through the publisher, which takes the catalog.
+pages read the catalog. The catalog merges lazily: content handlers raise triggers through
+the publisher, which takes the catalog.
 
 - **Triggers** - `WorkflowTriggerDescriptor(Key, DisplayName, Object, Description, Position)`
   from `IWorkflowTriggerProvider`; raised through `IWorkflowTriggerPublisher.PublishAsync`,
@@ -278,7 +277,7 @@ handlers that raise triggers through the publisher, which takes the catalog.
   keys so a typo fails loudly).
   Input to the flow: `TriggerKey`, `Payload` (ids and scalars only; activities re-read
   objects through their registries' services), `Actor`; correlation id = the object's id.
-  The `Crest trigger` activity (`CrestTrigger`, ports Done/Denied/Skipped) subscribes
+  The `Registry trigger` activity (`RegistryTrigger`, ports Done/Denied/Skipped) subscribes
   by key, with an optional `RequiredPermission` and an optional **payload filter** (one
   `Key = value` per line, case-insensitive equality; a miss ends on Skipped).
 - **Activities** - `WorkflowActivityDescriptor(Key, DisplayName, Object, ActivityType,
@@ -320,15 +319,16 @@ sync and expects Keep for every flow.
 A flow starts from a **trigger** node, or by hand, or as a **hook attachment**, or as a
 **composable activity** inside another flow.
 
-- **Crest trigger** (`CrestTrigger`): a registered trigger key, an optional payload
+- **Registry trigger** (`RegistryTrigger`): a registered trigger key, an optional payload
   filter (`Kind = invoice`, one `Key = value` per line, all must match → otherwise the
   `Skipped` port), an optional required permission for the acting user (otherwise `Denied`).
   The payload and the acting user arrive as workflow input (`Payload`, `Actor`,
   `TriggerKey`, `StimulusId`).
-- **Stock Orchard events** (`PlatformEvent`): every event an Orchard module registers
-  (content published, user logged in, ...) as a trigger with its stock filter; **stock
-  tasks** run through `PlatformTask` (inside the unit) or `PlatformExternalTask` (e-mail, SMS,
-  notifications, HTTP - after the unit commits, see below).
+- **Platform triggers**: the Users module raises `user.created`, `.updated`, `.deleted`,
+  `.enabled`, `.disabled`, `.confirmed`, `.logged-in` and `.logged-out` (payload UserId,
+  UserName, Email, Roles as a comma list, Provider on login; correlation = user id) from its
+  event handlers and both login paths. Content events are the Contents feature's triggers
+  below. Platform tasks are engine activities in their own modules (§ Platform activities).
 - **Content triggers** (`Crest.Workflows.Contents`): created, published, updated,
   deleted, ... with a content-type filter.
 - **Timers and cron**, **webhooks** (`Webhook received`: HMAC-signed posts to
@@ -345,25 +345,30 @@ scopes of their own, one per stimulus, under the object's lock when the stimulus
 correlated to an object. Nothing is raised for a unit that failed. Every stimulus carries a
 `StimulusId`, the idempotency key a consumer that must act once per event keys on.
 
-### Stock Orchard activities
+### Platform activities
 
-Every activity the enabled Orchard modules register through `WorkflowOptions` (Email, Users,
-Roles, Notifications, Forms, Contents, ...) is in the palette unchanged:
-`StockActivityProvider` lists each as `platform.<Name>` on the `PlatformEvent` (events),
-`PlatformTask` (tasks inside the unit) or `PlatformExternalTask` (tasks with an effect outside
-the database - `StockActivityRunner.External`: e-mail, SMS, notifications, HTTP - run as a
-background activity after the unit commits) adapter with the name preset, the stock category,
-`IsTrigger` for events; each adapter refuses the other's names. `PlatformWorkflowManager` turns `TriggerEventAsync(name, input, correlationId)` into
-a stimulus keyed by event name; `PlatformEvent` instantiates the stock event with the node's
-properties and evaluates its own `CanExecute` (a non-matching content type ends on Skipped,
-the stock contract); `StockActivityRunner` runs a stock task with the two stock contexts
-built from the engine's state, mapping outcomes to ports. `StockActivityRunner.EngineNative`
-leaves out, and refuses to run, the stock control-flow/state/HTTP-pipeline/forms activities
-the engine does natively. Option providers feed the property panel: permissions, registered
-triggers, stock events and tasks, tenant connections, roles, content types. Stock Liquid in
-stock activities works (the stock evaluators stay registered). Publishing a
-`WorkflowDefinition` item never fans out to content triggers. Crest's JSON login raises
-`UserLoggedInEvent` like the stock controller does.
+The activities the platform modules contribute, each an engine activity in its own module
+with `Input<T>` properties, a `Failure` output and Done/Failed ports, registered through the
+registry so the palette groups them by object. Those with an effect outside the database
+carry `IUnitBoundary` and `RunAsynchronously`: the unit commits first and they run after it
+in a unit of their own (§ Units of work).
+
+| Module | Activities | After commit |
+| --- | --- | --- |
+| Email | `Send email` (to, cc, bcc, from, sender, reply-to, subject, text and HTML bodies, body format) | yes |
+| Sms | `Send SMS` | yes |
+| Notifications | `Notify users` (comma-separated user names), `Notify content owner` (item id, default the payload's ContentItemId) | yes |
+| Twitter | `Update X status` | yes |
+| Facebook (Pixel) | `Send Meta conversion event` | yes |
+| Users | `Create user` (e-mail, user name, moderation, optional confirmation e-mail with the link as the ConfirmationUrl output), `Validate user` (Anonymous / Authenticated / InRole on the request's user), `Assign user role`, `Unassign user role` (refreshes the security stamp), `Get users by role` (user id → name) | no |
+| Tenants | `Create tenant`, `Setup tenant`, `Enable tenant`, `Disable tenant` (default tenant only) | no |
+| Crest.Workflows | `Log` (level, message) | no |
+
+Deleted without a port, because the engine already has the behaviour: the stock content
+events and tasks (the Contents feature below), the Forms and ReCaptcha form-posting
+activities (HTTP workflows are the engine's), `HttpRequestTask` (`Send HTTP request`),
+`NotifyTask` (a session notifier with no Blazor equivalent) and `MissingActivity`.
+Publishing a `WorkflowDefinition` item never fans out to content triggers.
 
 `Crest.Workflows.Contents` (feature) adds the engine-native content triggers (created,
 published, updated, deleted, versioned, draft saved, unpublished) with a content-type filter
@@ -393,7 +398,7 @@ API request that ran the hook answers **409** with the slot, the attachment and 
 (nested composable flows included) and classifies it atomic or long-running; a hook accepts
 only atomic attachments (refused at attach and at publish, naming the node and suggesting
 the event side). Boundaries are everything that waits: triggers, delays, HTTP endpoints,
-approvals, connectors, external stock tasks. `Raise trigger` is not one.
+approvals, connectors, external platform activities. `Raise trigger` is not one.
 
 **External calls are background activities.** `Call connector`, `Poll connector` and
 `Orchard external task` are engine background activities: the burst bookmarks the node and
@@ -433,8 +438,8 @@ uncommitted state.
   recorded for the journal in a fresh scope. Bursts are bounded by compute time: nothing
   inside a unit waits or calls out.
 - **External calls are boundaries, like waits.** `Call connector`, `Poll connector` and
-  `Orchard external task` (the stock tasks with effects outside the database,
-  `StockActivityRunner.External`: e-mail, SMS, notifications, HTTP) are the engine's own
+  the external platform activities (`Send email`, `Send SMS`, `Notify users`, ...:
+  `IUnitBoundary`) are the engine's own
   **background activities** (`RunAsynchronously`): the engine's middleware bookmarks the node
   and hands it to the scheduler; Crest's `DurableBackgroundActivityScheduler` writes the
   job (`WorkflowBackgroundJob`, indexed, idempotency key instance + node + bookmark) in the
@@ -450,8 +455,8 @@ uncommitted state.
   *atomic* (no boundary inside, nested definitions walked) or *long-running*. Computed at
   publish by `WorkflowAtomicityAnalyzer`; a published composable flow re-validates what uses
   it. Boundaries: the engine's bookmark-creating activities (events, timers, delays, HTTP
-  endpoints), connector activities, `Request approval`, stock tasks with external effects
-  (e-mail, notifications, HTTP request) - all of them waits now that calls are two-phase.
+  endpoints), connector activities, `Request approval`, the external platform activities
+  (e-mail, SMS, notifications, social posts) - all of them waits now that calls are two-phase.
 - **Two kinds of extension point.** **Hooks** run the attached flows *inline, inside the
   unit*, as child instances in the same scope and session; a required attachment's failure
   fails the unit. A slot is run either by a flow (`Hook` activity) or by a registry service
@@ -482,8 +487,8 @@ Still to build › Queues.
 trigger as an update (delete-then-insert of one document in a session is refused by YesSql),
 and the definition notifications (Publishing/Published, Retracting/Retracted) are raised
 once, by the content handler, with Retracted carrying the definition as unpublished.
-`WorkflowStimulusQueue` (Server/Units) collects every stimulus - registry triggers, stock
-events, content events - and sends each in its own child scope after the scope's session
+`WorkflowStimulusQueue` (Server/Units) collects every stimulus - registry triggers,
+content events - and sends each in its own child scope after the scope's session
 commits; nothing is sent when the unit failed or the commit threw. `WorkflowUnitOfWork`
 (scoped; nested frames for hook attachments) and `UnitOfWorkCommitStateHandler` (wraps the
 engine's commit handler: a failed unit cancels the document store and records the faulted
@@ -491,7 +496,7 @@ state through a child scope). `Hook` and `Fail unit` activities, `WorkflowHookSe
 (system attachments from `IWorkflowHookAttachmentProvider`, tenant ones in a document),
 `api/crest/workflows/hooks`, `WorkflowAtomicityAnalyzer` (used at attach and, through the
 engine's validating notification, at publish), `IUnitBoundary` on the connector, approval
-and external stock task activities; the generic `flow.hook` slot. Check `workflows-units`.
+and external platform activities; the generic `flow.hook` slot. Check `workflows-units`.
 Known limits, for the queue stage: the flows one stimulus starts share a unit (the serial
 writer gives per-unit isolation); the approval decision resumes its flow inline in the
 deciding request and an incoming webhook runs its flows in the request (both are their own
@@ -506,9 +511,10 @@ background jobs share. `DurableBackgroundActivityScheduler` (replaces the engine
 `WorkflowBackgroundJob` + store + `BackgroundJobContext` (the running job, for the
 idempotency key), `ShellScopedBackgroundActivityInvoker` (the engine's invoker with the
 hand-back resumed directly; engine edit: `ResumeWorkflowAsync` virtual, `BuildResumeOptionsAsync`
-factored out), recovery at tenant activation. `ConnectorActivityBase` and
-`PlatformExternalTask` are `RunAsynchronously`; `PlatformTask` refuses external task names;
-`RaiseTrigger` is not an `IUnitBoundary`. `WorkflowHookRunner` (`IWorkflowHookRunner` in Domain) runs a slot from a
+factored out), recovery at tenant activation. `ConnectorActivityBase` and the
+external platform activities (`Send email`, `Send SMS`, the notify activities, the social
+posts) are `RunAsynchronously`;
+`RaiseTrigger` is not an `IUnitBoundary`. `WorkflowHookRunner` (`IWorkflowHookRunner` in Abstractions) runs a slot from a
 flow or a service; `WorkflowHookFailedException` → 409 through `WorkflowHookFailedExceptionFilter`
 for any module's controller; a failed `WorkflowUnitOfWork` cancels its own session through a
 before-dispose callback registered ahead of Orchard's commit, so a service's request discards
@@ -529,7 +535,7 @@ a durable bookmark queue (stimuli that arrive before their bookmark), background
 resilience feature, scheduling, distributed locks. None of it knows the host's transaction:
 the engine saves its own state immediately and its background consumers run in bare service
 scopes. Verdict: ownership, registry, hooks, units, field dependencies, approvals, connections
-are new; the after-commit queue and `CrestTrigger` are thin glue over `IStimulusSender`;
+are new; the after-commit queue and `RegistryTrigger` are thin glue over `IStimulusSender`;
 two things had been reinvented and were folded back - two-phase calls onto background
 activities (above) and connector retries onto the resilience feature
 (`ConnectionResilienceStrategy`, category Connectors, the connection's `RetryCount` as the
@@ -546,7 +552,7 @@ never carried `[Activity(RunAsynchronously = true)]` onto the descriptor, so a d
 background task ran inline unless a node toggled it (engine edit in `ActivityDescriber`).
 
 **The write side, as built:**
-- `IWorkflowObjectLock` (Domain) over the engine's `IDistributedLockProvider`, keyed by
+- `IWorkflowObjectLock` (Abstractions) over the engine's `IDistributedLockProvider`, keyed by
   object id, re-entrant within a unit (scoped): the owning registry service takes it around
   every write to an object and the after-commit send
   takes it around each correlated run, so no two units touching one object interleave.
@@ -571,7 +577,7 @@ ride the engine's activity descriptors (`crest:fieldDependencies`) and the regis
 **Contracts are per-activity field dependencies, not a record-level contract.** An
 activity declares each content field it reads or writes as a dependency on a field path
 (`Part.Field`) with a **required marker per field**
-and a read/write marker. `Server/Fields`, contracts in Domain: system activities
+and a read/write marker. `Server/Fields`, contracts in Abstractions: system activities
 declare theirs in code with `[FieldDependency(path, Required, Writes, ContentType)]`;
 configurable activities derive theirs from their bindings through `IFieldDependencySource`
 (`Copy fields`' mapping rows: each source with its own marker, each target as a write). The
@@ -615,12 +621,13 @@ ownership tiers apply to the pieces.
 
 | Activity | What it does |
 | --- | --- |
-| `Crest trigger`, `Raise trigger` | start from / raise a registered trigger |
+| `Registry trigger`, `Raise trigger` | start from / raise a registered trigger |
 | `Hook`, `Fail unit` | run a slot's attachments inside the unit; fail the unit |
 | `Require permission` | gate on an Orchard permission of the acting user |
 | `Request approval` | park until a role member or permission holder decides |
 | `Call connector`, `Poll connector` | call a tenant connection after commit; poll for changes |
-| `Orchard task`, `Orchard external task` | a stock Orchard task inside the unit / after commit |
+| `Log` | write to the tenant's log |
+| `Send email`, `Send SMS`, `Notify users`, `Notify content owner`, `Update X status`, `Send Meta conversion event`, the user and tenant activities | the platform modules' activities (§ Platform activities) |
 | `Copy fields`, `Move fields` | copy field values between content items by typed mapping rows |
 | `Create party role`, `Resolve party` | Parties |
 
@@ -628,8 +635,10 @@ Triggers, activities and shipped flows by Crest module:
 
 | Module | Triggers raised | Activities | Shipped flows |
 | --- | --- | --- | --- |
+| Users | `user.created`, `.updated`, `.deleted`, `.enabled`, `.disabled`, `.confirmed`, `.logged-in`, `.logged-out` (event handlers and both login paths; correlation = user id) | `CreateUser`, `ValidateUser`, `AssignUserRole`, `UnassignUserRole`, `GetUsersByRole` | — |
+| Email, Sms, Notifications, Twitter, Facebook, Tenants | — | `SendEmail`; `SendSms`; `NotifyUsers`, `NotifyContentOwner`; `UpdateTwitterStatus`; `SendMetaConversionEvent`; `CreateTenant`, `SetupTenant`, `EnableTenant`, `DisableTenant` | — |
 | Parties | `party.role-created`, `.role-removed` (a content handler on every registered party type except the two base types; correlation = role id) | `CreatePartyRole` (registry key → role type, party from the payload, idempotent); `ResolveParty` (a role or base party id → RoleId, RoleContentType, RoleTypeKey, BasePartyId, BasePartyContentType: which item holds a field, nothing walks the graph implicitly) | — |
-| Crest.Workflows | `flow.raised`; hook slot `flow.hook` | `Crest trigger`, `Raise trigger`, `Hook`, `Fail unit`, `Require permission`, `Request approval`, connector activities, `Orchard task` (inside the unit) and `Orchard external task` (e-mail, SMS, notifications, HTTP: a background activity after commit; the registry maps each stock task to the right one), `Copy fields` / `Move fields` (Server/Contents: source and target item ids - the target defaults to the payload's ContentItemId or TransactionId - and a JSON mapping of `Part.Field → Part.Field` rows each with a `required` marker; `ContentFieldValueCopier` resolves both sides against the tenant's current definitions, copies a same-type pair's JSON whole, converts text ↔ numeric, refuses other pairs; a required source that is empty or missing ends on Failed with the field named, an optional one is skipped and listed in `Skipped`; Move clears the source; the written field is re-applied as a typed element so the item's own readers see it in the same unit) | — |
+| Crest.Workflows | `flow.raised`; hook slot `flow.hook` | `Registry trigger`, `Raise trigger`, `Hook`, `Fail unit`, `Require permission`, `Request approval`, connector activities, `Log`, `Copy fields` / `Move fields` (Server/Contents: source and target item ids - the target defaults to the payload's ContentItemId or TransactionId - and a JSON mapping of `Part.Field → Part.Field` rows each with a `required` marker; `ContentFieldValueCopier` resolves both sides against the tenant's current definitions, copies a same-type pair's JSON whole, converts text ↔ numeric, refuses other pairs; a required source that is empty or missing ends on Failed with the field named, an optional one is skipped and listed in `Skipped`; Move clears the source; the written field is re-applied as a typed element so the item's own readers see it in the same unit) | — |
 
 **Approvals** (`Server/Approvals`): `Request approval` records an `ApprovalTask` (YesSql,
 indexed) for an Orchard role and/or permission and waits on a bookmark;
@@ -737,7 +746,6 @@ shipped. The checks Crest.Workflows carries:
 | Check | Covers |
 | --- | --- |
 | `workflows-api` | engine API round-trip (save, publish, execute, journal), antiforgery 400, limited role 403, anonymous 401 |
-| `workflows-platform-activities` | stock `ContentPublishedEvent` (filtered) starts a flow; stock `CreateContentTask` with stock Liquid |
 | `workflows-units` | a failed required hook attachment faults the host and discards its writes; a healthy one commits with child instances; best-effort failure journaled; long-running flows refused at attach and at republish; a trigger raised in a failed unit never fires |
 | `workflows-approvals` | request, queue, decide, 403/409; the pending API shows the parked flow for its object |
 | `workflows-designer` | the real UI: open, add node, connect, save, publish, run, journal; lazy download assertion; Connections and Approvals pages |
@@ -763,7 +771,7 @@ watch server or do not edit during a run. A build that fails on
 
 ## Where things are
 
-- Module: `Crest.Workflows` - `Domain` (contracts), `Server` (the
+- Module: `Crest.Workflows` - `Abstractions` (contracts), `Server` (the
   module: `Registry`, `Security`, `Units`, `Hooks`, `Fields`, `Contents`, `Connectors`,
   `Approvals`, `Orchard`, `Stores`), `engine` (the vendored engine), `designer` (the forked
   Studio), `tests`.
@@ -860,17 +868,17 @@ selector's startup filter runs today (before routing).
 `ModularTenantContainerMiddleware` (matches the tenant by host and prefix, opens the shell
 scope the whole request runs in, commits or cancels it at the end) →
 `ModularTenantRouterMiddleware` (tenant prefix into `PathBase`) → the tenant pipeline: the
-`IStartupFilter`s (this is where `BlazorAdminThemeMiddleware` runs: classifies admin, login
-and member paths, **authenticates the cookie itself** for admin and member pages, runs the
-route permission check, stamps the bucket and shifts `PathBase`) → `UseRouting()` → the
-module startups by `ConfigureOrder` (`UseAuthentication` at −150; the workflows engine API
-branch with its own authentication at −151; request localization at −100; Crest.Server's
-endpoints, CORS and `UseAuthorization` in the default group) → `UseEndpoints`. So steps 1
-and 2 exist; step 3 runs twice and in two places (the shell middleware before routing for
-pages, `UseAuthentication` after routing for everything else); steps 4–6 do not exist, and
-the site bucket is never stamped. Background work (`ModularBackgroundService`) enters
-through a synthetic `HttpContext` with `Items["IsBackground"]` and an **empty principal**,
-and a platform shortcut skips the whole tenant pipeline for it.
+`IStartupFilter`s (this is where `BlazorAdminThemeMiddleware`, the shell selector, runs:
+it classifies admin, login and member paths and calls `IAccessGate`, which authenticates
+once, stamps the side and builds the caller, then the selector runs the route permission
+check, stamps the bucket and shifts `PathBase`) → `UseRouting()` → the module startups by
+`ConfigureOrder` (`AccessGateMiddleware` at −150: the request-handler schemes, then the gate
+for whatever the selector left; the workflows engine API branch at −151, which maps the
+caller onto engine grants and authenticates nothing; request localization at −100;
+Crest.Server's endpoints, CORS and `UseAuthorization` in the default group) →
+`UseEndpoints`. As of 2026-10-10 steps 1 to 4 run once each (the platform's
+`UseAuthentication` is gone); background work enters through a synthetic `HttpContext`
+flagged `IsBackground` and runs as the system caller its entry point sets.
 
 #### Caller lifetime
 
@@ -985,8 +993,7 @@ lists, GraphQL, the content-items API and the pickers (the picker scope resolver
 (every request authenticates once, cookie or `Api` scheme, `X-Shell` required on
 cookie-authenticated API calls, Site stamped as a side); the clients send `X-Shell`/`X-Org`
 (`CrestShellContext`), the loopback client forwards them. Not yet: the analyzer, the
-conformance suite, the circuit-lifetime rules, `UseAuthentication` removal (it still runs
-after routing, redundantly), the user picker's scope, read logging as a tenant setting
+conformance suite, the circuit-lifetime rules, the user picker's scope, read logging as a tenant setting
 (`AccessAuditOptions.LogReads` is an option for now).
 
 What exists: the cookie is per tenant with claims **baked at sign-in** by
@@ -1054,9 +1061,11 @@ per binding and assignments, nothing on the data.
   there, and it is the **only** way a system caller comes to exist: built in process, never
   from a credential (Decisions › System actors). The platform's `IsBackground` shortcut around the tenant pipeline is reviewed so the
   gate still runs.
-- [ ] **The `Api` scheme for machines**: OpenId validation enabled by the host recipe, or an
-  opaque-key handler behind the same forwarder (machine-actors.md); either way the gate sees a
-  machine caller.
+- [x] **The `Api` scheme for machines** (gate side landed 2026-10-10): the gate
+  authenticates `Api` for every request with an `Authorization` header; the forwarder takes
+  additional credential schemes (the remote deployment key is the first); a principal with
+  no user record is an `application` caller. Still open: OpenId validation enabled by the
+  host recipe (machine-actors.md).
 - [ ] **The analyzer** in `Crest.Build` that refuses `ISession`, content-manager writes,
   `IDbConnectionAccessor` and `IQueryManager` outside `Crest.Access` and the registered
   sources.
@@ -1169,7 +1178,7 @@ carries an output schema today.
 #### 4. The action pipelines ([workflows.md](workflows.md))
 
 What exists (survey 2026-10-10, `src/Crest.Workflows`): the engine runs the default
-pipelines (`CrestWorkflowsFeature.cs:38`; workflow: heartbeat, engine exception handling,
+pipelines (`EngineFeature.cs:38`; workflow: heartbeat, engine exception handling,
 persistent variables, exception handling, scheduler; activity: exception handling, execution
 logging, notifications, log-persistence evaluation, `BackgroundActivityInvokerMiddleware` as
 the terminal, which subclasses `DefaultActivityInvokerMiddleware`). Crest adds **no**
@@ -1237,8 +1246,9 @@ shell-scoped consumers, task handler and bookmark worker). `WorkflowStateCommitt
   `WorkflowStateCommitted`.
 - [x] **The engine API gate becomes a consumer of `IAccessDecision`.** Landed 2026-10-10:
   the caller comes from the request path's gate (none → 403), every check is the decision,
-  the Run list is consulted beside it; the branch's own authentication is still to go.
-  `CrestWorkflowsApiSecurityMiddleware` (`Server/Security`) maps Crest permissions to engine
+  the Run list is consulted beside it; the branch's own authentication went with the one
+  gate (2026-10-10, access.md § 3).
+  `ApiSecurityMiddleware` (`Server/Security`) maps Crest permissions to engine
   claims and enforces the run gate per definition; it keeps the mapping but asks the one
   decision, and sits after the request path's steps 1–6 rather than carrying its own
   authentication branch.
@@ -1246,11 +1256,11 @@ shell-scoped consumers, task handler and bookmark worker). `WorkflowStateCommitt
   model, sealed secrets, OAuth, `ConnectorHttp` (SSRF guard, redirects off, size limits),
   rate limiters, token cache and `ConnectionResilienceStrategy` move down; the activities
   stay as consumers; the webhook controller verifies through a narrow verifier.
+- [x] **The stock activities ported to `Input<T>`** and the stock module deleted. Landed
+  2026-10-10: § Platform activities; the stock Liquid and JavaScript evaluators went with it.
 - [ ] **Expressions**: the engine's Liquid handler replaced by the platform's parser and
-  context; one Fluid version (2.40 platform, 2.31 engine today); the platform-side
-  `LiquidWorkflowExpressionEvaluator` and `JavaScriptWorkflowScriptEvaluator` deleted with
-  the stock tasks ported to `Input<T>`; Jint and Fluid limits configured in one place
-  (blazor-display.md § 12).
+  context; one Fluid version (2.40 platform, 2.31 engine today); Jint and Fluid limits
+  configured in one place (blazor-display.md § 12).
 
 #### 5. Move the reads
 
@@ -1397,14 +1407,18 @@ shell-scoped consumers, task handler and bookmark worker). `WorkflowStateCommitt
 ## Still to build
 
 The workflow service, its registry, connectors, approvals, ownership, permissions, units
-of work, hooks, field dependencies and the stock-Orchard bridge are built: see the
+of work, hooks, field dependencies and the platform activities are built: see the
 sections above. This section holds what is designed but not built, the rulings that shape
 the design, and the open work.
 
 ### Rulings
 
 - **Workflows is the fifth core registry, owned by Crest.**
-- **Elsa is the Orchard workflow service, by override** (2026-09-27): depend on the stock
+- **One engine, no stock module** (2026-10-10): the stock OrchardCore workflow module's
+  activities were ported to engine activities in their own modules, its events became
+  registry triggers, and the module, its bridge and its contracts were deleted. Supersedes
+  the override ruling below.
+- **Elsa is the Orchard workflow service, by override** (2026-09-27, superseded 2026-10-10): depend on the stock
   feature, re-register its services last. Rejected: stock engine + Studio over an adapter
   (no versions, no typed model, a copy of the non-virtual manager); two live engines (two
   palettes, duplicated events, two instance stores).
@@ -1429,7 +1443,7 @@ Built today: see [docs/workflows.md › Units of work](workflows.md#units-of-wor
 
 - [x] **Merge the stock workflows module into Crest.Workflows** (ruling 2026-10-09, done with
   the platform rename). The stock module is gone. Its contract, which platform modules
-  implement, is the library `Crest.Workflows.Platform.Abstractions` (activity base classes,
+  implement, is the library `Crest.Workflows.Abstractions` (activity base classes,
   `AddActivity`, `IActivityLibrary`, the expression and script evaluator interfaces, and
   `ManageWorkflows`). What the engine runs it with lives in Crest.Workflows under
   `Server/Platform/Runtime` (`PlatformActivitiesStartup`): the activity library, the Liquid and

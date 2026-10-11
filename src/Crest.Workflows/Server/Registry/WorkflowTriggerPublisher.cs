@@ -31,7 +31,7 @@ public sealed class WorkflowTriggerPublisher(
             [WorkflowsConstants.InputKeys.Actor] = userContext.Capture(),
         };
 
-        await queue.EnqueueAsync<CrestTrigger>(new CrestTriggerStimulus(key), new() { CorrelationId = correlationId, Input = input });
+        await queue.EnqueueAsync<RegistryTrigger>(new RegistryTriggerStimulus(key), new() { CorrelationId = correlationId, Input = input });
         logger.LogDebug("Workflow trigger {Trigger} queued for {Correlation}; it fires after commit.", key, correlationId);
     }
 }

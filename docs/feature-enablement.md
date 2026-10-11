@@ -38,13 +38,10 @@ T" when the providing feature is off.
 - **`Crest.Queries.Sql`** — a *provider* of `IQuerySource`, not a requirement.
   Crest enumerates whatever sources a tenant has and rejects unknown ones; declaring it
   would force a SQL query feature onto every tenant.
-- **`Crest.Workflows.Platform`** — no Crest code references it. It appears in the host
-  host's admin-menu layout and in the `legacy-frame-workflows` Playwright check, both
-  host-level concerns.
 - **A host's business modules** — standalone modules that depend on Crest, not the reverse.
 
 These are host choices, which is why the ones a host wants (its business modules,
-`Crest.Workflows.Platform`, `Crest.Tenants`) are listed in its setup recipe's `feature`
+`Crest.Tenants`) are listed in its setup recipe's `feature`
 step. Everything else Crest needs arrives through the dependency
 graph.
 

@@ -1,5 +1,5 @@
 using Crest.Data.Migration;
-using Crest.Queries.Core;
+using Crest.Queries;
 
 namespace Crest.Queries.Sql.Migrations;
 

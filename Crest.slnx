@@ -29,7 +29,7 @@
   <Project Path="src/Crest.SiteTheme/Crest.SiteTheme.csproj" />
   <Project Path="src/Crest.SiteTheme/wasm/Crest.SiteTheme.Client.csproj" />
   <Project Path="src/Crest.Workflows/Contents/Crest.Workflows.Contents.csproj" />
-  <Project Path="src/Crest.Workflows/Domain/Crest.Workflows.Domain.csproj" />
+  <Project Path="src/Crest.Workflows/Abstractions/Crest.Workflows.Abstractions.csproj" />
   <Project Path="src/Crest.Workflows/Server/Crest.Workflows.csproj" />
   <Project Path="src/Crest.Workflows/blazor-wasm/Crest.Workflows.BlazorWasm.csproj" />
   <Project Path="src/Crest.Workflows/designer/src/framework/Crest.Workflows.Studio.Core.BlazorWasm/Crest.Workflows.Studio.Core.BlazorWasm.csproj" />

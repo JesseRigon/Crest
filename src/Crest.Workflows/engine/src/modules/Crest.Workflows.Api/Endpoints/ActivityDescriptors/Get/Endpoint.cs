@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Crest.Workflows.Api.Endpoints.ActivityDescriptors.Get;
 
 [PublicAPI]
-internal class Get : CrestWorkflowsEndpoint<Request, ActivityDescriptor>
+internal class Get : WorkflowsEndpoint<Request, ActivityDescriptor>
 {
     private readonly IActivityRegistryLookupService _registryLookup;
 

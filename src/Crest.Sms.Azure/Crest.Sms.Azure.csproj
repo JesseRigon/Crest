@@ -24,6 +24,6 @@
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
-    <ProjectReference Include="..\Crest.Sms.Core\Crest.Sms.Core.csproj" />
+    <ProjectReference Include="..\Crest.Sms\Crest.Sms.csproj" />
   </ItemGroup>
 </Project>

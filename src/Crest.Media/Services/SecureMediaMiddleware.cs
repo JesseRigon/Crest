@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Crest.Routing;
 
@@ -36,19 +37,23 @@ public class SecureMediaMiddleware
             RequestDelegate next,
             PathString subPath)
         {
-            if (!(context.User.Identity?.IsAuthenticated ?? false))
-            {
-                // Allow bearer (API) authentication too.
-                var authenticateResult = await authenticationService.AuthenticateAsync(context, PlatformConstants.AuthenticationSchemes.Api);
-
-                if (authenticateResult.Succeeded)
-                {
-                    context.User = authenticateResult.Principal;
-                }
-            }
-
+            // The request path's gate authenticated the request (bearer or cookie); the
+            // principal is the gate's.
             if (await authorizationService.AuthorizeAsync(context.User, MediaPermissions.ViewMedia, (object)subPath.ToString()))
             {
+                // A file an anonymous caller could not see is served with the secure caching
+                // policy; one anyone may see keeps the default browser caching.
+                var callers = context.RequestServices.GetRequiredService<Crest.Access.ICallerContextAccessor>();
+                if (callers.Current is { IsAuthenticated: true } caller)
+                {
+                    var decision = context.RequestServices.GetRequiredService<Crest.Access.IAccessDecision>();
+                    var anonymous = Crest.Access.CallerContext.Anonymous(caller.Tenant, caller.Side, permissionVersion: caller.PermissionVersion);
+                    if (!(await decision.DecideAsync(anonymous, MediaPermissions.ViewMedia.Name, subPath.ToString())).IsAllowed)
+                    {
+                        context.MarkAsSecureMediaRequested();
+                    }
+                }
+
                 await next(context);
             }
             else

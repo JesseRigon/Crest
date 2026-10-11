@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Navigation;
 using Crest.AzureAI.Drivers;
 using Crest.AzureAI.Models;

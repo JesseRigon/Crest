@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.AspNetCore.Routing;
 using Moq;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 
 namespace Crest.Tests.Mvc;
 

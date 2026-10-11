@@ -2,7 +2,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Crest.Users.Models;
-using Crest.Workflows.Platform.Services;
+using Crest.Users.Workflows;
+using Crest.Workflows;
 
 namespace Crest.Users.Controllers;
 
@@ -10,22 +11,10 @@ public abstract class AccountBaseController : Controller
 {
     protected async Task<IActionResult> LoggedInActionResultAsync(IUser user, string returnUrl = null, ExternalLoginInfo info = null)
     {
-        var workflowManager = HttpContext.RequestServices.GetService<IWorkflowManager>();
-
-        if (workflowManager != null && user is User u)
+        var triggers = HttpContext.RequestServices.GetService<IWorkflowTriggerPublisher>();
+        if (triggers is not null && user is User platformUser)
         {
-            var input = new Dictionary<string, object>
-            {
-                ["UserName"] = user.UserName,
-                ["ExternalClaims"] = info?.Principal?.GetSerializableClaims() ?? [],
-                ["Roles"] = u.RoleNames,
-                ["Provider"] = info?.LoginProvider,
-            };
-
-            await workflowManager.TriggerEventAsync(
-                name: nameof(Workflows.Activities.UserLoggedInEvent),
-                input: input,
-                correlationId: u.UserId);
+            await triggers.PublishAsync(UserWorkflowTriggers.LoggedIn, platformUser.UserId, UserWorkflowTriggers.Payload(platformUser, info?.LoginProvider ?? string.Empty));
         }
 
         return RedirectToLocal(returnUrl);

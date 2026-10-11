@@ -1,15 +1,16 @@
 using Microsoft.Extensions.DependencyInjection;
-using Crest.Email.Workflows.Activities;
 using Crest.Modules;
-using Crest.Workflows.Platform.Helpers;
+using Crest.Workflows;
+using Crest.Workflows.Extensions;
 
 namespace Crest.Email.Workflows;
 
-[RequireFeatures("Crest.Workflows")]
+[RequireFeatures(WorkflowsConstants.FeatureId)]
 public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddActivity<EmailTask>();
+        services.AddScoped<IWorkflowActivityProvider, EmailWorkflowProvider>();
+        services.ConfigureCrestWorkflows(workflows => workflows.AddActivitiesFrom<Startup>());
     }
 }

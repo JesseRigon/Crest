@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Graph;
 
 [PublicAPI]
-internal class Graph(IWorkflowDefinitionService workflowDefinitionService, IApiSerializer apiSerializer, ActivityWriter activityWriter) : CrestWorkflowsEndpoint<Request>
+internal class Graph(IWorkflowDefinitionService workflowDefinitionService, IApiSerializer apiSerializer, ActivityWriter activityWriter) : WorkflowsEndpoint<Request>
 {
     public override void Configure()
     {

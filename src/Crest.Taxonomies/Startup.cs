@@ -18,7 +18,7 @@ using Crest.Modules;
 using Crest.Navigation;
 using Crest.Security.Permissions;
 using Crest.Settings.Deployment;
-using Crest.Taxonomies.Core;
+using Crest.Taxonomies;
 using Crest.Taxonomies.Drivers;
 using Crest.Taxonomies.Fields;
 using Crest.Taxonomies.GraphQL;

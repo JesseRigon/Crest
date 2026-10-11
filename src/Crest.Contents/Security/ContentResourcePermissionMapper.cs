@@ -10,7 +10,9 @@ namespace Crest.Contents.Security;
 /// </summary>
 public sealed class ContentResourcePermissionMapper : IResourcePermissionMapper
 {
-    public IReadOnlyList<string>? Map(string permission, object resource, CallerContext caller)
+    private static bool IsContentPermission(string permission) => ContentPermissionNames.Matches(permission);
+
+    public ValueTask<IReadOnlyList<PermissionCandidate>?> MapAsync(string permission, object resource, CallerContext caller, CancellationToken cancellationToken = default)
     {
         string? contentType;
         var owned = false;
@@ -21,7 +23,9 @@ public sealed class ContentResourcePermissionMapper : IResourcePermissionMapper
                 contentType = item.ContentType;
                 owned = caller.UserId is not null && string.Equals(caller.UserId, item.Owner, StringComparison.Ordinal);
                 break;
-            case string typeName when !string.IsNullOrEmpty(typeName):
+            // A bare string is a content type name only for a content permission: other
+            // modules ask string resources too (a media path, a settings group id).
+            case string typeName when !string.IsNullOrEmpty(typeName) && IsContentPermission(permission):
                 contentType = typeName;
                 break;
             case ContentTypeProbe probe:
@@ -29,7 +33,7 @@ public sealed class ContentResourcePermissionMapper : IResourcePermissionMapper
                 owned = probe.AsOwner;
                 break;
             default:
-                return null;
+                return ValueTask.FromResult<IReadOnlyList<PermissionCandidate>?>(null);
         }
 
         var effective = permission;
@@ -38,7 +42,7 @@ public sealed class ContentResourcePermissionMapper : IResourcePermissionMapper
             effective = ownerVariation.Name;
         }
 
-        var candidates = new List<string>();
+        var candidates = new List<PermissionCandidate>();
         if (ContentTypePermissionsHelper.PermissionTemplates.TryGetValue(effective, out var template) && !string.IsNullOrEmpty(contentType))
         {
             candidates.Add(ContentTypePermissionsHelper.CreateDynamicPermission(template, contentType).Name);
@@ -50,8 +54,15 @@ public sealed class ContentResourcePermissionMapper : IResourcePermissionMapper
             candidates.Add(permission);
         }
 
-        return candidates;
+        return ValueTask.FromResult<IReadOnlyList<PermissionCandidate>?>(candidates);
     }
+}
+
+/// <summary>Whether a permission is one of the content permissions with a per-type template.</summary>
+file static class ContentPermissionNames
+{
+    public static bool Matches(string permission) =>
+        ContentTypePermissionsHelper.PermissionTemplates.ContainsKey(permission) || CommonPermissions.OwnerPermissionsByName.ContainsKey(permission);
 }
 
 /// <summary>A resource standing in for "an item of this type, owned (or not) by the caller",

@@ -1,37 +1,21 @@
 using Fluid;
 using Fluid.Values;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
+using Crest.Access;
 using Crest.Liquid;
 
 namespace Crest.Users.Liquid;
 
-public class IsInRoleFilter : ILiquidFilter
+/// <summary>Whether the request's caller holds a role; reads the one caller, never the principal.</summary>
+public class IsInRoleFilter(ICallerContextAccessor callers) : ILiquidFilter
 {
-    private readonly IdentityOptions _identityOptions;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public IsInRoleFilter(IOptions<IdentityOptions> identityOptions, IHttpContextAccessor httpContextAccessor)
-    {
-        _identityOptions = identityOptions.Value;
-        _httpContextAccessor = httpContextAccessor;
-    }
-
     public ValueTask<FluidValue> ProcessAsync(FluidValue input, FilterArguments arguments, LiquidTemplateContext ctx)
     {
-        if (input.ToObjectValue() is LiquidUserAccessor)
+        if (input.ToObjectValue() is LiquidUserAccessor && callers.Current is { } caller)
         {
-            var user = _httpContextAccessor.HttpContext?.User;
-            if (user != null)
+            var roleName = arguments["name"].Or(arguments.At(0)).ToStringValue();
+            if (caller.Roles.Contains(roleName))
             {
-                var claimName = arguments["name"].Or(arguments.At(0)).ToStringValue();
-                var roleClaimType = _identityOptions.ClaimsIdentity.RoleClaimType;
-
-                if (user.Claims.Any(claim => claim.Type == roleClaimType && claim.Value.Equals(claimName, StringComparison.OrdinalIgnoreCase)))
-                {
-                    return ValueTask.FromResult<FluidValue>(BooleanValue.True);
-                }
+                return ValueTask.FromResult<FluidValue>(BooleanValue.True);
             }
         }
 

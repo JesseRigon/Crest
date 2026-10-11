@@ -23,7 +23,7 @@
        Monaco, ...) is referenced only so it ships with the app; its assemblies are lazy
        (crest-lazy-assemblies.txt) and nothing here touches their types. -->
   <ItemGroup>
-    <ProjectReference Include="..\Domain\Crest.Workflows.Domain.csproj" />
+    <ProjectReference Include="..\Abstractions\Crest.Workflows.Abstractions.csproj" />
     <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
     <ProjectReference Include="..\studio-host\Crest.Workflows.Studio.Host.csproj" />
   </ItemGroup>

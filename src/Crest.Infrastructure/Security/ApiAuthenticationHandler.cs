@@ -24,14 +24,37 @@ public class ApiAuthenticationHandler : AuthenticationHandler<ApiAuthorizationOp
         _authenticationOptions = authenticationOptions;
     }
 
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        if (!_authenticationOptions.Value.SchemeMap.ContainsKey(Options.ApiAuthenticationScheme))
+        var schemes = _authenticationOptions.Value.SchemeMap;
+        AuthenticateResult? result = null;
+        if (schemes.ContainsKey(Options.ApiAuthenticationScheme))
         {
-            return Task.FromResult<AuthenticateResult>(AuthenticateResult.NoResult());
+            result = await Context.AuthenticateAsync(Options.ApiAuthenticationScheme);
+            if (result.Succeeded)
+            {
+                return result;
+            }
         }
 
-        return Context.AuthenticateAsync(Options.ApiAuthenticationScheme);
+        // The other API credentials modules registered (docs/access.md § Machine callers).
+        foreach (var scheme in Options.AdditionalSchemes)
+        {
+            if (!schemes.ContainsKey(scheme))
+            {
+                continue;
+            }
+
+            var other = await Context.AuthenticateAsync(scheme);
+            if (other.Succeeded)
+            {
+                return other;
+            }
+
+            result ??= other;
+        }
+
+        return result ?? AuthenticateResult.NoResult();
     }
 
     protected override Task HandleChallengeAsync(AuthenticationProperties properties)

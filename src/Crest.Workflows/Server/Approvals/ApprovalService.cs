@@ -1,8 +1,5 @@
-using System.Security.Claims;
 using Crest.Workflows.Runtime;
 using Crest.Workflows.Runtime.Options;
-using Microsoft.AspNetCore.Authorization;
-using Crest.Security.Permissions;
 using YesSql;
 
 namespace Crest.Workflows.Approvals;
@@ -22,12 +19,12 @@ public enum ApprovalDecisionResult { Decided, NotFound, Forbidden, AlreadyDecide
 /// queue a user sees, and the decision, which is recorded first and then resumes the
 /// waiting workflow. A task is decided once.
 /// </summary>
-public sealed class ApprovalService(ISession session, IAuthorizationService authorizationService, IPermissionService permissionService, IWorkflowResumer resumer)
+public sealed class ApprovalService(ISession session, Crest.Access.ICallerContextAccessor callers, Crest.Access.IAccessDecision decision, IWorkflowResumer resumer)
 {
     public Task<ApprovalTask?> FindAsync(string approvalId) =>
         session.Query<ApprovalTask, ApprovalTaskIndex>(i => i.ApprovalId == approvalId).FirstOrDefaultAsync()!;
 
-    public async Task<IReadOnlyList<ApprovalTaskModel>> ListAsync(ClaimsPrincipal user, string? status, bool all)
+    public async Task<IReadOnlyList<ApprovalTaskModel>> ListAsync(string? status, bool all)
     {
         var query = string.IsNullOrWhiteSpace(status)
             ? session.Query<ApprovalTask, ApprovalTaskIndex>()
@@ -37,7 +34,7 @@ public sealed class ApprovalService(ISession session, IAuthorizationService auth
         var result = new List<ApprovalTaskModel>();
         foreach (var task in tasks)
         {
-            var canDecide = await CanDecideAsync(user, task);
+            var canDecide = await CanDecideAsync(task);
             if (all || canDecide)
             {
                 result.Add(ToModel(task, canDecide && task.Status == ApprovalStatuses.Pending));
@@ -47,27 +44,28 @@ public sealed class ApprovalService(ISession session, IAuthorizationService auth
         return result;
     }
 
-    public async Task<bool> CanDecideAsync(ClaimsPrincipal user, ApprovalTask task)
+    /// <summary>Whether the request's caller may decide the task: a member of its role, or a holder of its permission through the one decision (ceilings included).</summary>
+    public async Task<bool> CanDecideAsync(ApprovalTask task)
     {
-        if (user.Identity?.IsAuthenticated != true)
+        if (callers.Current is not { IsAuthenticated: true } caller)
         {
             return false;
         }
 
-        if (!string.IsNullOrWhiteSpace(task.Role) && user.IsInRole(task.Role))
+        if (!string.IsNullOrWhiteSpace(task.Role) && caller.Roles.Contains(task.Role))
         {
             return true;
         }
 
-        if (!string.IsNullOrWhiteSpace(task.Permission) && await permissionService.FindByNameAsync(task.Permission) is { } permission)
+        if (!string.IsNullOrWhiteSpace(task.Permission))
         {
-            return await authorizationService.AuthorizeAsync(user, permission);
+            return (await decision.DecideAsync(caller, task.Permission)).IsAllowed;
         }
 
         return false;
     }
 
-    public async Task<(ApprovalDecisionResult Result, ApprovalTask? Task)> DecideAsync(string approvalId, ClaimsPrincipal user, ApprovalDecisionRequest request, CancellationToken cancellationToken)
+    public async Task<(ApprovalDecisionResult Result, ApprovalTask? Task)> DecideAsync(string approvalId, ApprovalDecisionRequest request, CancellationToken cancellationToken)
     {
         var status = request.Decision?.Trim().ToLowerInvariant() switch
         {
@@ -86,7 +84,7 @@ public sealed class ApprovalService(ISession session, IAuthorizationService auth
             return (ApprovalDecisionResult.NotFound, null);
         }
 
-        if (!await CanDecideAsync(user, task))
+        if (!await CanDecideAsync(task))
         {
             return (ApprovalDecisionResult.Forbidden, task);
         }
@@ -97,8 +95,9 @@ public sealed class ApprovalService(ISession session, IAuthorizationService auth
         }
 
         task.Status = status;
-        task.DecidedBy = user.Identity!.Name;
-        task.DecidedByUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var caller = callers.Current!;
+        task.DecidedBy = caller.UserName;
+        task.DecidedByUserId = caller.UserId;
         task.Comment = string.IsNullOrWhiteSpace(request.Comment) ? null : request.Comment.Trim();
         task.DecidedUtc = DateTime.UtcNow;
         await session.SaveAsync(task);

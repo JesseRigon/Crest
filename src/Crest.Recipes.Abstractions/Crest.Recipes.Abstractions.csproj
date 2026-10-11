@@ -18,4 +18,8 @@
     <ProjectReference Include="..\Crest.Data.YesSql.Abstractions\Crest.Data.YesSql.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

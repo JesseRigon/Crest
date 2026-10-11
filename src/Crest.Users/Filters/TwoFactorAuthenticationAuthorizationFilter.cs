@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.Users.Controllers;
 using Crest.Users.Events;
 

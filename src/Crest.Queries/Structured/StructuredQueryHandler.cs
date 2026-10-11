@@ -1,7 +1,7 @@
 #nullable enable
 using System.Text.Json;
 using Crest.Entities;
-using Crest.Queries.Core;
+using Crest.Queries;
 
 namespace Crest.Queries.Structured;
 

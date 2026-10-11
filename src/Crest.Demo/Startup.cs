@@ -22,7 +22,7 @@ using Crest.DisplayManagement.Descriptors;
 using Crest.DisplayManagement.Handlers;
 using Crest.Environment.Commands;
 using Crest.Modules;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.Navigation;
 using Crest.Security.Permissions;
 using Crest.Users.Models;

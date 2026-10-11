@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Crest.ContentFields.Settings;
 using Crest.Tests.Apis.Context;
-using Crest.Users.Core.Json;
+using Crest.Users.Json;
 using Crest.Users.Indexes;
 using Crest.Users.Models;
 

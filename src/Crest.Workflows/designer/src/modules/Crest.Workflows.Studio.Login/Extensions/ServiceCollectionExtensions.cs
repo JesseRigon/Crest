@@ -36,10 +36,10 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection UseCrestWorkflowsIdentity(this IServiceCollection services)
     {
         return services
-                .AddScoped<ICredentialsValidator, CrestWorkflowsIdentityCredentialsValidator>()
-                .AddScoped<IAuthorizationService, CrestWorkflowsIdentityAuthorizationService>()
-                .AddScoped<IRefreshTokenService, CrestWorkflowsIdentityRefreshTokenService>()
-                .AddScoped<IEndSessionService, CrestWorkflowsIdentityEndSessionService>()
+                .AddScoped<ICredentialsValidator, IdentityCredentialsValidator>()
+                .AddScoped<IAuthorizationService, IdentityAuthorizationService>()
+                .AddScoped<IRefreshTokenService, IdentityRefreshTokenService>()
+                .AddScoped<IEndSessionService, IdentityEndSessionService>()
                 .AddScoped<IAuthenticationProviderManager, DefaultAuthenticationProviderManager>()
                 .AddScoped<IAuthenticationProvider, JwtAuthenticationProvider>();
             ;
@@ -60,10 +60,10 @@ public static class ServiceCollectionExtensions
         
         return services
                 .AddScoped<ICredentialsValidator, OAuth2CredentialsValidator>()
-                .AddScoped<IAuthorizationService, CrestWorkflowsIdentityAuthorizationService>()
-                .AddScoped<IRefreshTokenService, CrestWorkflowsIdentityRefreshTokenService>()
+                .AddScoped<IAuthorizationService, IdentityAuthorizationService>()
+                .AddScoped<IRefreshTokenService, IdentityRefreshTokenService>()
                 .AddScoped<IAuthenticationProviderManager, DefaultAuthenticationProviderManager>()
-                .AddScoped<IEndSessionService, CrestWorkflowsIdentityEndSessionService>()
+                .AddScoped<IEndSessionService, IdentityEndSessionService>()
                 .AddScoped<IAuthenticationProviderManager, DefaultAuthenticationProviderManager>()
             ;
     }

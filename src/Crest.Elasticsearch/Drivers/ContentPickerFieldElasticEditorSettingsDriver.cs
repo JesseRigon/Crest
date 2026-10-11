@@ -3,7 +3,7 @@ using Crest.ContentTypes.Editors;
 using Crest.DisplayManagement.Handlers;
 using Crest.DisplayManagement.Views;
 using Crest.Indexing;
-using Crest.Elasticsearch.Core.Models;
+using Crest.Elasticsearch.Models;
 
 namespace Crest.Elasticsearch.Drivers;
 

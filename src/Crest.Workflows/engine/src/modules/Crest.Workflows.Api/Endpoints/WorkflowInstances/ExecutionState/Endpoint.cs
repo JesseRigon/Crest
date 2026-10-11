@@ -9,7 +9,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.ExecutionState;
 /// Returns the execution state of the specified workflow instance.
 /// </summary>
 [PublicAPI]
-internal class ExecutionState(IWorkflowInstanceStore store) : CrestWorkflowsEndpoint<Request, Response>
+internal class ExecutionState(IWorkflowInstanceStore store) : WorkflowsEndpoint<Request, Response>
 {
     /// <inheritdoc />
     public override void Configure()

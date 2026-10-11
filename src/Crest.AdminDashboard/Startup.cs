@@ -14,7 +14,7 @@ using Crest.ContentTypes.Events;
 using Crest.Data;
 using Crest.Data.Migration;
 using Crest.Modules;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.Security.Permissions;
 
 namespace Crest.AdminDashboard;

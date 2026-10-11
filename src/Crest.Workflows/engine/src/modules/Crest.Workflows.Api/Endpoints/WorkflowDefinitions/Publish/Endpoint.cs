@@ -11,7 +11,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Publish;
 
 [PublicAPI]
 internal class Publish(IWorkflowDefinitionStore store, IWorkflowDefinitionPublisher workflowDefinitionPublisher, IWorkflowDefinitionLinker linker, IAuthorizationService authorizationService)
-    : CrestWorkflowsEndpoint<Request, Response>
+    : WorkflowsEndpoint<Request, Response>
 {
     public override void Configure()
     {

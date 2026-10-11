@@ -50,32 +50,38 @@ re-read in the source; confirm each point at design time.
   controllers and the engine gate, carry the client id into the workflow actor.
   - [ ] **Enable the features.** The OpenId server and validation features are not in the setup
     recipe.
-  - [ ] **Accept bearer tokens on our APIs.** The Crest controllers (`api/crest/...`) and the
-    workflow engine gate (`CrestWorkflowsApiSecurityMiddleware`) authenticate with the
-    Orchard cookie and require an antiforgery token on writes. For machines they would accept
-    the `Api` scheme as well and skip antiforgery for bearer requests - safe, because a
-    browser never sends a bearer token on its own.
+  - [x] **Accept bearer tokens on our APIs.** Landed 2026-10-10: the access gate
+    authenticates the `Api` scheme for every request carrying an `Authorization` header, so
+    the Crest controllers and the workflow engine gate see the machine's caller; the
+    forwarder also takes additional schemes (`ApiAuthorizationOptions.AdditionalSchemes`).
+  - [ ] **Skip antiforgery for bearer requests.** Writes still validate an antiforgery
+    token; a bearer request should skip it (safe: a browser never sends a bearer token on
+    its own).
   - [ ] **Workflow attribution.** A machine-triggered run has no user. The actor snapshot
     (`WorkflowUserContext`, workflow input `Actor`) would carry the client id so journals and
     approvals show which machine acted.
   - [ ] **Check workflow permissions.** Workflow permissions fit as they are. A machine whose
     application holds `WorkflowViewer` or `WorkflowEditor` would get exactly those engine
     grants from the gate. Per-flow access lists (`Crest.Access.Edit` / `Run`) would work by
-    role name. Naming a machine directly in a list is uncertain:
-    `WorkflowDefinitionAccessHandler` compares entries against the principal's name, and how
-    an application principal populates it is unchecked.
-- [ ] **2. Opaque API keys**, only if CLI users find the token exchange a burden.
+    role name. Naming a machine directly in a list compares against the caller's user name,
+    which for a client-credentials token is the application's display name
+    (`WorkflowDefinitionAccessCeiling`).
+- [ ] **2. Opaque API keys**, only if CLI users find the token exchange a burden. The pattern
+  exists (2026-10-10): the remote deployment key is an opaque-key scheme behind the `Api`
+  forwarder, with a contributor granting its caller exactly one permission.
 - [ ] **3. A machine registry** (ids, last-seen, per-machine revocation), only if operating many
   machines makes deleting applications too blunt.
 
 ## Decisions needed
 
-- [ ] **Member ceiling.** Decide whether a machine identity is staff-class or gets its own
-  class in the member permission ceiling (`Crest.Members`).
+- [x] **Member ceiling.** A machine identity has its own class, `application`
+  (`CallerClasses.Application`, 2026-10-10); it is not member-class, so the member ceiling
+  does not apply. Whether an application acting for an organization takes the ceiling is
+  access.md's open decision.
 - [ ] **Device flow.** Does Orchard's OpenId admin expose the device flow, or only OpenIddict
   underneath?
-- [ ] **Principal name.** What is `Identity.Name` on a client-credentials principal (needed for
-  per-flow lists and for the actor snapshot)?
+- [x] **Principal name.** The application's display name: the client-credentials flow adds
+  it as the `name` claim; the name identifier is the client id (2026-10-10).
 - [ ] **Where the OpenID server runs.** One OpenID server per tenant, or a central one on the
   default tenant that the others validate against? Per tenant keeps identities and secrets
   inside the tenant's database.

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Options;
-using Crest.Media.Core.Processing;
+using Crest.Media.Processing;
 using Crest.Media.Fields;
 using Crest.Media.Processing;
 using Crest.Media.Services;

@@ -26,8 +26,8 @@ using Crest.FileStorage.FileSystem;
 using Crest.Indexing;
 using Crest.Liquid;
 using Crest.Localization;
-using Crest.Media.Core;
-using Crest.Media.Core.Helpers;
+using Crest.Media;
+using Crest.Media.Helpers;
 using Crest.Media.Deployment;
 using Crest.Media.Drivers;
 using Crest.Media.Endpoints.Api;
@@ -168,7 +168,7 @@ public sealed class Startup : StartupBase
         });
 
         services.AddPermissionProvider<PermissionProvider>();
-        services.AddScoped<IAuthorizationHandler, ManageMediaFolderAuthorizationHandler>();
+        services.AddScoped<Crest.Access.IResourcePermissionMapper, ManageMediaFolderPermissionMapper>();
         services.AddNavigationProvider<AdminMenu>();
 
         // Image processing pipeline (NetVips-based)
@@ -409,7 +409,7 @@ public sealed class SecureMediaStartup : StartupBase
         // Marker service to easily detect if the feature has been enabled.
         services.AddSingleton<SecureMediaMarker>();
         services.AddPermissionProvider<SecureMediaPermissions>();
-        services.AddScoped<IAuthorizationHandler, ViewMediaFolderAuthorizationHandler>();
+        services.AddScoped<Crest.Access.IResourcePermissionMapper, ViewMediaFolderPermissionMapper>();
 
         services.AddSingleton<IMediaEventHandler, SecureMediaFileStoreEventHandler>();
     }
@@ -501,25 +501,13 @@ public sealed class MediaTusStartup : StartupBase
             "/api/media/tus",
             async httpContext =>
             {
-                // Authenticate against the configured Media API scheme (cookie by default, bearer
-                // "Api" when enabled) and adopt its principal so this handler and the tus event
-                // callbacks below authorize against that identity.
-                var mediaApiSettings = httpContext.RequestServices
-                    .GetRequiredService<ISiteService>()
-                    .GetSettings<MediaApiSettings>();
-
-                var authenticationScheme = mediaApiSettings.AuthenticationScheme == MediaApiAuthenticationScheme.Bearer
-                    ? PlatformConstants.AuthenticationSchemes.Api
-                    : IdentityConstants.ApplicationScheme;
-
-                var authenticateResult = await httpContext.AuthenticateAsync(authenticationScheme);
-                if (!authenticateResult.Succeeded)
+                // The request path's gate authenticated the request (bearer or cookie); this
+                // handler and the tus event callbacks below authorize against that identity.
+                if (httpContext.User.Identity?.IsAuthenticated != true)
                 {
                     httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     return null;
                 }
-
-                httpContext.User = authenticateResult.Principal;
 
                 var authService =
                     httpContext.RequestServices.GetRequiredService<IAuthorizationService>();

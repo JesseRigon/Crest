@@ -2,7 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Crest.Elasticsearch.Core.Services;
+using Crest.Elasticsearch.Services;
 using Crest.Elasticsearch.Models;
 using Crest.Elasticsearch.ViewModels;
 using Crest.Entities;
@@ -12,7 +12,7 @@ namespace Crest.Elasticsearch;
 
 [Route("api/elasticsearch")]
 [ApiController]
-[Authorize(AuthenticationSchemes = PlatformConstants.AuthenticationSchemes.Api), IgnoreAntiforgeryToken, AllowAnonymous]
+[Authorize, IgnoreAntiforgeryToken, AllowAnonymous]
 public sealed class ElasticsearchApiController : ControllerBase
 {
     private readonly IAuthorizationService _authorizationService;

@@ -21,11 +21,11 @@
     <ProjectReference Include="..\Crest.Deployment.Abstractions\Crest.Deployment.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
     <ProjectReference Include="..\Crest.Localization.Abstractions\Crest.Localization.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Localization.Core\Crest.Localization.Core.csproj" />
+    <ProjectReference Include="..\Crest.Localization\Crest.Localization.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
-    <ProjectReference Include="..\Crest.Settings.Core\Crest.Settings.Core.csproj" />
+    <ProjectReference Include="..\Crest.Settings\Crest.Settings.csproj" />
     <ProjectReference Include="..\Crest.ContentTypes\Crest.ContentTypes.csproj" />
   </ItemGroup>
 

@@ -16,7 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
-    <ProjectReference Include="..\Crest.Mvc.Core\Crest.Mvc.Core.csproj" />
+    <ProjectReference Include="..\Crest.Mvc\Crest.Mvc.csproj" />
   </ItemGroup>
 
 </Project>

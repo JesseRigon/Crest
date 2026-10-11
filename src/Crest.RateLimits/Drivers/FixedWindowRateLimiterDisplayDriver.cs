@@ -4,7 +4,7 @@ using Crest.DisplayManagement.Handlers;
 using Crest.DisplayManagement.Views;
 using Crest.Entities;
 using Crest.Mvc.ModelBinding;
-using Crest.RateLimits.Core;
+using Crest.RateLimits;
 using Crest.RateLimits.Models;
 using Crest.RateLimits.Services;
 using Crest.RateLimits.ViewModels;

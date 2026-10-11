@@ -31,6 +31,9 @@ public static class CallerClasses
     public const string Staff = "staff";
 
     public const string Member = "member";
+
+    /// <summary>A machine: a client-credentials token's application, a remote deployment client. Staff-side, no user record.</summary>
+    public const string Application = "application";
 }
 
 /// <summary>The caller under construction. Contributors add what their module knows.</summary>

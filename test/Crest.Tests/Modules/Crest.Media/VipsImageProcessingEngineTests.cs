@@ -1,7 +1,7 @@
 #nullable enable
 
 using NetVips;
-using Crest.Media.Core.Processing;
+using Crest.Media.Processing;
 using Crest.Media.Processing;
 
 namespace Crest.Tests.Modules.Crest.Media;

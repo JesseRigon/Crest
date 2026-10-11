@@ -8,7 +8,7 @@ using Crest.ContentManagement.Records;
 using Crest.DisplayManagement;
 using Crest.DisplayManagement.Notify;
 using Crest.Indexing;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Indexing.Models;
 using Crest.Modules;
 using Crest.Navigation;

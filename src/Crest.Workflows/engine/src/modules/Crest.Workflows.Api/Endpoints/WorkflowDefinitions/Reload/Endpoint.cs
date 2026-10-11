@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Reload;
 
 [PublicAPI]
-internal class Reload(IWorkflowDefinitionsReloader workflowDefinitionsReloader) : CrestWorkflowsEndpointWithoutRequest
+internal class Reload(IWorkflowDefinitionsReloader workflowDefinitionsReloader) : WorkflowsEndpointWithoutRequest
 {
     private const int BatchSize = 10;
 

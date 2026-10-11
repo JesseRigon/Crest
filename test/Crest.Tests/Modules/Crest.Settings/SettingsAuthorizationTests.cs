@@ -59,16 +59,14 @@ public class SettingsAuthorizationTests
     {
         using var serviceProvider = CreateGroupAuthorizationServiceProvider();
         var options = serviceProvider.GetRequiredService<IOptions<SiteSettingsPermissionOptions>>();
-        var handler = new SiteSettingsAuthorizationHandler(serviceProvider, options);
-        var user = new ClaimsPrincipal(new ClaimsIdentity(
-            [new Claim(Permission.ClaimType, EmailPermissions.ManageEmailSettings.Name)],
-            "Test"));
-        var requirement = new PermissionRequirement(SettingsPermissions.ManageGroupSettings);
-        var context = new AuthorizationHandlerContext([requirement], user, EmailSettings.GroupId);
+        var mapper = new SiteSettingsPermissionMapper(options);
 
-        await handler.HandleAsync(context);
+        // The group's registered permission is a candidate beside the group permission itself.
+        var candidates = await mapper.MapAsync(SettingsPermissions.ManageGroupSettings.Name, EmailSettings.GroupId, TestCaller());
 
-        Assert.True(context.HasSucceeded);
+        Assert.NotNull(candidates);
+        Assert.Contains(candidates, c => c.Permission == EmailPermissions.ManageEmailSettings.Name);
+        Assert.Contains(candidates, c => c.Permission == SettingsPermissions.ManageGroupSettings.Name);
     }
 
     [Fact]
@@ -76,17 +74,18 @@ public class SettingsAuthorizationTests
     {
         using var serviceProvider = CreateGroupAuthorizationServiceProvider();
         var options = serviceProvider.GetRequiredService<IOptions<SiteSettingsPermissionOptions>>();
-        var handler = new SiteSettingsAuthorizationHandler(serviceProvider, options);
-        var user = new ClaimsPrincipal(new ClaimsIdentity(
-            [new Claim(Permission.ClaimType, EmailPermissions.ManageEmailSettings.Name)],
-            "Test"));
-        var requirement = new PermissionRequirement(SettingsPermissions.ManageGroupSettings);
-        var context = new AuthorizationHandlerContext([requirement], user, "legacy");
+        var mapper = new SiteSettingsPermissionMapper(options);
 
-        await handler.HandleAsync(context);
-
-        Assert.False(context.HasSucceeded);
+        // An unregistered group maps to nothing: only the group permission itself decides.
+        Assert.Null(await mapper.MapAsync(SettingsPermissions.ManageGroupSettings.Name, "legacy", TestCaller()));
     }
+
+    private static global::Crest.Access.CallerContext TestCaller() => new()
+    {
+        Tenant = "Default",
+        Side = global::Crest.Access.CallerSide.Admin,
+        UserId = "u1",
+    };
 
     [Fact]
     public async Task DefaultDriver_EditWithGeneralPermission_ReturnsEditor()

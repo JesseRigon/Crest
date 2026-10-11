@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Crest.FileStorage;
 using Crest.FileStorage.AmazonS3;
-using Crest.Media.Core;
+using Crest.Media;
 using Crest.Modules;
 using Crest.Tests.Integration.Infrastructure;
 using Xunit;

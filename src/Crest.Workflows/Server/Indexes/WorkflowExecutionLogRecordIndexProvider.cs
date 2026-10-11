@@ -9,7 +9,7 @@ public class WorkflowExecutionLogRecordIndexProvider : IndexProvider<WorkflowExe
 {
     public WorkflowExecutionLogRecordIndexProvider()
     {
-        CollectionName = CrestWorkflowsCollections.WorkflowExecutionLogRecords;
+        CollectionName = WorkflowCollections.WorkflowExecutionLogRecords;
     }
 
     public override void Describe(DescribeContext<WorkflowExecutionLogRecordDocument> context)

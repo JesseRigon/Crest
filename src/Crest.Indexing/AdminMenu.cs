@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Localization;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Navigation;
 
 namespace Crest.Indexing;

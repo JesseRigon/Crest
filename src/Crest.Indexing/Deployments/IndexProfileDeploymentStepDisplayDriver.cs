@@ -3,7 +3,7 @@ using Microsoft.Extensions.Localization;
 using Crest.Deployment;
 using Crest.DisplayManagement.Handlers;
 using Crest.DisplayManagement.Views;
-using Crest.Indexing.Core.Deployments;
+using Crest.Indexing.Deployments;
 using Crest.Indexing.Deployments.ViewModels;
 using Crest.Mvc.ModelBinding;
 

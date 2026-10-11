@@ -21,7 +21,7 @@ public static class GetEndpoint
         return builder;
     }
 
-    [Authorize(AuthenticationSchemes = PlatformConstants.AuthenticationSchemes.Api)]
+    [Authorize]
     private static async Task<IResult> HandleAsync(
         string contentItemId,
         IContentManager contentManager,

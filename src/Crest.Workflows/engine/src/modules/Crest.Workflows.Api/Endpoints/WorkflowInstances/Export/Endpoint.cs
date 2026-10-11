@@ -22,7 +22,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.Export;
 /// Exports the specified workflow instances as JSON downloads. When selecting multiple instances, a zip file will be downloaded.
 /// </summary>
 [UsedImplicitly]
-internal class Export : CrestWorkflowsEndpointWithMapper<Request, WorkflowInstanceMapper>
+internal class Export : WorkflowsEndpointWithMapper<Request, WorkflowInstanceMapper>
 {
     private readonly IWorkflowInstanceStore _workflowInstanceStore;
     private readonly IActivityExecutionStore _activityExecutionStore;

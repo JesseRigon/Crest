@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Crest.Application.Targets\Crest.Application.Targets.csproj" PrivateAssets="none" />
-    <ProjectReference Include="..\Crest.Mvc.Core\Crest.Mvc.Core.csproj" />
+    <ProjectReference Include="..\Crest.Mvc\Crest.Mvc.csproj" />
   </ItemGroup>
 
 </Project>

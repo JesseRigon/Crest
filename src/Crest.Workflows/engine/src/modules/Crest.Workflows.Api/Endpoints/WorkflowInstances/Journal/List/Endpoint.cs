@@ -13,7 +13,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.Journal.List;
 /// Gets the journal for a workflow instance.
 /// </summary>
 [PublicAPI]
-internal class Get : CrestWorkflowsEndpoint<Request, Response>
+internal class Get : WorkflowsEndpoint<Request, Response>
 {
     private readonly IWorkflowExecutionLogStore _store;
 

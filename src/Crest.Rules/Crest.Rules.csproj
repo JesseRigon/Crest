@@ -23,7 +23,9 @@
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
-    <ProjectReference Include="..\Crest.Rules.Core\Crest.Rules.Core.csproj" />
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Rules.Abstractions\Crest.Rules.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Access.Abstractions\Crest.Access.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

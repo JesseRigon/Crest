@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Crest.Data;
 using Crest.Data.Migration;
-using Crest.Deployment.Core;
+using Crest.Deployment;
 using Crest.Deployment.Deployment;
 using Crest.Deployment.Drivers;
 using Crest.Deployment.Indexes;

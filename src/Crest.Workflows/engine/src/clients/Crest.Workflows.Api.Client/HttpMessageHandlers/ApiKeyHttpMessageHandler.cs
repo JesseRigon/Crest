@@ -9,12 +9,12 @@ namespace Crest.Workflows.Api.Client.HttpMessageHandlers;
 /// </summary>
 public class ApiKeyHttpMessageHandler : DelegatingHandler
 {
-    private readonly CrestWorkflowsClientOptions _options;
+    private readonly WorkflowsClientOptions _options;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ApiKeyHttpMessageHandler"/> class.
     /// </summary>
-    public ApiKeyHttpMessageHandler(IOptions<CrestWorkflowsClientOptions> options)
+    public ApiKeyHttpMessageHandler(IOptions<WorkflowsClientOptions> options)
     {
         _options = options.Value;
     }

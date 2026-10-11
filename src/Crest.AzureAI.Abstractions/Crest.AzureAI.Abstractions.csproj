@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.AzureAI</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest AzureAI Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for the AzureAI module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" />
+    <PackageReference Include="Azure.Search.Documents" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Contents.Abstractions\Crest.Contents.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Indexing.Abstractions\Crest.Indexing.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -11,7 +11,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.BulkPublish;
 
 [PublicAPI]
 internal class BulkPublish(IWorkflowDefinitionStore store, IWorkflowDefinitionPublisher workflowDefinitionPublisher, IAuthorizationService authorizationService)
-    : CrestWorkflowsEndpoint<Request, Response>
+    : WorkflowsEndpoint<Request, Response>
 {
     public override void Configure()
     {

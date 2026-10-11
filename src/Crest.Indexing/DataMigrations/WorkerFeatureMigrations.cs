@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Crest.Data.Migration;
 using Crest.Environment.Shell;
 using Crest.Environment.Shell.Scope;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 
 namespace Crest.Indexing.DataMigrations;
 

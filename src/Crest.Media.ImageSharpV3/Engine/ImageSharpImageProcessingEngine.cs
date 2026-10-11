@@ -7,11 +7,11 @@ using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.Processing;
-using Crest.Media.Core.Processing;
+using Crest.Media.Processing;
 using Crest.Media.Processing;
 using ISImage = SixLabors.ImageSharp.Image;
 using ISResizeMode = SixLabors.ImageSharp.Processing.ResizeMode;
-using OCResizeMode = Crest.Media.Core.Processing.ResizeMode;
+using OCResizeMode = Crest.Media.Processing.ResizeMode;
 
 namespace Crest.Media.ImageSharpV3.Engine;
 

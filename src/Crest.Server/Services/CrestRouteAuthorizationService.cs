@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Crest.Admin;
 using Crest.Contents;
 using Crest.Indexing;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Localization;
 using Crest.Media;
 using Crest.Recipes;

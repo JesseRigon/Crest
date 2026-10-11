@@ -9,7 +9,7 @@ namespace Crest.Workflows.Api.Endpoints.Features.Get;
 /// Returns the specified installed feature.
 /// </summary>
 [PublicAPI]
-internal class Get : CrestWorkflowsEndpointWithoutRequest<FeatureDescriptor>
+internal class Get : WorkflowsEndpointWithoutRequest<FeatureDescriptor>
 {
     private readonly IInstalledFeatureRegistry _installedFeatureRegistry;
 

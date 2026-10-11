@@ -1,6 +1,6 @@
 using Crest.Data.Migration;
-using Crest.Queries.Core;
-using Crest.Elasticsearch.Core.Services;
+using Crest.Queries;
+using Crest.Elasticsearch.Services;
 
 namespace Crest.Queries.Sql.Migrations;
 

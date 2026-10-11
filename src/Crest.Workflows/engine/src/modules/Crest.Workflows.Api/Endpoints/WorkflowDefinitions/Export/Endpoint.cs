@@ -16,7 +16,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Export;
 /// Exports the specified workflow definition as JSON download.
 /// </summary>
 [UsedImplicitly]
-internal class Export : CrestWorkflowsEndpoint<Request>
+internal class Export : WorkflowsEndpoint<Request>
 {
     private readonly IApiSerializer _serializer;
     private readonly IWorkflowDefinitionStore _store;

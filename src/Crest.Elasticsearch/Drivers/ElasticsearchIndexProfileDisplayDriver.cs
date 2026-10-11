@@ -9,7 +9,7 @@ using Crest.DisplayManagement.Views;
 using Crest.Entities;
 using Crest.Indexing.Models;
 using Crest.Mvc.ModelBinding;
-using Crest.Elasticsearch.Core.Models;
+using Crest.Elasticsearch.Models;
 using Crest.Elasticsearch.ViewModels;
 
 namespace Crest.Elasticsearch.Drivers;

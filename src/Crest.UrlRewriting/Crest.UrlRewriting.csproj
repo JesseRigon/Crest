@@ -18,10 +18,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
     <ProjectReference Include="..\Crest.Recipes.Abstractions\Crest.Recipes.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
-    <ProjectReference Include="..\Crest.UrlRewriting.Core\Crest.UrlRewriting.Core.csproj" />
+    <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.UrlRewriting.Abstractions\Crest.UrlRewriting.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

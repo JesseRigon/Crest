@@ -1,7 +1,7 @@
 using Fluid;
 using Fluid.Values;
 using Microsoft.AspNetCore.Mvc.Routing;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 
 namespace Crest.Liquid.Filters;
 

@@ -10,7 +10,7 @@ namespace Crest.Workflows.Api.Endpoints.Scripting.ExpressionDescriptors.List;
 /// Returns a TypeScript definition that is used by the Monaco editor to display intellisense for JavaScript expressions.
 /// </summary>
 [UsedImplicitly]
-internal class List(IExpressionDescriptorRegistry expressionDescriptorRegistry) : CrestWorkflowsEndpointWithoutRequest<ListResponse<ExpressionDescriptorModel>>
+internal class List(IExpressionDescriptorRegistry expressionDescriptorRegistry) : WorkflowsEndpointWithoutRequest<ListResponse<ExpressionDescriptorModel>>
 {
     /// <inheritdoc />
     public override void Configure()

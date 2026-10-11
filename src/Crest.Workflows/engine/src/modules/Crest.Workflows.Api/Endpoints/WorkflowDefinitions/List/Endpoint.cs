@@ -11,7 +11,7 @@ using JetBrains.Annotations;
 namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.List;
 
 [PublicAPI]
-internal class List(IWorkflowDefinitionStore store, IWorkflowDefinitionLinker linker) : CrestWorkflowsEndpoint<Request, PagedListResponse<LinkedWorkflowDefinitionSummary>>
+internal class List(IWorkflowDefinitionStore store, IWorkflowDefinitionLinker linker) : WorkflowsEndpoint<Request, PagedListResponse<LinkedWorkflowDefinitionSummary>>
 {
     public override void Configure()
     {

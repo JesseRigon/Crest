@@ -9,7 +9,7 @@ namespace Crest.Workflows.Api.Endpoints.StorageDrivers.List;
 /// <summary>
 /// Returns a list of registered <see cref="IStorageDriver"/> implementations.
 /// </summary>
-public class List : CrestWorkflowsEndpointWithoutRequest<Response>
+public class List : WorkflowsEndpointWithoutRequest<Response>
 {
     private readonly IStorageDriverManager _registry;
 

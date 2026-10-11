@@ -2,7 +2,6 @@
 @using Crest.ContentManagement
 @using Crest.Forms.Models
 @using Crest.Mvc.Utilities
-@using Crest.Workflows.Platform
 
 @{
     var contentItem = (ContentItem)Model.ContentItem;
@@ -22,11 +21,6 @@
     @if (formPart.EnableAntiForgeryToken)
     {
         @Html.AntiForgeryToken()
-    }
-
-    @if (formPart.SaveFormLocation)
-    {
-        <input type="hidden" name="@WorkflowConstants.FormLocationKeyInputName" value="@ViewContext.HttpContext.Request.Path" />
     }
 
     @await DisplayAsync((IHtmlContent)Model.Metadata.ChildContent)

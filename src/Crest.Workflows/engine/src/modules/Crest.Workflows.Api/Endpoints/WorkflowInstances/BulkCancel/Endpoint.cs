@@ -8,7 +8,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.BulkCancel;
 /// Represents an endpoint for bulk cancelling workflow instances.
 /// </summary>
 [PublicAPI]
-public class BulkCancel(IWorkflowCancellationService workflowCancellationService) : CrestWorkflowsEndpoint<Request, Response>
+public class BulkCancel(IWorkflowCancellationService workflowCancellationService) : WorkflowsEndpoint<Request, Response>
 {
     /// <inheritdoc />
     public override void Configure()

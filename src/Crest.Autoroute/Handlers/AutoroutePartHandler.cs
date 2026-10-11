@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
-using Crest.Autoroute.Core.Indexes;
+using Crest.Autoroute.Indexes;
 using Crest.Autoroute.Models;
 using Crest.Autoroute.ViewModels;
 using Crest.ContentLocalization;

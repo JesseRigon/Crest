@@ -7,7 +7,7 @@ using Crest.ContentManagement.Handlers;
 using Crest.DisplayManagement.Extensions;
 using Crest.Entities;
 using Crest.Media;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.Seo.Models;
 using Crest.Settings;
 

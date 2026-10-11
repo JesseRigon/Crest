@@ -11,7 +11,7 @@ using Crest.Apis.GraphQL;
 using Crest.Apis.GraphQL.Resolvers;
 using Crest.ContentManagement.GraphQL.Queries;
 using Crest.Queries;
-using Crest.Elasticsearch.Core.Services;
+using Crest.Elasticsearch.Services;
 
 namespace Crest.Elasticsearch.GraphQL.Queries;
 

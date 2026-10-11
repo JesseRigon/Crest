@@ -14,7 +14,7 @@ internal class GetEndpoint(
     IWorkflowRuntime workflowRuntime,
     IWorkflowStarter workflowStarter,
     IApiSerializer apiSerializer)
-    : CrestWorkflowsEndpoint<GetRequest>
+    : WorkflowsEndpoint<GetRequest>
 {
     /// <inheritdoc />
     public override void Configure()

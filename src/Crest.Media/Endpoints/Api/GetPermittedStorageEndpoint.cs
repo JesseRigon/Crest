@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
-using Crest.Media.Core.Helpers;
+using Crest.Media.Helpers;
 using Crest.Media.ViewModels;
 
 namespace Crest.Media.Endpoints.Api;

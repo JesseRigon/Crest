@@ -214,7 +214,7 @@ Documents, opaque blob keys, versions, metadata; the drive class, drive types an
      module. Its feature ids and the services other modules resolve stay, so everything built
      on Media keeps working: SEO, image fields, images in rich text and Markdown, media
      indexing, image processing, and recipes that enable Media.
-  8. The Media libraries (`Crest.Media.Abstractions`, `Crest.Media.Core`) stay:
+  8. The Media libraries (`Crest.Media.Abstractions`, `Crest.Media`) stay:
      stored content and other modules are built against their types. See "Reworking the
      Media module".
   9. `/media/...` URLs keep their form and are served by Crest from the drive tree, after the
@@ -629,7 +629,7 @@ its asset-naming MSBuild fix.
 
 **What the module is.** Media is two layers:
 
-- **Libraries** (`Crest.Media.Abstractions`, `Crest.Media.Core`): `MediaField`,
+- **Libraries** (`Crest.Media.Abstractions`, `Crest.Media`): `MediaField`,
   `IMediaFileStore`, `MediaOptions`, `MediaPermissions`, `DefaultMediaFileStore`, the image
   processing contract. Other modules compile against these, and stored content refers to them.
 - **The module** (`Crest.Media`: 139 source files, 8 features, about 70 service

@@ -13,7 +13,7 @@ namespace Crest.Workflows.Api.Endpoints.ActivityExecutions.List;
 /// Lists the executions for a given activity.
 /// </summary>
 [PublicAPI]
-internal class List : CrestWorkflowsEndpoint<Request, ListResponse<ActivityExecutionRecord>>
+internal class List : WorkflowsEndpoint<Request, ListResponse<ActivityExecutionRecord>>
 {
     private readonly IActivityExecutionStore _store;
 

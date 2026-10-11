@@ -11,7 +11,7 @@ namespace Crest.Workflows.Api.Endpoints.CommitStrategies.Activities.List;
 /// This class is an implementation of an endpoint that retrieves a collection of workflow commit strategy registrations
 /// from a provided registry and returns them in a unified response.
 /// </remarks>
-internal class List(ICommitStrategyRegistry registry) : CrestWorkflowsEndpointWithoutRequest<ListResponse<CommitStrategyDescriptor>>
+internal class List(ICommitStrategyRegistry registry) : WorkflowsEndpointWithoutRequest<ListResponse<CommitStrategyDescriptor>>
 {
     public override void Configure()
     {

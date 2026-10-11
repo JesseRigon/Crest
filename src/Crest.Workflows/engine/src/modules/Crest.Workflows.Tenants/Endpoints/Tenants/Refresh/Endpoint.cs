@@ -3,7 +3,7 @@ using Crest.Workflows.Common.Multitenancy;
 
 namespace Crest.Workflows.Tenants.Endpoints.Tenants.Refresh;
 
-public class Endpoint(ITenantService tenantService) : CrestWorkflowsEndpointWithoutRequest
+public class Endpoint(ITenantService tenantService) : WorkflowsEndpointWithoutRequest
 {
     public override void Configure()
     {

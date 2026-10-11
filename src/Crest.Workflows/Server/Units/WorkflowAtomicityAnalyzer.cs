@@ -3,17 +3,9 @@ using Crest.Workflows.Management;
 using Crest.Workflows.Management.Activities.WorkflowDefinitionActivity;
 using Crest.Workflows.Expressions.Models;
 using Crest.Workflows.Models;
-using Crest.Workflows.Platform;
 using Crest.Workflows.Activities;
 
 namespace Crest.Workflows.Units;
-
-/// <summary>
-/// Marks an activity as a unit boundary: it waits - including for an external call that is
-/// performed after the unit commits and answers in the next burst. A flow containing one is long-running and cannot be a
-/// hook attachment (docs/workflows.md › Posting on workflows).
-/// </summary>
-public interface IUnitBoundary;
 
 /// <summary>Where a flow stops being atomic: the node, its type, and why.</summary>
 public sealed record WorkflowBoundary(string ActivityId, string ActivityType, string Reason, string? InDefinition = null);

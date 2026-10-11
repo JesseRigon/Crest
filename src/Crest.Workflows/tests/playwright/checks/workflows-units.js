@@ -60,7 +60,7 @@ module.exports = async function run(page, ctx) {
   const writeLine = (id, text) => ({ type: 'Crest.Workflows.WriteLine', id, version: 1, text: literal(text) });
   const failUnit = (id, reason) => ({ type: 'Crest.Workflows.FailUnit', id, version: 1, reason: literal(reason) });
   const hook = (id, slot = 'flow.hook') => ({ type: 'Crest.Workflows.Hook', id, version: 1, slot: literal(slot) });
-  const createOrg = (id, title) => ({ type: 'Crest.Workflows.PlatformTask', id, version: 1, activityName: literal('CreateContentTask'), propertiesJson: literal(JSON.stringify({ ContentType: 'Organization', Publish: true, ContentProperties: { Expression: JSON.stringify({ DisplayText: title }) } })) });
+  const createOrg = (id, title) => ({ type: 'Crest.Content.CreateContent', id, version: 1, contentType: literal('Organization'), publish: literal(true), contentProperties: literal({ DisplayText: title }) });
   async function orgByTitle(title) {
     const response = await call('GET', `${content}?contentType=Organization&pageSize=100&search=${encodeURIComponent(title)}`);
     return (response.json?.items || []).find(i => i.displayText === title) || null;
@@ -149,7 +149,7 @@ module.exports = async function run(page, ctx) {
     await detachAll();
 
     // 5. Triggers fire after commit only.
-    const listener = await publish('after-commit listener', [{ type: 'Crest.Workflows.CrestTrigger', id: 'on', version: 1, triggerKey: literal('flow.raised'), customProperties: { canStartWorkflow: true } }, writeLine('log', 'heard')], [edge('on', 'log')]);
+    const listener = await publish('after-commit listener', [{ type: 'Crest.Workflows.RegistryTrigger', id: 'on', version: 1, triggerKey: literal('flow.raised'), customProperties: { canStartWorkflow: true } }, writeLine('log', 'heard')], [edge('on', 'log')]);
     const raiser = await publish('raising host', [{ type: 'Crest.Workflows.RaiseTrigger', id: 'raise', version: 1, triggerKey: literal('flow.raised'), correlationId: literal(`unit-${stamp}`) }, hook('hook')], [edge('raise', 'hook')]);
     await attach(failing.id, true);
     const raisedFailed = await execute(raiser.id);

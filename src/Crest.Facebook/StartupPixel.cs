@@ -2,14 +2,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Crest.DisplayManagement.Handlers;
-using Crest.Facebook.Activities;
 using Crest.Facebook.Drivers;
 using Crest.Facebook.Filters;
 using Crest.Facebook.Services;
 using Crest.Modules;
 using Crest.Navigation;
 using Crest.Security.Permissions;
-using Crest.Workflows.Platform.Helpers;
+using Crest.Facebook.Workflows;
+using Crest.Workflows;
+using Crest.Workflows.Extensions;
 using Polly;
 
 namespace Crest.Facebook;
@@ -48,10 +49,13 @@ public sealed class StartupPixel : StartupBase
 }
 
 [Feature(FacebookConstants.Features.Pixel)]
-[RequireFeatures("Crest.Workflows")]
+[RequireFeatures(WorkflowsConstants.FeatureId)]
 public sealed class StartupPixelWorkflows : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
-        => services.AddActivity<MetaConversionsApiEventTask>();
+    {
+        services.AddScoped<IWorkflowActivityProvider, FacebookWorkflowProvider>();
+        services.ConfigureCrestWorkflows(workflows => workflows.AddActivitiesFrom<StartupPixelWorkflows>());
+    }
 }
 

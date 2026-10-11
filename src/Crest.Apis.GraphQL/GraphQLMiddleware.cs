@@ -61,12 +61,8 @@ public sealed class GraphQLMiddleware
 
     private async Task ProcessGraphQLRequestAsync(HttpContext context)
     {
-        var authenticationService = context.RequestServices.GetService<IAuthenticationService>();
-        var authenticateResult = await authenticationService.AuthenticateAsync(context, PlatformConstants.AuthenticationSchemes.Api);
-        if (authenticateResult.Succeeded)
-        {
-            context.User = authenticateResult.Principal;
-        }
+        // The request path's gate authenticated the request (the Api scheme when it carries a
+        // bearer token); the principal is the gate's.
         var authorizationService = context.RequestServices.GetService<IAuthorizationService>();
         var authorized = await authorizationService.AuthorizeAsync(context.User, GraphQLPermissions.ExecuteGraphQL);
 

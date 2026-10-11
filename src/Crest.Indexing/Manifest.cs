@@ -1,4 +1,4 @@
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Modules.Manifest;
 
 [assembly: Module(

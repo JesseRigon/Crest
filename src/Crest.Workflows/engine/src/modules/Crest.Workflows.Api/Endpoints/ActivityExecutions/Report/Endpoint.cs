@@ -8,7 +8,7 @@ namespace Crest.Workflows.Api.Endpoints.ActivityExecutions.Report;
 /// Gets a report for the specified set of activities that includes number of executions, split by completed and non-completed executions as well as blocking activities.
 /// </summary>
 [PublicAPI]
-internal class Report : CrestWorkflowsEndpoint<Request, Response>
+internal class Report : WorkflowsEndpoint<Request, Response>
 {
     private readonly IActivityExecutionStore _store;
     private readonly IActivityExecutionStatsService _activityExecutionStatsService;

@@ -22,14 +22,14 @@ public class AccessDecisionTests
 
     private sealed class Ceiling(string name) : IAccessCeiling
     {
-        public string Deny(CallerContext caller, string permission)
+        public string Deny(CallerContext caller, string permission, object resource = null)
             => caller.UserClass == "member" && permission == name ? $"'{permission}' is never granted to members." : null;
     }
 
     private sealed class Mapper : IResourcePermissionMapper
     {
-        public IReadOnlyList<string> Map(string permission, object resource, CallerContext caller)
-            => resource is string type ? [$"{permission}_{type}", permission] : null;
+        public ValueTask<IReadOnlyList<PermissionCandidate>> MapAsync(string permission, object resource, CallerContext caller, CancellationToken cancellationToken = default)
+            => ValueTask.FromResult<IReadOnlyList<PermissionCandidate>>(resource is string type ? [$"{permission}_{type}", permission] : null);
     }
 
     private static CallerContext Caller(bool superUser = false, string userClass = null, params string[] permissions) => new()
@@ -42,8 +42,13 @@ public class AccessDecisionTests
         Permissions = new HashSet<string>(permissions, StringComparer.OrdinalIgnoreCase),
     };
 
+    private sealed class NoAudit : IAccessAuditor
+    {
+        public Task RecordAsync(AccessEvent accessEvent, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
     private static AccessDecisionService Decision(params IAccessCeiling[] ceilings)
-        => new(new Permissions(), ceilings, [new Mapper()]);
+        => new(new Permissions(), ceilings, [new Mapper()], new NoAudit());
 
     [Fact]
     public async Task GrantedPermissionIsAllowed()

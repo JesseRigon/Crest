@@ -7,7 +7,7 @@ namespace Crest.Workflows.Api.Endpoints.Tasks.Complete;
 /// <summary>
 /// Resumes the <see cref="RunTask"/> activity matching the received Task ID.
 /// </summary>
-public class Complete : CrestWorkflowsEndpoint<Request, Response>
+public class Complete : WorkflowsEndpoint<Request, Response>
 {
     private readonly ITaskReporter _taskReporter;
 

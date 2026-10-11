@@ -16,7 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Crest.DisplayManagement.Liquid\Crest.DisplayManagement.Liquid.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
-    <ProjectReference Include="..\Crest.ResourceManagement.Core\Crest.ResourceManagement.Core.csproj" />
+    <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
   </ItemGroup>
 
 </Project>

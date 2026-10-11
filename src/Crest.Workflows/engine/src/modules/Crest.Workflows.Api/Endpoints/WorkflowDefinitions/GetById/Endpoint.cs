@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Builder;
 namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.GetById;
 
 [PublicAPI]
-internal class GetById(IWorkflowDefinitionStore store, IWorkflowDefinitionLinker linker) : CrestWorkflowsEndpoint<Request>
+internal class GetById(IWorkflowDefinitionStore store, IWorkflowDefinitionLinker linker) : WorkflowsEndpoint<Request>
 {
     public override void Configure()
     {

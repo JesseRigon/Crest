@@ -60,20 +60,19 @@
     <ProjectReference Include="$(PlatformSrcDir)Crest.Data.YesSql\Crest.Data.YesSql.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Recipes.Abstractions\Crest.Recipes.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Crest.Recipes.Core\Crest.Recipes.Core.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Recipes\Crest.Recipes.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Queries\Crest.Queries.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Crest.Localization.Core\Crest.Localization.Core.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Localization\Crest.Localization.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Indexing.Abstractions\Crest.Indexing.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Crest.Indexing.Core\Crest.Indexing.Core.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Crest.Lucene.Core\Crest.Lucene.Core.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Indexing\Crest.Indexing.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Lucene\Crest.Lucene.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Roles.Abstractions\Crest.Roles.Abstractions.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Themes\Crest.Themes.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Templates\Crest.Templates.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Tenants\Crest.Tenants.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Security\Crest.Security.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Users\Crest.Users.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Crest.Workflows.Platform.Abstractions\Crest.Workflows.Platform.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Workflows\Abstractions\Crest.Workflows.Abstractions.csproj" />
     <PackageReference Include="YesSql.Abstractions" />
     <!-- AddInteractiveWebAssemblyComponents() (Startup.cs) is defined by this package,
          not by Microsoft.AspNetCore.App's shared framework - WASM-hosting-from-a-server

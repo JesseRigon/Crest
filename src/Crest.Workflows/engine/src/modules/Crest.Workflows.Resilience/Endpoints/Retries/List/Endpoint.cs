@@ -5,7 +5,7 @@ using Crest.Workflows.Resilience.Entities;
 
 namespace Crest.Workflows.Resilience.Endpoints.Retries.List;
 
-public class Endpoint(IRetryAttemptReader reader) : CrestWorkflowsEndpointWithoutRequest
+public class Endpoint(IRetryAttemptReader reader) : WorkflowsEndpointWithoutRequest
 {
     public override void Configure()
     {

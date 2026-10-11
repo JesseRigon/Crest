@@ -12,7 +12,7 @@ using Crest.Environment.Shell.Configuration;
 using Crest.Entities;
 using Crest.Modules;
 using Crest.RateLimits;
-using Crest.RateLimits.Core;
+using Crest.RateLimits;
 using Crest.RateLimits.Models;
 using Crest.RateLimits.Services;
 

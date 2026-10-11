@@ -16,7 +16,7 @@ using Crest.Admin;
 using Crest.Entities;
 using Crest.Indexing;
 using Crest.Liquid;
-using Crest.Lucene.Core;
+using Crest.Lucene;
 using Crest.Lucene.Models;
 using Crest.Lucene.Services;
 using Crest.Lucene.ViewModels;

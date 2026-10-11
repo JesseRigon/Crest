@@ -1,6 +1,6 @@
 using System.Globalization;
 using Microsoft.AspNetCore.WebUtilities;
-using Crest.Media.Core.Processing;
+using Crest.Media.Processing;
 using Crest.Media.Fields;
 using Crest.Media.Models;
 

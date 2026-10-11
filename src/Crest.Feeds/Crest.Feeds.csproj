@@ -17,7 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
-    <ProjectReference Include="..\Crest.Feeds.Core\Crest.Feeds.Core.csproj" />
+    <ProjectReference Include="..\Crest.Feeds.Abstractions\Crest.Feeds.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

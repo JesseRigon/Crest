@@ -14,7 +14,7 @@ namespace Crest.Workflows.Api.Endpoints.VariableTypes.List;
 /// Returns a list of available variable types.
 /// </summary>
 [PublicAPI]
-internal class List : CrestWorkflowsEndpointWithoutRequest<Response>
+internal class List : WorkflowsEndpointWithoutRequest<Response>
 {
     private readonly IWellKnownTypeRegistry _wellKnownTypeRegistry;
     private readonly ManagementOptions _managementOptions;

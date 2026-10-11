@@ -9,7 +9,7 @@ public class ActivityExecutionRecordIndexProvider : IndexProvider<ActivityExecut
 {
     public ActivityExecutionRecordIndexProvider()
     {
-        CollectionName = CrestWorkflowsCollections.ActivityExecutionRecords;
+        CollectionName = WorkflowCollections.ActivityExecutionRecords;
     }
 
     public override void Describe(DescribeContext<ActivityExecutionRecordDocument> context)

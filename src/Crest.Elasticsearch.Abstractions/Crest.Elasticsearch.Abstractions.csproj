@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Elasticsearch</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest Elasticsearch Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for the Elasticsearch module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Elastic.Clients.Elasticsearch" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.Contents.Abstractions\Crest.Contents.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Indexing.Abstractions\Crest.Indexing.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Queries.Abstractions\Crest.Queries.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

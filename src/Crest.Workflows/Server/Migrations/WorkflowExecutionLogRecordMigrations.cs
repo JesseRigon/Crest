@@ -8,7 +8,7 @@ namespace Crest.Workflows.Migrations;
 [UsedImplicitly]
 public class WorkflowExecutionLogRecordMigrations : DataMigration
 {
-    private const string Collection = CrestWorkflowsCollections.WorkflowExecutionLogRecords;
+    private const string Collection = WorkflowCollections.WorkflowExecutionLogRecords;
 
     [UsedImplicitly]
     public async Task<int> CreateAsync()

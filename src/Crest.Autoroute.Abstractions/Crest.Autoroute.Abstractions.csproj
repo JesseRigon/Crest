@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Crest.Autoroute</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Crest Autoroute Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for the Autoroute module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YesSql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

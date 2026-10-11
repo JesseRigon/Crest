@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Crest.Apis;
-using Crest.Autoroute.Core.Indexes;
+using Crest.Autoroute.Indexes;
 using Crest.Autoroute.Models;
 using Crest.ContentManagement.GraphQL;
 using Crest.ContentManagement.GraphQL.Queries;

@@ -21,4 +21,14 @@
     <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="YesSql" />
+    <PackageReference Include="YesSql.Filters.Query" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.DisplayManagement.Abstractions\Crest.DisplayManagement.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

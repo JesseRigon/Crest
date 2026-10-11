@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.BulkDelete;
 
 [PublicAPI]
-internal class BulkDelete(IWorkflowInstanceStore workflowInstanceStore, IWorkflowInstanceManager workflowInstanceManager, IWorkflowRuntime workflowRuntime) : CrestWorkflowsEndpoint<Request, Response>
+internal class BulkDelete(IWorkflowInstanceStore workflowInstanceStore, IWorkflowInstanceManager workflowInstanceManager, IWorkflowRuntime workflowRuntime) : WorkflowsEndpoint<Request, Response>
 {
     public override void Configure()
     {

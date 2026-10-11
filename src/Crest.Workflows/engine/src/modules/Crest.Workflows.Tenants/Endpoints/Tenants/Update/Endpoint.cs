@@ -5,7 +5,7 @@ using Crest.Workflows.Common.Serialization;
 
 namespace Crest.Workflows.Tenants.Endpoints.Tenants.Update;
 
-public class Endpoint(ITenantService tenantService, ITenantStore tenantStore) : CrestWorkflowsEndpoint<UpdatedTenant, Tenant>
+public class Endpoint(ITenantService tenantService, ITenantStore tenantStore) : WorkflowsEndpoint<UpdatedTenant, Tenant>
 {
     public override void Configure()
     {

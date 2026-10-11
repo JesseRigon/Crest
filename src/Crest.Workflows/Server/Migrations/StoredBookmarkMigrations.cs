@@ -8,7 +8,7 @@ namespace Crest.Workflows.Migrations;
 [UsedImplicitly]
 public class StoredBookmarkMigrations : DataMigration
 {
-    private const string Collection = CrestWorkflowsCollections.StoredBookmarks;
+    private const string Collection = WorkflowCollections.StoredBookmarks;
     
     [UsedImplicitly]
     public async Task<int> CreateAsync()

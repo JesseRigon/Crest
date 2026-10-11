@@ -9,9 +9,9 @@ using Crest.Modules.Manifest;
 
 // The engine. The platform modules' workflow startups (Email, Users, Contents, ...) are
 // gated on this feature id and contribute their activities to the platform activity library
-// (Crest.Workflows.Platform.Abstractions), which this feature hosts and runs through the
+// (Crest.Workflows.Abstractions), which this feature hosts and runs through the
 // engine (docs/workflows.md). No OpenID: the API rides the tenant cookie behind Crest's
-// antiforgery header and the ManageWorkflows permission (Security/CrestWorkflowsApiSecurityMiddleware).
+// antiforgery header and the ManageWorkflows permission (Security/ApiSecurityMiddleware).
 [assembly: Feature(
     Id = "Crest.Workflows",
     Name = "Crest Workflows",

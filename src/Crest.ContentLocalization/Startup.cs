@@ -40,7 +40,7 @@ public sealed class Startup : StartupBase
         services.AddContentLocalization();
 
         services.AddPermissionProvider<Permissions>();
-        services.AddScoped<IAuthorizationHandler, LocalizeContentAuthorizationHandler>();
+        services.AddScoped<Crest.Access.IResourcePermissionMapper, LocalizeContentPermissionMapper>();
 
         services.AddScoped<IContentsAdminListFilter, LocalizationPartContentsAdminListFilter>();
         services.AddTransient<IContentsAdminListFilterProvider, LocalizationPartContentsAdminListFilterProvider>();

@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Http;
 namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.List;
 
 [UsedImplicitly]
-internal class List(IWorkflowInstanceStore store) : CrestWorkflowsEndpoint<Request, Response>
+internal class List(IWorkflowInstanceStore store) : WorkflowsEndpoint<Request, Response>
 {
     public override void Configure()
     {

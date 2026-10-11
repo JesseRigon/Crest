@@ -8,7 +8,7 @@ using Open.Linq.AsyncExtensions;
 namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.Variables.List;
 
 [UsedImplicitly]
-internal class List(IWorkflowInstanceVariableManager workflowInstanceVariableManager) : CrestWorkflowsEndpointWithoutRequest<ListResponse<ResolvedVariableModel>>
+internal class List(IWorkflowInstanceVariableManager workflowInstanceVariableManager) : WorkflowsEndpointWithoutRequest<ListResponse<ResolvedVariableModel>>
 {
     public override void Configure()
     {

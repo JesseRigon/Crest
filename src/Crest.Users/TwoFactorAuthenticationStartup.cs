@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Crest.DisplayManagement.Handlers;
 using Crest.Modules;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.RateLimits;
 using Crest.Security.Permissions;
 using Crest.Users.Controllers;

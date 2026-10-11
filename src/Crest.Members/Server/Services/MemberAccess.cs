@@ -69,7 +69,7 @@ public class MemberPermissionCeilingOptions
 /// </summary>
 public sealed class MemberClassCeiling(IOptions<MemberPermissionCeilingOptions> options) : IAccessCeiling
 {
-    public string? Deny(CallerContext caller, string permission)
+    public string? Deny(CallerContext caller, string permission, object? resource = null)
     {
         if (caller.UserClass != UserClasses.Member)
         {

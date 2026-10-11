@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using Crest.Navigation;
-using Crest.Elasticsearch.Core.Models;
+using Crest.Elasticsearch.Models;
 
 namespace Crest.Elasticsearch;
 

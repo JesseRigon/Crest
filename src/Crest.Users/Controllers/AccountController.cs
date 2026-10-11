@@ -10,7 +10,7 @@ using Crest.DisplayManagement;
 using Crest.DisplayManagement.ModelBinding;
 using Crest.DisplayManagement.Notify;
 using Crest.Modules;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.RateLimits;
 using Crest.Settings;
 using Crest.Users.Events;

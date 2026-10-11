@@ -24,29 +24,28 @@
     <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.AdminMenu.Abstractions\Crest.AdminMenu.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.AuditTrail.Abstractions\Crest.AuditTrail.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.ContentFields.Core\Crest.ContentFields.Core.csproj" />
+    <ProjectReference Include="..\Crest.ContentFields\Crest.ContentFields.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.GraphQL\Crest.ContentManagement.GraphQL.csproj" />
     <ProjectReference Include="..\Crest.Access.Abstractions\Crest.Access.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Contents.Core\Crest.Contents.Core.csproj" />
     <ProjectReference Include="..\Crest.Contents.TagHelpers\Crest.Contents.TagHelpers.csproj" />
+    <ProjectReference Include="..\Crest.Contents.Abstractions\Crest.Contents.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement\Crest.ContentManagement.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Display\Crest.ContentManagement.Display.csproj" />
     <ProjectReference Include="..\Crest.ContentTypes.Abstractions\Crest.ContentTypes.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Deployment.Abstractions\Crest.Deployment.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Deployment.Core\Crest.Deployment.Core.csproj" />
+    <ProjectReference Include="..\Crest.Deployment\Crest.Deployment.csproj" />
     <ProjectReference Include="..\Crest.DisplayManagement.Liquid\Crest.DisplayManagement.Liquid.csproj" />
     <ProjectReference Include="..\Crest.Feeds.Abstractions\Crest.Feeds.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Indexing.Abstractions\Crest.Indexing.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.Liquid.Abstractions\Crest.Liquid.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Localization.Abstractions\Crest.Localization.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
     <ProjectReference Include="..\Crest.Recipes.Abstractions\Crest.Recipes.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
-    <ProjectReference Include="..\Crest.Settings.Core\Crest.Settings.Core.csproj" />
+    <ProjectReference Include="..\Crest.Settings\Crest.Settings.csproj" />
     <ProjectReference Include="..\Crest.Sitemaps.Abstractions\Crest.Sitemaps.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Users.Abstractions\Crest.Users.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Workflows.Platform.Abstractions\Crest.Workflows.Platform.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

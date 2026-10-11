@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Crest.BackgroundTasks;
 using Crest.Environment.Shell;
-using Crest.Media.Core;
+using Crest.Media;
 using Crest.Modules;
 
 namespace Crest.Media.Services;

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Localization;
 using Crest.Contents;
 using Crest.ContentTypes.Controllers;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.Navigation;
 
 namespace Crest.ContentTypes;

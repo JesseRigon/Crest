@@ -1,4 +1,4 @@
-using Crest.RateLimits.Core;
+using Crest.RateLimits;
 using Crest.Security.Permissions;
 
 namespace Crest.RateLimits;

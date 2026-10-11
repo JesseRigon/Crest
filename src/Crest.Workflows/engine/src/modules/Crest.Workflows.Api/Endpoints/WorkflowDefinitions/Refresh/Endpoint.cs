@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Refresh;
 
 [PublicAPI]
-internal class Refresh(IWorkflowDefinitionsRefresher workflowDefinitionsRefresher) : CrestWorkflowsEndpoint<Request>
+internal class Refresh(IWorkflowDefinitionsRefresher workflowDefinitionsRefresher) : WorkflowsEndpoint<Request>
 {
     private const int BatchSize = 10;
 

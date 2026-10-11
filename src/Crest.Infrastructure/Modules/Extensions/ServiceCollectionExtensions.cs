@@ -541,11 +541,10 @@ public static class ServiceCollectionExtensions
             // because it holds a reference to an underlying dictionary, responsible of storing
             // the registered schemes which need to be distinct for each tenant.
             services.AddSingleton<IAuthenticationSchemeProvider, AuthenticationSchemeProvider>();
-        })
-        .Configure(app =>
-        {
-            app.UseAuthentication();
-        }, order: PlatformConstants.ConfigureOrder.Authentication);
+        });
+
+        // No UseAuthentication: the access gate (Crest.Access, at the Authentication order)
+        // is the one place that authenticates a request and runs the request-handler schemes.
     }
 
     /// <summary>

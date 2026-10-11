@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text.Json.Nodes;
 using Crest.Controllers;
 using Crest.ViewModels;
+using SiteSettings = Crest.ViewModels.SiteSettings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;

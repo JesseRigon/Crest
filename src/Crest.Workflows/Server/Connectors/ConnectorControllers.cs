@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Crest.Workflows.Contexts;
-using Crest.Workflows.Platform;
 using Crest.Workflows.Registry;
 using Crest.Workflows.Runtime;
 using Microsoft.AspNetCore.Authorization;
@@ -146,7 +145,7 @@ public sealed class WorkflowWebhooksController(
             try
             {
                 using var json = JsonDocument.Parse(text);
-                parsed = StockActivityRunner.ToPlain(json.RootElement.Clone());
+                parsed = Services.JsonPlain.ToPlain(json.RootElement.Clone());
             }
             catch (JsonException)
             {

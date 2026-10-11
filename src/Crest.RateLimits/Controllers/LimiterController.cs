@@ -6,7 +6,7 @@ using Crest.Admin;
 using Crest.DisplayManagement;
 using Crest.DisplayManagement.ModelBinding;
 using Crest.DisplayManagement.Notify;
-using Crest.RateLimits.Core;
+using Crest.RateLimits;
 using Crest.RateLimits.Models;
 using Crest.RateLimits.Services;
 using Crest.RateLimits.ViewModels;

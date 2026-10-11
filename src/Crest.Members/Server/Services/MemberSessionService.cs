@@ -24,16 +24,24 @@ public class MemberSessionService
         MemberClaims.Impersonator,
     ];
 
-    public async Task<string?> GetActiveOrganizationAsync(HttpContext httpContext)
+    /// <summary>
+    /// The request's authentication result as the gate published it (docs/access.md: one place
+    /// authenticates). A request the gate did not admit has none.
+    /// </summary>
+    internal static AuthenticateResult Gated(HttpContext httpContext)
+        => httpContext.Features.Get<IAuthenticateResultFeature>()?.AuthenticateResult
+            ?? throw new InvalidOperationException("The request was not admitted by the access gate.");
+
+    public Task<string?> GetActiveOrganizationAsync(HttpContext httpContext)
     {
-        var result = await httpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
-        return result.Properties?.Items.TryGetValue(MemberSessionKeys.ActiveOrganization, out var orgId) == true ? orgId : null;
+        var result = Gated(httpContext);
+        return Task.FromResult(result.Properties?.Items.TryGetValue(MemberSessionKeys.ActiveOrganization, out var orgId) == true ? orgId : null);
     }
 
-    public async Task<string?> GetImpersonatorAsync(HttpContext httpContext)
+    public Task<string?> GetImpersonatorAsync(HttpContext httpContext)
     {
-        var result = await httpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
-        return result.Properties?.Items.TryGetValue(MemberSessionKeys.ImpersonatorUserId, out var userId) == true ? userId : null;
+        var result = Gated(httpContext);
+        return Task.FromResult(result.Properties?.Items.TryGetValue(MemberSessionKeys.ImpersonatorUserId, out var userId) == true ? userId : null);
     }
 
     /// <summary>Re-issues the session with a new active organization. The caller has
@@ -41,7 +49,7 @@ public class MemberSessionService
     /// enrichment claims - the next request's enrichment rebuilds them for the new org.</summary>
     public async Task SetActiveOrganizationAsync(HttpContext httpContext, string organizationId)
     {
-        var result = await httpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+        var result = Gated(httpContext);
         if (result.Principal is null)
         {
             throw new InvalidOperationException("No authenticated session to update.");

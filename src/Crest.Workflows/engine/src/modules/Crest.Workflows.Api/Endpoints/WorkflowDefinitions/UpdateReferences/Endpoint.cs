@@ -12,7 +12,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.UpdateReferences;
 
 [PublicAPI]
 internal class UpdateReferences(IWorkflowReferenceUpdater workflowReferenceUpdater, IWorkflowDefinitionStore store, IAuthorizationService authorizationService)
-    : CrestWorkflowsEndpoint<Request, Response>
+    : WorkflowsEndpoint<Request, Response>
 {
     public override void Configure()
     {

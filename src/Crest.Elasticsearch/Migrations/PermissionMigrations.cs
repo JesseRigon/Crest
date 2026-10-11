@@ -5,7 +5,7 @@ using Crest.Elasticsearch;
 using Crest.Environment.Shell;
 using Crest.Environment.Shell.Scope;
 using Crest.Indexing;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Security;
 using Crest.Security.Services;
 using static Crest.Elasticsearch.ElasticsearchIndexPermissionHelper;

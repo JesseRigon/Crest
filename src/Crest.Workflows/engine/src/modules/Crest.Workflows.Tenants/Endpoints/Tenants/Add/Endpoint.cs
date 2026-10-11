@@ -6,7 +6,7 @@ using Crest.Workflows;
 
 namespace Crest.Workflows.Tenants.Endpoints.Tenants.Add;
 
-public class Endpoint(ITenantService tenantService, IIdentityGenerator identityGenerator, ITenantStore tenantStore) : CrestWorkflowsEndpoint<NewTenant, Tenant>
+public class Endpoint(ITenantService tenantService, IIdentityGenerator identityGenerator, ITenantStore tenantStore) : WorkflowsEndpoint<NewTenant, Tenant>
 {
     public override void Configure()
     {

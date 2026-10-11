@@ -8,7 +8,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using Crest.Admin;
 using Crest.Environment.Shell;
-using Crest.Media.Core.Helpers;
+using Crest.Media.Helpers;
 using Crest.Settings;
 using Crest.Media.Hubs;
 using Crest.Media.Services;

@@ -18,7 +18,7 @@ using Crest.Environment.Shell.Configuration;
 using Crest.Environment.Shell.Scope;
 using Crest.Liquid;
 using Crest.Modules;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.Mvc.Routing;
 using Crest.Navigation;
 using Crest.Security.Permissions;

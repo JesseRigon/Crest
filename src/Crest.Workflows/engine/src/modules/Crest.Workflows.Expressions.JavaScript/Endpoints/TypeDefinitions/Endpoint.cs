@@ -13,7 +13,7 @@ namespace Crest.Workflows.Expressions.JavaScript.Endpoints.TypeDefinitions;
 /// Returns a TypeScript definition that is used by the Monaco editor to display intellisense for JavaScript expressions.
 /// </summary>
 [PublicAPI]
-internal class Get : CrestWorkflowsEndpoint<Request>
+internal class Get : WorkflowsEndpoint<Request>
 {
     private readonly ITypeDefinitionService _typeDefinitionService;
     private readonly IWorkflowDefinitionService _workflowDefinitionService;

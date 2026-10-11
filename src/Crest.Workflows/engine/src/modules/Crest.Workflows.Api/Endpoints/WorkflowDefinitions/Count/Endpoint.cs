@@ -8,7 +8,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Count;
 /// An endpoint for counting workflow definitions.
 /// </summary>
 [PublicAPI]
-internal class Count(IWorkflowDefinitionStore store) : CrestWorkflowsEndpointWithoutRequest<Response>
+internal class Count(IWorkflowDefinitionStore store) : WorkflowsEndpointWithoutRequest<Response>
 {
     public override void Configure()
     {

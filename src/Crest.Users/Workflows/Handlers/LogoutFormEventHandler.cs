@@ -1,36 +1,15 @@
 using Crest.Users.Events;
 using Crest.Users.Models;
-using Crest.Users.Workflows.Activities;
-using Crest.Workflows.Platform.Services;
+using Crest.Workflows;
 
 namespace Crest.Users.Workflows.Handlers;
 
-public sealed class LogoutFormEventHandler : LogoutFormEventBase
+/// <summary>Raises <c>user.logged-out</c> after the sign-out's unit commits.</summary>
+public sealed class LogoutFormEventHandler(IWorkflowTriggerPublisher triggers) : LogoutFormEventBase
 {
-    private readonly IWorkflowManager _workflowManager;
-
-    public LogoutFormEventHandler(IWorkflowManager workflowManager)
-    {
-        _workflowManager = workflowManager;
-    }
-
     /// <inheritdoc/>
     public override Task LoggedOutAsync(IUser user, CancellationToken cancellationToken = default)
-    {
-        if (user is not User u)
-        {
-            return Task.CompletedTask;
-        }
-
-        var input = new Dictionary<string, object>
-        {
-            ["UserName"] = u.UserName,
-            ["Roles"] = u.RoleNames,
-        };
-
-        return _workflowManager.TriggerEventAsync(
-            name: nameof(UserLoggedOutEvent),
-            input: input,
-            correlationId: u.UserId);
-    }
+        => user is User platformUser
+            ? triggers.PublishAsync(UserWorkflowTriggers.LoggedOut, platformUser.UserId, UserWorkflowTriggers.Payload(platformUser), cancellationToken)
+            : Task.CompletedTask;
 }

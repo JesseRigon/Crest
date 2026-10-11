@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
-using Crest.AzureAI.Core;
+using Crest.AzureAI;
 using Crest.AzureAI.Deployment;
 using Crest.AzureAI.Drivers;
 using Crest.AzureAI.Flows;
@@ -13,7 +13,7 @@ using Crest.Deployment;
 using Crest.DisplayManagement.Handlers;
 using Crest.Environment.Shell;
 using Crest.Environment.Shell.Scope;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Indexing.Models;
 using Crest.Modules;
 using Crest.Navigation;

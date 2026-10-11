@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Crest.ContentManagement;
 using Crest.ContentManagement.Handlers;
 using Crest.ContentPreview;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Indexing.Models;
 
 namespace Crest.Indexing;

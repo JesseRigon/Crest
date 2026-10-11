@@ -18,7 +18,8 @@
     <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Display\Crest.ContentManagement.Display.csproj" />
-    <ProjectReference Include="..\Crest.Contents.Core\Crest.Contents.Core.csproj" />
+    <ProjectReference Include="..\Crest.Contents.Abstractions\Crest.Contents.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement\Crest.ContentManagement.csproj" />
     <ProjectReference Include="..\Crest.Contents.TagHelpers\Crest.Contents.TagHelpers.csproj" />
     <ProjectReference Include="..\Crest.ContentTypes.Abstractions\Crest.ContentTypes.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />

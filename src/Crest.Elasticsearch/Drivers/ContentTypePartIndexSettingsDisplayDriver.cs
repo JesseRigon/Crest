@@ -4,7 +4,7 @@ using Crest.ContentManagement.Metadata.Models;
 using Crest.ContentTypes.Editors;
 using Crest.DisplayManagement.Handlers;
 using Crest.DisplayManagement.Views;
-using Crest.Elasticsearch.Core.Models;
+using Crest.Elasticsearch.Models;
 using Crest.Elasticsearch.ViewModels;
 
 namespace Crest.Elasticsearch.Drivers;

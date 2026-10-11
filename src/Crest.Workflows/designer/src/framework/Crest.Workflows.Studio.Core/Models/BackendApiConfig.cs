@@ -11,7 +11,7 @@ public class BackendApiConfig
     /// <summary>
     /// Gets or sets the configure http client builder action.
     /// </summary>
-    public Action<CrestWorkflowsClientBuilderOptions>? ConfigureHttpClientBuilder { get; set; }
+    public Action<WorkflowsClientBuilderOptions>? ConfigureHttpClientBuilder { get; set; }
     /// <summary>
     /// Gets or sets the configure backend options action.
     /// </summary>

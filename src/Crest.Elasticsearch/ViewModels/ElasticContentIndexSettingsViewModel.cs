@@ -1,4 +1,4 @@
-using Crest.Elasticsearch.Core.Models;
+using Crest.Elasticsearch.Models;
 
 namespace Crest.Elasticsearch.ViewModels;
 

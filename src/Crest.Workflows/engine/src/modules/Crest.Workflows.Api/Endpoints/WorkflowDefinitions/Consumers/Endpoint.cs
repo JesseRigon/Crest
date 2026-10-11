@@ -10,7 +10,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Consumers;
 /// Returns all workflow definitions that consume the specified workflow definition (recursively).
 /// </summary>
 [PublicAPI]
-internal class Consumers(IWorkflowDefinitionStore store, IWorkflowReferenceGraphBuilder workflowReferenceGraphBuilder) : CrestWorkflowsEndpoint<Request, Response>
+internal class Consumers(IWorkflowDefinitionStore store, IWorkflowReferenceGraphBuilder workflowReferenceGraphBuilder) : WorkflowsEndpoint<Request, Response>
 {
     /// <inheritdoc />
     public override void Configure()

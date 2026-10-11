@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Crest.Workflows.Resilience.Endpoints.ResilienceStrategies.List;
 
-public class Endpoint(IResilienceStrategyCatalog catalog, ResilienceStrategySerializer serializer) : CrestWorkflowsEndpointWithoutRequest
+public class Endpoint(IResilienceStrategyCatalog catalog, ResilienceStrategySerializer serializer) : WorkflowsEndpointWithoutRequest
 {
     public override void Configure()
     {

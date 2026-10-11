@@ -1,4 +1,4 @@
-using Crest.Autoroute.Core.Indexes;
+using Crest.Autoroute.Indexes;
 using Crest.Autoroute.Models;
 using Crest.ContentManagement.Metadata;
 using Crest.ContentManagement.Metadata.Settings;

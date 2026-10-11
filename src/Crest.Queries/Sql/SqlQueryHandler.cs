@@ -1,5 +1,5 @@
 using Crest.Entities;
-using Crest.Queries.Core;
+using Crest.Queries;
 using Crest.Queries.Sql.Models;
 
 namespace Crest.Queries.Sql;

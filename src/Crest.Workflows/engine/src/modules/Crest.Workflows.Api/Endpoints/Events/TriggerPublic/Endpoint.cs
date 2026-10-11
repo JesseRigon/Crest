@@ -9,7 +9,7 @@ namespace Crest.Workflows.Api.Endpoints.Events.TriggerPublic;
 /// Resumes a workflow instance blocked by a specified event encoded in the provided SAS token.
 /// </summary>
 [PublicAPI]
-internal class Trigger : CrestWorkflowsEndpointWithoutRequest
+internal class Trigger : WorkflowsEndpointWithoutRequest
 {
     private readonly ITokenService _tokenService;
     private readonly IEventPublisher _eventPublisher;

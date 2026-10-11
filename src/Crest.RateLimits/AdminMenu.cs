@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using Crest.Navigation;
-using Crest.RateLimits.Core;
+using Crest.RateLimits;
 namespace Crest.RateLimits;
 
 internal sealed class AdminMenu : AdminNavigationProvider

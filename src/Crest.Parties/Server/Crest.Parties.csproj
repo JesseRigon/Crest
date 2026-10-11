@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Domain/Crest.Parties.Domain.csproj" />
-    <ProjectReference Include="../../Crest.Workflows/Domain/Crest.Workflows.Domain.csproj" />
+    <ProjectReference Include="../../Crest.Workflows/Abstractions/Crest.Workflows.Abstractions.csproj" />
     <ProjectReference Include="../../Crest.Workflows/engine/src/modules/Crest.Workflows.Core/Crest.Workflows.Core.csproj" />
     <ProjectReference Include="../../Crest.Workflows/engine/src/modules/Crest.Workflows.Engine/Crest.Workflows.Engine.csproj" />
     <ProjectReference Include="../../Crest.Server/Crest.Server.csproj" />

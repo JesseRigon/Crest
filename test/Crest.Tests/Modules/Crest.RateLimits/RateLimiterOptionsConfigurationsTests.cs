@@ -3,7 +3,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Crest.Entities;
 using Crest.RateLimits;
-using Crest.RateLimits.Core;
+using Crest.RateLimits;
 using Crest.RateLimits.Models;
 using Crest.RateLimits.Services;
 using Crest.Users.Endpoints.EmailAuthenticator;

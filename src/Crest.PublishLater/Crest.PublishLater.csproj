@@ -15,9 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Crest.Contents.Abstractions\Crest.Contents.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement\Crest.ContentManagement.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Display\Crest.ContentManagement.Display.csproj" />
-    <ProjectReference Include="..\Crest.Contents.Core\Crest.Contents.Core.csproj" />
     <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Data.YesSql\Crest.Data.YesSql.csproj" />
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />

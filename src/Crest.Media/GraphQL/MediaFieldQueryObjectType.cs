@@ -3,7 +3,7 @@ using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Crest.Apis.GraphQL;
-using Crest.Media.Core.Processing;
+using Crest.Media.Processing;
 using Crest.Media.Fields;
 
 namespace Crest.Media.GraphQL;

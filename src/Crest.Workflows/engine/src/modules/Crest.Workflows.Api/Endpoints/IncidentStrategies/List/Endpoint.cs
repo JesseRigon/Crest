@@ -11,7 +11,7 @@ namespace Crest.Workflows.Api.Endpoints.IncidentStrategies.List;
 /// <summary>
 /// Returns list of available <see cref="IIncidentStrategy" /> implementations.
 /// </summary>
-internal class List(IEnumerable<IIncidentStrategy> strategies) : CrestWorkflowsEndpointWithoutRequest<ListResponse<IncidentStrategyDescriptor>>
+internal class List(IEnumerable<IIncidentStrategy> strategies) : WorkflowsEndpointWithoutRequest<ListResponse<IncidentStrategyDescriptor>>
 {
     public override void Configure()
     {

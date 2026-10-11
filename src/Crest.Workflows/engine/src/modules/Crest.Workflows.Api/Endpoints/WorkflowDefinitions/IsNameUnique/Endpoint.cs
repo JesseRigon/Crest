@@ -8,7 +8,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.IsNameUnique;
 /// Checks if a workflow definition name is unique.
 /// </summary>
 [PublicAPI]
-internal class IsNameUnique(IWorkflowDefinitionStore store) : CrestWorkflowsEndpoint<Request>
+internal class IsNameUnique(IWorkflowDefinitionStore store) : WorkflowsEndpoint<Request>
 {
     public override void Configure()
     {

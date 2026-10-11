@@ -4,21 +4,43 @@ namespace Crest.Access.Services;
 
 /// <summary>
 /// The one decision: ceilings first (a single deny wins), then the super user, then the
-/// resource mapping, then the caller's permissions with the implied-by chain resolved.
+/// resource mapping (a candidate may re-ask the question for another resource), then the
+/// caller's permissions with the implied-by chain resolved. Every denial is recorded; an
+/// allow is the operation's to record, since only it knows whether it is a read.
 /// </summary>
 public sealed class AccessDecisionService(
     IPermissionService permissions,
     IEnumerable<IAccessCeiling> ceilings,
-    IEnumerable<IResourcePermissionMapper> mappers) : IAccessDecision
+    IEnumerable<IResourcePermissionMapper> mappers,
+    IAccessAuditor auditor) : IAccessDecision
 {
+    private const int MaxDepth = 4;
+
     public async Task<AccessDecision> DecideAsync(CallerContext caller, string permission, object? resource = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(caller);
         ArgumentException.ThrowIfNullOrEmpty(permission);
 
+        var decision = await DecideCoreAsync(caller, permission, resource, 0, cancellationToken);
+        if (!decision.IsAllowed)
+        {
+            await auditor.RecordAsync(new AccessEvent(
+                AccessEventKind.Decision,
+                permission,
+                caller,
+                decision.Verdict,
+                Resource: resource?.ToString(),
+                Reason: decision.Reason));
+        }
+
+        return decision;
+    }
+
+    private async Task<AccessDecision> DecideCoreAsync(CallerContext caller, string permission, object? resource, int depth, CancellationToken cancellationToken)
+    {
         foreach (var ceiling in ceilings)
         {
-            if (ceiling.Deny(caller, permission) is { } reason)
+            if (ceiling.Deny(caller, permission, resource) is { } reason)
             {
                 return AccessDecision.Ceilinged(reason);
             }
@@ -29,12 +51,12 @@ public sealed class AccessDecisionService(
             return AccessDecision.Allowed;
         }
 
-        IReadOnlyList<string> candidates = [permission];
+        IReadOnlyList<PermissionCandidate> candidates = [permission];
         if (resource is not null)
         {
             foreach (var mapper in mappers)
             {
-                if (mapper.Map(permission, resource, caller) is { } mapped)
+                if (await mapper.MapAsync(permission, resource, caller, cancellationToken) is { } mapped)
                 {
                     candidates = mapped;
                     break;
@@ -44,7 +66,33 @@ public sealed class AccessDecisionService(
 
         foreach (var candidate in candidates)
         {
-            if (await IsGrantedAsync(caller, candidate))
+            if (candidate.Permission == PermissionCandidate.GrantedPermission)
+            {
+                return AccessDecision.Allowed;
+            }
+
+            if (candidate.Resource is not null)
+            {
+                if (depth >= MaxDepth)
+                {
+                    continue;
+                }
+
+                var nested = await DecideCoreAsync(caller, candidate.Permission, candidate.Resource, depth + 1, cancellationToken);
+                if (nested.IsFinal)
+                {
+                    return nested;
+                }
+
+                if (nested.IsAllowed)
+                {
+                    return AccessDecision.Allowed;
+                }
+
+                continue;
+            }
+
+            if (await IsGrantedAsync(caller, candidate.Permission))
             {
                 return AccessDecision.Allowed;
             }

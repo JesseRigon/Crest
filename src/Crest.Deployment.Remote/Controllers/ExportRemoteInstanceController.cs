@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using Crest.Admin;
-using Crest.Deployment.Core.Services;
+using Crest.Deployment.Services;
 using Crest.Deployment.Remote.Services;
 using Crest.Deployment.Remote.ViewModels;
 using Crest.Deployment.Services;
@@ -102,9 +102,13 @@ public sealed class ExportRemoteInstanceController : Controller
                 ),
                     nameof(ImportViewModel.Content), Path.GetFileName(archiveFileName));
                 requestContent.Add(new StringContent(remoteInstance.ClientName), nameof(ImportViewModel.ClientName));
-                requestContent.Add(new StringContent(remoteInstance.ApiKey), nameof(ImportViewModel.ApiKey));
 
+                // The remote deployment key is the call's credential, authenticated by the
+                // receiving instance's gate; it never travels in the form.
                 var httpClient = _httpClientFactory.CreateClient();
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
+                    Services.RemoteDeploymentKeyAuthenticationHandler.AuthorizationScheme,
+                    $"{remoteInstance.ClientName}:{remoteInstance.ApiKey}");
 
                 response = await httpClient.PostAsync(remoteInstance.Url, requestContent);
             }

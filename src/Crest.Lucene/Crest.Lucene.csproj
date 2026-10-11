@@ -19,25 +19,28 @@
     <ProjectReference Include="..\Crest.ContentLocalization.Abstractions\Crest.ContentLocalization.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Display\Crest.ContentManagement.Display.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.GraphQL\Crest.ContentManagement.GraphQL.csproj" />
+    <ProjectReference Include="..\Crest.Contents.Abstractions\Crest.Contents.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement\Crest.ContentManagement.csproj" />
     <ProjectReference Include="..\Crest.ContentPreview.Abstractions\Crest.ContentPreview.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentTypes.Abstractions\Crest.ContentTypes.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Contents.Core\Crest.Contents.Core.csproj" />
     <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Deployment.Abstractions\Crest.Deployment.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
     <ProjectReference Include="..\Crest.Indexing.Abstractions\Crest.Indexing.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Indexing.Core\Crest.Indexing.Core.csproj" />
+    <ProjectReference Include="..\Crest.Indexing\Crest.Indexing.csproj" />
     <ProjectReference Include="..\Crest.Localization.Abstractions\Crest.Localization.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Liquid.Abstractions\Crest.Liquid.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
-    <ProjectReference Include="..\Crest.Queries.Core\Crest.Queries.Core.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
+    <ProjectReference Include="..\Crest.Queries\Crest.Queries.csproj" />
     <ProjectReference Include="..\Crest.Recipes.Abstractions\Crest.Recipes.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Roles.Abstractions\Crest.Roles.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
     <ProjectReference Include="..\Crest.Search.Abstractions\Crest.Search.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Lucene.Core\Crest.Lucene.Core.csproj" />
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Queries.Abstractions\Crest.Queries.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Search.Lucene.Abstractions\Crest.Search.Lucene.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Lucene.Abstractions\Crest.Lucene.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

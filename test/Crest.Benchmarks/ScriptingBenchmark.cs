@@ -16,8 +16,6 @@ using Crest.Queries;
 using Crest.Scripting;
 using Crest.Scripting.JavaScript;
 using Crest.Scripting.Providers;
-using Crest.Workflows.Platform.Models;
-using Crest.Workflows.Platform.Scripting;
 
 namespace Crest.Benchmarks;
 
@@ -58,8 +56,6 @@ public class ScriptingBenchmark
     private IScriptingManager _scriptingManager;
     private IScriptingEngine _jsEngine;
     private GlobalMethod[] _registeredMethods;
-    private WorkflowMethodsProvider _workflowMethods;
-    private IGlobalMethodProvider[] _workflowProviders;
 
     [GlobalSetup]
     public void Setup()
@@ -96,24 +92,9 @@ public class ScriptingBenchmark
         _jsEngine = _scriptingManager.GetScriptingEngine("js");
         _registeredMethods = _scriptingManager.GlobalMethodProviders.SelectMany(x => x.GetMethods()).ToArray();
 
-        var workflowContext = new WorkflowExecutionContext(
-            new WorkflowType { Id = 1, WorkflowTypeId = "wt", Activities = [], Transitions = [] },
-            new Workflow { WorkflowId = "w1", State = new System.Text.Json.Nodes.JsonObject() },
-            new Dictionary<string, object> { ["Message"] = "hello" },
-            new Dictionary<string, object>(),
-            new Dictionary<string, object>(),
-            [],
-            null,
-            []);
-
-        _workflowMethods = new WorkflowMethodsProvider(workflowContext);
-        _workflowProviders = [_workflowMethods];
-
         // Warm every path once so no row pays for first-call JIT or for the prepared-script cache miss.
         Recipe_OneGlobal();
         Recipe_Constant();
-        Workflow_Input().GetAwaiter().GetResult();
-        Workflow_Composite().GetAwaiter().GetResult();
         LayerRule_PerRequest_ThreeRules().GetAwaiter().GetResult();
     }
 
@@ -132,27 +113,6 @@ public class ScriptingBenchmark
     [Benchmark]
     public object Recipe_Constant()
         => _scriptingManager.Evaluate("js:'literal'", null, null, null);
-
-    /// <summary>
-    /// A workflow expression. The nine <see cref="WorkflowMethodsProvider"/> globals are passed to the scope
-    /// rather than registered in DI, so they are on the eager path and every one of them is built and
-    /// wrapped for an engine that only reads <c>input</c>.
-    /// </summary>
-    [Benchmark]
-    public async Task<object> Workflow_Input()
-        => await _scriptingManager.EvaluateAsync("js:input('Message')", null, null, _workflowProviders);
-
-    /// <summary>
-    /// A workflow expression that reads and writes several of the scoped globals, so the eager cost is at
-    /// least partly paid for.
-    /// </summary>
-    [Benchmark]
-    public async Task<object> Workflow_Composite()
-        => await _scriptingManager.EvaluateAsync(
-            "js:(function(){ setProperty('seen', input('Message')); return workflowId() + ':' + property('seen'); })()",
-            null,
-            null,
-            _workflowProviders);
 
     /// <summary>
     /// One request's worth of JavaScript layer rules: a single scope, reused across three distinct rules,

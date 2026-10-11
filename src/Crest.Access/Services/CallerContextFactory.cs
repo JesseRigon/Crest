@@ -151,9 +151,10 @@ public sealed class CallerContextFactory(
             }
             else if (principal is not null)
             {
-                // An application (a client-credentials token): no user record, the
-                // application's roles come with the identity, the permissions from the roles.
-                builder.UserClass = CallerClasses.Staff;
+                // An application (a client-credentials token, a remote deployment client): no
+                // user record, the application's roles come with the identity, the permissions
+                // from the roles (and from contributors, for a credential without roles).
+                builder.UserClass = CallerClasses.Application;
                 foreach (var roleName in principal.FindAll(ClaimTypes.Role).Concat(principal.FindAll("role")).Select(claim => claim.Value).Distinct(StringComparer.OrdinalIgnoreCase))
                 {
                     roleNames.Add(roleName);

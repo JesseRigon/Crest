@@ -14,7 +14,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.Import;
 /// Imports JSON and/or ZIP files containing a workflow instances.
 /// </summary>
 [PublicAPI]
-internal class Import : CrestWorkflowsEndpointWithoutRequest<Response>
+internal class Import : WorkflowsEndpointWithoutRequest<Response>
 {
     private readonly IWorkflowInstanceManager _workflowInstanceManager;
     private readonly IWorkflowInstanceStore _workflowInstanceStore;

@@ -7,7 +7,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.Cancel;
 
 [PublicAPI]
 internal class Cancel(IWorkflowCancellationService workflowCancellationService)
-    : CrestWorkflowsEndpoint<Request>
+    : WorkflowsEndpoint<Request>
 {
     public override void Configure()
     {

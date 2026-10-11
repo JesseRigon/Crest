@@ -10,7 +10,7 @@ namespace Crest.Workflows.Api.Endpoints.Features.List;
 /// Returns a list of installed features.
 /// </summary>
 [PublicAPI]
-internal class List : CrestWorkflowsEndpointWithoutRequest<ListResponse<FeatureDescriptor>>
+internal class List : WorkflowsEndpointWithoutRequest<ListResponse<FeatureDescriptor>>
 {
     private readonly IInstalledFeatureRegistry _installedFeatureRegistry;
 

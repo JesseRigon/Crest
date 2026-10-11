@@ -2,8 +2,8 @@ using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Crest.ContentManagement;
 using Crest.Indexing;
-using Crest.Indexing.Core;
-using Crest.Lucene.Core;
+using Crest.Indexing;
+using Crest.Lucene;
 using Crest.Lucene.Settings;
 
 namespace Crest.Lucene.Services;

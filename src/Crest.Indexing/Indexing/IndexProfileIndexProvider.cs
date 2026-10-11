@@ -1,4 +1,4 @@
-using Crest.Indexing.Core.Indexes;
+using Crest.Indexing.Indexes;
 using Crest.Indexing.Models;
 using YesSql.Indexes;
 

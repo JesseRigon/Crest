@@ -39,7 +39,7 @@ public class MemberImpersonationService
     public async Task StartAsync(string memberUserId)
     {
         var httpContext = _httpContextAccessor.HttpContext!;
-        var current = await httpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+        var current = MemberSessionService.Gated(httpContext);
         if (current.Principal is null)
         {
             throw new InvalidOperationException("No authenticated session.");
@@ -81,7 +81,7 @@ public class MemberImpersonationService
     public async Task StopAsync()
     {
         var httpContext = _httpContextAccessor.HttpContext!;
-        var current = await httpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+        var current = MemberSessionService.Gated(httpContext);
 
         if (current.Properties?.Items.TryGetValue(MemberSessionKeys.ImpersonatorUserId, out var staffUserId) != true || staffUserId is null)
         {

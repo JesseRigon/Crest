@@ -6,7 +6,7 @@ using Crest.Entities;
 using Crest.Indexing;
 using Crest.Mvc.ModelBinding;
 using Crest.Queries;
-using Crest.Elasticsearch.Core.Services;
+using Crest.Elasticsearch.Services;
 using Crest.Elasticsearch.Models;
 using Crest.Elasticsearch.ViewModels;
 

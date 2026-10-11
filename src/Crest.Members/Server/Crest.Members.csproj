@@ -14,9 +14,8 @@
     <ProjectReference Include="$(PlatformSrcDir)Crest.Access.Abstractions\Crest.Access.Abstractions.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Crest.Roles.Core\Crest.Roles.Core.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Roles\Crest.Roles.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Users\Crest.Users.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Crest.Users.Core\Crest.Users.Core.csproj" />
     <PackageReference Include="YesSql.Abstractions" />
   </ItemGroup>
 

@@ -15,8 +15,8 @@ using Microsoft.Extensions.Options;
 using Crest.Admin;
 using Crest.Indexing;
 using Crest.Liquid;
-using Crest.Elasticsearch.Core.Models;
-using Crest.Elasticsearch.Core.Services;
+using Crest.Elasticsearch.Models;
+using Crest.Elasticsearch.Services;
 using Crest.Elasticsearch.ViewModels;
 
 namespace Crest.Elasticsearch;

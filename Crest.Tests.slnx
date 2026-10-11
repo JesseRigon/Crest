@@ -62,8 +62,8 @@
     <Project Path="src/Crest.Workflows/designer/src/modules/Crest.Workflows.Studio.Workflows.Designer/Crest.Workflows.Studio.Workflows.Designer.csproj" />
     <Project Path="src/Crest.Workflows/designer/src/modules/Crest.Workflows.Studio.Workflows/Crest.Workflows.Studio.Workflows.csproj" />
   </Folder>
-  <Folder Name="/Crest.Workflows/Domain/">
-    <Project Path="src/Crest.Workflows/Domain/Crest.Workflows.Domain.csproj" />
+  <Folder Name="/Crest.Workflows/Abstractions/">
+    <Project Path="src/Crest.Workflows/Abstractions/Crest.Workflows.Abstractions.csproj" />
   </Folder>
   <Folder Name="/Crest.Workflows/engine/" />
   <Folder Name="/Crest.Workflows/engine/src/" />

@@ -82,10 +82,12 @@ public class BlogPostDeploymentContext : SiteContext
         {
             { new StreamContent(zipStream), nameof(ImportViewModel.Content), "Recipe.zip" },
             { new StringContent(RemoteDeploymentClientName), nameof(ImportViewModel.ClientName) },
-            { new StringContent(RemoteDeploymentApiKey), nameof(ImportViewModel.ApiKey) },
         };
 
-        var response = await Client.PostAsync("Crest.Deployment.Remote/ImportRemoteInstance/Import", requestContent);
+        // The remote deployment key is the call's credential, authenticated by the gate.
+        using var request = new HttpRequestMessage(HttpMethod.Post, "Crest.Deployment.Remote/ImportRemoteInstance/Import") { Content = requestContent };
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("RemoteDeployment", $"{RemoteDeploymentClientName}:{RemoteDeploymentApiKey}");
+        var response = await Client.SendAsync(request);
         if (ensureSuccess)
         {
             response.EnsureSuccessStatusCode();

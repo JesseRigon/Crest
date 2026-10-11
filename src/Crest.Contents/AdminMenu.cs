@@ -8,7 +8,7 @@ using Crest.ContentManagement.Metadata;
 using Crest.ContentManagement.Metadata.Models;
 using Crest.Contents.Controllers;
 using Crest.Contents.Security;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.Navigation;
 using Crest.Settings;
 

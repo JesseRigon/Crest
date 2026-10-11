@@ -19,15 +19,26 @@
   <ItemGroup>
     <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
-    <ProjectReference Include="..\Crest.Flows.Core\Crest.Flows.Core.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Flows\Crest.Flows.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.Roles.Abstractions\Crest.Roles.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.AzureAI.Core\Crest.AzureAI.Core.csproj" />
+    <ProjectReference Include="..\Crest.Indexing\Crest.Indexing.csproj" />
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ContentLocalization.Abstractions\Crest.ContentLocalization.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ContentPreview.Abstractions\Crest.ContentPreview.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Contents.Abstractions\Crest.Contents.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement\Crest.ContentManagement.csproj" />
+    <ProjectReference Include="..\Crest.Deployment.Abstractions\Crest.Deployment.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Search.Abstractions\Crest.Search.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.AzureAI.Abstractions\Crest.AzureAI.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Azure.Search.Documents" />
+    <PackageReference Include="Microsoft.Extensions.Azure" />
   </ItemGroup>
 
 </Project>

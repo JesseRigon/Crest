@@ -19,9 +19,19 @@
   <ItemGroup>
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
-    <ProjectReference Include="..\Crest.Sms.Core\Crest.Sms.Core.csproj" />
-    <ProjectReference Include="..\Crest.Workflows.Platform.Abstractions\Crest.Workflows.Platform.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Workflows\Abstractions\Crest.Workflows.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Workflows\engine\src\modules\Crest.Workflows.Core\Crest.Workflows.Core.csproj" />
+    <ProjectReference Include="..\Crest.Workflows\engine\src\modules\Crest.Workflows.Engine\Crest.Workflows.Engine.csproj" />
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Notifications.Abstractions\Crest.Notifications.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Sms.Abstractions\Crest.Sms.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Users\Crest.Users.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+  </ItemGroup>
+
 </Project>

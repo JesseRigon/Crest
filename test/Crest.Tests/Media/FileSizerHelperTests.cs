@@ -1,4 +1,4 @@
-using Crest.Media.Core.Helpers;
+using Crest.Media.Helpers;
 
 namespace Crest.Tests.Media;
 

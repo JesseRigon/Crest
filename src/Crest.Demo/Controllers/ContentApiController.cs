@@ -7,7 +7,7 @@ using Crest.Contents;
 namespace Crest.Demo.Controllers;
 
 [Route("api/demo")]
-[Authorize(AuthenticationSchemes = PlatformConstants.AuthenticationSchemes.Api), IgnoreAntiforgeryToken, AllowAnonymous]
+[Authorize, IgnoreAntiforgeryToken, AllowAnonymous]
 [ApiController]
 public sealed class ContentApiController : ControllerBase
 {

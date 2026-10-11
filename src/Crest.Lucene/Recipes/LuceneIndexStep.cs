@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Crest.Indexing;
-using Crest.Indexing.Core;
+using Crest.Indexing;
 using Crest.Recipes.Models;
 using Crest.Recipes.Services;
 

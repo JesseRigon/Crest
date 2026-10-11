@@ -21,8 +21,8 @@
    "label": "Crest.Access.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 10,
-   "title": "Crest.Access.Abstractions\\nreferenced by 9, references 1, packages 0"
+   "value": 20,
+   "title": "Crest.Access.Abstractions\\nreferenced by 19, references 1, packages 0"
   },
   {
    "id": "Crest.Admin",
@@ -197,16 +197,16 @@
    "label": "Crest.Autoroute",
    "color": "#ffb703",
    "kind": "module",
-   "value": 2,
-   "title": "Crest.Autoroute\\nreferenced by 1, references 15, packages 0"
+   "value": 3,
+   "title": "Crest.Autoroute\\nreferenced by 2, references 17, packages 0"
   },
   {
-   "id": "Crest.Autoroute.Core",
-   "label": "Crest.Autoroute.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 3,
-   "title": "Crest.Autoroute.Core\\nreferenced by 2, references 3, packages 0"
+   "id": "Crest.Autoroute.Abstractions",
+   "label": "Crest.Autoroute.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
+   "value": 2,
+   "title": "Crest.Autoroute.Abstractions\\nreferenced by 1, references 3, packages 1"
   },
   {
    "id": "Crest.AzureAI",
@@ -214,15 +214,15 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.AzureAI\\nreferenced by 1, references 7, packages 1"
+   "title": "Crest.AzureAI\\nreferenced by 1, references 17, packages 2"
   },
   {
-   "id": "Crest.AzureAI.Core",
-   "label": "Crest.AzureAI.Core",
-   "color": "#219ebc",
-   "kind": "core",
+   "id": "Crest.AzureAI.Abstractions",
+   "label": "Crest.AzureAI.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
    "value": 2,
-   "title": "Crest.AzureAI.Core\\nreferenced by 1, references 10, packages 2"
+   "title": "Crest.AzureAI.Abstractions\\nreferenced by 1, references 4, packages 2"
   },
   {
    "id": "Crest.BackgroundTasks",
@@ -261,16 +261,16 @@
    "label": "Crest.ContentFields",
    "color": "#ffb703",
    "kind": "module",
-   "value": 8,
-   "title": "Crest.ContentFields\\nreferenced by 7, references 17, packages 1"
+   "value": 12,
+   "title": "Crest.ContentFields\\nreferenced by 11, references 18, packages 1"
   },
   {
-   "id": "Crest.ContentFields.Core",
-   "label": "Crest.ContentFields.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 6,
-   "title": "Crest.ContentFields.Core\\nreferenced by 5, references 1, packages 0"
+   "id": "Crest.ContentFields.Abstractions",
+   "label": "Crest.ContentFields.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
+   "value": 2,
+   "title": "Crest.ContentFields.Abstractions\\nreferenced by 1, references 2, packages 0"
   },
   {
    "id": "Crest.ContentLocalization",
@@ -278,7 +278,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.ContentLocalization\\nreferenced by 1, references 15, packages 0"
+   "title": "Crest.ContentLocalization\\nreferenced by 1, references 17, packages 0"
   },
   {
    "id": "Crest.ContentLocalization.Abstractions",
@@ -293,16 +293,16 @@
    "label": "Crest.ContentManagement",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 32,
-   "title": "Crest.ContentManagement\\nreferenced by 31, references 5, packages 0"
+   "value": 36,
+   "title": "Crest.ContentManagement\\nreferenced by 35, references 5, packages 0"
   },
   {
    "id": "Crest.ContentManagement.Abstractions",
    "label": "Crest.ContentManagement.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 48,
-   "title": "Crest.ContentManagement.Abstractions\\nreferenced by 47, references 1, packages 0"
+   "value": 50,
+   "title": "Crest.ContentManagement.Abstractions\\nreferenced by 49, references 1, packages 0"
   },
   {
    "id": "Crest.ContentManagement.Display",
@@ -317,8 +317,8 @@
    "label": "Crest.ContentManagement.GraphQL",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 21,
-   "title": "Crest.ContentManagement.GraphQL\\nreferenced by 20, references 8, packages 0"
+   "value": 20,
+   "title": "Crest.ContentManagement.GraphQL\\nreferenced by 19, references 8, packages 0"
   },
   {
    "id": "Crest.ContentPartLists",
@@ -342,15 +342,15 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.ContentPreview\\nreferenced by 1, references 7, packages 0"
+   "title": "Crest.ContentPreview\\nreferenced by 1, references 8, packages 0"
   },
   {
    "id": "Crest.ContentPreview.Abstractions",
    "label": "Crest.ContentPreview.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 9,
-   "title": "Crest.ContentPreview.Abstractions\\nreferenced by 8, references 0, packages 0"
+   "value": 8,
+   "title": "Crest.ContentPreview.Abstractions\\nreferenced by 7, references 0, packages 0"
   },
   {
    "id": "Crest.ContentTypes",
@@ -374,15 +374,15 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 11,
-   "title": "Crest.Contents\\nreferenced by 10, references 26, packages 0"
+   "title": "Crest.Contents\\nreferenced by 10, references 25, packages 0"
   },
   {
-   "id": "Crest.Contents.Core",
-   "label": "Crest.Contents.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 17,
-   "title": "Crest.Contents.Core\\nreferenced by 16, references 3, packages 1"
+   "id": "Crest.Contents.Abstractions",
+   "label": "Crest.Contents.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
+   "value": 18,
+   "title": "Crest.Contents.Abstractions\\nreferenced by 17, references 3, packages 1"
   },
   {
    "id": "Crest.Contents.TagHelpers",
@@ -406,7 +406,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.CustomSettings\\nreferenced by 1, references 8, packages 0"
+   "title": "Crest.CustomSettings\\nreferenced by 1, references 9, packages 0"
   },
   {
    "id": "Crest.Data",
@@ -421,8 +421,8 @@
    "label": "Crest.Data.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 47,
-   "title": "Crest.Data.Abstractions\\nreferenced by 46, references 1, packages 0"
+   "value": 49,
+   "title": "Crest.Data.Abstractions\\nreferenced by 48, references 1, packages 0"
   },
   {
    "id": "Crest.Data.YesSql",
@@ -469,24 +469,16 @@
    "label": "Crest.Deployment",
    "color": "#ffb703",
    "kind": "module",
-   "value": 2,
-   "title": "Crest.Deployment\\nreferenced by 1, references 10, packages 0"
+   "value": 4,
+   "title": "Crest.Deployment\\nreferenced by 3, references 10, packages 0"
   },
   {
    "id": "Crest.Deployment.Abstractions",
    "label": "Crest.Deployment.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 32,
-   "title": "Crest.Deployment.Abstractions\\nreferenced by 31, references 2, packages 0"
-  },
-  {
-   "id": "Crest.Deployment.Core",
-   "label": "Crest.Deployment.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 4,
-   "title": "Crest.Deployment.Core\\nreferenced by 3, references 1, packages 0"
+   "value": 30,
+   "title": "Crest.Deployment.Abstractions\\nreferenced by 29, references 3, packages 1"
   },
   {
    "id": "Crest.Deployment.Remote",
@@ -494,7 +486,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.Deployment.Remote\\nreferenced by 1, references 8, packages 0"
+   "title": "Crest.Deployment.Remote\\nreferenced by 1, references 9, packages 0"
   },
   {
    "id": "Crest.Diagnostics",
@@ -509,16 +501,16 @@
    "label": "Crest.DisplayManagement",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 79,
-   "title": "Crest.DisplayManagement\\nreferenced by 78, references 5, packages 1"
+   "value": 75,
+   "title": "Crest.DisplayManagement\\nreferenced by 74, references 5, packages 1"
   },
   {
    "id": "Crest.DisplayManagement.Abstractions",
    "label": "Crest.DisplayManagement.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 10,
-   "title": "Crest.DisplayManagement.Abstractions\\nreferenced by 9, references 0, packages 0"
+   "value": 12,
+   "title": "Crest.DisplayManagement.Abstractions\\nreferenced by 11, references 0, packages 0"
   },
   {
    "id": "Crest.DisplayManagement.Liquid",
@@ -550,23 +542,23 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.Elasticsearch\\nreferenced by 1, references 8, packages 1"
+   "title": "Crest.Elasticsearch\\nreferenced by 1, references 20, packages 1"
   },
   {
-   "id": "Crest.Elasticsearch.Core",
-   "label": "Crest.Elasticsearch.Core",
-   "color": "#219ebc",
-   "kind": "core",
+   "id": "Crest.Elasticsearch.Abstractions",
+   "label": "Crest.Elasticsearch.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
    "value": 2,
-   "title": "Crest.Elasticsearch.Core\\nreferenced by 1, references 12, packages 1"
+   "title": "Crest.Elasticsearch.Abstractions\\nreferenced by 1, references 4, packages 1"
   },
   {
    "id": "Crest.Email",
    "label": "Crest.Email",
    "color": "#ffb703",
    "kind": "module",
-   "value": 2,
-   "title": "Crest.Email\\nreferenced by 1, references 9, packages 0"
+   "value": 4,
+   "title": "Crest.Email\\nreferenced by 3, references 12, packages 0"
   },
   {
    "id": "Crest.Email.Abstractions",
@@ -585,14 +577,6 @@
    "title": "Crest.Email.Azure\\nreferenced by 1, references 5, packages 1"
   },
   {
-   "id": "Crest.Email.Core",
-   "label": "Crest.Email.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 4,
-   "title": "Crest.Email.Core\\nreferenced by 3, references 2, packages 0"
-  },
-  {
    "id": "Crest.Email.Smtp",
    "label": "Crest.Email.Smtp",
    "color": "#ffb703",
@@ -606,7 +590,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.Facebook\\nreferenced by 1, references 14, packages 3"
+   "title": "Crest.Facebook\\nreferenced by 1, references 16, packages 3"
   },
   {
    "id": "Crest.Features",
@@ -617,12 +601,12 @@
    "title": "Crest.Features\\nreferenced by 2, references 9, packages 0"
   },
   {
-   "id": "Crest.Features.Core",
-   "label": "Crest.Features.Core",
-   "color": "#219ebc",
-   "kind": "core",
+   "id": "Crest.Features.Abstractions",
+   "label": "Crest.Features.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
    "value": 2,
-   "title": "Crest.Features.Core\\nreferenced by 1, references 1, packages 0"
+   "title": "Crest.Features.Abstractions\\nreferenced by 1, references 1, packages 0"
   },
   {
    "id": "Crest.Feeds",
@@ -639,14 +623,6 @@
    "kind": "abstractions",
    "value": 4,
    "title": "Crest.Feeds.Abstractions\\nreferenced by 3, references 1, packages 0"
-  },
-  {
-   "id": "Crest.Feeds.Core",
-   "label": "Crest.Feeds.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 2,
-   "title": "Crest.Feeds.Core\\nreferenced by 1, references 1, packages 0"
   },
   {
    "id": "Crest.FileStorage.Abstractions",
@@ -685,16 +661,16 @@
    "label": "Crest.Flows",
    "color": "#ffb703",
    "kind": "module",
-   "value": 3,
-   "title": "Crest.Flows\\nreferenced by 2, references 11, packages 0"
+   "value": 4,
+   "title": "Crest.Flows\\nreferenced by 3, references 11, packages 0"
   },
   {
-   "id": "Crest.Flows.Core",
-   "label": "Crest.Flows.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 3,
-   "title": "Crest.Flows.Core\\nreferenced by 2, references 1, packages 0"
+   "id": "Crest.Flows.Abstractions",
+   "label": "Crest.Flows.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
+   "value": 2,
+   "title": "Crest.Flows.Abstractions\\nreferenced by 1, references 1, packages 0"
   },
   {
    "id": "Crest.Forms",
@@ -702,7 +678,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.Forms\\nreferenced by 1, references 8, packages 0"
+   "title": "Crest.Forms\\nreferenced by 1, references 7, packages 0"
   },
   {
    "id": "Crest.GitHub",
@@ -757,16 +733,16 @@
    "label": "Crest.Html",
    "color": "#ffb703",
    "kind": "module",
-   "value": 2,
-   "title": "Crest.Html\\nreferenced by 1, references 15, packages 1"
+   "value": 3,
+   "title": "Crest.Html\\nreferenced by 2, references 17, packages 1"
   },
   {
-   "id": "Crest.Html.Core",
-   "label": "Crest.Html.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 3,
-   "title": "Crest.Html.Core\\nreferenced by 2, references 3, packages 0"
+   "id": "Crest.Html.Abstractions",
+   "label": "Crest.Html.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
+   "value": 2,
+   "title": "Crest.Html.Abstractions\\nreferenced by 1, references 1, packages 1"
   },
   {
    "id": "Crest.Https",
@@ -797,24 +773,16 @@
    "label": "Crest.Indexing",
    "color": "#ffb703",
    "kind": "module",
-   "value": 4,
-   "title": "Crest.Indexing\\nreferenced by 3, references 11, packages 0"
+   "value": 8,
+   "title": "Crest.Indexing\\nreferenced by 7, references 16, packages 0"
   },
   {
    "id": "Crest.Indexing.Abstractions",
    "label": "Crest.Indexing.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 24,
-   "title": "Crest.Indexing.Abstractions\\nreferenced by 23, references 2, packages 0"
-  },
-  {
-   "id": "Crest.Indexing.Core",
-   "label": "Crest.Indexing.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 8,
-   "title": "Crest.Indexing.Core\\nreferenced by 7, references 7, packages 0"
+   "value": 26,
+   "title": "Crest.Indexing.Abstractions\\nreferenced by 25, references 2, packages 1"
   },
   {
    "id": "Crest.Infrastructure",
@@ -822,15 +790,15 @@
    "color": "#adb5bd",
    "kind": "library",
    "value": 6,
-   "title": "Crest.Infrastructure\\nreferenced by 5, references 4, packages 6"
+   "title": "Crest.Infrastructure\\nreferenced by 5, references 5, packages 6"
   },
   {
    "id": "Crest.Infrastructure.Abstractions",
    "label": "Crest.Infrastructure.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 59,
-   "title": "Crest.Infrastructure.Abstractions\\nreferenced by 58, references 2, packages 0"
+   "value": 72,
+   "title": "Crest.Infrastructure.Abstractions\\nreferenced by 71, references 2, packages 0"
   },
   {
    "id": "Crest.Layers",
@@ -838,7 +806,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.Layers\\nreferenced by 1, references 14, packages 0"
+   "title": "Crest.Layers\\nreferenced by 1, references 15, packages 0"
   },
   {
    "id": "Crest.LegacyFrame",
@@ -861,8 +829,8 @@
    "label": "Crest.Liquid.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 27,
-   "title": "Crest.Liquid.Abstractions\\nreferenced by 26, references 1, packages 1"
+   "value": 26,
+   "title": "Crest.Liquid.Abstractions\\nreferenced by 25, references 1, packages 1"
   },
   {
    "id": "Crest.Lists",
@@ -877,8 +845,8 @@
    "label": "Crest.Localization",
    "color": "#ffb703",
    "kind": "module",
-   "value": 3,
-   "title": "Crest.Localization\\nreferenced by 2, references 9, packages 0"
+   "value": 5,
+   "title": "Crest.Localization\\nreferenced by 4, references 10, packages 1"
   },
   {
    "id": "Crest.Localization.Abstractions",
@@ -887,14 +855,6 @@
    "kind": "abstractions",
    "value": 13,
    "title": "Crest.Localization.Abstractions\\nreferenced by 12, references 2, packages 0"
-  },
-  {
-   "id": "Crest.Localization.Core",
-   "label": "Crest.Localization.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 5,
-   "title": "Crest.Localization.Core\\nreferenced by 4, references 2, packages 1"
   },
   {
    "id": "Crest.Logging.NLog",
@@ -917,16 +877,16 @@
    "label": "Crest.Lucene",
    "color": "#ffb703",
    "kind": "module",
-   "value": 2,
-   "title": "Crest.Lucene\\nreferenced by 1, references 23, packages 3"
+   "value": 3,
+   "title": "Crest.Lucene\\nreferenced by 2, references 26, packages 3"
   },
   {
-   "id": "Crest.Lucene.Core",
-   "label": "Crest.Lucene.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 3,
-   "title": "Crest.Lucene.Core\\nreferenced by 2, references 6, packages 2"
+   "id": "Crest.Lucene.Abstractions",
+   "label": "Crest.Lucene.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
+   "value": 2,
+   "title": "Crest.Lucene.Abstractions\\nreferenced by 1, references 2, packages 1"
   },
   {
    "id": "Crest.Markdown",
@@ -949,8 +909,8 @@
    "label": "Crest.Media",
    "color": "#ffb703",
    "kind": "module",
-   "value": 6,
-   "title": "Crest.Media\\nreferenced by 5, references 24, packages 5"
+   "value": 8,
+   "title": "Crest.Media\\nreferenced by 7, references 27, packages 5"
   },
   {
    "id": "Crest.Media.Abstractions",
@@ -958,7 +918,7 @@
    "color": "#8ecae6",
    "kind": "abstractions",
    "value": 10,
-   "title": "Crest.Media.Abstractions\\nreferenced by 9, references 3, packages 0"
+   "title": "Crest.Media.Abstractions\\nreferenced by 9, references 4, packages 0"
   },
   {
    "id": "Crest.Media.AmazonS3",
@@ -966,7 +926,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.Media.AmazonS3\\nreferenced by 1, references 9, packages 0"
+   "title": "Crest.Media.AmazonS3\\nreferenced by 1, references 8, packages 0"
   },
   {
    "id": "Crest.Media.Azure",
@@ -974,15 +934,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.Media.Azure\\nreferenced by 1, references 8, packages 0"
-  },
-  {
-   "id": "Crest.Media.Core",
-   "label": "Crest.Media.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 6,
-   "title": "Crest.Media.Core\\nreferenced by 5, references 3, packages 1"
+   "title": "Crest.Media.Azure\\nreferenced by 1, references 7, packages 0"
   },
   {
    "id": "Crest.Media.ImageSharpV3",
@@ -1030,7 +982,7 @@
    "color": "#adb5bd",
    "kind": "library",
    "value": 1,
-   "title": "Crest.Members\\nreferenced by 0, references 14, packages 1"
+   "title": "Crest.Members\\nreferenced by 0, references 13, packages 1"
   },
   {
    "id": "Crest.Members.Domain",
@@ -1105,12 +1057,12 @@
    "title": "Crest.Money.Domain\\nreferenced by 1, references 0, packages 0"
   },
   {
-   "id": "Crest.Mvc.Core",
-   "label": "Crest.Mvc.Core",
-   "color": "#219ebc",
-   "kind": "core",
+   "id": "Crest.Mvc",
+   "label": "Crest.Mvc",
+   "color": "#adb5bd",
+   "kind": "library",
    "value": 4,
-   "title": "Crest.Mvc.Core\\nreferenced by 3, references 2, packages 1"
+   "title": "Crest.Mvc\\nreferenced by 3, references 2, packages 1"
   },
   {
    "id": "Crest.Mvc.HelloWorld",
@@ -1133,16 +1085,16 @@
    "label": "Crest.Navigation",
    "color": "#ffb703",
    "kind": "module",
-   "value": 2,
-   "title": "Crest.Navigation\\nreferenced by 1, references 4, packages 0"
+   "value": 63,
+   "title": "Crest.Navigation\\nreferenced by 62, references 6, packages 1"
   },
   {
-   "id": "Crest.Navigation.Core",
-   "label": "Crest.Navigation.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 64,
-   "title": "Crest.Navigation.Core\\nreferenced by 63, references 3, packages 1"
+   "id": "Crest.Navigation.Abstractions",
+   "label": "Crest.Navigation.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
+   "value": 3,
+   "title": "Crest.Navigation.Abstractions\\nreferenced by 2, references 1, packages 0"
   },
   {
    "id": "Crest.Notifications",
@@ -1150,23 +1102,15 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.Notifications\\nreferenced by 1, references 10, packages 0"
+   "title": "Crest.Notifications\\nreferenced by 1, references 15, packages 0"
   },
   {
    "id": "Crest.Notifications.Abstractions",
    "label": "Crest.Notifications.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 3,
-   "title": "Crest.Notifications.Abstractions\\nreferenced by 2, references 1, packages 0"
-  },
-  {
-   "id": "Crest.Notifications.Core",
-   "label": "Crest.Notifications.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 2,
-   "title": "Crest.Notifications.Core\\nreferenced by 1, references 5, packages 0"
+   "value": 4,
+   "title": "Crest.Notifications.Abstractions\\nreferenced by 3, references 3, packages 2"
   },
   {
    "id": "Crest.OpenApi",
@@ -1174,15 +1118,15 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.OpenApi\\nreferenced by 1, references 7, packages 5"
+   "title": "Crest.OpenApi\\nreferenced by 1, references 8, packages 5"
   },
   {
-   "id": "Crest.OpenApi.Core",
-   "label": "Crest.OpenApi.Core",
-   "color": "#219ebc",
-   "kind": "core",
+   "id": "Crest.OpenApi.Abstractions",
+   "label": "Crest.OpenApi.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
    "value": 2,
-   "title": "Crest.OpenApi.Core\\nreferenced by 1, references 1, packages 0"
+   "title": "Crest.OpenApi.Abstractions\\nreferenced by 1, references 1, packages 0"
   },
   {
    "id": "Crest.OpenId",
@@ -1190,15 +1134,15 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.OpenId\\nreferenced by 1, references 13, packages 7"
+   "title": "Crest.OpenId\\nreferenced by 1, references 15, packages 8"
   },
   {
-   "id": "Crest.OpenId.Core",
-   "label": "Crest.OpenId.Core",
-   "color": "#219ebc",
-   "kind": "core",
+   "id": "Crest.OpenId.Abstractions",
+   "label": "Crest.OpenId.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
    "value": 2,
-   "title": "Crest.OpenId.Core\\nreferenced by 1, references 2, packages 1"
+   "title": "Crest.OpenId.Abstractions\\nreferenced by 1, references 1, packages 2"
   },
   {
    "id": "Crest.Parties",
@@ -1245,40 +1189,32 @@
    "label": "Crest.Queries",
    "color": "#ffb703",
    "kind": "module",
-   "value": 3,
-   "title": "Crest.Queries\\nreferenced by 2, references 14, packages 1"
+   "value": 5,
+   "title": "Crest.Queries\\nreferenced by 4, references 14, packages 2"
   },
   {
    "id": "Crest.Queries.Abstractions",
    "label": "Crest.Queries.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 7,
-   "title": "Crest.Queries.Abstractions\\nreferenced by 6, references 2, packages 0"
-  },
-  {
-   "id": "Crest.Queries.Core",
-   "label": "Crest.Queries.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 4,
-   "title": "Crest.Queries.Core\\nreferenced by 3, references 2, packages 1"
+   "value": 8,
+   "title": "Crest.Queries.Abstractions\\nreferenced by 7, references 3, packages 0"
   },
   {
    "id": "Crest.RateLimits",
    "label": "Crest.RateLimits",
    "color": "#ffb703",
    "kind": "module",
-   "value": 2,
-   "title": "Crest.RateLimits\\nreferenced by 1, references 5, packages 0"
+   "value": 4,
+   "title": "Crest.RateLimits\\nreferenced by 3, references 9, packages 0"
   },
   {
-   "id": "Crest.RateLimits.Core",
-   "label": "Crest.RateLimits.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 4,
-   "title": "Crest.RateLimits.Core\\nreferenced by 3, references 4, packages 0"
+   "id": "Crest.RateLimits.Abstractions",
+   "label": "Crest.RateLimits.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
+   "value": 2,
+   "title": "Crest.RateLimits.Abstractions\\nreferenced by 1, references 2, packages 0"
   },
   {
    "id": "Crest.ReCaptcha",
@@ -1286,39 +1222,31 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.ReCaptcha\\nreferenced by 1, references 9, packages 0"
+   "title": "Crest.ReCaptcha\\nreferenced by 1, references 10, packages 1"
   },
   {
-   "id": "Crest.ReCaptcha.Core",
-   "label": "Crest.ReCaptcha.Core",
-   "color": "#219ebc",
-   "kind": "core",
+   "id": "Crest.ReCaptcha.Abstractions",
+   "label": "Crest.ReCaptcha.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
    "value": 2,
-   "title": "Crest.ReCaptcha.Core\\nreferenced by 1, references 2, packages 1"
+   "title": "Crest.ReCaptcha.Abstractions\\nreferenced by 1, references 1, packages 0"
   },
   {
    "id": "Crest.Recipes",
    "label": "Crest.Recipes",
    "color": "#ffb703",
    "kind": "module",
-   "value": 2,
-   "title": "Crest.Recipes\\nreferenced by 1, references 8, packages 0"
+   "value": 3,
+   "title": "Crest.Recipes\\nreferenced by 2, references 9, packages 0"
   },
   {
    "id": "Crest.Recipes.Abstractions",
    "label": "Crest.Recipes.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 32,
-   "title": "Crest.Recipes.Abstractions\\nreferenced by 31, references 1, packages 0"
-  },
-  {
-   "id": "Crest.Recipes.Core",
-   "label": "Crest.Recipes.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 3,
-   "title": "Crest.Recipes.Core\\nreferenced by 2, references 3, packages 0"
+   "value": 31,
+   "title": "Crest.Recipes.Abstractions\\nreferenced by 30, references 2, packages 0"
   },
   {
    "id": "Crest.Redis",
@@ -1357,8 +1285,8 @@
    "label": "Crest.ResourceManagement",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 72,
-   "title": "Crest.ResourceManagement\\nreferenced by 71, references 1, packages 0"
+   "value": 73,
+   "title": "Crest.ResourceManagement\\nreferenced by 72, references 2, packages 0"
   },
   {
    "id": "Crest.ResourceManagement.Abstractions",
@@ -1367,14 +1295,6 @@
    "kind": "abstractions",
    "value": 5,
    "title": "Crest.ResourceManagement.Abstractions\\nreferenced by 4, references 0, packages 0"
-  },
-  {
-   "id": "Crest.ResourceManagement.Core",
-   "label": "Crest.ResourceManagement.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 3,
-   "title": "Crest.ResourceManagement.Core\\nreferenced by 2, references 2, packages 0"
   },
   {
    "id": "Crest.Resources",
@@ -1405,8 +1325,8 @@
    "label": "Crest.Roles",
    "color": "#ffb703",
    "kind": "module",
-   "value": 2,
-   "title": "Crest.Roles\\nreferenced by 1, references 12, packages 0"
+   "value": 6,
+   "title": "Crest.Roles\\nreferenced by 5, references 12, packages 0"
   },
   {
    "id": "Crest.Roles.Abstractions",
@@ -1417,20 +1337,12 @@
    "title": "Crest.Roles.Abstractions\\nreferenced by 8, references 1, packages 1"
   },
   {
-   "id": "Crest.Roles.Core",
-   "label": "Crest.Roles.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 7,
-   "title": "Crest.Roles.Core\\nreferenced by 6, references 2, packages 0"
-  },
-  {
    "id": "Crest.Rules",
    "label": "Crest.Rules",
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.Rules\\nreferenced by 1, references 5, packages 1"
+   "title": "Crest.Rules\\nreferenced by 1, references 7, packages 1"
   },
   {
    "id": "Crest.Rules.Abstractions",
@@ -1439,14 +1351,6 @@
    "kind": "abstractions",
    "value": 3,
    "title": "Crest.Rules.Abstractions\\nreferenced by 2, references 1, packages 0"
-  },
-  {
-   "id": "Crest.Rules.Core",
-   "label": "Crest.Rules.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 2,
-   "title": "Crest.Rules.Core\\nreferenced by 1, references 3, packages 0"
   },
   {
    "id": "Crest.Scripting",
@@ -1526,31 +1430,31 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 7,
-   "title": "Crest.Server\\nreferenced by 6, references 37, packages 3"
+   "title": "Crest.Server\\nreferenced by 6, references 36, packages 3"
   },
   {
    "id": "Crest.Settings",
    "label": "Crest.Settings",
    "color": "#ffb703",
    "kind": "module",
-   "value": 2,
-   "title": "Crest.Settings\\nreferenced by 1, references 11, packages 0"
+   "value": 17,
+   "title": "Crest.Settings\\nreferenced by 16, references 13, packages 0"
   },
   {
-   "id": "Crest.Settings.Core",
-   "label": "Crest.Settings.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 17,
-   "title": "Crest.Settings.Core\\nreferenced by 16, references 2, packages 0"
+   "id": "Crest.Settings.Abstractions",
+   "label": "Crest.Settings.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
+   "value": 2,
+   "title": "Crest.Settings.Abstractions\\nreferenced by 1, references 1, packages 0"
   },
   {
    "id": "Crest.Setup",
    "label": "Crest.Setup",
    "color": "#ffb703",
    "kind": "module",
-   "value": 3,
-   "title": "Crest.Setup\\nreferenced by 2, references 7, packages 0"
+   "value": 4,
+   "title": "Crest.Setup\\nreferenced by 3, references 8, packages 1"
   },
   {
    "id": "Crest.Setup.Abstractions",
@@ -1559,14 +1463,6 @@
    "kind": "abstractions",
    "value": 7,
    "title": "Crest.Setup.Abstractions\\nreferenced by 6, references 2, packages 0"
-  },
-  {
-   "id": "Crest.Setup.Core",
-   "label": "Crest.Setup.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 3,
-   "title": "Crest.Setup.Core\\nreferenced by 2, references 4, packages 1"
   },
   {
    "id": "Crest.Shell",
@@ -1661,8 +1557,8 @@
    "label": "Crest.Sms",
    "color": "#ffb703",
    "kind": "module",
-   "value": 2,
-   "title": "Crest.Sms\\nreferenced by 1, references 6, packages 0"
+   "value": 3,
+   "title": "Crest.Sms\\nreferenced by 2, references 12, packages 1"
   },
   {
    "id": "Crest.Sms.Abstractions",
@@ -1679,14 +1575,6 @@
    "kind": "module",
    "value": 2,
    "title": "Crest.Sms.Azure\\nreferenced by 1, references 4, packages 1"
-  },
-  {
-   "id": "Crest.Sms.Core",
-   "label": "Crest.Sms.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 4,
-   "title": "Crest.Sms.Core\\nreferenced by 3, references 5, packages 1"
   },
   {
    "id": "Crest.SourceGenerators",
@@ -1713,12 +1601,12 @@
    "title": "Crest.Taxonomies\\nreferenced by 1, references 17, packages 0"
   },
   {
-   "id": "Crest.Taxonomies.Core",
-   "label": "Crest.Taxonomies.Core",
-   "color": "#219ebc",
-   "kind": "core",
+   "id": "Crest.Taxonomies.Abstractions",
+   "label": "Crest.Taxonomies.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
    "value": 2,
-   "title": "Crest.Taxonomies.Core\\nreferenced by 1, references 3, packages 0"
+   "title": "Crest.Taxonomies.Abstractions\\nreferenced by 1, references 3, packages 1"
   },
   {
    "id": "Crest.Templates",
@@ -1734,7 +1622,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 3,
-   "title": "Crest.Tenants\\nreferenced by 2, references 13, packages 1"
+   "title": "Crest.Tenants\\nreferenced by 2, references 15, packages 1"
   },
   {
    "id": "Crest.Theme.Targets",
@@ -1766,7 +1654,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.Twitter\\nreferenced by 1, references 9, packages 2"
+   "title": "Crest.Twitter\\nreferenced by 1, references 11, packages 2"
   },
   {
    "id": "Crest.UrlRewriting",
@@ -1774,7 +1662,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.UrlRewriting\\nreferenced by 1, references 5, packages 0"
+   "title": "Crest.UrlRewriting\\nreferenced by 1, references 8, packages 0"
   },
   {
    "id": "Crest.UrlRewriting.Abstractions",
@@ -1782,39 +1670,23 @@
    "color": "#8ecae6",
    "kind": "abstractions",
    "value": 2,
-   "title": "Crest.UrlRewriting.Abstractions\\nreferenced by 1, references 1, packages 0"
-  },
-  {
-   "id": "Crest.UrlRewriting.Core",
-   "label": "Crest.UrlRewriting.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 2,
-   "title": "Crest.UrlRewriting.Core\\nreferenced by 1, references 4, packages 0"
+   "title": "Crest.UrlRewriting.Abstractions\\nreferenced by 1, references 2, packages 0"
   },
   {
    "id": "Crest.Users",
    "label": "Crest.Users",
    "color": "#ffb703",
    "kind": "module",
-   "value": 5,
-   "title": "Crest.Users\\nreferenced by 4, references 23, packages 1"
+   "value": 12,
+   "title": "Crest.Users\\nreferenced by 11, references 27, packages 2"
   },
   {
    "id": "Crest.Users.Abstractions",
    "label": "Crest.Users.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 8,
-   "title": "Crest.Users.Abstractions\\nreferenced by 7, references 2, packages 0"
-  },
-  {
-   "id": "Crest.Users.Core",
-   "label": "Crest.Users.Core",
-   "color": "#219ebc",
-   "kind": "core",
-   "value": 12,
-   "title": "Crest.Users.Core\\nreferenced by 11, references 6, packages 1"
+   "value": 9,
+   "title": "Crest.Users.Abstractions\\nreferenced by 8, references 3, packages 2"
   },
   {
    "id": "Crest.Widgets",
@@ -1822,7 +1694,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Crest.Widgets\\nreferenced by 1, references 9, packages 0"
+   "title": "Crest.Widgets\\nreferenced by 1, references 10, packages 0"
   },
   {
    "id": "Crest.Workflows",
@@ -1830,15 +1702,39 @@
    "color": "#adb5bd",
    "kind": "library",
    "value": 2,
-   "title": "Crest.Workflows\\nreferenced by 1, references 24, packages 2"
+   "title": "Crest.Workflows\\nreferenced by 1, references 23, packages 2"
   },
   {
-   "id": "Crest.Workflows.Api (?)",
-   "label": "Crest.Workflows.Api (?)",
-   "color": "#e76f51",
-   "kind": "missing",
+   "id": "Crest.Workflows.Abstractions",
+   "label": "Crest.Workflows.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
+   "value": 13,
+   "title": "Crest.Workflows.Abstractions\\nreferenced by 12, references 0, packages 0"
+  },
+  {
+   "id": "Crest.Workflows.Api",
+   "label": "Crest.Workflows.Api",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 3,
+   "title": "Crest.Workflows.Api\\nreferenced by 2, references 5, packages 0"
+  },
+  {
+   "id": "Crest.Workflows.Api.Client",
+   "label": "Crest.Workflows.Api.Client",
+   "color": "#b5a2d8",
+   "kind": "engine",
    "value": 2,
-   "title": "Crest.Workflows.Api (?)\\nreferenced by 1, references 0, packages 0"
+   "title": "Crest.Workflows.Api.Client\\nreferenced by 1, references 0, packages 7"
+  },
+  {
+   "id": "Crest.Workflows.Api.Common",
+   "label": "Crest.Workflows.Api.Common",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 7,
+   "title": "Crest.Workflows.Api.Common\\nreferenced by 6, references 2, packages 3"
   },
   {
    "id": "Crest.Workflows.BlazorWasm",
@@ -1849,6 +1745,22 @@
    "title": "Crest.Workflows.BlazorWasm\\nreferenced by 1, references 3, packages 3"
   },
   {
+   "id": "Crest.Workflows.Caching",
+   "label": "Crest.Workflows.Caching",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 3,
+   "title": "Crest.Workflows.Caching\\nreferenced by 2, references 1, packages 2"
+  },
+  {
+   "id": "Crest.Workflows.Common",
+   "label": "Crest.Workflows.Common",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 5,
+   "title": "Crest.Workflows.Common\\nreferenced by 4, references 2, packages 7"
+  },
+  {
    "id": "Crest.Workflows.Contents",
    "label": "Crest.Workflows.Contents",
    "color": "#adb5bd",
@@ -1857,108 +1769,172 @@
    "title": "Crest.Workflows.Contents\\nreferenced by 0, references 10, packages 1"
   },
   {
-   "id": "Crest.Workflows.Core (?)",
-   "label": "Crest.Workflows.Core (?)",
-   "color": "#e76f51",
-   "kind": "missing",
-   "value": 3,
-   "title": "Crest.Workflows.Core (?)\\nreferenced by 2, references 0, packages 0"
+   "id": "Crest.Workflows.Core",
+   "label": "Crest.Workflows.Core",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 15,
+   "title": "Crest.Workflows.Core\\nreferenced by 14, references 2, packages 8"
   },
   {
-   "id": "Crest.Workflows.Domain",
-   "label": "Crest.Workflows.Domain",
-   "color": "#adb5bd",
-   "kind": "library",
-   "value": 5,
-   "title": "Crest.Workflows.Domain\\nreferenced by 4, references 0, packages 0"
+   "id": "Crest.Workflows.Engine",
+   "label": "Crest.Workflows.Engine",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 11,
+   "title": "Crest.Workflows.Engine\\nreferenced by 10, references 4, packages 3"
   },
   {
-   "id": "Crest.Workflows.Engine (?)",
-   "label": "Crest.Workflows.Engine (?)",
-   "color": "#e76f51",
-   "kind": "missing",
+   "id": "Crest.Workflows.Expressions",
+   "label": "Crest.Workflows.Expressions",
+   "color": "#b5a2d8",
+   "kind": "engine",
    "value": 4,
-   "title": "Crest.Workflows.Engine (?)\\nreferenced by 3, references 0, packages 0"
+   "title": "Crest.Workflows.Expressions\\nreferenced by 3, references 2, packages 2"
   },
   {
-   "id": "Crest.Workflows.Expressions.JavaScript (?)",
-   "label": "Crest.Workflows.Expressions.JavaScript (?)",
-   "color": "#e76f51",
-   "kind": "missing",
+   "id": "Crest.Workflows.Expressions.JavaScript",
+   "label": "Crest.Workflows.Expressions.JavaScript",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 5,
+   "title": "Crest.Workflows.Expressions.JavaScript\\nreferenced by 4, references 3, packages 2"
+  },
+  {
+   "id": "Crest.Workflows.Expressions.Liquid",
+   "label": "Crest.Workflows.Expressions.Liquid",
+   "color": "#b5a2d8",
+   "kind": "engine",
    "value": 3,
-   "title": "Crest.Workflows.Expressions.JavaScript (?)\\nreferenced by 2, references 0, packages 0"
+   "title": "Crest.Workflows.Expressions.Liquid\\nreferenced by 2, references 2, packages 3"
   },
   {
-   "id": "Crest.Workflows.Expressions.Liquid (?)",
-   "label": "Crest.Workflows.Expressions.Liquid (?)",
-   "color": "#e76f51",
-   "kind": "missing",
+   "id": "Crest.Workflows.Features",
+   "label": "Crest.Workflows.Features",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 8,
+   "title": "Crest.Workflows.Features\\nreferenced by 7, references 0, packages 2"
+  },
+  {
+   "id": "Crest.Workflows.Http",
+   "label": "Crest.Workflows.Http",
+   "color": "#b5a2d8",
+   "kind": "engine",
    "value": 2,
-   "title": "Crest.Workflows.Expressions.Liquid (?)\\nreferenced by 1, references 0, packages 0"
+   "title": "Crest.Workflows.Http\\nreferenced by 1, references 6, packages 4"
   },
   {
-   "id": "Crest.Workflows.Http (?)",
-   "label": "Crest.Workflows.Http (?)",
-   "color": "#e76f51",
-   "kind": "missing",
+   "id": "Crest.Workflows.KeyValues",
+   "label": "Crest.Workflows.KeyValues",
+   "color": "#b5a2d8",
+   "kind": "engine",
    "value": 2,
-   "title": "Crest.Workflows.Http (?)\\nreferenced by 1, references 0, packages 0"
+   "title": "Crest.Workflows.KeyValues\\nreferenced by 1, references 2, packages 0"
   },
   {
-   "id": "Crest.Workflows.Management (?)",
-   "label": "Crest.Workflows.Management (?)",
-   "color": "#e76f51",
-   "kind": "missing",
+   "id": "Crest.Workflows.Management",
+   "label": "Crest.Workflows.Management",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 7,
+   "title": "Crest.Workflows.Management\\nreferenced by 6, references 3, packages 5"
+  },
+  {
+   "id": "Crest.Workflows.Mediator",
+   "label": "Crest.Workflows.Mediator",
+   "color": "#b5a2d8",
+   "kind": "engine",
    "value": 2,
-   "title": "Crest.Workflows.Management (?)\\nreferenced by 1, references 0, packages 0"
+   "title": "Crest.Workflows.Mediator\\nreferenced by 1, references 0, packages 4"
   },
   {
-   "id": "Crest.Workflows.Platform.Abstractions",
-   "label": "Crest.Workflows.Platform.Abstractions",
-   "color": "#8ecae6",
-   "kind": "abstractions",
-   "value": 14,
-   "title": "Crest.Workflows.Platform.Abstractions\\nreferenced by 13, references 2, packages 0"
+   "id": "Crest.Workflows.Resilience",
+   "label": "Crest.Workflows.Resilience",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 4,
+   "title": "Crest.Workflows.Resilience\\nreferenced by 3, references 3, packages 1"
   },
   {
-   "id": "Crest.Workflows.Resilience (?)",
-   "label": "Crest.Workflows.Resilience (?)",
-   "color": "#e76f51",
-   "kind": "missing",
+   "id": "Crest.Workflows.Resilience.Core",
+   "label": "Crest.Workflows.Resilience.Core",
+   "color": "#b5a2d8",
+   "kind": "engine",
    "value": 2,
-   "title": "Crest.Workflows.Resilience (?)\\nreferenced by 1, references 0, packages 0"
+   "title": "Crest.Workflows.Resilience.Core\\nreferenced by 1, references 1, packages 2"
   },
   {
-   "id": "Crest.Workflows.Runtime (?)",
-   "label": "Crest.Workflows.Runtime (?)",
-   "color": "#e76f51",
-   "kind": "missing",
-   "value": 2,
-   "title": "Crest.Workflows.Runtime (?)\\nreferenced by 1, references 0, packages 0"
+   "id": "Crest.Workflows.Runtime",
+   "label": "Crest.Workflows.Runtime",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 8,
+   "title": "Crest.Workflows.Runtime\\nreferenced by 7, references 5, packages 5"
   },
   {
-   "id": "Crest.Workflows.Runtime.Distributed (?)",
-   "label": "Crest.Workflows.Runtime.Distributed (?)",
-   "color": "#e76f51",
-   "kind": "missing",
+   "id": "Crest.Workflows.Runtime.Distributed",
+   "label": "Crest.Workflows.Runtime.Distributed",
+   "color": "#b5a2d8",
+   "kind": "engine",
    "value": 2,
-   "title": "Crest.Workflows.Runtime.Distributed (?)\\nreferenced by 1, references 0, packages 0"
+   "title": "Crest.Workflows.Runtime.Distributed\\nreferenced by 1, references 2, packages 5"
   },
   {
-   "id": "Crest.Workflows.Scheduling (?)",
-   "label": "Crest.Workflows.Scheduling (?)",
-   "color": "#e76f51",
-   "kind": "missing",
-   "value": 2,
-   "title": "Crest.Workflows.Scheduling (?)\\nreferenced by 1, references 0, packages 0"
+   "id": "Crest.Workflows.SasTokens",
+   "label": "Crest.Workflows.SasTokens",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 3,
+   "title": "Crest.Workflows.SasTokens\\nreferenced by 2, references 1, packages 0"
   },
   {
-   "id": "Crest.Workflows.Studio.Core.BlazorWasm (?)",
-   "label": "Crest.Workflows.Studio.Core.BlazorWasm (?)",
-   "color": "#e76f51",
-   "kind": "missing",
+   "id": "Crest.Workflows.Scheduling",
+   "label": "Crest.Workflows.Scheduling",
+   "color": "#b5a2d8",
+   "kind": "engine",
    "value": 2,
-   "title": "Crest.Workflows.Studio.Core.BlazorWasm (?)\\nreferenced by 1, references 0, packages 0"
+   "title": "Crest.Workflows.Scheduling\\nreferenced by 1, references 1, packages 1"
+  },
+  {
+   "id": "Crest.Workflows.Studio.ActivityPortProviders",
+   "label": "Crest.Workflows.Studio.ActivityPortProviders",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 2,
+   "title": "Crest.Workflows.Studio.ActivityPortProviders\\nreferenced by 1, references 2, packages 0"
+  },
+  {
+   "id": "Crest.Workflows.Studio.Core",
+   "label": "Crest.Workflows.Studio.Core",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 9,
+   "title": "Crest.Workflows.Studio.Core\\nreferenced by 8, references 1, packages 14"
+  },
+  {
+   "id": "Crest.Workflows.Studio.Core.BlazorServer",
+   "label": "Crest.Workflows.Studio.Core.BlazorServer",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 1,
+   "title": "Crest.Workflows.Studio.Core.BlazorServer\\nreferenced by 0, references 2, packages 1"
+  },
+  {
+   "id": "Crest.Workflows.Studio.Core.BlazorWasm",
+   "label": "Crest.Workflows.Studio.Core.BlazorWasm",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 2,
+   "title": "Crest.Workflows.Studio.Core.BlazorWasm\\nreferenced by 1, references 2, packages 1"
+  },
+  {
+   "id": "Crest.Workflows.Studio.DomInterop",
+   "label": "Crest.Workflows.Studio.DomInterop",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 3,
+   "title": "Crest.Workflows.Studio.DomInterop\\nreferenced by 2, references 0, packages 3"
   },
   {
    "id": "Crest.Workflows.Studio.Host",
@@ -1969,20 +1945,84 @@
    "title": "Crest.Workflows.Studio.Host\\nreferenced by 1, references 5, packages 3"
   },
   {
-   "id": "Crest.Workflows.Studio.Shell (?)",
-   "label": "Crest.Workflows.Studio.Shell (?)",
-   "color": "#e76f51",
-   "kind": "missing",
-   "value": 2,
-   "title": "Crest.Workflows.Studio.Shell (?)\\nreferenced by 1, references 0, packages 0"
+   "id": "Crest.Workflows.Studio.Login",
+   "label": "Crest.Workflows.Studio.Login",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 3,
+   "title": "Crest.Workflows.Studio.Login\\nreferenced by 2, references 2, packages 2"
   },
   {
-   "id": "Crest.Workflows.Studio.Workflows (?)",
-   "label": "Crest.Workflows.Studio.Workflows (?)",
-   "color": "#e76f51",
-   "kind": "missing",
+   "id": "Crest.Workflows.Studio.Login.BlazorServer",
+   "label": "Crest.Workflows.Studio.Login.BlazorServer",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 1,
+   "title": "Crest.Workflows.Studio.Login.BlazorServer\\nreferenced by 0, references 1, packages 1"
+  },
+  {
+   "id": "Crest.Workflows.Studio.Login.BlazorWasm",
+   "label": "Crest.Workflows.Studio.Login.BlazorWasm",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 1,
+   "title": "Crest.Workflows.Studio.Login.BlazorWasm\\nreferenced by 0, references 1, packages 0"
+  },
+  {
+   "id": "Crest.Workflows.Studio.Shared",
+   "label": "Crest.Workflows.Studio.Shared",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 8,
+   "title": "Crest.Workflows.Studio.Shared\\nreferenced by 7, references 2, packages 2"
+  },
+  {
+   "id": "Crest.Workflows.Studio.Shell",
+   "label": "Crest.Workflows.Studio.Shell",
+   "color": "#b5a2d8",
+   "kind": "engine",
    "value": 2,
-   "title": "Crest.Workflows.Studio.Workflows (?)\\nreferenced by 1, references 0, packages 0"
+   "title": "Crest.Workflows.Studio.Shell\\nreferenced by 1, references 2, packages 0"
+  },
+  {
+   "id": "Crest.Workflows.Studio.UIHints",
+   "label": "Crest.Workflows.Studio.UIHints",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 2,
+   "title": "Crest.Workflows.Studio.UIHints\\nreferenced by 1, references 2, packages 0"
+  },
+  {
+   "id": "Crest.Workflows.Studio.Workflows",
+   "label": "Crest.Workflows.Studio.Workflows",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 2,
+   "title": "Crest.Workflows.Studio.Workflows\\nreferenced by 1, references 6, packages 2"
+  },
+  {
+   "id": "Crest.Workflows.Studio.Workflows.Core",
+   "label": "Crest.Workflows.Studio.Workflows.Core",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 5,
+   "title": "Crest.Workflows.Studio.Workflows.Core\\nreferenced by 4, references 2, packages 1"
+  },
+  {
+   "id": "Crest.Workflows.Studio.Workflows.Designer",
+   "label": "Crest.Workflows.Studio.Workflows.Designer",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 2,
+   "title": "Crest.Workflows.Studio.Workflows.Designer\\nreferenced by 1, references 2, packages 0"
+  },
+  {
+   "id": "Crest.Workflows.Tenants",
+   "label": "Crest.Workflows.Tenants",
+   "color": "#b5a2d8",
+   "kind": "engine",
+   "value": 2,
+   "title": "Crest.Workflows.Tenants\\nreferenced by 1, references 3, packages 0"
   },
   {
    "id": "Crest.XmlRpc",
@@ -2018,6 +2058,31 @@
   }
  ],
  "edges": [
+  {
+   "from": "Crest.RateLimits.Abstractions",
+   "to": "Crest.Data.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.RateLimits.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Autoroute.Abstractions",
+   "to": "Crest.ContentManagement.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Autoroute.Abstractions",
+   "to": "Crest.Data.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Autoroute.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
   {
    "from": "Crest.Application.Targets",
    "to": "Crest.Infrastructure",
@@ -2055,7 +2120,7 @@
   },
   {
    "from": "Crest.Shortcodes",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -2090,22 +2155,12 @@
   },
   {
    "from": "Crest.Apis.GraphQL",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.Apis.GraphQL",
    "to": "Crest.ResourceManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Roles.Core",
-   "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Roles.Core",
-   "to": "Crest.Roles.Abstractions",
    "arrows": "to"
   },
   {
@@ -2140,11 +2195,6 @@
   },
   {
    "from": "Crest.Flows",
-   "to": "Crest.Flows.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Flows",
    "to": "Crest.Indexing.Abstractions",
    "arrows": "to"
   },
@@ -2164,13 +2214,8 @@
    "arrows": "to"
   },
   {
-   "from": "Crest.Workflows.Platform.Abstractions",
-   "to": "Crest.DisplayManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Workflows.Platform.Abstractions",
-   "to": "Crest.Liquid.Abstractions",
+   "from": "Crest.Flows",
+   "to": "Crest.Flows.Abstractions",
    "arrows": "to"
   },
   {
@@ -2185,7 +2230,7 @@
   },
   {
    "from": "Crest.Markdown",
-   "to": "Crest.ContentFields.Core",
+   "to": "Crest.ContentFields",
    "arrows": "to"
   },
   {
@@ -2275,17 +2320,7 @@
   },
   {
    "from": "Crest.Sms.Azure",
-   "to": "Crest.Sms.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Mvc.Core",
-   "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Mvc.Core",
-   "to": "Crest.DisplayManagement.Abstractions",
+   "to": "Crest.Sms",
    "arrows": "to"
   },
   {
@@ -2310,47 +2345,27 @@
   },
   {
    "from": "Crest.Rules",
-   "to": "Crest.Rules.Core",
+   "to": "Crest.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Rules",
+   "to": "Crest.Rules.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Rules",
+   "to": "Crest.Access.Abstractions",
    "arrows": "to"
   },
   {
    "from": "Crest.ResourceManagement",
-   "to": "Crest.ResourceManagement.Core",
+   "to": "Crest.Abstractions",
    "arrows": "to"
   },
   {
-   "from": "Crest.Users.Core",
-   "to": "Crest.ContentManagement.GraphQL",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Users.Core",
-   "to": "Crest.Data.YesSql",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Users.Core",
-   "to": "Crest.DisplayManagement.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Users.Core",
-   "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Users.Core",
-   "to": "Crest.Roles.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Users.Core",
-   "to": "Crest.Users.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.ContentFields.Core",
-   "to": "Crest.ContentManagement.Abstractions",
+   "from": "Crest.ResourceManagement",
+   "to": "Crest.ResourceManagement.Abstractions",
    "arrows": "to"
   },
   {
@@ -2375,7 +2390,7 @@
   },
   {
    "from": "Crest.DisplayManagement",
-   "to": "Crest.Mvc.Core",
+   "to": "Crest.Mvc",
    "arrows": "to"
   },
   {
@@ -2389,6 +2404,11 @@
    "arrows": "to"
   },
   {
+   "from": "Crest.Deployment.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
    "from": "Crest.SignalR.Azure",
    "to": "Crest.Abstractions",
    "arrows": "to"
@@ -2396,6 +2416,16 @@
   {
    "from": "Crest.SignalR.Azure",
    "to": "Crest.Module.Targets",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Mvc",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Mvc",
+   "to": "Crest.DisplayManagement.Abstractions",
    "arrows": "to"
   },
   {
@@ -2445,7 +2475,12 @@
   },
   {
    "from": "Crest.ContentPreview",
-   "to": "Crest.Contents.Core",
+   "to": "Crest.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.ContentPreview",
+   "to": "Crest.ContentManagement",
    "arrows": "to"
   },
   {
@@ -2466,16 +2501,6 @@
   {
    "from": "Crest.ContentPreview",
    "to": "Crest.ResourceManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.OpenId.Core",
-   "to": "Crest.Data.YesSql",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.OpenId.Core",
-   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -2500,6 +2525,11 @@
   },
   {
    "from": "Crest.Lucene",
+   "to": "Crest.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Lucene",
    "to": "Crest.ContentManagement",
    "arrows": "to"
   },
@@ -2511,11 +2541,6 @@
   {
    "from": "Crest.Lucene",
    "to": "Crest.ContentTypes.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Lucene",
-   "to": "Crest.Contents.Core",
    "arrows": "to"
   },
   {
@@ -2540,7 +2565,7 @@
   },
   {
    "from": "Crest.Lucene",
-   "to": "Crest.Indexing.Core",
+   "to": "Crest.Indexing",
    "arrows": "to"
   },
   {
@@ -2560,12 +2585,12 @@
   },
   {
    "from": "Crest.Lucene",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.Lucene",
-   "to": "Crest.Queries.Core",
+   "to": "Crest.Queries",
    "arrows": "to"
   },
   {
@@ -2590,7 +2615,22 @@
   },
   {
    "from": "Crest.Lucene",
-   "to": "Crest.Lucene.Core",
+   "to": "Crest.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Lucene",
+   "to": "Crest.Queries.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Lucene",
+   "to": "Crest.Search.Lucene.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Lucene",
+   "to": "Crest.Lucene.Abstractions",
    "arrows": "to"
   },
   {
@@ -2610,7 +2650,17 @@
   },
   {
    "from": "Crest.Navigation",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Admin.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Navigation",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Navigation",
+   "to": "Crest.Navigation.Abstractions",
    "arrows": "to"
   },
   {
@@ -2640,7 +2690,7 @@
   },
   {
    "from": "Crest.AuditTrail",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -2650,7 +2700,7 @@
   },
   {
    "from": "Crest.AuditTrail",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
@@ -2671,81 +2721,6 @@
   {
    "from": "Crest.Media.Indexing.OpenXML",
    "to": "Crest.ResourceManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Indexing.Core",
-   "to": "Crest.ContentLocalization.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Indexing.Core",
-   "to": "Crest.ContentManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Indexing.Core",
-   "to": "Crest.ContentPreview.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Indexing.Core",
-   "to": "Crest.Deployment.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Indexing.Core",
-   "to": "Crest.Indexing.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Indexing.Core",
-   "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Indexing.Core",
-   "to": "Crest.Search.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Taxonomies.Core",
-   "to": "Crest.ContentManagement.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Taxonomies.Core",
-   "to": "Crest.ContentManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Taxonomies.Core",
-   "to": "Crest.Navigation.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Notifications.Core",
-   "to": "Crest.ContentManagement.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Notifications.Core",
-   "to": "Crest.Email.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Notifications.Core",
-   "to": "Crest.Infrastructure",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Notifications.Core",
-   "to": "Crest.Notifications.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Notifications.Core",
-   "to": "Crest.Users.Core",
    "arrows": "to"
   },
   {
@@ -2790,7 +2765,7 @@
   },
   {
    "from": "Crest.Roles",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -2805,82 +2780,22 @@
   },
   {
    "from": "Crest.Roles",
-   "to": "Crest.Roles.Core",
+   "to": "Crest.Users.Abstractions",
    "arrows": "to"
   },
   {
    "from": "Crest.Roles",
-   "to": "Crest.Users.Core",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
    "from": "Crest.Roles",
-   "to": "Crest.Workflows.Platform.Abstractions",
+   "to": "Crest.Roles.Abstractions",
    "arrows": "to"
   },
   {
    "from": "Crest.Sms.Abstractions",
    "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Elasticsearch.Core",
-   "to": "Crest.ContentLocalization.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Elasticsearch.Core",
-   "to": "Crest.ContentManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Elasticsearch.Core",
-   "to": "Crest.ContentPreview.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Elasticsearch.Core",
-   "to": "Crest.Contents.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Elasticsearch.Core",
-   "to": "Crest.ContentTypes.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Elasticsearch.Core",
-   "to": "Crest.Deployment.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Elasticsearch.Core",
-   "to": "Crest.Indexing.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Elasticsearch.Core",
-   "to": "Crest.Indexing.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Elasticsearch.Core",
-   "to": "Crest.Liquid.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Elasticsearch.Core",
-   "to": "Crest.Queries.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Elasticsearch.Core",
-   "to": "Crest.Roles.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Elasticsearch.Core",
-   "to": "Crest.Search.Abstractions",
    "arrows": "to"
   },
   {
@@ -2905,7 +2820,7 @@
   },
   {
    "from": "Crest.Sms",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -2915,16 +2830,51 @@
   },
   {
    "from": "Crest.Sms",
-   "to": "Crest.Sms.Core",
+   "to": "Crest.Workflows.Abstractions",
    "arrows": "to"
   },
   {
    "from": "Crest.Sms",
-   "to": "Crest.Workflows.Platform.Abstractions",
+   "to": "Crest.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Sms",
+   "to": "Crest.Workflows.Engine",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Sms",
+   "to": "Crest.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Sms",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Sms",
+   "to": "Crest.Notifications.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Sms",
+   "to": "Crest.Sms.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Sms",
+   "to": "Crest.Users",
    "arrows": "to"
   },
   {
    "from": "Crest.Shortcodes.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Navigation.Abstractions",
    "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
@@ -2980,7 +2930,12 @@
   },
   {
    "from": "Crest.Widgets",
-   "to": "Crest.Contents.Core",
+   "to": "Crest.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Widgets",
+   "to": "Crest.ContentManagement",
    "arrows": "to"
   },
   {
@@ -3006,6 +2961,11 @@
   {
    "from": "Crest.Widgets",
    "to": "Crest.ResourceManagement",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.ReCaptcha.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -3035,7 +2995,7 @@
   },
   {
    "from": "Crest.Search",
-   "to": "Crest.Indexing.Core",
+   "to": "Crest.Indexing",
    "arrows": "to"
   },
   {
@@ -3045,7 +3005,7 @@
   },
   {
    "from": "Crest.Search",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -3059,38 +3019,28 @@
    "arrows": "to"
   },
   {
-   "from": "Crest.OpenApi.Core",
-   "to": "Crest.Infrastructure.Abstractions",
+   "from": "Crest.AzureAI.Abstractions",
+   "to": "Crest.ContentManagement.Abstractions",
    "arrows": "to"
   },
   {
-   "from": "Crest.Lucene.Core",
-   "to": "Crest.Abstractions",
+   "from": "Crest.AzureAI.Abstractions",
+   "to": "Crest.Contents.Abstractions",
    "arrows": "to"
   },
   {
-   "from": "Crest.Lucene.Core",
-   "to": "Crest.Contents.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Lucene.Core",
+   "from": "Crest.AzureAI.Abstractions",
    "to": "Crest.Indexing.Abstractions",
    "arrows": "to"
   },
   {
-   "from": "Crest.Lucene.Core",
-   "to": "Crest.Indexing.Core",
+   "from": "Crest.AzureAI.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
-   "from": "Crest.Lucene.Core",
-   "to": "Crest.Queries.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Lucene.Core",
-   "to": "Crest.Search.Lucene.Abstractions",
+   "from": "Crest.OpenApi.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -3150,7 +3100,7 @@
   },
   {
    "from": "Crest.Demo",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -3160,27 +3110,7 @@
   },
   {
    "from": "Crest.Demo",
-   "to": "Crest.Users.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Setup.Core",
-   "to": "Crest.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Setup.Core",
-   "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Setup.Core",
-   "to": "Crest.Recipes.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Setup.Core",
-   "to": "Crest.Setup.Abstractions",
+   "to": "Crest.Users",
    "arrows": "to"
   },
   {
@@ -3220,7 +3150,7 @@
   },
   {
    "from": "Crest.Sitemaps",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -3265,17 +3195,12 @@
   },
   {
    "from": "Crest.Localization",
-   "to": "Crest.Localization.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Localization",
    "to": "Crest.Module.Targets",
    "arrows": "to"
   },
   {
    "from": "Crest.Localization",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -3285,32 +3210,17 @@
   },
   {
    "from": "Crest.Localization",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
-   "from": "Crest.Html.Core",
-   "to": "Crest.ContentManagement.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Html.Core",
-   "to": "Crest.Liquid.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Html.Core",
-   "to": "Crest.Shortcodes.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Email.Core",
-   "to": "Crest.Email.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Email.Core",
+   "from": "Crest.Localization",
    "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Localization",
+   "to": "Crest.Localization.Abstractions",
    "arrows": "to"
   },
   {
@@ -3335,6 +3245,11 @@
   },
   {
    "from": "Crest.Lists",
+   "to": "Crest.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Lists",
    "to": "Crest.ContentManagement",
    "arrows": "to"
   },
@@ -3346,11 +3261,6 @@
   {
    "from": "Crest.Lists",
    "to": "Crest.ContentManagement.GraphQL",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Lists",
-   "to": "Crest.Contents.Core",
    "arrows": "to"
   },
   {
@@ -3385,7 +3295,7 @@
   },
   {
    "from": "Crest.Lists",
-   "to": "Crest.Media.Core",
+   "to": "Crest.Media",
    "arrows": "to"
   },
   {
@@ -3420,12 +3330,17 @@
   },
   {
    "from": "Crest.Https",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.Https",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Features.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -3435,7 +3350,7 @@
   },
   {
    "from": "Crest.UrlRewriting",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -3450,57 +3365,22 @@
   },
   {
    "from": "Crest.UrlRewriting",
-   "to": "Crest.UrlRewriting.Core",
+   "to": "Crest.Admin.Abstractions",
    "arrows": "to"
   },
   {
-   "from": "Crest.AzureAI.Core",
-   "to": "Crest.Indexing",
+   "from": "Crest.UrlRewriting",
+   "to": "Crest.Data.Abstractions",
    "arrows": "to"
   },
   {
-   "from": "Crest.AzureAI.Core",
-   "to": "Crest.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.AzureAI.Core",
-   "to": "Crest.ContentLocalization.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.AzureAI.Core",
-   "to": "Crest.ContentManagement.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.AzureAI.Core",
-   "to": "Crest.ContentPreview.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.AzureAI.Core",
-   "to": "Crest.Contents.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.AzureAI.Core",
-   "to": "Crest.Deployment.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.AzureAI.Core",
-   "to": "Crest.Indexing.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.AzureAI.Core",
+   "from": "Crest.UrlRewriting",
    "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
-   "from": "Crest.AzureAI.Core",
-   "to": "Crest.Search.Abstractions",
+   "from": "Crest.UrlRewriting",
+   "to": "Crest.UrlRewriting.Abstractions",
    "arrows": "to"
   },
   {
@@ -3516,11 +3396,6 @@
   {
    "from": "Crest.Deployment",
    "to": "Crest.Data.YesSql",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Deployment",
-   "to": "Crest.Deployment.Core",
    "arrows": "to"
   },
   {
@@ -3545,7 +3420,7 @@
   },
   {
    "from": "Crest.Deployment",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -3554,13 +3429,8 @@
    "arrows": "to"
   },
   {
-   "from": "Crest.ResourceManagement.Core",
-   "to": "Crest.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.ResourceManagement.Core",
-   "to": "Crest.ResourceManagement.Abstractions",
+   "from": "Crest.Deployment",
+   "to": "Crest.Deployment.Abstractions",
    "arrows": "to"
   },
   {
@@ -3620,7 +3490,7 @@
   },
   {
    "from": "Crest.ContentTypes",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -3660,7 +3530,7 @@
   },
   {
    "from": "Crest.Microsoft.Authentication",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -3700,6 +3570,11 @@
   },
   {
    "from": "Crest.Roles.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Settings.Abstractions",
    "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
@@ -3750,12 +3625,7 @@
   },
   {
    "from": "Crest.Media.Azure",
-   "to": "Crest.Media.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Media.Azure",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -3780,7 +3650,7 @@
   },
   {
    "from": "Crest.Deployment.Remote",
-   "to": "Crest.Deployment.Core",
+   "to": "Crest.Deployment",
    "arrows": "to"
   },
   {
@@ -3800,12 +3670,17 @@
   },
   {
    "from": "Crest.Deployment.Remote",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.Deployment.Remote",
    "to": "Crest.ResourceManagement",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Deployment.Remote",
+   "to": "Crest.Access.Abstractions",
    "arrows": "to"
   },
   {
@@ -3816,6 +3691,11 @@
   {
    "from": "Crest.Users.Abstractions",
    "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Users.Abstractions",
+   "to": "Crest.DisplayManagement.Abstractions",
    "arrows": "to"
   },
   {
@@ -3835,12 +3715,12 @@
   },
   {
    "from": "Crest.Security",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.Security",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
@@ -3879,8 +3759,13 @@
    "arrows": "to"
   },
   {
+   "from": "Crest.Media.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
    "from": "Crest.AdminMenu.Abstractions",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -3890,12 +3775,12 @@
   },
   {
    "from": "Crest.AdminDashboard",
-   "to": "Crest.ContentManagement",
+   "to": "Crest.Contents.Abstractions",
    "arrows": "to"
   },
   {
    "from": "Crest.AdminDashboard",
-   "to": "Crest.Contents.Core",
+   "to": "Crest.ContentManagement",
    "arrows": "to"
   },
   {
@@ -3925,22 +3810,12 @@
   },
   {
    "from": "Crest.AdminDashboard",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.AdminDashboard",
    "to": "Crest.ResourceManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Localization.Core",
-   "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Localization.Core",
-   "to": "Crest.Localization.Abstractions",
    "arrows": "to"
   },
   {
@@ -3955,7 +3830,7 @@
   },
   {
    "from": "Crest.HomeRoute",
-   "to": "Crest.Mvc.Core",
+   "to": "Crest.Mvc",
    "arrows": "to"
   },
   {
@@ -3971,21 +3846,6 @@
   {
    "from": "Crest.ResponseCompression",
    "to": "Crest.Module.Targets",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Media.Core",
-   "to": "Crest.FileStorage.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Media.Core",
-   "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Media.Core",
-   "to": "Crest.Media.Abstractions",
    "arrows": "to"
   },
   {
@@ -4045,7 +3905,7 @@
   },
   {
    "from": "Crest.Layers",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -4061,6 +3921,11 @@
   {
    "from": "Crest.Layers",
    "to": "Crest.Rules.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Layers",
+   "to": "Crest.Access.Abstractions",
    "arrows": "to"
   },
   {
@@ -4090,7 +3955,12 @@
   },
   {
    "from": "Crest.ContentLocalization",
-   "to": "Crest.Contents.Core",
+   "to": "Crest.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.ContentLocalization",
+   "to": "Crest.ContentManagement",
    "arrows": "to"
   },
   {
@@ -4135,7 +4005,12 @@
   },
   {
    "from": "Crest.ContentLocalization",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.ContentLocalization",
+   "to": "Crest.Access.Abstractions",
    "arrows": "to"
   },
   {
@@ -4155,7 +4030,7 @@
   },
   {
    "from": "Crest.Contents",
-   "to": "Crest.ContentFields.Core",
+   "to": "Crest.ContentFields",
    "arrows": "to"
   },
   {
@@ -4170,12 +4045,12 @@
   },
   {
    "from": "Crest.Contents",
-   "to": "Crest.Contents.Core",
+   "to": "Crest.Contents.TagHelpers",
    "arrows": "to"
   },
   {
    "from": "Crest.Contents",
-   "to": "Crest.Contents.TagHelpers",
+   "to": "Crest.Contents.Abstractions",
    "arrows": "to"
   },
   {
@@ -4200,7 +4075,7 @@
   },
   {
    "from": "Crest.Contents",
-   "to": "Crest.Deployment.Core",
+   "to": "Crest.Deployment",
    "arrows": "to"
   },
   {
@@ -4235,7 +4110,7 @@
   },
   {
    "from": "Crest.Contents",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -4250,7 +4125,7 @@
   },
   {
    "from": "Crest.Contents",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
@@ -4261,11 +4136,6 @@
   {
    "from": "Crest.Contents",
    "to": "Crest.Users.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Contents",
-   "to": "Crest.Workflows.Platform.Abstractions",
    "arrows": "to"
   },
   {
@@ -4280,12 +4150,12 @@
   },
   {
    "from": "Crest.AzureAI",
-   "to": "Crest.Flows.Core",
+   "to": "Crest.Flows",
    "arrows": "to"
   },
   {
    "from": "Crest.AzureAI",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -4300,7 +4170,57 @@
   },
   {
    "from": "Crest.AzureAI",
-   "to": "Crest.AzureAI.Core",
+   "to": "Crest.Indexing",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.AzureAI",
+   "to": "Crest.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.AzureAI",
+   "to": "Crest.ContentLocalization.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.AzureAI",
+   "to": "Crest.ContentManagement.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.AzureAI",
+   "to": "Crest.ContentPreview.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.AzureAI",
+   "to": "Crest.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.AzureAI",
+   "to": "Crest.ContentManagement",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.AzureAI",
+   "to": "Crest.Deployment.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.AzureAI",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.AzureAI",
+   "to": "Crest.Search.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.AzureAI",
+   "to": "Crest.AzureAI.Abstractions",
    "arrows": "to"
   },
   {
@@ -4395,12 +4315,12 @@
   },
   {
    "from": "Crest.Notifications",
-   "to": "Crest.ContentManagement",
+   "to": "Crest.Contents.Abstractions",
    "arrows": "to"
   },
   {
    "from": "Crest.Notifications",
-   "to": "Crest.Contents.Core",
+   "to": "Crest.ContentManagement",
    "arrows": "to"
   },
   {
@@ -4410,12 +4330,7 @@
   },
   {
    "from": "Crest.Notifications",
-   "to": "Crest.Navigation.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Notifications",
-   "to": "Crest.Notifications.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -4425,12 +4340,42 @@
   },
   {
    "from": "Crest.Notifications",
-   "to": "Crest.Users.Core",
+   "to": "Crest.Users",
    "arrows": "to"
   },
   {
    "from": "Crest.Notifications",
-   "to": "Crest.Workflows.Platform.Abstractions",
+   "to": "Crest.Workflows.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Notifications",
+   "to": "Crest.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Notifications",
+   "to": "Crest.Workflows.Engine",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Notifications",
+   "to": "Crest.ContentManagement.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Notifications",
+   "to": "Crest.Email.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Notifications",
+   "to": "Crest.Infrastructure",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Notifications",
+   "to": "Crest.Notifications.Abstractions",
    "arrows": "to"
   },
   {
@@ -4470,7 +4415,7 @@
   },
   {
    "from": "Crest.Seo",
-   "to": "Crest.Media.Core",
+   "to": "Crest.Media",
    "arrows": "to"
   },
   {
@@ -4480,7 +4425,7 @@
   },
   {
    "from": "Crest.Seo",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -4514,33 +4459,18 @@
    "arrows": "to"
   },
   {
-   "from": "Crest.Rules.Core",
-   "to": "Crest.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Rules.Core",
-   "to": "Crest.DisplayManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Rules.Core",
-   "to": "Crest.Rules.Abstractions",
-   "arrows": "to"
-  },
-  {
    "from": "Crest.Recipes.Abstractions",
    "to": "Crest.Data.YesSql.Abstractions",
    "arrows": "to"
   },
   {
-   "from": "Crest.ContentFields",
-   "to": "Crest.Admin.Abstractions",
+   "from": "Crest.Recipes.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
    "from": "Crest.ContentFields",
-   "to": "Crest.ContentFields.Core",
+   "to": "Crest.Admin.Abstractions",
    "arrows": "to"
   },
   {
@@ -4565,7 +4495,12 @@
   },
   {
    "from": "Crest.ContentFields",
-   "to": "Crest.Contents.Core",
+   "to": "Crest.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.ContentFields",
+   "to": "Crest.ContentManagement",
    "arrows": "to"
   },
   {
@@ -4580,7 +4515,7 @@
   },
   {
    "from": "Crest.ContentFields",
-   "to": "Crest.Html.Core",
+   "to": "Crest.Html",
    "arrows": "to"
   },
   {
@@ -4615,7 +4550,12 @@
   },
   {
    "from": "Crest.ContentFields",
-   "to": "Crest.Users.Core",
+   "to": "Crest.Users",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.ContentFields",
+   "to": "Crest.ContentFields.Abstractions",
    "arrows": "to"
   },
   {
@@ -4640,12 +4580,12 @@
   },
   {
    "from": "Crest.Elasticsearch",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.Elasticsearch",
-   "to": "Crest.Queries.Core",
+   "to": "Crest.Queries",
    "arrows": "to"
   },
   {
@@ -4655,7 +4595,67 @@
   },
   {
    "from": "Crest.Elasticsearch",
-   "to": "Crest.Elasticsearch.Core",
+   "to": "Crest.ContentLocalization.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch",
+   "to": "Crest.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch",
+   "to": "Crest.ContentManagement",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch",
+   "to": "Crest.ContentPreview.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch",
+   "to": "Crest.ContentTypes.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch",
+   "to": "Crest.Deployment.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch",
+   "to": "Crest.Indexing.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch",
+   "to": "Crest.Indexing",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch",
+   "to": "Crest.Liquid.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch",
+   "to": "Crest.Queries.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch",
+   "to": "Crest.Roles.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch",
+   "to": "Crest.Search.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch",
+   "to": "Crest.Elasticsearch.Abstractions",
    "arrows": "to"
   },
   {
@@ -4670,7 +4670,7 @@
   },
   {
    "from": "Crest.Feeds",
-   "to": "Crest.Feeds.Core",
+   "to": "Crest.Feeds.Abstractions",
    "arrows": "to"
   },
   {
@@ -4715,7 +4715,7 @@
   },
   {
    "from": "Crest.Menu",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -4765,7 +4765,7 @@
   },
   {
    "from": "Crest.Tenants",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -4785,27 +4785,32 @@
   },
   {
    "from": "Crest.Tenants",
-   "to": "Crest.Setup.Core",
+   "to": "Crest.Setup",
    "arrows": "to"
   },
   {
    "from": "Crest.Tenants",
-   "to": "Crest.Workflows.Platform.Abstractions",
+   "to": "Crest.Workflows.Abstractions",
    "arrows": "to"
   },
   {
-   "from": "Crest.Recipes.Core",
-   "to": "Crest.Data.Abstractions",
+   "from": "Crest.Tenants",
+   "to": "Crest.Workflows.Core",
    "arrows": "to"
   },
   {
-   "from": "Crest.Recipes.Core",
+   "from": "Crest.Tenants",
+   "to": "Crest.Workflows.Engine",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.ContentFields.Abstractions",
+   "to": "Crest.ContentManagement.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.ContentFields.Abstractions",
    "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Recipes.Core",
-   "to": "Crest.Recipes.Abstractions",
    "arrows": "to"
   },
   {
@@ -4819,8 +4824,23 @@
    "arrows": "to"
   },
   {
+   "from": "Crest.OpenId.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
    "from": "Crest.Notifications.Abstractions",
    "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Notifications.Abstractions",
+   "to": "Crest.ContentManagement.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Notifications.Abstractions",
+   "to": "Crest.DisplayManagement.Abstractions",
    "arrows": "to"
   },
   {
@@ -4831,6 +4851,11 @@
   {
    "from": "Crest.Queries.Abstractions",
    "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Queries.Abstractions",
+   "to": "Crest.Data.Abstractions",
    "arrows": "to"
   },
   {
@@ -4870,7 +4895,7 @@
   },
   {
    "from": "Crest.BackgroundTasks",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -4925,21 +4950,6 @@
   },
   {
    "from": "Crest.Logging.Serilog",
-   "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Contents.Core",
-   "to": "Crest.ContentManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Contents.Core",
-   "to": "Crest.DisplayManagement.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Contents.Core",
    "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
@@ -5095,22 +5105,12 @@
   },
   {
    "from": "Crest.Users",
-   "to": "Crest.Sms.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.Users",
-   "to": "Crest.Users.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Users",
-   "to": "Crest.Navigation.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Users",
-   "to": "Crest.RateLimits.Core",
+   "to": "Crest.RateLimits",
    "arrows": "to"
   },
   {
@@ -5125,12 +5125,12 @@
   },
   {
    "from": "Crest.Users",
-   "to": "Crest.Roles.Core",
+   "to": "Crest.Roles",
    "arrows": "to"
   },
   {
    "from": "Crest.Users",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
@@ -5140,7 +5140,37 @@
   },
   {
    "from": "Crest.Users",
-   "to": "Crest.Workflows.Platform.Abstractions",
+   "to": "Crest.Workflows.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Users",
+   "to": "Crest.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Users",
+   "to": "Crest.Workflows.Engine",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Users",
+   "to": "Crest.Data.YesSql",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Users",
+   "to": "Crest.DisplayManagement.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Users",
+   "to": "Crest.Users.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Users",
+   "to": "Crest.Access.Abstractions",
    "arrows": "to"
   },
   {
@@ -5160,7 +5190,7 @@
   },
   {
    "from": "Crest.Setup",
-   "to": "Crest.Localization.Core",
+   "to": "Crest.Localization",
    "arrows": "to"
   },
   {
@@ -5175,7 +5205,12 @@
   },
   {
    "from": "Crest.Setup",
-   "to": "Crest.Setup.Core",
+   "to": "Crest.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Setup",
+   "to": "Crest.Setup.Abstractions",
    "arrows": "to"
   },
   {
@@ -5225,7 +5260,7 @@
   },
   {
    "from": "TheAdmin",
-   "to": "Crest.Users.Core",
+   "to": "Crest.Users",
    "arrows": "to"
   },
   {
@@ -5805,17 +5840,22 @@
   },
   {
    "from": "Crest.Recipes",
-   "to": "Crest.Navigation.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Recipes",
-   "to": "Crest.Recipes.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.Recipes",
    "to": "Crest.ResourceManagement",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Recipes",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Recipes",
+   "to": "Crest.Recipes.Abstractions",
    "arrows": "to"
   },
   {
@@ -5855,7 +5895,7 @@
   },
   {
    "from": "Crest.CustomSettings",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -5866,6 +5906,11 @@
   {
    "from": "Crest.CustomSettings",
    "to": "Crest.ResourceManagement",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.CustomSettings",
+   "to": "Crest.Access.Abstractions",
    "arrows": "to"
   },
   {
@@ -5890,7 +5935,7 @@
   },
   {
    "from": "Crest.Themes",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -5935,17 +5980,12 @@
   },
   {
    "from": "Crest.OpenId",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.OpenId",
-   "to": "Crest.OpenId.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.OpenId",
-   "to": "Crest.RateLimits.Core",
+   "to": "Crest.RateLimits",
    "arrows": "to"
   },
   {
@@ -5960,7 +6000,7 @@
   },
   {
    "from": "Crest.OpenId",
-   "to": "Crest.Roles.Core",
+   "to": "Crest.Roles",
    "arrows": "to"
   },
   {
@@ -5969,8 +6009,23 @@
    "arrows": "to"
   },
   {
-   "from": "Crest.Flows.Core",
-   "to": "Crest.ContentManagement.Abstractions",
+   "from": "Crest.OpenId",
+   "to": "Crest.Data.YesSql",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.OpenId",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.OpenId",
+   "to": "Crest.OpenId.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.PublishLater",
+   "to": "Crest.Contents.Abstractions",
    "arrows": "to"
   },
   {
@@ -5981,11 +6036,6 @@
   {
    "from": "Crest.PublishLater",
    "to": "Crest.ContentManagement.Display",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.PublishLater",
-   "to": "Crest.Contents.Core",
    "arrows": "to"
   },
   {
@@ -6080,7 +6130,7 @@
   },
   {
    "from": "Crest.Facebook",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -6095,7 +6145,17 @@
   },
   {
    "from": "Crest.Facebook",
-   "to": "Crest.Workflows.Platform.Abstractions",
+   "to": "Crest.Workflows.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Facebook",
+   "to": "Crest.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Facebook",
+   "to": "Crest.Workflows.Engine",
    "arrows": "to"
   },
   {
@@ -6145,7 +6205,7 @@
   },
   {
    "from": "Crest.Settings",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -6160,12 +6220,7 @@
   },
   {
    "from": "Crest.Settings",
-   "to": "Crest.Roles.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Settings",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Roles",
    "arrows": "to"
   },
   {
@@ -6174,8 +6229,18 @@
    "arrows": "to"
   },
   {
-   "from": "Crest.Features.Core",
-   "to": "Crest.DisplayManagement",
+   "from": "Crest.Settings",
+   "to": "Crest.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Settings",
+   "to": "Crest.Settings.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Settings",
+   "to": "Crest.Access.Abstractions",
    "arrows": "to"
   },
   {
@@ -6195,17 +6260,12 @@
   },
   {
    "from": "Crest.ReCaptcha",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.ReCaptcha",
-   "to": "Crest.ReCaptcha.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.ReCaptcha",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
@@ -6215,12 +6275,22 @@
   },
   {
    "from": "Crest.ReCaptcha",
-   "to": "Crest.Users.Core",
+   "to": "Crest.Users",
    "arrows": "to"
   },
   {
    "from": "Crest.ReCaptcha",
-   "to": "Crest.Workflows.Platform.Abstractions",
+   "to": "Crest.DisplayManagement",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.ReCaptcha",
+   "to": "Crest.ResourceManagement.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.ReCaptcha",
+   "to": "Crest.ReCaptcha.Abstractions",
    "arrows": "to"
   },
   {
@@ -6256,6 +6326,11 @@
   {
    "from": "Crest.Money",
    "to": "Crest.Money.Domain",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Flows.Abstractions",
+   "to": "Crest.ContentManagement.Abstractions",
    "arrows": "to"
   },
   {
@@ -6375,11 +6450,6 @@
   },
   {
    "from": "Crest.Html",
-   "to": "Crest.Html.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Html",
    "to": "Crest.Indexing.Abstractions",
    "arrows": "to"
   },
@@ -6404,6 +6474,26 @@
    "arrows": "to"
   },
   {
+   "from": "Crest.Html",
+   "to": "Crest.Liquid.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Html",
+   "to": "Crest.Shortcodes.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Html",
+   "to": "Crest.Html.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.ArchiveLater",
+   "to": "Crest.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
    "from": "Crest.ArchiveLater",
    "to": "Crest.ContentManagement",
    "arrows": "to"
@@ -6411,11 +6501,6 @@
   {
    "from": "Crest.ArchiveLater",
    "to": "Crest.ContentManagement.Display",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.ArchiveLater",
-   "to": "Crest.Contents.Core",
    "arrows": "to"
   },
   {
@@ -6480,7 +6565,7 @@
   },
   {
    "from": "Crest.Media",
-   "to": "Crest.ContentFields.Core",
+   "to": "Crest.ContentFields",
    "arrows": "to"
   },
   {
@@ -6540,11 +6625,6 @@
   },
   {
    "from": "Crest.Media",
-   "to": "Crest.Media.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Media",
    "to": "Crest.MetaWeblog.Abstractions",
    "arrows": "to"
   },
@@ -6555,7 +6635,7 @@
   },
   {
    "from": "Crest.Media",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -6586,6 +6666,26 @@
   {
    "from": "Crest.Media",
    "to": "Crest.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Media",
+   "to": "Crest.FileStorage.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Media",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Media",
+   "to": "Crest.Media.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Media",
+   "to": "Crest.Access.Abstractions",
    "arrows": "to"
   },
   {
@@ -6645,17 +6745,17 @@
   },
   {
    "from": "Crest.Queries",
-   "to": "Crest.Navigation.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Queries",
-   "to": "Crest.Queries.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.Queries",
    "to": "Crest.ResourceManagement",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Queries",
+   "to": "Crest.Queries.Abstractions",
    "arrows": "to"
   },
   {
@@ -6695,7 +6795,7 @@
   },
   {
    "from": "Crest.DataLocalization",
-   "to": "Crest.Localization.Core",
+   "to": "Crest.Localization",
    "arrows": "to"
   },
   {
@@ -6705,7 +6805,7 @@
   },
   {
    "from": "Crest.DataLocalization",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -6715,12 +6815,27 @@
   },
   {
    "from": "Crest.DataLocalization",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
    "from": "Crest.DataLocalization",
    "to": "Crest.ContentTypes",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Taxonomies.Abstractions",
+   "to": "Crest.ContentManagement.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Taxonomies.Abstractions",
+   "to": "Crest.Navigation.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Taxonomies.Abstractions",
+   "to": "Crest.Notifications.Abstractions",
    "arrows": "to"
   },
   {
@@ -6730,7 +6845,7 @@
   },
   {
    "from": "Crest.Application.Mvc.Targets",
-   "to": "Crest.Mvc.Core",
+   "to": "Crest.Mvc",
    "arrows": "to"
   },
   {
@@ -6751,6 +6866,11 @@
   {
    "from": "Crest.Infrastructure",
    "to": "Crest.Localization.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Infrastructure",
+   "to": "Crest.Access.Abstractions",
    "arrows": "to"
   },
   {
@@ -6800,17 +6920,12 @@
   },
   {
    "from": "Crest.Media.AmazonS3",
-   "to": "Crest.Media.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Media.AmazonS3",
    "to": "Crest.Module.Targets",
    "arrows": "to"
   },
   {
    "from": "Crest.Media.AmazonS3",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -6845,7 +6960,7 @@
   },
   {
    "from": "Crest.Resources",
-   "to": "Crest.ResourceManagement.Core",
+   "to": "Crest.ResourceManagement",
    "arrows": "to"
   },
   {
@@ -6855,7 +6970,7 @@
   },
   {
    "from": "Crest.Templates",
-   "to": "Crest.Autoroute.Core",
+   "to": "Crest.Autoroute",
    "arrows": "to"
   },
   {
@@ -6905,7 +7020,7 @@
   },
   {
    "from": "Crest.Templates",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -6955,7 +7070,7 @@
   },
   {
    "from": "Crest.AdminMenu",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -6995,17 +7110,12 @@
   },
   {
    "from": "Crest.Features",
-   "to": "Crest.Features.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Features",
    "to": "Crest.Module.Targets",
    "arrows": "to"
   },
   {
    "from": "Crest.Features",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -7016,6 +7126,11 @@
   {
    "from": "Crest.Features",
    "to": "Crest.ResourceManagement",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Features",
+   "to": "Crest.Features.Abstractions",
    "arrows": "to"
   },
   {
@@ -7105,17 +7220,12 @@
   },
   {
    "from": "Crest.Server",
-   "to": "Crest.Recipes.Core",
+   "to": "Crest.Recipes",
    "arrows": "to"
   },
   {
    "from": "Crest.Server",
    "to": "Crest.Queries",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Server",
-   "to": "Crest.Localization.Core",
    "arrows": "to"
   },
   {
@@ -7130,12 +7240,12 @@
   },
   {
    "from": "Crest.Server",
-   "to": "Crest.Indexing.Core",
+   "to": "Crest.Indexing",
    "arrows": "to"
   },
   {
    "from": "Crest.Server",
-   "to": "Crest.Lucene.Core",
+   "to": "Crest.Lucene",
    "arrows": "to"
   },
   {
@@ -7170,7 +7280,7 @@
   },
   {
    "from": "Crest.Server",
-   "to": "Crest.Workflows.Platform.Abstractions",
+   "to": "Crest.Workflows.Abstractions",
    "arrows": "to"
   },
   {
@@ -7201,21 +7311,6 @@
   {
    "from": "Crest.Server",
    "to": "Crest.MemberTheme.Client",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Navigation.Core",
-   "to": "Crest.Admin.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Navigation.Core",
-   "to": "Crest.DisplayManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Navigation.Core",
-   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -7250,12 +7345,12 @@
   },
   {
    "from": "Crest.Email.Azure",
-   "to": "Crest.Email.Core",
+   "to": "Crest.Email",
    "arrows": "to"
   },
   {
    "from": "Crest.Email.Azure",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -7340,7 +7435,7 @@
   },
   {
    "from": "Crest.Cors",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -7360,37 +7455,17 @@
   },
   {
    "from": "Crest.Cors",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
    "from": "Crest.Cors",
-   "to": "Crest.Users.Core",
+   "to": "Crest.Users",
    "arrows": "to"
   },
   {
    "from": "Crest.Cors",
    "to": "Crest.ResourceManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.RateLimits.Core",
-   "to": "Crest.Deployment.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.RateLimits.Core",
-   "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.RateLimits.Core",
-   "to": "Crest.Infrastructure",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.RateLimits.Core",
-   "to": "Crest.Recipes.Abstractions",
    "arrows": "to"
   },
   {
@@ -7415,7 +7490,7 @@
   },
   {
    "from": "Crest.Forms",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -7426,11 +7501,6 @@
   {
    "from": "Crest.Forms",
    "to": "Crest.ResourceManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Forms",
-   "to": "Crest.Workflows.Platform.Abstractions",
    "arrows": "to"
   },
   {
@@ -7494,11 +7564,6 @@
    "arrows": "to"
   },
   {
-   "from": "Crest.Feeds.Core",
-   "to": "Crest.Feeds.Abstractions",
-   "arrows": "to"
-  },
-  {
    "from": "Crest.ContentManagement.GraphQL",
    "to": "Crest.Apis.GraphQL.Abstractions",
    "arrows": "to"
@@ -7520,17 +7585,17 @@
   },
   {
    "from": "Crest.ContentManagement.GraphQL",
+   "to": "Crest.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.ContentManagement.GraphQL",
    "to": "Crest.ContentManagement",
    "arrows": "to"
   },
   {
    "from": "Crest.ContentManagement.GraphQL",
    "to": "Crest.Access.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.ContentManagement.GraphQL",
-   "to": "Crest.Contents.Core",
    "arrows": "to"
   },
   {
@@ -7546,16 +7611,6 @@
   {
    "from": "Crest.Apis.GraphQL.Abstractions",
    "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.ReCaptcha.Core",
-   "to": "Crest.DisplayManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.ReCaptcha.Core",
-   "to": "Crest.ResourceManagement.Abstractions",
    "arrows": "to"
   },
   {
@@ -7614,11 +7669,6 @@
    "arrows": "to"
   },
   {
-   "from": "Crest.Deployment.Core",
-   "to": "Crest.Deployment.Abstractions",
-   "arrows": "to"
-  },
-  {
    "from": "Crest.Google",
    "to": "Crest.Admin.Abstractions",
    "arrows": "to"
@@ -7645,7 +7695,7 @@
   },
   {
    "from": "Crest.Google",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -7660,7 +7710,7 @@
   },
   {
    "from": "Crest.Google",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
@@ -7680,12 +7730,7 @@
   },
   {
    "from": "Crest.OpenApi",
-   "to": "Crest.Navigation.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.OpenApi",
-   "to": "Crest.OpenApi.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -7699,28 +7744,13 @@
    "arrows": "to"
   },
   {
-   "from": "Crest.Sms.Core",
-   "to": "Crest.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Sms.Core",
+   "from": "Crest.OpenApi",
    "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
-   "from": "Crest.Sms.Core",
-   "to": "Crest.Notifications.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Sms.Core",
-   "to": "Crest.Sms.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Sms.Core",
-   "to": "Crest.Users.Core",
+   "from": "Crest.OpenApi",
+   "to": "Crest.OpenApi.Abstractions",
    "arrows": "to"
   },
   {
@@ -7735,32 +7765,12 @@
   },
   {
    "from": "Crest.ReverseProxy",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.ReverseProxy",
-   "to": "Crest.Settings.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.UrlRewriting.Core",
-   "to": "Crest.Admin.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.UrlRewriting.Core",
-   "to": "Crest.Data.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.UrlRewriting.Core",
-   "to": "Crest.Infrastructure.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.UrlRewriting.Core",
-   "to": "Crest.UrlRewriting.Abstractions",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
@@ -7779,13 +7789,18 @@
    "arrows": "to"
   },
   {
-   "from": "Crest.Settings.Core",
-   "to": "Crest.Abstractions",
+   "from": "Crest.Contents.Abstractions",
+   "to": "Crest.ContentManagement",
    "arrows": "to"
   },
   {
-   "from": "Crest.Settings.Core",
-   "to": "Crest.Deployment.Abstractions",
+   "from": "Crest.Contents.Abstractions",
+   "to": "Crest.DisplayManagement.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Contents.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -7806,6 +7821,11 @@
   {
    "from": "Crest.Data.YesSql.Abstractions",
    "to": "Crest.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Html.Abstractions",
+   "to": "Crest.ContentManagement.Abstractions",
    "arrows": "to"
   },
   {
@@ -7865,17 +7885,12 @@
   },
   {
    "from": "Crest.Indexing",
-   "to": "Crest.Indexing.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Indexing",
    "to": "Crest.Module.Targets",
    "arrows": "to"
   },
   {
    "from": "Crest.Indexing",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -7889,13 +7904,33 @@
    "arrows": "to"
   },
   {
-   "from": "Crest.Queries.Core",
-   "to": "Crest.Data.Abstractions",
+   "from": "Crest.Indexing",
+   "to": "Crest.ContentLocalization.Abstractions",
    "arrows": "to"
   },
   {
-   "from": "Crest.Queries.Core",
-   "to": "Crest.Queries.Abstractions",
+   "from": "Crest.Indexing",
+   "to": "Crest.ContentManagement",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Indexing",
+   "to": "Crest.Indexing.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Indexing",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Indexing",
+   "to": "Crest.Search.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Indexing",
+   "to": "Crest.Access.Abstractions",
    "arrows": "to"
   },
   {
@@ -7920,12 +7955,12 @@
   },
   {
    "from": "Crest.Email.Smtp",
-   "to": "Crest.Email.Core",
+   "to": "Crest.Email",
    "arrows": "to"
   },
   {
    "from": "Crest.Email.Smtp",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -7965,7 +8000,7 @@
   },
   {
    "from": "Crest.Twitter",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -7980,17 +8015,22 @@
   },
   {
    "from": "Crest.Twitter",
-   "to": "Crest.Workflows.Platform.Abstractions",
+   "to": "Crest.Workflows.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Twitter",
+   "to": "Crest.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Twitter",
+   "to": "Crest.Workflows.Engine",
    "arrows": "to"
   },
   {
    "from": "Crest.Autoroute",
    "to": "Crest.Apis.GraphQL.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Autoroute",
-   "to": "Crest.Autoroute.Core",
    "arrows": "to"
   },
   {
@@ -8059,6 +8099,21 @@
    "arrows": "to"
   },
   {
+   "from": "Crest.Autoroute",
+   "to": "Crest.Data.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Autoroute",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Autoroute",
+   "to": "Crest.Autoroute.Abstractions",
+   "arrows": "to"
+  },
+  {
    "from": "Crest.GitHub",
    "to": "Crest.Admin.Abstractions",
    "arrows": "to"
@@ -8085,7 +8140,7 @@
   },
   {
    "from": "Crest.GitHub",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -8114,6 +8169,16 @@
    "arrows": "to"
   },
   {
+   "from": "Crest.Lucene.Abstractions",
+   "to": "Crest.Indexing.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Lucene.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
    "from": "Crest.AuditTrail.Abstractions",
    "to": "Crest.ContentManagement.Abstractions",
    "arrows": "to"
@@ -8139,6 +8204,11 @@
    "arrows": "to"
   },
   {
+   "from": "Crest.UrlRewriting.Abstractions",
+   "to": "Crest.Data.Abstractions",
+   "arrows": "to"
+  },
+  {
    "from": "Crest.Admin",
    "to": "Crest.Admin.Abstractions",
    "arrows": "to"
@@ -8160,7 +8230,7 @@
   },
   {
    "from": "Crest.Admin",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -8170,7 +8240,7 @@
   },
   {
    "from": "Crest.Admin",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
@@ -8190,12 +8260,7 @@
   },
   {
    "from": "Crest.Email",
-   "to": "Crest.Email.Core",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Email",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -8210,12 +8275,32 @@
   },
   {
    "from": "Crest.Email",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
    "from": "Crest.Email",
-   "to": "Crest.Workflows.Platform.Abstractions",
+   "to": "Crest.Workflows.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Email",
+   "to": "Crest.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Email",
+   "to": "Crest.Workflows.Engine",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Email",
+   "to": "Crest.Email.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Email",
+   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -8240,17 +8325,37 @@
   },
   {
    "from": "Crest.RateLimits",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
    "from": "Crest.RateLimits",
-   "to": "Crest.RateLimits.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
    "from": "Crest.RateLimits",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Deployment.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.RateLimits",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.RateLimits",
+   "to": "Crest.Infrastructure",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.RateLimits",
+   "to": "Crest.Recipes.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.RateLimits",
+   "to": "Crest.RateLimits.Abstractions",
    "arrows": "to"
   },
   {
@@ -8265,7 +8370,7 @@
   },
   {
    "from": "Crest.Taxonomies",
-   "to": "Crest.ContentFields.Core",
+   "to": "Crest.ContentFields",
    "arrows": "to"
   },
   {
@@ -8280,12 +8385,12 @@
   },
   {
    "from": "Crest.Taxonomies",
-   "to": "Crest.ContentManagement",
+   "to": "Crest.Contents.Abstractions",
    "arrows": "to"
   },
   {
    "from": "Crest.Taxonomies",
-   "to": "Crest.Contents.Core",
+   "to": "Crest.ContentManagement",
    "arrows": "to"
   },
   {
@@ -8320,7 +8425,7 @@
   },
   {
    "from": "Crest.Taxonomies",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -8330,12 +8435,12 @@
   },
   {
    "from": "Crest.Taxonomies",
-   "to": "Crest.Settings.Core",
+   "to": "Crest.Settings",
    "arrows": "to"
   },
   {
    "from": "Crest.Taxonomies",
-   "to": "Crest.Taxonomies.Core",
+   "to": "Crest.Taxonomies.Abstractions",
    "arrows": "to"
   },
   {
@@ -8380,7 +8485,7 @@
   },
   {
    "from": "Crest.Placements",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -8404,23 +8509,28 @@
    "arrows": "to"
   },
   {
+   "from": "Crest.Elasticsearch.Abstractions",
+   "to": "Crest.Contents.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch.Abstractions",
+   "to": "Crest.Indexing.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch.Abstractions",
+   "to": "Crest.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Elasticsearch.Abstractions",
+   "to": "Crest.Queries.Abstractions",
+   "arrows": "to"
+  },
+  {
    "from": "Crest.Feeds.Abstractions",
    "to": "Crest.DisplayManagement.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Autoroute.Core",
-   "to": "Crest.ContentManagement.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Autoroute.Core",
-   "to": "Crest.Data.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Autoroute.Core",
-   "to": "Crest.Infrastructure.Abstractions",
    "arrows": "to"
   },
   {
@@ -8475,17 +8585,17 @@
   },
   {
    "from": "Crest.Parties",
-   "to": "Crest.Workflows.Domain",
+   "to": "Crest.Workflows.Abstractions",
    "arrows": "to"
   },
   {
    "from": "Crest.Parties",
-   "to": "Crest.Workflows.Core (?)",
+   "to": "Crest.Workflows.Core",
    "arrows": "to"
   },
   {
    "from": "Crest.Parties",
-   "to": "Crest.Workflows.Engine (?)",
+   "to": "Crest.Workflows.Engine",
    "arrows": "to"
   },
   {
@@ -8505,7 +8615,7 @@
   },
   {
    "from": "Crest.Workflows.BlazorWasm",
-   "to": "Crest.Workflows.Domain",
+   "to": "Crest.Workflows.Abstractions",
    "arrows": "to"
   },
   {
@@ -8540,27 +8650,27 @@
   },
   {
    "from": "Crest.Workflows.Contents",
-   "to": "Crest.Workflows.Expressions.JavaScript (?)",
+   "to": "Crest.Workflows.Expressions.JavaScript",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows.Contents",
-   "to": "Crest.Workflows.Core (?)",
+   "to": "Crest.Workflows.Core",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows.Contents",
-   "to": "Crest.Workflows.Management (?)",
+   "to": "Crest.Workflows.Management",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows.Contents",
-   "to": "Crest.Workflows.Runtime (?)",
+   "to": "Crest.Workflows.Runtime",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows.Contents",
-   "to": "Crest.Workflows.Engine (?)",
+   "to": "Crest.Workflows.Engine",
    "arrows": "to"
   },
   {
@@ -8605,7 +8715,7 @@
   },
   {
    "from": "Crest.Workflows",
-   "to": "Crest.Navigation.Core",
+   "to": "Crest.Navigation",
    "arrows": "to"
   },
   {
@@ -8620,57 +8730,52 @@
   },
   {
    "from": "Crest.Workflows",
-   "to": "Crest.Workflows.Platform.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Workflows",
    "to": "Crest.Liquid.Abstractions",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows",
-   "to": "Crest.Workflows.Engine (?)",
+   "to": "Crest.Workflows.Engine",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows",
-   "to": "Crest.Workflows.Expressions.JavaScript (?)",
+   "to": "Crest.Workflows.Expressions.JavaScript",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows",
-   "to": "Crest.Workflows.Expressions.Liquid (?)",
+   "to": "Crest.Workflows.Expressions.Liquid",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows",
-   "to": "Crest.Workflows.Http (?)",
+   "to": "Crest.Workflows.Http",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows",
-   "to": "Crest.Workflows.Api (?)",
+   "to": "Crest.Workflows.Api",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows",
-   "to": "Crest.Workflows.Runtime.Distributed (?)",
+   "to": "Crest.Workflows.Runtime.Distributed",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows",
-   "to": "Crest.Workflows.Resilience (?)",
+   "to": "Crest.Workflows.Resilience",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows",
-   "to": "Crest.Workflows.Scheduling (?)",
+   "to": "Crest.Workflows.Scheduling",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows",
-   "to": "Crest.Workflows.Domain",
+   "to": "Crest.Workflows.Abstractions",
    "arrows": "to"
   },
   {
@@ -8690,7 +8795,7 @@
   },
   {
    "from": "Crest.Workflows.Studio.Host",
-   "to": "Crest.Workflows.Domain",
+   "to": "Crest.Workflows.Abstractions",
    "arrows": "to"
   },
   {
@@ -8700,17 +8805,402 @@
   },
   {
    "from": "Crest.Workflows.Studio.Host",
-   "to": "Crest.Workflows.Studio.Core.BlazorWasm (?)",
+   "to": "Crest.Workflows.Studio.Core.BlazorWasm",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows.Studio.Host",
-   "to": "Crest.Workflows.Studio.Shell (?)",
+   "to": "Crest.Workflows.Studio.Shell",
    "arrows": "to"
   },
   {
    "from": "Crest.Workflows.Studio.Host",
-   "to": "Crest.Workflows.Studio.Workflows (?)",
+   "to": "Crest.Workflows.Studio.Workflows",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.UIHints",
+   "to": "Crest.Workflows.Studio.Shared",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.UIHints",
+   "to": "Crest.Workflows.Studio.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Workflows.Core",
+   "to": "Crest.Workflows.Studio.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Workflows.Core",
+   "to": "Crest.Workflows.Studio.Shared",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Login.BlazorServer",
+   "to": "Crest.Workflows.Studio.Login",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Login",
+   "to": "Crest.Workflows.Studio.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Login",
+   "to": "Crest.Workflows.Studio.Shared",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Workflows",
+   "to": "Crest.Workflows.Studio.DomInterop",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Workflows",
+   "to": "Crest.Workflows.Studio.Shared",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Workflows",
+   "to": "Crest.Workflows.Studio.ActivityPortProviders",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Workflows",
+   "to": "Crest.Workflows.Studio.UIHints",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Workflows",
+   "to": "Crest.Workflows.Studio.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Workflows",
+   "to": "Crest.Workflows.Studio.Workflows.Designer",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Login.BlazorWasm",
+   "to": "Crest.Workflows.Studio.Login",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Workflows.Designer",
+   "to": "Crest.Workflows.Studio.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Workflows.Designer",
+   "to": "Crest.Workflows.Studio.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.ActivityPortProviders",
+   "to": "Crest.Workflows.Studio.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.ActivityPortProviders",
+   "to": "Crest.Workflows.Studio.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Shared",
+   "to": "Crest.Workflows.Studio.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Shared",
+   "to": "Crest.Workflows.Studio.DomInterop",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Core",
+   "to": "Crest.Workflows.Api.Client",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Core.BlazorServer",
+   "to": "Crest.Workflows.Studio.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Core.BlazorServer",
+   "to": "Crest.Workflows.Studio.Shared",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Shell",
+   "to": "Crest.Workflows.Studio.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Shell",
+   "to": "Crest.Workflows.Studio.Shared",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Core.BlazorWasm",
+   "to": "Crest.Workflows.Studio.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Studio.Core.BlazorWasm",
+   "to": "Crest.Workflows.Studio.Shared",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Runtime",
+   "to": "Crest.Workflows.Caching",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Runtime",
+   "to": "Crest.Workflows.KeyValues",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Runtime",
+   "to": "Crest.Workflows.Tenants",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Runtime",
+   "to": "Crest.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Runtime",
+   "to": "Crest.Workflows.Management",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Http",
+   "to": "Crest.Workflows.Expressions.JavaScript",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Http",
+   "to": "Crest.Workflows.Expressions.Liquid",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Http",
+   "to": "Crest.Workflows.Resilience",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Http",
+   "to": "Crest.Workflows.SasTokens",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Http",
+   "to": "Crest.Workflows.Api",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Http",
+   "to": "Crest.Workflows.Runtime",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Core",
+   "to": "Crest.Workflows.Common",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Core",
+   "to": "Crest.Workflows.Expressions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Resilience.Core",
+   "to": "Crest.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Resilience",
+   "to": "Crest.Workflows.Api.Common",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Resilience",
+   "to": "Crest.Workflows.Resilience.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Resilience",
+   "to": "Crest.Workflows.Runtime",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Expressions.JavaScript",
+   "to": "Crest.Workflows.Api.Common",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Expressions.JavaScript",
+   "to": "Crest.Workflows.Expressions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Expressions.JavaScript",
+   "to": "Crest.Workflows.Management",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Scheduling",
+   "to": "Crest.Workflows.Runtime",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Runtime.Distributed",
+   "to": "Crest.Workflows.Resilience",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Runtime.Distributed",
+   "to": "Crest.Workflows.Runtime",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Engine",
+   "to": "Crest.Workflows.Api.Common",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Engine",
+   "to": "Crest.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Engine",
+   "to": "Crest.Workflows.Management",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Engine",
+   "to": "Crest.Workflows.Runtime",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Common",
+   "to": "Crest.Workflows.Features",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Common",
+   "to": "Crest.Workflows.Mediator",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Api",
+   "to": "Crest.Workflows.Api.Common",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Api",
+   "to": "Crest.Workflows.Expressions.JavaScript",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Api",
+   "to": "Crest.Workflows.SasTokens",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Api",
+   "to": "Crest.Workflows.Management",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Api",
+   "to": "Crest.Workflows.Runtime",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Tenants",
+   "to": "Crest.Workflows.Api.Common",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Tenants",
+   "to": "Crest.Workflows.Features",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Tenants",
+   "to": "Crest.Workflows.Common",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.SasTokens",
+   "to": "Crest.Workflows.Features",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Expressions",
+   "to": "Crest.Workflows.Features",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Expressions",
+   "to": "Crest.Workflows.Common",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Caching",
+   "to": "Crest.Workflows.Features",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Expressions.Liquid",
+   "to": "Crest.Workflows.Expressions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Expressions.Liquid",
+   "to": "Crest.Workflows.Management",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Management",
+   "to": "Crest.Workflows.Api.Common",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Management",
+   "to": "Crest.Workflows.Caching",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Management",
+   "to": "Crest.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.KeyValues",
+   "to": "Crest.Workflows.Features",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.KeyValues",
+   "to": "Crest.Workflows.Common",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Api.Common",
+   "to": "Crest.Workflows.Core",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Workflows.Api.Common",
+   "to": "Crest.Workflows.Features",
    "arrows": "to"
   },
   {
@@ -8800,17 +9290,12 @@
   },
   {
    "from": "Crest.Members",
-   "to": "Crest.Roles.Core",
+   "to": "Crest.Roles",
    "arrows": "to"
   },
   {
    "from": "Crest.Members",
    "to": "Crest.Users",
-   "arrows": "to"
-  },
-  {
-   "from": "Crest.Members",
-   "to": "Crest.Users.Core",
    "arrows": "to"
   },
   {
@@ -8885,6 +9370,9 @@
   }
  ],
  "packages": {
+  "Crest.Autoroute.Abstractions": [
+   "YesSql"
+  ],
   "Crest.Apis.GraphQL": [
    "GraphQL",
    "GraphQL.DataLoader",
@@ -8899,31 +9387,31 @@
   "Crest.Sms.Azure": [
    "Azure.Communication.Sms"
   ],
-  "Crest.Mvc.Core": [
-   "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation"
-  ],
   "Crest.Rules": [
    "Jint"
-  ],
-  "Crest.Users.Core": [
-   "YesSql.Filters.Query"
   ],
   "Crest.DisplayManagement": [
    "Castle.Core"
   ],
+  "Crest.Deployment.Abstractions": [
+   "YesSql"
+  ],
   "Crest.SignalR.Azure": [
    "Microsoft.Azure.SignalR"
   ],
+  "Crest.Mvc": [
+   "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation"
+  ],
   "Crest.Search.Lucene.Abstractions": [
    "Lucene.Net"
-  ],
-  "Crest.OpenId.Core": [
-   "OpenIddict.Core"
   ],
   "Crest.Lucene": [
    "Lucene.Net.Analysis.Common",
    "Lucene.Net.QueryParser",
    "Lucene.Net.Spatial"
+  ],
+  "Crest.Navigation": [
+   "System.IO.Hashing"
   ],
   "Crest.Redis.Abstractions": [
    "Microsoft.AspNetCore.DataProtection.StackExchangeRedis",
@@ -8937,8 +9425,8 @@
   "Crest.Media.Indexing.OpenXML": [
    "DocumentFormat.OpenXml"
   ],
-  "Crest.Elasticsearch.Core": [
-   "Elastic.Clients.Elasticsearch"
+  "Crest.Sms": [
+   "Microsoft.Extensions.Http.Resilience"
   ],
   "Crest.Shortcodes.Abstractions": [
    "Shortcodes"
@@ -8949,16 +9437,12 @@
   "Crest.Logging.NLog": [
    "NLog.Web.AspNetCore"
   ],
-  "Crest.Lucene.Core": [
-   "Lucene.Net.QueryParser",
-   "Lucene.Net.Spatial"
+  "Crest.AzureAI.Abstractions": [
+   "Azure.Identity",
+   "Azure.Search.Documents"
   ],
-  "Crest.Setup.Core": [
-   "YesSql"
-  ],
-  "Crest.AzureAI.Core": [
-   "Azure.Search.Documents",
-   "Microsoft.Extensions.Azure"
+  "Crest.Localization": [
+   "ZString"
   ],
   "Crest.Scripting.JavaScript": [
    "Jint"
@@ -8978,20 +9462,22 @@
    "Microsoft.AspNetCore.Components.Forms",
    "Microsoft.AspNetCore.Components.Web"
   ],
+  "Crest.Users.Abstractions": [
+   "YesSql",
+   "YesSql.Filters.Query"
+  ],
   "Crest.Global": [
    "YesSql.Abstractions"
-  ],
-  "Crest.Localization.Core": [
-   "ZString"
-  ],
-  "Crest.Media.Core": [
-   "System.IO.Hashing"
   ],
   "Crest.Liquid.Abstractions": [
    "Fluid.Core"
   ],
   "Crest.AzureAI": [
-   "Azure.Search.Documents"
+   "Azure.Search.Documents",
+   "Microsoft.Extensions.Azure"
+  ],
+  "Crest.Indexing.Abstractions": [
+   "YesSql"
   ],
   "Crest.Media.Indexing.Pdf": [
    "PdfPig"
@@ -9012,6 +9498,14 @@
    "Microsoft.AspNetCore.Components.WebAssembly",
    "Microsoft.Extensions.Http"
   ],
+  "Crest.OpenId.Abstractions": [
+   "OpenIddict.Abstractions",
+   "YesSql"
+  ],
+  "Crest.Notifications.Abstractions": [
+   "YesSql",
+   "YesSql.Filters.Query"
+  ],
   "Crest.DataProtection.Azure": [
    "Azure.Extensions.AspNetCore.DataProtection.Blobs"
   ],
@@ -9022,15 +9516,16 @@
   "Crest.Logging.Serilog": [
    "Serilog.AspNetCore"
   ],
-  "Crest.Contents.Core": [
-   "YesSql.Filters.Query"
-  ],
   "Crest.FileStorage.AzureBlob": [
    "Azure.Storage.Blobs",
    "Azure.Storage.Files.DataLake"
   ],
   "Crest.Users": [
-   "Microsoft.Extensions.Compliance.Redaction"
+   "Microsoft.Extensions.Compliance.Redaction",
+   "YesSql.Filters.Query"
+  ],
+  "Crest.Setup": [
+   "YesSql"
   ],
   "Crest.Liquid": [
    "AnyAscii",
@@ -9039,6 +9534,7 @@
   "Crest.OpenId": [
    "Microsoft.AspNetCore.Authentication.OpenIdConnect",
    "Microsoft.IdentityModel.Protocols.OpenIdConnect",
+   "OpenIddict.Core",
    "OpenIddict.Server.AspNetCore",
    "OpenIddict.Server.DataProtection",
    "OpenIddict.Validation.AspNetCore",
@@ -9056,6 +9552,9 @@
   "Crest.MiniProfiler": [
    "MiniProfiler.AspNetCore.Mvc",
    "YesSql.Abstractions"
+  ],
+  "Crest.ReCaptcha": [
+   "Microsoft.Extensions.Http.Resilience"
   ],
   "Crest.Money": [
    "YesSql.Abstractions"
@@ -9077,11 +9576,15 @@
    "tusdotnet"
   ],
   "Crest.Queries": [
-   "Cyqwel"
+   "Cyqwel",
+   "YesSql.Core"
   ],
   "Crest.FileStorage.AmazonS3": [
    "AWSSDK.Extensions.NETCore.Setup",
    "AWSSDK.S3"
+  ],
+  "Crest.Taxonomies.Abstractions": [
+   "YesSql"
   ],
   "Crest.Infrastructure": [
    "Fluid.Core",
@@ -9095,9 +9598,6 @@
    "Microsoft.AspNetCore.Components.WebAssembly.Server",
    "Microsoft.Extensions.Http",
    "YesSql.Abstractions"
-  ],
-  "Crest.Navigation.Core": [
-   "System.IO.Hashing"
   ],
   "Crest.Email.Azure": [
    "Azure.Communication.Email"
@@ -9122,9 +9622,6 @@
    "GraphQL",
    "GraphQL.DataLoader"
   ],
-  "Crest.ReCaptcha.Core": [
-   "Microsoft.Extensions.Http.Resilience"
-  ],
   "Crest.Google": [
    "Microsoft.AspNetCore.Authentication.Google"
   ],
@@ -9135,12 +9632,12 @@
    "Swashbuckle.AspNetCore.SwaggerGen",
    "Swashbuckle.AspNetCore.SwaggerUI"
   ],
-  "Crest.Sms.Core": [
-   "Microsoft.Extensions.Http.Resilience"
-  ],
   "Crest.SourceGenerators": [
    "Microsoft.CodeAnalysis.Analyzers",
    "Microsoft.CodeAnalysis.CSharp"
+  ],
+  "Crest.Contents.Abstractions": [
+   "YesSql.Filters.Query"
   ],
   "Crest.Cms.Web": [
    "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation"
@@ -9148,8 +9645,8 @@
   "Crest.Data.YesSql.Abstractions": [
    "YesSql.Abstractions"
   ],
-  "Crest.Queries.Core": [
-   "YesSql.Core"
+  "Crest.Html.Abstractions": [
+   "Shortcodes"
   ],
   "Crest.Email.Smtp": [
    "MailKit"
@@ -9161,8 +9658,14 @@
   "Crest.GitHub": [
    "AspNet.Security.OAuth.GitHub"
   ],
+  "Crest.Lucene.Abstractions": [
+   "Lucene.Net"
+  ],
   "Crest.AuditTrail.Abstractions": [
    "YesSql.Filters.Query"
+  ],
+  "Crest.Elasticsearch.Abstractions": [
+   "Elastic.Clients.Elasticsearch"
   ],
   "Crest.ContentPartLists.BlazorWasm": [
    "Microsoft.AspNetCore.Components",
@@ -9191,6 +9694,153 @@
    "Microsoft.AspNetCore.Components",
    "Microsoft.AspNetCore.Components.Web",
    "Microsoft.AspNetCore.Components.WebAssembly"
+  ],
+  "Crest.Workflows.Studio.Workflows.Core": [
+   "Microsoft.AspNetCore.Components"
+  ],
+  "Crest.Workflows.Studio.Login.BlazorServer": [
+   "Microsoft.AspNetCore.Authentication.JwtBearer"
+  ],
+  "Crest.Workflows.Studio.Login": [
+   "Blazored.LocalStorage",
+   "Microsoft.AspNetCore.WebUtilities"
+  ],
+  "Crest.Workflows.Studio.Workflows": [
+   "Microsoft.AspNetCore.SignalR.Client",
+   "Microsoft.AspNetCore.WebUtilities"
+  ],
+  "Crest.Workflows.Studio.DomInterop": [
+   "Microsoft.AspNetCore.Components",
+   "Microsoft.Extensions.DependencyInjection.Abstractions",
+   "Microsoft.JSInterop"
+  ],
+  "Crest.Workflows.Studio.Shared": [
+   "BlazorMonaco",
+   "Blazored.LocalStorage"
+  ],
+  "Crest.Workflows.Studio.Core": [
+   "Blazored.FluentValidation",
+   "Blazored.LocalStorage",
+   "CodeBeam.MudBlazor.Extensions",
+   "Crest.Workflows.Api.Client",
+   "FluentValidation",
+   "Microsoft.AspNetCore.Components.Authorization",
+   "Microsoft.AspNetCore.Components.CustomElements",
+   "Microsoft.AspNetCore.Components.Web",
+   "Microsoft.Extensions.DependencyInjection.Abstractions",
+   "Microsoft.JSInterop",
+   "MudBlazor",
+   "Radzen.Blazor",
+   "ShortGuid",
+   "ThrottleDebounce"
+  ],
+  "Crest.Workflows.Studio.Core.BlazorServer": [
+   "Blazored.LocalStorage"
+  ],
+  "Crest.Workflows.Studio.Core.BlazorWasm": [
+   "Blazored.LocalStorage"
+  ],
+  "Crest.Workflows.Runtime": [
+   "DistributedLock.FileSystem",
+   "Microsoft.Extensions.DependencyInjection",
+   "Microsoft.Extensions.Hosting.Abstractions",
+   "Open.Linq.AsyncExtensions",
+   "ThrottleDebounce"
+  ],
+  "Crest.Workflows.Http": [
+   "FluentStorage",
+   "Microsoft.Extensions.Http.Resilience",
+   "Microsoft.Extensions.Resilience",
+   "Polly"
+  ],
+  "Crest.Workflows.Core": [
+   "Humanizer.Core",
+   "Microsoft.Extensions.Hosting.Abstractions",
+   "Microsoft.Extensions.Logging",
+   "Microsoft.Extensions.Logging.Abstractions",
+   "Microsoft.Extensions.Options",
+   "Newtonsoft.Json",
+   "ShortGuid",
+   "System.Linq.Async"
+  ],
+  "Crest.Workflows.Resilience.Core": [
+   "Polly",
+   "Polly.Extensions"
+  ],
+  "Crest.Workflows.Resilience": [
+   "Polly"
+  ],
+  "Crest.Workflows.Expressions.JavaScript": [
+   "Jint",
+   "System.Linq.Async"
+  ],
+  "Crest.Workflows.Scheduling": [
+   "Cronos"
+  ],
+  "Crest.Workflows.Runtime.Distributed": [
+   "DistributedLock.FileSystem",
+   "Microsoft.Extensions.DependencyInjection",
+   "Microsoft.Extensions.Hosting.Abstractions",
+   "Open.Linq.AsyncExtensions",
+   "Polly"
+  ],
+  "Crest.Workflows.Engine": [
+   "Microsoft.Extensions.DependencyInjection.Abstractions",
+   "Microsoft.Extensions.Hosting.Abstractions",
+   "Microsoft.Extensions.Logging"
+  ],
+  "Crest.Workflows.Common": [
+   "Cronos",
+   "DistributedLock.Core",
+   "IronCompress",
+   "LinqKit.Core",
+   "Microsoft.Extensions.Configuration",
+   "Microsoft.Extensions.Configuration.Json",
+   "Snappier"
+  ],
+  "Crest.Workflows.Expressions": [
+   "Microsoft.Extensions.DependencyInjection.Abstractions",
+   "Microsoft.Extensions.Options"
+  ],
+  "Crest.Workflows.Caching": [
+   "Microsoft.Extensions.Caching.Memory",
+   "Scrutor"
+  ],
+  "Crest.Workflows.Expressions.Liquid": [
+   "Fluid.Core",
+   "Microsoft.Extensions.Caching.Memory",
+   "Microsoft.Extensions.Configuration.Abstractions"
+  ],
+  "Crest.Workflows.Management": [
+   "Humanizer.Core",
+   "IronCompress",
+   "PolySharp",
+   "Snappier",
+   "System.Linq.Dynamic.Core"
+  ],
+  "Crest.Workflows.Mediator": [
+   "Microsoft.Extensions.DependencyInjection.Abstractions",
+   "Microsoft.Extensions.Hosting.Abstractions",
+   "Microsoft.Extensions.Logging.Abstractions",
+   "Microsoft.Extensions.Options.ConfigurationExtensions"
+  ],
+  "Crest.Workflows.Features": [
+   "Microsoft.Extensions.DependencyInjection.Abstractions",
+   "Microsoft.Extensions.Hosting.Abstractions"
+  ],
+  "Crest.Workflows.Api.Common": [
+   "FastEndpoints",
+   "FastEndpoints.Security",
+   "FastEndpoints.Swagger"
+  ],
+  "Crest.Workflows.Api.Client": [
+   "Humanizer.Core",
+   "Microsoft.Extensions.DependencyInjection.Abstractions",
+   "Microsoft.Extensions.Http.Polly",
+   "Polly",
+   "Polly.Extensions.Http",
+   "Refit",
+   "Refit.HttpClientFactory"
   ],
   "Crest.SiteTheme.Client": [
    "Microsoft.AspNetCore.Components.WebAssembly"

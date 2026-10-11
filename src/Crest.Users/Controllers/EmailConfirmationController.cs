@@ -7,7 +7,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Crest.DisplayManagement.Notify;
 using Crest.Modules;
-using Crest.Mvc.Core.Utilities;
+using Crest.Mvc.Utilities;
 using Crest.Users.Handlers;
 using Crest.Users.Models;
 using Crest.Users.Services;

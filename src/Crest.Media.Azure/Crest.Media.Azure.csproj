@@ -24,8 +24,7 @@
     <ProjectReference Include="..\Crest.ContentManagement.Display\Crest.ContentManagement.Display.csproj" />
     <ProjectReference Include="..\Crest.FileStorage.AzureBlob\Crest.FileStorage.AzureBlob.csproj" />
     <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Media.Core\Crest.Media.Core.csproj" />
-    <ProjectReference Include="..\Crest.Navigation.Core\Crest.Navigation.Core.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.Media\Crest.Media.csproj" />
   </ItemGroup>

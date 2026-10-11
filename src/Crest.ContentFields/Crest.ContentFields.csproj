@@ -20,22 +20,23 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.ContentFields.Core\Crest.ContentFields.Core.csproj" />
     <ProjectReference Include="..\Crest.ContentLocalization.Abstractions\Crest.ContentLocalization.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Display\Crest.ContentManagement.Display.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.GraphQL\Crest.ContentManagement.GraphQL.csproj" />
-    <ProjectReference Include="..\Crest.Contents.Core\Crest.Contents.Core.csproj" />
+    <ProjectReference Include="..\Crest.Contents.Abstractions\Crest.Contents.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement\Crest.ContentManagement.csproj" />
     <ProjectReference Include="..\Crest.Contents.TagHelpers\Crest.Contents.TagHelpers.csproj" />
     <ProjectReference Include="..\Crest.ContentTypes.Abstractions\Crest.ContentTypes.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Html.Core\Crest.Html.Core.csproj" />
+    <ProjectReference Include="..\Crest.Html\Crest.Html.csproj" />
     <ProjectReference Include="..\Crest.Indexing.Abstractions\Crest.Indexing.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Liquid.Abstractions\Crest.Liquid.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Media.Abstractions\Crest.Media.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.Shortcodes.Abstractions\Crest.Shortcodes.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
-    <ProjectReference Include="..\Crest.Users.Core\Crest.Users.Core.csproj" />
+    <ProjectReference Include="..\Crest.Users\Crest.Users.csproj" />
+    <ProjectReference Include="..\Crest.ContentFields.Abstractions\Crest.ContentFields.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

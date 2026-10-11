@@ -3,7 +3,7 @@ using Crest.Workflows.Common.Multitenancy;
 
 namespace Crest.Workflows.Tenants.Endpoints.Tenants.Delete;
 
-public class Endpoint(ITenantService tenantService, ITenantStore store) : CrestWorkflowsEndpointWithoutRequest<Tenant>
+public class Endpoint(ITenantService tenantService, ITenantStore store) : WorkflowsEndpointWithoutRequest<Tenant>
 {
     public override void Configure()
     {

@@ -17,7 +17,7 @@ using Crest.DisplayManagement.Notify;
 using Crest.Environment.Shell;
 using Crest.Infrastructure.Entities;
 using Crest.Navigation;
-using Crest.RateLimits.Core;
+using Crest.RateLimits;
 using Crest.RateLimits.Models;
 using Crest.RateLimits.Services;
 using Crest.RateLimits.ViewModels;

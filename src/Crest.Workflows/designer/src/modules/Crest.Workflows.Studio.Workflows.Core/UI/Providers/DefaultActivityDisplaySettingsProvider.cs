@@ -16,55 +16,55 @@ public class DefaultActivityDisplaySettingsProvider : IActivityDisplaySettingsPr
     public IDictionary<string, ActivityDisplaySettings> GetSettings() => new Dictionary<string, ActivityDisplaySettings>
     {
         // Not Found Activity
-        ["Crest.Workflows.NotFoundActivity"] = new(DefaultActivityColors.NotFound, CrestWorkflowsStudioIcons.Heroicons.Exclamation),
+        ["Crest.Workflows.NotFoundActivity"] = new(DefaultActivityColors.NotFound, StudioIcons.Heroicons.Exclamation),
         
         // Branching
-        ["Crest.Workflows.If"] = new(DefaultActivityColors.Branching, CrestWorkflowsStudioIcons.Heroicons.Question),
-        ["Crest.Workflows.FlowDecision"] = new(DefaultActivityColors.Branching, CrestWorkflowsStudioIcons.Heroicons.Question),
-        ["Crest.Workflows.Switch"] = new(DefaultActivityColors.Branching, CrestWorkflowsStudioIcons.Tabler.SwitchDiagonal),
-        ["Crest.Workflows.FlowSwitch"] = new(DefaultActivityColors.Branching, CrestWorkflowsStudioIcons.Tabler.SwitchDiagonal),
-        ["Crest.Workflows.FlowJoin"] = new(DefaultActivityColors.Branching, CrestWorkflowsStudioIcons.Tabler.GitMerge),
-        ["Crest.Workflows.FlowFork"] = new(DefaultActivityColors.Branching, CrestWorkflowsStudioIcons.Tabler.GitFork),
+        ["Crest.Workflows.If"] = new(DefaultActivityColors.Branching, StudioIcons.Heroicons.Question),
+        ["Crest.Workflows.FlowDecision"] = new(DefaultActivityColors.Branching, StudioIcons.Heroicons.Question),
+        ["Crest.Workflows.Switch"] = new(DefaultActivityColors.Branching, StudioIcons.Tabler.SwitchDiagonal),
+        ["Crest.Workflows.FlowSwitch"] = new(DefaultActivityColors.Branching, StudioIcons.Tabler.SwitchDiagonal),
+        ["Crest.Workflows.FlowJoin"] = new(DefaultActivityColors.Branching, StudioIcons.Tabler.GitMerge),
+        ["Crest.Workflows.FlowFork"] = new(DefaultActivityColors.Branching, StudioIcons.Tabler.GitFork),
         
         // Composition
-        ["Crest.Workflows.Complete"] = new(DefaultActivityColors.Composition, CrestWorkflowsStudioIcons.Tabler.CheckCircle),
+        ["Crest.Workflows.Complete"] = new(DefaultActivityColors.Composition, StudioIcons.Tabler.CheckCircle),
         ["Crest.Workflows.SetOutput"] = new (DefaultActivityColors.Composition, Icons.Material.Outlined.Output),
         ["Crest.Workflows.DispatchWorkflow"] = new (DefaultActivityColors.Composition, Icons.Material.Outlined.Commit),
         ["Crest.Workflows.BulkDispatchWorkflows"] = new (DefaultActivityColors.Composition, Icons.Material.Outlined.Share),
         ["Crest.Workflows.ExecuteWorkflow"] = new (DefaultActivityColors.Composition, Icons.Material.Outlined.Terminal),
         
         // Console
-        ["Crest.Workflows.WriteLine"] = new(DefaultActivityColors.Console, CrestWorkflowsStudioIcons.Tabler.Pencil),
-        ["Crest.Workflows.ReadLine"] = new(DefaultActivityColors.Console, CrestWorkflowsStudioIcons.Tabler.Text),
+        ["Crest.Workflows.WriteLine"] = new(DefaultActivityColors.Console, StudioIcons.Tabler.Pencil),
+        ["Crest.Workflows.ReadLine"] = new(DefaultActivityColors.Console, StudioIcons.Tabler.Text),
         
         // Email
         ["Crest.Workflows.SendEmail"] = new(DefaultActivityColors.Email, Icons.Material.Outlined.Email),
         
         // Flowchart
-        ["Crest.Workflows.Flowchart"] = new(DefaultActivityColors.Flowchart, CrestWorkflowsStudioIcons.Tabler.GitFork),
-        ["Crest.Workflows.FlowNode"] = new(DefaultActivityColors.Flowchart, CrestWorkflowsStudioIcons.Tabler.Hexagon),
+        ["Crest.Workflows.Flowchart"] = new(DefaultActivityColors.Flowchart, StudioIcons.Tabler.GitFork),
+        ["Crest.Workflows.FlowNode"] = new(DefaultActivityColors.Flowchart, StudioIcons.Tabler.Hexagon),
         ["Crest.Workflows.Start"] = new(DefaultActivityColors.Flowchart, Icons.Material.Outlined.Start),
         ["Crest.Workflows.End"] = new(DefaultActivityColors.Flowchart, Icons.Material.Outlined.OutlinedFlag),
         
         // HTTP
-        ["Crest.Workflows.HttpEndpoint"] = new(DefaultActivityColors.Http, CrestWorkflowsStudioIcons.Tabler.Cloud),
-        ["Crest.Workflows.WriteHttpResponse"] = new(DefaultActivityColors.Http, CrestWorkflowsStudioIcons.Heroicons.PencilPaper),
+        ["Crest.Workflows.HttpEndpoint"] = new(DefaultActivityColors.Http, StudioIcons.Tabler.Cloud),
+        ["Crest.Workflows.WriteHttpResponse"] = new(DefaultActivityColors.Http, StudioIcons.Heroicons.PencilPaper),
         ["Crest.Workflows.WriteFileHttpResponse"] = new(DefaultActivityColors.Http, Icons.Material.Outlined.FileDownload),
-        ["Crest.Workflows.SendHttpRequest"] = new(DefaultActivityColors.Http, CrestWorkflowsStudioIcons.Tabler.World),
-        ["Crest.Workflows.FlowSendHttpRequest"] = new(DefaultActivityColors.Http, CrestWorkflowsStudioIcons.Tabler.World),
+        ["Crest.Workflows.SendHttpRequest"] = new(DefaultActivityColors.Http, StudioIcons.Tabler.World),
+        ["Crest.Workflows.FlowSendHttpRequest"] = new(DefaultActivityColors.Http, StudioIcons.Tabler.World),
         ["Crest.Workflows.DownloadHttpFile"] = new(DefaultActivityColors.Http, @Icons.Material.Outlined.CloudDownload),
         
         // Looping
-        ["Crest.Workflows.While"] = new(DefaultActivityColors.Looping, CrestWorkflowsStudioIcons.Tabler.RepeatOne),
-        ["Crest.Workflows.ForEach"] = new(DefaultActivityColors.Looping, CrestWorkflowsStudioIcons.Tabler.RepeatOne),
-        ["Crest.Workflows.For"] = new(DefaultActivityColors.Looping, CrestWorkflowsStudioIcons.Tabler.RepeatOne),
-        ["Crest.Workflows.ParallelForEach"] = new(DefaultActivityColors.Looping, CrestWorkflowsStudioIcons.Tabler.RepeatOne),
-        ["Crest.Workflows.Break"] = new(DefaultActivityColors.Looping, CrestWorkflowsStudioIcons.Tabler.Back1),
+        ["Crest.Workflows.While"] = new(DefaultActivityColors.Looping, StudioIcons.Tabler.RepeatOne),
+        ["Crest.Workflows.ForEach"] = new(DefaultActivityColors.Looping, StudioIcons.Tabler.RepeatOne),
+        ["Crest.Workflows.For"] = new(DefaultActivityColors.Looping, StudioIcons.Tabler.RepeatOne),
+        ["Crest.Workflows.ParallelForEach"] = new(DefaultActivityColors.Looping, StudioIcons.Tabler.RepeatOne),
+        ["Crest.Workflows.Break"] = new(DefaultActivityColors.Looping, StudioIcons.Tabler.Back1),
         
         // Primitives
-        ["Crest.Workflows.SetVariable"] = new(DefaultActivityColors.Primitives, CrestWorkflowsStudioIcons.Tabler.Pencil),
-        ["Crest.Workflows.SetName"] = new(DefaultActivityColors.Primitives, CrestWorkflowsStudioIcons.Tabler.Italic),
-        ["Crest.Workflows.Finish"] = new(DefaultActivityColors.Primitives, CrestWorkflowsStudioIcons.Tabler.CheckShield),
+        ["Crest.Workflows.SetVariable"] = new(DefaultActivityColors.Primitives, StudioIcons.Tabler.Pencil),
+        ["Crest.Workflows.SetName"] = new(DefaultActivityColors.Primitives, StudioIcons.Tabler.Italic),
+        ["Crest.Workflows.Finish"] = new(DefaultActivityColors.Primitives, StudioIcons.Tabler.CheckShield),
         ["Crest.Workflows.Fault"] = new(DefaultActivityColors.Primitives, Icons.Material.Outlined.ErrorOutline),
         ["Crest.Workflows.Correlate"] = new(DefaultActivityColors.Primitives, Icons.Material.Outlined.DatasetLinked),
         ["Crest.Workflows.RunTask"] = new(DefaultActivityColors.Primitives, Icons.Material.Outlined.Settings),
@@ -81,10 +81,10 @@ public class DefaultActivityDisplaySettingsProvider : IActivityDisplaySettingsPr
         ["Crest.Workflows.RunJavaScript"] = new(DefaultActivityColors.Scripting, Icons.Material.Outlined.Javascript),
         
         // Diagnostics
-        ["Crest.Workflows.Log"] = new(DefaultActivityColors.Diagnostics, CrestWorkflowsStudioIcons.Tabler.Pencil),
+        ["Crest.Workflows.Log"] = new(DefaultActivityColors.Diagnostics, StudioIcons.Tabler.Pencil),
 
         // Azure Service Bus
-        ["Crest.Workflows.AzureServiceBus.MessageReceived"] = new("#a21caf", CrestWorkflowsStudioIcons.Heroicons.Incoming),
-        ["Crest.Workflows.AzureServiceBus.SendMessage"] = new("#a21caf", CrestWorkflowsStudioIcons.Heroicons.Outgoing),
+        ["Crest.Workflows.AzureServiceBus.MessageReceived"] = new("#a21caf", StudioIcons.Heroicons.Incoming),
+        ["Crest.Workflows.AzureServiceBus.SendMessage"] = new("#a21caf", StudioIcons.Heroicons.Outgoing),
     };
 }

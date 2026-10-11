@@ -1,31 +1,23 @@
-using System.Security.Claims;
+using Crest.Access;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Crest.Environment.Cache.CacheContextProviders;
 
-public class RolesCacheContextProvider : ICacheContextProvider
+/// <summary>The <c>user.roles</c> cache context: the request's caller's roles, never the principal's claims.</summary>
+public class RolesCacheContextProvider(IHttpContextAccessor httpContextAccessor) : ICacheContextProvider
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public RolesCacheContextProvider(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
-
     public Task PopulateContextEntriesAsync(IEnumerable<string> contexts, List<CacheContextEntry> entries)
     {
         if (contexts.Any(ctx => string.Equals(ctx, "user.roles", StringComparison.OrdinalIgnoreCase)))
         {
-            var user = _httpContextAccessor.HttpContext.User;
-            if (user.Identity.IsAuthenticated)
+            var caller = httpContextAccessor.HttpContext?.RequestServices.GetService<ICallerContextAccessor>()?.Current;
+            if (caller is { IsAuthenticated: true })
             {
-                var roleClaims = user.Claims.Where(x => x.Type == ClaimTypes.Role);
-                foreach (var roleClaim in roleClaims)
+                foreach (var role in caller.Roles)
                 {
-                    entries.Add(new CacheContextEntry("user.roles", roleClaim.Value));
+                    entries.Add(new CacheContextEntry("user.roles", role));
                 }
-
-                return Task.CompletedTask;
             }
         }
 

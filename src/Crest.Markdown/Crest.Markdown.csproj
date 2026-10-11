@@ -17,7 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Apis.GraphQL.Abstractions\Crest.Apis.GraphQL.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.ContentFields.Core\Crest.ContentFields.Core.csproj" />
+    <ProjectReference Include="..\Crest.ContentFields\Crest.ContentFields.csproj" />
     <ProjectReference Include="..\Crest.ContentLocalization.Abstractions\Crest.ContentLocalization.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Display\Crest.ContentManagement.Display.csproj" />

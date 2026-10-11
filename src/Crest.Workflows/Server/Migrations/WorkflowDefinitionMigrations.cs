@@ -10,7 +10,7 @@ namespace Crest.Workflows.Migrations;
 [UsedImplicitly]
 public class WorkflowDefinitionMigrations(IContentDefinitionManager contentDefinitionManager) : DataMigration
 {
-    private const string Collection = CrestWorkflowsCollections.WorkflowDefinitions;
+    private const string Collection = WorkflowCollections.WorkflowDefinitions;
     
     [UsedImplicitly]
     public async Task<int> CreateAsync()

@@ -13,7 +13,7 @@ public static class ModuleExtensions
     private static readonly IDictionary<IServiceCollection, IModule> Modules = new ConcurrentDictionary<IServiceCollection, IModule>();
     
     /// <summary>
-    /// Creates a new Crest.Workflows module and adds the <see cref="CrestWorkflowsFeature"/> to it.
+    /// Creates a new Crest.Workflows module and adds the <see cref="EngineFeature"/> to it.
     /// </summary>
     public static IModule AddCrestWorkflows(this IServiceCollection services, Action<IModule>? configure = null)
     {

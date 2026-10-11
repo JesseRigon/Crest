@@ -54,15 +54,9 @@ public sealed class DefaultLayersMethodProvider : IGlobalMethodProvider
         _isInRole = new GlobalMethod
         {
             Name = "isInRole",
+            // The request's caller, never the principal (docs/access.md).
             Method = serviceProvider => (Func<string, bool>)(role =>
-            {
-                var httpContext = serviceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext;
-                var optionsAccessor = serviceProvider.GetRequiredService<IOptions<IdentityOptions>>();
-                var roleClaimType = optionsAccessor.Value.ClaimsIdentity.RoleClaimType;
-
-                // IsInRole() & HasClaim() are case sensitive.
-                return httpContext.User?.Claims.Any(claim => claim.Type == roleClaimType && claim.Value.Equals(role, StringComparison.OrdinalIgnoreCase)) == true;
-            }),
+                serviceProvider.GetRequiredService<Crest.Access.ICallerContextAccessor>().Current?.Roles.Contains(role) == true),
         };
 
         _url = new GlobalMethod

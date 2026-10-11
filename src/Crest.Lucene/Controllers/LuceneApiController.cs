@@ -10,7 +10,7 @@ namespace Crest.Lucene.Controllers;
 
 [Route("api/lucene")]
 [ApiController]
-[Authorize(AuthenticationSchemes = PlatformConstants.AuthenticationSchemes.Api)]
+[Authorize]
 [IgnoreAntiforgeryToken]
 [AllowAnonymous]
 public sealed class LuceneApiController : ControllerBase

@@ -62,7 +62,7 @@ only) when you do.
   `NuGet.config`, the MVC designer pages/controllers/admin menu, the OpenID dependency,
   `PermissionsClaimsProvider` (granted `permissions=*` to every user), the Taxonomies
   dependency of Contents (`ResolveTerm`).
-- Added: `Security/CrestWorkflowsApiSecurityMiddleware` (the API gate: Crest permission,
+- Added: `Security/ApiSecurityMiddleware` (the API gate: Crest permission,
   antiforgery, per-request engine grant), `Contexts/*` (acting-user snapshot and
   authorizer), `Activities/RequirePermission`, per-shell file lock directory,
   `RequiredPermission` on the content triggers, acting user on every content stimulus,

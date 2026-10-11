@@ -12,7 +12,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Import;
 /// Imports JSON and/or ZIP files containing a workflow definitions.
 /// </summary>
 [PublicAPI]
-internal class Import : CrestWorkflowsEndpoint<WorkflowDefinitionModel>
+internal class Import : WorkflowsEndpoint<WorkflowDefinitionModel>
 {
     private readonly IWorkflowDefinitionImporter _workflowDefinitionImporter;
     private readonly IWorkflowDefinitionLinker _linker;

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
-using Crest.Autoroute.Core.Indexes;
+using Crest.Autoroute.Indexes;
 using Crest.Autoroute.Models;
 using Crest.Autoroute.ViewModels;
 using Crest.ContentManagement.Display.ContentDisplay;

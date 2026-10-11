@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 namespace Crest.Workflows.Api.Endpoints.WorkflowInstances.Get;
 
 [PublicAPI]
-internal class Get(IWorkflowInstanceStore store) : CrestWorkflowsEndpoint<Request, WorkflowInstanceModel, WorkflowInstanceMapper>
+internal class Get(IWorkflowInstanceStore store) : WorkflowsEndpoint<Request, WorkflowInstanceModel, WorkflowInstanceMapper>
 {
     public override void Configure()
     {

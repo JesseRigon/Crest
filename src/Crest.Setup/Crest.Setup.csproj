@@ -22,10 +22,15 @@
     <ProjectReference Include="..\Crest.Data\Crest.Data.csproj" />
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
     <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Localization.Core\Crest.Localization.Core.csproj" />
+    <ProjectReference Include="..\Crest.Localization\Crest.Localization.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.Recipes.Abstractions\Crest.Recipes.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Setup.Core\Crest.Setup.Core.csproj" />
+    <ProjectReference Include="..\Crest.Abstractions\Crest.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Setup.Abstractions\Crest.Setup.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YesSql" />
   </ItemGroup>
 
 </Project>

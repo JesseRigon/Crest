@@ -28,12 +28,14 @@
     <ProjectReference Include="..\Crest.ContentTypes.Abstractions\Crest.ContentTypes.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
-    <ProjectReference Include="..\Crest.Html.Core\Crest.Html.Core.csproj" />
     <ProjectReference Include="..\Crest.Indexing.Abstractions\Crest.Indexing.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.MetaWeblog.Abstractions\Crest.MetaWeblog.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Media.Abstractions\Crest.Media.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
+    <ProjectReference Include="..\Crest.Liquid.Abstractions\Crest.Liquid.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Shortcodes.Abstractions\Crest.Shortcodes.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Html.Abstractions\Crest.Html.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

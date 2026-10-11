@@ -13,7 +13,7 @@ using Crest.Entities;
 using Crest.Environment.Cache;
 using Crest.Modules;
 using Crest.Navigation;
-using Crest.Navigation.Core;
+using Crest.Navigation;
 using Crest.Notifications.Indexes;
 using Crest.Notifications.Models;
 using Crest.Notifications.Services;

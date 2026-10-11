@@ -12,7 +12,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Retract;
 
 [PublicAPI]
 internal class Retract(IWorkflowDefinitionStore store, IWorkflowDefinitionPublisher workflowDefinitionPublisher, IWorkflowDefinitionLinker linker, IAuthorizationService authorizationService)
-    : CrestWorkflowsEndpoint<Request, LinkedWorkflowDefinitionModel>
+    : WorkflowsEndpoint<Request, LinkedWorkflowDefinitionModel>
 {
     public override void Configure()
     {

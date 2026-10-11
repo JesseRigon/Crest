@@ -1,4 +1,4 @@
-namespace Crest.Media.Core.Processing;
+namespace Crest.Media.Processing;
 
 public enum ResizeMode
 {

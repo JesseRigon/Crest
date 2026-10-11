@@ -207,9 +207,10 @@ on **Crowdin** (crowdin.com) via the `OrchardCore.Translations` repo:
 type and view names. Internally, translations take a generic name (for example
 `Translations.*`, not a project name), and a mapping rewrites the packages' `Crest.*`
 contexts to the renamed platform names when they are loaded, so the community translations
-keep applying. Built: `TranslationContextMap` (`Crest.Localization.Core/PortableObject`) is
+keep applying. Built: `TranslationContextMap` (`Crest.Localization/PortableObject`) is
 applied by the PO parser to every entry it reads, with the same rules as the rename
-(`OrchardCore.Workflows.*` → `Crest.Workflows.Platform.*`, `OrchardCore.*` → `Crest.*`,
+(`OrchardCore.*` → `Crest.*`; the stock workflow module's own prefix rule went with the
+module 2026-10-10,
 identifiers carrying the name made neutral); contexts that never carried the name pass through
 unchanged.
 

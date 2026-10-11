@@ -7,8 +7,7 @@ using Crest.Data.Migration;
 using Crest.DisplayManagement.Handlers;
 using Crest.Environment.Shell.Configuration;
 using Crest.Modules;
-using Crest.Navigation.Core;
-using Crest.Notifications.Activities;
+using Crest.Navigation;
 using Crest.Notifications.Drivers;
 using Crest.Notifications.Endpoints.Management;
 using Crest.Notifications.Handlers;
@@ -19,7 +18,9 @@ using Crest.Notifications.Services;
 using Crest.Security.Permissions;
 using Crest.Users;
 using Crest.Users.Models;
-using Crest.Workflows.Platform.Helpers;
+using Crest.Notifications.Workflows;
+using Crest.Workflows;
+using Crest.Workflows.Extensions;
 using YesSql.Filters.Query;
 
 namespace Crest.Notifications;
@@ -76,21 +77,13 @@ public sealed class Startup : StartupBase
     }
 }
 
-[RequireFeatures("Crest.Workflows")]
+[RequireFeatures(WorkflowsConstants.FeatureId, UserConstants.Features.Users)]
 public sealed class WorkflowsStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddActivity<NotifyUserTask>();
-    }
-}
-
-[RequireFeatures("Crest.Workflows", UserConstants.Features.Users, "Crest.Contents")]
-public sealed class UsersWorkflowStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddActivity<NotifyContentOwnerTask>();
+        services.AddScoped<IWorkflowActivityProvider, NotificationsWorkflowProvider>();
+        services.ConfigureCrestWorkflows(workflows => workflows.AddActivitiesFrom<WorkflowsStartup>());
     }
 }
 

@@ -28,7 +28,7 @@ namespace Crest.Tenants.Controllers;
 
 [Route("api/tenants")]
 [ApiController]
-[Authorize(AuthenticationSchemes = PlatformConstants.AuthenticationSchemes.Api), IgnoreAntiforgeryToken, AllowAnonymous]
+[Authorize, IgnoreAntiforgeryToken, AllowAnonymous]
 public sealed class TenantApiController : ControllerBase
 {
     private readonly IShellHost _shellHost;

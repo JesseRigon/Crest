@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Crest.Environment.Shell;
-using Crest.Media.Core.Processing;
+using Crest.Media.Processing;
 using Crest.Media.Models;
 using Crest.Media.Processing;
 using Crest.Media.Services;

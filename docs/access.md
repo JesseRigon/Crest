@@ -33,7 +33,7 @@ the member caller is described there too.
   is a defect to remove.
 - **The gate owns authentication**, once per request, tenant first, then theme shell, then
   user, then permissions (workflows.md › Operations › Decisions › Who authenticates).
-  Repeated `UseAuthentication` calls behind it go.
+  Nothing behind it authenticates again (landed 2026-10-10).
 - **Identity in the cookie and in tokens; rights on the server.** Cookies and bearer tokens
   carry who the caller is. Roles, permissions, class, organization and ceiling are read from
   the store under the tenant's permission version, never from claims.
@@ -45,24 +45,29 @@ the member caller is described there too.
 | Scheme | Where | What it does |
 | --- | --- | --- |
 | Identity cookie (`orchauth_{tenant}`) | `Crest.Users` | the default sign-in; `AddIdentity`, cookie paths from `UserOptions`; `UseAuthorization` at order 0 |
-| Tenant `UseAuthentication` | `Crest.Infrastructure` module extensions, order −150 | the platform's own authentication middleware, after routing |
-| `Api` forwarder | `Crest.Infrastructure/Security/ApiAuthenticationHandler.cs` | forwards to the scheme in `ApiAuthorizationOptions` (default "Bearer"); no result if that scheme is absent; challenge writes 401 with `WWW-Authenticate: Bearer` |
+| The access gate | `Crest.Access` `IAccessGate` (`AccessGateService`), called by the shell selector; `AccessGateMiddleware` at order −150 for what the selector did not classify | the one authentication (cookie, or `Api` when an `Authorization` header is present), the side stamp, the caller; runs the request-handler schemes the platform's `UseAuthentication` used to run (OpenIddict's endpoints) |
+| `Api` forwarder | `Crest.Infrastructure/Security/ApiAuthenticationHandler.cs` | forwards to the scheme in `ApiAuthorizationOptions` (default "Bearer"), then to each `AdditionalSchemes` entry (the remote deployment key); challenge writes 401 with `WWW-Authenticate: Bearer` |
 | OpenId Validation | `Crest.OpenId` | the only bearer-to-principal path: OpenIddict validation, local (data protection, optionally another tenant's server) or remote (discovery); re-points `Api` to itself |
 | OpenId Server | `Crest.OpenId` | issues tokens: code, password, refresh and client credentials; user flows carry the user's name identifier, the client-credentials flow carries `sub` = client id, the application's roles and their Permission claims, and **no name identifier** |
 | OpenId Client, Management | `Crest.OpenId` | external OIDC login; admin UI for applications and scopes |
 | External providers | `Crest.Microsoft.Authentication`, `Crest.Google`, `Crest.Facebook`, `Crest.GitHub`, `Crest.Twitter` | land in `Identity.External`, finished by the Users external-authentication feature |
 | Member portal login | `Crest.Members` `MemberPortalController`, `MemberLoginSurfaceGate` | the portal's login, register and external-login; the `ILoginFormEvent` veto that keeps members off the tenant surface and staff off the portal |
 | Crest JSON login | `Crest.Server` `CrestLoginService`, `api/crest/auth` | replays the stock login event sequence and signs the one cookie |
-| Workflows engine API | `Crest.Workflows` `CrestWorkflowsApiSecurityMiddleware`, order −151 | its own `UseAuthentication` branch under `/crest-workflows/api`, then the decision, antiforgery, a transient claims identity with engine permission names, the Run list and the endpoint's policy |
-| Secure media, GraphQL, media tus | `Crest.Media`, `Crest.Apis.GraphQL` | each authenticates `Api` again before its own check |
+| Workflows engine API | `Crest.Workflows` `ApiSecurityMiddleware`, order −151 | under `/crest-workflows/api`: the gated caller (none → 403), the decision, antiforgery, a transient claims identity with engine permission names, the Run list and the endpoint's policy; no authentication of its own |
+| Secure media, GraphQL, media tus, OpenApi | `Crest.Media`, `Crest.Apis.GraphQL`, `Crest.OpenApi` | authorize the gate's principal; none authenticates again |
+| Remote deployment key | `Crest.Deployment.Remote` `RemoteDeploymentKeyAuthenticationHandler` | `Authorization: RemoteDeployment {client}:{key}`, an additional `Api` scheme; the import runs as the remote client's application caller, which a contributor gives exactly `ImportRemoteInstances` |
 
-The request path today: `BlazorAdminThemeMiddleware` (a startup filter before routing)
-classifies the request, authenticates once (`Api` when an `Authorization` header is present,
-else the cookie), stamps the side and builds the caller; then routing; then the workflows
-branch, the tenant `UseAuthentication`, the module startups, `UseAuthorization`, secure
-media and GraphQL each authenticate again. A request with both a cookie and a bearer token
-is authenticated as the token by the gate and as the cookie by `UseAuthentication`, so the
-handler rebuilds a caller for a different user.
+The request path now: the shell selector (`BlazorAdminThemeMiddleware`, a startup filter
+before routing) classifies the request and calls the gate for it (`AdmitAsync` for pages
+with the side it chose, `AdmitApiAsync` for API calls with the prefix side); the gate
+authenticates once, publishes the result as the standard authentication feature (the
+member session reads its ticket properties from it), stamps the side and builds the
+caller. `AccessGateMiddleware` at the authentication order runs the request-handler
+schemes and gates whatever the selector left (assets, infrastructure paths, hosts without
+the selector) as Site. Nothing after it authenticates: the platform's `UseAuthentication`,
+the workflows branch's, GraphQL's, secure media's, tus's, OpenApi's and the member
+session's re-authentication are gone, and the `[Authorize(AuthenticationSchemes = "Api")]`
+attributes are plain `[Authorize]`.
 
 ### Authorization
 
@@ -71,19 +76,21 @@ The platform's permission types are `Crest.Infrastructure.Abstractions/Security`
 `Crest.Security` is only the security-headers module. The stock handlers
 (`PermissionHandler`, `RolesPermissionsHandler`, `SuperUserHandler`,
 `ContentTypeAuthorizationHandler`) are gone; what decides a `PermissionRequirement` today is
-`AccessAuthorizationHandler` delegating to the one decision, beside nine resource handlers
-that still map a permission to a finer one for their resource kind:
+`AccessAuthorizationHandler` delegating to the one decision; it is the only
+`IAuthorizationHandler` (2026-10-10). What used to be nine resource handlers are mappers
+and a ceiling inside the decision:
 
-| Handler | Module | Maps |
+| Mapper or ceiling | Module | Maps |
 | --- | --- | --- |
-| `RoleAuthorizationHandler` | Users | per-role user-management variants, `EditOwnUser`; re-enters `IAuthorizationService` |
-| `ViewUserAuditTrailEventsHandler` | Users audit trail | own versus others' events |
-| `SiteSettingsAuthorizationHandler` | Settings | `ManageGroupSettings` to per-group permissions |
-| `CustomSettingsAuthorizationHandler` | CustomSettings | `ManageResourceSettings` to per-type (an unregistered permission instance) |
-| `LocalizeContentAuthorizationHandler` | ContentLocalization | `LocalizeContent` to `LocalizeOwnContent` by owner |
-| `IndexingAuthorizationHandler` | Indexing | `QuerySearchIndex` to per-index |
-| `ManageMediaFolderAuthorizationHandler`, `ViewMediaFolderAuthorizationHandler` | Media | per-folder, own, attached-field; the view handler fails sticky and probes an anonymous principal for cache marking |
-| `WorkflowDefinitionAccessHandler` | Workflows | the definition's Edit and Run lists, with its own super-user and Administrator checks |
+| `ContentResourcePermissionMapper` | Contents | per-type and owner variations; a bare string only for a content permission |
+| `RolePermissionMapper` | Users | per-role user-management variants, `EditOwnUser` |
+| `UserAuditTrailPermissionMapper` | Users audit trail | own versus others' events |
+| `SiteSettingsPermissionMapper` | Settings | `ManageGroupSettings` to per-group permissions |
+| `CustomSettingsPermissionMapper` | CustomSettings | `ManageResourceSettings` to per-type |
+| `LocalizeContentPermissionMapper` | ContentLocalization | `LocalizeContent` to `LocalizeOwnContent` by owner |
+| `IndexingPermissionMapper` | Indexing | `QuerySearchIndex` to per-index |
+| `ManageMediaFolderPermissionMapper`, `ViewMediaFolderPermissionMapper` | Media | per-folder, own, attached-field (re-asks `ViewContent` for the item); the secure cache marker moved to the secure-media middleware |
+| `WorkflowDefinitionAccessCeiling` (a ceiling) | Workflows | the definition's Edit and Run lists veto, never grant |
 
 Two policy registrations exist (`MediaApi`, the media hub). `DefaultPermissionGrantingService`
 (the claims-based implied-by check) survives with one consumer, the role editor's granted
@@ -112,25 +119,28 @@ signature), `PermissionVersionService` with `PermissionVersionBumper` (role and 
 events), `AccessAuditor` on the audit trail, `AccessRunner`, `SystemCallerForBackgroundTasks`.
 Scope providers: `ContentItemScopeProvider` (Contents), `AssignmentScopeProvider` and
 `OrganizationScopeProvider` (Server), compiled by `Crest.Data.YesSql` `ScopeExpressions`.
-Contributors and ceilings: `MemberCallerContributor`, `MemberClassCeiling` (Members).
+Contributors and ceilings: `MemberCallerContributor`, `MemberClassCeiling` (Members),
+`RemoteDeploymentCallerContributor` (Deployment.Remote), `WorkflowDefinitionAccessCeiling`
+(Workflows). Mappers: the table under Authorization.
 Consumers of the scope: Queries, the GraphQL content filters, the content-items API, the
-pickers, the admin content lists. Only Crest.Server references the implementation; seven
-projects reference the abstractions.
+pickers, the admin content lists. Only Crest.Server references the implementation; nineteen
+projects reference the abstractions (the mapper modules joined them 2026-10-10).
 
 ### Shells
 
 The **tenant shell** is resolved by `ModularTenantContainerMiddleware` through the running
 shell table (host and prefix, then host, then prefix, then the default) and opened as the
 request's `ShellScope`; `ModularTenantRouterMiddleware` moves the prefix into `PathBase`.
-Deferred tasks run in a fresh scope with no caller. Background runs enter through a
+Deferred tasks and child scopes inherit the caller of the scope that queued them
+(`IInheritedShellScopeFeature`). Background runs enter through a
 synthetic `HttpContext` flagged `IsBackground`, whose short-circuit middleware sits at
 `int.MinValue`, which is after the startup filters.
 
 The **theme shell** is `BlazorAdminThemeMiddleware` (Crest.Server, a startup filter):
 infrastructure paths get a path strip only; `{shell}/api` and `/api` go through
-`GateApiAsync` (a valid `X-Shell` wins, an unknown value is 400, a cookie-authenticated call
+`IAccessGate.AdmitApiAsync` (a valid `X-Shell` wins, an unknown value is 400, a cookie-authenticated call
 without the header and without a prefix side is 403, else the prefix side or Site); pages
-go through `GateAsync` (authenticate, stamp the side, build the caller with `X-Org`); admin
+go through `IAccessGate.AdmitAsync` (authenticate, stamp the side, build the caller with `X-Org`); admin
 pages add the login redirect and the route permission (`CrestRouteAuthorizationService` over
 `ICrestRoutePermissionProvider`s, first template wins, no match denies); member pages add
 the login redirect only. It stamps the route bucket and the side as two separate items.
@@ -200,16 +210,16 @@ stamp refresh keeps stale claims.
 
 | Overlap | Today | One system |
 | --- | --- | --- |
-| Permissions | Permission claims in the cookie and in tokens, and the role manager read by the factory | the factory only; `RoleClaimsProvider` stamps roles for identity, no Permission claims; tokens carry identity |
+| Permissions | ~~Permission claims in the cookie and in tokens, and the role manager read by the factory~~ (done 2026-10-10) | the factory only; `RoleClaimsProvider` stamps roles for identity, no Permission claims; tokens carry identity and roles |
 | Implied-by | `DefaultPermissionGrantingService` (instance) and `AccessDecisionService` (registry) | the decision, resolving from the instance first and the registry second; the role editor asks the decision |
 | Super user | the factory, the workflow definition handler, the definition resource | the caller's flag only |
 | Definition access lists | handler and resource | the resource's `Admits`, called by the decision through a mapper |
-| Resource to permission | `IResourcePermissionMapper` (content) and eight resource handlers | one mapper per resource kind, registered by its module; the handlers go; direct callers of the decision get the same mapping |
+| Resource to permission | ~~`IResourcePermissionMapper` (content) and eight resource handlers~~ (done 2026-10-10) | one mapper per resource kind, registered by its module (content, localization, custom settings, indexing, media manage and view, settings groups, user audit trail, roles and users); a candidate may re-ask for another resource; the definition lists are a ceiling; the handler list ends at `AccessAuthorizationHandler` |
 | Invalidation | permission version, security stamp, SignalR nudge | the version, bumped by every rights write; the stamp for sign-out and credentials; the nudge fed from the version |
 | Shell stamps | side item and route bucket item | one item set once by the selector |
-| Authentication | the gate, tenant `UseAuthentication`, the workflows branch, GraphQL, secure media, tus, member session | the gate only |
+| Authentication | ~~the gate, tenant `UseAuthentication`, the workflows branch, GraphQL, secure media, tus, member session~~ (done 2026-10-10) | the gate only |
 | User class | cookie claim and contributor | the contributor |
-| Roles | cookie claims (Rules, Layers, Liquid, approvals, `Me`) and the caller | the caller; the condition evaluators and Liquid read it |
+| Roles | ~~cookie claims (Rules, Layers, Liquid, approvals, `Me`) and the caller~~ (done 2026-10-10) | the caller; the condition evaluators, Liquid, approvals, the roles cache context and `Me` read it |
 | Content filters | caller scope plus the old per-type authorization in admin controllers | the scope |
 | Route gates | `CrestRouteAuthorizationService` (Blazor) and `AdminFilter` (MVC) | one route permission table; `AdminFilter` goes with the MVC admin |
 
@@ -240,13 +250,14 @@ stamp refresh keeps stale claims.
   it answers as anonymous (the hand-down rule).
 - [x] The authorization handler audits every denial (landed 2026-10-10); deferred tasks
   carry their caller (section 2).
-- [ ] Version bumps only for rights writes; implied-by from the instance; a caller for the
-  remote deployment import; a bump on super-user change.
+- [x] A caller for the remote deployment import and a bump on super-user change landed
+  2026-10-10 (§ 5, § 6). Still open: version bumps only for rights writes (user
+  create/update/delete bump today); implied-by from the instance.
 
 ### 2. One calculation per request, handed down
 
 - [x] **The gate is the only builder.** `ICallerContextFactory` is called from the gate
-  (`GateAsync`/`GateApiAsync`) and from the background entry points. `AccessAuthorizationHandler`
+  (`IAccessGate`) and from the background entry points. `AccessAuthorizationHandler`
   builds one only when no gate ran (a host without the shell selector) and never a second
   one for a differing principal (landed 2026-10-10). Still open: the workflow caller
   resolver's per-burst build is an entry point by design; nothing else may call the factory.
@@ -259,70 +270,87 @@ stamp refresh keeps stale claims.
   caller as such a feature (`CallerFeature`) and answers from it in an inheriting scope, so
   child scopes, deferred tasks and after-commit work (which goes through child scopes) carry
   the caller that queued them, the system caller included.
-- [ ] **Hand-down into inline work.** Workflow bursts started inline by a request (hooks,
-  HTTP-endpoint workflows, the approval decision) inherit the request's caller
-  (`WorkflowAccessGateMiddleware` already prefers the inherited caller); the actor
-  snapshot is written for later bursts, which build their own.
-- [ ] **No hand-down across requests.** The client's session copy, the actor snapshot in
-  a workflow instance, a job payload and a token carry identity only; the entry point that
-  receives them builds a fresh caller under the current permission version. The
-  conformance suite checks that a right revoked between two requests is gone on the
-  second.
-- [ ] **One place reads the principal.** Only the gate reads `HttpContext.User`; the
-  decision, the scope, Rules, Layers, Liquid, approvals and `Me` read the caller.
+- [x] **Hand-down into inline work.** Verified 2026-10-10: workflow bursts started inline
+  by a request (hooks, HTTP-endpoint workflows, the approval decision, which now resumes
+  as the caller) inherit the request's caller through the accessor
+  (`WorkflowAccessGateMiddleware`), and the actor snapshot is written on the first burst
+  for later ones, which build their own.
+- [x] **No hand-down across requests.** By construction since 2026-10-10: the cookie and
+  tokens carry identity and roles only (no Permission claims), the actor snapshot is
+  identity only, and every entry point builds a fresh caller under the current permission
+  version. Still open: the conformance suite's check that a right revoked between two
+  requests is gone on the second.
+- [x] **One place reads the principal.** Landed 2026-10-10 for rights: the decision, the
+  scope, Rules, Layers, Liquid `is_in_role`, approvals, the roles cache context and `Me`
+  read the caller. Identity-level readers stay on the principal by design: the two-factor
+  flows, the Liquid `has_claim` filter, OpenIddict's own endpoints.
 
 ### 3. One gate
 
-- [ ] The gate moves from the theme-shell middleware into the platform's request path, after
-  the tenant router and the `IsBackground` short-circuit, as the one place that
-  authenticates (cookie or `Api` by request kind), stamps the shell once, builds the caller
-  and denies a disagreeing marker; the theme-shell selector keeps classification, path
-  shifting and the route table. `UseAuthentication` at −150, the workflows branch's own
-  authentication, GraphQL's, secure media's, tus's and the member session's re-authentication
-  go.
-- [ ] Static assets and infrastructure paths get the anonymous caller rather than none.
-- [ ] Deferred tasks and child scopes inherit the caller of the scope that queued them, or
-  the system caller when queued by a background entry point.
+- [x] Landed 2026-10-10: the gate is `IAccessGate` in `Crest.Access`, called by the
+  theme-shell selector at the moment it needs the answer (it keeps classification, path
+  shifting and the route table) and by `AccessGateMiddleware` at the authentication order
+  for every request the selector did not classify; it authenticates once (cookie or `Api`
+  by request kind), publishes the result as the authentication feature, stamps the shell,
+  builds the caller and denies a disagreeing marker. The platform's `UseAuthentication`,
+  the workflows branch's own authentication, GraphQL's, secure media's, tus's, OpenApi's
+  and the member session's re-authentication are gone; the middleware runs the
+  request-handler schemes (OpenIddict) in their place.
+- [x] Static assets and infrastructure paths get the anonymous caller (built through the
+  caller state cache, a hit after the first) rather than none.
+- [x] Deferred tasks and child scopes inherit the caller of the scope that queued them, or
+  the system caller when queued by a background entry point (`IInheritedShellScopeFeature`,
+  `SystemCallerForBackgroundTasks`).
 
 ### 4. One decision
 
-- [ ] The eight resource handlers become `IResourcePermissionMapper`s registered by their
-  modules; the handler list ends at `AccessAuthorizationHandler`.
-- [ ] `RoleClaimsProvider` stops stamping Permission claims; OpenIddict tokens carry identity
-  and application id only; the refreshed principal carries only the claims the providers
-  produce now.
-- [ ] Rules, Layers, Liquid `is_in_role`, the approval service, the role cache context and
-  `CrestAuthController.Me` read the caller.
-- [ ] The admin controllers' per-type content authorization goes; the scope is the filter.
-- [ ] `IAccessDecision` audits denials everywhere, not only in workflow activities; reads per
-  the audit ruling.
+- [x] Landed 2026-10-10: the eight resource handlers are `IResourcePermissionMapper`s
+  registered by their modules (localization, custom settings, indexing, media manage and
+  view, settings groups, user audit trail, roles and users); the contract is async and a
+  candidate may re-ask the decision for another resource (a folder's content item) or
+  declare the resource public (`PermissionCandidate.Granted`); the workflow definition
+  lists became `WorkflowDefinitionAccessCeiling`; the handler list ends at
+  `AccessAuthorizationHandler`. The content mapper claims a string resource only for a
+  content permission, since media paths and settings groups are strings too.
+- [x] `RoleClaimsProvider` stamps roles only; client-credentials tokens carry the
+  application's roles and no Permission claims (landed 2026-10-10).
+- [x] Rules, Layers, Liquid `is_in_role`, the approval service, the roles cache context and
+  `CrestAuthController.Me` read the caller (landed 2026-10-10).
+- [ ] The admin controllers' per-type content authorization goes; the scope is the filter
+  (with the Crest.Server extraction, [server.md](server.md)).
+- [x] `IAccessDecision` records every denial itself (landed 2026-10-10); reads per the
+  audit ruling stay the operation's.
 
 ### 5. Machine callers
 
-- [ ] An application caller kind: client-credentials tokens resolve to the application's
-  roles and permissions through the factory; the audit records the application.
-- [ ] The remote deployment key becomes an `Api`-scheme credential (an opaque-key handler
-  behind the forwarder, [machine-actors.md](machine-actors.md)); its import runs as that
-  caller behind `ImportRemoteInstances`, with antiforgery irrelevant because it is a bearer
-  call.
-- [ ] The `[Authorize(AuthenticationSchemes = "Api")]` attributes go once the gate
-  authenticates `Api` for every API request.
+- [x] The application caller class (`CallerClasses.Application`): a principal with no user
+  record resolves to its roles' permissions through the factory and contributors; the
+  audit records it like any caller (landed 2026-10-10).
+- [x] The remote deployment key is an `Api`-scheme credential (landed 2026-10-10):
+  `RemoteDeploymentKeyAuthenticationHandler`, one of the forwarder's `AdditionalSchemes`,
+  reads `Authorization: RemoteDeployment {client}:{key}`; the import controller is
+  `[Authorize]` and asks `ImportRemoteInstances` (a new, security-critical permission the
+  remote client's contributor grants its caller); the exporting instance sends the header,
+  never the form field.
+- [x] The `[Authorize(AuthenticationSchemes = "Api")]` attributes are plain `[Authorize]`
+  (landed 2026-10-10).
 
 ### 6. Invalidation
 
-- [ ] One channel: the permission version, bumped by role, user-role, binding, policy,
-  organization-switch, impersonation and super-user writes; the SignalR nudge sends the
-  version; the security stamp stays for sign-out and credential change, at an explicit
-  interval.
+- [x] One channel (landed 2026-10-10): the permission version, bumped by role, user,
+  binding and super-user writes (the settings recipe step); the security stamp stays for
+  sign-out and credential change at an explicit thirty-minute interval. An organization
+  switch and an impersonation need no bump: the caller state is keyed by user and
+  organization, so the switched-to state is built fresh. There is no SignalR nudge today;
+  a client learns of a change on its next request.
 
 ## Decisions needed
 
 - [ ] **Application callers and the member ceiling.** Does an application token acting for
   an organization (a member's integration) take the member ceiling and the organization
   scope, and how is that organization named in the token?
-- [ ] **The anonymous caller for assets.** Whether static asset requests should build the
-  anonymous caller (cost per request) or carry a marker that scoped code treats as
-  anonymous without a build.
+- [x] **The anonymous caller for assets.** Ruled 2026-10-10: built, through the caller
+  state cache (one build per tenant, side and permission version; a hit afterwards).
 - [ ] **Search scope.** Whether Lucene and Elasticsearch sources take the scope in the query
   (index-side filtering with the owner and organization columns indexed) or stay admin-only
   until they become connections (queries.md).

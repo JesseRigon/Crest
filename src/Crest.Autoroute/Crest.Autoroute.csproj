@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Crest.Apis.GraphQL.Abstractions\Crest.Apis.GraphQL.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Autoroute.Core\Crest.Autoroute.Core.csproj" />
     <ProjectReference Include="..\Crest.ContentLocalization.Abstractions\Crest.ContentLocalization.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.GraphQL\Crest.ContentManagement.GraphQL.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
@@ -30,6 +29,9 @@
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
     <ProjectReference Include="..\Crest.Sitemaps.Abstractions\Crest.Sitemaps.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Autoroute.Abstractions\Crest.Autoroute.Abstractions.csproj" />
   </ItemGroup>
 
   <!-- For Unit Tests-->

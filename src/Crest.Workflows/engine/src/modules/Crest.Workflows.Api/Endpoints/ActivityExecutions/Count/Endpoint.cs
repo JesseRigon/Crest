@@ -10,7 +10,7 @@ namespace Crest.Workflows.Api.Endpoints.ActivityExecutions.Count;
 /// Counts the number of executions for a given activity.
 /// </summary>
 [PublicAPI]
-internal class Count : CrestWorkflowsEndpoint<Request, CountResponse>
+internal class Count : WorkflowsEndpoint<Request, CountResponse>
 {
     private readonly IActivityExecutionStore _store;
 

@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.Version;
 
 [PublicAPI]
-internal class ListVersions(IWorkflowDefinitionStore store) : CrestWorkflowsEndpointWithoutRequest
+internal class ListVersions(IWorkflowDefinitionStore store) : WorkflowsEndpointWithoutRequest
 {
     public override void Configure()
     {

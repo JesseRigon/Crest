@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Crest.ContentManagement.Routing;
 using Crest.Settings;
 using Crest.ViewModels;
+using SiteSettings = Crest.ViewModels.SiteSettings;
 
 namespace Crest.Controllers;
 

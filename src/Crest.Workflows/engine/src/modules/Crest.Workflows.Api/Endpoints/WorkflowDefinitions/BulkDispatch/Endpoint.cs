@@ -10,7 +10,7 @@ namespace Crest.Workflows.Api.Endpoints.WorkflowDefinitions.BulkDispatch;
 
 [PublicAPI]
 internal class Endpoint(IWorkflowDefinitionService workflowDefinitionService, IWorkflowDispatcher workflowDispatcher, IIdentityGenerator identityGenerator)
-    : CrestWorkflowsEndpoint<Request, Response>
+    : WorkflowsEndpoint<Request, Response>
 {
     public override void Configure()
     {

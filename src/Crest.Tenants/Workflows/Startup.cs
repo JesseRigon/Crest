@@ -1,18 +1,16 @@
 using Microsoft.Extensions.DependencyInjection;
 using Crest.Modules;
-using Crest.Tenants.Workflows.Activities;
-using Crest.Workflows.Platform.Helpers;
+using Crest.Workflows;
+using Crest.Workflows.Extensions;
 
 namespace Crest.Tenants.Workflows;
 
-[RequireFeatures("Crest.Workflows")]
+[RequireFeatures(WorkflowsConstants.FeatureId)]
 public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddActivity<DisableTenantTask>();
-        services.AddActivity<EnableTenantTask>();
-        services.AddActivity<CreateTenantTask>();
-        services.AddActivity<SetupTenantTask>();
+        services.AddScoped<IWorkflowActivityProvider, TenantsWorkflowProvider>();
+        services.ConfigureCrestWorkflows(workflows => workflows.AddActivitiesFrom<Startup>());
     }
 }

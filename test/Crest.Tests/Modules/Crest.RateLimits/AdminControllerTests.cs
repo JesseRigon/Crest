@@ -4,7 +4,7 @@ using Crest.DisplayManagement;
 using Crest.DisplayManagement.Notify;
 using Crest.Environment.Shell;
 using Crest.RateLimits.Controllers;
-using Crest.RateLimits.Core;
+using Crest.RateLimits;
 using Crest.RateLimits.Models;
 using Crest.RateLimits.ViewModels;
 using Crest.RateLimits;
