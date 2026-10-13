@@ -49,6 +49,17 @@ public sealed class SiteController(
         return Ok(new SiteHomeResult(homeContentItemId));
     }
 
+    // The public site's pages (docs/blazor-display.md rework step 3): the site shell's content
+    // route asks for the page of a path and renders the tree it gets. Anonymous at the endpoint;
+    // the item itself is decided for the caller (ViewContent), and the tree is filtered for them.
+    [HttpGet("page")]
+    [AllowAnonymous]
+    public async Task<ActionResult<SitePageResult>> GetPageAsync([FromQuery] string? path, [FromServices] Crest.Display.SitePageBuilder pages, CancellationToken cancellationToken)
+    {
+        var page = await pages.BuildAsync(path, cancellationToken);
+        return Ok(new SitePageResult(page.Status, page.Title, page.Tree));
+    }
+
     // Anonymous: the login page greets with the tenant's own name, before anyone is signed
     // in. The branding display name IS ISite.SiteName (docs/branding.md) - the same value the
     // General settings screen edits - and nothing else from ISite is exposed here.

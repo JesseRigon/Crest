@@ -28,6 +28,7 @@ namespace Crest.Components.Primitives
     /// &lt;/CrestLink&gt;
     /// </code>
     /// </example>
+    [Crest.DisplayManagement.Components.CrestBlazorComponent("Link", DisplayName = "Link", Category = "Basic", Icon = "link")]
     public partial class CrestLink : CrestComponent
     {
         private string? imageAlternateText;

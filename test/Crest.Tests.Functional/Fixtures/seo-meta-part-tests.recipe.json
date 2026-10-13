@@ -6,9 +6,12 @@
   "website": "https://orchardcore.net",
   "version": "1.0.0",
   "issetuprecipe": true,
-  "categories": [ "tests" ],
-  "tags": [ "tests" ],
-
+  "categories": [
+    "tests"
+  ],
+  "tags": [
+    "tests"
+  ],
   "steps": [
     {
       "name": "feature",
@@ -23,14 +26,11 @@
         "Crest.Settings",
         "Crest.Themes",
         "Crest.Users",
-
         "Crest.Contents",
         "Crest.ContentTypes",
         "Crest.Flows",
         "Crest.Seo",
         "Crest.Title",
-        "Crest.Widgets",
-
         "TheAdmin",
         "SafeMode"
       ]
@@ -64,54 +64,11 @@
                   "Position": "0"
                 }
               }
-            },
-            {
-              "PartName": "FlowPart",
-              "Name": "FlowPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "SeoMetaPartTestWidget",
-          "DisplayName": "Seo Meta Part Test Widget",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "TitlePart",
-              "Name": "TitlePart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            },
-            {
-              "PartName": "SeoMetaPart",
-              "Name": "SeoMetaPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
-                },
-                "SeoMetaPartSettings": {
-                  "DisplayCustomMetaTags": true
-                }
-              }
             }
           ]
         }
-      ]
+      ],
+      "ContentParts": []
     }
   ]
 }

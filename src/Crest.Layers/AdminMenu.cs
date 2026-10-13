@@ -1,63 +1,25 @@
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Localization;
-using Crest.Layers.Drivers;
+using Crest.Admin;
 using Crest.Navigation;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 
 namespace Crest.Layers;
 
-public sealed class AdminMenu : AdminNavigationProvider
+/// <summary>Design › Layers: the admin page that edits the layers and what they place (a Blazor page, so a URL).</summary>
+public sealed class AdminMenu(IStringLocalizer<AdminMenu> stringLocalizer, IOptions<AdminOptions> adminOptions) : AdminNavigationProvider
 {
-    private static readonly RouteValueDictionary s_routeValues = new()
-    {
-        { "area", "Crest.Settings" },
-        { "groupId", LayerSiteSettingsDisplayDriver.GroupId },
-    };
-
-    internal readonly IStringLocalizer S;
-
-    public AdminMenu(IStringLocalizer<AdminMenu> stringLocalizer)
-    {
-        S = stringLocalizer;
-    }
+    private readonly IStringLocalizer S = stringLocalizer;
 
     protected override ValueTask BuildAsync(NavigationBuilder builder)
     {
-        if (NavigationHelper.UseLegacyFormat())
-        {
-            builder
-                .Add(S["Design"], design => design
-                    .Add(S["Settings"], settings => settings
-                        .Add(S["Zones"], S["Zones"].PrefixPosition(), zones => zones
-                            .Action("Index", "Admin", s_routeValues)
-                            .Permission(Permissions.ManageLayers)
-                            .LocalNav()
-                        )
-                    )
-                    .Add(S["Widgets"], S["Widgets"].PrefixPosition(), widgets => widgets
-                        .Permission(Permissions.ManageLayers)
-                        .Action("Index", "Admin", "Crest.Layers")
-                        .LocalNav()
-                    )
-                );
-
-            return ValueTask.CompletedTask;
-        }
-
-        builder
-            .Add(S["Design"], design => design
-                .Add(S["Widgets"], S["Widgets"].PrefixPosition(), widgets => widgets
-                    .Permission(Permissions.ManageLayers)
-                    .Action("Index", "Admin", "Crest.Layers")
-                    .LocalNav()
-                )
-            )
-            .Add(S["Settings"], settings => settings
-                .Add(S["Zones"], S["Zones"].PrefixPosition(), zones => zones
-                    .Action("Index", "Admin", s_routeValues)
-                    .Permission(Permissions.ManageLayers)
-                    .LocalNav()
-                )
-            );
+        var adminPath = "/" + adminOptions.Value.AdminUrlPrefix.Trim('/');
+        builder.Add(S["Design"], design => design
+            .Add(S["Layers"], S["Layers"].PrefixPosition(), layers => layers
+                .AddClass("icon-class-@iconify:mdi:layers")
+                .Id("layers")
+                .Url($"{adminPath}/Layers")
+                .Permission(Permissions.ManageLayers)
+                .LocalNav()));
 
         return ValueTask.CompletedTask;
     }

@@ -74,6 +74,14 @@
     {
         <base href="@(_tenantBasePath + "/")" />
         <meta name="crest-tenant-base" content="@_tenantBasePath" />
+        @* The site shell on the display tree (docs/blazor-display.md rework step 3): the same
+           design system as the admin (tokens, component styles, icons) and the site frame. *@
+        <link id="crest-radzen-theme" rel="stylesheet" href="@Asset("/_content/Crest.Components/css/material-base.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Crest.AdminTheme.Client/CrestAdmin.DesignSystem.Default.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Crest.Components/CrestComponents.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Crest.Components/Crest.Components.bundle.scp.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Crest.Icons/CrestIcons.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Crest.SiteTheme.Client/CrestSite.css")" />
     }
     <HeadOutlet @rendermode="@_renderMode" />
 </head>
@@ -106,6 +114,9 @@
            doesn't own this request before endpoint selection completes, so only one of
            the two ever actually renders here. *@
         <Routes @rendermode="@_renderMode" />
+        <script src="@Asset("/_content/Crest.Components/crest.components.js")"></script>
+        <script src="@Asset("/_content/Crest.Icons/icons.js")"></script>
+        <script src="@Asset("/_content/Crest.Components/Radzen.Blazor.js")"></script>
     }
     <script src="@Asset("/_framework/blazor.web.js")"></script>
 </body>

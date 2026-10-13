@@ -17,7 +17,7 @@ using Crest.Modules.Manifest;
     Name = "Crest Workflows",
     Description = "Crest.Workflows 3 as the tenant's workflow engine: definitions as content items, per-shell stores, the Crest.Workflows API behind Crest permissions.",
     Category = "Crest.Workflows",
-    Dependencies = ["Crest.Contents", "Crest.Liquid", "Crest.Scripting", "Crest"]
+    Dependencies = ["Crest.Access", "Crest.Contents", "Crest.Liquid", "Crest.Scripting", "Crest"]
 )]
 
 [assembly: Feature(

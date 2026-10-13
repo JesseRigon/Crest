@@ -18,12 +18,8 @@ public sealed class SearchMigrations : DataMigration
             .Attachable()
         );
 
-        await _contentDefinitionManager.AlterTypeDefinitionAsync("SearchForm", type => type
-            .Stereotype("Widget")
-            .WithDisplayName("Search Form")
-            .WithDescription("Provides a search form")
-            .WithPart("SearchFormPart")
-        );
+        // No "SearchForm" widget type: widgets are retired (docs/blazor-display.md, rulings
+        // 2026-10-12); a search form is placed as a component by a template or a layer rule.
 
         return 1;
     }

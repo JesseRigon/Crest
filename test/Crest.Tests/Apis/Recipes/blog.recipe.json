@@ -12,7 +12,6 @@
   "tags": [
     "blog"
   ],
-  // The variables are evaluated the first time they are accessed, and reused across steps
   "variables": {
     "adminUrlPrefix": "[js: configuration('Crest_Admin:AdminUrlPrefix', 'Admin')]",
     "blogContentItemId": "[js:uuid()]",
@@ -24,13 +23,11 @@
     "spaceTagContentItemId": "[js:uuid()]",
     "categoriesContentItemId": "[js:uuid()]",
     "categoryTravelContentItemId": "[js:uuid()]"
-    // "now": "[js: new Date().toISOString()]"
   },
   "steps": [
     {
       "name": "feature",
       "enable": [
-        // SaaS
         "Crest.HomeRoute",
         "Crest.Admin",
         "Crest.Diagnostics",
@@ -44,7 +41,6 @@
         "Crest.Settings",
         "Crest.Themes",
         "Crest.Users",
-        // Content Management
         "Crest.Alias",
         "Crest.AdminMenu",
         "Crest.Autoroute",
@@ -72,10 +68,8 @@
         "Crest.Taxonomies",
         "Crest.Title",
         "Crest.Templates",
-        "Crest.Widgets",
         "Crest.Search",
         "Crest.Lucene",
-        // Themes
         "TheAdmin",
         "SafeMode"
       ]
@@ -318,130 +312,6 @@
           ]
         },
         {
-          "Name": "Container",
-          "DisplayName": "Container",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "Container",
-              "Name": "Container",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            },
-            {
-              "PartName": "FlowPart",
-              "Name": "FlowPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "Blockquote",
-          "DisplayName": "Blockquote",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "Blockquote",
-              "Name": "Blockquote",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "Image",
-          "DisplayName": "Image",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "Image",
-              "Name": "Image",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "Paragraph",
-          "DisplayName": "Paragraph",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "Paragraph",
-              "Name": "Paragraph",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "RawHtml",
-          "DisplayName": "Raw Html",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "RawHtml",
-              "Name": "RawHtml",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            }
-          ]
-        },
-        {
           "Name": "Page",
           "DisplayName": "Page",
           "Settings": {
@@ -474,15 +344,6 @@
                   "AllowCustomPath": true,
                   "Pattern": "{{ Model.ContentItem | display_text | slugify }}",
                   "ShowHomepageOption": true
-                }
-              }
-            },
-            {
-              "PartName": "FlowPart",
-              "Name": "FlowPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "2"
                 }
               }
             },
@@ -699,92 +560,6 @@
                 "MediaFieldSettings": {
                   "Multiple": false,
                   "AllowAnchors": true
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "Blockquote",
-          "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
-            {
-              "FieldName": "TextField",
-              "Name": "Quote",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "Quote",
-                  "Editor": "TextArea",
-                  "Position": "0"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "Image",
-          "Settings": {
-            "Attachable": true
-          },
-          "ContentPartFieldDefinitionRecords": [
-            {
-              "FieldName": "MediaField",
-              "Name": "Media",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "Image",
-                  "Position": "0"
-                },
-                "MediaFieldSettings": {
-                  "Multiple": false,
-                  "Required": true
-                }
-              }
-            },
-            {
-              "FieldName": "TextField",
-              "Name": "Caption",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "Caption",
-                  "Position": "1"
-                },
-                "TextFieldSettings": {
-                  "Hint": "A description of the image used as title or alternate text"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "Paragraph",
-          "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
-            {
-              "FieldName": "HtmlField",
-              "Name": "Content",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "Content",
-                  "Position": "0",
-                  "Editor": "Wysiwyg"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "RawHtml",
-          "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
-            {
-              "FieldName": "HtmlField",
-              "Name": "Content",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "Content",
-                  "Position": "0",
-                  "Editor": "Multiline"
                 }
               }
             }
@@ -1085,28 +860,9 @@
               ]
             }
           }
-        },
-        {
-          "ContentItemId": "[js: uuid()]",
-          "ContentType": "RawHtml",
-          "DisplayText": "Footer",
-          "Latest": true,
-          "Published": true,
-          "Owner": "[js: parameters('AdminUserId')]",
-          "Author": "[js: parameters('AdminUsername')]",
-          "LayerMetadata": {
-            "Layer": "Always",
-            "Zone": "Footer",
-            "RenderTitle": false,
-            "Position": 10
-          },
-          "RawHtml": {
-            "Content": {
-              "Html": "<footer class=\"footer\"><p>Copyright &copy; The Blog</p></footer>"
-            }
-          }
         }
-      ]
+      ],
+      "data": []
     },
     {
       "name": "MediaProfiles",
@@ -1165,29 +921,66 @@
           "Type": "Content",
           "Name": "Search",
           "Properties": {
-            "LuceneIndexMetadata": { "StoreSourceData": false, "AnalyzerName": "standardanalyzer" },
-            "ContentIndexMetadata": { "IndexLatest": false, "IndexedContentTypes": ["Article", "Blockquote", "Blog", "BlogPost", "Container", "Image", "LinkMenuItem", "Menu", "Page", "Paragraph", "RawHtml"], "Culture": "any" },
+            "LuceneIndexMetadata": {
+              "StoreSourceData": false,
+              "AnalyzerName": "standardanalyzer"
+            },
+            "ContentIndexMetadata": {
+              "IndexLatest": false,
+              "IndexedContentTypes": [
+                "Article",
+                "Blockquote",
+                "Blog",
+                "BlogPost",
+                "Container",
+                "Image",
+                "LinkMenuItem",
+                "Menu",
+                "Page",
+                "Paragraph",
+                "RawHtml"
+              ],
+              "Culture": "any"
+            },
             "LuceneIndexDefaultQueryMetadata": {
               "DefaultVersion": "LUCENE_30",
               "QueryAnalyzerName": "standardanalyzer",
               "AllowLuceneQueries": false,
-              "DefaultSearchFields": [ "Content.ContentItem.FullText" ]
+              "DefaultSearchFields": [
+                "Content.ContentItem.FullText"
+              ]
             }
           },
           "IndexLatest": false,
           "Culture": "any",
-          "IndexedContentTypes": ["Article", "Blockquote", "Blog", "BlogPost", "Container", "Image", "LinkMenuItem", "Menu", "Page", "Paragraph", "RawHtml"]
+          "IndexedContentTypes": [
+            "Article",
+            "Blockquote",
+            "Blog",
+            "BlogPost",
+            "Container",
+            "Image",
+            "LinkMenuItem",
+            "Menu",
+            "Page",
+            "Paragraph",
+            "RawHtml"
+          ]
         }
       ]
     },
     {
       "name": "Settings",
-      "SearchSettings": { "DefaultIndexProfileName": "Search" }
+      "SearchSettings": {
+        "DefaultIndexProfileName": "Search"
+      }
     },
     {
       "name": "RebuildIndex",
       "includeAll": false,
-      "indexNames": [ "Search" ]
+      "indexNames": [
+        "Search"
+      ]
     },
     {
       "name": "Roles",
@@ -1195,7 +988,10 @@
         {
           "Name": "Anonymous",
           "Description": "Anonymous role",
-          "Permissions": [ "ViewContent", "QueryIndex_Search" ]
+          "Permissions": [
+            "ViewContent",
+            "QueryIndex_Search"
+          ]
         }
       ]
     },

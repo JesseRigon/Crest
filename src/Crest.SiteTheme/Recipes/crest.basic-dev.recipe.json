@@ -31,7 +31,6 @@
       "name": "feature",
       "disable": [
         "Crest.AdminDashboard",
-        "Crest.AdminTemplates",
         "Crest.Alias",
         "Crest.Apis.GraphQL",
         "Crest.ArchiveLater",
@@ -69,10 +68,8 @@
         "Crest.Facebook",
         "Crest.Facebook.Login",
         "Crest.Facebook.Pixel",
-        "Crest.Facebook.Widgets",
         "Crest.Feeds",
         "Crest.Flows",
-        "Crest.Forms",
         "Crest.GitHub.Authentication",
         "Crest.Google.Analytics",
         "Crest.Google.GoogleAuthentication",
@@ -172,7 +169,6 @@
         "Crest.Users.Registration",
         "Crest.Users.ResetPassword",
         "Crest.Users.TimeZone",
-        "Crest.Widgets",
         "Crest.Workflows",
         "Crest.XmlRpc"
       ],

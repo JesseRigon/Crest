@@ -27,6 +27,7 @@ namespace Crest.Components.Primitives
     /// &lt;CrestButton IsBusy=@isSaving BusyText="Saving..." Text="Save" Click=@SaveData /&gt;
     /// </code>
     /// </example>
+    [Crest.DisplayManagement.Components.CrestBlazorComponent("Button", DisplayName = "Button", Category = "Basic", Icon = "smart_button")]
     public partial class CrestButton : CrestComponent
     {
         /// <summary>

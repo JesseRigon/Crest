@@ -253,6 +253,11 @@ public class DefaultHtmlDisplay : IHtmlDisplay
 
     private static string GetBindingEngine(string bindingSource)
     {
+        if (bindingSource?.StartsWith("component:", StringComparison.Ordinal) == true)
+        {
+            return "component";
+        }
+
         var extension = Path.GetExtension(bindingSource);
 
         if (string.Equals(extension, ".cshtml", StringComparison.OrdinalIgnoreCase))
@@ -268,7 +273,7 @@ public class DefaultHtmlDisplay : IHtmlDisplay
         return "code";
     }
 
-    private static ShapeDescriptor GetShapeDescriptor(string shapeType, ShapeTable shapeTable)
+    internal static ShapeDescriptor GetShapeDescriptor(string shapeType, ShapeTable shapeTable)
     {
         // Note: The shape type of a descriptor is a fundamental shape type that never contains
         // any '__' separator. If a shape type contains some '__' separators, its fundamental

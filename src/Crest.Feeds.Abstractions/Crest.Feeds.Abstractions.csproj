@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Crest.Mvc.Abstractions\Crest.Mvc.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.DisplayManagement.Abstractions\Crest.DisplayManagement.Abstractions.csproj" />
   </ItemGroup>
 

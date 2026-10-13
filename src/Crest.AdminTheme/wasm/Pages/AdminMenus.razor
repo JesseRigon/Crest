@@ -4,7 +4,7 @@
 @using Crest.AdminTheme.Api
 @using Crest.AdminTheme.Components.Admin
 @using Crest.AdminTheme.Components.Shared
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @using Crest.Components.Inputs
 @using Crest.Icons
 @using Crest.Icons.Components
@@ -18,7 +18,7 @@
 @inject IJSRuntime Js
 @inject NavigationManager Navigation
 @inject NotificationService Notifications
-@inject DisplayManager DisplayManager
+@inject AdminShellState AdminShellState
 @inject ClientIconRegistry ClientIcons
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
@@ -325,7 +325,7 @@
 
             SyncPrimaryNavMenuSettingsModel();
             ShouldInitializeTree = true;
-            await DisplayManager.RefreshAdminMenuAsync();
+            await AdminShellState.RefreshAdminMenuAsync();
         }
         catch (Exception ex)
         {
@@ -364,7 +364,7 @@
         }
 
         // Base-relative: the server middleware strips the shell base off
-        // "{shellBase}/api/..." - see DisplayManager.StartPermissionRefreshAsync for
+        // "{shellBase}/api/..." - see AdminShellState.StartPermissionRefreshAsync for
         // the same pattern and rationale.
         AdminMenuLayoutHub = new HubConnectionBuilder()
             .WithUrl(new Uri(new Uri(Navigation.BaseUri), "api/crest/admin-menu-layout"))
@@ -574,7 +574,7 @@
             SelectedMenuId = updated.Id;
             CancelMenuRename();
             Notifications.Notify(NotificationSeverity.Success, T["Admin menu renamed"], updated.Name);
-            await DisplayManager.RefreshAdminMenuAsync();
+            await AdminShellState.RefreshAdminMenuAsync();
         }
         else
         {
@@ -591,7 +591,7 @@
         {
             State = new(State.Menus.Select(existing => existing.Id == updated.Id ? updated : existing).ToArray());
             Notifications.Notify(NotificationSeverity.Success, updated.Enabled ? T["Admin menu shown"] : T["Admin menu hidden"], updated.Name);
-            await DisplayManager.RefreshAdminMenuAsync();
+            await AdminShellState.RefreshAdminMenuAsync();
         }
     }
 
@@ -613,7 +613,7 @@
             State = new(State.Menus.Where(existing => existing.Id != menu.Id).ToArray());
             SelectedMenuId = State.Menus.FirstOrDefault()?.Id;
             Notifications.Notify(NotificationSeverity.Success, T["Admin menu deleted"], menu.Name);
-            await DisplayManager.RefreshAdminMenuAsync();
+            await AdminShellState.RefreshAdminMenuAsync();
         }
     }
 
@@ -1281,7 +1281,7 @@
         SelectedMenuId = menu.Id;
         SyncPrimaryNavMenuSettingsModel();
         ShouldInitializeTree = true;
-        await DisplayManager.RefreshAdminMenuAsync();
+        await AdminShellState.RefreshAdminMenuAsync();
         await InvokeAsync(StateHasChanged);
     }
 

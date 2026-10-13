@@ -51,7 +51,7 @@ using Crest.Modules.Manifest;
     //     BooleanFieldIndex rows, which ContentItemOptionSourceProvider joins for
     //     Field:-path sort/filter pushdown. Without the feature the tables are empty
     //     and a field-sorted picker would silently return no rows.
-    Dependencies = ["Crest.Admin", "Crest.AdminMenu", "Crest.Autoroute", "Crest.ContentFields", "Crest.ContentFields.Indexing.SQL", "Crest.Contents", "Crest.DataLocalization", "Crest.Indexing", "Crest.Localization", "Crest.Media", "Crest.Menu", "Crest.Navigation", "Crest.Queries", "Crest.Recipes", "Crest.Security", "Crest.Settings", "Crest.Templates", "Crest.Themes", "Crest.Users", "Crest.Icons"],
+    Dependencies = ["Crest.Access", "Crest.Admin", "Crest.AdminMenu", "Crest.Autoroute", "Crest.ContentFields", "Crest.ContentFields.Indexing.SQL", "Crest.Contents", "Crest.DataLocalization", "Crest.Indexing", "Crest.Localization", "Crest.Media", "Crest.Menu", "Crest.Navigation", "Crest.Queries", "Crest.Recipes", "Crest.Security", "Crest.Settings", "Crest.Templates", "Crest.Themes", "Crest.Users", "Crest.Icons"],
     IsAlwaysEnabled = true
 )]
 

@@ -1,10 +1,10 @@
 using Crest.AdminTheme.Api;
-using Crest.AdminTheme.DisplayManagement;
+using Crest.AdminTheme.State;
 using Xunit;
 
 namespace Crest.AdminTheme.Tests;
 
-// Table-driven coverage of DisplayManager.ResolveCulture's 5-rung priority chain
+// Table-driven coverage of AdminShellState.ResolveCulture's 5-rung priority chain
 // (docs/localization.md's "Resolution architecture"): session override -> user
 // stored default -> admin default (admin-path only) -> browser locale -> tenant default.
 public sealed class CultureResolutionTests
@@ -25,7 +25,7 @@ public sealed class CultureResolutionTests
     {
         var selector = Selector(userDefault: "es", tenantDefault: "en", adminDefault: "fr");
 
-        var resolved = DisplayManager.ResolveCulture(selector, sessionOverride: "de", browserLocale: "es", isUnderAdminPath: true);
+        var resolved = AdminShellState.ResolveCulture(selector, sessionOverride: "de", browserLocale: "es", isUnderAdminPath: true);
 
         Assert.Equal("de", resolved);
     }
@@ -35,7 +35,7 @@ public sealed class CultureResolutionTests
     {
         var selector = Selector(userDefault: "es", tenantDefault: "en", adminDefault: "fr");
 
-        var resolved = DisplayManager.ResolveCulture(selector, sessionOverride: null, browserLocale: null, isUnderAdminPath: true);
+        var resolved = AdminShellState.ResolveCulture(selector, sessionOverride: null, browserLocale: null, isUnderAdminPath: true);
 
         Assert.Equal("es", resolved);
     }
@@ -45,7 +45,7 @@ public sealed class CultureResolutionTests
     {
         var selector = Selector(userDefault: null, tenantDefault: "en", adminDefault: "fr");
 
-        var resolved = DisplayManager.ResolveCulture(selector, sessionOverride: null, browserLocale: null, isUnderAdminPath: true);
+        var resolved = AdminShellState.ResolveCulture(selector, sessionOverride: null, browserLocale: null, isUnderAdminPath: true);
 
         Assert.Equal("fr", resolved);
     }
@@ -55,7 +55,7 @@ public sealed class CultureResolutionTests
     {
         var selector = Selector(userDefault: null, tenantDefault: "en", adminDefault: "fr");
 
-        var resolved = DisplayManager.ResolveCulture(selector, sessionOverride: null, browserLocale: null, isUnderAdminPath: false);
+        var resolved = AdminShellState.ResolveCulture(selector, sessionOverride: null, browserLocale: null, isUnderAdminPath: false);
 
         Assert.Equal("en", resolved);
     }
@@ -65,7 +65,7 @@ public sealed class CultureResolutionTests
     {
         var selector = Selector(userDefault: null, tenantDefault: "en", adminDefault: null);
 
-        var resolved = DisplayManager.ResolveCulture(selector, sessionOverride: null, browserLocale: "es", isUnderAdminPath: false);
+        var resolved = AdminShellState.ResolveCulture(selector, sessionOverride: null, browserLocale: "es", isUnderAdminPath: false);
 
         Assert.Equal("es", resolved);
     }
@@ -75,7 +75,7 @@ public sealed class CultureResolutionTests
     {
         var selector = Selector(userDefault: null, tenantDefault: "en", adminDefault: null);
 
-        var resolved = DisplayManager.ResolveCulture(selector, sessionOverride: null, browserLocale: "ja-JP", isUnderAdminPath: false);
+        var resolved = AdminShellState.ResolveCulture(selector, sessionOverride: null, browserLocale: "ja-JP", isUnderAdminPath: false);
 
         Assert.Equal("en", resolved);
     }
@@ -85,7 +85,7 @@ public sealed class CultureResolutionTests
     {
         var selector = Selector(userDefault: null, tenantDefault: "en", adminDefault: null);
 
-        var resolved = DisplayManager.ResolveCulture(selector, sessionOverride: null, browserLocale: null, isUnderAdminPath: false);
+        var resolved = AdminShellState.ResolveCulture(selector, sessionOverride: null, browserLocale: null, isUnderAdminPath: false);
 
         Assert.Equal("en", resolved);
     }
@@ -95,7 +95,7 @@ public sealed class CultureResolutionTests
     {
         var selector = Selector(userDefault: "es", tenantDefault: "en", adminDefault: null);
 
-        var resolved = DisplayManager.ResolveCulture(selector, sessionOverride: "ja-JP", browserLocale: null, isUnderAdminPath: false);
+        var resolved = AdminShellState.ResolveCulture(selector, sessionOverride: "ja-JP", browserLocale: null, isUnderAdminPath: false);
 
         Assert.Equal("es", resolved);
     }
@@ -105,7 +105,7 @@ public sealed class CultureResolutionTests
     {
         var selector = Selector(userDefault: "ja-JP", tenantDefault: "en", adminDefault: "fr");
 
-        var resolved = DisplayManager.ResolveCulture(selector, sessionOverride: null, browserLocale: null, isUnderAdminPath: true);
+        var resolved = AdminShellState.ResolveCulture(selector, sessionOverride: null, browserLocale: null, isUnderAdminPath: true);
 
         Assert.Equal("fr", resolved);
     }
@@ -115,7 +115,7 @@ public sealed class CultureResolutionTests
     {
         var selector = Selector(userDefault: null, tenantDefault: "en", adminDefault: "ja-JP");
 
-        var resolved = DisplayManager.ResolveCulture(selector, sessionOverride: null, browserLocale: "fr", isUnderAdminPath: true);
+        var resolved = AdminShellState.ResolveCulture(selector, sessionOverride: null, browserLocale: "fr", isUnderAdminPath: true);
 
         Assert.Equal("fr", resolved);
     }
@@ -129,7 +129,7 @@ public sealed class CultureResolutionTests
     [InlineData("", "/admin", false)]
     public void IsUnderAdminPathMatchesPrefixNotSubstring(string? basePath, string path, bool expected)
     {
-        var resolved = DisplayManager.IsUnderAdminPath(basePath, $"https://example.test{path}");
+        var resolved = AdminShellState.IsUnderAdminPath(basePath, $"https://example.test{path}");
 
         Assert.Equal(expected, resolved);
     }

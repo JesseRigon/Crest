@@ -32,8 +32,7 @@ public sealed class ElasticsearchQuerySource : IQuerySource
     private readonly ISession _session;
     private readonly JavaScriptEncoder _javaScriptEncoder;
     private readonly TemplateOptions _templateOptions;
-    private readonly ICallerContextAccessor _callerAccessor;
-    private readonly IScopeSetProvider _scopeSetProvider;
+    private readonly IServiceProvider _services;
 
     public ElasticsearchQuerySource(
         ElasticsearchQueryService queryService,
@@ -50,8 +49,7 @@ public sealed class ElasticsearchQuerySource : IQuerySource
         _session = session;
         _javaScriptEncoder = javaScriptEncoder;
         _templateOptions = templateOptions.Value;
-        _callerAccessor = serviceProvider.GetService(typeof(ICallerContextAccessor)) as ICallerContextAccessor;
-        _scopeSetProvider = serviceProvider.GetService(typeof(IScopeSetProvider)) as IScopeSetProvider;
+        _services = serviceProvider;
     }
 
     public string Name
@@ -63,7 +61,7 @@ public sealed class ElasticsearchQuerySource : IQuerySource
         ArgumentNullException.ThrowIfNull(request);
 
         var cancellationToken = request.CancellationToken;
-        var scopes = await CallerScopes.RequireAsync(_callerAccessor, _scopeSetProvider, query.Name ?? SourceName, cancellationToken);
+        var scopes = await CallerScopes.RequireAsync(_services, query.Name ?? SourceName, cancellationToken);
         var rule = scopes.Require(nameof(ContentItemIndex));
 
         if (!query.ReturnContentItems && rule.Kind != ScopeKind.All)

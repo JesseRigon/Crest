@@ -38,7 +38,7 @@ public sealed class SiteLayersQuery : ISchemaBuilder
         var field = new FieldType
         {
             Name = "SiteLayers",
-            Description = S["Site layers define the rules and zone placement for widgets."],
+            Description = S["Site layers define the rules under which components are placed into zones."],
             Type = typeof(ListGraphType<LayerQueryObjectType>),
             Resolver = new LockedAsyncFieldResolver<IEnumerable<Layer>>(ResolveAsync),
         };

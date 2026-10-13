@@ -13,95 +13,47 @@ using Crest.Rules.Services;
 namespace Crest.Layers.Recipes;
 
 /// <summary>
-/// This recipe step creates or updates a layer.
+/// Creates or updates layers and their placements: <c>{ "name": "Layers", "Layers": [ { "Name",
+/// "Description", "LayerRule": { "Conditions": [ { "Name": "BooleanCondition", "Value": true } ] } } ],
+/// "Placements": [ { "Id", "Layer", "Zone", "Component", "Properties", "Position" } ] }</c>. A
+/// placement with the id of an existing one replaces it.
 /// </summary>
-public sealed class LayerStep : NamedRecipeStepHandler
+public sealed class LayerStep(ILayerService layerService, LayerRuleReader rules, IStringLocalizer<LayerStep> stringLocalizer) : NamedRecipeStepHandler("Layers")
 {
-    private readonly ILayerService _layerService;
-    private readonly IConditionIdGenerator _conditionIdGenerator;
-    private readonly IEnumerable<IConditionFactory> _factories;
-    private readonly JsonSerializerOptions _serializationOptions;
-
-    internal readonly IStringLocalizer S;
-
-    public LayerStep(
-        ILayerService layerService,
-        IConditionIdGenerator conditionIdGenerator,
-        IEnumerable<IConditionFactory> factories,
-        IOptions<DocumentJsonSerializerOptions> serializationOptions,
-        IStringLocalizer<LayerStep> stringLocalizer)
-        : base("Layers")
-    {
-        _layerService = layerService;
-        _conditionIdGenerator = conditionIdGenerator;
-        _factories = factories;
-        _serializationOptions = serializationOptions.Value.SerializerOptions;
-        S = stringLocalizer;
-    }
+    internal readonly IStringLocalizer S = stringLocalizer;
 
     protected override async Task HandleAsync(RecipeExecutionContext context)
     {
-        // The recipe step contains polymorphic types which need to be resolved.
-        var model = context.Step.ToObject<LayersStepModel>(_serializationOptions);
-
-        var allLayers = await _layerService.LoadLayersAsync();
-
+        var model = context.Step.ToObject<LayersStepModel>();
+        var allLayers = await layerService.LoadLayersAsync();
         var unknownTypes = new List<string>();
-        var factories = _factories.ToDictionary(x => x.Name);
 
-        foreach (var layerStep in model.Layers)
+        foreach (var layerStep in model.Layers ?? [])
         {
-            var layer = allLayers.Layers.FirstOrDefault(x => string.Equals(x.Name, layerStep.Name, StringComparison.OrdinalIgnoreCase));
-
-            if (layer == null)
+            if (string.IsNullOrEmpty(layerStep.Name))
             {
-                layer = new Layer();
-                allLayers.Layers.Add(layer);
-            }
-
-            // Backwards compatibility check.
-            if (layer.LayerRule == null)
-            {
-                layer.LayerRule = new Rule();
-                _conditionIdGenerator.GenerateUniqueId(layer.LayerRule);
-            }
-
-            // Replace any property that is set in the recipe step.
-            if (!string.IsNullOrEmpty(layerStep.Name))
-            {
-                layer.Name = layerStep.Name;
-            }
-            else
-            {
-                context.Errors.Add(S["The layer '{0}' is required.", layer.Name]);
-
+                context.Errors.Add(S["A layer needs a name."]);
                 continue;
             }
 
+            var layer = allLayers.Layers.FirstOrDefault(x => string.Equals(x.Name, layerStep.Name, StringComparison.OrdinalIgnoreCase));
+            if (layer == null)
+            {
+                layer = new Layer { Name = layerStep.Name };
+                allLayers.Layers.Add(layer);
+            }
+
+            // The conditions are replaced, because conditions cannot be merged logically.
             if (layerStep.LayerRule != null)
             {
+                layer.LayerRule = rules.Read(layerStep.LayerRule.Conditions, unknownTypes);
                 if (!string.IsNullOrEmpty(layerStep.LayerRule.ConditionId))
                 {
                     layer.LayerRule.ConditionId = layerStep.LayerRule.ConditionId;
                 }
-
-                // The conditions list is cleared, because we cannot logically merge conditions.
-                layer.LayerRule.Conditions.Clear();
-                foreach (var jCondition in layerStep.LayerRule.Conditions)
-                {
-                    var name = jCondition["Name"].ToString();
-                    if (factories.TryGetValue(name, out var factory))
-                    {
-                        var factoryCondition = (Condition)jCondition.ToObject(factory.Create().GetType(), _serializationOptions);
-
-                        layer.LayerRule.Conditions.Add(factoryCondition);
-                    }
-                    else
-                    {
-                        unknownTypes.Add(name);
-                    }
-                }
             }
+
+            layer.LayerRule ??= rules.Read(null, unknownTypes);
 
             if (!string.IsNullOrEmpty(layerStep.Description))
             {
@@ -109,20 +61,38 @@ public sealed class LayerStep : NamedRecipeStepHandler
             }
         }
 
+        foreach (var placement in model.Placements ?? [])
+        {
+            if (string.IsNullOrWhiteSpace(placement.Layer) || string.IsNullOrWhiteSpace(placement.Zone) || string.IsNullOrWhiteSpace(placement.Component))
+            {
+                context.Errors.Add(S["A layer placement needs its layer, zone and component."]);
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(placement.Id))
+            {
+                placement.Id = Guid.NewGuid().ToString("n");
+            }
+
+            allLayers.Placements.RemoveAll(existing => string.Equals(existing.Id, placement.Id, StringComparison.Ordinal));
+            allLayers.Placements.Add(placement);
+        }
+
         if (unknownTypes.Count != 0)
         {
             context.Errors.Add(S["No changes have been made. The following types of conditions cannot be added: {0}. Please ensure that the related features are enabled to add these types of conditions.", string.Join(", ", unknownTypes)]);
-
             return;
         }
 
-        await _layerService.UpdateAsync(allLayers);
+        await layerService.UpdateAsync(allLayers);
     }
 }
 
 public class LayersStepModel
 {
-    public LayerStepModel[] Layers { get; set; }
+    public LayerStepModel[] Layers { get; set; } = [];
+
+    public LayerPlacement[] Placements { get; set; }
 }
 
 public class LayerStepModel

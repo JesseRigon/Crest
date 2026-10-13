@@ -1,6 +1,7 @@
 using Crest.AdminMenu;
 using Crest.AdminMenu.Services;
 using Crest.Localization.Data;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Crest.DataLocalization.Services;
 
@@ -9,11 +10,14 @@ namespace Crest.DataLocalization.Services;
 /// under its context whose caption no provider enumerates any more (a deleted or renamed
 /// node), and a deleted menu takes its whole context with it, plus the menu name's own entry
 /// in the generic admin-menus context when no other menu still bears the name.
+/// The providers are resolved when a menu is saved, not injected: the admin menu's own provider
+/// depends on the admin menu service, which raises these events, so injecting them would be a
+/// construction cycle (service → handlers → providers → service).
 /// </summary>
 public sealed class AdminMenuTranslationCleanup(
     ITranslationsManager translationsManager,
     IAdminMenuAccessor adminMenus,
-    IEnumerable<ILocalizationDataProvider> providers) : IAdminMenuEventHandler
+    IServiceProvider services) : IAdminMenuEventHandler
 {
     public async Task SavedAsync(Crest.AdminMenu.Models.AdminMenu menu)
     {
@@ -22,7 +26,7 @@ public sealed class AdminMenuTranslationCleanup(
         // The live captions are what the editor would show: every provider's descriptors under
         // this menu's context, the same enumeration the Translations editor rows come from.
         var live = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var provider in providers)
+        foreach (var provider in services.GetServices<ILocalizationDataProvider>())
         {
             foreach (var descriptor in await provider.GetDescriptorsAsync())
             {

@@ -12,7 +12,7 @@ using Crest.Modules.Manifest;
     Name = "Queries Core Services",
     Description = "Provides querying capability services.",
     Dependencies =
-    [
+    ["Crest.Access", 
         "Crest.Liquid",
     ],
     Category = "Content Management",

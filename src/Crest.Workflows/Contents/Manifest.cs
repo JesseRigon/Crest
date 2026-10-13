@@ -12,5 +12,5 @@ using Crest.Modules.Manifest;
     Name = "Content Activities",
     Description = "Content triggers (created, published, ...) carrying the acting user, and content tasks.",
     Category = "Crest.Workflows",
-    Dependencies = ["Crest.Workflows", "Crest.Contents", "Crest.Title"]
+    Dependencies = ["Crest.Access", "Crest.Workflows", "Crest.Contents", "Crest.Title"]
 )]

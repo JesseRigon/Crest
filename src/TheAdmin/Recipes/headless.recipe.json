@@ -55,7 +55,6 @@
         "Crest.OpenId.Validation",
         "Crest.Queries",
         "Crest.Title",
-        "Crest.Widgets",
 
         // Themes
         "TheAdmin"

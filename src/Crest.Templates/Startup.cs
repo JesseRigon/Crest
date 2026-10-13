@@ -1,52 +1,49 @@
-using Microsoft.Extensions.DependencyInjection;
-using Crest.ContentTypes.Editors;
+using Crest.ContentManagement;
+using Crest.Data.Migration;
 using Crest.Deployment;
-using Crest.DisplayManagement;
+using Crest.DisplayManagement.Components;
 using Crest.Modules;
 using Crest.Navigation;
 using Crest.Recipes;
 using Crest.Security.Permissions;
 using Crest.Templates.Deployment;
+using Crest.Templates.Handlers;
+using Crest.Templates.Models;
 using Crest.Templates.Recipes;
 using Crest.Templates.Services;
-using Crest.Templates.Settings;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Crest.Templates;
 
+/// <summary>
+/// Templates as content (docs/blazor-display.md § 5, rework step 4): Liquid whose tags emit
+/// display-tree nodes, bound to shapes ahead of the modules' components or placed by name as
+/// composites, published like content. Edited on the admin Templates page through
+/// <c>api/crest/templates</c>.
+/// </summary>
 public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddResourceConfiguration<ResourceManagementOptionsConfiguration>();
+        services.AddContentPart<TemplatePart>();
+        services.AddDataMigration<Migrations>();
+        services.AddScoped<Crest.ContentManagement.Handlers.IContentHandler, TemplatePublishHandler>();
 
-        services.AddScoped<IShapeBindingResolver, TemplatesShapeBindingResolver>();
-        services.AddScoped<PreviewTemplatesProvider>();
-        services.AddScoped<TemplatesManager>();
+        services.AddSingleton<TemplateTreeParser>();
+        services.AddScoped<TemplateTreeEvaluator>();
+        services.AddScoped<TemplateStore>();
+        services.AddScoped<ITemplateCatalog>(sp => sp.GetRequiredService<TemplateStore>());
+        services.AddScoped<TemplateResolver>();
+        services.AddScoped<TemplateValidator>();
+        services.AddScoped<TemplatePreview>();
+        services.AddScoped<IDisplayTemplateBinding, TemplateDisplayBinding>();
+        services.AddScoped<ComponentOverrides>();
+        services.AddScoped<IDisplayTreeOverrides>(sp => sp.GetRequiredService<ComponentOverrides>());
+
         services.AddPermissionProvider<Permissions>();
         services.AddNavigationProvider<AdminMenu>();
-        services.AddRecipeExecutionStep<TemplateStep>();
-
-        // Template shortcuts in settings
-        services.AddScoped<IContentPartDefinitionDisplayDriver, TemplateContentPartDefinitionDriver>();
-        services.AddScoped<IContentTypeDefinitionDisplayDriver, TemplateContentTypeDefinitionDriver>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, TemplateContentTypePartDefinitionDriver>();
-
-        services.AddDeployment<AllTemplatesDeploymentSource, AllTemplatesDeploymentStep, AllTemplatesDeploymentStepDriver>();
-
-        services.AddScoped<AdminTemplatesManager>();
         services.AddPermissionProvider<AdminTemplatesPermissions>();
-    }
-}
-
-[Feature("Crest.AdminTemplates")]
-public sealed class AdminTemplatesStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddScoped<IShapeBindingResolver, AdminTemplatesShapeBindingResolver>();
-        services.AddScoped<AdminPreviewTemplatesProvider>();
-        services.AddNavigationProvider<AdminTemplatesAdminMenu>();
-        services.AddRecipeExecutionStep<AdminTemplateStep>();
-        services.AddDeployment<AllAdminTemplatesDeploymentSource, AllAdminTemplatesDeploymentStep, AllAdminTemplatesDeploymentStepDriver>();
+        services.AddRecipeExecutionStep<TemplateStep>();
+        services.AddDeployment<AllTemplatesDeploymentSource, AllTemplatesDeploymentStep, AllTemplatesDeploymentStepDriver>();
     }
 }

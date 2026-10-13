@@ -52,7 +52,7 @@
                 <CrestDataGridColumn TItem="ContentItem" Title="@T["Type"]"><Template Context="item">@item.ContentType</Template></CrestDataGridColumn>
                 <CrestDataGridColumn TItem="ContentItem" Title="@T["Status"]"><Template Context="item"><CrestBadge Text="@(item.Published ? T["Published"] : T["Draft"])" BadgeStyle="@(item.Published ? BadgeStyle.Success : BadgeStyle.Warning)" /></Template></CrestDataGridColumn>
                 <CrestDataGridColumn TItem="ContentItem" Title="@T["Modified"]"><Template Context="item">@(item.ModifiedUtc?.ToLocalTime().ToString("g") ?? T["—"])</Template></CrestDataGridColumn>
-                <CrestDataGridColumn TItem="ContentItem" Title="@T["Actions"]" Sortable="false" Filterable="false" Width="15rem">
+                <CrestDataGridColumn TItem="ContentItem" Title="@T["Actions"]" Sortable="false" Filterable="false" Width="17.5rem">
                     <Template Context="item">
                         <CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem">
                             @if (item.Published)
@@ -63,6 +63,7 @@
                             {
                                 <CrestButton Icon="publish" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Publish"]" Click="@(() => ChangePublicationAsync(item, true))" Disabled="@IsBusy" />
                             }
+                            <CrestButton Icon="visibility" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Display"]" Click="@(() => Display(item))" Disabled="@IsBusy" data-testid="content-item-display" />
                             <CrestButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Edit"]" Click="@(() => Edit(item))" Disabled="@IsBusy" />
                             <CrestButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Delete"]" Click="@(() => RequestDelete(item))" Disabled="@IsBusy" />
                         </CrestStack>
@@ -185,6 +186,7 @@
     private void CloseCreate() => CreateDialogOpen = false;
     private void Create() { if (!string.IsNullOrWhiteSpace(CreateContentType)) Navigation.NavigateTo($"Contents/ContentTypes/{Uri.EscapeDataString(CreateContentType)}/Create"); }
     private void Edit(ContentItem item) => Navigation.NavigateTo($"Contents/ContentItems/{Uri.EscapeDataString(item.ContentItemId)}/Edit");
+    private void Display(ContentItem item) => Navigation.NavigateTo($"Contents/ContentItems/{Uri.EscapeDataString(item.ContentItemId)}/Display");
     private void RequestDelete(ContentItem item) => DeleteCandidate = item;
     private void CancelDelete() => DeleteCandidate = null;
 

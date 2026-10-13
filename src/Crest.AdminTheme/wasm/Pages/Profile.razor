@@ -1,5 +1,5 @@
 @page "/Profile"
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @inject NavigationManager Navigation
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
@@ -23,7 +23,7 @@
 </CrestStack>
 
 @code {
-    [CascadingParameter] public DisplayManager? DisplayManager { get; set; }
+    [CascadingParameter] public AdminShellState? AdminShellState { get; set; }
 
-    private string UserName => DisplayManager?.User.UserName ?? T["User"];
+    private string UserName => AdminShellState?.User.UserName ?? T["User"];
 }

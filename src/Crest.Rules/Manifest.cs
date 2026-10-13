@@ -12,7 +12,7 @@ using Crest.Modules.Manifest;
     Name = "Rules",
     Description = "The Rules module adds rule building capabilities.",
     Dependencies =
-    [
+    ["Crest.Access", 
         "Crest.Scripting"
     ],
     Category = "Infrastructure"

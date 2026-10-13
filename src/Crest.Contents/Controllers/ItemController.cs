@@ -22,24 +22,8 @@ public sealed class ItemController : Controller, IUpdateModel
         _authorizationService = authorizationService;
     }
 
-    public async Task<IActionResult> Display(string contentItemId, string jsonPath)
-    {
-        var contentItem = await _contentManager.GetAsync(contentItemId, jsonPath);
-
-        if (contentItem == null)
-        {
-            return NotFound();
-        }
-
-        if (!await _authorizationService.AuthorizeAsync(User, CommonPermissions.ViewContent, contentItem))
-        {
-            return this.ChallengeOrForbid();
-        }
-
-        var model = await _contentItemDisplayManager.BuildDisplayAsync(contentItem, this);
-
-        return View(model);
-    }
+    // Display is the site shell's content route now (docs/blazor-display.md rework step 3); the
+    // DisplayContentItem route only generates its URLs.
 
     public async Task<IActionResult> Preview(string contentItemId)
     {

@@ -11,7 +11,7 @@ using Crest.Modules.Manifest;
     Id = "Crest.Members",
     Name = "Members",
     Description = "Member user class, per-tenant user hierarchies, org bindings and member portal access control.",
-    Dependencies = [
+    Dependencies = ["Crest.Access", 
         "Crest.Users",
         "Crest.Roles",
         "Crest.Contents",

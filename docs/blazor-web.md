@@ -1,6 +1,6 @@
 # Blazor Web App hosting in an OrchardCore module
 
-Crest.Server hosts interactive Blazor islands (routable `.razor` pages marked `@rendermode`, e.g. `Components/Pages/BlazorCounter.razor`) directly from an OrchardCore module project. This isn't the stock `dotnet new blazor` template shape, and two parts of that template's usual "just works" behavior silently break when the host is an OrchardCore module instead of a normal ASP.NET Core web app. Both failures are silent at build time — no error, no warning, just a 404 or missing markup at runtime — so they're easy to reintroduce without noticing.
+Crest.Server hosts interactive Blazor islands (routable `.razor` pages marked `@rendermode`, e.g. the site's content route `ContentPage.razor`) directly from an OrchardCore module project. This isn't the stock `dotnet new blazor` template shape, and two parts of that template's usual "just works" behavior silently break when the host is an OrchardCore module instead of a normal ASP.NET Core web app. Both failures are silent at build time — no error, no warning, just a 404 or missing markup at runtime — so they're easy to reintroduce without noticing.
 
 ## Hosting model, in brief (stable — the design below is done, not in flux)
 

@@ -11,6 +11,5 @@ public sealed class Startup : StartupBase
     {
         services.AddSingleton<ISchemaBuilder, SiteLayersQuery>();
         services.AddTransient<LayerQueryObjectType>();
-        services.AddTransient<LayerWidgetQueryObjectType>();
     }
 }

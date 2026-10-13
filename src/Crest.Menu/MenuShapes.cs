@@ -148,6 +148,11 @@ public class MenuShapes : ShapeTableProvider
                     level);
 
                 menuItem.Metadata.Alternates.AddRange(cachedAlternates);
+
+                // What a component renders a menu item from (docs/blazor-display.md, rework
+                // step 3): its text and resolved link, so the display tree carries resolved
+                // values and no client re-resolves the menu item content item.
+                await SetLinkAsync(menuItem, menuContentItem, context.ServiceProvider);
             });
 
         builder.Describe("MenuItemLink")
@@ -169,6 +174,32 @@ public class MenuShapes : ShapeTableProvider
             });
 
         return ValueTask.CompletedTask;
+    }
+
+    private static async Task SetLinkAsync(IShape menuItem, ContentItem menuContentItem, IServiceProvider services)
+    {
+        menuItem.Properties["Text"] = menuContentItem.DisplayText;
+
+        if (menuContentItem.TryGet<LinkMenuItemPart>(out var link))
+        {
+            // "~/about" is tenant-relative: relative to the document base, which is the tenant's.
+            menuItem.Properties["Url"] = link.Url is { } url && url.StartsWith("~/", StringComparison.Ordinal) ? url[2..] : link.Url;
+            menuItem.Properties["Target"] = link.Target;
+            return;
+        }
+
+        if (menuContentItem.Content["ContentMenuItemPart"]?["SelectedContentItem"]?["ContentItemIds"] is System.Text.Json.Nodes.JsonArray { Count: > 0 } ids
+            && ids[0]?.GetValue<string>() is { Length: > 0 } targetId
+            && services.GetService<IHttpContextAccessor>()?.HttpContext is { } httpContext)
+        {
+            var contentManager = services.GetRequiredService<IContentManager>();
+            if (await contentManager.GetAsync(targetId, VersionOptions.Published) is { } target)
+            {
+                var metadata = await contentManager.PopulateAspectAsync<ContentItemMetadata>(target);
+                var linkGenerator = services.GetRequiredService<Microsoft.AspNetCore.Routing.LinkGenerator>();
+                menuItem.Properties["Url"] = Microsoft.AspNetCore.Routing.LinkGeneratorRouteValuesAddressExtensions.GetPathByRouteValues(linkGenerator, httpContext, string.Empty, metadata.DisplayRouteValues);
+            }
+        }
     }
 
     private async static Task<bool> ShouldCreateAsync(

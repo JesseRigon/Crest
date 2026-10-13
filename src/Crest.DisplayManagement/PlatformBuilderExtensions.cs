@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Razor.Compilation;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Crest.DisplayManagement;
+using Crest.DisplayManagement.Components;
 using Crest.DisplayManagement.Descriptors;
 using Crest.DisplayManagement.Descriptors.ShapeAttributeStrategy;
 using Crest.DisplayManagement.Descriptors.ShapePlacementStrategy;
@@ -63,6 +64,14 @@ public static class PlatformBuilderExtensions
                 services.AddKeyedSingleton<IDictionary<string, Task<ShapeTable>>>(nameof(DefaultShapeTableManager), new ConcurrentDictionary<string, Task<ShapeTable>>());
                 services.AddScoped<IShapeTableManager, DefaultShapeTableManager>();
 
+                // The component registry (docs/blazor-display.md § 1): per tenant like the shape
+                // table, rebuilt with the shell.
+                services.AddSingleton<IComponentRegistryManager, ComponentRegistryManager>();
+                services.AddOptions<ComponentRegistryOptions>();
+                services.TryAddScoped<IShellKindAccessor, SiteShellKindAccessor>();
+                services.AddScoped<IComponentRegistry>(sp => sp.GetRequiredService<IComponentRegistryManager>()
+                    .GetRegistry(sp.GetRequiredService<IShellKindAccessor>().ShellKind));
+
                 services.AddShapeTableProvider<ShapeAttributeBindingStrategy>();
                 services.AddShapeTableProvider<ShapePlacementParsingStrategy>();
                 services.AddShapeTableProvider<ShapeTemplateBindingStrategy>();
@@ -82,6 +91,13 @@ public static class PlatformBuilderExtensions
 
                 services.AddScoped(typeof(IDisplayManager<>), typeof(DisplayManager<>));
                 services.AddScoped<IHtmlDisplay, DefaultHtmlDisplay>();
+                // The Blazor display beside IHtmlDisplay: shape tree -> display tree (IComponentRegistry
+                // is registered with the component registry), and the HTML side of component bindings.
+                services.AddScoped<IDisplayTreeBuilder, DisplayTreeBuilder>();
+                services.AddScoped<IDisplayTreeFilter, DisplayTreeFilter>();
+                services.AddScoped<IDisplayHtmlRenderer, DisplayHtmlRenderer>();
+                services.AddScoped<ComponentShapeRenderer>();
+                services.AddOptions<DisplayTreeOptions>();
                 services.AddOptions<ShapeRenderingOptions>();
                 services.AddScoped<ILayoutAccessor, LayoutAccessor>();
                 services.AddScoped<IThemeManager, ThemeManager>();

@@ -10,10 +10,9 @@ using Crest.Modules.Manifest;
 [assembly: Feature(
     Id = "Crest.Layers",
     Name = "Layers",
-    Description = "Enables users to render Widgets across pages of the site based on conditions.",
+    Description = "Places components into zones across the site's pages, by rules.",
     Dependencies =
-    [
-        "Crest.Widgets",
+    ["Crest.Access",
         "Crest.Scripting",
         "Crest.Rules"
     ],

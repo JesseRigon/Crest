@@ -8,6 +8,10 @@ public sealed record OptionPickerRow(string Id, Dictionary<string, string?>? Val
     public string? Key { get; init; }
 
     public bool Hidden { get; init; }
+
+    /// <summary>The text the picker shows for the row (its primary column's value): what the
+    /// drop-down's text binding reads, since a value in <see cref="Values"/> is not a member.</summary>
+    public string? Text { get; init; }
 }
 
 /// <summary>A column the picker displays. Mirrors the server-side field setting.</summary>

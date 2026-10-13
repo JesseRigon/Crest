@@ -12,9 +12,6 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddObjectGraphType<BagPart, BagPartQueryObjectType>();
-        services.AddObjectGraphType<FlowPart, FlowPartQueryObjectType>();
-        services.AddObjectGraphType<FlowMetadata, FlowMetadataQueryObjectType>();
 
-        services.AddScoped<IContentTypeBuilder, FlowMetadataContentTypeBuilder>();
     }
 }

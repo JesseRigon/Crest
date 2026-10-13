@@ -1,51 +1,30 @@
-using Fluid;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using Crest.ContentManagement;
-using Crest.ContentManagement.Display.ContentDisplay;
-using Crest.ContentManagement.Handlers;
-using Crest.Data;
-using Crest.Data.Migration;
 using Crest.Deployment;
-using Crest.DisplayManagement.Handlers;
+using Crest.DisplayManagement.Layout;
 using Crest.Layers.Deployment;
-using Crest.Layers.Drivers;
-using Crest.Layers.Handlers;
-using Crest.Layers.Indexes;
-using Crest.Layers.Models;
 using Crest.Layers.Recipes;
 using Crest.Layers.Services;
-using Crest.Layers.ViewModels;
 using Crest.Modules;
 using Crest.Navigation;
 using Crest.Recipes;
 using Crest.Scripting;
 using Crest.Security.Permissions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Crest.Layers;
 
+/// <summary>
+/// Layers as a build step (docs/blazor-display.md rework step 6): rules place component
+/// instances into zone keys while a page's layout is built, edited on the admin Layers page
+/// through <c>api/crest/layers</c>. Widgets and the MVC result filter are retired.
+/// </summary>
 public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.Configure<TemplateOptions>(o =>
-        {
-            o.MemberAccessStrategy.Register<WidgetWrapper>();
-        });
-
-        services.Configure<MvcOptions>((options) =>
-        {
-            options.Filters.Add<LayerFilter>();
-        });
-
-        services.AddSiteDisplayDriver<LayerSiteSettingsDisplayDriver>();
-        services.AddContentPart<LayerMetadata>();
-        services.AddScoped<IContentDisplayDriver, LayerMetadataWelder>();
         services.AddNavigationProvider<AdminMenu>();
         services.AddScoped<ILayerService, LayerService>();
-        services.AddScoped<IContentHandler, LayerMetadataHandler>();
-        services.AddIndexProvider<LayerMetadataIndexProvider>();
-        services.AddDataMigration<Migrations>();
+        services.AddScoped<LayerRuleReader>();
+        services.AddScoped<ILayoutTreeContributor, LayerTreeContributor>();
         services.AddPermissionProvider<Permissions>();
         services.AddRecipeExecutionStep<LayerStep>();
         services.AddDeployment<AllLayersDeploymentSource, AllLayersDeploymentStep, AllLayersDeploymentStepDriver>();

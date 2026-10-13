@@ -1,22 +1,22 @@
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @using Crest.AdminTheme.Options
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @implements IDisposable
-@inject DisplayManager DisplayManager
+@inject AdminShellState AdminShellState
 @inject CrestRoutingOptions Routing
 @inject NavigationManager Navigation
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
-@if (!DisplayManager.IsInitialized)
+@if (!AdminShellState.IsInitialized)
 {
     <CrestStack Gap="1rem" Style="padding: 2rem;">
         <CrestText Text="@T["Loading..."]" />
     </CrestStack>
 }
-else if (DisplayManager.IsAuthenticated)
+else if (AdminShellState.IsAuthenticated)
 {
-    <CascadingValue Value="DisplayManager">
+    <CascadingValue Value="AdminShellState">
         <div class="admin-shell">
             <AdminTitleBar />
             <div class="@DashboardClass">
@@ -45,21 +45,21 @@ else if (DisplayManager.IsAuthenticated)
 
     protected override async Task OnInitializedAsync()
     {
-        DisplayManager.Changed += StateHasChanged;
-        await DisplayManager.EnsureInitializedAsync();
+        AdminShellState.Changed += StateHasChanged;
+        await AdminShellState.EnsureInitializedAsync();
         EnsureAuthenticated();
     }
 
     public void Dispose()
     {
-        DisplayManager.Changed -= StateHasChanged;
+        AdminShellState.Changed -= StateHasChanged;
     }
 
     private void ClosePrimaryNavMenu() => IsPrimaryNavMenuOpen = false;
 
     private void EnsureAuthenticated()
     {
-        if (!DisplayManager.IsAuthenticated)
+        if (!AdminShellState.IsAuthenticated)
         {
             // Crossing from the admin shell (base href = AdminPath) to the login
             // shell (base href = LoginPath) requires a full reload - see

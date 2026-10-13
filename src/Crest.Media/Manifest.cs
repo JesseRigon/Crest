@@ -12,8 +12,10 @@ using Crest.Modules.Manifest;
     Name = "Media",
     Description = "The media module adds media management support.",
     Dependencies =
-    [
-        "Crest.ContentTypes"
+    ["Crest.Access",
+        "Crest.ContentTypes",
+        // Every upload is scanned (docs/media.md, requirement 86): no Media without scanning.
+        "Crest.Media.Scanning",
     ],
     Category = "Content Management"
 )]

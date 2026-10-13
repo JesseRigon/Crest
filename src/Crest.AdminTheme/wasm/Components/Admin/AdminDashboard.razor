@@ -1,5 +1,5 @@
 @using Crest.AdminTheme.Api
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject Crest.Components.Theme.CrestApiLocalizer T
@@ -8,18 +8,18 @@
             <CrestTabs>
                 <Tabs>
             <CrestTabsItem Text="@T["App"]">
-                @if (DisplayManager?.Manifest is null)
+                @if (AdminShellState?.Manifest is null)
                 {
                     <CrestText Text="@T["Loading app manifest..."]" />
                 }
                 else
                 {
                     <CrestStack Gap="0.75rem">
-                        <CrestText TextStyle="TextStyle.H6" Text="@DisplayManager.Manifest.Site.SiteName" />
-                        <CrestText Text="@T["Tenant: {0} · State: {1} · Admin: {2}", DisplayManager.Manifest.Tenant.Name, DisplayManager.Manifest.Tenant.State, DisplayManager.Manifest.Admin.BasePath]" />
-                        <CrestText TextStyle="TextStyle.Caption" Text="@T["Feature hash: {0}", DisplayManager.Manifest.FeatureHash]" />
-                        <CrestText Text="@T["Enabled features: {0}", DisplayManager.Manifest.Features.Length]" />
-                        <CrestText Text="@T["Roles: {0}", DisplayManager.Roles.Length]" />
+                        <CrestText TextStyle="TextStyle.H6" Text="@AdminShellState.Manifest.Site.SiteName" />
+                        <CrestText Text="@T["Tenant: {0} · State: {1} · Admin: {2}", AdminShellState.Manifest.Tenant.Name, AdminShellState.Manifest.Tenant.State, AdminShellState.Manifest.Admin.BasePath]" />
+                        <CrestText TextStyle="TextStyle.Caption" Text="@T["Feature hash: {0}", AdminShellState.Manifest.FeatureHash]" />
+                        <CrestText Text="@T["Enabled features: {0}", AdminShellState.Manifest.Features.Length]" />
+                        <CrestText Text="@T["Roles: {0}", AdminShellState.Roles.Length]" />
                     </CrestStack>
                 }
             </CrestTabsItem>
@@ -59,23 +59,23 @@
                         <CrestButton Text="@T["Load by handle"]" Click="LoadContentItemAsync" Disabled="@IsLoading" />
                     </CrestStack>
 
-                    @if (DisplayManager?.CurrentContentItem is not null)
+                    @if (AdminShellState?.CurrentContentItem is not null)
                     {
                         <CrestCard>
-                            <CrestText TextStyle="TextStyle.H6" Text="@DisplayManager.CurrentContentItem.DisplayText" />
-                            <CrestText Text="@($"{DisplayManager.CurrentContentItem.ContentType} · {DisplayManager.CurrentContentItem.ContentItemId}")" />
+                            <CrestText TextStyle="TextStyle.H6" Text="@AdminShellState.CurrentContentItem.DisplayText" />
+                            <CrestText Text="@($"{AdminShellState.CurrentContentItem.ContentType} · {AdminShellState.CurrentContentItem.ContentItemId}")" />
                         </CrestCard>
                     }
 
                     <CrestText TextStyle="TextStyle.H6" Text="@T["Content Types"]" />
-                    @if (DisplayManager?.ContentTypes.Length is null or 0)
+                    @if (AdminShellState?.ContentTypes.Length is null or 0)
                     {
                         <CrestText Text="@T["No content types returned."]" />
                     }
                     else
                     {
                         <ul>
-                            @foreach (var contentType in DisplayManager.ContentTypes)
+                            @foreach (var contentType in AdminShellState.ContentTypes)
                             {
                                 <li>@contentType.DisplayName (@contentType.Name) · @contentType.Parts.Length @T["Parts"]</li>
                             }
@@ -89,7 +89,7 @@
 
 @code {
     [CascadingParameter]
-    public DisplayManager? DisplayManager { get; set; }
+    public AdminShellState? AdminShellState { get; set; }
 
     private EditableSiteSettings? Site { get; set; }
     private string ContentHandle { get; set; } = "alias:main-menu";
@@ -100,7 +100,7 @@
 
     private async Task LoadAsync()
     {
-        if (DisplayManager is null)
+        if (AdminShellState is null)
         {
             return;
         }
@@ -108,9 +108,9 @@
         IsLoading = true;
         Status = null;
 
-        if (DisplayManager.Manifest is null)
+        if (AdminShellState.Manifest is null)
         {
-            await DisplayManager.RefreshAdminStateAsync();
+            await AdminShellState.RefreshAdminStateAsync();
         }
 
         BindEditableSite();
@@ -120,19 +120,19 @@
 
     private async Task LoadContentItemAsync()
     {
-        if (DisplayManager is null || string.IsNullOrWhiteSpace(ContentHandle))
+        if (AdminShellState is null || string.IsNullOrWhiteSpace(ContentHandle))
         {
             return;
         }
 
         IsLoading = true;
-        await DisplayManager.LoadContentItemByHandleAsync(ContentHandle.Trim());
+        await AdminShellState.LoadContentItemByHandleAsync(ContentHandle.Trim());
         IsLoading = false;
     }
 
     private async Task SaveSiteAsync()
     {
-        if (DisplayManager is null || Site is null)
+        if (AdminShellState is null || Site is null)
         {
             return;
         }
@@ -140,10 +140,10 @@
         IsLoading = true;
         Status = null;
 
-        var saved = await DisplayManager.UpdateSiteAsync(Site.ToUpdate());
+        var saved = await AdminShellState.UpdateSiteAsync(Site.ToUpdate());
         if (saved is null)
         {
-            Status = DisplayManager.ErrorMessage ?? "Unable to save site settings.";
+            Status = AdminShellState.ErrorMessage ?? "Unable to save site settings.";
         }
         else
         {
@@ -156,9 +156,9 @@
 
     private void BindEditableSite()
     {
-        if (DisplayManager?.Site is not null)
+        if (AdminShellState?.Site is not null)
         {
-            Site = EditableSiteSettings.From(DisplayManager.Site);
+            Site = EditableSiteSettings.From(AdminShellState.Site);
         }
     }
 

@@ -13,7 +13,7 @@ using Crest.Modules.Manifest;
     Id = "Crest.Parties",
     Name = "Parties",
     Description = "Person and Organization party content types shared by every domain module, with bag-contained contact points and addresses.",
-    Dependencies = [
+    Dependencies = ["Crest.Access", 
         "Crest.Workflows",
         "Crest.Contents",
         "Crest.ContentFields",

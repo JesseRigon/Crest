@@ -1,0 +1,62 @@
+@page "/"
+@page "/{*Path}"
+@using System.Net
+@using System.Net.Http.Json
+@using Crest.DisplayManagement.Components
+@using Crest.Shell
+@using Microsoft.Extensions.DependencyInjection
+@inject HttpClient Http
+@inject IServiceProvider Services
+
+@*
+    The site's content route (docs/blazor-display.md § 6, rework step 3): every site path no
+    module page claims. The server builds the page (the path through Autoroute, the home route
+    for "/", the layout, the menu, the layer rules' components) as one display tree; it crosses
+    to the browser once, as persisted state, and the one renderer draws it. @page "/" is also the
+    site bucket's default landing, which SiteRouteComponentTableProvider reads back by reflection.
+    A miss is still a page (the layout with NotFound) and answers 404 while prerendering.
+*@
+
+@if (State?.Page is { } sitePage)
+{
+    <PageTitle>@sitePage.Title</PageTitle>
+    @if (sitePage.Tree is { } tree)
+    {
+        <DisplayTreeRenderer @key="State.Path" Node="tree.Root" />
+    }
+}
+
+@code {
+    [Parameter] public string? Path { get; set; }
+
+    /// <summary>The page the prerender fetched, handed to the interactive render.</summary>
+    [PersistentState] public PageState? State { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var path = "/" + (Path ?? string.Empty);
+        if (State is null || State.Path != path)
+        {
+            SitePage? page = null;
+            try
+            {
+                page = await Http.GetFromJsonAsync<SitePage>($"api/crest/site/page?path={Uri.EscapeDataString(path)}");
+            }
+            catch (HttpRequestException)
+            {
+            }
+
+            State = new PageState(path, page ?? new SitePage((int)HttpStatusCode.ServiceUnavailable, null, null));
+        }
+
+        // While prerendering, the response carries the page's status (404 for a miss).
+        if (State.Page.Status != (int)HttpStatusCode.OK)
+        {
+            Services.GetService<IShellResponseStatus>()?.Set(State.Page.Status);
+        }
+    }
+
+    public sealed record SitePage(int Status, string? Title, DisplayTree? Tree);
+
+    public sealed record PageState(string Path, SitePage Page);
+}

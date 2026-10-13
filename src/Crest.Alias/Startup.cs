@@ -82,12 +82,3 @@ public sealed class ContentAliasStartup : StartupBase
         services.AddShapeTableProvider<ContentAliasShapeTableProvider>();
     }
 }
-
-[RequireFeatures("Crest.Widgets")]
-public sealed class WidgetAliasStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddShapeTableProvider<WidgetAliasShapeTableProvider>();
-    }
-}

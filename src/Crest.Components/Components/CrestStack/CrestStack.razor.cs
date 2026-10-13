@@ -36,6 +36,7 @@ namespace Crest.Components.Primitives
     /// &lt;/CrestStack&gt;
     /// </code>
     /// </example>
+    [Crest.DisplayManagement.Components.CrestBlazorComponent("Stack", DisplayName = "Stack", Category = "Layout", Icon = "view_agenda")]
     public partial class CrestStack : CrestFlexComponent
     {
         /// <summary>

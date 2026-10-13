@@ -1,63 +1,71 @@
-using Crest.ViewModels;
-using Crest.Services;
-using Crest.Models;
 using Crest.Components.Primitives;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.JSInterop;
+using Crest.DisplayManagement.Components;
 using Crest.DisplayManagement.Implementation;
+using Crest.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 using Xunit;
 
 namespace Crest.Server.Tests;
 
-// Exercises the actual end-to-end path: registry resolves a real component by its
-// [CrestBlazorComponent] name, and the resolver renders it via HtmlRenderer to real HTML -
-// not just "no exception thrown". Asserting on rendered content (not just a clean run) is
-// what caught the real ParametersFromShape bug this suite found during development (see
-// the integration test in this same project for that history).
+// Exercises the actual end-to-end path: the component registry (built from Crest.Components'
+// generated catalog) resolves a real component by its [CrestBlazorComponent] name, and the
+// resolver renders it via the display tree and HtmlRenderer to real HTML - not just "no
+// exception thrown". Asserting on rendered content (not just a clean run) is what caught the
+// real ParametersFromShape bug this suite found during development (see the integration test
+// in this same project for that history).
 public sealed class CrestBlazorComponentShapeBindingResolverTests
 {
+    private static ComponentRegistry ComponentsRegistry() =>
+        new([ComponentCatalogs.ForAssembly(typeof(CrestHeading).Assembly)]);
+
     [Fact]
     public void RegistryResolvesRealMarkedComponent()
     {
-        var registry = new AssemblyScanningCrestBlazorComponentRegistry([typeof(CrestHeading).Assembly]);
+        var registry = ComponentsRegistry();
 
-        Assert.True(registry.TryResolve("CrestHeading", out var type));
-        Assert.Equal(typeof(CrestHeading), type);
+        Assert.True(registry.TryGet("CrestHeading", out var descriptor));
+        Assert.Equal(typeof(CrestHeading), descriptor.Type);
+        Assert.Equal("Crest.Components", descriptor.Module);
+        Assert.Equal("Typography", descriptor.Category);
+
+        var size = Assert.IsType<ParameterDescriptor>(descriptor.Parameter("Size"));
+        Assert.Equal(ParameterKind.Choice, size.Kind);
+        Assert.Equal(["H1", "H2", "H3", "H4", "H5", "H6"], size.Choices);
     }
 
     [Fact]
     public void RegistryFallsThroughForUnknownName()
     {
-        var registry = new AssemblyScanningCrestBlazorComponentRegistry([typeof(CrestHeading).Assembly]);
+        var registry = ComponentsRegistry();
 
-        Assert.False(registry.TryResolve("NotARegisteredComponent", out _));
+        Assert.False(registry.TryGet("NotARegisteredComponent", out _));
     }
 
     [Fact]
     public async Task ResolverRendersRealHtmlForRegisteredShapeType()
     {
-        var registry = new AssemblyScanningCrestBlazorComponentRegistry([typeof(CrestHeading).Assembly]);
+        var registry = ComponentsRegistry();
 
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton<IJSRuntime, UnsupportedJSRuntime>();
+        services.AddTestDisplayTree([.. registry.Components]);
         var serviceProvider = services.BuildServiceProvider();
 
-        var resolver = new CrestBlazorComponentShapeBindingResolver(registry, serviceProvider, NullLoggerFactory.Instance);
+        var resolver = new CrestBlazorComponentShapeBindingResolver(registry);
 
         var binding = await resolver.GetShapeBindingAsync("CrestHeading");
 
         Assert.NotNull(binding);
 
-        // The resolver reads component parameters from IShape.Properties, not from this
-        // model's own Parameters CLR property (see the resolver's own comment on why -
-        // Composite's dynamic-property machinery never sees a plain auto-property). A
+        // The display tree mapper reads component parameters by the component's schema from
+        // IShape.Properties, not from this model's own Parameters CLR property. A
         // CrestBlazorComponentPartDisplayDriver-built shape copies Parameters into
         // Properties explicitly for this reason; do the same here.
-        var shape = new CrestBlazorComponentShapeViewModel();
+        var shape = new Crest.DisplayManagement.Shapes.Shape();
         shape.Properties["Text"] = "Hello Crest";
-        var displayContext = new DisplayContext { Value = shape };
+        var displayContext = new DisplayContext { Value = shape, ServiceProvider = serviceProvider };
 
         var html = (await binding.BindingAsync(displayContext)).ToString();
 
@@ -66,18 +74,53 @@ public sealed class CrestBlazorComponentShapeBindingResolverTests
     }
 
     [Fact]
-    public async Task ResolverFallsThroughForUnregisteredShapeType()
+    public async Task ResolverRendersCounterFromStoredStringParameter()
     {
-        var registry = new AssemblyScanningCrestBlazorComponentRegistry([typeof(CrestHeading).Assembly]);
+        // The dev recipe's item: a part stores { "StartValue": "5" }, the driver binds it by the
+        // schema and the renderer draws it.
+        var registry = ComponentsRegistry();
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton<IJSRuntime, UnsupportedJSRuntime>();
+        services.AddTestDisplayTree([.. registry.Components]);
         var serviceProvider = services.BuildServiceProvider();
 
-        var resolver = new CrestBlazorComponentShapeBindingResolver(registry, serviceProvider, NullLoggerFactory.Instance);
+        Assert.True(registry.TryGet("CrestCounter", out var descriptor));
+        var shape = new Crest.DisplayManagement.Shapes.Shape();
+        foreach (var (key, value) in ComponentParameters.Bind(descriptor, [KeyValuePair.Create("StartValue", (object?)"5")]))
+        {
+            shape.Properties[key] = value;
+        }
+
+        var binding = await new CrestBlazorComponentShapeBindingResolver(registry).GetShapeBindingAsync("CrestCounter");
+        Assert.NotNull(binding);
+        var html = (await binding.BindingAsync(new DisplayContext { Value = shape, ServiceProvider = serviceProvider })).ToString();
+
+        Assert.Contains("Count: 5", html);
+    }
+
+    [Fact]
+    public async Task ResolverFallsThroughForUnregisteredShapeType()
+    {
+        var resolver = new CrestBlazorComponentShapeBindingResolver(ComponentsRegistry());
 
         var binding = await resolver.GetShapeBindingAsync("Content-Page");
 
         Assert.Null(binding);
+    }
+
+    [Fact]
+    public async Task ResolverFallsThroughForComponentOutsideTheShell()
+    {
+        // A component limited to the admin shell is not in the site shell's registry.
+        var adminOnly = DisplayTreeTestServices.WithText("AdminCard", typeof(CrestQuote)) with { Shells = new HashSet<ShellKind> { ShellKind.Admin } };
+        var resolver = new CrestBlazorComponentShapeBindingResolver(new ComponentRegistry([new ListCatalog([adminOnly])], ShellKind.Site));
+
+        Assert.Null(await resolver.GetShapeBindingAsync("AdminCard"));
+    }
+
+    private sealed class ListCatalog(IEnumerable<ComponentDescriptor> components) : IComponentCatalog
+    {
+        public IEnumerable<ComponentDescriptor> Describe() => components;
     }
 }

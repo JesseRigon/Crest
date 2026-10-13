@@ -79,9 +79,9 @@ content items to an organization and to assignees, which is the party model's te
 
 Components/App.razor and imports, Endpoints/BlazorFrameworkScriptEndpoints,
 Extensions/CrestBlazorHosting, Routing/* (the route-component table, scanners, providers,
-member options, theme owner metadata), ICrestBlazorComponentRegistry and the assembly-scanning
-registry, CrestBlazorComponentPart with its driver, migration, shape-binding resolver and
-view model, CrestRoutingController, CrestAntiforgeryController, AppController and
+member options, theme owner metadata), the component shape-binding resolver, the display
+endpoints and builders (Display/: the site page, the editor tree, the response status),
+CrestRoutingController, CrestAntiforgeryController, AppController and
 AppViewModels (the bootstrap aggregate), CrestServerApiClient, UnsupportedJSRuntime,
 ShellAssemblies, DesignSystemStartup, Manifest and Startup (about 35). This is the Blazor
 host that [blazor-display.md](blazor-display.md) describes; its name is an X3 question

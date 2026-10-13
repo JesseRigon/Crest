@@ -8,7 +8,6 @@ using Crest.Navigation;
 using Crest.Placements.Deployment;
 using Crest.Placements.Recipes;
 using Crest.Placements.Services;
-using Crest.Placements.Settings;
 using Crest.Recipes;
 using Crest.Security.Permissions;
 
@@ -24,11 +23,6 @@ public sealed class Startup : StartupBase
         services.TryAddScoped<IPlacementStore, DatabasePlacementsStore>();
         services.AddScoped<PlacementsManager>();
         services.AddScoped<IShapePlacementProvider, PlacementProvider>();
-
-        // Shortcuts in settings
-        services.AddScoped<IContentPartDefinitionDisplayDriver, PlacementContentPartDefinitionDriver>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, PlacementContentTypePartDefinitionDriver>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, PlacementContentPartFieldDefinitionDisplayDriver>();
 
         // Recipes
         services.AddRecipeExecutionStep<PlacementStep>();

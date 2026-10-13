@@ -11,6 +11,7 @@ using Crest.Flows.Models;
 using Crest.Flows.Settings;
 using Crest.Flows.ViewModels;
 using Crest.Indexing;
+using Crest.DisplayManagement;
 using Crest.Modules;
 
 namespace Crest.Flows;
@@ -22,20 +23,9 @@ public sealed class Startup : StartupBase
         services.Configure<TemplateOptions>(o =>
         {
             o.MemberAccessStrategy.Register<BagPartViewModel>();
-            o.MemberAccessStrategy.Register<FlowPartViewModel>();
-            o.MemberAccessStrategy.Register<FlowMetadata>();
-            o.MemberAccessStrategy.Register<FlowPart>();
         });
 
         services.AddScoped<IContentPartIndexHandler, BagPartDocumentIndexHandler>();
-
-        // Flow Part
-        services.AddContentPart<FlowPart>()
-            .UseDisplayDriver<FlowPartDisplayDriver>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, FlowPartSettingsDisplayDriver>();
-        services.AddScoped<IContentPartIndexHandler, FlowPartIndexHandler>();
-
-        services.AddScoped<IContentDisplayDriver, FlowMetadataDisplayDriver>();
 
         // Bag Part
         services.AddContentPart<BagPart>()
@@ -45,7 +35,9 @@ public sealed class Startup : StartupBase
         services.AddScoped<IContentTypePartDefinitionDisplayDriver, BagPartBlocksEditorSettingsDriver>();
         services.AddScoped<IContentPartIndexHandler, BagPartIndexHandler>();
 
-        services.AddContentPart<FlowMetadata>();
+        // The content cards the BagPart editor is built from (moved here from the retired
+        // Widgets module, docs/blazor-display.md rulings 2026-10-12).
+        services.AddShapeTableProvider<ContentCardShapes>();
 
         services.AddDataMigration<Migrations>();
 

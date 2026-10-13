@@ -17,10 +17,9 @@ This list is generated from the current resolved Orchard admin navigation for th
 | Media > Options | `/Admin/Media/Options` | native read-only configuration |
 | Design > Themes | `/Admin/Themes` | native |
 | Design > Design System | `/Admin/DesignSystem` | native |
-| Design > Templates | `/Admin/Templates` | native list/editor |
-| Design > Zones | `/Admin/Settings/zones` | standard Orchard UI (deferred) |
-| Design > Placements | `/Admin/Placements` | standard Orchard UI (deferred) |
-| Design > Widgets | `/Admin/Layers` | standard Orchard UI (deferred) |
+| Design > Templates | `/Admin/Templates` | native: Liquid tree templates, drafts, publish, preview (blazor-display.md step 4) |
+| Design > Placements | `/Admin/Placements` | native: placement rules per shape type (blazor-display.md step 6) |
+| Design > Layers | `/Admin/Layers` | native: layer rules and the components they place into zone keys (widgets retired, step 6) |
 | Design > Shortcodes | `/Admin/Shortcodes` | standard Orchard UI (deferred) |
 | Design > Icons | `/Admin/Design/Icons` | native |
 | Settings > General | `/Admin/Settings/general` | native |

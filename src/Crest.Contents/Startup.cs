@@ -223,11 +223,15 @@ public sealed class Startup : StartupBase
 
         var itemControllerName = typeof(ItemController).ControllerName();
 
+        // Generation only: the site shell's content route serves "Contents/ContentItems/{id}" on the
+        // display tree (docs/blazor-display.md rework step 3); links to items without an autoroute
+        // are still generated from this route's values.
         routes.MapAreaControllerRoute(
             name: "DisplayContentItem",
             areaName: "Crest.Contents",
             pattern: "Contents/ContentItems/{contentItemId}",
-            defaults: new { controller = itemControllerName, action = nameof(ItemController.Display) }
+            defaults: new { controller = itemControllerName, action = "Display" },
+            constraints: new { contentItemId = new Crest.Routing.GenerationOnlyRouteConstraint() }
         );
 
         routes.MapAreaControllerRoute(

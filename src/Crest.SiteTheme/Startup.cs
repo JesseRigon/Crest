@@ -7,7 +7,10 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection serviceCollection)
     {
-        serviceCollection.AddResourceConfiguration<ResourceManagementOptionsConfiguration>();
+        // The site renders on the display tree (docs/blazor-display.md rework step 3): its
+        // layout, content frame and error pages are components in the theme's client library
+        // (wasm/Components), its styles the design system's plus CrestSite.css. No Liquid views,
+        // no Bootstrap resources.
 
         // Razor Components/SSR hosting (AddRazorComponents, AddInteractiveWebAssemblyComponents,
         // AddCrestComponents/AddCrestIconClient) is registered once in Crest.Server, not

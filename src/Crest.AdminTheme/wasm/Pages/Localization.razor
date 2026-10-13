@@ -1,6 +1,6 @@
 @page "/Settings/localization"
 @using Crest.AdminTheme.Api
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @using Crest.Components.Inputs
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
@@ -134,7 +134,7 @@
 </CrestStack>
 
 @code {
-    [CascadingParameter] public DisplayManager? DisplayManager { get; set; }
+    [CascadingParameter] public AdminShellState? AdminShellState { get; set; }
 
     private CrestLocalization? Model { get; set; }
     private bool IsLoading { get; set; } = true;
@@ -143,7 +143,7 @@
     private string? SelectedCultureToAdd { get; set; }
     private string? CustomCultureCode { get; set; }
 
-    private bool HasDynamicTranslations => DisplayManager?.Manifest?.Features.Any(feature =>
+    private bool HasDynamicTranslations => AdminShellState?.Manifest?.Features.Any(feature =>
         string.Equals(feature.Id, "Crest.DataLocalization", StringComparison.OrdinalIgnoreCase)) == true;
 
     private CrestCulture[] SupportedCultureOptions => Model?.SupportedCultures

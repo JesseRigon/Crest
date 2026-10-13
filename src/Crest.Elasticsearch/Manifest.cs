@@ -12,7 +12,7 @@ using Crest.Modules.Manifest;
     Name = "Elasticsearch",
     Description = "Creates Elasticsearch indexes to support search scenarios, introduces a preconfigured container-enabled content type.",
     Dependencies =
-    [
+    ["Crest.Access", 
         "Crest.Queries.Core",
         "Crest.Indexing",
         "Crest.ContentTypes",

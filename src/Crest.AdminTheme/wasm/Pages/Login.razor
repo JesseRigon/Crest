@@ -1,10 +1,10 @@
 @page "/login"
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @using Crest.AdminTheme.Options
 @using Microsoft.AspNetCore.Components
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
-@inject DisplayManager DisplayManager
+@inject AdminShellState AdminShellState
 @inject CrestRoutingOptions Routing
 @inject NavigationManager Navigation
 @inject Crest.Components.Theme.CrestApiLocalizer T
@@ -15,15 +15,15 @@
 <CrestStack Gap="1rem" AlignItems="AlignItems.Center">
     @* The tenant's own name (ISite.SiteName), not the platform's: each tenant has its own
        users and its own login page. *@
-    @if (!string.IsNullOrWhiteSpace(DisplayManager.Branding?.SiteName))
+    @if (!string.IsNullOrWhiteSpace(AdminShellState.Branding?.SiteName))
     {
-        <CrestText TextStyle="TextStyle.H3" Text="@DisplayManager.Branding.SiteName" />
+        <CrestText TextStyle="TextStyle.H3" Text="@AdminShellState.Branding.SiteName" />
     }
 
-    @if (DisplayManager.IsAuthenticated)
+    @if (AdminShellState.IsAuthenticated)
     {
-        <CrestText Text="@T["Signed in as {0}", DisplayManager.User.UserName]" />
-        <CrestButton Text="@T["Log out"]" Click="LogoutAsync" Disabled="@DisplayManager.IsBusy" />
+        <CrestText Text="@T["Signed in as {0}", AdminShellState.User.UserName]" />
+        <CrestButton Text="@T["Log out"]" Click="LogoutAsync" Disabled="@AdminShellState.IsBusy" />
     }
     else
     {
@@ -53,10 +53,10 @@
                    native GET to "/Login/login?UserName=...&Password=..." - a 404 that leaks
                    the password into the URL, history and server logs. A disabled sole submit
                    button also blocks the Enter-key implicit submission for that window. *@
-                <CrestButton ButtonType="ButtonType.Submit" Text="@T["Log in"]" Disabled="@(DisplayManager.IsBusy || !RendererInfo.IsInteractive)" />
-                @if (DisplayManager.ErrorMessage is not null)
+                <CrestButton ButtonType="ButtonType.Submit" Text="@T["Log in"]" Disabled="@(AdminShellState.IsBusy || !RendererInfo.IsInteractive)" />
+                @if (AdminShellState.ErrorMessage is not null)
                 {
-                    <CrestText TextStyle="TextStyle.Caption" Text="@DisplayManager.ErrorMessage" />
+                    <CrestText TextStyle="TextStyle.Caption" Text="@AdminShellState.ErrorMessage" />
                 }
             </CrestStack>
         </CrestTemplateForm>
@@ -81,7 +81,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await DisplayManager.EnsureInitializedAsync();
+        await AdminShellState.EnsureInitializedAsync();
         if (!string.IsNullOrWhiteSpace(UserName))
         {
             _login.UserName = UserName;
@@ -101,11 +101,11 @@
             return;
         }
 
-        if (DisplayManager.IsAuthenticated && SwitchUser)
+        if (AdminShellState.IsAuthenticated && SwitchUser)
         {
-            await DisplayManager.LogoutAsync();
+            await AdminShellState.LogoutAsync();
         }
-        else if (DisplayManager.IsAuthenticated)
+        else if (AdminShellState.IsAuthenticated)
         {
             // Crossing from the login shell (base href = LoginPath) to the admin
             // shell (base href = AdminPath) requires a full reload so the browser
@@ -117,7 +117,7 @@
 
     private async Task LoginAsync(LoginForm form)
     {
-        if (await DisplayManager.LoginAsync(form.UserName, form.Password, form.RememberMe))
+        if (await AdminShellState.LoginAsync(form.UserName, form.Password, form.RememberMe))
         {
             Navigation.NavigateTo(Routing.AdminPath, forceLoad: true);
         }
@@ -125,7 +125,7 @@
 
     private async Task LogoutAsync()
     {
-        await DisplayManager.LogoutAsync();
+        await AdminShellState.LogoutAsync();
         Navigation.NavigateTo(Routing.LoginPath);
     }
 

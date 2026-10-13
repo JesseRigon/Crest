@@ -54,6 +54,9 @@ public sealed record SiteSettingsUpdate(
 
 public sealed record SiteHomeResult(string ContentItemId);
 
+/// <summary>A public page: the status it answers with (200, 403, 404), its title and its display tree.</summary>
+public sealed record SitePageResult(int Status, string? Title, Crest.DisplayManagement.Components.DisplayTree? Tree);
+
 /// <summary>
 /// The tenant's public identity, readable anonymously (the login page greets with it): only
 /// public-safe facts, nothing else from <c>ISite</c>. Logo slots join it later

@@ -37,6 +37,9 @@ public interface IRestApi
     IMediaProfilesApi MediaProfiles { get; }
     IMediaOptionsApi MediaOptions { get; }
     ITemplatesApi Templates { get; }
+    ILayersApi Layers { get; }
+    IPlacementsApi Placements { get; }
+    IComponentsApi Components { get; }
     ISecurityHeadersApi SecurityHeaders { get; }
     ILoginSettingsApi LoginSettings { get; }
     IUsersApi Users { get; }
@@ -104,6 +107,12 @@ public interface IContentItemsApi
     Task<bool> PublishAsync(string contentItemId);
     Task<bool> UnpublishAsync(string contentItemId);
     Task<bool> DeleteAsync(string contentItemId);
+
+    /// <summary>The item's display tree (docs/blazor-display.md § 8); null when it is missing or not the caller's to see.</summary>
+    Task<Crest.DisplayManagement.Components.DisplayTree?> DisplayAsync(string contentItemId, string? displayType = null);
+
+    /// <summary>The item's editor tree (docs/blazor-display.md rework step 5); <c>new-{type}</c> for a new item.</summary>
+    Task<Crest.DisplayManagement.Components.DisplayTree?> EditorAsync(string contentItemId);
 }
 
 public interface IFeaturesApi
@@ -169,7 +178,23 @@ public interface IMediaProfilesApi
     Task<bool> DeleteAsync(string name);
 }
 public interface IMediaOptionsApi { Task<CrestMediaOptions?> GetAsync(); }
-public interface ITemplatesApi { Task<CrestTemplate[]> ListAsync(); Task<CrestTemplate?> SaveAsync(string name, CrestTemplateWrite request); Task<bool> DeleteAsync(string name); }
+/// <summary>Templates as content (docs/blazor-display.md § 5): a save makes a validated draft, publish is its own act, preview evaluates a draft.</summary>
+public interface ITemplatesApi
+{
+    Task<CrestTemplate[]> ListAsync();
+    Task<CrestTemplateSaveResult> SaveAsync(string? id, CrestTemplateWrite request);
+    Task<CrestTemplateValidation?> PublishAsync(string id);
+    Task<bool> DeleteAsync(string id);
+    Task<CrestTemplateValidation?> ValidateAsync(CrestTemplateWrite request);
+    Task<Crest.DisplayManagement.Components.DisplayTree?> PreviewAsync(CrestTemplatePreview request);
+
+    /// <summary>Overrides (§ 5a): saved variants of components, and values for single placements.</summary>
+    Task<CrestComponentOverrides?> GetOverridesAsync();
+    Task<CrestLayersResult> SaveVariantAsync(CrestComponentVariant variant);
+    Task<CrestLayersResult> DeleteVariantAsync(string name);
+    Task<CrestLayersResult> SaveInstanceOverrideAsync(CrestInstanceOverride instance);
+    Task<CrestLayersResult> DeleteInstanceOverrideAsync(string instanceId);
+}
 public interface ISecurityHeadersApi { Task<CrestSecurityHeaders?> GetAsync(); Task<CrestSecurityHeaders?> SaveAsync(CrestSecurityHeaders value); }
 public interface ILoginSettingsApi { Task<CrestLoginSettings?> GetAsync(); Task<CrestLoginSettings?> SaveAsync(CrestLoginSettings value); }
 public interface IUsersApi { Task<CrestUserList> ListAsync(string? search = null, string? status = null); Task<CrestUser?> GetAsync(string id); Task<CrestUser?> CreateAsync(CrestUserWrite value); Task<CrestUser?> SaveAsync(string id, CrestUserWrite value); Task<CrestUser?> SetEnabledAsync(string id, bool enabled); Task<bool> DeleteAsync(string id); }
@@ -249,6 +274,9 @@ public sealed class RestApi(HttpClient http, ICrestAntiforgeryTokenStore antifor
     public IMediaProfilesApi MediaProfiles { get; } = new MediaProfilesApi(http);
     public IMediaOptionsApi MediaOptions { get; } = new MediaOptionsApi(http);
     public ITemplatesApi Templates { get; } = new TemplatesApi(http);
+    public ILayersApi Layers { get; } = new LayersApi(http);
+    public IPlacementsApi Placements { get; } = new PlacementsApi(http);
+    public IComponentsApi Components { get; } = new ComponentsApi(http);
     public ISecurityHeadersApi SecurityHeaders { get; } = new SecurityHeadersApi(http);
     public ILoginSettingsApi LoginSettings { get; } = new LoginSettingsApi(http);
     public IUsersApi Users { get; } = new UsersApi(http);
@@ -514,6 +542,20 @@ public sealed class ContentItemsApi(HttpClient http) : IContentItemsApi
     public Task<bool> UnpublishAsync(string contentItemId) => SendActionAsync(HttpMethod.Post, $"api/crest/content-items/{Uri.EscapeDataString(contentItemId)}/unpublish");
     public Task<bool> DeleteAsync(string contentItemId) => SendActionAsync(HttpMethod.Delete, $"api/crest/content-items/{Uri.EscapeDataString(contentItemId)}");
 
+    public async Task<Crest.DisplayManagement.Components.DisplayTree?> EditorAsync(string contentItemId)
+    {
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, $"api/crest/content-items/{Uri.EscapeDataString(contentItemId)}/editor")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<Crest.DisplayManagement.Components.DisplayTree>() : null;
+    }
+
+    public async Task<Crest.DisplayManagement.Components.DisplayTree?> DisplayAsync(string contentItemId, string? displayType = null)
+    {
+        var uri = $"api/crest/content-items/{Uri.EscapeDataString(contentItemId)}/display";
+        if (!string.IsNullOrWhiteSpace(displayType)) uri += $"?displayType={Uri.EscapeDataString(displayType)}";
+        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, uri)));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<Crest.DisplayManagement.Components.DisplayTree>() : null;
+    }
+
     private async Task<bool> SendActionAsync(HttpMethod method, string uri)
     {
         using var response = await http.SendAsync(WithCredentials(new(method, uri)));
@@ -607,11 +649,203 @@ public sealed class MediaOptionsApi(HttpClient http) : IMediaOptionsApi
 }
 public sealed class TemplatesApi(HttpClient http) : ITemplatesApi
 {
- public async Task<CrestTemplate[]> ListAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/templates")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestTemplate[]>()??[]:[];}
- public async Task<CrestTemplate?> SaveAsync(string name,CrestTemplateWrite x){using var q=C(new(HttpMethod.Put,$"api/crest/templates/{Uri.EscapeDataString(name)}"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestTemplate>():null;}
- public async Task<bool> DeleteAsync(string name){using var r=await http.SendAsync(C(new(HttpMethod.Delete,$"api/crest/templates/{Uri.EscapeDataString(name)}")));return r.IsSuccessStatusCode;}
- static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}
+    public async Task<CrestTemplate[]> ListAsync()
+    {
+        using var response = await http.SendAsync(C(new(HttpMethod.Get, "api/crest/templates")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<CrestTemplate[]>() ?? [] : [];
+    }
+
+    public async Task<CrestTemplateSaveResult> SaveAsync(string? id, CrestTemplateWrite request)
+    {
+        using var message = C(id is null ? new(HttpMethod.Post, "api/crest/templates") : new(HttpMethod.Put, $"api/crest/templates/{Uri.EscapeDataString(id)}"));
+        message.Content = JsonContent.Create(request);
+        using var response = await http.SendAsync(message);
+        if (response.IsSuccessStatusCode)
+        {
+            return new(await response.Content.ReadFromJsonAsync<CrestTemplate>(), null);
+        }
+
+        return new(null, response.StatusCode == System.Net.HttpStatusCode.BadRequest ? await response.Content.ReadFromJsonAsync<CrestTemplateValidation>() : null);
+    }
+
+    public async Task<CrestTemplateValidation?> PublishAsync(string id)
+    {
+        using var response = await http.SendAsync(C(new(HttpMethod.Post, $"api/crest/templates/{Uri.EscapeDataString(id)}/publish")));
+        return response.IsSuccessStatusCode ? new(true, [])
+            : response.StatusCode == System.Net.HttpStatusCode.BadRequest ? await response.Content.ReadFromJsonAsync<CrestTemplateValidation>()
+            : null;
+    }
+
+    public async Task<bool> DeleteAsync(string id)
+    {
+        using var response = await http.SendAsync(C(new(HttpMethod.Delete, $"api/crest/templates/{Uri.EscapeDataString(id)}")));
+        return response.IsSuccessStatusCode;
+    }
+
+    public async Task<CrestTemplateValidation?> ValidateAsync(CrestTemplateWrite request)
+    {
+        using var message = C(new(HttpMethod.Post, "api/crest/templates/validate"));
+        message.Content = JsonContent.Create(request);
+        using var response = await http.SendAsync(message);
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<CrestTemplateValidation>() : null;
+    }
+
+    public async Task<Crest.DisplayManagement.Components.DisplayTree?> PreviewAsync(CrestTemplatePreview request)
+    {
+        using var message = C(new(HttpMethod.Post, "api/crest/templates/preview"));
+        message.Content = JsonContent.Create(request);
+        using var response = await http.SendAsync(message);
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<Crest.DisplayManagement.Components.DisplayTree>() : null;
+    }
+
+    public async Task<CrestComponentOverrides?> GetOverridesAsync()
+    {
+        using var response = await http.SendAsync(C(new(HttpMethod.Get, "api/crest/templates/overrides")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<CrestComponentOverrides>() : null;
+    }
+
+    public Task<CrestLayersResult> SaveVariantAsync(CrestComponentVariant variant) =>
+        SendAsync(new(HttpMethod.Put, $"api/crest/templates/overrides/variants/{Uri.EscapeDataString(variant.Name)}"), variant);
+
+    public Task<CrestLayersResult> DeleteVariantAsync(string name) =>
+        SendAsync(new(HttpMethod.Delete, $"api/crest/templates/overrides/variants/{Uri.EscapeDataString(name)}"), null);
+
+    public Task<CrestLayersResult> SaveInstanceOverrideAsync(CrestInstanceOverride instance) =>
+        SendAsync(new(HttpMethod.Put, $"api/crest/templates/overrides/instances/{Uri.EscapeDataString(instance.InstanceId)}"), instance);
+
+    public Task<CrestLayersResult> DeleteInstanceOverrideAsync(string instanceId) =>
+        SendAsync(new(HttpMethod.Delete, $"api/crest/templates/overrides/instances/{Uri.EscapeDataString(instanceId)}"), null);
+
+    private async Task<CrestLayersResult> SendAsync(HttpRequestMessage message, object? body)
+    {
+        using (message)
+        {
+            if (body is not null)
+            {
+                message.Content = JsonContent.Create(body);
+            }
+
+            using var response = await http.SendAsync(C(message));
+            if (response.IsSuccessStatusCode)
+            {
+                return new(true, []);
+            }
+
+            var error = response.StatusCode == System.Net.HttpStatusCode.BadRequest ? await response.Content.ReadFromJsonAsync<CrestLayersError>() : null;
+            return new(false, error?.Errors ?? [$"The server answered {(int)response.StatusCode}."]);
+        }
+    }
+
+    static HttpRequestMessage C(HttpRequestMessage r) { r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include); return r; }
 }
+
+/// <summary>Layers (docs/blazor-display.md rework step 6): rules, and the component instances they place into zone keys.</summary>
+public interface ILayersApi
+{
+    Task<CrestLayers?> GetAsync();
+    Task<CrestLayersResult> SaveLayerAsync(string name, CrestLayer layer);
+    Task<CrestLayersResult> DeleteLayerAsync(string name);
+    Task<CrestLayersResult> SavePlacementAsync(CrestLayerPlacement placement);
+    Task<bool> DeletePlacementAsync(string id);
+}
+
+public sealed class LayersApi(HttpClient http) : ILayersApi
+{
+    public async Task<CrestLayers?> GetAsync()
+    {
+        using var response = await http.SendAsync(C(new(HttpMethod.Get, "api/crest/layers")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<CrestLayers>() : null;
+    }
+
+    public Task<CrestLayersResult> SaveLayerAsync(string name, CrestLayer layer) =>
+        SendAsync(new(HttpMethod.Put, $"api/crest/layers/{Uri.EscapeDataString(name)}"), layer);
+
+    public Task<CrestLayersResult> DeleteLayerAsync(string name) =>
+        SendAsync(new(HttpMethod.Delete, $"api/crest/layers/{Uri.EscapeDataString(name)}"), null);
+
+    public Task<CrestLayersResult> SavePlacementAsync(CrestLayerPlacement placement) =>
+        SendAsync(new(HttpMethod.Put, $"api/crest/layers/placements/{Uri.EscapeDataString(string.IsNullOrEmpty(placement.Id) ? "new" : placement.Id)}"), placement);
+
+    public async Task<bool> DeletePlacementAsync(string id)
+    {
+        using var response = await http.SendAsync(C(new(HttpMethod.Delete, $"api/crest/layers/placements/{Uri.EscapeDataString(id)}")));
+        return response.IsSuccessStatusCode;
+    }
+
+    private async Task<CrestLayersResult> SendAsync(HttpRequestMessage message, object? body)
+    {
+        using (message)
+        {
+            if (body is not null)
+            {
+                message.Content = JsonContent.Create(body);
+            }
+
+            using var response = await http.SendAsync(C(message));
+            if (response.IsSuccessStatusCode)
+            {
+                return new(true, []);
+            }
+
+            var error = response.StatusCode == System.Net.HttpStatusCode.BadRequest ? await response.Content.ReadFromJsonAsync<CrestLayersError>() : null;
+            return new(false, error?.Errors ?? [$"The server answered {(int)response.StatusCode}."]);
+        }
+    }
+
+    static HttpRequestMessage C(HttpRequestMessage r) { r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include); return r; }
+}
+
+/// <summary>The tenant's placement rules per shape type (docs/blazor-display.md rework step 6).</summary>
+public interface IPlacementsApi
+{
+    Task<Dictionary<string, System.Text.Json.Nodes.JsonArray>> ListAsync();
+    Task<string?> SaveAsync(string shapeType, System.Text.Json.Nodes.JsonArray rules);
+    Task<bool> DeleteAsync(string shapeType);
+}
+
+public sealed class PlacementsApi(HttpClient http) : IPlacementsApi
+{
+    public async Task<Dictionary<string, System.Text.Json.Nodes.JsonArray>> ListAsync()
+    {
+        using var response = await http.SendAsync(C(new(HttpMethod.Get, "api/crest/placements")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<Dictionary<string, System.Text.Json.Nodes.JsonArray>>() ?? [] : [];
+    }
+
+    /// <summary>Null when saved, else the server's reason.</summary>
+    public async Task<string?> SaveAsync(string shapeType, System.Text.Json.Nodes.JsonArray rules)
+    {
+        using var message = C(new(HttpMethod.Put, $"api/crest/placements/{Uri.EscapeDataString(shapeType)}"));
+        message.Content = JsonContent.Create(rules);
+        using var response = await http.SendAsync(message);
+        return response.IsSuccessStatusCode ? null : await response.Content.ReadAsStringAsync();
+    }
+
+    public async Task<bool> DeleteAsync(string shapeType)
+    {
+        using var response = await http.SendAsync(C(new(HttpMethod.Delete, $"api/crest/placements/{Uri.EscapeDataString(shapeType)}")));
+        return response.IsSuccessStatusCode;
+    }
+
+    static HttpRequestMessage C(HttpRequestMessage r) { r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include); return r; }
+}
+
+/// <summary>The component registry's schema per shell (docs/blazor-display.md § 1).</summary>
+public interface IComponentsApi
+{
+    Task<CrestComponentSchema[]> ListAsync(string shell);
+}
+
+public sealed class ComponentsApi(HttpClient http) : IComponentsApi
+{
+    public async Task<CrestComponentSchema[]> ListAsync(string shell)
+    {
+        using var response = await http.SendAsync(C(new(HttpMethod.Get, $"api/crest/components?shell={Uri.EscapeDataString(shell)}")));
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<CrestComponentSchema[]>() ?? [] : [];
+    }
+
+    static HttpRequestMessage C(HttpRequestMessage r) { r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include); return r; }
+}
+
 public sealed class SecurityHeadersApi(HttpClient http) : ISecurityHeadersApi { public async Task<CrestSecurityHeaders?> GetAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/security-headers")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestSecurityHeaders>():null;}public async Task<CrestSecurityHeaders?> SaveAsync(CrestSecurityHeaders x){using var q=C(new(HttpMethod.Put,"api/crest/security-headers"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestSecurityHeaders>():null;}static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
 public sealed class LoginSettingsApi(HttpClient http) : ILoginSettingsApi { public async Task<CrestLoginSettings?> GetAsync(){using var r=await http.SendAsync(C(new(HttpMethod.Get,"api/crest/settings/login")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestLoginSettings>():null;}public async Task<CrestLoginSettings?> SaveAsync(CrestLoginSettings x){using var q=C(new(HttpMethod.Put,"api/crest/settings/login"));q.Content=JsonContent.Create(x);using var r=await http.SendAsync(q);return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestLoginSettings>():null;}static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
 public sealed class UsersApi(HttpClient http) : IUsersApi { public async Task<CrestUserList> ListAsync(string? search=null,string? status=null){var q=string.Join('&',new[]{string.IsNullOrWhiteSpace(search)?null:$"search={Uri.EscapeDataString(search)}",string.IsNullOrWhiteSpace(status)?null:$"status={Uri.EscapeDataString(status)}"}.Where(x=>x is not null));using var r=await http.SendAsync(C(new(HttpMethod.Get,$"api/crest/users{(q.Length>0?"?"+q:"")}")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestUserList>()??new(0,[]):new(0,[]);} public async Task<CrestUser?> GetAsync(string id){using var r=await http.SendAsync(C(new(HttpMethod.Get,$"api/crest/users/{Uri.EscapeDataString(id)}")));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestUser>():null;} public Task<CrestUser?> CreateAsync(CrestUserWrite x)=>Write(new(HttpMethod.Post,"api/crest/users"),x); public Task<CrestUser?> SaveAsync(string id,CrestUserWrite x)=>Write(new(HttpMethod.Put,$"api/crest/users/{Uri.EscapeDataString(id)}"),x); public async Task<CrestUser?> SetEnabledAsync(string id,bool enabled)=>await Write(new(HttpMethod.Post,$"api/crest/users/{Uri.EscapeDataString(id)}/enabled"),new CrestUserEnabled(enabled)); public async Task<bool> DeleteAsync(string id){using var r=await http.SendAsync(C(new(HttpMethod.Delete,$"api/crest/users/{Uri.EscapeDataString(id)}")));return r.IsSuccessStatusCode;} async Task<CrestUser?> Write(HttpRequestMessage q,object x){using(q){q.Content=JsonContent.Create(x);using var r=await http.SendAsync(C(q));return r.IsSuccessStatusCode?await r.Content.ReadFromJsonAsync<CrestUser>():null;}} static HttpRequestMessage C(HttpRequestMessage r){r.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);return r;}}
@@ -1381,8 +1615,26 @@ public sealed record MediaFolderRequest(string? ParentPath, string? Name);
 public sealed record MediaProfile(string Name, string? Hint, int Width, int Height, int Mode, int Format, int Quality, string? BackgroundColor, bool AutoOrient);
 public sealed record MediaProfileWriteRequest(string? Hint, int Width, int Height, int Mode, int Format, int Quality, string? BackgroundColor, bool AutoOrient);
 public sealed record CrestMediaOptions(int[] SupportedSizes, IEnumerable<string> AllowedFileExtensions, int MaxBrowserCacheDays, int MaxSecureFilesBrowserCacheDays, int MaxCacheDays, long MaxFileSize, int? MaxUploadChunkSize, string CdnBaseUrl, string AssetsRequestPath, string AssetsPath, string AssetsUsersFolder, bool UseTokenizedQueryString);
-public sealed record CrestTemplate(string Name,string? Description,string Content);
-public sealed record CrestTemplateWrite(string? Description,string? Content);
+public sealed record CrestTemplate(string Id, string Name, string? Theme, string? DisplayType, string? Description, string Source, bool Published, bool HasDraft, DateTime? ModifiedUtc,
+    bool IsComposite = false, string? DisplayName = null, string? Category = null, string? Icon = null,
+    System.Text.Json.Nodes.JsonArray? Inputs = null, System.Text.Json.Nodes.JsonArray? Outputs = null);
+public sealed record CrestTemplateWrite(string Name, string? Theme, string? DisplayType, string? Description, string? Source,
+    bool IsComposite = false, string? DisplayName = null, string? Category = null, string? Icon = null,
+    System.Text.Json.Nodes.JsonArray? Inputs = null, System.Text.Json.Nodes.JsonArray? Outputs = null);
+public sealed record CrestTemplatePreview(string Name, string Source, string? ContentItemId, string? DisplayType);
+public sealed record CrestTemplateValidation(bool Valid, Crest.DisplayManagement.Components.DisplayDiagnostic[] Diagnostics);
+public sealed record CrestTemplateSaveResult(CrestTemplate? Template, CrestTemplateValidation? Validation);
+public sealed record CrestComponentVariant(string Name, string Base, string? DisplayName, string? Category, string? Icon, System.Text.Json.Nodes.JsonObject Values);
+public sealed record CrestInstanceOverride(string InstanceId, System.Text.Json.Nodes.JsonObject Values);
+public sealed record CrestComponentOverrides(CrestComponentVariant[] Variants, CrestInstanceOverride[] Instances);
+public sealed record CrestLayer(string Name, string? Description, System.Text.Json.Nodes.JsonArray? Conditions);
+public sealed record CrestLayerPlacement(string Id, string Layer, string Zone, string Component, System.Text.Json.Nodes.JsonObject Properties, double Position, string? Title);
+public sealed record CrestLayers(CrestLayer[] Layers, CrestLayerPlacement[] Placements);
+public sealed record CrestLayersError(string[] Errors);
+public sealed record CrestLayersResult(bool Succeeded, string[] Errors);
+public sealed record CrestComponentParameter(string Name, string Kind, string Editor, string? DisplayName, string? Group, bool Required, bool Hidden, bool Advanced, bool ReadOnly, string[]? Choices, string[]? Accepts, string Type);
+public sealed record CrestComponentZone(string Name, string[] Allowed, int Min, int Max);
+public sealed record CrestComponentSchema(string Name, string? DisplayName, string? Category, string? Icon, string? Module, string? Permission, string Instances, bool IsWrapper, bool IsHost, bool IsOverlay, CrestComponentParameter[] Parameters, CrestComponentZone[] Zones);
 public sealed record CrestSecurityHeaders(Dictionary<string,string>? ContentSecurityPolicy,Dictionary<string,string>? PermissionsPolicy,string? ReferrerPolicy,bool FromConfiguration);
 public sealed class CrestLoginSettings
 {

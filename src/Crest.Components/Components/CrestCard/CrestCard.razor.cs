@@ -29,6 +29,7 @@ namespace Crest.Components.Primitives
     /// &lt;/CrestCard&gt;
     /// </code>
     /// </example>
+    [Crest.DisplayManagement.Components.CrestBlazorComponent("Card", DisplayName = "Card", Category = "Layout", Icon = "crop_portrait")]
     public partial class CrestCard : CrestComponentWithChildren
     {
         /// <inheritdoc />

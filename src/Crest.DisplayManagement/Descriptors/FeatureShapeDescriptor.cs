@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Html;
+using Microsoft.Extensions.DependencyInjection;
+using Crest.DisplayManagement.Components;
 using Crest.DisplayManagement.Implementation;
 using Crest.Environment.Extensions.Features;
 
@@ -217,4 +219,27 @@ public sealed class ShapeBinding
     public string BindingName { get; set; }
     public string BindingSource { get; set; }
     public Func<DisplayContext, Task<IHtmlContent>> BindingAsync { get; set; }
+
+    /// <summary>
+    /// The registered component the shape is bound to (docs/blazor-display.md § 2, the component
+    /// binding); null for a Razor, Liquid or code binding. The display tree names this component;
+    /// where the server still renders HTML, <see cref="BindingAsync"/> renders the shape's node and
+    /// its zones in one pass through <see cref="ComponentShapeRenderer"/>.
+    /// </summary>
+    public string ComponentName { get; set; }
+
+    /// <summary>A component binding: the shape renders as <paramref name="componentName"/>.</summary>
+    public static ShapeBinding ForComponent(string shapeType, string componentName) => new()
+    {
+        BindingName = shapeType,
+        BindingSource = $"component:{componentName}",
+        ComponentName = componentName,
+        BindingAsync = context =>
+        {
+            var services = context.ServiceProvider
+                ?? throw new InvalidOperationException($"The component binding of '{shapeType}' needs the display context's service provider.");
+
+            return services.GetRequiredService<ComponentShapeRenderer>().RenderAsync(context.Value, componentName);
+        },
+    };
 }

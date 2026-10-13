@@ -1,4 +1,4 @@
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @using Crest.AdminTheme.Components.Shared
 @using Crest.Components.Navigation
 @using Crest.Components.Overlay
@@ -20,7 +20,7 @@
      @onmouseleave="EndHoverOpen">
     <Crest.Components.Layout.CrestPrimaryNavMenu Class="primary-nav-menu__surface">
     <div class="primary-nav-menu__content">
-        @if (DisplayManager is null)
+        @if (AdminShellState is null)
         {
             <CrestText TextStyle="TextStyle.Body2" Text="@T["Display manager is unavailable."]" />
         }
@@ -30,7 +30,7 @@
         }
         else
         {
-            @if (DisplayManager.Manifest?.AdminSettings.DisplayMenuFilter == true)
+            @if (AdminShellState.Manifest?.AdminSettings.DisplayMenuFilter == true)
             {
                 <div class="@FilterRowClass">
                     @if (ShowSearchIcon)
@@ -174,7 +174,7 @@
 
 @code {
     [CascadingParameter]
-    public DisplayManager? DisplayManager { get; set; }
+    public AdminShellState? AdminShellState { get; set; }
 
     // When CollapseIconPosition is InsideBottomLeft, the collapse/expand toggle renders
     // as its own fixed-to-bottom row inside the nav (like a menu item row, left-aligned
@@ -197,7 +197,7 @@
     private int ExpansionVersion { get; set; }
     private MenuRenderModel? CachedMenuModel { get; set; }
 
-    private DisplayMenu? Menu => DisplayManager?.AdminMenu;
+    private DisplayMenu? Menu => AdminShellState?.AdminMenu;
     private DisplayMenuItem? QuickAddSource => CurrentMenuModel?.QuickAddSource;
     private DisplayMenuItem[] QuickAddItems => CurrentMenuModel?.QuickAddItems ?? [];
     private bool HasQuickAddItems => QuickAddItems.Length > 0;

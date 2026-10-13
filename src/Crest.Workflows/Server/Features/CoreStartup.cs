@@ -157,6 +157,12 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddSingleton<IActivityDescriptorModifier, RequiredPermissionDescriptorModifier>()
             .AddScoped<WorkflowCallerResolver>()
             .AddSingleton<WorkflowActorSeal>()
+            // Display trees (docs/blazor-display.md § 4a): workflow actions are decided like an
+            // HTTP endpoint workflow, when the tree is built and when the action runs.
+            .AddScoped<Display.WorkflowDisplayActionAuthorizer>()
+            .AddScoped<Display.IUiActionContracts, Display.UiActionContracts>()
+            .AddScoped<Crest.DisplayManagement.Components.IDisplayActionFilter, Display.WorkflowDisplayActionFilter>()
+            .AddScoped<Crest.DisplayManagement.Components.IDisplayActionValidator, Display.WorkflowDisplayActionValidator>()
             // The registry's query kind: one run-query descriptor per query the catalog lists.
             .AddScoped<IActivityProvider, Queries.QueryActivityProvider>()
             .AddNotificationHandler<Fields.FieldDependencyPublishHandler>()

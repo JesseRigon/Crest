@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>Crest.Components</AssemblyName>
     <RootNamespace>Crest.Components</RootNamespace>
+    <!-- Generates this library's component catalog (Crest.DisplayManagement.Abstractions' buildTransitive targets). -->
+    <ComponentCatalog>true</ComponentCatalog>
   </PropertyGroup>
 
   <ItemGroup>
@@ -49,6 +51,11 @@
     <EmbeddedResource Update="Utilities\CrestStrings.resx">
       <ManifestResourceName>Crest.Components.Primitives.CrestStrings</ManifestResourceName>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- The component declaration ([CrestBlazorComponent]) and the display contracts. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Crest.DisplayManagement.Abstractions\Crest.DisplayManagement.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

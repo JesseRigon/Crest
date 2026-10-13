@@ -122,6 +122,7 @@
     <Project Path="src/Crest.Media.Abstractions/Crest.Media.Abstractions.csproj" />
     <Project Path="src/Crest.MetaWeblog.Abstractions/Crest.MetaWeblog.Abstractions.csproj" />
     <Project Path="src/Crest.Module.Targets/Crest.Module.Targets.csproj" />
+    <Project Path="src/Crest.Mvc.Abstractions/Crest.Mvc.Abstractions.csproj" />
     <Project Path="src/Crest.Mvc/Crest.Mvc.csproj" />
     <Project Path="src/Crest.Notifications.Abstractions/Crest.Notifications.Abstractions.csproj" />
     <Project Path="src/Crest.Queries.Abstractions/Crest.Queries.Abstractions.csproj" />
@@ -191,7 +192,6 @@
     <Project Path="src/Crest.Feeds/Crest.Feeds.csproj" />
     <Project Path="src/Crest.Flows.Abstractions/Crest.Flows.Abstractions.csproj" />
     <Project Path="src/Crest.Flows/Crest.Flows.csproj" />
-    <Project Path="src/Crest.Forms/Crest.Forms.csproj" />
     <Project Path="src/Crest.GitHub/Crest.GitHub.csproj" />
     <Project Path="src/Crest.Google/Crest.Google.csproj" />
     <Project Path="src/Crest.HealthChecks/Crest.HealthChecks.csproj" />
@@ -263,7 +263,6 @@
     <Project Path="src/Crest.Twitter/Crest.Twitter.csproj" />
     <Project Path="src/Crest.UrlRewriting/Crest.UrlRewriting.csproj" />
     <Project Path="src/Crest.Users/Crest.Users.csproj" />
-    <Project Path="src/Crest.Widgets/Crest.Widgets.csproj" />
     <Project Path="src/Crest.XmlRpc/Crest.XmlRpc.csproj" />
   </Folder>
   <Folder Name="/platform/themes/">

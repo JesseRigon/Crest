@@ -1,0 +1,19 @@
+@namespace Crest.Components.Interaction
+
+<ul class="crest-item-list" role="listbox">
+    @if (Rows.Count == 0 && !string.IsNullOrEmpty(EmptyText))
+    {
+        <li class="crest-item-list__empty">@EmptyText</li>
+    }
+    @for (var i = 0; i < Rows.Count; i++)
+    {
+        var index = i;
+        var item = Rows[i];
+        <li @key="index" role="option" aria-selected="@(index == _selected)"
+            class="crest-item-list__item @(index == _selected ? "crest-item-list__item--selected" : null)"
+            @onclick="() => SelectAsync(index, item)"
+            @oncontextmenu="args => ContextMenuAsync(args, item)" @oncontextmenu:preventDefault="ItemContextMenu.HasDelegate">
+            @TextOf(item)
+        </li>
+    }
+</ul>

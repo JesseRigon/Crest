@@ -1,6 +1,6 @@
 @page "/Profile/Settings"
 @using Crest.AdminTheme.Api
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @using Crest.Components.Primitives
 @inject IApi Api
 @inject NotificationService Notifications
@@ -45,14 +45,14 @@
 </CrestStack>
 
 @code {
-    [CascadingParameter] public DisplayManager? DisplayManager { get; set; }
+    [CascadingParameter] public AdminShellState? AdminShellState { get; set; }
 
     private bool IsLoading { get; set; } = true;
     private bool IsSaving { get; set; }
     private string? ErrorMessage { get; set; }
     private string? SelectedCulture { get; set; }
 
-    private CultureOption[] CultureOptions => DisplayManager?.Manifest?.CultureSelector.Cultures ?? [];
+    private CultureOption[] CultureOptions => AdminShellState?.Manifest?.CultureSelector.Cultures ?? [];
 
     protected override async Task OnInitializedAsync()
     {

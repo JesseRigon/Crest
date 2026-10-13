@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Crest.Icons</AssemblyName>
     <RootNamespace>Crest.Icons</RootNamespace>
+    <!-- Generates this library's component catalog (Crest.DisplayManagement.Abstractions' buildTransitive targets). -->
+    <ComponentCatalog>true</ComponentCatalog>
   </PropertyGroup>
 
   <ItemGroup>

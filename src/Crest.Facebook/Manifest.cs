@@ -30,19 +30,6 @@ using Crest.Modules.Manifest;
 )]
 
 [assembly: Feature(
-    Id = FacebookConstants.Features.Widgets,
-    Name = "Meta Social Plugins Widgets",
-    Category = "Meta",
-    Description = "Integrates Meta social plugins as predefined widgets",
-    Dependencies =
-    [
-        FacebookConstants.Features.Core,
-        "Crest.Widgets",
-        "Crest.Recipes.Core",
-    ]
-)]
-
-[assembly: Feature(
     Id = FacebookConstants.Features.Pixel,
     Name = "Meta Pixel",
     Category = "Meta",

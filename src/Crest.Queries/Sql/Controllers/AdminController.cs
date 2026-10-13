@@ -20,8 +20,7 @@ public sealed class AdminController : Controller
     private readonly IAuthorizationService _authorizationService;
     private readonly IStore _store;
     private readonly IQueryManager _queryManager;
-    private readonly ICallerContextAccessor _callerAccessor;
-    private readonly IScopeSetProvider _scopeSetProvider;
+    private readonly IServiceProvider _services;
 
     internal readonly IStringLocalizer S;
 
@@ -35,8 +34,7 @@ public sealed class AdminController : Controller
         _authorizationService = authorizationService;
         _store = store;
         _queryManager = queryManager;
-        _callerAccessor = serviceProvider.GetService(typeof(ICallerContextAccessor)) as ICallerContextAccessor;
-        _scopeSetProvider = serviceProvider.GetService(typeof(IScopeSetProvider)) as IScopeSetProvider;
+        _services = serviceProvider;
         S = stringLocalizer;
     }
 
@@ -93,7 +91,7 @@ public sealed class AdminController : Controller
 
         try
         {
-            var scopes = await CallerScopes.RequireAsync(_callerAccessor, _scopeSetProvider, SqlQuerySource.SourceName, HttpContext.RequestAborted);
+            var scopes = await CallerScopes.RequireAsync(_services, SqlQuerySource.SourceName, HttpContext.RequestAborted);
 
             // Parsed here only to show the statement and the defaulted parameters; it runs
             // through the query pipeline like any saved Sql query: scoped, paged and capped,

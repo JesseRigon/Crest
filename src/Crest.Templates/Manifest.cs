@@ -10,15 +10,7 @@ using Crest.Modules.Manifest;
 [assembly: Feature(
     Id = "Crest.Templates",
     Name = "Templates",
-    Description = "The Templates module provides a way to write custom shape templates from the admin.",
+    Description = "Templates as content: Liquid that composes display-tree components, bound to shapes or placed by name.",
     Dependencies = ["Crest.Liquid"],
-    Category = "Development"
-)]
-
-[assembly: Feature(
-    Id = "Crest.AdminTemplates",
-    Name = "Admin Templates",
-    Description = "The Admin Templates module provides a way to write custom admin shape templates.",
-    Dependencies = ["Crest.Templates"],
     Category = "Development"
 )]

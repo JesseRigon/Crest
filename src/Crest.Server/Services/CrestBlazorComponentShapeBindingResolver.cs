@@ -1,96 +1,37 @@
-using Crest.Models;
-using Crest.ViewModels;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.Extensions.Logging;
 using Crest.DisplayManagement;
+using Crest.DisplayManagement.Components;
 using Crest.DisplayManagement.Descriptors;
-using Crest.DisplayManagement.Implementation;
 
 namespace Crest.Services;
 
 // Participates in Crest's own shape pipeline (DefaultHtmlDisplay.GetShapeBindingAsync
 // tries every registered IShapeBindingResolver before the compiled ShapeTable) exactly
 // the way Crest.Templates' TemplatesShapeBindingResolver overrides a shape's
-// rendering with tenant-stored Liquid - here the override renders a Blazor component with
-// .NET's own HtmlRenderer instead. Falls through (returns null) for every shape that isn't
-// a registered component name, so normal Liquid/Razor/Templates-resolved shapes are
-// unaffected.
+// rendering with tenant-stored Liquid. Falls through (returns null) for every shape that is
+// not a component in the request's component registry (docs/blazor-display.md § 1: per
+// tenant, theme and shell, only the enabled features' components), so normal
+// Liquid/Razor/Templates-resolved shapes are unaffected.
 //
-// Static SSR only: the component renders once, inline, to static HTML - no hydration, no
-// @rendermode. Genuinely interactive "islands" are a separate concern (the whole-page
-// Blazor Web App host/WASM client glob, Server's MapRazorComponents<App>()), not this
-// resolver's job.
+// A bound shape renders through the display tree (ComponentShapeRenderer): its properties are
+// read by the component's schema and converted to the parameters' types, its zones become
+// child nodes, and the whole tree renders in one pass with HtmlRenderer. Static SSR only: no
+// hydration, no @rendermode. Retired with the Liquid views (rework plan step 7).
 public sealed class CrestBlazorComponentShapeBindingResolver : IShapeBindingResolver
 {
-    private readonly ICrestBlazorComponentRegistry _registry;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILoggerFactory _loggerFactory;
+    private readonly IComponentRegistry _registry;
 
-    public CrestBlazorComponentShapeBindingResolver(
-        ICrestBlazorComponentRegistry registry,
-        IServiceProvider serviceProvider,
-        ILoggerFactory loggerFactory)
+    public CrestBlazorComponentShapeBindingResolver(IComponentRegistry registry)
     {
         _registry = registry;
-        _serviceProvider = serviceProvider;
-        _loggerFactory = loggerFactory;
     }
 
     public Task<ShapeBinding> GetShapeBindingAsync(string shapeType)
     {
-        if (!_registry.TryResolve(shapeType, out var componentType))
+        if (!_registry.TryGet(shapeType, out var descriptor) || descriptor.Type is null)
         {
             return Task.FromResult<ShapeBinding>(null);
         }
 
-        return Task.FromResult(BuildShapeBinding(shapeType, componentType));
-    }
-
-    private ShapeBinding BuildShapeBinding(string shapeType, Type componentType)
-    {
-        return new ShapeBinding
-        {
-            BindingName = shapeType,
-            BindingSource = $"Blazor/{shapeType}",
-            BindingAsync = async displayContext =>
-            {
-                var parameters = ParametersFromShape(displayContext.Value);
-
-                await using var renderer = new HtmlRenderer(_serviceProvider, _loggerFactory);
-
-                var html = await renderer.Dispatcher.InvokeAsync(async () =>
-                {
-                    var root = await renderer.RenderComponentAsync(componentType, parameters);
-                    return root.ToHtmlString();
-                });
-
-                return new Microsoft.AspNetCore.Html.HtmlString(html);
-            },
-        };
-    }
-
-    // Two different shape-creation paths reach this resolver, and both need to work:
-    //  1. CrestBlazorComponentPartDisplayDriver's Initialize<CrestBlazorComponentShapeViewModel>
-    //     (a tenant-placed CrestBlazorComponentPart) - ShapeFactory.CreateAsync<TModel> builds
-    //     a dynamic proxy castable to TModel itself, but CrestBlazorComponentShapeViewModel
-    //     inherits Shape, so its Parameters dictionary also ends up as ordinary shape
-    //     properties once set - same underlying storage as path 2.
-    //  2. Liquid's {{ "ComponentName" | shape_new: text: "..." | shape_render }}
-    //     (NewShapeFilter) - IShapeFactory.CreateAsync(shapeType, Arguments.From(properties)),
-    //     which is untyped and stores each named argument directly in IShape.Properties.
-    // IShape.Properties is the common ground for both: reading it directly (rather than
-    // casting to CrestBlazorComponentShapeViewModel) also means an IShape.Properties key
-    // maps onto a component's [Parameter] by name exactly the way Liquid/Razor shape
-    // templates already read @Model.X - the natural, general mapping for Blazor's own
-    // [Parameter] mechanism, not something specific to CrestBlazorComponentPart.
-    private static ParameterView ParametersFromShape(IShape shape)
-    {
-        if (shape is null || shape.Properties.Count == 0)
-        {
-            return ParameterView.Empty;
-        }
-
-        return ParameterView.FromDictionary(new Dictionary<string, object?>(shape.Properties));
+        return Task.FromResult(ShapeBinding.ForComponent(shapeType, descriptor.Name));
     }
 }

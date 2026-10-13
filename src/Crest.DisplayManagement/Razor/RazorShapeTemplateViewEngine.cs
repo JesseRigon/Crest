@@ -117,15 +117,18 @@ public class RazorShapeTemplateViewEngine : IShapeTemplateViewEngine
         return output.ToString();
     }
 
+    // A shape template is a partial wherever it renders: inside a view it goes through
+    // PartialAsync, and outside one (an API building a display tree) it must not pick up
+    // _ViewStart either, or the template comes back wrapped in the site layout.
     private static IView FindView(ActionContext actionContext, string viewName, IViewEngine viewEngine)
     {
-        var getViewResult = viewEngine.GetView(executingFilePath: null, viewPath: viewName, isMainPage: true);
+        var getViewResult = viewEngine.GetView(executingFilePath: null, viewPath: viewName, isMainPage: false);
         if (getViewResult.Success)
         {
             return getViewResult.View;
         }
 
-        var findViewResult = viewEngine.FindView(actionContext, viewName, isMainPage: true);
+        var findViewResult = viewEngine.FindView(actionContext, viewName, isMainPage: false);
         if (findViewResult.Success)
         {
             return findViewResult.View;

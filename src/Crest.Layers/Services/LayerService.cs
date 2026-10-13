@@ -1,62 +1,20 @@
-using System.Linq.Expressions;
-using Crest.ContentManagement;
-using Crest.ContentManagement.Records;
 using Crest.Documents;
-using Crest.Layers.Indexes;
 using Crest.Layers.Models;
-using YesSql;
 
 namespace Crest.Layers.Services;
 
-public class LayerService : ILayerService
+public sealed class LayerService(IDocumentManager<LayersDocument> documentManager) : ILayerService
 {
-    private readonly ISession _session;
-    private readonly IDocumentManager<LayersDocument> _documentManager;
+    public Task<LayersDocument> LoadLayersAsync() => documentManager.GetOrCreateMutableAsync();
 
-    public LayerService(ISession session, IDocumentManager<LayersDocument> documentManager)
-    {
-        _session = session;
-        _documentManager = documentManager;
-    }
+    public Task<LayersDocument> GetLayersAsync() => documentManager.GetOrCreateImmutableAsync();
 
-    /// <summary>
-    /// Loads the layers document from the store for updating and that should not be cached.
-    /// </summary>
-    public Task<LayersDocument> LoadLayersAsync() => _documentManager.GetOrCreateMutableAsync();
-
-    /// <summary>
-    /// Gets the layers document from the cache for sharing and that should not be updated.
-    /// </summary>
-    public Task<LayersDocument> GetLayersAsync() => _documentManager.GetOrCreateImmutableAsync();
-
-    public async Task<IEnumerable<ContentItem>> GetLayerWidgetsAsync(
-        Expression<Func<ContentItemIndex, bool>> predicate)
-    {
-        return await _session
-            .Query<ContentItem, LayerMetadataIndex>()
-            .With(predicate)
-            .ListAsync();
-    }
-
-    public async Task<IEnumerable<LayerMetadata>> GetLayerWidgetsMetadataAsync(
-        Expression<Func<ContentItemIndex, bool>> predicate)
-    {
-        var allWidgets = await GetLayerWidgetsAsync(predicate);
-
-        return allWidgets
-            .Select(x => x.TryGet<LayerMetadata>(out var layerMetadata) ? layerMetadata : null)
-            .Where(x => x != null)
-            .OrderBy(x => x.Position)
-            .ToList();
-    }
-
-    /// <summary>
-    /// Updates the store with the provided layers document and then updates the cache.
-    /// </summary>
     public async Task UpdateAsync(LayersDocument layers)
     {
+        // The loaded, tracked document is the one stored (passing the argument stored a detached copy).
         var existing = await LoadLayersAsync();
         existing.Layers = layers.Layers;
-        await _documentManager.UpdateAsync(layers);
+        existing.Placements = layers.Placements;
+        await documentManager.UpdateAsync(existing);
     }
 }

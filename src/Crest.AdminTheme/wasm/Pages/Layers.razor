@@ -1,0 +1,201 @@
+@page "/Layers"
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Crest.AdminTheme.Api
+@inject IApi Api
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* Layers (docs/blazor-display.md rework step 6; rulings 2026-10-12: widgets are retired): a
+   layer's rule (its conditions, in the recipe format) decides on which pages it applies; its
+   placements put component instances into zone keys there, ordered by position. Placements are
+   checked against the site registry's schema on the server. *@
+<CrestStack Gap="1rem" data-testid="layers-page">
+    <CrestText TextStyle="TextStyle.H4" Text="@T["Layers"]" />
+
+    @if (_errors.Length > 0)
+    {
+        <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false" data-testid="layers-errors">
+            @foreach (var error in _errors)
+            {
+                <div>@error</div>
+            }
+        </CrestAlert>
+    }
+
+    <CrestCard>
+        <CrestStack Gap="0.75rem">
+            <CrestText TextStyle="TextStyle.H6" Text="@T["Layers and rules"]" />
+            @foreach (var layer in _layers)
+            {
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                    <strong>@layer.Name</strong>
+                    <span>@layer.Description</span>
+                    <CrestButton Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => EditLayer(layer))" />
+                    <CrestButton Icon="delete" ButtonStyle="ButtonStyle.Light" Click="@(() => DeleteLayerAsync(layer.Name))" />
+                </CrestStack>
+            }
+
+            <CrestStack Gap="0.5rem">
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    <CrestTextBox @bind-Value="_layerName" Placeholder="@T["Layer name"]" data-testid="layers-name" />
+                    <CrestTextBox @bind-Value="_layerDescription" Placeholder="@T["Description"]" />
+                </CrestStack>
+                <CrestTextArea @bind-Value="_layerConditions" Rows="5" Placeholder='[ { "Name": "BooleanCondition", "Value": true } ]' Style="font-family: var(--crest-font-mono, monospace);" data-testid="layers-conditions" />
+                <CrestButton Text="@T["Save layer"]" Icon="save" Click="SaveLayerAsync" data-testid="layers-save" />
+            </CrestStack>
+        </CrestStack>
+    </CrestCard>
+
+    <CrestCard>
+        <CrestStack Gap="0.75rem">
+            <CrestText TextStyle="TextStyle.H6" Text="@T["Placements"]" />
+            <CrestDataGrid Data="@_placements" TItem="CrestLayerPlacement" data-testid="layers-placements">
+                <Columns>
+                    <CrestDataGridColumn TItem="CrestLayerPlacement" Property="Layer" Title="@T["Layer"]" />
+                    <CrestDataGridColumn TItem="CrestLayerPlacement" Property="Zone" Title="@T["Zone"]" />
+                    <CrestDataGridColumn TItem="CrestLayerPlacement" Property="Component" Title="@T["Component"]" />
+                    <CrestDataGridColumn TItem="CrestLayerPlacement" Property="Position" Title="@T["Position"]" />
+                    <CrestDataGridColumn TItem="CrestLayerPlacement" Title="@T["Actions"]">
+                        <Template Context="placement">
+                            <CrestButton Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => EditPlacement(placement))" />
+                            <CrestButton Icon="delete" ButtonStyle="ButtonStyle.Light" Click="@(() => DeletePlacementAsync(placement.Id))" />
+                        </Template>
+                    </CrestDataGridColumn>
+                </Columns>
+            </CrestDataGrid>
+
+            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                <CrestTextBox @bind-Value="_placementLayer" Placeholder="@T["Layer"]" />
+                <CrestTextBox @bind-Value="_placementZone" Placeholder="@T["Zone key (Footer, Sidebar, ...)"]" />
+                <CrestTextBox @bind-Value="_placementComponent" Placeholder="@T["Component"]" list="crest-layer-components" />
+                <CrestNumeric TValue="double" @bind-Value="_placementPosition" />
+            </CrestStack>
+            <datalist id="crest-layer-components">
+                @foreach (var component in _components)
+                {
+                    <option value="@component.Name">@(component.DisplayName ?? component.Name)</option>
+                }
+            </datalist>
+            @if (_components.FirstOrDefault(component => component.Name == _placementComponent) is { } selected)
+            {
+                <small>@T["Parameters"]: @string.Join(", ", selected.Parameters.Where(parameter => !parameter.Hidden && parameter.Kind is not ("EventHandler" or "Output")).Select(parameter => parameter.Required ? parameter.Name + "*" : parameter.Name))</small>
+            }
+            <CrestTextArea @bind-Value="_placementProperties" Rows="4" Placeholder='{ "Text": "Hello" }' Style="font-family: var(--crest-font-mono, monospace);" />
+            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <CrestButton Text="@T["Save placement"]" Icon="save" Click="SavePlacementAsync" data-testid="layers-placement-save" />
+                <CrestButton Text="@T["New placement"]" Icon="add" ButtonStyle="ButtonStyle.Light" Click="NewPlacement" />
+            </CrestStack>
+        </CrestStack>
+    </CrestCard>
+</CrestStack>
+
+@code {
+    private CrestLayer[] _layers = [];
+    private CrestLayerPlacement[] _placements = [];
+    private CrestComponentSchema[] _components = [];
+    private string[] _errors = [];
+
+    private string? _layerName;
+    private string? _layerDescription;
+    private string? _layerConditions = "[]";
+
+    private string _placementId = string.Empty;
+    private string? _placementLayer;
+    private string? _placementZone;
+    private string? _placementComponent;
+    private double _placementPosition;
+    private string? _placementProperties = "{}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _components = await Api.Crest.Rest.Components.ListAsync("site");
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        var layers = await Api.Crest.Rest.Layers.GetAsync();
+        _layers = layers?.Layers ?? [];
+        _placements = layers?.Placements ?? [];
+    }
+
+    private void EditLayer(CrestLayer layer)
+    {
+        _layerName = layer.Name;
+        _layerDescription = layer.Description;
+        _layerConditions = layer.Conditions?.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) ?? "[]";
+    }
+
+    private async Task SaveLayerAsync()
+    {
+        if (!TryParse<JsonArray>(_layerConditions, T["The conditions are not a JSON array."], out var conditions))
+        {
+            return;
+        }
+
+        Show(await Api.Crest.Rest.Layers.SaveLayerAsync(_layerName ?? string.Empty, new CrestLayer(_layerName ?? string.Empty, _layerDescription, conditions)));
+        await ReloadAsync();
+    }
+
+    private async Task DeleteLayerAsync(string name)
+    {
+        Show(await Api.Crest.Rest.Layers.DeleteLayerAsync(name));
+        await ReloadAsync();
+    }
+
+    private void NewPlacement()
+    {
+        _placementId = string.Empty;
+        _placementLayer = _placementZone = _placementComponent = null;
+        _placementPosition = 0;
+        _placementProperties = "{}";
+    }
+
+    private void EditPlacement(CrestLayerPlacement placement)
+    {
+        _placementId = placement.Id;
+        _placementLayer = placement.Layer;
+        _placementZone = placement.Zone;
+        _placementComponent = placement.Component;
+        _placementPosition = placement.Position;
+        _placementProperties = placement.Properties.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    private async Task SavePlacementAsync()
+    {
+        if (!TryParse<JsonObject>(_placementProperties, T["The parameters are not a JSON object."], out var properties))
+        {
+            return;
+        }
+
+        Show(await Api.Crest.Rest.Layers.SavePlacementAsync(new CrestLayerPlacement(_placementId, _placementLayer ?? string.Empty, _placementZone ?? string.Empty, _placementComponent ?? string.Empty, properties ?? [], _placementPosition, null)));
+        await ReloadAsync();
+    }
+
+    private async Task DeletePlacementAsync(string id)
+    {
+        await Api.Crest.Rest.Layers.DeletePlacementAsync(id);
+        await ReloadAsync();
+    }
+
+    private bool TryParse<TNode>(string? text, string error, out TNode? node) where TNode : JsonNode
+    {
+        try
+        {
+            node = JsonNode.Parse(string.IsNullOrWhiteSpace(text) ? (typeof(TNode) == typeof(JsonArray) ? "[]" : "{}") : text) as TNode;
+            if (node is not null)
+            {
+                return true;
+            }
+        }
+        catch (JsonException)
+        {
+        }
+
+        node = null;
+        _errors = [error];
+        return false;
+    }
+
+    private void Show(CrestLayersResult result) => _errors = result.Succeeded ? [] : result.Errors;
+}

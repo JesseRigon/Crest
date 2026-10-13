@@ -13,7 +13,6 @@ public static class FacebookConstants
 
     public static class Features
     {
-        public const string Widgets = "Crest.Facebook.Widgets";
         public const string Login = "Crest.Facebook.Login";
         public const string Core = "Crest.Facebook";
         public const string Pixel = "Crest.Facebook.Pixel";

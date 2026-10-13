@@ -25,8 +25,7 @@ public sealed class SqlQuerySource : IQuerySource
 
     private readonly IDbConnectionAccessor _dbConnectionAccessor;
     private readonly ISession _session;
-    private readonly ICallerContextAccessor? _callerAccessor;
-    private readonly IScopeSetProvider? _scopeSetProvider;
+    private readonly IServiceProvider _services;
     private readonly ILogger _logger;
 
     public SqlQuerySource(
@@ -37,8 +36,7 @@ public sealed class SqlQuerySource : IQuerySource
     {
         _dbConnectionAccessor = dbConnectionAccessor;
         _session = session;
-        _callerAccessor = serviceProvider.GetService(typeof(ICallerContextAccessor)) as ICallerContextAccessor;
-        _scopeSetProvider = serviceProvider.GetService(typeof(IScopeSetProvider)) as IScopeSetProvider;
+        _services = serviceProvider;
         _logger = logger;
     }
 
@@ -58,7 +56,7 @@ public sealed class SqlQuerySource : IQuerySource
         }
 
         var cancellationToken = request.CancellationToken;
-        var scopes = await CallerScopes.RequireAsync(_callerAccessor, _scopeSetProvider, query.Name ?? SourceName, cancellationToken);
+        var scopes = await CallerScopes.RequireAsync(_services, query.Name ?? SourceName, cancellationToken);
         var configuration = _session.Store.Configuration;
         var parameters = new Dictionary<string, object>(request.Parameters, StringComparer.OrdinalIgnoreCase);
 

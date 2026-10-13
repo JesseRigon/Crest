@@ -31,8 +31,15 @@ public class AssetUrlShortcodeProvider : IShortcodeProvider
             return null;
         }
 
+        // id="…" / path="…": the explicit reference forms (docs/shortcodes.md).
+        var explicitUrl = await MediaShortcodeReference.ResolveExplicitAsync(arguments, _references);
+        if (explicitUrl is not null)
+        {
+            content = explicitUrl;
+        }
+
         // Handle self closing shortcodes.
-        if (string.IsNullOrEmpty(content))
+        if (explicitUrl is null && string.IsNullOrEmpty(content))
         {
             content = arguments.NamedOrDefault("src");
             if (string.IsNullOrEmpty(content))
@@ -41,7 +48,7 @@ public class AssetUrlShortcodeProvider : IShortcodeProvider
             }
         }
 
-        if (!content.StartsWith("//", StringComparison.Ordinal) && !content.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        if (explicitUrl is null && !content.StartsWith("//", StringComparison.Ordinal) && !content.StartsWith("http", StringComparison.OrdinalIgnoreCase))
         {
             // Serve static files from virtual path.
             if (content.StartsWith("~/", StringComparison.Ordinal))

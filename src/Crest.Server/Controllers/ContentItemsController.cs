@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Nodes;
 using Crest;
 using Crest.ContentManagement;
+using Crest.ContentManagement.Display;
+using Crest.DisplayManagement.Components;
+using Crest.DisplayManagement.ModelBinding;
 using System.Text.Json.Settings;
 using Crest.ContentManagement.Records;
 using Crest.Contents;
@@ -191,6 +194,119 @@ public sealed class ContentItemsController(
         }
 
         return result.Count == 0 ? Forbid() : Ok(result);
+    }
+
+    // The headless display (docs/blazor-display.md § 8): the item's display tree, the same JSON
+    // the Blazor renderer draws. Built by the platform's display drivers and placement, mapped
+    // once to the tree, with every component the caller may not see already left out (§ 10).
+    // An editor may display the latest draft; anyone else the published version.
+    [HttpGet("{contentItemId}/display")]
+    public async Task<ActionResult<DisplayTree>> DisplayAsync(
+        string contentItemId,
+        [FromServices] IAccessDecision decision,
+        [FromServices] IContentItemDisplayManager displayManager,
+        [FromServices] IDisplayTreeBuilder trees,
+        [FromServices] IDisplayTreeFilter filter,
+        [FromServices] IDisplayHtmlRenderer htmlRenderer,
+        [FromServices] IUpdateModelAccessor updaters,
+        [FromQuery] string? displayType = null,
+        [FromQuery] string? format = null)
+    {
+        displayType = string.IsNullOrWhiteSpace(displayType) ? PlatformConstants.DisplayType.Detail : displayType.Trim();
+        if (displayType.Length > 64 || !displayType.All(char.IsAsciiLetterOrDigit))
+        {
+            return BadRequest();
+        }
+
+        var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
+        var caller = callerAccessor.Current;
+        if (caller is null)
+        {
+            return Forbid();
+        }
+
+        var item = await contentManager.GetAsync(contentItemId, VersionOptions.Published);
+        if (item is null)
+        {
+            var latest = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
+            if (latest is not null && await decision.AllowsAsync(caller, CommonPermissions.EditContent.Name, latest, cancellationToken))
+            {
+                item = latest;
+            }
+        }
+
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        var verdict = await decision.DecideAsync(caller, CommonPermissions.ViewContent.Name, item, cancellationToken);
+        if (!verdict.IsAllowed)
+        {
+            return verdict.Verdict == AccessVerdict.NotFound ? NotFound() : Forbid();
+        }
+
+        // TODO(blazor-display step 6): cache the tree per (item.ContentItemVersionId, displayType,
+        // caller.ScopeSignature), invalidated on theme, placement, feature and template changes as
+        // the shape table is. Never across scope signatures: the tree is built with the viewer's
+        // permissions (security audit item 9).
+        var shape = await displayManager.BuildDisplayAsync(item, updaters.ModelUpdater, displayType);
+        var tree = await trees.BuildAsync(shape, cancellationToken: cancellationToken);
+
+        // The node filter of § 10 over the whole tree: components the viewer may not see and
+        // actions the viewer may not run are left out, templates' nodes included.
+        var root = await filter.FilterAsync(tree.Root, caller, cancellationToken);
+        if (root is null)
+        {
+            return NotFound();
+        }
+
+        // The HTML path (§ 8): the same tree, rendered by the same renderer to static HTML.
+        if (string.Equals(format, "html", StringComparison.OrdinalIgnoreCase))
+        {
+            var html = await htmlRenderer.RenderAsync(root, cancellationToken);
+            return Content(html, "text/html; charset=utf-8");
+        }
+
+        return Ok(new DisplayTree { Root = root, DisplayType = tree.DisplayType, ScopeSignature = tree.ScopeSignature });
+    }
+
+    // Editors as trees (docs/blazor-display.md rework step 5): the item's editor, laid out by the
+    // server from its type's definition and the registry's editor components (or a template for
+    // ContentEditor__{Type}). "new-{type}" is the editor of a new item of that type.
+    [HttpGet("{contentItemId}/editor")]
+    public async Task<ActionResult<DisplayTree>> EditorAsync(
+        string contentItemId,
+        [FromServices] Crest.Display.ContentEditorTreeBuilder editors,
+        [FromServices] IAccessDecision decision,
+        CancellationToken cancellationToken)
+    {
+        var caller = callerAccessor.Current;
+        if (caller is null)
+        {
+            return Forbid();
+        }
+
+        Crest.ContentManagement.ContentItem? item;
+        if (contentItemId.StartsWith("new-", StringComparison.Ordinal))
+        {
+            // Decided as the caller's own new item, as creating it will be (owner-scoped rights apply).
+            item = await contentManager.NewAsync(contentItemId["new-".Length..]);
+            item.Owner = caller.UserName;
+            item.Author = caller.UserName;
+        }
+        else
+        {
+            item = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
+        }
+
+        if (item is null || !await decision.AllowsAsync(caller, CommonPermissions.EditContent.Name, item, cancellationToken))
+        {
+            return NotFound();
+        }
+
+        var tree = await editors.BuildAsync(item, cancellationToken);
+        return tree is null ? NotFound() : Ok(tree);
     }
 
     [HttpPost]

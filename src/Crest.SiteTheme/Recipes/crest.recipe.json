@@ -6,10 +6,15 @@
   "website": "https://orchardcore.net",
   "version": "1.0.0-rc2",
   "issetuprecipe": true,
-  "categories": [ "default" ],
-  "tags": [ "site", "blog", "bootstrap", "liquid" ],
-
-  // The variables are evaluated the first time they are accessed, and reused across steps
+  "categories": [
+    "default"
+  ],
+  "tags": [
+    "site",
+    "blog",
+    "bootstrap",
+    "liquid"
+  ],
   "variables": {
     "blogContentItemId": "[js:uuid()]",
     "menuContentItemId": "[js:uuid()]",
@@ -20,15 +25,12 @@
     "spaceTagContentItemId": "[js:uuid()]",
     "categoriesContentItemId": "[js:uuid()]",
     "categoryTravelContentItemId": "[js:uuid()]"
-    // "now": "[js: new Date().toISOString()]"
   },
-
   "steps": [
     {
       "name": "feature",
       "disable": [],
       "enable": [
-        // SaaS
         "Crest.Admin",
         "Crest.Diagnostics",
         "Crest.DynamicCache",
@@ -47,8 +49,6 @@
         "Crest.Users.ChangeEmail",
         "Crest.Users.Registration",
         "Crest.Users.ResetPassword",
-
-        // Content Management
         "Crest.Alias",
         "Crest.AdminMenu",
         "Crest.Autoroute",
@@ -62,7 +62,6 @@
         "Crest.Deployment.Remote",
         "Crest.Feeds",
         "Crest.Flows",
-        "Crest.Forms",
         "Crest.HomeRoute",
         "Crest.Html",
         "Crest.Indexing",
@@ -77,11 +76,7 @@
         "Crest.Taxonomies",
         "Crest.Title",
         "Crest.Templates",
-        "Crest.Widgets",
-
         "Crest",
-
-        // Themes
         "Crest.SiteTheme",
         "TheAdmin",
         "SafeMode"
@@ -101,7 +96,10 @@
         "ContentItemId": "[js: variables('blogContentItemId')]"
       },
       "LayerSettings": {
-        "Zones": [ "Content", "Footer" ]
+        "Zones": [
+          "Content",
+          "Footer"
+        ]
       },
       "LocalizationSettings": {
         "DefaultCulture": "en-US",
@@ -399,108 +397,6 @@
           ]
         },
         {
-          "Name": "Container",
-          "DisplayName": "Container",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "Container",
-              "Name": "Container",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            },
-            {
-              "PartName": "FlowPart",
-              "Name": "FlowPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "Blockquote",
-          "DisplayName": "Blockquote",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "Blockquote",
-              "Name": "Blockquote",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "ImageWidget",
-          "DisplayName": "Image",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "Image",
-              "Name": "Image",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "LiquidWidget",
-          "DisplayName": "Liquid",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Listable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "LiquidPart",
-              "Name": "LiquidPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            }
-          ]
-        },
-        {
           "Name": "Image",
           "DisplayName": "Image",
           "Settings": {
@@ -521,52 +417,6 @@
             {
               "PartName": "TitlePart",
               "Name": "TitlePart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "Paragraph",
-          "DisplayName": "Paragraph",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "Paragraph",
-              "Name": "Paragraph",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "RawHtml",
-          "DisplayName": "Raw Html",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "RawHtml",
-              "Name": "RawHtml",
               "Settings": {
                 "ContentTypePartSettings": {
                   "Position": "0"
@@ -608,15 +458,6 @@
                   "AllowCustomPath": true,
                   "Pattern": "{{ Model.ContentItem | display_text | slugify }}",
                   "ShowHomepageOption": true
-                }
-              }
-            },
-            {
-              "PartName": "FlowPart",
-              "Name": "FlowPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "2"
                 }
               }
             },
@@ -854,23 +695,6 @@
           ]
         },
         {
-          "Name": "Blockquote",
-          "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
-            {
-              "FieldName": "TextField",
-              "Name": "Quote",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "Quote",
-                  "Editor": "TextArea",
-                  "Position": "0"
-                }
-              }
-            }
-          ]
-        },
-        {
           "Name": "Image",
           "Settings": {
             "Attachable": true
@@ -900,40 +724,6 @@
                 },
                 "TextFieldSettings": {
                   "Hint": "A description of the image used as title or alternate text"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "Paragraph",
-          "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
-            {
-              "FieldName": "HtmlField",
-              "Name": "Content",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "Content",
-                  "Position": "0",
-                  "Editor": "Wysiwyg"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "RawHtml",
-          "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
-            {
-              "FieldName": "HtmlField",
-              "Name": "Content",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "Content",
-                  "Position": "0",
-                  "Editor": "Multiline"
                 }
               }
             }
@@ -979,7 +769,6 @@
       ]
     },
     {
-      // Create the indices before the content items so they are indexed automatically.
       "name": "lucene-index",
       "Indices": [
         {
@@ -1015,7 +804,6 @@
       ]
     },
     {
-      // Create the search settings.
       "name": "Settings",
       "LuceneSettings": {
         "SearchIndex": "Search",
@@ -1025,7 +813,6 @@
       }
     },
     {
-      // Create the search index permissions.
       "name": "Roles",
       "Roles": [
         {
@@ -1388,239 +1175,6 @@
             "Path": "contact",
             "SetHomepage": false
           },
-          "FlowPart": {
-            "Widgets": [
-              {
-                "ContentItemId": "[js: uuid()]",
-                "ContentItemVersionId": null,
-                "ContentType": "Form",
-                "DisplayText": "Contact",
-                "Latest": false,
-                "Published": false,
-                "PublishedUtc": null,
-                "CreatedUtc": null,
-                "Owner": null,
-                "Author": "[js: parameters('AdminUsername')]",
-                "TitlePart": {
-                  "Title": "Contact"
-                },
-                "FormPart": {
-                  "Action": "/workflows/Invoke?token=CfDJ8J9X5AJrfSFEg_y2herzL9treOg0l1xGW5AbPXEVnQILZxcfB7HLcWA8hPWv79cYxceFV3RXwPyo4XiarTdobhjPAXg65suEdfjD3bGXLQXph-ACWNVHDncMesMoJxr6MKttRFk8636cBBq7LRJQy3UYfmrlx0jV-EQnBrtcgAkQPZxK6ygsX6MbifonWoz054NbfeUMQ663f85zh2gpl5MhcbPjqkhPRmNpaEfIb52g",
-                  "Method": "POST",
-                  "WorkflowTypeId": null
-                },
-                "FlowPart": {
-                  "Widgets": [
-                    {
-                      "ContentItemId": "[js: uuid()]",
-                      "ContentItemVersionId": null,
-                      "ContentType": "Label",
-                      "DisplayText": "Full Name",
-                      "Latest": false,
-                      "Published": false,
-                      "ModifiedUtc": null,
-                      "PublishedUtc": null,
-                      "CreatedUtc": null,
-                      "Owner": null,
-                      "Author": "[js: parameters('AdminUsername')]",
-                      "TitlePart": {
-                        "Title": "Full Name"
-                      },
-                      "FormElementPart": {
-                        "Id": null
-                      },
-                      "LabelPart": {
-                        "For": "FullName"
-                      },
-                      "FlowMetadata": {
-                        "Alignment": 3,
-                        "Size": 100
-                      }
-                    },
-                    {
-                      "ContentItemId": "[js: uuid()]",
-                      "ContentItemVersionId": null,
-                      "ContentType": "Input",
-                      "DisplayText": "Full Name",
-                      "Latest": false,
-                      "Published": false,
-                      "PublishedUtc": null,
-                      "CreatedUtc": null,
-                      "Owner": null,
-                      "Author": "[js: parameters('AdminUsername')]",
-                      "FormInputElementPart": {
-                        "Name": "FullName"
-                      },
-                      "FormElementPart": {
-                        "Id": "FullName"
-                      },
-                      "InputPart": {
-                        "Type": "text",
-                        "DefaultValue": null,
-                        "Placeholder": "Enter Full Name"
-                      },
-                      "FlowMetadata": {
-                        "Alignment": 3,
-                        "Size": 100
-                      }
-                    },
-                    {
-                      "ContentItemId": "[js: uuid()]",
-                      "ContentItemVersionId": null,
-                      "ContentType": "Label",
-                      "DisplayText": "Email",
-                      "Latest": false,
-                      "Published": false,
-                      "ModifiedUtc": null,
-                      "PublishedUtc": null,
-                      "CreatedUtc": null,
-                      "Owner": null,
-                      "Author": "[js: parameters('AdminUsername')]",
-                      "TitlePart": {
-                        "Title": "Email"
-                      },
-                      "FormElementPart": {
-                        "Id": null
-                      },
-                      "LabelPart": {
-                        "For": "Email"
-                      },
-                      "FlowMetadata": {
-                        "Alignment": 3,
-                        "Size": 100
-                      }
-                    },
-                    {
-                      "ContentItemId": "[js: uuid()]",
-                      "ContentItemVersionId": null,
-                      "ContentType": "Input",
-                      "DisplayText": "Email",
-                      "Latest": false,
-                      "Published": false,
-                      "PublishedUtc": null,
-                      "CreatedUtc": null,
-                      "Owner": null,
-                      "Author": "[js: parameters('AdminUsername')]",
-                      "FormInputElementPart": {
-                        "Name": "Email"
-                      },
-                      "FormElementPart": {
-                        "Id": "Email"
-                      },
-                      "InputPart": {
-                        "Type": "email",
-                        "DefaultValue": null,
-                        "Placeholder": "Enter Email"
-                      },
-                      "FlowMetadata": {
-                        "Alignment": 3,
-                        "Size": 100
-                      }
-                    },
-                    {
-                      "ContentItemId": "[js: uuid()]",
-                      "ContentItemVersionId": null,
-                      "ContentType": "Label",
-                      "DisplayText": "Message",
-                      "Latest": false,
-                      "Published": false,
-                      "ModifiedUtc": null,
-                      "PublishedUtc": null,
-                      "CreatedUtc": null,
-                      "Owner": null,
-                      "Author": "[js: parameters('AdminUsername')]",
-                      "TitlePart": {
-                        "Title": "Message"
-                      },
-                      "FormElementPart": {
-                        "Id": null
-                      },
-                      "LabelPart": {
-                        "For": "Message"
-                      },
-                      "FlowMetadata": {
-                        "Alignment": 3,
-                        "Size": 100
-                      }
-                    },
-                    {
-                      "ContentItemId": "[js: uuid()]",
-                      "ContentItemVersionId": null,
-                      "ContentType": "TextArea",
-                      "DisplayText": "Message",
-                      "Latest": false,
-                      "Published": false,
-                      "PublishedUtc": null,
-                      "CreatedUtc": null,
-                      "Owner": null,
-                      "Author": "[js: parameters('AdminUsername')]",
-                      "FormInputElementPart": {
-                        "Name": "Message"
-                      },
-                      "FormElementPart": {
-                        "Id": "Message"
-                      },
-                      "TextAreaPart": {
-                        "DefaultValue": null,
-                        "Placeholder": "Enter Text Message"
-                      },
-                      "FlowMetadata": {
-                        "Alignment": 3,
-                        "Size": 100
-                      }
-                    },
-                    {
-                      "ContentItemId": "[js: uuid()]",
-                      "ContentItemVersionId": null,
-                      "ContentType": "ValidationSummary",
-                      "DisplayText": null,
-                      "Latest": false,
-                      "Published": false,
-                      "PublishedUtc": null,
-                      "CreatedUtc": null,
-                      "Owner": null,
-                      "Author": "[js: parameters('AdminUsername')]",
-                      "ValidationSummaryPart": {},
-                      "FlowMetadata": {
-                        "Alignment": 3,
-                        "Size": 100
-                      }
-                    },
-                    {
-                      "ContentItemId": "[js: uuid()]",
-                      "ContentItemVersionId": null,
-                      "ContentType": "Button",
-                      "DisplayText": "Submit",
-                      "Latest": false,
-                      "Published": false,
-                      "PublishedUtc": null,
-                      "CreatedUtc": null,
-                      "Owner": null,
-                      "Author": "[js: parameters('AdminUsername')]",
-                      "FormInputElementPart": {
-                        "Name": "Submit"
-                      },
-                      "FormElementPart": {
-                        "Id": null
-                      },
-                      "ButtonPart": {
-                        "Text": "Submit",
-                        "Type": "submit"
-                      },
-                      "FlowMetadata": {
-                        "Alignment": 3,
-                        "Size": 100
-                      }
-                    }
-                  ]
-                },
-                "FlowMetadata": {
-                  "Alignment": 3,
-                  "Size": 100
-                }
-              }
-            ]
-          },
           "TitlePart": {
             "Title": "Contact"
           }
@@ -1647,28 +1201,9 @@
           "TitlePart": {
             "Title": "Counter"
           }
-        },
-        {
-          "ContentItemId": "[js: uuid()]",
-          "ContentType": "RawHtml",
-          "Displaytext": "Footer",
-          "Latest": true,
-          "Published": true,
-          "Owner": "[js: parameters('AdminUsername')]",
-          "Author": "[js: parameters('AdminUsername')]",
-          "LayerMetadata": {
-            "Layer": "Always",
-            "Zone": "Footer",
-            "RenderTitle": false,
-            "Position": 10
-          },
-          "RawHtml": {
-            "Content": {
-              "Html": "[file:text('Snippets/footer.html')]"
-            }
-          }
         }
-      ]
+      ],
+      "data": []
     },
     {
       "name": "media",

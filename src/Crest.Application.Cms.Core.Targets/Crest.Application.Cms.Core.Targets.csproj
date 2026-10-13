@@ -67,7 +67,6 @@
     <ProjectReference Include="..\Crest.Features\Crest.Features.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Feeds\Crest.Feeds.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Flows\Crest.Flows.csproj" PrivateAssets="none" />
-    <ProjectReference Include="..\Crest.Forms\Crest.Forms.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.GitHub\Crest.GitHub.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Google\Crest.Google.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.HealthChecks\Crest.HealthChecks.csproj" PrivateAssets="none" />
@@ -122,6 +121,7 @@
     <ProjectReference Include="..\Crest.SignalR.Azure\Crest.SignalR.Azure.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.SignalR.Redis\Crest.SignalR.Redis.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Sitemaps\Crest.Sitemaps.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Crest.Access\Crest.Access.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Sharing\Crest.Sharing.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Shortcodes\Crest.Shortcodes.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Sms\Crest.Sms.csproj" PrivateAssets="none" />
@@ -134,7 +134,6 @@
     <ProjectReference Include="..\Crest.Title\Crest.Title.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Twitter\Crest.Twitter.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.Users\Crest.Users.csproj" PrivateAssets="none" />
-    <ProjectReference Include="..\Crest.Widgets\Crest.Widgets.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Crest.XmlRpc\Crest.XmlRpc.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\TheAdmin\TheAdmin.csproj" PrivateAssets="none" />
   </ItemGroup>

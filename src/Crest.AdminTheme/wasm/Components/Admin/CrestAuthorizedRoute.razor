@@ -1,8 +1,8 @@
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @using Crest.AdminTheme.Options
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
-@inject DisplayManager DisplayManager
+@inject AdminShellState AdminShellState
 @inject CrestRoutingOptions Routing
 @inject NavigationManager Navigation
 @inject Crest.Components.Theme.CrestApiLocalizer T
@@ -22,19 +22,19 @@
 {
     @ChildContent
 }
-else if (!DisplayManager.IsInitialized)
+else if (!AdminShellState.IsInitialized)
 {
     <CrestStack Gap="1rem" Style="padding: 2rem;">
         <CrestText Text="@T["Loading..."]" />
     </CrestStack>
 }
-else if (!DisplayManager.IsAuthenticated)
+else if (!AdminShellState.IsAuthenticated)
 {
     <CrestStack Gap="1rem" Style="padding: 2rem;">
         <CrestText Text="@T["Sign in is required."]" />
     </CrestStack>
 }
-else if (!DisplayManager.IsRouteAuthorized(Navigation.Uri))
+else if (!AdminShellState.IsRouteAuthorized(Navigation.Uri))
 {
     <CrestStack data-testid="crest-route-forbidden" Gap="0.5rem" Style="padding: 2rem;">
         <CrestText TextStyle="TextStyle.H4" Text="@T["Access denied"]" />
@@ -52,7 +52,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await DisplayManager.EnsureInitializedAsync();
+        await AdminShellState.EnsureInitializedAsync();
         // Prerender: the middleware already authenticated this request (see the
         // markup comment above); a server-side manifest failure here must not turn
         // an authorized page's prerender into a 302 to the login shell. The
@@ -62,7 +62,7 @@ else
             return;
         }
 
-        if (!DisplayManager.IsAuthenticated)
+        if (!AdminShellState.IsAuthenticated)
         {
             // Crossing from the admin shell (base href = AdminPath) to the login
             // shell (base href = LoginPath) requires a full reload - see

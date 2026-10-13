@@ -10,11 +10,11 @@
    and swallows Crest's Liquid homepage) is handled in Crest.Server's App.razor, which
    only renders AdminRoutes when the middleware marked the request as an admin shell. *@
 @page "/"
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @using Crest.AdminTheme.Options
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
-@inject DisplayManager DisplayManager
+@inject AdminShellState AdminShellState
 @inject CrestRoutingOptions Routing
 @inject NavigationManager Navigation
 
@@ -53,10 +53,10 @@
             return;
         }
 
-        await DisplayManager.EnsureInitializedAsync();
+        await AdminShellState.EnsureInitializedAsync();
         var currentBasePath = new Uri(Navigation.BaseUri).AbsolutePath.TrimEnd('/');
 
-        if (DisplayManager.IsAuthenticated)
+        if (AdminShellState.IsAuthenticated)
         {
             if (string.Equals(currentBasePath, Routing.AdminPath.TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
             {

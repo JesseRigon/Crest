@@ -188,3 +188,26 @@
     min-width: 0;
     width: 100%;
 }
+
+/* Display tree interaction primitives (docs/blazor-display.md § 4a). */
+.crest-item-list { list-style: none; margin: 0; padding: 0; }
+.crest-item-list__item { padding-block: var(--crest-space-2, 0.5rem); padding-inline: var(--crest-space-3, 0.75rem); cursor: pointer; border-radius: var(--crest-radius-sm, 4px); }
+.crest-item-list__item:hover { background: var(--crest-surface-hover, var(--rz-base-200)); }
+.crest-item-list__item--selected { background: var(--crest-surface-selected, var(--rz-primary-lighter)); }
+.crest-item-list__empty, .crest-property-list__empty { color: var(--crest-text-muted, var(--rz-text-secondary-color)); }
+.crest-overlay-backdrop { position: fixed; inset: 0; z-index: var(--crest-overlay-z-index, 1200); background: var(--crest-overlay-scrim, rgba(0, 0, 0, 0.32)); }
+.crest-overlay-backdrop--clear { background: transparent; }
+.crest-context-menu { position: fixed; z-index: calc(var(--crest-overlay-z-index, 1200) + 1); min-inline-size: 10rem; padding-block: var(--crest-space-1, 0.25rem); background: var(--crest-surface, var(--rz-base-background-color)); border-radius: var(--crest-radius-md, 6px); box-shadow: var(--crest-shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.2)); }
+.crest-context-menu__item { display: flex; gap: var(--crest-space-2, 0.5rem); align-items: center; inline-size: 100%; padding-block: var(--crest-space-2, 0.5rem); padding-inline: var(--crest-space-3, 0.75rem); border: 0; background: none; text-align: start; cursor: pointer; color: inherit; }
+.crest-context-menu__item:hover { background: var(--crest-surface-hover, var(--rz-base-200)); }
+.crest-dialog { position: fixed; z-index: calc(var(--crest-overlay-z-index, 1200) + 1); inset-block-start: 50%; inset-inline-start: 50%; transform: translate(-50%, -50%); min-inline-size: min(32rem, 90vw); max-block-size: 85vh; overflow: auto; background: var(--crest-surface, var(--rz-base-background-color)); border-radius: var(--crest-radius-lg, 8px); box-shadow: var(--crest-shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.2)); }
+.crest-dialog__header { display: flex; justify-content: space-between; align-items: center; padding: var(--crest-space-3, 0.75rem) var(--crest-space-4, 1rem); }
+.crest-dialog__close { border: 0; background: none; font-size: 1.25rem; cursor: pointer; color: inherit; }
+.crest-dialog__body { padding: 0 var(--crest-space-4, 1rem) var(--crest-space-4, 1rem); }
+.crest-property-list { display: grid; grid-template-columns: max-content 1fr; gap: var(--crest-space-1, 0.25rem) var(--crest-space-4, 1rem); margin: 0; }
+.crest-property-list dt { font-weight: 600; }
+.crest-property-list dd { margin: 0; }
+.crest-menu__list { display: flex; flex-wrap: wrap; gap: var(--crest-space-1, 0.25rem) var(--crest-space-4, 1rem); list-style: none; margin: 0; padding: 0; }
+.crest-menu__list--nested { flex-direction: column; padding-inline-start: var(--crest-space-3, 0.75rem); }
+.crest-menu__link { color: inherit; text-decoration: none; }
+.crest-menu__link:hover, .crest-menu__link:focus-visible { text-decoration: underline; }

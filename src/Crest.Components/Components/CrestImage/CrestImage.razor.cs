@@ -28,6 +28,7 @@ namespace Crest.Components.Primitives
     /// &lt;CrestImage Path=@($"data:image/jpeg;base64,{base64String}") AlternateText="Uploaded Photo" /&gt;
     /// </code>
     /// </example>
+    [Crest.DisplayManagement.Components.CrestBlazorComponent("Image", DisplayName = "Image", Category = "Basic", Icon = "image")]
     public partial class CrestImage : CrestComponentWithChildren
     {
         /// <summary>

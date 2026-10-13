@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Crest.Mvc.Abstractions\Crest.Mvc.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Apis.GraphQL.Abstractions\Crest.Apis.GraphQL.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.AuditTrail.Abstractions\Crest.AuditTrail.Abstractions.csproj" />

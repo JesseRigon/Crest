@@ -27,6 +27,16 @@
   <Import Project="$(PlatformSrcDir)Crest.Theme.Targets\Crest.Theme.Targets.targets"
           Condition="'$(ModuleType)' == 'Theme' And '$(_IsPlatformProject)' != 'true'" />
 
+  <!-- The component catalog generator for Crest's own component libraries (theme *.Client,
+       module *.BlazorWasm, and the projects that opt in with ComponentCatalog=true): the same
+       file the display abstractions package ships in buildTransitive/, with the generator as a
+       project reference instead of the packaged assembly. -->
+  <PropertyGroup Condition="'$(_IsPlatformProject)' != 'true'">
+    <ComponentCatalogGeneratorProject>$(MSBuildThisFileDirectory)src\Crest.SourceGenerators\Crest.SourceGenerators.csproj</ComponentCatalogGeneratorProject>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)src\Crest.DisplayManagement.Abstractions\buildTransitive\Crest.DisplayManagement.Abstractions.targets"
+          Condition="'$(_IsPlatformProject)' != 'true'" />
+
   <!-- The platform projects: what the former src/*/Directory.Build.targets files imported. -->
   <Import Project="src\Crest.Build\Crest.Commons.targets" Condition="'$(_PlatformKind)' == 'Library' Or '$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
   <Import Project="src\Crest.Module.Targets\Crest.Module.Targets.targets" Condition="'$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />

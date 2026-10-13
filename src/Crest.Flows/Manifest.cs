@@ -10,7 +10,6 @@ using Crest.Modules.Manifest;
 [assembly: Feature(
     Id = "Crest.Flows",
     Name = "Flows",
-    Description = "Provides a content part allowing users to edit their content based on Widgets.",
-    Dependencies = ["Crest.Widgets"],
+    Description = "Provides BagPart, a collection of content items held in their parent.",
     Category = "Content"
 )]

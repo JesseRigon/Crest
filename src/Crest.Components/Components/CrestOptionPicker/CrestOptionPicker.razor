@@ -14,16 +14,18 @@
         <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</CrestAlert>
     }
 
-    <CrestDropDownDataGrid TValue="IEnumerable<string>"
+    @* A multiple picker's value is the list of ids, a single one's the one id: the grid filters
+       its rows by comparing ids with the value. *@
+    <CrestDropDownDataGrid TValue="object"
                            Data="@Rows"
-                           Value="@SelectedIds"
+                           Value="@(Multiple ? SelectedIds : SelectedIds.FirstOrDefault())"
                            Multiple="@Multiple"
                            Chips="@Multiple"
                            AllowFiltering="true"
                            AllowClear="@(!Required)"
                            Disabled="@Disabled"
                            Placeholder="@Placeholder"
-                           TextProperty="@PrimaryColumnPath"
+                           TextProperty="@nameof(OptionPickerRow.Text)"
                            ValueProperty="Id"
                            LoadData="@OnLoadDataAsync"
                            Change="@OnChangeAsync"
@@ -32,12 +34,12 @@
         <Columns>
             @foreach (var column in VisibleColumns)
             {
-                <CrestDropDownDataGridColumn TItem="OptionPickerRow"
-                                             Property="@($"Values.{column.Path}")"
-                                             Title="@column.Label"
+                @* Drawn by the template: a value in Values is not a member a property path can read;
+                   the drop-down searches by the row's Text. *@
+                <CrestDropDownDataGridColumn Title="@column.Label"
                                              Width="@column.Width">
                     <Template Context="row">
-                        @ReadValue(row, column.Path)
+                        @ReadValue((OptionPickerRow)row, column.Path)
                     </Template>
                 </CrestDropDownDataGridColumn>
             }
@@ -241,7 +243,7 @@
             }
 
             var rows = await response.Content.ReadFromJsonAsync<OptionPickerRow[]>() ?? [];
-            Rows = [.. rows];
+            Rows = [.. rows.Select(WithText)];
 
             // Keep already-selected rows present even when the current filter excludes
             // them, or the closed picker would blank out while the user searches.
@@ -282,7 +284,7 @@
         {
             if (!Rows.Any(existing => existing.Id == row.Id))
             {
-                Rows.Add(row);
+                Rows.Add(WithText(row));
             }
         }
     }
@@ -302,6 +304,8 @@
 
     private string[] RequestedColumns() =>
         Columns.Count > 0 ? [.. Columns.Select(column => column.Path)] : [DefaultColumn.Path];
+
+    private OptionPickerRow WithText(OptionPickerRow row) => row with { Text = ReadValue(row, PrimaryColumnPath) };
 
     private static string ReadValue(OptionPickerRow row, string path) =>
         row.Values is not null && row.Values.TryGetValue(path, out var value) ? value ?? string.Empty : string.Empty;

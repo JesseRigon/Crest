@@ -97,15 +97,11 @@ public sealed class Startup : StartupBase
             });
         });
 
-        services.AddSingleton<AutorouteTransformer>();
         services.AddSingleton<IShellRouteValuesAddressScheme, AutorouteValuesAddressScheme>();
     }
 
-    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        // The 1st segment prevents the transformer to be executed for the home.
-        routes.MapDynamicControllerRoute<AutorouteTransformer>("/{any}/{**slug}");
-    }
+    // No MVC route for autoroute paths: the site shell's content route serves them on the display
+    // tree (docs/blazor-display.md rework step 3); the address scheme above still generates them.
 }
 
 [RequireFeatures("Crest.Sitemaps")]
@@ -123,15 +119,6 @@ public sealed class ContentAutourouteStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddShapeTableProvider<ContentAutorouteShapeTableProvider>();
-    }
-}
-
-[RequireFeatures("Crest.Widgets")]
-public sealed class WidgetAutourouteStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddShapeTableProvider<WidgetAutorouteShapeTableProvider>();
     }
 }
 

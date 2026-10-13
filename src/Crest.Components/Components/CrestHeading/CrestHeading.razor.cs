@@ -1,4 +1,4 @@
-﻿using Crest.Components.Blazor;
+﻿using Crest.DisplayManagement.Components;
 using Microsoft.AspNetCore.Components;
 
 namespace Crest.Components.Primitives
@@ -6,7 +6,7 @@ namespace Crest.Components.Primitives
     /// <summary>
     /// CrestHeading component.
     /// </summary>
-    [CrestBlazorComponent("CrestHeading")]
+    [CrestBlazorComponent("CrestHeading", DisplayName = "Heading", Category = "Typography", Icon = "title")]
     public partial class CrestHeading : CrestComponent
     {
         /// <summary>
@@ -14,6 +14,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value>The text.</value>
         [Parameter]
+        [ComponentParameter(DisplayName = "Text", Group = "Content", Required = true)]
         public string? Text { get; set; }
 
         /// <summary>
@@ -21,6 +22,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value>The size.</value>
         [Parameter]
+        [ComponentParameter(DisplayName = "Level", Group = "Content", Choices = ["H1", "H2", "H3", "H4", "H5", "H6"])]
         public string Size { get; set; } = "H1";
 
         /// <inheritdoc />

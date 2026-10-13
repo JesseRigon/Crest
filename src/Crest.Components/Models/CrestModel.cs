@@ -2,24 +2,17 @@ using System.Text.Json.Nodes;
 
 namespace Crest.Components.Models;
 
-public sealed record CrestModelSource(
-    string Name,
-    string? ContentType,
-    string Version,
-    CrestModel[] Items);
-
 public sealed record CrestContentItemPage(CrestContentItem[] Items, int Total, int Page, int PageSize);
 
+/// <summary>
+/// The content-item wrapper the model-driven components (the editors, Parties, Fruitful) consume.
+/// Not a display tree: the tree's node is <c>Crest.DisplayManagement.Components.DisplayNode</c>
+/// (docs/blazor-display.md, ruling 2026-10-12), which replaced the shape metadata, zones, sources
+/// and diagnostics this record used to carry.
+/// </summary>
 public sealed record CrestModel(
     CrestContentItem? ContentItem,
-    JsonNode? Content,
-    CrestModel[]? Items = null,
-    string[]? Classes = null,
-    Dictionary<string, string>? Attributes = null,
-    CrestShapeMetadata? Metadata = null,
-    Dictionary<string, CrestZone>? Zones = null,
-    Dictionary<string, CrestModelSource>? Sources = null,
-    CrestShapeDiagnostic[]? Diagnostics = null)
+    JsonNode? Content)
 {
     /// <summary>Wraps a content item returned by the api/crest/content-items API
     /// into the shape the model-driven components consume.</summary>
@@ -81,23 +74,3 @@ public sealed record CrestContentFieldMetadata(
     string Editor,
     string? Position,
     JsonNode? Settings);
-
-public sealed record CrestShapeMetadata(
-    string? Shape = null,
-    string? Type = null,
-    string? DisplayType = null,
-    string? Name = null,
-    string? Position = null,
-    string? Differentiator = null,
-    string? Id = null,
-    string? TagName = null,
-    string[]? Alternates = null,
-    string[]? Wrappers = null);
-
-public sealed record CrestZone(CrestModel[] Items);
-
-public sealed record CrestShapeDiagnostic(
-    string Path,
-    string? SourceType,
-    string Action,
-    string Reason);

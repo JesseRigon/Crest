@@ -1,48 +1,26 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Microsoft.Extensions.Options;
 using Crest.Deployment;
 using Crest.Json;
-using Crest.Layers.Models;
 using Crest.Layers.Services;
-using Crest.Settings;
+using Microsoft.Extensions.Options;
 
 namespace Crest.Layers.Deployment;
 
-public sealed class AllLayersDeploymentSource
+/// <summary>Exports the layers, their rules and their placements as a Layers step.</summary>
+public sealed class AllLayersDeploymentSource(ILayerService layerService, IOptions<DocumentJsonSerializerOptions> serializationOptions)
     : DeploymentSourceBase<AllLayersDeploymentStep>
 {
-    private readonly ILayerService _layerService;
-    private readonly ISiteService _siteService;
-    private readonly JsonSerializerOptions _jsonSerializerOptions;
-
-    public AllLayersDeploymentSource(
-        ILayerService layerService,
-        ISiteService siteService,
-        IOptions<DocumentJsonSerializerOptions> serializationOptions)
-    {
-        _layerService = layerService;
-        _siteService = siteService;
-        _jsonSerializerOptions = serializationOptions.Value.SerializerOptions;
-    }
+    private readonly JsonSerializerOptions _jsonSerializerOptions = serializationOptions.Value.SerializerOptions;
 
     protected override async Task ProcessAsync(AllLayersDeploymentStep step, DeploymentPlanResult result)
     {
-        var layers = await _layerService.GetLayersAsync();
-
+        var layers = await layerService.GetLayersAsync();
         result.Steps.Add(new JsonObject
         {
             ["name"] = "Layers",
             ["Layers"] = JArray.FromObject(layers.Layers, _jsonSerializerOptions),
-        });
-
-        var layerSettings = await _siteService.GetSettingsAsync<LayerSettings>();
-
-        // Adding Layer settings
-        result.Steps.Add(new JsonObject
-        {
-            ["name"] = "Settings",
-            ["LayerSettings"] = JObject.FromObject(layerSettings),
+            ["Placements"] = JArray.FromObject(layers.Placements, _jsonSerializerOptions),
         });
     }
 }

@@ -6,5 +6,6 @@ using Crest.Modules.Manifest;
     Website = ManifestConstants.PlatformWebsite,
     Version = ManifestConstants.PlatformVersion,
     Description = "Share any module's items with users, roles, organizations, the tenant or the public: grants and blocks that flow down a tree, and ordered rules. Decided by the access gate.",
-    Category = "Security"
+    Category = "Security",
+    Dependencies = ["Crest.Access"]
 )]

@@ -69,6 +69,8 @@
     <ProjectReference Include="$(PlatformSrcDir)Crest.Roles.Abstractions\Crest.Roles.Abstractions.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Themes\Crest.Themes.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Templates\Crest.Templates.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Layers\Crest.Layers.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Placements\Crest.Placements.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Tenants\Crest.Tenants.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Security\Crest.Security.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Users\Crest.Users.csproj" />

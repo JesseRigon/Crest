@@ -1,10 +1,10 @@
 @page "/DesignSystem"
 @using Crest.AdminTheme.Api
 @using Crest.AdminTheme.Components.Admin
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
-@inject DisplayManager DisplayManager
+@inject AdminShellState AdminShellState
 @inject NotificationService Notifications
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
@@ -57,8 +57,8 @@
                     </div>
 
                     <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                        <CrestButton Text="@T["Save"]" Icon="save" ButtonType="ButtonType.Submit" Disabled="@DisplayManager.IsBusy" />
-                        <CrestButton Text="@T["Reset defaults"]" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@DisplayManager.IsBusy" />
+                        <CrestButton Text="@T["Save"]" Icon="save" ButtonType="ButtonType.Submit" Disabled="@AdminShellState.IsBusy" />
+                        <CrestButton Text="@T["Reset defaults"]" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@AdminShellState.IsBusy" />
                     </CrestStack>
                 </CrestStack>
             </CrestTemplateForm>
@@ -82,12 +82,12 @@
 
     protected override void OnInitialized()
     {
-        Model = DesignSystemModel.From(DisplayManager.Theme);
+        Model = DesignSystemModel.From(AdminShellState.Theme);
     }
 
     private async Task SaveAsync()
     {
-        var saved = await DisplayManager.UpdateThemeAsync(Model.ToSettings());
+        var saved = await AdminShellState.UpdateThemeAsync(Model.ToSettings());
         if (saved is not null)
         {
             Model = DesignSystemModel.From(saved);

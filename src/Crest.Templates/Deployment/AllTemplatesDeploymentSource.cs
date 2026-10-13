@@ -1,48 +1,46 @@
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Crest.Deployment;
-using Crest.Templates.Models;
 using Crest.Templates.Services;
 
 namespace Crest.Templates.Deployment;
 
-public sealed class AllTemplatesDeploymentSource
-    : DeploymentSourceBase<AllTemplatesDeploymentStep>
+/// <summary>Exports the published templates as a Templates step, their sources inline or as files.</summary>
+public sealed class AllTemplatesDeploymentSource(TemplateStore store) : DeploymentSourceBase<AllTemplatesDeploymentStep>
 {
-    private readonly TemplatesManager _templatesManager;
-
-    public AllTemplatesDeploymentSource(TemplatesManager templatesManager)
-    {
-        _templatesManager = templatesManager;
-    }
-
     protected override async Task ProcessAsync(AllTemplatesDeploymentStep step, DeploymentPlanResult result)
     {
-        var templateObjects = new JsonObject();
-        var templates = await _templatesManager.GetTemplatesDocumentAsync();
+        var templates = new JsonObject();
+        foreach (var template in await store.ListPublishedAsync())
+        {
+            var source = template.Source;
+            if (step.ExportAsFiles)
+            {
+                var fileName = "Templates/" + template.Name.Replace("__", "-").Replace("_", ".") + (template.Theme is null ? string.Empty : "." + template.Theme) + (template.DisplayType is null ? string.Empty : "." + template.DisplayType) + ".liquid";
+                await result.FileBuilder.SetFileAsync(fileName, Encoding.UTF8.GetBytes(template.Source));
+                source = $"[file:text('{fileName}')]";
+            }
 
-        if (step.ExportAsFiles)
-        {
-            foreach (var template in templates.Templates)
+            templates[template.Name] = new JsonObject
             {
-                var fileName = "Templates/" + template.Key.Replace("__", "-").Replace("_", ".") + ".liquid";
-                var templateValue = new Template { Description = template.Value.Description, Content = $"[file:text('{fileName}')]" };
-                await result.FileBuilder.SetFileAsync(fileName, Encoding.UTF8.GetBytes(template.Value.Content));
-                templateObjects[template.Key] = JObject.FromObject(templateValue);
-            }
-        }
-        else
-        {
-            foreach (var template in templates.Templates)
-            {
-                templateObjects[template.Key] = JObject.FromObject(template.Value);
-            }
+                ["Source"] = source,
+                ["Theme"] = template.Theme,
+                ["DisplayType"] = template.DisplayType,
+                ["Description"] = template.Description,
+                ["IsComposite"] = template.IsComposite,
+                ["DisplayName"] = template.DisplayName,
+                ["Category"] = template.Category,
+                ["Icon"] = template.Icon,
+                ["Inputs"] = JsonSerializer.SerializeToNode(template.Inputs),
+                ["Outputs"] = JsonSerializer.SerializeToNode(template.Outputs),
+            };
         }
 
         result.Steps.Add(new JsonObject
         {
             ["name"] = "Templates",
-            ["Templates"] = templateObjects,
+            ["Templates"] = templates,
         });
     }
 }

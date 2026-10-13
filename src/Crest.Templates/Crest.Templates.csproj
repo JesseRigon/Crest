@@ -6,7 +6,7 @@
     <Title>Crest Templates</Title>
     <Description>$(OCCMSDescription)
 
-    Provides features to write custom shape templates from the Admin UI.</Description>
+    Templates as content: Liquid whose tags emit display-tree nodes, bound to shapes or placed as composites.</Description>
     <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
   </PropertyGroup>
 
@@ -24,6 +24,7 @@
     <ProjectReference Include="..\Crest.DisplayManagement.Liquid\Crest.DisplayManagement.Liquid.csproj" />
     <ProjectReference Include="..\Crest.Localization.Abstractions\Crest.Localization.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ContentManagement.Abstractions\Crest.ContentManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.ContentManagement\Crest.ContentManagement.csproj" />
     <ProjectReference Include="..\Crest.ContentTypes.Abstractions\Crest.ContentTypes.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />

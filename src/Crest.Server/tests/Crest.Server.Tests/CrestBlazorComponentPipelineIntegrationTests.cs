@@ -16,7 +16,7 @@ using Xunit;
 namespace Crest.Server.Tests;
 
 // Goes one level deeper than CrestBlazorComponentShapeBindingResolverTests: instead of
-// hand-building the CrestBlazorComponentShapeViewModel and calling the resolver directly,
+// hand-building a shape and calling the resolver directly,
 // this drives the real chain a live request would use -
 // IShapeFactory.CreateAsync<TModel>(shapeType, initialize) (Crest's real dynamic-proxy/
 // Shape machinery, the same DefaultShapeFactory a live tenant uses, and the same call
@@ -35,10 +35,12 @@ public sealed class CrestBlazorComponentPipelineIntegrationTests
         var registryServices = new ServiceCollection();
         registryServices.AddLogging();
         registryServices.AddSingleton<IJSRuntime, UnsupportedJSRuntime>();
+        var registry = new Crest.DisplayManagement.Components.ComponentRegistry(
+            [Crest.DisplayManagement.Components.ComponentCatalogs.ForAssembly(typeof(CrestQuote).Assembly)]);
+        registryServices.AddTestDisplayTree([.. registry.Components]);
         var registryServiceProvider = registryServices.BuildServiceProvider();
 
-        var registry = new AssemblyScanningCrestBlazorComponentRegistry([typeof(CrestQuote).Assembly]);
-        var resolver = new CrestBlazorComponentShapeBindingResolver(registry, registryServiceProvider, NullLoggerFactory.Instance);
+        var resolver = new CrestBlazorComponentShapeBindingResolver(registry);
 
         var shapeTableManager = Substitute.For<IShapeTableManager>();
         shapeTableManager.GetShapeTableAsync(Arg.Any<string>())
@@ -64,16 +66,10 @@ public sealed class CrestBlazorComponentPipelineIntegrationTests
             shapeRenderingOptions,
             themeManager);
 
-        // This is exactly what CrestBlazorComponentPartDisplayDriver.Display's
-        // Initialize<CrestBlazorComponentShapeViewModel>(part.ComponentName, model => ...)
-        // call resolves to under the hood (DisplayDriverBase.Initialize<TModel> ->
-        // ctx.ShapeFactory.CreateAsync<TModel>(shapeType)) - a real dynamic-proxy shape,
-        // not a hand-built CrestBlazorComponentShapeViewModel instance. Parameters are
-        // copied into Properties, the same way the real driver does it (see its own
-        // comment) and the same storage Liquid's shape_new path writes to.
-        System.Action<CrestBlazorComponentShapeViewModel> initialize = model =>
-            model.Properties["Text"] = "Real content pipeline.";
-        var shape = await shapeFactory.CreateAsync("CrestQuote", initialize);
+        // A real shape from the shape factory, named after the component, its parameter in
+        // Properties: what a driver or Liquid's shape_new produces.
+        var shape = await shapeFactory.CreateAsync("CrestQuote");
+        shape.Properties["Text"] = "Real content pipeline.";
 
         var html = (await htmlDisplay.ExecuteAsync(new Crest.DisplayManagement.Implementation.DisplayContext
         {

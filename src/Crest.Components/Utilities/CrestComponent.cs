@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Crest.DisplayManagement.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
@@ -42,6 +43,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value>The mouse enter event callback.</value>
         [Parameter]
+        [ComponentParameter(Group = "Events", Advanced = true)]
         public EventCallback<ElementReference> MouseEnter { get; set; }
 
         /// <summary>
@@ -51,6 +53,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value>The mouse leave event callback.</value>
         [Parameter]
+        [ComponentParameter(Group = "Events", Advanced = true)]
         public EventCallback<ElementReference> MouseLeave { get; set; }
 
         /// <summary>
@@ -60,6 +63,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value>The context menu (right-click) event callback.</value>
         [Parameter]
+        [ComponentParameter(Group = "Events", Advanced = true)]
         public EventCallback<Microsoft.AspNetCore.Components.Web.MouseEventArgs> ContextMenu { get; set; }
 
         /// <summary>
@@ -68,6 +72,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value>The culture for localization. Default is <see cref="CultureInfo.CurrentCulture"/>.</value>
         [Parameter]
+        [ComponentParameter(Hidden = true)]
         public CultureInfo Culture
         {
             get => culture ?? DefaultCulture ?? CultureInfo.CurrentCulture;
@@ -91,6 +96,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value>The UI culture for string localization. Default is <see cref="CultureInfo.CurrentUICulture"/>.</value>
         [Parameter]
+        [ComponentParameter(Hidden = true)]
         public CultureInfo UICulture
         {
             get => uiCulture ?? DefaultUICulture ?? CultureInfo.CurrentUICulture;
@@ -138,6 +144,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value>The style.</value>
         [Parameter]
+        [ComponentParameter(Group = "Appearance", Advanced = true)]
         public virtual string? Style { get; set; }
 
         /// <summary>
@@ -145,6 +152,7 @@ namespace Crest.Components.Primitives
         /// </summary>
         /// <value><c>true</c> if visible; otherwise, <c>false</c>.</value>
         [Parameter]
+        [ComponentParameter(Group = "Behavior")]
         public virtual bool Visible { get; set; } = true;
 
         /// <summary>

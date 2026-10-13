@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Crest.Recipes.Models;
 using Crest.Recipes.Services;
@@ -7,29 +8,45 @@ using Crest.Templates.Services;
 namespace Crest.Templates.Recipes;
 
 /// <summary>
-/// This recipe step creates a set of templates.
+/// Creates and publishes templates: <c>{ "name": "Templates", "Templates": { "Content__BlogPost":
+/// { "Source": "...", "Theme": null, "DisplayType": "Detail", "Description": "..." } } }</c>.
+/// A template of the same name, theme and display type is replaced.
 /// </summary>
-public sealed class TemplateStep : NamedRecipeStepHandler
+public sealed class TemplateStep(TemplateStore store) : NamedRecipeStepHandler("Templates")
 {
-    private readonly TemplatesManager _templatesManager;
-
-    public TemplateStep(TemplatesManager templatesManager)
-        : base("Templates")
-    {
-        _templatesManager = templatesManager;
-    }
+    private static readonly System.Text.Json.JsonSerializerOptions s_json = new(System.Text.Json.JsonSerializerDefaults.Web);
 
     protected override async Task HandleAsync(RecipeExecutionContext context)
     {
-        if (context.Step.TryGetPropertyValue("Templates", out var jsonNode) && jsonNode is JsonObject templates)
+        if (!context.Step.TryGetPropertyValue("Templates", out var node) || node is not JsonObject templates)
         {
-            foreach (var property in templates)
-            {
-                var name = property.Key;
-                var value = property.Value.ToObject<Template>();
+            return;
+        }
 
-                await _templatesManager.UpdateTemplateAsync(name, value);
+        var existing = await store.ListLatestAsync();
+        foreach (var (name, value) in templates)
+        {
+            if (value is not JsonObject template)
+            {
+                continue;
             }
+
+            // The declaration reads straight off the step (Source, Theme, DisplayType, Description,
+            // IsComposite, DisplayName, Category, Icon, Inputs, Outputs); "Content" is the old name of Source.
+            var part = template.Deserialize<TemplatePart>(s_json) ?? new TemplatePart();
+            part.Name = name;
+            if (string.IsNullOrEmpty(part.Source) && template["Content"]?.GetValue<string>() is { } content)
+            {
+                part.Source = content;
+            }
+
+            var match = existing.FirstOrDefault(record =>
+                string.Equals(record.Name, part.Name, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(record.Theme ?? string.Empty, part.Theme ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(record.DisplayType ?? string.Empty, part.DisplayType ?? string.Empty, StringComparison.OrdinalIgnoreCase));
+
+            var saved = await store.SaveDraftAsync(match?.ContentItemId, part);
+            await store.PublishAsync(saved.ContentItemId);
         }
     }
 }

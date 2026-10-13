@@ -6,15 +6,17 @@
   "website": "https://orchardcore.net",
   "version": "1.0.0",
   "issetuprecipe": true,
-  "categories": [ "tests" ],
-  "tags": [ "tests" ],
-
+  "categories": [
+    "tests"
+  ],
+  "tags": [
+    "tests"
+  ],
   "variables": {
     "seededPageId": "[js:uuid()]",
     "seededWidgetId": "[js:uuid()]",
     "seededLiquidWidgetId": "[js:uuid()]"
   },
-
   "steps": [
     {
       "name": "feature",
@@ -29,7 +31,6 @@
         "Crest.Settings",
         "Crest.Themes",
         "Crest.Users",
-
         "Crest.ContentFields",
         "Crest.Contents",
         "Crest.ContentTypes",
@@ -37,8 +38,6 @@
         "Crest.Html",
         "Crest.Liquid",
         "Crest.Title",
-        "Crest.Widgets",
-
         "TheAdmin",
         "SafeMode"
       ]
@@ -72,211 +71,11 @@
                   "Position": "0"
                 }
               }
-            },
-            {
-              "PartName": "FlowPart",
-              "Name": "FlowPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "EsModuleTestFieldsWidget",
-          "DisplayName": "Es Module Test Fields Widget",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "TitlePart",
-              "Name": "TitlePart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            },
-            {
-              "PartName": "EsModuleTestFieldsWidget",
-              "Name": "EsModuleTestFieldsWidget",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "EsModuleTestHtmlBodyTrumbowyg",
-          "DisplayName": "Es Module Test HtmlBody Trumbowyg",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "TitlePart",
-              "Name": "TitlePart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            },
-            {
-              "PartName": "HtmlBodyPart",
-              "Name": "HtmlBodyPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Editor": "Trumbowyg",
-                  "Position": "1"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "EsModuleTestHtmlBodyWysiwyg",
-          "DisplayName": "Es Module Test HtmlBody Wysiwyg",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "TitlePart",
-              "Name": "TitlePart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            },
-            {
-              "PartName": "HtmlBodyPart",
-              "Name": "HtmlBodyPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Editor": "Wysiwyg",
-                  "Position": "1"
-                }
-              }
-            }
-          ]
-        },
-        {
-          "Name": "EsModuleTestLiquidWidget",
-          "DisplayName": "Es Module Test Liquid Widget",
-          "Settings": {
-            "ContentTypeSettings": {
-              "Draftable": true,
-              "Versionable": true,
-              "Securable": true,
-              "Stereotype": "Widget"
-            }
-          },
-          "ContentTypePartDefinitionRecords": [
-            {
-              "PartName": "TitlePart",
-              "Name": "TitlePart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "0"
-                }
-              }
-            },
-            {
-              "PartName": "LiquidPart",
-              "Name": "LiquidPart",
-              "Settings": {
-                "ContentTypePartSettings": {
-                  "Position": "1"
-                }
-              }
             }
           ]
         }
       ],
-      "ContentParts": [
-        {
-          "Name": "EsModuleTestFieldsWidget",
-          "Settings": {},
-          "ContentPartFieldDefinitionRecords": [
-            {
-              "FieldName": "TextField",
-              "Name": "IconField",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "Icon",
-                  "Editor": "IconPicker",
-                  "Position": "0"
-                }
-              }
-            },
-            {
-              "FieldName": "TextField",
-              "Name": "ColorField",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "Color",
-                  "Editor": "Color",
-                  "Position": "1"
-                }
-              }
-            },
-            {
-              "FieldName": "HtmlField",
-              "Name": "WysiwygField",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "Wysiwyg Content",
-                  "Editor": "Wysiwyg",
-                  "Position": "2"
-                }
-              }
-            },
-            {
-              "FieldName": "HtmlField",
-              "Name": "TrumbowygField",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "Trumbowyg Content",
-                  "Editor": "Trumbowyg",
-                  "Position": "3"
-                }
-              }
-            },
-            {
-              "FieldName": "HtmlField",
-              "Name": "CodeMirrorField",
-              "Settings": {
-                "ContentPartFieldSettings": {
-                  "DisplayName": "CodeMirror Content",
-                  "Position": "4"
-                }
-              }
-            }
-          ]
-        }
-      ]
+      "ContentParts": []
     },
     {
       "name": "content",
@@ -291,57 +90,10 @@
           "Author": "[js: parameters('AdminUsername')]",
           "TitlePart": {
             "Title": "ES Module Test Page"
-          },
-          "FlowPart": {
-            "Widgets": [
-              {
-                "ContentItemId": "[js: variables('seededWidgetId')]",
-                "ContentType": "EsModuleTestFieldsWidget",
-                "DisplayText": "Seeded Fields Widget",
-                "Latest": true,
-                "Published": true,
-                "Owner": "[js: parameters('AdminUserId')]",
-                "Author": "[js: parameters('AdminUsername')]",
-                "TitlePart": {
-                  "Title": "Seeded Fields Widget"
-                },
-                "EsModuleTestFieldsWidget": {
-                  "IconField": {
-                    "Text": "fa-solid fa-car"
-                  },
-                  "ColorField": {
-                    "Text": "#336699"
-                  },
-                  "WysiwygField": {
-                    "Html": "<p>Seeded wysiwyg content.</p>"
-                  },
-                  "TrumbowygField": {
-                    "Html": "<p>Seeded trumbowyg content.</p>"
-                  },
-                  "CodeMirrorField": {
-                    "Html": "<p>Seeded codemirror content.</p>"
-                  }
-                }
-              },
-              {
-                "ContentItemId": "[js: variables('seededLiquidWidgetId')]",
-                "ContentType": "EsModuleTestLiquidWidget",
-                "DisplayText": "Seeded Liquid Widget",
-                "Latest": true,
-                "Published": true,
-                "Owner": "[js: parameters('AdminUserId')]",
-                "Author": "[js: parameters('AdminUsername')]",
-                "TitlePart": {
-                  "Title": "Seeded Liquid Widget"
-                },
-                "LiquidPart": {
-                  "Liquid": "<p>{{ 'Seeded liquid content.' }}</p>"
-                }
-              }
-            ]
           }
         }
-      ]
+      ],
+      "data": []
     }
   ]
 }

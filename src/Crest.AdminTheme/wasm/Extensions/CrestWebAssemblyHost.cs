@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using Crest.AdminTheme.Options;
 using Crest.Components.Primitives;
 using Crest.Icons;
+using Crest.Shell;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -75,11 +76,51 @@ public static class CrestWebAssemblyHost
 
         builder.Services.AddCrestAdminClient(apiBaseAddress, routingOptions, new Uri(appBaseAddress, tenantBase + "/"));
         builder.Services.AddCrestLazyModules(lazyModules);
+        // The component registry of this document's shell (docs/blazor-display.md § 1), what
+        // DisplayTreeRenderer resolves nodes through: the shared libraries, the shell's theme
+        // client and the shell's module libraries as they load.
+        builder.Services.AddShellComponentRegistry(shell, ShellComponentAssemblies(shell));
         builder.RootComponents.RegisterCrestModuleJSComponents();
         builder.Services.AddCrestIconClient();
         builder.Services.AddCrestComponents();
 
         await builder.Build().RunAsync();
+    }
+
+    // The theme client of each shell. The admin client is this assembly; the site and member
+    // clients are referenced by the host's WASM entry project, not by this one, so they are
+    // loaded by name (a host without one simply has no theme components for that shell).
+    private static readonly Dictionary<string, string> s_themeClients = new(StringComparer.Ordinal)
+    {
+        [CrestShellContext.Site] = "Crest.SiteTheme.Client",
+        [CrestShellContext.Member] = "Crest.MemberTheme.Client",
+    };
+
+    private static IEnumerable<System.Reflection.Assembly> ShellComponentAssemblies(string shell)
+    {
+        yield return typeof(CrestComponent).Assembly;
+        yield return typeof(IIconRegistry).Assembly;
+
+        if (shell == CrestShellContext.Admin)
+        {
+            yield return typeof(CrestWebAssemblyHost).Assembly;
+        }
+        else if (s_themeClients.TryGetValue(shell, out var name) && TryLoad(name) is { } client)
+        {
+            yield return client;
+        }
+
+        static System.Reflection.Assembly? TryLoad(string name)
+        {
+            try
+            {
+                return System.Reflection.Assembly.Load(name);
+            }
+            catch (Exception exception) when (exception is FileNotFoundException or FileLoadException or BadImageFormatException)
+            {
+                return null;
+            }
+        }
     }
 
     private static async Task<CrestRoutingOptions> FetchRoutingOptionsAsync(Uri apiBaseAddress)

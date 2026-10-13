@@ -34,6 +34,12 @@ public sealed class Startup : StartupBase
         services.AddScoped<IAccessRunner, AccessRunner>();
         services.AddScoped<IAccessAuditor, AccessAuditor>();
         services.AddScoped<IPermissionVersion, PermissionVersionService>();
+
+        // The version is an invalidation token, not a counter anyone reads: two writers that
+        // both move v to v + 1 still invalidate every state built at v. Optimistic concurrency
+        // would instead roll back the whole unit (a setup recipe writing roles and users from
+        // several scopes), so it is off for this one document.
+        services.PostConfigure<Crest.Documents.Options.DocumentOptions>(typeof(PermissionVersionDocument).FullName, options => options.CheckConcurrency = false);
         services.AddSingleton<CallerStateCache>();
 
         services.AddScoped<IAuthorizationHandler, AccessAuthorizationHandler>();

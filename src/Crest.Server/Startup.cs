@@ -1,9 +1,7 @@
-using Crest.Drivers;
 using Crest.Indexing;
 using Crest.Models;
 using YesSql.Indexes;
 using Crest.ViewModels;
-using Crest.Migrations;
 using Crest.Components.Primitives;
 using Crest.Components;
 using Microsoft.AspNetCore.Builder;
@@ -25,6 +23,7 @@ using Crest.ContentManagement.Display.ContentDisplay;
 using Crest.Data;
 using Crest.Data.Migration;
 using Crest.DisplayManagement;
+using Crest.DisplayManagement.Components;
 using Crest.DisplayManagement.Theming;
 using Crest.Modules;
 using Crest.Navigation;
@@ -157,7 +156,7 @@ public sealed class Startup : StartupBase
         // WASM runtime downloads in the background, then WASM for every visit after -
         // "WASM as the primary route, Server as the fallback." Static-SSR-only content
         // (the overwhelming majority - anything rendered via
-        // CrestBlazorComponentShapeBindingResolver's HtmlRenderer path) never touches
+        // a component binding's HtmlRenderer path) never touches
         // either of these; they only matter for components explicitly marked
         // @rendermode, i.e. genuine interactive islands like Components/Pages/
         // BlazorCounter.razor.
@@ -218,7 +217,7 @@ public sealed class Startup : StartupBase
         // container - any admin-page dependency missing here is the AdminMenu DI bug
         // all over again (an unresolvable constructor surfacing as a blank/broken
         // page). Counterparts of Crest.AdminTheme's AddCrestAdminClient (WASM side):
-        // IApi/DisplayManager/CrestThemeEngine/CrestApiLocalizer ride the
+        // IApi/AdminShellState/CrestThemeEngine/CrestApiLocalizer ride the
         // forwarded-cookie HttpClient above; CrestRoutingOptions comes straight from
         // the tenant's configured options (no HTTP self-call needed server-side) via
         // BlazorAdminThemeOptions, which BlazorAdminThemeOptionsConfiguration already
@@ -227,7 +226,11 @@ public sealed class Startup : StartupBase
         // already resolved per-request by the platform's request localization pipeline
         // (the tenant-wide culture cookie, then Accept-Language), which CrestApiLocalizer picks up.
         services.AddScoped<Crest.AdminTheme.Api.IApi, Crest.AdminTheme.Api.Api>();
-        services.AddScoped<Crest.AdminTheme.DisplayManagement.DisplayManager>();
+        services.AddScoped<Crest.AdminTheme.State.AdminShellState>();
+        // Display trees' server actions and bound slots in a circuit: over the same HTTP path the
+        // browser uses (docs/blazor-display.md § 4a), never in-process from a long-lived circuit.
+        services.AddScoped<Crest.AdminTheme.Display.HttpDisplayActionDispatcher>();
+        services.AddScoped<Crest.DisplayManagement.Components.IDisplayActionDispatcher>(sp => sp.GetRequiredService<Crest.AdminTheme.Display.HttpDisplayActionDispatcher>());
         services.AddScoped<Crest.AdminTheme.Theme.CrestThemeEngine>();
         services.AddScoped<Crest.Components.Theme.CrestApiLocalizer>();
         services.AddScoped<Crest.Components.Primitives.ILocalizer>(sp => sp.GetRequiredService<Crest.Components.Theme.CrestApiLocalizer>());
@@ -255,23 +258,31 @@ public sealed class Startup : StartupBase
         // Phase 3: Blazor participates in Crest's own shape pipeline instead of a
         // custom request-intercepting middleware - see docs/blazor-web.md
         // ("Crest's routing does not fit stock Blazor Web App hosting"
-        // finding for why. CrestBlazorComponentPart is the tenant-placeable tree node
-        // (mirrors WidgetsListPart/BagPart); the registry is the shared, tenant-agnostic
-        // catalog of components tenants can place, scanned once from Server's own
-        // Components/Icons references - the same assemblies already flow into
-        // AddRazorComponents() above, so no separate discovery mechanism is needed here.
-        // Registered as a singleton: the catalog is process-wide, not per-tenant (see
-        // ICrestBlazorComponentRegistry's own comment).
-        services.AddSingleton<ICrestBlazorComponentRegistry>(_ =>
-            new AssemblyScanningCrestBlazorComponentRegistry(
-            [
-                typeof(Crest.Components.Primitives.ServiceCollectionExtensions).Assembly,
-                typeof(IIconRegistry).Assembly,
-            ]));
+        // finding for why. Components are placed by templates, page trees and layer rules
+        // (widgets are retired). What a tree may name is the component registry
+        // (docs/blazor-display.md § 1), built by the display management per tenant, theme
+        // and shell from the enabled features' assemblies plus the libraries added here: the
+        // shared component libraries, the theme clients and the module client libraries
+        // (each limited to its shell, as its router is). The scoped IComponentRegistry is the
+        // current request's shell.
+        services.Configure<ComponentRegistryOptions>(options =>
+        {
+            options.Add(typeof(Crest.Components.Primitives.ServiceCollectionExtensions).Assembly);
+            options.Add(typeof(IIconRegistry).Assembly);
+            foreach (var bucket in new[] { Crest.Routing.RouteBucket.Admin, Crest.Routing.RouteBucket.Site, Crest.Routing.RouteBucket.Member })
+            {
+                foreach (var assembly in Crest.Routing.ShellAssemblies.InBucket(bucket))
+                {
+                    options.Add(assembly, Crest.Routing.RequestShellKindAccessor.ToShellKind(bucket));
+                }
+            }
+        });
+        services.Replace(ServiceDescriptor.Scoped<IShellKindAccessor, Crest.Routing.RequestShellKindAccessor>());
         services.AddScoped<IShapeBindingResolver, CrestBlazorComponentShapeBindingResolver>();
-        services.AddScoped<IContentPartDisplayDriver, CrestBlazorComponentPartDisplayDriver>();
-        services.AddContentPart<CrestBlazorComponentPart>();
-        services.AddDataMigration<CrestBlazorComponentMigrations>();
+        // The public site on the display tree (docs/blazor-display.md rework step 3).
+        services.AddScoped<Crest.Display.SitePageBuilder>();
+        services.AddScoped<Crest.Display.ContentEditorTreeBuilder>();
+        services.AddScoped<Crest.Shell.IShellResponseStatus, Crest.Display.ShellResponseStatus>();
 
         // Content Part Lists themselves (parts, service, management API, screen) live in the
         // Crest.ContentPartLists module - an opt-in feature. Only the provider-agnostic
@@ -314,7 +325,7 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<Indexing.OptionPickerFieldIndexMigrations>();
         services.AddScopedIndexProvider<Indexing.OptionPickerFieldIndexProvider>();
 
-        // HtmlRenderer (used by CrestBlazorComponentShapeBindingResolver for Static SSR)
+        // HtmlRenderer (used by component bindings, ComponentShapeRenderer, for Static SSR)
         // instantiates components via this same service provider, and component base
         // classes routinely have [Inject] IJSRuntime - without any registration, DI throws
         // before rendering even starts, for components that never call JS during initial
@@ -333,8 +344,8 @@ public sealed class Startup : StartupBase
 
         // Interactive islands only (wasm/Pages/BlazorCounter.razor today) - the
         // endpoint this maps is what actually understands @rendermode, unlike
-        // CrestBlazorComponentShapeBindingResolver's plain HtmlRenderer (see that
-        // resolver's comments / plan doc Phase 3.5). AddAdditionalAssemblies pulls in
+        // a component binding's plain HtmlRenderer (see ComponentShapeRenderer
+        // and docs/blazor-display.md). AddAdditionalAssemblies pulls in
         // whichever theme wasm/*.Client.csproj projects Crest.csproj's
         // CrestThemeWasmClientProject glob resolved to, so InteractiveWebAssembly/
         // InteractiveAuto components declared in any of them are discoverable too.
@@ -408,6 +419,15 @@ public sealed class Startup : StartupBase
                 if (bucket is { } value)
                 {
                     endpointBuilder.Metadata.Add(new Crest.Routing.ThemeOwnerMetadata(value));
+                }
+
+                // A page that only catches the rest (the site's content route, "/{*Path}") is the
+                // last resort: component endpoints are ordered ahead of conventional routes, so
+                // without this it would win over every MVC route still served on the site
+                // (/Error/{status}, previews, account screens).
+                if (endpointBuilder is Microsoft.AspNetCore.Routing.RouteEndpointBuilder { RoutePattern.PathSegments: [{ Parts: [Microsoft.AspNetCore.Routing.Patterns.RoutePatternParameterPart { IsCatchAll: true }] }] } catchAll)
+                {
+                    catchAll.Order = int.MaxValue - 1;
                 }
             });
     }

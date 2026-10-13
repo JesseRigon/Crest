@@ -58,6 +58,8 @@ public sealed class CoreStartup : StartupBase
         .AddLiquidFilter<QueryFilter>("query");
 
         services.AddScoped<IQueryManager, DefaultQueryManager>();
+        // Display trees read through the query system (docs/blazor-display.md decision 4).
+        services.AddScoped<Crest.DisplayManagement.Components.IDisplayDataSource, Services.QueryDisplayDataSource>();
         services.AddScoped<IQueryCatalog, DefaultQueryCatalog>();
 
         services.AddScoped<IIndexTableCatalog, IndexTableCatalog>();

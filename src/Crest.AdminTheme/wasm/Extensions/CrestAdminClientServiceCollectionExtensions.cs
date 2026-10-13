@@ -1,5 +1,6 @@
 using Crest.AdminTheme.Api;
-using Crest.AdminTheme.DisplayManagement;
+using Crest.AdminTheme.Display;
+using Crest.AdminTheme.State;
 using Crest.AdminTheme.Options;
 using Crest.AdminTheme.Theme;
 using Crest.Components.Primitives;
@@ -31,7 +32,9 @@ public static class CrestAdminClientServiceCollectionExtensions
             return new HttpClient(handler) { BaseAddress = apiBaseAddress };
         });
         services.AddScoped<IApi, global::Crest.AdminTheme.Api.Api>();
-        services.AddScoped<DisplayManager>();
+        services.AddScoped<AdminShellState>();
+        services.AddScoped<HttpDisplayActionDispatcher>();
+        services.AddScoped<Crest.DisplayManagement.Components.IDisplayActionDispatcher>(sp => sp.GetRequiredService<HttpDisplayActionDispatcher>());
         services.AddScoped(_ => routingOptions);
         services.AddScoped<CrestThemeEngine>();
         services.AddScoped<CrestApiLocalizer>();

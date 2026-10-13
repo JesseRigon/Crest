@@ -1,0 +1,93 @@
+@page "/Placements"
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Crest.AdminTheme.Api
+@inject IApi Api
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* Placements (docs/blazor-display.md rework step 6): the tenant's placement rules per shape type,
+   in the placement.json format, over the modules' and the theme's. They decide where a driver's
+   shape lands in the tree (a zone and a position), what alternates and wrappers it gets. *@
+<CrestStack Gap="1rem" data-testid="placements-page">
+    <CrestText TextStyle="TextStyle.H4" Text="@T["Placements"]" />
+
+    @if (_error is not null)
+    {
+        <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@_error</CrestAlert>
+    }
+
+    <CrestCard>
+        <CrestStack Gap="0.5rem">
+            <CrestTextBox @bind-Value="_shapeType" Placeholder="@T["Shape type (TitlePart, HtmlBodyPart, ...)"]" data-testid="placements-shape" />
+            <CrestTextArea @bind-Value="_rules" Rows="8" Placeholder='[ { "place": "Header:5", "displayType": "Detail" } ]' Style="font-family: var(--crest-font-mono, monospace);" data-testid="placements-rules" />
+            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <CrestButton Text="@T["Save"]" Icon="save" Click="SaveAsync" data-testid="placements-save" />
+                <CrestButton Text="@T["New"]" Icon="add" ButtonStyle="ButtonStyle.Light" Click="New" />
+            </CrestStack>
+        </CrestStack>
+    </CrestCard>
+
+    @foreach (var (shapeType, rules) in _placements)
+    {
+        <CrestCard>
+            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap">
+                <strong>@shapeType</strong>
+                <code>@rules.ToJsonString()</code>
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                    <CrestButton Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(shapeType, rules))" />
+                    <CrestButton Icon="delete" ButtonStyle="ButtonStyle.Light" Click="@(() => DeleteAsync(shapeType))" />
+                </CrestStack>
+            </CrestStack>
+        </CrestCard>
+    }
+</CrestStack>
+
+@code {
+    private Dictionary<string, JsonArray> _placements = [];
+    private string? _shapeType;
+    private string? _rules = "[]";
+    private string? _error;
+
+    protected override async Task OnInitializedAsync() => _placements = await Api.Crest.Rest.Placements.ListAsync();
+
+    private void New()
+    {
+        _shapeType = null;
+        _rules = "[]";
+    }
+
+    private void Edit(string shapeType, JsonArray rules)
+    {
+        _shapeType = shapeType;
+        _rules = rules.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    private async Task SaveAsync()
+    {
+        JsonArray? rules;
+        try
+        {
+            rules = JsonNode.Parse(_rules ?? "[]") as JsonArray;
+        }
+        catch (JsonException exception)
+        {
+            _error = exception.Message;
+            return;
+        }
+
+        if (rules is null || string.IsNullOrWhiteSpace(_shapeType))
+        {
+            _error = T["A shape type and a JSON array of rules are required."];
+            return;
+        }
+
+        _error = await Api.Crest.Rest.Placements.SaveAsync(_shapeType.Trim(), rules);
+        _placements = await Api.Crest.Rest.Placements.ListAsync();
+    }
+
+    private async Task DeleteAsync(string shapeType)
+    {
+        await Api.Crest.Rest.Placements.DeleteAsync(shapeType);
+        _placements = await Api.Crest.Rest.Placements.ListAsync();
+    }
+}

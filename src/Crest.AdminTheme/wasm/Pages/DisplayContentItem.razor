@@ -1,0 +1,77 @@
+@page "/Contents/ContentItems/{ContentItemId}/Display"
+@using Crest.AdminTheme.Api
+@using Crest.DisplayManagement.Components
+@using Microsoft.Extensions.DependencyInjection
+@inject IApi Api
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* The first consumer of the display tree (docs/blazor-display.md › Rework plan, step 2): the
+   item as the platform's display drivers and placement build it, mapped to the tree on the
+   server and drawn by the one renderer. The tree crosses to the client once, as persisted
+   state, so hydration does not fetch it again (§ 4). *@
+<CrestStack Gap="1rem" data-testid="content-item-display-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <CrestText TextStyle="TextStyle.H4" Text="@T["Display"]" />
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <CrestButton Text="@T["Edit"]" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="Edit" />
+            <CrestButton Text="@T["Back"]" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="Back" />
+        </CrestStack>
+    </CrestStack>
+
+    @if (State is null)
+    {
+        <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (State.Tree is null)
+    {
+        <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T["This content item cannot be displayed."]</CrestAlert>
+    }
+    else if (Registry is null)
+    {
+        @* The shell registers the browser's IComponentRegistry (Crest.Shell, CrestWebAssemblyHost);
+           its absence means a host that skipped that boot path. *@
+        <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["The component registry is not available in this runtime yet."]</CrestAlert>
+    }
+    else
+    {
+        <div class="crest-display" data-testid="content-item-display-tree">
+            <DisplayTreeRenderer Node="State.Tree.Root" />
+        </div>
+    }
+</CrestStack>
+
+@code {
+    [Parameter] public string? ContentItemId { get; set; }
+
+    [SupplyParameterFromQuery] public string? DisplayType { get; set; }
+
+    /// <summary>The tree the prerender fetched, handed to the interactive render.</summary>
+    [PersistentState] public DisplayPageState? State { get; set; }
+
+    private IComponentRegistry? Registry => Services.GetService<IComponentRegistry>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(ContentItemId))
+        {
+            State = new(string.Empty, DisplayType, null);
+            return;
+        }
+
+        if (State is { } state && state.ContentItemId == ContentItemId && state.DisplayType == DisplayType)
+        {
+            return;
+        }
+
+        State = null;
+        State = new(ContentItemId, DisplayType, await Api.Crest.Rest.Content.Items.DisplayAsync(ContentItemId, DisplayType));
+    }
+
+    private void Edit() => Navigation.NavigateTo($"Contents/ContentItems/{Uri.EscapeDataString(ContentItemId ?? string.Empty)}/Edit");
+
+    private void Back() => Navigation.NavigateTo("Contents/ContentItems");
+
+    public sealed record DisplayPageState(string ContentItemId, string? DisplayType, DisplayTree? Tree);
+}

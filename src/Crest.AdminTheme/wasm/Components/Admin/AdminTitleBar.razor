@@ -1,5 +1,5 @@
 @using Crest.AdminTheme.Api
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @using Crest.AdminTheme.Options
 @using Crest.Components.Inputs
 @using Crest.Components.Display
@@ -16,7 +16,7 @@
 
 <header class="admin-titlebar">
     @* Test-only hook (Playwright localization checks - docs/localization.md):
-       DisplayManager.ResolvedCulture has no other reliable DOM signal, since the culture
+       AdminShellState.ResolvedCulture has no other reliable DOM signal, since the culture
        dropdown's visible label is optional (CrestTitleBarSettings.DisplayCultureLabel) and
        its icon alone doesn't identify a specific culture unambiguously. *@
     <span data-testid="resolved-culture" hidden>@SelectedCulture</span>
@@ -43,7 +43,7 @@
                         Style="color: var(--crest-color-text-2, var(--crest-color-text-1, #1f2937)); border-color: transparent;" />
     </CrestStack>
 
-    @if (DisplayManager?.Manifest?.AdminSettings.DisplayTitlesInTopbar == true && !string.IsNullOrWhiteSpace(CurrentTitle))
+    @if (AdminShellState?.Manifest?.AdminSettings.DisplayTitlesInTopbar == true && !string.IsNullOrWhiteSpace(CurrentTitle))
     {
         <div class="admin-titlebar__page-title">@CurrentTitle</div>
     }
@@ -66,7 +66,7 @@
                             Style="color: var(--crest-color-accent-1, #2f6f4e); border-color: transparent;" />
         }
 
-        @if (DisplayManager?.Manifest?.AdminSettings.DisplayThemeToggler != false)
+        @if (AdminShellState?.Manifest?.AdminSettings.DisplayThemeToggler != false)
         {
             <button type="button" class="admin-titlebar__icon-button" @onclick="ToggleThemeAsync" title="@T["Toggle dark/light mode"]" aria-label="@T["Toggle dark/light mode"]">
                 <PlatformIcon IconKey="@ThemeToggleIcon" Size="1.25rem" />
@@ -126,22 +126,22 @@
 
 @code {
     [CascadingParameter]
-    public DisplayManager? DisplayManager { get; set; }
+    public AdminShellState? AdminShellState { get; set; }
 
-    private Tenant[] TenantOptions => DisplayManager?.Manifest?.Tenants is { Length: > 0 } tenants
+    private Tenant[] TenantOptions => AdminShellState?.Manifest?.Tenants is { Length: > 0 } tenants
         ? tenants
-        : DisplayManager?.Manifest?.Tenant is { } tenant ? [tenant] : [];
+        : AdminShellState?.Manifest?.Tenant is { } tenant ? [tenant] : [];
 
-    private string SelectedTenantName => DisplayManager?.Manifest?.Tenant.Name ?? T["Tenant"];
-    private string UserName => DisplayManager?.User.UserName ?? T["User"];
+    private string SelectedTenantName => AdminShellState?.Manifest?.Tenant.Name ?? T["Tenant"];
+    private string UserName => AdminShellState?.User.UserName ?? T["User"];
     // Static SSR: IsActive resolves Navigation.Uri against Navigation.BaseUri, and
     // during prerender Uri is the server-side rewritten request path (not the
     // browser URL) while BaseUri is the site root (not this shell's <base href>),
     // so the computed "current page" title would be wrong in the prerendered
     // paint. Skip it there; the interactive phase (circuit or WASM) recomputes it
     // from the real browser URL.
-    private string? CurrentTitle => RendererInfo.IsInteractive ? FindCurrentTitle(DisplayManager?.AdminMenu?.Items) : null;
-    private DisplayMenuItem[] ProfileMenuItems => DisplayManager?.ProfileMenu?.Items ?? [];
+    private string? CurrentTitle => RendererInfo.IsInteractive ? FindCurrentTitle(AdminShellState?.AdminMenu?.Items) : null;
+    private DisplayMenuItem[] ProfileMenuItems => AdminShellState?.ProfileMenu?.Items ?? [];
     private string TenantInitial => string.IsNullOrWhiteSpace(SelectedTenantName) ? "?" : SelectedTenantName[..1].ToUpperInvariant();
     private string UserInitials => GetInitials(UserName);
     private LocalUser[] KnownUsers { get; set; } = [];
@@ -149,10 +149,10 @@
         .Where(user => !user.UserName.Equals(UserName, StringComparison.OrdinalIgnoreCase));
     private string ThemeToggleIcon { get; set; } = "iconify.mdi/current/default/weather-night";
     private string? LastRememberedUserContext { get; set; }
-    private CultureOption[] CultureOptions => DisplayManager?.Manifest?.CultureSelector.Cultures ?? [];
-    private string? SelectedCulture => DisplayManager?.ResolvedCulture;
+    private CultureOption[] CultureOptions => AdminShellState?.Manifest?.CultureSelector.Cultures ?? [];
+    private string? SelectedCulture => AdminShellState?.ResolvedCulture;
     private bool IsSavingDefaultCulture { get; set; }
-    private CrestTitleBarSettingsDto TitleBarSettings => DisplayManager?.Manifest?.TitleBarSettings ?? CrestTitleBarSettingsDto.Default;
+    private CrestTitleBarSettingsDto TitleBarSettings => AdminShellState?.Manifest?.TitleBarSettings ?? CrestTitleBarSettingsDto.Default;
     private CrestAvatarShape TenantAvatarShape => Enum.TryParse<CrestAvatarShape>(TitleBarSettings.TenantAvatarShape, true, out var shape)
         ? shape
         : CrestAvatarShape.Circle;
@@ -247,9 +247,9 @@
             shouldRender = true;
         }
 
-        if (DisplayManager?.IsAuthenticated == true)
+        if (AdminShellState?.IsAuthenticated == true)
         {
-            var tenantPrefix = DisplayManager.Manifest?.Tenant.RequestUrlPrefix ?? string.Empty;
+            var tenantPrefix = AdminShellState.Manifest?.Tenant.RequestUrlPrefix ?? string.Empty;
             var context = $"{UserName}|{SelectedTenantName}|{tenantPrefix}";
             if (!string.Equals(context, LastRememberedUserContext, StringComparison.Ordinal))
             {
@@ -335,7 +335,7 @@
 
     private async Task SelectCultureAsync(string? culture)
     {
-        var selector = DisplayManager?.Manifest?.CultureSelector;
+        var selector = AdminShellState?.Manifest?.CultureSelector;
         if (selector is null || string.IsNullOrWhiteSpace(culture) ||
             string.Equals(culture, SelectedCulture, StringComparison.OrdinalIgnoreCase))
         {
@@ -347,7 +347,7 @@
         // future resolution this browser session, then write the resolved cookie immediately
         // so the reload below (and any legacy same-origin iframe page) picks it up right away
         // rather than waiting for the next manifest refresh to re-derive it.
-        await Js.InvokeVoidAsync("crestTheme.setSessionCultureOverride", DisplayManager?.User.UserName, culture);
+        await Js.InvokeVoidAsync("crestTheme.setSessionCultureOverride", AdminShellState?.User.UserName, culture);
         await Js.InvokeVoidAsync("crestTheme.setAdminCulture", selector.CookieName, selector.CookiePath, culture);
         Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
     }
@@ -402,19 +402,19 @@
 
     private async Task SignInAsAnotherUserAsync()
     {
-        if (DisplayManager is not null)
+        if (AdminShellState is not null)
         {
-            await DisplayManager.LogoutAsync();
+            await AdminShellState.LogoutAsync();
         }
 
-        Navigation.NavigateTo(BuildLoginPath(DisplayManager?.Manifest?.Tenant.RequestUrlPrefix, null), forceLoad: true);
+        Navigation.NavigateTo(BuildLoginPath(AdminShellState?.Manifest?.Tenant.RequestUrlPrefix, null), forceLoad: true);
     }
 
     private async Task SignInAsUserAsync(LocalUser user)
     {
-        if (DisplayManager is not null)
+        if (AdminShellState is not null)
         {
-            await DisplayManager.LogoutAsync();
+            await AdminShellState.LogoutAsync();
         }
 
         Navigation.NavigateTo(BuildLoginPath(user.LastTenantPrefix, user.UserName), forceLoad: true);
@@ -422,12 +422,12 @@
 
     private async Task LogoutAsync()
     {
-        if (DisplayManager is null)
+        if (AdminShellState is null)
         {
             return;
         }
 
-        await DisplayManager.LogoutAsync();
+        await AdminShellState.LogoutAsync();
         // Crossing from the admin shell (base href = AdminPath) to the login shell
         // (base href = LoginPath) requires a full reload so the browser re-fetches
         // the document with the correct <base> tag - see BlazorAdminThemeMiddleware's

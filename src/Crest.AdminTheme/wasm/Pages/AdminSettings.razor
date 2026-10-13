@@ -1,12 +1,12 @@
 @page "/Settings/admin"
 @using Crest.AdminTheme.Api
 @using Crest.AdminTheme.Components.Shared
-@using Crest.AdminTheme.DisplayManagement
+@using Crest.AdminTheme.State
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject IApi Api
 @inject NotificationService Notifications
-@inject DisplayManager DisplayManager
+@inject AdminShellState AdminShellState
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
 <CrestStack Gap="1rem">
@@ -137,7 +137,7 @@
                 Model = AdminSettingsModel.From(saved);
                 Model.ContentGroupPages = groupsSaved.AutoMenuPages;
                 TitleBarModel = TitleBarSettingsModel.From(titleBarSaved);
-                await DisplayManager.RefreshAdminStateAsync();
+                await AdminShellState.RefreshAdminStateAsync();
                 Notifications.Notify(NotificationSeverity.Success, T["Settings saved"], T["Admin settings were updated."]);
             }
         }

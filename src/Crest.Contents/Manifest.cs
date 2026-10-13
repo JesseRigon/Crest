@@ -12,7 +12,7 @@ using Crest.Modules.Manifest;
     Name = "Contents",
     Description = "The contents module enables the edition and rendering of content items.",
     Dependencies =
-    [
+    ["Crest.Access", 
         "Crest.Settings",
         "Crest.Liquid"
     ],

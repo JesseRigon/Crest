@@ -16,10 +16,6 @@ public sealed class Migrations : DataMigration
 
     public async Task<int> CreateAsync()
     {
-        await _contentDefinitionManager.AlterPartDefinitionAsync("FlowPart", builder => builder
-            .Attachable()
-            .WithDescription("Provides a customizable body for your content item where you can build a content structure with widgets."));
-
         await _contentDefinitionManager.AlterPartDefinitionAsync("BagPart", builder => builder
             .Attachable()
             .Reusable()

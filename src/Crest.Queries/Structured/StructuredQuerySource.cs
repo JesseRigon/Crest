@@ -21,8 +21,7 @@ public sealed class StructuredQuerySource : IQuerySource, IQueryDescriber
     private readonly IDbConnectionAccessor _dbConnectionAccessor;
     private readonly ISession _session;
     private readonly IIndexTableCatalog _catalog;
-    private readonly ICallerContextAccessor? _callerAccessor;
-    private readonly IScopeSetProvider? _scopeSetProvider;
+    private readonly IServiceProvider _services;
 
     public StructuredQuerySource(
         IDbConnectionAccessor dbConnectionAccessor,
@@ -33,8 +32,7 @@ public sealed class StructuredQuerySource : IQuerySource, IQueryDescriber
         _dbConnectionAccessor = dbConnectionAccessor;
         _session = session;
         _catalog = catalog;
-        _callerAccessor = serviceProvider.GetService(typeof(ICallerContextAccessor)) as ICallerContextAccessor;
-        _scopeSetProvider = serviceProvider.GetService(typeof(IScopeSetProvider)) as IScopeSetProvider;
+        _services = serviceProvider;
     }
 
     public string Name => SourceName;
@@ -67,7 +65,7 @@ public sealed class StructuredQuerySource : IQuerySource, IQueryDescriber
 
         var cancellationToken = request.CancellationToken;
         var plan = QueryPlan.Build(metadata.Definition, _catalog);
-        var scopes = await CallerScopes.RequireAsync(_callerAccessor, _scopeSetProvider, plan.From.Table.Name, cancellationToken);
+        var scopes = await CallerScopes.RequireAsync(_services, plan.From.Table.Name, cancellationToken);
         var configuration = _session.Store.Configuration;
 
         var statement = StructuredQueryCompiler.Compile(

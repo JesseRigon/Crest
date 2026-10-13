@@ -30,7 +30,7 @@ public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js, Crest.Compon
     // step, so it needs the base handed to it explicitly.
     public Uri? BaseAddress { get; set; }
 
-    // Pushed by DisplayManager.RefreshManifestAsync every time it resolves culture (see
+    // Pushed by AdminShellState.RefreshManifestAsync every time it resolves culture (see
     // docs/localization.md phase 15). The cookie is per-origin but a session
     // override lives in sessionStorage (per-tab) - so between two open tabs with
     // different overrides, whichever tab last wrote the cookie "wins" for both until the
@@ -78,7 +78,7 @@ public sealed class CrestAntiforgeryHandler(IJSInProcessRuntime js, Crest.Compon
         {
             var sessionOverride = js.Invoke<string?>("crestTheme.getSessionCultureOverride", context.UserName);
             var browserLocale = js.Invoke<string?>("crestTheme.getBrowserLocale");
-            var resolved = Crest.AdminTheme.DisplayManagement.DisplayManager.ResolveCulture(
+            var resolved = Crest.AdminTheme.State.AdminShellState.ResolveCulture(
                 context.CultureSelector, sessionOverride, browserLocale, context.IsUnderAdminPath);
             js.InvokeVoid("crestTheme.setAdminCulture", context.CultureSelector.CookieName, context.CultureSelector.CookiePath, resolved);
         }
@@ -133,7 +133,7 @@ public interface ICrestAntiforgeryTokenStore
     void Clear();
 }
 
-// Phase 8: DisplayManager's seam onto the browser-side culture-cookie rewrite, so it
+// Phase 8: AdminShellState's seam onto the browser-side culture-cookie rewrite, so it
 // can depend on an interface instead of the concrete WASM-only CrestAntiforgeryHandler
 // (whose ctor hard-requires IJSInProcessRuntime and can't be constructed server-side).
 // WASM: implemented by CrestAntiforgeryHandler (rewrites the cookie via synchronous JS
@@ -147,10 +147,10 @@ public interface ICrestCultureCookieWriter
 
 public sealed record CrestAntiforgeryToken(string HeaderName, string RequestToken);
 
-// Pushed into CrestAntiforgeryHandler by DisplayManager.RefreshManifestAsync (see
+// Pushed into CrestAntiforgeryHandler by AdminShellState.RefreshManifestAsync (see
 // docs/localization.md phase 15) so the handler can independently re-resolve and
 // rewrite the culture cookie on every outgoing request without depending on
-// DisplayManager itself (avoids a circular DI dependency - DisplayManager depends on
+// AdminShellState itself (avoids a circular DI dependency - AdminShellState depends on
 // IApi, which depends on this handler's owning HttpClient).
 public sealed record CultureCookieContext(string? UserName, CultureSelector CultureSelector, bool IsUnderAdminPath);
 

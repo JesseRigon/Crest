@@ -2,6 +2,8 @@ using Crest.Security.Permissions;
 
 namespace Crest.Templates;
 
+/// <summary>Editing a template whose theme is the admin theme: what the admin shell shows every administrator.</summary>
+
 public sealed class AdminTemplatesPermissions : IPermissionProvider
 {
     public static readonly Permission ManageAdminTemplates = new("ManageAdminTemplates", "Manage admin templates", isSecurityCritical: true);
