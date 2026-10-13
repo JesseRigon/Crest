@@ -31,15 +31,18 @@ public sealed record AppManifest(
     Tenant[] Tenants,
     SiteSettings Site,
     AdminSettingsDto AdminSettings,
-    CrestTitleBarSettingsDto TitleBarSettings,
+    TitleBarSettingsDto TitleBarSettings,
     AdminDescriptor Admin,
     int FeatureSerialNumber,
     string FeatureHash,
     Feature[] Features,
     NavigationMenu AdminMenu,
-    CrestRouteAccess[] AuthorizedRoutes,
+    Crest.Access.RouteAccess[] AuthorizedRoutes,
     CultureSelector CultureSelector,
-    NavigationMenu ProfileMenu);
+    NavigationMenu ProfileMenu,
+    // The signed-in user's organizations on this tenant (a dual user's member bindings), for
+    // the shell switcher; server data, never a list of other tenants.
+    Crest.Routing.ShellOrganization[] Organizations);
 
 public sealed record CultureSelector(
     string? UserDefaultCulture,
@@ -136,14 +139,14 @@ public sealed record AdminSettingsDto(
         settings.DisplayTitlesInTopbar);
 }
 
-public sealed record CrestTitleBarSettingsDto(
+public sealed record TitleBarSettingsDto(
     bool DisplayCultureLabel,
     string? TenantAvatarImageUrl,
     string TenantAvatarShape,
     string? TenantAvatarClipPath,
     string? TenantAvatarBorderRadius)
 {
-    public static CrestTitleBarSettingsDto From(CrestTitleBarSettings settings) => new(
+    public static TitleBarSettingsDto From(TitleBarSettings settings) => new(
         settings.DisplayCultureLabel,
         settings.TenantAvatarImageUrl,
         settings.TenantAvatarShape,

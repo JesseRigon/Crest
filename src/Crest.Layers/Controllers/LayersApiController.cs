@@ -107,8 +107,23 @@ public sealed class LayersApiController(
             errors.Add("A placement needs the zone key it fills.");
         }
 
-        // Layers fill the site's pages: the site shell's registry decides what may be placed.
-        if (!registries.GetRegistry(ShellKind.Site).TryGet(placement.Component, out var descriptor))
+        // Layers fill the site's pages: the site shell's registry decides what may be placed,
+        // and where (decision 6: an unknown zone key is a save error, as is a component the key
+        // does not admit).
+        var registry = registries.GetRegistry(ShellKind.Site);
+        if (!string.IsNullOrWhiteSpace(placement.Zone))
+        {
+            if (!registry.TryGetZoneKey(placement.Zone, out var zoneKey))
+            {
+                errors.Add($"'{placement.Zone}' is not a declared zone key.");
+            }
+            else if (!zoneKey.Admits(placement.Component))
+            {
+                errors.Add($"The zone '{placement.Zone}' does not admit '{placement.Component}'.");
+            }
+        }
+
+        if (!registry.TryGet(placement.Component, out var descriptor))
         {
             errors.Add($"'{placement.Component}' is not a registered component.");
         }

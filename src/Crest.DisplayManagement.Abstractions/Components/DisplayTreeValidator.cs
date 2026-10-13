@@ -4,7 +4,8 @@ namespace Crest.DisplayManagement.Components;
 /// Checks a tree's interaction wiring against the registry (§ 4a › Validation): a binding names
 /// a node of the tree and one of its outputs, or a page variable; an event names an event or
 /// output parameter; an open, close or toggle targets an overlay node; a workflow action names a
-/// workflow; bindings form no cycle. Used on save (templates, pages) and by the designer. The
+/// workflow; bindings form no cycle; a component declared single per page (decision 6) appears
+/// once. Used on save (templates, pages) and by the designer. The
 /// errors are paths into the tree with the reason; an empty list is a valid tree.
 /// </summary>
 public static class DisplayTreeValidator
@@ -18,6 +19,15 @@ public static class DisplayTreeValidator
             if (!nodes.TryAdd(node.Id, node))
             {
                 errors.Add(new(node.Id, "duplicate", $"The instance id '{node.Id}' appears more than once in the tree."));
+            }
+        }
+
+        var singles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var node in nodes.Values)
+        {
+            if (registry.TryGet(node.Component, out var single) && single.Instances == ComponentInstances.Single && !singles.Add(single.Name))
+            {
+                errors.Add(new(node.Id, "instances", $"'{single.Name}' may appear only once on a page."));
             }
         }
 

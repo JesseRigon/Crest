@@ -76,6 +76,17 @@ public sealed partial class LocalMediaStorageProvider(string root) : IMediaStora
         return Task.CompletedTask;
     }
 
+    public Task DeletePrefixAsync(MediaStorageArea area, string prefix, CancellationToken cancellationToken = default)
+    {
+        var path = PathOf(area, prefix);
+        if (Directory.Exists(path))
+        {
+            Directory.Delete(path, recursive: true);
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task<Uri?> GetTemporaryReadUriAsync(MediaStorageArea area, string key, TimeSpan lifetime, CancellationToken cancellationToken = default) =>
         Task.FromResult<Uri?>(null);
 
@@ -86,7 +97,12 @@ public sealed partial class LocalMediaStorageProvider(string root) : IMediaStora
             throw new ArgumentException("A storage key is an opaque id and version.", nameof(key));
         }
 
-        var directory = area == MediaStorageArea.Quarantine ? "Quarantine" : "Committed";
+        var directory = area switch
+        {
+            MediaStorageArea.Quarantine => "Quarantine",
+            MediaStorageArea.Derived => "Derived",
+            _ => "Committed",
+        };
         var path = Path.GetFullPath(Path.Combine(Root, directory, key.Replace('/', Path.DirectorySeparatorChar)));
         if (!path.StartsWith(Root + Path.DirectorySeparatorChar, StringComparison.Ordinal))
         {

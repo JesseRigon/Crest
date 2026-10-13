@@ -6,6 +6,10 @@ using Crest.Environment.Shell.Removing;
 using Crest.Tenants;
 using TenantsPermissions = Crest.Tenants.Permissions;
 using Crest.ViewModels;
+// The wire model is the admin client's own (one CrestTenant, not a hand-kept server copy).
+using CrestTenant = Crest.AdminTheme.Api.CrestTenant;
+using TenantBulkAction = Crest.AdminTheme.Api.TenantBulkAction;
+using TenantCatalog = Crest.AdminTheme.Api.TenantCatalog;
 
 namespace Crest.Controllers;
 
@@ -22,10 +26,10 @@ namespace Crest.Controllers;
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/tenants")]
-public sealed class CrestTenantsController(ICrestRequestAccess requestAccess) : ControllerBase
+public sealed class TenantsController(IRequestAccess requestAccess) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<CrestTenantCatalog>> ListAsync(
+    public async Task<ActionResult<TenantCatalog>> ListAsync(
         [FromQuery] string? search = null,
         [FromQuery] string? category = null,
         [FromQuery] string? state = null,
@@ -35,7 +39,7 @@ public sealed class CrestTenantsController(ICrestRequestAccess requestAccess) : 
         if (access is null) return Forbid();
 
         var settings = access.GetRequiredService<IShellHost>().GetAllSettings();
-        var entries = settings.Select(CrestTenant.From);
+        var entries = settings.Select(ToTenant);
         if (!string.IsNullOrWhiteSpace(search))
         {
             entries = entries.Where(tenant => tenant.Name.Contains(search, StringComparison.OrdinalIgnoreCase)
@@ -56,7 +60,7 @@ public sealed class CrestTenantsController(ICrestRequestAccess requestAccess) : 
             .ToArray();
 
         var removalAllowed = access.GetRequiredService<IOptions<TenantsOptions>>().Value.TenantRemovalAllowed;
-        return Ok(new CrestTenantCatalog(entries.ToArray(), categories, removalAllowed));
+        return Ok(new TenantCatalog(entries.ToArray(), categories, removalAllowed));
     }
 
     [HttpPost("{name}/enable")]
@@ -66,7 +70,7 @@ public sealed class CrestTenantsController(ICrestRequestAccess requestAccess) : 
     public Task<ActionResult<CrestTenant>> DisableAsync(string name) => ChangeStateAsync(name, "Disable");
 
     [HttpPost("bulk")]
-    public async Task<ActionResult<CrestTenant[]>> BulkAsync([FromBody] CrestTenantBulkAction request)
+    public async Task<ActionResult<CrestTenant[]>> BulkAsync([FromBody] TenantBulkAction request)
     {
         if (!string.Equals(request.Action, "Enable", StringComparison.OrdinalIgnoreCase) && !string.Equals(request.Action, "Disable", StringComparison.OrdinalIgnoreCase)) return BadRequest("Only Enable and Disable are valid tenant bulk actions.");
         var access = await GetDefaultTenantAccessAsync();
@@ -80,12 +84,12 @@ public sealed class CrestTenantsController(ICrestRequestAccess requestAccess) : 
             if (string.Equals(request.Action, "Enable", StringComparison.OrdinalIgnoreCase) && settings.IsDisabled())
             {
                 await host.UpdateShellSettingsAsync(settings.AsRunning());
-                updated.Add(CrestTenant.From(settings.AsRunning()));
+                updated.Add(ToTenant(settings.AsRunning()));
             }
             else if (string.Equals(request.Action, "Disable", StringComparison.OrdinalIgnoreCase) && !settings.IsDefaultShell() && settings.IsRunning())
             {
                 await host.UpdateShellSettingsAsync(settings.AsDisabled());
-                updated.Add(CrestTenant.From(settings.AsDisabled()));
+                updated.Add(ToTenant(settings.AsDisabled()));
             }
         }
         return Ok(updated.ToArray());
@@ -129,20 +133,30 @@ public sealed class CrestTenantsController(ICrestRequestAccess requestAccess) : 
             if (!settings.IsDisabled()) return BadRequest("Only Disabled tenants can be enabled.");
             var enabled = settings.AsRunning();
             await host.UpdateShellSettingsAsync(enabled);
-            return Ok(CrestTenant.From(enabled));
+            return Ok(ToTenant(enabled));
         }
 
         if (settings.IsDefaultShell()) return BadRequest("The default tenant cannot be disabled.");
         if (!settings.IsRunning()) return BadRequest("Only Running tenants can be disabled.");
         var disabled = settings.AsDisabled();
         await host.UpdateShellSettingsAsync(disabled);
-        return Ok(CrestTenant.From(disabled));
+        return Ok(ToTenant(disabled));
     }
 
-    private async Task<CrestAuthorizedRequest?> GetDefaultTenantAccessAsync()
+    private async Task<AuthorizedRequest?> GetDefaultTenantAccessAsync()
     {
         var access = await requestAccess.AuthorizeAsync(User, TenantsPermissions.ManageTenants);
         if (access is null || !access.GetRequiredService<ShellSettings>().IsDefaultShell()) return null;
         return access;
     }
+
+    private static CrestTenant ToTenant(ShellSettings settings) => new(
+        settings.Name,
+        settings.State.ToString(),
+        settings["Category"],
+        settings["Description"],
+        settings.RequestUrlHost,
+        settings.RequestUrlPrefix,
+        settings.IsDefaultShell(),
+        settings.IsRemovable());
 }

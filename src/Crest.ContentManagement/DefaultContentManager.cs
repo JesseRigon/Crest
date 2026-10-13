@@ -32,6 +32,7 @@ public class DefaultContentManager : IContentManager
     private readonly IContentItemIdGenerator _idGenerator;
     private readonly IClock _clock;
     private readonly IUpdateModelAccessor _updateModelAccessor;
+    private readonly IContentSaveGuard[] _saveGuards;
 
     protected readonly IStringLocalizer S;
 
@@ -44,8 +45,10 @@ public class DefaultContentManager : IContentManager
         ILogger<DefaultContentManager> logger,
         IClock clock,
         IUpdateModelAccessor updateModelAccessor,
-        IStringLocalizer<DefaultContentManager> localizer)
+        IStringLocalizer<DefaultContentManager> localizer,
+        IEnumerable<IContentSaveGuard> saveGuards)
     {
+        _saveGuards = saveGuards.ToArray();
         _contentDefinitionManager = contentDefinitionManager;
         Handlers = handlers;
         _session = session;
@@ -625,6 +628,8 @@ public class DefaultContentManager : IContentManager
         // invoke handlers to add information to persistent stores.
         await Handlers.InvokeAsync((handler, context) => handler.CreatingAsync(context), context, _logger);
 
+        await GuardAsync(contentItem);
+
         if (context.Cancel)
         {
             if (_updateModelAccessor.ModelUpdater is not null)
@@ -824,9 +829,32 @@ public class DefaultContentManager : IContentManager
 
         await Handlers.InvokeAsync((handler, context) => handler.UpdatingAsync(context), context, _logger);
 
+        await GuardAsync(contentItem);
+
         await _session.SaveAsync(contentItem);
 
         await ReversedHandlers.InvokeAsync((handler, context) => handler.UpdatedAsync(context), context, _logger);
+    }
+
+    // Save guards run on every create and update, after the handlers; a refusal is not
+    // swallowed like a handler exception, it stops the write (IContentSaveGuard).
+    private async Task GuardAsync(ContentItem contentItem)
+    {
+        if (_saveGuards.Length == 0)
+        {
+            return;
+        }
+
+        var context = new ContentSaveGuardContext(contentItem, this);
+        foreach (var guard in _saveGuards)
+        {
+            await guard.GuardAsync(context);
+        }
+
+        if (context.Errors.Count > 0)
+        {
+            throw new ContentSaveRefusedException(context.Errors);
+        }
     }
 
     public async Task<ContentValidateResult> ValidateAsync(ContentItem contentItem)
@@ -1035,6 +1063,8 @@ public class DefaultContentManager : IContentManager
         // Invoked create handlers.
         var context = new CreateContentContext(contentItem);
         await Handlers.InvokeAsync((handler, context) => handler.CreatingAsync(context), context, _logger);
+
+        await GuardAsync(contentItem);
 
         var result = await ValidateAsync(contentItem);
         if (!result.Succeeded)

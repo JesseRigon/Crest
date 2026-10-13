@@ -42,6 +42,7 @@ public static class WorkflowsConstants
         public const string InstanceViewAdmin = "/workflows/instances/{id}/view";
         public const string ConnectionsAdmin = "/workflows/connections";
         public const string ApprovalsAdmin = "/workflows/approvals";
+        public const string HooksAdmin = "/workflows/hooks";
 
         /// <summary>The approval queue and decisions.</summary>
         public const string ApprovalsApi = "api/crest/workflows/approvals";
@@ -53,13 +54,13 @@ public static class WorkflowsConstants
         public const string WebhooksApi = "api/crest/workflows/webhooks";
     }
 
-    /// <summary>The core object a trigger or activity acts on, for grouping in the palette.</summary>
+    /// <summary>
+    /// The core objects Crest's own triggers and activities act on, for grouping in the
+    /// palette. Object names are free strings: a module names its own records' object.
+    /// </summary>
     public static class Objects
     {
         public const string Party = "party";
-        public const string Account = "account";
-        public const string Asset = "asset";
-        public const string Transaction = "transaction";
         public const string Content = "content";
 
         /// <summary>A platform-wide activity with no core object of its own (e-mail, SMS, social posts, logging).</summary>
@@ -134,6 +135,17 @@ public static class WorkflowsConstants
     /// <summary>On an engine activity descriptor: the permission the activity's class declares with <see cref="RequiresPermissionAttribute"/>.</summary>
     public const string RequiredPermissionDescriptorProperty = "crest:requiredPermission";
 
+    /// <summary>On an engine activity descriptor: the resource the gate asks
+    /// <see cref="RequiredPermissionDescriptorProperty"/> against (a content operation's type
+    /// name, so the per-type content permissions decide); absent, the bare permission.</summary>
+    public const string PermissionResourceDescriptorProperty = "crest:permissionResource";
+
+    /// <summary>On a content operation descriptor: the content type it acts on.</summary>
+    public const string ContentTypeDescriptorProperty = "crest:contentType";
+
+    /// <summary>On a content operation descriptor: the operation (create, update, delete, publish, unpublish).</summary>
+    public const string ContentOperationDescriptorProperty = "crest:contentOperation";
+
     /// <summary>On a run-query activity descriptor: the query it runs (the registry's query kind, docs/operations.md step 3).</summary>
     public const string QueryNameDescriptorProperty = "crest:query";
 
@@ -147,6 +159,16 @@ public static class WorkflowsConstants
     /// way a workflow comes to act as the system.
     /// </summary>
     public const string RunsAsSystemProperty = "Crest.RunsAsSystem";
+
+    /// <summary>
+    /// Accepts anonymous runs (docs/access.md, Anonymous actors, ruled 2026-10-11): a run with
+    /// no signed-in caller is admitted only when the definition carries it and the run starts
+    /// at a page-URL HTTP endpoint (a public page). Every other anonymous run is refused with
+    /// the reason. Publishing a definition with it set takes ManageShippedWorkflows, like
+    /// <see cref="RunsAsSystemProperty"/>; a privileged step in such a flow means publishing it
+    /// as system.
+    /// </summary>
+    public const string AcceptsAnonymousRunsProperty = "Crest.AcceptsAnonymousRuns";
 
     /// <summary>
     /// A definition's own access lists: role names and user names allowed to edit (save,

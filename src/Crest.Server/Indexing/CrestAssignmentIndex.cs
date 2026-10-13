@@ -48,7 +48,7 @@ public class CrestAssignmentIndex : MapIndex
 /// <summary>
 /// Maps items carrying <see cref="CrestAssignmentPart"/> into one row per assignment.
 /// </summary>
-public sealed class CrestAssignmentIndexProvider : IndexProvider<ContentItem>
+public sealed class AssignmentIndexProvider : IndexProvider<ContentItem>
 {
     public override void Describe(DescribeContext<ContentItem> context)
     {

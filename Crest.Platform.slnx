@@ -96,6 +96,7 @@
     <Project Path="src/Crest.ContentTypes.Abstractions/Crest.ContentTypes.Abstractions.csproj" />
     <Project Path="src/Crest.Contents.TagHelpers/Crest.Contents.TagHelpers.csproj" />
     <Project Path="src/Crest.Data.Abstractions/Crest.Data.Abstractions.csproj" />
+    <Project Path="src/Crest.Data.Types/Crest.Data.Types.csproj" />
     <Project Path="src/Crest.Data.YesSql.Abstractions/Crest.Data.YesSql.Abstractions.csproj" />
     <Project Path="src/Crest.Data.YesSql/Crest.Data.YesSql.csproj" />
     <Project Path="src/Crest.Data/Crest.Data.csproj" />
@@ -114,6 +115,7 @@
     <Project Path="src/Crest.Indexing.Abstractions/Crest.Indexing.Abstractions.csproj" />
     <Project Path="src/Crest.Infrastructure.Abstractions/Crest.Infrastructure.Abstractions.csproj" />
     <Project Path="src/Crest.Infrastructure/Crest.Infrastructure.csproj" />
+    <Project Path="src/Crest.Kinds/Crest.Kinds.csproj" />
     <Project Path="src/Crest.Liquid.Abstractions/Crest.Liquid.Abstractions.csproj" />
     <Project Path="src/Crest.Localization.Abstractions/Crest.Localization.Abstractions.csproj" />
     <Project Path="src/Crest.Logging.NLog/Crest.Logging.NLog.csproj" />

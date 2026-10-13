@@ -60,7 +60,7 @@ internal sealed class FakeSite : ISite
 // unsupported culture onto the admin area.
 public sealed class LocalizationControllerSaveTests
 {
-    private static CrestLocalizationController BuildController(FakeSite site, out ISiteService sites)
+    private static LocalizationController BuildController(FakeSite site, out ISiteService sites)
     {
         sites = Substitute.For<ISiteService>();
         sites.LoadSiteSettingsAsync().Returns(Task.FromResult<ISite>(site));
@@ -83,7 +83,7 @@ public sealed class LocalizationControllerSaveTests
         // empty provider keeps these tests honest about what Save depends on.
         var serviceProvider = new ServiceCollection().BuildServiceProvider();
 
-        var controller = new CrestLocalizationController(sites, releases, authorization, localizationService, userManager, localizationManager, serviceProvider)
+        var controller = new LocalizationController(sites, releases, authorization, localizationService, userManager, localizationManager, serviceProvider)
         {
             ControllerContext = new ControllerContext
             {
@@ -100,7 +100,7 @@ public sealed class LocalizationControllerSaveTests
         var site = new FakeSite();
         var controller = BuildController(site, out _);
 
-        var result = await controller.SaveAsync(new CrestLocalization(
+        var result = await controller.SaveAsync(new LocalizationModel(
             "en-US",
             ["en-US", "es-ES"],
             false,
@@ -116,7 +116,7 @@ public sealed class LocalizationControllerSaveTests
         var site = new FakeSite();
         var controller = BuildController(site, out var sites);
 
-        var result = await controller.SaveAsync(new CrestLocalization(
+        var result = await controller.SaveAsync(new LocalizationModel(
             "en-US",
             ["en-US", "es-ES"],
             false,
@@ -135,7 +135,7 @@ public sealed class LocalizationControllerSaveTests
         var site = new FakeSite();
         var controller = BuildController(site, out var sites);
 
-        var result = await controller.SaveAsync(new CrestLocalization(
+        var result = await controller.SaveAsync(new LocalizationModel(
             "en-US",
             ["en-US", "es-ES", "fr-FR"],
             false,
@@ -143,7 +143,7 @@ public sealed class LocalizationControllerSaveTests
             []));
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
-        var dto = Assert.IsType<CrestLocalization>(ok.Value);
+        var dto = Assert.IsType<LocalizationModel>(ok.Value);
         Assert.Equal("fr-FR", dto.AdminDefaultCulture);
         await sites.Received(1).UpdateSiteSettingsAsync(Arg.Any<ISite>());
         Assert.True(site.TryGet<CrestLocalizationSettings>(out var settings));
@@ -156,7 +156,7 @@ public sealed class LocalizationControllerSaveTests
         var site = new FakeSite();
         var controller = BuildController(site, out _);
 
-        var result = await controller.SaveAsync(new CrestLocalization(
+        var result = await controller.SaveAsync(new LocalizationModel(
             "en-US",
             [],
             false,
@@ -172,7 +172,7 @@ public sealed class LocalizationControllerSaveTests
         var site = new FakeSite();
         var controller = BuildController(site, out _);
 
-        var result = await controller.SaveAsync(new CrestLocalization(
+        var result = await controller.SaveAsync(new LocalizationModel(
             "ja-JP",
             ["en-US", "es-ES"],
             false,
@@ -180,7 +180,7 @@ public sealed class LocalizationControllerSaveTests
             []));
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
-        var dto = Assert.IsType<CrestLocalization>(ok.Value);
+        var dto = Assert.IsType<LocalizationModel>(ok.Value);
         Assert.Equal("en-US", dto.DefaultCulture);
     }
 }

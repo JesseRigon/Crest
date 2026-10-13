@@ -13,8 +13,12 @@ namespace Crest.Media.Sharing;
 /// an inactive drive is inactive. A soft link is identified as its target, so it opens the
 /// target with the target's access and grants nothing of its own.
 /// </summary>
-public sealed class MediaFileShareableKind(IMediaObjectStore store) : IShareableKind, IShareableTree, IShareableScopeTarget, IShareableRoots, IShareableAdminAssignment, IShareableAdminEligibility
+public sealed class MediaFileShareableKind(IMediaObjectStore store, IServiceProvider? services = null) : IShareableKind, IShareableTree, IShareableScopeTarget, IShareableRoots, IShareableAdminAssignment, IShareableAdminEligibility, IShareableLinks
 {
+    /// <summary>The byte endpoint (docs/media.md › Serving): the Share panel's public link.</summary>
+    public Task<string?> LinkAsync(string id, CancellationToken cancellationToken = default) =>
+        Task.FromResult<string?>($"files/{Uri.EscapeDataString(id)}");
+
     /// <summary>Holders of <c>ManageSharedDrives</c> assign and remove Drive Admins without being
     /// one (requirement 31).</summary>
     public string AdminAssignmentPermission => MediaPermissions.ManageSharedDrives.Name;
@@ -98,8 +102,16 @@ public sealed class MediaFileShareableKind(IMediaObjectStore store) : IShareable
         return new ShareableObject
         {
             Ref = new ShareableRef(KindName, placement.Placement.Id),
+            DisplayName = placement.Placement.Name,
             Parent = placement.Placement.ParentId is { } parentId ? new ShareableRef(KindName, parentId) : null,
+            OtherParents = await OtherParentsAsync(placement.Placement),
             OwnerUserId = content.Content.Owner.Kind == MediaOwnerKind.User ? content.Content.Owner.Id : null,
+            OwnerAccountId = content.Content.Owner.Kind switch
+            {
+                MediaOwnerKind.TenantAccount => Crest.Access.SystemAccounts.Tenant,
+                MediaOwnerKind.OrganizationAccount when content.Content.Owner.Id is { } organizationId => Crest.Access.SystemAccounts.Organization(organizationId),
+                _ => null,
+            },
 
             // A placement whose drive is gone is out of use too: fail closed.
             IsInactive = drive is null || drive.Content.IsInactive,
@@ -107,12 +119,80 @@ public sealed class MediaFileShareableKind(IMediaObjectStore store) : IShareable
         };
     }
 
-    /// <summary>The placements whose sharing parent is this one. Soft links are not objects of
-    /// their own (they are their target), so they are not children.</summary>
+    /// <summary>
+    /// What inherits from this placement: the children of its folder through every hard
+    /// placement of the folder (multi-path inheritance, F3: they inherit through each of them).
+    /// Soft links are not objects of their own (they are their target), so they are not children.
+    /// </summary>
     public async Task<IReadOnlyList<ShareableRef>> ChildrenAsync(string id, CancellationToken cancellationToken = default) =>
-        [.. (await store.GetChildrenAsync([id]))
+        [.. (await store.GetChildrenAsync(await HardPlacementsOfSameContentAsync(id)))
             .Where(child => !child.Placement.IsSoftLink)
             .Select(child => new ShareableRef(KindName, child.Placement.Id))];
+
+    /// <summary>
+    /// The folder's other hard placements, beside the one the placement was created or moved
+    /// through (its sharing parent): a child of a hard-linked folder inherits through each of
+    /// them too (multi-path inheritance, F3).
+    /// </summary>
+    private async Task<IReadOnlyList<ShareableRef>> OtherParentsAsync(MediaPlacement placement)
+    {
+        if (placement.ParentId is not { } parentId)
+        {
+            return [];
+        }
+
+        var placements = await HardPlacementsOfSameContentAsync(parentId);
+        var parents = placements.Where(other => other != parentId).Select(other => new ShareableRef(KindName, other)).ToList();
+        if (await AttachedContentItemAsync(placement) is { } contentItemId)
+        {
+            parents.Add(new ShareableRef(ContentKindName, contentItemId));
+        }
+
+        return parents;
+    }
+
+    /// <summary>The content kind's name (<c>Crest.Contents</c>' sharing), when it is registered.</summary>
+    public const string ContentKindName = "content";
+
+    /// <summary>
+    /// The content item an attached-field folder belongs to (<c>mediafields/{type}/{id}</c> at
+    /// the root of the media library drive): its files follow their content item's access
+    /// (docs/media.md › The media library (F1)), so the item is one more parent of the folder.
+    /// A path through it is left out when content items are not shareable.
+    /// </summary>
+    private async Task<string?> AttachedContentItemAsync(MediaPlacement placement)
+    {
+        if (placement.ParentId is not { } typeFolderId ||
+            await store.GetPlacementAsync(typeFolderId) is not { } typeFolder ||
+            typeFolder.Placement.ParentId is not { } attachedRootId ||
+            await store.GetPlacementAsync(attachedRootId) is not { } attachedRoot ||
+            attachedRoot.Placement.ParentId != placement.DriveId ||
+            !string.Equals(attachedRoot.Placement.Name, AttachedFieldsFolder, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var library = services?.GetService(typeof(Library.IMediaLibrary)) as Library.IMediaLibrary;
+        return library is not null && await library.GetDriveIdAsync() == placement.DriveId ? placement.Name : null;
+    }
+
+    /// <summary>Where attached media fields keep their files (<c>AttachedMediaFieldFileService</c>).</summary>
+    private const string AttachedFieldsFolder = "mediafields";
+
+    /// <summary>The placement and every other hard placement of its content, in a stable order.</summary>
+    private async Task<IReadOnlyList<string>> HardPlacementsOfSameContentAsync(string placementId)
+    {
+        if (await store.GetPlacementAsync(placementId) is not { } placement)
+        {
+            return [placementId];
+        }
+
+        var all = await store.GetPlacementsOfContentAsync(placement.Placement.ContentId);
+        return [placementId, .. all
+            .Where(other => !other.Placement.IsSoftLink && other.Placement.Id != placementId)
+            .Select(other => other.Placement.Id)
+            .Order(StringComparer.Ordinal)];
+    }
 
     /// <summary>Viewing is Viewer, creating and updating Editor, managing (delete, move) Manager.
     /// Changing sharing is Admin, through <see cref="ISharingService"/>.</summary>

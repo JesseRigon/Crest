@@ -8,6 +8,7 @@ using Crest.ContentManagement;
 using Crest.Data;
 using Crest.Data.Migration;
 using Crest.Modules;
+using Crest.Navigation;
 
 namespace Crest.Regions;
 
@@ -29,5 +30,9 @@ public sealed class Startup : StartupBase
         // ships; geocoders are external and registered by the host.
         services.AddScoped<IGeoBoundaryResolver, NetTopologySuiteBoundaryResolver>();
         services.AddScoped<IGeoLocator, CompositeGeoLocator>();
+
+        // The addressing-map editor (Default tenant): menu entry and page gate.
+        services.AddNavigationProvider<Navigation.RegionsAdminMenu>();
+        services.AddScoped<Crest.Access.IRoutePermissionProvider, Navigation.RegionsRoutePermissionProvider>();
     }
 }

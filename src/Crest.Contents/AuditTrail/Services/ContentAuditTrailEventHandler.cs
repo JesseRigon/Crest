@@ -1,3 +1,4 @@
+using Crest.AuditTrail.Models;
 using Crest.AuditTrail.Services;
 using Crest.AuditTrail.Services.Models;
 using Crest.ContentManagement;
@@ -6,25 +7,47 @@ using Crest.Entities;
 
 namespace Crest.Contents.AuditTrail.Services;
 
-public class ContentAuditTrailEventHandler : AuditTrailEventHandlerBase
+/// <summary>
+/// Shapes content events: the editor's comment, the subject feeds filter on (the item, its
+/// type, its owner), and the stored form - a diff with checkpoints instead of a snapshot
+/// (<see cref="ContentHistory"/>), applied only to events that are actually saved.
+/// </summary>
+public class ContentAuditTrailEventHandler(ContentHistory history) : AuditTrailEventHandlerBase
 {
     public override Task CreateAsync(AuditTrailCreateContext context)
     {
-        if (context.Category != "Content")
+        if (context.Category != ContentAuditTrailEventConfiguration.Content
+            || context is not AuditTrailCreateContext<AuditTrailContentEvent> contentEvent
+            || contentEvent.AuditTrailEventItem.ContentItem is not { } contentItem)
         {
             return Task.CompletedTask;
         }
 
-        if (context is AuditTrailCreateContext<AuditTrailContentEvent> contentEvent)
+        if (contentItem.TryGet<AuditTrailPart>(out var auditTrailPart))
         {
-            if (!contentEvent.AuditTrailEventItem.ContentItem.TryGet<AuditTrailPart>(out var auditTrailPart))
-            {
-                return Task.CompletedTask;
-            }
-
             contentEvent.AuditTrailEventItem.Comment = auditTrailPart.Comment;
         }
 
+        context.Subject ??= new AuditTrailSubject();
+        context.Subject.RecordId ??= contentItem.ContentItemId;
+        context.Subject.RecordType ??= contentItem.ContentType;
+        context.Subject.DisplayText ??= contentItem.DisplayText;
+        context.Subject.OwnerId ??= contentItem.Owner;
+
         return Task.CompletedTask;
+    }
+
+    public override async Task AlterAsync(AuditTrailCreateContext context, AuditTrailEvent auditTrailEvent)
+    {
+        if (context.Category != ContentAuditTrailEventConfiguration.Content
+            || context is not AuditTrailCreateContext<AuditTrailContentEvent> contentContext
+            || contentContext.AuditTrailEventItem.ContentItem is null)
+        {
+            return;
+        }
+
+        var contentEvent = contentContext.AuditTrailEventItem;
+        await history.PrepareAsync(auditTrailEvent, contentEvent, context.Name == ContentAuditTrailEventConfiguration.Published);
+        auditTrailEvent.Put(contentEvent);
     }
 }

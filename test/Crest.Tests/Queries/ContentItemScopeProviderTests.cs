@@ -110,7 +110,7 @@ public class ContentItemScopeProviderTests
     [Fact]
     public void Version_IsBumped()
     {
-        Assert.Equal(2, new ContentItemScopeProvider(Mock.Of<IContentDefinitionManager>(), new GrantedDecision([])).Version);
+        Assert.Equal(3, new ContentItemScopeProvider(Mock.Of<IContentDefinitionManager>(), new GrantedDecision([])).Version);
     }
 
     private sealed class GrantedDecision((string Permission, string Type, bool AsOwner)[] grants) : IAccessDecision

@@ -21,7 +21,7 @@ using ISession = YesSql.ISession;
 
 namespace Crest.Users.AuditTrail.Handlers;
 
-public class UserEventHandler : UserEventHandlerBase, ILoginFormEvent
+public class UserEventHandler : UserEventHandlerBase, ILoginFormEvent, ILogoutFormEvent
 {
     /// <summary>
     /// Properties of <see cref="User"/> which may never be stored for security reasons.
@@ -79,10 +79,21 @@ public class UserEventHandler : UserEventHandlerBase, ILoginFormEvent
                     UserId = string.Empty,
                     UserName = userName,
                 }
-            );
+            )
+        {
+            Subject = new AuditTrailSubject { RecordType = "User", DisplayText = userName },
+        };
 
         return _auditTrailManager.RecordEventAsync(context);
     }
+
+    // Recorded before the sign-out, while the request still carries the session: an
+    // impersonated session's sign-out is attributed to the staff user like its other actions.
+    public Task LoggingOutAsync(IUser user, CancellationToken cancellationToken = default)
+        => RecordAuditTrailEventAsync(UserAuditTrailEventConfiguration.LoggedOut, user);
+
+    public Task LoggedOutAsync(IUser user, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
 
     public Task IsLockedOutAsync(IUser user)
         => RecordAuditTrailEventAsync(UserAuditTrailEventConfiguration.LogInIsLockedOut, user);
@@ -164,7 +175,10 @@ public class UserEventHandler : UserEventHandlerBase, ILoginFormEvent
                 userId: userIdActual,
                 userName: userNameActual,
                 userEvent
-            );
+            )
+        {
+            Subject = new AuditTrailSubject { RecordId = userId, RecordType = "User", DisplayText = userName },
+        };
 
         await _auditTrailManager.RecordEventAsync(context);
     }

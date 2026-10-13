@@ -3,7 +3,7 @@
 
 @{
     var contentEvent = Model.ContentEvent;
-    var contentItem = contentEvent.ContentItem;
+    var contentItem = Model.ContentItem;
     var versionNumber = contentEvent.VersionNumber;
     var latestVersionId = Model.LatestVersionId;
     var newTime = await DisplayAsync(await New.Timespan(Utc: Model.AuditTrailEvent.CreatedUtc, Format: "g"));

@@ -4,7 +4,7 @@ namespace Crest.Components.Primitives;
 
 /// <summary>
 /// Phase 8: guarded JS interop for code that runs during the static-SSR/prerender phase
-/// of InteractiveAuto (or under CrestBlazorComponentShapeBindingResolver's HtmlRenderer),
+/// of InteractiveAuto (or under BlazorComponentShapeBindingResolver's HtmlRenderer),
 /// where no browser is attached and any interop call throws InvalidOperationException.
 /// Correctness rests on Blazor's own lifecycle: the interactive phase (circuit or WASM)
 /// creates a fresh component instance and re-runs its init, this time with working

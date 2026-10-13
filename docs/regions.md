@@ -307,8 +307,24 @@ import, and the boundary and geocoding seams. This section is the checklist of w
 `global.country-codes`, `global.subdivisions` and `global.postal-formats` are levels 1 and
 2 of the tree plus one column of the map, and are replaced by them.
 
-- [ ] **Make maps runtime rules.** Maps as **Orchard-backed runtime rules** editable by the
+- [x] **Make maps runtime rules.** Maps as **Orchard-backed runtime rules** editable by the
   super-tenant — today they are data-file only.
+  *What landed (2026-10-13):* the maps were already global-store documents seeded from
+  `addressing-maps.json`; now the Default tenant edits them at runtime.
+  `api/crest/regions/addressing-maps` (`AddressingMapsController`): `GET {country}` answers
+  the applicable map (the generic one when the country has none) to any signed-in caller of
+  any tenant, so the client resolves the same rule the server's `IGeoService` does; `GET`,
+  `PUT {country}` and `DELETE {country}` (revert) are Default-tenant only behind
+  `ManageGlobalReferenceData`. A write is checked by `AddressingMapValidator`
+  (`Crest.Regions.Domain`, shared with the client: level 1 present, levels and fields unique,
+  fields known or naming a declared level, the locality level declared, the postal pattern a
+  valid regex) and marks the map `Edited`; the data-file loader skips an edited map, and a
+  revert restores the shipped one (`GeoGlobalSchema.ShippedMap`: the authored map, or the
+  generic map with the country's postal pattern) or, for a country the files do not know,
+  removes it. The global store's version bump invalidates every host's cached map. Settings ›
+  Addressing maps (Default tenant only, `Pages/AddressingMaps.razor`) lists the maps,
+  edits one as JSON and reverts it. Not done: a tenant's label overlay (described above, not
+  required for this item), and the libaddressinput dataset (licence unverified).
 
   Candidate open dataset for the maps: Google's libaddressinput address metadata (it
   encodes exactly this — field order, required fields, postal pattern, subdivision lists,
@@ -319,11 +335,14 @@ import, and the boundary and geocoding seams. This section is the checklist of w
 
 The validation engine is a genuinely shared piece of code referenced by both client and
 server — worth fixing regardless, since `CrestTenant` today is hand-duplicated between
-`Crest.AdminTheme/wasm/Api/Api.cs` and
+`Crest.AdminTheme/client-services/Api/Api.cs` and
 `Crest.Server/ViewModels/TenantsViewModels.cs` with nothing keeping the two
 in sync. That duplication is the concrete proof this problem is real.
 
-- [ ] **Fix the `CrestTenant` duplication.** The `CrestTenant` duplication fix. Not touched.
+- [x] **Fix the `CrestTenant` duplication.** The `CrestTenant` duplication fix.
+  *What landed (2026-10-13):* the server's copies (`CrestTenant`, `TenantCatalog`,
+  `TenantBulkAction`) are deleted; `TenantsController` returns the admin client's
+  records from `Crest.AdminTheme.Api`, which Crest.Server already references.
 
 ### Populating the tree
 
@@ -333,6 +352,17 @@ Postal-code → place data is the hard part and is commercial in many countries.
 
 - [ ] **Load postal codes and boundaries.** Postal-code records and boundaries loaded from
       data — schema only, no rows ship.
+      *Partly landed (2026-10-13): the loaders.* `POST api/crest/regions/geo/import/postal-codes`
+      (`format=table`: a header row with Country, Code, NodeIds, Latitude, Longitude; or
+      `format=geonames`: the GeoNames postal dump, whose admin codes name `{CC}-{admin1}` and
+      `{CC}-{admin1}-{admin2}`) and `POST .../geo/import/boundaries` (a GeoJSON
+      FeatureCollection; `idProperty` and `idFormat`, e.g. `COUNTYFP` and `US-IL-{0}`, compose
+      the node id; Polygon and MultiPolygon stored as WKT MultiPolygons, which the built-in
+      resolver reads). Both are Default-tenant only behind `ManageGlobalReferenceData`,
+      upsert, normalize codes the way lookups do, merge a code's rows, and report nodes the tree
+      lacks as warnings instead of storing them dangling. Parsers: `GeoDataParsers.cs`; tests:
+      `GeoDataLoadingTests`. Left: rows to load, which waits on the data sourcing and licence
+      decision below.
 
 ### Geocoding
 

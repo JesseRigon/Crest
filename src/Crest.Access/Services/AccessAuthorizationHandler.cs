@@ -13,7 +13,7 @@ namespace Crest.Access.Services;
 public sealed class AccessAuthorizationHandler(
     ICallerContextAccessor accessor,
     ICallerContextFactory factory,
-    IAccessDecision decision,
+    AccessDecisionService decision,
     IHttpContextAccessor httpContextAccessor) : IAuthorizationHandler
 {
     public async Task HandleAsync(AuthorizationHandlerContext context)
@@ -32,7 +32,8 @@ public sealed class AccessAuthorizationHandler(
                 continue;
             }
 
-            var verdict = await decision.DecideAsync(caller, requirement.Permission.Name, context.Resource);
+            // The requirement's own instance: a dynamic permission keeps its implied-by chain.
+            var verdict = await decision.DecideAsync(caller, requirement.Permission, context.Resource);
             if (verdict.IsAllowed)
             {
                 context.Succeed(requirement);

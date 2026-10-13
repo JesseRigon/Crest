@@ -10,9 +10,12 @@ public static class SharePrincipals
     public static IReadOnlyList<SharePrincipal> Of(CallerContext caller)
     {
         var principals = new List<SharePrincipal>();
-        if (caller.UserId is not null)
+
+        // A system actor is its system account (requirement 33): it matches the account's owner
+        // rows, nothing a person was given.
+        if (caller.ActorId is not null)
         {
-            principals.Add(SharePrincipal.User(caller.UserId));
+            principals.Add(SharePrincipal.User(caller.ActorId));
         }
 
         principals.AddRange(caller.Roles.Select(SharePrincipal.Role));
@@ -87,14 +90,51 @@ public sealed class SharingResolver(
 
     private const int MaxChain = 64;
 
+    /// <summary>The most paths to the root one object is resolved through (multi-path
+    /// inheritance); further ones are left out, which can only give less access.</summary>
+    public const int MaxPaths = 16;
+
     public async Task<ShareResolution> ResolveAsync(CallerContext caller, ShareableRef target, CancellationToken cancellationToken = default)
     {
-        var chain = await ChainAsync(target, cancellationToken);
-        if (chain is null)
+        var chains = await ChainsAsync(target, cancellationToken);
+        if (chains is null)
         {
             return ShareResolution.Unknown;
         }
 
+        // Multi-path inheritance (F3): each path to the root is resolved on its own, and the
+        // caller gets the most any path still in use gives them. A path through an inactive
+        // drive gives nothing; the object is inactive only when every path is.
+        ShareResolution? best = null;
+        ShareResolution? inactive = null;
+        foreach (var chain in chains)
+        {
+            var resolution = await ResolveChainAsync(caller, chain);
+            if (resolution.IsInactive)
+            {
+                inactive ??= resolution;
+                continue;
+            }
+
+            if (best is null)
+            {
+                best = resolution;
+                continue;
+            }
+
+            var winner = resolution.Level > best.Level ? resolution : best;
+            best = winner with
+            {
+                IsPublic = best.IsPublic || resolution.IsPublic,
+                IsOwner = best.IsOwner || resolution.IsOwner,
+            };
+        }
+
+        return best ?? inactive!;
+    }
+
+    private async Task<ShareResolution> ResolveChainAsync(CallerContext caller, IReadOnlyList<ShareableObject> chain)
+    {
         var decisions = await DecisionsAsync(chain);
         var principals = SharePrincipals.Of(caller);
 
@@ -123,7 +163,7 @@ public sealed class SharingResolver(
         }
 
         var isOwner = false;
-        if (caller.UserId is not null && OwnerLevels(chain).TryGetValue(caller.UserId, out var owned))
+        if (caller.ActorId is not null && OwnerLevels(chain).TryGetValue(caller.ActorId, out var owned))
         {
             level = Max(level, owned);
             isOwner = true;
@@ -132,47 +172,105 @@ public sealed class SharingResolver(
         return new ShareResolution(level, isPublic, isOwner, chain.Any(item => item.IsInactive), decidingTier, decisions);
     }
 
-    /// <summary>The object and its parents, root first; null when the kind or an object is unknown or the chain loops.</summary>
+    /// <summary>The object and its parents, root first, along its first parent at every level
+    /// (the primary path); null when the kind or an object is unknown or the chain loops.</summary>
     public async Task<IReadOnlyList<ShareableObject>?> ChainAsync(ShareableRef target, CancellationToken cancellationToken)
     {
-        var chain = new List<ShareableObject>();
-        var seen = new HashSet<ShareableRef>();
-        ShareableRef? next = target;
-        while (next is { } current)
+        var chains = await ChainsAsync(target, cancellationToken);
+        return chains?[0];
+    }
+
+    /// <summary>
+    /// Every path from the root down to the object (multi-path inheritance, F3), root first, the
+    /// primary path (first parents all the way) first and at most <see cref="MaxPaths"/>. Null
+    /// when the primary path does not resolve; another path that does not resolve (a loop, an
+    /// unknown object) is left out.
+    /// </summary>
+    public async Task<IReadOnlyList<IReadOnlyList<ShareableObject>>?> ChainsAsync(ShareableRef target, CancellationToken cancellationToken)
+    {
+        var objects = new Dictionary<ShareableRef, ShareableObject?>();
+        async Task<ShareableObject?> GetAsync(ShareableRef reference)
         {
-            if (!seen.Add(current) || chain.Count >= MaxChain || kinds.Find(current.Kind) is not { } kind)
+            if (!objects.TryGetValue(reference, out var found))
             {
-                return null;
+                found = kinds.Find(reference.Kind) is { } kind ? await kind.GetAsync(reference.Id, cancellationToken) : null;
+                objects[reference] = found;
             }
 
-            var item = await kind.GetAsync(current.Id, cancellationToken);
-            if (item is null)
-            {
-                return null;
-            }
-
-            chain.Add(item);
-            next = item.Parent;
+            return found;
         }
 
-        chain.Reverse();
-        return chain;
+        var paths = new List<IReadOnlyList<ShareableObject>>();
+        var primaryFailed = false;
+
+        // Depth first, first parents first: the first complete path is the primary one.
+        async Task WalkAsync(ShareableRef current, List<ShareableObject> below, HashSet<ShareableRef> seen, bool primary)
+        {
+            if (paths.Count >= MaxPaths)
+            {
+                return;
+            }
+
+            if (!seen.Add(current) || below.Count >= MaxChain || await GetAsync(current) is not { } item)
+            {
+                primaryFailed |= primary;
+                return;
+            }
+
+            var path = new List<ShareableObject>(below) { item };
+            if (item.Parent is not { } parent)
+            {
+                path.Reverse();
+                paths.Add(path);
+                return;
+            }
+
+            await WalkAsync(parent, path, [.. seen], primary);
+            foreach (var other in item.OtherParents)
+            {
+                if (primaryFailed)
+                {
+                    return;
+                }
+
+                await WalkAsync(other, path, [.. seen], primary: false);
+            }
+        }
+
+        await WalkAsync(target, [], [], primary: true);
+        return primaryFailed || paths.Count == 0 ? null : paths;
+    }
+
+    /// <summary>
+    /// The key of one path for the access index: empty for the primary path (index 0), else a
+    /// short hash of the path's objects, so each path's document keeps its key while the paths
+    /// above it come and go.
+    /// </summary>
+    public static string PathKey(IReadOnlyList<ShareableObject> chain, int index)
+    {
+        if (index == 0)
+        {
+            return string.Empty;
+        }
+
+        var text = string.Join('/', chain.Select(item => item.Ref.ToString()));
+        return Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(text)))[..16];
     }
 
     /// <summary>
     /// The owners of the target and what owning gives them: the target's owner holds Manager on
     /// it (Admin when it is a root), and the root's owner administers the whole tree (a personal
-    /// drive's owner). By user id.
+    /// drive's owner). By user id, or system account id for what a system account owns.
     /// </summary>
     public static IReadOnlyDictionary<string, AccessLevel> OwnerLevels(IReadOnlyList<ShareableObject> chain)
     {
         var owners = new Dictionary<string, AccessLevel>(StringComparer.Ordinal);
-        if (chain[^1].OwnerUserId is { } owner)
+        if ((chain[^1].OwnerUserId ?? chain[^1].OwnerAccountId) is { } owner)
         {
             owners[owner] = chain[^1].IsRoot ? AccessLevel.Admin : AccessLevel.Manager;
         }
 
-        if (chain[0].OwnerUserId is { } rootOwner)
+        if ((chain[0].OwnerUserId ?? chain[0].OwnerAccountId) is { } rootOwner)
         {
             owners[rootOwner] = AccessLevel.Admin;
         }

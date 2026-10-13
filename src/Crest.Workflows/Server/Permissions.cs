@@ -1,4 +1,10 @@
+using Crest.Admin;
+using Crest.Environment.Extensions.Features;
+using Crest.Environment.Shell;
+using Crest.Security;
 using Crest.Security.Permissions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Crest.Workflows;
 
@@ -34,13 +40,53 @@ public sealed class WorkflowsPermissionProvider : IPermissionProvider
     public Task<IEnumerable<Permission>> GetPermissionsAsync() => Task.FromResult<IEnumerable<Permission>>(Permissions.All);
 
     // Administrator and Editor hold the ManageWorkflows umbrella; the finer set goes to two
-    // roles of its own (shipped by the recipe, defaulted here for a tenant that creates them
-    // by hand): authors of tenant flows, and readers.
+    // roles of its own, created with the feature (WorkflowRolesFeatureEvents): authors of
+    // tenant flows, and readers.
     public IEnumerable<PermissionStereotype> GetDefaultStereotypes() =>
     [
         new() { Name = PlatformConstants.Roles.Administrator, Permissions = [Permissions.ManageWorkflows] },
         new() { Name = PlatformConstants.Roles.Editor, Permissions = [Permissions.ManageWorkflows] },
-        new() { Name = WorkflowsConstants.Roles.WorkflowEditor, Permissions = [Permissions.ViewWorkflows, Permissions.EditWorkflows, Permissions.PublishWorkflows, Permissions.RunWorkflows] },
-        new() { Name = WorkflowsConstants.Roles.WorkflowViewer, Permissions = [Permissions.ViewWorkflows] },
+        .. WorkflowRolesFeatureEvents.Roles.Select(role => new PermissionStereotype { Name = role.Name, Permissions = role.Permissions }),
     ];
+}
+
+/// <summary>
+/// Ships the two workflow roles with the feature: when Crest.Workflows is installed on a
+/// tenant, <c>WorkflowEditor</c> (authors the tenant's own flows: view, edit, publish, run) and
+/// <c>WorkflowViewer</c> (reads definitions, instances and journals) are created if the tenant
+/// has no role of that name, holding the admin panel and exactly their stereotype's workflow
+/// permissions. Every host gets them, so the ownership checks run without a host recipe; a
+/// role the tenant already has is left as it is.
+/// </summary>
+public sealed class WorkflowRolesFeatureEvents(IServiceProvider services) : FeatureEventHandler
+{
+    public static readonly IReadOnlyList<(string Name, string Description, Permission[] Permissions)> Roles =
+    [
+        (WorkflowsConstants.Roles.WorkflowEditor, "Authors the tenant's own workflows: view, edit, publish and run; not the shipped templates or connections.",
+            [Permissions.ViewWorkflows, Permissions.EditWorkflows, Permissions.PublishWorkflows, Permissions.RunWorkflows]),
+        (WorkflowsConstants.Roles.WorkflowViewer, "Reads workflow definitions, instances and journals; changes nothing.",
+            [Permissions.ViewWorkflows]),
+    ];
+
+    public override async Task InstalledAsync(IFeatureInfo feature)
+    {
+        if (!string.Equals(feature.Id, WorkflowsConstants.FeatureId, StringComparison.Ordinal)
+            || services.GetService<RoleManager<IRole>>() is not { } roleManager)
+        {
+            return;
+        }
+
+        foreach (var (name, description, permissions) in Roles)
+        {
+            if (await roleManager.FindByNameAsync(name) is not null)
+            {
+                continue;
+            }
+
+            var role = new Role { RoleName = name, RoleDescription = description };
+            role.RoleClaims.Add(RoleClaim.Create(AdminPermissions.AccessAdminPanel.Name));
+            role.RoleClaims.AddRange(permissions.Select(permission => RoleClaim.Create(permission.Name)));
+            await roleManager.CreateAsync(role);
+        }
+    }
 }

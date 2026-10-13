@@ -5,7 +5,7 @@
 
        Every module client library the host references is lazy, with the assemblies only it
        needs; the admin router loads a route's module before it matches (Crest.AdminTheme's
-       CrestLazyModules), and a page region loads the modules that contribute to regions
+       LazyModules), and a page region loads the modules that contribute to regions
        before it renders. Worked out at build time by the Crest.LazyModules tool from the
        referenced assemblies themselves, so nothing is listed by hand and nothing depends on
        where a module sits on disk (source or package):
@@ -13,11 +13,15 @@
          convention Crest.Server uses for the server-side route table), plus
          any assembly a module names in its embedded crest-lazy-assemblies.txt resource (a
          library it loads itself, e.g. the workflow designer);
+       - lazy too: each theme client (an assembly declaring its shell that is not a module),
+         loaded when its shell's document boots (Crest.Shell.CrestShellRoot);
+       - eager roots: assemblies declaring [assembly: CrestEager] (the shell runtime, a
+         theme's services - the boot path Program.cs calls);
        - kept eager: a module assembly declaring [CrestJSComponent] (JS components register
          at startup), and everything the app itself reaches;
        - framework and Microsoft.* assemblies always stay eager.
-       Produces BlazorWebAssemblyLazyLoad items and CrestLazyModules.g.cs (a
-       CrestLazyModulesManifest class in the app's own namespace - routes, per-module
+       Produces BlazorWebAssemblyLazyLoad items and LazyModules.g.cs (a
+       LazyModulesManifest class in the app's own namespace - routes, per-module
        dependencies, region contributors) that the app's Program.cs hands to Crest. -->
   <PropertyGroup>
     <!-- From source: set CrestLazyModulesToolProject to tools/Crest.LazyModules/Crest.LazyModules.csproj
@@ -33,22 +37,22 @@
     <ProjectReference Include="$(CrestLazyModulesToolProject)" ReferenceOutputAssembly="false" Private="false" />
   </ItemGroup>
 
-  <Target Name="CrestLazyModules" AfterTargets="ResolveReferences" BeforeTargets="CoreCompile">
+  <Target Name="LazyModules" AfterTargets="ResolveReferences" BeforeTargets="CoreCompile">
     <!-- Here, not at evaluation: IntermediateOutputPath is set after this file is imported. -->
     <PropertyGroup>
-      <_CrestLazyDir>$(IntermediateOutputPath)CrestLazyModules/</_CrestLazyDir>
+      <_CrestLazyDir>$(IntermediateOutputPath)LazyModules/</_CrestLazyDir>
     </PropertyGroup>
     <MSBuild Projects="$(CrestLazyModulesToolProject)" Targets="GetTargetPath" Condition="'$(CrestLazyModulesToolProject)' != ''">
       <Output TaskParameter="TargetOutputs" PropertyName="_CrestLazyToolDll" />
     </MSBuild>
     <MakeDir Directories="$(_CrestLazyDir)" />
     <WriteLinesToFile File="$(_CrestLazyDir)references.txt" Lines="@(ReferencePath->'%(FullPath)')" Overwrite="true" />
-    <Exec Command="dotnet &quot;$(_CrestLazyToolDll)&quot; &quot;$(_CrestLazyDir)references.txt&quot; $(AssemblyName) &quot;$(_CrestLazyDir)CrestLazyModules.g.cs&quot; &quot;$(_CrestLazyDir)lazy.txt&quot;" />
+    <Exec Command="dotnet &quot;$(_CrestLazyToolDll)&quot; &quot;$(_CrestLazyDir)references.txt&quot; $(AssemblyName) &quot;$(_CrestLazyDir)LazyModules.g.cs&quot; &quot;$(_CrestLazyDir)lazy.txt&quot;" />
     <ReadLinesFromFile File="$(_CrestLazyDir)lazy.txt">
       <Output TaskParameter="Lines" ItemName="BlazorWebAssemblyLazyLoad" />
     </ReadLinesFromFile>
     <ItemGroup>
-      <Compile Include="$(_CrestLazyDir)CrestLazyModules.g.cs" />
+      <Compile Include="$(_CrestLazyDir)LazyModules.g.cs" />
     </ItemGroup>
   </Target>
 </Project>

@@ -48,10 +48,24 @@ public sealed class SharingWorld
 
         private readonly List<ShareableRef> _order = [];
 
+        /// <summary>The documents of paths other than the primary one (multi-path inheritance).</summary>
+        public Dictionary<(ShareableRef Ref, string PathKey), ShareAccessDocument> OtherPaths { get; } = [];
+
         public Task<ShareAccessDocument> GetAsync(ShareableRef target) => Task.FromResult(Documents.GetValueOrDefault(target));
+
+        public Task<IReadOnlyList<ShareAccessDocument>> GetPathsAsync(ShareableRef target) =>
+            Task.FromResult<IReadOnlyList<ShareAccessDocument>>([
+                .. Documents.TryGetValue(target, out var primary) ? [primary] : Array.Empty<ShareAccessDocument>(),
+                .. OtherPaths.Where(pair => pair.Key.Ref == target).Select(pair => pair.Value)]);
 
         public Task SaveAsync(ShareAccessDocument document)
         {
+            if (document.PathKey.Length > 0)
+            {
+                OtherPaths[(document.Ref, document.PathKey)] = document;
+                return Task.CompletedTask;
+            }
+
             if (!Documents.ContainsKey(document.Ref))
             {
                 _order.Add(document.Ref);
@@ -61,10 +75,28 @@ public sealed class SharingWorld
             return Task.CompletedTask;
         }
 
+        public async Task SavePathsAsync(ShareableRef target, IReadOnlyList<ShareAccessDocument> documents)
+        {
+            foreach (var document in documents)
+            {
+                await SaveAsync(document);
+            }
+
+            foreach (var gone in OtherPaths.Keys.Where(key => key.Ref == target && documents.All(document => document.PathKey != key.PathKey)).ToList())
+            {
+                OtherPaths.Remove(gone);
+            }
+        }
+
         public Task DeleteAsync(ShareableRef target)
         {
             Documents.Remove(target);
             _order.Remove(target);
+            foreach (var gone in OtherPaths.Keys.Where(key => key.Ref == target).ToList())
+            {
+                OtherPaths.Remove(gone);
+            }
+
             return Task.CompletedTask;
         }
 
@@ -146,7 +178,7 @@ public sealed class SharingWorld
         public Task<IReadOnlyList<ShareableRef>> ChildrenAsync(string id, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<ShareableRef>>([.. Nodes.Values.Where(node => node.ParentId == id).Select(node => new ShareableRef(Kind, node.Id))]);
 
-        public sealed record Node(string Id, string? ParentId, string? Owner = null, bool Inactive = false, Dictionary<string, IReadOnlyList<string>>? Facts = null);
+        public sealed record Node(string Id, string? ParentId, string? Owner = null, bool Inactive = false, Dictionary<string, IReadOnlyList<string>>? Facts = null, string? OwnerAccount = null);
 
         public Dictionary<string, Node> Nodes { get; } = new(StringComparer.Ordinal);
 
@@ -171,6 +203,7 @@ public sealed class SharingWorld
                     Ref = new ShareableRef(Kind, node.Id),
                     Parent = node.ParentId is null ? null : new ShareableRef(Kind, node.ParentId),
                     OwnerUserId = node.Owner,
+                    OwnerAccountId = node.OwnerAccount,
                     IsInactive = node.Inactive,
                     Facts = node.Facts ?? new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase),
                 }
@@ -186,7 +219,7 @@ public sealed class SharingWorld
             _ => null,
         };
 
-        public Node Add(string id, string parent = null, string owner = null, bool inactive = false, string extension = null, string tag = null)
+        public Node Add(string id, string parent = null, string owner = null, bool inactive = false, string extension = null, string tag = null, string ownerAccount = null)
         {
             var facts = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
             if (extension is not null)
@@ -199,7 +232,7 @@ public sealed class SharingWorld
                 facts["tag"] = [tag];
             }
 
-            return Nodes[id] = new Node(id, parent, owner, inactive, facts);
+            return Nodes[id] = new Node(id, parent, owner, inactive, facts, ownerAccount);
         }
     }
 

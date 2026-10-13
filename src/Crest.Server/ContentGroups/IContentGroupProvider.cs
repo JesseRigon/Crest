@@ -43,9 +43,9 @@ public sealed class ContentGroupBuilder
         return new ContentGroupEntriesBuilder(group);
     }
 
-    public IReadOnlyList<CrestContentGroupDefinition> Build() =>
+    public IReadOnlyList<ContentGroupDefinition> Build() =>
         _groups.Values
-            .Select(group => new CrestContentGroupDefinition(
+            .Select(group => new ContentGroupDefinition(
                 group.Key,
                 group.DisplayName ?? group.Key,
                 group.Position ?? 0,
@@ -57,7 +57,7 @@ public sealed class ContentGroupBuilder
         public string Key { get; } = key;
         public string? DisplayName { get; set; }
         public int? Position { get; set; }
-        public List<CrestContentGroupEntryRef> Entries { get; } = [];
+        public List<ContentGroupEntryRef> Entries { get; } = [];
     }
 }
 
@@ -74,7 +74,7 @@ public sealed class ContentGroupEntriesBuilder
             throw new ArgumentException("A content group entry needs a kind and a key.");
         }
 
-        var entry = new CrestContentGroupEntryRef(kind.Trim().ToLowerInvariant(), key.Trim());
+        var entry = new ContentGroupEntryRef(kind.Trim().ToLowerInvariant(), key.Trim());
         if (!_group.Entries.Any(existing => existing.Matches(entry.Kind, entry.Key)))
         {
             _group.Entries.Add(entry);
@@ -83,7 +83,7 @@ public sealed class ContentGroupEntriesBuilder
         return this;
     }
 
-    public ContentGroupEntriesBuilder Type(string contentType) => Entry(CrestContentGroupEntryKinds.Type, contentType);
+    public ContentGroupEntriesBuilder Type(string contentType) => Entry(ContentGroupEntryKinds.Type, contentType);
 
     public ContentGroupEntriesBuilder Types(params string[] contentTypes)
     {
@@ -95,7 +95,7 @@ public sealed class ContentGroupEntriesBuilder
         return this;
     }
 
-    public ContentGroupEntriesBuilder List(string listKey) => Entry(CrestContentGroupEntryKinds.List, listKey);
+    public ContentGroupEntriesBuilder List(string listKey) => Entry(ContentGroupEntryKinds.List, listKey);
 
     public ContentGroupEntriesBuilder Lists(params string[] listKeys)
     {
@@ -119,5 +119,5 @@ public interface IContentGroupEntryResolver
 
     /// <summary>Null when the key does not exist on this tenant (the entry stays in
     /// the group as unresolved so a module's declaration is never silently lost).</summary>
-    Task<CrestContentGroupResolvedEntry?> ResolveAsync(string key, CancellationToken cancellationToken = default);
+    Task<ContentGroupResolvedEntry?> ResolveAsync(string key, CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,64 @@
+@page "/Settings/debugging"
+@using Crest.AdminTheme.Api
+@using Crest.AdminTheme.Components.Shared
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+<CrestStack Gap="1rem" data-testid="debug-settings-page">
+    <CrestStack Gap="0.25rem">
+        <CrestText TextStyle="TextStyle.H4" Text="@T["Debugging"]" />
+        <CrestText TextStyle="TextStyle.Body2" Text="@T["Diagnostics for the tenant's rendering."]" />
+    </CrestStack>
+
+    <CrestCard>
+        @if (Model is null)
+        {
+            @if (LoadFailed)
+            {
+                <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@T["The debugging settings could not be loaded."]</CrestAlert>
+            }
+            else
+            {
+                <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+            }
+        }
+        else
+        {
+            <CrestStack Gap="1rem">
+                <SettingsSwitch Label="@T["Write shape debug information"]" Hint="@T["Writes HTML comments around each rendered shape naming its type and the template that rendered it. Turn off in production."]" @bind-Value="WriteShapeDebugInformation" />
+                <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                    <CrestButton Text="@T["Save settings"]" Icon="save" Click="SaveAsync" Disabled="@IsSaving" />
+                </CrestStack>
+            </CrestStack>
+        }
+    </CrestCard>
+</CrestStack>
+
+@code {
+    private CrestDebugSettings? Model { get; set; }
+    private bool WriteShapeDebugInformation { get; set; }
+    private bool LoadFailed { get; set; }
+    private bool IsSaving { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Api.Crest.Rest.DebugSettings.GetAsync();
+        LoadFailed = Model is null;
+        WriteShapeDebugInformation = Model?.WriteShapeDebugInformation ?? false;
+    }
+
+    private async Task SaveAsync()
+    {
+        IsSaving = true;
+        try
+        {
+            var saved = await Api.Crest.Rest.DebugSettings.UpdateAsync(new CrestDebugSettings(WriteShapeDebugInformation));
+            if (saved is null) { Notifications.Notify(NotificationSeverity.Error, T["Settings not saved"], T["The debugging settings could not be saved."]); return; }
+            Model = saved;
+            Notifications.Notify(NotificationSeverity.Success, T["Settings saved"], T["The debugging settings were saved."]);
+        }
+        finally { IsSaving = false; }
+    }
+}

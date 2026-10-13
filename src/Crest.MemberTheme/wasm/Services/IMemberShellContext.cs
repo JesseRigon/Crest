@@ -1,7 +1,9 @@
 namespace Crest.MemberTheme.Services;
 
 /// <summary>One organization the signed-in member is bound to, as the shell displays it.</summary>
-public sealed record MemberShellOrganization(string Id, string Name);
+/// <remarks><paramref name="Slug"/> is how member page paths name it,
+/// <c>/{member prefix}/{slug}/…</c>.</remarks>
+public sealed record MemberShellOrganization(string Id, string Name, string Slug);
 
 /// <summary>One entry in the member shell's navigation region.</summary>
 public sealed record MemberShellNavigationEntry(string Path, string Text, int Position = 0);
@@ -48,6 +50,15 @@ public interface IMemberShellContext
     /// <summary>The active organization's display name.</summary>
     string? ActiveOrganizationName { get; }
 
+    /// <summary>
+    /// The organization this document's path names, or null on an organization-free page.
+    /// Switching organizations is a navigation to another organization's path.
+    /// </summary>
+    string? ActiveOrganizationSlug { get; }
+
+    /// <summary>Whether this session is staff impersonating the member, and who.</summary>
+    string? ImpersonatorName { get; }
+
     /// <summary>The member nav entries contributed for this member.</summary>
     IReadOnlyList<MemberShellNavigationEntry> NavigationEntries { get; }
 
@@ -63,11 +74,19 @@ public interface IMemberShellContext
     /// <summary>Loads the shell's state if it has not been loaded for this session yet.</summary>
     Task EnsureLoadedAsync();
 
-    /// <summary>Switches the organization this session acts in.</summary>
+    /// <summary>
+    /// Remembers <paramref name="organizationId"/> as the session's last choice (what a
+    /// request naming no organization falls back to). The shell then navigates to that
+    /// organization's path.
+    /// </summary>
     Task SetActiveOrganizationAsync(string organizationId);
 
     /// <summary>Ends the member's session.</summary>
     Task SignOutAsync();
+
+    /// <summary>Ends an impersonation, restoring the staff session. Returns where the staff
+    /// user goes next (the admin), or null.</summary>
+    Task<string?> StopImpersonationAsync();
 }
 
 /// <summary>
@@ -93,6 +112,10 @@ public sealed class EmptyMemberShellContext : IMemberShellContext
 
     public string? ActiveOrganizationName => null;
 
+    public string? ActiveOrganizationSlug => null;
+
+    public string? ImpersonatorName => null;
+
     public IReadOnlyList<MemberShellNavigationEntry> NavigationEntries { get; } = [];
 
     public string AccountPath { get; } = "/account";
@@ -110,4 +133,6 @@ public sealed class EmptyMemberShellContext : IMemberShellContext
     public Task SetActiveOrganizationAsync(string organizationId) => Task.CompletedTask;
 
     public Task SignOutAsync() => Task.CompletedTask;
+
+    public Task<string?> StopImpersonationAsync() => Task.FromResult<string?>(null);
 }

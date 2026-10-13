@@ -11,7 +11,7 @@ namespace Crest.ContentGroups;
 /// <see cref="CrestContentGroupsDocument"/>. The item itself carries nothing: the
 /// group is a property of the KIND of content, never of an instance.
 /// </summary>
-public static class CrestContentGroupEntryKinds
+public static class ContentGroupEntryKinds
 {
     /// <summary>A content type, by name.</summary>
     public const string Type = "type";
@@ -21,25 +21,25 @@ public static class CrestContentGroupEntryKinds
 }
 
 /// <summary>Who put a group or entry there: module code or the tenant.</summary>
-public static class CrestContentGroupSources
+public static class ContentGroupSources
 {
     public const string Module = "Module";
     public const string Tenant = "Tenant";
 }
 
 /// <summary>A reference to one content source inside a group.</summary>
-public sealed record CrestContentGroupEntryRef(string Kind, string Key)
+public sealed record ContentGroupEntryRef(string Kind, string Key)
 {
     public bool Matches(string kind, string key) =>
         string.Equals(Kind, kind, StringComparison.OrdinalIgnoreCase) && string.Equals(Key, key, StringComparison.OrdinalIgnoreCase);
 }
 
 /// <summary>What a module declared (before tenant overrides are applied).</summary>
-public sealed record CrestContentGroupDefinition(string Key, string DisplayName, int Position, IReadOnlyList<CrestContentGroupEntryRef> Entries);
+public sealed record ContentGroupDefinition(string Key, string DisplayName, int Position, IReadOnlyList<ContentGroupEntryRef> Entries);
 
 /// <summary>An entry resolved to what it actually covers: the content types and/or
 /// the specific content items its kind maps to. Either list may be empty.</summary>
-public sealed record CrestContentGroupResolvedEntry(
+public sealed record ContentGroupResolvedEntry(
     string Kind,
     string Key,
     string DisplayName,
@@ -47,18 +47,18 @@ public sealed record CrestContentGroupResolvedEntry(
     IReadOnlyList<string> ContentItemIds);
 
 /// <summary>The effective group as the API exposes it.</summary>
-public sealed record CrestContentGroupModel(
+public sealed record ContentGroupModel(
     string Key,
     string DisplayName,
     int Position,
     bool Hidden,
     string Source,
-    IReadOnlyList<CrestContentGroupEntryModel> Entries);
+    IReadOnlyList<ContentGroupEntryModel> Entries);
 
-public sealed record CrestContentGroupEntryModel(string Kind, string Key, string DisplayName, string Source, bool Resolved);
+public sealed record ContentGroupEntryModel(string Kind, string Key, string DisplayName, string Source, bool Resolved);
 
 /// <summary>What a group filter expands to on the content-items query.</summary>
-public sealed record CrestContentGroupFilter(IReadOnlyList<string> ContentTypes, IReadOnlyList<string> ContentItemIds)
+public sealed record ContentGroupFilter(IReadOnlyList<string> ContentTypes, IReadOnlyList<string> ContentItemIds)
 {
     public bool IsEmpty => ContentTypes.Count == 0 && ContentItemIds.Count == 0;
 }
@@ -81,10 +81,10 @@ public sealed class CrestContentGroupsSettings
 /// </summary>
 public sealed class CrestContentGroupsDocument : Document
 {
-    public Dictionary<string, CrestContentGroupOverride> Groups { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, ContentGroupOverride> Groups { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
-public sealed class CrestContentGroupOverride
+public sealed class ContentGroupOverride
 {
     /// <summary>True for a group the tenant created (no provider declares it).</summary>
     public bool TenantOwned { get; set; }
@@ -95,8 +95,8 @@ public sealed class CrestContentGroupOverride
 
     public bool Hidden { get; set; }
 
-    public List<CrestContentGroupEntryRef> Added { get; set; } = [];
+    public List<ContentGroupEntryRef> Added { get; set; } = [];
 
     /// <summary>Provider-declared entries the tenant took out of this group.</summary>
-    public List<CrestContentGroupEntryRef> Removed { get; set; } = [];
+    public List<ContentGroupEntryRef> Removed { get; set; } = [];
 }

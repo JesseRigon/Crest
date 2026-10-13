@@ -20,7 +20,7 @@ using Crest.ViewModels;
 namespace Crest.Controllers;
 
 [ApiController, AutoValidateAntiforgeryToken, Route("api/crest/localization")]
-public sealed class CrestLocalizationController(
+public sealed class LocalizationController(
     ISiteService sites,
     IShellReleaseManager releases,
     IAuthorizationService authorization,
@@ -76,7 +76,7 @@ public sealed class CrestLocalizationController(
         // resolved with the client context preferred over the flat most-common pool.
         // BuildIndex already skips empty and identity entries, so untranslated msgids
         // never mask the client-side literal fallback.
-        var chainIndexes = CrestPoTranslationLookup.BuildCultureChainIndexes(localizationManager, cultureInfo);
+        var chainIndexes = PoTranslationLookup.BuildCultureChainIndexes(localizationManager, cultureInfo);
         var keys = new HashSet<string>(StringComparer.Ordinal);
         foreach (var index in chainIndexes)
         {
@@ -85,7 +85,7 @@ public sealed class CrestLocalizationController(
 
         foreach (var key in keys)
         {
-            if (CrestPoTranslationLookup.Resolve(chainIndexes, key, null, ClientContextPreference) is { } value)
+            if (PoTranslationLookup.Resolve(chainIndexes, key, null, ClientContextPreference) is { } value)
             {
                 strings[key] = value;
             }
@@ -135,7 +135,7 @@ public sealed class CrestLocalizationController(
     // preference here. Shared by the culture dropdown's "Save as default" action and the
     // Settings page's localization section — one write path, not duplicated.
     [HttpGet("me")]
-    public async Task<ActionResult<CrestUserCulture>> GetMyCultureAsync()
+    public async Task<ActionResult<UserCulture>> GetMyCultureAsync()
     {
         if (User.Identity?.IsAuthenticated != true)
         {
@@ -149,11 +149,11 @@ public sealed class CrestLocalizationController(
         }
 
         user.TryGet<UserLocalizationSettings>(out var settings);
-        return Ok(new CrestUserCulture(settings?.Culture));
+        return Ok(new UserCulture(settings?.Culture));
     }
 
     [HttpPut("me")]
-    public async Task<ActionResult<CrestUserCulture>> SetMyCultureAsync(CrestUserCulture request)
+    public async Task<ActionResult<UserCulture>> SetMyCultureAsync(UserCulture request)
     {
         if (User.Identity?.IsAuthenticated != true)
         {
@@ -186,11 +186,11 @@ public sealed class CrestLocalizationController(
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        return Ok(new CrestUserCulture(culture));
+        return Ok(new UserCulture(culture));
     }
 
     [HttpGet]
-    public async Task<ActionResult<CrestLocalization>> GetAsync()
+    public async Task<ActionResult<LocalizationModel>> GetAsync()
     {
         if (!await authorization.AuthorizeAsync(User, LocalizationPermissions.ManageCultures))
         {
@@ -201,7 +201,7 @@ public sealed class CrestLocalizationController(
     }
 
     [HttpPut]
-    public async Task<ActionResult<CrestLocalization>> SaveAsync(CrestLocalization request)
+    public async Task<ActionResult<LocalizationModel>> SaveAsync(LocalizationModel request)
     {
         if (!await authorization.AuthorizeAsync(User, LocalizationPermissions.ManageCultures))
         {
@@ -260,7 +260,7 @@ public sealed class CrestLocalizationController(
         return Ok(await CreateDtoAsync(cultures, defaultCulture, request.FallBackToParentCulture, adminDefaultCulture));
     }
 
-    private async Task<CrestLocalization> CreateDtoAsync(
+    private async Task<LocalizationModel> CreateDtoAsync(
         string[]? cultures = null,
         string? defaultCulture = null,
         bool? fallBackToParentCulture = null,
@@ -273,7 +273,7 @@ public sealed class CrestLocalizationController(
         fallBackToParentCulture ??= settings.FallBackToParentCulture;
         adminDefaultCulture ??= crestSettings.AdminDefaultCulture;
 
-        return new CrestLocalization(
+        return new LocalizationModel(
             defaultCulture,
             cultures,
             fallBackToParentCulture.Value,
@@ -282,7 +282,7 @@ public sealed class CrestLocalizationController(
                 .GroupBy(culture => culture.Name, StringComparer.OrdinalIgnoreCase)
                 .Select(group => group.First())
                 .OrderBy(culture => culture.DisplayName, StringComparer.OrdinalIgnoreCase)
-                .Select(CrestCulture.From)
+                .Select(Culture.From)
                 .ToArray());
     }
 

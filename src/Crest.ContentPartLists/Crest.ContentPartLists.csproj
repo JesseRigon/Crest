@@ -23,9 +23,9 @@
 
   <ItemGroup>
     <!-- The picker abstraction (IOptionSourceProvider, OptionRow,
-         CrestOptionSourceKeys) and OptionPickerField live in Crest.Server; this module
+         OptionSourceKeys) and OptionPickerField live in Crest.Server; this module
          plugs Content Part Lists in as one provider among several. -->
     <ProjectReference Include="../Crest.Server/Crest.Server.csproj" />
-    <ProjectReference Include="../Crest.Global/Crest.Global.csproj" />
+    <ProjectReference Include="../Crest.Data.Global/Crest.Data.Global.csproj" />
   </ItemGroup>
 </Project>

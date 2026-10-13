@@ -24,7 +24,8 @@ public sealed class CallerContextFactory(
     IPermissionVersion permissionVersion,
     CallerStateCache cache,
     IEnumerable<ICallerRequestResolver> resolvers,
-    IEnumerable<ICallerContextContributor> contributors) : ICallerContextFactory
+    IEnumerable<ICallerContextContributor> contributors,
+    IEnumerable<IDerivedRoleProvider>? derivedRoles = null) : ICallerContextFactory
 {
     public async Task<CallerContext> CreateAsync(CallerRequest request, CancellationToken cancellationToken = default)
     {
@@ -49,7 +50,7 @@ public sealed class CallerContextFactory(
                 ImpersonatorUserId = request.ImpersonatorUserId,
             };
 
-            await AddRolesAndPermissionsAsync(builder, userId, principal, cancellationToken);
+            var isUser = await AddRolesAndPermissionsAsync(builder, userId, principal, cancellationToken);
 
             foreach (var contributor in contributors)
             {
@@ -58,6 +59,11 @@ public sealed class CallerContextFactory(
                 {
                     throw new CallerDeniedException(builder.DenialReason);
                 }
+            }
+
+            if (isUser)
+            {
+                await AddDerivedRolesAsync(builder, userId!, cancellationToken);
             }
 
             state = new CallerState(
@@ -100,7 +106,7 @@ public sealed class CallerContextFactory(
                 Side = CallerSide.System,
                 IsSystem = true,
                 IsSuperUser = true,
-                UserName = "system",
+                UserName = SystemAccounts.DisplayName(SystemAccounts.Tenant),
                 PermissionVersion = version,
             };
         }
@@ -109,7 +115,7 @@ public sealed class CallerContextFactory(
         // contributor supplies the member-admin roles for the organization.
         var builder = new CallerContextBuilder(new CallerRequest(null, CallerSide.System, organizationId, null), shellSettings.Name)
         {
-            UserName = "system",
+            UserName = SystemAccounts.DisplayName(SystemAccounts.Organization(organizationId)),
             OrganizationId = organizationId,
         };
         await AddRolesAndPermissionsAsync(builder, null, null, cancellationToken);
@@ -136,9 +142,50 @@ public sealed class CallerContextFactory(
     private static bool IsIdentityCookie(ClaimsPrincipal principal) =>
         principal.Identities.Any(identity => identity.AuthenticationType is { } type && type.StartsWith("Identity.", StringComparison.Ordinal));
 
-    private async Task AddRolesAndPermissionsAsync(CallerContextBuilder builder, string? userId, ClaimsPrincipal? principal, CancellationToken cancellationToken)
+    /// <summary>
+    /// Business roles (docs/sharing.md § 5, requirements 41-42): computed from the relationship
+    /// records by every <see cref="IDerivedRoleProvider"/> for the organization the caller acts
+    /// for, after the contributors settled it (on the member side they replace the roles with the
+    /// binding's), and added with their roles' permissions. Never stored on the user; the cached
+    /// caller is rebuilt when a relationship changes, which bumps the permission version (43).
+    /// </summary>
+    private async Task AddDerivedRolesAsync(CallerContextBuilder builder, string userId, CancellationToken cancellationToken)
+    {
+        if (derivedRoles is null)
+        {
+            return;
+        }
+
+        var grants = await DerivedRoles.GrantsAsync(derivedRoles, new DerivedRoleContext(userId, builder.OrganizationId), cancellationToken);
+        foreach (var roleName in grants.Select(grant => grant.RoleName).Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (!builder.Roles.Add(roleName))
+            {
+                continue;
+            }
+
+            var role = await roleManager.FindByNameAsync(roleName);
+            if (role is null)
+            {
+                continue;
+            }
+
+            foreach (var claim in await roleManager.GetClaimsAsync(role))
+            {
+                if (string.Equals(claim.Type, Permission.ClaimType, StringComparison.OrdinalIgnoreCase))
+                {
+                    builder.Permissions.Add(claim.Value);
+                }
+            }
+        }
+    }
+
+    /// <summary>Adds the roles and permissions; true when the caller is a known, enabled user
+    /// (not an application, a deleted or a disabled account).</summary>
+    private async Task<bool> AddRolesAndPermissionsAsync(CallerContextBuilder builder, string? userId, ClaimsPrincipal? principal, CancellationToken cancellationToken)
     {
         var roleNames = new List<string> { PlatformConstants.Roles.Anonymous };
+        var isUser = false;
 
         if (userId is not null)
         {
@@ -154,6 +201,7 @@ public sealed class CallerContextFactory(
 
             if (user is not null)
             {
+                isUser = true;
                 builder.UserName ??= user.UserName;
                 foreach (var roleName in await userManager.GetRolesAsync(user))
                 {
@@ -206,5 +254,7 @@ public sealed class CallerContextFactory(
                 }
             }
         }
+
+        return isUser;
     }
 }

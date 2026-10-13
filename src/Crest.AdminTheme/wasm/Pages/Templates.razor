@@ -114,15 +114,15 @@
         </CrestStack>
     </CrestCard>
 
-    <CrestDataGrid Data="@_items" TItem="CrestTemplate" data-testid="templates-grid">
+    <CrestDataGrid Data="@_items" TItem="Template" data-testid="templates-grid">
         <Columns>
-            <CrestDataGridColumn TItem="CrestTemplate" Property="Name" Title="@T["Name"]" />
-            <CrestDataGridColumn TItem="CrestTemplate" Property="Theme" Title="@T["Theme"]" />
-            <CrestDataGridColumn TItem="CrestTemplate" Property="DisplayType" Title="@T["Display type"]" />
-            <CrestDataGridColumn TItem="CrestTemplate" Title="@T["Status"]">
+            <CrestDataGridColumn TItem="Template" Property="Name" Title="@T["Name"]" />
+            <CrestDataGridColumn TItem="Template" Property="Theme" Title="@T["Theme"]" />
+            <CrestDataGridColumn TItem="Template" Property="DisplayType" Title="@T["Display type"]" />
+            <CrestDataGridColumn TItem="Template" Title="@T["Status"]">
                 <Template Context="template">@(template.Published ? (template.HasDraft ? T["Published, draft pending"] : T["Published"]) : T["Draft"])</Template>
             </CrestDataGridColumn>
-            <CrestDataGridColumn TItem="CrestTemplate" Title="@T["Actions"]">
+            <CrestDataGridColumn TItem="Template" Title="@T["Actions"]">
                 <Template Context="template"><CrestButton Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(template))" /></Template>
             </CrestDataGridColumn>
         </Columns>
@@ -130,7 +130,7 @@
 </CrestStack>
 
 @code {
-    private CrestTemplate[] _items = [];
+    private Template[] _items = [];
     private Editing? _editing;
     private DisplayDiagnostic[] _diagnostics = [];
     private string? _message;
@@ -168,7 +168,7 @@
 
     private async Task DeleteInstanceAsync(string instanceId) => await AfterOverrideAsync(await Api.Crest.Rest.Templates.DeleteInstanceOverrideAsync(instanceId));
 
-    private async Task AfterOverrideAsync(CrestLayersResult result)
+    private async Task AfterOverrideAsync(LayersResult result)
     {
         _message = result.Succeeded ? T["Saved."] : string.Join(" ", result.Errors);
         _diagnostics = [];
@@ -189,7 +189,7 @@
 
     private void New() => Open(new Editing());
 
-    private void Edit(CrestTemplate template) => Open(new Editing
+    private void Edit(Template template) => Open(new Editing
     {
         Id = template.Id,
         Name = template.Name,
@@ -215,7 +215,7 @@
 
     private void Close() => _editing = null;
 
-    private CrestTemplateWrite Write() => new(
+    private TemplateWrite Write() => new(
         _editing!.Name ?? string.Empty, _editing.Theme, _editing.DisplayType, _editing.Description, _editing.Source,
         _editing.IsComposite, _editing.DisplayName, _editing.Category, _editing.Icon,
         Parse(_editing.Inputs), Parse(_editing.Outputs));
@@ -245,7 +245,7 @@
         if (result.Template is { } saved)
         {
             _editing.Id = saved.Id;
-            Show(new CrestTemplateValidation(true, []), T["Draft saved."]);
+            Show(new TemplateValidation(true, []), T["Draft saved."]);
             _items = await Api.Crest.Rest.Templates.ListAsync();
         }
         else
@@ -277,7 +277,7 @@
         _message = _preview is null ? T["The preview could not be built."] : null;
     }
 
-    private void Show(CrestTemplateValidation? result, string success)
+    private void Show(TemplateValidation? result, string success)
     {
         _diagnostics = result?.Diagnostics ?? [];
         _message = result is null ? T["The server refused the request."] : result.Valid ? success : T["The template has problems:"];

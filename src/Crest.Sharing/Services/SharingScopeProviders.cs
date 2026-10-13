@@ -24,6 +24,11 @@ public sealed class SharingScopes(ShareableKinds kinds, IClock clock) : IShareSc
         kinds.Find(kind) is IShareableScopeTarget target
             ? new SharingScopeProvider(kind, target.ScopeTarget, clock).Build(caller, minimum)
             : null;
+
+    public ScopeRule? IndicatorRuleFor(string kind, ShareIndicator indicator) =>
+        kinds.Find(kind) is IShareableScopeTarget target
+            ? SharingScopeProvider.Indicator(kind, target.ScopeTarget, indicator)
+            : null;
 }
 
 /// <summary>
@@ -38,7 +43,9 @@ public sealed class SharingScopes(ShareableKinds kinds, IClock clock) : IShareSc
 /// <item>their organization's row grants; or, with no organization row,</item>
 /// <item>the tenant row grants (signed-in callers only).</item>
 /// </list>
-/// Only rows active now count, so an ended share is out of every list at once. The tenant
+/// Only rows active now count, so an ended share is out of every list at once. The tiers are
+/// read per path to the root (one access document per path, multi-path inheritance F3), and an
+/// object is visible when any path admits the caller. The tenant
 /// administrator sees every row. This is the resolver's tier logic restated over the index rows,
 /// and the tests hold the two to each other (requirement 81).
 /// </summary>
@@ -46,12 +53,13 @@ public sealed class SharingScopeProvider(string kind, ShareScopeTarget target, I
 {
     private const string Access = nameof(ShareAccessIndex);
     private const string Shadows = nameof(ShareRoleShadowIndex);
+    private const string Paths = nameof(ShareAccessObjectIndex);
 
     public string Kind => kind;
 
     public string Target => target.Table;
 
-    public int Version => 1;
+    public int Version => 2;
 
     public Task<ScopeRule> BuildAsync(CallerContext caller, CancellationToken cancellationToken = default) =>
         Task.FromResult(Build(caller));
@@ -94,12 +102,46 @@ public sealed class SharingScopeProvider(string kind, ShareScopeTarget target, I
         // Public is absolute for viewing (requirement 62), and never more than viewing.
         if (minimum > AccessLevel.Viewer)
         {
-            return visible is null ? ScopeRule.None : ScopeRule.Where(visible);
+            return visible is null ? ScopeRule.None : ScopeRule.Where(Objects(visible));
         }
 
         var isPublic = In(Rows(SharePrincipalKind.Anyone, [string.Empty], now, minimum));
-        return ScopeRule.Where(visible is null ? isPublic : ScopeFilter.AnyOf(isPublic, visible));
+        return ScopeRule.Where(Objects(visible is null ? isPublic : ScopeFilter.AnyOf(isPublic, visible)));
     }
+
+    /// <summary>
+    /// The rows whose object has <paramref name="indicator"/> on any path (requirement 98): public,
+    /// shared (and not public), or neither. An object never calculated is private.
+    /// </summary>
+    public static ScopeRule Indicator(string kind, ShareScopeTarget target, ShareIndicator indicator)
+    {
+        ScopeFilter Having(string column) =>
+            ScopeFilter.Of(ScopeCondition.InSelect(target.IdColumn, Paths, nameof(ShareAccessObjectIndex.ObjectId), ScopeFilter.AllOf(
+                ScopeFilter.Of(ScopeCondition.Equal(nameof(ShareAccessObjectIndex.Kind), kind)),
+                ScopeFilter.Of(ScopeCondition.Equal(column, true)))));
+
+        ScopeFilter NotHaving(string column) =>
+            ScopeFilter.Of(ScopeCondition.NotInSelect(target.IdColumn, Paths, nameof(ShareAccessObjectIndex.ObjectId), ScopeFilter.AllOf(
+                ScopeFilter.Of(ScopeCondition.Equal(nameof(ShareAccessObjectIndex.Kind), kind)),
+                ScopeFilter.Of(ScopeCondition.Equal(column, true)))));
+
+        return indicator switch
+        {
+            ShareIndicator.Public => ScopeRule.Where(Having(nameof(ShareAccessObjectIndex.IsPublic))),
+            ShareIndicator.Shared => ScopeRule.Where(ScopeFilter.AllOf(Having(nameof(ShareAccessObjectIndex.IsShared)), NotHaving(nameof(ShareAccessObjectIndex.IsPublic)))),
+            _ => ScopeRule.Where(ScopeFilter.AllOf(NotHaving(nameof(ShareAccessObjectIndex.IsShared)), NotHaving(nameof(ShareAccessObjectIndex.IsPublic)))),
+        };
+    }
+
+    /// <summary>
+    /// The tier logic above runs per path to the root (multi-path inheritance, F3): over the
+    /// per-path registry, correlated by access key. An object is in the list when any of its
+    /// paths admits the caller.
+    /// </summary>
+    private ScopeFilter Objects(ScopeFilter paths) =>
+        ScopeFilter.Of(ScopeCondition.InSelect(target.IdColumn, Paths, nameof(ShareAccessObjectIndex.ObjectId), ScopeFilter.AllOf(
+            ScopeFilter.Of(ScopeCondition.Equal(nameof(ShareAccessObjectIndex.Kind), kind)),
+            paths)));
 
     /// <summary>A role grant of at least <paramref name="minimum"/> that no deeper row of the
     /// caller's roles below <paramref name="minimum"/> outranks.</summary>
@@ -144,9 +186,9 @@ public sealed class SharingScopeProvider(string kind, ShareScopeTarget target, I
             ScopeFilter.AnyOf(ScopeFilter.Of(ScopeCondition.IsNull(starts)), ScopeFilter.Of(ScopeCondition.LessThanOrEqual(starts, now))),
             ScopeFilter.AnyOf(ScopeFilter.Of(ScopeCondition.IsNull(ends)), ScopeFilter.Of(ScopeCondition.GreaterThan(ends, now))));
 
-    private ScopeFilter In(ScopeFilter rows) =>
-        ScopeFilter.Of(ScopeCondition.InSelect(target.IdColumn, Access, nameof(ShareAccessIndex.ObjectId), rows));
+    private static ScopeFilter In(ScopeFilter rows) =>
+        ScopeFilter.Of(ScopeCondition.InSelect(nameof(ShareAccessObjectIndex.AccessKey), Access, nameof(ShareAccessIndex.AccessKey), rows));
 
-    private ScopeFilter NotIn(ScopeFilter rows) =>
-        ScopeFilter.Of(ScopeCondition.NotInSelect(target.IdColumn, Access, nameof(ShareAccessIndex.ObjectId), rows));
+    private static ScopeFilter NotIn(ScopeFilter rows) =>
+        ScopeFilter.Of(ScopeCondition.NotInSelect(nameof(ShareAccessObjectIndex.AccessKey), Access, nameof(ShareAccessIndex.AccessKey), rows));
 }

@@ -3,7 +3,7 @@
   <!-- The member shell's client half: a Razor class library, not a WASM app entry. A
        Blazor Web App has exactly ONE WASM entry project (the host app's), which
        references this library alongside Admin's and Site's and runs the one Program.cs
-       (CrestWebAssemblyHost).
+       (ClientWebAssemblyHost).
        A third shell is therefore a theme, a client library, a route bucket and an
        App.razor branch - NOT a third build output. See plans/shells-and-themes.md. -->
   <PropertyGroup>
@@ -51,7 +51,7 @@
     <!-- No module references here: the member theme never references a module. Module
          member-wasm libraries reach the payload through the host app's WASM entry
          project, which references them, and the member router loads them per shell
-         through CrestLazyModules. -->
+         through LazyModules. -->
   </ItemGroup>
 
 </Project>

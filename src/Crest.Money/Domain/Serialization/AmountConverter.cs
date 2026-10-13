@@ -22,6 +22,14 @@ public sealed class AmountConverter : JsonConverter<Amount>
     public const string Iso = "iso";
     public const string DecimalDigits = "dec";
 
+    // A denomination other than a currency is written whole (kind, code, precision and its
+    // display rule), so an amount reads back without a provider lookup.
+    public const string Kind = "kind";
+    public const string Code = "code";
+    public const string Precision = "precision";
+    public const string Unit = "unit";
+    public const string Format = "format";
+
     public override Amount Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         decimal value = default;
@@ -31,6 +39,11 @@ public sealed class AmountConverter : JsonConverter<Amount>
         string symbol = null;
         string iso = null;
         int? decimalDigits = null;
+        string kind = null;
+        string code = null;
+        int? precision = null;
+        string unit = null;
+        string format = null;
 
         if (reader.TokenType == JsonTokenType.String)
         {
@@ -66,9 +79,29 @@ public sealed class AmountConverter : JsonConverter<Amount>
                 case DecimalDigits when reader.TryGetInt32(out var i):
                     decimalDigits = i;
                     break;
+                case Kind:
+                    kind = reader.GetString();
+                    break;
+                case Code:
+                    code = reader.GetString();
+                    break;
+                case Precision when reader.TryGetInt32(out var p):
+                    precision = p;
+                    break;
+                case Unit:
+                    unit = reader.GetString();
+                    break;
+                case Format:
+                    format = reader.GetString();
+                    break;
                 default:
                     throw new InvalidOperationException($"Unknown property name \"{propertyName}\".");
             }
+        }
+
+        if (kind is not null && kind != DenominationKinds.Currency)
+        {
+            return new(value, new Denomination(kind, code ?? throw new InvalidOperationException("Invalid amount format. A denomination must include a code."), precision.GetValueOrDefault(DefaultDecimalDigits), symbol, englishName ?? nativeName, unit, format));
         }
 
         currency = HandleUnknownCurrency(currency, nativeName, englishName, symbol, iso, decimalDigits);
@@ -78,13 +111,27 @@ public sealed class AmountConverter : JsonConverter<Amount>
 
     public override void Write(Utf8JsonWriter writer, Amount value, JsonSerializerOptions options)
     {
-        if (value.Currency is null)
+        if (value.Denomination is null)
         {
-            throw new InvalidOperationException("Amount must have a currency applied to allow serialization.");
+            throw new InvalidOperationException("Amount must have a denomination applied to allow serialization.");
         }
 
         writer.WriteStartObject();
         writer.WriteNumber(ValueName, value.Value);
+
+        if (!value.Denomination.IsCurrency())
+        {
+            var denomination = value.Denomination;
+            writer.WriteString(Kind, denomination.Kind);
+            writer.WriteString(Code, denomination.Code);
+            writer.WriteNumber(Precision, denomination.Precision);
+            writer.WriteString(Symbol, denomination.Symbol);
+            writer.WriteString(EnglishName, denomination.Name);
+            if (denomination.Unit is not null) writer.WriteString(Unit, denomination.Unit);
+            if (denomination is Denomination { FormatPattern: var pattern } && pattern != Denomination.DefaultFormat) writer.WriteString(Format, pattern);
+            writer.WriteEndObject();
+            return;
+        }
 
         if (IsKnownCurrency(value.Currency.CurrencyIsoCode))
         {

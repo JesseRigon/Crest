@@ -40,12 +40,14 @@ public sealed class MemberPortalLoginContext(IHttpContextAccessor httpContextAcc
             return null;
         }
 
+        // The key's presence marks the portal; an empty value is an external sign-in that named
+        // no organization (an existing member signing in with any of their bindings).
         var external = await httpContext.AuthenticateAsync(IdentityConstants.ExternalScheme);
         if (external.Succeeded
             && external.Properties?.Items.TryGetValue(MemberSessionKeys.PortalOrganization, out var organizationId) == true
-            && !string.IsNullOrWhiteSpace(organizationId))
+            && organizationId is not null)
         {
-            _marker = new PortalLoginMarker(organizationId, null);
+            _marker = new PortalLoginMarker(string.IsNullOrWhiteSpace(organizationId) ? null : organizationId, null, External: true);
         }
 
         return _marker;
@@ -53,6 +55,7 @@ public sealed class MemberPortalLoginContext(IHttpContextAccessor httpContextAcc
 }
 
 /// <summary>The portal mark: which organization (null = "any of the member's
-/// bindings", password sign-in only) and, for registration, the Person already
-/// created for the account.</summary>
-public sealed record PortalLoginMarker(string? OrganizationId, string? PersonId);
+/// bindings"; never creates an account) and, for registration, the Person already
+/// created for the account. <paramref name="External"/>: the mark came back on an external
+/// sign-in's callback rather than from the portal's own endpoints.</summary>
+public sealed record PortalLoginMarker(string? OrganizationId, string? PersonId, bool External = false);

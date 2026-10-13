@@ -90,6 +90,14 @@
                         <CrestFormField Text="@T["Timeout (s)"]"><CrestNumeric TValue="int" @bind-Value="Draft.TimeoutSeconds" Min="1" Max="120" /></CrestFormField>
                     </CrestStack>
 
+                    @if (Draft.AuthKind == WorkflowConnectorAuthKinds.Hmac)
+                    {
+                        @* A webhook's run acts as the connection's machine identity, with these roles (docs/access.md, Anonymous actors). *@
+                        <CrestFormField Text="@T["Roles of the webhook's caller (comma-separated)"]">
+                            <CrestTextBox @bind-Value="Draft.Roles" Placeholder="@T["No roles: the run holds only what Anonymous and Authenticated grant"]" Style="width: 100%;" data-testid="connection-roles" />
+                        </CrestFormField>
+                    }
+
                     @if (Draft.AuthKind == WorkflowConnectorAuthKinds.Hmac && !IsNew)
                     {
                         <CrestAlert AlertStyle="AlertStyle.Info" Summary="@T["Webhook URL"]"
@@ -260,6 +268,7 @@
         public int RetryCount { get; set; } = 2;
         public int? RateLimitPerMinute { get; set; }
         public int TimeoutSeconds { get; set; } = 30;
+        public string Roles { get; set; } = string.Empty;
 
         public string? Setting(string key) => Settings.TryGetValue(key, out var value) ? value : null;
 
@@ -275,12 +284,14 @@
             RetryCount = model.RetryCount,
             RateLimitPerMinute = model.RateLimitPerMinute,
             TimeoutSeconds = model.TimeoutSeconds,
+            Roles = string.Join(", ", model.Roles ?? []),
         };
 
         // An empty secret box keeps the stored secret (null); only a typed one replaces it.
         public WorkflowConnectionSaveRequest ToRequest() => new(
             Key, DisplayName, ConnectorKey, string.IsNullOrWhiteSpace(BaseUrl) ? string.Empty : BaseUrl, AuthKind,
             Settings.Where(s => !string.IsNullOrWhiteSpace(s.Value)).ToDictionary(s => s.Key, s => s.Value),
-            string.IsNullOrEmpty(Secret) ? null : Secret, RetryCount, RateLimitPerMinute ?? 0, TimeoutSeconds);
+            string.IsNullOrEmpty(Secret) ? null : Secret, RetryCount, RateLimitPerMinute ?? 0, TimeoutSeconds,
+            Roles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
     }
 }

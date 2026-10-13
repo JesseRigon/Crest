@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
+using Crest.Admin;
 using Crest.AuditTrail.Controllers;
 using Crest.AuditTrail.Settings;
 using Crest.Navigation;
@@ -21,10 +23,12 @@ public sealed class AuditTrailAdminMenu : AdminNavigationProvider
     };
 
     internal readonly IStringLocalizer S;
+    private readonly string _adminPath;
 
-    public AuditTrailAdminMenu(IStringLocalizer<AuditTrailAdminMenu> stringLocalizer)
+    public AuditTrailAdminMenu(IStringLocalizer<AuditTrailAdminMenu> stringLocalizer, IOptions<AdminOptions> adminOptions)
     {
         S = stringLocalizer;
+        _adminPath = "/" + adminOptions.Value.AdminUrlPrefix.Trim('/');
     }
 
     protected override ValueTask BuildAsync(NavigationBuilder builder)
@@ -54,14 +58,25 @@ public sealed class AuditTrailAdminMenu : AdminNavigationProvider
             return ValueTask.CompletedTask;
         }
 
+        // The Crest audit pages (Crest.AuditTrail.BlazorWasm, docs/audit.md › step 4).
         builder
             .Add(S["Tools"], tools => tools
                 .Add(S["Audit Trail"], S["Audit Trail"].PrefixPosition(), configuration => configuration
                     .AddClass("audittrail")
                     .Id("audittrail")
-                    .Action(nameof(AdminController.Index), "Admin", s_routeValues)
+                    .Url(_adminPath + Api.AuditTrailRoutes.TrailAdmin)
                     .Permission(AuditTrailPermissions.ViewAuditTrail)
                     .LocalNav()
+                    .Add(S["Events"], "0", events => events
+                        .Id("audittrail-events")
+                        .Url(_adminPath + Api.AuditTrailRoutes.TrailAdmin)
+                        .Permission(AuditTrailPermissions.ViewAuditTrail)
+                        .LocalNav())
+                    .Add(S["Impersonation sessions"], "10", sessions => sessions
+                        .Id("audittrail-sessions")
+                        .Url(_adminPath + Api.AuditTrailRoutes.SessionsAdmin)
+                        .Permission(AuditTrailPermissions.ViewAuditTrail)
+                        .LocalNav())
                 )
             )
             .Add(S["Settings"], settings => settings

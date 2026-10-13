@@ -160,8 +160,21 @@ public sealed class ShareableObject
     /// system account owns.</summary>
     public string? OwnerUserId { get; init; }
 
+    /// <summary>The system account that owns it (<c>Crest.Access.SystemAccounts</c>: the tenant's
+    /// for a shared drive, an organization's for its drive), when no user does. The tenant or
+    /// organization system actor acting as that account is its owner (requirement 33).</summary>
+    public string? OwnerAccountId { get; init; }
+
     /// <summary>The object its grants are inherited from; null for a root.</summary>
     public ShareableRef? Parent { get; init; }
+
+    /// <summary>
+    /// Further parents its grants are inherited from too (multi-path inheritance, decision F3 in
+    /// docs/sharing.md): a child of a hard-linked folder inherits through every placement of the
+    /// folder, not only the one it was created or moved through. Each parent opens one more path
+    /// to the root; the caller gets the most a path gives them. Empty for one path.
+    /// </summary>
+    public IReadOnlyList<ShareableRef> OtherParents { get; init; } = [];
 
     /// <summary>A top of a tree (a drive): the only place <see cref="AccessLevel.Admin"/> is granted.</summary>
     public bool IsRoot => Parent is null;
@@ -169,6 +182,10 @@ public sealed class ShareableObject
     /// <summary>Out of use (an inactive drive, or anything in one): nobody but a tenant
     /// administrator reaches it.</summary>
     public bool IsInactive { get; init; }
+
+    /// <summary>A name for people (a folder's name), shown in the Share panel and the Rules
+    /// screens; null when the kind has none to give.</summary>
+    public string? DisplayName { get; init; }
 
     /// <summary>What rules test, by fact name.</summary>
     public IReadOnlyDictionary<string, IReadOnlyList<string>> Facts { get; init; } = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);

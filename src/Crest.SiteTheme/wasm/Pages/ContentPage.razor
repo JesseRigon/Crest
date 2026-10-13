@@ -1,20 +1,33 @@
 @page "/"
-@page "/{*Path}"
 @using System.Net
 @using System.Net.Http.Json
+@using System.Text.Json
 @using Crest.DisplayManagement.Components
 @using Crest.Shell
 @using Microsoft.Extensions.DependencyInjection
 @inject HttpClient Http
 @inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject Microsoft.JSInterop.IJSRuntime JS
 
 @*
     The site's content route (docs/blazor-display.md § 6, rework step 3): every site path no
     module page claims. The server builds the page (the path through Autoroute, the home route
     for "/", the layout, the menu, the layer rules' components) as one display tree; it crosses
-    to the browser once, as persisted state, and the one renderer draws it. @page "/" is also the
-    site bucket's default landing, which SiteRouteComponentTableProvider reads back by reflection.
+    to the browser once, as persisted state, and the one renderer draws it. @page "/" is its only
+    route - the site bucket's default landing, which SiteRouteComponentTableProvider reads back
+    by reflection. It is deliberately NOT a "/{*Path}" catch-all: that was a Blazor endpoint at
+    the tenant root matching every URL, which won over MVC routes (the legacy admin frame, the
+    error pages, the stock login) and over static files (ruling 2026-10-13, docs/shells-and-
+    themes.md › Shell dispatch). The shell middleware resolves every site path through the
+    route table instead, rewrites a content path to "/" and forwards a legacy-owned one to MVC.
+    The real path therefore comes from elsewhere: IShellRequestPath while prerendering (the
+    middleware's stash), the navigation manager once interactive (the site Router renders this
+    page for every URL it has no page for, passing the path).
     A miss is still a page (the layout with NotFound) and answers 404 while prerendering.
+    Decision 12: once interactive, pages are kept in session storage with their ETag (the
+    composite version); a navigation revalidates and draws the kept tree on 304. The kept
+    pages are dropped when the viewer's scope changes (a sign-out, a sign-in).
 *@
 
 @if (State?.Page is { } sitePage)
@@ -34,13 +47,19 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        var path = "/" + (Path ?? string.Empty);
+        var path = Path is not null
+            ? "/" + Path.TrimStart('/')
+            : RendererInfo.IsInteractive
+                ? "/" + Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0].TrimStart('/')
+                : Services.GetService<IShellRequestPath>()?.Path ?? "/";
         if (State is null || State.Path != path)
         {
             SitePage? page = null;
             try
             {
-                page = await Http.GetFromJsonAsync<SitePage>($"api/crest/site/page?path={Uri.EscapeDataString(path)}");
+                page = RendererInfo.IsInteractive
+                    ? await FetchKeptAsync(path)
+                    : await Http.GetFromJsonAsync<SitePage>($"api/crest/site/page?path={Uri.EscapeDataString(path)}");
             }
             catch (HttpRequestException)
             {
@@ -55,6 +74,79 @@
             Services.GetService<IShellResponseStatus>()?.Set(State.Page.Status);
         }
     }
+
+    private const string KeptPrefix = "crest.site.page:";
+    private const string KeptScope = "crest.site.scope";
+    private const string KeptIndex = "crest.site.pages";
+
+    // A kept page is sent back as If-None-Match; 304 draws it, 200 replaces it. Storage that
+    // fails (private mode, quota) only costs the revalidation.
+    private async Task<SitePage?> FetchKeptAsync(string path)
+    {
+        var kept = await ReadAsync<KeptPage>(KeptPrefix + path);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"api/crest/site/page?path={Uri.EscapeDataString(path)}");
+        if (kept?.ETag is { Length: > 0 } etag)
+        {
+            request.Headers.TryAddWithoutValidation("If-None-Match", etag);
+        }
+
+        using var response = await Http.SendAsync(request);
+        if (response.StatusCode == HttpStatusCode.NotModified && kept is not null)
+        {
+            return kept.Page;
+        }
+
+        var page = await response.Content.ReadFromJsonAsync<SitePage>();
+        if (page is not null && response.Headers.ETag?.Tag is { } fresh)
+        {
+            await KeepAsync(path, new KeptPage(fresh, page), page.Tree?.ScopeSignature);
+        }
+
+        return page;
+    }
+
+    private async Task KeepAsync(string path, KeptPage page, string? scope)
+    {
+        try
+        {
+            var paths = await ReadAsync<List<string>>(KeptIndex) ?? [];
+            if (await JS.InvokeAsync<string?>("sessionStorage.getItem", KeptScope) != scope)
+            {
+                foreach (var stale in paths)
+                {
+                    await JS.InvokeVoidAsync("sessionStorage.removeItem", KeptPrefix + stale);
+                }
+
+                paths.Clear();
+                await JS.InvokeVoidAsync("sessionStorage.setItem", KeptScope, scope ?? string.Empty);
+            }
+
+            if (!paths.Contains(path))
+            {
+                paths.Add(path);
+            }
+
+            await JS.InvokeVoidAsync("sessionStorage.setItem", KeptPrefix + path, JsonSerializer.Serialize(page));
+            await JS.InvokeVoidAsync("sessionStorage.setItem", KeptIndex, JsonSerializer.Serialize(paths));
+        }
+        catch (Exception exception) when (exception is Microsoft.JSInterop.JSException or InvalidOperationException)
+        {
+        }
+    }
+
+    private async Task<T?> ReadAsync<T>(string key)
+    {
+        try
+        {
+            return await JS.InvokeAsync<string?>("sessionStorage.getItem", key) is { Length: > 0 } json ? JsonSerializer.Deserialize<T>(json) : default;
+        }
+        catch (Exception exception) when (exception is Microsoft.JSInterop.JSException or JsonException or InvalidOperationException)
+        {
+            return default;
+        }
+    }
+
+    private sealed record KeptPage(string ETag, SitePage Page);
 
     public sealed record SitePage(int Status, string? Title, DisplayTree? Tree);
 

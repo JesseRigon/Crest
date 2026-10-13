@@ -93,6 +93,8 @@ public sealed class WorkflowChangeDeniedException(string message) : InvalidOpera
 /// (<see cref="WorkflowsConstants.RunsAsSystemProperty"/>) takes
 /// <see cref="Permissions.ManageShippedWorkflows"/> on top of Publish, whatever the tier: it
 /// is the only way a workflow comes to act as the system (docs/operations.md › Decisions).
+/// Accepting anonymous runs (<see cref="WorkflowsConstants.AcceptsAnonymousRunsProperty"/>)
+/// takes the same (docs/access.md, Anonymous actors).
 /// </summary>
 public sealed class WorkflowOwnershipGuard(
     IContentManager contentManager,
@@ -121,8 +123,11 @@ public sealed class WorkflowOwnershipGuard(
     /// </summary>
     public Task<WorkflowOwnershipInfo> AuthorizeChangeAsync(string? definitionId, WorkflowChange change) => AuthorizeChangeAsync(definitionId, change, runsAsSystem: false);
 
-    /// <summary>The full form: <paramref name="runsAsSystem"/> says the definition about to be published carries the system flag.</summary>
-    public async Task<WorkflowOwnershipInfo> AuthorizeChangeAsync(string? definitionId, WorkflowChange change, bool runsAsSystem)
+    /// <summary>
+    /// The full form: <paramref name="runsAsSystem"/> and <paramref name="acceptsAnonymousRuns"/>
+    /// say the definition about to be published carries the system flag or accepts anonymous runs.
+    /// </summary>
+    public async Task<WorkflowOwnershipInfo> AuthorizeChangeAsync(string? definitionId, WorkflowChange change, bool runsAsSystem, bool acceptsAnonymousRuns = false)
     {
         var properties = await GetStoredPropertiesAsync(definitionId);
         var stored = WorkflowOwnershipInfo.From(properties);
@@ -158,6 +163,11 @@ public sealed class WorkflowOwnershipGuard(
             throw new WorkflowChangeDeniedException($"'{name}' may not publish this workflow as system: it takes {Permissions.ManageShippedWorkflows.Name}.");
         }
 
+        if (acceptsAnonymousRuns && change == WorkflowChange.Publish && !await access.AuthorizeAsync(Permissions.ManageShippedWorkflows, resource))
+        {
+            throw new WorkflowChangeDeniedException($"'{name}' may not publish this workflow to accept anonymous runs: it takes {Permissions.ManageShippedWorkflows.Name}.");
+        }
+
         return stored.IsShipped && change == WorkflowChange.Save ? stored with { Forked = true } : stored;
     }
 
@@ -180,7 +190,7 @@ public sealed class WorkflowOwnershipGuard(
         }
         else
         {
-            ownership = await AuthorizeChangeAsync(definition.DefinitionId, change, Contexts.WorkflowCallerResolver.RunsAsSystem(definition.CustomProperties));
+            ownership = await AuthorizeChangeAsync(definition.DefinitionId, change, Contexts.WorkflowCallerResolver.RunsAsSystem(definition.CustomProperties), Contexts.WorkflowCallerResolver.AcceptsAnonymousRuns(definition.CustomProperties));
             ownership.Stamp(definition.CustomProperties);
         }
 

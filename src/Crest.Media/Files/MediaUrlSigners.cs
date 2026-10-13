@@ -21,6 +21,22 @@ public sealed class HmacMediaUrlSigner(byte[] key) : IMediaUrlSigner
 
     public string Name => "hmac";
 
+    /// <summary>Crest's own origin.</summary>
+    public string? BaseUrl => null;
+
+    public MediaSignatureCheck Verify(string path, string query, DateTimeOffset now)
+    {
+        var values = QueryHelpers.ParseQuery(query);
+        if (!values.TryGetValue(SignatureParameter, out var signature))
+        {
+            return MediaSignatureCheck.Absent;
+        }
+
+        return Verify(path, values.TryGetValue(ExpiresParameter, out var expires) ? expires.ToString() : null, signature.ToString(), now)
+            ? MediaSignatureCheck.Valid
+            : MediaSignatureCheck.Invalid;
+    }
+
     public Uri Sign(Uri url, DateTimeOffset expires)
     {
         var (path, query) = Split(url);
@@ -90,30 +106,3 @@ public sealed class HmacMediaUrlSigner(byte[] key) : IMediaUrlSigner
     }
 }
 
-// TODO (docs/media.md › Serving and CDNs): CDN signers, each configured per tenant like the
-// storage and scanner providers. The private origin then requires the same token, and the
-// CDN's cache key leaves it out.
-
-/// <summary>Cloudflare token authentication (<c>is_timed_hmac_valid_v0</c>). Not built yet.</summary>
-public sealed class CloudflareMediaUrlSigner : IMediaUrlSigner
-{
-    public string Name => "cloudflare";
-
-    public Uri Sign(Uri url, DateTimeOffset expires) => throw new NotImplementedException("TODO: Cloudflare timed HMAC token.");
-}
-
-/// <summary>Amazon CloudFront signed URLs (RSA or ECDSA key pair). Not built yet.</summary>
-public sealed class CloudFrontMediaUrlSigner : IMediaUrlSigner
-{
-    public string Name => "cloudfront";
-
-    public Uri Sign(Uri url, DateTimeOffset expires) => throw new NotImplementedException("TODO: CloudFront signed URL with a canned policy.");
-}
-
-/// <summary>Bunny pull-zone token authentication (HMAC-SHA256 over path and expiry). Not built yet.</summary>
-public sealed class BunnyMediaUrlSigner : IMediaUrlSigner
-{
-    public string Name => "bunny";
-
-    public Uri Sign(Uri url, DateTimeOffset expires) => throw new NotImplementedException("TODO: Bunny token authentication.");
-}

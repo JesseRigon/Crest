@@ -8,7 +8,6 @@ namespace Crest.Media.Scanning.Processing;
 /// rewritten without its GPS tags (parsed and written by ImageSharp), an XMP segment that carries
 /// GPS is dropped, and every other byte, the image data included, is copied as it was.
 /// </summary>
-// TODO: PNG (eXIf chunk), WebP (EXIF chunk) and HEIC location data.
 public static class JpegLocationStripper
 {
     private const byte Marker = 0xFF;

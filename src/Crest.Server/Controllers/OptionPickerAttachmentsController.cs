@@ -24,7 +24,7 @@ public sealed class OptionPickerAttachmentsController(
     IContentDefinitionManager contentDefinitionManager,
     IEnumerable<IOptionSourceProvider> sourceProviders,
     IAuthorizationService authorizationService,
-    CrestDefinitionLockGuard locks) : ControllerBase
+    DefinitionLockGuard locks) : ControllerBase
 {
     /// <summary>The field's current picker binding. 200 with IsOptionPicker=false
     /// for a field of another type (the PUT would convert it); 200 with
@@ -74,7 +74,7 @@ public sealed class OptionPickerAttachmentsController(
         }
 
         var settings = request.Settings ?? new OptionPickerFieldSettings();
-        var (providerKey, _) = CrestOptionSourceKeys.Split(settings.SourceKey);
+        var (providerKey, _) = OptionSourceKeys.Split(settings.SourceKey);
         if (!sourceProviders.Any(provider => string.Equals(provider.Key, providerKey, StringComparison.OrdinalIgnoreCase)))
         {
             return Problem($"There is no option source provider named '{providerKey}'.", statusCode: StatusCodes.Status400BadRequest);
@@ -93,7 +93,7 @@ public sealed class OptionPickerAttachmentsController(
         // A locked field keeps its type and binding; 409 via the lock filter.
         if (current is not null)
         {
-            await locks.EnsureFieldChangeAsync(request.Part, request.Field, string.Equals(current.FieldDefinition?.Name, nameof(OptionPickerField), StringComparison.Ordinal) ? CrestDefinitionChanges.SettingsChanged : CrestDefinitionChanges.Retyped);
+            await locks.EnsureFieldChangeAsync(request.Part, request.Field, string.Equals(current.FieldDefinition?.Name, nameof(OptionPickerField), StringComparison.Ordinal) ? DefinitionChanges.SettingsChanged : DefinitionChanges.Retyped);
         }
 
         if (current is not null && !string.Equals(current.FieldDefinition?.Name, nameof(OptionPickerField), StringComparison.Ordinal))
@@ -159,7 +159,7 @@ public sealed class OptionPickerAttachmentsController(
             return Problem("Only option picker fields can be removed here.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        await locks.EnsureFieldChangeAsync(part, field, CrestDefinitionChanges.Removed);
+        await locks.EnsureFieldChangeAsync(part, field, DefinitionChanges.Removed);
         await contentDefinitionManager.AlterPartDefinitionAsync(part, definition => definition.RemoveField(field));
         return NoContent();
     }

@@ -1,20 +1,26 @@
 @namespace Crest.Components.Regions
 @using Microsoft.AspNetCore.Components
+@using Crest.DisplayManagement.Components
 @using Microsoft.Extensions.DependencyInjection
 @inject IServiceProvider Services
 
-@if (_ready)
+@*
+    A page region (docs/page-regions.md): an open zone key (decision 6) the page owns, filled by
+    the components modules contribute to it in code, read from the component registry by
+    priority. A key nobody declared still renders; the registry reports it.
+*@
+@if (_ready && Services.GetService<IComponentRegistry>() is { } registry)
 {
-    @foreach (var contributor in PageRegionRegistry.For(Key))
+    @foreach (var contribution in registry.Contributions(Key))
     {
-        <DynamicComponent Type="@contributor.ComponentType" Parameters="@Parameters" />
+        <DynamicComponent Type="@contribution.ComponentType" Parameters="@Parameters" />
     }
 }
 
 @code {
     public const string ContextParameterName = "Context";
 
-    /// <summary>The region's key, owned by the page's module.</summary>
+    /// <summary>The region's key, owned by the page's module (declared with <c>[assembly: ZoneKey]</c>).</summary>
     [Parameter, EditorRequired] public string Key { get; set; } = string.Empty;
 
     /// <summary>Whatever the page wants contributors to know - typically the content item id being edited.</summary>

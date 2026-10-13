@@ -35,13 +35,10 @@ public class SettingsAuthorizationTests
         {
             new Claim(Permission.ClaimType, SettingsPermissions.ManageSettings.Name),
         };
-        var permissionGrantingService = new DefaultPermissionGrantingService();
 
-        Assert.True(permissionGrantingService.IsGranted(
-            new PermissionRequirement(SettingsPermissions.ManageGeneralSettings),
+        Assert.True(global::Crest.Tests.Access.ImpliedPermissions.IsGranted(SettingsPermissions.ManageGeneralSettings,
             claims));
-        Assert.True(permissionGrantingService.IsGranted(
-            new PermissionRequirement(SettingsPermissions.ManageDebuggingSettings),
+        Assert.True(global::Crest.Tests.Access.ImpliedPermissions.IsGranted(SettingsPermissions.ManageDebuggingSettings,
             claims));
     }
 
@@ -216,7 +213,6 @@ public class SettingsAuthorizationTests
 
     private static IAuthorizationService CreatePermissionAuthorizationService()
     {
-        var permissionGrantingService = new DefaultPermissionGrantingService();
         var authorizationService = new Mock<IAuthorizationService>();
         authorizationService
             .Setup(x => x.AuthorizeAsync(
@@ -227,7 +223,7 @@ public class SettingsAuthorizationTests
             {
                 var isGranted = requirements
                     .OfType<PermissionRequirement>()
-                    .All(requirement => permissionGrantingService.IsGranted(requirement, user.Claims));
+                    .All(requirement => global::Crest.Tests.Access.ImpliedPermissions.IsGranted(requirement.Permission, user.Claims));
 
                 return Task.FromResult(isGranted ? AuthorizationResult.Success() : AuthorizationResult.Failed());
             });

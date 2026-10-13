@@ -5,7 +5,7 @@ using Crest.Services;
 
 namespace Crest.ViewModels;
 
-public sealed record CrestTitleBarSettingsUpdate(
+public sealed record TitleBarSettingsUpdate(
     bool DisplayCultureLabel,
     string? TenantAvatarImageUrl,
     string TenantAvatarShape,

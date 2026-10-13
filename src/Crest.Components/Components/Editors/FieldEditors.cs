@@ -127,37 +127,37 @@ public abstract class FieldEditorBase : ComponentBase, IDisposable
     }
 }
 
-[CrestBlazorComponent("TextFieldEditor", DisplayName = "Text", Category = "Editors", Icon = "short_text", Edits = ["TextField"])]
+[BlazorComponent("TextFieldEditor", DisplayName = "Text", Category = "Editors", Icon = "short_text", Edits = ["TextField"])]
 public sealed class TextFieldEditor : FieldEditorBase
 {
     protected override void RenderInput(RenderTreeBuilder builder) => TextInput(builder, 0, "Text");
 }
 
-[CrestBlazorComponent("TitlePartEditor", DisplayName = "Title", Category = "Editors", Icon = "title", Edits = ["TitlePart"])]
+[BlazorComponent("TitlePartEditor", DisplayName = "Title", Category = "Editors", Icon = "title", Edits = ["TitlePart"])]
 public sealed class TitlePartEditor : FieldEditorBase
 {
     protected override void RenderInput(RenderTreeBuilder builder) => TextInput(builder, 0, "Title");
 }
 
-[CrestBlazorComponent("AutoroutePartEditor", DisplayName = "Permalink", Category = "Editors", Icon = "link", Edits = ["AutoroutePart"])]
+[BlazorComponent("AutoroutePartEditor", DisplayName = "Permalink", Category = "Editors", Icon = "link", Edits = ["AutoroutePart"])]
 public sealed class AutoroutePartEditor : FieldEditorBase
 {
     protected override void RenderInput(RenderTreeBuilder builder) => TextInput(builder, 0, "Path", "about/team");
 }
 
-[CrestBlazorComponent("HtmlEditor", DisplayName = "HTML", Category = "Editors", Icon = "code", Edits = ["HtmlField", "HtmlBodyPart"])]
+[BlazorComponent("HtmlEditor", DisplayName = "HTML", Category = "Editors", Icon = "code", Edits = ["HtmlField", "HtmlBodyPart"])]
 public sealed class HtmlEditor : FieldEditorBase
 {
     protected override void RenderInput(RenderTreeBuilder builder) => TextAreaInput(builder, 0, "Html", 10);
 }
 
-[CrestBlazorComponent("MarkdownEditor", DisplayName = "Markdown", Category = "Editors", Icon = "notes", Edits = ["MarkdownField", "MarkdownBodyPart"])]
+[BlazorComponent("MarkdownEditor", DisplayName = "Markdown", Category = "Editors", Icon = "notes", Edits = ["MarkdownField", "MarkdownBodyPart"])]
 public sealed class MarkdownEditor : FieldEditorBase
 {
     protected override void RenderInput(RenderTreeBuilder builder) => TextAreaInput(builder, 0, "Markdown", 10);
 }
 
-[CrestBlazorComponent("LinkFieldEditor", DisplayName = "Link", Category = "Editors", Icon = "link", Edits = ["LinkField"])]
+[BlazorComponent("LinkFieldEditor", DisplayName = "Link", Category = "Editors", Icon = "link", Edits = ["LinkField"])]
 public sealed class LinkFieldEditor : FieldEditorBase
 {
     protected override void RenderInput(RenderTreeBuilder builder)
@@ -170,7 +170,7 @@ public sealed class LinkFieldEditor : FieldEditorBase
     }
 }
 
-[CrestBlazorComponent("NumericFieldEditor", DisplayName = "Number", Category = "Editors", Icon = "pin", Edits = ["NumericField"])]
+[BlazorComponent("NumericFieldEditor", DisplayName = "Number", Category = "Editors", Icon = "pin", Edits = ["NumericField"])]
 public sealed class NumericFieldEditor : FieldEditorBase
 {
     protected override void RenderInput(RenderTreeBuilder builder)
@@ -186,7 +186,7 @@ public sealed class NumericFieldEditor : FieldEditorBase
     }
 }
 
-[CrestBlazorComponent("BooleanFieldEditor", DisplayName = "Yes/no", Category = "Editors", Icon = "check_box", Edits = ["BooleanField"])]
+[BlazorComponent("BooleanFieldEditor", DisplayName = "Yes/no", Category = "Editors", Icon = "check_box", Edits = ["BooleanField"])]
 public sealed class BooleanFieldEditor : FieldEditorBase
 {
     protected override void RenderInput(RenderTreeBuilder builder)
@@ -199,7 +199,7 @@ public sealed class BooleanFieldEditor : FieldEditorBase
     }
 }
 
-[CrestBlazorComponent("DateFieldEditor", DisplayName = "Date", Category = "Editors", Icon = "event", Edits = ["DateField", "DateTimeField"])]
+[BlazorComponent("DateFieldEditor", DisplayName = "Date", Category = "Editors", Icon = "event", Edits = ["DateField", "DateTimeField"])]
 public sealed class DateFieldEditor : FieldEditorBase
 {
     protected override void RenderInput(RenderTreeBuilder builder)
@@ -213,7 +213,7 @@ public sealed class DateFieldEditor : FieldEditorBase
     }
 }
 
-[CrestBlazorComponent("ContentPickerFieldEditor", DisplayName = "Content items", Category = "Editors", Icon = "link", Edits = ["ContentPickerField"])]
+[BlazorComponent("ContentPickerFieldEditor", DisplayName = "Content items", Category = "Editors", Icon = "link", Edits = ["ContentPickerField"])]
 public sealed class ContentPickerFieldEditor : FieldEditorBase
 {
     protected override void RenderInput(RenderTreeBuilder builder)
@@ -234,7 +234,7 @@ public sealed class ContentPickerFieldEditor : FieldEditorBase
     }
 }
 
-[CrestBlazorComponent("OptionPickerFieldEditor", DisplayName = "Options", Category = "Editors", Icon = "checklist", Edits = ["OptionPickerField"])]
+[BlazorComponent("OptionPickerFieldEditor", DisplayName = "Options", Category = "Editors", Icon = "checklist", Edits = ["OptionPickerField"])]
 public sealed class OptionPickerFieldEditor : FieldEditorBase
 {
     protected override void RenderInput(RenderTreeBuilder builder)
@@ -270,7 +270,7 @@ public sealed class OptionPickerFieldEditor : FieldEditorBase
 }
 
 /// <summary>The editor of last resort (<c>*</c>): the stored object as JSON, replaced whole when it parses.</summary>
-[CrestBlazorComponent("JsonEditor", DisplayName = "JSON", Category = "Editors", Icon = "data_object", Edits = ["*"])]
+[BlazorComponent("JsonEditor", DisplayName = "JSON", Category = "Editors", Icon = "data_object", Edits = ["*"])]
 public sealed class JsonEditor : FieldEditorBase
 {
     private string? _error;

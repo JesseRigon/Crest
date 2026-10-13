@@ -24,6 +24,10 @@ public class HttpStartup(IShellConfiguration shellConfiguration) : StartupBase
                     shellConfiguration.GetSection("CrestWorkflows:Http").Bind(options);
                 };
                 http.UseCache();
+                // The engine's HTTP activities reach only public addresses, as the connectors do
+                // (docs/access.md, recorded defects: SSRF); the shell's AllowPrivateNetworks opens it.
+                http.HttpClientBuilder = builder => builder.ConfigurePrimaryHttpMessageHandler(sp =>
+                    Connectors.ConnectorNetworkPolicy.CreateHandler(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Connectors.WorkflowConnectorOptions>>().Value.AllowPrivateNetworks));
                 // An HTTP-endpoint workflow acts as the request's caller, and a trigger with
                 // Authorize asks the one decision for Run on the definition (docs/operations.md
                 // step 4). The engine's base path (/workflows by default) stays as it is.

@@ -52,7 +52,7 @@ public class DisplayInteractionTests
         var state = new DisplayState();
         var dispatcher = new RecordingDispatcher { Result = new JsonObject { ["total"] = 12 } };
         var runner = new DisplayActionRunner(dispatcher, NullLogger.Instance);
-        var payload = new JsonObject { ["item"] = new JsonObject { ["id"] = "inv-1" } };
+        var payload = new JsonObject { ["item"] = new JsonObject { ["id"] = "ord-1" } };
 
         await runner.RunAsync(
             [
@@ -61,9 +61,9 @@ public class DisplayInteractionTests
                 new DisplayAction
                 {
                     Kind = DisplayActionKind.Workflow,
-                    Workflow = "post-invoice",
+                    Workflow = "approve-order",
                     Target = "result",
-                    Arguments = new() { ["invoice"] = DisplayBinding.FromVariable("row", "id") },
+                    Arguments = new() { ["order"] = DisplayBinding.FromVariable("row", "id") },
                 },
                 new DisplayAction { Kind = DisplayActionKind.Navigate, Value = DisplayBinding.Literal("invoices/inv-1") },
                 new DisplayAction { Kind = DisplayActionKind.Close },
@@ -75,11 +75,40 @@ public class DisplayInteractionTests
             state,
             TestContext.Current.CancellationToken);
 
-        Assert.Equal("inv-1", state.GetVariable("row")!["id"]!.GetValue<string>());
-        Assert.Equal(("post-invoice", "inv-1"), (dispatcher.Workflow, dispatcher.Input!["invoice"]!.GetValue<string>()));
+        Assert.Equal("ord-1", state.GetVariable("row")!["id"]!.GetValue<string>());
+        Assert.Equal(("approve-order", "ord-1"), (dispatcher.Workflow, dispatcher.Input!["order"]!.GetValue<string>()));
         Assert.Equal(12, state.GetVariable("result")!["total"]!.GetValue<int>());
         Assert.Equal("invoices/inv-1", dispatcher.Navigated);
         Assert.False(state.IsOpen("rowMenu"));
+    }
+
+    [Fact]
+    public async Task RunnerKeepsRefusedArgumentsUnderTheSourceNodeUntilARunSucceeds()
+    {
+        var state = new DisplayState();
+        var refusing = new RefusingDispatcher();
+        var actions = new List<DisplayAction> { new() { Kind = DisplayActionKind.Workflow, Workflow = "contact" } };
+
+        await new DisplayActionRunner(refusing, NullLogger.Instance).RunAsync(actions, "form", null, null, null, state, TestContext.Current.CancellationToken);
+
+        Assert.Equal(["The input 'email' is required."], state.GetErrors("form")["email"]);
+        Assert.Empty(state.GetErrors("other"));
+
+        await new DisplayActionRunner(new RecordingDispatcher(), NullLogger.Instance).RunAsync(actions, "form", null, null, null, state, TestContext.Current.CancellationToken);
+
+        Assert.Empty(state.GetErrors("form"));
+    }
+
+    private sealed class RefusingDispatcher : IDisplayActionDispatcher
+    {
+        public Task<JsonNode?> RunWorkflowAsync(string workflow, IReadOnlyDictionary<string, JsonNode?> input, CancellationToken cancellationToken = default) =>
+            throw new DisplayActionException("Invalid", new Dictionary<string, IReadOnlyList<string>> { ["email"] = ["The input 'email' is required."] });
+
+        public void Navigate(string url)
+        {
+        }
+
+        public Task SubmitAsync(string nodeId, JsonNode? values, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     [Fact]

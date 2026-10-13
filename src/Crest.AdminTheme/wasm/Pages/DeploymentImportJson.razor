@@ -1,0 +1,52 @@
+@page "/DeploymentPlan/Import/Json"
+@using System.Text.Json
+@using Crest.AdminTheme.Api
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+<CrestStack Gap="1rem" data-testid="deployment-import-json-page">
+    <CrestStack Gap="0.25rem">
+        <CrestText TextStyle="TextStyle.H4" Text="@T["JSON Import"]" />
+        <CrestText TextStyle="TextStyle.Body2" Text="@T["Paste a recipe and run it against this tenant."]" />
+    </CrestStack>
+
+    @if (Outcome is not null)
+    {
+        <CrestAlert AlertStyle="@(Outcome.Succeeded ? AlertStyle.Success : AlertStyle.Danger)" ShowIcon="true" AllowClose="false">@Outcome.Message</CrestAlert>
+    }
+
+    <CrestCard>
+        <CrestStack Gap="1rem">
+            <CrestFormField Text="@T["Recipe (JSON)"]" Style="width: 100%;">
+                <CrestTextArea @bind-Value="Json" Rows="20" Style="width: 100%; font-family: var(--rz-code-font-family, monospace);" data-testid="deployment-import-json-text" />
+            </CrestFormField>
+            <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                <CrestButton Text="@T["Import"]" Icon="upload" Click="ImportAsync" Disabled="@(IsImporting || string.IsNullOrWhiteSpace(Json))" />
+            </CrestStack>
+        </CrestStack>
+    </CrestCard>
+</CrestStack>
+
+@code {
+    private string Json { get; set; } = "{\n  \"steps\": []\n}";
+    private DeploymentResult? Outcome { get; set; }
+    private bool IsImporting { get; set; }
+
+    private async Task ImportAsync()
+    {
+        Outcome = null;
+        try { using var _ = JsonDocument.Parse(Json); }
+        catch (JsonException exception) { Outcome = new(false, T["The recipe is written in an incorrect JSON format: {0}", exception.Message]); return; }
+
+        IsImporting = true;
+        try
+        {
+            Outcome = await Api.Crest.Rest.Deployment.ImportJsonAsync(Json);
+            if (Outcome.Succeeded) Notifications.Notify(NotificationSeverity.Success, T["JSON Import"], T["Recipe imported."]);
+        }
+        catch (Exception exception) { Outcome = new(false, exception.Message); }
+        finally { IsImporting = false; }
+    }
+}

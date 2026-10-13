@@ -1,5 +1,5 @@
-using Crest.Global;
-using Crest.Global.Lists;
+using Crest.Data.Global;
+using Crest.Data.Global.Lists;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Crest.Environment.Shell;
@@ -17,7 +17,7 @@ namespace Crest.Controllers;
 [AutoValidateAntiforgeryToken]
 [Route(GlobalListsRoutes.Api)]
 public sealed class GlobalListsController(
-    ICrestGlobalStore globalStore,
+    IGlobalStore globalStore,
     ShellSettings shellSettings,
     IAuthorizationService authorization) : ControllerBase
 {
@@ -129,7 +129,7 @@ public sealed class GlobalListsController(
             return NotFound();
         }
 
-        return await authorization.AuthorizeAsync(User, CrestGlobalPermissions.ManageGlobalReferenceData) ? null : Forbid();
+        return await authorization.AuthorizeAsync(User, GlobalPermissions.ManageGlobalReferenceData) ? null : Forbid();
     }
 
     public sealed record GlobalOptionWrite(string DisplayText, string? DisplayTextPlural, string? Value, string? Category, int? Position);

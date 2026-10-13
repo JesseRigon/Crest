@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
-using Crest.Global;
+using Crest.Data.Global;
 using Crest.Regions.Indexes;
 using Crest.Regions.Models;
 using Crest.Regions.Services;
@@ -14,14 +14,13 @@ namespace Crest.Regions.Global;
 /// The geo tree's global-store schema: index tables plus the standard-data loader. Fresh-
 /// install repeatable: a new store gets the tables and the data in one pass; a re-run
 /// against a populated store upserts by node id and is a no-op when nothing changed.
-/// Bump <see cref="Version"/> with the data files to reload.
+/// Add an <c>UpdateFromNAsync</c> step that reloads when the data files change.
 /// </summary>
-public sealed class GeoGlobalSchema : ICrestGlobalSchema
+public sealed class GeoGlobalSchema : GlobalDataMigration
 {
-    public string Name => "Crest.Regions.Geo";
-    public int Version => 2;
+    public override string LegacySchemaName => "Crest.Regions.Geo";
 
-    public IEnumerable<IIndexProvider> IndexProviders() =>
+    public override IEnumerable<IIndexProvider> IndexProviders() =>
     [
         new GeoNodeIndexProvider(),
         new GeoPostalCodeIndexProvider(),
@@ -29,23 +28,32 @@ public sealed class GeoGlobalSchema : ICrestGlobalSchema
         new AddressingMapIndexProvider(),
     ];
 
-    public async Task ApplyAsync(ICrestGlobalSchemaContext context, int fromVersion, CancellationToken cancellationToken)
+    public async Task<int> CreateAsync()
     {
-        if (fromVersion < 1)
-        {
-            await CreateTablesAsync(context.SchemaBuilder);
-        }
+        await CreateTablesAsync(SchemaBuilder);
+        await LoadAsync();
+        return 2;
+    }
 
+    // Version 2 reloaded the data files.
+    public async Task<int> UpdateFrom1Async()
+    {
+        await LoadAsync();
+        return 2;
+    }
+
+    private async Task LoadAsync()
+    {
         // Order matters only for parents: countries and subdivisions, then US counties from
         // the Census gazetteer, then the US extras that parent onto counties.
-        var existing = (await context.Session.Query<GeoNode, GeoNodeIndex>().ListAsync(cancellationToken))
+        var existing = (await Session.Query<GeoNode, GeoNodeIndex>().ListAsync())
             .ToDictionary(node => node.NodeId, StringComparer.Ordinal);
-        await UpsertNodesAsync(context.Session, existing, ReadData<GeoNodesFile>("geo-nodes.json").Nodes);
-        await UpsertNodesAsync(context.Session, existing, ReadCounties());
+        await UpsertNodesAsync(Session, existing, ReadData<GeoNodesFile>("geo-nodes.json").Nodes);
+        await UpsertNodesAsync(Session, existing, ReadCounties());
         var us = ReadData<GeoNodesFile>("geo-nodes-us.json");
-        await UpsertNodesAsync(context.Session, existing, us.Nodes);
-        await ApplyGroupMembershipsAsync(context.Session, existing, us.GroupMemberships);
-        await LoadAddressingMapsAsync(context.Session, cancellationToken);
+        await UpsertNodesAsync(Session, existing, us.Nodes);
+        await ApplyGroupMembershipsAsync(Session, existing, us.GroupMemberships);
+        await LoadAddressingMapsAsync(Session, CancellationToken.None);
     }
 
     private static async Task CreateTablesAsync(ISchemaBuilder schema)
@@ -163,6 +171,12 @@ public sealed class GeoGlobalSchema : ICrestGlobalSchema
 
             if (existing.TryGetValue(incoming.Country, out var current))
             {
+                // A map the Default tenant edited at runtime is the rule now; the file does not overwrite it.
+                if (current.Edited)
+                {
+                    continue;
+                }
+
                 current.Levels = incoming.Levels;
                 current.Fields = incoming.Fields;
                 current.PostalCodePattern = incoming.PostalCodePattern;
@@ -200,6 +214,36 @@ public sealed class GeoGlobalSchema : ICrestGlobalSchema
                 LocalityLevel = generic.LocalityLevel,
             });
         }
+    }
+
+    /// <summary>
+    /// The map the shipped data files give a country: its authored map, else the generic map
+    /// with the country's postal pattern; null when the files know nothing of it. Reverting an
+    /// edited map restores this.
+    /// </summary>
+    public static AddressingMap? ShippedMap(string country)
+    {
+        var file = ReadData<AddressingMapsFile>("addressing-maps.json");
+        var authored = file.Maps.FirstOrDefault(map => map.Country == country);
+        if (authored is not null)
+        {
+            if (authored.PostalCodePattern is null && file.PostalPatterns.TryGetValue(country, out var authoredPattern))
+            {
+                authored.PostalCodePattern = authoredPattern;
+            }
+
+            return authored;
+        }
+
+        var generic = file.Maps.FirstOrDefault(map => map.Country == AddressingMapDefaults.AnyCountry);
+        if (generic is null || !file.PostalPatterns.TryGetValue(country, out var pattern))
+        {
+            return null;
+        }
+
+        generic.Country = country;
+        generic.PostalCodePattern = pattern;
+        return generic;
     }
 
     private static T ReadData<T>(string fileName)

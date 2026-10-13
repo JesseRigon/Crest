@@ -32,6 +32,38 @@ public sealed class WorkflowCallerResolver(
     public static bool RunsAsSystem(IDictionary<string, object>? properties) =>
         properties is not null && bool.TryParse(WorkflowOwnershipInfo.Text(properties, WorkflowsConstants.RunsAsSystemProperty), out var runsAsSystem) && runsAsSystem;
 
+    /// <summary>Whether the definition accepts anonymous runs (<see cref="WorkflowsConstants.AcceptsAnonymousRunsProperty"/>).</summary>
+    public static bool AcceptsAnonymousRuns(Workflow workflow) => AcceptsAnonymousRuns(workflow.CustomProperties);
+
+    public static bool AcceptsAnonymousRuns(IDictionary<string, object>? properties) =>
+        properties is not null && bool.TryParse(WorkflowOwnershipInfo.Text(properties, WorkflowsConstants.AcceptsAnonymousRunsProperty), out var accepts) && accepts;
+
+    /// <summary>
+    /// Why an anonymous <paramref name="caller"/> may not run <paramref name="workflow"/>, or null
+    /// when it may (docs/access.md, Anonymous actors): a signed-in caller, an application and the
+    /// system always pass; an anonymous one only for a definition that accepts anonymous runs,
+    /// and on a run's first burst only when the run starts at a page-URL HTTP endpoint
+    /// (<paramref name="startsAtPageEndpoint"/>). A later burst keeps the bound anonymous actor of
+    /// a run admitted that way.
+    /// </summary>
+    public static string? AnonymousRefusal(CallerContext caller, Workflow workflow, bool firstBurst, bool startsAtPageEndpoint)
+    {
+        if (caller.IsAuthenticated || caller.IsSystem)
+        {
+            return null;
+        }
+
+        var name = workflow.WorkflowMetadata.Name ?? workflow.Identity.DefinitionId;
+        if (!AcceptsAnonymousRuns(workflow))
+        {
+            return $"Workflow '{name}' does not accept anonymous runs: sign in, or have it published to accept anonymous runs from a public page.";
+        }
+
+        return firstBurst && !startsAtPageEndpoint
+            ? $"Workflow '{name}' accepts anonymous runs only from a page-URL HTTP endpoint; this run was started some other way."
+            : null;
+    }
+
     /// <summary>
     /// The caller a burst of <paramref name="workflow"/> with <paramref name="input"/> acts as;
     /// throws <see cref="WorkflowAccessRefusedException"/> when there is none. The actor is read

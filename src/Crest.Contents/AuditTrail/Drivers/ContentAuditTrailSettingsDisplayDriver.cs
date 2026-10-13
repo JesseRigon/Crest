@@ -37,7 +37,7 @@ public sealed class ContentAuditTrailSettingsDisplayDriver : SiteDisplayDriver<C
 
         return Initialize<ContentAuditTrailSettingsViewModel>("ContentAuditTrailSettings_Edit", model =>
         {
-            model.AllowedContentTypes = section.AllowedContentTypes;
+            model.ExcludedContentTypes = section.ExcludedContentTypes;
         }).Location("Content:10#Content;5")
         .OnGroup(SettingsGroupId);
     }
@@ -52,7 +52,7 @@ public sealed class ContentAuditTrailSettingsDisplayDriver : SiteDisplayDriver<C
 
         var model = new ContentAuditTrailSettings();
         await context.Updater.TryUpdateModelAsync(model, Prefix);
-        section.AllowedContentTypes = model.AllowedContentTypes;
+        section.ExcludedContentTypes = model.ExcludedContentTypes;
 
         return await EditAsync(site, section, context);
     }

@@ -41,14 +41,14 @@ public interface IShellCompatibilityService
         PendingThemeChange? pending = null);
 
     /// <summary>The shells the enabled features ship pages for.</summary>
-    Task<IReadOnlySet<RouteBucket>> GetRequiredBucketsAsync();
+    Task<IReadOnlySet<ShellId>> GetRequiredBucketsAsync();
 }
 
 /// <summary>
 /// A theme change not yet applied: <paramref name="ThemeId"/> becomes the active theme of
 /// <paramref name="Bucket"/>, or the bucket is left with no theme when it is null (a reset).
 /// </summary>
-public sealed record PendingThemeChange(RouteBucket Bucket, string? ThemeId);
+public sealed record PendingThemeChange(ShellId Bucket, string? ThemeId);
 
 public sealed class ShellCompatibilityService(
     IAdminThemeService adminThemeService,
@@ -100,7 +100,7 @@ public sealed class ShellCompatibilityService(
         return incompatibilities;
     }
 
-    public async Task<IReadOnlySet<RouteBucket>> GetRequiredBucketsAsync() =>
+    public async Task<IReadOnlySet<ShellId>> GetRequiredBucketsAsync() =>
         (await ResolveContractsAsync(null)).Select(contract => contract.Contract.Bucket).ToHashSet();
 
     // Every contract the given features declare - explicitly, through an
@@ -128,26 +128,37 @@ public sealed class ShellCompatibilityService(
     // any other theme they render nothing. Module client libraries are named for their
     // module ("Crest.Members.Member.BlazorWasm" belongs to "Crest.Members"), the same
     // convention the client project globs and the lazy-module generator already rely on.
+    // An assembly belongs to the module with the LONGEST matching id, so a library of
+    // "Crest.Members" is never credited to "Crest" as well.
     // Theme clients are excluded: a theme does not need itself.
-    private static IEnumerable<ShellContract> ShippedContracts(string extensionId) =>
-        AppDomain.CurrentDomain.GetAssemblies()
+    private IEnumerable<ShellContract> ShippedContracts(string extensionId)
+    {
+        var extensionIds = extensionManager.GetExtensions().Select(extension => extension.Id).ToList();
+
+        return AppDomain.CurrentDomain.GetAssemblies()
             .Where(assembly => assembly.GetName().Name is { } name
-                && name.StartsWith(extensionId + ".", StringComparison.OrdinalIgnoreCase)
-                && name.EndsWith(ModuleClientSuffix, StringComparison.Ordinal))
-            .Select(ShellAssemblies.GetBucket)
-            .OfType<RouteBucket>()
+                && ModuleClientAssemblies.IsModuleClient(name)
+                && string.Equals(OwningExtensionId(name, extensionIds), extensionId, StringComparison.OrdinalIgnoreCase))
+            .Select(ShellAssemblies.GetShell)
+            .OfType<ShellId>()
             .Distinct()
             .Select(bucket => new ShellContract(bucket));
+    }
 
-    private const string ModuleClientSuffix = ".BlazorWasm";
+    /// <summary>
+    /// The module a client assembly belongs to: the longest module id the assembly name
+    /// starts with, followed by a dot. Null when no module matches.
+    /// </summary>
+    internal static string? OwningExtensionId(string assemblyName, IEnumerable<string> extensionIds) =>
+        ModuleClientAssemblies.OwningExtensionId(assemblyName, extensionIds);
 
-    private async Task<Dictionary<RouteBucket, IExtensionInfo?>> GetActiveThemesAsync(PendingThemeChange? pending)
+    private async Task<Dictionary<ShellId, IExtensionInfo?>> GetActiveThemesAsync(PendingThemeChange? pending)
     {
-        var themes = new Dictionary<RouteBucket, IExtensionInfo?>
+        var themes = new Dictionary<ShellId, IExtensionInfo?>
         {
-            [RouteBucket.Admin] = await adminThemeService.GetAdminThemeAsync(),
-            [RouteBucket.Site] = await siteThemeService.GetSiteThemeAsync(),
-            [RouteBucket.Member] = await memberThemeService.GetMemberThemeAsync(),
+            [ShellId.Admin] = await adminThemeService.GetAdminThemeAsync(),
+            [ShellId.Site] = await siteThemeService.GetSiteThemeAsync(),
+            [ShellId.Member] = await memberThemeService.GetMemberThemeAsync(),
         };
 
         // A pending theme change replaces the active theme of ITS OWN bucket only: that is

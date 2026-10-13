@@ -115,6 +115,7 @@ public class ContentItemWorkflowDefinitionPublisher(
             part.IsReadonly = definition.IsReadonly;
             part.IsSystem = definition.IsSystem;
             part.RunsAsSystem = Contexts.WorkflowCallerResolver.RunsAsSystem(definition.CustomProperties);
+            part.AcceptsAnonymousRuns = Contexts.WorkflowCallerResolver.AcceptsAnonymousRuns(definition.CustomProperties);
             part.MaterializerName = definition.MaterializerName;
             part.ProviderName = definition.ProviderName;
             part.ToolVersion = definition.ToolVersion;
@@ -192,6 +193,7 @@ public class ContentItemWorkflowDefinitionPublisher(
             part.IsReadonly = specifiedVersion.IsReadonly;
             part.IsSystem = specifiedVersion.IsSystem;
             part.RunsAsSystem = specifiedVersion.RunsAsSystem;
+            part.AcceptsAnonymousRuns = specifiedVersion.AcceptsAnonymousRuns;
             part.MaterializerName = specifiedVersion.MaterializerName;
             part.ProviderName = specifiedVersion.ProviderName;
             part.ToolVersion = specifiedVersion.ToolVersion;

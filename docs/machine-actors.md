@@ -48,18 +48,29 @@ re-read in the source; confirm each point at design time.
 
 - [ ] **1. OpenId client credentials.** Enable per tenant, accept the `Api` scheme on the Crest
   controllers and the engine gate, carry the client id into the workflow actor.
-  - [ ] **Enable the features.** The OpenId server and validation features are not in the setup
+  - [x] **Enable the features.** The OpenId server and validation features are not in the setup
     recipe.
+    *What landed (2026-10-13):* the host's setup recipe enables the OpenId server, validation and
+    management features, turns on the token endpoint with only the client-credentials flow, and
+    validates against the tenant's own server (empty validation settings). Crest's own sample
+    recipes already enabled them. Not yet verified against a running tenant.
   - [x] **Accept bearer tokens on our APIs.** Landed 2026-10-10: the access gate
     authenticates the `Api` scheme for every request carrying an `Authorization` header, so
     the Crest controllers and the workflow engine gate see the machine's caller; the
     forwarder also takes additional schemes (`ApiAuthorizationOptions.AdditionalSchemes`).
-  - [ ] **Skip antiforgery for bearer requests.** Writes still validate an antiforgery
+  - [x] **Skip antiforgery for bearer requests.** Writes still validate an antiforgery
     token; a bearer request should skip it (safe: a browser never sends a bearer token on
     its own).
-  - [ ] **Workflow attribution.** A machine-triggered run has no user. The actor snapshot
+    *What landed (2026-10-13):* the tenant's `IAntiforgery` is wrapped by
+    `BearerRequestAntiforgery`: a request with `Authorization: Bearer …` is valid; anything else
+    (Basic included, which browsers re-send) validates as before. One seam covers the MVC
+    filters, the endpoint middleware and the workflow API gate.
+  - [x] **Workflow attribution.** A machine-triggered run has no user. The actor snapshot
     (`WorkflowUserContext`, workflow input `Actor`) would carry the client id so journals and
     approvals show which machine acted.
+    *What landed (2026-10-13):* `WorkflowUserContext.ClientId`, set from an application caller's
+    name identifier. Rebuilding a machine actor's rights on resume is the separate
+    "check workflow permissions" item.
   - [ ] **Check workflow permissions.** Workflow permissions fit as they are. A machine whose
     application holds `WorkflowViewer` or `WorkflowEditor` would get exactly those engine
     grants from the gate. Per-flow access lists (`Crest.Access.Edit` / `Run`) would work by

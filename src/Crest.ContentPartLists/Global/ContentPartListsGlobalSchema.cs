@@ -1,33 +1,30 @@
 using System.Text.Json;
-using Crest.Global;
+using Crest.Data.Global;
 using YesSql;
 using YesSql.Indexes;
 using YesSql.Sql;
 
-namespace Crest.Global.Lists;
+namespace Crest.Data.Global.Lists;
 
 /// <summary>
 /// Global-store schema for the shared lists: the index table and the data-file loader.
 /// Fresh-install repeatable; re-runs replace Standard rows and keep Host rows.
 /// </summary>
-public sealed class ContentPartListsGlobalSchema : ICrestGlobalSchema
+public sealed class ContentPartListsGlobalSchema : GlobalDataMigration
 {
-    public string Name => "Crest.ContentPartLists.GlobalLists";
-    public int Version => 1;
+    public override string LegacySchemaName => "Crest.ContentPartLists.GlobalLists";
 
-    public IEnumerable<IIndexProvider> IndexProviders() => [new GlobalListIndexProvider()];
+    public override IEnumerable<IIndexProvider> IndexProviders() => [new GlobalListIndexProvider()];
 
-    public async Task ApplyAsync(ICrestGlobalSchemaContext context, int fromVersion, CancellationToken cancellationToken)
+    public async Task<int> CreateAsync()
     {
-        if (fromVersion < 1)
-        {
-            await context.SchemaBuilder.CreateMapIndexTableAsync<GlobalListIndex>(table => table
-                .Column<string>(nameof(GlobalListIndex.Key), column => column.WithLength(128)));
-            await context.SchemaBuilder.AlterIndexTableAsync<GlobalListIndex>(table => table
-                .CreateIndex("IDX_GlobalListIndex_Key", "DocumentId", "Key"));
-        }
+        await SchemaBuilder.CreateMapIndexTableAsync<GlobalListIndex>(table => table
+            .Column<string>(nameof(GlobalListIndex.Key), column => column.WithLength(128)));
+        await SchemaBuilder.AlterIndexTableAsync<GlobalListIndex>(table => table
+            .CreateIndex("IDX_GlobalListIndex_Key", "DocumentId", "Key"));
 
-        await LoadAsync(context.Session, cancellationToken);
+        await LoadAsync(Session, CancellationToken.None);
+        return 1;
     }
 
     private static async Task LoadAsync(ISession session, CancellationToken cancellationToken)

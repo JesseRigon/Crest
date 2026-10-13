@@ -12,5 +12,7 @@ using Crest.Modules.Manifest;
     Id = "Crest.AuditTrail",
     Name = "Audit Trail",
     Description = "Provides a log for recording and viewing back-end changes.",
-    Category = "Security"
+    Category = "Security",
+    // After Settings: the audit trail decorates the site service to record settings writes.
+    Dependencies = ["Crest.Settings"]
 )]

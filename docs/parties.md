@@ -48,13 +48,16 @@ Also avoid attaching `CustomerPart` directly to both `Person` and `Organization`
 
 ## Vocabularies and pickers
 
-- **Party vocabularies**: `parties.contact-point-kind`,
-  `parties.address-kind`, `parties.organization-type`, `parties.industry` —
+- **Party vocabularies**: `parties.contact-point-kind` (each kind's `Category` is its
+  hidden type: phone, email, web, social, messaging, other), `parties.address-kind`,
+  `parties.organization-type`, `parties.organization-name-kind` and
+  `parties.association-type` (data-locked module types) —
   module-owned Content Part Lists seeded DEFERRED (Parties migrates before Contents'
   index tables exist at first-time setup, so inline seeding aborts provisioning —
   every early module defers), none locked (the address-kind seed gains a DataLock
   when posting starts snapshotting by kind). Organization carries OrganizationType +
-  Industry pickers. Seed keys in `PartiesOptionSets`/`ContactPointKinds`/`AddressKinds`.
+  Industry pickers; Industry is the global `global.naics` list (all NAICS levels, each option's
+  `Parent` its enclosing code), tenants adding their own industries over it. Seed keys in `PartiesOptionSets`/`ContactPointKinds`/`AddressKinds`.
 - **Content Part List adoption.** `Crest.Parties` declares
   `Crest.ContentPartLists` in its manifest and its migration attaches pickers
   DEFERRED (global lists seed in a deferred task; an inline attach at
@@ -71,7 +74,7 @@ Also avoid attaching `CustomerPart` directly to both `Person` and `Organization`
   country — PostalCode, Preferred). Person / Organization carry no scalar
   Email/Phone/Website fields. Nothing edits bag contents generically (Crest's editor round-trips them but
   is field-based), so Parties owns the write surface:
-  `api/crest/parties/{partyId}/contacts|contact-points|addresses` (authorized with
+  `api/crest/parties/{partyId}/contacts|contact-points|addresses|names` (authorized with
   Orchard's View/EditContent on the party item; kinds and phone countries travel as
   option KEYS, translated through the scoped `PartyOptionKeys`; an address's country
   selects its addressing map, which validates it server-side; "preferred" is exclusive
@@ -136,8 +139,15 @@ write commits) and knows nothing more about its consumers.
 `PersonId` is supplied, and the person's org position links to the Organization.
 
 **Bindings.** One account can hold several **organization bindings**, with different roles
-per organization: the binding record (`CrestMemberInfo` aspect, `MemberOrgBindingIndex`,
-one row per binding) says which role templates the member holds in which organization.
+per organization: the binding record (`CrestMemberInfo` aspect on the user, the record of
+truth) says in which organization, in which class, and with which role templates. The class
+is a set derived from it: staff is a binding to the tenant's own organization, member a
+binding to any other, so a user may be both. `UserConnectionIndex` (one row per
+`(UserId, OrganizationId, Class)`) and the hierarchy nodes are projections of it, written only
+by `MemberBindingService` (the one binding write path, which also enforces the tenant
+organization rule) and rebuilt by `POST api/crest/members/rebuild`. Adding or removing a class
+is its own action (`api/crest/members/{userId}/classes`, `ConvertUserClass`, bumping the
+security stamp); the binding API refuses to add or end a class.
 Roles are per user in the platform and `RolesDocument` is one cached per-tenant blob, so
 per-organization roles are not thousands of role rows: the tenant defines a small set of
 ordinary member role templates (Member, MemberAdmin, …) in the normal role editor, the
@@ -154,9 +164,11 @@ Enforcement is two-layered: the hierarchy's root guard bounds the **who**, ordin
 permissions bound the **what**; the member admin holds a role the tenant shaped, never a
 parallel authority. Organizations choose people, tenants choose powers.
 
-**The tenant's own organization** is special: it exists before the first user, is
-referenced from site settings, and has no members by default (Still to build ›
-Organizations).
+**The tenant's own organization** is special: it exists before the first user (created at
+tenant setup by `ITenantOrganizationService`), is referenced from site settings
+(`TenantOrganizationSettings`), staff are bound to it, and members may be bound to it only when
+the Members setting `AllowMembersOnTenantOrganization` says so (default: blocked;
+`api/crest/members/settings`).
 
 ### Hierarchies
 
@@ -185,23 +197,29 @@ expansion in front of the fail-closed scope machinery), **chain(user)** (the pat
 root, for escalation and approval routing) and a node's membership (user, parent, the
 organization or the staff root).
 
-As built: `CrestUserHierarchy`, a plain table (adjacency plus a materialized path, created
-by a data migration) behind the root-guarded `UserHierarchyService` over
-the request's YesSql session (its connection and transaction) with dialect quoting;
-multi-organization members get one node per binding; hierarchy writes run inline in the same
-unit of work as the user record, and a failure cancels the whole unit (they used to be
-deferred tasks on a second connection, which deadlocked SQLite and swallowed failures). It is superseded by the closure table under Still to
-build › Relational hierarchy, and the subtree expansion is not wired into the scope
-machinery yet.
+As built (2026-10-13): a closure table on YesSql. `UserHierarchyMembership` is a document
+per (user, organization) holding the direct managers and the computed ancestors;
+`UserHierarchyClosureIndex` emits one row per ancestor, so "everyone under me" and "everyone
+above me" are index queries, and `HierarchyClosure` holds the pure rules (ancestors, the cycle
+refusal, every path up). The staff hierarchy is the tenant organization's. Edge writes take a
+per-organization lock held until the unit of work commits, recompute the ancestors and save
+the documents that changed; removing a node detaches its reports; `RebuildAsync` repairs from
+the edges. API: `api/crest/members/hierarchy/{organizationId}` (nodes, `edges` add and
+remove), `ManageMembers` against the organization. The subtree expansion is not wired into
+the scope machinery yet.
 
 ### What `Crest.Members` contains on the party side
 
-- Bindings: the `CrestMemberInfo` aspect, `MemberOrgBindingIndex`, `MemberService`
-  (first member of an organization becomes its member admin), the binding endpoints
-  (`api/crest/members`: me, active-org, list-by-org, create, bindings add/remove).
-- Provisioning: member creation and `MemberStampService` (shared by `CreateMemberAsync`
-  and the portal's registration path: class, binding, then the hierarchy node inline once the user has its id); member
-  role templates ensured by a deferred, idempotent migration.
+- Bindings: the `CrestMemberInfo` aspect, `UserConnectionIndex`, `MemberBindingService`
+  (first member of an organization becomes its member admin), `MemberService` (reads, member
+  creation), `UserClassService` (add or remove a class), the endpoints (`api/crest/members`:
+  me, active-org, list-by-org, create, bindings add/remove, classes, settings, rebuild,
+  hierarchy). The user list filters by class with the `class:member` / `class:staff` term.
+- Provisioning: every new user is placed in an organization at creation
+  (`UserClassStampHandler`: staff of the tenant organization, or on a portal request a member
+  of the portal's organization, with a Person created for an external-login member); the
+  hierarchy node is written inline once the user has its id; member role templates ensured by
+  a deferred, idempotent migration.
 - The hierarchy store above.
 - Ordering rule the build found: inline vocabulary seeding in Parties' `CreateAsync`
   aborted first-time provisioning (index tables not yet created), so it is deferred, like
@@ -270,7 +288,7 @@ holds what is not built yet.
 
 ### Organizations
 
-- [ ] **Legal entity names** (ruling 2026-10-05). The display name (the TitlePart; for the
+- [x] **Legal entity names** (ruling 2026-10-05). The display name (the TitlePart; for the
   tenant, `ISite.SiteName`) stays the default name everywhere a name is shown. An
   Organization additionally carries its legal entity names as **a list of kinds**, the way
   contact points are: an `OrganizationNames` bag whose entries carry a Kind from a
@@ -278,10 +296,15 @@ holds what is not built yet.
   so an organization can hold several DBAs. **One primary entry per kind**, exclusive like
   contact points' Preferred. **No effective dates**: a superseded name becomes the
   `former` kind. None of these is a second display name ([branding.md](branding.md)).
-- [ ] **Parent organization** (ruling 2026-10-05): a picker on Organization restricted to
+  *What landed (2026-10-13):* the `OrganizationNames` bag (`OrganizationName` element: Kind,
+  Name, Primary), the `parties.organization-name-kind` list (legal, dba, former, other),
+  `api/crest/parties/{orgId}/names` and `OrganizationNameIndex`.
+- [x] **Parent organization** (ruling 2026-10-05): a picker on Organization restricted to
   Organization. Its type rule and cycle refusal are a handler registered on the picker
   ([content-items.md](content-items.md) › Picker relationship handlers).
-- [ ] **The tenant's own organization** (ruling 2026-10-05). It exists **before the first
+  *What landed (2026-10-13):* `ParentOrganization` on the Organization part;
+  `ParentOrganizationRelationshipHandler` refuses itself and any descendant.
+- [x] **The tenant's own organization** (ruling 2026-10-05). It exists **before the first
   user** — created during tenant setup — because staff belong to it (› Members and
   organizations › Class becomes a set). A site-settings reference to an
   Organization party representing the tenant's legal entity: its legal names, tax id and
@@ -292,10 +315,13 @@ holds what is not built yet.
   setting, default: blocked** (ruling 2026-10-06), enforced by Members through a Parties
   check, "is this the tenant's organization", read from the site-settings reference — never
   a flag on the item.
+  *What landed (2026-10-13):* `TenantOrganizationSettings` and `ITenantOrganizationService`
+  (created by a deferred task at setup, titled with the site name; `EnsureAsync` also
+  creates it when a staff user arrives first). The open questions are P6 below.
 
 ### Members and organizations
 
-- [ ] **Class becomes a set, one index of connections** (ruling 2026-10-06). A user's
+- [x] **Class becomes a set, one index of connections** (ruling 2026-10-06). A user's
   connections are rows keyed by the composite **`(UserId, OrgId, Class)`**, unique, no
   nulls: staff belong to the tenant's own organization, so staff is `(user, tenant org,
   staff)`, and acting for an organization as a member is `(user, org, member)`. Membership
@@ -309,12 +335,19 @@ holds what is not built yet.
   replaces today's `convert-to-staff` endpoint, bumping the security stamp either way;
   adding staff keeps the bindings, removing member ends them (ruling 2026-10-05, both
   directions).
-- [ ] **One home per fact: the binding record, not a second declaration.** The record is
+  *What landed (2026-10-13):* see › Members (Bindings). `CrestUserClass` and
+  `UserClassIndex` are gone; one class claim per class; the login gate admits a staff
+  connection at the tenant surfaces and a member connection at the portal; the caller acts as
+  staff on the admin and site sides when the user has a staff connection.
+- [x] **One home per fact: the binding record, not a second declaration.** The record is
   the seam of record; the flattened projection on the user object (what the caller builder
   reads) stays but is written only by the record's write path and is rebuildable from the
   records. `AddBindingAsync`/`RemoveBindingAsync` stop being public API and become internal
   projection writers; a rebuild command ships with the work, as drift repair and as the
   migration that populates existing data.
+  *What landed (2026-10-13):* `IMemberService` lost `AddBindingAsync`/`RemoveBindingAsync`;
+  `MemberBindingService` is the one write path; `POST api/crest/members/rebuild` re-saves every
+  user, places a user with no binding as staff and rebuilds the hierarchy.
 - [ ] **Layering: identity in the user layer, structure in content** (ruling 2026-09-16,
   option C of three). Identity and the authorization hot path (class, active organization,
   effective roles) live in the user layer; the declarative organization structure
@@ -324,7 +357,7 @@ holds what is not built yet.
   Rejected: everything in the user layer (fast, but structure is not content, so every
   admin surface is hand-built); everything in content (the content store on every request,
   or a cache that is the projection again).
-- [ ] **The tenant's own organization has no members by default** (rulings 2026-10-05,
+- [x] **The tenant's own organization has no members by default** (rulings 2026-10-05,
   2026-10-06): a tenant setting, default **block**, decides whether bindings may point at
   the Organization that represents the tenant (› Organizations above), so by default staff
   and member logins never share an organization. **One source of truth**: Parties exposes
@@ -332,19 +365,21 @@ holds what is not built yet.
   binding write (the binding API, the member stamp path, the portal register endpoint) goes
   through one Members service that checks it with the tenant setting. No flag is stored on
   the organization.
-- [ ] **Person creation for external-login auto-registered members** (today they get the
-  class and the binding only).
-- [ ] **Admin list class filter.** `IUsersAdminListFilterProvider` adds a named search term
+- [x] **Person creation for external-login auto-registered members** (they used to get the
+  class and the binding only). *Landed 2026-10-13* in `UserClassStampHandler`.
+- [x] **Admin list class filter.** `IUsersAdminListFilterProvider` adds a named search term
   (`class:member`), copying `RolesAdminListFilterProvider` (`.AlwaysRun()` for forced
   scoping, useful later for portal-side lists); the dropdown is a display driver on
   `UserIndexOptions`. The stock `UsersFilter` enum is closed, so the named term is the
   route, not an enum fork.
+  *What landed (2026-10-13):* the `class` named term (`UserClassAdminListFilterProvider`). The
+  MVC dropdown driver was not built: no effort goes into non-Blazor UI.
 - [ ] **User editor class section**, read-only, via `SectionDisplayDriver<User, T>`;
   conversion is not edited there, it is its own action.
 
 ### Relational hierarchy
 
-- [ ] **Replace the single-parent tree with manager → report relationships** (rulings
+- [x] **Replace the single-parent tree with manager → report relationships** (rulings
   2026-10-05, 2026-10-06), built **on YesSql as a closure table**, no hand-written SQL:
   each person in a hierarchy has a small document per organization holding their direct
   managers and their computed ancestor list; a map index emits one row per ancestor,
@@ -355,8 +390,8 @@ holds what is not built yet.
   everyone below, saved in one session; edge writes are serialized per organization so two
   writes cannot together create a cycle; a rebuild from the edges doubles as repair. The
   root guard holds: every query and write carries the organization. Replaces
-  `UserHierarchyService`'s plain-SQL tree and its path math.
-- [ ] **Association relationship types** (ruling 2026-10-05). Typed connections beside
+  `UserHierarchyService`'s plain-SQL tree and its path math. *Landed 2026-10-13* (› Hierarchies).
+- [x] **Association relationship types** (ruling 2026-10-05). Typed connections beside
   reports-to (sales rep → contact, account rep → organization, …) that may cross staff and
   an organization; they grant no visibility by default, and what a type grants is decided
   per type. Modules and tenants both declare types: module types are built in and not
@@ -368,6 +403,11 @@ holds what is not built yet.
   type may register a visibility resolver (default: nothing), and the reading API enforces
   that a rep sees only their own connections and the organization's people do not see the
   rep side unless the type allows it.
+  *What landed (2026-10-13):* the `Association` content type (FromPerson, FromOrganization,
+  ToPerson, ToOrganization, Type from `parties.association-type`), `AssociationIndex`,
+  `IAssociationVisibilityResolver` (per type: whether the far end sees it, which parties it
+  grants; default nothing) and `GET api/crest/parties/associations/me`. Tenant types are
+  additions to the list; resolvers come from modules.
 - [ ] **Hierarchy-aware scope expansion** feeding the fail-closed scope providers
   ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery) step 1): subtree(user) as an input to the content
   and assignment scopes. Deliberately not wired yet; the organization-scope axis on data
@@ -388,21 +428,27 @@ holds what is not built yet.
 
 ### Contacts and addresses
 
-- [ ] **One bag-element service** (ruling 2026-10-06). OrchardCore stores bags (`BagPart`,
+- [x] **One bag-element service** (ruling 2026-10-06). OrchardCore stores bags (`BagPart`,
   a list of contained items) and edits them only through its MVC editor; it has no API for
   adding, changing or removing elements. Crest's contacts service is that API plus Crest's
   rules (primary per kind, option keys, per-country address validation). It is generalized
   into one service, parameterized by bag, element type and kind list, used by contact
   points, addresses and legal entity names — never a second bag service.
-- [ ] **One map index per bag element type** (ruling 2026-10-06). Stock indexes do not look
+  *What landed (2026-10-13):* `PartyBagElementService` over `PartyBag` descriptors
+  (`PartyBags.ContactPoints|Addresses|OrganizationNames`).
+- [x] **One map index per bag element type** (ruling 2026-10-06). Stock indexes do not look
   inside bags, so every queryable bag facet gets its own Parties-owned index, one row per
   element with Published and Latest — the `PartyPositionIndex` pattern: a contact-point index
   (kind, type, preferred), an organization-name index (kind, primary).
+  *What landed (2026-10-13):* `ContactPointIndex` (kind id, value, preferred) and
+  `OrganizationNameIndex`. The type is not a column: it is the kind option's Category, so a
+  query by type resolves the type to its kind ids from the list and filters on `KindId`.
 
-- [ ] **Contact, address and position writes publish** (ruling 2026-10-06). They are live
+- [x] **Contact, address and position writes publish** (ruling 2026-10-06). They are live
   data: the write and the publish happen together, rather than saving a draft that never
   reaches the published version. `AddressGeoNodeIndex` gains Published and Latest columns,
   like the other Parties indexes, so consumers such as tax read published addresses.
+  *Landed 2026-10-13* (`PartyBagElementService.SaveAsync`).
 
 - [ ] **One kind list, with a hidden type per kind** (ruling 2026-10-06). The user picks one
   contact kind from one tenant-editable list (`parties.contact-point-kind`); landline,
@@ -412,7 +458,8 @@ holds what is not built yet.
   its type's rule (number, address, URL, handle); reports and the person's preferred
   contact methods can group by type, so a tenant-added kind rolls up once it has a type.
   The seed gives every kind a type; a tenant adding a kind chooses one, and the data lock
-  freezes it once code relies on it.
+  freezes it once code relies on it. *Partly landed 2026-10-13:* the seed gives every kind its
+  type; per-type validation, the lock and code reading types are P2 below.
 
 - [ ] **Preferred contact methods are per Person only** (ruling 2026-10-05): an ordered
   party-level preference across channels (text, call, e-mail) on Person. `Preferred` on a
@@ -427,7 +474,7 @@ holds what is not built yet.
 
 ### Industry classification
 
-- [ ] **Reseed `parties.industry` from NAICS.** It ships today as a
+- [x] **Reseed `parties.industry` from NAICS.** It ships today as a
   hand-rolled 16-entry starter set (agriculture, construction, education…), which was
   fine as a placeholder but is not a classification anyone can map onto. NAICS is the
   Census Bureau's industry counterpart to NAPCS — the same open family, public domain
@@ -445,9 +492,17 @@ holds what is not built yet.
   tenant's list document. NAICS is a hierarchy (sector → subsector → industry group →
   industry → national industry), so this needs Content Part Lists' Category to handle
   hierarchy ([content-items.md](content-items.md) › Still to build).
-- [ ] **Organization type is the legal form only (ruling 2026-10-06).** Drop "DBA" from the
+  *What landed (2026-10-13):* `global.naics` in `global-lists.json`: the 2,125 NAICS 2022
+  codes from the Census Bureau's 2-6 digit file, Category the level name, Parent the
+  enclosing code (sectors are ranges such as `31-33`), data-locked. `parties.industry` and its
+  starter set are gone; Organization's Industry picker points at `global.naics`.
+- [x] **Organization type is the legal form only (ruling 2026-10-06).** Drop "DBA" from the
   `parties.organization-type` seed (Incorporation, LLC, Community Group, NGO, Government):
   trade names are `dba` entries in the organization's legal entity names.
+  *What landed (2026-10-13):* the seed no longer has "DBA" (an existing tenant keeps the
+  option until it is reset; seeding never removes). The `convert-to-staff` endpoint and
+  `UserClassConversionService` are removed too; the `ConvertUserClass` permission stays for
+  the add/remove-class action that replaces it (not built yet, with class-as-set).
 
 ### Decisions needed
 

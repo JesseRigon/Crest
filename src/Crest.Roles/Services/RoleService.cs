@@ -9,13 +9,16 @@ public class RoleService : IRoleService
 {
     private readonly RoleManager<IRole> _roleManager;
     private readonly ISystemRoleProvider _systemRoleProvider;
+    private readonly IEnumerable<IDerivedRoleProvider> _derivedRoleProviders;
 
     public RoleService(
         RoleManager<IRole> roleManager,
-        ISystemRoleProvider systemRoleProvider)
+        ISystemRoleProvider systemRoleProvider,
+        IEnumerable<IDerivedRoleProvider> derivedRoleProviders)
     {
         _roleManager = roleManager;
         _systemRoleProvider = systemRoleProvider;
+        _derivedRoleProviders = derivedRoleProviders;
     }
 
     public async Task<IEnumerable<Claim>> GetRoleClaimsAsync(string role, CancellationToken cancellationToken = default)
@@ -53,4 +56,7 @@ public class RoleService : IRoleService
 
     public ValueTask<bool> IsSystemRoleAsync(string role)
          => ValueTask.FromResult(_systemRoleProvider.IsSystemRole(role));
+
+    public ValueTask<bool> IsDerivedRoleAsync(string role)
+        => ValueTask.FromResult(DerivedRoles.IsDerived(_derivedRoleProviders, role));
 }

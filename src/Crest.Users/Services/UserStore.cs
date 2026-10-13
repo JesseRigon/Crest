@@ -36,6 +36,7 @@ public class UserStore :
     private readonly ILogger _logger;
     private readonly IRoleService _roleService;
     private readonly IDataProtectionProvider _dataProtectionProvider;
+    private readonly Crest.Access.IPermissionVersion _permissionVersion;
 
     public UserStore(ISession session,
         ILookupNormalizer keyNormalizer,
@@ -43,8 +44,10 @@ public class UserStore :
         ILogger<UserStore> logger,
         IEnumerable<IUserEventHandler> handlers,
         IRoleService roleService,
-        IDataProtectionProvider dataProtectionProvider)
+        IDataProtectionProvider dataProtectionProvider,
+        Crest.Access.IPermissionVersion permissionVersion = null)
     {
+        _permissionVersion = permissionVersion;
         _session = session;
         _keyNormalizer = keyNormalizer;
         _userIdGenerator = userIdGenerator;
@@ -82,6 +85,13 @@ public class UserStore :
         {
             // Due to database collation we normalize the userId to lower invariant.
             newUserId = _userIdGenerator.GenerateUniqueId(user).ToLowerInvariant();
+        }
+
+        // System accounts are ids, never user records (docs/sharing.md requirements 33-35): no
+        // user may take one, so none can sign in as one or be counted as a user.
+        if (Crest.Access.SystemAccounts.IsSystemAccount(newUserId))
+        {
+            return IdentityResult.Failed(new IdentityError { Code = "SystemAccountId", Description = "This user id is reserved for system accounts." });
         }
 
         try
@@ -411,7 +421,19 @@ public class UserStore :
                 throw new InvalidOperationException($"Role {normalizedRoleName} does not exist.");
             }
 
-            u.RoleNames.Add(roleName);
+            // A derived (business) role is computed from a relationship, never stored on a user
+            // (docs/sharing.md requirement 45): every assignment path ends here and is refused.
+            if (await _roleService.IsDerivedRoleAsync(roleName))
+            {
+                throw new Crest.Roles.DerivedRoleAssignmentException(roleName);
+            }
+
+            // A role membership is a rights write: callers cached under the old version rebuild.
+            if (!u.RoleNames.Contains(roleName, StringComparer.OrdinalIgnoreCase))
+            {
+                u.RoleNames.Add(roleName);
+                await BumpPermissionVersionAsync(cancellationToken);
+            }
         }
     }
 
@@ -429,9 +451,15 @@ public class UserStore :
                 throw new InvalidOperationException($"Role {normalizedRoleName} does not exist.");
             }
 
-            u.RoleNames.Remove(roleName);
+            if (u.RoleNames.Remove(roleName))
+            {
+                await BumpPermissionVersionAsync(cancellationToken);
+            }
         }
     }
+
+    private Task BumpPermissionVersionAsync(CancellationToken cancellationToken) =>
+        _permissionVersion is null ? Task.CompletedTask : _permissionVersion.BumpAsync(cancellationToken);
 
     public Task<IList<string>> GetRolesAsync(IUser user, CancellationToken cancellationToken)
     {

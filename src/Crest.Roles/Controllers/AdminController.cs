@@ -24,7 +24,6 @@ public sealed class AdminController : Controller
     private readonly IDocumentStore _documentStore;
     private readonly RoleManager<IRole> _roleManager;
     private readonly IAuthorizationService _authorizationService;
-    private readonly IPermissionGrantingService _permissionGrantingService;
     private readonly IAccessDecision _accessDecision;
     private readonly ShellSettings _shellSettings;
     private readonly ISystemRoleProvider _systemRoleProvider;
@@ -41,7 +40,6 @@ public sealed class AdminController : Controller
         IDocumentStore documentStore,
         RoleManager<IRole> roleManager,
         IAuthorizationService authorizationService,
-        IPermissionGrantingService permissionGrantingService,
         IAccessDecision accessDecision,
         ShellSettings shellSettings,
         ISystemRoleProvider systemRoleProvider,
@@ -56,7 +54,6 @@ public sealed class AdminController : Controller
         _documentStore = documentStore;
         _roleManager = roleManager;
         _authorizationService = authorizationService;
-        _permissionGrantingService = permissionGrantingService;
         _accessDecision = accessDecision;
         _shellSettings = shellSettings;
         _systemRoleProvider = systemRoleProvider;
@@ -416,12 +413,21 @@ public sealed class AdminController : Controller
             return new HashSet<string>(StringComparer.Ordinal);
         }
 
-        var roleClaims = role.RoleClaims.Select(c => c.ToClaim()).ToArray();
+        // What the role's permissions grant with their implied-by chains, asked of the one
+        // decision for a caller holding exactly them (no super user, no class).
+        var caller = new CallerContext
+        {
+            Tenant = _shellSettings.Name,
+            Side = CallerSide.Admin,
+            UserName = role.RoleName,
+            Roles = new HashSet<string>([role.RoleName], StringComparer.OrdinalIgnoreCase),
+            Permissions = PermissionsOf(role),
+        };
         var result = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var permission in allPermissions)
         {
-            if (_permissionGrantingService.IsGranted(new PermissionRequirement(permission), roleClaims))
+            if ((await _accessDecision.DecideAsync(caller, permission.Name)).IsAllowed)
             {
                 result.Add(permission.Name);
             }
@@ -444,9 +450,7 @@ public sealed class AdminController : Controller
             UserName = role.RoleName,
             IsSuperUser = string.Equals(role.RoleName, _systemRoleProvider.GetAdminRole().RoleName, StringComparison.OrdinalIgnoreCase),
             Roles = new HashSet<string>([role.RoleName], StringComparer.OrdinalIgnoreCase),
-            Permissions = new HashSet<string>(
-                role.RoleClaims.Where(c => string.Equals(c.ClaimType, Permission.ClaimType, StringComparison.OrdinalIgnoreCase)).Select(c => c.ClaimValue),
-                StringComparer.OrdinalIgnoreCase),
+            Permissions = PermissionsOf(role),
         };
 
         var result = new Dictionary<string, Permission>(StringComparer.Ordinal);
@@ -461,6 +465,10 @@ public sealed class AdminController : Controller
 
         return result;
     }
+
+    private static HashSet<string> PermissionsOf(Role role) => new(
+        role.RoleClaims.Where(c => string.Equals(c.ClaimType, Permission.ClaimType, StringComparison.OrdinalIgnoreCase)).Select(c => c.ClaimValue),
+        StringComparer.OrdinalIgnoreCase);
 
     private IEnumerable<RoleClaim> ExtractSelectedPermissions()
         => Request.Form.Keys

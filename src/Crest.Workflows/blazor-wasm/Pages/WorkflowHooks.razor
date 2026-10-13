@@ -1,0 +1,197 @@
+@page "/workflows/hooks"
+@using Crest.Workflows
+@inject HttpClient Http
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* Hook attachment (docs/workflows.md › Still to build, ruling 2026-10-05): every hook slot the
+   modules declare, the flows attached to it - the module's own, then the tenant's - and, for
+   a user who may edit workflows, attaching a published flow or detaching one. The flow runs
+   inside the host's transaction, so the API refuses a flow that is not atomic. Crest
+   components throughout; this page is not part of the forked Studio. *@
+
+<PageTitle>@T["Hooks"]</PageTitle>
+
+<CrestStack Gap="1rem" data-testid="workflow-hooks">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <div>
+            <CrestText TextStyle="TextStyle.H4" class="rz-m-0">@T["Hooks"]</CrestText>
+            <CrestText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["Points inside a module's work where attached flows run in the same transaction: they succeed with it or not at all."]</CrestText>
+        </div>
+        <CrestButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="IsBusy" />
+    </CrestStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" Summary="@T["Hook action failed"]" Detail="@Error" />
+    }
+
+    @if (Slots.Length == 0 && !IsBusy)
+    {
+        <CrestCard><CrestText TextStyle="TextStyle.Body1">@T["No module declares a hook slot."]</CrestText></CrestCard>
+    }
+
+    @foreach (var slot in Slots)
+    {
+        var descriptor = slot.Slot;
+        <CrestCard data-testid="hook-slot" data-slot="@descriptor.Key">
+            <CrestStack Gap="0.75rem">
+                <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <CrestText TextStyle="TextStyle.H6" class="rz-m-0">@descriptor.DisplayName</CrestText>
+                    <CrestBadge Text="@descriptor.Key" BadgeStyle="BadgeStyle.Secondary" />
+                    @if (!descriptor.AllowTenantAttachments)
+                    {
+                        <CrestBadge Text="@T["System only"]" BadgeStyle="BadgeStyle.Warning" />
+                    }
+                    else if (descriptor.RequiredOnly)
+                    {
+                        <CrestBadge Text="@T["Required attachments only"]" BadgeStyle="BadgeStyle.Info" />
+                    }
+                </CrestStack>
+                @if (!string.IsNullOrWhiteSpace(descriptor.Description))
+                {
+                    <CrestText TextStyle="TextStyle.Body2" class="rz-color-secondary">@descriptor.Description</CrestText>
+                }
+
+                @if (slot.Attachments.Count == 0)
+                {
+                    <CrestText TextStyle="TextStyle.Body2">@T["Nothing attached."]</CrestText>
+                }
+                else
+                {
+                    <CrestTable>
+                        <CrestTableHeader>
+                            <CrestTableHeaderRow>
+                                <CrestTableHeaderCell>@T["Flow"]</CrestTableHeaderCell>
+                                <CrestTableHeaderCell>@T["Owner"]</CrestTableHeaderCell>
+                                <CrestTableHeaderCell>@T["Position"]</CrestTableHeaderCell>
+                                <CrestTableHeaderCell>@T["On failure"]</CrestTableHeaderCell>
+                                <CrestTableHeaderCell />
+                            </CrestTableHeaderRow>
+                        </CrestTableHeader>
+                        <CrestTableBody>
+                            @foreach (var attachment in slot.Attachments)
+                            {
+                                <CrestTableRow data-testid="hook-attachment" data-definition="@attachment.DefinitionId">
+                                    <CrestTableCell>@(attachment.DefinitionName ?? attachment.DefinitionId)</CrestTableCell>
+                                    <CrestTableCell>@(attachment.Ownership == WorkflowOwnership.System ? T["Module"] : T["Tenant"])</CrestTableCell>
+                                    <CrestTableCell>@attachment.Position</CrestTableCell>
+                                    <CrestTableCell>@(attachment.Required ? T["Fails the transaction"] : T["Noted, the transaction goes on"])</CrestTableCell>
+                                    <CrestTableCell>
+                                        @if (CanEdit && attachment.Id is not null)
+                                        {
+                                            <CrestButton Text="@T["Detach"]" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => DetachAsync(attachment.Id))" Disabled="IsBusy" data-testid="hook-detach" />
+                                        }
+                                    </CrestTableCell>
+                                </CrestTableRow>
+                            }
+                        </CrestTableBody>
+                    </CrestTable>
+                }
+
+                @if (CanEdit && descriptor.AllowTenantAttachments)
+                {
+                    var draft = DraftFor(descriptor.Key);
+                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="1rem" Wrap="FlexWrap.Wrap">
+                        <CrestFormField Text="@T["Published flow"]">
+                            <CrestDropDown TValue="string" @bind-Value="draft.DefinitionId" Data="@Candidates" TextProperty="Name" ValueProperty="DefinitionId" AllowFiltering="true" Style="min-width: 16rem;" data-testid="hook-candidate" />
+                        </CrestFormField>
+                        <CrestFormField Text="@T["Position"]">
+                            <CrestNumeric TValue="int" @bind-Value="draft.Position" Style="width: 6rem;" />
+                        </CrestFormField>
+                        @if (!descriptor.RequiredOnly)
+                        {
+                            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <CrestCheckBox TValue="bool" @bind-Value="draft.Required" Name="@($"required-{descriptor.Key}")" />
+                                <CrestText TextStyle="TextStyle.Body2">@T["Required: a failure fails the transaction"]</CrestText>
+                            </CrestStack>
+                        }
+                        <CrestButton Text="@T["Attach"]" Click="@(() => AttachAsync(descriptor.Key))" Disabled="@(IsBusy || string.IsNullOrEmpty(draft.DefinitionId))" data-testid="hook-attach" />
+                    </CrestStack>
+                }
+            </CrestStack>
+        </CrestCard>
+    }
+</CrestStack>
+
+@code {
+    private WorkflowHookSlotModel[] Slots { get; set; } = [];
+    private WorkflowHookCandidateModel[] Candidates { get; set; } = [];
+    private Dictionary<string, AttachDraft> Drafts { get; } = new(StringComparer.OrdinalIgnoreCase);
+    private bool CanEdit { get; set; }
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private AttachDraft DraftFor(string slot) => Drafts.TryGetValue(slot, out var draft) ? draft : Drafts[slot] = new AttachDraft();
+
+    private async Task LoadAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            Slots = await Http.GetFromJsonAsync<WorkflowHookSlotModel[]>(WorkflowsConstants.Routes.HooksApi) ?? [];
+
+            // Only a user who may edit workflows gets the picker; the API answers 403 otherwise.
+            var candidates = await Http.GetAsync($"{WorkflowsConstants.Routes.HooksApi}/candidates");
+            CanEdit = candidates.IsSuccessStatusCode;
+            Candidates = CanEdit ? await candidates.Content.ReadFromJsonAsync<WorkflowHookCandidateModel[]>() ?? [] : [];
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task AttachAsync(string slot)
+    {
+        var draft = DraftFor(slot);
+        await RunAsync(() => Http.PostAsJsonAsync(WorkflowsConstants.Routes.HooksApi, new WorkflowHookAttachRequest(slot, draft.DefinitionId!, draft.Position, draft.Required)));
+        if (Error is null)
+        {
+            Drafts.Remove(slot);
+        }
+    }
+
+    private Task DetachAsync(string attachmentId) =>
+        RunAsync(() => Http.DeleteAsync($"{WorkflowsConstants.Routes.HooksApi}/{Uri.EscapeDataString(attachmentId)}"));
+
+    private async Task RunAsync(Func<Task<HttpResponseMessage>> call)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var response = await call();
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
+        if (Error is null)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private sealed class AttachDraft
+    {
+        public string? DefinitionId { get; set; }
+        public int Position { get; set; }
+        public bool Required { get; set; } = true;
+    }
+}

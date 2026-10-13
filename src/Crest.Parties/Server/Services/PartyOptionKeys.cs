@@ -9,7 +9,7 @@ namespace Crest.Parties.Services;
 /// identity rule), so every read and write crosses this boundary. Scoped: each list
 /// is loaded at most once per request, however many contact points reference it.
 /// </summary>
-public sealed class PartyOptionKeys(ICrestContentPartListService lists)
+public sealed class PartyOptionKeys(IContentPartListService lists)
 {
     private readonly Dictionary<string, ListLookup> _cache = new(StringComparer.OrdinalIgnoreCase);
 

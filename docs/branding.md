@@ -1,8 +1,10 @@
 # Tenant branding — display name, logos, and the login page as a page
 
 **Status: in progress, re-planned 2026-10-10 onto the display and query systems.** The
-display name is done; the renditions, the settings group and the login page as a designed
-page are not. A tenant presents ITS OWN identity, not the platform's: the login page greets
+display name, the renditions, the settings group, the `site` query's branding and the
+settings editor's branding group are done (2026-10-13, see What landed); the login page as a
+designed page is not, because the admin and member shells do not render data-defined pages
+yet (backlog › Decision 9). A tenant presents ITS OWN identity, not the platform's: the login page greets
 with the tenant's display name (today it says "Crest"), and the app chrome uses
 tenant-uploaded logos wherever a logo appears.
 
@@ -51,7 +53,7 @@ Current state:
 
 A logo is not one file: the app consumes specific renditions in specific places.
 
-- [ ] **Define the renditions.** Model as **named renditions**, each with its intended
+- [x] **Define the renditions.** Model as **named renditions**, each with its intended
   size, consumed by a specific surface. Initial set (extend as surfaces appear):
 
   | Rendition | Used by | Notes |
@@ -64,11 +66,11 @@ A logo is not one file: the app consumes specific renditions in specific places.
   Rendition definitions are registry entries (name, label, expected size, where it is
   used), so the settings editor and the `site` query never hard-code surface knowledge; a
   module that adds a surface registers the rendition it consumes.
-- [ ] **Files live in Media.** Under a tenant-relative media folder the service owns
+- [x] **Files live in Media.** Under a tenant-relative media folder the service owns
   (resolved through `IMediaFileStore`, never a hand-typed absolute path). Upload goes
   through the existing media adapter surface (the same pipeline as icon tenant media), so
   Media permissions and validation apply unchanged.
-- [ ] **The branding settings group.** A settings section on the tenant's settings (the
+- [x] **The branding settings group.** A settings section on the tenant's settings (the
   standard custom-section pattern over `ISite.Properties`) holding
   `Renditions: { name → media path }` beside the site name. The stored value is the media
   **path**; URLs are resolved through the media file store at read time, inside the `site`
@@ -88,10 +90,46 @@ the static icon); setting one fills every surface on the next render because eve
 binds the same query. The client keeps the query's result in its session copy like any
 other query result; SSR runs the same query in process.
 
-- [ ] **The `site` query exposes `name` and `branding.*`** from the settings group, with
+- [x] **The `site` query exposes `name` and `branding.*`** from the settings group, with
   the anonymous subset (name, renditions) and the rest behind the data permission.
-- [ ] **The layouts and the document head bind renditions** through slots; the interim
+- [ ] **The layouts and the document head bind renditions** (partly: see What landed) through slots; the interim
   `GET api/crest/site/branding` read and `DisplayManager.Branding` go.
+
+## What landed (2026-10-13)
+
+- **Registry.** `BrandingRendition` (name, label, where it is used, intended size, accepted
+  types, reserved) registered with `services.AddBrandingRendition(...)` into `BrandingOptions`
+  (`Crest.Infrastructure.Abstractions/Settings/Branding.cs`). `Crest.Settings` registers
+  `login`, `sidebar`, `favicon` and `email` (reserved).
+- **Settings group.** `BrandingSettings { Renditions: name → media path }` on `ISite`
+  (`site.Alter<BrandingSettings>`). `ResolveRenditions` turns it into one URL per registered
+  rendition, empty when unset, through `IBrandingUrlResolver`, which Media implements over
+  `IMediaFileStore.MapPathToPublicUrl`.
+- **Files.** `api/crest/site/branding-settings` (`BrandingController`, `ManageSettings`;
+  uploads also need `ManageMedia`, Media's allowed extensions and the upload pipeline) stores
+  each upload as `_branding/{rendition}-{random}.{ext}` in the media store, so a new logo never
+  comes from a cache, and deletes the file it replaced. It deletes only files in that folder.
+- **`site` query.** The row is `Name` and `Branding` (rendition → URL or "") for any caller
+  allowed to run it; `DefaultCulture` and `BaseUrl` only for a signed-in caller. Anonymous and
+  Authenticated get `ExecuteApi_site` by default stereotype, and the site recipe grants it
+  to Anonymous. *Interpretation to confirm:* "the rest behind the data permission" is read
+  as "signed in".
+- **Surfaces.** The SSR document head (`App.razor`) reads `site` in process
+  (`SiteIdentity`): `<title>` is `site › name` and `<link rel="icon">` is
+  `site › branding.favicon` on all three shells when set. The admin client reads
+  `api/queries/site` (falling back to the interim `GET api/crest/site/branding`, which now
+  answers from the same query, for a tenant whose Anonymous role predates the grant). The
+  login page shows `branding.login`, or the name as text when it is unset. The title bar's
+  tenant chip shows `branding.sidebar` before the title-bar avatar setting.
+- **Editor.** Settings › General has a Branding card generated from the registry: the
+  current image or "Not set", an upload, a clear (`BrandingSettingsGroup.razor`).
+- **Tests.** `test/Crest.Tests/Settings/BrandingSettingsTests.cs`: round-trip, resolution
+  and empty, the anonymous row holding only `Name` and `Branding`.
+
+Left, and why: the interim endpoint and `AdminShellState.Branding` go with the hand-built
+login page; the member layout's nav header has no logo spot yet (the shells work owns it);
+the login page as a designed page waits on admin and member shells rendering data-defined
+pages.
 
 ## The login page as a page
 
@@ -108,7 +146,7 @@ page, the document title) and a tree from a shipped template, overridable per te
   record, so the surfaces stay separate by construction
   ([shells-and-themes.md](shells-and-themes.md) › The member portal).
 - [ ] **The login form submits a workflow action**, the one sign-in operation behind the
-  gate (`CrestLoginService`'s `ILoginFormEvent` sequence as the action; see
+  gate (`LoginService`'s `ILoginFormEvent` sequence as the action; see
   [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)).
   No component calls an endpoint of its own; a slot never binds a write.
 - [ ] **Overrides, not forks.** A tenant restyles or rearranges the login page through the
@@ -129,7 +167,7 @@ through the media adapter, a clear control. Rendition metadata comes from the re
 The design-system editor ([design-systems.md](design-systems.md)) links to the group; it
 does not host a hand-written Branding section of its own.
 
-- [ ] **The branding group in the settings editor**, generated from the settings section
+- [x] **The branding group in the settings editor**, generated from the settings section
   and the rendition registry.
 
 ## Permissions
@@ -152,5 +190,7 @@ does not host a hand-written Branding section of its own.
 ## Out of scope / later
 
 - [ ] **Site theme branding.** The public site's layout binds the same renditions when its
-  theme work happens; nothing new to store.
-- [ ] **Email templates** (rendition reserved).
+  theme work happens; nothing new to store. The site document's favicon already binds
+  `site › branding.favicon`.
+- [ ] **Email templates** (rendition reserved: `email` is registered and editable; no mail
+  template reads it yet).

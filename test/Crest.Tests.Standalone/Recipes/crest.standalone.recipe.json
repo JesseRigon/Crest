@@ -1,0 +1,84 @@
+{
+  "name": "CrestStandalone",
+  "displayName": "Crest standalone",
+  "description": "Crest's application layer with no line-of-business module: the fresh-install test host's setup recipe.",
+  "author": "Crest",
+  "website": "",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [
+    "test"
+  ],
+  "tags": [
+    "test"
+  ],
+  "variables": {},
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Crest.Admin",
+        "Crest.AdminMenu",
+        "Crest.ContentTypes",
+        "Crest.Contents",
+        "Crest.Deployment",
+        "Crest.Diagnostics",
+        "Crest.Features",
+        "Crest.Layers",
+        "Crest.Placements",
+        "Crest.Liquid",
+        "Crest.Media",
+        "Crest.Navigation",
+        "Crest.Notifications.Portal",
+        "Crest.Recipes",
+        "Crest.Roles",
+        "Crest.Settings",
+        "Crest.Shortcodes",
+        "Crest.Templates",
+        "Crest.Themes",
+        "Crest.Users",
+        "Crest.AuditTrail",
+        "Crest.Users.AuditTrail",
+        "Crest",
+        "Crest.AdminTheme",
+        "Crest.SiteTheme",
+        "Crest.ContentPartLists",
+        "TheAdmin",
+        "SafeMode",
+        "Crest.Localization",
+        "Crest.LegacyFrame",
+        "Crest.Icons",
+        "Crest.Data.Global",
+        "Crest.Regions",
+        "Crest.Money",
+        "Crest.Parties",
+        "Crest.Members",
+        "Crest.Workflows",
+        "Crest.Workflows.Contents",
+        "Crest.Autoroute",
+        "Crest.Email",
+        "Crest.DynamicCache",
+        "Crest.Flows",
+        "Crest.HomeRoute",
+        "Crest.Html",
+        "Crest.Recipes.Core",
+        "Crest.Resources",
+        "Crest.Roles.Core",
+        "Crest.Security",
+        "Crest.Tenants",
+        "Crest.Title",
+        "Crest.MemberTheme"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "Crest.AdminTheme",
+      "site": "Crest.SiteTheme"
+    },
+    {
+      "name": "settings",
+      "SiteName": "Crest standalone",
+      "CurrentAdminThemeName": "Crest.AdminTheme"
+    }
+  ]
+}

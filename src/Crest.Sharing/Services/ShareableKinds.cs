@@ -12,9 +12,11 @@ namespace Crest.Sharing.Services;
 public sealed class ShareableKinds
 {
     private readonly Dictionary<string, IShareableKind?> _byName = new(StringComparer.Ordinal);
+    private readonly IShareableChildSource[] _childSources;
 
-    public ShareableKinds(IEnumerable<IShareableKind> kinds, IProviderPriority? priority = null, ILogger<ShareableKinds>? logger = null)
+    public ShareableKinds(IEnumerable<IShareableKind> kinds, IProviderPriority? priority = null, ILogger<ShareableKinds>? logger = null, IEnumerable<IShareableChildSource>? childSources = null)
     {
+        _childSources = [.. childSources ?? []];
         foreach (var group in kinds.GroupBy(kind => kind.Name, StringComparer.Ordinal))
         {
             var ranked = group.GroupBy(kind => priority?.PriorityOf(kind.GetType()) ?? 0).OrderByDescending(rank => rank.Key).First().ToList();
@@ -33,6 +35,27 @@ public sealed class ShareableKinds
     public IEnumerable<IShareableKind> All => _byName.Values.OfType<IShareableKind>();
 
     public IShareableKind? Find(string name) => _byName.GetValueOrDefault(name);
+
+    /// <summary>
+    /// What is directly below <paramref name="parent"/>: its kind's children
+    /// (<see cref="IShareableTree"/>) and what other modules filed in it
+    /// (<see cref="IShareableChildSource"/>, requirement 74), each once.
+    /// </summary>
+    public async Task<IReadOnlyList<ShareableRef>> ChildrenAsync(ShareableRef parent, CancellationToken cancellationToken = default)
+    {
+        var children = new List<ShareableRef>();
+        if (Find(parent.Kind) is IShareableTree tree)
+        {
+            children.AddRange(await tree.ChildrenAsync(parent.Id, cancellationToken));
+        }
+
+        foreach (var source in _childSources)
+        {
+            children.AddRange(await source.ChildrenAsync(parent, cancellationToken));
+        }
+
+        return children.Count == 0 ? children : [.. children.Distinct()];
+    }
 
     /// <summary>The kind in force that recognises <paramref name="resource"/>; a conflicted name's
     /// resources are claimed with no kind, so they are denied rather than decided elsewhere.</summary>

@@ -255,7 +255,7 @@
             }
 
             // The antiforgery token is added by the HttpClient's own handler
-            // (CrestAntiforgeryHandler) for every unsafe request. Adding it here too
+            // (AntiforgeryHandler) for every unsafe request. Adding it here too
             // produced a comma-joined pair of tokens in the header, which the server
             // cannot parse - the request failed validation with a bodiless 400.
             var response = await Http.SendAsync(request);

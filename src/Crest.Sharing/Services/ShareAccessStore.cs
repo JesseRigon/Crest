@@ -7,10 +7,20 @@ namespace Crest.Sharing.Services;
 /// <summary>Where the access index documents and the pending recalculations live.</summary>
 public interface IShareAccessStore
 {
+    /// <summary>The object's document for its primary path.</summary>
     Task<ShareAccessDocument?> GetAsync(ShareableRef target);
 
+    /// <summary>The object's documents, one per path to the root (multi-path inheritance, F3).</summary>
+    Task<IReadOnlyList<ShareAccessDocument>> GetPathsAsync(ShareableRef target);
+
+    /// <summary>Saves one path's document, replacing the stored one for the same path.</summary>
     Task SaveAsync(ShareAccessDocument document);
 
+    /// <summary>Saves an object's documents, one per path, and removes those of paths it no
+    /// longer has.</summary>
+    Task SavePathsAsync(ShareableRef target, IReadOnlyList<ShareAccessDocument> documents);
+
+    /// <summary>Deletes every path's document of the object.</summary>
     Task DeleteAsync(ShareableRef target);
 
     /// <summary>Up to <paramref name="max"/> objects whose next boundary is at or before
@@ -41,25 +51,33 @@ public interface IShareAccessStore
 
 public sealed class YesSqlShareAccessStore(ISession session) : IShareAccessStore
 {
-    private readonly Dictionary<ShareableRef, ShareAccessDocument?> _read = [];
+    private readonly Dictionary<ShareableRef, List<ShareAccessDocument>> _read = [];
 
-    public async Task<ShareAccessDocument?> GetAsync(ShareableRef target)
+    public async Task<ShareAccessDocument?> GetAsync(ShareableRef target) =>
+        (await LoadAsync(target)).FirstOrDefault(document => document.PathKey.Length == 0);
+
+    public async Task<IReadOnlyList<ShareAccessDocument>> GetPathsAsync(ShareableRef target) => [.. await LoadAsync(target)];
+
+    private async Task<List<ShareAccessDocument>> LoadAsync(ShareableRef target)
     {
-        if (!_read.TryGetValue(target, out var document))
+        if (!_read.TryGetValue(target, out var documents))
         {
-            document = await session.Query<ShareAccessDocument, ShareAccessObjectIndex>(index => index.Kind == target.Kind && index.ObjectId == target.Id).FirstOrDefaultAsync();
-            _read[target] = document;
+            documents = [.. await session.Query<ShareAccessDocument, ShareAccessObjectIndex>(index => index.Kind == target.Kind && index.ObjectId == target.Id).ListAsync()];
+            _read[target] = documents;
         }
 
-        return document;
+        return documents;
     }
 
     public async Task SaveAsync(ShareAccessDocument document)
     {
-        if (await GetAsync(document.Ref) is { } existing && !ReferenceEquals(existing, document))
+        var documents = await LoadAsync(document.Ref);
+        var existing = documents.FirstOrDefault(candidate => candidate.PathKey == document.PathKey);
+        if (existing is not null && !ReferenceEquals(existing, document))
         {
-            // One document per object: the new calculation replaces the stored one in place.
+            // One document per object and path: the new calculation replaces the stored one in place.
             existing.IsPublic = document.IsPublic;
+            existing.IsShared = document.IsShared;
             existing.IsInactive = document.IsInactive;
             existing.NextBoundaryUtc = document.NextBoundaryUtc;
             existing.CalculatedUtc = document.CalculatedUtc;
@@ -67,19 +85,38 @@ public sealed class YesSqlShareAccessStore(ISession session) : IShareAccessStore
             existing.Shadows = document.Shadows;
             document = existing;
         }
+        else if (existing is null)
+        {
+            documents.Add(document);
+        }
 
         await session.SaveAsync(document);
-        _read[document.Ref] = document;
+    }
+
+    public async Task SavePathsAsync(ShareableRef target, IReadOnlyList<ShareAccessDocument> documents)
+    {
+        foreach (var document in documents)
+        {
+            await SaveAsync(document);
+        }
+
+        var keep = documents.Select(document => document.PathKey).ToHashSet(StringComparer.Ordinal);
+        var stored = await LoadAsync(target);
+        foreach (var gone in stored.Where(document => !keep.Contains(document.PathKey)).ToList())
+        {
+            session.Delete(gone);
+            stored.Remove(gone);
+        }
     }
 
     public async Task DeleteAsync(ShareableRef target)
     {
-        if (await GetAsync(target) is { } existing)
+        foreach (var existing in await LoadAsync(target))
         {
             session.Delete(existing);
         }
 
-        _read[target] = null;
+        _read[target] = [];
     }
 
     public async Task<IReadOnlyList<ShareableRef>> DueAsync(DateTime utc, int max)
@@ -88,7 +125,7 @@ public sealed class YesSqlShareAccessStore(ISession session) : IShareAccessStore
             .OrderBy(index => index.NextBoundaryUtc)
             .Take(max)
             .ListAsync();
-        return [.. due.Select(index => new ShareableRef(index.Kind, index.ObjectId))];
+        return [.. due.Select(index => new ShareableRef(index.Kind, index.ObjectId)).Distinct()];
     }
 
     public async Task<(IReadOnlyList<ShareableRef> Page, long Cursor)> PageAsync(long afterId, int max)
@@ -97,7 +134,7 @@ public sealed class YesSqlShareAccessStore(ISession session) : IShareAccessStore
             .OrderBy(index => index.Id)
             .Take(max)
             .ListAsync()).ToList();
-        return ([.. page.Select(index => new ShareableRef(index.Kind, index.ObjectId))], page.Count == 0 ? afterId : page[^1].Id);
+        return ([.. page.Select(index => new ShareableRef(index.Kind, index.ObjectId)).Distinct()], page.Count == 0 ? afterId : page[^1].Id);
     }
 
     public async Task<IReadOnlyList<ShareableRef>> FindGrantedAsync(IReadOnlyCollection<SharePrincipal> principals, DateTime utc)
@@ -137,5 +174,12 @@ public sealed class YesSqlShareAccessStore(ISession session) : IShareAccessStore
 
     public Task FlushAsync() => session.FlushAsync();
 
-    public Task CommitAsync() => session.SaveChangesAsync();
+    public async Task CommitAsync()
+    {
+        await session.SaveChangesAsync();
+
+        // A commit ends the session's tracking (YesSql clears its identity map): documents read
+        // before it would be saved again as new ones, or fail to delete.
+        _read.Clear();
+    }
 }

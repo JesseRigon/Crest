@@ -10,7 +10,7 @@ namespace Crest.Components.Interaction;
 /// as an output other nodes bind to (the invoice details read the list's selection), and raises
 /// a positioned context-menu event with the right-clicked item as its payload.
 /// </summary>
-[CrestBlazorComponent("ItemList", DisplayName = "Item list", Category = "Data", Icon = "list")]
+[BlazorComponent("ItemList", DisplayName = "Item list", Category = "Data", Icon = "list")]
 public partial class ItemList : ComponentBase
 {
     /// <summary>The items: an array, or a query result whose <c>items</c> is one.</summary>

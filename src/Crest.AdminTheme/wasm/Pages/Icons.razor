@@ -188,7 +188,7 @@
         ErrorMessage = null;
         try
         {
-            var saved = await Api.Crest.Rest.Icons.UpdateProvidersAsync(new CrestIconProvidersSettings(Model.ToSettings()));
+            var saved = await Api.Crest.Rest.Icons.UpdateProvidersAsync(new IconProvidersSettings(Model.ToSettings()));
             if (saved is null)
             {
                 Notifications.Notify(NotificationSeverity.Error, T["Icon providers not saved"], T["The server rejected the provider settings."]);

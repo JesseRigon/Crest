@@ -13,6 +13,15 @@ Both sit on the one access machinery ([workflows.md › Operations](workflows.md
 > rule when a type needs it. The provider and controller changes below describe the stock
 > shape and are superseded by that.
 
+**What landed (2026-10-13): the seam.** `Crest.Access.ContentPartScope`: a module registers an
+`IScopeProvider` with the target `ContentPartScope.Target(type, part)`
+(`ContentPart:{type}.{part}`); its rule, read against the item's content index row, shows the
+part (`All`), hides it (`None`) or shows it on the rows a filter admits (a semi-join fails
+closed). `ContentItemsController.ViewAsync` (`?parts=`) decides `ViewContent` on the item once,
+then keeps each requested part its scope admits; a part with no provider follows the item. No
+rule ships, so nothing changes until a type needs one; the default-grants question below
+belongs to that first rule.
+
 ### Per-part permissions
 
 OrchardCore's built-in permission model is **content-type/item level**, not part level. `Crest.Contents.Security.ContentTypePermissions` (`Crest.Contents/Security/ContentTypePermissions.cs`) generates permissions per content type via `ContentTypePermissionsHelper.PermissionTemplates` (e.g. `Editable_<ContentType>`, `Viewable_<ContentType>`) — there is no native concept of "can view `CrestBlazorComponentPart` on this item but not `TitlePart` on the same item." A role either can or can't act on the whole item.

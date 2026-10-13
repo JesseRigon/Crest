@@ -14,12 +14,13 @@ public sealed record CreateMemberRequest(
     IReadOnlyList<string>? Roles);
 
 /// <summary>
-/// Member accounts and org bindings (design: docs/members.md). All writes keep
-/// the three stores in step: the user aspect (+ its index rows via re-save), and the
-/// hierarchy tree (one node per binding, under the org's root).
+/// Member accounts (design: docs/members.md). Reads go through the connection index;
+/// every binding write goes through <see cref="MemberBindingService"/>, the binding
+/// record's one write path.
 /// </summary>
 public interface IMemberService
 {
+    /// <summary>The user as a member (their member bindings); null when they hold none.</summary>
     Task<MemberModel?> GetAsync(string userId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<MemberModel>> ListByOrganizationAsync(string organizationId, CancellationToken cancellationToken = default);
@@ -29,12 +30,4 @@ public interface IMemberService
     /// are reported through <paramref name="reportError"/> (identity-validation shape,
     /// mirroring IUserService.CreateUserAsync).</summary>
     Task<IUser?> CreateMemberAsync(CreateMemberRequest request, Action<string, string> reportError, CancellationToken cancellationToken = default);
-
-    /// <summary>Adds an org binding to an existing member (first member of THAT org
-    /// still becomes its member admin). Refuses staff-class users.</summary>
-    Task<MemberOrgBindingModel> AddBindingAsync(string userId, string organizationId, IReadOnlyList<string>? roles, CancellationToken cancellationToken = default);
-
-    /// <summary>Removes a binding and its hierarchy node (node must be re-parented
-    /// first if it has children - the hierarchy service enforces that).</summary>
-    Task RemoveBindingAsync(string userId, string organizationId, CancellationToken cancellationToken = default);
 }

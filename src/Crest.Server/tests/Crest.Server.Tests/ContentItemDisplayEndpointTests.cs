@@ -8,6 +8,7 @@ using Crest.DisplayManagement.ModelBinding;
 using Crest.DisplayManagement.Shapes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Xunit;
 
@@ -116,7 +117,11 @@ public sealed class ContentItemDisplayEndpointTests
         // Only the collaborators the display action uses; the others are not touched by it.
         var controller = new ContentItemsController(null!, null!, _contentManager, null!, null!, null!, _callers, null!)
         {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+            ControllerContext = new ControllerContext
+            {
+                // A published item's tree is versioned (decision 12), which reads the version service.
+                HttpContext = new DefaultHttpContext { RequestServices = new ServiceCollection().AddSingleton<DisplayTreeVersions>().BuildServiceProvider() },
+            },
         };
 
         // The node filter passes the tree through: its own tests cover what it leaves out.

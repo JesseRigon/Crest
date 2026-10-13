@@ -1,3 +1,4 @@
+using Crest.Access;
 using Crest.Services;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
@@ -48,6 +49,12 @@ public sealed class WorkflowsAdminMenu(IStringLocalizer<WorkflowsAdminMenu> stri
                 .Permission(Permissions.ManageConnections)
                 .LocalNav());
 
+            workflows.Add(S["Hooks"], "25", item => item
+                .Id("workflows-hooks")
+                .Url($"{adminPath}{WorkflowsConstants.Routes.HooksAdmin}")
+                .Permission(Permissions.ViewWorkflows)
+                .LocalNav());
+
             workflows.Add(S["Approvals"], "30", item => item
                 .Id("workflows-approvals")
                 .Url($"{adminPath}{WorkflowsConstants.Routes.ApprovalsAdmin}")
@@ -65,9 +72,9 @@ public sealed class WorkflowsAdminMenu(IStringLocalizer<WorkflowsAdminMenu> stri
 /// Connections), and they run in the browser only: Studio's services and HTTP clients are
 /// registered in the WASM client (Crest.Workflows.BlazorWasm), never in a server circuit.
 /// </summary>
-public sealed class WorkflowsRoutePermissionProvider : ICrestRoutePermissionProvider, ICrestWebAssemblyRouteProvider
+public sealed class WorkflowsRoutePermissionProvider : IRoutePermissionProvider, IWebAssemblyRouteProvider
 {
-    // The Studio pages only; Connections and Approvals are plain Crest pages.
+    // The Studio pages only; Connections, Hooks and Approvals are plain Crest pages.
     public IEnumerable<string> GetWebAssemblyRoutes() =>
     [
         WorkflowsConstants.Routes.DefinitionsAdmin,
@@ -76,13 +83,14 @@ public sealed class WorkflowsRoutePermissionProvider : ICrestRoutePermissionProv
         WorkflowsConstants.Routes.InstanceViewAdmin,
     ];
 
-    public IEnumerable<CrestRoutePermission> GetRoutes() =>
+    public IEnumerable<RoutePermission> GetRoutes() =>
     [
-        new(WorkflowsConstants.Routes.DefinitionsAdmin, Permissions.ViewWorkflows),
-        new(WorkflowsConstants.Routes.DefinitionEditAdmin, Permissions.ViewWorkflows),
-        new(WorkflowsConstants.Routes.InstancesAdmin, Permissions.ViewWorkflows),
-        new(WorkflowsConstants.Routes.InstanceViewAdmin, Permissions.ViewWorkflows),
-        new(WorkflowsConstants.Routes.ConnectionsAdmin, Permissions.ManageConnections),
-        new(WorkflowsConstants.Routes.ApprovalsAdmin, AdminPermissions.AccessAdminPanel),
+        new(WorkflowsConstants.Routes.DefinitionsAdmin, Permissions.ViewWorkflows.Name),
+        new(WorkflowsConstants.Routes.DefinitionEditAdmin, Permissions.ViewWorkflows.Name),
+        new(WorkflowsConstants.Routes.InstancesAdmin, Permissions.ViewWorkflows.Name),
+        new(WorkflowsConstants.Routes.InstanceViewAdmin, Permissions.ViewWorkflows.Name),
+        new(WorkflowsConstants.Routes.ConnectionsAdmin, Permissions.ManageConnections.Name),
+        new(WorkflowsConstants.Routes.ApprovalsAdmin, AdminPermissions.AccessAdminPanel.Name),
+        new(WorkflowsConstants.Routes.HooksAdmin, Permissions.ViewWorkflows.Name),
     ];
 }

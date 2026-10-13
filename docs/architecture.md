@@ -23,6 +23,7 @@ store and the geographic tree. Three modules complete it:
 | `Crest.Queries` | The read side: the structured query model (a step list compiled through YesSql into parameterised SQL with the caller's scope conjoined for every table), the SQL source for external databases with its scope rewriter, the `System` source (`item`, `user`, `site`) that display slots bind, query descriptors and the catalog the workflow engine's registry reads. Every run is paged, cancellable, typed and caller-scoped. The connection system (external systems by protocol) is planned here ([queries.md](queries.md)). |
 | `Crest.Workflows` | The action side: a workflow service built on a vendored fork of Elsa 3 (MIT). Its registry (activities, triggers, hook slots, flows, and queries as `RunQuery` activities) is the operation registry; units of work (one burst, one session, one transaction, with inline hooks and durable background calls); the access gate as engine middleware with the actor rule (a run acts as the caller who started it, or as the system when published so); connectors with API-key, bearer, basic and OAuth2 authentication and OpenAPI import; approvals; field dependencies; ownership tiers and per-flow access; the platform modules' activities and triggers (the stock OrchardCore workflow module is gone); the designer bridge. |
 | `Crest.Money` | The money type and the `PriceField` a tenant puts on any content type: `Amount` bound to an `ICurrency`, ISO 4217 metadata from the global store so minor units are never a per-tenant guess, and a default currency. Adapted from OrchardCore.Commerce (MIT). See [money.md](money.md). |
+| `Crest.Kinds` | The kind-registry contract, server-free: `IKindDescriptor` and `KindCatalog<TKind>` (merge what the enabled features register by key, order it, find by key or content type). Party types are one registry on it; a downstream module's own registries (asset kinds, transaction kinds) are others. `KindAdminMenu<TKind>` in Crest.Navigation builds a registry's admin menu from it. |
 
 The thesis: **all an application needs is parties, workflows and content items.** A
 party is who, a workflow is what happens, a content item is everything else. Line-of-
@@ -154,7 +155,7 @@ unless it is proprietary or depends on proprietary code. Three exist: `OptionPic
 ## Naming
 
 `Crest.Parties`, `Crest.Members`, `Crest.Workflows`, matching `Crest.Regions`,
-`Crest.Global`, `Crest.ContentPartLists`. Namespaces, assembly names, feature ids,
+`Crest.Data.Global`, `Crest.ContentPartLists`. Namespaces, assembly names, feature ids,
 manifests, permission names, option-set keys (`parties.*` — already unbranded), route
 constants and test names follow.
 
@@ -172,8 +173,43 @@ a module rebrand is a module rename. The UI component library (`CrestButton`,
 The one exception on the service side: where a Crest service would clash with a platform
 service of the same name, the Crest one keeps the prefix. Applied to Crest.Workflows on
 2026-10-10 (26 identifiers; stored definitions using the old trigger type id
-`Crest.Workflows.CrestTrigger` need re-creating). Crest.Server's prefixed names go with its
-extraction ([server.md](server.md)); the rest of `src/` after that.
+`Crest.Workflows.CrestTrigger` need re-creating). Applied to the rest of `src/` on
+2026-10-13, Crest.Server included, ahead of its extraction ([server.md](server.md)): about 200
+types and members lose the prefix (`ICrestGlobalStore` → `IGlobalStore`,
+`CrestContentPartListService` → `ContentPartListService`, `CrestAuthController` →
+`AuthController`, `CrestWebAssemblyHost` → `ClientWebAssemblyHost`, the generated
+`CrestLazyModulesManifest` → `LazyModulesManifest`, `[CrestBlazorComponent]` →
+`[BlazorComponent]`, the permission `ManageCrestGlobalReferenceData` →
+`ManageGlobalReferenceData` — re-grant it on dev tenants). Routes, JSON property names and
+recipe step names did not change. Names that stay, and why:
+
+- **Stored by type name** (renaming would orphan data): the content parts `CrestOptionPart`,
+  `CrestContentPartListPart`, `CrestRegionalProfilePart`, `CrestRegionalProfileReferencePart`,
+  `CrestAssignmentPart`, `CrestOrganizationPart`, `CrestBlazorComponentPart`; the indexes
+  `CrestAssignmentIndex`, `CrestOrganizationIndex`; the migrations (the migration record keys
+  on the class name) `CrestContentPartListMigrations`, `CrestAssignmentIndexMigrations`,
+  `CrestOrganizationIndexMigrations`; the documents `CrestAdminMenuLayoutDocument`,
+  `CrestContentGroupsDocument`, `CrestMenuPlacementDocument`, `CrestProviderMenuSyncDocument`,
+  `CrestGlobalSchemaState`; the definition and entity settings `CrestOptionFieldSettings`,
+  `CrestDefinitionLockSettings`, `CrestFieldVisibilitySettings`, `CrestContentTypeMenuSettings`,
+  `CrestContentGroupsSettings`, `CrestLocalizationSettings`, `CrestMemberThemeSettings`,
+  `CrestUserMenuPreferences`, `CrestMemberInfo`; and the site-settings keys `CrestTitleBar`,
+  `CrestIconProviders`, `CrestAdminPrimaryNavMenu`. They go together at the first tenant reset
+  that allows it, or with an upgrade step after the first public release.
+- **Would clash with a platform type of the same name** (the clash exception): the admin
+  API view models and their client mirrors that duplicate a module's own model
+  (`CrestUser`, `CrestTenant`, `CrestQuery`, `CrestLoginSettings`, `CrestTemplatePreview`,
+  `CrestDeploymentPlan`, `CrestLayer`, `CrestMediaOptions`, the icon catalog records and about
+  25 more), `CrestMediaProfilesController`, `CrestAdminMenu`, `CrestAntiforgeryToken`. Each
+  folds into its module's own model when Crest.Server's wrappers move ([server.md](server.md)).
+- **The component library**, `Crest.Components` whole, including its client plumbing
+  (`[CrestShell]`, `[CrestEager]`, `[CrestJSComponent]`, `CrestShellContext`,
+  `CrestLateServiceProviders`, `CrestApiLocalizer`, the files and sharing clients) — open
+  whether that plumbing counts as components.
+- **Not yet:** the Workflows permission names (`ViewCrestWorkflows` and siblings; the
+  connection one becomes `ManageConnections` with the connection system, [queries.md](queries.md)),
+  the client API root property `Api.Crest`, and `IsCrestBlazor`/`IsCrestBlazorTheme`
+  (a JSON property on the themes API).
 
 **No downstream name appears in Crest.** Crest is open source and knows nothing of the
 products built on it — not in a namespace, an assembly name, a route, a comment, a test name
@@ -248,57 +284,105 @@ The global store's host-call rough edge is in [globals.md](globals.md).
 
 ### Standing alone
 
-- [ ] **3. Add a party role of Crest's own.** A party role of Crest's own (or a test fixture
+- [x] **3. Add a party role of Crest's own.** A party role of Crest's own (or a test fixture
   that registers one), so the generic role pages can be exercised without a host's modules.
+  *What landed (2026-10-13):* the fixture route - feature `Crest.Parties.SampleRole`
+  (category Samples, off by default) composes a `SampleRole` role type with
+  `CreatePartyRoleDefinitionsAsync` and registers it as the `sample-roles` party type, so the
+  menu item, `/Parties/sample-roles`, the All Parties pane and the route gate exist with no host
+  module. Browser checks that want it enable the feature in their fixture recipe.
 - [ ] **4. Remove the host references below, and add the publishing gate check.** Crest must
   build, test and read without any host present.
-  - [ ] `Crest.Tests.slnx` lists a host's projects. Root cause:
+  - [x] `Crest.Tests.slnx` lists a host's projects. Root cause:
     `Crest.AdminTheme.Client.csproj` globs `..\..\..\**\blazor-wasm\*.csproj`, reaching out
     of the repository. Replace the glob with an item the host supplies.
-  - [ ] Workflow object constants and a payload fallback key name a host's records; object
+  - [x] Workflow object constants and a payload fallback key name a host's records; object
     names are free strings, and the subject key becomes a generic `ContentItemId`.
-  - [ ] Test fixtures and code comments use a host's flow keys and vocabulary; reword them
+  - [x] Test fixtures and code comments use a host's flow keys and vocabulary; reword them
     generically.
   - [ ] A global list for item classification ships in Crest although a downstream module
     seeds and owns it; it moves to that module's global schema.
-  - [ ] Two code mentions name a product (the member home page, the members portal check).
-  - [ ] **Publishing gate:** no host or product name anywhere in the repository, checked
+  - [x] Two code mentions name a product (the member home page, the members portal check).
+  - [x] **Publishing gate:** no host or product name anywhere in the repository, checked
     automatically in Crest's test run (the list of names comes from configuration outside
     the repository, so Crest never contains them).
+  *What landed (2026-10-13):* the glob was already gone; the slnx's leftover host entries are
+  removed. `WorkflowsConstants.Objects` keeps only Crest's own objects (a module names its
+  own) and the copy-fields target falls back to the payload's `ContentItemId` only. Fixtures,
+  comments, docs and the README use neutral names (`approve-order`, `order.placed`). The gate
+  is `PublishingGateTests` in `Crest.Tests`: it reads the names from `PUBLISHING_GATE_NAMES`
+  (comma-separated) or the file named by `PUBLISHING_GATE_NAMES_FILE`, scans every file git
+  tracks or would add, whole words, case-insensitive, and skips when no names are set. Still
+  open: the item-classification global list (it moves with the host's open ruling on that
+  list) and the pre-publish secrets/attribution review.
   - [ ] **Before publishing code that moved in from a private host:** no secrets, tokens,
     connection strings or real credentials in the moved trees (`Data/`, recipes, test
     fixtures, `appsettings*`); test fixtures use invented people and organizations only;
     third-party attribution present (Elsa's MIT licence for the engine and the Studio fork,
     and the header of anything else adapted at file boundaries); the moved plans read
     without the host's repository; the README lists the modules.
-- [ ] **5. Build and test a host that has no line-of-business modules** as a fresh install,
-  to prove Crest stands alone.
+- [x] **5. Build and test a host that has no line-of-business modules** as a fresh install,
+  to prove Crest stands alone. *Landed 2026-10-13:* `test/Crest.Tests.Standalone` (in
+  Crest.Tests.slnx) builds a host the way a product does (AddPlatformCms, AddHostDefaults,
+  UsePlatform) over Crest's application layer only, installs it fresh into a temp
+  `Crest:DataRoot` from its own setup recipe, and checks the data root, that only Crest's
+  features are on, the registries' defaults (party types, the `currency` source, exchange
+  rates), the shipped workflow roles, gap-free numbering and that the site and login serve.
+  Setup takes a few minutes. It found a dependency cycle on fresh install
+  (`PersonalDriveUserEventHandler` → `UserManager` → user store → user event handlers),
+  fixed by resolving the manager lazily. A host's content root needs a `wwwroot` (the
+  resized-image cache) and the Web SDK (Crest.Server maps the static-assets manifest).
 - [ ] **6. Move the generic pieces below into Crest, one at a time.** Hosts built on Crest
   currently carry their own copies of things every Crest application needs. Each belongs in
   Crest once a host-neutral version exists; none references a host's types.
-  - [ ] **A currency option source** over `ICurrencyProvider`, in `Crest.Money` (the content
-    items doc already lists `currency` as a source a host supplies).
-  - [ ] **A money wire DTO** (value and currency) for `Amount` over the API, in `Crest.Money`.
-  - [ ] **An exchange-rate seam** (rate, policy, registry, manual rates) in `Crest.Money`, so a
-    multi-currency application converts without a line-of-business module.
+  - [x] **A currency option source** over `ICurrencyProvider`, in `Crest.Money` (the content
+    items doc already lists `currency` as a source a host supplies). *Landed 2026-10-13:*
+    `CurrencyOptionSourceProvider`, registered by `Crest.Money` ([types.md](types.md)).
+  - [x] **A money wire DTO** (value and currency) for `Amount` over the API, in `Crest.Money`.
+    *Landed 2026-10-13:* `MoneyModel` in `Crest.Money.Domain`, with `From`/`ToAmount`.
+  - [x] **An exchange-rate seam** (rate, policy, registry, manual rates) in `Crest.Money`, so a
+    multi-currency application converts without a line-of-business module. *Landed
+    2026-10-13:* `ExchangeRate`, `IExchangeRateProvider` (name, priority),
+    `IExchangeRateRegistry`, `ManualExchangeRateProvider` over the tenant's
+    `ExchangeRateSettings` (site settings: rates, failure behaviour); [types.md](types.md).
+    Dev tenants that kept manual rates in a host's own settings re-enter them.
   - [ ] **Workflow browser checks** for connectors, ownership tiers, party triggers and engine
     tenant isolation, written against a Crest fixture (a content-published trigger, a
     shipped fixture flow, a fixture party role) instead of a host's documents. The tenant
     isolation check runs last.
-  - [ ] **Workflow editor and viewer role stereotypes** granting only the Crest workflow
-    permissions, so every host can run the ownership checks.
-  - [ ] **Host defaults:** the data-root shell-options override and the no-cache static files
-    fix, as a Crest server host extension (configuration key `Crest:DataRoot`).
+  - [x] **Workflow editor and viewer role stereotypes** granting only the Crest workflow
+    permissions, so every host can run the ownership checks. *Landed 2026-10-13:* the
+    stereotypes were already Crest's; the roles themselves are now created when the feature
+    is installed (`WorkflowRolesFeatureEvents`), so no host recipe has to ship them.
+  - [x] **Host defaults:** the data-root shell-options override and the no-cache static files
+    fix, as a Crest server host extension (configuration key `Crest:DataRoot`). *Landed
+    2026-10-13:* `ServerHostDefaults` in Crest.Server: `services.AddHostDefaults()` (the
+    `Crest:DataRoot` override of the shells data path: tenants, `tenants.json`, the global
+    store) and `app.UseHostStaticFiles()` (`Cache-Control: no-cache`, revalidated by ETag).
   - [ ] **Kind-registry plumbing:** the catalog, menu, route gates, "All" page and per-kind pane
     that `Crest.Parties` implements, as a generic `KindCatalog<T>` and kind pane hosts reuse
-    for their own registries.
-  - [ ] **Gap-free record numbering** as a Crest server service.
+    for their own registries. *Partly landed 2026-10-13:* `Crest.Kinds` (server-free:
+    `IKindDescriptor`, `KindCatalog<TKind>` — merge by key, first wins, ordered, `Find`,
+    `ForContentType`, `RouteOf`) and `KindAdminMenu<TKind>` in Crest.Navigation (the section,
+    its "All" child and one child per kind). Parties' catalog and menu are built on them.
+    Still open: the route gates (two lines per registry, not worth a base yet), the "All"
+    page and the per-kind pane (Blazor, in the component library).
+  - [x] **Gap-free record numbering** as a Crest server service. *Landed 2026-10-13:*
+    `IRecordNumbering` in Crest.Server (named sequences per tenant in one document, a number
+    taken only when the record commits; `IRecordNumbering.Format(prefix, n)`). A host that
+    kept its own counters starts its sequences at 1 again: reset dev tenants.
   - [ ] **A content-part-list import** that upserts options by key and never overwrites a
     tenant's label.
-  - [ ] **Shared dev tooling:** feed pack and check, stopping the local server, the throwaway
+  - [x] **Shared dev tooling:** feed pack and check, stopping the local server, the throwaway
     test server, the solution-membership gate, the legacy-script filter, provisioning
     verification and the suite entry point, as `tools/dev-lib.sh` and a `runHostSuite()`
-    harness helper. Hosts pass their solution, features, ports and credentials.
+    harness helper. Hosts pass their solution, features, ports and credentials. *Landed
+    2026-10-13:* `tools/dev-lib.sh` (sourced; functions only: `ensure_feed`,
+    `pack_into_output`, `restore_host`, `stop_server`, `start_test_server` /
+    `stop_test_server` on `Crest:DataRoot`, `wait_until_provisioned`,
+    `check_solution_membership`, `is_legacy_script`, `run_host_suite`) and `runHostSuite()`
+    in `tests/playwright/harness/run-suite.js` (BASE_URL, CHECK_FILTER, OUTPUT_ROOT, VERBOSE,
+    login, summary, exit code).
 
 - [x] **The access machinery, the query pipeline and the action pipelines** landed in their
   first form on 2026-10-10 ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery), steps 1, 2 and 4). Open there:

@@ -27,7 +27,7 @@ public sealed class ReflectionComponentCatalog(Assembly assembly) : IComponentCa
                 continue;
             }
 
-            var marker = type.GetCustomAttribute<CrestBlazorComponentAttribute>(inherit: false);
+            var marker = type.GetCustomAttribute<BlazorComponentAttribute>(inherit: false);
             if (marker is null)
             {
                 continue;
@@ -38,7 +38,7 @@ public sealed class ReflectionComponentCatalog(Assembly assembly) : IComponentCa
     }
 
     /// <summary>One component's descriptor; the shells and module are the declaring assembly's.</summary>
-    public static ComponentDescriptor Describe(Type type, CrestBlazorComponentAttribute marker, IReadOnlySet<ShellKind> shells, string? module)
+    public static ComponentDescriptor Describe(Type type, BlazorComponentAttribute marker, IReadOnlySet<ShellKind> shells, string? module)
     {
         var parameters = new List<ParameterDescriptor>();
         var zones = new List<ZoneDescriptor>();

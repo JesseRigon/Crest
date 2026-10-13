@@ -10,8 +10,10 @@ public sealed class UploadScanningSettings
     /// <summary>Where the tenant's external scanner accepts jobs; none when empty.</summary>
     public string? ExternalScannerUrl { get; set; }
 
-    /// <summary>The secret the tenant's scanner signs its verdicts with, and Crest its jobs.</summary>
-    // TODO: protect at rest with data protection once the settings editor exists.
+    /// <summary>
+    /// The secret the tenant's scanner signs its verdicts with, and Crest its jobs. Stored
+    /// protected (data protection); <see cref="Services.ITenantScanningSettings"/> hands it out in clear.
+    /// </summary>
     public string? ExternalScannerSecret { get; set; }
 
     /// <summary>Only the tenant's scanner runs; ignored without one.</summary>

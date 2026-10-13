@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Crest.ContentManagement.Routing;
+using Crest.DisplayManagement.Components;
+using Microsoft.AspNetCore.Http;
 using Crest.Settings;
 using Crest.ViewModels;
 using SiteSettings = Crest.ViewModels.SiteSettings;
@@ -52,23 +54,63 @@ public sealed class SiteController(
     // The public site's pages (docs/blazor-display.md rework step 3): the site shell's content
     // route asks for the page of a path and renders the tree it gets. Anonymous at the endpoint;
     // the item itself is decided for the caller (ViewContent), and the tree is filtered for them.
+    // Decision 12: the page's composite version (everything the tree depends on, the path and
+    // the viewer's scope) is its ETag, compared before anything is built; an anonymous viewer's
+    // page is shared through the server cache, a signed-in viewer's never is.
     [HttpGet("page")]
     [AllowAnonymous]
-    public async Task<ActionResult<SitePageResult>> GetPageAsync([FromQuery] string? path, [FromServices] Crest.Display.SitePageBuilder pages, CancellationToken cancellationToken)
+    public async Task<ActionResult<SitePageResult>> GetPageAsync(
+        [FromQuery] string? path,
+        [FromServices] Crest.Display.SitePageBuilder pages,
+        [FromServices] Crest.Access.ICallerContextAccessor callers,
+        [FromServices] DisplayTreeVersions versions,
+        [FromServices] IEnumerable<IDisplayTreeVersionPart> parts,
+        [FromServices] DisplayTreeCache cache,
+        CancellationToken cancellationToken)
     {
+        var caller = callers.Current;
+        if (caller is null)
+        {
+            var refused = await pages.BuildAsync(path, cancellationToken);
+            return Ok(new SitePageResult(refused.Status, refused.Title, refused.Tree));
+        }
+
+        var version = await versions.ComputeAsync(parts, ["site-page", Crest.Display.SitePageBuilder.Normalize(path), caller.ScopeSignature], cancellationToken);
+        var shared = caller.UserId is null && !caller.IsSuperUser && !caller.IsSystem;
+        Response.Headers.ETag = DisplayTreeVersions.ETag(version);
+        Response.Headers.CacheControl = shared ? "public, no-cache" : "private, no-cache";
+        if (DisplayTreeVersions.Matches(Request.Headers.IfNoneMatch, version))
+        {
+            return StatusCode(StatusCodes.Status304NotModified);
+        }
+
+        if (shared && cache.TryGet<SitePageResult>(version, out var cached) && cached is not null)
+        {
+            return Ok(cached);
+        }
+
         var page = await pages.BuildAsync(path, cancellationToken);
-        return Ok(new SitePageResult(page.Status, page.Title, page.Tree));
+        var result = new SitePageResult(page.Status, page.Title, page.Tree);
+        if (shared)
+        {
+            cache.Set(version, result, System.Text.Json.JsonSerializer.Serialize(result).Length);
+        }
+
+        return Ok(result);
     }
 
     // Anonymous: the login page greets with the tenant's own name, before anyone is signed
     // in. The branding display name IS ISite.SiteName (docs/branding.md) - the same value the
     // General settings screen edits - and nothing else from ISite is exposed here.
+    // Interim: the client reads the `site` query (api/queries/site) and falls back here only
+    // for a tenant whose Anonymous role lacks the query's permission. Answered from the same
+    // query in process, so the two never disagree; it goes with the hand-built login page.
     [HttpGet("branding")]
     [AllowAnonymous]
-    public async Task<ActionResult<SiteBrandingResult>> GetBrandingAsync()
+    public async Task<ActionResult<SiteBrandingResult>> GetBrandingAsync([FromServices] global::Crest.Services.SiteIdentity identity)
     {
-        var site = await siteService.GetSiteSettingsAsync();
-        return Ok(new SiteBrandingResult(site.SiteName ?? string.Empty));
+        var result = await identity.GetAsync(HttpContext.RequestAborted);
+        return Ok(new SiteBrandingResult(result.Name, result.Branding));
     }
 
     [HttpPut]

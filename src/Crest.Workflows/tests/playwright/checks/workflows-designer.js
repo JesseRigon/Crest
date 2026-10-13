@@ -112,7 +112,7 @@ module.exports = async function run(page, ctx) {
     const palette = [];
     // The palette is an accordion (one category open at a time): open each, then look.
     // Only categories Crest itself registers belong here. A consuming host's activities
-    // (Fruitful's "Accounting" category, say) are asserted by that host's own checks -
+    // (an "Orders" category, say) are asserted by that host's own checks -
     // this check runs against standalone Crest too, where they do not exist.
     const crestCategories = [['Connectors', 'Call connector'], ['Approvals', 'Request approval']];
     for (const [category, label] of crestCategories) {

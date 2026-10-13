@@ -28,21 +28,42 @@ public sealed class Startup : StartupBase
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<MemberSessionService>();
         services.AddScoped<MemberOrganizationDirectory>();
-        services.AddScoped<MemberStampService>();
+        // Member page paths carry the organization (/{member prefix}/{slug}/…), resolved among
+        // the signed-in user's own bindings.
+        services.AddScoped<Crest.Routing.IShellOrganizationResolver, MemberOrganizationSlugResolver>();
+        services.AddScoped<MemberBindingService>();
+        services.AddScoped<UserClassService>();
         services.AddScoped<MemberPortalLoginContext>();
         services.AddScoped<MemberImpersonationService>();
-        services.AddScoped<UserClassConversionService>();
+        // Audit (docs/audit.md): the recorder is a no-op while the audit trail is disabled; the
+        // actor handler and the category only matter when it is enabled.
+        services.AddScoped<AuditTrail.MemberAuditRecorder>();
+        services.AddScoped<Crest.AuditTrail.Services.IAuditTrailEventHandler, AuditTrail.ImpersonationAuditTrailEventHandler>();
+        services.AddTransient<Microsoft.Extensions.Options.IConfigureOptions<Crest.AuditTrail.Services.Models.AuditTrailOptions>, AuditTrail.MemberAuditTrailEventConfiguration>();
         services.AddScoped<Crest.Access.ICallerContextContributor, MemberCallerContributor>();
         services.AddScoped<Crest.Access.ICallerRequestResolver, MemberCallerRequestResolver>();
+        // Members' access extensions (docs/access.md, Domains onto the extension system): who may
+        // manage an organization's members, which binding rows a caller reads, and the
+        // organization row scope on content.
+        services.AddScoped<Crest.Access.IResourcePermissionMapper, MemberResourcePermissionMapper>();
+        services.AddScoped<Crest.Access.IScopeProvider, UserConnectionScopeProvider>();
+        services.AddScoped<Crest.Access.IScopeProvider, OrganizationScopeProvider>();
         services.AddPermissionProvider<MembersPermissionProvider>();
 
-        // Class foundation: index for reliable SQL filtering, creation stamp, class
-        // claim on the principal, and the login-surface gate (tenant vs portal).
-        services.AddIndexProvider<UserClassIndexProvider>();
-        services.AddIndexProvider<MemberOrgBindingIndexProvider>();
+        // Class foundation: the connection index, the creation stamp (every new user is
+        // placed in an organization), class claims on the principal, and the login-surface
+        // gate (tenant vs portal).
+        services.AddIndexProvider<UserConnectionIndexProvider>();
+        services.AddIndexProvider<UserHierarchyIndexProvider>();
         services.AddScoped<IUserEventHandler, UserClassStampHandler>();
         services.AddScoped<IUserClaimsProvider, UserClassClaimsProvider>();
         services.AddScoped<ILoginFormEvent, MemberLoginSurfaceGate>();
+        services.AddScoped<IUsersAdminListFilterProvider, Users.UserClassAdminListFilterProvider>();
+
+        // Drives created automatically (docs/media.md § 3): Members knows who is staff and which
+        // organizations exist; Media creates the drives when the tenant uses them.
+        services.AddScoped<Crest.Media.Files.IMediaDriveOwnerSource, MemberDriveOwnerSource>();
+        services.AddScoped<Crest.ContentManagement.Handlers.IContentHandler, OrganizationDriveHandler>();
 
 
         // The class permission ceiling (docs/members.md §E). The baseline set is
@@ -74,7 +95,11 @@ public sealed class Startup : StartupBase
                 "ManageWorkflows",
                 Permissions.MembersPermissions.ManageMembers.Name,
                 Permissions.MembersPermissions.ImpersonateMembers.Name,
-                Permissions.MembersPermissions.ConvertUserClass.Name)
+                Permissions.MembersPermissions.ConvertUserClass.Name,
+                // The audit trail is staff-only: members see functional attribution only
+                // (docs/audit.md › step 4).
+                "ViewAuditTrail",
+                "ManageAuditTrailSettings")
             .CeilingPrefix(
                 // Dynamic expansions: per-role user management, per-group site settings.
                 "ManageUsersInRole_",

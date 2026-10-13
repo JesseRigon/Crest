@@ -14,7 +14,8 @@ public abstract class AccountBaseController : Controller
         var triggers = HttpContext.RequestServices.GetService<IWorkflowTriggerPublisher>();
         if (triggers is not null && user is User platformUser)
         {
-            await triggers.PublishAsync(UserWorkflowTriggers.LoggedIn, platformUser.UserId, UserWorkflowTriggers.Payload(platformUser, info?.LoginProvider ?? string.Empty));
+            // The flows act as the user who just signed in, not the anonymous request (docs/access.md, Anonymous actors).
+            await triggers.PublishForUserAsync(UserWorkflowTriggers.LoggedIn, platformUser.UserId, platformUser.UserId, platformUser.UserName, UserWorkflowTriggers.Payload(platformUser, info?.LoginProvider ?? string.Empty));
         }
 
         return RedirectToLocal(returnUrl);

@@ -148,6 +148,24 @@ public sealed class WorkflowHookService(
         return true;
     }
 
+    /// <summary>
+    /// The flows a tenant may offer for attachment: published, and editable by the caller (the
+    /// attach checks the rest - the slot's policy and the flow's atomicity).
+    /// </summary>
+    public async Task<IReadOnlyList<WorkflowHookCandidateModel>> ListCandidatesAsync(CancellationToken cancellationToken = default)
+    {
+        var result = new List<WorkflowHookCandidateModel>();
+        foreach (var definition in await definitions.FindManyAsync(new WorkflowDefinitionFilter { VersionOptions = VersionOptions.Published }, cancellationToken))
+        {
+            if (await access.AuthorizeAsync(WorkflowOwnershipGuard.PermissionFor(WorkflowChange.Save, WorkflowOwnershipInfo.From(definition.CustomProperties)), definition.DefinitionId))
+            {
+                result.Add(new(definition.DefinitionId, definition.Name ?? definition.DefinitionId));
+            }
+        }
+
+        return result.OrderBy(candidate => candidate.Name, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
     /// <summary>The tenant attachments that use a definition, for the publish-time check.</summary>
     public async Task<IReadOnlyList<WorkflowHookAttachment>> AttachmentsOfAsync(string definitionId)
     {

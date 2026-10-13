@@ -7,8 +7,8 @@ namespace Crest.Routing;
 // assembly - see CrestShellAttribute.
 public sealed class MemberRouteComponentTableProvider : IRouteComponentTableProvider
 {
-    public RouteBucket Bucket => RouteBucket.Member;
+    public ShellId Shell => ShellId.Member;
 
     public IEnumerable<RouteComponentEntry> GetRouteComponents() =>
-        ShellAssemblies.InBucket(Bucket).SelectMany(assembly => AssemblyRouteComponentScanner.Scan(assembly, Bucket));
+        ShellAssemblies.InShell(Shell).SelectMany(assembly => AssemblyRouteComponentScanner.Scan(assembly, Shell));
 }

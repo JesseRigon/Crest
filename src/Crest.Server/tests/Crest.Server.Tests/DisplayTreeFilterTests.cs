@@ -83,6 +83,24 @@ public sealed class DisplayTreeFilterTests
         Assert.Empty(filtered!.Zones["ChildContent"]);
     }
 
+    [Fact]
+    public async Task SanitizesMarkupParametersBeforeTheTreeLeaves()
+    {
+        var sanitizer = Substitute.For<Crest.Infrastructure.Html.IHtmlSanitizerService>();
+        sanitizer.Sanitize(Arg.Any<string>()).Returns(call => call.Arg<string>()!.Replace("<script>x</script>", string.Empty, StringComparison.Ordinal));
+        var root = new DisplayNode
+        {
+            Id = "text",
+            Component = "Text",
+            Properties = new(StringComparer.OrdinalIgnoreCase) { ["Html"] = "<p>Hi</p><script>x</script>", ["Class"] = "<b>" },
+        };
+
+        var filtered = await Filter(sanitizer: sanitizer).FilterAsync(root, s_viewer, TestContext.Current.CancellationToken);
+
+        Assert.Equal("<p>Hi</p>", filtered!.Properties["Html"]!.GetValue<string>());
+        Assert.Equal("<b>", filtered.Properties["Class"]!.GetValue<string>());
+    }
+
     private static DisplayNode Menu() => new()
     {
         Id = "root",
@@ -97,9 +115,14 @@ public sealed class DisplayTreeFilterTests
         },
     };
 
-    private static DisplayTreeFilter Filter(IDisplayActionFilter? actionFilter = null, IAccessDecision? decision = null)
+    private static DisplayTreeFilter Filter(IDisplayActionFilter? actionFilter = null, IAccessDecision? decision = null, Crest.Infrastructure.Html.IHtmlSanitizerService? sanitizer = null)
     {
         var services = new ServiceCollection();
+        if (sanitizer is not null)
+        {
+            services.AddSingleton(sanitizer);
+        }
+
         if (actionFilter is not null)
         {
             services.AddSingleton(actionFilter);
@@ -111,6 +134,11 @@ public sealed class DisplayTreeFilterTests
             new ComponentDescriptor("Menu", typeof(ComponentBase), [], [new ZoneDescriptor("ChildContent", [])], ComponentSchema.AllShells),
             new ComponentDescriptor("Item", typeof(ComponentBase), [new ParameterDescriptor("Clicked", typeof(EventCallback), ParameterKind.EventHandler, "action")], [], ComponentSchema.AllShells),
             new ComponentDescriptor("Secret", typeof(ComponentBase), [], [], ComponentSchema.AllShells, Permission: "ViewSecrets"),
+            new ComponentDescriptor("Text", typeof(ComponentBase),
+            [
+                new ParameterDescriptor("Html", typeof(string), ParameterKind.String, ComponentSchema.Editors.Markup),
+                new ParameterDescriptor("Class", typeof(string), ParameterKind.String, ComponentSchema.Editors.Text),
+            ], [], ComponentSchema.AllShells),
         ])]);
 
         return new DisplayTreeFilter(registry, services.BuildServiceProvider());

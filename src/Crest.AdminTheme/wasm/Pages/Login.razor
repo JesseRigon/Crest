@@ -1,11 +1,12 @@
 @page "/login"
+@attribute [Crest.Components.Modules.SetsAuthenticationCookie]
 @using Crest.AdminTheme.State
 @using Crest.AdminTheme.Options
 @using Microsoft.AspNetCore.Components
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject AdminShellState AdminShellState
-@inject CrestRoutingOptions Routing
+@inject RoutingOptions Routing
 @inject NavigationManager Navigation
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
@@ -15,7 +16,12 @@
 <CrestStack Gap="1rem" AlignItems="AlignItems.Center">
     @* The tenant's own name (ISite.SiteName), not the platform's: each tenant has its own
        users and its own login page. *@
-    @if (!string.IsNullOrWhiteSpace(AdminShellState.Branding?.SiteName))
+    @* The login rendition (site › branding.login) when one is set; the name as text otherwise. *@
+    @if (AdminShellState.Branding?.Rendition("login") is { Length: > 0 } loginLogo)
+    {
+        <img src="@loginLogo" alt="@AdminShellState.Branding.SiteName" style="max-width: 320px; max-height: 96px;" data-testid="login-logo" />
+    }
+    else if (!string.IsNullOrWhiteSpace(AdminShellState.Branding?.SiteName))
     {
         <CrestText TextStyle="TextStyle.H3" Text="@AdminShellState.Branding.SiteName" />
     }
@@ -110,7 +116,7 @@
             // Crossing from the login shell (base href = LoginPath) to the admin
             // shell (base href = AdminPath) requires a full reload so the browser
             // re-fetches the document with the correct <base> tag - see
-            // BlazorAdminThemeMiddleware's PathBase shift and App.razor.
+            // ShellSelectionMiddleware's PathBase shift and App.razor.
             Navigation.NavigateTo(Routing.AdminPath, forceLoad: true);
         }
     }

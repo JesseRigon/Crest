@@ -25,6 +25,12 @@ public sealed class WorkflowUserContext
     public string? OrganizationId { get; set; }
     public bool IsSystem { get; set; }
 
+    /// <summary>
+    /// The OpenID client id when a machine (an application, client credentials) acted, so the
+    /// journal and approvals show which machine it was (docs/machine-actors.md); null for a user.
+    /// </summary>
+    public string? ClientId { get; set; }
+
     public bool IsAuthenticated => UserId is not null;
 
     public static WorkflowUserContext Anonymous(string tenant, CallerSide side = CallerSide.Site) => new() { Tenant = tenant, Side = side };
@@ -38,6 +44,8 @@ public sealed class WorkflowUserContext
         Side = caller.Side,
         OrganizationId = caller.OrganizationId,
         IsSystem = caller.IsSystem,
+        // An application's name identifier is its client id (the client-credentials flow).
+        ClientId = caller.UserClass == CallerClasses.Application ? caller.UserId : null,
     };
 
     /// <summary>The identity of an authenticated principal (its name identifier and name), or the anonymous actor.</summary>

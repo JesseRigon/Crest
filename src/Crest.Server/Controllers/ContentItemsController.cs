@@ -1,5 +1,7 @@
+using Crest.ContentManagement.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json.Nodes;
 using Crest;
 using Crest.ContentManagement;
@@ -26,8 +28,8 @@ public sealed class ContentItemsController(
     IPlatformHelper platformHelper,
     ISession session,
     IContentManager contentManager,
-    Crest.Services.CrestFieldVisibilityEnforcer visibilityEnforcer,
-    Crest.ContentGroups.CrestContentGroupService contentGroups,
+    Crest.Services.FieldVisibilityEnforcer visibilityEnforcer,
+    Crest.ContentGroups.ContentGroupService contentGroups,
     IAuthorizationService authorizationService,
     ICallerContextAccessor callerAccessor,
     IScopeSetProvider scopes) : ControllerBase
@@ -155,13 +157,10 @@ public sealed class ContentItemsController(
     // fields back as anyone else who can view it; this isn't a "public" vs "admin"
     // endpoint, it's permission-shaped for whoever's asking.
     //
-    // Today every requested field checks the same item-level CommonPermissions.ViewContent
-    // - Crest has no built-in per-part permission (see docs/permissions.md for
-    // why, and what real per-part permissions would require). That means "permitted"
-    // currently means "can view this item at all," not yet differentiated per part -
-    // each field's check is already its own step below so a real per-part permission
-    // can replace CommonPermissions.ViewContent there later without restructuring this
-    // action.
+    // The item is decided once (ViewContent); each requested field is then a part the caller's
+    // scope may narrow: a scope provider registered for the type and part
+    // (Crest.Access.ContentPartScope, docs/permissions.md ruling 2026-10-10) hides it where its
+    // rule does not admit the item; a part with no provider follows the item.
     [HttpGet("{contentItemId}/view")]
     public async Task<ActionResult<Dictionary<string, object?>>> ViewAsync(
         string contentItemId,
@@ -177,10 +176,17 @@ public sealed class ContentItemsController(
             ? DefaultViewFields
             : parts.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
+        if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.ViewContent, item))
+        {
+            return Forbid();
+        }
+
+        var caller = callerAccessor.Current;
+        var scope = caller is null ? null : await scopes.GetAsync(caller, HttpContext.RequestAborted);
         var result = new Dictionary<string, object?>();
         foreach (var field in requestedFields)
         {
-            if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.ViewContent, item))
+            if (scope is null || !ContentPartScope.Admits(scope, item.ContentType, field, column => IndexColumn(item, column)))
             {
                 continue;
             }
@@ -195,6 +201,23 @@ public sealed class ContentItemsController(
 
         return result.Count == 0 ? Forbid() : Ok(result);
     }
+
+    /// <summary>The item's content index columns, for a part's scope rule.</summary>
+    private static object? IndexColumn(Crest.ContentManagement.ContentItem item, string column) => column switch
+    {
+        nameof(ContentItemIndex.ContentItemId) => item.ContentItemId,
+        nameof(ContentItemIndex.ContentItemVersionId) => item.ContentItemVersionId,
+        nameof(ContentItemIndex.ContentType) => item.ContentType,
+        nameof(ContentItemIndex.Owner) => item.Owner,
+        nameof(ContentItemIndex.Author) => item.Author,
+        nameof(ContentItemIndex.Published) => item.Published,
+        nameof(ContentItemIndex.Latest) => item.Latest,
+        nameof(ContentItemIndex.DisplayText) => item.DisplayText,
+        nameof(ContentItemIndex.CreatedUtc) => item.CreatedUtc,
+        nameof(ContentItemIndex.ModifiedUtc) => item.ModifiedUtc,
+        nameof(ContentItemIndex.PublishedUtc) => item.PublishedUtc,
+        _ => null,
+    };
 
     // The headless display (docs/blazor-display.md § 8): the item's display tree, the same JSON
     // the Blazor renderer draws. Built by the platform's display drivers and placement, mapped
@@ -246,10 +269,24 @@ public sealed class ContentItemsController(
             return verdict.Verdict == AccessVerdict.NotFound ? NotFound() : Forbid();
         }
 
-        // TODO(blazor-display step 6): cache the tree per (item.ContentItemVersionId, displayType,
-        // caller.ScopeSignature), invalidated on theme, placement, feature and template changes as
-        // the shape table is. Never across scope signatures: the tree is built with the viewer's
-        // permissions (security audit item 9).
+        // Decision 12: a published item's tree carries its composite version as the ETag (the
+        // item version, the display type, the viewer's scope signature, and everything the tree
+        // depends on), compared before anything is built. A draft is never versioned or cached.
+        if (item.Published && HttpContext is { } http)
+        {
+            var versions = http.RequestServices.GetRequiredService<DisplayTreeVersions>();
+            var version = await versions.ComputeAsync(
+                http.RequestServices.GetServices<IDisplayTreeVersionPart>(),
+                ["content-display", item.ContentItemVersionId, displayType, format?.ToLowerInvariant(), caller.ScopeSignature],
+                cancellationToken);
+            http.Response.Headers.ETag = DisplayTreeVersions.ETag(version);
+            http.Response.Headers.CacheControl = "private, no-cache";
+            if (DisplayTreeVersions.Matches(http.Request.Headers.IfNoneMatch, version))
+            {
+                return StatusCode(Microsoft.AspNetCore.Http.StatusCodes.Status304NotModified);
+            }
+        }
+
         var shape = await displayManager.BuildDisplayAsync(item, updaters.ModelUpdater, displayType);
         var tree = await trees.BuildAsync(shape, cancellationToken: cancellationToken);
 
@@ -331,7 +368,17 @@ public sealed class ContentItemsController(
         // Clear-on-save: a field whose visibility condition is false must not keep a
         // stale value the editor was hiding.
         await visibilityEnforcer.ClearHiddenFieldsAsync(item, HttpContext.RequestAborted);
-        var created = await contentManager.CreateAsync(item, VersionOptions.Draft);
+        bool created;
+        try
+        {
+            created = await contentManager.CreateAsync(item, VersionOptions.Draft);
+        }
+        catch (ContentSaveRefusedException refused)
+        {
+            // A save guard (a picker's allowed types, a relationship rule) refused the item.
+            return BadRequest(new { errors = refused.Errors });
+        }
+
         if (!created) return Conflict();
         if (request.Publish && !await contentManager.PublishAsync(item)) return Conflict();
         return Ok(ContentItem.From(item));
@@ -348,7 +395,15 @@ public sealed class ContentItemsController(
         item.DisplayText = request.DisplayText?.Trim() ?? string.Empty;
         ReplaceContent(item, request.Content);
         await visibilityEnforcer.ClearHiddenFieldsAsync(item, HttpContext.RequestAborted);
-        await contentManager.UpdateAsync(item);
+        try
+        {
+            await contentManager.UpdateAsync(item);
+        }
+        catch (ContentSaveRefusedException refused)
+        {
+            return BadRequest(new { errors = refused.Errors });
+        }
+
         if (request.Publish && !item.Published && !await contentManager.PublishAsync(item)) return Conflict();
         return Ok(ContentItem.From(item));
     }

@@ -1,5 +1,10 @@
+using Crest.Data;
 using Crest.Data.Migration;
 using Crest.Sharing.Indexes;
+using Crest.Environment.Shell.Scope;
+using Dapper;
+using Microsoft.Extensions.DependencyInjection;
+using YesSql;
 using YesSql.Sql;
 
 namespace Crest.Sharing.Migrations;
@@ -79,9 +84,63 @@ public sealed class SharingMigrations : DataMigration
             .Column<string>(nameof(ShareRecalculationIndex.ObjectId), column => column.WithLength(255))
             .Column<DateTime>(nameof(ShareRecalculationIndex.RequestedUtc)));
 
-        return 2;
+        return await UpdateFrom2Async();
     }
 
-    /// <summary>A kind (64), a separator, an object id (255), '#' and a depth.</summary>
-    public const int DepthKeyLength = 330;
+    /// <summary>
+    /// Multi-path inheritance (F3): an object reached through several paths has an access
+    /// document per path, and the list scopes correlate rows by <c>AccessKey</c> (the object id
+    /// for the primary path). Existing rows are all primary paths, so their key is their object id.
+    /// </summary>
+    public async Task<int> UpdateFrom2Async()
+    {
+        await SchemaBuilder.AlterIndexTableAsync<ShareAccessIndex>(table => table
+            .AddColumn<string>(nameof(ShareAccessIndex.AccessKey), column => column.WithLength(AccessKeyLength)));
+        await SchemaBuilder.AlterIndexTableAsync<ShareAccessIndex>(table => table
+            .CreateIndex("IDX_ShareAccessIndex_AccessKey", nameof(ShareAccessIndex.Kind), nameof(ShareAccessIndex.PrincipalKind), nameof(ShareAccessIndex.PrincipalId), nameof(ShareAccessIndex.AccessKey)));
+
+        await SchemaBuilder.AlterIndexTableAsync<ShareAccessObjectIndex>(table => table
+            .AddColumn<string>(nameof(ShareAccessObjectIndex.AccessKey), column => column.WithLength(AccessKeyLength)));
+        await SchemaBuilder.AlterIndexTableAsync<ShareAccessObjectIndex>(table => table
+            .CreateIndex("IDX_ShareAccessObjectIndex_AccessKey", nameof(ShareAccessObjectIndex.Kind), nameof(ShareAccessObjectIndex.AccessKey), nameof(ShareAccessObjectIndex.ObjectId)));
+
+        // The rows already there stand for primary paths, and their depth keys stay as they are.
+        ShellScope.AddDeferredTask(async scope =>
+        {
+            var session = scope.ServiceProvider.GetRequiredService<ISession>();
+            var dialect = session.Store.Configuration.SqlDialect;
+            var prefix = session.Store.Configuration.TablePrefix;
+            await using var connection = scope.ServiceProvider.GetRequiredService<IDbConnectionAccessor>().CreateConnection();
+            await connection.OpenAsync();
+            foreach (var table in new[] { nameof(ShareAccessIndex), nameof(ShareAccessObjectIndex) })
+            {
+                var quoted = dialect.QuoteForTableName(prefix + table, session.Store.Configuration.Schema);
+                await connection.ExecuteAsync(
+                    $"UPDATE {quoted} SET {dialect.QuoteForColumnName(nameof(ShareAccessIndex.AccessKey))} = {dialect.QuoteForColumnName(nameof(ShareAccessIndex.ObjectId))} WHERE {dialect.QuoteForColumnName(nameof(ShareAccessIndex.AccessKey))} IS NULL");
+            }
+        });
+
+        return await UpdateFrom3Async();
+    }
+
+    /// <summary>
+    /// The access indicator (requirement 98): whether an object is shared with someone other than
+    /// its owner, beside the public flag, so lists filter by it in the query. Existing documents
+    /// get it when recalculated: a rebuild is queued.
+    /// </summary>
+    public async Task<int> UpdateFrom3Async()
+    {
+        await SchemaBuilder.AlterIndexTableAsync<ShareAccessObjectIndex>(table => table
+            .AddColumn<bool>(nameof(ShareAccessObjectIndex.IsShared), column => column.WithDefault(false)));
+
+        ShellScope.AddDeferredTask(scope => scope.ServiceProvider.GetRequiredService<IShareAccessIndex>().QueueRebuildAsync());
+
+        return 4;
+    }
+
+    /// <summary>An object id (255), '~' and a path key.</summary>
+    public const int AccessKeyLength = 280;
+
+    /// <summary>A kind (64), a separator, an access key (an object id and a path key), '#' and a depth.</summary>
+    public const int DepthKeyLength = 360;
 }

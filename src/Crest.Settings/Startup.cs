@@ -42,6 +42,13 @@ public sealed class Startup : StartupBase
         services.AddRecipeExecutionStep<SettingsStep>();
         services.AddSingleton<ISiteService, SiteService>();
 
+        // The branding renditions the shipped surfaces consume (docs/branding.md); a module
+        // that adds a surface registers its own the same way.
+        services.AddBrandingRendition(new BrandingRendition("login", "Login logo", "The login page's header, beside or instead of the site name", Width: 320, Height: 96));
+        services.AddBrandingRendition(new BrandingRendition("sidebar", "Sidebar logo", "The admin and member navigation header and the tenant chip in the switcher", Width: 64, Height: 64));
+        services.AddBrandingRendition(new BrandingRendition("favicon", "Favicon", "The browser tab icon", Width: 32, Height: 32, Accept: ".ico,.png,.svg"));
+        services.AddBrandingRendition(new BrandingRendition("email", "Email logo", "Mail templates", Width: 240, Height: 64, Reserved: true));
+
         // Site Settings editor
         services.AddSiteDisplayDriver<DefaultSiteSettingsDisplayDriver>();
         services.AddSiteDisplayDriver<DebugSettingsDisplayDriver>();

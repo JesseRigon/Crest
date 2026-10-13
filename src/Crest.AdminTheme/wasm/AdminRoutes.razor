@@ -41,7 +41,7 @@
 @code {
     // Shell-less: Admin's own chrome-free pages, plus any page declaring
     // [AllowAnonymous] - the same marker the server gate (RouteComponentEntry
-    // .AllowsAnonymous, BlazorAdminThemeMiddleware) reads, so a public page a
+    // .AllowsAnonymous, ShellSelectionMiddleware) reads, so a public page a
     // module contributes is public end to end without Crest knowing the module.
     private static bool IsShelllessRoute(RouteData routeData)
         => string.Equals(routeData.PageType.Name, "Login", StringComparison.Ordinal)
@@ -50,18 +50,15 @@
             || routeData.PageType.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), inherit: false);
 
     // The module assemblies the router knows: those loaded at startup, plus each ADMIN module
-    // loaded on demand (CrestLazyModules; browser only - on the server every assembly is
+    // loaded on demand (LazyModules; browser only - on the server every assembly is
     // loaded). Admin only: the loader holds every shell's loaded modules, and handing this
     // Router a member library would make its pages routable in the admin shell.
-    private readonly List<Assembly> _assemblies = [.. CrestModuleAssemblyRegistry.Assemblies];
-    private CrestLazyModules? _lazyModules;
+    private readonly List<Assembly> _assemblies = [.. ModuleAssemblyRegistry.Assemblies];
+    private LazyModules? _lazyModules;
 
     protected override void OnInitialized()
     {
-        // Downstream modules contribute components to pages they do not own through the
-        // page-region seam; discovery runs over the same module assemblies the Router uses.
-        PageRegionRegistry.Configure(CrestModuleAssemblyRegistry.Assemblies);
-        _lazyModules = Services.GetService<CrestLazyModules>();
+        _lazyModules = Services.GetService<LazyModules>();
         if (_lazyModules is not null && Services.GetService<LazyAssemblyLoader>() is { } loader)
         {
             _lazyModules.Attach(loader);

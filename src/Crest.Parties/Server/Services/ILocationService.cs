@@ -1,3 +1,5 @@
+using Crest.Access;
+using Crest.Data.Scoping;
 using Crest.Regions.Fields;
 using Crest.Parties.Constants;
 using Crest.Parties.Indexes;
@@ -19,11 +21,23 @@ public interface ILocationService
     Task SetPrimaryAsync(string contentItemId, CancellationToken cancellationToken = default);
 }
 
-public sealed class LocationService(ISession session, IContentManager contentManager, IPartyContactsService contacts) : ILocationService
+/// <summary>
+/// Locations, read through the caller's scope on <see cref="LocationIndex"/> (docs/access.md,
+/// Domains onto the extension system): a list or a lookup returns only the Locations the caller
+/// may see. The tenant's home Location (<see cref="GetPrimaryAsync"/>) is configuration every
+/// posting reads, and stays unscoped.
+/// </summary>
+public sealed class LocationService(ISession session, IContentManager contentManager, IPartyContactsService contacts, ICallerContextAccessor callers, IScopeSetProvider scopes) : ILocationService
 {
     public async Task<IReadOnlyList<LocationModel>> ListAsync(CancellationToken cancellationToken = default)
     {
-        var items = await session.Query<ContentItem, LocationIndex>(index => index.Published).ListAsync(cancellationToken);
+        var scope = await ScopeAsync(cancellationToken);
+        if (scope.Kind == ScopeKind.None)
+        {
+            return [];
+        }
+
+        var items = await session.Query<ContentItem, LocationIndex>(index => index.Published).Where(ScopeExpressions.ToPredicate<LocationIndex>(scope)).ListAsync(cancellationToken);
         var models = new List<LocationModel>();
         foreach (var item in items)
         {
@@ -35,9 +49,21 @@ public sealed class LocationService(ISession session, IContentManager contentMan
 
     public async Task<LocationModel?> GetAsync(string contentItemId, CancellationToken cancellationToken = default)
     {
-        var item = await contentManager.GetAsync(contentItemId, VersionOptions.Published);
+        var scope = await ScopeAsync(cancellationToken);
+        if (scope.Kind == ScopeKind.None)
+        {
+            return null;
+        }
+
+        var item = await session.Query<ContentItem, LocationIndex>(index => index.ContentItemId == contentItemId && index.Published)
+            .Where(ScopeExpressions.ToPredicate<LocationIndex>(scope))
+            .FirstOrDefaultAsync(cancellationToken);
         return item is null || item.ContentType != PartiesConstants.ContentTypes.Location ? null : await ToModelAsync(item, cancellationToken);
     }
+
+    /// <summary>The caller's rule for <see cref="LocationIndex"/>; no caller reads nothing.</summary>
+    private async Task<ScopeRule> ScopeAsync(CancellationToken cancellationToken) =>
+        callers.Current is { } caller ? (await scopes.GetAsync(caller, cancellationToken)).Require(nameof(LocationIndex)) : ScopeRule.None;
 
     public async Task<LocationModel?> GetPrimaryAsync(CancellationToken cancellationToken = default)
     {

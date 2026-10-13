@@ -32,7 +32,7 @@ namespace Crest.Controllers;
 /// ViewDynamicTranslations grants read-only access.
 /// </remarks>
 [ApiController, AutoValidateAntiforgeryToken, Route("api/crest/translations")]
-public sealed class CrestTranslationsController(
+public sealed class TranslationsController(
     IAuthorizationService authorization,
     ILocalizationService localizationService,
     ILocalizationManager localizationManager,
@@ -41,7 +41,7 @@ public sealed class CrestTranslationsController(
     TranslationsManager translationsManager) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<CrestTranslations>> GetAsync(string? culture = null)
+    public async Task<ActionResult<TranslationsModel>> GetAsync(string? culture = null)
     {
         var cultures = await GetAllowedCulturesAsync();
         if (cultures.Length == 0)
@@ -52,7 +52,7 @@ public sealed class CrestTranslationsController(
         var selected = cultures.FirstOrDefault(candidate =>
             string.Equals(candidate.Value, culture, StringComparison.OrdinalIgnoreCase)) ?? cultures[0];
 
-        return Ok(new CrestTranslations(
+        return Ok(new TranslationsModel(
             cultures,
             selected.Value,
             selected.CanEdit,
@@ -60,7 +60,7 @@ public sealed class CrestTranslationsController(
     }
 
     [HttpPut]
-    public async Task<ActionResult<CrestTranslations>> SaveAsync(CrestTranslationsSaveModel model)
+    public async Task<ActionResult<TranslationsModel>> SaveAsync(TranslationsSaveModel model)
     {
         if (string.IsNullOrWhiteSpace(model.Culture))
         {
@@ -106,7 +106,7 @@ public sealed class CrestTranslationsController(
         // request's own update until the deferred save commits after the response is written.
         // Building the response from it would show the page its pre-save values (the same
         // one-behind trap AdminMenusController.GetDefaultMenuSummaryAsync documents).
-        return Ok(new CrestTranslations(
+        return Ok(new TranslationsModel(
             cultures,
             target.Value,
             target.CanEdit,
@@ -118,7 +118,7 @@ public sealed class CrestTranslationsController(
     /// overlaid with stored values - plus every stored entry no descriptor covers, flagged as
     /// an orphan and slotted into its context's group.
     /// </summary>
-    private async Task<CrestTranslationGroup[]> BuildGroupsAsync(string culture, bool fresh = false)
+    private async Task<TranslationGroup[]> BuildGroupsAsync(string culture, bool fresh = false)
     {
         var document = fresh
             ? await translationsManager.LoadTranslationsDocumentAsync()
@@ -129,9 +129,9 @@ public sealed class CrestTranslationsController(
         // shows the same thing the menu does. Menu-caption rows get the recorded source
         // contexts first (unioned per caption - rows have no item identity), then the
         // *.AdminMenu tier, mirroring the caption resolver.
-        var poIndexes = CrestPoTranslationLookup.BuildCultureChainIndexes(
+        var poIndexes = PoTranslationLookup.BuildCultureChainIndexes(
             localizationManager, CultureInfo.GetCultureInfo(culture));
-        var sourcesByCaption = CrestProviderMenuSyncService.BuildSourcesByCaption(
+        var sourcesByCaption = ProviderMenuSyncService.BuildSourcesByCaption(
             await syncDocuments.GetOrCreateImmutableAsync());
         // First-wins on duplicate (context, key) pairs rather than ToDictionary's throw - a
         // store that somehow holds duplicates must degrade to showing one row, not 500 the
@@ -146,7 +146,7 @@ public sealed class CrestTranslationsController(
             }
         }
 
-        var rows = new List<CrestTranslationString>();
+        var rows = new List<TranslationString>();
         var covered = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var provider in localizationDataProviders)
@@ -161,7 +161,7 @@ public sealed class CrestTranslationsController(
 
                 stored.TryGetValue(key, out var entry);
                 var value = entry?.Value ?? string.Empty;
-                rows.Add(new CrestTranslationString(
+                rows.Add(new TranslationString(
                     descriptor.Context,
                     descriptor.Name,
                     value,
@@ -174,26 +174,26 @@ public sealed class CrestTranslationsController(
         {
             if (!covered.Contains(key))
             {
-                rows.Add(new CrestTranslationString(entry.Context, entry.Key, entry.Value, Orphan: true));
+                rows.Add(new TranslationString(entry.Context, entry.Key, entry.Value, Orphan: true));
             }
         }
 
         return rows
             .GroupBy(row => row.Context, StringComparer.OrdinalIgnoreCase)
             .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
-            .Select(group => new CrestTranslationGroup(
+            .Select(group => new TranslationGroup(
                 group.Key,
                 group.OrderBy(row => row.Key, StringComparer.OrdinalIgnoreCase).ToArray()))
             .ToArray();
     }
 
-    private async Task<CrestTranslationCulture[]> GetAllowedCulturesAsync()
+    private async Task<TranslationCulture[]> GetAllowedCulturesAsync()
     {
         var supported = await localizationService.GetSupportedCulturesAsync();
         var canManageAll = await authorization.AuthorizeAsync(User, DataLocalizationPermissions.ManageTranslations);
         var canView = await authorization.AuthorizeAsync(User, DataLocalizationPermissions.ViewDynamicTranslations);
 
-        var cultures = new List<CrestTranslationCulture>();
+        var cultures = new List<TranslationCulture>();
         foreach (var name in supported)
         {
             var cultureInfo = CultureInfo.GetCultureInfo(name);
@@ -204,7 +204,7 @@ public sealed class CrestTranslationsController(
 
             if (canEdit || canView)
             {
-                cultures.Add(new CrestTranslationCulture(name, label, canEdit));
+                cultures.Add(new TranslationCulture(name, label, canEdit));
             }
         }
 
@@ -220,10 +220,10 @@ public sealed class CrestTranslationsController(
         var isMenuCaption = context.StartsWith(
             Crest.AdminMenu.DataLocalizationContext.AdminMenu(null), StringComparison.OrdinalIgnoreCase);
 
-        return CrestPoTranslationLookup.Resolve(
+        return PoTranslationLookup.Resolve(
             poIndexes,
             key,
-            isMenuCaption ? CrestPoTranslationLookup.AdminMenuContextSuffix : null,
+            isMenuCaption ? PoTranslationLookup.AdminMenuContextSuffix : null,
             isMenuCaption && sourcesByCaption.TryGetValue(key, out var sourceContexts) ? sourceContexts : null);
     }
 

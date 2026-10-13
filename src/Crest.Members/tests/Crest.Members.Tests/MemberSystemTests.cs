@@ -11,37 +11,58 @@ using Xunit;
 
 namespace Crest.Members.Tests;
 
-public class HierarchyPathMathTests
+public class HierarchyClosureTests
 {
-    [Fact]
-    public void BuildPath_RootLevel_IsSlashIdSlash()
-        => Assert.Equal("/12/", HierarchyPathMath.BuildPath(null, 12));
-
-    [Fact]
-    public void BuildPath_Child_AppendsToParent()
-        => Assert.Equal("/12/45/", HierarchyPathMath.BuildPath("/12/", 45));
-
-    [Fact]
-    public void Chain_ReturnsRootFirstSelfLast()
-        => Assert.Equal([12L, 45L, 78L], HierarchyPathMath.Chain("/12/45/78/"));
-
-    [Fact]
-    public void IsWithin_SelfAndDescendants_True()
+    private static Dictionary<string, List<string>> Edges(params (string Report, string Manager)[] edges)
     {
-        Assert.True(HierarchyPathMath.IsWithin("/12/45/", "/12/45/"));
-        Assert.True(HierarchyPathMath.IsWithin("/12/45/78/", "/12/45/"));
-        Assert.False(HierarchyPathMath.IsWithin("/12/450/", "/12/45/"));
-        Assert.False(HierarchyPathMath.IsWithin("/12/", "/12/45/"));
+        var managers = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        foreach (var (report, manager) in edges)
+        {
+            (managers.TryGetValue(report, out var list) ? list : managers[report] = []).Add(manager);
+            managers.TryAdd(manager, []);
+        }
+
+        return managers;
     }
 
     [Fact]
-    public void IsWithin_SiblingPrefixNumbers_DoNotCollide()
-        // "/1/" must not match inside "/12/..." - the trailing separator prevents it.
-        => Assert.False(HierarchyPathMath.IsWithin("/12/45/", "/1/"));
+    public void Ancestors_FollowEveryPath()
+    {
+        // d reports to b and c; both report to a.
+        var ancestors = HierarchyClosure.ComputeAncestors(Edges(("b", "a"), ("c", "a"), ("d", "b"), ("d", "c")));
+
+        Assert.Empty(ancestors["a"]);
+        Assert.Equal(["a"], ancestors["b"]);
+        Assert.Equal(["a", "b", "c"], ancestors["d"].Order(StringComparer.Ordinal));
+    }
 
     [Fact]
-    public void Reroot_RewritesMovedSubtreePaths()
-        => Assert.Equal("/99/45/78/", HierarchyPathMath.Reroot("/12/45/78/", "/12/45/", "/99/45/"));
+    public void WouldCycle_RefusesAReportAlreadyAboveTheManager()
+    {
+        var edges = Edges(("b", "a"), ("c", "b"));
+
+        Assert.True(HierarchyClosure.WouldCycle(edges, reportId: "a", managerId: "c"));
+        Assert.True(HierarchyClosure.WouldCycle(edges, reportId: "a", managerId: "a"));
+        Assert.False(HierarchyClosure.WouldCycle(edges, reportId: "c", managerId: "a"));
+    }
+
+    [Fact]
+    public void ComputeAncestors_ThrowsOnAnExistingCycle()
+        => Assert.Throws<InvalidOperationException>(() => HierarchyClosure.ComputeAncestors(Edges(("a", "b"), ("b", "a"))));
+
+    [Fact]
+    public void Chains_ListEveryPathTopFirst()
+    {
+        var chains = HierarchyClosure.Chains(Edges(("b", "a"), ("c", "a"), ("d", "b"), ("d", "c")), "d");
+
+        Assert.Equal(2, chains.Count);
+        Assert.Contains(chains, chain => chain.SequenceEqual(["a", "b", "d"]));
+        Assert.Contains(chains, chain => chain.SequenceEqual(["a", "c", "d"]));
+    }
+
+    [Fact]
+    public void Chains_OfATop_IsItself()
+        => Assert.Equal(["a"], Assert.Single(HierarchyClosure.Chains(Edges(("b", "a")), "a")));
 }
 
 public class MemberClassCeilingTests
@@ -97,19 +118,30 @@ public class UserIndexProviderTests
     }
 
     [Fact]
-    public void UserWithoutAspect_MapsToStaff()
+    public void UserWithoutBindings_HasNoClass()
     {
+        // No user exists outside an organization: a user with no binding is the failure
+        // mode the rebuild repairs, never a default class.
         var user = new User { UserId = "u1" };
-        Assert.False(user.TryGet<CrestUserClass>(out _));
+        Assert.Empty(UserClassSet.Classes(user));
     }
 
     [Fact]
-    public void MemberAspect_RoundTrips()
+    public void ClassIsASet_DerivedFromTheBindings()
     {
         var user = new User { UserId = "u1" };
-        user.Put(new CrestUserClass { Class = UserClasses.Member });
-        Assert.True(user.TryGet<CrestUserClass>(out var userClass));
-        Assert.Equal(UserClasses.Member, userClass!.Class);
+        user.Put(new CrestMemberInfo
+        {
+            Bindings =
+            [
+                new MemberOrgBinding { OrganizationId = "tenant", Class = UserClasses.Staff },
+                new MemberOrgBinding { OrganizationId = "orgA", Class = UserClasses.Member, Roles = [MemberRoleTemplates.Member] },
+            ],
+        });
+
+        Assert.Equal([UserClasses.Staff, UserClasses.Member], UserClassSet.Classes(user));
+        Assert.True(UserClassSet.Has(user, UserClasses.Staff));
+        Assert.Equal("orgA", Assert.Single(UserClassSet.Bindings(user, UserClasses.Member)).OrganizationId);
     }
 
     [Fact]

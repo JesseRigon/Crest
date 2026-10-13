@@ -15,10 +15,10 @@ namespace Crest.Controllers;
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/content-part-lists")]
 public sealed class ContentPartListsController(
-    ICrestContentPartListService contentPartLists,
+    IContentPartListService contentPartLists,
     IMeasurementPreferenceService measurementPreferences,
     IAuthorizationService authorizationService,
-    CrestDefinitionLockGuard locks) : ControllerBase
+    DefinitionLockGuard locks) : ControllerBase
 {
     /// <summary>
     /// The culture-to-units dataset: which measurement system the culture uses and
@@ -58,6 +58,24 @@ public sealed class ContentPartListsController(
 
         var list = await contentPartLists.GetAsync(key, HttpContext.RequestAborted);
         return list is null ? NotFound() : Ok(list);
+    }
+
+    /// <summary>
+    /// Browses a list arranged in levels: the selectable options directly under
+    /// <paramref name="parent"/> (the top level when omitted), each with whether it has
+    /// options below it. Searching the whole hierarchy is the picker's search over the
+    /// <c>Path</c> column.
+    /// </summary>
+    [HttpGet("{key}/children")]
+    public async Task<ActionResult<OptionNode[]>> GetChildrenAsync(string key, [FromQuery] string? parent = null)
+    {
+        if (!await CanViewAsync())
+        {
+            return Forbid();
+        }
+
+        var options = await contentPartLists.GetSelectableAsync(key, HttpContext.RequestAborted);
+        return Ok(ContentPartListRules.Children(options, parent).ToArray());
     }
 
     /// <summary>The options an editor should offer: ordered, hidden ones dropped.</summary>
@@ -101,14 +119,14 @@ public sealed class ContentPartListsController(
         var list = await contentPartLists.GetAsync(key, HttpContext.RequestAborted);
         if (list is not null)
         {
-            if (CrestContentPartListRules.LockActive(list.EditLock))
+            if (ContentPartListRules.LockActive(list.EditLock))
             {
                 return LockedProblem("Options cannot be added while the list is locked for editing.");
             }
 
             // Adds stay allowed under a data lock, but the category vocabulary is
             // frozen: logic keyed on the category set must cover tenant additions.
-            var categoryValidation = CrestContentPartListRules.ValidateAddedCategory(list, request.Category);
+            var categoryValidation = ContentPartListRules.ValidateAddedCategory(list, request.Category);
             if (!categoryValidation.IsValid)
             {
                 return LockedProblem(categoryValidation.Error!);
@@ -117,7 +135,7 @@ public sealed class ContentPartListsController(
 
         try
         {
-            return Ok(await contentPartLists.AddOptionAsync(key, request.Key, request.DisplayText, request.Position, request.Category, request.DisplayTextPlural, request.Value, request.Fields, HttpContext.RequestAborted));
+            return Ok(await contentPartLists.AddOptionAsync(key, request.Key, request.DisplayText, request.Position, request.Category, request.DisplayTextPlural, request.Value, request.Fields, request.Parent, HttpContext.RequestAborted));
         }
         catch (InvalidOperationException exception)
         {
@@ -156,7 +174,7 @@ public sealed class ContentPartListsController(
     [HttpPut("{key}/locks")]
     public async Task<ActionResult<CrestContentPartListModel>> UpdateLocksAsync(string key, [FromBody] UpdateContentPartListLocksRequest request)
     {
-        if (!await IsAuthorizedAsync(CrestContentPartListPermissions.LockContentPartLists))
+        if (!await IsAuthorizedAsync(ContentPartListPermissions.LockContentPartLists))
         {
             return Forbid();
         }
@@ -210,26 +228,32 @@ public sealed class ContentPartListsController(
         var list = await contentPartLists.GetAsync(key, HttpContext.RequestAborted);
         if (list is not null)
         {
-            if (CrestContentPartListRules.LockActive(list.EditLock))
+            if (ContentPartListRules.LockActive(list.EditLock))
             {
                 return LockedProblem("The list is locked for editing.");
             }
 
             // The data lock freezes the MACHINE surface - category assignments and
             // machine values; relabel/hide/reposition are display-level and stay open.
-            if (request.Category is not null && CrestContentPartListRules.LockActive(list.DataLock))
+            if (request.Category is not null && ContentPartListRules.LockActive(list.DataLock))
             {
                 return LockedProblem("This list's categories are locked and cannot be reassigned.");
             }
 
-            if (request.Value is not null && CrestContentPartListRules.LockActive(list.DataLock))
+            if (request.Value is not null && ContentPartListRules.LockActive(list.DataLock))
             {
                 return LockedProblem("This list's machine values are locked and cannot be changed.");
             }
 
+            // An option's level is machine surface too: code may roll up by ancestor.
+            if (request.Parent is not null && ContentPartListRules.LockActive(list.DataLock))
+            {
+                return LockedProblem("This list's levels are locked; an option cannot be moved under another.");
+            }
+
             // Custom fields freeze per the admin's designation: a DataLocked field is
             // machine surface like Category/Value, the rest stay display surface.
-            if (request.Fields is { Count: > 0 } && CrestContentPartListRules.LockActive(list.DataLock))
+            if (request.Fields is { Count: > 0 } && ContentPartListRules.LockActive(list.DataLock))
             {
                 var lockedField = (list.Fields ?? [])
                     .FirstOrDefault(field => field.DataLocked && request.Fields.Keys.Any(name =>
@@ -243,7 +267,7 @@ public sealed class ContentPartListsController(
 
         try
         {
-            return Ok(await contentPartLists.UpdateOptionAsync(key, optionKey, request.DisplayText, request.Position, request.Hidden, request.Category, request.DisplayTextPlural, request.Value, request.Fields, HttpContext.RequestAborted));
+            return Ok(await contentPartLists.UpdateOptionAsync(key, optionKey, request.DisplayText, request.Position, request.Hidden, request.Category, request.DisplayTextPlural, request.Value, request.Fields, request.Parent, HttpContext.RequestAborted));
         }
         catch (InvalidOperationException exception)
         {
@@ -266,12 +290,12 @@ public sealed class ContentPartListsController(
         var list = await contentPartLists.GetAsync(key, HttpContext.RequestAborted);
         if (list is not null)
         {
-            if (CrestContentPartListRules.LockActive(list.EditLock))
+            if (ContentPartListRules.LockActive(list.EditLock))
             {
                 return LockedProblem("The list is locked for editing.");
             }
 
-            if (CrestContentPartListRules.LockActive(list.DataLock))
+            if (ContentPartListRules.LockActive(list.DataLock))
             {
                 return LockedProblem("This list's data is locked; field lock designations cannot be changed.");
             }
@@ -314,12 +338,12 @@ public sealed class ContentPartListsController(
         var list = await contentPartLists.GetAsync(key, HttpContext.RequestAborted);
         if (list is not null)
         {
-            if (CrestContentPartListRules.LockActive(list.EditLock))
+            if (ContentPartListRules.LockActive(list.EditLock))
             {
                 return LockedProblem("The list is locked for editing.");
             }
 
-            if (CrestContentPartListRules.LockActive(list.DataLock))
+            if (ContentPartListRules.LockActive(list.DataLock))
             {
                 return LockedProblem("This list's data is locked; the option type cannot be changed.");
             }
@@ -345,7 +369,7 @@ public sealed class ContentPartListsController(
 
         // Attaching converts an existing field of another type: a locked one stays what it is
         // (409 via the definition-lock filter).
-        await locks.EnsureFieldChangeAsync(request.ContentType, request.FieldName, CrestDefinitionChanges.Retyped);
+        await locks.EnsureFieldChangeAsync(request.ContentType, request.FieldName, DefinitionChanges.Retyped);
 
         try
         {
@@ -361,15 +385,15 @@ public sealed class ContentPartListsController(
     private async Task<bool> IsEditLockedAsync(string key)
     {
         var list = await contentPartLists.GetAsync(key, HttpContext.RequestAborted);
-        return list is not null && CrestContentPartListRules.LockActive(list.EditLock);
+        return list is not null && ContentPartListRules.LockActive(list.EditLock);
     }
 
     private ObjectResult LockedProblem(string message) =>
         Problem(message, statusCode: StatusCodes.Status409Conflict);
 
-    private Task<bool> CanViewAsync() => IsAuthorizedAsync(CrestContentPartListPermissions.ViewContentPartLists);
+    private Task<bool> CanViewAsync() => IsAuthorizedAsync(ContentPartListPermissions.ViewContentPartLists);
 
-    private Task<bool> CanManageAsync() => IsAuthorizedAsync(CrestContentPartListPermissions.ManageContentPartLists);
+    private Task<bool> CanManageAsync() => IsAuthorizedAsync(ContentPartListPermissions.ManageContentPartLists);
 
     private async Task<bool> IsAuthorizedAsync(Crest.Security.Permissions.Permission permission) =>
         await authorizationService.AuthorizeAsync(User, permission);
@@ -377,13 +401,13 @@ public sealed class ContentPartListsController(
 
 public sealed record CreateContentPartListRequest(string Key, string DisplayText);
 
-public sealed record AddOptionRequest(string Key, string DisplayText, int Position = 0, string? Category = null, string? DisplayTextPlural = null, string? Value = null, Dictionary<string, string?>? Fields = null);
+public sealed record AddOptionRequest(string Key, string DisplayText, int Position = 0, string? Category = null, string? DisplayTextPlural = null, string? Value = null, Dictionary<string, string?>? Fields = null, string? Parent = null);
 
 /// <summary>Null leaves a value unchanged; a BLANK DisplayTextPlural or Value clears
 /// it (plural falls back to the singular; a cleared Value means the key is the
 /// option's only machine datum). Fields carries custom data field edits by field
 /// name, with the same per-entry contract: absent = untouched, blank = cleared.</summary>
-public sealed record UpdateOptionRequest(string? DisplayText, int? Position, bool? Hidden, string? Category = null, string? DisplayTextPlural = null, string? Value = null, Dictionary<string, string?>? Fields = null);
+public sealed record UpdateOptionRequest(string? DisplayText, int? Position, bool? Hidden, string? Category = null, string? DisplayTextPlural = null, string? Value = null, Dictionary<string, string?>? Fields = null, string? Parent = null);
 
 /// <summary>The per-field lock designation: true freezes the field's values under
 /// the list's data lock, false keeps them display-editable.</summary>

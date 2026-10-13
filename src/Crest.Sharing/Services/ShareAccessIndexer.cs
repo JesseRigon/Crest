@@ -133,34 +133,37 @@ public sealed class ShareAccessIndexer(
     public async Task<IReadOnlyList<string>> VerifyAsync(ShareableRef target, CancellationToken cancellationToken = default)
     {
         var now = Now;
-        var expected = await CalculateAsync(target, cancellationToken);
-        var stored = await store.GetAsync(target);
+        var expected = await CalculatePathsAsync(target, cancellationToken) ?? [];
+        var stored = await store.GetPathsAsync(target);
         var differences = new List<string>();
 
-        if (expected is null || stored is null)
+        foreach (var key in expected.Select(document => document.PathKey).Union(stored.Select(document => document.PathKey)).Distinct(StringComparer.Ordinal))
         {
-            if (expected is not null || stored is not null)
+            var want = expected.FirstOrDefault(document => document.PathKey == key);
+            var have = stored.FirstOrDefault(document => document.PathKey == key);
+            var label = key.Length == 0 ? target.ToString() : $"{target} (path {key})";
+            if (want is null || have is null)
             {
-                differences.Add(expected is null ? $"{target}: indexed, but it no longer resolves." : $"{target}: not indexed.");
+                differences.Add(want is null ? $"{label}: indexed, but it no longer resolves." : $"{label}: not indexed.");
+                continue;
             }
 
-            return differences;
+            if (want.IsInactive != have.IsInactive)
+            {
+                differences.Add($"{label}: inactive is {have.IsInactive}, expected {want.IsInactive}.");
+            }
+
+            var wantRows = Signatures(want.Rows, now);
+            var haveRows = Signatures(have.Rows, now);
+            differences.AddRange(wantRows.Except(haveRows).Select(row => $"{label}: missing {row}."));
+            differences.AddRange(haveRows.Except(wantRows).Select(row => $"{label}: unexpected {row}."));
+
+            var wantShadows = ShadowSignatures(want.Shadows, now);
+            var haveShadows = ShadowSignatures(have.Shadows, now);
+            differences.AddRange(wantShadows.Except(haveShadows).Select(row => $"{label}: missing shadow {row}."));
+            differences.AddRange(haveShadows.Except(wantShadows).Select(row => $"{label}: unexpected shadow {row}."));
         }
 
-        if (expected.IsInactive != stored.IsInactive)
-        {
-            differences.Add($"{target}: inactive is {stored.IsInactive}, expected {expected.IsInactive}.");
-        }
-
-        var want = Signatures(expected.Rows, now);
-        var have = Signatures(stored.Rows, now);
-        differences.AddRange(want.Except(have).Select(row => $"{target}: missing {row}."));
-        differences.AddRange(have.Except(want).Select(row => $"{target}: unexpected {row}."));
-
-        var wantShadows = ShadowSignatures(expected.Shadows, now);
-        var haveShadows = ShadowSignatures(stored.Shadows, now);
-        differences.AddRange(wantShadows.Except(haveShadows).Select(row => $"{target}: missing shadow {row}."));
-        differences.AddRange(haveShadows.Except(wantShadows).Select(row => $"{target}: unexpected shadow {row}."));
         return differences;
     }
 
@@ -168,16 +171,39 @@ public sealed class ShareAccessIndexer(
     /// The object's access as it would be indexed now; null when it does not resolve (an unknown
     /// kind or object, a broken chain), which leaves it out of every list.
     /// </summary>
-    public async Task<ShareAccessDocument?> CalculateAsync(ShareableRef target, CancellationToken cancellationToken = default)
+    public async Task<ShareAccessDocument?> CalculateAsync(ShareableRef target, CancellationToken cancellationToken = default) =>
+        (await CalculatePathsAsync(target, cancellationToken))?[0];
+
+    /// <summary>
+    /// The object's access as it would be indexed now, one document per path to the root
+    /// (multi-path inheritance, F3), the primary path's first; null when it does not resolve.
+    /// Lists admit the object when any path's document does.
+    /// </summary>
+    public async Task<IReadOnlyList<ShareAccessDocument>?> CalculatePathsAsync(ShareableRef target, CancellationToken cancellationToken = default)
     {
-        var chain = await resolver.ChainAsync(target, cancellationToken);
-        if (chain is null)
+        var chains = await resolver.ChainsAsync(target, cancellationToken);
+        if (chains is null)
         {
             return null;
         }
 
+        var documents = new List<ShareAccessDocument>();
+        for (var i = 0; i < chains.Count; i++)
+        {
+            var document = await CalculateChainAsync(target, chains[i], SharingResolver.PathKey(chains[i], i));
+            if (documents.All(existing => existing.PathKey != document.PathKey))
+            {
+                documents.Add(document);
+            }
+        }
+
+        return documents;
+    }
+
+    private async Task<ShareAccessDocument> CalculateChainAsync(ShareableRef target, IReadOnlyList<ShareableObject> chain, string pathKey)
+    {
         var now = Now;
-        var document = new ShareAccessDocument { Kind = target.Kind, ObjectId = target.Id, CalculatedUtc = now };
+        var document = new ShareAccessDocument { Kind = target.Kind, ObjectId = target.Id, PathKey = pathKey, CalculatedUtc = now };
         if (chain.Any(item => item.IsInactive))
         {
             document.IsInactive = true;
@@ -283,20 +309,24 @@ public sealed class ShareAccessIndexer(
         }
 
         document.IsPublic = document.Rows.Any(row => row.PrincipalKind == SharePrincipalKind.Anyone && row.Admits && row.IsActiveAt(now));
+
+        // Shared (the access indicator, requirement 98): someone other than its owner may view it,
+        // now; public is its own indicator.
+        document.IsShared = document.Rows.Any(row => !row.IsOwner && row.PrincipalKind != SharePrincipalKind.Anyone && row.Admits && row.IsActiveAt(now));
         document.NextBoundaryUtc = boundaries.Count > 0 ? boundaries[0] : null;
         return document;
     }
 
     private async Task RecalculateOneAsync(ShareableRef target, CancellationToken cancellationToken)
     {
-        var document = await CalculateAsync(target, cancellationToken);
-        if (document is null)
+        var documents = await CalculatePathsAsync(target, cancellationToken);
+        if (documents is null)
         {
             await store.DeleteAsync(target);
             return;
         }
 
-        await store.SaveAsync(document);
+        await store.SavePathsAsync(target, documents);
     }
 
     private async Task RecalculateAllAsync(IReadOnlyList<ShareableRef> targets, CancellationToken cancellationToken)
@@ -333,8 +363,8 @@ public sealed class ShareAccessIndexer(
 
     /// <summary>
     /// The object and everything below it, parents before children; null when there are more
-    /// than <paramref name="limit"/>. A kind that is not an <see cref="IShareableTree"/> has no
-    /// children.
+    /// than <paramref name="limit"/>. Children are the kind's (<see cref="IShareableTree"/>) and
+    /// what other modules filed in the object (<see cref="IShareableChildSource"/>).
     /// </summary>
     public async Task<IReadOnlyList<ShareableRef>?> SubtreeAsync(ShareableRef target, int limit, CancellationToken cancellationToken = default)
     {
@@ -346,12 +376,7 @@ public sealed class ShareAccessIndexer(
             var next = new List<ShareableRef>();
             foreach (var parent in level)
             {
-                if (kinds.Find(parent.Kind) is not IShareableTree tree)
-                {
-                    continue;
-                }
-
-                foreach (var child in await tree.ChildrenAsync(parent.Id, cancellationToken))
+                foreach (var child in await kinds.ChildrenAsync(parent, cancellationToken))
                 {
                     if (!seen.Add(child))
                     {

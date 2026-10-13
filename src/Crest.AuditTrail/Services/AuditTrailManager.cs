@@ -80,7 +80,11 @@ public class AuditTrailManager : IAuditTrailManager
             context.UserId,
             context.UserName,
             context.AuditTrailEventItem
-        );
+        )
+        {
+            Subject = context.Subject,
+            Attribution = context.Attribution,
+        };
 
         await _auditTrailEventHandlers.InvokeAsync((handler, context) => handler.CreateAsync(context), createContext, _logger);
 
@@ -100,8 +104,23 @@ public class AuditTrailManager : IAuditTrailManager
         };
 
         auditTrailEvent.Put(createContext.AuditTrailEventItem);
+        auditTrailEvent.Put(createContext.Attribution ?? new AuditTrailAttribution());
+        auditTrailEvent.Put(createContext.Subject ?? new AuditTrailSubject());
 
         await _auditTrailEventHandlers.InvokeAsync((handler, context, auditTrailEvent) => handler.AlterAsync(context, auditTrailEvent), createContext, auditTrailEvent, _logger);
+
+        // An actor handler may have moved the audit attribution (impersonation): the
+        // functional attribution defaults to the actor, and the normalized name follows the name.
+        auditTrailEvent.NormalizedUserName = string.IsNullOrEmpty(auditTrailEvent.UserName) ? "" : _keyNormalizer.NormalizeName(auditTrailEvent.UserName);
+        auditTrailEvent.Alter<AuditTrailAttribution>(attribution =>
+        {
+            attribution.FunctionalUserId ??= string.IsNullOrEmpty(auditTrailEvent.UserId) ? null : auditTrailEvent.UserId;
+            attribution.FunctionalUserName ??= string.IsNullOrEmpty(auditTrailEvent.UserName) ? null : auditTrailEvent.UserName;
+            if (attribution.ActorKind == AuditTrailActorKinds.User && string.IsNullOrEmpty(auditTrailEvent.UserId) && string.IsNullOrEmpty(auditTrailEvent.UserName))
+            {
+                attribution.ActorKind = AuditTrailActorKinds.Anonymous;
+            }
+        });
 
         await _session.SaveAsync(auditTrailEvent, collection: AuditTrailEvent.Collection);
     }

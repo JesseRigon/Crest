@@ -10,7 +10,7 @@ using Crest.Modules.Manifest;
 [assembly: Feature(
     Id = "Crest.Media.AmazonS3",
     Name = "Amazon Media Storage",
-    Description = "Enables support for storing media files in Amazon S3.",
+    Description = "Stores file objects and the media library's files in Amazon S3.",
     Dependencies =
     [
         "Crest.Media.Cache"

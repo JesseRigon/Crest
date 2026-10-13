@@ -37,7 +37,7 @@ Shared components consume the canonical `--crest-*` primitive token contract; th
 - packaged default primitive token CSS (`Crest.AdminTheme/wasm/wwwroot/CrestAdmin.DesignSystem.Default.css`), loaded by the admin document and applied via the shell;
 - shared component cleanup so primitives do not consume Admin or Radzen token names directly;
 - Admin shell/primary-navigation/titlebar/shared tab components moved toward canonical `--crest-*` tokens;
-- a Design System page (`wasm/Pages/DesignSystem.razor`) + `CrestThemeSettings` covering a small fixed token set (Radzen theme, 4 colors, radius) via Site Settings.
+- a Design System page (`wasm/Pages/DesignSystem.razor`) + `ThemeSettings` covering a small fixed token set (Radzen theme, 4 colors, radius) via Site Settings.
 
 The default file defines the canonical primitive Crest token names. It may use the active Radzen variables as source values for the packaged default mapping, but only the `--crest-*` token names are consumed by Crest primitives.
 

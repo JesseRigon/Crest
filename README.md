@@ -175,8 +175,8 @@ tenant/user autosetup recipes in the host repo.
 
 ## Validation
 
-End-to-end validation runs in a host application (for example Venti:
-`bash dev/dev.sh build`, then `bash dev/dev.sh test`). Browser validation uses reusable
+End-to-end validation runs in a host application (its own build and
+test scripts). Browser validation uses reusable
 Playwright scripts under the owning project's `tests/playwright` directory, not one-off
 inline scripts.
 

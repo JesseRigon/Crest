@@ -16,5 +16,15 @@ public sealed class CrestShellContext
 
     public string Shell { get; set; } = Site;
 
+    /// <summary>The tenant's browser-absolute base path ("" or "/t2"), as the server sent it.</summary>
+    public string TenantBase { get; set; } = string.Empty;
+
     public string? OrganizationId { get; set; }
+
+    /// <summary>
+    /// The organization slug the member document's path names ("/members/{slug}/"), or null
+    /// for a document outside any organization. The member shell resolves it to
+    /// <see cref="OrganizationId"/> from the member's own organizations.
+    /// </summary>
+    public string? OrganizationSlug { get; set; }
 }

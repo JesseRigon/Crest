@@ -1,4 +1,5 @@
 using Crest.Deployment;
+using Crest.DisplayManagement.Components;
 using Crest.DisplayManagement.Layout;
 using Crest.Layers.Deployment;
 using Crest.Layers.Recipes;
@@ -25,6 +26,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<ILayerService, LayerService>();
         services.AddScoped<LayerRuleReader>();
         services.AddScoped<ILayoutTreeContributor, LayerTreeContributor>();
+        services.AddScoped<IDisplayTreeVersionPart, LayersTreeVersion>();
         services.AddPermissionProvider<Permissions>();
         services.AddRecipeExecutionStep<LayerStep>();
         services.AddDeployment<AllLayersDeploymentSource, AllLayersDeploymentStep, AllLayersDeploymentStepDriver>();

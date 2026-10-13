@@ -77,7 +77,7 @@ async function loginAsUser(page, baseUrl, { username, password }) {
 
 // Logs the current session out via Crest's own auth API (not a UI click), so callers
 // don't need to know which page/menu currently hosts the logout action.
-// CrestAuthController is [AutoValidateAntiforgeryToken] - see harness/antiforgery.js for
+// AuthController is [AutoValidateAntiforgeryToken] - see harness/antiforgery.js for
 // why a DOM meta-tag scrape (the MVC convention) doesn't work against this WASM shell.
 async function logout(page, baseUrl) {
   const { fetchAntiforgeryToken } = require('./antiforgery');

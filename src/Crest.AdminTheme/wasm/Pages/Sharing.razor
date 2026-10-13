@@ -1,0 +1,42 @@
+@page "/Sharing"
+@page "/Sharing/{Kind}/{Id}"
+@using Crest.Components.Primitives
+@using Crest.Components.Sharing
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* Sharing screens (docs/sharing.md § 8): /Sharing is the tenant's entries and rules, which reach
+   every object (requirement 97, the tenant permission); /Sharing/{kind}/{id} is any object's Share
+   panel and, for a container, its Rules screen (a content type: /Sharing/contenttype/Article). The
+   server decides who may see and change what: everyone else is told "not found". *@
+
+<CrestStack Gap="1rem" data-testid="sharing-page">
+    <CrestText TextStyle="TextStyle.H4" Text="@(IsTenant ? T["Sharing for everything on this site"] : T["Sharing"])" />
+    <div class="crest-sharing-page__tabs" role="tablist">
+        <CrestButton Size="ButtonSize.Small" ButtonStyle="@(ShowRules ? ButtonStyle.Light : ButtonStyle.Primary)" Text="@T["Share"]" Click="@(() => ShowRules = false)" data-testid="sharing-tab-share" />
+        <CrestButton Size="ButtonSize.Small" ButtonStyle="@(ShowRules ? ButtonStyle.Primary : ButtonStyle.Light)" Text="@T["Rules"]" Click="@(() => ShowRules = true)" data-testid="sharing-tab-rules" />
+    </div>
+    <CrestCard>
+        @if (ShowRules)
+        {
+            <CrestShareRules Kind="@TargetKind" Id="@TargetId" />
+        }
+        else
+        {
+            <CrestSharePanel Kind="@TargetKind" Id="@TargetId" />
+        }
+    </CrestCard>
+</CrestStack>
+
+@code {
+    [Parameter] public string? Kind { get; set; }
+
+    [Parameter] public string? Id { get; set; }
+
+    private bool ShowRules;
+
+    private bool IsTenant => string.IsNullOrEmpty(Kind);
+
+    private string TargetKind => IsTenant ? CrestSharingClient.TenantKind : Kind!;
+
+    private string? TargetId => IsTenant ? null : Id;
+}

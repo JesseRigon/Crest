@@ -126,7 +126,7 @@ public class ShareAccessIndexTests
     private sealed class Decision : IAccessDecision
     {
         public Task<AccessDecision> DecideAsync(CallerContext caller, string permission, object resource = null, CancellationToken cancellationToken = default) =>
-            Task.FromResult(caller.IsSuperUser ? AccessDecision.Allowed : AccessDecision.Denied($"'{permission}' is not granted."));
+            Task.FromResult(caller.IsSuperUser || caller.Permissions.Contains(permission) ? AccessDecision.Allowed : AccessDecision.Denied($"'{permission}' is not granted."));
     }
 
     private static SharingService Service(SharingWorld world, CallerContext caller) =>
@@ -160,7 +160,10 @@ public class ShareAccessIndexTests
     public async Task ChangingRulesRecalculatesTheSubtree()
     {
         var world = Example();
-        var service = Service(world, DriveAdmin(world));
+
+        // The rules written back keep rule 2's Anyone grant, which takes ShareWithAnyone.
+        var admin = DriveAdmin(world);
+        var service = Service(world, new CallerContext { Tenant = admin.Tenant, Side = admin.Side, UserId = admin.UserId, UserName = admin.UserName, Permissions = new HashSet<string> { "ShareWithAnyone" } });
         await world.IndexAllAsync();
 
         // Without rule 1, customers see chair.psd again and Dana loses it.

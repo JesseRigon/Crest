@@ -11,14 +11,20 @@ public sealed class UsersStep : NamedRecipeStepHandler
 {
     private readonly UserManager<IUser> _userManager;
     private readonly ISession _session;
+    private readonly Crest.Access.IPermissionVersion _permissionVersion;
+    private readonly Crest.Security.Services.IRoleService _roleService;
 
     public UsersStep(
         UserManager<IUser> userManager,
-        ISession session)
+        ISession session,
+        Crest.Security.Services.IRoleService roleService,
+        Crest.Access.IPermissionVersion permissionVersion = null)
         : base("Users")
     {
         _userManager = userManager;
         _session = session;
+        _roleService = roleService;
+        _permissionVersion = permissionVersion;
     }
 
     protected override async Task HandleAsync(RecipeExecutionContext context)
@@ -30,6 +36,11 @@ public sealed class UsersStep : NamedRecipeStepHandler
             if (string.IsNullOrWhiteSpace(importedUser.UserName))
             {
                 continue;
+            }
+
+            if (Crest.Access.SystemAccounts.IsSystemAccount(importedUser.UserId))
+            {
+                throw new InvalidOperationException($"'{importedUser.UserId}' is reserved for system accounts.");
             }
 
             var iUser = await _userManager.FindByIdAsync(importedUser.UserId);
@@ -56,9 +67,25 @@ public sealed class UsersStep : NamedRecipeStepHandler
             user.TwoFactorEnabled = importedUser.TwoFactorEnabled;
             user.PhoneNumber = importedUser.PhoneNumber;
             user.PhoneNumberConfirmed = importedUser.PhoneNumberConfirmed;
+            // Derived (business) roles are computed, never assigned (docs/sharing.md
+            // requirement 45): a recipe naming one is refused.
+            foreach (var roleName in importedUser.RoleNames ?? [])
+            {
+                if (await _roleService.IsDerivedRoleAsync(roleName))
+                {
+                    throw new Crest.Roles.DerivedRoleAssignmentException(roleName);
+                }
+            }
+
             user.RoleNames = importedUser.RoleNames;
 
             await _session.SaveAsync(user);
+        }
+
+        // Imported roles and enabled flags are rights writes made past the user store.
+        if (_permissionVersion is not null && model.Users.Length > 0)
+        {
+            await _permissionVersion.BumpAsync();
         }
     }
 }

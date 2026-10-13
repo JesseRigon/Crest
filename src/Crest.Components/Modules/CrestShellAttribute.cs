@@ -4,7 +4,7 @@ namespace Crest.Components.Modules;
 /// <remarks>
 /// Strings rather than an enum because the lazy-module generator reads the attribute out
 /// of assembly metadata without loading the assembly, and a string argument is read
-/// directly from the attribute blob. Server code maps these onto <c>Crest.Routing.RouteBucket</c>.
+/// directly from the attribute blob. Server code carries them as <c>Crest.Routing.ShellId</c>.
 /// </remarks>
 public static class CrestShells
 {
@@ -37,4 +37,27 @@ public static class CrestShells
 public sealed class CrestShellAttribute(string shell) : Attribute
 {
     public string Shell { get; } = shell;
+
+    /// <summary>
+    /// On a theme client, the shell's <c>Routes</c> component: what the eager shell root
+    /// (<c>Crest.Shell.CrestShellRoot</c>) renders once the theme client is loaded. A theme
+    /// client is lazy - each loads when its shell is opened - so the document names the shell,
+    /// never this type. Null on a module library.
+    /// </summary>
+    public Type? Routes { get; init; }
+}
+
+/// <summary>
+/// Declares a client assembly that loads at boot, whatever shell the document serves: the
+/// shell runtime and a theme's services (the HTTP pipeline, the API client, the state the
+/// host registers before the container is sealed). Everything else a host's WASM app ships -
+/// theme UIs and module libraries - loads on demand (Crest.LazyModules).
+/// </summary>
+/// <remarks>
+/// The lazy-module generator cannot see the app's own references (it runs before the app is
+/// compiled), so the eager roots are named by this attribute rather than inferred.
+/// </remarks>
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
+public sealed class CrestEagerAttribute : Attribute
+{
 }

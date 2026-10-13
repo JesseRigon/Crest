@@ -1,0 +1,58 @@
+@page "/Audit/Records/{RecordId}"
+@inject HttpClient Http
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* A record's history (docs/audit.md › step 4): every event for one record - a content item, a
+   user, a workflow run - newest first, impersonated actions marked. *@
+
+<PageTitle>@T["History"]</PageTitle>
+
+<CrestStack Gap="1rem" data-testid="audit-record">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <div>
+            <CrestText TextStyle="TextStyle.H4" class="rz-m-0">@T["History"]</CrestText>
+            <CrestText TextStyle="TextStyle.Body2" class="rz-color-secondary">@(Title ?? RecordId)</CrestText>
+        </div>
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <CrestLink Path="@AuditTrailRoutes.TrailAdmin.TrimStart('/')" Text="@T["Audit trail"]" />
+            <CrestButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="@(() => LoadAsync(0))" Disabled="IsBusy" />
+        </CrestStack>
+    </CrestStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" Summary="@T["Could not load the history"]" Detail="@Error" />
+    }
+
+    <AuditEventTable Page="Page" PageChanged="LoadAsync" ShowRecordLinks="false" />
+</CrestStack>
+
+@code {
+    [Parameter] public string RecordId { get; set; } = string.Empty;
+
+    private AuditEventPage Page { get; set; } = new([], 0, 0, 50);
+    private string? Title { get; set; }
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    protected override Task OnParametersSetAsync() => LoadAsync(0);
+
+    private async Task LoadAsync(int skip)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            Page = await Http.GetFromJsonAsync<AuditEventPage>($"{AuditTrailRoutes.Api}/records/{Uri.EscapeDataString(RecordId)}?skip={skip}&take=50") ?? Page;
+            Title = Page.Items.FirstOrDefault()?.Summary;
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

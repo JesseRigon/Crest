@@ -1,4 +1,4 @@
-using Crest.Global;
+using Crest.Data.Global;
 using Crest.Regions.Indexes;
 using Crest.Regions.Models;
 using Crest.Regions.Services;
@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Crest.Environment.Shell;
 using YesSql;
+using YesSql.Services;
 
 namespace Crest.Regions.Controllers;
 
@@ -19,7 +20,7 @@ namespace Crest.Regions.Controllers;
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route(RegionsConstants.Routes.Api + "/geo/import")]
-public sealed class GeoImportController(ICrestGlobalStore globalStore, ShellSettings shellSettings, IAuthorizationService authorization) : ControllerBase
+public sealed class GeoImportController(IGlobalStore globalStore, ShellSettings shellSettings, IAuthorizationService authorization) : ControllerBase
 {
     [HttpPost]
     [RequestSizeLimit(512 * 1024 * 1024)]
@@ -30,7 +31,7 @@ public sealed class GeoImportController(ICrestGlobalStore globalStore, ShellSett
             return NotFound();
         }
 
-        if (!await authorization.AuthorizeAsync(User, CrestGlobalPermissions.ManageGlobalReferenceData))
+        if (!await authorization.AuthorizeAsync(User, GlobalPermissions.ManageGlobalReferenceData))
         {
             return Forbid();
         }
@@ -85,12 +86,33 @@ public sealed class GeoImportController(ICrestGlobalStore globalStore, ShellSett
                 }
             }
 
+            // Postal codes, upserted by (country, code) as lookups normalize it. A node the tree
+            // does not have is dropped from the code's set with a warning, never stored dangling.
+            var countries = batch.PostalCodes.Select(code => code.Country).Distinct(StringComparer.Ordinal).ToArray();
+            var storedCodes = countries.Length == 0
+                ? new Dictionary<(string, string), GeoPostalCode>()
+                : (await session.Query<GeoPostalCode, GeoPostalCodeIndex>(index => index.Country.IsIn(countries)).ListAsync(ct))
+                    .GroupBy(code => (code.Country, code.Code))
+                    .ToDictionary(group => group.Key, group => group.First());
+
             foreach (var incoming in batch.PostalCodes)
             {
-                var current = await session.Query<GeoPostalCode, GeoPostalCodeIndex>(index => index.Country == incoming.Country && index.Code == incoming.Code).FirstOrDefaultAsync(ct);
+                incoming.Code = PostalCodeFileParser.NormalizeCode(incoming.Code);
+                var unknown = incoming.NodeIds.Where(nodeId => !existing.ContainsKey(nodeId)).ToArray();
+                if (unknown.Length > 0)
+                {
+                    incoming.NodeIds = [.. incoming.NodeIds.Except(unknown, StringComparer.Ordinal)];
+                    if (result.Warnings.Count < MaxWarnings)
+                    {
+                        result.Warnings.Add($"Postal code {incoming.Country} {incoming.Code}: no node {string.Join(", ", unknown)}.");
+                    }
+                }
+
+                var current = storedCodes.GetValueOrDefault((incoming.Country, incoming.Code));
                 if (current is null)
                 {
                     await session.SaveAsync(incoming);
+                    storedCodes[(incoming.Country, incoming.Code)] = incoming;
                 }
                 else
                 {
@@ -105,6 +127,16 @@ public sealed class GeoImportController(ICrestGlobalStore globalStore, ShellSett
 
             foreach (var incoming in batch.Boundaries)
             {
+                if (!existing.ContainsKey(incoming.NodeId))
+                {
+                    if (result.Warnings.Count < MaxWarnings)
+                    {
+                        result.Warnings.Add($"Boundary for {incoming.NodeId} skipped: the tree has no such node.");
+                    }
+
+                    continue;
+                }
+
                 var current = await session.Query<GeoBoundary, GeoBoundaryIndex>(index => index.NodeId == incoming.NodeId).FirstOrDefaultAsync(ct);
                 if (current is null)
                 {
@@ -134,7 +166,7 @@ public sealed class GeoImportController(ICrestGlobalStore globalStore, ShellSett
             return NotFound();
         }
 
-        if (!await authorization.AuthorizeAsync(User, CrestGlobalPermissions.ManageGlobalReferenceData))
+        if (!await authorization.AuthorizeAsync(User, GlobalPermissions.ManageGlobalReferenceData))
         {
             return Forbid();
         }
@@ -147,6 +179,81 @@ public sealed class GeoImportController(ICrestGlobalStore globalStore, ShellSett
 
         return await ImportAsync(batch, cancellationToken);
     }
+
+    /// <summary>
+    /// A postal-code file (docs/regions.md › Populating the tree): <c>format=table</c> (a header
+    /// row with Country, Code, NodeIds, Latitude, Longitude) or <c>format=geonames</c> (the
+    /// GeoNames postal dump). No data ships; the file is the caller's, as is its licence.
+    /// </summary>
+    [HttpPost("postal-codes")]
+    [RequestSizeLimit(512 * 1024 * 1024)]
+    public async Task<ActionResult<GeoImportResult>> ImportPostalCodesAsync(IFormFile file, [FromQuery] string format = PostalCodeFileParser.TableFormat, CancellationToken cancellationToken = default)
+    {
+        if (!shellSettings.IsDefaultShell())
+        {
+            return NotFound();
+        }
+
+        if (!await authorization.AuthorizeAsync(User, GlobalPermissions.ManageGlobalReferenceData))
+        {
+            return Forbid();
+        }
+
+        var batch = new GeoImportBatch();
+        try
+        {
+            using var reader = new StreamReader(file.OpenReadStream());
+            batch.PostalCodes.AddRange(PostalCodeFileParser.Read(reader, format));
+        }
+        catch (InvalidDataException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+
+        return await ImportAsync(batch, cancellationToken);
+    }
+
+    /// <summary>
+    /// Boundaries from a GeoJSON FeatureCollection: <c>idProperty</c> names the feature property
+    /// holding the node id, <c>idFormat</c> composes it (<c>US-IL-{0}</c>). Stored as WKT
+    /// MultiPolygons; features for nodes the tree lacks are skipped with a warning.
+    /// </summary>
+    [HttpPost("boundaries")]
+    [RequestSizeLimit(1024L * 1024 * 1024)]
+    public async Task<ActionResult<GeoImportResult>> ImportBoundariesAsync(IFormFile file, [FromQuery] string idProperty = "nodeId", [FromQuery] string? idFormat = null, CancellationToken cancellationToken = default)
+    {
+        if (!shellSettings.IsDefaultShell())
+        {
+            return NotFound();
+        }
+
+        if (!await authorization.AuthorizeAsync(User, GlobalPermissions.ManageGlobalReferenceData))
+        {
+            return Forbid();
+        }
+
+        var batch = new GeoImportBatch();
+        var skipped = new List<string>();
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            batch.Boundaries.AddRange(GeoJsonBoundaryParser.Read(stream, idProperty, idFormat, skipped));
+        }
+        catch (Exception exception) when (exception is InvalidDataException or System.Text.Json.JsonException or ArgumentException or FormatException)
+        {
+            return BadRequest(exception.Message);
+        }
+
+        var result = await ImportAsync(batch, cancellationToken);
+        if (result.Value is { } imported)
+        {
+            imported.Warnings.InsertRange(0, skipped.Take(MaxWarnings));
+        }
+
+        return result;
+    }
+
+    private const int MaxWarnings = 200;
 
     private static bool ReachesItself(string nodeId, IReadOnlyDictionary<string, IReadOnlyList<string>> parents)
     {
@@ -186,5 +293,8 @@ public sealed class GeoImportController(ICrestGlobalStore globalStore, ShellSett
         public int PostalCodes { get; set; }
         public int Boundaries { get; set; }
         public List<string> Errors { get; set; } = [];
+
+        /// <summary>Rows that were imported only in part or skipped (at most 200 listed).</summary>
+        public List<string> Warnings { get; set; } = [];
     }
 }

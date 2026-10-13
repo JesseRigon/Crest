@@ -144,9 +144,12 @@ public readonly partial struct Currency
 
     public static bool IsKnownCurrency(string isoCode) => _defaultProvider.IsKnownCurrency(isoCode);
 
+    // The registered providers first, in registration order (the global-store table is a
+    // shared correction to minor units and must win), the culture-derived table behind them
+    // for anything no provider knows.
     public static ICurrency FromIsoCode(string code, IEnumerable<ICurrencyProvider> providers = null) =>
-        _defaultProvider.GetCurrency(code) ??
-        providers?.GetFirstCurrency(currency => currency.CurrencyIsoCode == code);
+        providers?.GetFirstCurrency(currency => currency.CurrencyIsoCode == code) ??
+        _defaultProvider.GetCurrency(code);
 
     public static ICurrency FromNativeName(string name, IEnumerable<ICurrencyProvider> providers = null)
     {
@@ -172,8 +175,7 @@ public readonly partial struct Currency
     {
         ArgumentNullException.ThrowIfNull(region);
 
-        return _defaultProvider.GetCurrency(region.ISOCurrencySymbol) ??
-               FromIsoCode(region.ISOCurrencySymbol, providers);
+        return FromIsoCode(region.ISOCurrencySymbol, providers);
     }
 
     public static ICurrency FromCulture(CultureInfo culture, IEnumerable<ICurrencyProvider> providers = null) =>

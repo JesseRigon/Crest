@@ -7,9 +7,9 @@ namespace Crest.Routing;
 // can only be scoped by assembly - see CrestShellAttribute.
 public sealed class SiteRouteComponentTableProvider : IRouteComponentTableProvider
 {
-    public RouteBucket Bucket => RouteBucket.Site;
+    public ShellId Shell => ShellId.Site;
 
     public IEnumerable<RouteComponentEntry> GetRouteComponents() =>
-        ShellAssemblies.InBucket(Bucket).SelectMany(assembly =>
-            AssemblyRouteComponentScanner.Scan(assembly, Bucket, defaultLandingRoutePattern: "/"));
+        ShellAssemblies.InShell(Shell).SelectMany(assembly =>
+            AssemblyRouteComponentScanner.Scan(assembly, Shell, defaultLandingRoutePattern: "/"));
 }

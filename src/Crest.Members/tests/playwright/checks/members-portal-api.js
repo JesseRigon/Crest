@@ -11,7 +11,7 @@ module.exports = async function run(page, ctx) {
   const results = [];
   const check = (name, pass, message) => results.push({ name, pass, message });
   // The tenant's member base (MemberOptions.MemberUrlPrefix): "members" unless the host
-  // moved it, as Venti does.
+  // moved it.
   const memberBase = `${ctx.baseUrl}/${(process.env.MEMBER_URL_PREFIX || 'members').replace(/^\/+|\/+$/g, '')}`;
 
   function apiOn(target) {

@@ -26,10 +26,10 @@ public class CrestOptionPart : ContentPart
     /// </summary>
     public string? Value { get; set; }
 
-    /// <summary>Where this option came from: <see cref="CrestOptionSources"/>.
+    /// <summary>Where this option came from: <see cref="OptionSources"/>.
     /// Version history shows THAT a module option was edited, but cannot tell
     /// module-shipped from tenant-created - hence this explicit field.</summary>
-    public string Source { get; set; } = CrestOptionSources.Tenant;
+    public string Source { get; set; } = OptionSources.Tenant;
 
     /// <summary>
     /// The label used when the option names more than one of something ("Boxes" to
@@ -49,10 +49,18 @@ public class CrestOptionPart : ContentPart
     /// <summary>
     /// Flat, single-valued grouping label used by the Categorized sort. Never null:
     /// an option without an explicit category belongs to
-    /// <see cref="CrestOptionCategories.Uncategorized"/>. No hierarchy - a category
-    /// is a label, not a tree.
+    /// <see cref="OptionCategories.Uncategorized"/>. Flat: a category is a label;
+    /// levels are <see cref="Parent"/>.
     /// </summary>
-    public string Category { get; set; } = CrestOptionCategories.Uncategorized;
+    public string Category { get; set; } = OptionCategories.Uncategorized;
+
+    /// <summary>
+    /// The key of the option this one sits under, for lists arranged in levels (NAICS:
+    /// sector, subsector, industry group, ...). Null for a top-level option and for every
+    /// option of a flat list. Machine surface like <see cref="Category"/>: frozen under a
+    /// data lock, never a display concern.
+    /// </summary>
+    public string? Parent { get; set; }
 
     /// <summary>Back-reference to the owning Content part list content item.</summary>
     public string ContentPartListContentItemId { get; set; } = string.Empty;
@@ -60,7 +68,7 @@ public class CrestOptionPart : ContentPart
 
 /// <summary>Provenance values for <see cref="CrestOptionPart.Source"/> and
 /// <see cref="CrestContentPartListPart.Source"/>.</summary>
-public static class CrestOptionSources
+public static class OptionSources
 {
     /// <summary>Seeded by a module. Tenants may relabel or hide these, but the key
     /// is the module's contract.</summary>
@@ -71,7 +79,7 @@ public static class CrestOptionSources
 }
 
 /// <summary>Category values for <see cref="CrestOptionPart.Category"/>.</summary>
-public static class CrestOptionCategories
+public static class OptionCategories
 {
     /// <summary>The default category every option belongs to until a tenant assigns
     /// one. Stored as this invariant token; screens localize it for display.</summary>

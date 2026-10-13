@@ -67,8 +67,8 @@
                                         Data="AvailableCultureOptions"
                                         Value="@SelectedCultureToAdd"
                                         ValueChanged="SelectCultureToAddAsync"
-                                        TextProperty="@nameof(CrestCulture.Label)"
-                                        ValueProperty="@nameof(CrestCulture.Value)"
+                                        TextProperty="@nameof(Culture.Label)"
+                                        ValueProperty="@nameof(Culture.Value)"
                                         Placeholder="@T["Choose a culture"]"
                                         AllowFiltering="true"
                                         FilterPlaceholder="@T["Filter cultures"]"
@@ -96,8 +96,8 @@
                                 Data="SupportedCultureOptions"
                                 Value="@Model.DefaultCulture"
                                 ValueChanged="SelectDefaultCultureAsync"
-                                TextProperty="@nameof(CrestCulture.Label)"
-                                ValueProperty="@nameof(CrestCulture.Value)"
+                                TextProperty="@nameof(Culture.Label)"
+                                ValueProperty="@nameof(Culture.Value)"
                                 Placeholder="@T["Choose the default culture"]"
                                 AllowFiltering="true"
                                 FilterPlaceholder="@T["Filter supported cultures"]"
@@ -117,8 +117,8 @@
                                 Data="AdminDefaultCultureOptions"
                                 Value="@Model.AdminDefaultCulture"
                                 ValueChanged="SelectAdminDefaultCultureAsync"
-                                TextProperty="@nameof(CrestCulture.Label)"
-                                ValueProperty="@nameof(CrestCulture.Value)"
+                                TextProperty="@nameof(Culture.Label)"
+                                ValueProperty="@nameof(Culture.Value)"
                                 Placeholder="@T["No admin-specific override"]"
                                 AllowClear="true"
                                 AllowFiltering="true"
@@ -136,7 +136,7 @@
 @code {
     [CascadingParameter] public AdminShellState? AdminShellState { get; set; }
 
-    private CrestLocalization? Model { get; set; }
+    private LocalizationModel? Model { get; set; }
     private bool IsLoading { get; set; } = true;
     private bool IsSaving { get; set; }
     private string? ErrorMessage { get; set; }
@@ -146,7 +146,7 @@
     private bool HasDynamicTranslations => AdminShellState?.Manifest?.Features.Any(feature =>
         string.Equals(feature.Id, "Crest.DataLocalization", StringComparison.OrdinalIgnoreCase)) == true;
 
-    private CrestCulture[] SupportedCultureOptions => Model?.SupportedCultures
+    private Culture[] SupportedCultureOptions => Model?.SupportedCultures
         .Select(ToCulture)
         .OrderBy(culture => culture.Label, StringComparer.OrdinalIgnoreCase)
         .ToArray() ?? [];
@@ -154,9 +154,9 @@
     // Same set as SupportedCultureOptions - the admin default, when set, must be one of the
     // tenant's own supported cultures (enforced again server-side on save). "No override"
     // is represented by a null Model.AdminDefaultCulture, via the dropdown's AllowClear.
-    private CrestCulture[] AdminDefaultCultureOptions => SupportedCultureOptions;
+    private Culture[] AdminDefaultCultureOptions => SupportedCultureOptions;
 
-    private CrestCulture[] AvailableCultureOptions => Model?.AvailableCultures
+    private Culture[] AvailableCultureOptions => Model?.AvailableCultures
         .Where(culture => !Model.SupportedCultures.Contains(culture.Value, StringComparer.OrdinalIgnoreCase))
         .ToArray() ?? [];
 
@@ -287,11 +287,11 @@
         }
     }
 
-    private CrestCulture ToCulture(string value) => Model?.AvailableCultures.FirstOrDefault(culture =>
+    private Culture ToCulture(string value) => Model?.AvailableCultures.FirstOrDefault(culture =>
         string.Equals(culture.Value, value, StringComparison.OrdinalIgnoreCase))
-        ?? new CrestCulture(value, string.IsNullOrEmpty(value) ? T["Invariant culture"] : value, value);
+        ?? new Culture(value, string.IsNullOrEmpty(value) ? T["Invariant culture"] : value, value);
 
-    private static string DisplayCultureName(CrestCulture culture) => string.IsNullOrWhiteSpace(culture.NativeLabel)
+    private static string DisplayCultureName(Culture culture) => string.IsNullOrWhiteSpace(culture.NativeLabel)
         ? culture.Label
         : $"{culture.NativeLabel} ({culture.Label})";
 }

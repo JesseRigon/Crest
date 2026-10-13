@@ -18,7 +18,7 @@ Crest adds no parallel content framework. Its server is a set of thin JSON
 adapters (`api/crest/content-items`, `api/crest/content-types`,
 `api/crest/content-part-lists`, `api/crest/option-sources`, …) over Orchard's own
 services, and every adapter authorizes the real Orchard request principal with the
-native Orchard permission before touching a service (`ICrestRequestAccess`).
+native Orchard permission before touching a service (`IRequestAccess`).
 Tenant scope, feature gates, validation and lifecycle are Orchard's; Crest must
 not bypass, broaden, or persist parallel state.
 
@@ -76,8 +76,8 @@ part's) and attachment (`lock`); the Content Parts and Content Types pages show 
 disable the frozen controls.
 
 > **Gotcha — enforcement is for TENANT writes only, and lives in two places.** Crest's
-> definition controllers ask `CrestDefinitionLockGuard` before altering (409 with the
-> reason, through `CrestDefinitionLockExceptionFilter`); the stock content-types module's
+> definition controllers ask `DefinitionLockGuard` before altering (409 with the
+> reason, through `DefinitionLockExceptionFilter`); the stock content-types module's
 > `IContentDefinitionService` and `IContentDefinitionDisplayManager` are decorated
 > (`LockedContentDefinitionServices`, registered last) so its admin obeys the same locks if
 > a tenant enables it (it is not in the host recipe; the decorators are unit-tested,
@@ -114,7 +114,7 @@ gate cover the filtered view with no new route template.
 `CrestFieldVisibilitySettings { Path, Operator: Any|Equals|In, Keys }` on the
 field definition. The editor shows/hides live and exempts hidden fields from
 required-validation; the server CLEARS a hidden field's value on save
-(`CrestFieldVisibilityEnforcer`, a fixpoint over chained conditions) — hidden
+(`FieldVisibilityEnforcer`, a fixpoint over chained conditions) — hidden
 values are never kept dormant. Configured per field via `GET/PUT
 api/crest/field-visibility` (wholesale replace; blank Path clears) and the
 Visibility editor on the Content Parts screen. Keys follow the identity rule
@@ -229,7 +229,9 @@ freezes it); `DisplayTextPlural` (null = fall back to singular; blank on update
 CLEARS); `Value` (an optional second machine datum — a dial code on `US`, a
 regex on a postal format; null for pure enums whose key IS their value);
 `Position` (the list's only intrinsic order — everything else about ordering is
-a per-attachment parameter).
+a per-attachment parameter). `Parent` (the key of the option above this one, for lists
+arranged in levels such as NAICS; null at the top and in flat lists; machine surface like
+`Category`).
 
 **Locks — one mechanism, two authorities**, each valued None|Tenant|Module:
 `DataLock` freezes the MACHINE surface (categories, the category vocabulary,
@@ -250,7 +252,7 @@ each list stores an `OptionContentType` (types carrying `CrestOptionPart` are
 eligible; assignable from the list header; retargeting a POPULATED list is
 refused because existing option items keep their stored type and would orphan).
 Values travel stringified in a `Fields` bag (null = untouched, blank = clears,
-unknown names 400); `CrestOptionFieldAccessor` is the ONE place that knows the
+unknown names 400); `OptionFieldAccessor` is the ONE place that knows the
 document JSON, and Numeric/Boolean fields store typed values — unparseable input
 is refused, not stringified. Each field carries a per-field lock designation
 (`CrestOptionFieldSettings.DataLocked`): machine surface (frozen with the data
@@ -396,17 +398,32 @@ questions. Nothing here is scheduled unless stated.
 
 ### Not built yet
 
-- [ ] **Picker relationship handlers** (ruling 2026-10-06). Hierarchies built from content
+- [x] **Picker relationship handlers** (ruling 2026-10-06). Hierarchies built from content
   pickers are common (parent organization, parent location, parent account) and built in
   many different ways, so the picker cannot know how to walk every graph. Content pickers
   get a hook where the owner of a picker field registers its own handler: allowed target
   types enforced on the server (today the type restriction is UI-only) and graph rules
   such as refusing cycles. It runs on every save path, so generic editors cannot bypass
   it. Built in Crest beside the stock picker; Orchard is not changed.
-- [ ] **Hierarchical Category** (ruling 2026-10-06). An option's `Category` is flat today;
+  *What landed (2026-10-13):* `IContentSaveGuard` in the platform's content manager: guards
+  run on every create and update after the handlers, and a refusal throws
+  `ContentSaveRefusedException` (an `InvalidOperationException`; the content items API answers
+  400) instead of being swallowed like a handler exception. `ContentPickerRelationshipGuard`
+  (Crest.ContentFields) walks the item and its contained items, enforces each picker's
+  allowed types and stereotypes, and runs the handlers registered with
+  `AddContentPickerRelationshipHandler<T>(part, field)` (`IContentPickerRelationshipHandler`).
+  First user: Parties' parent organization.
+- [x] **Hierarchical Category** (ruling 2026-10-06). An option's `Category` is flat today;
   full NAICS as a global list ([parties.md](parties.md) › Industry classification) needs
   options arranged in levels (parent option or a level path), with pickers that can browse
   or search the hierarchy.
+  *What landed (2026-10-13):* an option's `Parent` (the key of the option above it; null at
+  the top) on the option part, the model, seeds and global options; machine surface (refused on
+  standard global rows, frozen under a data lock), validated against strangers and cycles
+  (`ContentPartListRules.ValidateParent`). Pickers get `Parent`, `Path` (ancestor labels,
+  searchable) and `Level` columns, and filter and search columns are computed even when not
+  displayed; `GET api/crest/content-part-lists/{key}/children?parent=` browses one level.
+  `Category` stays the flat label.
 
 - [ ] **Per-type designed pages.** Every menu-flagged type lands on the generic
   content-items surface. The Blazor designer is the intended replacement, per
@@ -442,20 +459,26 @@ Blazor endpoints only, by standing ruling, with no Liquid path in.
 - [ ] **Run the full parity audit.** Deferred PENDING A FULL AUDIT; recorded so findings are not lost. The audit
   decides which parity refactors happen — nothing below is scheduled.
 - [x] **Liquid can already embed Crest components.**
-  `CrestBlazorComponentShapeBindingResolver` participates in Orchard's shape
+  `BlazorComponentShapeBindingResolver` participates in Orchard's shape
   pipeline the way `Crest.Templates`' resolver does, so
   `{{ "ComponentName" | shape_new: text: "..." | shape_render }}` renders a
   Blazor component via `HtmlRenderer`. Named arguments land in
   `IShape.Properties` and map onto `[Parameter]`s by name. Falls through for
   unregistered shape names. STATIC SSR ONLY — no hydration, no `@rendermode`.
-- [ ] **Liquid filters over the services the API wraps (`option_list`, `option_label`).**
+- [x] **Liquid filters over the services the API wraps (`option_list`, `option_label`).**
+  *What landed (2026-10-13):* `Crest.ContentPartLists` registers both when `Crest.Liquid` is
+  on. `{{ "list-key" | option_list }}` gives the selectable options;
+  `{{ value | option_label }}` gives the label for a stored ContentItemId, a list of them or a
+  field with `TermContentItemIds`, and `option_label: "list-key"` also accepts an option key.
+  No authorization check: options are labels, and a template that needs a permission says so
+  (`has_permission`).
   - **Liquid cannot call the `api/crest/*` endpoints, and should not.** Liquid
     renders server-side against objects in scope; an HTTP request back into the
     same server to reach a service already in DI is the wrong shape.
   - **The right mechanism is `AddLiquidFilter` over the SAME services the API
     wraps.** Prior art: `Crest.Users` (`users_by_id`, `has_permission`,
     `is_in_role`) calling `IUserService` directly. A Crest equivalent —
-    `option_list`, `option_label` over `ICrestContentPartListService` — gives
+    `option_list`, `option_label` over `IContentPartListService` — gives
     template authors `{{ item.Content.SomePart.Status | option_label }}`
     with no Blazor involved. Small: a few filters over an existing service.
   - **`option_label` is not a nicety.** Content stores `ContentItemId`, code
@@ -469,9 +492,16 @@ Blazor endpoints only, by standing ruling, with no Liquid path in.
     templates render for anonymous visitors. Orchard shipping
     `has_permission`/`is_in_role` suggests template-level authorization is
     expected to be EXPLICIT.
-- [ ] **Fluid sandboxing, with the data-scope work.** **Tenant-authored Liquid is a growing security surface.** `TitlePattern` is
+- [x] **Fluid sandboxing, with the data-scope work.** **Tenant-authored Liquid is a growing security surface.** `TitlePattern` is
   itself tenant-authored Liquid, so Fluid sandboxing (what object graph a
   template can reach) belongs with the data-scope work, not treated separately.
+  *What landed (2026-10-13):* the filters through which a template reaches the stores go
+  through the request caller's access decision: `content_item_id` returns only items the
+  caller may view, `users_by_id` and `users_by_name` the caller's own account and others only
+  with `View Users`; with no caller nothing loads. Fluid's member access was already an
+  allow-list of registered types. Templates are bounded by `MaxSteps` (1,000,000) and
+  `MaxRecursion` (100). Left with the query work: the `query` filter's slot binding
+  ([workflows.md](workflows.md)).
 
 ### Known transients / test-suite notes
 

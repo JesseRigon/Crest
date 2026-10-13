@@ -21,6 +21,15 @@ public abstract class AuditTrailContext
     public string CorrelationId { get; set; }
     public string UserId { get; set; }
     public string UserName { get; set; }
+
+    /// <summary>What the event is about (docs/audit.md › step 5); stored on the event and indexed.</summary>
+    public Crest.AuditTrail.Models.AuditTrailSubject Subject { get; set; }
+
+    /// <summary>
+    /// Attribution the recorder already knows (an impersonation start names the member before the
+    /// session carries it). The actor handlers complete it; what is set here is kept.
+    /// </summary>
+    public Crest.AuditTrail.Models.AuditTrailAttribution Attribution { get; set; }
 }
 
 public class AuditTrailContext<TEvent> : AuditTrailContext where TEvent : class, new()

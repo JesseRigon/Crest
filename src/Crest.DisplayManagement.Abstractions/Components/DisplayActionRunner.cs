@@ -30,6 +30,11 @@ public sealed class DisplayActionRunner(IDisplayActionDispatcher? dispatcher, IL
             {
                 await RunAsync(action, sourceNodeId, payload, position, overlay, state, cancellationToken);
             }
+            catch (DisplayActionException exception)
+            {
+                state.SetErrors(sourceNodeId, exception.Errors);
+                return;
+            }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 logger.LogWarning(exception, "The {Kind} action of node '{Node}' failed; the rest of its list was skipped.", action.Kind, sourceNodeId);
@@ -74,6 +79,7 @@ public sealed class DisplayActionRunner(IDisplayActionDispatcher? dispatcher, IL
                 }
 
                 var result = await Dispatcher(action).RunWorkflowAsync(workflow, input, cancellationToken);
+                state.SetErrors(sourceNodeId, null);
                 if (action.Target is { Length: > 0 } into)
                 {
                     state.SetVariable(into, result);

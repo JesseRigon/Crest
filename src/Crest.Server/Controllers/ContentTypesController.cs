@@ -21,7 +21,7 @@ public sealed class ContentTypesController(
     IContentDefinitionManager contentDefinitionManager,
     IOptions<ContentOptions> contentOptions,
     IAuthorizationService authorization,
-    Crest.Services.CrestDefinitionLockGuard locks) : ControllerBase
+    Crest.Services.DefinitionLockGuard locks) : ControllerBase
 {
     /// <summary>
     /// Sets whether the type gets its own entry under the Content menu (the
@@ -53,7 +53,7 @@ public sealed class ContentTypesController(
         var actionContext = ControllerContext;
         Crest.Environment.Shell.Scope.ShellScope.AddDeferredTask(scope =>
             scope.ServiceProvider
-                .GetRequiredService<Crest.Services.CrestProviderMenuSyncService>()
+                .GetRequiredService<Crest.Services.ProviderMenuSyncService>()
                 .SyncAsync(actionContext));
 
         return NoContent();
@@ -107,7 +107,7 @@ public sealed class ContentTypesController(
         // A locked field keeps its type (docs/content-items.md › Definition locks); 409 via the lock filter.
         if (current is not null)
         {
-            await locks.EnsureFieldChangeAsync(request.Part, request.Field, Crest.Services.CrestDefinitionChanges.Retyped);
+            await locks.EnsureFieldChangeAsync(request.Part, request.Field, Crest.Services.DefinitionChanges.Retyped);
         }
 
         var position = current?.Settings?["ContentPartFieldSettings"]?["Position"]?.ToString();
@@ -249,7 +249,7 @@ public sealed class ContentTypesController(
             return NotFound();
         }
 
-        await locks.EnsureTypePartChangeAsync(contentType, partName, Crest.Services.CrestDefinitionChanges.Detached);
+        await locks.EnsureTypePartChangeAsync(contentType, partName, Crest.Services.DefinitionChanges.Detached);
         await contentDefinitionManager.AlterTypeDefinitionAsync(contentType, type => type.RemovePart(partName));
         return NoContent();
     }
@@ -263,9 +263,9 @@ public sealed class ContentTypesController(
     [HttpPut("locks")]
     public async Task<IActionResult> SetLock([FromBody] SetDefinitionLockRequest request)
     {
-        if (!await authorization.AuthorizeAsync(User, Crest.Permissions.CrestContentDefinitionPermissions.LockContentDefinitions)) return Forbid();
+        if (!await authorization.AuthorizeAsync(User, Crest.Permissions.ContentDefinitionPermissions.LockContentDefinitions)) return Forbid();
 
-        var requested = Crest.Settings.CrestDefinitionLockSources.Normalize(request.Lock);
+        var requested = Crest.Settings.DefinitionLockSources.Normalize(request.Lock);
         if (string.IsNullOrWhiteSpace(request.Part))
         {
             return Problem("A part name is required.", statusCode: StatusCodes.Status400BadRequest);
@@ -280,7 +280,7 @@ public sealed class ContentTypesController(
                 return NotFound();
             }
 
-            Crest.Services.CrestDefinitionLockGuard.EnsureLockChange(typePart.GetLock(), requested, $"Part '{request.Part}' on type '{request.Type}'");
+            Crest.Services.DefinitionLockGuard.EnsureLockChange(typePart.GetLock(), requested, $"Part '{request.Part}' on type '{request.Type}'");
             await contentDefinitionManager.AlterTypeDefinitionAsync(request.Type, type => type.WithPart(request.Part, part => part.Locked(requested)));
             return NoContent();
         }
@@ -299,12 +299,12 @@ public sealed class ContentTypesController(
                 return NotFound();
             }
 
-            Crest.Services.CrestDefinitionLockGuard.EnsureLockChange(field.GetLock(), requested, $"Field '{request.Part}.{request.Field}'");
+            Crest.Services.DefinitionLockGuard.EnsureLockChange(field.GetLock(), requested, $"Field '{request.Part}.{request.Field}'");
             await contentDefinitionManager.AlterPartDefinitionAsync(request.Part, part => part.WithField(request.Field, builder => builder.Locked(requested)));
             return NoContent();
         }
 
-        Crest.Services.CrestDefinitionLockGuard.EnsureLockChange(partDefinition.GetLock(), requested, $"Part '{request.Part}'");
+        Crest.Services.DefinitionLockGuard.EnsureLockChange(partDefinition.GetLock(), requested, $"Part '{request.Part}'");
         await contentDefinitionManager.AlterPartDefinitionAsync(request.Part, part => part.Locked(requested));
         return NoContent();
     }
@@ -333,4 +333,4 @@ public sealed record ContentPartDefinitionModel(string Name, Crest.ViewModels.Co
 public sealed record AttachPartRequest(string Part, string? DisplayName = null, string? Description = null, string? Position = null);
 
 /// <summary>A tenant lock change: Part alone, Part + Field, or Type + Part. Lock is None or Tenant.</summary>
-public sealed record SetDefinitionLockRequest(string Part, string? Field = null, string? Type = null, string Lock = Crest.Settings.CrestDefinitionLockSources.None);
+public sealed record SetDefinitionLockRequest(string Part, string? Field = null, string? Type = null, string Lock = Crest.Settings.DefinitionLockSources.None);

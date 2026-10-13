@@ -1,4 +1,4 @@
-using Crest.Global.Lists;
+using Crest.Data.Global.Lists;
 using Crest.ContentGroups;
 using Crest.Parties.Constants;
 
@@ -13,12 +13,14 @@ public sealed class PartiesContentGroupProvider : IContentGroupProvider
 
     public void Build(ContentGroupBuilder builder) => builder
         .Group(Key, "Parties", 10)
-        .Types(PartiesConstants.ContentTypes.Person, PartiesConstants.ContentTypes.Organization)
+        .Types(PartiesConstants.ContentTypes.Person, PartiesConstants.ContentTypes.Organization, PartiesConstants.ContentTypes.Association)
         .Lists(
             PartiesOptionSets.ContactPointKind,
             PartiesOptionSets.AddressKind,
             PartiesOptionSets.OrganizationType,
-            PartiesOptionSets.Industry,
+            PartiesOptionSets.OrganizationNameKind,
+            PartiesOptionSets.AssociationType,
+            GlobalLists.Naics,
             GlobalLists.Honorifics,
             GlobalLists.NameSuffixes);
 }

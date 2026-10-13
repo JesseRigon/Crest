@@ -96,7 +96,7 @@
 </CrestStack>
 
 @code {
-    private CrestQueryCatalog Catalog { get; set; } = CrestQueryCatalog.Empty;
+    private QueryCatalog Catalog { get; set; } = QueryCatalog.Empty;
     private string? Search { get; set; }
     private bool IsLoading { get; set; }
     private bool IsSaving { get; set; }
@@ -172,7 +172,7 @@
         EditorError = null;
         try
         {
-            var write = new CrestQueryWrite(DraftName, DraftSource, DraftSchema, DraftReturnContentItems, properties);
+            var write = new QueryWrite(DraftName, DraftSource, DraftSchema, DraftReturnContentItems, properties);
             var saved = EditingName is null ? await Api.Crest.Rest.Queries.CreateAsync(write) : await Api.Crest.Rest.Queries.SaveAsync(EditingName, write);
             if (saved is null) { EditorError = T["The query could not be saved. Check the provider metadata and try again."]; return; }
             Notifications.Notify(NotificationSeverity.Success, T["Query saved"], T["{0} was saved.", saved.Name]);

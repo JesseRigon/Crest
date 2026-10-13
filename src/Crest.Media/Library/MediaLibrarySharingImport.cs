@@ -5,6 +5,7 @@ using Crest.Media.Sharing;
 using Crest.Security;
 using Crest.Security.Permissions;
 using Crest.Sharing;
+using YesSql;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -23,9 +24,10 @@ namespace Crest.Media.Library;
 /// on each file at the root, <c>ViewOthersMediaContent</c> on the users folder. The Anonymous role
 /// maps to Anyone and Authenticated to the tenant.</item>
 /// </list>
-/// Gaps (docs/media.md › Reworking the Media module): a user's own folder (<c>ViewOwnMediaContent</c>)
-/// is not granted to its user, and attached-field files do not follow their content item's view
-/// right; both stay with the drive's administrators until shared. With sharing off nothing is
+/// Each user's own folder is granted to its user (Viewer with <c>ViewOwnMediaContent</c>, Manager
+/// with <c>ManageOwnMediaContent</c>). Attached-field files follow their content item: the file
+/// kind gives each content item's attached folder the item as a further parent
+/// (<see cref="Sharing.MediaFileShareableKind"/>). With sharing off nothing is
 /// written: <see cref="LibraryPlacementPermissionMapper"/> decides placements by their path, so
 /// Secure Media keeps applying.
 /// </summary>
@@ -83,12 +85,14 @@ public sealed class MediaLibrarySharingImport(IServiceProvider services, IOption
         var topFolders = imported.Where(placement => placement.IsFolder && placement.Path.Length > 0 && !placement.Path.Contains('/')).ToList();
         var rootFiles = imported.Where(placement => !placement.IsFolder && !placement.Path.Contains('/')).ToList();
         var grants = new List<(string, ShareEntry)>();
+        var rolePermissions = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
         foreach (var role in await roles.GetRolesAsync())
         {
             var permissions = (await roles.GetRoleClaimsAsync(role.RoleName))
                 .Where(claim => claim.Type == Permission.ClaimType)
                 .Select(claim => claim.Value)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            rolePermissions[role.RoleName] = permissions;
 
             // Managing every folder implies viewing every folder.
             if (permissions.Contains(MediaPermissions.ManageMediaFolder.Name))
@@ -115,6 +119,55 @@ public sealed class MediaLibrarySharingImport(IServiceProvider services, IOption
             if (permissions.Contains(MediaPermissions.ViewRootMedia.Name))
             {
                 grants.AddRange(rootFiles.Select(file => (file.PlacementId, viewer)));
+            }
+        }
+
+        grants.AddRange(await OwnFolderGrantsAsync(usersFolder, imported, rolePermissions));
+        return grants;
+    }
+
+    /// <summary>
+    /// Each user's own folder (<c>{users folder}/{the user's folder name}</c>) granted to that user,
+    /// as Secure Media let them have it: Manager when one of their roles manages its own media,
+    /// Viewer when one may view its own media. Every signed-in user holds the Authenticated role.
+    /// </summary>
+    private async Task<IReadOnlyList<(string PlacementId, ShareEntry Entry)>> OwnFolderGrantsAsync(string usersFolder, IReadOnlyList<ImportedPlacement> imported, IReadOnlyDictionary<string, HashSet<string>> rolePermissions)
+    {
+        if (usersFolder.Length == 0 ||
+            services.GetService<IUserAssetFolderNameProvider>() is not { } folderNames ||
+            services.GetService<Microsoft.AspNetCore.Identity.UserManager<Crest.Users.IUser>>() is not { } users ||
+            services.GetService<YesSql.ISession>() is not { } session)
+        {
+            return [];
+        }
+
+        var userFolders = imported
+            .Where(placement => placement.IsFolder && placement.Path.StartsWith(usersFolder + "/", StringComparison.Ordinal) && placement.Path.Count(character => character == '/') == 1)
+            .ToDictionary(placement => placement.Path[(usersFolder.Length + 1)..], placement => placement.PlacementId, StringComparer.Ordinal);
+        if (userFolders.Count == 0)
+        {
+            return [];
+        }
+
+        var grants = new List<(string, ShareEntry)>();
+        foreach (var index in await session.QueryIndex<Crest.Users.Indexes.UserIndex>().ListAsync())
+        {
+            if (folderNames.GetUserAssetFolderName(index.UserId) is not { } name ||
+                !userFolders.TryGetValue(name, out var placementId) ||
+                await users.FindByIdAsync(index.UserId) is not { } user)
+            {
+                continue;
+            }
+
+            var held = (await users.GetRolesAsync(user)).Append(PlatformConstants.Roles.Authenticated)
+                .SelectMany(role => rolePermissions.TryGetValue(role, out var permissions) ? permissions : [])
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var level = held.Contains(MediaPermissions.ManageOwnMedia.Name) || held.Contains(MediaPermissions.ManageOthersMedia.Name) || held.Contains(MediaPermissions.ManageMedia.Name)
+                ? AccessLevel.Manager
+                : held.Contains(MediaPermissions.ViewOwnMedia.Name) ? AccessLevel.Viewer : AccessLevel.None;
+            if (level != AccessLevel.None)
+            {
+                grants.Add((placementId, ShareEntry.Grant(SharePrincipal.User(index.UserId), level)));
             }
         }
 

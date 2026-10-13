@@ -12,7 +12,7 @@ namespace Crest.DisplayManagement.SourceGenerators;
 
 /// <summary>
 /// Emits an assembly's component catalog (docs/blazor-display.md § 1): for every class marked
-/// <c>[CrestBlazorComponent]</c>, a <c>ComponentDescriptor</c> built from its <c>[Parameter]</c>
+/// <c>[BlazorComponent]</c>, a <c>ComponentDescriptor</c> built from its <c>[Parameter]</c>
 /// properties (kind and editor inferred from the CLR type, refined by <c>[ComponentParameter]</c>
 /// and <c>[ComponentZone]</c>), the assembly's shells from <c>[assembly: CrestShell]</c> (every
 /// shell without one) and the assembly name as the module; then
@@ -32,7 +32,7 @@ public sealed class ComponentCatalogGenerator : IIncrementalGenerator
     public const string MarkupParameterDiagnosticId = "OCSG004";
     public const string SkippedComponentDiagnosticId = "OCSG005";
 
-    private const string MarkerAttributeName = "Crest.DisplayManagement.Components.CrestBlazorComponentAttribute";
+    private const string MarkerAttributeName = "Crest.DisplayManagement.Components.BlazorComponentAttribute";
     private const string CatalogInterfaceName = "Crest.DisplayManagement.Components.IComponentCatalog";
     private const string ParameterRefinementName = "Crest.DisplayManagement.Components.ComponentParameterAttribute";
     private const string ZoneRefinementName = "Crest.DisplayManagement.Components.ComponentZoneAttribute";
@@ -51,7 +51,7 @@ public sealed class ComponentCatalogGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor s_markupMarker = new(
         MarkupMarkerDiagnosticId,
         "Component marked in Razor markup",
-        "'{0}' marks a component with @attribute [CrestBlazorComponent]; the component catalog only reads C# declarations, so it is left out. Move the attribute to the code-behind (.razor.cs).",
+        "'{0}' marks a component with @attribute [BlazorComponent]; the component catalog only reads C# declarations, so it is left out. Move the attribute to the code-behind (.razor.cs).",
         "Usage",
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -67,7 +67,7 @@ public sealed class ComponentCatalogGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor s_skipped = new(
         SkippedComponentDiagnosticId,
         "Component left out of the catalog",
-        "'{0}' is marked [CrestBlazorComponent] but is left out of the component catalog: {1}",
+        "'{0}' is marked [BlazorComponent] but is left out of the component catalog: {1}",
         "Usage",
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -492,7 +492,7 @@ public sealed class ComponentCatalogGenerator : IIncrementalGenerator
             return null;
         }
 
-        const string Usage = "CrestBlazorComponent(";
+        const string Usage = "BlazorComponent(";
         var marker = text.IndexOf(Usage, StringComparison.Ordinal);
         var markedInMarkup = marker >= 0 && text.LastIndexOf("@attribute", marker, StringComparison.Ordinal) is var directive and >= 0
             && text.IndexOf('\n', directive) is var lineEnd && (lineEnd < 0 || lineEnd > marker);

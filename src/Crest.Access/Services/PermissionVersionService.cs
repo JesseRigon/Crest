@@ -30,7 +30,12 @@ public sealed class PermissionVersionService(IDocumentManager<PermissionVersionD
     }
 }
 
-/// <summary>Bumps the version on every event that can change what a caller holds.</summary>
+/// <summary>
+/// Bumps the version on the rights writes these events stand for (docs/access.md, Invalidation):
+/// roles created, changed or removed; a user deleted, disabled or enabled. A user created holds
+/// no cached state yet, and an ordinary update (a profile, a lockout counter, a sign-in) changes
+/// no right; a user's role membership bumps where it is written (the user store).
+/// </summary>
 public sealed class PermissionVersionBumper(IPermissionVersion version)
     : IRoleCreatedEventHandler, IRoleUpdatedEventHandler, IRoleRemovedEventHandler, IUserEventHandler
 {
@@ -42,7 +47,7 @@ public sealed class PermissionVersionBumper(IPermissionVersion version)
 
     public Task CreatingAsync(UserCreateContext context) => Task.CompletedTask;
 
-    public Task CreatedAsync(UserCreateContext context) => version.BumpAsync();
+    public Task CreatedAsync(UserCreateContext context) => Task.CompletedTask;
 
     public Task DeletingAsync(UserDeleteContext context) => Task.CompletedTask;
 
@@ -50,7 +55,7 @@ public sealed class PermissionVersionBumper(IPermissionVersion version)
 
     public Task UpdatingAsync(UserUpdateContext context) => Task.CompletedTask;
 
-    public Task UpdatedAsync(UserUpdateContext context) => version.BumpAsync();
+    public Task UpdatedAsync(UserUpdateContext context) => Task.CompletedTask;
 
     public Task DisabledAsync(UserContext context) => version.BumpAsync();
 

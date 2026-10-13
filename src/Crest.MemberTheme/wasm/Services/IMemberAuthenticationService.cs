@@ -33,10 +33,29 @@ public interface IMemberAuthenticationService
 {
     Task<MemberAuthenticationResult> SignInAsync(string userName, string password, bool rememberMe);
 
-    Task<MemberAuthenticationResult> RegisterAsync(string userName, string email, string password, string? organizationId);
+    Task<MemberAuthenticationResult> RegisterAsync(string userName, string email, string password, string firstName, string lastName, string? organizationId);
 
     Task SignOutAsync();
+
+    /// <summary>The external identity providers the tenant offers on the portal.</summary>
+    Task<IReadOnlyList<MemberExternalProvider>> GetExternalProvidersAsync();
+
+    /// <summary>
+    /// The URL that starts an external sign-in with <paramref name="provider"/> - a navigation,
+    /// not a fetch: the challenge redirects to the provider. Relative to the member shell's base.
+    /// </summary>
+    string ExternalLoginUrl(string provider, string? organizationId, string returnUrl);
+
+    /// <summary>Sends a password-reset link to the member portal. Always "succeeds": whether
+    /// the account exists is not something an unauthenticated caller gets to learn.</summary>
+    Task<MemberAuthenticationResult> RequestPasswordResetAsync(string userNameOrEmail);
+
+    /// <summary>Sets a new password from the reset link's code.</summary>
+    Task<MemberAuthenticationResult> ResetPasswordAsync(string userNameOrEmail, string code, string newPassword);
 }
+
+/// <summary>An external identity provider offered on the member portal.</summary>
+public sealed record MemberExternalProvider(string Name, string DisplayName);
 
 /// <summary>
 /// The fallback when no module supplies member authentication.
@@ -54,8 +73,19 @@ public sealed class UnavailableMemberAuthenticationService : IMemberAuthenticati
     public Task<MemberAuthenticationResult> SignInAsync(string userName, string password, bool rememberMe) =>
         Task.FromResult(MemberAuthenticationResult.Failed(Unavailable));
 
-    public Task<MemberAuthenticationResult> RegisterAsync(string userName, string email, string password, string? organizationId) =>
+    public Task<MemberAuthenticationResult> RegisterAsync(string userName, string email, string password, string firstName, string lastName, string? organizationId) =>
         Task.FromResult(MemberAuthenticationResult.Failed(Unavailable));
 
     public Task SignOutAsync() => Task.CompletedTask;
+
+    public Task<IReadOnlyList<MemberExternalProvider>> GetExternalProvidersAsync() =>
+        Task.FromResult<IReadOnlyList<MemberExternalProvider>>([]);
+
+    public string ExternalLoginUrl(string provider, string? organizationId, string returnUrl) => string.Empty;
+
+    public Task<MemberAuthenticationResult> RequestPasswordResetAsync(string userNameOrEmail) =>
+        Task.FromResult(MemberAuthenticationResult.Failed(Unavailable));
+
+    public Task<MemberAuthenticationResult> ResetPasswordAsync(string userNameOrEmail, string code, string newPassword) =>
+        Task.FromResult(MemberAuthenticationResult.Failed(Unavailable));
 }

@@ -28,7 +28,6 @@ public static partial class PlatformBuilderExtensions
                 }
             });
 
-            services.AddScoped<IPermissionGrantingService, DefaultPermissionGrantingService>();
             services.AddScoped<IPermissionService, DefaultPermissionService>();
         });
 

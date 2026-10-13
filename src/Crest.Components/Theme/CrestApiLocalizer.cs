@@ -8,7 +8,7 @@ namespace Crest.Components.Theme;
 // deliberately do NOT live in a .resx satellite assembly baked into the WASM bundle -
 // that would need a recompile/redeploy to edit, unlike every other piece of translatable
 // content in Crest. Instead this fetches the resolved .po catalog (see
-// CrestLocalizationController.GetStrings, server-side) for the active culture and plugs
+// LocalizationController.GetStrings, server-side) for the active culture and plugs
 // into the SAME Localizer/ILocalizer extension seam Crest.Components already
 // defines. Keys are invariant literals (T["Some text"], native Crest style - see
 // docs/localization.md): the literal is simultaneously the key and the fallback, so an
@@ -21,7 +21,7 @@ namespace Crest.Components.Theme;
 // catalog without collision.
 //
 // Lives in Crest.Components (not Crest.AdminTheme) because every WASM client project below
-// Crest.AdminTheme in the dependency graph - Crest.Icons, Accounting.BlazorWasm, and any future
+// Crest.AdminTheme in the dependency graph - Crest.Icons, a host module's BlazorWasm library, and any future
 // module's blazor-wasm project - needs to localize its own strings too, and none of them
 // can reference Crest.AdminTheme (Crest.AdminTheme depends on them, not the other way around).
 // Deliberately depends on a plain HttpClient rather than Crest.AdminTheme.Api.IApi - the
@@ -85,7 +85,7 @@ public sealed class CrestApiLocalizer(HttpClient http) : ILocalizer
         string.Format(CultureInfo.CurrentCulture, this[text], args);
 
     // Cookie/credential inclusion is configured once, at HttpClient registration time
-    // (see Crest.AdminTheme/wasm/Program.cs's CrestAntiforgeryHandler-wrapped HttpClient), not
+    // (see Crest.AdminTheme/wasm/Program.cs's AntiforgeryHandler-wrapped HttpClient), not
     // per-request here - that keeps this class portable across WASM and server-rendered
     // execution contexts. The WASM-only per-request BrowserRequestCredentials extension
     // (Microsoft.AspNetCore.Components.WebAssembly.Http) doesn't exist outside a browser

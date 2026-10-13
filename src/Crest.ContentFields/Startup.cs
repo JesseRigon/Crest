@@ -10,6 +10,7 @@ using Crest.ContentFields.Settings;
 using Crest.ContentFields.ViewModels;
 using Crest.ContentManagement;
 using Crest.ContentManagement.Display.ContentDisplay;
+using Crest.ContentManagement.Handlers;
 using Crest.ContentTypes.Editors;
 using Crest.Data;
 using Crest.Data.Migration;
@@ -143,6 +144,9 @@ public sealed class Startup : StartupBase
         services.AddScoped<IContentPartFieldDefinitionDisplayDriver, ContentPickerFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, ContentPickerFieldIndexHandler>();
         services.AddScoped<IContentPickerResultProvider, DefaultContentPickerResultProvider>();
+        // The picker's server side on every save path: allowed target types and the
+        // relationship handlers field owners register (docs/content-items.md).
+        services.AddScoped<IContentSaveGuard, ContentPickerRelationshipGuard>();
 
         // Migration, can be removed in a future release.
         services.AddDataMigration<Migrations>();

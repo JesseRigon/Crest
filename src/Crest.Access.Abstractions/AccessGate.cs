@@ -12,6 +12,14 @@ public static class AccessGate
     /// <summary>Items key: the <see cref="CallerSide"/> the shell selector chose, boxed.</summary>
     public const string SideItem = "Crest.Access.Side";
 
+    /// <summary>
+    /// An API path (the tenant-root API surface and the workflow engine's API): admitted with
+    /// <c>X-Shell</c>, and answered with a status code, never a redirect to a login or an
+    /// error page.
+    /// </summary>
+    public static bool IsApiPath(PathString path) =>
+        path.StartsWithSegments("/api") || path.StartsWithSegments("/crest-workflows");
+
     public static CallerSide SideOf(HttpContext? context)
     {
         if (context?.Items.TryGetValue(SideItem, out var side) == true && side is CallerSide value)

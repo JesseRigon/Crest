@@ -70,6 +70,7 @@ public class WorkflowDefinitionPartMapper(IApiSerializer apiSerializer, Workflow
         target.IsReadonly = source.IsReadonly;
         target.IsSystem = source.IsSystem;
         target.RunsAsSystem = Contexts.WorkflowCallerResolver.RunsAsSystem(source.CustomProperties);
+        target.AcceptsAnonymousRuns = Contexts.WorkflowCallerResolver.AcceptsAnonymousRuns(source.CustomProperties);
         target.UsableAsActivity = source.Options?.UsableAsActivity == true;
         target.SerializedData = apiSerializer.Serialize(source);
     }

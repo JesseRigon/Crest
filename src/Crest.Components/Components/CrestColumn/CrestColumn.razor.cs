@@ -109,6 +109,7 @@ namespace Crest.Components.Primitives
     /// &lt;/CrestRow&gt;
     /// </code>
     /// </example>
+    [Crest.DisplayManagement.Components.BlazorComponent("Column", DisplayName = "Column", Category = "Layout", Icon = "view_week")]
     public partial class CrestColumn : CrestComponentWithChildren
     {
         /// <summary>

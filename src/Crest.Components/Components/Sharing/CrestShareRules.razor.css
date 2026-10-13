@@ -1,0 +1,6 @@
+.crest-share-rules { display: flex; flex-direction: column; gap: 1rem; }
+.crest-share-rules__error { color: var(--crest-danger, #b00020); }
+.crest-share-rules__inherited { opacity: .75; }
+.crest-share-rules__own li { display: flex; align-items: center; gap: .25rem; }
+.crest-share-rules__own li > span { flex: 1; }
+.crest-share-rules__condition, .crest-share-rules__effect, .crest-share-rules__actions { display: flex; gap: .5rem; align-items: center; margin-block: .25rem; }

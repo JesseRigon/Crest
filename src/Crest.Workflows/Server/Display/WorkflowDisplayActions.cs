@@ -129,10 +129,10 @@ public sealed class WorkflowActionsController(
             return NotFound();
         }
 
-        var problems = contract.Check(input ?? []);
+        var problems = contract.CheckByInput(input ?? []);
         if (problems.Count > 0)
         {
-            return BadRequest(new WorkflowActionResult("Invalid", null, string.Join(" ", problems)));
+            return BadRequest(new WorkflowActionResult("Invalid", null, string.Join(" ", problems.Values.SelectMany(errors => errors)), problems));
         }
 
         var payload = input is null
@@ -177,4 +177,5 @@ public sealed class WorkflowActionsController(
     }
 }
 
-public sealed record WorkflowActionResult(string Status, JsonNode? Output, string? Error);
+/// <summary>A run's answer; a refusal of the arguments carries its <paramref name="Errors"/> by input name.</summary>
+public sealed record WorkflowActionResult(string Status, JsonNode? Output, string? Error, IReadOnlyDictionary<string, IReadOnlyList<string>>? Errors = null);

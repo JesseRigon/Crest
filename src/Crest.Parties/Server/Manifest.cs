@@ -25,3 +25,11 @@ using Crest.Modules.Manifest;
     ],
     Category = "Business"
 )]
+
+[assembly: Feature(
+    Id = "Crest.Parties.SampleRole",
+    Name = "Parties: sample role",
+    Description = "A sample party role, so the generic role pages can be exercised without a host's modules.",
+    Dependencies = ["Crest.Parties"],
+    Category = "Samples"
+)]

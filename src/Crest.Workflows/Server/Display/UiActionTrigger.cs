@@ -87,19 +87,20 @@ public sealed record UiActionContract(IReadOnlyList<UiActionInput> Inputs)
     }
 
     /// <summary>The names an action passes, checked by name only (values are bound at run time).</summary>
-    public IReadOnlyList<string> CheckNames(IEnumerable<string> names)
-    {
-        var given = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
-        var errors = new List<string>();
-        errors.AddRange(Inputs.Where(input => input.Required && !given.Contains(input.Name)).Select(input => $"The input '{input.Name}' is required."));
-        errors.AddRange(given.Where(name => !Inputs.Any(input => string.Equals(input.Name, name, StringComparison.OrdinalIgnoreCase))).Select(name => $"'{name}' is not an input of this workflow."));
-        return errors;
-    }
+    public IReadOnlyList<string> CheckNames(IEnumerable<string> names) =>
+        [.. CheckNamesByInput(names).SelectMany(pair => pair.Value)];
 
     /// <summary>The values an action sends, checked by name and type.</summary>
-    public IReadOnlyList<string> Check(JsonObject values)
+    public IReadOnlyList<string> Check(JsonObject values) =>
+        [.. CheckByInput(values).SelectMany(pair => pair.Value)];
+
+    /// <summary>
+    /// <see cref="Check"/> by input name, so a form shows each error beside its input
+    /// (docs/widgets.md, Validation).
+    /// </summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> CheckByInput(JsonObject values)
     {
-        var errors = CheckNames(values.Select(pair => pair.Key)).ToList();
+        var errors = CheckNamesByInput(values.Select(pair => pair.Key));
         foreach (var input in Inputs)
         {
             var value = values.FirstOrDefault(pair => string.Equals(pair.Key, input.Name, StringComparison.OrdinalIgnoreCase)).Value;
@@ -120,11 +121,38 @@ public sealed record UiActionContract(IReadOnlyList<UiActionInput> Inputs)
 
             if (!fits)
             {
-                errors.Add($"The input '{input.Name}' must be a {input.Type}.");
+                Add(errors, input.Name, $"The input '{input.Name}' must be a {input.Type}.");
             }
         }
 
+        return errors.ToDictionary(pair => pair.Key, pair => (IReadOnlyList<string>)pair.Value, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private Dictionary<string, List<string>> CheckNamesByInput(IEnumerable<string> names)
+    {
+        var given = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
+        var errors = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var input in Inputs.Where(input => input.Required && !given.Contains(input.Name)))
+        {
+            Add(errors, input.Name, $"The input '{input.Name}' is required.");
+        }
+
+        foreach (var name in given.Where(name => !Inputs.Any(input => string.Equals(input.Name, name, StringComparison.OrdinalIgnoreCase))))
+        {
+            Add(errors, name, $"'{name}' is not an input of this workflow.");
+        }
+
         return errors;
+    }
+
+    private static void Add(Dictionary<string, List<string>> errors, string name, string error)
+    {
+        if (!errors.TryGetValue(name, out var list))
+        {
+            errors[name] = list = [];
+        }
+
+        list.Add(error);
     }
 }
 

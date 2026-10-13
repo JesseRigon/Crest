@@ -5,7 +5,7 @@ using Crest.Environment.Extensions;
 namespace Crest.Routing;
 
 // Single source of truth for "is the Blazor admin theme the tenant's currently active
-// admin theme" - the same question BlazorAdminThemeMiddleware, RouteGateMatcherPolicy,
+// admin theme" - the same question ShellSelectionMiddleware, RouteGateMatcherPolicy,
 // and AdminRouteComponentTableProvider/DefaultRouteComponentTableManager each used to ask
 // with their own, independently-typed logic (a raw theme-id string equality check that
 // silently drifted from the real "is this theme id OR does it carry the blazor tag"

@@ -30,7 +30,7 @@
     }
     else if (Registry is null)
     {
-        @* The shell registers the browser's IComponentRegistry (Crest.Shell, CrestWebAssemblyHost);
+        @* The shell registers the browser's IComponentRegistry (Crest.Shell, ClientWebAssemblyHost);
            its absence means a host that skipped that boot path. *@
         <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["The component registry is not available in this runtime yet."]</CrestAlert>
     }

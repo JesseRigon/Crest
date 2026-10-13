@@ -15,4 +15,9 @@ public interface IRoleService
 
     ValueTask<bool> IsSystemRoleAsync(string role)
         => ValueTask.FromResult(false);
+
+    /// <summary>A role computed from a relationship (<c>Crest.Roles.RoleKind.Derived</c>,
+    /// docs/sharing.md requirement 45): never assignable, never stored on a user.</summary>
+    ValueTask<bool> IsDerivedRoleAsync(string role)
+        => ValueTask.FromResult(false);
 }

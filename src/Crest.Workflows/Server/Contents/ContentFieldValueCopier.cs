@@ -113,10 +113,10 @@ public sealed class ContentFieldValueCopier(IContentDefinitionManager definition
                 return new($"{from} ({sourceField.FieldDefinition.Name}) cannot be copied into {to} ({targetField.FieldDefinition.Name}).", outcomes);
             }
 
-            Write(target, to, targetField.FieldDefinition.Name, converted);
+            WriteField(target, to, targetField.FieldDefinition.Name, converted);
             if (move)
             {
-                Write(source, from, sourceField.FieldDefinition.Name, null);
+                WriteField(source, from, sourceField.FieldDefinition.Name, null);
             }
 
             outcomes.Add(new(from.ToString(), to.ToString(), true, null));
@@ -146,7 +146,7 @@ public sealed class ContentFieldValueCopier(IContentDefinitionManager definition
     /// building its response) seeing the old value. Apply replaces the cached element and
     /// drops the item's cached parts.
     /// </summary>
-    private void Write(ContentItem item, FieldPath path, string fieldType, JsonObject? value)
+    public void WriteField(ContentItem item, FieldPath path, string fieldType, JsonObject? value)
     {
         var type = fieldActivators.GetTypeActivator(fieldType).Type;
         var element = value is null

@@ -14,7 +14,9 @@ using System.Text.Json.Serialization;
 namespace Crest.Money;
 
 /// <summary>
-/// A money amount, which is represented by a decimal number and a currency.
+/// A money amount: a decimal value and the <see cref="IDenomination"/> it counts (a currency,
+/// a metal by weight, a crypto asset, points). <see cref="Currency"/> is the denomination's
+/// currency when it is one, so currency-only callers keep working.
 /// </summary>
 [JsonConverter(typeof(AmountConverter))]
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
@@ -22,7 +24,7 @@ public readonly struct Amount : IEquatable<Amount>, IComparable<Amount>
 {
     public static Amount Unspecified { get; } = new(0, Money.Currency.UnspecifiedCurrency);
 
-    private readonly ICurrency? _currency;
+    private readonly IDenomination? _denomination;
 
     private string DebuggerDisplay => ToString();
 
@@ -32,16 +34,21 @@ public readonly struct Amount : IEquatable<Amount>, IComparable<Amount>
     public decimal Value { get; }
 
     /// <summary>
-    /// Gets the currency.
+    /// Gets what the amount counts.
     /// </summary>
-    public ICurrency Currency => _currency ?? Money.Currency.UnspecifiedCurrency;
+    public IDenomination Denomination => _denomination ?? Money.Denomination.Unspecified;
+
+    /// <summary>
+    /// Gets the currency when the denomination is one; the unspecified currency for any other kind.
+    /// </summary>
+    public ICurrency Currency => Denomination.Currency ?? Money.Currency.UnspecifiedCurrency;
 
     /// <summary>
     /// Gets a value indicating whether this <see cref="Amount"/> has usable values.
     /// </summary>
     public bool IsValid =>
         Value >= 0 &&
-        Currency.CurrencyIsoCode != Money.Currency.UnspecifiedCurrency.CurrencyIsoCode;
+        !Denomination.Equals(Money.Denomination.Unspecified);
 
     public bool IsValidAndNonZero => Value > 0 && IsValid;
 
@@ -62,29 +69,38 @@ public readonly struct Amount : IEquatable<Amount>, IComparable<Amount>
     }
 
     public Amount(decimal value, ICurrency? currency)
+        : this(value, Money.Denominations.Of(currency ?? Money.Currency.UnspecifiedCurrency))
     {
-        _currency = currency ?? Money.Currency.UnspecifiedCurrency;
+    }
+
+    public Amount(decimal value, IDenomination? denomination)
+    {
+        _denomination = denomination ?? Money.Denomination.Unspecified;
         Value = value;
     }
 
     public bool Equals(Amount other) =>
         Value == other.Value &&
-        Currency.Equals(other.Currency);
+        Denomination.Equals(other.Denomination);
 
     public override bool Equals(object? obj) => obj is Amount other && Equals(other);
 
-    public override int GetHashCode() => (Value, Currency).GetHashCode();
+    public override int GetHashCode() => (Value, Denomination).GetHashCode();
 
-    public override string ToString() => Currency.ToString(Value);
+    public override string ToString() => Denomination.Format(Value);
 
     public int CompareTo(Amount other)
     {
-        ThrowIfCurrencyDoesntMatch(other);
+        ThrowIfDenominationDoesntMatch(other);
         return Value.CompareTo(other.Value);
     }
 
     public Amount GetRounded() =>
-        new(Math.Round(Value, Currency.DecimalPlaces), Currency);
+        new(Math.Round(Value, Denomination.Precision), Denomination);
+
+    /// <summary>This amount in another denomination at <paramref name="rate"/> units of it per unit of this one, rounded to its precision.</summary>
+    public Amount ConvertTo(IDenomination denomination, decimal rate) =>
+        new(Math.Round(Value * rate, denomination.Precision), denomination);
 
     /// <summary>
     /// Converts the <see cref="Amount"/> to a fixed-point fractional value by keeping some digits based on the <see
@@ -106,7 +122,7 @@ public readonly struct Amount : IEquatable<Amount>, IComparable<Amount>
     {
         static int Tens(int zeroes) => (int)Math.Pow(10, zeroes);
 
-        var (keepDigits, roundTens) = roundingByCurrencyCode.TryGetValue(Currency.CurrencyIsoCode, out var pair)
+        var (keepDigits, roundTens) = roundingByCurrencyCode.TryGetValue(Denomination.Code, out var pair)
             ? pair
             : (defaultKeepDigits, defaultRoundTens);
 
@@ -115,12 +131,12 @@ public readonly struct Amount : IEquatable<Amount>, IComparable<Amount>
             : (long)Math.Round(Value * Tens(keepDigits));
     }
 
-    private void ThrowIfCurrencyDoesntMatch(Amount other, string operation = "compare")
+    private void ThrowIfDenominationDoesntMatch(Amount other, string operation = "compare")
     {
-        if (Currency.Equals(other.Currency)) return;
+        if (Denomination.Equals(other.Denomination)) return;
         throw new InvalidOperationException(
-            $"Can't {operation} amounts of different currencies ({Currency.CurrencyIsoCode} and " +
-            $"{other.Currency.CurrencyIsoCode}).");
+            $"Can't {operation} amounts of different denominations ({Denomination} and " +
+            $"{other.Denomination}).");
     }
 
     #region Operators
@@ -129,52 +145,52 @@ public readonly struct Amount : IEquatable<Amount>, IComparable<Amount>
 
     public static Amount operator +(Amount first, Amount second)
     {
-        first.ThrowIfCurrencyDoesntMatch(second, operation: "add");
-        return new(first.Value + second.Value, first.Currency);
+        first.ThrowIfDenominationDoesntMatch(second, operation: "add");
+        return new(first.Value + second.Value, first.Denomination);
     }
 
-    public static Amount operator +(Amount first, decimal second) => new(first.Value + second, first.Currency);
+    public static Amount operator +(Amount first, decimal second) => new(first.Value + second, first.Denomination);
 
     public static Amount operator -(Amount first, Amount second)
     {
-        first.ThrowIfCurrencyDoesntMatch(second, operation: "subtract");
-        return new(first.Value - second.Value, first.Currency);
+        first.ThrowIfDenominationDoesntMatch(second, operation: "subtract");
+        return new(first.Value - second.Value, first.Denomination);
     }
 
-    public static Amount operator -(Amount first, decimal second) => new(first.Value - second, first.Currency);
+    public static Amount operator -(Amount first, decimal second) => new(first.Value - second, first.Denomination);
 
     public static Amount operator -(Amount amount) =>
-        new(-amount.Value, amount.Currency);
+        new(-amount.Value, amount.Denomination);
 
     public static Amount operator *(int quantity, Amount amount) =>
-        new(quantity * amount.Value, amount.Currency);
+        new(quantity * amount.Value, amount.Denomination);
 
     public static Amount operator *(decimal quantity, Amount amount) =>
-        new(quantity * amount.Value, amount.Currency);
+        new(quantity * amount.Value, amount.Denomination);
 
     public static Amount operator *(float quantity, Amount amount) =>
-        new((decimal)quantity * amount.Value, amount.Currency);
+        new((decimal)quantity * amount.Value, amount.Denomination);
 
     public static Amount operator *(double quantity, Amount amount) =>
-        new((decimal)quantity * amount.Value, amount.Currency);
+        new((decimal)quantity * amount.Value, amount.Denomination);
 
     public static Amount operator *(Amount amount, int quantity) =>
-        new(quantity * amount.Value, amount.Currency);
+        new(quantity * amount.Value, amount.Denomination);
 
     public static Amount operator *(Amount amount, decimal quantity) =>
-        new(quantity * amount.Value, amount.Currency);
+        new(quantity * amount.Value, amount.Denomination);
 
     public static Amount operator *(Amount amount, float quantity) =>
-        new((decimal)quantity * amount.Value, amount.Currency);
+        new((decimal)quantity * amount.Value, amount.Denomination);
 
     public static Amount operator *(Amount amount, double quantity) =>
-        new((decimal)quantity * amount.Value, amount.Currency);
+        new((decimal)quantity * amount.Value, amount.Denomination);
 
     public static Amount operator /(Amount amount, int quantity) =>
-        new(amount.Value / quantity, amount.Currency);
+        new(amount.Value / quantity, amount.Denomination);
 
     public static Amount operator /(Amount amount, decimal quantity) =>
-        new(amount.Value / quantity, amount.Currency);
+        new(amount.Value / quantity, amount.Denomination);
 
     public static Amount operator /(Amount amount, float quantity) =>
         amount / (decimal)quantity;
@@ -188,25 +204,25 @@ public readonly struct Amount : IEquatable<Amount>, IComparable<Amount>
 
     public static bool operator <(Amount first, Amount second)
     {
-        first.ThrowIfCurrencyDoesntMatch(second);
+        first.ThrowIfDenominationDoesntMatch(second);
         return first.Value < second.Value;
     }
 
     public static bool operator >(Amount first, Amount second)
     {
-        first.ThrowIfCurrencyDoesntMatch(second);
+        first.ThrowIfDenominationDoesntMatch(second);
         return first.Value > second.Value;
     }
 
     public static bool operator <=(Amount first, Amount second)
     {
-        first.ThrowIfCurrencyDoesntMatch(second);
+        first.ThrowIfDenominationDoesntMatch(second);
         return first.Value <= second.Value;
     }
 
     public static bool operator >=(Amount first, Amount second)
     {
-        first.ThrowIfCurrencyDoesntMatch(second);
+        first.ThrowIfDenominationDoesntMatch(second);
         return first.Value >= second.Value;
     }
 

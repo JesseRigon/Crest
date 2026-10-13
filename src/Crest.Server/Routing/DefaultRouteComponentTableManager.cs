@@ -31,7 +31,9 @@ public sealed class DefaultRouteComponentTableManager(
     ISiteThemeService siteThemeService,
     IBlazorAdminThemeDetector blazorAdminThemeDetector,
     IEnumerable<IRouteComponentTableProvider> providers,
-    ConcurrentDictionary<(string? AdminThemeId, string? SiteThemeId), Task<RouteComponentTable>> cache)
+    ConcurrentDictionary<(string? AdminThemeId, string? SiteThemeId), Task<RouteComponentTable>> cache,
+    IEnumerable<IDataRouteComponentTableProvider> dataProviders,
+    IEnabledModuleAssemblies enabledModules)
     : IRouteComponentTableManager
 {
     public async Task<RouteComponentTable> GetRouteComponentTableAsync()
@@ -40,7 +42,17 @@ public sealed class DefaultRouteComponentTableManager(
         var siteThemeId = await siteThemeService.GetSiteThemeNameAsync();
         var key = (adminThemeId, siteThemeId);
 
-        return await cache.GetOrAdd(key, _ => BuildAsync());
+        var scanned = await cache.GetOrAdd(key, _ => BuildAsync());
+
+        // Data-defined pages (decision 9) change on publish, not with the shell: added per
+        // request from their own cache, after the scanned pages.
+        var data = new List<RouteComponentEntry>();
+        foreach (var provider in dataProviders)
+        {
+            data.AddRange(await provider.GetRouteComponentsAsync(scanned));
+        }
+
+        return data.Count == 0 ? scanned : new RouteComponentTable([.. scanned.Entries, .. data]);
     }
 
     private async Task<RouteComponentTable> BuildAsync()
@@ -58,9 +70,15 @@ public sealed class DefaultRouteComponentTableManager(
         // enabled, which is what decides whether a member provider is registered at all.
         var isBlazorAdminThemeActive = await blazorAdminThemeDetector.IsBlazorAdminThemeActiveAsync();
 
+        // A disabled module is absent for the tenant: its pages are not in the table, so their
+        // URLs resolve to no page (the admin legacy frame, the member not-found page, the
+        // site's 404) - the same as a module the host never shipped.
+        var enabled = await enabledModules.GetEnabledAsync();
         var entries = providers
-            .Where(provider => provider.Bucket != RouteBucket.Admin || isBlazorAdminThemeActive)
+            .Where(provider => provider.Shell != ShellId.Admin || isBlazorAdminThemeActive)
             .SelectMany(provider => provider.GetRouteComponents())
+            .Where(entry => !ModuleClientAssemblies.IsModuleClient(entry.ComponentType.Assembly.GetName().Name)
+                || enabled.Contains(entry.ComponentType.Assembly.GetName().Name!))
             .ToArray();
 
         return new RouteComponentTable(entries);

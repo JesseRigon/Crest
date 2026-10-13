@@ -1,20 +1,20 @@
 namespace Crest.Routing;
 
-// One entry per @page-attributed Blazor component belonging to a routing bucket.
+// One entry per @page-attributed Blazor component belonging to a shell.
 // RoutePattern is always read back from the component's own [Route]/@page literal via
 // reflection (see IRouteComponentTableProvider) - never re-typed as a second string
 // constant anywhere else, per the standing "no invented path literals" rule (agents.md).
-// Bucket is the two-value RouteBucket (Admin/Site), not a raw theme id - see
-// ThemeOwnerMetadata's comment for why a theme-id comparison can never correctly decide
-// "is this bucket active" (a tenant's admin theme and site theme are both active at once).
+// Shell is the shell id (ShellId), not a raw theme id - see ShellId for why a theme-id
+// comparison can never decide which shell serves a request.
 // AllowsAnonymous is read off the component's own [AllowAnonymous] attribute (the same
-// ASP.NET marker MVC uses): such a page is served without the admin shell's login
-// redirect or route authorization, and rendered shell-less - the seam a module uses for
-// a public surface that lives in the admin bucket (a member portal's login/registration
-// pages, say) without Crest knowing anything about that module's parties or classes.
+// ASP.NET marker MVC uses): such a page is served without the shell's login redirect or
+// route authorization, and rendered shell-less.
+// IsOrganizationFree is read off [OrganizationFreePage]: a member page served at the member
+// shell's base rather than under an organization (sign-in, registration, the picker).
 public sealed record RouteComponentEntry(
     string RoutePattern,
     Type ComponentType,
-    RouteBucket Bucket,
+    ShellId Shell,
     bool IsDefaultLanding = false,
-    bool AllowsAnonymous = false);
+    bool AllowsAnonymous = false,
+    bool IsOrganizationFree = false);

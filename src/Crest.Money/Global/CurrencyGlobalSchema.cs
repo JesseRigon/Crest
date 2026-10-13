@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
-using Crest.Global;
+using Crest.Data.Global;
 using YesSql;
 using YesSql.Indexes;
 using YesSql.Sql;
@@ -29,25 +29,28 @@ public sealed class CurrencyMetadataIndexProvider : IndexProvider<CurrencyMetada
         context.For<CurrencyMetadataIndex>().Map(currency => new CurrencyMetadataIndex { Code = currency.Code });
 }
 
-/// <summary>Schema and loader for the currency table. Fresh-install repeatable: upserts by code from the shipped data file on version bump.</summary>
-public sealed class CurrencyGlobalSchema : ICrestGlobalSchema
+/// <summary>Global migration and loader for the currency table. A data change adds an <c>UpdateFromNAsync</c> step that reloads (upserts by code).</summary>
+public sealed class CurrencyGlobalSchema : GlobalDataMigration
 {
-    public string Name => "Crest.Money.Currencies";
-    public int Version => 1;
+    public override string LegacySchemaName => "Crest.Money.Currencies";
 
-    public IEnumerable<IIndexProvider> IndexProviders() => [new CurrencyMetadataIndexProvider()];
+    public override IEnumerable<IIndexProvider> IndexProviders() => [new CurrencyMetadataIndexProvider()];
 
-    public async Task ApplyAsync(ICrestGlobalSchemaContext context, int fromVersion, CancellationToken cancellationToken)
+    public async Task<int> CreateAsync()
     {
-        if (fromVersion < 1)
-        {
-            await context.SchemaBuilder.CreateMapIndexTableAsync<CurrencyMetadataIndex>(table => table
-                .Column<string>(nameof(CurrencyMetadataIndex.Code), column => column.WithLength(3)));
-            await context.SchemaBuilder.AlterIndexTableAsync<CurrencyMetadataIndex>(table => table.CreateIndex("IDX_CurrencyMetadataIndex_Code", "DocumentId", "Code"));
-        }
+        await SchemaBuilder.CreateMapIndexTableAsync<CurrencyMetadataIndex>(table => table
+            .Column<string>(nameof(CurrencyMetadataIndex.Code), column => column.WithLength(3)));
+        await SchemaBuilder.AlterIndexTableAsync<CurrencyMetadataIndex>(table => table.CreateIndex("IDX_CurrencyMetadataIndex_Code", "DocumentId", "Code"));
 
+        await LoadAsync();
+        return 1;
+    }
+
+    // Upserts by code from the shipped data file.
+    private async Task LoadAsync()
+    {
         var file = ReadData();
-        var existing = (await context.Session.Query<CurrencyMetadata, CurrencyMetadataIndex>().ListAsync(cancellationToken))
+        var existing = (await Session.Query<CurrencyMetadata, CurrencyMetadataIndex>().ListAsync())
             .ToDictionary(currency => currency.Code, StringComparer.Ordinal);
         foreach (var incoming in file.Currencies)
         {
@@ -61,11 +64,11 @@ public sealed class CurrencyGlobalSchema : ICrestGlobalSchema
                 current.Name = incoming.Name;
                 current.Symbol = incoming.Symbol;
                 current.MinorUnits = incoming.MinorUnits;
-                await context.Session.SaveAsync(current);
+                await Session.SaveAsync(current);
             }
             else
             {
-                await context.Session.SaveAsync(incoming);
+                await Session.SaveAsync(incoming);
             }
         }
     }

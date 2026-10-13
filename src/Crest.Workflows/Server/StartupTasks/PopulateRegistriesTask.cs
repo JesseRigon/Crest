@@ -20,6 +20,9 @@ public class PopulateRegistriesTask : ModularTenantEvents
 
         // Background jobs (external calls) a previous process scheduled but never finished.
         ShellScope.AddDeferredTask(scope => scope.ServiceProvider.GetRequiredService<IBackgroundActivityScheduler>() is Crest.Workflows.Units.DurableBackgroundActivityScheduler durable ? durable.RecoverAsync() : Task.CompletedTask);
+
+        // Stimuli a previous process committed but never delivered (the event queue is at least once).
+        ShellScope.AddDeferredTask(scope => Crest.Workflows.Units.WorkflowStimulusQueue.RecoverAsync(scope.ServiceProvider.GetRequiredService<YesSql.ISession>()));
         return Task.CompletedTask;
     }
 }

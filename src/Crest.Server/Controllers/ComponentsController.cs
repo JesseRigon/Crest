@@ -19,9 +19,13 @@ public sealed class ComponentsController(
     IAuthorizationService authorization) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<ComponentSchemaModel[]>> ListAsync([FromQuery] string? shell = null)
+    public async Task<ActionResult<ComponentSchemaModel[]>> ListAsync([FromQuery] string? shell = null, [FromQuery] string? page = null)
     {
-        if (!await authorization.AuthorizeAsync(User, AdminPermissions.AccessAdminPanel))
+        // Designing one page needs that page's Schema set (§ 10), not the admin panel.
+        var allowed = string.IsNullOrWhiteSpace(page)
+            ? await authorization.AuthorizeAsync(User, AdminPermissions.AccessAdminPanel)
+            : await authorization.AuthorizeAsync(User, Crest.Templates.Services.DesignedPagePermissions.Schema(page.Trim()));
+        if (!allowed)
         {
             return Forbid();
         }
@@ -57,7 +61,26 @@ public sealed class ComponentsController(
             .Select(ComponentSchemaModel.From)
             .ToArray());
     }
+
+    /// <summary>The open zone keys of a shell (decision 6): what the designer's zone picker and the Layers page offer.</summary>
+    [HttpGet("zone-keys")]
+    public async Task<ActionResult<ZoneKeyModel[]>> ZoneKeysAsync([FromQuery] string? shell = null)
+    {
+        if (!await authorization.AuthorizeAsync(User, AdminPermissions.AccessAdminPanel))
+        {
+            return Forbid();
+        }
+
+        var kind = ComponentSchema.ParseShell(shell?.ToLowerInvariant()) ?? ShellKind.Site;
+        return Ok(registries.GetRegistry(kind).ZoneKeys
+            .OrderBy(key => key.Module is null ? 0 : 1)
+            .ThenBy(key => key.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(key => new ZoneKeyModel(key.Key, key.DisplayName, key.Module, [.. key.Allowed], key.Instances.ToString(), key.RequiredOnLayout))
+            .ToArray());
+    }
 }
+
+public sealed record ZoneKeyModel(string Key, string? DisplayName, string? Module, string[] Allowed, string Instances, bool RequiredOnLayout);
 
 public sealed record ComponentSchemaModel(
     string Name,
@@ -74,6 +97,9 @@ public sealed record ComponentSchemaModel(
     ZoneSchemaModel[] Zones,
     string Source = "code")
 {
+    /// <summary>The value types an editor component edits (the editor facet); empty for anything else.</summary>
+    public string[] Edits { get; init; } = [];
+
     public static ComponentSchemaModel From(ComponentDescriptor component) => new(
         component.Name,
         component.DisplayName,
@@ -99,7 +125,10 @@ public sealed record ComponentSchemaModel(
             parameter.Accepts?.ToArray(),
             (parameter.ValueType ?? parameter.ClrType).Name)).ToArray(),
         component.Zones.Select(zone => new ZoneSchemaModel(zone.Name, [.. zone.Allowed], zone.Min, zone.Max)).ToArray(),
-        component.Type is null ? "template" : "code");
+        component.Type is null ? "template" : "code")
+    {
+        Edits = [.. component.Edits],
+    };
 }
 
 public sealed record ParameterSchemaModel(

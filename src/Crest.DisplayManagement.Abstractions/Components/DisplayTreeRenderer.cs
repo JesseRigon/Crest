@@ -168,7 +168,7 @@ public sealed class DisplayTreeRenderer : ComponentBase, IDisposable
         {
             foreach (var (name, binding) in bindings)
             {
-                if (context.State.Read(binding) is { } bound)
+                if (context.State.Read(binding) is { } bound && !IsMarkup(descriptor, name))
                 {
                     values[name] = bound;
                 }
@@ -181,7 +181,7 @@ public sealed class DisplayTreeRenderer : ComponentBase, IDisposable
         {
             foreach (var (name, slot) in slots)
             {
-                if (!slot.IsStatic && context.State.TryGetSlot(slot, context.DataSource, out var result))
+                if (!slot.IsStatic && !IsMarkup(descriptor, name) && context.State.TryGetSlot(slot, context.DataSource, out var result))
                 {
                     values[name] = result;
                 }
@@ -190,10 +190,16 @@ public sealed class DisplayTreeRenderer : ComponentBase, IDisposable
 
         foreach (var (name, raw) in values)
         {
-            if (descriptor.Parameter(name) is { IsEvent: false } parameter && Convert(raw, parameter.ClrType) is { } converted)
+            if (descriptor.Parameter(name) is { IsEvent: false } parameter && parameter.Name != DisplayNode.InstanceIdParameter
+                && Convert(raw, parameter.ClrType) is { } converted)
             {
                 builder.AddComponentParameter(3, parameter.Name, converted);
             }
+        }
+
+        if (descriptor.Parameter(DisplayNode.InstanceIdParameter) is { ClrType: var idType } && idType == typeof(string))
+        {
+            builder.AddComponentParameter(3, DisplayNode.InstanceIdParameter, node.Id);
         }
 
         if (context.Receiver is not null && context.Runner is not null)
@@ -272,6 +278,11 @@ public sealed class DisplayTreeRenderer : ComponentBase, IDisposable
             return null;
         }
     }
+
+    // Markup is sanitized on the server only (§ 10): a value bound in the browser (an output, a
+    // re-run slot) never reaches a markup parameter, which keeps what the server rendered.
+    private static bool IsMarkup(ComponentDescriptor descriptor, string name) =>
+        descriptor.Parameter(name)?.Editor == ComponentSchema.Editors.Markup;
 
     private static object? Convert(JsonNode? value, Type type)
     {

@@ -6,7 +6,7 @@ namespace Crest.Components.Primitives
     /// <summary>
     /// CrestHeading component.
     /// </summary>
-    [CrestBlazorComponent("CrestHeading", DisplayName = "Heading", Category = "Typography", Icon = "title")]
+    [BlazorComponent("CrestHeading", DisplayName = "Heading", Category = "Typography", Icon = "title")]
     public partial class CrestHeading : CrestComponent
     {
         /// <summary>

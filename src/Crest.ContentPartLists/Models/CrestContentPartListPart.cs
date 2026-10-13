@@ -22,8 +22,8 @@ public class CrestContentPartListPart : ContentPart
     /// </summary>
     public string Key { get; set; } = string.Empty;
 
-    /// <summary>Where this set came from: <see cref="CrestOptionSources"/>.</summary>
-    public string Source { get; set; } = CrestOptionSources.Tenant;
+    /// <summary>Where this set came from: <see cref="OptionSources"/>.</summary>
+    public string Source { get; set; } = OptionSources.Tenant;
 
     /// <summary>The content type its options are created as.</summary>
     /// <remarks>
@@ -40,17 +40,17 @@ public class CrestContentPartListPart : ContentPart
     /// (code evaluates formulas against them). Labels, visibility, order, sort mode
     /// and tenant-added options stay editable - new options must use one of the
     /// list's existing categories. Value is who placed the lock:
-    /// <see cref="CrestContentPartListLockSources"/>.
+    /// <see cref="ContentPartListLockSources"/>.
     /// </summary>
-    public string DataLock { get; set; } = CrestContentPartListLockSources.None;
+    public string DataLock { get; set; } = ContentPartListLockSources.None;
 
     /// <summary>
     /// Freezes ALL tenant editing - the list is read-only: no relabels, no
     /// hiding, no reordering, no new options, no deletion. (How an INSTANCE sorts the
     /// list for display is not list data and is never locked.) Value is who placed
-    /// the lock: <see cref="CrestContentPartListLockSources"/>.
+    /// the lock: <see cref="ContentPartListLockSources"/>.
     /// </summary>
-    public string EditLock { get; set; } = CrestContentPartListLockSources.None;
+    public string EditLock { get; set; } = ContentPartListLockSources.None;
 
     /// <summary>The options themselves, contained in this item's own document -
     /// one read, no separate lifecycle.</summary>
@@ -63,7 +63,7 @@ public class CrestContentPartListPart : ContentPart
     /// plural, hidden and position can differ per tenant. <see cref="Options"/> then
     /// holds only the tenant's own ADDITIONS.
     /// </summary>
-    public Dictionary<string, CrestOptionOverride> Overrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, OptionOverride> Overrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>
@@ -72,7 +72,7 @@ public class CrestContentPartListPart : ContentPart
 /// (super admin included) can change it; a Tenant lock is placed and lifted by the
 /// tenant super admin (the LockContentPartLists permission) through the same system.
 /// </summary>
-public static class CrestContentPartListLockSources
+public static class ContentPartListLockSources
 {
     /// <summary>Not locked.</summary>
     public const string None = "None";
@@ -85,7 +85,7 @@ public static class CrestContentPartListLockSources
 }
 
 /// <summary>A tenant's override of one global option's presentation. Null members mean "as the standard says".</summary>
-public sealed class CrestOptionOverride
+public sealed class OptionOverride
 {
     public string? DisplayText { get; set; }
     public string? DisplayTextPlural { get; set; }

@@ -91,7 +91,7 @@ public sealed class UserOptionSourceProvider(ISession session, ICallerContextAcc
 
         // One query for the whole id set - rendering a document full of user
         // references must not become one lookup per line. (Filtering happens after
-        // materializing, the same way CrestUsersController queries UserIndex.)
+        // materializing, the same way UsersController queries UserIndex.)
         var wanted = new HashSet<string>(ids, StringComparer.OrdinalIgnoreCase);
         var users = await session.Query<User, UserIndex>().ListAsync();
 

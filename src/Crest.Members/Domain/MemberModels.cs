@@ -19,22 +19,29 @@ public sealed record MemberModel(
     string? PersonId,
     IReadOnlyList<MemberOrgBindingModel> Bindings);
 
-/// <summary>One node of the per-tenant user hierarchy (staff root or an org's root).</summary>
+/// <summary>One user's node in one organization's reports-to hierarchy: their direct
+/// managers and every user above them by any path.</summary>
 public sealed record HierarchyNodeModel(
-    long Id,
     string UserId,
-    long? ParentId,
-    string RootKind,
-    string? OrganizationId,
-    string Path,
-    int Position);
+    string OrganizationId,
+    IReadOnlyList<string> ManagerIds,
+    IReadOnlyList<string> AncestorIds);
 
-/// <summary>Root kinds of the shared hierarchy forest.</summary>
-public static class HierarchyRootKinds
-{
-    public const string Staff = "staff";
-    public const string Organization = "org";
-}
+/// <summary>A user's classes and connections as the class endpoints return them: one
+/// connection per (organization, class).</summary>
+public sealed record UserConnectionsModel(
+    string UserId,
+    IReadOnlyList<string> Classes,
+    IReadOnlyList<UserConnectionModel> Connections);
+
+public sealed record UserConnectionModel(string OrganizationId, string Class, IReadOnlyList<string> Roles, bool IsMemberAdmin);
+
+/// <summary>Adds a class to a user: staff (the tenant organization) or member (of
+/// <paramref name="OrganizationId"/>, which a member class requires).</summary>
+public sealed record AddUserClassRequest(string Class, string? OrganizationId, IReadOnlyList<string>? Roles);
+
+/// <summary>The Members tenant settings.</summary>
+public sealed record MembersSettingsModel(bool AllowMembersOnTenantOrganization);
 
 /// <summary>Member session view for the current principal: who am I, which orgs, which
 /// one is active, and whether this session is an impersonation.</summary>
@@ -42,10 +49,20 @@ public sealed record MemberSessionModel(
     MemberModel? Member,
     string? ActiveOrganizationId,
     string? ImpersonatorUserId,
-    IReadOnlyList<MemberSessionOrganization> Organizations);
+    IReadOnlyList<MemberSessionOrganization> Organizations,
+    string? ImpersonatorUserName = null,
+    string? SiteName = null);
 
-/// <summary>An organization the session's member is bound to, with its display name.</summary>
-public sealed record MemberSessionOrganization(string Id, string Name);
+/// <summary>An organization the session's member is bound to, with its display name and the
+/// slug member page paths name it by (<c>/{member prefix}/{slug}/…</c>), unique among this
+/// member's organizations.</summary>
+public sealed record MemberSessionOrganization(string Id, string Name, string Slug = "");
+
+/// <summary>Portal password recovery: sends a reset link to the member portal.</summary>
+public sealed record PortalForgotPasswordRequest(string UserNameOrEmail);
+
+/// <summary>Portal password reset, from the link's code.</summary>
+public sealed record PortalResetPasswordRequest(string UserNameOrEmail, string Code, string NewPassword);
 
 /// <summary>Portal sign-in. <paramref name="OrganizationId"/> is optional: when given,
 /// the account must be bound to that organization and it becomes the active one;
@@ -54,14 +71,15 @@ public sealed record PortalLoginRequest(string UserName, string Password, bool R
 
 /// <summary>Portal self-registration: the account, the person it is, and the
 /// organization it joins. Registration stamps the member class and the org binding
-/// before the user record is first saved.</summary>
+/// before the user record is first saved. The organization is optional in the request so
+/// that its absence is the controller's own refusal, not a model-validation failure.</summary>
 public sealed record PortalRegisterRequest(
     string UserName,
     string Email,
     string Password,
     string FirstName,
     string LastName,
-    string OrganizationId);
+    string? OrganizationId);
 
 /// <summary>What registration did: signed the new member in, or held the account for
 /// the tenant's moderation / email confirmation (stock RegistrationSettings).</summary>

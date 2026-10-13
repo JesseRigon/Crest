@@ -11,20 +11,20 @@ namespace Crest.Controllers;
 [Route("api/crest/title-bar-settings")]
 public sealed class TitleBarSettingsController(
     IAuthorizationService authorizationService,
-    CrestTitleBarSettingsStore store) : ControllerBase
+    TitleBarSettingsStore store) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<CrestTitleBarSettingsDto>> GetAsync()
+    public async Task<ActionResult<TitleBarSettingsDto>> GetAsync()
     {
         if (!await authorizationService.AuthorizeAsync(User, AdminPermissions.ManageAdminSettings)) return Forbid();
-        return Ok(CrestTitleBarSettingsDto.From(await store.GetAsync(HttpContext.RequestAborted)));
+        return Ok(TitleBarSettingsDto.From(await store.GetAsync(HttpContext.RequestAborted)));
     }
 
     [HttpPut]
-    public async Task<ActionResult<CrestTitleBarSettingsDto>> PutAsync([FromBody] CrestTitleBarSettingsUpdate update)
+    public async Task<ActionResult<TitleBarSettingsDto>> PutAsync([FromBody] TitleBarSettingsUpdate update)
     {
         if (!await authorizationService.AuthorizeAsync(User, AdminPermissions.ManageAdminSettings)) return Forbid();
-        var saved = await store.SaveAsync(new CrestTitleBarSettings
+        var saved = await store.SaveAsync(new TitleBarSettings
         {
             DisplayCultureLabel = update.DisplayCultureLabel,
             TenantAvatarImageUrl = update.TenantAvatarImageUrl,
@@ -32,6 +32,6 @@ public sealed class TitleBarSettingsController(
             TenantAvatarClipPath = update.TenantAvatarClipPath,
             TenantAvatarBorderRadius = update.TenantAvatarBorderRadius,
         }, HttpContext.RequestAborted);
-        return Ok(CrestTitleBarSettingsDto.From(saved));
+        return Ok(TitleBarSettingsDto.From(saved));
     }
 }

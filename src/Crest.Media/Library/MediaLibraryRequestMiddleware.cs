@@ -128,14 +128,14 @@ internal sealed class MediaLibraryRequestMiddleware(
         var store = services.GetRequiredService<IMediaObjectStore>();
 
         // A signed URL stands for an earlier decision on exactly this path; nothing else does.
-        var query = context.Request.Query;
-        var signed = query.ContainsKey(HmacMediaUrlSigner.SignatureParameter);
-        if (signed && services.GetService<HmacMediaUrlSigner>() is { } signer &&
-            !signer.Verify(context.Request.PathBase + context.Request.Path, query[HmacMediaUrlSigner.ExpiresParameter], query[HmacMediaUrlSigner.SignatureParameter], DateTimeOffset.UtcNow))
+        var check = FileServingEndpoint.CheckSignature(context);
+        if (check == MediaSignatureCheck.Invalid)
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             return;
         }
+
+        var signed = check == MediaSignatureCheck.Valid;
 
         var placement = await store.GetPlacementAsync(placementId);
         if (placement?.Placement.LinkTargetPlacementId is { } target)
@@ -191,19 +191,7 @@ internal sealed class MediaLibraryRequestMiddleware(
 
         if (!isPublic)
         {
-            // TODO (docs/media.md, ruling F2): a private resize cache keyed by placement, version
-            // and size, behind the same decision. Until then a private file is resized per request
-            // and never written to the shared cache.
-            await using var source = await storage.OpenReadAsync(MediaStorageArea.Committed, found.BlobKey, cancellationToken);
-            if (source is null)
-            {
-                context.Response.StatusCode = StatusCodes.Status404NotFound;
-                return;
-            }
-
-            using var result = await engine.ProcessAsync(source, MediaImageProcessingMiddleware.BuildEngineCommands(commands, format), cancellationToken);
-            result.Output.Position = 0;
-            await WriteAsync(context, result.Output, result.ContentType, "private, no-store");
+            await ServePrivateAsync(context, storage, placement.Placement.Id, number!.Value, found.BlobKey, commands, format, contentType, cancellationToken);
             return;
         }
 
@@ -260,6 +248,70 @@ internal sealed class MediaLibraryRequestMiddleware(
         }
 
         await WriteAsync(context, entry.Content, entry.ContentType, cacheControl);
+    }
+
+    /// <summary>
+    /// The private resize cache (ruling F2): derivatives of a private file, made only after the
+    /// decision, kept in the storage provider's <see cref="MediaStorageArea.Derived"/> area keyed
+    /// by placement, version and commands, and served <c>private, no-store</c>. Nothing here ever
+    /// enters the shared resize cache. A placement's derivatives go when it is removed; a new
+    /// version is a new key.
+    /// </summary>
+    private async Task ServePrivateAsync(HttpContext context, IMediaStorageProvider storage, string placementId, int version, string blobKey, MediaCommands commands, Format format, string contentType, CancellationToken cancellationToken)
+    {
+        var key = PrivateCacheKey(placementId, version, commands.GetValues());
+        var cached = await storage.OpenReadAsync(MediaStorageArea.Derived, key, cancellationToken);
+        if (cached is null)
+        {
+            var produced = await singleFlight.ScheduleAsync("private:" + key, async _ =>
+            {
+                if (await storage.OpenReadAsync(MediaStorageArea.Derived, key, CancellationToken.None) is { } again)
+                {
+                    await again.DisposeAsync();
+                    return key;
+                }
+
+                try
+                {
+                    await using var source = await storage.OpenReadAsync(MediaStorageArea.Committed, blobKey, CancellationToken.None);
+                    if (source is null)
+                    {
+                        return null;
+                    }
+
+                    using var result = await engine.ProcessAsync(source, MediaImageProcessingMiddleware.BuildEngineCommands(commands, format), CancellationToken.None);
+                    result.Output.Position = 0;
+                    await storage.WriteAsync(MediaStorageArea.Derived, key, result.Output, CancellationToken.None);
+                    return key;
+                }
+                catch (Exception exception)
+                {
+                    logger.LogError(exception, "Error resizing private placement '{PlacementId}'.", placementId);
+                    return null;
+                }
+            });
+
+            cached = produced is null ? null : await storage.OpenReadAsync(MediaStorageArea.Derived, key, cancellationToken);
+        }
+
+        if (cached is null)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        await WriteAsync(context, cached, contentType, "private, no-store");
+    }
+
+    /// <summary><c>{placementId}/v{n}/{hash of the commands}</c>: an opaque storage key.</summary>
+    internal static string PrivateCacheKey(string placementId, int version, IEnumerable<KeyValuePair<string, string?>> commands)
+    {
+        var canonical = string.Join('&', commands
+            .Where(pair => pair.Value is not null)
+            .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+            .Select(pair => $"{pair.Key}={pair.Value}"));
+        var hash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(canonical)))[..32];
+        return $"{placementId}/v{version.ToString(CultureInfo.InvariantCulture)}/{hash}";
     }
 
     private static async Task<bool> IsPublicAsync(IServiceProvider services, CallerContext caller, string placementId, CancellationToken cancellationToken)

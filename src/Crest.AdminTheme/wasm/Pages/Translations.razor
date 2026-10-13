@@ -43,8 +43,8 @@
                                Data="Model.Cultures"
                                Value="@Model.Culture"
                                ValueChanged="ChangeCultureAsync"
-                               TextProperty="@nameof(CrestTranslationCulture.Label)"
-                               ValueProperty="@nameof(CrestTranslationCulture.Value)"
+                               TextProperty="@nameof(TranslationCulture.Label)"
+                               ValueProperty="@nameof(TranslationCulture.Value)"
                                class="translations-page__culture-dropdown" />
             </div>
             <div class="translations-page__filter">
@@ -85,7 +85,7 @@
 </CrestStack>
 
 @code {
-    private CrestTranslations? Model;
+    private TranslationsModel? Model;
     private List<EditableGroup> Groups = [];
     private bool IsLoading = true;
     private bool IsSaving;
@@ -135,10 +135,10 @@
             // and anything outside the set (which this page never loaded) is preserved.
             var entries = Groups
                 .SelectMany(group => group.Rows)
-                .Select(row => new CrestTranslationSaveEntry(row.Context, row.Key, row.Value))
+                .Select(row => new TranslationSaveEntry(row.Context, row.Key, row.Value))
                 .ToArray();
 
-            var saved = await Api.Crest.Rest.Translations.SaveAsync(new CrestTranslationsSaveModel(Model.Culture, entries));
+            var saved = await Api.Crest.Rest.Translations.SaveAsync(new TranslationsSaveModel(Model.Culture, entries));
             if (saved is null)
             {
                 throw new InvalidOperationException(T["The translations could not be saved. Verify your permission to manage this culture."]);

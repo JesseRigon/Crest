@@ -1,7 +1,7 @@
 namespace Crest.Workflows;
 
 /// <summary>
-/// A trigger a registry can raise: <c>transaction.posted</c>, <c>party.role-created</c>, ...
+/// A trigger a registry can raise: <c>order.placed</c>, <c>party.role-created</c>, ...
 /// Modules that own the object declare it; flows subscribe to it by key through the
 /// RegistryTrigger activity. The payload is ids and scalars only — activities re-read the
 /// objects through their registries' services.
@@ -258,6 +258,9 @@ public sealed record WorkflowHookAttachmentModel(
 
 public sealed record WorkflowHookSlotModel(WorkflowHookSlotDescriptor Slot, IReadOnlyList<WorkflowHookAttachmentModel> Attachments);
 
+/// <summary>A published flow the user may attach to a hook slot.</summary>
+public sealed record WorkflowHookCandidateModel(string DefinitionId, string Name);
+
 /// <summary>Attach a published definition to a slot; Required defaults to true.</summary>
 public sealed record WorkflowHookAttachRequest(string Slot, string DefinitionId, int? Position = null, bool Required = true);
 
@@ -290,6 +293,14 @@ public interface IWorkflowTriggerPublisher
     /// attachment, not a trigger subscriber.
     /// </summary>
     Task PublishAsync(string triggerKey, string? correlationId, IDictionary<string, object>? payload = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The same, for an event that names its user - a sign-in, a registration (docs/access.md,
+    /// Anonymous actors): when the request's caller is anonymous, the flows act as
+    /// <paramref name="userId"/> (the user just signed in, the user just created), never as the
+    /// anonymous request; a signed-in caller (an administrator creating a user) stays the actor.
+    /// </summary>
+    Task PublishForUserAsync(string triggerKey, string? correlationId, string userId, string? userName, IDictionary<string, object>? payload = null, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -363,7 +374,8 @@ public sealed record WorkflowConnectionModel(
     DateTime UpdatedUtc,
     bool Authorized = false,
     DateTime? TokenExpiresUtc = null,
-    IReadOnlyList<WorkflowConnectionOperation>? Operations = null);
+    IReadOnlyList<WorkflowConnectionOperation>? Operations = null,
+    IReadOnlyList<string>? Roles = null);
 
 /// <summary>One operation of a connection's API, imported from its OpenAPI document; the registry shows each as a palette entry preset on Call connector.</summary>
 public sealed record WorkflowConnectionOperation(string OperationId, string Method, string Path, string? Summary);
@@ -385,7 +397,9 @@ public sealed record WorkflowConnectionSaveRequest(
     string? Secret,
     int? RetryCount,
     int? RateLimitPerMinute,
-    int? TimeoutSeconds);
+    int? TimeoutSeconds,
+    // The roles the connection's machine identity holds (a webhook's run acts with them); null keeps them.
+    IReadOnlyList<string>? Roles = null);
 
 /// <summary>What is still pending for an object: the flows about it that have not finished, and the background jobs (external calls) they wait on.</summary>
 public sealed record WorkflowPendingModel(string CorrelationId, IReadOnlyList<WorkflowPendingInstanceModel> Instances, IReadOnlyList<WorkflowPendingJobModel> Jobs)

@@ -24,6 +24,13 @@ public static class PartiesConstants
         public const string Organizations = "organizations";
     }
 
+    /// <summary>Fields on the Organization part.</summary>
+    public static class OrganizationFields
+    {
+        /// <summary>The organization this one belongs to; restricted to Organization, cycles refused.</summary>
+        public const string ParentOrganization = "ParentOrganization";
+    }
+
     public static class ContentTypes
     {
         public const string Person = "Person";
@@ -34,6 +41,14 @@ public static class PartiesConstants
         public const string ContactPoint = "ContactPoint";
         public const string Address = "Address";
         public const string OrgPosition = "OrgPosition";
+
+        /// <summary>Bag-contained in an Organization's OrganizationNames bag: one legal
+        /// entity name (legal, trade name, former, ...), never a second display name.</summary>
+        public const string OrganizationName = "OrganizationName";
+
+        /// <summary>A typed connection between two parties that is not reports-to (sales
+        /// rep to contact, account rep to organization). Kept apart from the hierarchy.</summary>
+        public const string Association = "Association";
 
         /// <summary>
         /// A place the TENANT operates from - warehouse, store, office, dock. Holds
@@ -51,6 +66,9 @@ public static class PartiesConstants
     {
         public const string ContactPoints = "ContactPoints";
         public const string Addresses = "Addresses";
+
+        /// <summary>Organization only: its legal entity names, typed by kind.</summary>
+        public const string OrganizationNames = "OrganizationNames";
 
         /// <summary>Person only: the organizations a person holds positions in.</summary>
         public const string Positions = "Positions";

@@ -41,12 +41,26 @@ public sealed class AccessDecisionService(
 
     private static int PriorityOf(IProviderPriority? priority, IResourcePermissionMapper mapper) => priority?.PriorityOf(mapper.GetType()) ?? 0;
 
-    public async Task<AccessDecision> DecideAsync(CallerContext caller, string permission, object? resource = null, CancellationToken cancellationToken = default)
+    public Task<AccessDecision> DecideAsync(CallerContext caller, string permission, object? resource = null, CancellationToken cancellationToken = default) =>
+        DecideAsync(caller, permission, instance: null, resource, cancellationToken);
+
+    /// <summary>
+    /// The same, for a permission instance in hand (a requirement, a dynamic per-type
+    /// permission built at run time): its implied-by chain counts first, then the registered
+    /// permission's of the same name, so an instance the registry does not hold keeps its chain.
+    /// </summary>
+    public Task<AccessDecision> DecideAsync(CallerContext caller, Permission permission, object? resource = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(permission);
+        return DecideAsync(caller, permission.Name, permission, resource, cancellationToken);
+    }
+
+    private async Task<AccessDecision> DecideAsync(CallerContext caller, string permission, Permission? instance, object? resource, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(caller);
         ArgumentException.ThrowIfNullOrEmpty(permission);
 
-        var decision = await DecideCoreAsync(caller, permission, resource, 0, cancellationToken);
+        var decision = await DecideCoreAsync(caller, permission, instance, resource, 0, cancellationToken);
         if (!decision.IsAllowed)
         {
             await auditor.RecordAsync(new AccessEvent(
@@ -61,7 +75,7 @@ public sealed class AccessDecisionService(
         return decision;
     }
 
-    private async Task<AccessDecision> DecideCoreAsync(CallerContext caller, string permission, object? resource, int depth, CancellationToken cancellationToken)
+    private async Task<AccessDecision> DecideCoreAsync(CallerContext caller, string permission, Permission? instance, object? resource, int depth, CancellationToken cancellationToken)
     {
         foreach (var ceiling in ceilings)
         {
@@ -73,6 +87,22 @@ public sealed class AccessDecisionService(
 
         if (caller.IsSuperUser)
         {
+            // The super user passes every grant and a mapping conflict, never a ceiling: a
+            // candidate that re-asks for another resource (an attachment's item) is still asked,
+            // so a ceiling met there stays final.
+            if (resource is not null && depth < MaxDepth)
+            {
+                var reasked = await MapAsync(permission, resource, caller, cancellationToken);
+                foreach (var candidate in reasked.Candidates ?? [])
+                {
+                    if (candidate.Resource is not null
+                        && await DecideCoreAsync(caller, candidate.Permission, null, candidate.Resource, depth + 1, cancellationToken) is { IsFinal: true } nested)
+                    {
+                        return nested;
+                    }
+                }
+            }
+
             return AccessDecision.Allowed;
         }
 
@@ -102,7 +132,7 @@ public sealed class AccessDecisionService(
                     continue;
                 }
 
-                var nested = await DecideCoreAsync(caller, candidate.Permission, candidate.Resource, depth + 1, cancellationToken);
+                var nested = await DecideCoreAsync(caller, candidate.Permission, null, candidate.Resource, depth + 1, cancellationToken);
                 if (nested.IsFinal)
                 {
                     return nested;
@@ -116,7 +146,7 @@ public sealed class AccessDecisionService(
                 continue;
             }
 
-            if (await IsGrantedAsync(caller, candidate.Permission))
+            if (await IsGrantedAsync(caller, candidate.Permission, string.Equals(candidate.Permission, instance?.Name, StringComparison.OrdinalIgnoreCase) ? instance : null))
             {
                 return AccessDecision.Allowed;
             }
@@ -175,21 +205,33 @@ public sealed class AccessDecisionService(
         return (candidates, null);
     }
 
-    private async Task<bool> IsGrantedAsync(CallerContext caller, string permissionName)
+    private async Task<bool> IsGrantedAsync(CallerContext caller, string permissionName, Permission? instance)
     {
         if (caller.Permissions.Contains(permissionName))
         {
             return true;
         }
 
-        var permission = await permissions.FindByNameAsync(permissionName);
-        if (permission is null)
+        // The instance's chain first, then the registered permission's: one resolution of
+        // implied-by for every surface (docs/access.md, Overlaps to remove).
+        var granting = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (instance is not null)
+        {
+            Collect(instance, granting);
+            if (granting.Overlaps(caller.Permissions))
+            {
+                return true;
+            }
+        }
+
+        var registered = await permissions.FindByNameAsync(permissionName);
+        if (registered is null)
         {
             return false;
         }
 
-        var granting = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        Collect(permission, granting);
+        granting.Clear();
+        Collect(registered, granting);
         return granting.Overlaps(caller.Permissions);
     }
 

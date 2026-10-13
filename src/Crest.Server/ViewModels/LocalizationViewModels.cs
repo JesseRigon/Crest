@@ -18,7 +18,7 @@ using Crest.Users.Models;
 
 namespace Crest.ViewModels;
 
-public sealed record CrestLocalization(
+public sealed record LocalizationModel(
     string DefaultCulture,
     string[] SupportedCultures,
     bool FallBackToParentCulture,
@@ -28,7 +28,7 @@ public sealed record CrestLocalization(
     // means "no admin-specific override" - the client falls through to rung 4/5 as if this
     // setting didn't exist.
     string? AdminDefaultCulture,
-    CrestCulture[] AvailableCultures);
+    Culture[] AvailableCultures);
 
 // Crest-owned, separate from Crest's own LocalizationSettings - AdminDefaultCulture
 // is a Crest concept the platform had no equivalent for.
@@ -39,11 +39,11 @@ public sealed class CrestLocalizationSettings
 
 // Culture is null when the user has no stored default (falls through to the next
 // resolution step — see docs/localization.md's resolution order).
-public sealed record CrestUserCulture(string? Culture);
+public sealed record UserCulture(string? Culture);
 
-public sealed record CrestCulture(string Value, string Label, string NativeLabel)
+public sealed record Culture(string Value, string Label, string NativeLabel)
 {
-    public static CrestCulture From(CultureInfo culture) => new(
+    public static Culture From(CultureInfo culture) => new(
         culture.Name,
         string.IsNullOrWhiteSpace(culture.DisplayName) ? culture.Name : culture.DisplayName,
         string.IsNullOrWhiteSpace(culture.NativeName) ? culture.DisplayName : culture.NativeName);

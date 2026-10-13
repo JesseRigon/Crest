@@ -21,20 +21,20 @@ public sealed class AdminMenusController(
     IAuthorizationService authorizationService,
     IAdminMenuService adminMenuService,
     INavigationManager navigationManager,
-    CrestAdminMenuLayoutService layoutService,
+    AdminMenuLayoutService layoutService,
     Crest.DataLocalization.Services.ITranslationsManager translationsManager,
-    CrestProviderMenuSyncCoordinator providerMenuSync,
-    CrestProviderMenuSyncService providerMenuSyncService,
-    CrestMenuPlacementService menuPlacementService,
-    CrestPrimaryNavMenuSettingsStore primaryNavMenuSettingsStore,
-    CrestAdminSettingsNormalizer adminSettingsNormalizer,
-    CrestIconController iconController) : ControllerBase
+    ProviderMenuSyncCoordinator providerMenuSync,
+    ProviderMenuSyncService providerMenuSyncService,
+    MenuPlacementService menuPlacementService,
+    PrimaryNavMenuSettingsStore primaryNavMenuSettingsStore,
+    AdminSettingsNormalizer adminSettingsNormalizer,
+    IconController iconController) : ControllerBase
 {
     // Re-runs the provider-menu import on demand. The import normally runs once per shell on
     // first use; this exposes it for the case where a tenant needs it re-checked without waiting
     // for a shell release, and reports what actually changed.
     [HttpPost("sync-providers")]
-    public async Task<ActionResult<CrestProviderMenuSyncResult>> SyncProvidersAsync()
+    public async Task<ActionResult<ProviderMenuSyncResult>> SyncProvidersAsync()
     {
         if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
@@ -70,7 +70,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId == AdminMenuLayoutService.DefaultMenuId)
         {
             return Ok(await GetDefaultMenuSummaryAsync());
         }
@@ -103,13 +103,13 @@ public sealed class AdminMenusController(
         // Crest's own admin-menu coordinator unconditionally injects every enabled
         // custom menu into the "admin" sidebar tree — it has no concept of placement. Menus
         // that aren't Admin-placed stay Enabled=false here forever so that coordinator never
-        // picks them up; CrestMenuPlacementEntry.Enabled is the "real" visible/hidden flag
+        // picks them up; MenuPlacementEntry.Enabled is the "real" visible/hidden flag
         // for those, independent of this one.
         var placement = model.Placement;
-        var menu = new AdminMenu { Name = name, Enabled = placement == CrestMenuPlacement.Admin && model.Enabled };
+        var menu = new AdminMenu { Name = name, Enabled = placement == MenuPlacement.Admin && model.Enabled };
         await adminMenuService.SaveAsync(menu);
 
-        if (placement != CrestMenuPlacement.Admin)
+        if (placement != MenuPlacement.Admin)
         {
             await menuPlacementService.SetAsync(menu.Id, placement, model.Enabled);
         }
@@ -125,12 +125,12 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId == AdminMenuLayoutService.DefaultMenuId)
         {
             return BadRequest("The Sidebar (Built In) menu cannot be converted.");
         }
 
-        if (model.Placement == CrestMenuPlacement.User)
+        if (model.Placement == MenuPlacement.User)
         {
             return BadRequest("Menus cannot be converted to a User Profile Menu — create a new one instead.");
         }
@@ -143,7 +143,7 @@ public sealed class AdminMenusController(
         }
 
         var currentEntry = await menuPlacementService.GetAsync(menuId);
-        if (currentEntry.Placement == CrestMenuPlacement.User)
+        if (currentEntry.Placement == MenuPlacement.User)
         {
             return BadRequest("A User Profile Menu cannot be converted to another type.");
         }
@@ -154,12 +154,12 @@ public sealed class AdminMenusController(
         }
 
         var enabled = currentEntry.Enabled;
-        if (model.Placement == CrestMenuPlacement.Admin)
+        if (model.Placement == MenuPlacement.Admin)
         {
             menu.Enabled = enabled;
             await adminMenuService.SaveAsync(menu);
             await menuPlacementService.RemoveAsync(menuId);
-            return Ok(WithPlacement(AdminMenuSummary.From(menu), CrestMenuPlacement.Admin, enabled));
+            return Ok(WithPlacement(AdminMenuSummary.From(menu), MenuPlacement.Admin, enabled));
         }
 
         menu.Enabled = false;
@@ -176,7 +176,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId == AdminMenuLayoutService.DefaultMenuId)
         {
             return BadRequest("The Primary Navigation menu cannot be renamed.");
         }
@@ -212,7 +212,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId == AdminMenuLayoutService.DefaultMenuId)
         {
             return BadRequest("The primary navigation menu cannot be hidden.");
         }
@@ -225,7 +225,7 @@ public sealed class AdminMenusController(
         }
 
         var entry = await menuPlacementService.GetAsync(menuId);
-        if (entry.Placement == CrestMenuPlacement.Admin)
+        if (entry.Placement == MenuPlacement.Admin)
         {
             menu.Enabled = !menu.Enabled;
             await adminMenuService.SaveAsync(menu);
@@ -247,7 +247,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId == AdminMenuLayoutService.DefaultMenuId)
         {
             return BadRequest("The default admin menu cannot be duplicated.");
         }
@@ -272,7 +272,7 @@ public sealed class AdminMenusController(
         }
 
         await adminMenuService.SaveAsync(copy);
-        if (sourceEntry.Placement != CrestMenuPlacement.Admin)
+        if (sourceEntry.Placement != MenuPlacement.Admin)
         {
             await menuPlacementService.SetAsync(copy.Id, sourceEntry.Placement, sourceEntry.Enabled);
         }
@@ -288,7 +288,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId == AdminMenuLayoutService.DefaultMenuId)
         {
             return BadRequest("The default admin menu cannot be deleted.");
         }
@@ -315,7 +315,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId == AdminMenuLayoutService.DefaultMenuId)
         {
             if (!IsPlaceholderNodeType(model.Type))
             {
@@ -372,7 +372,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId != AdminMenuLayoutService.DefaultMenuId)
         {
             return BadRequest("Separators are currently supported by the Primary Navigation menu only.");
         }
@@ -388,14 +388,14 @@ public sealed class AdminMenusController(
     }
 
     [HttpPost("{menuId}/primary-nav-menu-settings")]
-    public async Task<ActionResult<AdminMenuSummary>> UpdatePrimaryNavMenuSettingsAsync(string menuId, [FromBody] CrestPrimaryNavMenuSettings settings)
+    public async Task<ActionResult<AdminMenuSummary>> UpdatePrimaryNavMenuSettingsAsync(string menuId, [FromBody] PrimaryNavMenuSettings settings)
     {
         if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
         {
             return Forbid();
         }
 
-        if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId != AdminMenuLayoutService.DefaultMenuId)
         {
             return BadRequest("Primary navigation settings are supported by the Primary Navigation menu only.");
         }
@@ -412,7 +412,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId != AdminMenuLayoutService.DefaultMenuId)
         {
             return BadRequest("Separators are currently supported by the Primary Navigation menu only.");
         }
@@ -429,7 +429,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId != AdminMenuLayoutService.DefaultMenuId)
         {
             return BadRequest("Separators are currently supported by the Primary Navigation menu only.");
         }
@@ -452,7 +452,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId == AdminMenuLayoutService.DefaultMenuId)
         {
             var baseMenu = await BuildDefaultNavigationMenuAsync();
             var editingNewBranch = await layoutService.IsLockedNewBranchAsync(baseMenu, nodeId);
@@ -518,7 +518,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId != AdminMenuLayoutService.DefaultMenuId)
         {
             return BadRequest("Primary navigation renames are only supported on the generated Primary Navigation menu.");
         }
@@ -581,7 +581,7 @@ public sealed class AdminMenusController(
         // promoting after a rename has been cleared removes the translation, so the two stores
         // can be brought back into agreement the same way they were put into it.
         var layout = await layoutService.LoadAsync();
-        var renamed = CrestAdminMenuLayoutService.GetRename(layout, nodeId, culture);
+        var renamed = AdminMenuLayoutService.GetRename(layout, nodeId, culture);
 
         // The key is the caption the data localizer looks up within the menu context, not the
         // item's key: callers pass the pre-override caption for that reason.
@@ -597,7 +597,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId == AdminMenuLayoutService.DefaultMenuId)
         {
             var baseMenu = await BuildDefaultNavigationMenuAsync();
             if (await layoutService.IsLockedNewBranchAsync(baseMenu, nodeId) || await layoutService.IsLockedNewBranchAsync(baseMenu, model.ParentNodeId))
@@ -638,7 +638,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId == AdminMenuLayoutService.DefaultMenuId)
         {
             var baseMenu = await BuildDefaultNavigationMenuAsync();
             await layoutService.ToggleAsync(baseMenu, nodeId);
@@ -676,7 +676,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId != CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId != AdminMenuLayoutService.DefaultMenuId)
         {
             return NotFound();
         }
@@ -694,7 +694,7 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
-        if (menuId == CrestAdminMenuLayoutService.DefaultMenuId)
+        if (menuId == AdminMenuLayoutService.DefaultMenuId)
         {
             var baseMenu = await BuildDefaultNavigationMenuAsync();
             if (await layoutService.IsLockedNewBranchAsync(baseMenu, nodeId))
@@ -752,7 +752,7 @@ public sealed class AdminMenusController(
         var managedMenu = await iconController.ResolveMenuIconsAsync(baseMenu with
         {
             Items = layoutService.ApplyForManagement(baseMenu.Items, layout),
-        }, CrestIconController.AdminMenuChromeIconKeys, HttpContext.RequestAborted);
+        }, IconController.AdminMenuChromeIconKeys, HttpContext.RequestAborted);
         var items = managedMenu.Items;
         var separators = layout.Separators
             .Where(separator => !string.IsNullOrWhiteSpace(separator.Key))
@@ -763,8 +763,8 @@ public sealed class AdminMenusController(
                 separator.Order))
             .ToArray();
         return new AdminMenuSummary(
-            CrestAdminMenuLayoutService.DefaultMenuId,
-            CrestAdminMenuLayoutService.DefaultMenuName,
+            AdminMenuLayoutService.DefaultMenuId,
+            AdminMenuLayoutService.DefaultMenuName,
             true,
             true,
             separators,
@@ -832,14 +832,14 @@ public sealed class AdminMenusController(
         return adminMenuService.GetAdminMenuById(list, menuId);
     }
 
-    private static AdminMenuSummary WithPlacement(AdminMenuSummary summary, CrestMenuPlacementEntry entry) =>
+    private static AdminMenuSummary WithPlacement(AdminMenuSummary summary, MenuPlacementEntry entry) =>
         WithPlacement(summary, entry.Placement, entry.Enabled);
 
-    private static AdminMenuSummary WithPlacement(AdminMenuSummary summary, IReadOnlyDictionary<string, CrestMenuPlacementEntry> placements) =>
+    private static AdminMenuSummary WithPlacement(AdminMenuSummary summary, IReadOnlyDictionary<string, MenuPlacementEntry> placements) =>
         placements.TryGetValue(summary.Id, out var entry) ? WithPlacement(summary, entry) : summary;
 
-    private static AdminMenuSummary WithPlacement(AdminMenuSummary summary, CrestMenuPlacement placement, bool enabled) =>
-        placement == CrestMenuPlacement.Admin ? summary : summary with { Placement = placement, Enabled = enabled };
+    private static AdminMenuSummary WithPlacement(AdminMenuSummary summary, MenuPlacement placement, bool enabled) =>
+        placement == MenuPlacement.Admin ? summary : summary with { Placement = placement, Enabled = enabled };
 
     private static AdminNode CloneNode(AdminNode node, string menuName)
     {

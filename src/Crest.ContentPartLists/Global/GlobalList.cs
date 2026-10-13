@@ -1,6 +1,6 @@
 using YesSql.Indexes;
 
-namespace Crest.Global.Lists;
+namespace Crest.Data.Global.Lists;
 
 /// <summary>
 /// A standard list in the tenant-less store: the rows every tenant shares. Loaded from
@@ -24,6 +24,8 @@ public sealed class GlobalOption
     public string? DisplayTextPlural { get; set; }
     public string? Value { get; set; }
     public string? Category { get; set; }
+    /// <summary>The key of the option this one sits under (a list arranged in levels); null at the top.</summary>
+    public string? Parent { get; set; }
     public int Position { get; set; }
     /// <summary>"Standard" from the data file; "Host" when added by the Default tenant. The loader replaces only Standard rows.</summary>
     public string Source { get; set; } = GlobalOptionSources.Standard;
@@ -46,7 +48,7 @@ public sealed class GlobalListIndexProvider : IndexProvider<GlobalList>
         context.For<GlobalListIndex>().Map(list => new GlobalListIndex { Key = list.Key });
 }
 
-/// <summary>The ten lists that ship in the global store. Consumers name them by these keys.</summary>
+/// <summary>The lists that ship in the global store. Consumers name them by these keys.</summary>
 public static class GlobalLists
 {
     public const string CountryCodes = "global.country-codes";
@@ -59,6 +61,9 @@ public static class GlobalLists
     public const string Honorifics = "global.honorifics";
     public const string NameSuffixes = "global.name-suffixes";
     public const string UomRec20 = "global.uom-rec20";
+
+    /// <summary>The North American Industry Classification System, all levels (2 to 6 digits), each option's Parent its enclosing code. Public domain (17 U.S.C. § 105).</summary>
+    public const string Naics = "global.naics";
 
     /// <summary>The ONE canonical item classification every consumer maps from (tax, GDSN). Ships empty until an open dataset (NAPCS candidate) is loaded; an unclassified item is undecidable, never silently untaxed (the host's module inventory).</summary>
     public const string ItemBaseClassification = "items.base-classification";

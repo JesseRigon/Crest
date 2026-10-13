@@ -3,7 +3,7 @@ using Crest.DisplayManagement.Components;
 namespace Crest.ViewModels;
 
 /// <summary>A template as the Templates page lists it (docs/blazor-display.md § 5).</summary>
-public sealed record CrestTemplate(
+public sealed record Template(
     string Id,
     string Name,
     string? Theme,
@@ -20,7 +20,7 @@ public sealed record CrestTemplate(
     IReadOnlyList<Crest.Templates.Models.TemplateInput> Inputs,
     IReadOnlyList<Crest.Templates.Models.TemplateOutput> Outputs);
 
-public sealed record CrestTemplateWrite(
+public sealed record TemplateWrite(
     string Name,
     string? Theme,
     string? DisplayType,
@@ -52,4 +52,4 @@ public sealed record CrestTemplateWrite(
 /// <summary>Evaluates a draft for preview: bound to its name for one content item, or on its own.</summary>
 public sealed record CrestTemplatePreview(string Name, string Source, string? ContentItemId, string? DisplayType);
 
-public sealed record CrestTemplateValidation(bool Valid, IReadOnlyList<DisplayDiagnostic> Diagnostics);
+public sealed record TemplateValidation(bool Valid, IReadOnlyList<DisplayDiagnostic> Diagnostics);

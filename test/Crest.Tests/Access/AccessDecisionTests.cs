@@ -68,6 +68,16 @@ public class AccessDecisionTests
     }
 
     [Fact]
+    public async Task AnInstanceKeepsItsImpliedByChainWhenTheRegistryDoesNotHoldIt()
+    {
+        // A dynamic permission built at run time, unknown to the registry: its own chain decides.
+        var dynamic = new Permission("Publish_Gadget", "Publish gadgets", [Manage]);
+
+        Assert.True((await Decision().DecideAsync(Caller(permissions: "ManageIt"), dynamic)).IsAllowed);
+        Assert.False((await Decision().DecideAsync(Caller(permissions: "ManageIt"), "Publish_Gadget")).IsAllowed);
+    }
+
+    [Fact]
     public async Task UnknownPermissionIsDenied()
     {
         var verdict = await Decision().DecideAsync(Caller(permissions: "EditContent"), "DeleteIt");

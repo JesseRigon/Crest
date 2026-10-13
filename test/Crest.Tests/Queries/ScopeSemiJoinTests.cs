@@ -79,9 +79,10 @@ public class ScopeSemiJoinTests
     {
         var statement = Compile(new SqlServerDialect(), Shared());
 
-        Assert.Contains("t0.[ContentItemId] IN (SELECT __scope_select0.[ObjectId] FROM [tp_ShareAccessIndex] AS __scope_select0 WHERE (", statement.Sql);
-        Assert.Contains("NOT IN (SELECT __scope_select1.[DepthKey] FROM [tp_ShareRoleShadowIndex] AS __scope_select1", statement.Sql);
-        Assert.Contains("__scope_select0.[EndsUtc] > @p1", statement.Sql);
+        // SQL Server quotes aliases too.
+        Assert.Contains("[t0].[ContentItemId] IN (SELECT [__scope_select0].[ObjectId] FROM [tp_ShareAccessIndex] AS [__scope_select0] WHERE (", statement.Sql);
+        Assert.Contains("NOT IN (SELECT [__scope_select1].[DepthKey] FROM [tp_ShareRoleShadowIndex] AS [__scope_select1]", statement.Sql);
+        Assert.Contains("[__scope_select0].[EndsUtc] > @p1", statement.Sql);
     }
 
     [Theory]

@@ -18,7 +18,7 @@ public sealed class UnsupportedJSRuntime : IJSRuntime
     public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args) => throw NotSupported();
 
     private static InvalidOperationException NotSupported() => new(
-        "JavaScript interop is not available when a component is rendered by CrestBlazorComponentShapeBindingResolver " +
+        "JavaScript interop is not available when a component is rendered by BlazorComponentShapeBindingResolver " +
         "(Static SSR via HtmlRenderer, no browser attached). Guard interop calls behind OnAfterRenderAsync, or mark the " +
         "component as an interactive island instead (see docs/blazor-web.md).");
 }

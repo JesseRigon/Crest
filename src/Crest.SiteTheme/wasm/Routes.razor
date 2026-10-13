@@ -5,6 +5,7 @@
 @using Crest.Components.Modules
 @using Crest.Shell
 @inject IServiceProvider Services
+@inject NavigationManager Navigation
 
 @* The public site shell's Routes component, the site-bucket counterpart of AdminRoutes and
    MemberRoutes. Before rendering it loads the site shell's module libraries (each module's
@@ -19,7 +20,11 @@
             <RouteView RouteData="routeData" />
         </Found>
         <NotFound>
-            <p data-testid="site-not-found">Not found.</p>
+            @* Every site URL no module page claims is the content page (docs/blazor-display.md
+               § 6): the server already resolved it the same way and prerendered it. The path is
+               passed so a client-side navigation between content pages re-fetches. A miss is
+               still a page: the content page renders the layout with NotFound. *@
+            <Pages.ContentPage Path="@Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0]" />
         </NotFound>
     </Router>
 }
@@ -32,7 +37,7 @@
     {
         // Browser: load every site module library. Server (prerender): every assembly is
         // already in the process - the loader is simply not attached.
-        if (Services.GetService<CrestLazyModules>() is { } lazyModules)
+        if (Services.GetService<LazyModules>() is { } lazyModules)
         {
             if (Services.GetService<LazyAssemblyLoader>() is { } loader)
             {

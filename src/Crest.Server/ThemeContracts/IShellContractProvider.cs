@@ -14,7 +14,7 @@ namespace Crest.Themes;
 /// one shell contract in practice, and per-page granularity would multiply the
 /// declarations without changing any answer.
 /// </remarks>
-public sealed record ShellContract(RouteBucket Bucket, bool RequiresCrestBlazor = true);
+public sealed record ShellContract(ShellId Bucket, bool RequiresCrestBlazor = true);
 
 /// <summary>
 /// Declares the shell contracts a feature's pages depend on.
@@ -36,8 +36,7 @@ public interface IShellContractProvider
 /// <summary>One feature whose shell contract the active themes do not satisfy.</summary>
 public sealed record ShellIncompatibility(
     string FeatureId,
-    [property: System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RouteBucket>))]
-    RouteBucket Bucket,
+    ShellId Bucket,
     string? ActiveThemeId,
     string Reason);
 

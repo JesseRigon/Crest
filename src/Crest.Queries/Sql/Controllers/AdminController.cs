@@ -1,15 +1,11 @@
-using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
-using Crest.Access;
 using Crest.Admin;
-using Crest.Entities;
 using Crest.Modules;
-using Crest.Queries.Sql.Models;
 using Crest.Queries.Sql.ViewModels;
-using Crest.Queries.Structured;
 using YesSql;
 
 namespace Crest.Queries.Sql.Controllers;
@@ -19,7 +15,6 @@ public sealed class AdminController : Controller
 {
     private readonly IAuthorizationService _authorizationService;
     private readonly IStore _store;
-    private readonly IQueryManager _queryManager;
     private readonly IServiceProvider _services;
 
     internal readonly IStringLocalizer S;
@@ -27,13 +22,11 @@ public sealed class AdminController : Controller
     public AdminController(
         IAuthorizationService authorizationService,
         IStore store,
-        IQueryManager queryManager,
         IServiceProvider serviceProvider,
         IStringLocalizer<AdminController> stringLocalizer)
     {
         _authorizationService = authorizationService;
         _store = store;
-        _queryManager = queryManager;
         _services = serviceProvider;
         S = stringLocalizer;
     }
@@ -72,72 +65,22 @@ public sealed class AdminController : Controller
             model.Parameters = "{ }";
         }
 
-        var validationMessages = SqlParser.Validate(model.DecodedQuery);
-
-        if (validationMessages.Count > 0)
-        {
-            foreach (var message in validationMessages)
-            {
-                ModelState.AddModelError(nameof(model.DecodedQuery), message);
-            }
-
-            return View(model);
-        }
-
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-
         var parameters = new Dictionary<string, object>(JConvert.DeserializeObject<Dictionary<string, object>>(model.Parameters) ?? [], StringComparer.OrdinalIgnoreCase);
+        var run = await _services.GetRequiredService<SqlQueryRunner>().RunAsync(model.DecodedQuery, parameters, HttpContext.RequestAborted);
 
-        try
+        model.RawSql = run.RawSql;
+        model.Documents = run.Rows.ToList();
+        if (run.RawSql is not null)
         {
-            var scopes = await CallerScopes.RequireAsync(_services, SqlQuerySource.SourceName, HttpContext.RequestAborted);
-
-            // Parsed here only to show the statement and the defaulted parameters; it runs
-            // through the query pipeline like any saved Sql query: scoped, paged and capped,
-            // in a transaction that is never committed.
-            var shown = new Dictionary<string, object>(parameters, StringComparer.OrdinalIgnoreCase);
-
-            if (SqlParser.TryParsePage(model.DecodedQuery, _store.Configuration.Schema, _store.Configuration.SqlDialect, _store.Configuration.TablePrefix, shown, scopes, out var pageQuery, out _, out var messages))
-            {
-                shown.Remove(SqlParser.SkipParameter);
-                shown.Remove(SqlParser.TakeParameter);
-                model.RawSql = pageQuery;
-                model.Parameters = JConvert.SerializeObject(shown.Where(pair => !pair.Key.StartsWith("__scope", StringComparison.Ordinal)).ToDictionary(), JOptions.Indented);
-
-                var query = new Query { Name = SqlQuerySource.SourceName, Source = SqlQuerySource.SourceName };
-                query.Put(new SqlQueryMetadata { Template = model.DecodedQuery });
-
-                try
-                {
-                    var results = await _queryManager.ExecuteQueryAsync(query, new QueryRequest
-                    {
-                        Parameters = parameters,
-                        PageSize = StructuredQueryCompiler.MaxPageSize,
-                        CancellationToken = HttpContext.RequestAborted,
-                    });
-
-                    model.Documents = results.Items.ToList();
-                }
-                catch (Exception e) when (e is not ScopeRefusedException)
-                {
-                    ModelState.AddModelError("", S["An error occurred while executing the SQL query: {0}", e.Message]);
-                }
-            }
-            else
-            {
-                foreach (var message in messages)
-                {
-                    ModelState.AddModelError(nameof(model.DecodedQuery), message);
-                }
-            }
-        }
-        catch (ScopeRefusedException e)
-        {
-            ModelState.AddModelError(nameof(model.DecodedQuery), S["The query was refused: {0}", e.Message]);
+            model.Parameters = JConvert.SerializeObject(run.Parameters, JOptions.Indented);
         }
 
-        model.Elapsed = stopwatch.Elapsed;
+        foreach (var error in run.Errors)
+        {
+            ModelState.AddModelError(nameof(model.DecodedQuery), error);
+        }
+
+        model.Elapsed = run.Elapsed;
 
         return View(model);
     }

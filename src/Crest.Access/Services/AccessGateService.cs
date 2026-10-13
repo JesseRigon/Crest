@@ -93,20 +93,32 @@ public sealed class AccessGateService(ILogger<AccessGateService> logger) : IAcce
             ? PlatformConstants.AuthenticationSchemes.Api
             : IdentityConstants.ApplicationScheme;
         var result = await context.AuthenticateAsync(scheme);
-        var feature = new GatedAuthentication(result);
-        context.Features.Set<IHttpAuthenticationFeature>(feature);
-        context.Features.Set<IAuthenticateResultFeature>(feature);
         if (result.Succeeded && result.Principal is not null)
         {
             context.User = result.Principal;
         }
+
+        // After the principal, as the platform's authentication middleware does: a principal
+        // set through the feature retires the ticket, and the ticket is what the caller's
+        // contributors read (the member session's organization, an impersonation).
+        var feature = new GatedAuthentication(result);
+        context.Features.Set<IHttpAuthenticationFeature>(feature);
+        context.Features.Set<IAuthenticateResultFeature>(feature);
     }
 }
 
-/// <summary>The gate's authentication result, as the standard features read it.</summary>
+/// <summary>
+/// The gate's authentication result, as the standard features read it, with the platform's
+/// own contract between the two: a principal set after authentication (the workflow API's
+/// per-request grant) retires the ticket, so the authorization middleware - which re-reads
+/// the ticket through <see cref="IAuthenticateResultFeature"/> and writes it back, principal
+/// included - keeps the principal in hand instead of restoring the ticket's. A ticket set
+/// afterwards carries its principal, as the platform's feature does.
+/// </summary>
 internal sealed class GatedAuthentication(AuthenticateResult result) : IAuthenticateResultFeature, IHttpAuthenticationFeature
 {
     private AuthenticateResult? _result = result;
+    private System.Security.Claims.ClaimsPrincipal? _user = result.Principal;
 
     public AuthenticateResult? AuthenticateResult
     {
@@ -114,11 +126,19 @@ internal sealed class GatedAuthentication(AuthenticateResult result) : IAuthenti
         set
         {
             _result = value;
-            User = value?.Principal;
+            _user = value?.Principal;
         }
     }
 
-    public System.Security.Claims.ClaimsPrincipal? User { get; set; } = result.Principal;
+    public System.Security.Claims.ClaimsPrincipal? User
+    {
+        get => _user;
+        set
+        {
+            _user = value;
+            _result = null;
+        }
+    }
 }
 
 /// <summary>
@@ -146,9 +166,7 @@ public sealed class AccessGateMiddleware(RequestDelegate next, IAuthenticationSc
 
             if (accessor.Current is null)
             {
-                var path = context.Request.Path;
-                var isApi = path.StartsWithSegments("/api") || path.StartsWithSegments("/crest-workflows");
-                if (isApi ? !await gate.AdmitApiAsync(context, prefixSide: null) : !await gate.AdmitAsync(context, CallerSide.Site, allowAnonymous: true))
+                if (AccessGate.IsApiPath(context.Request.Path) ? !await gate.AdmitApiAsync(context, prefixSide: null) : !await gate.AdmitAsync(context, CallerSide.Site, allowAnonymous: true))
                 {
                     return;
                 }

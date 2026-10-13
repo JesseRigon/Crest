@@ -54,6 +54,40 @@ public static class ConnectorNetworkPolicy
 
         return false;
     }
+
+    /// <summary>
+    /// A handler that connects only to public addresses (unless <paramref name="allowPrivate"/>):
+    /// every connection, a redirect's included, is checked on the addresses DNS returned. Shared
+    /// by the connectors and the engine's HTTP activities (Send HTTP request, Download HTTP file).
+    /// </summary>
+    public static SocketsHttpHandler CreateHandler(bool allowPrivate) => new()
+    {
+        ConnectCallback = async (context, cancellationToken) =>
+        {
+            var addresses = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, cancellationToken);
+            if (addresses.Length == 0)
+            {
+                throw new ConnectorRefusedException($"'{context.DnsEndPoint.Host}' does not resolve.");
+            }
+
+            if (!allowPrivate && addresses.Any(a => !IsPublic(a)))
+            {
+                throw new ConnectorRefusedException($"'{context.DnsEndPoint.Host}' resolves to a non-public address; workflows may only call public services.");
+            }
+
+            var socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+            try
+            {
+                await socket.ConnectAsync(addresses, context.DnsEndPoint.Port, cancellationToken);
+                return new NetworkStream(socket, ownsSocket: true);
+            }
+            catch
+            {
+                socket.Dispose();
+                throw;
+            }
+        },
+    };
 }
 
 /// <summary>
@@ -66,37 +100,9 @@ public sealed class ConnectorHttpClient : IDisposable
 {
     public ConnectorHttpClient(IOptions<WorkflowConnectorOptions> options)
     {
-        var allowPrivate = options.Value.AllowPrivateNetworks;
-        var handler = new SocketsHttpHandler
-        {
-            AllowAutoRedirect = false,
-            PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-            ConnectCallback = async (context, cancellationToken) =>
-            {
-                var addresses = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, cancellationToken);
-                if (addresses.Length == 0)
-                {
-                    throw new ConnectorRefusedException($"'{context.DnsEndPoint.Host}' does not resolve.");
-                }
-
-                if (!allowPrivate && addresses.Any(a => !ConnectorNetworkPolicy.IsPublic(a)))
-                {
-                    throw new ConnectorRefusedException($"'{context.DnsEndPoint.Host}' resolves to a non-public address; connectors may only call public services.");
-                }
-
-                var socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
-                try
-                {
-                    await socket.ConnectAsync(addresses, context.DnsEndPoint.Port, cancellationToken);
-                    return new NetworkStream(socket, ownsSocket: true);
-                }
-                catch
-                {
-                    socket.Dispose();
-                    throw;
-                }
-            },
-        };
+        var handler = ConnectorNetworkPolicy.CreateHandler(options.Value.AllowPrivateNetworks);
+        handler.AllowAutoRedirect = false;
+        handler.PooledConnectionLifetime = TimeSpan.FromMinutes(2);
 
         Client = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
     }

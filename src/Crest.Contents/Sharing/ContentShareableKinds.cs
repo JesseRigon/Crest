@@ -56,6 +56,9 @@ public interface IContentShareLookup
     Task<IReadOnlyList<string>> TypesAsync();
 
     Task<bool> TypeExistsAsync(string contentType);
+
+    /// <summary>The folder the item is filed in (requirement 74); null when it is not filed.</summary>
+    Task<ShareableRef?> FolderAsync(string contentItemId) => Task.FromResult<ShareableRef?>(null);
 }
 
 public sealed class ContentShareLookup(ISession session, IContentDefinitionManager definitions) : IContentShareLookup
@@ -76,6 +79,12 @@ public sealed class ContentShareLookup(ISession session, IContentDefinitionManag
 
     public async Task<bool> TypeExistsAsync(string contentType) =>
         await definitions.GetTypeDefinitionAsync(contentType) is not null;
+
+    public async Task<ShareableRef?> FolderAsync(string contentItemId)
+    {
+        var row = await session.QueryIndex<ContentShareFolderIndex>(index => index.ContentItemId == contentItemId).FirstOrDefaultAsync();
+        return row is null ? null : new ShareableRef(row.FolderKind, row.FolderId);
+    }
 }
 
 /// <summary>
@@ -112,6 +121,7 @@ public sealed class ContentTypeShareableKind(IContentShareLookup lookup) : IShar
             ? new ShareableObject
             {
                 Ref = new ShareableRef(KindName, id),
+                DisplayName = id,
                 Facts = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase) { ["contenttype"] = [id] },
             }
             : null;
@@ -130,11 +140,16 @@ public sealed class ContentTypeShareableKind(IContentShareLookup lookup) : IShar
 /// its owner holds Manager on it; rules test its <c>contenttype</c>. Lists of
 /// <see cref="ContentItemIndex"/> filter on the access index by <c>ContentItemId</c>. An item
 /// not saved yet (being created) has no owner: the decision is its type's, so creating takes
-/// Editor on the type. Requirement 74 (an item placed in a folder follows the folder's chain)
-/// waits for content and media placements to be linked.
+/// Editor on the type. An item filed in a folder (<see cref="ContentShareFolderPart"/>,
+/// requirement 74) follows the folder's chain instead of its type's, with its content type still
+/// its <c>contenttype</c> for rules; a folder that no longer exists puts it back under its type.
 /// </summary>
-public sealed class ContentShareableKind(IContentShareLookup lookup) : IShareableKind, IShareableScopeTarget
+public sealed class ContentShareableKind(IContentShareLookup lookup, IServiceProvider? services = null) : IShareableKind, IShareableScopeTarget, IShareableLinks
 {
+    /// <summary>The item's display route: the Share panel's public link.</summary>
+    public Task<string?> LinkAsync(string id, CancellationToken cancellationToken = default) =>
+        Task.FromResult<string?>($"Contents/ContentItems/{Uri.EscapeDataString(id)}");
+
     public const string KindName = "content";
 
     // Items asked about this request: one being created is not in the index yet.
@@ -174,13 +189,16 @@ public sealed class ContentShareableKind(IContentShareLookup lookup) : IShareabl
     {
         string contentType;
         string? owner;
+        ShareableRef? folder = null;
         if (_saved.TryGetValue(id, out var saved) && !string.IsNullOrEmpty(saved.ContentType))
         {
             (contentType, owner) = (saved.ContentType, saved.Owner);
+            folder = saved.As<ContentShareFolderPart>()?.Folder;
         }
         else if (await lookup.ItemAsync(id) is { } stored)
         {
             (contentType, owner) = stored;
+            folder = await lookup.FolderAsync(id);
         }
         else if (_seen.TryGetValue(id, out var unsaved) && !string.IsNullOrEmpty(unsaved.ContentType))
         {
@@ -195,11 +213,24 @@ public sealed class ContentShareableKind(IContentShareLookup lookup) : IShareabl
         return new ShareableObject
         {
             Ref = new ShareableRef(KindName, id),
-            Parent = new ShareableRef(ContentTypeShareableKind.KindName, contentType),
+            Parent = await FolderExistsAsync(folder, cancellationToken) ? folder : new ShareableRef(ContentTypeShareableKind.KindName, contentType),
             OwnerUserId = string.IsNullOrEmpty(owner) ? null : owner,
             Facts = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase) { ["contenttype"] = [contentType] },
         };
     }
 
     public AccessLevel? LevelFor(string permission) => ContentShareLevels.LevelFor(permission);
+
+    /// <summary>Whether the folder is an object of a kind in force (resolved when asked: the
+    /// kinds include this one).</summary>
+    private async Task<bool> FolderExistsAsync(ShareableRef? folder, CancellationToken cancellationToken)
+    {
+        if (folder is not { } target || services is null || target.Kind is KindName or ContentTypeShareableKind.KindName)
+        {
+            return false;
+        }
+
+        var kind = ((IEnumerable<IShareableKind>?)services.GetService(typeof(IEnumerable<IShareableKind>)))?.FirstOrDefault(candidate => candidate.Name == target.Kind);
+        return kind is not null && await kind.GetAsync(target.Id, cancellationToken) is not null;
+    }
 }

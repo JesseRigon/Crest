@@ -5,10 +5,11 @@
        build tool. Test projects live in Crest.Tests.slnx. -->
   <Project Path="src/Crest.AdminTheme/Crest.AdminTheme.csproj" />
   <Project Path="src/Crest.AdminTheme/wasm/Crest.AdminTheme.Client.csproj" />
+  <Project Path="src/Crest.AdminTheme/client-services/Crest.AdminTheme.Client.Services.csproj" />
   <Project Path="src/Crest.Components/Crest.Components.csproj" />
   <Project Path="src/Crest.ContentPartLists/Crest.ContentPartLists.csproj" />
   <Project Path="src/Crest.ContentPartLists/blazor-wasm/Crest.ContentPartLists.BlazorWasm.csproj" />
-  <Project Path="src/Crest.Global/Crest.Global.csproj" />
+  <Project Path="src/Crest.Data.Global/Crest.Data.Global.csproj" />
   <Project Path="src/Crest.Iconify/Crest.Iconify.csproj" />
   <Project Path="src/Crest.Icons/Crest.Icons.csproj" />
   <Project Path="src/Crest.MemberTheme/Crest.MemberTheme.csproj" />
@@ -20,6 +21,7 @@
   <Project Path="src/Crest.Money/Domain/Crest.Money.Domain.csproj" />
   <Project Path="src/Crest.Parties/Domain/Crest.Parties.Domain.csproj" />
   <Project Path="src/Crest.Parties/Server/Crest.Parties.csproj" />
+  <Project Path="src/Crest.AuditTrail/blazor-wasm/Crest.AuditTrail.BlazorWasm.csproj" />
   <Project Path="src/Crest.Parties/blazor-wasm/Crest.Parties.BlazorWasm.csproj" />
   <Project Path="src/Crest.Regions/Crest.Regions.csproj" />
   <Project Path="src/Crest.Regions/Domain/Crest.Regions.Domain.csproj" />

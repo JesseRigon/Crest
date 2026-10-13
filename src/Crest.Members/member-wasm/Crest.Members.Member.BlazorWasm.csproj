@@ -28,4 +28,8 @@
     <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
     <ProjectReference Include="..\..\Crest.MemberTheme\wasm\Crest.MemberTheme.Client.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Crest.Members.Tests" />
+  </ItemGroup>
 </Project>

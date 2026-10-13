@@ -168,11 +168,15 @@ public sealed class MediaReferenceResolver(
 
         // Signed only once sharing has decided the file is private; the signature stands for the
         // decision the gate just made, for minutes.
+        // With a private CDN zone the URL is the zone's, signed with its token (docs/media.md ›
+        // Serving and CDNs); otherwise Crest's own origin, HMAC-signed.
         if (options.SignPrivate && services.GetService<ISharingResolver>() is not null && services.GetServices<IMediaUrlSigner>().LastOrDefault() is { } signer)
         {
             var now = new DateTimeOffset(DateTime.SpecifyKind(clock.UtcNow, DateTimeKind.Utc));
             var lifetime = libraryOptions.Value.SignedUrlLifetime;
-            url = signer.Sign(new Uri(url, UriKind.Relative), now + lifetime).OriginalString;
+            var unsigned = signer.BaseUrl is { } zone ? new Uri(zone + url, UriKind.Absolute) : new Uri(url, UriKind.Relative);
+            var signedUrl = signer.Sign(unsigned, now + lifetime);
+            url = signedUrl.IsAbsoluteUri ? signedUrl.AbsoluteUri : signedUrl.OriginalString;
             KeepPrivate(now, lifetime);
         }
 

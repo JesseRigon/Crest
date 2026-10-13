@@ -29,7 +29,14 @@
         <CascadingValue Value="_authentication" IsFixed="true">
             <Router AppAssembly="@typeof(MemberRoutes).Assembly" AdditionalAssemblies="@_assemblies">
                 <Found Context="routeData">
-                    @if (IsShelllessRoute(routeData))
+                    @if (IsOrganizationFree(routeData) != IsOrganizationFreeDocument)
+                    {
+                        @* The same split the server applies: an organization-free page (sign-in,
+                           the picker) only at the member base, every other page only under an
+                           organization. Client-side navigation must not cross it. *@
+                        <MemberNotFound />
+                    }
+                    else if (IsShelllessRoute(routeData))
                     {
                         <RouteView RouteData="@routeData" />
                     }
@@ -61,7 +68,7 @@
     {
         // Browser: load every member module library. Server (prerender): nothing to load,
         // every assembly is already in the process - the loader is simply not attached.
-        if (Services.GetService<CrestLazyModules>() is { } lazyModules)
+        if (Services.GetService<LazyModules>() is { } lazyModules)
         {
             if (Services.GetService<LazyAssemblyLoader>() is { } loader)
             {
@@ -124,12 +131,18 @@
         }
     }
 
-    // Shell-less: the pages that establish a session (they render their own centred card,
-    // not the member chrome - there is no active organization to put in a nav yet), plus
-    // any page declaring [AllowAnonymous] - the same marker the server gate reads, so a
-    // public page a module contributes is public end to end.
+    // Shell-less: any page declaring [AllowAnonymous] - the same marker the server gate reads,
+    // so a public page a module contributes is public end to end.
+    // Organization-free pages (sign-in, registration, password reset, the picker) have no
+    // active organization to put in a nav, so they render their own centred card too.
     private static bool IsShelllessRoute(RouteData routeData)
-        => string.Equals(routeData.PageType.Name, "MemberLogin", StringComparison.Ordinal)
-            || string.Equals(routeData.PageType.Name, "MemberRegister", StringComparison.Ordinal)
+        => IsOrganizationFree(routeData)
             || routeData.PageType.IsDefined(typeof(AllowAnonymousAttribute), inherit: false);
+
+    private static bool IsOrganizationFree(RouteData routeData) =>
+        routeData.PageType.IsDefined(typeof(OrganizationFreePageAttribute), inherit: false);
+
+    // Whether this document is the member base (no organization in its path).
+    private bool IsOrganizationFreeDocument =>
+        (Services.GetService<CrestShellContext>()?.OrganizationSlug) is not { Length: > 0 };
 }

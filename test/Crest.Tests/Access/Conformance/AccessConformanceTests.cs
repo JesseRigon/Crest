@@ -145,7 +145,9 @@ public class AccessConformanceTests
         services.AddLogging();
         services.AddAuthorizationCore();
         services.AddSingleton<ICallerContextAccessor>(new Accessor { Current = caller });
-        services.AddSingleton<IAccessDecision>(Decision());
+        var decision = Decision();
+        services.AddSingleton(decision);
+        services.AddSingleton<IAccessDecision>(decision);
         services.AddSingleton(Mock.Of<ICallerContextFactory>(MockBehavior.Strict));
         services.AddSingleton(Mock.Of<IHttpContextAccessor>());
         services.AddScoped<IAuthorizationHandler, AccessAuthorizationHandler>();

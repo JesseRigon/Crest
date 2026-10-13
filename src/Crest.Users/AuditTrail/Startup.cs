@@ -31,7 +31,8 @@ public sealed class Startup : StartupBase
 
         services.AddScoped<UserEventHandler, UserEventHandler>()
             .AddScoped<IUserEventHandler>(sp => sp.GetRequiredService<UserEventHandler>())
-            .AddScoped<ILoginFormEvent>(sp => sp.GetRequiredService<UserEventHandler>());
+            .AddScoped<ILoginFormEvent>(sp => sp.GetRequiredService<UserEventHandler>())
+            .AddScoped<ILogoutFormEvent>(sp => sp.GetRequiredService<UserEventHandler>());
 
         services.AddDisplayDriver<AuditTrailEvent, AuditTrailUserEventDisplayDriver>();
         services.AddIndexProvider<AuditTrailUserEventIndexProvider>();

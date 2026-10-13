@@ -129,6 +129,9 @@ public sealed class Startup : StartupBase
             return new LibraryFileStore(new FileSystemStore(mediaPath, serviceProvider.GetRequiredService<ILogger<FileSystemStore>>()));
         });
 
+        // Branding renditions are media paths; the site query resolves them through the store.
+        services.AddSingleton<Crest.Settings.IBrandingUrlResolver, MediaBrandingUrlResolver>();
+
         services.AddSingleton<IMediaFileStore>(serviceProvider =>
         {
             var shellOptions = serviceProvider.GetRequiredService<IOptions<ShellOptions>>();

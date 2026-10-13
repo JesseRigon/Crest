@@ -10,18 +10,18 @@ namespace Crest.Controllers;
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/recipes")]
-public sealed class CrestRecipesController(ICrestRequestAccess requestAccess) : ControllerBase
+public sealed class RecipesController(IRequestAccess requestAccess) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<CrestRecipe[]>> ListAsync()
+    public async Task<ActionResult<Recipe[]>> ListAsync()
     {
         var access = await requestAccess.AuthorizeAsync(User, RecipePermissions.ManageRecipes);
         if (access is null) return Forbid();
-        return Ok((await HarvestAsync(access)).Select(CrestRecipe.From).OrderBy(recipe => recipe.DisplayName).ToArray());
+        return Ok((await HarvestAsync(access)).Select(Recipe.From).OrderBy(recipe => recipe.DisplayName).ToArray());
     }
 
     [HttpPost("execute")]
-    public async Task<IActionResult> ExecuteAsync([FromBody] CrestRecipeKey key)
+    public async Task<IActionResult> ExecuteAsync([FromBody] RecipeKey key)
     {
         var access = await requestAccess.AuthorizeAsync(User, RecipePermissions.ManageRecipes);
         if (access is null) return Forbid();
@@ -31,7 +31,7 @@ public sealed class CrestRecipesController(ICrestRequestAccess requestAccess) : 
         catch (Exception exception) { return BadRequest(exception.Message); }
     }
 
-    private static async Task<IEnumerable<RecipeDescriptor>> HarvestAsync(CrestAuthorizedRequest access)
+    private static async Task<IEnumerable<RecipeDescriptor>> HarvestAsync(AuthorizedRequest access)
     {
         var harvesters = access.GetRequiredService<IEnumerable<IRecipeHarvester>>();
         return (await Task.WhenAll(harvesters.Select(harvester => harvester.HarvestRecipesAsync())))

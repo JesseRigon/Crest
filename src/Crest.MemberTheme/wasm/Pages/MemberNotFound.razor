@@ -1,5 +1,6 @@
 @attribute [Route(MemberRoutePaths.NotFound)]
 @attribute [AllowAnonymous]
+@attribute [Crest.Components.Modules.OrganizationFreePage]
 @namespace Crest.MemberTheme.Pages
 @using Crest.Components.Primitives
 @using Crest.MemberTheme.Services
@@ -18,6 +19,6 @@
     <CrestStack Gap="1rem" AlignItems="AlignItems.Center">
         <CrestText TextStyle="TextStyle.H4" Text="Not found" />
         <CrestText TextStyle="TextStyle.Body1" Text="This page does not exist." />
-        <CrestLink Path="@MemberRoutePaths.Home" Text="Go to the portal" />
+        <CrestLink Path="./" Text="Go to the portal" />
     </CrestStack>
 </div>

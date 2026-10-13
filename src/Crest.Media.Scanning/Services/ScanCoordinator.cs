@@ -297,7 +297,8 @@ public sealed class ScanCoordinator
 
     private async Task StripLocationAsync(ScanJob job, CancellationToken cancellationToken)
     {
-        if (!string.Equals(TypeConsistency.Normalize(job.DetectedType), "image/jpeg", StringComparison.Ordinal))
+        var type = TypeConsistency.Normalize(job.DetectedType);
+        if (!ImageLocationStripper.Handles(type))
         {
             return;
         }
@@ -316,7 +317,7 @@ public sealed class ScanCoordinator
             original = buffer.ToArray();
         }
 
-        if (JpegLocationStripper.TryStrip(original, out var stripped))
+        if (ImageLocationStripper.TryStrip(type, original, out var stripped))
         {
             using var content = new MemoryStream(stripped, writable: false);
             await _storage.WriteAsync(MediaStorageArea.Quarantine, job.StorageKey, content, cancellationToken);

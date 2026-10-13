@@ -1,0 +1,92 @@
+@page "/Audit"
+@inject HttpClient Http
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* The audit page (docs/audit.md › step 4): the tenant's trail, filtered by actor, impersonated
+   member, organization, category, record and date. Gated by the audit permission, as is the API
+   behind it; members never reach it (the permission is under the member class ceiling). *@
+
+<PageTitle>@T["Audit trail"]</PageTitle>
+
+<CrestStack Gap="1rem" data-testid="audit-trail">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <div>
+            <CrestText TextStyle="TextStyle.H4" class="rz-m-0">@T["Audit trail"]</CrestText>
+            <CrestText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["Who did what, to which record, when, from where, and on whose behalf."]</CrestText>
+        </div>
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <CrestLink Path="@AuditTrailRoutes.SessionsAdmin.TrimStart('/')" Text="@T["Impersonation sessions"]" />
+            <CrestButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="@(() => LoadAsync(0))" Disabled="IsBusy" />
+        </CrestStack>
+    </CrestStack>
+
+    <CrestCard>
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.75rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
+            <CrestFormField Text="@T["Acted by (user name)"]"><CrestTextBox @bind-Value="Filter.UserName" Style="width: 12rem" data-testid="audit-filter-user" /></CrestFormField>
+            <CrestFormField Text="@T["Impersonated member (user id)"]"><CrestTextBox @bind-Value="Filter.ImpersonatedUserId" Style="width: 12rem" /></CrestFormField>
+            <CrestFormField Text="@T["Organization"]"><CrestTextBox @bind-Value="Filter.OrganizationId" Style="width: 12rem" /></CrestFormField>
+            <CrestFormField Text="@T["Category"]"><CrestDropDown TValue="string" @bind-Value="Filter.Category" Data="Categories" TextProperty="Text" ValueProperty="Name" AllowClear="true" Placeholder="@T["All"]" Style="width: 12rem" /></CrestFormField>
+            <CrestFormField Text="@T["Record"]"><CrestTextBox @bind-Value="Filter.RecordId" Style="width: 12rem" /></CrestFormField>
+            <CrestFormField Text="@T["From"]"><CrestDatePicker TValue="DateTime?" @bind-Value="Filter.From" DateFormat="yyyy-MM-dd" AllowClear="true" Style="width: 10rem" /></CrestFormField>
+            <CrestFormField Text="@T["To"]"><CrestDatePicker TValue="DateTime?" @bind-Value="Filter.To" DateFormat="yyyy-MM-dd" AllowClear="true" Style="width: 10rem" /></CrestFormField>
+            <div>
+                <CrestCheckBox TValue="bool" @bind-Value="Filter.ImpersonatedOnly" Name="audit-impersonated-only" />
+                <CrestLabel Text="@T["Impersonated only"]" Component="audit-impersonated-only" />
+            </div>
+            <CrestButton Icon="search" Text="@T["Apply"]" Click="@(() => LoadAsync(0))" Disabled="IsBusy" data-testid="audit-filter-apply" />
+        </CrestStack>
+    </CrestCard>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" Summary="@T["Could not load the audit trail"]" Detail="@Error" />
+    }
+
+    @if (IsBusy)
+    {
+        <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+
+    <AuditEventTable Page="Page" PageChanged="LoadAsync" />
+</CrestStack>
+
+@code {
+    private AuditFilter Filter { get; } = new();
+    private AuditEventPage Page { get; set; } = new([], 0, 0, 50);
+    private IReadOnlyList<AuditCategory> Categories { get; set; } = [];
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Categories = await Http.GetFromJsonAsync<AuditCategory[]>($"{AuditTrailRoutes.Api}/categories") ?? [];
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+
+        await LoadAsync(0);
+    }
+
+    private async Task LoadAsync(int skip)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            Filter.Skip = skip;
+            Page = await Http.GetFromJsonAsync<AuditEventPage>($"{AuditTrailRoutes.Api}/events?{Filter.ToQueryString()}") ?? Page;
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

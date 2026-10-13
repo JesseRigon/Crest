@@ -31,6 +31,7 @@ namespace Crest.Components.Primitives
     /// &lt;/CrestRow&gt;
     /// </code>
     /// </example>
+    [Crest.DisplayManagement.Components.BlazorComponent("Row", DisplayName = "Row", Category = "Layout", Icon = "view_column")]
     public partial class CrestRow : CrestFlexComponent
     {
         /// <summary>

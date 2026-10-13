@@ -115,4 +115,34 @@ public interface IShareScopes
     /// <summary>Null when sharing does not govern the kind's lists (the kind is not registered,
     /// is in conflict, or has no <see cref="IShareableScopeTarget"/>).</summary>
     ScopeRule? RuleFor(CallerContext caller, string kind, AccessLevel minimum);
+
+    /// <summary>
+    /// The rows of the kind's scope target with the given access indicator (requirement 98), for
+    /// a list filtered by it in the query; AND it with <see cref="RuleFor"/>. Null when sharing
+    /// does not govern the kind's lists.
+    /// </summary>
+    ScopeRule? IndicatorRuleFor(string kind, ShareIndicator indicator) => null;
+}
+
+/// <summary>How an object is shared, as lists show it (docs/sharing.md, requirement 98).</summary>
+public enum ShareIndicator
+{
+    /// <summary>Only its owner (and administrators) reach it.</summary>
+    Private = 0,
+
+    /// <summary>Granted to someone besides its owner: a user, role, organization or the tenant.</summary>
+    Shared = 1,
+
+    /// <summary>Anyone may view it.</summary>
+    Public = 2,
+}
+
+/// <summary>
+/// The access indicators of objects the caller may view (requirement 98), from the access index:
+/// public when any path is public, shared when any path grants someone besides the owner. An
+/// object the caller cannot view, or never calculated, is left out.
+/// </summary>
+public interface IShareIndicators
+{
+    Task<IReadOnlyDictionary<ShareableRef, ShareIndicator>> GetAsync(IReadOnlyCollection<ShareableRef> targets, CancellationToken cancellationToken = default);
 }

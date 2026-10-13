@@ -23,11 +23,11 @@ public sealed record ContentGroupsSettingsRequest(bool AutoMenuPages);
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/content-groups")]
 public sealed class ContentGroupsController(
-    CrestContentGroupService groups,
+    ContentGroupService groups,
     IAuthorizationService authorization) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<CrestContentGroupModel>>> ListAsync()
+    public async Task<ActionResult<IReadOnlyList<ContentGroupModel>>> ListAsync()
     {
         if (!await authorization.AuthorizeAsync(User, CommonPermissions.ListContent)) return Forbid();
 
@@ -53,19 +53,19 @@ public sealed class ContentGroupsController(
     }
 
     [HttpPost]
-    public Task<ActionResult<CrestContentGroupModel>> CreateAsync(CreateContentGroupRequest request)
+    public Task<ActionResult<ContentGroupModel>> CreateAsync(CreateContentGroupRequest request)
         => WriteAsync(() => groups.CreateGroupAsync(request.Key, request.DisplayName, request.Position, HttpContext.RequestAborted));
 
     [HttpPut("{key}")]
-    public Task<ActionResult<CrestContentGroupModel>> UpdateAsync(string key, UpdateContentGroupRequest request)
+    public Task<ActionResult<ContentGroupModel>> UpdateAsync(string key, UpdateContentGroupRequest request)
         => WriteAsync(() => groups.UpdateGroupAsync(key, request.DisplayName, request.Position, request.Hidden, HttpContext.RequestAborted));
 
     [HttpPost("{key}/entries")]
-    public Task<ActionResult<CrestContentGroupModel>> AddEntryAsync(string key, AddContentGroupEntryRequest request)
+    public Task<ActionResult<ContentGroupModel>> AddEntryAsync(string key, AddContentGroupEntryRequest request)
         => WriteAsync(() => groups.AddEntryAsync(key, request.Kind, request.Key, HttpContext.RequestAborted));
 
     [HttpDelete("{key}/entries/{kind}/{entryKey}")]
-    public async Task<ActionResult<CrestContentGroupModel>> RemoveEntryAsync(string key, string kind, string entryKey)
+    public async Task<ActionResult<ContentGroupModel>> RemoveEntryAsync(string key, string kind, string entryKey)
     {
         if (!await authorization.AuthorizeAsync(User, ContentTypesPermissions.EditContentTypes)) return Forbid();
 
@@ -87,7 +87,7 @@ public sealed class ContentGroupsController(
         return NoContent();
     }
 
-    private async Task<ActionResult<CrestContentGroupModel>> WriteAsync(Func<Task<CrestContentGroupModel>> write)
+    private async Task<ActionResult<ContentGroupModel>> WriteAsync(Func<Task<ContentGroupModel>> write)
     {
         if (!await authorization.AuthorizeAsync(User, ContentTypesPermissions.EditContentTypes)) return Forbid();
 
@@ -108,7 +108,7 @@ public sealed class ContentGroupsController(
         var actionContext = ControllerContext;
         ShellScope.AddDeferredTask(scope =>
             scope.ServiceProvider
-                .GetRequiredService<Crest.Services.CrestProviderMenuSyncService>()
+                .GetRequiredService<Crest.Services.ProviderMenuSyncService>()
                 .SyncAsync(actionContext));
     }
 }

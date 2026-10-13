@@ -18,11 +18,20 @@
   <Folder Name="/Crest.Members/tests/">
     <Project Path="src/Crest.Members/tests/Crest.Members.Tests/Crest.Members.Tests.csproj" />
   </Folder>
+  <Folder Name="/Crest.Data.Global/tests/">
+    <Project Path="src/Crest.Data.Global/tests/Crest.Data.Global.Tests/Crest.Data.Global.Tests.csproj" />
+  </Folder>
   <Folder Name="/Crest.Money/" />
   <Folder Name="/Crest.Money/Domain/">
     <Project Path="src/Crest.Money/Domain/Crest.Money.Domain.csproj" />
   </Folder>
+  <Folder Name="/Crest.Money/tests/">
+    <Project Path="src/Crest.Money/tests/Crest.Money.Tests/Crest.Money.Tests.csproj" />
+  </Folder>
   <Folder Name="/Crest.Parties/" />
+  <Folder Name="/Crest.AuditTrail/blazor-wasm/">
+    <Project Path="src/Crest.AuditTrail/blazor-wasm/Crest.AuditTrail.BlazorWasm.csproj" />
+  </Folder>
   <Folder Name="/Crest.Parties/blazor-wasm/">
     <Project Path="src/Crest.Parties/blazor-wasm/Crest.Parties.BlazorWasm.csproj" />
   </Folder>
@@ -110,6 +119,9 @@
   <Folder Name="/Crest.AdminTheme/wasm/">
     <Project Path="src/Crest.AdminTheme/wasm/Crest.AdminTheme.Client.csproj" />
   </Folder>
+  <Folder Name="/Crest.AdminTheme/client-services/">
+    <Project Path="src/Crest.AdminTheme/client-services/Crest.AdminTheme.Client.Services.csproj" />
+  </Folder>
   <Folder Name="/Crest.Components/" />
   <Folder Name="/Crest.Components/tests/">
     <Project Path="src/Crest.Components/tests/Crest.Components.Tests/Crest.Components.Tests.csproj" />
@@ -135,19 +147,14 @@
   <Folder Name="/Crest.SiteTheme/wasm/">
     <Project Path="src/Crest.SiteTheme/wasm/Crest.SiteTheme.Client.csproj" />
   </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Crest.Tests.Standalone/Crest.Tests.Standalone.csproj" />
+  </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/Crest.LazyModules/Crest.LazyModules.csproj" />
   </Folder>
-  <Project Path="../Fruitful/Fruitful.Accounting/blazor-wasm/Fruitful.Accounting.BlazorWasm.csproj" />
-  <Project Path="../Fruitful/Fruitful.Accounting/Domain/Fruitful.Accounting.Domain.csproj" />
-  <Project Path="../Fruitful/Fruitful.Assets/blazor-wasm/Fruitful.Assets.BlazorWasm.csproj" />
-  <Project Path="../Fruitful/Fruitful.Assets/Domain/Fruitful.Assets.Domain.csproj" />
-  <Project Path="../Fruitful/Fruitful.Memberships/blazor-wasm/Fruitful.Memberships.BlazorWasm.csproj" />
-  <Project Path="../Fruitful/Fruitful.Memberships/Domain/Fruitful.Memberships.Domain.csproj" />
-  <Project Path="../Fruitful/Fruitful.Taxes/blazor-wasm/Fruitful.Taxes.BlazorWasm.csproj" />
-  <Project Path="../Fruitful/Fruitful.Taxes/Domain/Fruitful.Taxes.Domain.csproj" />
   <Project Path="src/Crest.ContentPartLists/Crest.ContentPartLists.csproj" />
-  <Project Path="src/Crest.Global/Crest.Global.csproj" />
+  <Project Path="src/Crest.Data.Global/Crest.Data.Global.csproj" />
   <Project Path="src/Crest.Regions/Crest.Regions.csproj" />
   <Project Path="src/Crest.Components/Crest.Components.csproj" />
   <Project Path="src/Crest.Iconify/Crest.Iconify.csproj" />

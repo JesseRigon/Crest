@@ -21,10 +21,10 @@ public sealed record AdminMenuSummary(
     bool Enabled,
     bool IsDefault,
     AdminMenuSeparatorSummary[] Separators,
-    CrestPrimaryNavMenuSettings PrimaryNavMenuSettings,
+    PrimaryNavMenuSettings PrimaryNavMenuSettings,
     IconPack? Icons,
     AdminMenuNodeSummary[] Nodes,
-    CrestMenuPlacement Placement = CrestMenuPlacement.Admin)
+    MenuPlacement Placement = MenuPlacement.Admin)
 {
     public static AdminMenuSummary From(AdminMenu menu) => new(
         menu.Id,
@@ -32,7 +32,7 @@ public sealed record AdminMenuSummary(
         menu.Enabled,
         false,
         [],
-        CrestPrimaryNavMenuSettings.Default,
+        PrimaryNavMenuSettings.Default,
         null,
         menu.MenuItems.OfType<AdminNode>().Select((node, index) => AdminMenuNodeSummary.From(node, null, 0, index)).ToArray());
 }
@@ -97,7 +97,7 @@ public sealed record AdminMenuNodeSummary(
         _ => null,
     };
 
-    public static AdminMenuNodeSummary From(NavigationItem item, CrestAdminMenuLayoutDocument layout, CrestAdminMenuLayoutService layoutService, string? parentId, int depth, int order, IReadOnlyDictionary<string, string> originalTextsById)
+    public static AdminMenuNodeSummary From(NavigationItem item, CrestAdminMenuLayoutDocument layout, AdminMenuLayoutService layoutService, string? parentId, int depth, int order, IReadOnlyDictionary<string, string> originalTextsById)
     {
         var itemOverride = layout.Items.FirstOrDefault(layoutItem => string.Equals(layoutItem.ItemKey, item.Key, StringComparison.Ordinal));
         // The "originally called X" hint shown next to a renamed item. Resolved by Id from
@@ -214,9 +214,9 @@ public sealed record AdminMenuNodeSummary(
     }
 }
 
-public sealed record AdminMenuEditModel(string? Name, bool Enabled, CrestMenuPlacement Placement = CrestMenuPlacement.Admin);
+public sealed record AdminMenuEditModel(string? Name, bool Enabled, MenuPlacement Placement = MenuPlacement.Admin);
 
-public sealed record ConvertMenuModel(CrestMenuPlacement Placement);
+public sealed record ConvertMenuModel(MenuPlacement Placement);
 
 public sealed record AdminMenuNodeEditModel(
     string Type,

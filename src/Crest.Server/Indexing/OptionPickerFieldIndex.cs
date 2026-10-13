@@ -152,7 +152,7 @@ public abstract class OptionPickerFieldIndexProviderBase<TIndex>(IServiceProvide
 }
 
 /// <summary>Provider for the catch-all partition.</summary>
-public class OptionPickerFieldIndexProvider(IServiceProvider serviceProvider, CrestOptionIndexPartitions partitions)
+public class OptionPickerFieldIndexProvider(IServiceProvider serviceProvider, OptionIndexPartitions partitions)
     : OptionPickerFieldIndexProviderBase<OptionPickerFieldIndex>(serviceProvider)
 {
     protected override IReadOnlySet<string> PartitionContentTypes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -164,7 +164,7 @@ public class OptionPickerFieldIndexProvider(IServiceProvider serviceProvider, Cr
 /// The content types that have their own index partition. Modules add to this at
 /// startup; the catch-all partition skips whatever is registered here.
 /// </summary>
-public sealed class CrestOptionIndexPartitions
+public sealed class OptionIndexPartitions
 {
     private readonly HashSet<string> _contentTypes = new(StringComparer.OrdinalIgnoreCase);
 

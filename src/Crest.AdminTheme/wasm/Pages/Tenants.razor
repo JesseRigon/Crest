@@ -75,7 +75,7 @@
 </CrestStack>
 
 @code {
-    private CrestTenantCatalog Catalog { get; set; } = CrestTenantCatalog.Empty;
+    private TenantCatalog Catalog { get; set; } = TenantCatalog.Empty;
     private HashSet<string> SelectedNames { get; } = new(StringComparer.OrdinalIgnoreCase);
     private string? Search { get; set; }
     private string? Category { get; set; }

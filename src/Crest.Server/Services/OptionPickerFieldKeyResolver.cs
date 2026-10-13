@@ -28,7 +28,7 @@ public sealed class OptionPickerFieldKeyResolver(IEnumerable<IOptionSourceProvid
             return [];
         }
 
-        var (providerKey, qualifier) = CrestOptionSourceKeys.Split(field.SourceKey);
+        var (providerKey, qualifier) = OptionSourceKeys.Split(field.SourceKey);
         var provider = providers.FirstOrDefault(candidate =>
             string.Equals(candidate.Key, providerKey, StringComparison.OrdinalIgnoreCase));
 

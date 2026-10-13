@@ -15,7 +15,7 @@ public sealed class IconProvidersController(
     IIconifyLocalMirrorStore localMirrorStore) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<CrestIconProvidersSettings>> GetAsync()
+    public async Task<ActionResult<IconProvidersSettings>> GetAsync()
     {
         if (!await CanManageAsync())
         {
@@ -26,7 +26,7 @@ public sealed class IconProvidersController(
     }
 
     [HttpPut]
-    public async Task<ActionResult<CrestIconProvidersSettings>> PutAsync(CrestIconProvidersSettings settings)
+    public async Task<ActionResult<IconProvidersSettings>> PutAsync(IconProvidersSettings settings)
     {
         if (!await CanManageAsync())
         {
@@ -64,7 +64,7 @@ public sealed class IconProvidersController(
 
     private Task<bool> CanManageAsync() => authorizationService.AuthorizeAsync(User, SettingsPermissions.ManageSettings);
 
-    private static CrestIconProvidersSettings Redact(CrestIconProvidersSettings settings) => settings with
+    private static IconProvidersSettings Redact(IconProvidersSettings settings) => settings with
     {
         Iconify = settings.Iconify with
         {

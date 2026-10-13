@@ -1,5 +1,7 @@
 @attribute [Route(MemberRoutePaths.Login)]
 @attribute [AllowAnonymous]
+@attribute [Crest.Components.Modules.SetsAuthenticationCookie]
+@attribute [Crest.Components.Modules.OrganizationFreePage]
 @namespace Crest.MemberTheme.Pages
 @inject NavigationManager Navigation
 
@@ -10,8 +12,8 @@
    kind of account it is talking to. A runtime check is a gate someone can get wrong; two
    bases cannot be confused.
 
-   Renders InteractiveWebAssembly, set by App.razor's auth-cookie rule rather than
-   declared here: under InteractiveAuto's first-visit server circuit the credential POST
+   Renders InteractiveWebAssembly, declared above with [SetsAuthenticationCookie] (App.razor
+   reads it off the routed page): under InteractiveAuto's first-visit server circuit the credential POST
    goes out on the server-side loopback HttpClient, so the auth Set-Cookie lands in that
    handler and never reaches the browser - a "successful" sign-in that leaves the browser
    anonymous. *@
@@ -44,7 +46,14 @@
             <CrestText TextStyle="TextStyle.Caption" Text="@_error" data-testid="member-login-error" />
         }
 
-        <CrestLink Path="@MemberRoutePaths.Register" Text="Create an account" />
+        <CrestLink Path="@MemberShellLinks.Relative(MemberRoutePaths.ForgotPassword)" Text="Forgot your password?" data-testid="member-login-forgot" />
+
+        @if (_hasExternalProviders)
+        {
+            <CrestLink Path="@MemberShellLinks.Relative(MemberRoutePaths.ExternalLogin)" Text="Sign in with another account" data-testid="member-login-external" />
+        }
+
+        <CrestLink Path="@MemberShellLinks.Relative(MemberRoutePaths.Register)" Text="Create an account" />
     </CrestStack>
 </div>
 
@@ -59,6 +68,19 @@
     private bool _rememberMe;
     private bool _busy;
     private string? _error;
+    private bool _hasExternalProviders;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _hasExternalProviders = (await Auth.GetExternalProvidersAsync()).Count > 0;
+        }
+        catch (HttpRequestException)
+        {
+            _hasExternalProviders = false;
+        }
+    }
 
     private async Task SignInAsync()
     {
@@ -76,7 +98,8 @@
             }
 
             // forceLoad: the session cookie was just set, and the member shell's
-            // authenticated document has to be fetched with it.
+            // authenticated document has to be fetched with it. The member base opens the
+            // organization picker (straight into the only organization when there is one).
             Navigation.NavigateTo(Navigation.BaseUri, forceLoad: true);
         }
         catch (Exception ex)

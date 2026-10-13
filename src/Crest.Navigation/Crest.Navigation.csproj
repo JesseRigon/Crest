@@ -21,6 +21,7 @@
     <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Navigation.Abstractions\Crest.Navigation.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Kinds\Crest.Kinds.csproj" />
   </ItemGroup>
 
   <ItemGroup>

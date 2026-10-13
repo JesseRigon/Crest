@@ -4,16 +4,20 @@ using Microsoft.AspNetCore.Mvc;
 using Crest.Queries;
 using QueriesPermissions = Crest.Queries.Permissions;
 using Crest.ViewModels;
+using Crest.Queries.Sql;
+using System.Text.Json;
+using SqlRun = Crest.AdminTheme.Api.SqlRun;
+using SqlRunRequest = Crest.AdminTheme.Api.SqlRunRequest;
 
 namespace Crest.Controllers;
 
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/queries")]
-public sealed class CrestQueriesController(ICrestRequestAccess requestAccess) : ControllerBase
+public sealed class QueriesController(IRequestAccess requestAccess) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<CrestQueryCatalog>> ListAsync([FromQuery] string? search = null)
+    public async Task<ActionResult<QueryCatalog>> ListAsync([FromQuery] string? search = null)
     {
         var access = await requestAccess.AuthorizeAsync(User, QueriesPermissions.ManageQueries);
         if (access is null) return Forbid();
@@ -25,11 +29,11 @@ public sealed class CrestQueriesController(ICrestRequestAccess requestAccess) : 
             .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
-        return Ok(new CrestQueryCatalog(queries.OrderBy(query => query.Name, StringComparer.OrdinalIgnoreCase).Select(CrestQuery.From).ToArray(), sources));
+        return Ok(new QueryCatalog(queries.OrderBy(query => query.Name, StringComparer.OrdinalIgnoreCase).Select(CrestQuery.From).ToArray(), sources));
     }
 
     [HttpPost]
-    public async Task<ActionResult<CrestQuery>> CreateAsync([FromBody] CrestQueryWrite write)
+    public async Task<ActionResult<CrestQuery>> CreateAsync([FromBody] QueryWrite write)
     {
         var access = await requestAccess.AuthorizeAsync(User, QueriesPermissions.ManageQueries);
         if (access is null) return Forbid();
@@ -47,7 +51,7 @@ public sealed class CrestQueriesController(ICrestRequestAccess requestAccess) : 
     }
 
     [HttpPut("{name}")]
-    public async Task<ActionResult<CrestQuery>> UpdateAsync(string name, [FromBody] CrestQueryWrite write)
+    public async Task<ActionResult<CrestQuery>> UpdateAsync(string name, [FromBody] QueryWrite write)
     {
         var access = await requestAccess.AuthorizeAsync(User, QueriesPermissions.ManageQueries);
         if (access is null) return Forbid();
@@ -74,7 +78,7 @@ public sealed class CrestQueriesController(ICrestRequestAccess requestAccess) : 
     }
 
     [HttpPost("delete")]
-    public async Task<IActionResult> DeleteManyAsync([FromBody] CrestQueryNames request)
+    public async Task<IActionResult> DeleteManyAsync([FromBody] QueryNames request)
     {
         var access = await requestAccess.AuthorizeAsync(User, QueriesPermissions.ManageQueries);
         if (access is null) return Forbid();
@@ -83,7 +87,39 @@ public sealed class CrestQueriesController(ICrestRequestAccess requestAccess) : 
         return await access.GetRequiredService<IQueryManager>().DeleteQueryAsync(names) ? NoContent() : NotFound();
     }
 
-    private static void Apply(Query query, CrestQueryWrite write)
+    /// <summary>
+    /// Runs an ad-hoc SQL template (the admin's SQL runner): SELECT only, scoped to the caller,
+    /// paged and capped like a saved Sql query, never committed.
+    /// </summary>
+    [HttpPost("sql")]
+    public async Task<ActionResult<SqlRun>> RunSqlAsync([FromBody] SqlRunRequest request)
+    {
+        var access = await requestAccess.AuthorizeAsync(User, Crest.Queries.QueriesPermissions.ManageSqlQueries);
+        if (access is null) return Forbid();
+        if (access.GetService<SqlQueryRunner>() is not { } runner) return NotFound("The SQL queries feature is not enabled for this tenant.");
+        if (string.IsNullOrWhiteSpace(request.Sql)) return Ok(SqlRun.Failed("Enter a query to run."));
+
+        var parameters = request.Parameters is null
+            ? new Dictionary<string, object>()
+            : JConvert.DeserializeObject<Dictionary<string, object>>(request.Parameters.ToJsonString()) ?? [];
+        var run = await runner.RunAsync(request.Sql, parameters, HttpContext.RequestAborted);
+
+        var rows = new JsonArray(run.Rows.Select(row => JsonSerializer.SerializeToNode(row, row.GetType(), JOptions.Default)).ToArray());
+        var columns = run.Columns.Count > 0
+            ? run.Columns.Select(column => column.Name).ToArray()
+            : rows.OfType<JsonObject>().SelectMany(row => row.Select(pair => pair.Key)).Distinct(StringComparer.Ordinal).ToArray();
+
+        return Ok(new SqlRun(
+            run.Errors.ToArray(),
+            run.RawSql,
+            JsonSerializer.SerializeToNode(run.Parameters, JOptions.Default) as JsonObject ?? [],
+            columns,
+            rows,
+            run.Elapsed.TotalMilliseconds,
+            run.FactoryName));
+    }
+
+    private static void Apply(Query query, QueryWrite write)
     {
         query.Name = write.Name.Trim();
         query.Source = write.Source.Trim();

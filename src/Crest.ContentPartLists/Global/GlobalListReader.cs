@@ -1,7 +1,7 @@
-using Crest.Global;
+using Crest.Data.Global;
 using YesSql;
 
-namespace Crest.Global.Lists;
+namespace Crest.Data.Global.Lists;
 
 /// <summary>Reads the standard lists from the global store through the host cache, with a per-request memo on top.</summary>
 public interface IGlobalListReader
@@ -10,7 +10,7 @@ public interface IGlobalListReader
     Task<IReadOnlyList<GlobalList>> ListAsync(CancellationToken cancellationToken = default);
 }
 
-public sealed class GlobalListReader(ICrestGlobalStore store, ICrestGlobalCache cache) : IGlobalListReader
+public sealed class GlobalListReader(IGlobalStore store, IGlobalCache cache) : IGlobalListReader
 {
     private readonly Dictionary<string, GlobalList?> _byKey = new(StringComparer.OrdinalIgnoreCase);
     private IReadOnlyList<GlobalList>? _all;

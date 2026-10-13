@@ -69,12 +69,19 @@ public class MediaListScopeTests : IAsyncLifetime
         User("eve"),
     ];
 
-    private static FilesWorld World(YesSql.ISession session)
+    // The access index's store over the test's session: each step commits through it, as a
+    // request or the job ends its unit of work, so nothing it read outlives the commit.
+    private YesSqlShareAccessStore _accessStore = null!;
+
+    private Task CommitAsync() => _accessStore.CommitAsync();
+
+    private FilesWorld World(YesSql.ISession session)
     {
         var world = new FilesWorld { StoreOverride = new YesSqlMediaObjectStore(session) };
         var kinds = new ShareableKinds([world.Kind]);
         var resolver = new SharingResolver(kinds, world.Sharing.Store, world.Sharing.Clock);
-        world.AccessIndex = new ShareAccessIndexer(kinds, resolver, new YesSqlShareAccessStore(session), world.Sharing.Clock);
+        _accessStore = new YesSqlShareAccessStore(session);
+        world.AccessIndex = new ShareAccessIndexer(kinds, resolver, _accessStore, world.Sharing.Clock);
         world.Scopes = new SharingScopes(kinds, world.Sharing.Clock);
         return world;
     }
@@ -157,7 +164,7 @@ public class MediaListScopeTests : IAsyncLifetime
 
         // Entries are sharing's to index; here they were written straight to its store.
         await world.AccessIndex!.RecalculateAsync(new ShareableRef(FileShareableKind.Name, drive.Placement.Id), includeDescendants: true, Token);
-        await session.SaveChangesAsync();
+        await CommitAsync();
 
         await AssertListsAgreeAsync(world, session, images);
         await AssertListsAgreeAsync(world, session, spec);
@@ -169,13 +176,13 @@ public class MediaListScopeTests : IAsyncLifetime
 
         // A move recalculates what moved: the spec sheet under Images now inherits Marketing.
         await root.MoveAsync(specFile.Placement.Id, images.Placement.Id, Token);
-        await session.SaveChangesAsync();
+        await CommitAsync();
         await AssertListsAgreeAsync(world, session, images);
         await AssertListsAgreeAsync(world, session, spec);
 
         // A deleted object leaves every list.
         await root.DeleteAsync(final.Placement.Id, Token);
-        await session.SaveChangesAsync();
+        await CommitAsync();
         Assert.DoesNotContain(final.Placement.Id, (await world.Service(User("mia", "Marketing")).ListChildrenAsync(images.Placement.Id, Token)).Select(item => item.Placement.Id));
         await AssertListsAgreeAsync(world, session, images);
     }
@@ -189,7 +196,7 @@ public class MediaListScopeTests : IAsyncLifetime
         await world.DriveAsync("Closed");
         world.Share(open.Placement.Id, ShareEntry.Grant(SharePrincipal.Tenant, AccessLevel.Viewer));
         await world.AccessIndex!.RecalculateAsync(new ShareableRef(FileShareableKind.Name, open.Placement.Id), includeDescendants: true, Token);
-        await session.SaveChangesAsync();
+        await CommitAsync();
 
         Assert.Equal([open.Placement.Id], (await world.Service(User("eve")).ListDrivesAsync(Token)).Select(item => item.Placement.Id));
         Assert.Equal(2, (await world.Service(Root).ListDrivesAsync(Token)).Count);

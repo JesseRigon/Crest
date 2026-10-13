@@ -72,7 +72,9 @@ public class SharingResolverTests
 
         Assert.Equal(AccessLevel.Editor, await LevelAsync(world, Marketer, "chair-original.jpg"));
         Assert.Equal(AccessLevel.Viewer, await LevelAsync(world, Customer, "chair-original.jpg"));
-        Assert.Equal(AccessLevel.None, await LevelAsync(world, Marketer, "spec-sheets"));
+        // Marketing's grant stays under Images: on Spec sheets a marketer has only what the whole
+        // tenant has there (requirement 37: Tenant is everyone signed in).
+        Assert.Equal(AccessLevel.Viewer, await LevelAsync(world, Marketer, "spec-sheets"));
     }
 
     [Fact]

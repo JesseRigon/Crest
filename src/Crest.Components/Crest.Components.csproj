@@ -53,7 +53,7 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <!-- The component declaration ([CrestBlazorComponent]) and the display contracts. -->
+  <!-- The component declaration ([BlazorComponent]) and the display contracts. -->
   <ItemGroup>
     <ProjectReference Include="..\Crest.DisplayManagement.Abstractions\Crest.DisplayManagement.Abstractions.csproj" />
   </ItemGroup>

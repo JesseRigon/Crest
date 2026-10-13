@@ -23,6 +23,13 @@ public sealed class WorkflowConnection
     public int TimeoutSeconds { get; set; } = 30;
     public DateTime UpdatedUtc { get; set; }
 
+    /// <summary>
+    /// The roles assigned to the connection's machine identity (docs/access.md, Anonymous
+    /// actors): a webhook's run acts as the connection's application caller with these roles,
+    /// read from here on every build, never from what the caller of the hook sent.
+    /// </summary>
+    public List<string> Roles { get; set; } = [];
+
     /// <summary>Changes whenever the connection is saved; keys caches (tokens, rate limiters).</summary>
     public string Version => $"{Key}:{UpdatedUtc.Ticks}";
 

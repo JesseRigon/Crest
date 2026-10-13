@@ -2,6 +2,8 @@
 
 using System.Collections.Concurrent;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Crest.DisplayManagement.Extensions;
 using Crest.Environment.Extensions;
@@ -29,7 +31,7 @@ public interface IComponentRegistryManager
 /// <remarks>
 /// A component belongs to the feature that ships its type (the shell blueprint maps every type
 /// of an enabled feature's assembly to it); a component in a client library belongs to the module
-/// the library is named after (<c>Fruitful.Accounting.BlazorWasm</c> is <c>Fruitful.Accounting</c>'s),
+/// the library is named after (<c>Acme.Orders.BlazorWasm</c> is <c>Acme.Orders</c>'s),
 /// and one in a library no module owns (Crest.Components) to none. A component of a disabled
 /// feature is absent. Catalogs are applied in feature order, so a later feature, and a theme
 /// last, overrides an earlier one's name.
@@ -41,13 +43,16 @@ public sealed class ComponentRegistryManager : IComponentRegistryManager
     private readonly IExtensionManager _extensionManager;
     private readonly ITypeFeatureProvider _typeFeatureProvider;
     private readonly ComponentRegistryOptions _options;
+    private readonly ILogger _logger;
 
     public ComponentRegistryManager(
         ShellBlueprint blueprint,
         IExtensionManager extensionManager,
         ITypeFeatureProvider typeFeatureProvider,
-        IOptions<ComponentRegistryOptions> options)
+        IOptions<ComponentRegistryOptions> options,
+        ILogger<ComponentRegistryManager>? logger = null)
     {
+        _logger = logger ?? NullLogger<ComponentRegistryManager>.Instance;
         _blueprint = blueprint;
         _extensionManager = extensionManager;
         _typeFeatureProvider = typeFeatureProvider;
@@ -80,6 +85,8 @@ public sealed class ComponentRegistryManager : IComponentRegistryManager
         }
 
         var admitted = new List<(int Order, ComponentDescriptor Descriptor)>();
+        var zoneKeys = new List<(int Order, ZoneKeyDescriptor ZoneKey)>();
+        var contributions = new List<ZoneContribution>();
         foreach (var (assembly, limit) in assemblies)
         {
             if (limit is { } only && only != shell)
@@ -88,9 +95,20 @@ public sealed class ComponentRegistryManager : IComponentRegistryManager
             }
 
             var owner = OwnerOf(assembly);
-            foreach (var descriptor in ComponentCatalogs.ForAssembly(assembly).Describe())
+            var catalog = ComponentCatalogs.ForAssembly(assembly);
+
+            // A disabled feature's keys and contributions are absent with its components.
+            if (TryGetFeature(null, owner, enabled, out var keyOwner))
             {
-                if (!TryGetFeature(descriptor, owner, enabled, out var feature))
+                var position = keyOwner is null ? -1 : order.GetValueOrDefault(keyOwner.Id, int.MaxValue - 1);
+                zoneKeys.AddRange(catalog.DescribeZoneKeys().Select(zoneKey => (position, zoneKey)));
+            }
+
+            contributions.AddRange(catalog.DescribeContributions().Where(contribution => TryGetFeature(contribution.ComponentType, owner, enabled, out _)));
+
+            foreach (var descriptor in catalog.Describe())
+            {
+                if (!TryGetFeature(descriptor.Type, owner, enabled, out var feature))
                 {
                     continue;
                 }
@@ -106,16 +124,32 @@ public sealed class ComponentRegistryManager : IComponentRegistryManager
         }
 
         var ordered = admitted.OrderBy(entry => entry.Order).Select(entry => entry.Descriptor).ToArray();
-        return new ComponentRegistry([new FixedCatalog(ordered)], shell);
+        var registry = new ComponentRegistry([new FixedCatalog(ordered, [.. zoneKeys.OrderBy(entry => entry.Order).Select(entry => entry.ZoneKey)], contributions)], shell);
+
+        // Decision 6: a layout missing a required key gets a warning, not a refusal.
+        if (registry.TryGet("Layout", out var layout))
+        {
+            foreach (var required in registry.ZoneKeys.Where(key => key.RequiredOnLayout && !key.IsFamily && layout.Zone(key.Key) is null))
+            {
+                _logger.LogWarning("The {Shell} layout '{Layout}' has no zone for the required key '{Key}'.", shell, layout.Type?.FullName, required.Key);
+            }
+        }
+
+        foreach (var contribution in contributions.Where(contribution => !registry.TryGetZoneKey(contribution.Key, out _)))
+        {
+            _logger.LogWarning("'{Component}' contributes to the zone key '{Key}', which no module declares.", contribution.ComponentType.FullName, contribution.Key);
+        }
+
+        return registry;
     }
 
     // The feature a component belongs to: its type's feature when its assembly is a feature's,
     // else the feature of the module its library is named after; null when nothing owns it.
     // False when that feature is disabled.
-    private bool TryGetFeature(ComponentDescriptor descriptor, IExtensionInfo? owner, HashSet<string> enabled, out IFeatureInfo? feature)
+    private bool TryGetFeature(Type? type, IExtensionInfo? owner, HashSet<string> enabled, out IFeatureInfo? feature)
     {
         feature = null;
-        if (descriptor.Type is { } type)
+        if (type is not null)
         {
             if (_blueprint.Dependencies.TryGetValue(type, out var features) && features.Any())
             {
@@ -168,8 +202,12 @@ public sealed class ComponentRegistryManager : IComponentRegistryManager
             .FirstOrDefault();
     }
 
-    private sealed class FixedCatalog(IReadOnlyList<ComponentDescriptor> descriptors) : IComponentCatalog
+    private sealed class FixedCatalog(IReadOnlyList<ComponentDescriptor> descriptors, IReadOnlyList<ZoneKeyDescriptor> zoneKeys, IReadOnlyList<ZoneContribution> contributions) : IComponentCatalog
     {
         public IEnumerable<ComponentDescriptor> Describe() => descriptors;
+
+        public IEnumerable<ZoneKeyDescriptor> DescribeZoneKeys() => zoneKeys;
+
+        public IEnumerable<ZoneContribution> DescribeContributions() => contributions;
     }
 }

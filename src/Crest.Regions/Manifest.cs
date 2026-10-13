@@ -12,5 +12,5 @@ using Crest.Modules.Manifest;
     Name = "Crest Regions and Locations",
     Description = "Regional Profiles (a party's place, culture and currency), the geo tree every place resolves into, and per-country addressing maps.",
     Category = "Crest",
-    Dependencies = ["Crest", "Crest.Contents", "Crest.ContentFields", "Crest.Title", "Crest.Global"]
+    Dependencies = ["Crest", "Crest.Contents", "Crest.ContentFields", "Crest.Title", "Crest.Data.Global"]
 )]

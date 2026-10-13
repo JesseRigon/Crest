@@ -18,7 +18,7 @@ public class WorkflowDisplayActionTests
     {
         var filter = Filter(AccessDecision.Allowed, run: []);
 
-        Assert.True(await filter.AllowsAsync(s_viewer, Workflow("post-invoice"), TestContext.Current.CancellationToken));
+        Assert.True(await filter.AllowsAsync(s_viewer, Workflow("approve-order"), TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -26,7 +26,7 @@ public class WorkflowDisplayActionTests
     {
         var filter = Filter(AccessDecision.Denied("no"), run: []);
 
-        Assert.False(await filter.AllowsAsync(s_viewer, Workflow("post-invoice"), TestContext.Current.CancellationToken));
+        Assert.False(await filter.AllowsAsync(s_viewer, Workflow("approve-order"), TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class WorkflowDisplayActionTests
     {
         var filter = Filter(AccessDecision.Allowed, run: ["Accountant"]);
 
-        Assert.False(await filter.AllowsAsync(s_viewer, Workflow("post-invoice"), TestContext.Current.CancellationToken));
+        Assert.False(await filter.AllowsAsync(s_viewer, Workflow("approve-order"), TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class WorkflowDisplayActionTests
     {
         var filter = Filter(AccessDecision.Allowed, run: [], contract: null);
 
-        Assert.False(await filter.AllowsAsync(s_viewer, Workflow("post-invoice"), TestContext.Current.CancellationToken));
+        Assert.False(await filter.AllowsAsync(s_viewer, Workflow("approve-order"), TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -79,14 +79,25 @@ public class WorkflowDisplayActionTests
     }
 
     [Fact]
+    public void TheContractReportsErrorsByInputForAForm()
+    {
+        var contract = UiActionContract.Parse("email: string\namount: number?");
+
+        var errors = contract.CheckByInput(new System.Text.Json.Nodes.JsonObject { ["amount"] = "three", ["extra"] = true });
+
+        Assert.Equal(["amount", "email", "extra"], errors.Keys.Order(StringComparer.Ordinal));
+        Assert.Contains("'email' is required", errors["email"][0], StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task TheValidatorChecksATemplatesArgumentsAgainstTheContract()
     {
         var contracts = Substitute.For<IUiActionContracts>();
-        contracts.FindAsync("post-invoice", Arg.Any<CancellationToken>()).Returns(UiActionContract.Parse("invoice: string"));
+        contracts.FindAsync("approve-order", Arg.Any<CancellationToken>()).Returns(UiActionContract.Parse("order: string"));
         var validator = new WorkflowDisplayActionValidator(contracts);
 
-        Assert.Empty(await validator.ValidateAsync(new DisplayAction { Kind = DisplayActionKind.Workflow, Workflow = "post-invoice", Arguments = new() { ["invoice"] = DisplayBinding.FromEvent("id") } }, TestContext.Current.CancellationToken));
-        Assert.NotEmpty(await validator.ValidateAsync(new DisplayAction { Kind = DisplayActionKind.Workflow, Workflow = "post-invoice" }, TestContext.Current.CancellationToken));
+        Assert.Empty(await validator.ValidateAsync(new DisplayAction { Kind = DisplayActionKind.Workflow, Workflow = "approve-order", Arguments = new() { ["order"] = DisplayBinding.FromEvent("id") } }, TestContext.Current.CancellationToken));
+        Assert.NotEmpty(await validator.ValidateAsync(new DisplayAction { Kind = DisplayActionKind.Workflow, Workflow = "approve-order" }, TestContext.Current.CancellationToken));
         Assert.NotEmpty(await validator.ValidateAsync(new DisplayAction { Kind = DisplayActionKind.Workflow, Workflow = "unexposed" }, TestContext.Current.CancellationToken));
         Assert.Empty(await validator.ValidateAsync(new DisplayAction { Kind = DisplayActionKind.Navigate, Value = DisplayBinding.Literal("x") }, TestContext.Current.CancellationToken));
     }

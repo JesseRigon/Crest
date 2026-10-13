@@ -117,6 +117,7 @@
         "Crest.Navigation",
         "Crest.Notifications",
         "Crest.Notifications.Email",
+        "Crest.Notifications.Portal",
         "Crest.Notifications.Sms",
         "Crest.OpenId",
         "Crest.OpenId.Client",

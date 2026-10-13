@@ -22,8 +22,8 @@ namespace Crest.Parties.Controllers;
 [Route(PartiesConstants.Routes.Api)]
 public sealed class PartyTypesController(
     IAuthorizationService authorization,
-    CrestAdminMenuBuilder adminMenuBuilder,
-    CrestUserMenuPreferencesService userMenuPreferences,
+    AdminMenuBuilder adminMenuBuilder,
+    UserMenuPreferencesService userMenuPreferences,
     PartyTypeCatalog catalog,
     IOptions<AdminOptions> adminOptions) : ControllerBase
 {
@@ -37,7 +37,7 @@ public sealed class PartyTypesController(
 
         // The tree the sidebar serves, before the user's own overlay, so a user-hidden type
         // is still found and flagged. Keys are the served keys - synced node UniqueIds, never
-        // the provider's slug (see CrestProviderMenuSyncService for why the slug does not survive).
+        // the provider's slug (see ProviderMenuSyncService for why the slug does not survive).
         var menu = await adminMenuBuilder.BuildAsync(ControllerContext, User, applyUserPreferences: false);
 
         var adminPath = "/" + adminOptions.Value.AdminUrlPrefix.Trim('/');
@@ -45,7 +45,7 @@ public sealed class PartyTypesController(
         var hiddenByUser = (await userMenuPreferences.GetAsync(User)).HiddenItemKeys.ToHashSet(StringComparer.Ordinal);
 
         var models = new List<PartyTypeModel>();
-        foreach (var type in catalog.Types)
+        foreach (var type in catalog.Kinds)
         {
             var route = PartyTypeCatalog.RouteOf(type);
             var menuItem = root is null ? null : Flatten(root.Items).FirstOrDefault(item => UrlMatches(item, adminPath + route));

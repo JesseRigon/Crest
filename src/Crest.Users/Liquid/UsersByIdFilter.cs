@@ -11,10 +11,14 @@ namespace Crest.Users.Liquid;
 public class UsersByIdFilter : ILiquidFilter
 {
     private readonly ISession _session;
+    private readonly Crest.Access.IAccessDecision _decision;
+    private readonly Crest.Access.ICallerContextAccessor _callers;
 
-    public UsersByIdFilter(ISession session)
+    public UsersByIdFilter(ISession session, Crest.Access.IAccessDecision decision, Crest.Access.ICallerContextAccessor callers)
     {
         _session = session;
+        _decision = decision;
+        _callers = callers;
     }
 
     public async ValueTask<FluidValue> ProcessAsync(FluidValue input, FilterArguments arguments, LiquidTemplateContext ctx)
@@ -41,7 +45,7 @@ public class UsersByIdFilter : ILiquidFilter
 
                 var missingUsers = await _session.Query<User, UserIndex>(x => x.UserId.IsIn(missingUserIds)).ListAsync();
 
-                return FluidValue.Create(missingUsers.Concat(cachedUsers).ToList(), ctx.Options);
+                return FluidValue.Create(await LiquidUserScope.VisibleAsync(missingUsers.Concat(cachedUsers), _decision, _callers), ctx.Options);
             }
 
             return EmptyValue.Instance;
@@ -52,11 +56,14 @@ public class UsersByIdFilter : ILiquidFilter
             // List of user ids
             var userIds = input.Enumerate(ctx).Select(x => x.ToStringValue()).ToArray();
 
-            return FluidValue.Create(await _session.Query<User, UserIndex>(x => x.UserId.IsIn(userIds)).ListAsync(), ctx.Options);
+            return FluidValue.Create(await LiquidUserScope.VisibleAsync(await _session.Query<User, UserIndex>(x => x.UserId.IsIn(userIds)).ListAsync(), _decision, _callers), ctx.Options);
         }
 
         var userId = input.ToStringValue();
 
-        return FluidValue.Create(await _session.Query<User, UserIndex>(x => x.UserId == userId).FirstOrDefaultAsync(), ctx.Options);
+        var user = await _session.Query<User, UserIndex>(x => x.UserId == userId).FirstOrDefaultAsync();
+        return user is not null && (await LiquidUserScope.VisibleAsync([user], _decision, _callers)).Count == 1
+            ? FluidValue.Create(user, ctx.Options)
+            : NilValue.Instance;
     }
 }

@@ -114,3 +114,18 @@ public sealed class ComponentOverrides(IDocumentManager<ComponentOverridesDocume
         }
     }
 }
+
+/// <summary>
+/// The templates' part of a tree's composite version (decision 12): the published template set
+/// and the overrides document. A template is content, so its publish also bumps the content
+/// version; the overrides are a document of their own.
+/// </summary>
+public sealed class TemplatesTreeVersion(ITemplateCatalog templates, ComponentOverrides overrides) : IDisplayTreeVersionPart
+{
+    public async ValueTask<string?> GetVersionAsync(CancellationToken cancellationToken = default)
+    {
+        var published = await templates.ListPublishedAsync();
+        var document = await overrides.GetAsync();
+        return string.Join(',', published.Select(template => template.ContentItemVersionId).Order(StringComparer.Ordinal)) + "|" + document.Identifier;
+    }
+}

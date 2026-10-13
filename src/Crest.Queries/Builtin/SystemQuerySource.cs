@@ -48,9 +48,12 @@ public sealed class SystemQuerySource : IQuerySource, IQueryDescriber
         new("IsAuthenticated", typeof(bool)),
     ];
 
+    // Name and Branding are the anonymous subset (docs/branding.md › Permissions): the login
+    // page renders them. The rest needs an authenticated caller.
     private static readonly QueryColumn[] s_siteColumns =
     [
         new("Name", typeof(string)),
+        new("Branding", typeof(JsonObject)),
         new("DefaultCulture", typeof(string)),
         new("BaseUrl", typeof(string)),
     ];
@@ -204,16 +207,32 @@ public sealed class SystemQuerySource : IQuerySource, IQueryDescriber
         }
 
         var site = await siteService.GetSiteSettingsAsync();
-        var culture = _serviceProvider.GetService(typeof(ILocalizationService)) is ILocalizationService localization
-            ? await localization.GetDefaultCultureAsync()
-            : null;
+
+        // One entry per registered rendition: its URL, or "" when not set (empty is a value;
+        // the surface falls back).
+        var branding = new JsonObject();
+        if (_serviceProvider.GetService(typeof(Microsoft.Extensions.Options.IOptions<BrandingOptions>)) is Microsoft.Extensions.Options.IOptions<BrandingOptions> brandingOptions)
+        {
+            foreach (var (name, url) in site.ResolveRenditions(brandingOptions.Value, _serviceProvider.GetService(typeof(IBrandingUrlResolver)) as IBrandingUrlResolver))
+            {
+                branding[name] = url;
+            }
+        }
 
         var row = new JsonObject
         {
             ["Name"] = site.SiteName,
-            ["DefaultCulture"] = culture,
-            ["BaseUrl"] = site.BaseUrl,
+            ["Branding"] = branding,
         };
+
+        var caller = (_serviceProvider.GetService(typeof(ICallerContextAccessor)) as ICallerContextAccessor)?.Current;
+        if (caller?.IsAuthenticated == true)
+        {
+            row["DefaultCulture"] = _serviceProvider.GetService(typeof(ILocalizationService)) is ILocalizationService localization
+                ? await localization.GetDefaultCultureAsync()
+                : null;
+            row["BaseUrl"] = site.BaseUrl;
+        }
 
         return new QueryResults { Items = [row], Columns = s_siteColumns, Total = 1 };
     }

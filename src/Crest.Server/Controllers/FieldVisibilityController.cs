@@ -21,7 +21,7 @@ namespace Crest.Controllers;
 public sealed class FieldVisibilityController(
     IContentDefinitionManager contentDefinitionManager,
     IAuthorizationService authorization,
-    Crest.Services.CrestDefinitionLockGuard locks) : ControllerBase
+    Crest.Services.DefinitionLockGuard locks) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<FieldVisibilityModel>> GetAsync([FromQuery] string part, [FromQuery] string field)
@@ -53,11 +53,11 @@ public sealed class FieldVisibilityController(
         }
 
         // A locked field cannot be made conditional (hidden); 409 via the lock filter.
-        await locks.EnsureFieldChangeAsync(request.Part, request.Field, Crest.Services.CrestDefinitionChanges.SettingsChanged);
+        await locks.EnsureFieldChangeAsync(request.Part, request.Field, Crest.Services.DefinitionChanges.SettingsChanged);
 
         var incoming = request.Settings ?? new CrestFieldVisibilitySettings();
         var hasCondition = !string.IsNullOrWhiteSpace(incoming.Path);
-        if (hasCondition && !CrestFieldVisibilityOperators.All.Contains(incoming.Operator, StringComparer.OrdinalIgnoreCase))
+        if (hasCondition && !FieldVisibilityOperators.All.Contains(incoming.Operator, StringComparer.OrdinalIgnoreCase))
         {
             return Problem($"'{incoming.Operator}' is not a visibility operator.", statusCode: StatusCodes.Status400BadRequest);
         }
@@ -67,7 +67,7 @@ public sealed class FieldVisibilityController(
                 .MergeSettings<CrestFieldVisibilitySettings>(settings =>
                 {
                     settings.Path = hasCondition ? incoming.Path!.Trim() : null;
-                    settings.Operator = hasCondition ? incoming.Operator : CrestFieldVisibilityOperators.Any;
+                    settings.Operator = hasCondition ? incoming.Operator : FieldVisibilityOperators.Any;
                     settings.Keys = hasCondition
                         ? [.. (incoming.Keys ?? []).Where(key => !string.IsNullOrWhiteSpace(key)).Select(key => key.Trim())]
                         : [];

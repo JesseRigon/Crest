@@ -118,25 +118,56 @@ public sealed class MemberCallerContributor(
             return;
         }
 
-        builder.UserClass = user.TryGet<CrestUserClass>(out var userClass) ? userClass.Class : UserClasses.Staff;
+        // The class is a set derived from the bindings; the request's side picks which one
+        // the caller acts in. A staff connection acts on the admin and the site; a member
+        // connection only on the member side (a dual user's staff grants never reach the
+        // portal, their member roles never reach the admin).
+        var isStaff = UserClassSet.Has(user, UserClasses.Staff);
+        var isMember = UserClassSet.Has(user, UserClasses.Member);
+
+        // An impersonation acts on the member side only (docs/shells-and-themes.md › Member
+        // sessions and sides): the session IS the member's principal, so a dual user being
+        // impersonated would otherwise carry their staff grants into the admin. Staff rights
+        // are stripped exactly as on any member-side request: the admin is refused, the site
+        // sees a signed-in visitor with no tenant rights.
+        if (builder.Request.ImpersonatorUserId is not null && builder.Request.Side != CallerSide.Member)
+        {
+            builder.UserClass = UserClasses.Member;
+            if (builder.Request.Side == CallerSide.Admin)
+            {
+                builder.DenialReason = "An impersonation session acts on the member side only; stop impersonating to return to the admin.";
+                return;
+            }
+
+            await ReplaceRolesAsync(builder, []);
+            return;
+        }
 
         if (builder.Request.Side != CallerSide.Member)
         {
-            if (builder.UserClass == UserClasses.Member)
+            if (isStaff)
             {
-                // A member acts only on the member side. The admin is refused outright; the
-                // public site sees the member as a signed-in visitor with no tenant rights.
-                if (builder.Request.Side == CallerSide.Admin)
-                {
-                    builder.DenialReason = "A member-class user cannot act on the admin side.";
-                    return;
-                }
-
-                await ReplaceRolesAsync(builder, []);
+                builder.UserClass = UserClasses.Staff;
+                return;
             }
 
+            builder.UserClass = isMember ? UserClasses.Member : null;
+
+            // Without a staff connection the admin is refused outright; the public site
+            // sees the user as a signed-in visitor with no tenant rights.
+            if (builder.Request.Side == CallerSide.Admin)
+            {
+                builder.DenialReason = isMember
+                    ? "A member-class user cannot act on the admin side."
+                    : "The user belongs to no organization.";
+                return;
+            }
+
+            await ReplaceRolesAsync(builder, []);
             return;
         }
+
+        builder.UserClass = UserClasses.Member;
 
         // The organization the request names, or the session's last choice (filled in by the
         // request resolver); never a default.
@@ -144,7 +175,7 @@ public sealed class MemberCallerContributor(
         var member = user.TryGet<CrestMemberInfo>(out var info) ? info : null;
         var binding = organizationId is null
             ? null
-            : member?.Bindings.FirstOrDefault(candidate => string.Equals(candidate.OrganizationId, organizationId, StringComparison.Ordinal));
+            : member?.Bindings.FirstOrDefault(candidate => candidate.Class == UserClasses.Member && string.Equals(candidate.OrganizationId, organizationId, StringComparison.Ordinal));
 
         if (binding is null)
         {
@@ -164,11 +195,11 @@ public sealed class MemberCallerContributor(
     {
         builder.UserClass = UserClasses.Member;
         var admins = await session
-            .Query<User, MemberOrgBindingIndex>(index => index.OrganizationId == organizationId && index.IsMemberAdmin)
+            .Query<User, UserConnectionIndex>(index => index.OrganizationId == organizationId && index.Class == UserClasses.Member && index.IsMemberAdmin)
             .ListAsync();
         var roles = admins
             .SelectMany(admin => admin.TryGet<CrestMemberInfo>(out var info) ? info.Bindings : [])
-            .Where(binding => string.Equals(binding.OrganizationId, organizationId, StringComparison.Ordinal))
+            .Where(binding => binding.Class == UserClasses.Member && string.Equals(binding.OrganizationId, organizationId, StringComparison.Ordinal))
             .SelectMany(binding => binding.Roles)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -225,6 +256,16 @@ public sealed class MemberCallerRequestResolver(IHttpContextAccessor httpContext
             return request;
         }
 
+        // The session belongs to the request's own signed-in user. A caller built for someone
+        // else (a workflow's sealed actor delivered after commit, setup's own request) has no
+        // session here: neither its organization choice nor an impersonator may come from it.
+        var gated = httpContext.Features.Get<Microsoft.AspNetCore.Authentication.IAuthenticateResultFeature>()?.AuthenticateResult;
+        if (gated?.Principal is not { } sessionUser
+            || !string.Equals(UserIdOf(sessionUser), UserIdOf(request.Principal), StringComparison.Ordinal))
+        {
+            return request;
+        }
+
         var organizationId = request.RequestedOrganizationId;
         if (organizationId is null && request.Side == CallerSide.Member)
         {
@@ -234,4 +275,7 @@ public sealed class MemberCallerRequestResolver(IHttpContextAccessor httpContext
         var impersonator = await sessionService.GetImpersonatorAsync(httpContext);
         return request with { RequestedOrganizationId = organizationId, ImpersonatorUserId = impersonator };
     }
+
+    private static string? UserIdOf(System.Security.Claims.ClaimsPrincipal principal) =>
+        principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 }

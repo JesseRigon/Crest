@@ -1,0 +1,144 @@
+@page "/Regions/AddressingMaps"
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Crest.AdminTheme.Api
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* Addressing maps as runtime rules (docs/regions.md): global reference data the Default
+   tenant edits here; every tenant's address forms and validation read the stored map at
+   runtime. An edited map survives data-file reloads until it is reverted. *@
+
+<CrestStack Gap="1rem" data-testid="addressing-maps-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="@T["Addressing maps"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Per country: the levels an address uses, the form's fields and the postal-code rule. Shared by every tenant."]" />
+        </CrestStack>
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
+            <CrestTextBox @bind-Value="NewCountry" Placeholder="@T["Country code"]" Style="width: 8rem;" />
+            <CrestButton Text="@T["Add or open"]" Icon="add" Click="OpenNewAsync" Disabled="@(IsBusy || string.IsNullOrWhiteSpace(NewCountry))" />
+        </CrestStack>
+    </CrestStack>
+
+    @foreach (var error in Errors)
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@error</CrestAlert>
+    }
+
+    @if (EditingCountry is not null)
+    {
+        <CrestCard data-testid="addressing-map-editor">
+            <CrestStack Gap="1rem">
+                <CrestText TextStyle="TextStyle.H5" Text="@T["Map for {0}", EditingCountry]" />
+                <CrestFormField Text="@T["Map (JSON)"]" Style="width: 100%;">
+                    <CrestTextArea @bind-Value="Draft" Rows="24" Style="width: 100%; font-family: var(--rz-code-font-family, monospace);" />
+                </CrestFormField>
+                <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => EditingCountry = null)" Disabled="@IsBusy" />
+                    <CrestButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" />
+                </CrestStack>
+            </CrestStack>
+        </CrestCard>
+    }
+
+    <CrestCard>
+        @if (Maps is null)
+        {
+            @if (LoadFailed)
+            {
+                <CrestAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T["Addressing maps are edited on the Default tenant by an administrator of global reference data."]</CrestAlert>
+            }
+            else
+            {
+                <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+            }
+        }
+        else
+        {
+            <CrestDataGrid Data="@Maps" TItem="CrestAddressingMapSummary" AllowPaging="true" PageSize="25" AllowFiltering="true">
+                <Columns>
+                    <CrestDataGridColumn TItem="CrestAddressingMapSummary" Property="Country" Title="@T["Country"]" Width="8rem" />
+                    <CrestDataGridColumn TItem="CrestAddressingMapSummary" Property="LevelCount" Title="@T["Levels"]" Width="6rem" Filterable="false" />
+                    <CrestDataGridColumn TItem="CrestAddressingMapSummary" Property="PostalCodeLabel" Title="@T["Postal label"]" />
+                    <CrestDataGridColumn TItem="CrestAddressingMapSummary" Property="PostalCodePattern" Title="@T["Postal pattern"]" />
+                    <CrestDataGridColumn TItem="CrestAddressingMapSummary" Title="@T["Source"]" Width="8rem" Filterable="false"><Template Context="map">@(map.Edited ? T["Edited"] : T["Shipped"])</Template></CrestDataGridColumn>
+                    <CrestDataGridColumn TItem="CrestAddressingMapSummary" Title="@T["Actions"]" Width="10rem" Filterable="false"><Template Context="map"><CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem"><CrestButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => EditAsync(map.Country))" title="@T["Edit"]" /><CrestButton Icon="undo" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Outlined" Click="@(() => RevertAsync(map.Country))" Disabled="@(!map.Edited || IsBusy)" title="@T["Revert to shipped"]" /></CrestStack></Template></CrestDataGridColumn>
+                </Columns>
+            </CrestDataGrid>
+        }
+    </CrestCard>
+</CrestStack>
+
+@code {
+    private CrestAddressingMapSummary[]? Maps { get; set; }
+    private bool LoadFailed { get; set; }
+    private bool IsBusy { get; set; }
+    private string[] Errors { get; set; } = [];
+    private string? EditingCountry { get; set; }
+    private string Draft { get; set; } = string.Empty;
+    private string? NewCountry { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        Maps = await Api.Crest.Rest.Regions.ListAddressingMapsAsync();
+        LoadFailed = Maps is null;
+    }
+
+    private Task OpenNewAsync() => EditAsync(NewCountry!.Trim().ToUpperInvariant());
+
+    private async Task EditAsync(string country)
+    {
+        IsBusy = true;
+        Errors = [];
+        try
+        {
+            // The applicable map: the country's own, else the generic one as a starting point.
+            var map = await Api.Crest.Rest.Regions.GetAddressingMapAsync(country) ?? new JsonObject();
+            map.Remove("id");
+            map.Remove("edited");
+            map["country"] = country;
+            EditingCountry = country;
+            Draft = map.ToJsonString(new() { WriteIndented = true });
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (EditingCountry is null) return;
+        JsonObject? map;
+        try { map = JsonNode.Parse(Draft) as JsonObject; }
+        catch (JsonException exception) { Errors = [exception.Message]; return; }
+        if (map is null) { Errors = [T["The map must be a JSON object."]]; return; }
+
+        IsBusy = true;
+        try
+        {
+            var result = await Api.Crest.Rest.Regions.SaveAddressingMapAsync(EditingCountry, map);
+            Errors = result.Errors;
+            if (!result.Succeeded) return;
+            Notifications.Notify(NotificationSeverity.Success, T["Addressing maps"], T["The map for {0} was saved.", EditingCountry]);
+            EditingCountry = null;
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task RevertAsync(string country)
+    {
+        IsBusy = true;
+        try
+        {
+            var result = await Api.Crest.Rest.Regions.RevertAddressingMapAsync(country);
+            Errors = result.Errors;
+            if (result.Succeeded) Notifications.Notify(NotificationSeverity.Success, T["Addressing maps"], T["The map for {0} was reverted.", country]);
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+}

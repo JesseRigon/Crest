@@ -32,11 +32,20 @@ This list is generated from the current resolved Orchard admin navigation for th
 | Settings > Recipes | `/Admin/Recipes` | native list/execute |
 | Settings > Localization > Cultures | `/Admin/Settings/localization` | native settings editor |
 | Settings > Search > Indexes | `/Admin/indexing` | native list/rebuild |
-| Settings > Search > Queries > All Queries | `/Admin/Queries/Index` | pending |
-| Settings > Search > Queries > Run SQL Query | `/Admin/Queries/Sql/Query` | pending |
-| Settings > Deployments > Debugging | `/Admin/Settings/debugging` | pending |
-| Settings > Deployments > JSON Import | `/Admin/DeploymentPlan/Import/Json` | pending |
-| Settings > Deployments > Package Import | `/Admin/DeploymentPlan/Import/Index` | pending |
-| Settings > Deployments > Remote Clients | `/Admin/Deployment/RemoteClient/Index` | pending |
-| Settings > Deployments > Remote Instances | `/Admin/Deployment/RemoteInstance/Index` | pending |
-| Settings > Deployments > Plans | `/Admin/DeploymentPlan/Index` | pending |
+| Settings > Search > Queries > All Queries | `/Admin/Queries/Index` | native list/editor (provider metadata as JSON) |
+| Settings > Search > Queries > Run SQL Query | `/Admin/Queries/Sql/Query` | native: SELECT-only runner through the query pipeline (`SqlQueryRunner`, shared with the MVC screen) |
+| Settings > Deployments > Debugging | `/Admin/Settings/debugging` | native settings editor |
+| Settings > Deployments > JSON Import | `/Admin/DeploymentPlan/Import/Json` | native |
+| Settings > Deployments > Package Import | `/Admin/DeploymentPlan/Import/Index` | native upload (through the upload pipeline) |
+| Settings > Deployments > Remote Clients | `/Admin/Deployment/RemoteClient/Index` | native list/editor (API key write-only) |
+| Settings > Deployments > Remote Instances | `/Admin/Deployment/RemoteInstance/Index` | native list/editor (API key write-only) |
+| Settings > Deployments > Plans | `/Admin/DeploymentPlan/Index`, `/Admin/DeploymentPlan/Display/{id}` | native list, steps (settings edited as the stored JSON), reorder, download, send to a remote instance |
+
+The Deployments pages and the SQL runner read and write through `api/crest/deployment`,
+`api/crest/settings/debugging` and `api/crest/queries/sql` (Crest.Server); package building
+and import (`DeploymentPackages`) and the SQL run (`SqlQueryRunner`) are shared with the stock
+MVC controllers, which stay until the MVC admin is retired. A deployment step's settings are
+edited as the JSON the plan stores, so a step type a module adds needs no component; the
+stock per-step editors (display drivers) remain only on the MVC screens. Remote instance and
+client API keys are write-only in the native pages: an edit keeps the stored key unless a
+new one is typed.

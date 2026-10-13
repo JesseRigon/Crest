@@ -2,7 +2,7 @@ const { ensureCultures } = require('../../harness/localization');
 const { createInstance } = require('../../harness/instance');
 const { loginAsAdmin } = require('../../harness/auth');
 
-// Regression check for CrestIconSourceStore's legacy icon fallback: default icons for
+// Regression check for IconSourceStore's legacy icon fallback: default icons for
 // stock menu items with no stored override used to be resolved (as a last resort) by
 // looking up the item's TRANSLATED caption text in LegacyNavigationIconMap, so switching
 // the admin UI culture changed the lookup key and silently dropped the icon for every

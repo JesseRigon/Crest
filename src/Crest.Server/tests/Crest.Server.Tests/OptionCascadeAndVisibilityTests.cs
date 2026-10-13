@@ -113,7 +113,7 @@ public class OptionDependentFilterTranslatorTests
 
 // The void-reason rule: a field shows only while its controlling field's resolved
 // value satisfies the condition; hidden fields are cleared on save.
-public class CrestFieldVisibilityRulesTests
+public class FieldVisibilityRulesTests
 {
     private static CrestFieldVisibilitySettings Condition(string @operator, params string[] keys) =>
         new() { Path = "Status", Operator = @operator, Keys = keys };
@@ -121,33 +121,33 @@ public class CrestFieldVisibilityRulesTests
     [Fact]
     public void No_condition_means_always_visible()
     {
-        Assert.True(CrestFieldVisibilityRules.IsVisible(null, []));
-        Assert.True(CrestFieldVisibilityRules.IsVisible(new CrestFieldVisibilitySettings(), []));
+        Assert.True(FieldVisibilityRules.IsVisible(null, []));
+        Assert.True(FieldVisibilityRules.IsVisible(new CrestFieldVisibilitySettings(), []));
     }
 
     [Fact]
     public void Any_shows_once_the_parent_has_a_value()
     {
-        Assert.False(CrestFieldVisibilityRules.IsVisible(Condition(CrestFieldVisibilityOperators.Any), []));
-        Assert.True(CrestFieldVisibilityRules.IsVisible(Condition(CrestFieldVisibilityOperators.Any), ["anything"]));
+        Assert.False(FieldVisibilityRules.IsVisible(Condition(FieldVisibilityOperators.Any), []));
+        Assert.True(FieldVisibilityRules.IsVisible(Condition(FieldVisibilityOperators.Any), ["anything"]));
     }
 
     [Fact]
     public void Equals_matches_keys_case_insensitively()
     {
-        var voided = Condition(CrestFieldVisibilityOperators.Equals, "Voided");
+        var voided = Condition(FieldVisibilityOperators.Equals, "Voided");
 
-        Assert.True(CrestFieldVisibilityRules.IsVisible(voided, ["voided"]));
-        Assert.False(CrestFieldVisibilityRules.IsVisible(voided, ["Posted"]));
-        Assert.False(CrestFieldVisibilityRules.IsVisible(voided, []));
+        Assert.True(FieldVisibilityRules.IsVisible(voided, ["voided"]));
+        Assert.False(FieldVisibilityRules.IsVisible(voided, ["Posted"]));
+        Assert.False(FieldVisibilityRules.IsVisible(voided, []));
     }
 
     [Fact]
     public void In_matches_any_configured_key()
     {
-        var settings = Condition(CrestFieldVisibilityOperators.In, "Voided", "Cancelled");
+        var settings = Condition(FieldVisibilityOperators.In, "Voided", "Cancelled");
 
-        Assert.True(CrestFieldVisibilityRules.IsVisible(settings, ["Cancelled"]));
-        Assert.False(CrestFieldVisibilityRules.IsVisible(settings, ["Draft"]));
+        Assert.True(FieldVisibilityRules.IsVisible(settings, ["Cancelled"]));
+        Assert.False(FieldVisibilityRules.IsVisible(settings, ["Draft"]));
     }
 }

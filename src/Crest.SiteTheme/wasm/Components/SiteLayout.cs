@@ -10,7 +10,7 @@ namespace Crest.SiteTheme.Client.Components;
 /// template named <c>Layout</c> replaces it. The design-system tokens style it; no theme CSS
 /// framework is loaded.
 /// </summary>
-[CrestBlazorComponent("Layout", DisplayName = "Site layout", Category = "Layout", Icon = "web", Instances = ComponentInstances.Single, IsHost = true)]
+[BlazorComponent("Layout", DisplayName = "Site layout", Category = "Layout", Icon = "web", Instances = ComponentInstances.Single, IsHost = true)]
 public sealed class SiteLayout : ComponentBase
 {
     [Parameter]
@@ -100,7 +100,7 @@ public sealed class SiteLayout : ComponentBase
 /// parts and fields arrive in the zones placement put them in. A template for
 /// <c>Content__{Type}</c> replaces it per type.
 /// </summary>
-[CrestBlazorComponent("Content", DisplayName = "Content item", Category = "Content", Icon = "article")]
+[BlazorComponent("Content", DisplayName = "Content item", Category = "Content", Icon = "article")]
 public sealed class SiteContent : ComponentBase
 {
     [Parameter, ComponentZone]
@@ -149,7 +149,7 @@ public sealed class SiteContent : ComponentBase
 }
 
 /// <summary>The site's not-found page (<c>NotFound</c>): the last fallback of the template chain (decision 7).</summary>
-[CrestBlazorComponent("NotFound", DisplayName = "Not found", Category = "Pages", Icon = "search_off")]
+[BlazorComponent("NotFound", DisplayName = "Not found", Category = "Pages", Icon = "search_off")]
 public sealed class SiteNotFound : ComponentBase
 {
     [Parameter]
@@ -166,7 +166,7 @@ public sealed class SiteNotFound : ComponentBase
 }
 
 /// <summary>The site's forbidden page (<c>Forbidden</c>).</summary>
-[CrestBlazorComponent("Forbidden", DisplayName = "Forbidden", Category = "Pages", Icon = "block")]
+[BlazorComponent("Forbidden", DisplayName = "Forbidden", Category = "Pages", Icon = "block")]
 public sealed class SiteForbidden : ComponentBase
 {
     [Parameter]

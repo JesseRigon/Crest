@@ -1,4 +1,4 @@
-using Crest.Global;
+using Crest.Data.Global;
 using Crest.Regions.Global;
 using Crest.Regions.Indexes;
 using Crest.Regions.Models;
@@ -7,7 +7,7 @@ using YesSql.Services;
 
 namespace Crest.Regions.Services;
 
-public sealed class GeoService(ICrestGlobalStore globalStore, ICrestGlobalCache cache, ISession tenantSession) : IGeoService
+public sealed class GeoService(IGlobalStore globalStore, IGlobalCache cache, ISession tenantSession) : IGeoService
 {
     // Standard nodes are read a country at a time through the host cache: a country's
     // whole tree (thousands of rows at most) is one version-keyed entry, so the hot path

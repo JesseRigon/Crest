@@ -106,7 +106,8 @@ public class DriveAdminTests
         var owner = new Mock<IUser>().Object;
         var users = new Mock<UserManager<IUser>>(Mock.Of<IUserStore<IUser>>(), null!, null!, null!, null!, null!, null!, null!, null!);
         users.Setup(manager => manager.FindByIdAsync("pat")).ReturnsAsync(owner);
-        var services = new ServiceCollection().AddSingleton(users.Object).BuildServiceProvider();
+        // Portal notifications on (the feature registers the marker), so a portal notice is stored.
+        var services = new ServiceCollection().AddSingleton(users.Object).AddSingleton(Mock.Of<IPortalNotifications>()).BuildServiceProvider();
 
         var session = new Mock<YesSql.ISession>();
         var notifications = new Mock<INotificationService>(MockBehavior.Strict);

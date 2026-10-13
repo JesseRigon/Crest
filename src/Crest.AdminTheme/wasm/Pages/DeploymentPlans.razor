@@ -1,0 +1,110 @@
+@page "/DeploymentPlan/Index"
+@using Crest.AdminTheme.Api
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NavigationManager Navigation
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+<CrestStack Gap="1rem" data-testid="deployment-plans-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="@T["Deployment Plans"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["A plan is an ordered list of steps that export this tenant's data and settings as a package."]" />
+        </CrestStack>
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <CrestButton Text="@T["Delete selected ({0})", Selected.Count]" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="DeleteSelectedAsync" Disabled="@(Selected.Count == 0 || IsBusy)" />
+            <CrestButton Text="@T["New plan"]" Icon="add" Click="@(() => { Creating = true; DraftName = string.Empty; Error = null; })" Disabled="@IsBusy" />
+        </CrestStack>
+    </CrestStack>
+
+    @if (Error is not null)
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</CrestAlert>
+    }
+
+    @if (Creating)
+    {
+        <CrestCard>
+            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="0.75rem">
+                <CrestFormField Text="@T["Name"]" Style="flex: 1;"><CrestTextBox @bind-Value="DraftName" Style="width: 100%;" /></CrestFormField>
+                <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Creating = false)" Disabled="@IsBusy" />
+                <CrestButton Text="@T["Create"]" Icon="save" Click="CreateAsync" Disabled="@IsBusy" />
+            </CrestStack>
+        </CrestCard>
+    }
+
+    <CrestCard>
+        <CrestRow AlignItems="AlignItems.End" Gap="0.75rem">
+            <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Search"]" Style="width: 100%;"><CrestTextBox @bind-Value="Search" Placeholder="@T["Search plan names"]" Style="width: 100%;" /></CrestFormField></CrestColumn>
+            <CrestColumn Size="12" SizeMD="3"><CrestButton Text="@T["Search"]" Icon="search" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" /></CrestColumn>
+        </CrestRow>
+    </CrestCard>
+
+    <CrestCard>
+        @if (Plans is null)
+        {
+            <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (Plans.Length == 0)
+        {
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["No deployment plans match this filter."]" />
+        }
+        else
+        {
+            <CrestDataGrid Data="@Plans" TItem="CrestDeploymentPlan" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <CrestDataGridColumn TItem="CrestDeploymentPlan" Width="3.5rem" Sortable="false" Filterable="false"><Template Context="plan"><CrestCheckBox Value="@Selected.Contains(plan.Id)" Change="@((bool value) => { if (value) Selected.Add(plan.Id); else Selected.Remove(plan.Id); })" Name="@($"plan-{plan.Id}")" /></Template></CrestDataGridColumn>
+                    <CrestDataGridColumn TItem="CrestDeploymentPlan" Property="Name" Title="@T["Name"]"><Template Context="plan"><a href="@($"DeploymentPlan/Display/{plan.Id}")">@plan.Name</a></Template></CrestDataGridColumn>
+                    <CrestDataGridColumn TItem="CrestDeploymentPlan" Property="StepCount" Title="@T["Steps"]" Width="8rem" />
+                    <CrestDataGridColumn TItem="CrestDeploymentPlan" Title="@T["Actions"]" Width="12rem"><Template Context="plan"><CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem"><CrestButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Navigation.NavigateTo($"DeploymentPlan/Display/{plan.Id}"))" title="@T["Open"]" /><CrestButton Icon="download" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => DeploymentDownload.SaveAsync(Api, Js, plan.Id, Notifications, T))" title="@T["Download package"]" /></CrestStack></Template></CrestDataGridColumn>
+                </Columns>
+            </CrestDataGrid>
+        }
+    </CrestCard>
+</CrestStack>
+
+@code {
+    [Inject] private IJSRuntime Js { get; set; } = default!;
+
+    private CrestDeploymentPlan[]? Plans { get; set; }
+    private HashSet<long> Selected { get; } = [];
+    private string? Search { get; set; }
+    private bool IsBusy { get; set; }
+    private bool Creating { get; set; }
+    private string DraftName { get; set; } = string.Empty;
+    private string? Error { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync() => Plans = await Api.Crest.Rest.Deployment.ListPlansAsync(Search);
+
+    private async Task CreateAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var result = await Api.Crest.Rest.Deployment.CreatePlanAsync(DraftName);
+            if (!result.Succeeded) { Error = result.Message ?? T["The plan could not be created."]; return; }
+            Navigation.NavigateTo($"DeploymentPlan/Display/{result.Message}");
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task DeleteSelectedAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            if (await Api.Crest.Rest.Deployment.DeletePlansAsync(Selected.ToArray()))
+            {
+                Notifications.Notify(NotificationSeverity.Success, T["Deployment Plans"], T["{0} plans deleted.", Selected.Count]);
+                Selected.Clear();
+            }
+            else Error = T["The selected plans could not be deleted."];
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+}

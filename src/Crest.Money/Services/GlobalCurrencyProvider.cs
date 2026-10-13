@@ -1,4 +1,4 @@
-using Crest.Global;
+using Crest.Data.Global;
 using Crest.Money.Global;
 using Crest.Money;
 using Crest.Money.Abstractions;
@@ -25,7 +25,7 @@ public sealed class GlobalCurrencyProvider : ICurrencyProvider
 
     public bool IsKnownCurrency(string isoCode) => isoCode is not null && _table.ContainsKey(isoCode);
 
-    public async Task LoadAsync(ICrestGlobalStore store, ICrestGlobalCache cache, CancellationToken cancellationToken)
+    public async Task LoadAsync(IGlobalStore store, IGlobalCache cache, CancellationToken cancellationToken)
     {
         var rows = await cache.GetOrCreateAsync<IReadOnlyList<CurrencyMetadata>>("accounting:currencies", async ct =>
             (await store.ReadAsync((session, innerCt) => session.Query<CurrencyMetadata, CurrencyMetadataIndex>().ListAsync(innerCt), ct)).ToArray(), cancellationToken);
@@ -36,7 +36,7 @@ public sealed class GlobalCurrencyProvider : ICurrencyProvider
 }
 
 /// <summary>Primes the tenant's <see cref="GlobalCurrencyProvider"/> when the shell activates.</summary>
-public sealed class GlobalCurrencyProviderLoader(GlobalCurrencyProvider provider, ICrestGlobalStore store, ICrestGlobalCache cache) : ModularTenantEvents
+public sealed class GlobalCurrencyProviderLoader(GlobalCurrencyProvider provider, IGlobalStore store, IGlobalCache cache) : ModularTenantEvents
 {
     public override Task ActivatedAsync() => provider.LoadAsync(store, cache, CancellationToken.None);
 }

@@ -35,6 +35,20 @@ public class ShellCompatibilityTests
         Theme(CrestMember, ["member", ThemeBuckets.CrestBlazorTag]);
     }
 
+    // An assembly belongs to the module with the longest matching id, never to a shorter
+    // prefix (the always-enabled "Crest" must not inherit "Crest.Members"' client).
+    [Theory]
+    [InlineData("Crest.Members.Member.BlazorWasm", "Crest.Members")]
+    [InlineData("Crest.ContentPartLists.BlazorWasm", "Crest.ContentPartLists")]
+    [InlineData("Crest.Other.BlazorWasm", "Crest")]
+    [InlineData("Acme.Ledger.BlazorWasm", null)]
+    public void ClientAssemblyBelongsToTheLongestMatchingModule(string assemblyName, string? expected)
+    {
+        string[] modules = ["Crest", "Crest.Members", "Crest.ContentPartLists", "Crest.Member"];
+
+        Assert.Equal(expected, ShellCompatibilityService.OwningExtensionId(assemblyName, modules));
+    }
+
     [Fact]
     public async Task CrestBlazorAdminThemeSatisfiesAnAdminContract()
     {
@@ -56,11 +70,11 @@ public class ShellCompatibilityTests
     {
         var service = Service(activeAdmin: CrestAdmin);
 
-        var broken = await service.GetIncompatibilitiesAsync(pending: new PendingThemeChange(RouteBucket.Admin, ClassicAdmin));
+        var broken = await service.GetIncompatibilitiesAsync(pending: new PendingThemeChange(ShellId.Admin, ClassicAdmin));
 
         var incompatibility = Assert.Single(broken);
         Assert.Equal(AdminFeature, incompatibility.FeatureId);
-        Assert.Equal(RouteBucket.Admin, incompatibility.Bucket);
+        Assert.Equal(ShellId.Admin, incompatibility.Bucket);
         Assert.Equal(ClassicAdmin, incompatibility.ActiveThemeId);
     }
 
@@ -69,7 +83,7 @@ public class ShellCompatibilityTests
     {
         var service = Service(activeAdmin: CrestAdmin);
 
-        var broken = await service.GetIncompatibilitiesAsync(pending: new PendingThemeChange(RouteBucket.Admin, null));
+        var broken = await service.GetIncompatibilitiesAsync(pending: new PendingThemeChange(ShellId.Admin, null));
 
         var incompatibility = Assert.Single(broken);
         Assert.Null(incompatibility.ActiveThemeId);
@@ -80,7 +94,7 @@ public class ShellCompatibilityTests
     {
         var service = Service(activeAdmin: CrestAdmin);
 
-        Assert.Empty(await service.GetIncompatibilitiesAsync(pending: new PendingThemeChange(RouteBucket.Site, null)));
+        Assert.Empty(await service.GetIncompatibilitiesAsync(pending: new PendingThemeChange(ShellId.Site, null)));
     }
 
     [Fact]
@@ -90,7 +104,7 @@ public class ShellCompatibilityTests
 
         var incompatibility = Assert.Single(await service.GetIncompatibilitiesAsync());
         Assert.Equal(MemberFeature, incompatibility.FeatureId);
-        Assert.Equal(RouteBucket.Member, incompatibility.Bucket);
+        Assert.Equal(ShellId.Member, incompatibility.Bucket);
     }
 
     [Fact]
@@ -100,7 +114,7 @@ public class ShellCompatibilityTests
 
         var buckets = await service.GetRequiredBucketsAsync();
 
-        Assert.Equal([RouteBucket.Admin, RouteBucket.Member], buckets.Order());
+        Assert.Equal([ShellId.Admin, ShellId.Member], buckets.Order());
     }
 
     private ShellCompatibilityService Service(string activeAdmin, string activeMember = CrestMember)
@@ -130,7 +144,7 @@ public class ShellCompatibilityTests
             memberThemes,
             extensions,
             features,
-            [Provider(AdminFeature, RouteBucket.Admin), Provider(MemberFeature, RouteBucket.Member)]);
+            [Provider(AdminFeature, ShellId.Admin), Provider(MemberFeature, ShellId.Member)]);
     }
 
     private void Theme(string id, string[] tags, string? baseTheme = null)
@@ -162,7 +176,7 @@ public class ShellCompatibilityTests
         return feature;
     }
 
-    private static IShellContractProvider Provider(string featureId, RouteBucket bucket)
+    private static IShellContractProvider Provider(string featureId, ShellId bucket)
     {
         var provider = Substitute.For<IShellContractProvider>();
         provider.FeatureId.Returns(featureId);

@@ -5,6 +5,7 @@ using Crest.Recipes;
 using Crest.Environment.Shell;
 using Crest.Data.Migration;
 using Crest.Modules;
+using Crest.Navigation;
 using Crest.Security.Permissions;
 using Crest.Sharing.Indexes;
 using Crest.Sharing.Migrations;
@@ -28,6 +29,10 @@ public sealed class Startup : StartupBase
         services.AddScoped<SharingResolver>();
         services.AddScoped<ISharingResolver>(provider => provider.GetRequiredService<SharingResolver>());
         services.AddScoped<ISharingService, SharingService>();
+        services.AddScoped<IShareChangeChecks, ShareChangeChecks>();
+        services.AddScoped<IShareComments, ShareComments>();
+        services.AddScoped<IShareIndicators, ShareIndicators>();
+        services.AddScoped<ISharePrincipalDirectory, SharingPrincipalDirectory>();
         services.AddScoped<IResourcePermissionMapper, SharingPermissionMapper>();
         services.AddPermissionProvider<Permissions>();
         services.AddIndexProvider<ShareIndexProvider>();
@@ -44,5 +49,9 @@ public sealed class Startup : StartupBase
         services.AddSingleton<IBackgroundTask, ShareAccessBackgroundTask>();
         services.AddRecipeExecutionStep<Recipes.SharingStep>();
         services.AddDataMigration<SharingMigrations>();
+
+        // The interface (phase 4): the menu entry and the pages' gates.
+        services.AddNavigationProvider<AdminMenu>();
+        services.AddScoped<IRoutePermissionProvider, SharingRoutePermissions>();
     }
 }

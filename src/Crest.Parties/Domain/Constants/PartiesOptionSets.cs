@@ -18,8 +18,28 @@ public static class PartiesOptionSets
     /// <summary>Legal/structural form of an organization.</summary>
     public const string OrganizationType = "parties.organization-type";
 
-    /// <summary>What sector an organization operates in.</summary>
-    public const string Industry = "parties.industry";
+    /// <summary>What a legal entity name of an organization is (legal, trade name, former, ...).</summary>
+    public const string OrganizationNameKind = "parties.organization-name-kind";
+
+    /// <summary>The types of association between parties (sales rep, account rep, ...):
+    /// module types seeded and locked, tenant types added on top.</summary>
+    public const string AssociationType = "parties.association-type";
+}
+
+/// <summary>Seed keys for <see cref="PartiesOptionSets.OrganizationNameKind"/>.</summary>
+public static class OrganizationNameKinds
+{
+    public const string Legal = "legal";
+    public const string Dba = "dba";
+    public const string Former = "former";
+    public const string Other = "other";
+}
+
+/// <summary>Seed keys for <see cref="PartiesOptionSets.AssociationType"/>.</summary>
+public static class AssociationTypes
+{
+    public const string SalesRep = "sales-rep";
+    public const string AccountRep = "account-rep";
 }
 
 /// <summary>

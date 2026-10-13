@@ -101,19 +101,19 @@
 
     private void ResetDefaults()
     {
-        Model = DesignSystemModel.From(CrestThemeSettings.Default);
+        Model = DesignSystemModel.From(ThemeSettings.Default);
     }
 
     private sealed class DesignSystemModel
     {
-        public string RadzenTheme { get; set; } = CrestThemeSettings.Default.RadzenTheme;
+        public string RadzenTheme { get; set; } = ThemeSettings.Default.RadzenTheme;
         public string Primary { get; set; } = "#2f6f4e";
         public string Secondary { get; set; } = "#6d5d3f";
         public string Surface { get; set; } = "#ffffff";
         public string Background { get; set; } = "#f7f8f6";
         public string Radius { get; set; } = "6px";
 
-        public static DesignSystemModel From(CrestThemeSettings settings) => new()
+        public static DesignSystemModel From(ThemeSettings settings) => new()
         {
             RadzenTheme = settings.RadzenTheme,
             Primary = Get(settings, "primary", "#2f6f4e"),
@@ -123,7 +123,7 @@
             Radius = Get(settings, "radius", "6px"),
         };
 
-        public CrestThemeSettings ToSettings() => new(RadzenTheme, new(StringComparer.OrdinalIgnoreCase)
+        public ThemeSettings ToSettings() => new(RadzenTheme, new(StringComparer.OrdinalIgnoreCase)
         {
             ["primary"] = Primary,
             ["secondary"] = Secondary,
@@ -132,7 +132,7 @@
             ["radius"] = Radius,
         });
 
-        private static string Get(CrestThemeSettings settings, string key, string fallback) =>
+        private static string Get(ThemeSettings settings, string key, string fallback) =>
             settings.Tokens.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : fallback;
     }
 }

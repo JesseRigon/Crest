@@ -1,21 +1,29 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Crest.Access;
+using Crest.Security;
 using Crest.Workflows.Contexts;
 using Crest.Workflows.Registry;
 using Crest.Workflows.Runtime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Crest.Environment.Shell;
 
 namespace Crest.Workflows.Connectors;
 
 /// <summary>The tenant's connections. Secrets go in, never out.</summary>
 [ApiController, AutoValidateAntiforgeryToken, Route(WorkflowsConstants.Routes.ConnectionsApi)]
-public sealed class WorkflowConnectionsController(IAuthorizationService authorizationService, WorkflowConnectionService connections, WorkflowRegistryCatalog catalog) : ControllerBase
+public sealed class WorkflowConnectionsController(
+    IAuthorizationService authorizationService,
+    WorkflowConnectionService connections,
+    WorkflowRegistryCatalog catalog,
+    IAccessDecision decision,
+    ICallerContextAccessor callers,
+    RoleManager<IRole> roleManager) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> ListAsync()
@@ -42,6 +50,7 @@ public sealed class WorkflowConnectionsController(IAuthorizationService authoriz
             return ValidationProblem($"No connector '{request.ConnectorKey}' is registered.");
         }
 
+        if (await RoleRefusalAsync(request.Roles, []) is { } refusal) return Forbid(refusal);
         var (connection, errors) = await connections.SaveAsync(null, request, connector);
         return connection is null ? ValidationProblem(string.Join(" ", errors)) : Ok(connections.ToModel(connection));
     }
@@ -50,7 +59,8 @@ public sealed class WorkflowConnectionsController(IAuthorizationService authoriz
     public async Task<IActionResult> UpdateAsync(string key, [FromBody] WorkflowConnectionSaveRequest request)
     {
         if (!await CanManageAsync()) return Forbid();
-        if (await connections.FindAsync(key) is null) return NotFound();
+        if (await connections.FindAsync(key) is not { } existing) return NotFound();
+        if (await RoleRefusalAsync(request.Roles, existing.Roles) is { } refusal) return Forbid(refusal);
         var (connection, errors) = await connections.SaveAsync(key, request, null);
         return connection is null ? ValidationProblem(string.Join(" ", errors)) : Ok(connections.ToModel(connection));
     }
@@ -90,6 +100,39 @@ public sealed class WorkflowConnectionsController(IAuthorizationService authoriz
 
     private async Task<bool> CanManageAsync() => await authorizationService.AuthorizeAsync(User, Permissions.ManageConnections);
 
+    /// <summary>
+    /// Assigning a role to a connection's machine identity is a rights write: each role added
+    /// takes the right to assign that role (<c>AssignRoleToUsers</c> against the role), as it
+    /// does for a user, so managing connections never grants more than the manager may give.
+    /// </summary>
+    private async Task<string?> RoleRefusalAsync(IReadOnlyList<string>? requested, IReadOnlyList<string> current)
+    {
+        if (requested is null)
+        {
+            return null;
+        }
+
+        foreach (var roleName in requested.Where(role => !string.IsNullOrWhiteSpace(role)).Select(role => role.Trim()).Except(current, StringComparer.OrdinalIgnoreCase))
+        {
+            var role = await roleManager.FindByNameAsync(roleName);
+            if (role is null)
+            {
+                return $"No role '{roleName}'.";
+            }
+
+            if (!await decision.AllowsAsync(callers.Current, AssignRoleToUsersPermission, role, HttpContext.RequestAborted))
+            {
+                return $"Assigning role '{roleName}' to a connection takes the right to assign it to users.";
+            }
+        }
+
+        return null;
+    }
+
+    private const string AssignRoleToUsersPermission = "AssignRoleToUsers";
+
+    private ObjectResult Forbid(string detail) => StatusCode(StatusCodes.Status403Forbidden, new { title = "Forbidden.", detail });
+
     private BadRequestObjectResult ValidationProblem(string detail) => BadRequest(new { title = "Invalid connection.", detail });
 }
 
@@ -98,15 +141,18 @@ public sealed class WorkflowConnectionsController(IAuthorizationService authoriz
 /// signature is the authentication: HMAC-SHA256 of the raw body with the connection's
 /// secret, hex, in the connection's signature header (optionally prefixed <c>sha256=</c>).
 /// Unknown or non-hmac connections are 404, a missing or wrong signature 401. The engine is
-/// the tenant's, so a hook can only start this tenant's workflows.
+/// the tenant's, so a hook can only start this tenant's workflows. The run acts as the
+/// connection's application caller (<see cref="WorkflowConnectionCaller"/>).
 /// </summary>
 [ApiController, AllowAnonymous, IgnoreAntiforgeryToken, Route(WorkflowsConstants.Routes.WebhooksApi)]
 public sealed class WorkflowWebhooksController(
     WorkflowConnectionService connections,
     IStimulusSender stimulusSender,
     IOptions<WorkflowConnectorOptions> options,
-    ShellSettings shellSettings,
+    ICallerContextFactory callerFactory,
+    IAccessRunner accessRunner,
     WorkflowActorSeal seal,
+    Audit.WorkflowAuditRecorder audit,
     ILogger<WorkflowWebhooksController> logger) : ControllerBase
 {
     [HttpPost("{connection}/{hook}")]
@@ -115,12 +161,14 @@ public sealed class WorkflowWebhooksController(
         var found = await connections.FindAsync(connection);
         if (found is null || found.AuthKind != WorkflowConnectorAuthKinds.Hmac || connections.RevealSecret(found) is not { } secret)
         {
+            await RejectedAsync(connection, hook, StatusCodes.Status404NotFound, "unknown or non-signing connection", Request.ContentLength);
             return NotFound();
         }
 
         var max = options.Value.MaxWebhookBytes;
         if (Request.ContentLength > max)
         {
+            await RejectedAsync(connection, hook, StatusCodes.Status413PayloadTooLarge, "payload too large", Request.ContentLength);
             return StatusCode(StatusCodes.Status413PayloadTooLarge);
         }
 
@@ -128,6 +176,7 @@ public sealed class WorkflowWebhooksController(
         await Request.Body.CopyToAsync(buffer, cancellationToken);
         if (buffer.Length > max)
         {
+            await RejectedAsync(connection, hook, StatusCodes.Status413PayloadTooLarge, "payload too large", buffer.Length);
             return StatusCode(StatusCodes.Status413PayloadTooLarge);
         }
 
@@ -136,6 +185,7 @@ public sealed class WorkflowWebhooksController(
         if (!IsValidSignature(Request.Headers[headerName].ToString(), body, secret))
         {
             logger.LogWarning("Webhook {Connection}/{Hook} refused: missing or invalid signature.", connection, hook);
+            await RejectedAsync(connection, hook, StatusCodes.Status401Unauthorized, "missing or invalid signature", body.Length);
             return Unauthorized();
         }
 
@@ -150,6 +200,7 @@ public sealed class WorkflowWebhooksController(
             }
             catch (JsonException)
             {
+                await RejectedAsync(connection, hook, StatusCodes.Status400BadRequest, "the body is not valid JSON", body.Length);
                 return BadRequest(new { title = "The body is not valid JSON." });
             }
         }
@@ -160,15 +211,44 @@ public sealed class WorkflowWebhooksController(
             ["Query"] = Request.Query.ToDictionary(q => q.Key, q => (object)q.Value.ToString()),
             ["ContentType"] = Request.ContentType ?? string.Empty,
         };
+        // The signature authenticated the connection: the run acts as its machine identity, with
+        // the roles assigned on the connection, never as the anonymous request (docs/access.md,
+        // Anonymous actors).
+        var caller = await callerFactory.CreateAsync(new CallerRequest(WorkflowConnectionCaller.Principal(found), CallerSide.Site, null, null), cancellationToken);
         var input = new Dictionary<string, object>
         {
             [WorkflowsConstants.InputKeys.Payload] = payload,
-            [WorkflowsConstants.InputKeys.Actor] = seal.Seal(WorkflowUserContext.Anonymous(shellSettings.Name)),
+            [WorkflowsConstants.InputKeys.Actor] = seal.Seal(WorkflowUserContext.From(caller)),
         };
 
-        var result = await stimulusSender.SendAsync<WebhookReceived>(WebhookReceived.Stimulus(found.Key, hook), new() { Input = input }, cancellationToken);
+        var result = await accessRunner.RunAsAsync(caller, async () =>
+        {
+            var sent = await stimulusSender.SendAsync<WebhookReceived>(WebhookReceived.Stimulus(found.Key, hook), new() { Input = input }, cancellationToken);
+            // Recorded as the connection's machine identity (docs/machine-actors.md).
+            await audit.RecordAsync(
+                Audit.WorkflowAuditTrailEventConfiguration.WebhookReceived,
+                found.Key,
+                new Audit.WorkflowAuditTrailEvent { Connection = found.Key, Hook = hook, StatusCode = StatusCodes.Status202Accepted, Bytes = body.Length, Started = sent.WorkflowInstanceResponses.Count },
+                new Crest.AuditTrail.Models.AuditTrailSubject { RecordId = found.Key, RecordType = "WorkflowConnection", DisplayText = $"{found.Key}/{hook}" },
+                isolated: false);
+            return sent;
+        });
         return Accepted(new { started = result.WorkflowInstanceResponses.Count });
     }
+
+    /// <summary>
+    /// A refused delivery (docs/workflows.md › Run history and insight through the audit system:
+    /// rejected posts are recorded, not only logged). The caller is anonymous; the event says
+    /// which connection and hook were addressed, why it was refused and how large it was -
+    /// never the body.
+    /// </summary>
+    private Task RejectedAsync(string connection, string hook, int statusCode, string reason, long? bytes) =>
+        audit.RecordAsync(
+            Audit.WorkflowAuditTrailEventConfiguration.WebhookRejected,
+            connection,
+            new Audit.WorkflowAuditTrailEvent { Connection = connection, Hook = hook, StatusCode = statusCode, Reason = reason, Bytes = bytes },
+            new Crest.AuditTrail.Models.AuditTrailSubject { RecordId = connection, RecordType = "WorkflowConnection", DisplayText = $"{connection}/{hook}" },
+            isolated: true);
 
     public static bool IsValidSignature(string header, byte[] body, string secret)
     {

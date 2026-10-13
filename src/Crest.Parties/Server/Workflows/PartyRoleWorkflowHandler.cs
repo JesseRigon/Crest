@@ -20,7 +20,7 @@ public sealed class PartyRoleWorkflowHandler(PartyTypeCatalog catalog, IWorkflow
 
     private async Task RaiseAsync(string trigger, ContentItem item)
     {
-        var type = catalog.Types.FirstOrDefault(t => t.Kind == PartyTypeKinds.Tenant && string.Equals(t.ContentType, item.ContentType, StringComparison.Ordinal));
+        var type = catalog.Kinds.FirstOrDefault(t => t.Kind == PartyTypeKinds.Tenant && string.Equals(t.ContentType, item.ContentType, StringComparison.Ordinal));
         if (type is null || type.Key is PartiesConstants.PartyTypeKeys.Contacts or PartiesConstants.PartyTypeKeys.Organizations)
         {
             return;

@@ -81,6 +81,23 @@ public sealed class UserEmailService
                 code = user.ResetToken,
             });
 
+        return await SendPasswordResetEmailAsync(user, lostPasswordUrl);
+    }
+
+    /// <summary>
+    /// Sends the password-reset email with a link to a reset page other than the tenant's own
+    /// (the member portal's): <paramref name="resetUrl"/> builds the absolute link from the
+    /// user id and the encoded reset code.
+    /// </summary>
+    public async Task<bool> SendPasswordResetAsync(User user, Func<string, string, string> resetUrl)
+    {
+        user.ResetToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(user.ResetToken));
+
+        return await SendPasswordResetEmailAsync(user, resetUrl(await _userManager.GetUserIdAsync(user), user.ResetToken));
+    }
+
+    private async Task<bool> SendPasswordResetEmailAsync(User user, string lostPasswordUrl)
+    {
         // Send email with callback link.
         return await SendEmailAsync(user.Email, S["Reset your password"], new LostPasswordViewModel()
         {

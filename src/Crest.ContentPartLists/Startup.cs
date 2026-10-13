@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Crest.ContentManagement;
 using Crest.Data.Migration;
 using Crest.Modules;
+using Crest.Liquid;
+using Fluid;
 using Crest.Navigation;
 
 namespace Crest.ContentPartLists;
@@ -23,8 +25,8 @@ public sealed class Startup : StartupBase
         services.AddContentPart<CrestContentPartListPart>();
         services.AddContentPart<CrestOptionPart>();
         services.AddDataMigration<CrestContentPartListMigrations>();
-        services.AddScoped<Crest.Global.Lists.IGlobalListReader, Crest.Global.Lists.GlobalListReader>();
-        services.AddScoped<ICrestContentPartListService, CrestContentPartListService>();
+        services.AddScoped<Crest.Data.Global.Lists.IGlobalListReader, Crest.Data.Global.Lists.GlobalListReader>();
+        services.AddScoped<IContentPartListService, ContentPartListService>();
 
         // Culture -> measurement system -> preferred units (CLDR-derived data);
         // stateless, so a singleton.
@@ -38,5 +40,17 @@ public sealed class Startup : StartupBase
 
         // Teaches content groups the "list" entry kind (an Content part list by key).
         services.AddScoped<Crest.ContentGroups.IContentGroupEntryResolver, ContentPartListGroupEntryResolver>();
+    }
+}
+
+// option_list / option_label over the same service the API wraps (docs/content-items.md).
+[RequireFeatures("Crest.Liquid")]
+public sealed class LiquidStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.Configure<TemplateOptions>(options => options.MemberAccessStrategy.Register<CrestOptionModel>());
+        services.AddLiquidFilter<Liquid.OptionListFilter>("option_list");
+        services.AddLiquidFilter<Liquid.OptionLabelFilter>("option_label");
     }
 }

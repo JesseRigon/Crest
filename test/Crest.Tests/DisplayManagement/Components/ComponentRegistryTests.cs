@@ -214,6 +214,51 @@ public class ComponentRegistryTests
         return feature.Object;
     }
 
+    [Fact]
+    public void ZoneKeysAreTheWellKnownOnesPlusWhatModulesDeclare()
+    {
+        var registry = new ComponentRegistry([new KeyCatalog(
+            [
+                new ZoneKeyDescriptor("Parties.Pane:*", "Crest.Parties", []),
+                new ZoneKeyDescriptor(ZoneKeys.Footer, "Rogue", ["Nothing"]),
+            ],
+            [
+                new ZoneContribution("Parties.Pane:tax", typeof(TestCard), 100),
+                new ZoneContribution("Parties.Pane:tax", typeof(TestPlain), 10),
+            ])]);
+
+        Assert.True(registry.TryGetZoneKey("footer", out var footer));
+        Assert.Null(footer.Module);
+        Assert.True(footer.Admits("Anything"));
+        Assert.True(registry.TryGetZoneKey("Parties.Pane:tax", out var pane));
+        Assert.Equal("Parties.Pane:*", pane.Key);
+        Assert.False(registry.TryGetZoneKey("Unknown", out _));
+        Assert.Equal([typeof(TestPlain), typeof(TestCard)], registry.Contributions("Parties.Pane:tax").Select(contribution => contribution.ComponentType));
+    }
+
+    [Fact]
+    public void ASingleInstanceComponentPlacedTwiceIsInvalid()
+    {
+        var registry = Registry(null, Component("Page"), Component("Header") with { Instances = ComponentInstances.Single });
+        var root = new DisplayNode
+        {
+            Id = "root",
+            Component = "Page",
+            Zones = new(StringComparer.OrdinalIgnoreCase) { ["ChildContent"] = [new DisplayNode { Id = "a", Component = "Header" }, new DisplayNode { Id = "b", Component = "Header" }] },
+        };
+
+        Assert.Contains(DisplayTreeValidator.Validate(root, registry), diagnostic => diagnostic.Action == "instances");
+    }
+
+    private sealed class KeyCatalog(IEnumerable<ZoneKeyDescriptor> keys, IEnumerable<ZoneContribution> contributions) : IComponentCatalog
+    {
+        public IEnumerable<ComponentDescriptor> Describe() => [];
+
+        public IEnumerable<ZoneKeyDescriptor> DescribeZoneKeys() => keys;
+
+        public IEnumerable<ZoneContribution> DescribeContributions() => contributions;
+    }
+
     private sealed class ListCatalog(IEnumerable<ComponentDescriptor> components) : IComponentCatalog
     {
         public IEnumerable<ComponentDescriptor> Describe() => components;

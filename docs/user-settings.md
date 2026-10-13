@@ -2,7 +2,7 @@
 
 One per-user preference exists beyond culture: **hidden admin-menu items**
 (`CrestUserMenuPreferences.HiddenItemKeys` on `User.Properties`, self-service
-`GET`/`PUT api/crest/navigation/me/hidden`, applied by `CrestAdminMenuBuilder` under the
+`GET`/`PUT api/crest/navigation/me/hidden`, applied by `AdminMenuBuilder` under the
 tenant layout overlay — [docs/admin-menu.md](admin-menu.md) › Two hide layers). It is the pattern the landing-page idea below should copy:
 a Crest-owned document on the user, one self-service endpoint, no admin override. The
 rest of this doc is planning. This is a holding doc for small, per-user
@@ -32,7 +32,7 @@ mirror or integrate with — this would be a new feature.
 
   Rough shape, following the same pattern [docs/localization.md](localization.md) already
   describes for per-user culture (`UserLocalizationSettings.Culture`,
-  `CrestLocalizationController`'s self-service `GET`/`PUT` endpoint,
+  `LocalizationController`'s self-service `GET`/`PUT` endpoint,
   `DisplayManager.Manifest`-carried value):
   - [ ] A new per-user setting, likely on a Crest-owned settings document (not
     `UserLocalizationSettings` — different concern) — e.g. `UserPreferencesSettings` or

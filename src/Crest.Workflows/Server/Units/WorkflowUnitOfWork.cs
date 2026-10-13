@@ -23,6 +23,13 @@ public sealed class WorkflowUnitOfWork(IDocumentStore? documentStore = null)
     private readonly Stack<Frame> _frames = new();
     private readonly Frame _root = new();
     private bool _cancelRegistered;
+    private int _slots;
+
+    /// <summary>The unit's id: with a slot, the idempotency key of what the unit raises.</summary>
+    public string Id { get; } = Guid.NewGuid().ToString("n");
+
+    /// <summary>The next slot of the unit: one per stimulus it raises, in order.</summary>
+    public int NextSlot() => ++_slots;
 
     /// <summary>The whole unit failed: the burst is discarded at commit.</summary>
     public bool IsFailed => _root.IsFailed;

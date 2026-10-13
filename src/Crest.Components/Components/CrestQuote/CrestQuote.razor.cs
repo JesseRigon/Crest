@@ -7,7 +7,7 @@ namespace Crest.Components.Primitives;
 /// CrestQuote component - renders a single block quote; content-driven,
 /// placed by templates, page trees and layer rules.
 /// </summary>
-[CrestBlazorComponent("CrestQuote", DisplayName = "Quote", Category = "Typography", Icon = "format_quote")]
+[BlazorComponent("CrestQuote", DisplayName = "Quote", Category = "Typography", Icon = "format_quote")]
 public partial class CrestQuote : ComponentBase
 {
     [Parameter]

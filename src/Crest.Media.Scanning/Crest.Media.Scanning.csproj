@@ -29,6 +29,7 @@
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Data.YesSql.Abstractions\Crest.Data.YesSql.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Settings.Abstractions\Crest.Settings.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

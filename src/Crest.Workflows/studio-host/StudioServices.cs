@@ -48,7 +48,7 @@ public static class StudioServices
         services.AddRemoteBackend(new BackendApiConfig
         {
             ConfigureBackendOptions = options => options.Url = engineApi,
-            ConfigureHttpClientBuilder = options => options.AuthenticationHandler = typeof(CrestCookieApiHandler),
+            ConfigureHttpClientBuilder = options => options.AuthenticationHandler = typeof(CookieApiHandler),
         });
         services.AddWorkflowsModule();
         services.AddScoped<IAuthenticationProviderManager, CookieAuthenticationProviderManager>();
@@ -74,7 +74,7 @@ public static class StudioServices
 /// API call without it; the admin side, as Studio runs in the admin app) and send Crest's
 /// antiforgery token on every unsafe request, as Crest's own client does.
 /// </summary>
-public sealed class CrestCookieApiHandler(ICrestAntiforgery antiforgery, CrestShellContext? shell = null) : DelegatingHandler
+public sealed class CookieApiHandler(ICrestAntiforgery antiforgery, CrestShellContext? shell = null) : DelegatingHandler
 {
     public const string ShellHeader = "X-Shell";
 

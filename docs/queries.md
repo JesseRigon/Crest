@@ -293,7 +293,9 @@ tenant's `ISession` and its unit of work. This is the state after the first cons
 
 **Folded into the unit of work**
 
-- Members' user hierarchy (`UserHierarchyService`, table `CrestUserHierarchy`): it used to run
+- Members' user hierarchy (`UserHierarchyService`, then table `CrestUserHierarchy`; since
+  2026-10-13 a YesSql closure table, documents and indexes, so it joins the unit of work like
+  any other document - [parties.md](parties.md) › Hierarchies): it used to run
   Dapper on its own connection and transaction, as deferred tasks that swallowed failures. It
   now runs on the session's connection and transaction (`ISession.BeginTransactionAsync()` for
   writes, `CreateConnectionAsync()` plus `CurrentTransaction` for reads). The writes run inline
@@ -331,8 +333,15 @@ tenant's `ISession` and its unit of work. This is the state after the first cons
 
 - [x] `Crest.Global` and its own store. **Ruled 2026-10-11: kept as the one exception** - the
   only store outside a tenant, for host-wide reference data (geo, currencies, global lists).
-  To do: its schema versioning (`ICrestGlobalSchema`, `CrestGlobalSchemaState`) moves onto
+  To do: its schema versioning (`IGlobalSchema`, `CrestGlobalSchemaState`) moves onto
   `DataMigration`, so there is one migration system.
+  *What landed (2026-10-13):* `IGlobalSchema` is gone; a global migration is a
+  `GlobalDataMigration` (a `DataMigration` with the global `Session` and its index providers),
+  run by `DataMigrationSteps` - the Create/UpdateFrom convention, now shared with the tenant
+  `DataMigrationManager` - and recorded in a `DataMigrationRecord` in the global store.
+  `CrestGlobalSchemaState` keeps only the data version; its old per-schema versions seed the
+  record once (`LegacySchemaName`, transitional). A host's own global schemas convert the same
+  way. Test: `GlobalMigrationTests`.
 - [ ] The file-based stores (`IFileDocumentStore`, `FileContentDefinitionStore`,
   `FilePlacementsStore`). To discuss in depth (2026-10-11).
 - [ ] `IVolatileDocumentManager` (distributed-cache documents). To discuss in depth.

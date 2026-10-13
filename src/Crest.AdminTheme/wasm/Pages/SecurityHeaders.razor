@@ -87,7 +87,7 @@
     [SupplyParameterFromQuery(Name = "groupId")]
     public string? GroupId { get; set; }
 
-    private CrestSecurityHeaders? Model;
+    private SecurityHeadersModel? Model;
     private Dictionary<string, string> ContentSecurityPolicy = new(StringComparer.Ordinal);
     private Dictionary<string, string> PermissionsPolicy = new(StringComparer.Ordinal);
     private string ReferrerPolicy = "no-referrer";

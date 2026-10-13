@@ -200,5 +200,7 @@ public sealed class ScanningWorld
     private sealed class StaticTenantSettings(ScanningWorld world) : ITenantScanningSettings
     {
         public Task<UploadScanningSettings> GetAsync() => Task.FromResult(world.TenantSettings);
+
+        public Task UpdateAsync(string? externalScannerUrl, string? secret, bool bypassHostScanners) => throw new NotSupportedException();
     }
 }

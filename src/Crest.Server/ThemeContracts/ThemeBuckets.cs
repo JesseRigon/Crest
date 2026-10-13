@@ -37,14 +37,14 @@ public static class ThemeBuckets
     /// existing Crest site theme valid with no manifest change - the reason the site
     /// shell deliberately has no bucket tag of its own.
     /// </remarks>
-    public static RouteBucket GetBucket(IManifestInfo? manifest)
+    public static ShellId GetBucket(IManifestInfo? manifest)
     {
         if (HasTag(manifest, MemberTag))
         {
-            return RouteBucket.Member;
+            return ShellId.Member;
         }
 
-        return HasTag(manifest, AdminTag) ? RouteBucket.Admin : RouteBucket.Site;
+        return HasTag(manifest, AdminTag) ? ShellId.Admin : ShellId.Site;
     }
 
     /// <summary>Whether a theme's own manifest declares a Crest Blazor shell document.</summary>

@@ -19,6 +19,7 @@ public sealed class DisplayState
     private readonly Dictionary<string, JsonNode?> _slots = new(StringComparer.Ordinal);
     private readonly HashSet<string> _loading = new(StringComparer.Ordinal);
     private readonly Dictionary<string, DisplayBinding> _aliases = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, IReadOnlyDictionary<string, IReadOnlyList<string>>> _errors = new(StringComparer.Ordinal);
 
     /// <summary>Raised after any change, once per change.</summary>
     public event Action? Changed;
@@ -48,6 +49,31 @@ public sealed class DisplayState
         _variables[name] = value?.DeepClone();
         Changed?.Invoke();
     }
+
+    /// <summary>
+    /// The errors the last server action of <paramref name="nodeId"/>'s events returned, by input
+    /// name (an empty name for errors that belong to no input); empty when it succeeded.
+    /// </summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> GetErrors(string nodeId) =>
+        _errors.TryGetValue(nodeId, out var errors) ? errors : s_noErrors;
+
+    public void SetErrors(string nodeId, IReadOnlyDictionary<string, IReadOnlyList<string>>? errors)
+    {
+        if (errors is not { Count: > 0 })
+        {
+            if (_errors.Remove(nodeId))
+            {
+                Changed?.Invoke();
+            }
+
+            return;
+        }
+
+        _errors[nodeId] = errors;
+        Changed?.Invoke();
+    }
+
+    private static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> s_noErrors = new Dictionary<string, IReadOnlyList<string>>();
 
     public bool IsOpen(string nodeId) => _open.ContainsKey(nodeId);
 

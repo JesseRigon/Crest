@@ -125,7 +125,7 @@ public class ComponentCatalogTests
 
             namespace Sample
             {
-                [CrestBlazorComponent("Banner")]
+                [BlazorComponent("Banner")]
                 public sealed class Banner : ComponentBase
                 {
                     [Parameter] public string? Text { get; set; }
@@ -169,7 +169,7 @@ public class ComponentCatalogTests
                     [Parameter] public T? Value { get; set; }
                 }
 
-                [CrestBlazorComponent("Panel", DisplayName = "Panel \"quoted\"", Category = "Layout", IsWrapper = true)]
+                [BlazorComponent("Panel", DisplayName = "Panel \"quoted\"", Category = "Layout", IsWrapper = true)]
                 public sealed partial class Panel : PanelBase<int>
                 {
                     [Parameter, ComponentParameter(Required = true, Group = "Content")] public string? Heading { get; set; }
@@ -184,14 +184,14 @@ public class ComponentCatalogTests
                     }
                 }
 
-                [CrestBlazorComponent("Generic")]
+                [BlazorComponent("Generic")]
                 public sealed class Generic<T> : ComponentBase
                 {
                 }
 
                 internal sealed class Hidden
                 {
-                    [CrestBlazorComponent("Inner")]
+                    [BlazorComponent("Inner")]
                     internal sealed class Inner : ComponentBase
                     {
                         [Parameter] public string? Text { get; set; }
@@ -242,7 +242,7 @@ public class ComponentCatalogTests
 
             namespace Sample
             {
-                [CrestBlazorComponent("Badge")]
+                [BlazorComponent("Badge")]
                 public partial class Badge : ComponentBase
                 {
                 }
@@ -256,7 +256,7 @@ public class ComponentCatalogTests
             }
             """;
 
-        var (_, diagnostics, _) = RunGenerator(Source, "Sample", ("/src/Badge.razor", Razor), ("/src/Marked.razor", "@attribute [CrestBlazorComponent(\"Marked\")]\n<p></p>"));
+        var (_, diagnostics, _) = RunGenerator(Source, "Sample", ("/src/Badge.razor", Razor), ("/src/Marked.razor", "@attribute [BlazorComponent(\"Marked\")]\n<p></p>"));
 
         Assert.Contains(diagnostics, diagnostic => diagnostic.Id == ComponentCatalogGenerator.MarkupParameterDiagnosticId);
         Assert.Contains(diagnostics, diagnostic => diagnostic.Id == ComponentCatalogGenerator.MarkupMarkerDiagnosticId);

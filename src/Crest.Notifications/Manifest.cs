@@ -28,3 +28,14 @@ using Crest.Modules.Manifest;
         "Crest.Email",
     ]
 )]
+
+[assembly: Feature(
+    Id = "Crest.Notifications.Portal",
+    Name = "Portal Notifications",
+    Description = "Shows each user's notifications in Crest's admin and member shells: an indicator, the list, and marking as read.",
+    Category = "Notifications",
+    Dependencies =
+    [
+        "Crest.Notifications",
+    ]
+)]

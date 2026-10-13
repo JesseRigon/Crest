@@ -58,7 +58,7 @@ public sealed class OptionParentValueResolver(
             return [];
         }
 
-        var (providerKey, qualifier) = CrestOptionSourceKeys.Split(sourceKey);
+        var (providerKey, qualifier) = OptionSourceKeys.Split(sourceKey);
         var provider = sourceProviders.FirstOrDefault(candidate =>
             string.Equals(candidate.Key, providerKey, StringComparison.OrdinalIgnoreCase));
         if (provider is null)

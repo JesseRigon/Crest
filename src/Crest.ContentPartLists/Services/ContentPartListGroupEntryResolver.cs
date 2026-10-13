@@ -9,15 +9,15 @@ namespace Crest.Services;
 /// in Crest.Server, because Server cannot reference the lists feature - the kind
 /// resolver seam is exactly what lets a feature teach the group system a new kind.
 /// </summary>
-public sealed class ContentPartListGroupEntryResolver(ICrestContentPartListService lists) : IContentGroupEntryResolver
+public sealed class ContentPartListGroupEntryResolver(IContentPartListService lists) : IContentGroupEntryResolver
 {
-    public string Kind => CrestContentGroupEntryKinds.List;
+    public string Kind => ContentGroupEntryKinds.List;
 
-    public async Task<CrestContentGroupResolvedEntry?> ResolveAsync(string key, CancellationToken cancellationToken = default)
+    public async Task<ContentGroupResolvedEntry?> ResolveAsync(string key, CancellationToken cancellationToken = default)
     {
         var list = await lists.GetAsync(key, cancellationToken);
         return list is null
             ? null
-            : new CrestContentGroupResolvedEntry(Kind, list.Key, list.DisplayText, [], [list.ContentItemId]);
+            : new ContentGroupResolvedEntry(Kind, list.Key, list.DisplayText, [], [list.ContentItemId]);
     }
 }

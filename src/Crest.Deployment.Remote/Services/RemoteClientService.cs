@@ -84,7 +84,12 @@ public class RemoteClientService
         }
 
         remoteClient.ClientName = clientName;
-        remoteClient.ProtectedApiKey = _dataProtector.Protect(Encoding.UTF8.GetBytes(apiKey));
+
+        // An empty key keeps the stored one: the key is write-only, never read back to an editor.
+        if (!string.IsNullOrEmpty(apiKey))
+        {
+            remoteClient.ProtectedApiKey = _dataProtector.Protect(Encoding.UTF8.GetBytes(apiKey));
+        }
 
         await _session.SaveAsync(_remoteClientList);
 

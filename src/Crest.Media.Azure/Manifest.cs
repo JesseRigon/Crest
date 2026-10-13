@@ -10,7 +10,7 @@ using Crest.Modules.Manifest;
 [assembly: Feature(
     Id = "Crest.Media.Azure.Storage",
     Name = "Azure Media Storage",
-    Description = "Enables support for storing media files in Microsoft Azure Blob Storage.",
+    Description = "Stores file objects and the media library's files in Microsoft Azure Blob Storage.",
     Dependencies =
     [
         "Crest.Media.Cache"

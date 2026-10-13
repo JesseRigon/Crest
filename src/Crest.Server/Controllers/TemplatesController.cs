@@ -24,14 +24,14 @@ namespace Crest.Controllers;
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/templates")]
-public sealed class CrestTemplatesController(
+public sealed class TemplatesController(
     TemplateStore store,
     TemplateValidator validator,
     IAuthorizationService authorization,
     IAdminThemeService adminThemes) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<CrestTemplate[]>> ListAsync()
+    public async Task<ActionResult<Template[]>> ListAsync()
     {
         if (!await authorization.AuthorizeAsync(User, TemplatesPermissions.ManageTemplates))
         {
@@ -43,7 +43,7 @@ public sealed class CrestTemplatesController(
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<CrestTemplate>> GetAsync(string id)
+    public async Task<ActionResult<Template>> GetAsync(string id)
     {
         if (!await authorization.AuthorizeAsync(User, TemplatesPermissions.ManageTemplates))
         {
@@ -61,11 +61,11 @@ public sealed class CrestTemplatesController(
     }
 
     [HttpPost]
-    public Task<ActionResult<CrestTemplate>> CreateAsync([FromBody] CrestTemplateWrite write, CancellationToken cancellationToken) =>
+    public Task<ActionResult<Template>> CreateAsync([FromBody] TemplateWrite write, CancellationToken cancellationToken) =>
         SaveAsync(null, write, cancellationToken);
 
     [HttpPut("{id}")]
-    public Task<ActionResult<CrestTemplate>> UpdateAsync(string id, [FromBody] CrestTemplateWrite write, CancellationToken cancellationToken) =>
+    public Task<ActionResult<Template>> UpdateAsync(string id, [FromBody] TemplateWrite write, CancellationToken cancellationToken) =>
         SaveAsync(id, write, cancellationToken);
 
     [HttpPost("{id}/publish")]
@@ -85,7 +85,7 @@ public sealed class CrestTemplatesController(
         var diagnostics = await validator.ValidateAsync(ToPart(template), cancellationToken);
         if (diagnostics.Count > 0)
         {
-            return BadRequest(new CrestTemplateValidation(false, diagnostics));
+            return BadRequest(new TemplateValidation(false, diagnostics));
         }
 
         await store.PublishAsync(id);
@@ -110,7 +110,7 @@ public sealed class CrestTemplatesController(
     }
 
     [HttpPost("validate")]
-    public async Task<ActionResult<CrestTemplateValidation>> ValidateAsync([FromBody] CrestTemplateWrite write, CancellationToken cancellationToken)
+    public async Task<ActionResult<TemplateValidation>> ValidateAsync([FromBody] TemplateWrite write, CancellationToken cancellationToken)
     {
         if (!await authorization.AuthorizeAsync(User, TemplatesPermissions.ManageTemplates))
         {
@@ -118,7 +118,7 @@ public sealed class CrestTemplatesController(
         }
 
         var diagnostics = await validator.ValidateAsync(write.ToPart(), cancellationToken);
-        return Ok(new CrestTemplateValidation(diagnostics.Count == 0, diagnostics));
+        return Ok(new TemplateValidation(diagnostics.Count == 0, diagnostics));
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ public sealed class CrestTemplatesController(
         return Ok(new DisplayTree { Root = filtered, DisplayType = displayType, ScopeSignature = caller?.ScopeSignature });
     }
 
-    private async Task<ActionResult<CrestTemplate>> SaveAsync(string? id, CrestTemplateWrite write, CancellationToken cancellationToken)
+    private async Task<ActionResult<Template>> SaveAsync(string? id, TemplateWrite write, CancellationToken cancellationToken)
     {
         if (!await MayEditAsync(write.Theme))
         {
@@ -186,7 +186,7 @@ public sealed class CrestTemplatesController(
         var diagnostics = await validator.ValidateAsync(part, cancellationToken);
         if (diagnostics.Count > 0)
         {
-            return BadRequest(new CrestTemplateValidation(false, diagnostics));
+            return BadRequest(new TemplateValidation(false, diagnostics));
         }
 
         var saved = await store.SaveDraftAsync(id, part);
@@ -207,7 +207,7 @@ public sealed class CrestTemplatesController(
             || await authorization.AuthorizeAsync(User, AdminTemplatesPermissions.ManageAdminTemplates);
     }
 
-    private static CrestTemplate ToModel(TemplateRecord record, bool published) =>
+    private static Template ToModel(TemplateRecord record, bool published) =>
         new(record.ContentItemId, record.Name, record.Theme, record.DisplayType, record.Description, record.Source, published, !record.Published, record.ModifiedUtc,
             record.IsComposite, record.DisplayName, record.Category, record.Icon, record.Inputs, record.Outputs);
 

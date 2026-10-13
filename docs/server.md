@@ -21,41 +21,41 @@ Counts are source files. "Also used by" lists modules that reference the type to
 
 | Area (files) | Proposed home | Notes |
 | --- | --- | --- |
-| AdminMenusController, CrestAdminMenuLayoutExportController, CrestAdminMenuLayoutService, CrestAdminMenuLayoutInvalidation, CrestAdminMenuBuilder, CrestMenuCaptionResolver, CrestMenuPlacementService, CrestProfileMenuService, CrestProviderMenuSync{Coordinator,Gate,Service,TenantEvents}, Recipes/CrestAdminMenuLayoutStep, AdminMenusViewModels (15) | **Crest.AdminMenu** | The tenant admin-menu layout and provider sync are the admin-menu feature. |
-| NavigationController, CrestPrimaryNavMenuSettingsStore, Navigation/CrestAdminMenu, NavigationViewModels (4) | **Crest.Navigation** | NavigationItem view model is also used by Parties. |
+| AdminMenusController, AdminMenuLayoutExportController, AdminMenuLayoutService, AdminMenuLayoutInvalidation, AdminMenuBuilder, MenuCaptionResolver, MenuPlacementService, ProfileMenuService, ProviderMenuSync{Coordinator,Gate,Service,TenantEvents}, Recipes/AdminMenuLayoutStep, AdminMenusViewModels (15) | **Crest.AdminMenu** | The tenant admin-menu layout and provider sync are the admin-menu feature. |
+| NavigationController, PrimaryNavMenuSettingsStore, Navigation/CrestAdminMenu (name kept: clashes with the per-module AdminMenu classes), NavigationViewModels (4) | **Crest.Navigation** | NavigationItem view model is also used by Parties. |
 | FeaturesController, FeaturesViewModels (2) | **Crest.Features** | Feature view model also used by Parties, Workflows, Money, Regions, Members. |
-| IconsController, IconProvidersController, TenantIconsController, CrestIconController, CrestIconProviderSettingsStore, CrestIconSourceStore, CrestIconPermissions, TenantMediaIconsStartup (8) | **Crest.Icons** | |
-| IconifyServerController, CrestIconifyLocalMirrorPathProvider, IconifyCacheRefreshService (3) | **Crest.Iconify** | |
+| IconsController, IconProvidersController, TenantIconsController, IconController, IconProviderSettingsStore, IconSourceStore, IconPermissions, TenantMediaIconsStartup (8) | **Crest.Icons** | |
+| IconifyServerController, IconifyLocalMirrorPathProvider, IconifyCacheBackgroundTask (3) | **Crest.Iconify** | |
 | IndexesController, IndexesViewModels (2) | **Crest.Indexing** | |
-| LocalizationController, CrestPoTranslationLookup, LocalizationViewModels (3) | **Crest.Localization** | |
+| LocalizationController, PoTranslationLookup, LocalizationViewModels (3) | **Crest.Localization** | |
 | TranslationsController, TranslationsViewModels (2) | **Crest.DataLocalization** | |
-| UsersController, LoginSettingsController, CrestAuthController, CrestLoginService, CrestUserMenuPreferencesService, UserOptionSourceProvider, Users/LoginSettings/CrestAuth view models (9) | **Crest.Users** | CrestLoginService is also used by Members; the login page plan ([branding.md](branding.md)) makes it a workflow action later. |
+| UsersController, LoginSettingsController, AuthController, LoginService, UserMenuPreferencesService, UserOptionSourceProvider, Users/LoginSettings/Auth view models (9) | **Crest.Users** | LoginService is also used by Members; the login page plan ([branding.md](branding.md)) makes it a workflow action later. |
 | MediaController, MediaOptionsController, MediaProfilesController, three view-model files (6) | **Crest.Media** | |
 | QueriesController, QueriesViewModels (2) | **Crest.Queries** | The query system ([queries.md](queries.md)) replaces this endpoint later; move as is. |
 | RecipesController, RecipesViewModels (2) | **Crest.Recipes** | |
 | RolesController, RolesViewModels (2) | **Crest.Roles** | |
 | SecurityHeadersController, SecurityHeadersViewModels (2) | **Crest.Security** | |
 | SiteController, SiteViewModels (2) | **Crest.Settings** | Site name and home route; branding joins it ([branding.md](branding.md)). |
-| AdminSettingsController, CrestAdminSettingsNormalizer, TitleBarSettingsController, CrestTitleBarSettingsStore, CrestThemeController, their view models (8) | **Crest.Admin** | Admin chrome preferences: title bar, theme choice, admin settings. |
+| AdminSettingsController, AdminSettingsNormalizer, TitleBarSettingsController, TitleBarSettingsStore, ThemeController, their view models (8) | **Crest.Admin** | Admin chrome preferences: title bar, theme choice, admin settings. |
 | StandardMenusController, StandardMenusViewModels (2) | **Crest.Menu** | |
 | TemplatesController, TemplatesViewModels (2) | **Crest.Templates** | |
 | TenantsController, TenantsViewModels (2) | **Crest.Tenants** | Tenant view model also used by ContentPartLists, Parties, Workflows, Regions. |
 | ThemesController, ThemesViewModels, ThemeContracts/{IShellContractProvider, MemberThemeService, ShellCompatibilityService, ThemeBuckets}, LegacyFrameThemeSelector, Themes/Crest.LegacyFrame (9) | **Crest.Themes** | Shell buckets and compatibility are theme concerns ([shells-and-themes.md](shells-and-themes.md)). |
 | ContentItemsController, ContentItemsViewModels (2) | **Crest.Contents** | ContentItem view model is used by five modules. |
-| ContentTypesController, ContentTypesViewModels, ContentGroups/* (5), FieldVisibilityController, CrestFieldVisibilityEnforcer, CrestFieldVisibilityRules, CrestFieldVisibilitySettings, CrestDefinitionLockGuard, CrestDefinitionLockSettings, CrestDefinitionLockExceptionFilter, LockedContentDefinitionServices, DefinitionLocksStartup, CrestContentDefinitionPermissions, ContentTypesMenuNavigationProvider, CrestContentTypeMenuSettings (19) | **Crest.ContentTypes** | Definition locks, field visibility and content groups all act on type definitions. ContentType and ContentPart view models are used by five modules. |
-| CrestContentPartListPermissions (1) | **Crest.ContentPartLists** | Already a module; the permission was parked here. |
+| ContentTypesController, ContentTypesViewModels, ContentGroups/* (5), FieldVisibilityController, FieldVisibilityEnforcer, FieldVisibilityRules, CrestFieldVisibilitySettings, DefinitionLockGuard, CrestDefinitionLockSettings, DefinitionLockExceptionFilter, LockedContentDefinitionServices, DefinitionLocksStartup, ContentDefinitionPermissions, ContentTypesMenuNavigationProvider, CrestContentTypeMenuSettings (19) | **Crest.ContentTypes** | Definition locks, field visibility and content groups all act on type definitions. ContentType and ContentPart view models are used by five modules. |
+| ContentPartListPermissions (1) | **Crest.ContentPartLists** | Already a module; the permission was parked here. |
 
 ### 2. Access → Crest.Access
 
-BlazorAdminThemeMiddleware (the gate), RouteGateMatcherPolicy, CrestRouteAuthorizationService
-with ICrestRoutePermissionProvider and CrestRoutePermission (used by Parties and Workflows),
-CrestPermissionInvalidation, CrestRequestAccess (7). This is the "one gate" step in
+ShellSelectionMiddleware (the gate), RouteGateMatcherPolicy (the route permission table
+moved to Access as IRoutePermissionProvider and IRouteAuthorization, 2026-10-13),
+PermissionInvalidation, RequestAccess (7). This is the "one gate" step in
 [access.md](access.md) § 3; the move and that step are the same work.
 
 ### 3. Needs a ruling: the option picker field family (23)
 
 Fields/OptionPickerField, Settings/OptionPickerFieldSettings, Indexing/OptionPickerFieldIndex
-and its migrations, Models/CrestOptionSourceKeys, IOptionSourceProvider, the four option
+and its migrations, Models/OptionSourceKeys, IOptionSourceProvider, the four option
 source providers (content item, culture, time zone, user), Option{DependentFilterTranslator,
 FilterMatcher, FilterResolver, ParentValueResolver, PickerFieldKeyResolver, RowSorter,
 SourceReferenceGuard}, OptionSourcesController, OptionPickerAttachmentsController, four test
@@ -68,8 +68,8 @@ files. Used by ContentPartLists, Parties and Workflows.
 ### 4. Needs a ruling: assignment and organization parts (7)
 
 Models/CrestAssignmentPart, Models/CrestOrganizationPart, Indexing/CrestAssignmentIndex and
-migrations, Indexing/CrestOrganizationIndex, CrestAssignmentService,
-AssignmentScopeProvider, OrganizationScopeProvider, CrestAssignmentTests. These scope
+migrations, Indexing/CrestOrganizationIndex, AssignmentService,
+AssignmentScopeProvider, OrganizationScopeProvider, AssignmentTests. These scope
 content items to an organization and to assignees, which is the party model's territory.
 
 - **Option A: Crest.Parties** (organizations are parties; [parties.md](parties.md)).
@@ -78,11 +78,11 @@ content items to an organization and to assignees, which is the party model's te
 ### 5. Stays: the host (what Crest.Server becomes)
 
 Components/App.razor and imports, Endpoints/BlazorFrameworkScriptEndpoints,
-Extensions/CrestBlazorHosting, Routing/* (the route-component table, scanners, providers,
+Extensions/BlazorHosting, Routing/* (the route-component table, scanners, providers,
 member options, theme owner metadata), the component shape-binding resolver, the display
 endpoints and builders (Display/: the site page, the editor tree, the response status),
-CrestRoutingController, CrestAntiforgeryController, AppController and
-AppViewModels (the bootstrap aggregate), CrestServerApiClient, UnsupportedJSRuntime,
+RoutingController, AntiforgeryController, AppController and
+AppViewModels (the bootstrap aggregate), ServerApiClient, UnsupportedJSRuntime,
 ShellAssemblies, DesignSystemStartup, Manifest and Startup (about 35). This is the Blazor
 host that [blazor-display.md](blazor-display.md) describes; its name is an X3 question
 ([architecture.md](architecture.md)).

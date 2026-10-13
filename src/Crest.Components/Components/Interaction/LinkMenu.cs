@@ -9,7 +9,7 @@ namespace Crest.Components.Interaction;
 /// (permissions, levels, resolved URLs) and the tree carries them; this draws them as a
 /// navigation landmark. Child items nest as sub-lists.
 /// </summary>
-[CrestBlazorComponent("Menu", DisplayName = "Menu", Category = "Navigation", Icon = "menu")]
+[BlazorComponent("Menu", DisplayName = "Menu", Category = "Navigation", Icon = "menu")]
 public sealed class LinkMenu : ComponentBase
 {
     [Parameter]
@@ -34,7 +34,7 @@ public sealed class LinkMenu : ComponentBase
 }
 
 /// <summary>One link of a <see cref="LinkMenu"/> (<c>MenuItem</c>), with its children as a sub-list.</summary>
-[CrestBlazorComponent("MenuItem", DisplayName = "Menu item", Category = "Navigation", Icon = "link")]
+[BlazorComponent("MenuItem", DisplayName = "Menu item", Category = "Navigation", Icon = "link")]
 public sealed class LinkMenuItem : ComponentBase
 {
     [Parameter]
@@ -70,7 +70,7 @@ public sealed class LinkMenuItem : ComponentBase
         {
             builder.OpenElement(5, "a");
             builder.AddAttribute(6, "class", "crest-menu__link");
-            builder.AddAttribute(7, "href", IsSafe(Url) ? Url : "#");
+            builder.AddAttribute(7, "href", Content.SafeUrl.IsSafe(Url) ? Url : "#");
             if (Target == "_blank")
             {
                 builder.AddAttribute(8, "target", "_blank");
@@ -91,10 +91,4 @@ public sealed class LinkMenuItem : ComponentBase
 
         builder.CloseElement();
     }
-
-    // Security audit item 6: a URL parameter never carries a script.
-    private static bool IsSafe(string url) =>
-        !url.TrimStart().StartsWith("javascript:", StringComparison.OrdinalIgnoreCase)
-        && !url.TrimStart().StartsWith("data:", StringComparison.OrdinalIgnoreCase)
-        && !url.TrimStart().StartsWith("vbscript:", StringComparison.OrdinalIgnoreCase);
 }

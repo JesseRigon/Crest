@@ -181,7 +181,7 @@ Permissions are Orchard permissions, implied by the `ManageWorkflows` umbrella:
 `ViewCrestWorkflows`, `EditCrestWorkflows`, `PublishCrestWorkflows`,
 `RunCrestWorkflows`, `ManageShippedCrestWorkflows`, `ManageCrestWorkflowConnections`.
 The engine API maps each endpoint to one of them and answers 403, never a login redirect.
-Two shipped roles: `WorkflowEditor`, `WorkflowViewer`. A definition can additionally name
+Two roles ship with the feature: `WorkflowEditor` (view, edit, publish, run) and `WorkflowViewer` (view), created on install when the tenant has no role of that name (`WorkflowRolesFeatureEvents`), so every host can run the ownership checks. A definition can additionally name
 who may **edit** and who may **run** it (role or user names; `GET/PUT
 api/crest/workflows/definitions/{id}/access`); the super user and Administrator are never
 narrowed. `WorkflowOwnershipGuard` enforces the tier on every change path, including the
@@ -726,7 +726,7 @@ token and refreshes it with the refresh token when expired; the API only says
 
 **Admin surface.** A "Workflows" menu root (`WorkflowsAdminMenu`, replacing the stock entry)
 with Definitions, Instances, Connections, Approvals; `WorkflowsRoutePermissionProvider`
-gates the routes and marks the Studio routes browser-only (`ICrestWebAssemblyRouteProvider`).
+gates the routes and marks the Studio routes browser-only (`IWebAssemblyRouteProvider`).
 Connections and Approvals are Crest pages; Definitions/Instances (and the editor and
 instance viewer, on Studio's own routes `/workflows/definitions[/{id}/edit]`,
 `/workflows/instances[/{id}/view]`) are the forked Studio.
@@ -739,7 +739,7 @@ by reflection, attaches it as a late container and renders the view) and
 `StudioActivityNode`, the canvas node's always-registered stand-in
 (`[CrestJSComponent]`). `Crest.Workflows.Studio.Host` (lazy) holds the container setup
 (Studio core, shell/MudBlazor, workflows module, the engine backend at
-`{tenant}/crest-workflows/api` behind `CrestCookieApiHandler` with Orchard's antiforgery
+`{tenant}/crest-workflows/api` behind `CookieApiHandler` with Orchard's antiforgery
 token, a cookie auth provider manager) and the views with MudBlazor's providers. The lazy
 set (26 assemblies: Studio, MudBlazor + extensions, Monaco, Refit, Polly, FluentValidation,
 Humanizer, Radzen, the engine API client) is listed in `crest-lazy-assemblies.txt`; the
@@ -884,7 +884,7 @@ selector's startup filter runs today (before routing).
 `ModularTenantContainerMiddleware` (matches the tenant by host and prefix, opens the shell
 scope the whole request runs in, commits or cancels it at the end) →
 `ModularTenantRouterMiddleware` (tenant prefix into `PathBase`) → the tenant pipeline: the
-`IStartupFilter`s (this is where `BlazorAdminThemeMiddleware`, the shell selector, runs:
+`IStartupFilter`s (this is where `ShellSelectionMiddleware`, the shell selector, runs:
 it classifies admin, login and member paths and calls `IAccessGate`, which authenticates
 once, stamps the side and builds the caller, then the selector runs the route permission
 check, stamps the bucket and shifts `PathBase`) → `UseRouting()` → the module startups by
@@ -926,9 +926,11 @@ side they act on and the organization they act for, and that is the caller's bus
 | Signs in at | the admin login | the member portal only ([shells-and-themes.md](shells-and-themes.md#the-member-portal-login-sessions-sides)) |
 | Tenant SSO | eligible | excluded by ruling |
 
-**The class is a property on the user record, never a role** (`CrestUserClass` aspect,
-indexed by `UserClassIndex`, stamped in `IUserEventHandler.CreatingAsync` so it persists in
-the same write). Roles are what admins grant and revoke daily; the class decides which login
+**The class is a property on the user record, never a role**: a set derived from the user's
+bindings (staff is a binding to the tenant organization, member a binding to any other;
+`CrestMemberInfo` aspect, indexed by `UserConnectionIndex`, stamped in
+`IUserEventHandler.CreatingAsync` so it persists in the same write; [parties.md](parties.md)
+› Members). Roles are what admins grant and revoke daily; the class decides which login
 surface accepts the account at all, so it must not be grantable: a mis-granted member role
 would lock staff out, a removed one would let a member into the staff login. **Conversion**
 is its own permission-gated action, never the role editor, bumping the security stamp so
@@ -1009,8 +1011,9 @@ lists, GraphQL, the content-items API and the pickers (the picker scope resolver
 (every request authenticates once, cookie or `Api` scheme, `X-Shell` required on
 cookie-authenticated API calls, Site stamped as a side); the clients send `X-Shell`/`X-Org`
 (`CrestShellContext`), the loopback client forwards them. Not yet: the analyzer, the
-conformance suite, the circuit-lifetime rules, the user picker's scope, read logging as a tenant setting
-(`AccessAuditOptions.LogReads` is an option for now).
+conformance suite, the user picker's scope. Read logging is a tenant setting since
+2026-10-13 (`AccessAuditSettings.LogReads`, a site setting the auditor reads per event; its
+editor comes with the audit pages, [audit.md](audit.md)).
 
 What exists: the cookie is per tenant with claims **baked at sign-in** by
 `DefaultUserClaimsPrincipalProviderFactory` → `RoleClaimsProvider` (one role claim per role
@@ -1035,7 +1038,7 @@ per binding and assignments, nothing on the data.
 - [x] **`ICallerContext`** built per request at step 4 from the authenticated identity and
   the server-side state, not from baked cookie claims: tenant, side (from the bucket; API
   calls confirm with `X-Shell`, member side carries `X-Org`, disagreement denied), organization
-  (from `MemberOrgBindingIndex`), roles and their permissions (from `RoleStore`'s document),
+  (from the binding record, indexed by `UserConnectionIndex`), roles and their permissions (from `RoleStore`'s document),
   class ceiling, policy verdicts, culture. System and anonymous callers. Replaces the members
   cookie-enrichment plan.
 - [x] **The permission version**: a per-tenant counter in a document, bumped by
@@ -1066,7 +1069,7 @@ per binding and assignments, nothing on the data.
   executions through a batched writer into their own collection (decision needed on volume).
   Categories register the existing way (`IConfigureOptions<AuditTrailOptions>`).
 - [x] **The `AccessGate` middleware chain** as the tenant startup filter that
-  `BlazorAdminThemeMiddleware` is today: it becomes the shell selector (all three buckets
+  `ShellSelectionMiddleware` is today: it becomes the shell selector (all three buckets
   stamped, Site included) **and owns authentication** for every request (cookie or `Api`
   scheme per request kind, once), then builds the caller; `UseAuthentication` at −150 and
   the engine API's own authentication branch go. The four pipelines and the renderer take a
@@ -1093,14 +1096,26 @@ per binding and assignments, nothing on the data.
   table), `AccessConformanceTests` (the table against the decision and
   `IAuthorizationService`, audit, monotonicity), `CallerContextFactoryTests` (revocation
   between two requests, roles, super user, applications, disabled and deleted users,
-  contributors, cache), `AccessGateTests` (sides, one authentication, refusals),
+  contributors, cache, access policies), `AccessGateTests` (sides, one authentication, refusals),
   `HandDownTests` (no second caller, runner restore, scope per request and per user),
   `DataAccessBoundaryTests` (the analyzer's rules over the source; fails today on the known
   bypasses, by design). Workflow side: `AccessGateTests`, `WorkflowCallerLifetimeTests`,
-  `ActorStampingDispatcherTests` in `Crest.Workflows.Tests`. Still to add: organizations and
-  policies as fixtures, the workflow activity gate and the query pipeline running the table.
-- [ ] **Caller lifetime rules** for circuits and websockets (per-operation build, stamp
-  revalidation, teardown). Workflow bursts landed 2026-10-11: rebuilt per burst from the
+  `ActorStampingDispatcherTests` in `Crest.Workflows.Tests`. *What landed (2026-10-13):*
+  organizations as fixtures (`Crest.Members.Tests/OrganizationConformanceTests`: the binding
+  and content scopes and the member mapper per caller and organization, through the real
+  providers), policies as fixtures (`CallerContextFactoryTests`: a subscription policy as a
+  contributor refusing portal access for one organization, narrowing permissions there, and
+  a changed verdict reaching the next request), `ConnectionCallerTests` for the connection
+  lifetime. Still to add: the workflow activity gate and the query pipeline running the table.
+- [x] **Caller lifetime rules** for circuits and websockets (per-operation build, stamp
+  revalidation, teardown). *What landed (2026-10-13):* `Crest.Access/Services/ConnectionCallers.cs`:
+  a global hub filter (`ConnectionCallerHubFilter`) and a circuit handler
+  (`ConnectionCallerCircuitHandler`, per inbound activity) build the caller per operation
+  from the side and organization the connection was admitted on; the security stamp is
+  re-validated once the stamp interval has passed; a changed stamp, a gone or disabled user
+  or a refused caller aborts the hub connection or throws out of the circuit, which tears it
+  down. The shell selector now admits `{shellBase}/_blazor` on the shell's side. Sign-out in
+  another browser reaches a connection through the stamp only. Workflow bursts landed 2026-10-11: rebuilt per burst from the
   sealed, instance-bound actor (§ Running identity); tests in
   `Crest.Workflows.Tests/WorkflowCallerLifetimeTests.cs`.
 - [x] **Two projects**: `Crest.Access.Abstractions` (contracts and `ScopeSet`) below
@@ -1135,7 +1150,7 @@ including subqueries, CTEs and set-operation branches), then runs it with Dapper
 `IDbConnectionAccessor`; with `ReturnContentItems` it loads the items through the session
 with no view check. There is **no table allow-list**: a query may select from the YesSql
 `Document` table and read any JSON. Paging is only the parser's limit handling. Index tables
-are the map indexes (`ContentItemIndex`, `CrestAssignmentIndex`, `MemberOrgBindingIndex`,
+are the map indexes (`ContentItemIndex`, `CrestAssignmentIndex`, `UserConnectionIndex`,
 `AuditTrailEventIndex`, …). The per-tenant store, prefix and dialect come from
 `ShellSettings` in `Crest.Data.YesSql`.
 
@@ -1192,15 +1207,37 @@ carries an output schema today.
   for free. The descriptor's `ClrType` is the one run-query activity.
 - [x] **The run-query activity** (`RunQuery`, landed 2026-10-10): executes its descriptor's query through the query pipeline
   with the run's actor; outputs the typed rows and a page token.
-- [ ] **Content operations** (create, update, delete, publish, unpublish per type) as typed
+- [x] **Content operations** (create, update, delete, publish, unpublish per type) as typed
   activities wrapping the content manager, so validation, handlers and the audit content
-  handler keep firing; the only writes outside workflows.
+  handler keep firing; the only writes outside workflows. *What landed (2026-10-13):*
+  `Server/Contents/ContentOperations.cs`: `ContentOperationActivityProvider` emits one
+  descriptor per content type and operation (`Crest.Content.{Operation}{Type}`, CLR type
+  `ContentOperation`), create and update with the type's fields as typed synthetic inputs
+  (text, HTML, Markdown, numeric, boolean, date, date-time, content, user and option pickers;
+  other kinds stay with Copy fields); the gate asks the owner variation of the operation's
+  content permission against the type (new `crest:permissionResource` descriptor property),
+  and `ContentOperationService` asks the decision again with the item, validates before it
+  writes, and calls the content manager. Copy fields and Move fields write through its update
+  path. Update writes the latest version in place (no draft is forced), like Copy fields.
 - [ ] **One registry** (ruled, Decisions): Crest's catalog kinds (triggers, flows,
   connectors, hook slots) become engine descriptors with grouping and position in
   `CustomProperties`; the catalog's consumers move to the engine registry; the catalog goes.
+  *Open (2026-10-13):* not started. The ruling names triggers, flows, connectors and hook
+  slots as descriptors, but only triggers and activity presets are operations; a shipped
+  flow is a definition JSON to import, a connector is an auth kind and base URL (and moves
+  with the connection system, itself open), a hook attachment is a pairing. Needed: what a
+  flow, a connector, a hook slot and a system attachment become in the engine registry (a
+  descriptor each, with the JSON and settings in `CustomProperties`, or providers that stay
+  as import sources), and whether the registry API's shape may change for the pages that
+  read it.
 - [ ] **Operation names per tenant**, mapped from the module's declared name, so a tenant can
   replace a shipped read with a saved query of the same name (the override model of
   blazor-display.md § 5a, applied to operations).
+  *Open (2026-10-13):* not started. Today a saved query whose name equals a built-in one
+  already hides it in the catalog's list. Needed: whether "names per tenant" is that
+  shadowing made consistent (find and execute too), or a stored per-tenant map from the
+  declared name to the tenant's operation (the three-ids-and-a-map model), and where that map
+  is edited.
 
 #### 4. The action pipelines ([workflows.md](workflows.md))
 
@@ -1260,13 +1297,13 @@ shell-scoped consumers, task handler and bookmark worker). `WorkflowStateCommitt
 - [x] **Data activities through the gate.** Landed 2026-10-10: `[RequiresPermission]` on the
   field and connector activities (`UseConnections`), the run-query activity and its
   provider (`Server/Queries`); the content operations and the rewrite of CopyFields/MoveFields
-  onto them are still open. The run-query activity and the content
+  onto them landed 2026-10-13 (step 3). The run-query activity and the content
   operations (step 3) are the only data activities; `Contents/FieldActivities.cs`
   (`CopyFields`, `MoveFields`, which call `IContentManager` directly) are rewritten on content
   operations; `CallConnector`/`PollConnector` go through the connection system.
 - [x] **Name and host the two action pipelines as such**: named 2026-10-10 in
-  `Server/Units/ActionPipelines.cs`; the queue hardening (partition, idempotency keys) is
-  still open under workflows.md › Queues. The unit of work and durable
+  `Server/Units/ActionPipelines.cs`; the queue hardening (partition, idempotency keys)
+  landed 2026-10-13 (workflows.md › Queues). The unit of work and durable
   background become the two named hosts in `CoreStartup`, with the queue hardening from
   workflows.md › Queues (partition by correlation id, idempotency keys; after-commit emission
   is already `WorkflowAfterCommit`). Anything that must be after-commit uses it, never
@@ -1278,16 +1315,24 @@ shell-scoped consumers, task handler and bookmark worker). `WorkflowStateCommitt
   `ApiSecurityMiddleware` (`Server/Security`) maps Crest permissions to engine
   claims and enforces the run gate per definition; it keeps the mapping but asks the one
   decision, and sits after the request path's steps 1–6 rather than carrying its own
-  authentication branch.
+  authentication branch. *Fixed 2026-10-13:* the per-request grant was lost before the
+  endpoint's policy ran - not in the mapping, but in the gate's authentication feature,
+  whose `User` setter kept the stale ticket for the authorization middleware to restore
+  ([access.md](access.md) § 3) - so every engine API call at the tenant root answered a
+  redirect to `/Error/403`; the `/Admin/crest-workflows/...` form that seemed to work was
+  the admin document, not the endpoint. With it, an API path (`AccessGate.IsApiPath`) now
+  answers 401 and 403 from the cookie scheme instead of redirecting. Tests:
+  `ApiGateResponseTests`.
 - [ ] **Connectors into the connection system** (queries.md › Workflows on Queries): the
   model, sealed secrets, OAuth, `ConnectorHttp` (SSRF guard, redirects off, size limits),
   rate limiters, token cache and `ConnectionResilienceStrategy` move down; the activities
   stay as consumers; the webhook controller verifies through a narrow verifier.
 - [x] **The stock activities ported to `Input<T>`** and the stock module deleted. Landed
   2026-10-10: § Platform activities; the stock Liquid and JavaScript evaluators went with it.
-- [ ] **Expressions**: the engine's Liquid handler replaced by the platform's parser and
-  context; one Fluid version (2.40 platform, 2.31 engine today); Jint and Fluid limits
-  configured in one place (blazor-display.md § 12).
+- [ ] **Expressions**: ~~the engine's Liquid handler replaced by the platform's parser and
+  context; one Fluid version~~ (2026-10-13, `PlatformLiquidTemplateManager`, Fluid 2.40
+  everywhere); Jint and Fluid limits configured in one place (blazor-display.md § 12, with the
+  parked sandbox).
 
 #### 5. Move the reads
 
@@ -1478,8 +1523,11 @@ Built today: see [docs/workflows.md › Units of work](workflows.md#units-of-wor
   Log, HTTP request). The stock engine, stores, indexes, admin UI, designer, deployment,
   trimming, user tasks, timers, HTTP events and control-flow activities were deleted, because
   the engine has its own. Platform modules' workflow startups now require the `Crest.Workflows`
-  feature. Still to do: the platform modules' activity display drivers and views (for the old
-  designer) are unused.
+  feature. The platform modules' activity display drivers and views (for the old designer)
+  are gone too.
+  *What landed (2026-10-13):* checked - no activity display driver, view model or
+  `*.Fields.*` activity view remains outside the engine; they went with the activities' move
+  onto the engine's `Activity` base. Nothing further to delete.
 - [ ] **Two queues, two guarantees (the full way; designed, built after the above, on engine
   parts - see the audit).** The *write side*: no two units touching one object interleave -
   first through the engine's `IDistributedLockProvider` keyed by correlation id around a
@@ -1490,6 +1538,21 @@ Built today: see [docs/workflows.md › Units of work](workflows.md#units-of-wor
   object version the unit committed, at-least-once delivery with idempotency keys (unit id +
   slot) for exactly-once effect. Costs accepted: read-your-writes latency with a pending state
   in the UI, optimistic conflicts re-run.
+
+  *What landed (2026-10-13), the event side's partition and keys:* `Units/WorkflowStimulusQueue.cs`.
+  Every stimulus is written as a `WorkflowStimulus` document in the raising unit (keyed by
+  the unit's id and the stimulus's slot in it, `WorkflowUnitOfWork.Id`/`NextSlot`; the key is
+  the flows' `StimulusId` input), so it exists only if the unit commits. After the commit its
+  partition (the correlation id; an uncorrelated stimulus is its own) is drained: each
+  delivery is one child scope that takes the object's lock, takes the partition's oldest
+  pending stimulus, sends it and marks it delivered; the mark commits with the flows the send
+  ran and the lock is held until that commit, so one object's events are consumed one at a
+  time, in order, and once. A send that throws is retried (three attempts, then set aside as
+  failed); one whose flows failed their unit counts as delivered (the failure is on the
+  instances); stimuli a dead process left pending are delivered again at activation. Values
+  keep their types (a content item in the input stays one). Not built: the object version in
+  the payload (the raisers name no version yet), a periodic redelivery sweep between
+  activations.
 
   The planned queues follow the
   same ruling: the event queue is the engine's stimulus dispatch + bookmark queue, hardened;
@@ -1525,17 +1588,24 @@ Built today: see [docs/workflows.md › Designer and admin pages](workflows.md#d
   The workflows pages are built on the Elsa designer UI; what it offers must not be lost in
   the move (ruling 2026-10-05).
 - [ ] **Hook attachment and hook insight** (ruling 2026-10-05: planned, not built).
-  - [ ] A hook-attachment page (the API exists: `HooksController`).
+  - [x] A hook-attachment page (the API exists: `HooksController`). *What landed
+    (2026-10-13):* `blazor-wasm/Pages/WorkflowHooks.razor` at `/workflows/hooks` (menu
+    Workflows › Hooks, View workflows), on Crest components: every slot with its module and
+    tenant attachments, attach (published flows the user may edit, from the new
+    `GET api/crest/workflows/hooks/candidates`) and detach for users with Edit workflows; the
+    API keeps refusing what is not atomic.
   - [ ] Clear, labelled sections for **webhooks** — pub/sub insight, process instances and
     history — and for **internal hooks**, with the same insight data.
-- [ ] **Run history and insight through the audit system** (ruling 2026-10-06). The engine's
-  own journal (execution logs, activity records), hook runs and inbound webhook deliveries
-  — including rejected posts, which today are only logged — are recorded as audit events;
-  the insight sections and metrics are audit feeds ([audit.md](audit.md)). Whether that
-  needs a change to AuditTrail's save path is open there.
+- [x] **Run history and insight through the audit system** (ruling 2026-10-06; built
+  2026-10-13, `Server/Audit`). Each burst of a run with its journal and incidents, hook
+  attachment runs and inbound webhook deliveries — rejected posts included — are audit events
+  (category `Workflows`); failures are written so a failed unit keeps them. The save path
+  stayed as it is (A0). See [audit.md › What landed](audit.md#what-landed-2026-10-13). Left:
+  the insight sections and metrics as audit feeds, with the feeds (audit.md A4).
 - [ ] **Per-process metrics** (ruling 2026-10-05): run counts, timings and failures per flow,
   on the workflow pages, over the already-indexed instances, execution logs and activity
-  records.
+  records. *Open (2026-10-13):* the 2026-10-06 ruling above makes the metrics audit
+  feeds; built from the engine's indexes now, or after run history reaches the audit?
 - [ ] **The designer UI that comes with it.** With it: the tier badge, Outdated + Reset, the access-list editor, the field-dependency
   panel, the pending state, an OAuth "Authorize" button on a connection, and a dedicated
   mapping editor for `Copy fields` (until then the rows are a JSON input).

@@ -25,8 +25,8 @@ both:
 
 - **Pages** - which shell pages a caller may open (site, admin, member, the login shell). The
   request path decides it: the shell selector picks the side, the gate admits the request
-  (anonymous or not), and the **route permission table** (`ICrestRoutePermissionProvider` →
-  `CrestRouteAuthorizationService` for Blazor routes, `AdminFilter`/`AccessAdminPanel` for the
+  (anonymous or not), and the **route permission table** (`IRoutePermissionProvider` →
+  Access's `IRouteAuthorization` for Blazor routes, `AdminFilter`/`AccessAdminPanel` for the
   remaining MVC admin) names the permission each page takes. It also decides which menu
   entries show. A page grants **no data**: it is a frame.
 - **Data and workflows** - which objects a caller may read, change or run, on any surface (the
@@ -533,7 +533,7 @@ Refusals:
 
 | Shell | Pages | Anonymous | Route permission |
 | --- | --- | --- | --- |
-| Admin (Default tenant) | tenants, tenant feature profiles, global reference data | no | `ManageTenants`, `ManageTenantFeatureProfiles`, `ManageCrestGlobalReferenceData` |
+| Admin (Default tenant) | tenants, tenant feature profiles, global reference data | no | `ManageTenants`, `ManageTenantFeatureProfiles`, `ManageGlobalReferenceData` |
 | Admin (any tenant) | everything | no | super user |
 
 **Data and workflows:**
@@ -542,7 +542,7 @@ Refusals:
 | --- | --- | --- | --- |
 | Tenants | create, set up, enable, disable | ⚠ `ManageTenants` | Default tenant only |
 | Tenant feature profiles | manage | `ManageTenantFeatureProfiles` | Default tenant only |
-| Global reference data | manage | `ManageCrestGlobalReferenceData` | Default tenant only; the one store outside a tenant |
+| Global reference data | manage | `ManageGlobalReferenceData` | Default tenant only; the one store outside a tenant |
 | Site owner | transfer | `SiteOwner` | version bump |
 
 ---

@@ -38,7 +38,8 @@ public sealed partial class MediaObjectService(
     IEnumerable<IAccessAuditor> auditors,
     IEnumerable<IShareAccessIndex> accessIndexes,
     IEnumerable<IShareScopes> shareScopes,
-    IEnumerable<ISharingService> sharing) : IMediaObjectWrites, IMediaObjectListing, IMediaVerdictHandler
+    IEnumerable<ISharingService> sharing,
+    IEnumerable<IShareChangeChecks> changeChecks) : IMediaObjectWrites, IMediaObjectListing, IMediaVerdictHandler
 {
     private const string GraphLock = "media-files-graph";
     private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(30);
@@ -178,7 +179,10 @@ public sealed partial class MediaObjectService(
     /// sharing off the media permissions decide, object by object, and the page is cut from the
     /// filtered list, never from the loaded one.
     /// </summary>
-    public async Task<MediaPage> ListChildrenPageAsync(string placementId, int skip, int take, CancellationToken cancellationToken = default)
+    public Task<MediaPage> ListChildrenPageAsync(string placementId, int skip, int take, CancellationToken cancellationToken = default) =>
+        ListChildrenPageAsync(placementId, skip, take, access: null, cancellationToken);
+
+    public async Task<MediaPage> ListChildrenPageAsync(string placementId, int skip, int take, ShareIndicator? access, CancellationToken cancellationToken = default)
     {
         var caller = Caller();
         skip = Math.Max(0, skip);
@@ -188,8 +192,28 @@ public sealed partial class MediaObjectService(
 
         if (Scope(caller) is { } scope)
         {
+            // Lists filter by the access indicator in the query too (requirement 98).
+            if (access is { } indicator && shareScopes.LastOrDefault()?.IndicatorRuleFor(FileShareableKind.Name, indicator) is { } byIndicator)
+            {
+                scope = scope.And(byIndicator);
+            }
+
             var (page, total) = await store.GetChildrenAsync(holders, scope, skip, take);
-            return new MediaPage(await ItemsAsync(page), total);
+
+            // A child of a hard-linked folder can live in another drive than this placement's.
+            // The scope admits a tenant administrator to everything, but another user's personal
+            // drive only opens through the separate, noticed access (§ 7): such a child is
+            // decided on its own.
+            var listed = new List<MediaPlacementDocument>(page.Count);
+            foreach (var child in page)
+            {
+                if (child.Placement.DriveId == folder.Placement.DriveId || await CanAsync(caller, View, child, cancellationToken))
+                {
+                    listed.Add(child);
+                }
+            }
+
+            return new MediaPage(await ItemsAsync(listed), total - (page.Count - listed.Count));
         }
 
         var visible = new List<MediaPlacementDocument>();
@@ -328,7 +352,22 @@ public sealed partial class MediaObjectService(
 
     /// <summary>A new version; with <paramref name="publishWhenClean"/> it becomes the published
     /// one as soon as its verdict is clean (an overwrite, which replaces what is served).</summary>
-    public async Task<MediaItem> ReplaceAsync(string placementId, Stream content, string? claimedType, bool publishWhenClean, CancellationToken cancellationToken = default)
+    public Task<MediaItem> ReplaceAsync(string placementId, Stream content, string? claimedType, bool publishWhenClean, CancellationToken cancellationToken = default) =>
+        ReplaceCoreAsync(placementId, content, claimedType, publishWhenClean, trustedReason: null, cancellationToken);
+
+    /// <summary>
+    /// A module-generated file (docs/media.md § 2, ruling 2026-10-05): through the same checks as
+    /// an upload by the caller; scanned unless <paramref name="exemptReason"/> says the module and
+    /// type are exempt, in which case it is recorded clean with that reason, never both.
+    /// </summary>
+    internal Task<MediaItem> CreateGeneratedAsync(MediaUpload upload, string? exemptReason, CancellationToken cancellationToken) =>
+        UploadCoreAsync(upload, exemptReason, cancellationToken);
+
+    /// <summary>A module-generated version: scanned, or recorded clean with the exemption's reason.</summary>
+    internal Task<MediaItem> ReplaceGeneratedAsync(string placementId, Stream content, string? claimedType, bool publishWhenClean, string? exemptReason, CancellationToken cancellationToken) =>
+        ReplaceCoreAsync(placementId, content, claimedType, publishWhenClean, exemptReason, cancellationToken);
+
+    private async Task<MediaItem> ReplaceCoreAsync(string placementId, Stream content, string? claimedType, bool publishWhenClean, string? trustedReason, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(content);
         var caller = Caller();
@@ -346,7 +385,7 @@ public sealed partial class MediaObjectService(
             }
 
             var number = document.Content.Versions.Count == 0 ? 1 : document.Content.Versions.Max(candidate => candidate.Number) + 1;
-            version = await QuarantineAsync(contentId, number, placement.Placement.Name, content, claimedType, caller, submit: true, cancellationToken);
+            version = await QuarantineAsync(contentId, number, placement.Placement.Name, content, claimedType, caller, submit: trustedReason is null, cancellationToken);
             document.Content.Versions.Add(version);
             if (publishWhenClean)
             {
@@ -359,8 +398,16 @@ public sealed partial class MediaObjectService(
             return true;
         });
 
-        await CommitUnscannedAsync(contentId, version, cancellationToken);
-        return await ItemAsync(placement);
+        if (trustedReason is null)
+        {
+            await CommitUnscannedAsync(contentId, version, cancellationToken);
+        }
+        else
+        {
+            await VerdictCoreAsync(contentId, version.Number, ScanVerdict.Clean, trustedReason, cancellationToken);
+        }
+
+        return await ItemAsync(await store.GetPlacementAsync(placement.Placement.Id) ?? placement);
     }
 
     // ---- Changing placements --------------------------------------------------------------
@@ -398,8 +445,8 @@ public sealed partial class MediaObjectService(
 
             // Moving changes the access of everything moved: Manager over all of it, Editor on
             // the destination (requirement 70).
-            await RequireManagerBelowAsync(caller, placement, cancellationToken);
             await RequireAsync(caller, Edit, destination, cancellationToken);
+            await RequireManagerBelowAsync(caller, placement, destination, cancellationToken);
             if (!placement.Placement.IsSoftLink && await graph.WouldLoopAsync(placement.Placement.ContentId, destination.Placement.Id, cancellationToken))
             {
                 throw new MediaObjectConflictException("A folder cannot be placed inside itself.");
@@ -477,7 +524,7 @@ public sealed partial class MediaObjectService(
         return SerializedAsync(GraphLock, async () =>
         {
             var placement = await VisibleAsync(caller, placementId, cancellationToken);
-            await RequireManagerBelowAsync(caller, placement, cancellationToken);
+            await RequireManagerBelowAsync(caller, placement, destination: null, cancellationToken);
 
             await RemoveTreeAsync(placement, cancellationToken);
             return true;
@@ -647,13 +694,35 @@ public sealed partial class MediaObjectService(
         }
     }
 
-    /// <summary>Manager on the placement and on everything below it, including what the caller
-    /// cannot see (requirements 69-70). The refusal never names or counts what failed.</summary>
-    private async Task RequireManagerBelowAsync(CallerContext caller, MediaPlacementDocument placement, CancellationToken cancellationToken)
+    /// <summary>
+    /// Manager on the placement and on everything below it, including what the caller cannot see,
+    /// and for a move Editor on the destination (requirements 69-70). The placement itself is
+    /// checked here (the personal-drive and inactive-drive rules are Media's). While sharing is on,
+    /// everything below is sharing's <see cref="IShareChangeChecks"/>, which walks every shareable
+    /// kind below (content items filed in a folder too); with sharing off the media permissions
+    /// decide each placement below. The refusal never names or counts what failed.
+    /// </summary>
+    private async Task RequireManagerBelowAsync(CallerContext caller, MediaPlacementDocument placement, MediaPlacementDocument? destination, CancellationToken cancellationToken)
     {
         await RequireAsync(caller, Manage, await SelfAsync(placement), cancellationToken);
         if (placement.Placement.IsSoftLink)
         {
+            // A soft link grants nothing and has nothing below it: its folder decides.
+            return;
+        }
+
+        if (changeChecks.LastOrDefault() is { } checks)
+        {
+            await RequireNoForeignPersonalDrivesBelowAsync(caller, placement, cancellationToken);
+            if (destination is null)
+            {
+                await checks.RequireDeleteAsync(Ref(placement), cancellationToken);
+            }
+            else
+            {
+                await checks.RequireMoveAsync(Ref(placement), Ref(destination), cancellationToken);
+            }
+
             return;
         }
 
@@ -661,6 +730,35 @@ public sealed partial class MediaObjectService(
         {
             // A soft link below is the folder's to remove; its own parent is checked here too.
             if (!below.Placement.IsSoftLink && !await CanAsync(caller, Manage, below, cancellationToken))
+            {
+                throw new AccessDeniedException(Manage, "The folder contains items you cannot delete or move.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sharing's checks let a tenant administrator through, but another user's personal drive is
+    /// only reached through the separate, noticed access (§ 7), as listing has it. Something below
+    /// a hard-linked folder can live in another drive: one query over the ancestor closure finds
+    /// what is below in other drives, and each such personal drive of another user must be open
+    /// to the caller. The refusal never names or counts what failed.
+    /// </summary>
+    private async Task RequireNoForeignPersonalDrivesBelowAsync(CallerContext caller, MediaPlacementDocument placement, CancellationToken cancellationToken)
+    {
+        var drives = (await store.GetDescendantsAsync(placement.Placement.Id))
+            .Select(below => below.Placement.DriveId)
+            .Where(driveId => driveId != placement.Placement.DriveId)
+            .Distinct(StringComparer.Ordinal);
+        foreach (var driveId in drives)
+        {
+            if (await store.GetPlacementAsync(driveId) is not { } drive ||
+                await store.GetContentAsync(drive.Placement.ContentId) is not { } content)
+            {
+                continue;
+            }
+
+            if (content.Content.DriveType == DriveType.Personal && content.Content.Owner.Id != caller.UserId &&
+                !await CanAsync(caller, View, drive, cancellationToken))
             {
                 throw new AccessDeniedException(Manage, "The folder contains items you cannot delete or move.");
             }
@@ -820,6 +918,9 @@ public sealed partial class MediaObjectService(
         }
 
         await store.DeleteAsync(placement);
+
+        // The placement's private derivatives (the private resize cache, ruling F2) go with it.
+        await storage.DeletePrefixAsync(MediaStorageArea.Derived, placement.Placement.Id);
 
         if (others.Count == 0 && content is not null)
         {

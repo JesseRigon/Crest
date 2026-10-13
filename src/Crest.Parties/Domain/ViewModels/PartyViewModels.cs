@@ -64,6 +64,21 @@ public sealed record PartyContactsModel(
     IReadOnlyList<ContactPointModel> ContactPoints,
     IReadOnlyList<AddressModel> Addresses);
 
+/// <summary>One legal entity name of an organization. <paramref name="Kind"/> is an option
+/// key of <c>parties.organization-name-kind</c> (legal, dba, former, other);
+/// <paramref name="Primary"/> marks the one entry per kind to use. None of these is a
+/// display name: the organization's title stays the name shown everywhere.</summary>
+public sealed record OrganizationNameModel(
+    string Id,
+    string? Kind,
+    string Name,
+    bool Primary);
+
+public sealed record OrganizationNameWriteModel(
+    string Kind,
+    string Name,
+    bool Primary = false);
+
 /// <summary>A position a person holds in an organization. A person may hold many,
 /// in many organizations; <paramref name="Primary"/> marks the one to show first.</summary>
 public sealed record PositionModel(

@@ -36,6 +36,7 @@ namespace Crest.Components.Primitives
     /// }
     /// </code>
     /// </example>
+    [Crest.DisplayManagement.Components.BlazorComponent("Alert", DisplayName = "Alert", Category = "Feedback", Icon = "info")]
     public partial class CrestAlert : CrestComponentWithChildren
     {
         private string GetAlertSize()

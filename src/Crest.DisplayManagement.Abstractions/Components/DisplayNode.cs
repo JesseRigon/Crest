@@ -71,6 +71,13 @@ public sealed class DisplayNode
     /// top-level nodes, a zone's contents moved as one.</summary>
     public const string FragmentComponent = "Fragment";
 
+    /// <summary>
+    /// A parameter the renderer fills with the node's instance id when the component declares it
+    /// (a form that reads the errors its actions returned from <see cref="DisplayState"/>). Never a
+    /// stored value: the renderer's id wins over anything a template sets.
+    /// </summary>
+    public const string InstanceIdParameter = "InstanceId";
+
     /// <summary>The component name of an error node: a subtree that could not be built (a render
     /// limit, a failed fallback). It renders nothing unless a theme registers a component by this
     /// name; the reason is in <see cref="Diagnostics"/> (ruling 2026-10-12: limits fall back, they

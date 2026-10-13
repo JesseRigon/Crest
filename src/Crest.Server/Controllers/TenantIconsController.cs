@@ -80,5 +80,5 @@ public sealed class TenantIconsController(
 
     private TenantMediaIconProvider? GetProvider() => iconProviders.OfType<TenantMediaIconProvider>().FirstOrDefault();
 
-    private Task<bool> CanManageAsync() => authorizationService.AuthorizeAsync(User, CrestIconPermissions.ManageTenantIcons);
+    private Task<bool> CanManageAsync() => authorizationService.AuthorizeAsync(User, IconPermissions.ManageTenantIcons);
 }

@@ -122,6 +122,18 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
                 .WithDefaultActivityExecutionPipeline(pipeline => pipeline.Insert<ActivityAccessGateMiddleware>(pipeline.Components.Count() - 1)));
         });
 
+        // One Liquid (docs/blazor-display.md § 12): the engine's Liquid expressions render through
+        // the platform's template manager; the variable types a workflow may hold are admitted
+        // by the platform's member allow-list, as the engine's own context admitted them.
+        services.Replace(ServiceDescriptor.Scoped<Crest.Workflows.Expressions.Liquid.Contracts.ILiquidTemplateManager, Crest.Workflows.Expressions.PlatformLiquidTemplateManager>());
+        services.AddOptions<Fluid.TemplateOptions>().Configure<Microsoft.Extensions.Options.IOptions<Crest.Workflows.Management.Options.ManagementOptions>>((template, management) =>
+        {
+            foreach (var variable in management.Value.VariableDescriptors.Where(descriptor => descriptor.Type is { IsClass: true, ContainsGenericParameters: false }))
+            {
+                Fluid.MemberAccessStrategyExtensions.Register(template.MemberAccessStrategy, variable.Type);
+            }
+        });
+
         // Crest may dispose the tenant container synchronously; Crest.Workflows's tenant service is
         // async-only and would crash the process on that path (SyncDisposableTenantService).
         SyncDisposableTenantService.ReplaceIn(services);
@@ -141,6 +153,8 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<WorkflowAtomicityAnalyzer>()
             .AddDataMigration<WorkflowBackgroundJobMigrations>()
             .AddIndexProvider<WorkflowBackgroundJobIndexProvider>()
+            .AddDataMigration<WorkflowStimulusMigrations>()
+            .AddIndexProvider<WorkflowStimulusIndexProvider>()
             .AddScoped<BackgroundJobStore>()
             .AddScoped<BackgroundJobContext>()
             .AddSingleton<ShellScopedBackgroundConsumers>()
@@ -149,6 +163,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<Hooks.WorkflowHookRunner>()
             .AddScoped<IWorkflowHookRunner>(sp => sp.GetRequiredService<Hooks.WorkflowHookRunner>())
             .AddScoped<Contents.ContentFieldValueCopier>()
+            .AddScoped<Contents.ContentOperationService>()
             .AddScoped<IWorkflowObjectLock, WorkflowObjectLock>()
             .AddScoped<Fields.WorkflowFieldDependencyAnalyzer>()
             .AddScoped<Fields.FieldDependencyChecker>()
@@ -165,6 +180,8 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<Crest.DisplayManagement.Components.IDisplayActionValidator, Display.WorkflowDisplayActionValidator>()
             // The registry's query kind: one run-query descriptor per query the catalog lists.
             .AddScoped<IActivityProvider, Queries.QueryActivityProvider>()
+            // The registry's content operations: one descriptor per content type and operation.
+            .AddScoped<IActivityProvider, Contents.ContentOperationActivityProvider>()
             .AddNotificationHandler<Fields.FieldDependencyPublishHandler>()
             .Configure<Microsoft.AspNetCore.Mvc.MvcOptions>(options => options.Filters.Add<Hooks.WorkflowHookFailedExceptionFilter>())
             .AddScoped<IWorkflowHookSlotProvider, Hooks.WorkflowsHookSlotProvider>()
@@ -188,6 +205,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
         // Crest's authorization pipeline; the linker narrows Studio's links to what the
         // user may do, replacing the engine's static one.
         services.AddPermissionProvider<WorkflowsPermissionProvider>();
+        services.AddScoped<Crest.Environment.Shell.IFeatureEventHandler, WorkflowRolesFeatureEvents>();
         services
             .AddScoped<WorkflowOwnershipGuard>()
             .AddScoped<WorkflowDefinitionAccessService>()
@@ -204,6 +222,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddSingleton<ConnectorRateLimiters>()
             .AddSingleton<ConnectorTokenCache>()
             .AddScoped<WorkflowConnectionService>()
+            .AddScoped<Crest.Access.ICallerContextContributor, WorkflowConnectionCallerContributor>()
             .AddScoped<ConnectorInvoker>()
             .AddScoped<ConnectorOAuthClient>()
             .AddScoped<IWorkflowActivityProvider, ConnectionOperationActivityProvider>()
@@ -222,8 +241,8 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
         // blazor-wasm).
         services.AddNavigationProvider<Navigation.WorkflowsAdminMenu>();
         services.AddScoped<Navigation.WorkflowsRoutePermissionProvider>();
-        services.AddScoped<Crest.Services.ICrestRoutePermissionProvider>(sp => sp.GetRequiredService<Navigation.WorkflowsRoutePermissionProvider>());
-        services.AddScoped<Crest.Services.ICrestWebAssemblyRouteProvider>(sp => sp.GetRequiredService<Navigation.WorkflowsRoutePermissionProvider>());
+        services.AddScoped<Crest.Access.IRoutePermissionProvider>(sp => sp.GetRequiredService<Navigation.WorkflowsRoutePermissionProvider>());
+        services.AddScoped<Crest.Services.IWebAssemblyRouteProvider>(sp => sp.GetRequiredService<Navigation.WorkflowsRoutePermissionProvider>());
 
         // The sample host set this at the process level; here it is per shell.
         services.Configure<MediatorOptions>(options => options.JobWorkerCount = 1);

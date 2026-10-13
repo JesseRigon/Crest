@@ -1,0 +1,89 @@
+@page "/Files/user-drive/{DriveId}"
+@using Crest.Components.Files
+@using Crest.Components.Primitives
+@implements IDisposable
+@inject HttpClient Http
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* A tenant administrator's access to another user's personal drive, in its own window and
+   clearly marked as administrator access (docs/media.md § 7, requirements 24 and 28). The
+   access ends on time: the server refuses everything after it, and this window closes the
+   drive when the time runs out. Every action here is recorded as administrator access. *@
+<CrestStack Gap="1rem" data-testid="user-drive-page">
+    <div class="crest-admin-access-banner" role="status" data-testid="admin-access-banner">
+        <strong>@T["Administrator access"]</strong>
+        @if (Access is { } access)
+        {
+            <span>@(access.EndsUtc is { } ends ? $"{T["Ends at"]} {ends.ToLocalTime():t}" : T["Until closed"])</span>
+            <CrestButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Text="@T["Close access"]" Click="CloseAsync" data-testid="close-admin-access" />
+        }
+    </div>
+
+    @if (Ended)
+    {
+        <CrestText Text="@T["The access has ended. Opening the drive again needs a new access, with its notice and delay."]" />
+    }
+    else if (Access is null)
+    {
+        <CrestText Text="@(Error ?? T["No access to this drive is in force."])" />
+    }
+    else if (Access.OpensUtc > DateTimeOffset.UtcNow)
+    {
+        <CrestText Text="@($"{T["The drive opens at"]} {Access.OpensUtc.ToLocalTime():g}.")" />
+    }
+    else
+    {
+        <CrestDriveBrowser RootDriveId="@DriveId" />
+    }
+</CrestStack>
+
+@code {
+    [Parameter] public string DriveId { get; set; } = string.Empty;
+
+    private CrestPersonalDriveAccess? Access;
+    private string? Error;
+    private bool Ended;
+    private Timer? _timer;
+
+    private CrestFilesClient Files => _files ??= new CrestFilesClient(Http);
+    private CrestFilesClient? _files;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        var current = await Files.CurrentAccessAsync(DriveId);
+        Access = current.Value;
+        Error = current.Status == 404 ? null : current.Error;
+        _timer = new Timer(_ => InvokeAsync(Tick), null, TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(15));
+        StateHasChanged();
+    }
+
+    private void Tick()
+    {
+        if (Access is { EndsUtc: { } ends } && ends <= DateTimeOffset.UtcNow)
+        {
+            Ended = true;
+            Access = null;
+            _timer?.Dispose();
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task CloseAsync()
+    {
+        if (Access is { } access)
+        {
+            await Files.CloseAccessAsync(access.Id);
+        }
+
+        Access = null;
+        Ended = true;
+    }
+
+    public void Dispose() => _timer?.Dispose();
+}

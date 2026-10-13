@@ -82,12 +82,12 @@ tests and audits): [user-stories.md](user-stories.md).
 | OpenId Client, Management | `Crest.OpenId` | external OIDC login; admin UI for applications and scopes |
 | External providers | `Crest.Microsoft.Authentication`, `Crest.Google`, `Crest.Facebook`, `Crest.GitHub`, `Crest.Twitter` | land in `Identity.External`, finished by the Users external-authentication feature |
 | Member portal login | `Crest.Members` `MemberPortalController`, `MemberLoginSurfaceGate` | the portal's login, register and external-login; the `ILoginFormEvent` veto that keeps members off the tenant surface and staff off the portal |
-| Crest JSON login | `Crest.Server` `CrestLoginService`, `api/crest/auth` | replays the stock login event sequence and signs the one cookie |
+| Crest JSON login | `Crest.Server` `LoginService`, `api/crest/auth` | replays the stock login event sequence and signs the one cookie |
 | Workflows engine API | `Crest.Workflows` `ApiSecurityMiddleware`, order −151 | under `/crest-workflows/api`: the gated caller (none → 403), the decision, antiforgery, a transient claims identity with engine permission names, the Run list and the endpoint's policy; no authentication of its own |
 | Secure media, GraphQL, media tus, OpenApi | `Crest.Media`, `Crest.Apis.GraphQL`, `Crest.OpenApi` | authorize the gate's principal; none authenticates again |
 | Remote deployment key | `Crest.Deployment.Remote` `RemoteDeploymentKeyAuthenticationHandler` | `Authorization: RemoteDeployment {client}:{key}`, an additional `Api` scheme; the import runs as the remote client's application caller, which a contributor gives exactly `ImportRemoteInstances` |
 
-The request path now: the shell selector (`BlazorAdminThemeMiddleware`, a startup filter
+The request path now: the shell selector (`ShellSelectionMiddleware`, a startup filter
 before routing) classifies the request and calls the gate for it (`AdmitAsync` for pages
 with the side it chose, `AdmitApiAsync` for API calls with the prefix side); the gate
 authenticates once, publishes the result as the standard authentication feature (the
@@ -122,9 +122,8 @@ and a ceiling inside the decision:
 | `ManageMediaFolderPermissionMapper`, `ViewMediaFolderPermissionMapper` | Media | per-folder, own, attached-field (re-asks `ViewContent` for the item); the secure cache marker moved to the secure-media middleware |
 | `WorkflowDefinitionAccessCeiling` (a ceiling) | Workflows | the definition's Edit and Run lists veto, never grant |
 
-Two policy registrations exist (`MediaApi`, the media hub). `DefaultPermissionGrantingService`
-(the claims-based implied-by check) survives with one consumer, the role editor's granted
-view. Rules, Layers, Liquid `is_in_role`, the approval service and the role cache provider
+Two policy registrations exist (`MediaApi`, the media hub). The claims-based implied-by check
+(`DefaultPermissionGrantingService`) is gone (2026-10-13); the role editor asks the decision. Rules, Layers, Liquid `is_in_role`, the approval service and the role cache provider
 still read **cookie role claims**.
 
 ### The access machinery (`Crest.Access.Abstractions`, `Crest.Access`)
@@ -171,13 +170,13 @@ Deferred tasks and child scopes inherit the caller of the scope that queued them
 synthetic `HttpContext` flagged `IsBackground`, whose short-circuit middleware sits at
 `int.MinValue`, which is after the startup filters.
 
-The **theme shell** is `BlazorAdminThemeMiddleware` (Crest.Server, a startup filter):
+The **theme shell** is `ShellSelectionMiddleware` (Crest.Server, a startup filter):
 infrastructure paths get a path strip only; `{shell}/api` and `/api` go through
 `IAccessGate.AdmitApiAsync` (a valid `X-Shell` wins, an unknown value is 400, a cookie-authenticated call
 without the header and without a prefix side is 403, else the prefix side or Site); pages
 go through `IAccessGate.AdmitAsync` (authenticate, stamp the side, build the caller with `X-Org`); admin
-pages add the login redirect and the route permission (`CrestRouteAuthorizationService` over
-`ICrestRoutePermissionProvider`s, first template wins, no match denies); member pages add
+pages add the login redirect and the route permission (Access's `IRouteAuthorization` over
+every module's `IRoutePermissionProvider`, first template wins, no match denies); member pages add
 the login redirect only. It stamps the route bucket and the side as two separate items.
 `RouteGateMatcherPolicy` keeps a shell from resolving another shell's endpoints; the member
 prefix is `MemberOptions.MemberUrlPrefix`. Static assets are not gated and get no caller.
@@ -294,6 +293,22 @@ Still open from this audit:
   - **Pages are the request path's rule, not a workflow's**: in every theme shell (site, admin,
     member) the login, sign-up, password-reset and error pages admit the anonymous caller as
     page permissions.
+  - **What landed (2026-10-13).** A connection carries `Roles` (`WorkflowConnection.Roles`, the
+    connections API and page); `WorkflowWebhooksController` builds the connection's caller
+    (`WorkflowConnectionCaller`, name identifier `connection:{key}`, an application) and starts
+    the run as it; `WorkflowConnectionCallerContributor` reads the roles from the connection on
+    every build, so a later burst holds what the connection holds then. Adding a role to a
+    connection takes `AssignRoleToUsers` for that role; a role change or a deleted connection
+    with roles bumps the permission version. The definition property
+    `Crest.AcceptsAnonymousRuns` (`WorkflowsConstants.AcceptsAnonymousRunsProperty`, mirrored on
+    `WorkflowDefinitionPart`) takes `ManageShippedWorkflows` to publish, like run-as-system;
+    `WorkflowAccessGateMiddleware` refuses every anonymous burst with the reason
+    (`WorkflowCallerResolver.AnonymousRefusal`) unless the definition accepts anonymous runs and,
+    on the first burst, the run starts at an `HttpEndpoint` trigger. `IWorkflowTriggerPublisher.PublishForUserAsync`
+    makes the flows of `user.logged-in`, `user.created` and `user.confirmed` act as the user the
+    event names when the request is anonymous (an administrator creating a user stays the
+    actor); the stimulus queue builds that caller after commit. No public media or content
+    endpoint starts a flow today, so their exception has nothing to admit yet.
 - [ ] **The activity gate fails open** for an activity that declares no permission. Fail closed
   with an allow-list of control-flow activities? Asked 2026-10-11: no preference given; to discuss.
 - [ ] **Messaging activities** (e-mail, SMS, Twitter, Meta, notifications) and the engine's
@@ -310,6 +325,16 @@ Still open from this audit:
 - [ ] **`ApprovalService.CanDecideAsync`** compares role names instead of asking the decision.
 - [ ] **`UsersController`** lists every user under one `ListUsers` check (with the Server
   extraction, [server.md](server.md)).
+- **What landed (2026-10-13).** The engine's HTTP activities (Send HTTP request, Download
+  HTTP file) use the connectors' guarded handler (`ConnectorNetworkPolicy.CreateHandler`, the
+  shell's `AllowPrivateNetworks` opening it), so every connection, a redirect's included, reaches
+  only public addresses. The messaging activities take no destination URL from the author (their
+  providers' endpoints are tenant settings), so they have nothing to guard; who may run them is
+  still the open item above. `UsersController` lists only the users the caller may list:
+  everyone under the base `ListUsers`, else the users of the roles `ListUsers` is granted on
+  (`ListUsersInRole_{role}`). Not built: the per-definition narrowing of instance reads, since
+  no list narrows reading today (a definition's lists are Edit and Run, and reading takes View);
+  which list, if any, narrows an instance read is a ruling.
 
 ## Domains onto the extension system (2026-10-11)
 
@@ -326,10 +351,23 @@ module by module (abstractions placed per file, not by script).
   that applies the member-admin template and the hierarchy root guard (who), so a member admin
   manages their own organization and nobody else's.
 - To move: member reads (`MemberService`, `MemberAccess` lookups) go through scope - an
-  `IScopeProvider` on `MemberOrgBindingIndex` - instead of permission-only checks.
+  `IScopeProvider` on `UserConnectionIndex` - instead of permission-only checks.
 - To move here: `OrganizationScopeProvider` (in `Crest.Server` today), the organization row
   scope, which reads the caller's acting organization Members supplies (ties to
   [server.md](server.md) ruling S3).
+- **What landed (2026-10-13).** `MembersController` asks `ManageMembers` against a
+  `MemberOrganizationResource` (list, create) or a `MemberBindingResource` (add, remove binding)
+  through the decision; `MemberResourcePermissionMapper` answers staff with the tenant-wide
+  permission and a caller acting in an organization only for its own, a binding only when the
+  user already holds one there (the root guard). `UserConnectionScopeProvider` scopes
+  `UserConnectionIndex` (until 2026-10-13 `MemberOrgBindingIndex`; one row per (user,
+  organization, class) since class became a set); `MemberService.ListByOrganizationAsync` reads through it and shows a
+  member only its organization's bindings. `OrganizationScopeProvider` moved to Members;
+  `OrganizationScopedTypes`, the part and the index stay in Server until S3 is ruled. Left: the
+  member class ceiling lists `ManageMembers`, and a ceiling runs before any mapper, so a member
+  admin is still refused on their own organization; whether the ceiling lets `ManageMembers`
+  through against the caller's own organization is a ruling. The organization system actor's
+  lookup of member admins (`MemberCallerContributor`) builds a caller and stays unscoped.
 
 **Parties** (`Crest.Parties`)
 - Already: controllers ask `IAuthorizationService` per party item (routed to the decision).
@@ -346,6 +384,27 @@ module by module (abstractions placed per file, not by script).
   the MVC admin.
 - `AssignmentScopeProvider` (Server) moves to the module that owns assignments
   ([server.md](server.md) ruling S3).
+- **What landed (2026-10-13).** The page gate is Access's: `IRoutePermissionProvider`,
+  `RoutePermission` (template and permission name), `RouteAccess`, `IRouteAuthorization` and
+  `RouteTemplates.Matches` in `Crest.Access.Abstractions`; `RouteAuthorizationService` in
+  `Crest.Access` decides each route for the request's caller through the one decision (no
+  longer from the principal). Server (`RoutePermissionProvider`), Workflows, Parties and
+  host modules register their routes; the shell selector, `AppController`, `App.razor`
+  and the route component table use the Access types. `IWebAssemblyRouteProvider` (a
+  render-mode choice, not access) stays in Server. Left: `AssignmentScopeProvider` waits for
+  S3 (the assignment part's home is open), and `AdminFilter` goes with the MVC admin, which
+  still has its controllers.
+
+**Parties, what landed (2026-10-13).** `PartyScopeProvider` scopes `LocationIndex` and
+`PartyPositionIndex` as a semi-join on the caller's content item scope (content, assignment and
+organization providers together); `LocationService` lists and looks up, and
+`PartyPositionsService.ListPeopleAsync` lists, through it. The tenant's home Location
+(`GetPrimaryAsync`, read by tax posting) stays unscoped configuration. `PartiesRoutePermissionProvider`
+registers through the Access route contract. Not built: the parties resource mapper. The
+ruling names its subjects (a person's own record, an organization's contacts) but not its
+rules: which permission a person holds on the Person linked to their account, who counts as
+an organization's contact and what they may do, and how it relates to the content mapper's
+own-item variations it would replace for party items. That is a ruling to make.
 
 ### Mapper roles and priority (ruled 2026-10-11)
 
@@ -379,7 +438,7 @@ nothing ([sharing.md](sharing.md)). Tests: `test/Crest.Tests/Access/Conformance/
 | Overlap | Today | One system |
 | --- | --- | --- |
 | Permissions | ~~Permission claims in the cookie and in tokens, and the role manager read by the factory~~ (done 2026-10-10) | the factory only; `RoleClaimsProvider` stamps roles for identity, no Permission claims; tokens carry identity and roles |
-| Implied-by | `DefaultPermissionGrantingService` (instance) and `AccessDecisionService` (registry) | the decision, resolving from the instance first and the registry second; the role editor asks the decision |
+| Implied-by | ~~`DefaultPermissionGrantingService` (instance) and `AccessDecisionService` (registry)~~ (done 2026-10-13) | the decision, resolving from the instance first and the registry second; the role editor asks the decision |
 | Super user | the factory, the workflow definition handler, the definition resource | the caller's flag only |
 | Definition access lists | handler and resource | the resource's `Admits`, called by the decision through a mapper |
 | Resource to permission | ~~`IResourcePermissionMapper` (content) and eight resource handlers~~ (done 2026-10-10) | one mapper per resource kind, registered by its module (content, localization, custom settings, indexing, media manage and view, settings groups, user audit trail, roles and users); a candidate may re-ask for another resource; the definition lists are a ceiling; the handler list ends at `AccessAuthorizationHandler` |
@@ -389,7 +448,7 @@ nothing ([sharing.md](sharing.md)). Tests: `test/Crest.Tests/Access/Conformance/
 | User class | cookie claim and contributor | the contributor |
 | Roles | ~~cookie claims (Rules, Layers, Liquid, approvals, `Me`) and the caller~~ (done 2026-10-10) | the caller; the condition evaluators, Liquid, approvals, the roles cache context and `Me` read it |
 | Content filters | caller scope plus the old per-type authorization in admin controllers | the scope |
-| Route gates | `CrestRouteAuthorizationService` (Blazor) and `AdminFilter` (MVC) | one route permission table; `AdminFilter` goes with the MVC admin |
+| Route gates | Access's `IRouteAuthorization` (Blazor) and `AdminFilter` (MVC) | one route permission table; `AdminFilter` goes with the MVC admin |
 
 ## Tasks
 
@@ -421,6 +480,15 @@ nothing ([sharing.md](sharing.md)). Tests: `test/Crest.Tests/Access/Conformance/
 - [x] A caller for the remote deployment import and a bump on super-user change landed
   2026-10-10 (§ 5, § 6). Still open: version bumps only for rights writes (user
   create/update/delete bump today); implied-by from the instance.
+- [x] **What landed (2026-10-13).** Version bumps only for rights writes: role writes, a user
+  deleted, disabled or enabled, a role membership added or removed (`UserStore`), a users recipe
+  import, connection roles; a user created or updated no longer bumps. The decision resolves
+  implied-by from the permission instance first and the registry second
+  (`AccessDecisionService.DecideAsync(caller, Permission, ...)`, used by
+  `AccessAuthorizationHandler` for every requirement); the role editor's granted view asks the
+  decision, and `IPermissionGrantingService` with `DefaultPermissionGrantingService` is gone.
+  The revocation check (`ARightRevokedBetweenTwoRequestsIsGoneOnTheSecond`,
+  `ARoleRemovedFromAUserIsGoneOnTheNextRequest`) is in the suite, to run with the tests.
 
 ### 2. One calculation per request, handed down
 
@@ -464,6 +532,22 @@ nothing ([sharing.md](sharing.md)). Tests: `test/Crest.Tests/Access/Conformance/
   the workflows branch's own authentication, GraphQL's, secure media's, tus's, OpenApi's
   and the member session's re-authentication are gone; the middleware runs the
   request-handler schemes (OpenIddict) in their place.
+- [x] **The gate's authentication feature follows the platform's contract** (fixed
+  2026-10-13). `GatedAuthentication` publishes the ticket as `IAuthenticateResultFeature`
+  and the principal as `IHttpAuthenticationFeature`; its `User` setter kept the ticket, where
+  the platform's `AuthenticationFeatures` retires it. The authorization middleware re-reads
+  the ticket through the feature and writes it back, principal included, so a principal set
+  after the gate - the workflow API gate's per-request grant - was replaced by the ticket's
+  before the endpoint's policy ran: every engine API call at the tenant root failed its
+  policy, and the cookie's forbid turned the 403 into a redirect to `/Error/403`. The setter
+  now retires the ticket; a ticket set afterwards carries its principal. Pinned by
+  `Crest.Workflows.Tests/ApiGateResponseTests` against the real authorization middleware.
+- [x] **An API path never redirects** (2026-10-13). `AccessGate.IsApiPath` is the one rule
+  (`/api`, `/crest-workflows`), read by the shell selector, `AccessGateMiddleware` and
+  `ApiCookieResponses`, a post-configuration of the identity cookie registered by
+  `Crest.Access`: on an API path the cookie's challenge answers 401 and its forbid 403, the
+  status code pages opted out so `ApiProblemDetailsMiddleware` writes the body; a page keeps
+  the login and access-denied redirects the Users module configures.
 - [x] Static assets and infrastructure paths get the anonymous caller (built through the
   caller state cache, a hit after the first) rather than none.
 - [x] Deferred tasks and child scopes inherit the caller of the scope that queued them, or
@@ -483,9 +567,14 @@ nothing ([sharing.md](sharing.md)). Tests: `test/Crest.Tests/Access/Conformance/
 - [x] `RoleClaimsProvider` stamps roles only; client-credentials tokens carry the
   application's roles and no Permission claims (landed 2026-10-10).
 - [x] Rules, Layers, Liquid `is_in_role`, the approval service, the roles cache context and
-  `CrestAuthController.Me` read the caller (landed 2026-10-10).
+  `AuthController.Me` read the caller (landed 2026-10-10).
 - [ ] The admin controllers' per-type content authorization goes; the scope is the filter
   (with the Crest.Server extraction, [server.md](server.md)).
+  Open (2026-10-13): the content-items list asks `ListContent` against a stand-in item of the
+  filtered type, so a holder of only `ListContent_{type}` lists that type. Dropping it leaves
+  either the global `ListContent` (and such holders lose the list) or no up-front check (the
+  view scope alone decides, so any caller with a view right gets the admin list). Which one
+  is a ruling; the MVC list (`Crest.Contents` `AdminController`) goes with the MVC admin.
 - [x] `IAccessDecision` records every denial itself (landed 2026-10-10); reads per the
   audit ruling stay the operation's.
 

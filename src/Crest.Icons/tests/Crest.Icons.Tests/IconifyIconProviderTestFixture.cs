@@ -17,7 +17,7 @@ internal static class IconifyIconProviderTestFixture
 
         var settingsStore = Substitute.For<IIconProviderSettingsStore>();
         settingsStore.GetAsync(Arg.Any<CancellationToken>())
-            .Returns(ValueTask.FromResult(new CrestIconProvidersSettings(settings)));
+            .Returns(ValueTask.FromResult(new IconProvidersSettings(settings)));
 
         var localMirrorStore = Substitute.For<IIconifyLocalMirrorStore>();
         localMirrorStore.IsPublicIconify(Arg.Any<IconifyIconProviderSettings>())

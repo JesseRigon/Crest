@@ -1,4 +1,8 @@
+using Crest.Settings;
+using YesSql;
+using Crest.Entities;
 using System.Security.Claims;
+using Crest.Access;
 using Crest.Members.Constants;
 using Crest.Members.Models;
 using Crest.Members.Services;
@@ -11,17 +15,23 @@ public sealed record CreateMemberApiRequest(string UserName, string? Email, stri
 public sealed record AddBindingRequest(string OrganizationId, IReadOnlyList<string>? Roles);
 public sealed record SetActiveOrgRequest(string OrganizationId);
 public sealed record ImpersonateRequest(string UserId);
+public sealed record HierarchyEdgeRequest(string ReportId, string ManagerId);
 
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/members")]
 public sealed class MembersController(
     IMemberService memberService,
+    MemberBindingService bindings,
+    UserClassService userClasses,
+    IUserHierarchyService hierarchy,
+    Microsoft.AspNetCore.Identity.UserManager<Crest.Users.IUser> userManager,
+    Crest.Settings.ISiteService siteService,
     MemberSessionService sessionService,
     MemberOrganizationDirectory organizationDirectory,
     MemberImpersonationService impersonationService,
-    UserClassConversionService conversionService,
     IAuthorizationService authorizationService,
+    Crest.Access.IAccessDecision decision,
     Crest.Access.ICallerContextAccessor callerAccessor) : ControllerBase
 {
     [HttpGet("me")]
@@ -36,7 +46,17 @@ public sealed class MembersController(
         var activeOrg = caller?.OrganizationId ?? await sessionService.GetActiveOrganizationAsync(HttpContext);
         var impersonator = caller?.ImpersonatorUserId;
 
-        return Ok(new MemberSessionModel(member, activeOrg, impersonator, await organizationDirectory.GetAsync(member)));
+        var impersonatorName = impersonator is null
+            ? null
+            : MemberSessionService.Gated(HttpContext).Properties?.Items.TryGetValue(MemberSessionKeys.ImpersonatorUserName, out var name) == true ? name : impersonator;
+
+        return Ok(new MemberSessionModel(
+            member,
+            activeOrg,
+            impersonator,
+            await organizationDirectory.GetAsync(member),
+            impersonatorName,
+            (await siteService.GetSiteSettingsAsync()).SiteName));
     }
 
     // The org switcher (ruling: one account, N bindings, per-org roles; the UI and
@@ -60,7 +80,7 @@ public sealed class MembersController(
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<MemberModel>>> ListAsync([FromQuery] string organizationId)
     {
-        if (!await authorizationService.AuthorizeAsync(User, Permissions.MembersPermissions.ManageMembers))
+        if (!await CanManageAsync(new MemberOrganizationResource(organizationId)))
         {
             return Forbid();
         }
@@ -71,7 +91,7 @@ public sealed class MembersController(
     [HttpPost]
     public async Task<ActionResult<MemberModel>> CreateAsync(CreateMemberApiRequest request)
     {
-        if (!await authorizationService.AuthorizeAsync(User, Permissions.MembersPermissions.ManageMembers))
+        if (!await CanManageAsync(new MemberOrganizationResource(request.OrganizationId)))
         {
             return Forbid();
         }
@@ -93,14 +113,23 @@ public sealed class MembersController(
     [HttpPost("{userId}/bindings")]
     public async Task<ActionResult<MemberOrgBindingModel>> AddBindingAsync(string userId, AddBindingRequest request)
     {
-        if (!await authorizationService.AuthorizeAsync(User, Permissions.MembersPermissions.ManageMembers))
+        if (!await CanManageAsync(new MemberBindingResource(userId, request.OrganizationId)))
         {
             return Forbid();
         }
 
         try
         {
-            return Ok(await memberService.AddBindingAsync(userId, request.OrganizationId, request.Roles, HttpContext.RequestAborted));
+            var user = await RequireUserAsync(userId);
+            // Giving a user their first member binding adds a class: that is conversion,
+            // its own permission-gated action, never a side effect of the binding API.
+            if (!UserClassSet.Has(user, UserClasses.Member))
+            {
+                return BadRequest(new { error = "The user is not a member; adding the member class is a class conversion." });
+            }
+
+            var binding = await bindings.AddAsync(user, request.OrganizationId, UserClasses.Member, request.Roles, HttpContext.RequestAborted);
+            return Ok(new MemberOrgBindingModel(binding.OrganizationId, binding.Roles, binding.IsMemberAdmin));
         }
         catch (InvalidOperationException exception)
         {
@@ -111,14 +140,20 @@ public sealed class MembersController(
     [HttpDelete("{userId}/bindings/{organizationId}")]
     public async Task<IActionResult> RemoveBindingAsync(string userId, string organizationId)
     {
-        if (!await authorizationService.AuthorizeAsync(User, Permissions.MembersPermissions.ManageMembers))
+        if (!await CanManageAsync(new MemberBindingResource(userId, organizationId)))
         {
             return Forbid();
         }
 
         try
         {
-            await memberService.RemoveBindingAsync(userId, organizationId, HttpContext.RequestAborted);
+            var user = await RequireUserAsync(userId);
+            if (UserClassSet.Bindings(user, UserClasses.Member).Count() == 1)
+            {
+                return BadRequest(new { error = "This is the user's last member binding; removing the member class is a class conversion." });
+            }
+
+            await bindings.RemoveAsync(user, organizationId, UserClasses.Member, HttpContext.RequestAborted);
             return NoContent();
         }
         catch (InvalidOperationException exception)
@@ -126,6 +161,153 @@ public sealed class MembersController(
             return BadRequest(new { error = exception.Message });
         }
     }
+
+    // Class conversion: adding or removing a class is the one action, gated by the
+    // security-critical ConvertUserClass permission (staff only: it is in the ceiling).
+    [HttpGet("{userId}/classes")]
+    public async Task<ActionResult<UserConnectionsModel>> GetClassesAsync(string userId)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, Permissions.MembersPermissions.ConvertUserClass))
+        {
+            return Forbid();
+        }
+
+        return await userClasses.GetAsync(userId, HttpContext.RequestAborted) is { } model ? Ok(model) : NotFound();
+    }
+
+    [HttpPost("{userId}/classes")]
+    public async Task<ActionResult<UserConnectionsModel>> AddClassAsync(string userId, AddUserClassRequest request)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, Permissions.MembersPermissions.ConvertUserClass))
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            return Ok(await userClasses.AddAsync(userId, request, HttpContext.RequestAborted));
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+    }
+
+    [HttpDelete("{userId}/classes/{userClass}")]
+    public async Task<ActionResult<UserConnectionsModel>> RemoveClassAsync(string userId, string userClass)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, Permissions.MembersPermissions.ConvertUserClass))
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            return Ok(await userClasses.RemoveAsync(userId, userClass, HttpContext.RequestAborted));
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+    }
+
+    // The Members tenant settings: whether members may be bound to the tenant's own
+    // organization (default: blocked). Staff only (ManageMembers is in the ceiling).
+    [HttpGet("settings")]
+    public async Task<ActionResult<MembersSettingsModel>> GetSettingsAsync()
+    {
+        if (!await authorizationService.AuthorizeAsync(User, Permissions.MembersPermissions.ManageMembers))
+        {
+            return Forbid();
+        }
+
+        var settings = await siteService.GetSettingsAsync<MembersSettings>();
+        return Ok(new MembersSettingsModel(settings.AllowMembersOnTenantOrganization));
+    }
+
+    [HttpPut("settings")]
+    public async Task<ActionResult<MembersSettingsModel>> SetSettingsAsync(MembersSettingsModel request)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, Permissions.MembersPermissions.ManageMembers))
+        {
+            return Forbid();
+        }
+
+        var site = await siteService.LoadSiteSettingsAsync();
+        site.Put(new MembersSettings { AllowMembersOnTenantOrganization = request.AllowMembersOnTenantOrganization });
+        await siteService.UpdateSiteSettingsAsync(site);
+        return Ok(request);
+    }
+
+    /// <summary>Rebuilds the connection index and the hierarchy from the binding records:
+    /// drift repair, and the migration of existing data.</summary>
+    [HttpPost("rebuild")]
+    public async Task<IActionResult> RebuildAsync()
+    {
+        if (!await authorizationService.AuthorizeAsync(User, Permissions.MembersPermissions.ConvertUserClass))
+        {
+            return Forbid();
+        }
+
+        return Ok(new { users = await bindings.RebuildAsync(HttpContext.RequestAborted) });
+    }
+
+    // The reports-to hierarchy of one organization (the staff hierarchy is the tenant
+    // organization's). ManageMembers against the organization: staff tenant-wide, a member
+    // admin only in their own organization.
+    [HttpGet("hierarchy/{organizationId}")]
+    public async Task<ActionResult<IReadOnlyList<HierarchyNodeModel>>> GetHierarchyAsync(string organizationId)
+    {
+        if (!await CanManageAsync(new MemberOrganizationResource(organizationId)))
+        {
+            return Forbid();
+        }
+
+        return Ok(await hierarchy.GetNodesAsync(organizationId, HttpContext.RequestAborted));
+    }
+
+    [HttpPost("hierarchy/{organizationId}/edges")]
+    public async Task<IActionResult> AddHierarchyEdgeAsync(string organizationId, HierarchyEdgeRequest request)
+    {
+        if (!await CanManageAsync(new MemberOrganizationResource(organizationId)))
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            await hierarchy.AddManagerAsync(organizationId, request.ReportId, request.ManagerId, HttpContext.RequestAborted);
+            return NoContent();
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+    }
+
+    [HttpDelete("hierarchy/{organizationId}/edges/{reportId}/{managerId}")]
+    public async Task<IActionResult> RemoveHierarchyEdgeAsync(string organizationId, string reportId, string managerId)
+    {
+        if (!await CanManageAsync(new MemberOrganizationResource(organizationId)))
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            await hierarchy.RemoveManagerAsync(organizationId, reportId, managerId, HttpContext.RequestAborted);
+            return NoContent();
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+    }
+
+    // Through the user store (the request's unit of work), not a session query of its own.
+    private async Task<Crest.Users.Models.User> RequireUserAsync(string userId) =>
+        await userManager.FindByIdAsync(userId) as Crest.Users.Models.User
+            ?? throw new InvalidOperationException("Unknown user.");
 
     [HttpPost("impersonate")]
     public async Task<IActionResult> ImpersonateAsync(ImpersonateRequest request)
@@ -156,7 +338,12 @@ public sealed class MembersController(
         try
         {
             await impersonationService.StopAsync();
-            return Ok();
+            // Back to the admin, where the restored staff session acts.
+            var adminPath = HttpContext.RequestServices.GetService(typeof(Microsoft.Extensions.Options.IOptions<Crest.Middlewares.BlazorAdminThemeOptions>))
+                is Microsoft.Extensions.Options.IOptions<Crest.Middlewares.BlazorAdminThemeOptions> admin
+                    ? admin.Value.AdminPath
+                    : "/";
+            return Ok(new { returnUrl = Request.PathBase.Add(new Microsoft.AspNetCore.Http.PathString(adminPath)).Value });
         }
         catch (InvalidOperationException exception)
         {
@@ -164,22 +351,11 @@ public sealed class MembersController(
         }
     }
 
-    [HttpPost("{userId}/convert-to-staff")]
-    public async Task<IActionResult> ConvertToStaffAsync(string userId)
-    {
-        if (!await authorizationService.AuthorizeAsync(User, Permissions.MembersPermissions.ConvertUserClass))
-        {
-            return Forbid();
-        }
-
-        try
-        {
-            await conversionService.ConvertMemberToStaffAsync(userId, HttpContext.RequestAborted);
-            return Ok();
-        }
-        catch (InvalidOperationException exception)
-        {
-            return BadRequest(new { error = exception.Message });
-        }
-    }
+    /// <summary>
+    /// <c>ManageMembers</c> asked against the organization or the binding, so Members' mapper
+    /// decides who: staff tenant-wide, a caller acting in an organization only there
+    /// (docs/access.md, Domains onto the extension system).
+    /// </summary>
+    private Task<bool> CanManageAsync(object resource) =>
+        decision.AllowsAsync(callerAccessor.Current, Permissions.MembersPermissions.ManageMembers.Name, resource, HttpContext.RequestAborted);
 }

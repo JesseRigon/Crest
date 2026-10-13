@@ -105,7 +105,7 @@ entry now reverts the rendered caption to the updated PO value instead of the li
 
 Crest's sidebar and app manifest resolve these captions against the tenant translation store
 per request culture at serialization time — the same place in the pipeline where TheAdmin's
-`NavigationItemText.cshtml` resolves at render time — through `CrestMenuCaptionResolver`,
+`NavigationItemText.cshtml` resolves at render time — through `MenuCaptionResolver`,
 which adds what a bare `IDataLocalizer` lookup lacks. (`NavigationManager.Merge` once dropped
 `MenuName` from the surviving instance of a merged pair, so an item could resolve under the
 generic context and miss its translation; the platform's `Merge` now copies `MenuName` with
@@ -122,7 +122,7 @@ caption in the Translations editor overrides every fallback. Each step checks th
 culture before its parents (`es-ES`, then `es`).
 
 **The PO layer.** Below the store sits the shipped PO catalog: a caption no store entry
-covers resolves against the culture's PO catalogs (`CrestPoTranslationLookup`, shared with
+covers resolves against the culture's PO catalogs (`PoTranslationLookup`, shared with
 the seeder and the Translations editor), so the full hierarchy is **store edit → PO
 translation → invariant literal**, and *deleting* a stored entry reverts the caption to the
 shipped PO value rather than the raw literal — delete walks down the hierarchy. To force the
@@ -187,7 +187,7 @@ entries no node carries any more and a deleted menu's whole context;
 Should a translation still go missing, `sync-providers` refills any seeded entry on demand.
 
 **Timing.** The import runs once per shell, right after tenant activation
-(`CrestProviderMenuSyncTenantEvents`): activation itself has no request, and the import
+(`ProviderMenuSyncTenantEvents`): activation itself has no request, and the import
 resolves each item's `Href` through `IUrlHelper`, so the work is deferred to a scope that runs
 once the activating scope completes, with a synthetic request context built the way
 OrchardCore's own background service builds one (`ShellContext.CreateHttpContext()`, the
@@ -196,7 +196,7 @@ provisioned or reset tenant has its provider items imported - under the UniqueId
 import pre-seeded - before the first admin request, instead of that request rendering the
 un-imported provider tree once and only the reload showing the layout.
 
-The request path (`CrestProviderMenuSyncCoordinator`, from the navigation and menu-editor
+The request path (`ProviderMenuSyncCoordinator`, from the navigation and menu-editor
 controllers) stays as the fallback. When it does perform an import that changed anything, it
 commits the document store immediately: `IDocumentManager`'s memory cache is only invalidated
 after commit, so without that the request that ran the import would still build its menu from
@@ -233,7 +233,7 @@ Two mechanisms supply that key, and `NavigationItem.Key` prefers the first:
 The layout overlay above is tenant-wide: an item hidden there is gone for everyone. Under it
 sits a per-user layer, `CrestUserMenuPreferences.HiddenItemKeys` on `User.Properties` (the
 same place OrchardCore keeps a user's culture), edited only by its owner through
-`GET`/`PUT api/crest/navigation/me/hidden`. `CrestAdminMenuBuilder` assembles the served
+`GET`/`PUT api/crest/navigation/me/hidden`. `AdminMenuBuilder` assembles the served
 tree once for every consumer — the sidebar endpoint, the app manifest, and any page that
 lists what the menu lists — and applies the two layers in that order, both keyed by the served
 item key above. A page that mirrors part of the menu (Crest's All Parties lists the Parties

@@ -8,6 +8,7 @@ using Crest.Users.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -29,9 +30,11 @@ public sealed class Startup : StartupBase
         services.AddScoped<IAccessGate, AccessGateService>();
         services.AddScoped<ICallerContextAccessor, CallerContextAccessor>();
         services.AddScoped<ICallerContextFactory, CallerContextFactory>();
-        services.AddScoped<IAccessDecision, AccessDecisionService>();
+        services.AddScoped<AccessDecisionService>();
+        services.AddScoped<IAccessDecision>(sp => sp.GetRequiredService<AccessDecisionService>());
         services.AddScoped<IScopeSetProvider, ScopeSetProvider>();
         services.AddScoped<IAccessRunner, AccessRunner>();
+        services.AddScoped<IRouteAuthorization, RouteAuthorizationService>();
         services.AddScoped<IAccessAuditor, AccessAuditor>();
         services.AddScoped<IPermissionVersion, PermissionVersionService>();
 
@@ -51,11 +54,21 @@ public sealed class Startup : StartupBase
         services.AddScoped<IRoleRemovedEventHandler, PermissionVersionBumper>();
         services.AddScoped<IUserEventHandler, PermissionVersionBumper>();
 
+        // Connections that outlive a request build the caller per operation, re-validate the
+        // stamp on its interval and are torn down when either fails (docs/workflows.md ›
+        // Caller lifetime).
+        services.Configure<HubOptions>(options => options.AddFilter<ConnectionCallerHubFilter>());
+        services.AddScoped<Microsoft.AspNetCore.Components.Server.Circuits.CircuitHandler, ConnectionCallerCircuitHandler>();
+
         // Background entry points enter the path as the system actor.
         services.AddScoped<IBackgroundTaskEventHandler, SystemCallerForBackgroundTasks>();
 
+        // An API path never redirects: the identity cookie's challenge and forbid answer
+        // status codes there (docs/access.md § One gate).
+        services.AddTransient<IPostConfigureOptions<Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions>, ApiCookieResponses>();
+
         services.AddTransient<IConfigureOptions<AuditTrailOptions>, AccessAuditTrailEventConfiguration>();
-        services.Configure<AccessAuditOptions>(options => { });
+        services.AddScoped<Crest.AuditTrail.Services.IAuditTrailEventHandler, CallerAuditTrailEventHandler>();
         // Invalidation (docs/access.md § Invalidation): rights travel through the permission
         // version; the security stamp stays for sign-out and credential change, re-validated
         // at this explicit interval.

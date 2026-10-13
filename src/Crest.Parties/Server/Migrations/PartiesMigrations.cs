@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using Crest.Global.Lists;
+using Crest.Data.Global.Lists;
 using Crest.Models;
 using Crest.Regions;
 using Crest.Regions.Fields;
@@ -32,15 +32,21 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
         await DefinePartyPartsAsync();
         await DefineContactElementsAsync();
         await DefineOrgPositionAsync();
+        await DefineOrganizationNameAsync();
         await DefinePartyTypesAsync();
+        await DefineAssociationAsync();
         await DefineLocationAsync();
         await CreatePositionIndexAsync();
         await CreateAddressGeoIndexAsync();
         await CreateLocationIndexAsync();
+        await CreateContactPointIndexAsync();
+        await CreateOrganizationNameIndexAsync();
+        await CreateAssociationIndexAsync();
 
         DeferAttachGlobalListPickers();
         DeferSeedPartyVocabularies();
         DeferAttachContactPickers();
+        DeferEnsureTenantOrganization();
 
         return 1;
     }
@@ -85,7 +91,21 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .WithField("TaxIdentifier", field => field
                 .OfType("TextField")
                 .WithDisplayName("Tax identifier")
-                .WithPosition("0")));
+                .WithPosition("0"))
+            // The organization this one belongs to. Restricted to Organization and
+            // guarded on every save path: the picker's allowed types are enforced by the
+            // content picker's save guard, the cycle refusal by Parties' relationship
+            // handler (ParentOrganizationRelationshipHandler).
+            .WithField(PartiesConstants.OrganizationFields.ParentOrganization, field => field
+                .OfType("ContentPickerField")
+                .WithDisplayName("Parent organization")
+                .WithPosition("1")
+                .MergeSettings<ContentPickerFieldSettings>(settings =>
+                {
+                    settings.Multiple = false;
+                    settings.DisplayAllContentTypes = false;
+                    settings.DisplayedContentTypes = [PartiesConstants.ContentTypes.Organization];
+                })));
     }
 
     // Bag element types. Their option pickers (Kind, PhoneCountry, Country, Region)
@@ -194,6 +214,128 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
         await contentDefinitionManager.AlterTypeDefinitionAsync(PartiesConstants.ContentTypes.OrgPosition, type => type
             .WithDisplayName("Organization position")
             .WithPart(PartiesConstants.ContentTypes.OrgPosition, part => part.WithPosition("0")));
+    }
+
+    // An organization's legal entity names: a kinded bag like contact points, so an
+    // organization holds any number of names (several DBAs), one primary per kind. None
+    // of them is a display name; the title stays the name shown (docs/parties.md).
+    private async Task DefineOrganizationNameAsync()
+    {
+        await contentDefinitionManager.AlterPartDefinitionAsync(PartiesConstants.ContentTypes.OrganizationName, part => part
+            .Attachable()
+            .Reusable(false)
+            .WithDisplayName("Legal entity name")
+            .WithDescription("A legal name, trade name (DBA) or former name of an organization.")
+            .WithField("Name", field => field
+                .OfType("TextField")
+                .WithDisplayName("Name")
+                .WithPosition("1"))
+            .WithField("Primary", field => field
+                .OfType("BooleanField")
+                .WithDisplayName("Primary")
+                .WithDescription("The one to use among names of the same kind.")
+                .WithPosition("2")));
+
+        await contentDefinitionManager.AlterTypeDefinitionAsync(PartiesConstants.ContentTypes.OrganizationName, type => type
+            .WithDisplayName("Legal entity name")
+            .WithPart(PartiesConstants.ContentTypes.OrganizationName, part => part.WithPosition("0")));
+    }
+
+    // An association: a typed connection between two parties beside reports-to (sales
+    // rep to contact, account rep to organization), possibly crossing staff and an
+    // organization. A content item, so editing, versioning, permissions and audit come
+    // from the content system; kept apart from the hierarchy (docs/parties.md). Each end
+    // is a person and the organization they act in; the Type picker is attached in the
+    // deferred vocabulary task.
+    private async Task DefineAssociationAsync()
+    {
+        await contentDefinitionManager.AlterPartDefinitionAsync(PartiesConstants.ContentTypes.Association, part => part
+            .Attachable(false)
+            .WithDisplayName("Association")
+            .WithDescription("A typed connection between two parties that is not reports-to.")
+            .WithField(AssociationFields.FromPerson, field => PersonPicker(field, "From person", "1"))
+            .WithField(AssociationFields.FromOrganization, field => OrganizationPicker(field, "From organization", "2"))
+            .WithField(AssociationFields.ToPerson, field => PersonPicker(field, "To person", "3"))
+            .WithField(AssociationFields.ToOrganization, field => OrganizationPicker(field, "To organization", "4")));
+
+        await contentDefinitionManager.AlterTypeDefinitionAsync(PartiesConstants.ContentTypes.Association, type => type
+            .WithDisplayName("Association")
+            .Creatable()
+            .Listable()
+            .Versionable()
+            .Securable()
+            .WithPart("TitlePart", part => part.WithPosition("0"))
+            .WithPart(PartiesConstants.ContentTypes.Association, part => part.WithPosition("1")));
+
+        static Crest.ContentManagement.Metadata.Builders.ContentPartFieldDefinitionBuilder PersonPicker(Crest.ContentManagement.Metadata.Builders.ContentPartFieldDefinitionBuilder field, string name, string position) => field
+            .OfType("ContentPickerField")
+            .WithDisplayName(name)
+            .WithPosition(position)
+            .MergeSettings<ContentPickerFieldSettings>(settings =>
+            {
+                settings.Multiple = false;
+                settings.DisplayedContentTypes = [PartiesConstants.ContentTypes.Person];
+            });
+
+        static Crest.ContentManagement.Metadata.Builders.ContentPartFieldDefinitionBuilder OrganizationPicker(Crest.ContentManagement.Metadata.Builders.ContentPartFieldDefinitionBuilder field, string name, string position) => field
+            .OfType("ContentPickerField")
+            .WithDisplayName(name)
+            .WithPosition(position)
+            .MergeSettings<ContentPickerFieldSettings>(settings =>
+            {
+                settings.Multiple = false;
+                settings.DisplayedContentTypes = [PartiesConstants.ContentTypes.Organization];
+            });
+    }
+
+    private async Task CreateContactPointIndexAsync()
+    {
+        await SchemaBuilder.CreateMapIndexTableAsync<ContactPointIndex>(table => table
+            .Column<string>(nameof(ContactPointIndex.PartyId), column => column.WithLength(26))
+            .Column<string>(nameof(ContactPointIndex.PartyContentType), column => column.WithLength(255))
+            .Column<string>(nameof(ContactPointIndex.ContactPointId), column => column.WithLength(26))
+            .Column<string>(nameof(ContactPointIndex.KindId), column => column.Nullable().WithLength(64))
+            .Column<string>(nameof(ContactPointIndex.Value), column => column.Nullable().WithLength(255))
+            .Column<bool>(nameof(ContactPointIndex.Preferred))
+            .Column<bool>(nameof(ContactPointIndex.Published))
+            .Column<bool>(nameof(ContactPointIndex.Latest)));
+        await SchemaBuilder.AlterIndexTableAsync<ContactPointIndex>(table => table
+            .CreateIndex("IDX_ContactPointIndex_Kind", "DocumentId", "KindId", "Preferred", "Published", "Latest"));
+        await SchemaBuilder.AlterIndexTableAsync<ContactPointIndex>(table => table
+            .CreateIndex("IDX_ContactPointIndex_Party", "DocumentId", "PartyId"));
+    }
+
+    private async Task CreateOrganizationNameIndexAsync()
+    {
+        await SchemaBuilder.CreateMapIndexTableAsync<OrganizationNameIndex>(table => table
+            .Column<string>(nameof(OrganizationNameIndex.OrganizationId), column => column.WithLength(26))
+            .Column<string>(nameof(OrganizationNameIndex.NameId), column => column.WithLength(26))
+            .Column<string>(nameof(OrganizationNameIndex.KindId), column => column.Nullable().WithLength(64))
+            .Column<string>(nameof(OrganizationNameIndex.Name), column => column.Nullable().WithLength(255))
+            .Column<bool>(nameof(OrganizationNameIndex.Primary))
+            .Column<bool>(nameof(OrganizationNameIndex.Published))
+            .Column<bool>(nameof(OrganizationNameIndex.Latest)));
+        await SchemaBuilder.AlterIndexTableAsync<OrganizationNameIndex>(table => table
+            .CreateIndex("IDX_OrganizationNameIndex_Kind", "DocumentId", "KindId", "Primary", "Published", "Latest"));
+        await SchemaBuilder.AlterIndexTableAsync<OrganizationNameIndex>(table => table
+            .CreateIndex("IDX_OrganizationNameIndex_Organization", "DocumentId", "OrganizationId"));
+    }
+
+    private async Task CreateAssociationIndexAsync()
+    {
+        await SchemaBuilder.CreateMapIndexTableAsync<AssociationIndex>(table => table
+            .Column<string>(nameof(AssociationIndex.ContentItemId), column => column.WithLength(26))
+            .Column<string>(nameof(AssociationIndex.TypeId), column => column.Nullable().WithLength(64))
+            .Column<string>(nameof(AssociationIndex.FromPersonId), column => column.Nullable().WithLength(26))
+            .Column<string>(nameof(AssociationIndex.FromOrganizationId), column => column.Nullable().WithLength(26))
+            .Column<string>(nameof(AssociationIndex.ToPersonId), column => column.Nullable().WithLength(26))
+            .Column<string>(nameof(AssociationIndex.ToOrganizationId), column => column.Nullable().WithLength(26))
+            .Column<bool>(nameof(AssociationIndex.Published))
+            .Column<bool>(nameof(AssociationIndex.Latest)));
+        await SchemaBuilder.AlterIndexTableAsync<AssociationIndex>(table => table
+            .CreateIndex("IDX_AssociationIndex_From", "DocumentId", "FromPersonId", "Published"));
+        await SchemaBuilder.AlterIndexTableAsync<AssociationIndex>(table => table
+            .CreateIndex("IDX_AssociationIndex_To", "DocumentId", "ToPersonId", "Published"));
     }
 
     private async Task CreatePositionIndexAsync()
@@ -309,9 +451,10 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .Column<string>(nameof(AddressGeoNodeIndex.NodeId), column => column.WithLength(64))
             .Column<int>(nameof(AddressGeoNodeIndex.Level))
             .Column<string>(nameof(AddressGeoNodeIndex.KindId), column => column.Nullable().WithLength(64))
+            .Column<bool>(nameof(AddressGeoNodeIndex.Published))
             .Column<bool>(nameof(AddressGeoNodeIndex.Latest)));
         await SchemaBuilder.AlterIndexTableAsync<AddressGeoNodeIndex>(table => table
-            .CreateIndex("IDX_AddressGeoNodeIndex_Node", "DocumentId", "NodeId", "Latest"));
+            .CreateIndex("IDX_AddressGeoNodeIndex_Node", "DocumentId", "NodeId", "Published", "Latest"));
         await SchemaBuilder.AlterIndexTableAsync<AddressGeoNodeIndex>(table => table
             .CreateIndex("IDX_AddressGeoNodeIndex_Address", "DocumentId", "AddressId"));
     }
@@ -359,7 +502,11 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .WithPart(PartiesConstants.Bags.Addresses, "BagPart", part => part
                 .WithDisplayName("Addresses")
                 .WithPosition("3")
-                .WithSettings(new BagPartSettings { ContainedContentTypes = [PartiesConstants.ContentTypes.Address] })));
+                .WithSettings(new BagPartSettings { ContainedContentTypes = [PartiesConstants.ContentTypes.Address] }))
+            .WithPart(PartiesConstants.Bags.OrganizationNames, "BagPart", part => part
+                .WithDisplayName("Legal entity names")
+                .WithPosition("4")
+                .WithSettings(new BagPartSettings { ContainedContentTypes = [PartiesConstants.ContentTypes.OrganizationName] })));
     }
 
     // The party-domain vocabularies this module OWNS (the cross-domain ones - honorifics,
@@ -378,29 +525,32 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     {
         ShellScope.AddDeferredTask(async scope =>
         {
-            var contentPartLists = scope.ServiceProvider.GetRequiredService<ICrestContentPartListService>();
+            var contentPartLists = scope.ServiceProvider.GetRequiredService<IContentPartListService>();
 
             await SeedPartyVocabulariesAsync(contentPartLists);
         });
     }
 
-    private static async Task SeedPartyVocabulariesAsync(ICrestContentPartListService contentPartLists)
+    private static async Task SeedPartyVocabulariesAsync(IContentPartListService contentPartLists)
     {
-        await contentPartLists.SeedAsync(new CrestContentPartListSeed(
+        await contentPartLists.SeedAsync(new ContentPartListSeed(
             PartiesOptionSets.ContactPointKind,
             "Contact point kind",
             [
-                new(ContactPointKinds.Email, "Email"),
-                new(ContactPointKinds.Phone, "Phone"),
-                new(ContactPointKinds.Mobile, "Mobile"),
-                new(ContactPointKinds.Fax, "Fax"),
-                new(ContactPointKinds.Website, "Website"),
-                new(ContactPointKinds.Social, "Social"),
-                new(ContactPointKinds.Messaging, "Messaging"),
-                new(ContactPointKinds.Other, "Other"),
+                // Each kind's Category is its type (phone, e-mail, web, social,
+                // messaging, other), which the user never selects; reports and the
+                // contact-point index group by it (docs/parties.md).
+                new(ContactPointKinds.Email, "Email", Category: "email"),
+                new(ContactPointKinds.Phone, "Phone", Category: "phone"),
+                new(ContactPointKinds.Mobile, "Mobile", Category: "phone"),
+                new(ContactPointKinds.Fax, "Fax", Category: "phone"),
+                new(ContactPointKinds.Website, "Website", Category: "web"),
+                new(ContactPointKinds.Social, "Social", Category: "social"),
+                new(ContactPointKinds.Messaging, "Messaging", Category: "messaging"),
+                new(ContactPointKinds.Other, "Other", Category: "other"),
             ]));
 
-        await contentPartLists.SeedAsync(new CrestContentPartListSeed(
+        await contentPartLists.SeedAsync(new ContentPartListSeed(
             PartiesOptionSets.AddressKind,
             "Address kind",
             [
@@ -411,47 +561,60 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
                 new(AddressKinds.Other, "Other"),
             ]));
 
-        // Values from the enterprise outline's OrganizationType enum table.
-        await contentPartLists.SeedAsync(new CrestContentPartListSeed(
+        // The legal form only: a trade name is a "dba" legal entity name of the
+        // organization, not a kind of organization (docs/parties.md).
+        await contentPartLists.SeedAsync(new ContentPartListSeed(
             PartiesOptionSets.OrganizationType,
             "Organization type",
             [
                 new("incorporation", "Incorporation"),
                 new("llc", "LLC"),
-                new("dba", "DBA"),
                 new("community-group", "Community group"),
                 new("ngo", "NGO"),
                 new("gov", "Government"),
             ]));
 
-        // A neutral starter set; the outline only says "its own industry list table",
-        // so tenants are expected to shape this one to their vertical.
-        await contentPartLists.SeedAsync(new CrestContentPartListSeed(
-            PartiesOptionSets.Industry,
-            "Industry",
+        // Kinds of legal entity name. "dba" is where trade names live (the organization
+        // type is the legal form only); a superseded name becomes "former".
+        await contentPartLists.SeedAsync(new ContentPartListSeed(
+            PartiesOptionSets.OrganizationNameKind,
+            "Legal entity name kind",
             [
-                new("agriculture", "Agriculture"),
-                new("construction", "Construction"),
-                new("education", "Education"),
-                new("finance", "Finance"),
-                new("government", "Government"),
-                new("healthcare", "Healthcare"),
-                new("hospitality", "Hospitality"),
-                new("manufacturing", "Manufacturing"),
-                new("nonprofit", "Nonprofit"),
-                new("professional-services", "Professional services"),
-                new("real-estate", "Real estate"),
-                new("retail", "Retail"),
-                new("technology", "Technology"),
-                new("transportation", "Transportation"),
-                new("wholesale", "Wholesale"),
-                new("other", "Other"),
+                new(OrganizationNameKinds.Legal, "Legal name"),
+                new(OrganizationNameKinds.Dba, "Trade name (DBA)"),
+                new(OrganizationNameKinds.Former, "Former name"),
+                new(OrganizationNameKinds.Other, "Other"),
             ]));
+
+        // Association types: the module's own types are seeded and data-locked (code
+        // may branch on them); tenants add their own types on top.
+        await contentPartLists.SeedAsync(new ContentPartListSeed(
+            PartiesOptionSets.AssociationType,
+            "Association type",
+            [
+                new(AssociationTypes.SalesRep, "Sales rep"),
+                new(AssociationTypes.AccountRep, "Account rep"),
+            ],
+            DataLock: true));
 
         await contentPartLists.AttachToContentTypeAsync(
             PartiesOptionSets.OrganizationType, PartiesConstants.ContentTypes.Organization, "OrganizationType", "Organization type");
+        // Industry is NAICS, all levels, held once in the global store (ruling
+        // 2026-10-06); tenants add their own industries as additions over it.
         await contentPartLists.AttachToContentTypeAsync(
-            PartiesOptionSets.Industry, PartiesConstants.ContentTypes.Organization, "Industry", "Industry");
+            GlobalLists.Naics, PartiesConstants.ContentTypes.Organization, "Industry", "Industry");
+        await contentPartLists.AttachToContentTypeAsync(
+            PartiesOptionSets.AssociationType, PartiesConstants.ContentTypes.Association, "Type", "Type",
+            settings => settings.Required = true);
+    }
+
+    // The tenant's own organization exists before the first user (staff belong to it):
+    // created at tenant setup, after the party types exist, deferred like every content
+    // write at first-time setup.
+    private static void DeferEnsureTenantOrganization()
+    {
+        ShellScope.AddDeferredTask(async scope =>
+            await scope.ServiceProvider.GetRequiredService<ITenantOrganizationService>().EnsureAsync());
     }
 
     // Pickers on the bag element types. Registered AFTER the vocabulary seed so the
@@ -461,7 +624,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     {
         ShellScope.AddDeferredTask(async scope =>
         {
-            var contentPartLists = scope.ServiceProvider.GetRequiredService<ICrestContentPartListService>();
+            var contentPartLists = scope.ServiceProvider.GetRequiredService<IContentPartListService>();
 
             await contentPartLists.AttachToContentTypeAsync(
                 PartiesOptionSets.ContactPointKind, PartiesConstants.ContentTypes.ContactPoint, "Kind", "Kind",
@@ -471,6 +634,9 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
 
             await contentPartLists.AttachToContentTypeAsync(
                 PartiesOptionSets.AddressKind, PartiesConstants.ContentTypes.Address, "Kind", "Kind",
+                settings => settings.Required = true);
+            await contentPartLists.AttachToContentTypeAsync(
+                PartiesOptionSets.OrganizationNameKind, PartiesConstants.ContentTypes.OrganizationName, "Kind", "Kind",
                 settings => settings.Required = true);
         });
     }
@@ -490,7 +656,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     {
         ShellScope.AddDeferredTask(async scope =>
         {
-            var contentPartLists = scope.ServiceProvider.GetRequiredService<ICrestContentPartListService>();
+            var contentPartLists = scope.ServiceProvider.GetRequiredService<IContentPartListService>();
 
             await contentPartLists.AttachToContentTypeAsync(GlobalLists.Honorifics, PartiesConstants.ContentTypes.Person, "Honorific", "Honorific");
             await contentPartLists.AttachToContentTypeAsync(GlobalLists.NameSuffixes, PartiesConstants.ContentTypes.Person, "Suffix", "Suffix");

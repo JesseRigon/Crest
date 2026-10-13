@@ -48,6 +48,19 @@ public sealed class Permissions : IPermissionProvider
             Name = PlatformConstants.Roles.Editor,
             Permissions = _generalPermissions,
         },
+
+        // The site query's anonymous subset (the site name and the branding renditions) is
+        // what the login page renders (docs/branding.md › Permissions).
+        new PermissionStereotype
+        {
+            Name = PlatformConstants.Roles.Anonymous,
+            Permissions = [CreatePermissionForQuery(Builtin.SystemQuerySource.SiteQuery)],
+        },
+        new PermissionStereotype
+        {
+            Name = PlatformConstants.Roles.Authenticated,
+            Permissions = [CreatePermissionForQuery(Builtin.SystemQuerySource.SiteQuery)],
+        },
     ];
 
     public static Permission CreatePermissionForQuery(string name)

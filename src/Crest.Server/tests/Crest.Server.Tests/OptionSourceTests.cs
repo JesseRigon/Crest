@@ -9,12 +9,12 @@ public class OptionSourceKeyTests
 {
     [Fact]
     public void Builds_a_qualified_key_for_an_option_list() =>
-        Assert.Equal("contentpartlist:pricing.modifier-kind", CrestOptionSourceKeys.ForContentPartList("pricing.modifier-kind"));
+        Assert.Equal("contentpartlist:pricing.modifier-kind", OptionSourceKeys.ForContentPartList("pricing.modifier-kind"));
 
     [Fact]
     public void Splits_provider_from_qualifier()
     {
-        var (provider, qualifier) = CrestOptionSourceKeys.Split("contentpartlist:pricing.side");
+        var (provider, qualifier) = OptionSourceKeys.Split("contentpartlist:pricing.side");
 
         Assert.Equal("contentpartlist", provider);
         Assert.Equal("pricing.side", qualifier);
@@ -25,7 +25,7 @@ public class OptionSourceKeyTests
     {
         // Only the FIRST colon separates provider from qualifier, so provider-specific
         // keys are free to use colons of their own.
-        var (provider, qualifier) = CrestOptionSourceKeys.Split("contenttype:Item:SalesCategory");
+        var (provider, qualifier) = OptionSourceKeys.Split("contenttype:Item:SalesCategory");
 
         Assert.Equal("contenttype", provider);
         Assert.Equal("Item:SalesCategory", qualifier);
@@ -34,7 +34,7 @@ public class OptionSourceKeyTests
     [Fact]
     public void A_bare_key_is_all_provider_and_no_qualifier()
     {
-        var (provider, qualifier) = CrestOptionSourceKeys.Split("users");
+        var (provider, qualifier) = OptionSourceKeys.Split("users");
 
         Assert.Equal("users", provider);
         Assert.Equal(string.Empty, qualifier);
@@ -45,7 +45,7 @@ public class OptionSourceKeyTests
     [InlineData("")]
     public void A_missing_key_splits_to_empties(string? sourceKey)
     {
-        var (provider, qualifier) = CrestOptionSourceKeys.Split(sourceKey);
+        var (provider, qualifier) = OptionSourceKeys.Split(sourceKey);
 
         Assert.Equal(string.Empty, provider);
         Assert.Equal(string.Empty, qualifier);

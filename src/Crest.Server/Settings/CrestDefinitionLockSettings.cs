@@ -7,7 +7,7 @@ namespace Crest.Settings;
 /// A lock on a content DEFINITION: a part definition, one of its fields, or a part's
 /// attachment to a type (docs/content-items.md › Definition locks). The definition-level
 /// counterpart of the option-list locks - one mechanism, two authorities
-/// (<see cref="CrestDefinitionLockSources"/>): a Module lock is the owning module's
+/// (<see cref="DefinitionLockSources"/>): a Module lock is the owning module's
 /// contract (a system process downstream depends on the field being there, of that type,
 /// with those settings) and no one in the tenant can lift it; a Tenant lock is placed and
 /// lifted by whoever holds <c>LockContentDefinitions</c>.
@@ -28,12 +28,12 @@ namespace Crest.Settings;
 /// </remarks>
 public class CrestDefinitionLockSettings
 {
-    /// <summary>One of <see cref="CrestDefinitionLockSources"/>; None when absent.</summary>
-    public string Lock { get; set; } = CrestDefinitionLockSources.None;
+    /// <summary>One of <see cref="DefinitionLockSources"/>; None when absent.</summary>
+    public string Lock { get; set; } = DefinitionLockSources.None;
 }
 
 /// <summary>Who placed a definition lock, which decides who may lift it.</summary>
-public static class CrestDefinitionLockSources
+public static class DefinitionLockSources
 {
     public const string None = "None";
 
@@ -55,42 +55,42 @@ public static class CrestDefinitionLockSources
 /// Reads and writes locks on definitions and their builders. Migrations call
 /// <c>Locked()</c> on a field, part or attachment builder to declare the module's contract.
 /// </summary>
-public static class CrestDefinitionLockExtensions
+public static class DefinitionLockExtensions
 {
     public static string GetLock(this ContentPartDefinition? part) =>
-        CrestDefinitionLockSources.Normalize(part?.GetSettings<CrestDefinitionLockSettings>()?.Lock);
+        DefinitionLockSources.Normalize(part?.GetSettings<CrestDefinitionLockSettings>()?.Lock);
 
     public static string GetLock(this ContentPartFieldDefinition? field) =>
-        CrestDefinitionLockSources.Normalize(field?.GetSettings<CrestDefinitionLockSettings>()?.Lock);
+        DefinitionLockSources.Normalize(field?.GetSettings<CrestDefinitionLockSettings>()?.Lock);
 
     public static string GetLock(this ContentTypePartDefinition? typePart) =>
-        CrestDefinitionLockSources.Normalize(typePart?.GetSettings<CrestDefinitionLockSettings>()?.Lock);
+        DefinitionLockSources.Normalize(typePart?.GetSettings<CrestDefinitionLockSettings>()?.Lock);
 
     /// <summary>A field is locked by its own lock or by its part's; the stronger source wins.</summary>
     public static string GetEffectiveLock(this ContentPartFieldDefinition? field, ContentPartDefinition? part) =>
-        CrestDefinitionLockRules.Strongest(field.GetLock(), part.GetLock());
+        DefinitionLockRules.Strongest(field.GetLock(), part.GetLock());
 
-    public static ContentPartFieldDefinitionBuilder Locked(this ContentPartFieldDefinitionBuilder builder, string source = CrestDefinitionLockSources.Module) =>
-        builder.MergeSettings<CrestDefinitionLockSettings>(settings => settings.Lock = CrestDefinitionLockSources.Normalize(source));
+    public static ContentPartFieldDefinitionBuilder Locked(this ContentPartFieldDefinitionBuilder builder, string source = DefinitionLockSources.Module) =>
+        builder.MergeSettings<CrestDefinitionLockSettings>(settings => settings.Lock = DefinitionLockSources.Normalize(source));
 
-    public static ContentPartDefinitionBuilder Locked(this ContentPartDefinitionBuilder builder, string source = CrestDefinitionLockSources.Module) =>
-        builder.MergeSettings<CrestDefinitionLockSettings>(settings => settings.Lock = CrestDefinitionLockSources.Normalize(source));
+    public static ContentPartDefinitionBuilder Locked(this ContentPartDefinitionBuilder builder, string source = DefinitionLockSources.Module) =>
+        builder.MergeSettings<CrestDefinitionLockSettings>(settings => settings.Lock = DefinitionLockSources.Normalize(source));
 
-    public static ContentTypePartDefinitionBuilder Locked(this ContentTypePartDefinitionBuilder builder, string source = CrestDefinitionLockSources.Module) =>
-        builder.MergeSettings<CrestDefinitionLockSettings>(settings => settings.Lock = CrestDefinitionLockSources.Normalize(source));
+    public static ContentTypePartDefinitionBuilder Locked(this ContentTypePartDefinitionBuilder builder, string source = DefinitionLockSources.Module) =>
+        builder.MergeSettings<CrestDefinitionLockSettings>(settings => settings.Lock = DefinitionLockSources.Normalize(source));
 }
 
 /// <summary>The pure rules: which source outranks which, and who may move a lock where.</summary>
-public static class CrestDefinitionLockRules
+public static class DefinitionLockRules
 {
-    private static int Rank(string source) => CrestDefinitionLockSources.Normalize(source) switch
+    private static int Rank(string source) => DefinitionLockSources.Normalize(source) switch
     {
-        CrestDefinitionLockSources.Module => 2,
-        CrestDefinitionLockSources.Tenant => 1,
+        DefinitionLockSources.Module => 2,
+        DefinitionLockSources.Tenant => 1,
         _ => 0,
     };
 
-    public static string Strongest(string first, string second) => Rank(first) >= Rank(second) ? CrestDefinitionLockSources.Normalize(first) : CrestDefinitionLockSources.Normalize(second);
+    public static string Strongest(string first, string second) => Rank(first) >= Rank(second) ? DefinitionLockSources.Normalize(first) : DefinitionLockSources.Normalize(second);
 
     /// <summary>
     /// A tenant may move a lock between None and Tenant (with the permission, checked by the
@@ -98,9 +98,9 @@ public static class CrestDefinitionLockRules
     /// </summary>
     public static bool CanTenantChange(string current, string requested)
     {
-        var from = CrestDefinitionLockSources.Normalize(current);
-        var to = CrestDefinitionLockSources.Normalize(requested);
-        return from != CrestDefinitionLockSources.Module && to != CrestDefinitionLockSources.Module;
+        var from = DefinitionLockSources.Normalize(current);
+        var to = DefinitionLockSources.Normalize(requested);
+        return from != DefinitionLockSources.Module && to != DefinitionLockSources.Module;
     }
 
     /// <summary>The settings sections a lock leaves editable: the display surface.</summary>

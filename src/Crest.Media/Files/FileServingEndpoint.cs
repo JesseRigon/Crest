@@ -41,16 +41,13 @@ public static class FileServingEndpoint
         var store = services.GetRequiredService<IMediaObjectStore>();
         var storage = services.GetRequiredService<IMediaStorageProvider>();
 
-        var query = context.Request.Query;
-        var signed = query.ContainsKey(HmacMediaUrlSigner.SignatureParameter);
-        if (signed)
+        var check = CheckSignature(context);
+        if (check == MediaSignatureCheck.Invalid)
         {
-            var signer = services.GetRequiredService<HmacMediaUrlSigner>();
-            if (!signer.Verify(context.Request.PathBase + context.Request.Path, query[HmacMediaUrlSigner.ExpiresParameter], query[HmacMediaUrlSigner.SignatureParameter], DateTimeOffset.UtcNow))
-            {
-                return Results.StatusCode(StatusCodes.Status403Forbidden);
-            }
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
         }
+
+        var signed = check == MediaSignatureCheck.Valid;
 
         var caller = services.GetRequiredService<ICallerContextAccessor>().Current;
         var placement = await store.GetPlacementAsync(placementId);
@@ -117,6 +114,18 @@ public static class FileServingEndpoint
 
         var etag = new EntityTagHeaderValue($"\"{found.Sha256}\"");
         return Results.Stream(bytes, type, entityTag: etag, enableRangeProcessing: true);
+    }
+
+    /// <summary>
+    /// The request's signature, by any of the tenant's signers (the built-in one, and the private
+    /// CDN zone's: the private origin requires the zone's own token, docs/media.md › Serving and
+    /// CDNs). Checked against the path with the tenant's path base and the raw query.
+    /// </summary>
+    public static MediaSignatureCheck CheckSignature(HttpContext context)
+    {
+        var services = context.RequestServices;
+        var signers = services.GetService<MediaUrlSigners>() ?? new MediaUrlSigners(services.GetRequiredService<HmacMediaUrlSigner>(), null);
+        return signers.Check(context.Request.PathBase + context.Request.Path, context.Request.QueryString.Value ?? string.Empty, DateTimeOffset.UtcNow);
     }
 
     /// <summary>Public only when sharing says so (an Anyone grant); with the Sharing feature

@@ -189,8 +189,14 @@ public class CallerContextFactoryTests
         var factory = world.Factory();
         await factory.CreateAsync(Request(Signed("u-editor")), TestContext.Current.CancellationToken);
 
-        ((TestUser)world.Users["u-editor"]).RoleNames = [];
+        // The user store bumps the version when it writes a role membership; an ordinary update
+        // (a profile, a lockout counter) does not.
+        var before = await world.Version.GetAsync(TestContext.Current.CancellationToken);
         await new PermissionVersionBumper(world.Version).UpdatedAsync(null);
+        Assert.Equal(before, await world.Version.GetAsync(TestContext.Current.CancellationToken));
+
+        ((TestUser)world.Users["u-editor"]).RoleNames = [];
+        await world.Version.BumpAsync(TestContext.Current.CancellationToken);
 
         var caller = await factory.CreateAsync(Request(Signed("u-editor")), TestContext.Current.CancellationToken);
 
@@ -426,6 +432,93 @@ public class CallerContextFactoryTests
         await bumper.DeletedAsync(null);
 
         Assert.Equal(7, version.Value);
+    }
+
+    // Access policies (docs/workflows.md › The member caller): a downstream module affects a
+    // member's access in one organization without Members knowing why, by refusing portal
+    // access there or narrowing the permissions; its verdicts are cached caller state, and a
+    // policy write bumps the version.
+
+    [Fact]
+    public async Task APolicyRefusesPortalAccessForThatOrganizationOnly()
+    {
+        var world = new World();
+        world.Contributors.Add(new OrganizationContributor());
+        var policy = new SubscriptionPolicy { Unpaid = { "org-unpaid" } };
+        world.Contributors.Add(policy);
+        var factory = world.Factory();
+
+        await Assert.ThrowsAsync<CallerDeniedException>(() =>
+            factory.CreateAsync(Request(Signed("u-editor"), CallerSide.Member, "org-unpaid"), TestContext.Current.CancellationToken));
+        var paid = await factory.CreateAsync(Request(Signed("u-editor"), CallerSide.Member, "org-paid"), TestContext.Current.CancellationToken);
+        var staff = await factory.CreateAsync(Request(Signed("u-editor")), TestContext.Current.CancellationToken);
+
+        Assert.Equal("org-paid", paid.OrganizationId);
+        Assert.Contains("EditContent", staff.Permissions);
+    }
+
+    [Fact]
+    public async Task APolicyNarrowsTheMembersPermissionsAndTheDecisionDenies()
+    {
+        var world = new World();
+        world.Contributors.Add(new OrganizationContributor());
+        world.Contributors.Add(new SubscriptionPolicy { Narrowed = { ["org-trial"] = ["PublishContent"] } });
+        var factory = world.Factory();
+
+        var trial = await factory.CreateAsync(Request(Signed("u-editor"), CallerSide.Member, "org-trial"), TestContext.Current.CancellationToken);
+        var full = await factory.CreateAsync(Request(Signed("u-editor"), CallerSide.Member, "org-full"), TestContext.Current.CancellationToken);
+
+        Assert.DoesNotContain("PublishContent", trial.Permissions);
+        Assert.False((await AccessWorld.Decision().DecideAsync(trial, "PublishContent", null, TestContext.Current.CancellationToken)).IsAllowed);
+        Assert.True((await AccessWorld.Decision().DecideAsync(full, "PublishContent", null, TestContext.Current.CancellationToken)).IsAllowed);
+        Assert.True((await AccessWorld.Decision().DecideAsync(trial, "EditContent", null, TestContext.Current.CancellationToken)).IsAllowed);
+    }
+
+    [Fact]
+    public async Task APolicyVerdictChangedBetweenTwoRequestsReachesTheSecond()
+    {
+        var world = new World();
+        world.Contributors.Add(new OrganizationContributor());
+        var policy = new SubscriptionPolicy();
+        world.Contributors.Add(policy);
+        var factory = world.Factory();
+
+        await factory.CreateAsync(Request(Signed("u-editor"), CallerSide.Member, "org-1"), TestContext.Current.CancellationToken);
+
+        // The membership lapses: the policy write bumps the version.
+        policy.Unpaid.Add("org-1");
+        await world.Version.BumpAsync(TestContext.Current.CancellationToken);
+
+        await Assert.ThrowsAsync<CallerDeniedException>(() =>
+            factory.CreateAsync(Request(Signed("u-editor"), CallerSide.Member, "org-1"), TestContext.Current.CancellationToken));
+    }
+
+    /// <summary>A subscription module's policy: unpaid organizations lose portal access, trial
+    /// organizations lose some permissions.</summary>
+    private sealed class SubscriptionPolicy : ICallerContextContributor
+    {
+        public HashSet<string> Unpaid { get; } = new(StringComparer.Ordinal);
+
+        public Dictionary<string, string[]> Narrowed { get; } = new(StringComparer.Ordinal);
+
+        public Task ContributeAsync(CallerContextBuilder builder, CancellationToken cancellationToken = default)
+        {
+            if (builder.Request.Side != CallerSide.Member || builder.OrganizationId is not { } organization)
+            {
+                return Task.CompletedTask;
+            }
+
+            if (Unpaid.Contains(organization))
+            {
+                builder.DenialReason = $"The membership of {organization} is unpaid.";
+            }
+            else if (Narrowed.TryGetValue(organization, out var removed))
+            {
+                builder.Permissions.ExceptWith(removed);
+            }
+
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class SideContributor : ICallerContextContributor

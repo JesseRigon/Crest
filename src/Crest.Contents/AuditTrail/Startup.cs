@@ -11,6 +11,7 @@ using Crest.Contents.AuditTrail.Handlers;
 using Crest.Contents.AuditTrail.Models;
 using Crest.Contents.AuditTrail.Services;
 using Crest.ContentTypes.Editors;
+using Crest.Data;
 using Crest.Data.Migration;
 using Crest.DisplayManagement.Handlers;
 using Crest.Modules;
@@ -30,7 +31,9 @@ public sealed class Startup : StartupBase
         services.AddScoped<IContentDisplayDriver, AuditTrailContentsDriver>();
 
         services.AddTransient<IConfigureOptions<AuditTrailOptions>, ContentAuditTrailEventConfiguration>();
+        services.AddScoped<ContentHistory>();
         services.AddScoped<IAuditTrailEventHandler, ContentAuditTrailEventHandler>();
+        services.AddIndexProvider<Indexes.ContentHistoryIndexProvider>();
         services.AddSiteDisplayDriver<ContentAuditTrailSettingsDisplayDriver>();
 
         services.AddDisplayDriver<AuditTrailEvent, AuditTrailContentEventDisplayDriver>();

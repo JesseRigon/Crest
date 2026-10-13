@@ -24,6 +24,7 @@ namespace Crest.Components.Primitives
     /// &lt;CrestPassword Name="PasswordInput" @bind-Value=@password /&gt;
     /// </code>
     /// </example>
+    [Crest.DisplayManagement.Components.BlazorComponent("Label", DisplayName = "Label", Category = "Typography", Icon = "label")]
     public partial class CrestLabel : CrestComponent
     {
         /// <summary>

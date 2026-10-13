@@ -13,6 +13,7 @@
     <ProjectReference Include="$(PlatformSrcDir)Crest.Data\Crest.Data.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Flows\Crest.Flows.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Sharing.Abstractions\Crest.Sharing.Abstractions.csproj" />
     <PackageReference Include="YesSql.Abstractions" />
   </ItemGroup>
 

@@ -10,7 +10,7 @@ namespace Crest.DisplayManagement.Components;
 /// The source generator turns these into the assembly's <see cref="IComponentCatalog"/>.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public sealed class CrestBlazorComponentAttribute(string name) : Attribute
+public sealed class BlazorComponentAttribute(string name) : Attribute
 {
     /// <summary>The shape type it binds by default ("Content", "Heading", "Widget__Image"); alternates are names too.</summary>
     public string Name { get; } = name;

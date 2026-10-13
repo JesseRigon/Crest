@@ -37,6 +37,7 @@
         "Crest.Features",
         "Crest.Localization",
         "Crest.Navigation",
+        "Crest.Notifications.Portal",
         "Crest.OpenId.Server",
         "Crest.OpenId.Management",
         "Crest.OpenId.Validation",
@@ -46,6 +47,8 @@
         "Crest.Settings",
         "Crest.Themes",
         "Crest.Users",
+        "Crest.AuditTrail",
+        "Crest.Users.AuditTrail",
         "Crest.Users.ChangeEmail",
         "Crest.Users.Registration",
         "Crest.Users.ResetPassword",
@@ -769,6 +772,23 @@
       ]
     },
     {
+      "name": "Templates",
+      "Templates": {
+        "Content__Article": {
+          "Source": "{% compose \"Content\" %}{% zone \"Header\" %}{% component \"CrestHeading\", text: Model.ContentItem.DisplayText, size: \"H1\" %}{% endzone %}{% zone \"Content\" %}{% children \"Content\" %}{% endzone %}{% zone \"Tags\" %}{% children \"Tags\" %}{% endzone %}{% endcompose %}",
+          "Description": "An article: its title and body (sample site)."
+        },
+        "Content__BlogPost": {
+          "Source": "{% compose \"Content\" %}{% zone \"Header\" %}{% component \"CrestHeading\", text: Model.ContentItem.DisplayText, size: \"H1\" %}{% endzone %}{% zone \"Content\" %}{% children \"Content\" %}{% endzone %}{% zone \"Tags\" %}{% children \"Tags\" %}{% endzone %}{% endcompose %}",
+          "Description": "A blog post: its title, body and tags (sample site)."
+        },
+        "Content__Blog": {
+          "Source": "{% compose \"Content\" %}{% zone \"Header\" %}{% component \"CrestHeading\", text: Model.ContentItem.DisplayText, size: \"H1\" %}{% endzone %}{% zone \"Content\" %}{% children \"Content\" %}{% endzone %}{% zone \"Tags\" %}{% children \"Tags\" %}{% endzone %}{% endcompose %}",
+          "Description": "The blog: its title, description and posts (sample site)."
+        }
+      }
+    },
+    {
       "name": "lucene-index",
       "Indices": [
         {
@@ -820,7 +840,8 @@
           "Description": "Anonymous role",
           "Permissions": [
             "ViewContent",
-            "QueryLuceneSearchIndex"
+            "QueryLuceneSearchIndex",
+            "ExecuteApi_site"
           ]
         }
       ]

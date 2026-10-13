@@ -6,10 +6,10 @@ using Crest.Navigation;
 
 namespace Crest.ViewModels;
 
-public sealed record NavigationMenu(string Name, NavigationItem[] Items, IconPack? Icons = null, NavigationSeparator[]? Separators = null, CrestPrimaryNavMenuSettings? PrimaryNavMenuSettings = null);
+public sealed record NavigationMenu(string Name, NavigationItem[] Items, IconPack? Icons = null, NavigationSeparator[]? Separators = null, PrimaryNavMenuSettings? PrimaryNavMenuSettings = null);
 
 /// <summary>The current user's own hidden admin-menu item keys (see CrestUserMenuPreferences).</summary>
-public sealed record CrestUserHiddenMenuItems(string[] HiddenItemKeys);
+public sealed record UserHiddenMenuItems(string[] HiddenItemKeys);
 
 public sealed record NavigationSeparator(string Key, string? ParentKey, int Order);
 
@@ -51,11 +51,11 @@ public sealed record NavigationItem(
     // resolves every caption through IDataLocalizer at render time (TheAdmin's
     // NavigationItemText.cshtml, keyed on the displayed caption); serialization here is Crest's
     // render time, so resolution happens in the same place, unconditionally - but through
-    // CrestMenuCaptionResolver, which falls back through parent and sibling contexts and the
+    // MenuCaptionResolver, which falls back through parent and sibling contexts and the
     // shipped PO catalogs before surrendering to the invariant literal - see the resolver's
     // remarks. A total miss returns the caption unchanged, so provider items keep
     // their PO-translated Text.Value.
-    public static NavigationItem From(MenuItem item, CrestMenuCaptionResolver? captionResolver)
+    public static NavigationItem From(MenuItem item, MenuCaptionResolver? captionResolver)
     {
         var text = item.Text.Value;
         if (captionResolver is not null && !string.IsNullOrEmpty(text))

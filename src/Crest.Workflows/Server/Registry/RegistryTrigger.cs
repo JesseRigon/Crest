@@ -13,7 +13,7 @@ namespace Crest.Workflows.Registry;
 public sealed record RegistryTriggerStimulus(string TriggerKey);
 
 /// <summary>
-/// Fires when a Crest registry raises a trigger (transaction.posted, party.role-created,
+/// Fires when a Crest registry raises a trigger (order.placed, party.role-created,
 /// ...). The result is the payload the registry sent; the acting user rides along as the
 /// workflow input <c>Actor</c>. Optional <see cref="RequiredPermission"/> ends the run on
 /// Denied when that user lacks the Crest permission; optional <see cref="PayloadFilter"/>
@@ -25,7 +25,7 @@ public sealed record RegistryTriggerStimulus(string TriggerKey);
 [FlowNode("Done", "Denied", "Skipped")]
 public class RegistryTrigger : Trigger<IDictionary<string, object>>
 {
-    [Input(DisplayName = "Trigger", Description = "The registered trigger key, e.g. transaction.posted.", UIHint = InputUIHints.DropDown, UIHandler = typeof(WorkflowTriggerOptionsProvider))]
+    [Input(DisplayName = "Trigger", Description = "The registered trigger key, e.g. party.role-created.", UIHint = InputUIHints.DropDown, UIHandler = typeof(WorkflowTriggerOptionsProvider))]
     public Input<string> TriggerKey { get; set; } = null!;
 
     [Input(DisplayName = "Required permission", Description = "Optional. Crest permission the acting user must hold for the flow to proceed; otherwise the run ends on Denied.", UIHint = InputUIHints.DropDown, UIHandler = typeof(PermissionOptionsProvider))]

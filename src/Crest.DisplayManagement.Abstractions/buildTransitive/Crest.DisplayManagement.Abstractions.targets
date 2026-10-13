@@ -1,7 +1,7 @@
 <Project>
   <!--
     The component catalog generator (docs/blazor-display.md § 1) for Razor component libraries.
-    A library that marks components with [CrestBlazorComponent] gets a generated
+    A library that marks components with [BlazorComponent] gets a generated
     IComponentCatalog and [assembly: ComponentCatalog], which the server and browser registries
     read; without it they fall back to reflection, which trimming defeats in WebAssembly.
 
@@ -12,7 +12,7 @@
     How it arrives, the same file both ways:
     - from the package: this file is in Crest.DisplayManagement.Abstractions' buildTransitive/,
       so it reaches every project that references the package directly or through another
-      (a Fruitful blazor-wasm library referencing Crest.Components), and the generator ships
+      (a host module's blazor-wasm library referencing Crest.Components), and the generator ships
       beside it in buildTransitive/analyzers/;
     - from source: Directory.Build.targets imports it with ComponentCatalogGeneratorProject set,
       and the generator is a project reference instead.

@@ -25,5 +25,6 @@ public sealed class Startup : StartupBase
         services.AddNavigationProvider<AdminMenu>();
         services.AddDataMigration<SqlQueryMigrations>();
         services.AddScoped<IQueryHandler, SqlQueryHandler>();
+        services.AddScoped<SqlQueryRunner>();
     }
 }

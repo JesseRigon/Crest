@@ -158,3 +158,14 @@ public interface IDisplayActionDispatcher
 
     Task SubmitAsync(string nodeId, JsonNode? values, CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// A server action the server refused with errors a viewer can fix (a workflow's arguments that do
+/// not match its declared inputs): the runner keeps them in <see cref="DisplayState"/> under the
+/// node whose event ran the action, where a form shows each beside its input.
+/// </summary>
+public sealed class DisplayActionException(string message, IReadOnlyDictionary<string, IReadOnlyList<string>> errors) : Exception(message)
+{
+    /// <summary>By input name; an empty name for errors that belong to no input.</summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> Errors { get; } = errors;
+}

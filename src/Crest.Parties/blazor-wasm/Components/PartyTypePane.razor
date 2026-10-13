@@ -311,7 +311,7 @@
     }
 
     // Credentials and the antiforgery token are attached by the registered HttpClient's
-    // handler (WASM: CrestAntiforgeryHandler; SSR/InteractiveServer: CrestForwardedAuthHandler),
+    // handler (WASM: AntiforgeryHandler; SSR/InteractiveServer: ForwardedAuthHandler),
     // never per request here - that keeps the pane portable across all three render contexts.
     private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string url, object? body)
     {

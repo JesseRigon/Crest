@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Domain\Crest.Parties.Domain.csproj" />
+    <ProjectReference Include="..\..\Server\Crest.Parties.csproj" />
   </ItemGroup>
 
 </Project>

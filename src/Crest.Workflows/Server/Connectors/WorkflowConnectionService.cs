@@ -1,11 +1,12 @@
 using System.Text.RegularExpressions;
+using Crest.Access;
 using Microsoft.AspNetCore.DataProtection;
 using Crest.Documents;
 
 namespace Crest.Workflows.Connectors;
 
 /// <summary>The tenant's connections: validation, sealing of secrets, and the API shape.</summary>
-public sealed partial class WorkflowConnectionService(IDocumentManager<WorkflowConnectionsDocument> documents, IDataProtectionProvider dataProtection)
+public sealed partial class WorkflowConnectionService(IDocumentManager<WorkflowConnectionsDocument> documents, IDataProtectionProvider dataProtection, IPermissionVersion permissionVersion)
 {
     private const string ProtectorPurpose = "Crest.Workflows.Connections";
     private IDataProtector Protector => dataProtection.CreateProtector(ProtectorPurpose);
@@ -57,6 +58,14 @@ public sealed partial class WorkflowConnectionService(IDocumentManager<WorkflowC
         if (request.RateLimitPerMinute is not null) connection.RateLimitPerMinute = request.RateLimitPerMinute.Value <= 0 ? null : request.RateLimitPerMinute.Value;
         if (request.TimeoutSeconds is not null) connection.TimeoutSeconds = request.TimeoutSeconds.Value;
         if (request.Secret is not null) connection.ProtectedSecret = request.Secret.Length == 0 ? null : Protector.Protect(request.Secret);
+        var rolesChanged = false;
+        if (request.Roles is not null)
+        {
+            var roles = request.Roles.Where(role => !string.IsNullOrWhiteSpace(role)).Select(role => role.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToList();
+            rolesChanged = !roles.SequenceEqual(connection.Roles, StringComparer.OrdinalIgnoreCase);
+            connection.Roles = roles;
+        }
+
         if (string.IsNullOrWhiteSpace(connection.DisplayName)) connection.DisplayName = connector?.DisplayName ?? connection.Key;
 
         Validate(connection, errors);
@@ -68,18 +77,29 @@ public sealed partial class WorkflowConnectionService(IDocumentManager<WorkflowC
         connection.UpdatedUtc = DateTime.UtcNow;
         document.Connections[connection.Key] = connection;
         await documents.UpdateAsync(document);
+        if (rolesChanged)
+        {
+            // The connection's roles are rights: its cached caller state goes with the version.
+            await permissionVersion.BumpAsync();
+        }
+
         return (connection, []);
     }
 
     public async Task<bool> DeleteAsync(string key)
     {
         var document = await documents.GetOrCreateMutableAsync();
-        if (!document.Connections.Remove(key))
+        if (!document.Connections.Remove(key, out var removed))
         {
             return false;
         }
 
         await documents.UpdateAsync(document);
+        if (removed.Roles.Count > 0)
+        {
+            await permissionVersion.BumpAsync();
+        }
+
         return true;
     }
 
@@ -87,7 +107,7 @@ public sealed partial class WorkflowConnectionService(IDocumentManager<WorkflowC
     {
         var tokens = ReadTokens(c);
         return new(c.Key, c.DisplayName, c.ConnectorKey, c.BaseUrl, c.AuthKind, c.Settings, !string.IsNullOrEmpty(c.ProtectedSecret), c.RetryCount, c.RateLimitPerMinute, c.TimeoutSeconds, c.UpdatedUtc,
-            Authorized: tokens is not null, TokenExpiresUtc: tokens?.ExpiresUtc, Operations: ReadOperations(c));
+            Authorized: tokens is not null, TokenExpiresUtc: tokens?.ExpiresUtc, Operations: ReadOperations(c), Roles: c.Roles);
     }
 
     /// <summary>The operations an OpenAPI import stored on the connection, if any.</summary>

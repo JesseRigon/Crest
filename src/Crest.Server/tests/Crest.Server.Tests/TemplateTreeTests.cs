@@ -62,7 +62,7 @@ public sealed class TemplateTreeTests
         var evaluation = await EvaluateAsync("""
             {% compose "List", id: "invoices" %}
               {% on "row_menu" %}{% set_variable "row", event.item %}{% open "rowMenu" %}{% endon %}
-              {% on "selected" %}{% run_workflow "post-invoice", into: "result", invoice: event.id %}{% endon %}
+              {% on "selected" %}{% run_workflow "approve-order", into: "result", order: event.id %}{% endon %}
             {% endcompose %}
             {% component "Label", id: "details", text: nodes.invoices.selected.name %}
             {% compose "Overlay", id: "rowMenu" %}{% component "Label", text: page.row.name %}{% endcompose %}
@@ -77,8 +77,8 @@ public sealed class TemplateTreeTests
         Assert.Equal("item", list.Events["RowMenu"][0].Value!.Path);
 
         var workflow = Assert.Single(list.Events["Selected"]);
-        Assert.Equal(("post-invoice", "result"), (workflow.Workflow, workflow.Target));
-        Assert.Equal("id", workflow.Arguments!["invoice"].Path);
+        Assert.Equal(("approve-order", "result"), (workflow.Workflow, workflow.Target));
+        Assert.Equal("id", workflow.Arguments!["order"].Path);
 
         var binding = nodes[1].Bindings!["Text"];
         Assert.Equal(("page.invoices", "Selected", "name"), (binding.Node, binding.Output, binding.Path));
@@ -336,6 +336,24 @@ public sealed class TemplateTreeTests
         Assert.Equal("article on the theme", (await resolver.ResolveAsync(names, "Detail"))!.Source);
         Assert.Equal("generic", (await resolver.ResolveAsync(["Content__Page", "Content"], "Detail"))!.Source);
         Assert.Null(await new TemplateResolver(catalog, Theme("SiteTheme")).ResolveAsync(["Menu"], null));
+    }
+
+    [Fact]
+    public async Task ShippedTemplatesAnswerBelowTheTenantsOwnPerName()
+    {
+        var tenant = Catalog(("Content", null, null, "tenant content"));
+        var shipped = Substitute.For<IShippedTemplateProvider>();
+        shipped.GetTemplatesAsync().Returns(
+        [
+            new TemplateRecord("s1", "s1", "Content__Article", null, null, "shipped article", null, true, true, null),
+            new TemplateRecord("s2", "s2", "Content", null, "Detail", "shipped content", null, true, true, null),
+        ]);
+        var resolver = new TemplateResolver(tenant, Theme("SiteTheme"), [shipped]);
+
+        Assert.Equal("shipped article", (await resolver.ResolveAsync(["Content__Article", "Content"], "Detail"))!.Source);
+        Assert.Equal("tenant content", (await resolver.ResolveAsync(["Content__Page", "Content"], "Detail"))!.Source);
+        Assert.Equal("shipped content", (await new TemplateResolver(Catalog(), Theme("SiteTheme"), [shipped]).ResolveAsync(["Content__Page", "Content"], "Detail"))!.Source);
+        Assert.Null(await new TemplateResolver(Catalog(), Theme("SiteTheme"), [shipped]).ResolveAsync(["Content__Page", "Content"], "Summary"));
     }
 
     private static async Task<TemplateEvaluation> EvaluateAsync(

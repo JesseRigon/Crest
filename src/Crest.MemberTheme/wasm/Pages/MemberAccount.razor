@@ -41,7 +41,7 @@
                         {
                             <CrestButton ButtonStyle="ButtonStyle.Light"
                                          Text="Switch"
-                                         Click="@(() => ShellContext.SetActiveOrganizationAsync(organization.Id))" />
+                                         Click="@(() => SwitchAsync(organization))" />
                         }
                     </CrestStack>
                 }
@@ -55,4 +55,21 @@
     // (its library is lazy, so it cannot be registered in the sealed WASM container).
     [CascadingParameter]
     private IMemberShellContext ShellContext { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    private IServiceProvider Services { get; set; } = default!;
+
+    // The organization is in the path: switching remembers the choice and opens the other
+    // organization's account page.
+    private async Task SwitchAsync(MemberShellOrganization organization)
+    {
+        await ShellContext.SetActiveOrganizationAsync(organization.Id);
+        var shell = Services.GetService(typeof(Crest.Components.Modules.CrestShellContext)) as Crest.Components.Modules.CrestShellContext;
+        Navigation.NavigateTo(
+            MemberShellLinks.Organization(Navigation, shell, organization.Slug) + MemberShellLinks.Relative(MemberRoutePaths.Account),
+            forceLoad: true);
+    }
 }

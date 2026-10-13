@@ -24,6 +24,10 @@
     <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Data.YesSql.Abstractions\Crest.Data.YesSql.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Recipes.Abstractions\Crest.Recipes.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Roles.Abstractions\Crest.Roles.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Users.Abstractions\Crest.Users.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Navigation\Crest.Navigation.csproj" />
   </ItemGroup>
 
 </Project>

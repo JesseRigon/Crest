@@ -24,6 +24,12 @@ public static class ComponentSchema
         public const string Output = "output";
         public const string List = "list";
         public const string Object = "object";
+
+        /// <summary>HTML: the server sanitizes the value before the tree leaves it (§ 10).</summary>
+        public const string Markup = "markup";
+
+        /// <summary>A media library path, picked from the library.</summary>
+        public const string Media = "media";
     }
 
     /// <summary>A <c>RenderFragment</c> or <c>RenderFragment&lt;T&gt;</c> parameter is a zone, not a value.</summary>

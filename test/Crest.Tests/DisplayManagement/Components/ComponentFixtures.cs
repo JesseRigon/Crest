@@ -26,7 +26,7 @@ public abstract class CardBase : ComponentBase
     public IReadOnlyDictionary<string, object>? Attributes { get; set; }
 }
 
-[CrestBlazorComponent("Test__Card", DisplayName = "Card", Category = "Layout", Icon = "card", IsHost = true, Instances = ComponentInstances.Single, Permission = "ViewCards")]
+[BlazorComponent("Test__Card", DisplayName = "Card", Category = "Layout", Icon = "card", IsHost = true, Instances = ComponentInstances.Single, Permission = "ViewCards")]
 public sealed class TestCard : CardBase
 {
     [Parameter]
@@ -76,14 +76,14 @@ public sealed class TestCard : CardBase
     public string? NotAParameter { get; set; }
 }
 
-[CrestBlazorComponent("Test__Plain")]
+[BlazorComponent("Test__Plain")]
 public sealed class TestPlain : ComponentBase
 {
     [Parameter]
     public string? Text { get; set; }
 }
 
-[CrestBlazorComponent("Test__Plain__Summary")]
+[BlazorComponent("Test__Plain__Summary")]
 public sealed class TestPlainSummary : ComponentBase
 {
 }
@@ -94,7 +94,7 @@ public sealed class TestUnmarked : ComponentBase
     public string? Text { get; set; }
 }
 
-[CrestBlazorComponent("Test__List")]
+[BlazorComponent("Test__List")]
 public sealed class TestList : ComponentBase
 {
     [Parameter]
@@ -105,14 +105,14 @@ public sealed class TestList : ComponentBase
     public EventCallback<int> Pressed { get; set; }
 }
 
-[CrestBlazorComponent("Test__Menu", IsOverlay = true)]
+[BlazorComponent("Test__Menu", IsOverlay = true)]
 public sealed class TestMenu : ComponentBase
 {
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 }
 
-[CrestBlazorComponent("Test__Editor", Edits = ["TestField", "OtherField"])]
+[BlazorComponent("Test__Editor", Edits = ["TestField", "OtherField"])]
 public sealed class TestEditor : ComponentBase
 {
     [Parameter]

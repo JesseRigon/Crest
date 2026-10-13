@@ -24,7 +24,7 @@ namespace Crest.Workflows.Hooks;
 [UsedImplicitly]
 public class Hook : Activity
 {
-    [Input(DisplayName = "Slot", Description = "The registered hook slot whose attachments run here, e.g. transaction.created.", UIHint = InputUIHints.DropDown, UIHandler = typeof(UIHints.HookSlotOptionsProvider))]
+    [Input(DisplayName = "Slot", Description = "The registered hook slot whose attachments run here, e.g. order.created.", UIHint = InputUIHints.DropDown, UIHandler = typeof(UIHints.HookSlotOptionsProvider))]
     public Input<string> Slot { get; set; } = null!;
 
     [Output(Description = "How many attachments ran.")]

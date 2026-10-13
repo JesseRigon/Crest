@@ -1,6 +1,8 @@
 #nullable enable
 
+using System.Text.Json.Nodes;
 using Crest.Access;
+using Crest.Infrastructure.Html;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Crest.DisplayManagement.Components;
@@ -56,6 +58,11 @@ public sealed class DisplayTreeFilter(IComponentRegistry registry, IServiceProvi
             return null;
         }
 
+        if (descriptor is not null)
+        {
+            SanitizeMarkup(node, descriptor);
+        }
+
         foreach (var action in (node.Events?.Values ?? Enumerable.Empty<List<DisplayAction>>()).SelectMany(list => list).Where(action => !action.IsClientOnly))
         {
             var key = $"action:{action.Kind}:{action.Workflow}";
@@ -81,6 +88,21 @@ public sealed class DisplayTreeFilter(IComponentRegistry registry, IServiceProvi
         }
 
         return node;
+    }
+
+    private void SanitizeMarkup(DisplayNode node, ComponentDescriptor descriptor)
+    {
+        foreach (var parameter in descriptor.Parameters)
+        {
+            if (parameter.Editor != ComponentSchema.Editors.Markup || !node.Properties.TryGetValue(parameter.Name, out var value) || value is null)
+            {
+                continue;
+            }
+
+            var html = value is JsonValue text && text.TryGetValue<string>(out var raw) ? raw : value.ToJsonString();
+            var sanitizer = services.GetService<IHtmlSanitizerService>();
+            node.Properties[parameter.Name] = sanitizer is null ? string.Empty : sanitizer.Sanitize(html);
+        }
     }
 
     private static async Task<bool> DecideAsync(CallerContext? caller, string key, Dictionary<string, bool> decisions, Func<Task<bool>> decide)

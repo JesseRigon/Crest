@@ -1,0 +1,17 @@
+@attribute [Route(MemberRoutePaths.Files)]
+@namespace Crest.MemberTheme.Pages
+@using Crest.Components.Files
+
+@* The member's drive browser (docs/media.md § 8): the drives the server lists for this
+   member - normally their organization's - with the viewer pane. What they upload is owned
+   by the drive it lands in (requirement 14). Nothing here is an access decision: the server
+   scopes every list to the member and the organization they act for. *@
+
+<PageTitle>Files</PageTitle>
+
+<div data-testid="member-files">
+    <CrestStack Gap="1rem">
+        <CrestText TextStyle="TextStyle.H4" Text="Files" />
+        <CrestDriveBrowser />
+    </CrestStack>
+</div>

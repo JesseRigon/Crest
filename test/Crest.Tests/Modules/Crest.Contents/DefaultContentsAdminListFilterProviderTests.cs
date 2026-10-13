@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
+using Crest.Access;
+using Crest.Contents.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -33,18 +34,17 @@ public class DefaultContentsAdminListFilterProviderTests
         var predicates = await ExecuteFilterAsync(
             new ContentTypeFilterNode(["Article", "Missing", "BlogPost"]),
             definitions,
-            contentItem => contentItem.ContentType == "Article");
+            ArticlesOrOwn());
 
-        var article = new ContentItemIndex { ContentType = "Article", Owner = "other-user" };
-        var ownedBlogPost = new ContentItemIndex { ContentType = "BlogPost", Owner = UserId };
-        var otherBlogPost = new ContentItemIndex { ContentType = "BlogPost", Owner = "other-user" };
-        var page = new ContentItemIndex { ContentType = "Page", Owner = UserId };
+        var article = new ContentItemIndex { Latest = true, ContentType = "Article", Owner = "other-user" };
+        var ownedBlogPost = new ContentItemIndex { Latest = true, ContentType = "BlogPost", Owner = UserId };
+        var otherBlogPost = new ContentItemIndex { Latest = true, ContentType = "BlogPost", Owner = "other-user" };
+        var page = new ContentItemIndex { Latest = true, ContentType = "Page", Owner = UserId };
 
-        Assert.Contains(predicates, predicate =>
-            predicate(article) &&
-            predicate(ownedBlogPost) &&
-            !predicate(otherBlogPost) &&
-            !predicate(page));
+        Assert.True(Matches(predicates, article));
+        Assert.True(Matches(predicates, ownedBlogPost));
+        Assert.False(Matches(predicates, otherBlogPost));
+        Assert.False(Matches(predicates, page));
     }
 
     [Fact]
@@ -60,18 +60,17 @@ public class DefaultContentsAdminListFilterProviderTests
         var predicates = await ExecuteFilterAsync(
             new StereotypeFilterNode(["Page", "Widget"]),
             definitions,
-            contentItem => contentItem.ContentType == "Article");
+            ArticlesOrOwn());
 
-        var article = new ContentItemIndex { ContentType = "Article", Owner = "other-user" };
-        var ownedHtmlWidget = new ContentItemIndex { ContentType = "HtmlWidget", Owner = UserId };
-        var otherHtmlWidget = new ContentItemIndex { ContentType = "HtmlWidget", Owner = "other-user" };
-        var menu = new ContentItemIndex { ContentType = "Menu", Owner = UserId };
+        var article = new ContentItemIndex { Latest = true, ContentType = "Article", Owner = "other-user" };
+        var ownedHtmlWidget = new ContentItemIndex { Latest = true, ContentType = "HtmlWidget", Owner = UserId };
+        var otherHtmlWidget = new ContentItemIndex { Latest = true, ContentType = "HtmlWidget", Owner = "other-user" };
+        var menu = new ContentItemIndex { Latest = true, ContentType = "Menu", Owner = UserId };
 
-        Assert.Contains(predicates, predicate =>
-            predicate(article) &&
-            predicate(ownedHtmlWidget) &&
-            !predicate(otherHtmlWidget) &&
-            !predicate(menu));
+        Assert.True(Matches(predicates, article));
+        Assert.True(Matches(predicates, ownedHtmlWidget));
+        Assert.False(Matches(predicates, otherHtmlWidget));
+        Assert.False(Matches(predicates, menu));
     }
 
     [Fact]
@@ -86,20 +85,19 @@ public class DefaultContentsAdminListFilterProviderTests
         var predicates = await ExecuteFilterAsync(
             new ContentTypeFilterNode("Missing"),
             definitions,
-            _ => true);
+            ScopeRule.All);
 
-        var article = new ContentItemIndex { ContentType = "Article" };
-        var secret = new ContentItemIndex { ContentType = "Secret" };
+        var article = new ContentItemIndex { Latest = true, ContentType = "Article" };
+        var secret = new ContentItemIndex { Latest = true, ContentType = "Secret" };
 
-        Assert.Contains(predicates, predicate =>
-            predicate(article) &&
-            !predicate(secret));
+        Assert.True(Matches(predicates, article));
+        Assert.False(Matches(predicates, secret));
     }
 
     private static async Task<Func<ContentItemIndex, bool>[]> ExecuteFilterAsync(
         TermNode filter,
         ContentTypeDefinition[] definitions,
-        Func<ContentItem, bool> canViewAll)
+        ScopeRule scope)
     {
         var definitionManager = new Mock<IContentDefinitionManager>();
         definitionManager
@@ -109,16 +107,12 @@ public class DefaultContentsAdminListFilterProviderTests
             .Setup(manager => manager.ListTypeDefinitionsAsync())
             .ReturnsAsync(definitions);
 
-        var authorizationService = new Mock<IAuthorizationService>();
-        authorizationService
-            .Setup(service => service.AuthorizeAsync(
-                It.IsAny<ClaimsPrincipal>(),
-                It.IsAny<object>(),
-                It.IsAny<IEnumerable<IAuthorizationRequirement>>()))
-            .ReturnsAsync((ClaimsPrincipal _, object resource, IEnumerable<IAuthorizationRequirement> _) =>
-                resource is ContentItem contentItem && canViewAll(contentItem)
-                    ? AuthorizationResult.Success()
-                    : AuthorizationResult.Failed());
+        // What the caller may see is the scope's business (the one scope set), not the filter's.
+        var caller = new CallerContext { Tenant = "Default", Side = CallerSide.Admin, UserId = UserId };
+        var scopes = new Mock<IScopeSetProvider>();
+        scopes
+            .Setup(provider => provider.GetAsync(caller, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ScopeSet("test", new Dictionary<string, ScopeRule> { [ContentItemScopeProvider.TargetName] = scope }));
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(
             [new Claim(ClaimTypes.NameIdentifier, UserId)],
@@ -129,7 +123,8 @@ public class DefaultContentsAdminListFilterProviderTests
             {
                 HttpContext = new DefaultHttpContext { User = user },
             })
-            .AddSingleton(authorizationService.Object)
+            .AddSingleton<ICallerContextAccessor>(new Accessor { Current = caller })
+            .AddSingleton(scopes.Object)
             .AddSingleton(definitionManager.Object)
             .BuildServiceProvider();
 
@@ -161,6 +156,21 @@ public class DefaultContentsAdminListFilterProviderTests
         await result.ExecuteAsync(new ContentQueryContext(services, query.Object));
 
         return [.. predicates.Select(CompilePredicate)];
+    }
+
+    /// <summary>The query holds every predicate at once (the status term's latest-version one
+    /// too): a row is listed when all admit it.</summary>
+    private static bool Matches(Func<ContentItemIndex, bool>[] predicates, ContentItemIndex index) =>
+        predicates.Length > 0 && predicates.All(predicate => predicate(index));
+
+    /// <summary>The caller may see articles, and their own items of any type.</summary>
+    private static ScopeRule ArticlesOrOwn() => ScopeRule.Where(ScopeFilter.AnyOf(
+        ScopeFilter.Of(ScopeCondition.In(nameof(ContentItemIndex.ContentType), ["Article"])),
+        ScopeFilter.Of(ScopeCondition.Equal(nameof(ContentItemIndex.Owner), UserId))));
+
+    private sealed class Accessor : ICallerContextAccessor
+    {
+        public CallerContext Current { get; set; }
     }
 
     private static Func<ContentItemIndex, bool> CompilePredicate(Expression<Func<ContentItemIndex, bool>> predicate)

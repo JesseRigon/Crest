@@ -1,10 +1,8 @@
-using System.IO.Compression;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Crest.Admin;
@@ -71,9 +69,6 @@ public sealed class ImportController : Controller
 
         if (importedPackage != null)
         {
-            var tempArchiveName = _tempDirectoryProvider.GetTempFileName(Path.GetExtension(importedPackage.FileName));
-            var tempArchiveFolder = _tempDirectoryProvider.GetTempFileName();
-
             try
             {
                 await using var uploadedStream = importedPackage.OpenReadStream();
@@ -89,30 +84,13 @@ public sealed class ImportController : Controller
                     return RedirectToAction(nameof(Index));
                 }
 
-                await using (var stream = new FileStream(tempArchiveName, FileMode.Create))
-                {
-                    await fileCreatingResult.Stream.CopyToAsync(stream, HttpContext.RequestAborted);
-                }
-
-                if (importedPackage.FileName.EndsWith(".zip"))
-                {
-                    ZipFile.ExtractToDirectory(tempArchiveName, tempArchiveFolder);
-                }
-                else if (importedPackage.FileName.EndsWith(".json"))
-                {
-                    Directory.CreateDirectory(tempArchiveFolder);
-                    System.IO.File.Move(tempArchiveName, Path.Combine(tempArchiveFolder, "Recipe.json"));
-                }
-                else
-                {
-                    await _notifier.ErrorAsync(H["Only zip or json files are supported."]);
-
-                    return RedirectToAction(nameof(Index));
-                }
-
-                await _deploymentManager.ImportDeploymentPackageAsync(new PhysicalFileProvider(tempArchiveFolder));
+                await DeploymentPackages.ImportPackageAsync(_deploymentManager, _tempDirectoryProvider, importedPackage.FileName, fileCreatingResult.Stream, HttpContext.RequestAborted);
 
                 await _notifier.SuccessAsync(H["Deployment package imported."]);
+            }
+            catch (NotSupportedException)
+            {
+                await _notifier.ErrorAsync(H["Only zip or json files are supported."]);
             }
             catch (RecipeExecutionException e)
             {
@@ -125,18 +103,6 @@ public sealed class ImportController : Controller
                 _logger.LogError(e, "Unable to import a deployment package.");
 
                 await _notifier.ErrorAsync(H["Unexpected error occurred while importing the deployment package."]);
-            }
-            finally
-            {
-                if (System.IO.File.Exists(tempArchiveName))
-                {
-                    System.IO.File.Delete(tempArchiveName);
-                }
-
-                if (Directory.Exists(tempArchiveFolder))
-                {
-                    Directory.Delete(tempArchiveFolder, true);
-                }
             }
         }
         else
@@ -172,13 +138,9 @@ public sealed class ImportController : Controller
 
         if (ModelState.IsValid)
         {
-            var tempArchiveFolder = _tempDirectoryProvider.CreateTempSubdirectory();
-
             try
             {
-                System.IO.File.WriteAllText(Path.Combine(tempArchiveFolder, "Recipe.json"), model.Json);
-
-                await _deploymentManager.ImportDeploymentPackageAsync(new PhysicalFileProvider(tempArchiveFolder));
+                await DeploymentPackages.ImportJsonAsync(_deploymentManager, _tempDirectoryProvider, model.Json);
 
                 await _notifier.SuccessAsync(H["Recipe imported successfully!"]);
             }
@@ -193,13 +155,6 @@ public sealed class ImportController : Controller
                 _logger.LogError(e, "Unable to import a recipe from JSON input.");
 
                 ModelState.AddModelError(string.Empty, S["Unexpected error occurred while importing the recipe."]);
-            }
-            finally
-            {
-                if (Directory.Exists(tempArchiveFolder))
-                {
-                    Directory.Delete(tempArchiveFolder, true);
-                }
             }
         }
 

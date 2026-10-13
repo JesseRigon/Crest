@@ -1,7 +1,9 @@
 # Sharing: who may reach an item, on any kind of item
 
 Status: ruled 2026-10-11; phases 1 (the engine and its registration with Access) and 2 (the
-access index and list scopes) built, phases 3-4 to come. Sharing is grants and blocks on objects that flow down a tree, as in Google Drive,
+access index and list scopes) built; phases 3 (business roles) and 4 (the interface), system
+accounts, deleting and moving, comments and filed items built 2026-10-13 (compiled, tests written
+and not run). Search filtering (F5) is still open. Sharing is grants and blocks on objects that flow down a tree, as in Google Drive,
 plus ordered rules. It was designed for files ([media.md](media.md)) and is now its own module
 so any module's items can be shared.
 
@@ -55,7 +57,10 @@ so any module's items can be shared.
   (ordered conditions → entries);
 - `IShareableKind` and `ShareableObject`: what a module registers;
 - `ISharingService`: grant, block, remove, set rules, list entries, "shared with me", explain;
-- `ISharingResolver`: the effective level for a caller on an object.
+- `ISharingResolver`: the effective level for a caller on an object;
+- `IShareChangeChecks` (deleting and moving, 69-70), `IShareComments` and `IShareCommentStore`
+  (71-72), `IShareableChildSource` (what another module files in a folder, 74),
+  `IShareIndicators` (98), `ISharePrincipalDirectory` and `IShareableLinks` (the interface).
 
 `Crest.Sharing`:
 - the share documents (one per object with entries or rules) and their index;
@@ -177,8 +182,8 @@ so any module's items can be shared.
      - Type entries in recipes: the `Sharing` recipe step (any kind, the tenant included)
        replaces an object's entries and recalculates what they reach. Editing them in type
        settings is the Share panel (phase 4).
-     - Requirement 74 (an item in a folder follows the folder's chain) waits until content
-       items and media placements are linked.
+     - Requirement 74 (an item in a folder follows the folder's chain): built 2026-10-13
+       (§ 6).
    - **Rebuild**: kinds may list their roots (`IShareableRoots`); enabling Sharing queues a
      rebuild (`IShareAccessIndex.QueueRebuildAsync`, also callable on demand), which the job
      turns into one queued subtree per root and runs a few per pass.
@@ -198,8 +203,8 @@ so any module's items can be shared.
    - Tests added: `test/Crest.Tests/Sharing/ContentShareableKindTests.cs` and
      `SharingPhaseTwoExtensionsTests.cs`, plus level and organization-role cases in
      `ShareListScopeTests.cs`.
-   - **Left for later**: the Share panel's pending indicator and type-settings editor (phase 4);
-     requirement 74. (Media registered its placements' scope target, tree, roots and admin
+   - **Left for later**: the type-settings editor's link to the Share panel. (The pending
+     indicator and requirement 74 landed with phase 4.) (Media registered its placements' scope target, tree, roots and admin
      assignment on 2026-10-11.)
    - **Media's edits** (2026-10-11, for media requirement 19):
      - `IShareableAdminAssignment.AppliesTo(root)` (a default method, every root): the
@@ -208,9 +213,65 @@ so any module's items can be shared.
        refuses an Admin grant to a principal the kind rules out, whoever asks.
        `SharingResolver` counts such a grant, stored or contributed, as Manager. Media uses it
        so that only a personal drive's owner holds Admin there.
-3. **Principals**: business roles and the role registry (§ 5, requirements 39-48).
-4. **Interface**: the Share panel, Rules screens, access indicators, pickers (§ 8); and Media's
-   file objects register when they exist ([media.md](media.md) § 3).
+3. **Principals** (built 2026-10-13, compiled, tests written and not run): business roles and the
+   role registry (§ 5, requirements 39-48).
+   - **Role registry** (`Crest.Roles.Abstractions/DerivedRoles.cs`, `Crest.Roles/Services/RoleRegistry.cs`):
+     `RoleKind` (Assigned, Derived), `IDerivedRoleProvider` (its `Roles`, and
+     `GetRolesAsync(DerivedRoleContext)`: the user and the organization they act for, or every
+     organization for the user editor), `IRoleRegistry` (every role with its kind; the derived
+     roles a user holds; `EnsureDerivedRolesAsync`). A role is Derived when an enabled provider
+     declares it; the kind is not stored. Each derived role is stored as a real role with no
+     permissions when a feature is enabled (`DerivedRolesFeatureEvents`), so it has a stable
+     identity, shows in pickers and permission screens and takes the permissions the tenant
+     gives it there (40). A provider grants only the roles it declares.
+   - **Assignment refused** (45): `IRoleService.IsDerivedRoleAsync`;
+     `GetAssignableRolesAsync` leaves derived roles out (the user editor, role filters,
+     `ManageUsersInRole_*`); `UserStore.AddToRoleAsync` (every path through the user manager:
+     the user editor, the users API, workflows) and the `Users` recipe step throw
+     `DerivedRoleAssignmentException`; a member binding naming one is refused.
+   - **Per request** (41-42): the caller factory adds the derived roles of the organization the
+     caller acts for, after the contributors (on the member side they replace the roles with the
+     binding's), with their roles' permissions. Grants for another organization never count.
+   - **Invalidation** (43): a relationship change bumps the tenant's permission version, so every
+     cached caller is rebuilt on its next request. Parties bumps it when a party-role item or a
+     person changes (`PartyRoleChangeHandler`); Members already bumps it on binding changes.
+   - **Party relationships** (48, `Crest.Parties/Server/BusinessRoles`): every party role a
+     module composes (a party type other than Person and Organization: Customer, Vendor, Lead,
+     ...) is a derived role named after its content type. A user holds it when a published role
+     item's `Party` points at their person (always) or at the organization they act for (only
+     then). The party-role index is the content picker field index over `Party`. Organizations
+     are also offered to sharing pickers (`PartyOrganizationDirectory`).
+   - Interpretation open to review: **Member** stays the member role template every binding
+     holds by default ([parties.md](parties.md) › Members), held only while acting for the
+     organization, rather than a derived role: making it derived would refuse it on bindings.
+     A stored role of the same name as a party role becomes derived; users who hold it as
+     stored keep it until it is removed.
+4. **Interface** (built 2026-10-13, compiled, not run) (§ 8):
+   - API `api/sharing` (`Crest.Sharing/Controllers/SharingController.cs`), objects by `kind` and
+     `id` in the query (the tenant: `kind=tenant`): `panel` (entries, every decision on the
+     chain with the winner per principal, the public link through the kind's optional
+     `IShareableLinks`, whether lists are still catching up: `ShareAccessIndexer.VerifyAsync`
+     finds a difference, requirement 80), `entries` and `entries/remove`, `rules` (the levels
+     from the tenant down to the object, only its own editable, 67), `indicators`, `principals`
+     (`ISharePrincipalDirectory`: Anyone, the tenant, roles of both kinds with derived ones
+     labelled, users for staff callers, organizations from Parties; never system accounts),
+     `roles`, `roles/users/{id}` (a user's derived roles with their relationships, for those who
+     may list users or the user themselves), and `comments`.
+   - Components (`Crest.Components/Components/Sharing`): `CrestSharePanel` (96),
+     `CrestShareRules` (97: "conditions → effect" in run order, reorder, filter, edit),
+     `CrestAccessIndicator` (98), `CrestPrincipalPicker` (46), `CrestDerivedRoles` (47).
+   - Where they show: the drive browser has a Share action per item and for the open folder
+     (Share panel, and a Rules tab for folders and drives), an indicator per item, and an access
+     filter applied in the query (`api/files/{id}/children?access=`, through
+     `IShareScopes.IndicatorRuleFor`); the admin page `/Sharing` is the tenant's entries and
+     rules (menu Access Control › Sharing, `ManageTenantSharing`) and `/Sharing/{kind}/{id}` any
+     object's (a content type's: `/Sharing/contenttype/Article`); the user editor lists derived
+     roles read-only beneath the assigned ones, each linking to its relationship.
+   - Indicators: `ShareAccessDocument.IsShared` (a grant to anyone but the owner, other than
+     Anyone) beside `IsPublic`, on `ShareAccessObjectIndex` (migration 4, which queues a
+     rebuild); `IShareIndicators` answers only for objects the caller may view.
+   - Left: the type settings editor does not link to the type's Share panel yet; members get
+     no user search in the picker; comments have an API and no screen.
 
 ## Terms
 
@@ -282,7 +343,15 @@ The content sharing feature and its settings; system accounts (tenant and organi
      or rules, and its content items keep Orchard's standard permissions. Nothing about it
      crosses tenants.
 
-- [ ] **Add system accounts.**
+- [x] **Add system accounts.** Built 2026-10-13. `Crest.Access.SystemAccounts`: the tenant
+  account is `system:tenant`, an organization's `system:organization:{id}`. They are ids, not
+  user records, so they cannot sign in or be impersonated, appear in no user list or picker and
+  are never counted (34-35, by construction); no user may take a `system:` id (the user store
+  and the `Users` recipe step refuse it). The system actors act as them
+  (`CallerContext.SystemAccountId`, `ActorId`), and the access audit attributes their actions to
+  the account (36). `ShareableObject.OwnerAccountId` names a system owner (Media: shared drives
+  are the tenant's, organization drives the organization's); the organization system actor is
+  its owner. Sharing refuses a system account as a principal.
   33. Each tenant has one tenant account, created with the tenant, and each organization has one
       organization account, created with the organization. They own what their tenant or
       organization owns, such as shared and organization drives.
@@ -295,7 +364,7 @@ The content sharing feature and its settings; system accounts (tenant and organi
       account in the audit trail, distinct from people and machine actors
       ([machine-actors.md](machine-actors.md)).
 
-- [ ] **Add the role registry with role kind.**
+- [x] **Add the role registry with role kind.** Built 2026-10-13 (Phases › 3).
   44. Each role has a **kind**, kept in Crest's role registry: **Assigned** (stored on users, the
       ordinary Orchard kind) or **Derived** (computed, with the provider that computes it).
       Orchard's role model has no field for this, and its built-in "system role" mechanism covers
@@ -378,14 +447,21 @@ Entries and rules, the resolution engine and its explanation, the access index a
   68. An object a person cannot view does not exist for them: it is in no listing, search, picker,
       count, explanation or error message.
 
-- [ ] **Check deleting and moving.**
+- [x] **Check deleting and moving.** Built 2026-10-13: `IShareChangeChecks` for any kind
+  (Manager over the object and everything below it, a kind's children and what is filed in it,
+  each resolved live; moving also Editor on the destination; the refusal names and counts
+  nothing). Media's file service makes the same checks over its placements; it does not yet
+  ask about content items filed in a folder it deletes or moves (such an item falls back to its
+  content type's chain).
   69. Deleting needs Manager. Deleting a folder needs Manager on it and everything below it, including objects
       the person cannot see. If any fail, nothing is deleted, and the refusal says the folder
       contains items they cannot delete, without naming or counting them.
   70. Moving changes the access of everything moved, so it needs Manager over everything moved,
       plus Editor on the destination, with the same refusal.
 
-- [ ] **Add comments.**
+- [x] **Add comments.** Built 2026-10-13: `IShareComments` (a Viewer reads, a Commenter adds,
+  the author or a Manager removes, audited); stored in the object's share document unless a
+  registered `IShareCommentStore` (a file type's own format) or the kind itself handles it.
   71. A Commenter can add comments and do nothing else.
   72. Comments are stored in the object's metadata by default. A file type can keep them where
       that format keeps comments instead, through a per-type comment store.
@@ -428,7 +504,7 @@ Entries and rules, the resolution engine and its explanation, the access index a
 
 The provider interface, per-request derived role claims, session invalidation on relationship change, the party-role index and provider.
 
-- [ ] **Compute business roles.**
+- [x] **Compute business roles.** Built 2026-10-13 (Phases › 3).
   39. Business relationships are roles: a user linked to a customer, vendor or lead party, or a
       member of an organization, holds the matching role (Customer, Vendor, Lead, Member).
   40. Each business role is a real Orchard role: it has a stable identity, appears in sharing
@@ -442,7 +518,7 @@ The provider interface, per-request derived role claims, session invalidation on
   43. Changing a relationship invalidates the affected user's sessions, so their principals are
       recomputed on their next request and a removed role stops counting immediately.
 
-- [ ] **Add derived role providers.**
+- [x] **Add derived role providers.** Built 2026-10-13 (Phases › 3).
   48. Derived roles are computed by providers behind a Crest interface: given a user and the
       organization they are acting for, a provider answers which business roles they hold.
       Party relationships are one provider, so the file system never needs to know what a party
@@ -452,7 +528,12 @@ The provider interface, per-request derived role claims, session invalidation on
 
 Content types and items on the same model; the content items API's listing, creation and view checks.
 
-- [x] **Put content items on the same model.** Built 2026-10-11 (Phases › 2), 74 still to do.
+- [x] **Put content items on the same model.** Built 2026-10-11 (Phases › 2); 74 built
+  2026-10-13: `ContentShareFolderPart` on the item names its folder (any kind),
+  `ContentShareFolderIndex` lists what a folder holds (its own migration), the content kind
+  takes the folder as parent while it exists (else the type) and keeps `contenttype` for rules,
+  `ContentFolderChildSource` puts filed items below the folder, and
+  `IContentShareFolders.MoveAsync` files or unfiles an item as a move (70).
   73. Content items use the same principals, levels, entries and rules. Their chain is tenant →
       content type → item: a content type carries entries (set in its settings and in recipes),
       and an item adds its own.
@@ -461,19 +542,19 @@ Content types and items on the same model; the content items API's listing, crea
 
 ## 8. Interface (sharing)
 
-- [ ] **Build the Share panel.**
+- [x] **Build the Share panel.** Built 2026-10-13 (Phases › 4).
   96. Every object has a Share panel for its drive's Drive Admins: who has access and why, grants and blocks
       to add, change or remove, and the public link when it is public.
 
-- [ ] **Build the Rules screens.**
+- [x] **Build the Rules screens.** Built 2026-10-13 (Phases › 4).
   97. Each folder, drive and the tenant has a Rules screen, for the drive's Drive Admins or, at the
       tenant, for holders of the tenant permission (85): rules in run order as
       "conditions → effect", reorderable, filterable and editable, scoped as in 67.
 
-- [ ] **Show access indicators.**
+- [x] **Show access indicators.** Built 2026-10-13 (Phases › 4).
   98. Lists show an access indicator (private, shared, public) and filter by it.
 
-- [ ] **Show derived roles in pickers and the user editor.**
+- [x] **Show derived roles in pickers and the user editor.** Built 2026-10-13 (Phases › 4).
   46. Sharing pickers offer both kinds, with derived roles labelled.
   47. The user editor shows a user's derived roles read-only beneath their assigned ones, each
       with the relationship that grants it ("Customer, member of Acme Corp"), linking to that
@@ -547,6 +628,19 @@ Content types and items on the same model; the content items API's listing, crea
   change that may remove access is applied before returning, in batches; one that only adds
   access is applied at once up to 200 objects and otherwise by the job. Hard links stay
   file-only (3) until subtree sizes are measured.
+  **Multi-path inheritance (built 2026-10-13, compiled, tests not run).** Folders are
+  hard-linked since ruling F4, so a child of a hard-linked folder is reached through every
+  placement of the folder. A kind names the extra parents in `ShareableObject.OtherParents`
+  (Media: the folder's other hard placements, and an attached-field folder's content item).
+  `SharingResolver.ChainsAsync` walks every path (at most 16, the primary path first);
+  `ResolveAsync` resolves each and gives the most any path not through an inactive drive gives.
+  The access index keeps one document per path (`PathKey`, empty for the primary path;
+  `AccessKey` = object id, or `{id}~{path key}`), and the list scope runs the tier logic per
+  path over `ShareAccessObjectIndex.AccessKey` and admits an object when any path admits the
+  caller. Migration 3 adds the columns and fills the existing rows' keys. A change on a path
+  other than the primary one reaches the index through the kind's children (Media lists a
+  folder's children through every placement); a change on a content item does not recalculate
+  the files attached to it until their next recalculation.
 - [ ] **Search filtering (F5).** Ruled: search engines are connections, and an engine
   indexing Crest data is set up with the permission system, so access is written into what
   is indexed and every search is filtered; each principal or rule change reindexes the

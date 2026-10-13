@@ -1,0 +1,115 @@
+@page "/Deployment/RemoteClient/Index"
+@using Crest.AdminTheme.Api
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* Clients allowed to send deployment packages to this tenant, each with its API key. The
+   key is stored protected and never read back; an edit keeps it unless a new one is typed. *@
+
+<CrestStack Gap="1rem" data-testid="remote-clients-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="@T["Remote Clients"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Other instances allowed to send deployment packages to this tenant."]" />
+        </CrestStack>
+        <CrestButton Text="@T["Add remote client"]" Icon="add" Click="New" Disabled="@IsBusy" />
+    </CrestStack>
+
+    @if (Error is not null)
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</CrestAlert>
+    }
+
+    @if (Editing)
+    {
+        <CrestCard data-testid="remote-client-editor">
+            <CrestStack Gap="1rem">
+                <CrestText TextStyle="TextStyle.H5" Text="@(EditingId is null ? T["New remote client"] : T["Edit {0}", DraftClientName])" />
+                <CrestRow Gap="1rem">
+                    <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Client name"]" Style="width: 100%;"><CrestTextBox @bind-Value="DraftClientName" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                    <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@(EditingId is null ? T["API key"] : T["API key (leave empty to keep the stored key)"])" Style="width: 100%;"><CrestPassword @bind-Value="DraftApiKey" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                </CrestRow>
+                <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <CrestButton Text="@T["Generate key"]" Icon="key" ButtonStyle="ButtonStyle.Light" Click="GenerateKey" Disabled="@IsBusy" />
+                    <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Editing = false)" Disabled="@IsBusy" />
+                    <CrestButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" />
+                </CrestStack>
+                @if (GeneratedKey is not null)
+                {
+                    <CrestAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["Copy this key now; it cannot be shown again after saving: {0}", GeneratedKey]</CrestAlert>
+                }
+            </CrestStack>
+        </CrestCard>
+    }
+
+    <CrestCard>
+        @if (Items is null)
+        {
+            <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (Items.Length == 0)
+        {
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["No remote clients yet."]" />
+        }
+        else
+        {
+            <CrestDataGrid Data="@Items" TItem="CrestRemoteClient" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <CrestDataGridColumn TItem="CrestRemoteClient" Property="ClientName" Title="@T["Client name"]" />
+                    <CrestDataGridColumn TItem="CrestRemoteClient" Title="@T["Actions"]" Width="10rem"><Template Context="item"><CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem"><CrestButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(item))" title="@T["Edit"]" /><CrestButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteAsync(item))" title="@T["Delete"]" /></CrestStack></Template></CrestDataGridColumn>
+                </Columns>
+            </CrestDataGrid>
+        }
+    </CrestCard>
+</CrestStack>
+
+@code {
+    private CrestRemoteClient[]? Items { get; set; }
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+    private bool Editing { get; set; }
+    private string? EditingId { get; set; }
+    private string DraftClientName { get; set; } = string.Empty;
+    private string? DraftApiKey { get; set; }
+    private string? GeneratedKey { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync() => Items = await Api.Crest.Rest.Deployment.ListRemoteClientsAsync();
+
+    private void New() { Editing = true; EditingId = null; DraftClientName = string.Empty; DraftApiKey = null; GeneratedKey = null; Error = null; }
+
+    private void Edit(CrestRemoteClient item) { Editing = true; EditingId = item.Id; DraftClientName = item.ClientName; DraftApiKey = null; GeneratedKey = null; Error = null; }
+
+    private void GenerateKey() => DraftApiKey = GeneratedKey = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
+
+    private async Task SaveAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var result = await Api.Crest.Rest.Deployment.SaveRemoteClientAsync(EditingId, new RemoteClientWrite(DraftClientName, DraftApiKey));
+            if (!result.Succeeded) { Error = result.Message ?? T["The remote client could not be saved."]; return; }
+            Notifications.Notify(NotificationSeverity.Success, T["Remote Clients"], T["{0} was saved.", DraftClientName]);
+            Editing = false;
+            GeneratedKey = null;
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task DeleteAsync(CrestRemoteClient item)
+    {
+        IsBusy = true;
+        try
+        {
+            if (await Api.Crest.Rest.Deployment.DeleteRemoteClientAsync(item.Id)) Notifications.Notify(NotificationSeverity.Success, T["Remote Clients"], T["{0} was deleted.", item.ClientName]);
+            else Error = T["{0} could not be deleted.", item.ClientName];
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+}

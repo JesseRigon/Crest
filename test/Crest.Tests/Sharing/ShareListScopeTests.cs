@@ -265,7 +265,8 @@ public class ShareListScopeTests : IAsyncLifetime
         await AssertConsistentAsync(world, "at Manager", AccessLevel.Manager);
 
         Assert.Contains("spec.psd", await ListedByExpressionAsync(Scope(world, Member("al", "acme", "MemberAdmin"), AccessLevel.Editor)));
-        Assert.DoesNotContain("spec.psd", await ListedByExpressionAsync(Scope(world, Member("bo", "beta", "MemberAdmin"))));
+        // Another organization's member keeps only Spec sheets' tenant Viewer (requirement 37).
+        Assert.DoesNotContain("spec.psd", await ListedByExpressionAsync(Scope(world, Member("bo", "beta", "MemberAdmin"), AccessLevel.Editor)));
     }
 
     [Fact]
@@ -301,6 +302,9 @@ public class ShareListScopeTests : IAsyncLifetime
         var ends = now.AddHours(1);
         world.Share("product-info", ShareEntry.Grant(SharePrincipal.User("eve"), AccessLevel.Viewer));
         world.Share("images", ShareEntry.Block(SharePrincipal.User("eve"), ends: ends));
+        // Tia's own window decides Spec sheets for her: without the example's tenant grant there
+        // (every signed-in user would see it through that, requirement 37).
+        world.Store.Documents[Ref("spec-sheets")].Entries.RemoveAll(entry => entry.Principal.Kind == SharePrincipalKind.Tenant);
         world.Share("spec-sheets", ShareEntry.Grant(SharePrincipal.User("tia"), AccessLevel.Viewer, starts: now.AddMinutes(30), ends: ends));
         world.Share("chair-original.jpg", ShareEntry.Block(SharePrincipal.Role("Staff"), starts: now.AddMinutes(10)));
         await IndexAsync(world);

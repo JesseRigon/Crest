@@ -26,6 +26,7 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddContentPart<TemplatePart>();
+        services.AddContentPart<DesignedPagePart>();
         services.AddDataMigration<Migrations>();
         services.AddScoped<Crest.ContentManagement.Handlers.IContentHandler, TemplatePublishHandler>();
 
@@ -39,11 +40,18 @@ public sealed class Startup : StartupBase
         services.AddScoped<IDisplayTemplateBinding, TemplateDisplayBinding>();
         services.AddScoped<ComponentOverrides>();
         services.AddScoped<IDisplayTreeOverrides>(sp => sp.GetRequiredService<ComponentOverrides>());
+        services.AddScoped<IDisplayTreeVersionPart, TemplatesTreeVersion>();
+
+        // Designed pages (decision 9): their trees bind as shipped templates, their sets are permissions (§ 10).
+        services.AddScoped<DesignedPageStore>();
+        services.AddScoped<IShippedTemplateProvider, DesignedPageTemplates>();
+        services.AddPermissionProvider<DesignedPagePermissions>();
 
         services.AddPermissionProvider<Permissions>();
         services.AddNavigationProvider<AdminMenu>();
         services.AddPermissionProvider<AdminTemplatesPermissions>();
         services.AddRecipeExecutionStep<TemplateStep>();
+        services.AddRecipeExecutionStep<DesignedPageStep>();
         services.AddDeployment<AllTemplatesDeploymentSource, AllTemplatesDeploymentStep, AllTemplatesDeploymentStepDriver>();
     }
 }

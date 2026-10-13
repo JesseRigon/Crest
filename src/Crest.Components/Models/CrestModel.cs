@@ -5,7 +5,7 @@ namespace Crest.Components.Models;
 public sealed record CrestContentItemPage(CrestContentItem[] Items, int Total, int Page, int PageSize);
 
 /// <summary>
-/// The content-item wrapper the model-driven components (the editors, Parties, Fruitful) consume.
+/// The content-item wrapper the model-driven components (the editors, Parties, host modules) consume.
 /// Not a display tree: the tree's node is <c>Crest.DisplayManagement.Components.DisplayNode</c>
 /// (docs/blazor-display.md, ruling 2026-10-12), which replaced the shape metadata, zones, sources
 /// and diagnostics this record used to carry.

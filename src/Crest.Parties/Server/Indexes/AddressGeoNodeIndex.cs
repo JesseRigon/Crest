@@ -16,6 +16,8 @@ public sealed class AddressGeoNodeIndex : MapIndex
     public int Level { get; set; }
     /// <summary>The address-kind option id (billing, shipping...), so a consumer can pick the right address per node.</summary>
     public string? KindId { get; set; }
+    /// <summary>Consumers such as tax read published addresses; editors read the latest.</summary>
+    public bool Published { get; set; }
     public bool Latest { get; set; }
 }
 
@@ -57,6 +59,7 @@ public sealed class AddressGeoNodeIndexProvider : IndexProvider<ContentItem>
                             NodeId = entry.NodeId,
                             Level = entry.Level,
                             KindId = kindId,
+                            Published = contentItem.Published,
                             Latest = contentItem.Latest,
                         });
                     }
@@ -70,6 +73,7 @@ public sealed class AddressGeoNodeIndexProvider : IndexProvider<ContentItem>
                             NodeId = boundary,
                             Level = 0,
                             KindId = kindId,
+                            Published = contentItem.Published,
                             Latest = contentItem.Latest,
                         });
                     }

@@ -174,7 +174,7 @@ public class ResolveParty : Activity
             return;
         }
 
-        var type = context.GetRequiredService<PartyTypeCatalog>().Types.FirstOrDefault(t => string.Equals(t.ContentType, item.ContentType, StringComparison.Ordinal));
+        var type = context.GetRequiredService<PartyTypeCatalog>().Kinds.FirstOrDefault(t => string.Equals(t.ContentType, item.ContentType, StringComparison.Ordinal));
         var baseId = item.Get<ContentPart>(item.ContentType)?.Get<ContentPickerField>("Party")?.ContentItemIds?.FirstOrDefault();
         var baseParty = baseId is null ? null : await contentManager.GetAsync(baseId, VersionOptions.Latest);
         if (type is null || baseParty is null)

@@ -6,7 +6,7 @@ namespace Crest.Components.Interaction;
 
 /// <summary>Renders its children and nothing else (<see cref="DisplayNode.FragmentComponent"/>):
 /// a template with several top-level nodes, a zone's contents moved as one.</summary>
-[CrestBlazorComponent(DisplayNode.FragmentComponent, DisplayName = "Fragment", Category = "Layout", Icon = "data_array")]
+[BlazorComponent(DisplayNode.FragmentComponent, DisplayName = "Fragment", Category = "Layout", Icon = "data_array")]
 public sealed class Fragment : ComponentBase
 {
     [Parameter]
@@ -17,7 +17,7 @@ public sealed class Fragment : ComponentBase
 }
 
 /// <summary>A block element around its children, styled by tokens: the base set's layout container.</summary>
-[CrestBlazorComponent("Container", DisplayName = "Container", Category = "Layout", Icon = "check_box_outline_blank")]
+[BlazorComponent("Container", DisplayName = "Container", Category = "Layout", Icon = "check_box_outline_blank")]
 public sealed class Container : ComponentBase
 {
     /// <summary>The element: a landmark (<c>header</c>, <c>nav</c>, <c>main</c>, <c>aside</c>, <c>footer</c>, <c>section</c>) or <c>div</c>.</summary>

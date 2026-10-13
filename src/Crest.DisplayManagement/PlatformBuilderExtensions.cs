@@ -95,6 +95,8 @@ public static class PlatformBuilderExtensions
                 // is registered with the component registry), and the HTML side of component bindings.
                 services.AddScoped<IDisplayTreeBuilder, DisplayTreeBuilder>();
                 services.AddScoped<IDisplayTreeFilter, DisplayTreeFilter>();
+                services.AddSingleton<DisplayTreeVersions>();
+                services.AddSingleton<DisplayTreeCache>();
                 services.AddScoped<IDisplayHtmlRenderer, DisplayHtmlRenderer>();
                 services.AddScoped<ComponentShapeRenderer>();
                 services.AddOptions<DisplayTreeOptions>();

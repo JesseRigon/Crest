@@ -3,7 +3,7 @@
 @using Crest.Components.Primitives
 @using Crest.Components.Primitives
 @inject AdminShellState AdminShellState
-@inject CrestRoutingOptions Routing
+@inject RoutingOptions Routing
 @inject NavigationManager Navigation
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
@@ -12,7 +12,7 @@
    prerender the site root, not this shell's <base href>) would evaluate the wrong
    path and prerender a spurious "Access denied" flash on perfectly authorized
    pages. But every prerendered admin page request has ALREADY been authorized
-   server-side - BlazorAdminThemeMiddleware runs CanAccessAsync before the App
+   server-side - ShellSelectionMiddleware runs CanAccessAsync before the App
    document renders and 403s/redirects unauthorized requests, so a request that
    reaches this component during prerender is authorized by construction. Render
    ChildContent (that's the whole value of SSR - real first-paint markup) and only

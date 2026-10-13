@@ -1,4 +1,6 @@
 using Crest.Services;
+using Crest.ContentFields.Relationships;
+using Crest.Parties.Constants;
 using Crest.Workflows.Extensions;
 using Crest.Parties.Indexes;
 using Crest.Parties.Migrations;
@@ -23,7 +25,7 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<PartiesMigrations>();
         services.AddNavigationProvider<Navigation.AdminMenu>();
         services.AddScoped<Crest.ContentGroups.IContentGroupProvider, PartiesContentGroupProvider>();
-        services.AddScoped<ICrestRoutePermissionProvider, PartiesRoutePermissionProvider>();
+        services.AddScoped<Crest.Access.IRoutePermissionProvider, PartiesRoutePermissionProvider>();
         services.AddScoped<PartyTypeCatalog>();
         services.AddScoped<IPartyTypeProvider, BasePartyTypeProvider>();
         // Registered with the workflow registry: role created/removed, raised from the content handler.
@@ -33,6 +35,14 @@ public sealed class Startup : StartupBase
         services.ConfigureCrestWorkflows(workflows => workflows.AddActivitiesFrom<Startup>());
 
         services.AddScoped<PartyOptionKeys>();
+        services.AddScoped<PartyBagElementService>();
+        services.AddScoped<IPartyNamesService, PartyNamesService>();
+        services.AddScoped<ITenantOrganizationService, TenantOrganizationService>();
+        services.AddScoped<IPartyAssociationService, PartyAssociationService>();
+        // The parent picker's cycle rule, on every save path (docs/content-items.md ›
+        // Picker relationship handlers).
+        services.AddContentPickerRelationshipHandler<ParentOrganizationRelationshipHandler>(
+            PartiesConstants.ContentTypes.Organization, PartiesConstants.OrganizationFields.ParentOrganization);
         services.AddScoped<PartyContactsService>();
         services.AddScoped<IPartyContactsService>(provider => provider.GetRequiredService<PartyContactsService>());
         services.AddScoped<IPartyUserLinkService, PartyUserLinkService>();
@@ -42,6 +52,14 @@ public sealed class Startup : StartupBase
         services.AddIndexProvider<PartyPositionIndexProvider>();
         services.AddIndexProvider<AddressGeoNodeIndexProvider>();
         services.AddIndexProvider<LocationIndexProvider>();
+        services.AddIndexProvider<ContactPointIndexProvider>();
+        services.AddIndexProvider<OrganizationNameIndexProvider>();
+        services.AddIndexProvider<AssociationIndexProvider>();
         services.AddScoped<ILocationService, LocationService>();
+
+        // Parties' reads go through the scope: a Location's or a position's row is readable
+        // when its content item is (docs/access.md, Domains onto the extension system).
+        services.AddScoped<Crest.Access.IScopeProvider>(provider => new PartyScopeProvider(nameof(LocationIndex), provider));
+        services.AddScoped<Crest.Access.IScopeProvider>(provider => new PartyScopeProvider(nameof(PartyPositionIndex), provider));
     }
 }

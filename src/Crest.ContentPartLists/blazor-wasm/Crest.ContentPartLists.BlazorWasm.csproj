@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- The *.BlazorWasm suffix is a routing convention, not decoration: the server
          loads and routes assemblies by it (Crest.Server Startup's client assembly
-         loading) and Admin.Client's generated CrestModuleAssemblyRegistry loads the
+         loading) and Admin.Client's generated ModuleAssemblyRegistry loads the
          same set browser-side. -->
     <AssemblyName>Crest.ContentPartLists.BlazorWasm</AssemblyName>
     <RootNamespace>Crest.ContentPartLists.BlazorWasm</RootNamespace>

@@ -211,3 +211,22 @@
 .crest-menu__list--nested { flex-direction: column; padding-inline-start: var(--crest-space-3, 0.75rem); }
 .crest-menu__link { color: inherit; text-decoration: none; }
 .crest-menu__link:hover, .crest-menu__link:focus-visible { text-decoration: underline; }
+
+/* Content and form primitives (docs/widgets.md): tokens and logical properties only. */
+.crest-rich-text > :first-child { margin-block-start: 0; }
+.crest-rich-text > :last-child { margin-block-end: 0; }
+.crest-figure { margin: 0; display: grid; gap: var(--crest-space-2, 0.5rem); }
+.crest-figure img { max-inline-size: 100%; block-size: auto; }
+.crest-figure figcaption { color: var(--crest-text-muted, var(--rz-text-secondary-color)); font-size: var(--crest-font-size-sm, 0.875rem); }
+.crest-form { display: grid; gap: var(--crest-space-4, 1rem); }
+.crest-form-field { display: grid; gap: var(--crest-space-1, 0.25rem); }
+.crest-form-field--checkbox { grid-template-columns: auto 1fr; align-items: center; }
+.crest-form-field--checkbox > label { order: 2; }
+.crest-form-field__control { font: inherit; padding-block: var(--crest-space-2, 0.5rem); padding-inline: var(--crest-space-3, 0.75rem); border: 1px solid var(--crest-border, var(--rz-base-300)); border-radius: var(--crest-radius-md, 0.25rem); background: var(--crest-surface, var(--rz-base-background-color)); color: inherit; }
+.crest-form-field--invalid .crest-form-field__control { border-color: var(--crest-danger, var(--rz-danger)); }
+.crest-form-field__options { display: flex; flex-wrap: wrap; gap: var(--crest-space-2, 0.5rem) var(--crest-space-4, 1rem); }
+.crest-form-field__required, .crest-form-field__error, .crest-validation-summary { color: var(--crest-danger, var(--rz-danger)); }
+.crest-form-field__error { font-size: var(--crest-font-size-sm, 0.875rem); }
+.crest-validation-summary { margin: 0; padding-inline-start: var(--crest-space-4, 1rem); }
+.crest-search-box { display: flex; gap: var(--crest-space-2, 0.5rem); }
+.crest-search-box input { flex: 1; font: inherit; padding-block: var(--crest-space-2, 0.5rem); padding-inline: var(--crest-space-3, 0.75rem); border: 1px solid var(--crest-border, var(--rz-base-300)); border-radius: var(--crest-radius-md, 0.25rem); }

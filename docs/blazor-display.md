@@ -82,8 +82,8 @@ this design).
 | `IResourceManager.Render*(TextWriter)`, the resource tag helpers | A head/foot renderer from the resource registry data, emitted as `HeadContent` / markup nodes in the tree. |
 | `Layout.liquid`, `Content-Page.liquid`, `Widget-*.liquid`, `Menu*.liquid` in `Crest.SiteTheme` | Layout, content and widget components (and templates for the tenant-editable ones). |
 | `Crest.AdminTheme/wasm/DisplayManagement` (`DisplayManager`, `Shape`, `ShapeView`) and the duplicate `Crest.Components/Shapes/Shape.cs` | Retired as a display system. What remains of `DisplayManager` is shell state (user, manifest, menus, culture) and moves out of the "display management" name. |
-| `[CrestBlazorComponent(name)]`, `ICrestBlazorComponentRegistry` (global singleton, name → Type), `IWorkbenchComponentRegistry` (planned), the route table's component scan | **One component registry**, below. |
-| `CrestBlazorComponentShapeBindingResolver` (renders a component to static HTML with `HtmlRenderer` so Liquid can embed it) | Gone with Liquid views; `HtmlRenderer` stays for headless HTML (email, static pages). |
+| `[BlazorComponent(name)]`, `ICrestBlazorComponentRegistry` (global singleton, name → Type), `IWorkbenchComponentRegistry` (planned), the route table's component scan | **One component registry**, below. |
+| `BlazorComponentShapeBindingResolver` (renders a component to static HTML with `HtmlRenderer` so Liquid can embed it) | Gone with Liquid views; `HtmlRenderer` stays for headless HTML (email, static pages). |
 
 ## The pieces
 
@@ -108,7 +108,7 @@ ComponentDescriptor
   Category, DisplayName, Icon   for the designer's palette
 ```
 
-- **Discovery:** an attribute on the component (the existing `[CrestBlazorComponent]` grows into
+- **Discovery:** an attribute on the component (the existing `[BlazorComponent]` grows into
   it; per X3 the *component* prefixes stay, the *service* names are neutral) and a **source
   generator** that emits the descriptors and a `name → Type` map at build time. Reflection over
   `[Parameter]` properties is the dev-time fallback; in WASM the generated map is what keeps
@@ -342,7 +342,9 @@ overrides:
   type with `AutoroutePart`) built by `IContentItemDisplayManager` into the Content zone; widgets
   from Layers into their zones; menus as `Menu` shapes. All of that is already shapes.
 - **Routing a content page in Blazor:** one content route component in the site shell
-  (`/{**path}` after the declared `@page` routes) resolves the path through Autoroute, builds the
+  (`ContentPage`, `@page "/"` only; the shell middleware rewrites every site path no module
+  page claims to it and hands it the real path, [shells-and-themes.md › Shell
+  dispatch](shells-and-themes.md#shell-dispatch)) resolves the path through Autoroute, builds the
   layout and the item, and renders the tree. Today that is `Content-Page.liquid` through MVC.
   Module `@page` components keep working beside it and may build a tree in code
   (`IDisplayManager<T>`) or render directly.
@@ -380,7 +382,7 @@ Three kinds of page, one route table:
 | Kind | Route comes from | Tree comes from |
 | --- | --- | --- |
 | **Module page** (`@page` component in a `blazor-wasm/`, `member-wasm/` or `site-wasm/` library) | the `[Route]` attribute, scanned per bucket into the route table | code: the component renders itself, or builds a tree with `IDisplayManager<T>` and hands it to the renderer |
-| **Content page** (a content item with `AutoroutePart`, or a type a module routes) | Autoroute (the content route component, `/{**path}` last in the site bucket) | the item's template, else the driver/placement generator |
+| **Content page** (a content item with `AutoroutePart`, or a type a module routes) | Autoroute (the content route component, "/" in the site bucket; the shell middleware rewrites every unclaimed site path to it) | the item's template, else the driver/placement generator |
 | **Designed page** (a tenant-authored tree with its own URL: a landing page, a dashboard, a per-type admin page) | data: a `Page` record with route pattern + bucket, registered in the same route table as module pages | its stored tree |
 
 The third kind is what blazordesigner.md's "page/app IDE" and content-items.md's "per-type
@@ -461,6 +463,15 @@ may embed its tree inline, but the route, the bucket and the authorization are t
      its own: without it there is nothing to preview before a change reaches every page that
      inherits it. Editing produces drafts; publish is the separate act, on either object.
   Workflows care about schema and data only.
+  **What landed (2026-10-13).** Per designed page, `DesignedPagePermissions` generates the sets
+  as permissions a role is granted: `DesignPage_{name}` (edit the draft, preview), 
+  `ViewPageSchema_{name}` (list the page and read `api/crest/components?page=`, implied by
+  Design), `ViewPage_{name}` (Data: view it at run time, unless the page allows anonymous
+  callers) and `PublishPage_{name}`; `ManageDesignedPages` creates pages and implies every page's
+  sets (the shell-level assignment, administrators by default). Shared components stay
+  `ManageSharedComponents`. Left: Publish per component (a node definition or an instance has no
+  draft of its own yet), and the sets of a shell's templates beyond `ManageTemplates` /
+  `ManageAdminTemplates`.
 - **Permissions are applied when the tree is built, on the server:** a node whose component or
   content the user may not see is not in the tree. The per-part read permission question in
   [permissions.md](permissions.md) lands here. The client never decides visibility.
@@ -530,6 +541,18 @@ and the binding model this design needs, so:
    the sandbox that admin-granted JavaScript, C# or Python needs. Neither a C# nor a Python
    provider exists in the vendored engine today.
 
+**What landed (2026-10-13).** Step 2: `PlatformLiquidTemplateManager` (`Crest.Workflows/Server/
+Expressions`) replaces the engine's template manager, so a workflow's Liquid expression is
+parsed and rendered by the platform's (cached parser, tags, filters, member allow-list) with
+`Variables`, `Input` and the workflow ids as properties; the workflow's variable types are
+admitted to the platform's allow-list. One Fluid: the engine builds against Fluid 2.40. Steps 3
+was done with the stock activities (workflows.md). Not done: step 4 (`Crest.Scripting` removed),
+which workflows.md sequences in its Retire step after the generated surfaces, with recipes'
+`[js: …]` and the layer rules moving to the engine; step 5 (a display
+`ExpressionExecutionContext`); step 6 (limits in one place), which the ruling ties to the start
+of the sandbox that is still parked; the engine's own Liquid filters (`base64`, `keys`) are not
+in the platform's set.
+
 The remaining parts of the engine's model (how a template declares inputs, limits, the designer
 hints for zones) are built on this, not beside it. The registry, the request path, the four pipelines and
 the one access machinery are planned in [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery) (2026-10-10).
@@ -553,7 +576,7 @@ the one access machinery are planned in [workflows.md › Operations](workflows.
    the descriptor, the attribute, one registry replacing the three. The route table reads it. No
    rendering change yet. What landed:
    - **Contracts** (`Crest.DisplayManagement.Abstractions/Components`, browser-safe):
-     `[CrestBlazorComponent]` with palette and rule metadata, `[ComponentParameter]` (now also
+     `[BlazorComponent]` with palette and rule metadata, `[ComponentParameter]` (now also
      `Choices`, static options that make a string parameter a `Choice`), `[ComponentZone]`,
      `[assembly: ComponentCatalog]`, `ComponentDescriptor`, `IComponentCatalog`,
      `IComponentRegistry`/`ComponentRegistry`. Added beside them: `ComponentSchema` (CLR type →
@@ -575,7 +598,7 @@ the one access machinery are planned in [workflows.md › Operations](workflows.
      markup; OCSG005 about a marked component it cannot catalog (generic, abstract, inaccessible).
    - **Generator wiring**: `buildTransitive/Crest.DisplayManagement.Abstractions.targets`, shipped
      in the abstractions package with the generator in `buildTransitive/analyzers/`, so every
-     package consumer gets it, directly or through `Crest.Components` (Fruitful's `blazor-wasm`
+     package consumer gets it, directly or through `Crest.Components` (a host's `blazor-wasm`
      libraries). It applies to Razor projects named `*.BlazorWasm` or `*.Client`, or any project
      setting `<ComponentCatalog>true</ComponentCatalog>` (`Crest.Components`, `Crest.Icons`), and
      enables the interceptor namespace the same assembly's shape generators need. In this repo
@@ -593,11 +616,11 @@ the one access machinery are planned in [workflows.md › Operations](workflows.
      shell bucket, else admin for an admin request, else site).
    - **Browser registry** (`Crest.Shell/ShellComponentRegistry.cs`): the document's shell over the
      shared libraries, its theme client, and the shell's eager and lazily loaded module libraries
-     (`CrestLazyModules`), rebuilt when a lazy module loads. Registered at WASM boot
-     (`CrestWebAssemblyHost`, the one boot path every shell shares), so `DisplayTreeRenderer`
+     (`LazyModules`), rebuilt when a lazy module loads. Registered at WASM boot
+     (`ClientWebAssemblyHost`, the one boot path every shell shares), so `DisplayTreeRenderer`
      resolves `IComponentRegistry` in the browser.
    - **Replaced**: `ICrestBlazorComponentRegistry` and `AssemblyScanningCrestBlazorComponentRegistry`
-     are deleted; `CrestBlazorComponentShapeBindingResolver` and `CrestBlazorComponentPart`'s
+     are deleted; `BlazorComponentShapeBindingResolver` and `CrestBlazorComponentPart`'s
      driver use `IComponentRegistry`; the part's parameters are validated against the schema on
      save (`CrestBlazorComponentPartHandler`) and bound to their types on display.
    - **Retired**: the admin client `DisplayManager`'s shape bindings (`NewShape`, `RenderShape`,
@@ -608,13 +631,18 @@ the one access machinery are planned in [workflows.md › Operations](workflows.
      metadata (the heading's level is a `Choice` of H1–H6); `CrestComponent`'s base parameters are
      grouped (`Style` advanced, the events advanced, the cultures hidden).
 
-   Left:
-   - **The route table reads the registry**: `AssemblyRouteComponentScanner` still scans
-     `@page` components itself; it should take the pages from the same catalogs.
-   - **Page regions as zone keys** (decision 6): `IPageRegionContributor`/`PageRegionRegistry`
-     still discover by their own scan; the well-known and module zone keys become registry
-     entries with a schema.
-   - **Annotating the Radzen-derived library**: candidates for a later pass, as primitives
+   Left (what landed 2026-10-13 is struck through):
+   - ~~**The route table reads the registry**~~: the catalogs describe an assembly's module
+     pages (`IComponentCatalog.DescribePages`, `PageDescriptor`: routed type, template,
+     anonymous), never as registry entries (§ 6a); `AssemblyRouteComponentScanner` reads them
+     through `ComponentCatalogs.ForAssembly`.
+   - ~~**Page regions as zone keys** (decision 6)~~: done 2026-10-13, see decision 6.
+   - **Annotating the Radzen-derived library**: 2026-10-13 annotated `Label`, `Badge`,
+     `Alert`, `Row`, `Column`, `Panel`, `Fieldset` (beside `Image`, `Button`, `Link`, `Card`,
+     `Stack`). Not annotated: `CrestIcon` and `CrestColorPicker` declare their parameters in
+     markup (OCSG003), `CrestMarkdown` renders markdown in the browser (no server sanitizing), the
+     layout hosts' names collide with the theme layouts and the zone keys, and the form editors
+     are replaced by the form primitives (widgets.md). The original list of candidates, as primitives
      (decision 2) — `CrestText`, `CrestLabel`, `CrestLink`, `CrestImage`, `CrestIcon`,
      `CrestButton`, `CrestBadge`, `CrestAlert`, `CrestMarkdown`, `CrestStack`, `CrestRow`/
      `CrestColumn`, `CrestCard`, `CrestPanel`, `CrestFieldset`; layout hosts with zones —
@@ -623,8 +651,8 @@ the one access machinery are planned in [workflows.md › Operations](workflows.
      `CrestNumeric`, `CrestCheckBox`, `CrestSwitch`, `CrestDatePicker`, `CrestDropDown`,
      `CrestColorPicker`, `CrestHtmlEditor`. Generic components (`CrestDataGrid<TItem>`, charts)
      cannot be named in a tree as they are; they need a closed wrapper.
-   - The registry has no facet or editor-kind entries yet (`Editor` facet: which value types an
-     editor component edits), and a theme scope is only applied when a caller passes the theme
+   - ~~The registry has no facet or editor-kind entries yet~~ (the editor facet is `Edits`
+     since step 5, and `api/crest/components` lists it since 2026-10-13), and a theme scope is only applied when a caller passes the theme
      id; the scoped registry passes none and admits every enabled theme serving the shell.
 2. **Display tree and renderer.** ✅ 2026-10-12. The DTO (`DisplayNode`, not `CrestModel`, per
    the 2026-10-12 ruling), the tree renderer library, the component binding in `ShapeBinding`, a
@@ -642,7 +670,7 @@ the one access machinery are planned in [workflows.md › Operations](workflows.
      with a `markup-fallback` diagnostic: the transition path, removed in step 7.
    - `ShapeBinding.ComponentName` / `ShapeBinding.ForComponent`: a component binding renders the
      shape's node and zones in one pass (`ComponentShapeRenderer`: `HtmlRenderer` +
-     `DisplayTreeRenderer`); `CrestBlazorComponentShapeBindingResolver` returns it instead of
+     `DisplayTreeRenderer`); `BlazorComponentShapeBindingResolver` returns it instead of
      rendering each shape with its own `HtmlRenderer`.
    - `GET api/crest/content-items/{id}/display?displayType=Detail` returns the tree (ViewContent
      through the decision; an editor may display the latest draft).
@@ -652,11 +680,12 @@ the one access machinery are planned in [workflows.md › Operations](workflows.
      `CrestModelSource`, items, classes, attributes) are removed.
 
    Left: ~~the browser registers no `IComponentRegistry` yet~~ (step 1 registers it, 2026-10-12);
-   the tree is not cached (TODO in the endpoint: per item version, display type and scope
-   signature, invalidated with the shape table); templates as a binding target (step 4); the
-   `DefaultHtmlDisplay` events (`Displaying`, `Processing`) do not run for bound nodes, so
-   alternates or properties added there are missed until the drivers' alternates move to build
-   time; ~~the generic resolver still keys by the old `ICrestBlazorComponentRegistry`~~ (it keys
+   ~~the tree is not cached~~ (versioned and validated by ETag since 2026-10-13, decision 12); templates as a binding target (step 4); ~~the
+   `DefaultHtmlDisplay` events (`Displaying`, `Processing`) do not run for bound nodes~~ (the
+   tree builder runs the shape descriptor's and the shape's own displaying and processing phases
+   before it resolves a binding since step 3, and for a caller-chosen component too since
+   2026-10-13; the global `IShapeDisplayEvents` and the `Displayed` phase stay with the HTML
+   render: they serve its output cache and profiler); ~~the generic resolver still keys by the old `ICrestBlazorComponentRegistry`~~ (it keys
    by `IComponentRegistry` since step 1).
 
    Verified live (2026-10-12, dev host): setup imports the recipe's `CrestCounter` part, the
@@ -678,9 +707,11 @@ the one access machinery are planned in [workflows.md › Operations](workflows.
      on), then the `Layout` shape filled (the item into `Content`, the `alias:main-menu` menu into
      `Navigation`, the `ILayoutTreeContributor`s) and mapped and filtered as one tree. A miss is
      the layout with `NotFound` (404), a refusal with `Forbidden` (403).
-   - The site client (`Crest.SiteTheme/wasm`): `ContentPage` (`@page "/"` and `"/{*Path}"`, the
-     page as `[PersistentState]`, the status set while prerendering through
-     `IShellResponseStatus`), and the components `Layout` (zones `Navigation`, `Header`,
+   - The site client (`Crest.SiteTheme/wasm`): `ContentPage` (`@page "/"` only since the
+     2026-10-13 ruling - the real path comes from `IShellRequestPath` while prerendering and
+     from the navigation manager once interactive, and the site `Routes` renders it for every
+     URL it has no page for; the page as `[PersistentState]`, the status set while
+     prerendering through `IShellResponseStatus`), and the components `Layout` (zones `Navigation`, `Header`,
      `Messages`, `Content`, `Sidebar`, `Footer`), `Content` (zones `Header`, `Meta`, `Content`,
      `Tags`, `Actions`, `Footer`), `NotFound`, `Forbidden`; `CrestSite.css` on the tokens.
    - `App.razor`'s site branch loads the design system (tokens, component styles, icons,
@@ -693,8 +724,12 @@ the one access machinery are planned in [workflows.md › Operations](workflows.
      Blog assets and `BlazorCounter.razor` are deleted; a minimal `Layout.cshtml` stays for the
      modules' remaining MVC site pages (account screens) until step 7 replaces them.
    - Two hosting details the live run found: component endpoints are ordered ahead of
-     conventional routes, so the catch-all is given the last order (else it swallowed
-     `/Error/{status}` and every MVC site route); and Blazor writes no body for a page that set
+     conventional routes and the `/{*Path}` catch-all swallowed `/Error/{status}`, every MVC
+     site route, the legacy admin frame and every module asset (the "last order" convention
+     never took effect) - resolved 2026-10-13 by the ruling that there is one routing system
+     on the Blazor side: the catch-all is gone, the shell middleware resolves site paths
+     through the route table and forwards a legacy-owned path to MVC
+     (`ILegacyRouteOwnership`); and Blazor writes no body for a page that set
      404 while rendering, so the page's status is applied as the response starts and the status
      code pages are switched off for it (it renders its own error page).
    - Verified live (2026-10-12): `/` and unknown paths answer 404 with the site frame; a published
@@ -741,7 +776,7 @@ the one access machinery are planned in [workflows.md › Operations](workflows.
      variants (an admin template is one whose theme is the admin theme, under
      `ManageAdminTemplates`).
 5. **Editors as trees.** ✅ 2026-10-12. Editor components declare what they edit
-   (`[CrestBlazorComponent(Edits = [...])]`, `IComponentRegistry.TryGetEditor`, `*` for the JSON
+   (`[BlazorComponent(Edits = [...])]`, `IComponentRegistry.TryGetEditor`, `*` for the JSON
    fallback): text, number, yes/no, date, content picker, option picker, HTML, Markdown, link,
    title, permalink. They read and write through one `ContentEditorContext` (moved out of
    `CrestFormManager`, with its visibility conditions and picker cascades), cascaded by the
@@ -764,8 +799,12 @@ the one access machinery are planned in [workflows.md › Operations](workflows.
    admin client's `DisplayManager` (pure shell state) is `AdminShellState` in
    `Crest.AdminTheme.State`. Not done: `IHtmlDisplay`, the Razor and Liquid shape engines and the
    tag helpers still serve the stock MVC pages (the legacy admin frame, the account screens) and
-   the markup fallback leaf; `CrestBlazorComponentShapeBindingResolver` still renders a component
-   inside such a fallback. They go page by page as each MVC page gets a component page.
+   the markup fallback leaf; `BlazorComponentShapeBindingResolver` still renders a component
+   inside such a fallback. They go page by page as each MVC page gets a component page. 2026-10-13:
+   the HTML and Markdown body shapes have components (`HtmlBodyPart`, `MarkdownBodyPart`, a
+   sanitized markup parameter), so the sample site's bodies no longer fall back. The retirement
+   itself still waits on the stock MVC pages (about 1,250 Razor views across the modules, the
+   account screens and the legacy admin frame among them) getting component pages.
 
 Each step compiles and runs on its own; the Liquid path is removed per page as its Blazor
 replacement lands (Direction ruling), not all at once.
@@ -821,6 +860,17 @@ before porting code; WordPress is GPL and is consulted for vocabulary only):
   - The rest of the data-layer chain (`Crest.Data`, connectors, query, the API surfaces) is
     decided later ([queries.md](queries.md)); the order sketched so far is not committed.
 
+  **What landed (2026-10-13).** `Crest.Data.Types` (a platform library, no server framework,
+  referenced by `Crest.Data`): `ValueTypeDescriptor` (name, query column type, workflow type,
+  field types, editor and display components, CLR type, owning module), the base types over the
+  content fields, `IValueTypeRegistry` and `AddValueType`; `Crest.Server` registers the registry
+  and `Crest.Money` registers `Money` (`PriceField`). `Crest.Global` is renamed
+  `Crest.Data.Global` (project, feature id, namespaces, and its users in Crest, Fruitful and the
+  host; Fruitful needs the repacked package). Not done: the global data registry beyond the
+  store, the query system and the display schema reading the value type registry, and the
+  `Crest.Components.Primitives` / `.Templates` projects (open question: the registered
+  primitives derive from the Radzen-derived base classes in `Crest.Components`, so a separate
+  primitives project means moving that whole library or leaving those primitives behind).
 - **Shape names are the registry keys** (`Content__Page`, `Widget__Hero`, `Zone`), so placement,
   alternates and templates all bind by the same names.
 - **The renderer, the display tree DTO and the registry contracts live in a small neutral
@@ -855,7 +905,7 @@ before porting code; WordPress is GPL and is consulted for vocabulary only):
   audit of these rulings follows.
 - **Work within the platform's display management, no parallel modules.** The display tree's
   node is a **new record** (not `CrestModel`, which stays the content-item wrapper the editors,
-  Parties and Fruitful use; its unused tree parts fold into the node) and it lives, with the
+  Parties and host modules use; its unused tree parts fold into the node) and it lives, with the
   component registry contract, the descriptors and the tree renderer, in
   **`Crest.DisplayManagement.Abstractions`**, reworked in place. The server-only pieces (the
   shape-to-tree mapper, the component and template bindings, the Blazor `IDisplay`) go in
@@ -1084,6 +1134,21 @@ rulings.
   instances per page**, is a base setting of *every* component (ruling 2026-10-09): a component
   declares whether more than one instance per page is allowed, because several instances of some
   components break their logic; the designer refuses a second placement where one is declared.
+  **What landed (2026-10-13).** Zone keys are registry entries: `ZoneKeyDescriptor` (key,
+  owning module, allowed components, single or multiple, required on a layout), the well-known
+  keys in `ZoneKeys.WellKnown` (`Content` required), module keys declared with
+  `[assembly: ZoneKey("prefix:*")]` (a trailing `*` declares a family under a prefix; a module
+  cannot redeclare a well-known key). The page-region seam is folded in: the catalogs collect a
+  library's `IPageRegionContributor`s as `ZoneContribution`s (key, component, default priority),
+  the registry serves `ZoneKeys`, `TryGetZoneKey` and `Contributions(key)` on the server (feature
+  filtered) and in the browser (rebuilt on a lazy load), `CrestPageRegion` renders from it, and the
+  static `PageRegionRegistry` is gone. A layer placement into an unknown key, or of a component
+  the key does not admit, is a save error; a layout without a required key and a contribution to
+  an undeclared key are logged warnings; `GET api/crest/components/zone-keys?shell=` lists the
+  keys; `DisplayTreeValidator` refuses a second instance of a component declared single.
+  Crest.Parties declares `Parties.Pane:*` and `Parties.Detail:*`. Left: reordering a zone's
+  contributions per zone or per page through the override system, and a `Zone` component node
+  (zones as components with the § 5a model); both wait for the designer's zone settings.
 - [x] **7. Template hierarchy.** Ruled (2026-10-09): the platform's alternates chain, as data,
   with qualifiers. A template binds a shape name plus optional **display type** and **theme**;
   resolution is most specific first, dropping one qualifier at a time, down to the module's
@@ -1127,6 +1192,21 @@ rulings.
   override chain; the components under it keep the full § 5a model. The top of a data-defined
   page's tree is therefore the page record itself, rendered through the layout the template
   hierarchy (7) resolves for it.
+  **What landed (2026-10-13).** The page record is the `DesignedPage` content type
+  (`DesignedPagePart`: name, route pattern, bucket, title, meta description, anonymous access,
+  Liquid source; drafts and publish, no overrides) in the Templates module, read through
+  `DesignedPageStore` (the published set cached and re-read on the publish signal). Its tree is
+  the shipped template `DesignedPage__{Name}` (`DesignedPageTemplates`), evaluated with the
+  route's values as `Model.Route`. `IDataRouteComponentTableProvider` adds data-defined entries
+  to the route table per request after the scanned pages; `DesignedPageRouteComponentTableProvider`
+  registers the site bucket's pages on the site's content route component, and `SitePageBuilder`
+  answers a matching path ahead of Autoroute, inside the site layout. `api/crest/pages` (list,
+  get, save draft, publish, delete, preview a draft at a path) validates the name, the bucket,
+  the route (pattern and uniqueness in the bucket) and the tree; the `DesignedPages` recipe step
+  creates and publishes them. Left: admin and member pages are stored and validated but not
+  routed, since neither shell has a component that renders a data-defined page (their client
+  routers know only scanned pages); route parameters are strings until `Crest.Data.Types` gives
+  them types; the designer's page editor.
 - [x] **10. One format, and no generated pages.** Ruled (2026-10-09). The display tree is one
   typed node format. **The shape system stays as the backend**: drivers and placement keep
   building `IShape` trees, and a mapper converts them once (shape type → component, alternates resolved to the binding, properties
@@ -1143,6 +1223,15 @@ rulings.
   the type exists, while a page and a URL exist only when a template is assigned (or the default
   template is enabled). This is a deliberate departure from OrchardCore, where any item with an
   Autoroute part gets a URL and renders through the default `Content` shape.
+  **What landed (2026-10-13).** Shipped templates are the chain's last level: modules register
+  an `IShippedTemplateProvider` and `TemplateResolver` tries, per name, the tenant's templates and
+  then the shipped ones. `DefaultContentTemplate` (`Crest.Server/Display`) is the default
+  `Content` template for the Detail display type (the title, then the item's `Header`, `Meta`,
+  `Content`, `Tags` and `Footer` zones as the drivers filled them and the node filter cut them),
+  present only while `SiteDisplaySettings.RenderUnassignedContent` is on; `SitePageBuilder` asks
+  the resolver alone, so the setting and a tenant template decide alike. The setting has no
+  admin screen yet (recipe `settings` step only); the per-part read rule that narrows "fields
+  the viewer may see" further is decision 13's, in the node filter.
 - [x] **11. Edit mode is an overlay, not a wrapper.** Ruled (2026-10-09). The designer's
   canvas is the real renderer and the real page, rendered **unmodified**; the content never
   carries designer markup. The root document has two layers: the **content** layer, and a
@@ -1180,6 +1269,21 @@ rulings.
   - **Anonymous and role-shared pages** share one filtered tree per permission set, the one place
     a shared cache or CDN applies.
   - Drafts and previews are never cached.
+  **What landed (2026-10-13).** The composite version is `DisplayTreeVersions`
+  (`Crest.DisplayManagement/Components`): a stamp taken when the tenant starts, a content counter
+  bumped on every publish, unpublish, update, import and removal (`DisplayTreeContentHandler`),
+  the culture, the `IDisplayTreeVersionPart`s modules register (Templates: the published set and
+  the overrides document; Layers: the layers document; Crest.Server: the site settings) and the
+  caller's scope (the path, `CallerContext.ScopeSignature`, which carries the user, the roles and
+  the permission version). `api/crest/site/page` and the published-item path of
+  `api/crest/content-items/{id}/display` send it as the ETag and answer 304 on a match before
+  building anything. The site shell's `ContentPage` keeps pages in session storage once
+  interactive, revalidates with If-None-Match, and drops them when the scope changes (sign-out).
+  Anonymous site pages, one permission set, share a filtered tree through `DisplayTreeCache` (a
+  tenant singleton bounded by size). Not built: the cache of **unfiltered** trees per page for
+  signed-in viewers. The tree builder still applies per-viewer decisions (component
+  permissions, menus filtered by their driver, the drivers' own checks), so a built tree is not
+  viewer-independent; that cache needs those decisions moved into the node filter first.
 - [x] **13. Publish.** Ruled (§ 10, set 5): publish is its own permission, per page and per
   component, since components have drafts of their own and a preview needs them. The tenant
   setting in § 5a defaults to "edit for preview, a manager publishes". "Data" at run time stays the only data permission, and the per-part

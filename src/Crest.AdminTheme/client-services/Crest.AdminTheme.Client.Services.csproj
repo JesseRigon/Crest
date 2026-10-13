@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!-- The admin theme's services: what the host's WASM app registers at boot, before the
+       container is sealed - the boot path itself (ClientWebAssemblyHost), the HTTP pipeline
+       every shell's HttpClient goes through (antiforgery, X-Shell/X-Org), the admin API
+       client, the admin shell state, the display action dispatcher, the theme engine and the
+       routing options. Eager ([assembly: CrestEager]): every browser loads it whatever shell
+       it lands in. The admin theme's UI (pages, layout, AdminRoutes) is
+       Crest.AdminTheme.Client, loaded only when the admin shell is opened
+       (docs/shells-and-themes.md › Theme UIs load per shell). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Crest.AdminTheme.Client.Services</AssemblyName>
+    <RootNamespace>Crest.AdminTheme</RootNamespace>
+    <PlatformCompatibilityVersion>4.0.0</PlatformCompatibilityVersion>
+    <CrestSecurityPatch>0</CrestSecurityPatch>
+    <CrestBugPatch>0</CrestBugPatch>
+    <CrestVersion>$(PlatformCompatibilityVersion).$(CrestSecurityPatch).$(CrestBugPatch)</CrestVersion>
+    <VersionPrefix>$(PlatformCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(PlatformCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(CrestVersion)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Watch Include="**\*.cs" Exclude="bin\**;obj\**;**\bin\**;**\obj\**" />
+    <Watch Remove="bin\**;obj\**;**\bin\**;**\obj\**" />
+    <None Include="Theme\reference\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Crest.AdminTheme.Client" />
+    <InternalsVisibleTo Include="Crest.AdminTheme.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WebAssembly package (not the BlazorWebAssembly SDK): AntiforgeryHandler uses
+         browser-only APIs (IJSInProcessRuntime, SetBrowserRequestCredentials) that only ever
+         execute in the browser; the assembly also loads server-side, where the server
+         registers its own counterparts. -->
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
+    <ProjectReference Include="..\..\Crest.Shell\Crest.Shell.csproj" />
+    <ProjectReference Include="..\..\Crest.Icons\Crest.Icons.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -33,19 +33,19 @@ namespace Crest.Controllers;
 [Route("api/crest/app")]
 public sealed class AppController(
     ShellSettings shellSettings,
-    IShellHost shellHost,
     IShellDescriptorManager shellDescriptorManager,
     IExtensionManager extensionManager,
     ISiteService siteService,
     IOptions<AdminOptions> adminOptions,
     IAuthorizationService authorization,
-    CrestAdminMenuBuilder adminMenuBuilder,
-    CrestPrimaryNavMenuSettingsStore primaryNavMenuSettingsStore,
-    CrestAdminSettingsNormalizer adminSettingsNormalizer,
-    CrestTitleBarSettingsStore titleBarSettingsStore,
-    CrestIconController iconController,
-    CrestRouteAuthorizationService routeAuthorization,
-    CrestProfileMenuService profileMenuService,
+    AdminMenuBuilder adminMenuBuilder,
+    PrimaryNavMenuSettingsStore primaryNavMenuSettingsStore,
+    AdminSettingsNormalizer adminSettingsNormalizer,
+    TitleBarSettingsStore titleBarSettingsStore,
+    IconController iconController,
+    Crest.Access.IRouteAuthorization routeAuthorization,
+    Crest.Access.ICallerContextAccessor callers,
+    ProfileMenuService profileMenuService,
     UserManager<IUser> userManager,
     IServiceProvider serviceProvider) : ControllerBase
 {
@@ -59,7 +59,14 @@ public sealed class AppController(
         var titleBarSettings = await titleBarSettingsStore.GetAsync(HttpContext.RequestAborted);
         var featureIds = descriptor.Features.Select(feature => feature.Id).Order(StringComparer.Ordinal).ToArray();
         var featureInfos = extensionManager.GetFeatures(featureIds.AsEnumerable()).ToDictionary(feature => feature.Id);
-        var tenants = await GetAvailableTenantsAsync();
+        // Only this tenant: the tenants in the switcher are the accounts added on this device,
+        // kept in the browser (docs/shells-and-themes.md › Member sessions and sides). No
+        // server data links accounts across tenants, and no other tenant's shell is started
+        // to ask whether a user of the same name exists there.
+        Tenant[] tenants = [Tenant.From(shellSettings)];
+        var organizations = serviceProvider.GetService<Crest.Routing.IShellOrganizationResolver>() is { } organizationResolver
+            ? [.. await organizationResolver.ListAsync(HttpContext)]
+            : Array.Empty<Crest.Routing.ShellOrganization>();
         var userDefaultCulture = await GetUserDefaultCultureAsync();
         var adminDefaultCulture = site.GetOrCreate<CrestLocalizationSettings>().AdminDefaultCulture;
         var cultureSelector = await CultureSelector.FromAsync(HttpContext, shellSettings, serviceProvider.GetService<ILocalizationService>(), userDefaultCulture, adminDefaultCulture);
@@ -68,7 +75,7 @@ public sealed class AppController(
         adminMenu = adminMenu with { PrimaryNavMenuSettings = await primaryNavMenuSettingsStore.GetAsync(HttpContext.RequestAborted) };
         adminMenu = await iconController.ResolveMenuIconsAsync(
             adminMenu,
-            CrestIconController.AdminMenuChromeIconKeys
+            IconController.AdminMenuChromeIconKeys
                 .Concat(cultureSelector.Cultures.Select(culture => culture.Icon))
                 .Concat([
                     "iconify.mdi/current/default/check",
@@ -82,15 +89,16 @@ public sealed class AppController(
             tenants,
             SiteSettings.From(site),
             AdminSettingsDto.From(adminSettings),
-            CrestTitleBarSettingsDto.From(titleBarSettings),
+            TitleBarSettingsDto.From(titleBarSettings),
             new AdminDescriptor(NormalizeAdminPath(adminOptions.Value.AdminUrlPrefix)),
             descriptor.SerialNumber,
             ComputeFeatureHash(descriptor.SerialNumber, featureIds),
             featureIds.Select(id => Feature.From(id, featureInfos.GetValueOrDefault(id))).ToArray(),
             adminMenu,
-            await routeAuthorization.GetAuthorizedRoutesAsync(User),
+            await routeAuthorization.GetAuthorizedRoutesAsync(callers.Current, HttpContext.RequestAborted),
             cultureSelector,
-            profileMenu));
+            profileMenu,
+            organizations));
     }
 
     private async Task<string?> GetUserDefaultCultureAsync()
@@ -102,45 +110,6 @@ public sealed class AppController(
 
         user.TryGet<UserLocalizationSettings>(out var settings);
         return settings?.Culture;
-    }
-
-    private async Task<Tenant[]> GetAvailableTenantsAsync()
-    {
-        var userName = User.Identity?.Name;
-        if (string.IsNullOrWhiteSpace(userName))
-        {
-            return [Tenant.From(shellSettings)];
-        }
-
-        var tenants = new List<Tenant>();
-        foreach (var settings in shellHost.GetAllSettings().OrderBy(settings => settings.Name, StringComparer.OrdinalIgnoreCase))
-        {
-            if (string.Equals(settings.Name, shellSettings.Name, StringComparison.OrdinalIgnoreCase))
-            {
-                tenants.Add(Tenant.From(settings));
-                continue;
-            }
-
-            try
-            {
-                await (await shellHost.GetScopeAsync(settings)).UsingServiceScopeAsync(async scope =>
-                {
-                    var userService = scope.ServiceProvider.GetService<IUserService>();
-                    if (userService is not null && await userService.GetUserAsync(userName) is not null)
-                    {
-                        tenants.Add(Tenant.From(settings));
-                    }
-                });
-            }
-            catch
-            {
-                // Ignore tenants that are unavailable or do not have Users enabled.
-            }
-        }
-
-        return tenants
-            .DistinctBy(tenant => tenant.Name, StringComparer.OrdinalIgnoreCase)
-            .ToArray();
     }
 
     private static string NormalizeAdminPath(string? adminUrlPrefix)

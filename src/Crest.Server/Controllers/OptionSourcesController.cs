@@ -36,7 +36,7 @@ public sealed class OptionSourcesController(
             return Forbid();
         }
 
-        var (providerKey, qualifier) = CrestOptionSourceKeys.Split(request.SourceKey);
+        var (providerKey, qualifier) = OptionSourceKeys.Split(request.SourceKey);
         var provider = sourceProviders.FirstOrDefault(candidate =>
             string.Equals(candidate.Key, providerKey, StringComparison.OrdinalIgnoreCase));
 
@@ -135,7 +135,7 @@ public sealed class OptionSourcesController(
             return Forbid();
         }
 
-        var (providerKey, qualifier) = CrestOptionSourceKeys.Split(request.SourceKey);
+        var (providerKey, qualifier) = OptionSourceKeys.Split(request.SourceKey);
         var provider = sourceProviders.FirstOrDefault(candidate =>
             string.Equals(candidate.Key, providerKey, StringComparison.OrdinalIgnoreCase));
 
@@ -174,7 +174,7 @@ public sealed class OptionSourcesController(
             return Forbid();
         }
 
-        var (providerKey, qualifier) = CrestOptionSourceKeys.Split(request.SourceKey);
+        var (providerKey, qualifier) = OptionSourceKeys.Split(request.SourceKey);
         var provider = sourceProviders.FirstOrDefault(candidate =>
             string.Equals(candidate.Key, providerKey, StringComparison.OrdinalIgnoreCase));
 
@@ -197,7 +197,7 @@ public sealed class OptionSourcesController(
             return Forbid();
         }
 
-        var (providerKey, qualifier) = CrestOptionSourceKeys.Split(sourceKey);
+        var (providerKey, qualifier) = OptionSourceKeys.Split(sourceKey);
         var provider = sourceProviders.FirstOrDefault(candidate =>
             string.Equals(candidate.Key, providerKey, StringComparison.OrdinalIgnoreCase));
 
@@ -281,7 +281,7 @@ public sealed class OptionSourcesController(
     private static IReadOnlyDictionary<string, IReadOnlyList<string>>? ToEditorState(IReadOnlyDictionary<string, string[]>? state) =>
         state?.ToDictionary(entry => entry.Key, entry => (IReadOnlyList<string>)entry.Value, StringComparer.OrdinalIgnoreCase);
 
-    private Task<bool> CanViewAsync() => IsAuthorizedAsync(CrestContentPartListPermissions.ViewContentPartLists);
+    private Task<bool> CanViewAsync() => IsAuthorizedAsync(ContentPartListPermissions.ViewContentPartLists);
 
     private async Task<bool> IsAuthorizedAsync(Crest.Security.Permissions.Permission permission) =>
         await authorizationService.AuthorizeAsync(User, permission);

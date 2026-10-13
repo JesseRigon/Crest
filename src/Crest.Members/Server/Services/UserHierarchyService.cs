@@ -1,240 +1,182 @@
-using System.Data.Common;
-using Dapper;
+using Crest.Locking.Distributed;
+using Crest.Members.Indexes;
 using Crest.Members.Models;
 using YesSql;
 
 namespace Crest.Members.Services;
 
 /// <summary>
-/// Raw-table implementation that runs on the request's YesSql <see cref="ISession"/>:
-/// the session's own connection and transaction, so every hierarchy write commits or
-/// rolls back together with the documents the same unit of work saves (no second
-/// connection, hence no SQLite write-lock conflict and no deferred task). The table
-/// stays a plain table rather than a YesSql index because the node id is an identity
-/// embedded in the materialized path and subtree reads are LIKE 'path%' matches.
-/// Table name composed from the store's TablePrefix, identifiers quoted through the
-/// ISqlDialect so SQLite/SqlServer/Postgres/MySql all work. The root guard is
-/// structural: every statement filters on RootKind + OrganizationId.
+/// The closure-table hierarchy on YesSql, no hand-written SQL: one
+/// <see cref="UserHierarchyMembership"/> document per (user, organization) holding the
+/// direct managers and the computed ancestors; the closure index is created and queried
+/// like every other index. Edge writes are serialized per organization (a distributed
+/// lock held until the unit of work is committed), so two writes cannot together create a
+/// cycle; each edge change recomputes the ancestors and saves only the documents whose
+/// list changed, in one session.
 /// </summary>
-public class UserHierarchyService : IUserHierarchyService
+public sealed class UserHierarchyService(ISession session, IDistributedLock locks) : IUserHierarchyService
 {
-    public const string TableName = "CrestUserHierarchy";
+    private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan LockExpiration = TimeSpan.FromSeconds(30);
 
-    private readonly ISession _session;
-    private readonly IStore _store;
-
-    public UserHierarchyService(ISession session)
+    public async Task EnsureNodeAsync(string organizationId, string userId, CancellationToken cancellationToken = default)
     {
-        _session = session;
-        _store = session.Store;
-    }
-
-    // Writes join (or open) the unit of work's transaction; the session commits it.
-    private Task<DbTransaction> WriteTransactionAsync(CancellationToken cancellationToken)
-        => _session.BeginTransactionAsync(cancellationToken);
-
-    // Reads use the session's connection and whatever transaction it already holds, the
-    // same way YesSql's own queries do, so they see this unit's uncommitted writes.
-    private async Task<(DbConnection Connection, DbTransaction? Transaction)> ReadContextAsync(CancellationToken cancellationToken)
-        => (await _session.CreateConnectionAsync(cancellationToken), _session.CurrentTransaction);
-
-    private string QuotedTable()
-        => _store.Configuration.SqlDialect.QuoteForTableName(
-            $"{_store.Configuration.TablePrefix}{TableName}",
-            _store.Configuration.Schema);
-
-    private string Col(string name) => _store.Configuration.SqlDialect.QuoteForColumnName(name);
-
-    private string RootFilter()
-        => $"{Col("RootKind")} = @RootKind AND ({Col("OrganizationId")} = @OrganizationId OR (@OrganizationId IS NULL AND {Col("OrganizationId")} IS NULL))";
-
-    public async Task<HierarchyNodeModel> AddAsync(HierarchyRoot root, string userId, long? parentNodeId = null, CancellationToken cancellationToken = default)
-    {
+        ArgumentException.ThrowIfNullOrEmpty(organizationId);
         ArgumentException.ThrowIfNullOrEmpty(userId);
 
-        var transaction = await WriteTransactionAsync(cancellationToken);
-        var connection = transaction.Connection!;
-
-        string? parentPath = null;
-        if (parentNodeId is not null)
+        if (await FindAsync(organizationId, userId, cancellationToken) is not null)
         {
-            var parent = await connection.QuerySingleOrDefaultAsync<HierarchyRow>(
-                $"SELECT * FROM {QuotedTable()} WHERE {Col("Id")} = @Id AND {RootFilter()}",
-                new { Id = parentNodeId, root.RootKind, root.OrganizationId }, transaction)
-                ?? throw new InvalidOperationException($"Parent node {parentNodeId} does not exist in this root.");
-            parentPath = parent.Path;
+            return;
         }
 
-        // Two-step because the path contains the identity id: insert (with the
-        // dialect's identity-select appended, the same way YesSql retrieves generated
-        // ids), then stamp the real path in the same transaction.
-        var id = await connection.ExecuteScalarAsync<long>(
-            $"INSERT INTO {QuotedTable()} ({Col("UserId")}, {Col("ParentId")}, {Col("RootKind")}, {Col("OrganizationId")}, {Col("Path")}, {Col("Position")}) " +
-            "VALUES (@UserId, @ParentId, @RootKind, @OrganizationId, '', 0)" +
-            _store.Configuration.SqlDialect.IdentitySelectString,
-            new { UserId = userId, ParentId = parentNodeId, root.RootKind, root.OrganizationId }, transaction);
-
-        var path = HierarchyPathMath.BuildPath(parentPath, id);
-        await connection.ExecuteAsync(
-            $"UPDATE {QuotedTable()} SET {Col("Path")} = @Path WHERE {Col("Id")} = @Id",
-            new { Path = path, Id = id }, transaction);
-
-        return new HierarchyNodeModel(id, userId, parentNodeId, root.RootKind, root.OrganizationId, path, 0);
+        await session.SaveAsync(new UserHierarchyMembership { UserId = userId, OrganizationId = organizationId });
     }
 
-    public async Task MoveAsync(HierarchyRoot root, long nodeId, long? newParentNodeId, CancellationToken cancellationToken = default)
-    {
-        var transaction = await WriteTransactionAsync(cancellationToken);
-        var connection = transaction.Connection!;
-
-        var node = await connection.QuerySingleOrDefaultAsync<HierarchyRow>(
-            $"SELECT * FROM {QuotedTable()} WHERE {Col("Id")} = @Id AND {RootFilter()}",
-            new { Id = nodeId, root.RootKind, root.OrganizationId }, transaction)
-            ?? throw new InvalidOperationException($"Node {nodeId} does not exist in this root.");
-
-        string? newParentPath = null;
-        if (newParentNodeId is not null)
+    public Task RemoveNodeAsync(string organizationId, string userId, CancellationToken cancellationToken = default) =>
+        WithOrganizationAsync(organizationId, async memberships =>
         {
-            var parent = await connection.QuerySingleOrDefaultAsync<HierarchyRow>(
-                $"SELECT * FROM {QuotedTable()} WHERE {Col("Id")} = @Id AND {RootFilter()}",
-                new { Id = newParentNodeId, root.RootKind, root.OrganizationId }, transaction)
-                ?? throw new InvalidOperationException($"Parent node {newParentNodeId} does not exist in this root.");
-
-            if (HierarchyPathMath.IsWithin(parent.Path, node.Path))
+            if (!memberships.Remove(userId, out var removed))
             {
-                throw new InvalidOperationException("Cannot move a node under its own subtree.");
+                return false;
             }
 
-            newParentPath = parent.Path;
-        }
-
-        var newPath = HierarchyPathMath.BuildPath(newParentPath, node.Id);
-
-        // Rewrite the node and every descendant path (prefix swap), all inside the root.
-        var descendants = await connection.QueryAsync<HierarchyRow>(
-            $"SELECT * FROM {QuotedTable()} WHERE {Col("Path")} LIKE @PathPrefix AND {RootFilter()}",
-            new { PathPrefix = node.Path + "%", root.RootKind, root.OrganizationId }, transaction);
-
-        foreach (var row in descendants)
-        {
-            await connection.ExecuteAsync(
-                $"UPDATE {QuotedTable()} SET {Col("Path")} = @Path WHERE {Col("Id")} = @Id",
-                new { Path = HierarchyPathMath.Reroot(row.Path, node.Path, newPath), row.Id }, transaction);
-        }
-
-        await connection.ExecuteAsync(
-            $"UPDATE {QuotedTable()} SET {Col("ParentId")} = @ParentId WHERE {Col("Id")} = @Id",
-            new { ParentId = newParentNodeId, Id = node.Id }, transaction);
-    }
-
-    public async Task RemoveAsync(HierarchyRoot root, long nodeId, CancellationToken cancellationToken = default)
-    {
-        var transaction = await WriteTransactionAsync(cancellationToken);
-        var connection = transaction.Connection!;
-
-        var node = await connection.QuerySingleOrDefaultAsync<HierarchyRow>(
-            $"SELECT * FROM {QuotedTable()} WHERE {Col("Id")} = @Id AND {RootFilter()}",
-            new { Id = nodeId, root.RootKind, root.OrganizationId }, transaction)
-            ?? throw new InvalidOperationException($"Node {nodeId} does not exist in this root.");
-
-        var childCount = await connection.ExecuteScalarAsync<long>(
-            $"SELECT COUNT(*) FROM {QuotedTable()} WHERE {Col("ParentId")} = @Id",
-            new { Id = nodeId }, transaction);
-        if (childCount > 0)
-        {
-            throw new InvalidOperationException("Cannot remove a node that still has children; re-parent them first.");
-        }
-
-        await connection.ExecuteAsync(
-            $"DELETE FROM {QuotedTable()} WHERE {Col("Id")} = @Id",
-            new { Id = nodeId }, transaction);
-    }
-
-    public async Task<IReadOnlyList<HierarchyNodeModel>> GetNodesAsync(HierarchyRoot root, CancellationToken cancellationToken = default)
-    {
-        var (connection, transaction) = await ReadContextAsync(cancellationToken);
-
-        var rows = await connection.QueryAsync<HierarchyRow>(
-            $"SELECT * FROM {QuotedTable()} WHERE {RootFilter()} ORDER BY {Col("Path")}",
-            new { root.RootKind, root.OrganizationId }, transaction);
-
-        return rows.Select(ToModel).ToArray();
-    }
-
-    public async Task<IReadOnlyList<string>> GetSubtreeUserIdsAsync(HierarchyRoot root, string userId, CancellationToken cancellationToken = default)
-    {
-        var (connection, transaction) = await ReadContextAsync(cancellationToken);
-
-        var ownNodes = (await connection.QueryAsync<HierarchyRow>(
-            $"SELECT * FROM {QuotedTable()} WHERE {Col("UserId")} = @UserId AND {RootFilter()}",
-            new { UserId = userId, root.RootKind, root.OrganizationId }, transaction)).ToArray();
-
-        if (ownNodes.Length == 0)
-        {
-            // Fail-closed expansion: no tree presence means no one under you - you still
-            // see yourself, never everyone.
-            return [userId];
-        }
-
-        var userIds = new HashSet<string>(StringComparer.Ordinal) { userId };
-        foreach (var node in ownNodes)
-        {
-            var rows = await connection.QueryAsync<HierarchyRow>(
-                $"SELECT * FROM {QuotedTable()} WHERE {Col("Path")} LIKE @PathPrefix AND {RootFilter()}",
-                new { PathPrefix = node.Path + "%", root.RootKind, root.OrganizationId }, transaction);
-            foreach (var row in rows)
+            session.Delete(removed);
+            foreach (var other in memberships.Values)
             {
-                userIds.Add(row.UserId);
+                other.ManagerIds.RemoveAll(id => string.Equals(id, userId, StringComparison.Ordinal));
             }
-        }
 
-        return userIds.ToArray();
-    }
+            return true;
+        }, cancellationToken);
 
-    public async Task<IReadOnlyList<string>> GetChainUserIdsAsync(HierarchyRoot root, string userId, CancellationToken cancellationToken = default)
-    {
-        var (connection, transaction) = await ReadContextAsync(cancellationToken);
-
-        var node = (await connection.QueryAsync<HierarchyRow>(
-            $"SELECT * FROM {QuotedTable()} WHERE {Col("UserId")} = @UserId AND {RootFilter()}",
-            new { UserId = userId, root.RootKind, root.OrganizationId }, transaction)).FirstOrDefault();
-        if (node is null)
+    public Task AddManagerAsync(string organizationId, string reportId, string managerId, CancellationToken cancellationToken = default) =>
+        WithOrganizationAsync(organizationId, memberships =>
         {
-            return [];
+            if (!memberships.TryGetValue(reportId, out var report) || !memberships.ContainsKey(managerId))
+            {
+                throw new InvalidOperationException("Both users need a place in this organization's hierarchy.");
+            }
+
+            if (report.ManagerIds.Contains(managerId, StringComparer.Ordinal))
+            {
+                return Task.FromResult(false);
+            }
+
+            if (HierarchyClosure.WouldCycle(ManagersOf(memberships), reportId, managerId))
+            {
+                throw new InvalidOperationException("The report is already above that manager; the edge would make a cycle.");
+            }
+
+            report.ManagerIds.Add(managerId);
+            return Task.FromResult(true);
+        }, cancellationToken);
+
+    public Task RemoveManagerAsync(string organizationId, string reportId, string managerId, CancellationToken cancellationToken = default) =>
+        WithOrganizationAsync(organizationId, memberships =>
+            Task.FromResult(memberships.TryGetValue(reportId, out var report)
+                && report.ManagerIds.RemoveAll(id => string.Equals(id, managerId, StringComparison.Ordinal)) > 0),
+            cancellationToken);
+
+    public async Task<IReadOnlyList<HierarchyNodeModel>> GetNodesAsync(string organizationId, CancellationToken cancellationToken = default) =>
+        [.. (await LoadAsync(organizationId, cancellationToken)).Values.Select(ToModel)];
+
+    public async Task<IReadOnlyList<string>> GetSubtreeUserIdsAsync(string organizationId, string userId, CancellationToken cancellationToken = default)
+    {
+        var below = await session.QueryIndex<UserHierarchyClosureIndex>(index => index.OrganizationId == organizationId && index.AncestorId == userId)
+            .ListAsync(cancellationToken);
+
+        return [userId, .. below.Select(row => row.DescendantId).Distinct(StringComparer.Ordinal)];
+    }
+
+    public async Task<IReadOnlyList<IReadOnlyList<string>>> GetChainsAsync(string organizationId, string userId, CancellationToken cancellationToken = default)
+    {
+        var memberships = await LoadAsync(organizationId, cancellationToken);
+        return memberships.ContainsKey(userId) ? HierarchyClosure.Chains(ManagersOf(memberships), userId) : [];
+    }
+
+    public async Task<IReadOnlyList<HierarchyNodeModel>> GetNodesForUserAsync(string userId, CancellationToken cancellationToken = default) =>
+        [.. (await session.Query<UserHierarchyMembership, UserHierarchyIndex>(index => index.UserId == userId).ListAsync(cancellationToken)).Select(ToModel)];
+
+    public Task RebuildAsync(string organizationId, CancellationToken cancellationToken = default) =>
+        WithOrganizationAsync(organizationId, memberships =>
+        {
+            foreach (var membership in memberships.Values)
+            {
+                membership.ManagerIds.RemoveAll(id => !memberships.ContainsKey(id));
+            }
+
+            return Task.FromResult(true);
+        }, cancellationToken, forceSave: true);
+
+    // The one edge-write path: lock the organization, load its documents, apply the
+    // change, recompute every ancestor list, save what changed and commit before the lock
+    // is released, so the next writer sees this one's edges.
+    private async Task WithOrganizationAsync(
+        string organizationId,
+        Func<Dictionary<string, UserHierarchyMembership>, Task<bool>> change,
+        CancellationToken cancellationToken,
+        bool forceSave = false)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(organizationId);
+
+        var (locker, locked) = await locks.TryAcquireLockAsync($"crest-hierarchy-{organizationId}", LockTimeout, LockExpiration);
+        if (!locked)
+        {
+            throw new InvalidOperationException("The organization's hierarchy is being changed; try again.");
         }
 
-        var chainIds = HierarchyPathMath.Chain(node.Path);
-        var rows = await connection.QueryAsync<HierarchyRow>(
-            $"SELECT * FROM {QuotedTable()} WHERE {Col("Id")} IN @Ids",
-            new { Ids = chainIds }, transaction);
+        await using (locker)
+        {
+            var memberships = await LoadAsync(organizationId, cancellationToken);
+            var before = memberships.ToDictionary(
+                entry => entry.Key,
+                entry => (Managers: entry.Value.ManagerIds.ToArray(), Ancestors: entry.Value.AncestorIds.ToArray()),
+                StringComparer.Ordinal);
 
-        var byId = rows.ToDictionary(row => row.Id);
-        return chainIds.Where(byId.ContainsKey).Select(id => byId[id].UserId).ToArray();
+            if (!await change(memberships))
+            {
+                return;
+            }
+
+            var ancestors = HierarchyClosure.ComputeAncestors(ManagersOf(memberships));
+            foreach (var (userId, membership) in memberships)
+            {
+                var computed = ancestors.TryGetValue(userId, out var list) ? list : [];
+                var changed = !before.TryGetValue(userId, out var previous)
+                    || !previous.Ancestors.SequenceEqual(computed, StringComparer.Ordinal)
+                    || !previous.Managers.SequenceEqual(membership.ManagerIds, StringComparer.Ordinal);
+                membership.AncestorIds = computed;
+                if (forceSave || changed)
+                {
+                    await session.SaveAsync(membership);
+                }
+            }
+
+            await session.SaveChangesAsync(cancellationToken);
+        }
     }
 
-    public async Task<IReadOnlyList<HierarchyNodeModel>> GetNodesForUserAsync(string userId, CancellationToken cancellationToken = default)
+    private async Task<Dictionary<string, UserHierarchyMembership>> LoadAsync(string organizationId, CancellationToken cancellationToken)
     {
-        var (connection, transaction) = await ReadContextAsync(cancellationToken);
+        var documents = await session.Query<UserHierarchyMembership, UserHierarchyIndex>(index => index.OrganizationId == organizationId)
+            .ListAsync(cancellationToken);
 
-        var rows = await connection.QueryAsync<HierarchyRow>(
-            $"SELECT * FROM {QuotedTable()} WHERE {Col("UserId")} = @UserId",
-            new { UserId = userId }, transaction);
+        var result = new Dictionary<string, UserHierarchyMembership>(StringComparer.Ordinal);
+        foreach (var document in documents)
+        {
+            result.TryAdd(document.UserId, document);
+        }
 
-        return rows.Select(ToModel).ToArray();
+        return result;
     }
 
-    private static HierarchyNodeModel ToModel(HierarchyRow row)
-        => new(row.Id, row.UserId, row.ParentId, row.RootKind, row.OrganizationId, row.Path, row.Position);
+    private async Task<UserHierarchyMembership?> FindAsync(string organizationId, string userId, CancellationToken cancellationToken) =>
+        await session.Query<UserHierarchyMembership, UserHierarchyIndex>(index => index.OrganizationId == organizationId && index.UserId == userId)
+            .FirstOrDefaultAsync(cancellationToken);
 
-    // Dapper materialization row (public setters required).
-    private sealed class HierarchyRow
-    {
-        public long Id { get; set; }
-        public string UserId { get; set; } = string.Empty;
-        public long? ParentId { get; set; }
-        public string RootKind { get; set; } = string.Empty;
-        public string? OrganizationId { get; set; }
-        public string Path { get; set; } = string.Empty;
-        public int Position { get; set; }
-    }
+    private static Dictionary<string, List<string>> ManagersOf(Dictionary<string, UserHierarchyMembership> memberships) =>
+        memberships.ToDictionary(entry => entry.Key, entry => entry.Value.ManagerIds, StringComparer.Ordinal);
+
+    private static HierarchyNodeModel ToModel(UserHierarchyMembership membership) =>
+        new(membership.UserId, membership.OrganizationId, [.. membership.ManagerIds], [.. membership.AncestorIds]);
 }

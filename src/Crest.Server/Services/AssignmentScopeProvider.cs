@@ -41,7 +41,7 @@ public sealed class AssignmentScopedTypes
 /// </summary>
 public sealed class AssignmentScopeProvider(
     AssignmentScopedTypes scopedTypes,
-    ICrestAssignmentService assignments) : IScopeProvider
+    IAssignmentService assignments) : IScopeProvider
 {
     public string Target => nameof(ContentItemIndex);
 

@@ -35,6 +35,7 @@ namespace Crest.Components.Primitives
     /// &lt;/CrestFieldset&gt;
     /// </code>
     /// </example>
+    [Crest.DisplayManagement.Components.BlazorComponent("Fieldset", DisplayName = "Fieldset", Category = "Layout", Icon = "select_all")]
     public partial class CrestFieldset : CrestComponent
     {
         /// <inheritdoc />

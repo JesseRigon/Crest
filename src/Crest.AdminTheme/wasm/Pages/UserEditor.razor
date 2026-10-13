@@ -19,6 +19,8 @@
         <CrestCheckBox @bind-Value="Model.EmailConfirmed" Name="email-confirmed" /><label for="email-confirmed"> @T["Email confirmed"]</label><br />
         <CrestCheckBox @bind-Value="Model.IsEnabled" Name="user-enabled" /><label for="user-enabled"> @T["Enabled"]</label>
         <CrestLabel Text="@T["Roles (comma-separated)"]" Component="roles" /><CrestTextBox Name="roles" @bind-Value="Roles" Style="width:100%" />
+        @* Derived (business) roles, read-only beneath the assigned ones (docs/sharing.md, requirement 47). *@
+        @if (!IsNew) { <Crest.Components.Sharing.CrestDerivedRoles UserId="@(Id ?? string.Empty)" /> }
         <CrestStack Orientation="Orientation.Horizontal"><CrestButton Text="@T["Save"]" Icon="save" Click="SaveAsync" /><CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="Cancel" /></CrestStack>
         @if (!string.IsNullOrWhiteSpace(Error)) { <CrestText Style="color: var(--rz-danger)">@Error</CrestText> }
     }
@@ -27,14 +29,14 @@
 @code {
     [Parameter] public string? Id { get; set; }
     private bool IsNew => string.IsNullOrWhiteSpace(Id);
-    private CrestUserWrite? Model;
+    private UserWrite? Model;
     private string? Roles;
     private string? Error;
     protected override async Task OnParametersSetAsync()
     {
-        if (IsNew) { Model = new CrestUserWrite(null, null, null, false, true, [], null); return; }
+        if (IsNew) { Model = new UserWrite(null, null, null, false, true, [], null); return; }
         var user = await Api.Crest.Rest.Users.GetAsync(Id!);
-        Model = user is null ? null : new CrestUserWrite(user.UserName, user.Email, user.PhoneNumber, user.EmailConfirmed, user.IsEnabled, user.Roles, null);
+        Model = user is null ? null : new UserWrite(user.UserName, user.Email, user.PhoneNumber, user.EmailConfirmed, user.IsEnabled, user.Roles, null);
         Roles = user is null ? null : string.Join(", ", user.Roles);
     }
     private async Task SaveAsync()

@@ -42,6 +42,14 @@ public sealed class WorkflowAccessGateMiddleware(WorkflowMiddlewareDelegate next
             ? inherited
             : await context.GetRequiredService<WorkflowCallerResolver>().ForRunAsync(context.Workflow, context.Input, context.Id, firstBurst, context.CancellationToken);
 
+        // An anonymous run only where the definition accepts one and only from a public page
+        // (docs/access.md, Anonymous actors); every other anonymous run is refused with the reason.
+        if (WorkflowCallerResolver.AnonymousRefusal(caller, context.Workflow, firstBurst, StartsAtPageEndpoint(context)) is { } refusal)
+        {
+            logger.LogWarning("Workflow {Definition} refused for an anonymous caller: {Reason}", context.Workflow.Identity.DefinitionId, refusal);
+            throw new WorkflowAccessRefusedException(refusal);
+        }
+
         if (firstBurst && !caller.IsSystem)
         {
             context.Input[WorkflowsConstants.InputKeys.Actor] = seal.Bind(WorkflowUserContext.From(caller), context.Id);
@@ -64,6 +72,10 @@ public sealed class WorkflowAccessGateMiddleware(WorkflowMiddlewareDelegate next
             accessor.Current = inherited;
         }
     }
+
+    /// <summary>Whether the run starts at an HTTP endpoint trigger, the page URL a public flow is served at.</summary>
+    private static bool StartsAtPageEndpoint(WorkflowExecutionContext context) =>
+        context.TriggerActivityId is { } triggerId && context.FindNodeByActivityId(triggerId)?.Activity is Crest.Workflows.Http.HttpEndpoint;
 }
 
 /// <summary>
@@ -86,7 +98,7 @@ public sealed class ActivityAccessGateMiddleware(ActivityMiddlewareDelegate next
 
         var caller = context.GetRequiredService<ICallerContextAccessor>().Current
             ?? throw new WorkflowAccessRefusedException($"Activity '{context.Activity.Type}' takes {permission} but the burst has no caller; the access gate did not run.");
-        var decision = await context.GetRequiredService<IAccessDecision>().DecideAsync(caller, permission, null, context.CancellationToken);
+        var decision = await context.GetRequiredService<IAccessDecision>().DecideAsync(caller, permission, PermissionResource(context.ActivityDescriptor), context.CancellationToken);
         var auditor = context.GetRequiredService<IAccessAuditor>();
         var resource = $"{context.WorkflowExecutionContext.Workflow.Identity.DefinitionId}/{context.Activity.Id}";
 
@@ -104,6 +116,11 @@ public sealed class ActivityAccessGateMiddleware(ActivityMiddlewareDelegate next
 
     public static string? RequiredPermission(ActivityDescriptor descriptor) =>
         descriptor.CustomProperties.TryGetValue(WorkflowsConstants.RequiredPermissionDescriptorProperty, out var value) && value is string permission && permission.Length > 0 ? permission : null;
+
+    /// <summary>What the permission is asked against, when the descriptor names it (a content
+    /// operation's type, so the per-type permissions decide); null asks the bare permission.</summary>
+    public static string? PermissionResource(ActivityDescriptor descriptor) =>
+        descriptor.CustomProperties.TryGetValue(WorkflowsConstants.PermissionResourceDescriptorProperty, out var value) && value is string resource && resource.Length > 0 ? resource : null;
 }
 
 /// <summary>Carries an activity class's <see cref="RequiresPermissionAttribute"/> onto its engine descriptor, where the gate and the registry read it.</summary>

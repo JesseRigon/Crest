@@ -23,6 +23,12 @@ public interface IMediaObjectWrites : IMediaObjectService
 public interface IMediaObjectListing
 {
     Task<MediaPage> ListChildrenPageAsync(string placementId, int skip, int take, CancellationToken cancellationToken = default);
+
+    /// <summary>One page of the children with the given access indicator (docs/sharing.md,
+    /// requirement 98), filtered in the query while sharing is on; with sharing off there are no
+    /// indicators and the filter is ignored.</summary>
+    Task<MediaPage> ListChildrenPageAsync(string placementId, int skip, int take, Crest.Sharing.ShareIndicator? access, CancellationToken cancellationToken = default) =>
+        ListChildrenPageAsync(placementId, skip, take, cancellationToken);
 }
 
 /// <summary>What happens to a deleted user's personal drive (requirement 20).</summary>

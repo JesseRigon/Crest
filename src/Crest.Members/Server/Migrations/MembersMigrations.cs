@@ -7,8 +7,8 @@ using YesSql.Sql;
 namespace Crest.Members.Migrations;
 
 /// <summary>
-/// The Members feature's schema: the user-class index, the per-tenant user hierarchy
-/// table and org bindings. The commercial half (subscriptions, seats, groups,
+/// The Members feature's schema: the connection index (one row per binding) and the
+/// closure-table hierarchy. The commercial half (subscriptions, seats, groups,
 /// entitlements) has its own module and its own migration, so a tenant that enables
 /// Members alone never gets that schema.
 /// </summary>
@@ -16,38 +16,34 @@ public sealed class MembersMigrations : DataMigration
 {
     public async Task<int> CreateAsync()
     {
-        await SchemaBuilder.CreateMapIndexTableAsync<UserClassIndex>(table => table
-            .Column<string>("UserId", column => column.WithLength(26))
-            .Column<string>("Class", column => column.WithLength(16)));
+        // A user's connections, one row per (user, organization, class).
+        await SchemaBuilder.CreateMapIndexTableAsync<UserConnectionIndex>(table => table
+            .Column<string>(nameof(UserConnectionIndex.UserId), column => column.WithLength(26))
+            .Column<string>(nameof(UserConnectionIndex.OrganizationId), column => column.WithLength(26))
+            .Column<string>(nameof(UserConnectionIndex.Class), column => column.WithLength(16))
+            .Column<bool>(nameof(UserConnectionIndex.IsMemberAdmin)));
 
-        await SchemaBuilder.AlterIndexTableAsync<UserClassIndex>(table => table
-            .CreateIndex("IDX_UserClassIndex_Class", "DocumentId", "Class", "UserId"));
+        await SchemaBuilder.AlterIndexTableAsync<UserConnectionIndex>(table => table
+            .CreateIndex("IDX_UserConnectionIndex_Organization", "DocumentId", "OrganizationId", "Class", "UserId"));
+        await SchemaBuilder.AlterIndexTableAsync<UserConnectionIndex>(table => table
+            .CreateIndex("IDX_UserConnectionIndex_User", "DocumentId", "UserId", "Class"));
 
-        // The per-tenant user hierarchy: a plain custom table (NOT a YesSql index -
-        // subtree queries are materialized-path prefix matches the query layer cannot
-        // express). One shared forest: RootKind 'staff' (OrganizationId null) or 'org'.
-        await SchemaBuilder.CreateTableAsync(Services.UserHierarchyService.TableName, table => table
-            .Column<long>("Id", column => column.PrimaryKey().Identity())
-            .Column<string>("UserId", column => column.WithLength(26))
-            .Column<long>("ParentId", column => column.Nullable())
-            .Column<string>("RootKind", column => column.WithLength(8))
-            .Column<string>("OrganizationId", column => column.WithLength(26))
-            .Column<string>("Path", column => column.WithLength(1024))
-            .Column<int>("Position"));
+        // The reports-to hierarchy as a closure table on YesSql (ruling 2026-10-06): a
+        // document per (user, organization), one index row per node, one per ancestor.
+        await SchemaBuilder.CreateMapIndexTableAsync<UserHierarchyIndex>(table => table
+            .Column<string>(nameof(UserHierarchyIndex.UserId), column => column.WithLength(26))
+            .Column<string>(nameof(UserHierarchyIndex.OrganizationId), column => column.WithLength(26)));
+        await SchemaBuilder.AlterIndexTableAsync<UserHierarchyIndex>(table => table
+            .CreateIndex("IDX_UserHierarchyIndex_Organization", "DocumentId", "OrganizationId", "UserId"));
 
-        await SchemaBuilder.AlterTableAsync(Services.UserHierarchyService.TableName, table =>
-        {
-            table.CreateIndex($"IDX_{Services.UserHierarchyService.TableName}_Root_Path", "RootKind", "OrganizationId", "Path");
-            table.CreateIndex($"IDX_{Services.UserHierarchyService.TableName}_UserId", "UserId");
-        });
-
-        await SchemaBuilder.CreateMapIndexTableAsync<Indexes.MemberOrgBindingIndex>(table => table
-            .Column<string>("UserId", column => column.WithLength(26))
-            .Column<string>("OrganizationId", column => column.WithLength(26))
-            .Column<bool>("IsMemberAdmin"));
-
-        await SchemaBuilder.AlterIndexTableAsync<Indexes.MemberOrgBindingIndex>(table => table
-            .CreateIndex("IDX_MemberOrgBindingIndex_Org", "DocumentId", "OrganizationId", "UserId"));
+        await SchemaBuilder.CreateMapIndexTableAsync<UserHierarchyClosureIndex>(table => table
+            .Column<string>(nameof(UserHierarchyClosureIndex.AncestorId), column => column.WithLength(26))
+            .Column<string>(nameof(UserHierarchyClosureIndex.DescendantId), column => column.WithLength(26))
+            .Column<string>(nameof(UserHierarchyClosureIndex.OrganizationId), column => column.WithLength(26)));
+        await SchemaBuilder.AlterIndexTableAsync<UserHierarchyClosureIndex>(table => table
+            .CreateIndex("IDX_UserHierarchyClosure_Ancestor", "DocumentId", "OrganizationId", "AncestorId"));
+        await SchemaBuilder.AlterIndexTableAsync<UserHierarchyClosureIndex>(table => table
+            .CreateIndex("IDX_UserHierarchyClosure_Descendant", "DocumentId", "OrganizationId", "DescendantId"));
 
         DeferEnsureMemberRoleTemplates();
 

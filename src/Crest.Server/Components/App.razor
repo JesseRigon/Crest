@@ -7,19 +7,23 @@
 @using global::Crest.MemberTheme
 @using global::Crest.Middlewares
 @using global::Crest.Extensions
+@using global::Crest.Shell
 
 @*
     Phase 8: theme-dispatching document root, mounted via Startup.cs's
     routes.MapRazorComponents<App>() - the single Blazor Web App host document for
     every Crest theme. Which theme's document renders is a per-request decision:
-    BlazorAdminThemeMiddleware authorizes admin/login page requests, rewrites their
+    the shell selection middleware authorizes admin/login page requests, rewrites their
     path to the canonical (prefix-stripped) form MapRazorComponents' route table
-    understands, and stamps HttpContext.Items[CrestBlazorHosting.ShellBasePathItem]
-    (see CrestBlazorHosting.cs) - that marker selects the Admin branch below. Every
+    understands, and stamps HttpContext.Items[BlazorHosting.ShellBasePathItem]
+    (see BlazorHosting.cs) - that marker selects the Admin branch below. Every
     other request gets the Site branch, exactly what this file rendered before Phase 8.
 
-    Routes (and every routable @page component) live in the WASM client assemblies
-    (Site.Client / Admin.Client / Member.Client under the host app's WASM entry), never here -
+    Each shell mounts the one eager root, CrestShellRoot (Crest.Shell), naming the shell: theme
+    UIs are lazy and load when their shell's document boots, so the document never names a
+    Routes type a browser could not activate at boot (docs/shells-and-themes.md › Theme UIs
+    load per shell). Routes (and every routable @page component) live in the WASM client
+    assemblies (Site.Client / Admin.Client / Member.Client under the host app's WASM entry), never here -
     the WASM runtime only has whatever assemblies it was compiled with; a Routes
     defined server-side resolves over the circuit but throws the moment
     InteractiveAuto switches to WASM. See docs/blazor-web.md.
@@ -43,6 +47,10 @@
     @if (_isAdminShell)
     {
         <title>@_siteName</title>
+        @if (!string.IsNullOrEmpty(_favicon))
+        {
+            <link rel="icon" href="@_favicon" />
+        }
         <base href="@_adminBaseHref" />
         <meta name="crest-tenant-base" content="@_tenantBasePath" />
         <link id="crest-radzen-theme" rel="stylesheet" href="@Asset("/_content/Crest.Components/css/material-base.css")" />
@@ -59,6 +67,10 @@
     else if (_isMemberShell)
     {
         <title>@_siteName</title>
+        @if (!string.IsNullOrEmpty(_favicon))
+        {
+            <link rel="icon" href="@_favicon" />
+        }
         @* Same base-href mechanism as the admin shell: the middleware shifted the member
            base into PathBase, so PathBase + "/" is the composed base href. *@
         <base href="@_adminBaseHref" />
@@ -73,6 +85,10 @@
     else
     {
         <base href="@(_tenantBasePath + "/")" />
+        @if (!string.IsNullOrEmpty(_favicon))
+        {
+            <link rel="icon" href="@_favicon" />
+        }
         <meta name="crest-tenant-base" content="@_tenantBasePath" />
         @* The site shell on the display tree (docs/blazor-display.md rework step 3): the same
            design system as the admin (tokens, component styles, icons) and the site frame. *@
@@ -88,7 +104,7 @@
 <body>
     @if (_isAdminShell)
     {
-        <AdminRoutes @rendermode="@_renderMode" />
+        <CrestShellRoot Shell="@(global::Crest.Components.Modules.CrestShells.Admin)" @rendermode="@_renderMode" />
         <script src="@Asset("/_content/Crest.AdminTheme.Client/crest.theme.js")"></script>
         <script src="@Asset("/_content/Crest.Components/crest.components.js")"></script>
         <script src="@Asset("/_content/Crest.AdminTheme.Client/crest.adminMenus.js")"></script>
@@ -100,7 +116,7 @@
     }
     else if (_isMemberShell)
     {
-        <MemberRoutes @rendermode="@_renderMode" />
+        <CrestShellRoot Shell="@(global::Crest.Components.Modules.CrestShells.Member)" @rendermode="@_renderMode" />
         <script src="@Asset("/_content/Crest.Components/crest.components.js")"></script>
         <script src="@Asset("/_content/Crest.Icons/icons.js")"></script>
         <script src="@Asset("/_content/Crest.Components/Radzen.Blazor.js")"></script>
@@ -113,7 +129,7 @@
            (see docs/blazor-web.md's "Route reachability" section) vetoes whichever one
            doesn't own this request before endpoint selection completes, so only one of
            the two ever actually renders here. *@
-        <Routes @rendermode="@_renderMode" />
+        <CrestShellRoot Shell="@(global::Crest.Components.Modules.CrestShells.Site)" @rendermode="@_renderMode" />
         <script src="@Asset("/_content/Crest.Components/crest.components.js")"></script>
         <script src="@Asset("/_content/Crest.Icons/icons.js")"></script>
         <script src="@Asset("/_content/Crest.Components/Radzen.Blazor.js")"></script>
@@ -127,24 +143,21 @@
     private HttpContext? HttpContext { get; set; }
 
     [Inject]
-    private IOptions<BlazorAdminThemeOptions> AdminThemeOptions { get; set; } = default!;
+    private IEnumerable<global::Crest.Services.IWebAssemblyRouteProvider> WebAssemblyRouteProviders { get; set; } = default!;
 
     [Inject]
-    private IEnumerable<global::Crest.Services.ICrestWebAssemblyRouteProvider> WebAssemblyRouteProviders { get; set; } = default!;
-
-    [Inject]
-    private IOptions<global::Crest.Routing.MemberOptions> MemberOptions { get; set; } = default!;
-
-    [Inject]
-    private Crest.Settings.ISiteService SiteService { get; set; } = default!;
+    private global::Crest.Services.SiteIdentity SiteIdentity { get; set; } = default!;
 
     // The tenant's own name for the shell documents' <title> (docs/branding.md: the display
-    // name IS ISite.SiteName), not the platform's.
+    // name IS ISite.SiteName), not the platform's, and its favicon rendition: both read
+    // through the `site` query in process (site › name, site › branding.favicon). An unset
+    // favicon keeps the static icon.
     private string _siteName = string.Empty;
+    private string _favicon = string.Empty;
 
-    private global::Crest.Routing.RouteBucket _shellBucket = global::Crest.Routing.RouteBucket.Site;
-    private bool _isAdminShell => _shellBucket == global::Crest.Routing.RouteBucket.Admin;
-    private bool _isMemberShell => _shellBucket == global::Crest.Routing.RouteBucket.Member;
+    private global::Crest.Routing.ShellId _shellBucket = global::Crest.Routing.ShellId.Site;
+    private bool _isAdminShell => _shellBucket == global::Crest.Routing.ShellId.Admin;
+    private bool _isMemberShell => _shellBucket == global::Crest.Routing.ShellId.Member;
     private string _adminBaseHref = "/";
     private string _tenantBasePath = "";
     private IComponentRenderMode _renderMode = RenderMode.InteractiveAuto;
@@ -156,7 +169,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _siteName = (await SiteService.GetSiteSettingsAsync()).SiteName ?? string.Empty;
+        var identity = await SiteIdentity.GetAsync(HttpContext?.RequestAborted ?? default);
+        _siteName = identity.Name;
+        _favicon = identity.Rendition("favicon");
     }
 
     protected override void OnInitialized()
@@ -165,7 +180,7 @@
         // any host-level PathBase), WITHOUT Crest's admin shell base. For admin-shell
         // requests the middleware stashes the pre-shift value; for site requests
         // PathBase was never shifted, so it IS the tenant base.
-        _tenantBasePath = HttpContext?.Items.TryGetValue(CrestBlazorHosting.TenantBasePathItem, out var tenantBase) == true
+        _tenantBasePath = HttpContext?.Items.TryGetValue(BlazorHosting.TenantBasePathItem, out var tenantBase) == true
             && tenantBase is string tenantBasePath
                 ? tenantBasePath.TrimEnd('/')
                 : (HttpContext?.Request.PathBase.Value ?? "").TrimEnd('/');
@@ -177,12 +192,12 @@
         // Which shell, by the bucket the middleware stamped - not inferred from the base
         // path, which cannot distinguish three shells. Absent means Site, the fallback
         // bucket for every request the middleware did not claim.
-        _shellBucket = HttpContext?.Items.TryGetValue(CrestBlazorHosting.ShellBucketItem, out var bucketItem) == true
-            && bucketItem is global::Crest.Routing.RouteBucket stampedBucket
+        _shellBucket = HttpContext?.Items.TryGetValue(BlazorHosting.ShellBucketItem, out var bucketItem) == true
+            && bucketItem is global::Crest.Routing.ShellId stampedBucket
                 ? stampedBucket
-                : global::Crest.Routing.RouteBucket.Site;
+                : global::Crest.Routing.ShellId.Site;
 
-        if (HttpContext?.Items.TryGetValue(CrestBlazorHosting.ShellBasePathItem, out var value) == true
+        if (HttpContext?.Items.TryGetValue(BlazorHosting.ShellBasePathItem, out var value) == true
             && value is string shellBasePath
             && !string.IsNullOrWhiteSpace(shellBasePath))
         {
@@ -192,34 +207,26 @@
             // NavigationManager.BaseUri once available (dotnet/aspnetcore#66388).
             _adminBaseHref = (HttpContext.Request.PathBase.Value ?? shellBasePath).TrimEnd('/') + "/";
 
-            // The login shell is the render-mode exception: under InteractiveAuto's
-            // first-visit server circuit, Login.razor's credential POST goes out on
-            // the server-side loopback HttpClient - the auth Set-Cookie lands in that
-            // handler, never in the browser, and the "successful" login leaves the
-            // browser anonymous. InteractiveWebAssembly keeps the SSR-prerendered
-            // form but runs the interactive phase in the browser, where the fetch's
-            // Set-Cookie is stored by the browser exactly like the old WASM shell.
-            // The same trap catches ANY page that establishes a session, so the rule is
-            // general rather than one shell's special case: the member shell's own login
-            // and registration pages set the same auth cookie and must render the same
-            // way. Here that is the member shell's "/login" and "/register" - the page
-            // paths after the middleware shifted the member base into PathBase.
-            var shellRelativePath = HttpContext.Request.Path.Value ?? "/";
-            var isAuthCookiePage =
-                string.Equals(shellBasePath, AdminThemeOptions.Value.LoginPath, StringComparison.OrdinalIgnoreCase)
-                || (_isMemberShell && (
-                    shellRelativePath.StartsWith("/login", StringComparison.OrdinalIgnoreCase)
-                    || shellRelativePath.StartsWith("/register", StringComparison.OrdinalIgnoreCase)));
-            if (isAuthCookiePage)
+            // A page that sets an authentication cookie renders InteractiveWebAssembly, and the
+            // page declares it ([SetsAuthenticationCookie]) - read here off the routed page,
+            // never off a list of shell paths. Under InteractiveAuto's first-visit server
+            // circuit the credential POST goes out on the server-side loopback HttpClient: the
+            // auth Set-Cookie lands in that handler, never in the browser, and the "successful"
+            // login leaves the browser anonymous. InteractiveWebAssembly keeps the prerendered
+            // form but runs the interactive phase in the browser, where the fetch's Set-Cookie
+            // is stored.
+            var pageType = HttpContext.GetEndpoint()?.Metadata
+                .GetMetadata<Microsoft.AspNetCore.Components.Endpoints.ComponentTypeMetadata>()?.Type;
+            if (pageType?.IsDefined(typeof(global::Crest.Components.Modules.SetsAuthenticationCookieAttribute), inherit: false) == true)
             {
                 _renderMode = RenderMode.InteractiveWebAssembly;
             }
 
-            // Pages a module declared client-only (ICrestWebAssemblyRouteProvider): the
+            // Pages a module declared client-only (IWebAssemblyRouteProvider): the
             // same InteractiveWebAssembly document, so they never run in a server circuit.
             var adminRemainder = HttpContext.Request.Path.Value;
             if (WebAssemblyRouteProviders.SelectMany(provider => provider.GetWebAssemblyRoutes())
-                .Any(template => global::Crest.Services.CrestRouteAuthorizationService.Matches(template, adminRemainder)))
+                .Any(template => global::Crest.Access.RouteTemplates.Matches(template, adminRemainder)))
             {
                 _renderMode = RenderMode.InteractiveWebAssembly;
             }

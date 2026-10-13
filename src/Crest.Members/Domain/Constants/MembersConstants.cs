@@ -46,6 +46,17 @@ public static class MemberSessionKeys
     public const string ImpersonatorUserId = "crest-impersonator-user-id";
     public const string ImpersonatorUserName = "crest-impersonator-user-name";
 
+    /// <summary>The impersonation session's id: the correlation id of its audit start and stop
+    /// events and the session id on every event recorded inside it (docs/audit.md › step 2).</summary>
+    public const string ImpersonationSessionId = "crest-impersonation-session-id";
+
+    /// <summary>The staff session's own last active organization (a dual user's), kept
+    /// through an impersonation so stopping restores the staff session exactly.</summary>
+    public const string ImpersonatorActiveOrganization = "crest-impersonator-active-org";
+
+    /// <summary>Whether the staff session was persistent ("remember me"), restored on stop.</summary>
+    public const string ImpersonatorPersistent = "crest-impersonator-persistent";
+
     /// <summary>Set on the EXTERNAL-scheme properties by the portal's external-login
     /// start endpoint: the organization the sign-in/registration is for. The login
     /// surface gate and the creation stamp read it back from the external cookie on

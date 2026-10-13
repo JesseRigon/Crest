@@ -50,14 +50,16 @@ public sealed class NotificationPersonalDriveNotifier(
 
         if (notice.HasFlag(PersonalDriveNotice.Portal))
         {
-            if (notifications.Any())
+            // A portal notice is stored for the portal to show (requirement 30); with portal
+            // notifications off nobody would see it, so it counts as not sent.
+            if (notifications.Any() && services.GetService(typeof(IPortalNotifications)) is not null)
             {
                 await StoreAsync(owner, ownerUserId, message, cancellationToken);
                 sent.Add("portal");
             }
             else
             {
-                failed.Add("portal (notifications are off)");
+                failed.Add("portal (portal notifications are off)");
             }
         }
 

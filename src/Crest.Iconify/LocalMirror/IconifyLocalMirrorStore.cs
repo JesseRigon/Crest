@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Text.Json;
 
 namespace Crest.Iconify;
@@ -54,7 +53,15 @@ public sealed record IconifyLocalCollection(
     string[] Names,
     IReadOnlyDictionary<string, string[]> Categories);
 
-public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider pathProvider) : IIconifyLocalMirrorStore
+/// <summary>
+/// Runs git for the local mirror; replaced in tests so a sync needs no network.
+/// </summary>
+public interface IIconifyGitRunner
+{
+    Task RunAsync(string arguments, string workingDirectory, CancellationToken cancellationToken);
+}
+
+public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider pathProvider, IIconifyGitRunner gitRunner) : IIconifyLocalMirrorStore
 {
     private const string RepositoryUrl = "https://github.com/iconify/icon-sets.git";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -63,6 +70,7 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
     private IReadOnlyDictionary<string, IconifyLocalCollectionInfo>? _collectionsCache;
     private IconifyLocalMirrorMetadata _metadata = IconifyLocalMirrorMetadata.Empty;
     private bool _isSyncing;
+    private Task? _firstSync;
 
     public bool IsPublicIconify(IconifyIconProviderSettings settings) =>
         string.Equals(NormalizeBaseUrl(settings.BaseUrl), NormalizeBaseUrl(IconifyIconProviderSettings.Default.BaseUrl), StringComparison.OrdinalIgnoreCase);
@@ -257,26 +265,20 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
             info?.License ?? "Iconify collection license");
     }
 
-    private async Task EnsureInitializedAsync(CancellationToken cancellationToken)
+    // The first lookup on a host with no mirror starts the first sync, in the background:
+    // lookups use the remote API until it lands, and the daily background task keeps it fresh.
+    private Task EnsureInitializedAsync(CancellationToken cancellationToken)
     {
-        if (File.Exists(Path.Combine(RootPath, "collections.json")))
+        if (_firstSync is null && !File.Exists(Path.Combine(RootPath, "collections.json")))
         {
-            return;
-        }
-
-        await SyncLock.WaitAsync(cancellationToken);
-        try
-        {
-            if (File.Exists(Path.Combine(RootPath, "collections.json")))
+            var firstSync = new Task<Task>(() => SyncAsync(CancellationToken.None).AsTask());
+            if (Interlocked.CompareExchange(ref _firstSync, firstSync.Unwrap(), null) is null)
             {
-                return;
+                firstSync.Start(TaskScheduler.Default);
             }
+        }
 
-        }
-        finally
-        {
-            SyncLock.Release();
-        }
+        return Task.CompletedTask;
     }
 
     private async Task RefreshRuntimeCacheAsync(CancellationToken cancellationToken)
@@ -315,7 +317,7 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
         }
     }
 
-    private static async Task UpdateGitCheckoutAsync(string workingDirectory, CancellationToken cancellationToken)
+    private async Task UpdateGitCheckoutAsync(string workingDirectory, CancellationToken cancellationToken)
     {
         await RunGitAsync("fetch --depth 1 origin master", workingDirectory, cancellationToken);
         await RunGitAsync("checkout --force FETCH_HEAD", workingDirectory, cancellationToken);
@@ -349,35 +351,8 @@ public sealed class IconifyLocalMirrorStore(IIconifyLocalMirrorPathProvider path
         return collections;
     }
 
-    private static async Task RunGitAsync(string arguments, string workingDirectory, CancellationToken cancellationToken)
-    {
-        var process = new Process
-        {
-            StartInfo = new ProcessStartInfo("git", arguments)
-            {
-                WorkingDirectory = workingDirectory,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            },
-        };
-
-        if (!process.Start())
-        {
-            throw new InvalidOperationException("Could not start git.");
-        }
-
-        var stdout = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        var stderr = process.StandardError.ReadToEndAsync(cancellationToken);
-        await process.WaitForExitAsync(cancellationToken);
-
-        if (process.ExitCode != 0)
-        {
-            var output = ((await stdout) + Environment.NewLine + (await stderr)).Trim();
-            throw new InvalidOperationException(string.IsNullOrWhiteSpace(output) ? $"git {arguments} failed with exit code {process.ExitCode}." : output);
-        }
-    }
+    private Task RunGitAsync(string arguments, string workingDirectory, CancellationToken cancellationToken) =>
+        gitRunner.RunAsync(arguments, workingDirectory, cancellationToken);
 
     private string? GetCurrentSourcePath()
     {

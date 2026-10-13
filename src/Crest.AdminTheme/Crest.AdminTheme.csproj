@@ -25,6 +25,12 @@
     <None Remove="wasm\**" />
     <RazorGenerate Remove="wasm\**" />
     <RazorComponent Remove="wasm\**" />
+    <Compile Remove="client-services\**" />
+    <Content Remove="client-services\**" />
+    <EmbeddedResource Remove="client-services\**" />
+    <None Remove="client-services\**" />
+    <RazorGenerate Remove="client-services\**" />
+    <RazorComponent Remove="client-services\**" />
     <Compile Remove="tests\**" />
     <Content Remove="tests\**" />
     <EmbeddedResource Remove="tests\**" />

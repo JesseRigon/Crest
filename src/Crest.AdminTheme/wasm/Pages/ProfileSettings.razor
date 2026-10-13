@@ -82,7 +82,7 @@
         ErrorMessage = null;
         try
         {
-            var saved = await Api.Crest.Rest.Localization.SetMyCultureAsync(new CrestUserCulture(value));
+            var saved = await Api.Crest.Rest.Localization.SetMyCultureAsync(new UserCulture(value));
             if (saved is null)
             {
                 throw new InvalidOperationException(T["Unable to save your default culture."]);

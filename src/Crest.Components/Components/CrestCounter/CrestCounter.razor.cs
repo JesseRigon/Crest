@@ -6,11 +6,11 @@ namespace Crest.Components.Primitives;
 /// <summary>
 /// CrestCounter component - a minimal interactive island. Needs an actual interactive
 /// render mode (InteractiveServer/InteractiveWebAssembly/InteractiveAuto) to be
-/// clickable - rendered through CrestBlazorComponentShapeBindingResolver's
+/// clickable - rendered through BlazorComponentShapeBindingResolver's
 /// Static-SSR-only HtmlRenderer path, the button renders but is inert (no circuit, no
 /// WASM runtime attached).
 /// </summary>
-[CrestBlazorComponent("CrestCounter", DisplayName = "Counter", Category = "Diagnostics", Icon = "add_circle")]
+[BlazorComponent("CrestCounter", DisplayName = "Counter", Category = "Diagnostics", Icon = "add_circle")]
 public partial class CrestCounter : ComponentBase
 {
     [Parameter]

@@ -1,0 +1,112 @@
+@page "/Files"
+@using Crest.AdminTheme.Api
+@using Crest.Components.Files
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject HttpClient Http
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* The drive browser (docs/media.md § 8): the caller's drives, folders and files with the viewer
+   pane. Other users' personal drives never appear here (requirement 24); a tenant
+   administrator reaches one only through "Open a user's drive", which opens it in its own
+   window, marked as administrator access (§ 7). *@
+<CrestStack Gap="1rem" data-testid="files-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <CrestText TextStyle="TextStyle.H4" Text="@T["Files"]" />
+        <CrestButton Text="@T["Open a user's drive"]" Icon="folder_shared" ButtonStyle="ButtonStyle.Light" Click="@(() => Opening = !Opening)" data-testid="open-user-drive" />
+    </CrestStack>
+
+    @if (Opening)
+    {
+        <CrestCard data-testid="open-user-drive-form">
+            <CrestStack Gap="0.75rem">
+                <CrestText TextStyle="TextStyle.Body2" Text="@T["Administrator access to another user's personal drive is a separate step: the owner may be notified, a delay may apply, and every step is recorded."]" />
+                <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                    <CrestTextBox @bind-Value="UserSearch" Placeholder="@T["User name or email"]" />
+                    <CrestButton Text="@T["Find"]" Click="FindUsersAsync" />
+                </CrestStack>
+                @foreach (var user in Users)
+                {
+                    <CrestButton Variant="Variant.Text" Text="@($"{user.UserName} ({user.Email})")" Click="@(() => FindDriveAsync(user))" />
+                }
+                @if (Drive is { } drive)
+                {
+                    <CrestStack Gap="0.5rem" data-testid="user-drive-request">
+                        <CrestText Text="@($"{T["Drive"]}: {drive.Name}{(drive.IsInactive ? " (" + T["inactive"] + ")" : string.Empty)}")" />
+                        <label>@T["How long"]
+                            <select @bind="DurationIndex">
+                                @for (var i = 0; i < drive.Durations.Count; i++)
+                                {
+                                    <option value="@i">@DurationText(drive.Durations[i])</option>
+                                }
+                            </select>
+                        </label>
+                        <CrestCheckBox @bind-Value="OverrideDelay" Name="override-delay" /><label for="override-delay"> @T["Override the notice delay (needs a reason)"]</label>
+                        <CrestTextBox @bind-Value="Reason" Placeholder="@T["Reason"]" Style="width: 100%;" />
+                        <CrestButton Text="@T["Request access"]" Click="RequestAsync" data-testid="request-user-drive-access" />
+                    </CrestStack>
+                }
+                @if (Access is { } access && Drive is { } opened)
+                {
+                    @if (access.OpensUtc > DateTimeOffset.UtcNow)
+                    {
+                        <CrestText Text="@($"{T["The drive opens at"]} {access.OpensUtc.ToLocalTime():g}.")" />
+                    }
+                    <a href="@($"Files/user-drive/{Uri.EscapeDataString(opened.DriveId)}")" target="_blank" rel="noopener" data-testid="user-drive-window">@T["Open in its own window"]</a>
+                }
+                @if (Error is { } error) { <CrestText TextStyle="TextStyle.Body2" Style="color: var(--rz-danger)">@error</CrestText> }
+            </CrestStack>
+        </CrestCard>
+    }
+
+    <CrestDriveBrowser AllowCreateSharedDrive="true" />
+</CrestStack>
+
+@code {
+    private bool Opening;
+    private string? UserSearch;
+    private CrestUser[] Users = [];
+    private CrestPersonalDrive? Drive;
+    private CrestPersonalDriveAccess? Access;
+    private int DurationIndex;
+    private bool OverrideDelay;
+    private string? Reason;
+    private string? Error;
+
+    private CrestFilesClient FilesClient => _files ??= new CrestFilesClient(Http);
+    private CrestFilesClient? _files;
+
+    private async Task FindUsersAsync()
+    {
+        Error = null;
+        Users = (await Api.Crest.Rest.Users.ListAsync(UserSearch)).Items.Take(10).ToArray();
+    }
+
+    private async Task FindDriveAsync(CrestUser user)
+    {
+        Error = null;
+        Access = null;
+        var found = await FilesClient.FindPersonalDriveAsync(user.Id);
+        Drive = found.Value;
+        Access = Drive?.CurrentAccess;
+        Error = found.Status == 404 ? T["That user has no personal drive."] : found.Error;
+        DurationIndex = 0;
+    }
+
+    private async Task RequestAsync()
+    {
+        if (Drive is not { } drive)
+        {
+            return;
+        }
+
+        var duration = drive.Durations.Count > DurationIndex ? drive.Durations[DurationIndex] : null;
+        var requested = await FilesClient.RequestAccessAsync(drive.DriveId, duration, OverrideDelay, Reason);
+        Access = requested.Value;
+        Error = requested.Error;
+    }
+
+    private string DurationText(TimeSpan? duration) => duration is { } span
+        ? span.TotalHours >= 1 ? $"{span.TotalHours:0.#} {T["hours"]}" : $"{span.TotalMinutes:0} {T["minutes"]}"
+        : T["Until closed"];
+}

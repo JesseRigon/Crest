@@ -1,4 +1,4 @@
-// CrestMenuCaptionResolver: two behaviors a bare IDataLocalizer lookup lacks.
+// MenuCaptionResolver: two behaviors a bare IDataLocalizer lookup lacks.
 //
 // 1. MenuName restoration. NavigationManager.Merge drops MenuName whenever the provider's
 //    instance survives the fold (registration-order roulette; entry #7 in the host's

@@ -6,6 +6,7 @@ using Crest.AuditTrail.Services;
 using Crest.AuditTrail.Services.Models;
 using Crest.ContentManagement.Records;
 using Crest.Contents.AuditTrail.Models;
+using Crest.Contents.AuditTrail.Services;
 using Crest.Contents.AuditTrail.ViewModels;
 using Crest.DisplayManagement.Handlers;
 using Crest.DisplayManagement.Views;
@@ -19,18 +20,24 @@ public sealed class AuditTrailContentEventDisplayDriver : AuditTrailEventSection
     private readonly Dictionary<string, string> _latestVersionId = [];
     private readonly IAuditTrailManager _auditTrailManager;
     private readonly ISession _session;
+    private readonly ContentHistory _history;
 
     public AuditTrailContentEventDisplayDriver(
         IAuditTrailManager auditTrailManager,
-        ISession session)
+        ISession session,
+        ContentHistory history)
     {
         _auditTrailManager = auditTrailManager;
         _session = session;
+        _history = history;
     }
 
     public override async Task<IDisplayResult> DisplayAsync(AuditTrailEvent auditTrailEvent, AuditTrailContentEvent contentEvent, BuildDisplayContext context)
     {
-        var contentItemId = contentEvent.ContentItem.ContentItemId;
+        // Lists show the summary the event carries; the detail rebuilds the versions it compares
+        // (docs/audit.md › Content history is stored as diffs).
+        var summaryItem = contentEvent.Stub();
+        var contentItemId = summaryItem.ContentItemId;
 
         if (!_latestVersionId.TryGetValue(contentItemId, out var latestVersionId))
         {
@@ -43,76 +50,45 @@ public sealed class AuditTrailContentEventDisplayDriver : AuditTrailEventSection
 
         var descriptor = _auditTrailManager.DescribeEvent(auditTrailEvent);
 
+        async ValueTask BuildDetailAsync(AuditTrailContentEventDetailViewModel m)
+        {
+            var current = await _history.RebuildAsync(auditTrailEvent) ?? summaryItem;
+            BuildSummaryViewModel(m, auditTrailEvent, contentEvent, descriptor, latestVersionId, current);
+
+            var previousContentItem = await _history.RebuildPreviousAsync(auditTrailEvent);
+            if (previousContentItem != null)
+            {
+                var currentJson = JObject.FromObject(current);
+                var previousJson = JObject.FromObject(previousContentItem);
+                previousJson.Remove(nameof(AuditTrailPart));
+                currentJson.Remove(nameof(AuditTrailPart));
+
+                m.PreviousContentItem = previousContentItem;
+                m.Previous = previousJson.ToString();
+                m.Current = currentJson.ToString();
+            }
+        }
+
         return Combine(
-            Initialize<AuditTrailContentEventViewModel>("AuditTrailContentEventData_SummaryAdmin", m => BuildSummaryViewModel(m, auditTrailEvent, contentEvent, descriptor, latestVersionId))
+            Initialize<AuditTrailContentEventViewModel>("AuditTrailContentEventData_SummaryAdmin", m => BuildSummaryViewModel(m, auditTrailEvent, contentEvent, descriptor, latestVersionId, summaryItem))
                 .Location(PlatformConstants.DisplayType.SummaryAdmin, "EventData:10"),
-            Initialize<AuditTrailContentEventViewModel>("AuditTrailContentEventContent_SummaryAdmin", m => BuildSummaryViewModel(m, auditTrailEvent, contentEvent, descriptor, latestVersionId))
+            Initialize<AuditTrailContentEventViewModel>("AuditTrailContentEventContent_SummaryAdmin", m => BuildSummaryViewModel(m, auditTrailEvent, contentEvent, descriptor, latestVersionId, summaryItem))
                 .Location(PlatformConstants.DisplayType.SummaryAdmin, "Content:10"),
-            Initialize<AuditTrailContentEventViewModel>("AuditTrailContentEventActions_SummaryAdmin", m => BuildSummaryViewModel(m, auditTrailEvent, contentEvent, descriptor, latestVersionId))
+            Initialize<AuditTrailContentEventViewModel>("AuditTrailContentEventActions_SummaryAdmin", m => BuildSummaryViewModel(m, auditTrailEvent, contentEvent, descriptor, latestVersionId, summaryItem))
                 .Location(PlatformConstants.DisplayType.SummaryAdmin, "Actions:5"),
-            Initialize<AuditTrailContentEventDetailViewModel>("AuditTrailContentEventDetail_DetailAdmin", async m =>
-            {
-                BuildSummaryViewModel(m, auditTrailEvent, contentEvent, descriptor, latestVersionId);
-                var previousContentItem = (await _session.Query<AuditTrailEvent, AuditTrailEventIndex>(collection: AuditTrailEvent.Collection)
-                    .Where(index =>
-                        index.Category == "Content" &&
-                        index.CreatedUtc <= auditTrailEvent.CreatedUtc &&
-                        index.EventId != auditTrailEvent.EventId &&
-                        index.CorrelationId == contentEvent.ContentItem.ContentItemId)
-                    .OrderByDescending(index => index.Id)
-                    .FirstOrDefaultAsync())?
-                    .GetOrCreate<AuditTrailContentEvent>()
-                    .ContentItem;
-
-                if (previousContentItem != null)
-                {
-                    var current = JObject.FromObject(contentEvent.ContentItem);
-                    var previous = JObject.FromObject(previousContentItem);
-                    previous.Remove(nameof(AuditTrailPart));
-                    current.Remove(nameof(AuditTrailPart));
-
-                    m.PreviousContentItem = previousContentItem;
-
-                    m.Previous = previous.ToString();
-                    m.Current = current.ToString();
-                }
-            }).Location(PlatformConstants.DisplayType.DetailAdmin, "Content:5"),
-            Initialize<AuditTrailContentEventDetailViewModel>("AuditTrailContentEventDiff_DetailAdmin", async m =>
-            {
-                BuildSummaryViewModel(m, auditTrailEvent, contentEvent, descriptor, latestVersionId);
-                var previousContentItem = (await _session.Query<AuditTrailEvent, AuditTrailEventIndex>(collection: AuditTrailEvent.Collection)
-                    .Where(index =>
-                        index.Category == "Content" &&
-                        index.CreatedUtc <= auditTrailEvent.CreatedUtc &&
-                        index.EventId != auditTrailEvent.EventId &&
-                        index.CorrelationId == contentEvent.ContentItem.ContentItemId)
-                    .OrderByDescending(index => index.Id)
-                    .FirstOrDefaultAsync())?
-                    .GetOrCreate<AuditTrailContentEvent>()
-                    .ContentItem;
-
-                if (previousContentItem != null)
-                {
-                    var current = JObject.FromObject(contentEvent.ContentItem);
-                    var previous = JObject.FromObject(previousContentItem);
-                    previous.Remove(nameof(AuditTrailPart));
-                    current.Remove(nameof(AuditTrailPart));
-
-                    m.PreviousContentItem = previousContentItem;
-
-                    m.Previous = previous.ToString();
-                    m.Current = current.ToString();
-                }
-            }).Location(PlatformConstants.DisplayType.DetailAdmin, "Content:5#Diff")
+            Initialize<AuditTrailContentEventDetailViewModel>("AuditTrailContentEventDetail_DetailAdmin", BuildDetailAsync)
+                .Location(PlatformConstants.DisplayType.DetailAdmin, "Content:5"),
+            Initialize<AuditTrailContentEventDetailViewModel>("AuditTrailContentEventDiff_DetailAdmin", BuildDetailAsync)
+                .Location(PlatformConstants.DisplayType.DetailAdmin, "Content:5#Diff")
         );
     }
 
-    private static void BuildSummaryViewModel(AuditTrailContentEventViewModel m, AuditTrailEvent model, AuditTrailContentEvent contentEvent, AuditTrailEventDescriptor descriptor, string latestVersionId)
+    private static void BuildSummaryViewModel(AuditTrailContentEventViewModel m, AuditTrailEvent model, AuditTrailContentEvent contentEvent, AuditTrailEventDescriptor descriptor, string latestVersionId, Crest.ContentManagement.ContentItem contentItem)
     {
         m.AuditTrailEvent = model;
         m.Descriptor = descriptor;
         m.Name = contentEvent.Name;
-        m.ContentItem = contentEvent.ContentItem;
+        m.ContentItem = contentItem;
         m.VersionNumber = contentEvent.VersionNumber;
         m.Comment = contentEvent.Comment;
         m.LatestVersionId = latestVersionId;

@@ -148,7 +148,7 @@ window.crestTheme = (() => {
   // tab can rehydrate the resolved culture before the first server round-trip completes.
   // NOTE: because the cookie is per-origin (not per-tab), it only reflects whichever tab
   // wrote it most recently - see getSessionCultureOverride below for the actual per-tab
-  // source of truth. CrestAntiforgeryHandler.RewriteCultureCookie calls this same function
+  // source of truth. AntiforgeryHandler.RewriteCultureCookie calls this same function
   // again (via getSessionCultureOverride/getBrowserLocale) immediately before every
   // outgoing Crest API request, not only on manifest refresh, so each tab's own requests
   // always carry its own resolved culture - see docs/localization.md phase 15.

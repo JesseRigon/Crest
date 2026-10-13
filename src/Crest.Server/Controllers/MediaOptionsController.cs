@@ -9,7 +9,7 @@ namespace Crest.Controllers;
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/media/options")]
-public sealed class CrestMediaOptionsController(IOptions<MediaOptions> options, IAuthorizationService authorization) : ControllerBase
+public sealed class MediaOptionsController(IOptions<MediaOptions> options, IAuthorizationService authorization) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<MediaOptionsDto>> GetAsync()

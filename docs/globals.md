@@ -1,11 +1,11 @@
-> **Ruling 2026-10-09:** this module becomes `Crest.Data.Global`, the home of the standardized
+> **Ruling 2026-10-09 (renamed 2026-10-13):** this module becomes `Crest.Data.Global`, the home of the standardized
 > global data set imports and loading and of the global data registry; see
 > [blazor-display.md](blazor-display.md) › Rulings.
 
 # The global store — tenant-less reference data
 
 Reference data that is the same for every tenant is stored **once**, in a YesSql store that
-belongs to no tenant (`Crest.Global`). The Default tenant is its only editor. Tenants read it
+belongs to no tenant (`Crest.Data.Global`). The Default tenant is its only editor. Tenants read it
 and may layer their own additions and presentation over it; they never modify it. What is not
 built yet is in [globals.md](globals.md).
 
@@ -29,7 +29,7 @@ Orchard can store tenant settings in a database rather than `tenants.json`
 session against a **store of its own** — its own `DatabaseProvider`, `ConnectionString`,
 `TablePrefix` and `Schema`, configured under `Crest_Shells_Database`.
 
-Crest does the same: a **`CrestGlobalStore`** — one host-level service that owns a
+Crest does the same: a **`GlobalStore`** — one host-level service that owns a
 tenant-less YesSql store configured under its own section (`Crest_Global`,
 same four fields). Full YesSql: documents, map indexes, SQLite, Postgres, SQL Server or
 MySQL. Shell services resolve host services, so tenant code queries it like any other
@@ -38,8 +38,9 @@ service.
 Rather than building a synthetic `ShellSettings` and asking `IShellContextFactory` for a
 context, as Orchard's `internal` helper does, the store builds its YesSql `Configuration`
 directly from those options, the way Crest.Data builds a tenant's store, so no shell is
-involved. Modules contribute their global documents as `ICrestGlobalSchema` types, discovered
-by scanning the loaded module assemblies, so the host does not name each one.
+involved. Modules contribute their global documents as `GlobalDataMigration` types (the
+platform's `DataMigration` convention: `CreateAsync`, then `UpdateFromNAsync`), discovered by
+scanning the loaded module assemblies, so the host does not name each one.
 
 **Topology is configuration, as it is for Orchard.** Orchard places tenants in one database
 by table prefix, or in separate databases by connection string, per configuration. The global
@@ -51,13 +52,13 @@ string, exactly as they would for `Crest_Shells_Database`.
 **No cross-store joins**, and none needed. Tenant indexes hold global ids (stable strings,
 see below); lookups query the global store with an `IN`. Two indexed queries, not one join.
 
-### The host registers it
+### The feature registers it
 
-`ICrestGlobalStore` is registered by an `PlatformBuilder` extension
-(`AddCrestGlobalStore()`), not by the feature, because the store is one database shared by
-every tenant and so belongs to the host's service collection: a host calls
-`AddPlatformCms().AddCrestGlobalStore()` in `Program.cs`. The `Crest.Global` feature itself
-only adds the `ManageCrestGlobalReferenceData` permission.
+The `Crest.Data.Global` feature registers `IGlobalStore` and `IGlobalCache` in each
+tenant that enables it, and every tenant of a host gets the same instance (`GlobalHost`,
+keyed by the host), built from host-level services only and released when the application
+stops. A host makes no call of its own. The feature also adds the
+`ManageGlobalReferenceData` permission.
 
 ## Who can write
 
@@ -82,7 +83,7 @@ Two write paths, and they are different:
   never clobber it — the same never-overwrite rule `SeedAsync` has, now at the global
   layer.
 
-Super-tenant writes go through the `ManageCrestGlobalReferenceData` permission and
+Super-tenant writes go through the `ManageGlobalReferenceData` permission and
 Default-shell-only controllers (`api/crest/global/lists`, geo import). The permission is
 granted to no stereotype, and the controllers additionally require the Default shell, so an
 ordinary tenant has no route to them, not a hidden one.
@@ -125,9 +126,9 @@ copy the table into tenants.
 
 A tenant's view of a list is the standard rows with its overlay applied plus its own
 additions — which is exactly what a Content Part List *is*, so
-`ICrestContentPartListService` keeps its contract and sources the standard rows from the
+`IContentPartListService` keeps its contract and sources the standard rows from the
 global store with the tenant overlay (`Overrides` on `CrestContentPartListPart`,
-`CrestOptionOverride`) applied. Consumers reading option keys are unaffected.
+`OptionOverride`) applied. Consumers reading option keys are unaffected.
 
 Tenant additions can never collide with standard keys (namespaced), and a standard row
 arriving later with the same meaning as a tenant addition is a super-tenant merge decision,
@@ -139,19 +140,20 @@ not an automatic one.
 
 - The `global.*` lists, declared in `Crest.ContentPartLists/Data/global-lists.json`:
   `country-codes`, `subdivisions`, `postal-formats`, `phone-country-codes`, `us-area-codes`,
-  `languages`, `uom`, `uom-rec20`, `honorifics`, `name-suffixes`, plus
-  `items.base-classification`
+  `languages`, `uom`, `uom-rec20`, `honorifics`, `name-suffixes`, `naics` (all levels,
+  arranged by each option's `Parent`), plus `items.base-classification`
 - The geo tree, postal-code records, `GeoBoundary` MultiPolygons, per-country addressing
   maps ([regions.md](regions.md))
 - Currency metadata, ISO 4217 minor units ([money.md](money.md))
-- Whatever reference data a downstream module declares through its own `ICrestGlobalSchema`
+- Whatever reference data a downstream module declares through its own `GlobalDataMigration`
   (authority catalogues, classification lists), seeded from that module's data file on
   fresh install and always present on the host
 
 **Per tenant** — tenant vocabulary, even where seeded with defaults:
 
-- Module option sets: `parties.industry` *additions*, address and contact-point kinds, and
-  downstream modules' own option sets
+- Module option sets: address, contact-point and legal-entity-name kinds, association types,
+  tenant *additions* over global lists (an industry NAICS does not name), and downstream
+  modules' own option sets
 - Standard data whose licence forbids redistribution: each tenant imports its own. The only
   case where licence, not ownership, decides the store.
 - Every overlay above
@@ -178,12 +180,12 @@ global store.
 
 ## The store and its cache
 
-- `CrestGlobalStore`: host-level service (`Crest.Global`, `AddCrestGlobalStore()` in
-  `Program.cs`), configuration section `Crest_Global`, shell-less
-  `ReadAsync`/`WriteAsync`, versioned `CrestGlobalSchemaState` per `ICrestGlobalSchema`,
-  hosted-service lifetime. Two tenants reading one row set is exercised by every list
+- `GlobalStore`: one per host, registered by the `Crest.Data.Global` feature
+  (`GlobalHost`), configuration section `Crest_Global`, shell-less
+  `ReadAsync`/`WriteAsync`, migrations recorded in the store's own `DataMigrationRecord`,
+  released on application stop. Two tenants reading one row set is exercised by every list
   read, not by a dedicated test.
-- Host-level cache with version-keyed invalidation: `ICrestGlobalCache`, one per
+- Host-level cache with version-keyed invalidation: `IGlobalCache`, one per
   host process; every `WriteAsync` bumps `CrestGlobalSchemaState.DataVersion`, the
   cache re-checks it at most every `CacheVersionCheckSeconds` (5) and drops every entry
   on change, so a write from another host lands within that window. Geo nodes (a
@@ -202,7 +204,7 @@ Editing UIs for the global store are generated for the functions a super-tenant 
 are visible **only** in the Default tenant — an ordinary tenant has no route to them, not a
 hidden one.
 
-- [x] **Permission and Default-only controllers.** `ManageCrestGlobalReferenceData`
+- [x] **Permission and Default-only controllers.** `ManageGlobalReferenceData`
       permission; Default-shell-only controllers (`api/crest/global/lists`, geo import).
       Documented above.
 - [ ] **Build the first generated editing UI.** The first generated editing UI, Default
@@ -211,15 +213,20 @@ hidden one.
 
 ### Known rough edge: the global store needs a host call
 
-- [ ] **Make the global store need no host call.** `Crest.Global`'s `ICrestGlobalStore` is
+- [x] **Make the global store need no host call.** `Crest.Data.Global`'s `IGlobalStore` is
   registered by an `PlatformBuilder` extension (`AddCrestGlobalStore()`), not by the
   feature, because the store is one database shared by every tenant and so belongs to the
-  host's service collection. A host that enables `Crest.Global`, `Crest.Regions` or
+  host's service collection. A host that enables `Crest.Data.Global`, `Crest.Regions` or
   `Crest.Money` without making that call gets no warning: the features enable, and setup
-  then fails with "Unable to resolve service for type ICrestGlobalStore". Enabling a
+  then fails with "Unable to resolve service for type IGlobalStore". Enabling a
   feature should not depend on an invisible second step — either the features should fail
   enablement with a clear message, or the registration should happen where the feature is.
   Recorded rather than fixed; it bit the standalone host first and will bite the next one.
+  *What landed (2026-10-13):* the registration happens where the feature is. `Crest.Data.Global`'s
+  Startup registers the store and cache through `GlobalHost`, one instance per host
+  (keyed by its `IHostApplicationLifetime`, so test hosts in one process never share), built
+  from host-level services only; the store no longer holds a service provider, and global
+  migrations take no services. `AddCrestGlobalStore()` and the host call are gone.
 
 ### Decisions needed
 

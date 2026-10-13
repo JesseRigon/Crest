@@ -18,3 +18,10 @@ public sealed class LayerService(IDocumentManager<LayersDocument> documentManage
         await documentManager.UpdateAsync(existing);
     }
 }
+
+/// <summary>The layers' part of a tree's composite version (decision 12): the layers document, rules and placements.</summary>
+public sealed class LayersTreeVersion(ILayerService layers) : Crest.DisplayManagement.Components.IDisplayTreeVersionPart
+{
+    public async ValueTask<string?> GetVersionAsync(CancellationToken cancellationToken = default) =>
+        (await layers.GetLayersAsync()).Identifier;
+}

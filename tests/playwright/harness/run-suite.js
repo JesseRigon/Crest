@@ -95,4 +95,38 @@ function printSummary(results) {
   return failed.length === 0;
 }
 
-module.exports = { runSuite, printSummary };
+// A host's suite entry point in one call: BASE_URL (or the host's default), CHECK_FILTER
+// (a substring; only matching checks run, the health gate still does), OUTPUT_ROOT (or the
+// host's own folder, so screenshots never land in a repository the host only consumes),
+// VERBOSE (one line per result), the admin login, the summary, and the exit code. A host
+// passes its ordered check list and its defaults; nothing else.
+async function runHostSuite({ checks, defaultBaseUrl, outputRoot, login, skipHealthCheck = false }) {
+  const baseUrl = process.env.BASE_URL || defaultBaseUrl;
+  if (!baseUrl) {
+    throw new Error('runHostSuite needs BASE_URL or a defaultBaseUrl.');
+  }
+
+  const filter = process.env.CHECK_FILTER;
+  const list = typeof checks === 'function' ? checks() : checks;
+  const selected = filter ? list.filter(check => check.name.includes(filter)) : list;
+
+  const results = await runSuite({
+    baseUrl,
+    login: login === undefined ? require('./auth').loginAsAdmin : login,
+    checks: selected,
+    outputRoot: process.env.OUTPUT_ROOT || outputRoot,
+    skipHealthCheck,
+  });
+
+  if (process.env.VERBOSE) {
+    for (const r of results) {
+      console.log(`${r.pass === false ? 'FAIL' : 'ok  '} ${r.suite} :: ${r.name} — ${r.message || ''}`);
+    }
+  }
+
+  const ok = printSummary(results);
+  process.exitCode = ok ? 0 : 1;
+  return ok;
+}
+
+module.exports = { runSuite, printSummary, runHostSuite };

@@ -19,11 +19,11 @@ namespace Crest.Services;
 public static class LockedContentDefinitionServices
 {
     /// <summary>Wraps the current registrations; a no-op when the content-types module has not registered them.</summary>
-    public static IServiceCollection AddCrestDefinitionLocks(this IServiceCollection services)
+    public static IServiceCollection AddDefinitionLocks(this IServiceCollection services)
     {
-        services.AddScoped<CrestDefinitionLockGuard>();
-        Decorate<IContentDefinitionService>(services, (inner, sp) => new LockedContentDefinitionService(inner, sp.GetRequiredService<CrestDefinitionLockGuard>()));
-        Decorate<IContentDefinitionDisplayManager>(services, (inner, sp) => new LockedContentDefinitionDisplayManager(inner, sp.GetRequiredService<CrestDefinitionLockGuard>()));
+        services.AddScoped<DefinitionLockGuard>();
+        Decorate<IContentDefinitionService>(services, (inner, sp) => new LockedContentDefinitionService(inner, sp.GetRequiredService<DefinitionLockGuard>()));
+        Decorate<IContentDefinitionDisplayManager>(services, (inner, sp) => new LockedContentDefinitionDisplayManager(inner, sp.GetRequiredService<DefinitionLockGuard>()));
         return services;
     }
 
@@ -47,7 +47,7 @@ public static class LockedContentDefinitionServices
     }
 }
 
-public sealed class LockedContentDefinitionService(IContentDefinitionService inner, CrestDefinitionLockGuard guard) : IContentDefinitionService
+public sealed class LockedContentDefinitionService(IContentDefinitionService inner, DefinitionLockGuard guard) : IContentDefinitionService
 {
     public Task<ContentTypeDefinition> AddTypeAsync(string name, string displayName) => inner.AddTypeAsync(name, displayName);
 
@@ -64,7 +64,7 @@ public sealed class LockedContentDefinitionService(IContentDefinitionService inn
 
     public async Task RemovePartFromTypeAsync(string partName, string typeName)
     {
-        await guard.EnsureTypePartChangeAsync(typeName, partName, CrestDefinitionChanges.Detached);
+        await guard.EnsureTypePartChangeAsync(typeName, partName, DefinitionChanges.Detached);
         await inner.RemovePartFromTypeAsync(partName, typeName);
     }
 
@@ -72,7 +72,7 @@ public sealed class LockedContentDefinitionService(IContentDefinitionService inn
 
     public async Task RemovePartAsync(string name)
     {
-        await guard.EnsurePartChangeAsync(name, CrestDefinitionChanges.Deleted);
+        await guard.EnsurePartChangeAsync(name, DefinitionChanges.Deleted);
         await inner.RemovePartAsync(name);
     }
 
@@ -83,7 +83,7 @@ public sealed class LockedContentDefinitionService(IContentDefinitionService inn
 
     public async Task RemoveFieldFromPartAsync(string fieldName, string partName)
     {
-        await guard.EnsureFieldChangeAsync(partName, fieldName, CrestDefinitionChanges.Removed);
+        await guard.EnsureFieldChangeAsync(partName, fieldName, DefinitionChanges.Removed);
         await inner.RemoveFieldFromPartAsync(fieldName, partName);
     }
 
@@ -101,7 +101,7 @@ public sealed class LockedContentDefinitionService(IContentDefinitionService inn
 /// locked field's, part's or attachment's editor is refused as a whole; the type editor
 /// (type-level settings: creatable, listable, ...) is not locked.
 /// </summary>
-public sealed class LockedContentDefinitionDisplayManager(IContentDefinitionDisplayManager inner, CrestDefinitionLockGuard guard) : IContentDefinitionDisplayManager
+public sealed class LockedContentDefinitionDisplayManager(IContentDefinitionDisplayManager inner, DefinitionLockGuard guard) : IContentDefinitionDisplayManager
 {
     public Task<dynamic> BuildTypeEditorAsync(ContentTypeDefinition definition, IUpdateModel updater, string groupId = "") => inner.BuildTypeEditorAsync(definition, updater, groupId);
     public Task<dynamic> UpdateTypeEditorAsync(ContentTypeDefinition definition, IUpdateModel updater, string groupId = "") => inner.UpdateTypeEditorAsync(definition, updater, groupId);
@@ -109,7 +109,7 @@ public sealed class LockedContentDefinitionDisplayManager(IContentDefinitionDisp
 
     public async Task<dynamic> UpdatePartEditorAsync(ContentPartDefinition definition, IUpdateModel updater, string groupId = "")
     {
-        await guard.EnsurePartChangeAsync(definition.Name, CrestDefinitionChanges.SettingsChanged);
+        await guard.EnsurePartChangeAsync(definition.Name, DefinitionChanges.SettingsChanged);
         return await inner.UpdatePartEditorAsync(definition, updater, groupId);
     }
 
@@ -117,7 +117,7 @@ public sealed class LockedContentDefinitionDisplayManager(IContentDefinitionDisp
 
     public async Task<dynamic> UpdateTypePartEditorAsync(ContentTypePartDefinition definition, IUpdateModel updater, string groupId = "")
     {
-        await guard.EnsureTypePartChangeAsync(definition.ContentTypeDefinition.Name, definition.Name, CrestDefinitionChanges.SettingsChanged);
+        await guard.EnsureTypePartChangeAsync(definition.ContentTypeDefinition.Name, definition.Name, DefinitionChanges.SettingsChanged);
         return await inner.UpdateTypePartEditorAsync(definition, updater, groupId);
     }
 
@@ -125,7 +125,7 @@ public sealed class LockedContentDefinitionDisplayManager(IContentDefinitionDisp
 
     public async Task<dynamic> UpdatePartFieldEditorAsync(ContentPartFieldDefinition definition, IUpdateModel updater, string groupId = "")
     {
-        await guard.EnsureFieldChangeAsync(definition.PartDefinition.Name, definition.Name, CrestDefinitionChanges.SettingsChanged);
+        await guard.EnsureFieldChangeAsync(definition.PartDefinition.Name, definition.Name, DefinitionChanges.SettingsChanged);
         return await inner.UpdatePartFieldEditorAsync(definition, updater, groupId);
     }
 }

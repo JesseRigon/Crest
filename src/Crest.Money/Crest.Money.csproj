@@ -14,7 +14,7 @@
 
   <!-- The money content field and the currency table behind it. ISO 4217 minor units are
        reference data every application shares, so they live in the global store
-       (Crest.Global); a tenant chooses its default currency, never the units. -->
+       (Crest.Data.Global); a tenant chooses its default currency, never the units. -->
   <ItemGroup>
     <ProjectReference Include="$(PlatformSrcDir)Crest.ContentFields\Crest.ContentFields.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.ContentManagement\Crest.ContentManagement.csproj" />
@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Crest.Server/Crest.Server.csproj" />
-    <ProjectReference Include="../Crest.Global/Crest.Global.csproj" />
+    <ProjectReference Include="../Crest.Data.Global/Crest.Data.Global.csproj" />
     <ProjectReference Include="Domain/Crest.Money.Domain.csproj" />
   </ItemGroup>
 </Project>

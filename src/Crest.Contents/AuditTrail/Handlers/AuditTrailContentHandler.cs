@@ -71,7 +71,7 @@ public class AuditTrailContentHandler : ContentHandlerBase
 
         var settings = await _siteService.GetSettingsAsync<ContentAuditTrailSettings>();
 
-        if (!settings.AllowedContentTypes.Contains(content.ContentItem.ContentType))
+        if (settings.ExcludedContentTypes.Contains(content.ContentItem.ContentType))
         {
             return;
         }

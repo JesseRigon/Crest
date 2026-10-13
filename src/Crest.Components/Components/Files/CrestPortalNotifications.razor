@@ -1,0 +1,131 @@
+@namespace Crest.Components.Files
+@using System.Globalization
+@using System.Net.Http.Json
+@using Crest.Components.Primitives
+@implements IDisposable
+@inject HttpClient Http
+@inject IServiceProvider Services
+
+@* Portal notifications (docs/media.md requirement 30): the signed-in user's stored
+   notifications in Crest's admin and member shells - an indicator with the unread count, the
+   list, and marking as read. With the feature off the API is not there and nothing renders. *@
+
+@if (Available)
+{
+    <div class="crest-portal-notifications" data-testid="portal-notifications">
+        <button type="button" class="crest-portal-notifications__bell" aria-haspopup="true" aria-expanded="@Open" aria-label="@BellLabel" @onclick="ToggleAsync" data-testid="portal-notifications-bell">
+            <span aria-hidden="true">🔔</span>
+            @if (Unread > 0)
+            {
+                <span class="crest-portal-notifications__badge" data-testid="portal-notifications-unread">@(Unread > 99 ? "99+" : Unread.ToString(CultureInfo.CurrentCulture))</span>
+            }
+        </button>
+        @if (Open)
+        {
+            <div class="crest-portal-notifications__panel" role="dialog" aria-label="@L("Notifications")" data-testid="portal-notifications-panel">
+                <div class="crest-portal-notifications__head">
+                    <strong>@L("Notifications")</strong>
+                    @if (Unread > 0)
+                    {
+                        <button type="button" class="crest-portal-notifications__link" @onclick="MarkAllAsync">@L("Mark all as read")</button>
+                    }
+                </div>
+                @if (Items.Count == 0)
+                {
+                    <div class="crest-portal-notifications__empty">@L("No notifications.")</div>
+                }
+                else
+                {
+                    <ul>
+                        @foreach (var item in Items)
+                        {
+                            <li class="@(item.IsRead ? null : "is-unread")" data-testid="portal-notification">
+                                <div class="crest-portal-notifications__subject">@item.Subject</div>
+                                <div class="crest-portal-notifications__meta">
+                                    <span>@item.CreatedUtc.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)</span>
+                                    @if (!item.IsRead)
+                                    {
+                                        <button type="button" class="crest-portal-notifications__link" @onclick="@(() => MarkAsync(item))">@L("Mark as read")</button>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>How often the unread count is refreshed while the shell is open.</summary>
+    [Parameter] public TimeSpan RefreshInterval { get; set; } = TimeSpan.FromMinutes(1);
+
+    private const string Base = "api/crest/notifications";
+    private bool Available;
+    private bool Open;
+    private int Unread;
+    private List<Item> Items = [];
+    private Timer? _timer;
+
+    private sealed record Item(string Id, string Subject, string Summary, DateTime CreatedUtc, bool IsRead, DateTime? ReadUtc);
+
+    private sealed record ItemList(int Unread, int Total, List<Item> Items);
+
+    private string BellLabel => Unread > 0 ? string.Format(CultureInfo.CurrentCulture, L("Notifications, {0} unread"), Unread) : L("Notifications");
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // In the browser only: a prerender has no session to read notifications for.
+        if (firstRender)
+        {
+            await RefreshAsync();
+            _timer = new Timer(_ => InvokeAsync(RefreshAsync), null, RefreshInterval, RefreshInterval);
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        try
+        {
+            using var response = await Http.GetAsync($"{Base}?take=20");
+            Available = response.IsSuccessStatusCode;
+            if (Available && await response.Content.ReadFromJsonAsync<ItemList>(CrestFilesClient.Json) is { } list)
+            {
+                Unread = list.Unread;
+                Items = list.Items;
+            }
+        }
+        catch (HttpRequestException)
+        {
+            Available = false;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task ToggleAsync()
+    {
+        Open = !Open;
+        if (Open)
+        {
+            await RefreshAsync();
+        }
+    }
+
+    private async Task MarkAsync(Item item)
+    {
+        using var response = await Http.PostAsync($"{Base}/{Uri.EscapeDataString(item.Id)}/read", null);
+        await RefreshAsync();
+    }
+
+    private async Task MarkAllAsync()
+    {
+        using var response = await Http.PostAsync($"{Base}/read-all", null);
+        await RefreshAsync();
+    }
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+
+    public void Dispose() => _timer?.Dispose();
+}

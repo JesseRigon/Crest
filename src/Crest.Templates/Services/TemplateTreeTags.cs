@@ -300,7 +300,7 @@ public static class TemplateTreeTags
         return Completion.Normal;
     }
 
-    /// <summary><c>{% run_workflow "post-invoice", into: "result", invoice: event.item.id %}</c>.</summary>
+    /// <summary><c>{% run_workflow "approve-order", into: "result", order: event.item.id %}</c>.</summary>
     public static async ValueTask<Completion> RunWorkflowAsync(IReadOnlyList<FilterArgument> arguments, TextWriter writer, TextEncoder encoder, TemplateContext context)
     {
         var state = TemplateTreeState.From(context);

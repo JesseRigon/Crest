@@ -35,6 +35,14 @@ public sealed class CallerContext
     /// no credential a user can present produces it.</summary>
     public bool IsSystem { get; init; }
 
+    /// <summary>The system account a system actor acts as: the organization's account when it
+    /// acts for one, else the tenant's (docs/sharing.md, requirements 33-36). Null for everyone
+    /// else.</summary>
+    public string? SystemAccountId => IsSystem ? SystemAccounts.Of(OrganizationId) : null;
+
+    /// <summary>Who an action is attributed to: the user, or the system account.</summary>
+    public string? ActorId => UserId ?? SystemAccountId;
+
     /// <summary>The organization the caller acts in, on the member side or for an
     /// organization system actor; null on the admin and site sides.</summary>
     public string? OrganizationId { get; init; }

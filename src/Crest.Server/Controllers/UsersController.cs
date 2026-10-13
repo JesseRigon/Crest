@@ -6,6 +6,7 @@ using Crest.Users;
 using Crest.Users.Indexes;
 using Crest.Users.Models;
 using Crest.Users.Services;
+using Crest.Security.Services;
 using YesSql;
 using Crest.ViewModels;
 
@@ -14,10 +15,10 @@ namespace Crest.Controllers;
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/users")]
-public sealed class CrestUsersController(UserManager<IUser> userManager, IUserService users, IAuthorizationService authorization, ICrestPermissionInvalidator permissions, ISession session) : ControllerBase
+public sealed class UsersController(UserManager<IUser> userManager, IUserService users, IAuthorizationService authorization, IPermissionInvalidator permissions, ISession session, IRoleService roles) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<CrestUserList>> ListAsync([FromQuery] string? search, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    public async Task<ActionResult<UserList>> ListAsync([FromQuery] string? search, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
         if (!await authorization.AuthorizeAsync(User, UsersPermissions.ListUsers, new User())) return Forbid();
 
@@ -38,9 +39,29 @@ public sealed class CrestUsersController(UserManager<IUser> userManager, IUserSe
             matching = matching.Where(user => (user.UserName ?? string.Empty).Contains(term, StringComparison.OrdinalIgnoreCase) || (user.Email ?? string.Empty).Contains(term, StringComparison.OrdinalIgnoreCase));
         }
 
-        var ordered = matching.OrderBy(user => user.UserName, StringComparer.OrdinalIgnoreCase).ToArray();
+        // Scoped to the users the caller may list (docs/access.md, recorded defects): the base
+        // ListUsers sees everyone; otherwise ListUsers is asked against each role (the per-role
+        // ListUsersInRole_{role}), and a user is listed when one of their roles is, or - holding
+        // none - when an assignable role is, as the role mapper decides for one user.
+        IEnumerable<User> listable = matching;
+        if (!await authorization.AuthorizeAsync(User, UsersPermissions.ListUsers))
+        {
+            var listableRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var role in await roles.GetRolesAsync())
+            {
+                if (await authorization.AuthorizeAsync(User, UsersPermissions.ListUsers, role))
+                {
+                    listableRoles.Add(role.RoleName);
+                }
+            }
+
+            var roleless = (await roles.GetAssignableRolesAsync()).Any(role => listableRoles.Contains(role.RoleName));
+            listable = matching.Where(user => user.RoleNames is { Count: > 0 } names ? names.Any(listableRoles.Contains) : roleless);
+        }
+
+        var ordered = listable.OrderBy(user => user.UserName, StringComparer.OrdinalIgnoreCase).ToArray();
         page = Math.Max(1, page); pageSize = Math.Clamp(pageSize, 1, 100);
-        return Ok(new CrestUserList(ordered.Length, ordered.Skip((page - 1) * pageSize).Take(pageSize).Select(CrestUser.From).ToArray()));
+        return Ok(new UserList(ordered.Length, ordered.Skip((page - 1) * pageSize).Take(pageSize).Select(CrestUser.From).ToArray()));
     }
 
     [HttpGet("{id}")]
@@ -52,7 +73,7 @@ public sealed class CrestUsersController(UserManager<IUser> userManager, IUserSe
     }
 
     [HttpPost]
-    public async Task<ActionResult<CrestUser>> CreateAsync([FromBody] CrestUserWrite request)
+    public async Task<ActionResult<CrestUser>> CreateAsync([FromBody] UserWrite request)
     {
         var user = new User();
         if (!await authorization.AuthorizeAsync(User, UsersPermissions.EditUsers, user)) return Forbid();
@@ -66,7 +87,7 @@ public sealed class CrestUsersController(UserManager<IUser> userManager, IUserSe
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<CrestUser>> SaveAsync(string id, [FromBody] CrestUserWrite request)
+    public async Task<ActionResult<CrestUser>> SaveAsync(string id, [FromBody] UserWrite request)
     {
         var user = await FindAsync(id); if (user is null) return NotFound();
         if (!await authorization.AuthorizeAsync(User, UsersPermissions.EditUsers, user)) return Forbid();
@@ -85,7 +106,7 @@ public sealed class CrestUsersController(UserManager<IUser> userManager, IUserSe
     }
 
     [HttpPost("{id}/enabled")]
-    public async Task<ActionResult<CrestUser>> SetEnabledAsync(string id, [FromBody] CrestUserEnabled request)
+    public async Task<ActionResult<CrestUser>> SetEnabledAsync(string id, [FromBody] UserEnabled request)
     {
         var user = await FindAsync(id); if (user is null) return NotFound();
         if (!await authorization.AuthorizeAsync(User, UsersPermissions.EditUsers, user)) return Forbid();
@@ -107,7 +128,7 @@ public sealed class CrestUsersController(UserManager<IUser> userManager, IUserSe
     }
 
     private async Task<User?> FindAsync(string id) => await userManager.FindByIdAsync(id) as User;
-    private static void Apply(CrestUserWrite request, User user) { user.UserName = request.UserName?.Trim(); user.Email = request.Email?.Trim(); user.PhoneNumber = request.PhoneNumber?.Trim(); user.EmailConfirmed = request.EmailConfirmed; user.IsEnabled = request.IsEnabled; }
+    private static void Apply(UserWrite request, User user) { user.UserName = request.UserName?.Trim(); user.Email = request.Email?.Trim(); user.PhoneNumber = request.PhoneNumber?.Trim(); user.EmailConfirmed = request.EmailConfirmed; user.IsEnabled = request.IsEnabled; }
     private async Task SetRolesAsync(User user, string[]? roles)
     {
         var target = (roles ?? []).Where(role => !string.IsNullOrWhiteSpace(role)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();

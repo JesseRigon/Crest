@@ -183,3 +183,53 @@ function getAnchorPoint(rect, anchorPoint) {
             return { x: rect.right, y: rect.bottom };
     }
 }
+
+// The accounts this device has signed in to (docs/shells-and-themes.md › Member sessions and
+// sides): one entry per tenant and user, kept in this browser only - never on a server, so no
+// server record links accounts across tenants. Tenants addressed by path share the list (one
+// origin); a tenant on an unrelated domain has its own. An account signed out of stays until
+// removed.
+window.crestComponents.deviceAccounts = (() => {
+    const storageKey = 'crest-device-accounts';
+    const limit = 20;
+    const same = (a, b) => String(a || '').toLowerCase() === String(b || '').toLowerCase();
+
+    function read() {
+        try {
+            const value = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            return Array.isArray(value) ? value : [];
+        } catch {
+            return [];
+        }
+    }
+
+    function write(accounts) {
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(accounts.slice(0, limit)));
+        } catch { }
+        return read();
+    }
+
+    function list() {
+        return read();
+    }
+
+    function remember(account) {
+        if (!account || !account.userName) return read();
+        const entry = {
+            tenantName: account.tenantName || '',
+            tenantBase: account.tenantBase || '',
+            userName: account.userName,
+            homeUrl: account.homeUrl || '',
+            lastSeenUtc: new Date().toISOString(),
+        };
+        const others = read().filter(item => !(same(item.tenantBase, entry.tenantBase) && same(item.userName, entry.userName)));
+        return write([entry, ...others]);
+    }
+
+    function remove(tenantBase, userName) {
+        return write(read().filter(item => !(same(item.tenantBase, tenantBase) && same(item.userName, userName))));
+    }
+
+    return { list, remember, remove };
+})();

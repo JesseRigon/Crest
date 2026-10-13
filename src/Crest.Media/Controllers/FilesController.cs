@@ -28,7 +28,7 @@ public sealed class FilesController(
     IFileDriveSettingsAccessor settings,
     IAccessDecision decision,
     ICallerContextAccessor callers,
-    HmacMediaUrlSigner signer) : ControllerBase
+    MediaUrlSigners signers) : ControllerBase
 {
     private const int MaxPageSize = 500;
     private static readonly TimeSpan PrivateUrlLifetime = TimeSpan.FromMinutes(5);
@@ -55,11 +55,12 @@ public sealed class FilesController(
 
     /// <summary>The children the caller may view, paged after filtering.</summary>
     [HttpGet("{id}/children")]
-    public Task<IActionResult> ListChildrenAsync(string id, [FromQuery] int skip = 0, [FromQuery] int take = 100) => RunAsync(async () =>
+    public Task<IActionResult> ListChildrenAsync(string id, [FromQuery] int skip = 0, [FromQuery] int take = 100, [FromQuery] ShareIndicator? access = null) => RunAsync(async () =>
     {
-        // Filtered and paged in the query while sharing is on (requirement 77).
+        // Filtered and paged in the query while sharing is on (requirement 77), by the access
+        // indicator too when asked (docs/sharing.md requirement 98).
         take = Math.Clamp(take, 1, MaxPageSize);
-        var page = await listing.ListChildrenPageAsync(id, skip, take, HttpContext.RequestAborted);
+        var page = await listing.ListChildrenPageAsync(id, skip, take, access, HttpContext.RequestAborted);
         return Ok(new FileListDto(await ToDtosAsync(page.Items), page.Total, skip, take));
     });
 
@@ -83,15 +84,20 @@ public sealed class FilesController(
 
     [HttpPut("{id}/content")]
     [RequestSizeLimit(100 * 1024 * 1024)]
-    public Task<IActionResult> ReplaceAsync(string id, IFormFile file) => RunAsync(async () =>
+    public Task<IActionResult> ReplaceAsync(string id, IFormFile file, [FromQuery] bool publish = false) => RunAsync(async () =>
     {
         if (file is null || file.Length == 0)
         {
             return BadRequest("A non-empty file is required.");
         }
 
+        // publish: the new version becomes the published one as soon as its verdict is clean
+        // (an add-on saving back from the viewer pane, docs/media.md § 8).
         await using var stream = file.OpenReadStream();
-        return Ok(await ToDtoAsync(await files.ReplaceAsync(id, stream, file.ContentType, HttpContext.RequestAborted)));
+        var item = publish && files is IMediaObjectWrites writes
+            ? await writes.ReplaceAsync(id, stream, file.ContentType, publishWhenClean: true, HttpContext.RequestAborted)
+            : await files.ReplaceAsync(id, stream, file.ContentType, HttpContext.RequestAborted);
+        return Ok(await ToDtoAsync(item));
     });
 
     [HttpPost("{id}/rename")]
@@ -160,8 +166,11 @@ public sealed class FilesController(
             return Ok(new FileUrlDto(path, null));
         }
 
+        // Signed for the private CDN zone when one is configured, else for this origin.
         var expires = DateTimeOffset.UtcNow.Add(PrivateUrlLifetime);
-        return Ok(new FileUrlDto(signer.Sign(new Uri(path, UriKind.Relative), expires).OriginalString, expires));
+        var signer = signers.Active;
+        var signed = signer.Sign(signer.BaseUrl is { } zone ? new Uri(zone + path, UriKind.Absolute) : new Uri(path, UriKind.Relative), expires);
+        return Ok(new FileUrlDto(signed.IsAbsoluteUri ? signed.AbsoluteUri : signed.OriginalString, expires));
     });
 
     // ---- Tenant administration (docs/media.md § 3, § 7) -----------------------------------
@@ -193,6 +202,12 @@ public sealed class FilesController(
                 if (before.Allows(type) != after.Allows(type))
                 {
                     await drives.SetDriveTypeEnabledAsync(type, after.Allows(type), request.ResetSharingOnReactivation, HttpContext.RequestAborted);
+
+                    // Turned on: every organization or staff user without a drive gets one.
+                    if (after.Allows(type))
+                    {
+                        await HttpContext.RequestServices.GetRequiredService<IMediaDriveProvisioning>().ProvisionAllAsync(type, HttpContext.RequestAborted);
+                    }
                 }
             }
         }

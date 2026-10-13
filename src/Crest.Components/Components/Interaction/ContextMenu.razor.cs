@@ -8,7 +8,7 @@ namespace Crest.Components.Interaction;
 /// opening event carried; a click outside closes it. Its items are actions (<see cref="MenuAction"/>)
 /// whose payload is what opened the menu (the right-clicked row).
 /// </summary>
-[CrestBlazorComponent("ContextMenu", DisplayName = "Context menu", Category = "Overlays", Icon = "menu_open", IsOverlay = true)]
+[BlazorComponent("ContextMenu", DisplayName = "Context menu", Category = "Overlays", Icon = "menu_open", IsOverlay = true)]
 public partial class ContextMenu : ComponentBase
 {
     [Parameter]

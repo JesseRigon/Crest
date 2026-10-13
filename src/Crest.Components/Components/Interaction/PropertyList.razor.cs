@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Components;
 namespace Crest.Components.Interaction;
 
 /// <summary>The members of one object as a definition list (a record's details from a slot).</summary>
-[CrestBlazorComponent("PropertyList", DisplayName = "Property list", Category = "Data", Icon = "list_alt")]
+[BlazorComponent("PropertyList", DisplayName = "Property list", Category = "Data", Icon = "list_alt")]
 public partial class PropertyList : ComponentBase
 {
     /// <summary>An object, or a query result whose first item is shown.</summary>

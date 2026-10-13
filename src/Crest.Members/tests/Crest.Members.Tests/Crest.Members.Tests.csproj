@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Domain\Crest.Members.Domain.csproj" />
     <ProjectReference Include="..\..\Server\Crest.Members.csproj" />
+    <ProjectReference Include="..\..\member-wasm\Crest.Members.Member.BlazorWasm.csproj" />
   </ItemGroup>
 
 </Project>

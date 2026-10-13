@@ -21,6 +21,17 @@ public class WorkflowUserContextTests
         return new WorkflowCallerResolver(factory, accessor, AccessGateTests.Seal, Substitute.For<IWorkflowInstanceStore>(), Substitute.For<IWorkflowDefinitionService>());
     }
 
+    // A machine's run is attributed to its client id (docs/machine-actors.md); a user's is not.
+    [Fact]
+    public void An_application_caller_carries_its_client_id()
+    {
+        var machine = new CallerContext { Tenant = "acme", Side = CallerSide.Admin, UserId = "ledger-sync", UserName = "Ledger sync", UserClass = CallerClasses.Application };
+        var person = new CallerContext { Tenant = "acme", Side = CallerSide.Admin, UserId = "u-1", UserName = "alice" };
+
+        Assert.Equal("ledger-sync", WorkflowUserContext.From(machine).ClientId);
+        Assert.Null(WorkflowUserContext.From(person).ClientId);
+    }
+
     [Fact]
     public void A_principal_captures_identity_and_shell_only()
     {

@@ -25,6 +25,12 @@ public static class RoleServiceExtensions
                 continue;
             }
 
+            // Derived (business) roles are computed, never assigned (requirement 45).
+            if (await roleService.IsDerivedRoleAsync(role.RoleName))
+            {
+                continue;
+            }
+
             assignableRoles.Add(role);
         }
 

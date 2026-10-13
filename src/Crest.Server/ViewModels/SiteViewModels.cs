@@ -62,4 +62,4 @@ public sealed record SitePageResult(int Status, string? Title, Crest.DisplayMana
 /// public-safe facts, nothing else from <c>ISite</c>. Logo slots join it later
 /// (docs/branding.md).
 /// </summary>
-public sealed record SiteBrandingResult(string SiteName);
+public sealed record SiteBrandingResult(string SiteName, IReadOnlyDictionary<string, string>? Renditions = null);

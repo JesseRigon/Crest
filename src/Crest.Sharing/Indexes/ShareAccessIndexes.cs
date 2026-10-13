@@ -14,6 +14,10 @@ public sealed class ShareAccessIndex : MapIndex
 
     public string ObjectId { get; set; } = string.Empty;
 
+    /// <summary>The object and the path (<see cref="ShareAccessDocument.AccessKey"/>): what the
+    /// list scopes correlate one path's rows by.</summary>
+    public string AccessKey { get; set; } = string.Empty;
+
     /// <summary>The <see cref="SharePrincipalKind"/>, which is also the tier.</summary>
     public int PrincipalKind { get; set; }
 
@@ -76,7 +80,13 @@ public sealed class ShareAccessObjectIndex : MapIndex
 
     public string ObjectId { get; set; } = string.Empty;
 
+    /// <summary>The object and the path (<see cref="ShareAccessDocument.AccessKey"/>).</summary>
+    public string AccessKey { get; set; } = string.Empty;
+
     public bool IsPublic { get; set; }
+
+    /// <summary>Shared with someone other than its owner (the access indicator).</summary>
+    public bool IsShared { get; set; }
 
     public DateTime? NextBoundaryUtc { get; set; }
 }
@@ -93,8 +103,9 @@ public sealed class ShareRecalculationIndex : MapIndex
 
 public sealed class ShareAccessIndexProvider : IndexProvider<ShareAccessDocument>
 {
-    /// <summary>The key a role grant row and the shadows over it share: the object and a depth.</summary>
-    public static string DepthKey(string kind, string objectId, int depth) => $"{kind}:{objectId}#{depth}";
+    /// <summary>The key a role grant row and the shadows over it share: the object, the path
+    /// (an access key) and a depth.</summary>
+    public static string DepthKey(string kind, string accessKey, int depth) => $"{kind}:{accessKey}#{depth}";
 
     /// <summary>A principal id as the index stores it: roles in lower case (role names match
     /// without case), an organization-scoped role as <c>role@org:id</c>; empty for Anyone and
@@ -113,7 +124,9 @@ public sealed class ShareAccessIndexProvider : IndexProvider<ShareAccessDocument
             {
                 Kind = document.Kind,
                 ObjectId = document.ObjectId,
+                AccessKey = document.AccessKey,
                 IsPublic = document.IsPublic,
+                IsShared = document.IsShared,
                 NextBoundaryUtc = document.NextBoundaryUtc,
             });
 
@@ -122,6 +135,7 @@ public sealed class ShareAccessIndexProvider : IndexProvider<ShareAccessDocument
             {
                 Kind = document.Kind,
                 ObjectId = document.ObjectId,
+                AccessKey = document.AccessKey,
                 PrincipalKind = (int)row.PrincipalKind,
                 PrincipalId = IndexedId(row.Principal),
                 Depth = row.Depth,
@@ -130,7 +144,7 @@ public sealed class ShareAccessIndexProvider : IndexProvider<ShareAccessDocument
                 IsDirect = row.IsDirect,
                 StartsUtc = row.StartsUtc,
                 EndsUtc = row.EndsUtc,
-                DepthKey = DepthKey(document.Kind, document.ObjectId, row.Depth),
+                DepthKey = DepthKey(document.Kind, document.AccessKey, row.Depth),
             }));
 
         context.For<ShareRoleShadowIndex>()
@@ -139,7 +153,7 @@ public sealed class ShareAccessIndexProvider : IndexProvider<ShareAccessDocument
                 Kind = document.Kind,
                 ObjectId = document.ObjectId,
                 Role = IndexedId(SharePrincipal.Role(shadow.Role) with { OrganizationId = shadow.OrganizationId }),
-                DepthKey = DepthKey(document.Kind, document.ObjectId, shadow.Depth),
+                DepthKey = DepthKey(document.Kind, document.AccessKey, shadow.Depth),
                 Level = (int)shadow.Level,
                 StartsUtc = shadow.StartsUtc,
                 EndsUtc = shadow.EndsUtc,

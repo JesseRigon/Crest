@@ -18,7 +18,7 @@ public class CrestOrganizationIndex : MapIndex
     public bool Latest { get; set; }
 }
 
-public sealed class CrestOrganizationIndexProvider : IndexProvider<ContentItem>
+public sealed class OrganizationIndexProvider : IndexProvider<ContentItem>
 {
     public override void Describe(DescribeContext<ContentItem> context)
     {

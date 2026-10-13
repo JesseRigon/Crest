@@ -5,7 +5,7 @@
 
 @{
     var contentEvent = Model.ContentEvent;
-    var contentItem = contentEvent.ContentItem;
+    var contentItem = Model.ContentItem;
     var versionNumber = Model.VersionNumber;
     var versionText = S["Version {0}", versionNumber];
     var eventName = Model.Descriptor.LocalizedName(Context.RequestServices).Value.ToLowerInvariant();

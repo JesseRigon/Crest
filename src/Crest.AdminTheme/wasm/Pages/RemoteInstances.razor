@@ -1,0 +1,113 @@
+@page "/Deployment/RemoteInstance/Index"
+@using Crest.AdminTheme.Api
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* Instances this tenant can send a deployment plan to. The API key is write-only: an
+   edit shows whether one is stored and keeps it unless a new one is typed. *@
+
+<CrestStack Gap="1rem" data-testid="remote-instances-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="@T["Remote Instances"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["Other instances this tenant can send deployment plans to."]" />
+        </CrestStack>
+        <CrestButton Text="@T["Add remote instance"]" Icon="add" Click="New" Disabled="@IsBusy" />
+    </CrestStack>
+
+    @if (Error is not null)
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</CrestAlert>
+    }
+
+    @if (Editing)
+    {
+        <CrestCard data-testid="remote-instance-editor">
+            <CrestStack Gap="1rem">
+                <CrestText TextStyle="TextStyle.H5" Text="@(EditingId is null ? T["New remote instance"] : T["Edit {0}", DraftName])" />
+                <CrestRow Gap="1rem">
+                    <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Name"]" Style="width: 100%;"><CrestTextBox @bind-Value="DraftName" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                    <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Url"]" Style="width: 100%;"><CrestTextBox @bind-Value="DraftUrl" Placeholder="https://example.com/api/deployment/import" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                    <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Client name"]" Style="width: 100%;"><CrestTextBox @bind-Value="DraftClientName" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                    <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@(DraftHasKey ? T["API key (leave empty to keep the stored key)"] : T["API key"])" Style="width: 100%;"><CrestPassword @bind-Value="DraftApiKey" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                </CrestRow>
+                <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Editing = false)" Disabled="@IsBusy" />
+                    <CrestButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" />
+                </CrestStack>
+            </CrestStack>
+        </CrestCard>
+    }
+
+    <CrestCard>
+        @if (Items is null)
+        {
+            <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (Items.Length == 0)
+        {
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["No remote instances yet."]" />
+        }
+        else
+        {
+            <CrestDataGrid Data="@Items" TItem="CrestRemoteInstance" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <CrestDataGridColumn TItem="CrestRemoteInstance" Property="Name" Title="@T["Name"]" />
+                    <CrestDataGridColumn TItem="CrestRemoteInstance" Property="Url" Title="@T["Url"]" />
+                    <CrestDataGridColumn TItem="CrestRemoteInstance" Property="ClientName" Title="@T["Client name"]" />
+                    <CrestDataGridColumn TItem="CrestRemoteInstance" Title="@T["Actions"]" Width="10rem"><Template Context="item"><CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem"><CrestButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(item))" title="@T["Edit"]" /><CrestButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteAsync(item))" title="@T["Delete"]" /></CrestStack></Template></CrestDataGridColumn>
+                </Columns>
+            </CrestDataGrid>
+        }
+    </CrestCard>
+</CrestStack>
+
+@code {
+    private CrestRemoteInstance[]? Items { get; set; }
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+    private bool Editing { get; set; }
+    private string? EditingId { get; set; }
+    private string DraftName { get; set; } = string.Empty;
+    private string DraftUrl { get; set; } = string.Empty;
+    private string DraftClientName { get; set; } = string.Empty;
+    private string? DraftApiKey { get; set; }
+    private bool DraftHasKey { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync() => Items = await Api.Crest.Rest.Deployment.ListRemoteInstancesAsync();
+
+    private void New() { Editing = true; EditingId = null; DraftName = DraftUrl = DraftClientName = string.Empty; DraftApiKey = null; DraftHasKey = false; Error = null; }
+
+    private void Edit(CrestRemoteInstance item) { Editing = true; EditingId = item.Id; DraftName = item.Name; DraftUrl = item.Url; DraftClientName = item.ClientName; DraftApiKey = null; DraftHasKey = item.HasApiKey; Error = null; }
+
+    private async Task SaveAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var result = await Api.Crest.Rest.Deployment.SaveRemoteInstanceAsync(EditingId, new RemoteInstanceWrite(DraftName, DraftUrl, DraftClientName, DraftApiKey));
+            if (!result.Succeeded) { Error = result.Message ?? T["The remote instance could not be saved."]; return; }
+            Notifications.Notify(NotificationSeverity.Success, T["Remote Instances"], T["{0} was saved.", DraftName]);
+            Editing = false;
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task DeleteAsync(CrestRemoteInstance item)
+    {
+        IsBusy = true;
+        try
+        {
+            if (await Api.Crest.Rest.Deployment.DeleteRemoteInstanceAsync(item.Id)) Notifications.Notify(NotificationSeverity.Success, T["Remote Instances"], T["{0} was deleted.", item.Name]);
+            else Error = T["{0} could not be deleted.", item.Name];
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+}

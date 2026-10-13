@@ -4,6 +4,7 @@ using Crest.Data.Migration;
 using Crest.Environment.Shell;
 using Crest.Environment.Shell.Configuration;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -28,6 +29,17 @@ public static class FileServiceCollectionExtensions
         services.AddScoped<IPersonalDriveAccessService>(serviceProvider => serviceProvider.GetRequiredService<PersonalDriveAccessService>());
         services.AddScoped<IPersonalDriveNotifier, NotificationPersonalDriveNotifier>();
         services.AddScoped<IFileDriveSettingsAccessor, SiteFileDriveSettingsAccessor>();
+        services.AddScoped<IMediaDriveProvisioning, MediaDriveProvisioner>();
+        services.AddScoped<IMediaGeneratedFiles, MediaGeneratedFiles>();
+        services.AddOptions<MediaScanExemptionOptions>()
+            .Configure<IShellConfiguration>((options, configuration) =>
+            {
+                foreach (var exemption in configuration.GetSection("Crest_Media:Generated:Exemptions").Get<List<MediaScanExemption>>() ?? [])
+                {
+                    options.Exemptions.Add(exemption);
+                }
+            });
+        services.AddScoped<Crest.Users.Handlers.IUserEventHandler, PersonalDriveUserEventHandler>();
 
         services.AddSingleton(serviceProvider => new LocalMediaStorageProvider(FilesRoot(serviceProvider)));
         services.AddSingleton<IMediaStorageProvider>(serviceProvider => serviceProvider.GetRequiredService<LocalMediaStorageProvider>());
@@ -36,7 +48,13 @@ public static class FileServiceCollectionExtensions
             serviceProvider.GetRequiredService<IShellConfiguration>()["Crest_Media:Files:UrlSigningKey"],
             FilesRoot(serviceProvider),
             serviceProvider.GetRequiredService<IDataProtectionProvider>())));
-        services.AddSingleton<IMediaUrlSigner>(serviceProvider => serviceProvider.GetRequiredService<HmacMediaUrlSigner>());
+
+        // The private CDN zone's signer (docs/media.md › Serving and CDNs): private URLs are
+        // signed for the zone when one is configured, and the origin accepts its tokens too.
+        services.AddSingleton(serviceProvider => new MediaUrlSigners(
+            serviceProvider.GetRequiredService<HmacMediaUrlSigner>(),
+            CdnUrlSigners.Create(serviceProvider.GetRequiredService<IShellConfiguration>().GetSection(MediaCdnOptions.Section).Get<MediaCdnOptions>() ?? new MediaCdnOptions())));
+        services.AddSingleton<IMediaUrlSigner>(serviceProvider => serviceProvider.GetRequiredService<MediaUrlSigners>().Active);
 
         services.AddIndexProvider<MediaContentIndexProvider>();
         services.AddIndexProvider<MediaPlacementIndexProvider>();

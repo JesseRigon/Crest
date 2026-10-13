@@ -23,6 +23,18 @@ public sealed class HooksController(IAuthorizationService authorizationService, 
         return Ok(await hooks.ListSlotsAsync(cancellationToken));
     }
 
+    /// <summary>The published flows the user may attach (the hook attachment page's picker).</summary>
+    [HttpGet("candidates")]
+    public async Task<IActionResult> CandidatesAsync(CancellationToken cancellationToken)
+    {
+        if (!await authorizationService.AuthorizeAsync(User, Permissions.EditWorkflows))
+        {
+            return Forbid();
+        }
+
+        return Ok(await hooks.ListCandidatesAsync(cancellationToken));
+    }
+
     [HttpPost]
     public async Task<IActionResult> AttachAsync([FromBody] WorkflowHookAttachRequest request, CancellationToken cancellationToken)
     {

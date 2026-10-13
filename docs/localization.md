@@ -65,7 +65,7 @@ would break the requirement that an admin tab and a front-end tab can independen
 different languages at once. Because a cookie is per-origin (not per-tab), the client
 re-resolves and rewrites the culture cookie **immediately before every
 culture-sensitive request**, not just on manifest load — implemented in
-`CrestAntiforgeryHandler`, the single `DelegatingHandler` every Crest API call already
+`AntiforgeryHandler`, the single `DelegatingHandler` every Crest API call already
 funnels through.
 
 The override key is also scoped by user name (`crest-culture-override:{userName}`), so
@@ -163,12 +163,12 @@ Two independent mechanisms, by project:
     extracted from their source, so the authoritative spelling is whatever their code
     says (`Log in`, not `Login`; `Disable local password login.` with the period).
   - Server: `GET api/crest/localization/strings?culture={culture}` on
-    `CrestLocalizationController` serves a **layered** per-culture dictionary, callable
+    `LocalizationController` serves a **layered** per-culture dictionary, callable
     pre-login, resolving each literal as **stored edit → PO → miss** (the client then
     renders the literal): tenant translation store entries under context
     `Crest.AdminTheme.Client` first; then PO — a `Crest.AdminTheme.Client`-context entry if one
     exists, else the most common translation of the literal across **all** shipped
-    catalogs (via `CrestPoTranslationLookup`, the same helper the menu caption chain
+    catalogs (via `PoTranslationLookup`, the same helper the menu caption chain
     uses). Every layer falls back from a region culture (`es-ES`) to its parent (`es`).
     Storing the literal itself as the value pins the literal over a shipped translation.
   - Client: `CrestApiLocalizer` (`Crest.Components.Theme.CrestApiLocalizer`) implements
@@ -248,7 +248,7 @@ or **Crest-authored** (private lane only).
 ## Menus and navigation
 
 Admin menu captions are **tenant data**, resolved per request culture at serialization
-time by `CrestMenuCaptionResolver` through the layered hierarchy **store edit → PO
+time by `MenuCaptionResolver` through the layered hierarchy **store edit → PO
 translation → invariant literal** (within the store: exact menu context → parent
 contexts → best entry in the culture; within PO: `*.AdminMenu` contexts preferred, then
 most-common), with provider-item translations seeded from the PO catalogs at import and
@@ -266,7 +266,7 @@ resolved display text, which varies per culture. Renames are recorded per cultur
 `docs/admin-menu.md`'s "Renames are per culture".
 
 The user profile dropdown menu is built from native, admin-editable `AdminMenu`
-documents (`CrestMenuPlacement.User`), merged across every enabled menu of that
+documents (`MenuPlacement.User`), merged across every enabled menu of that
 placement the current user has permission to see, the same way OrchardCore merges its
 own admin sidebar.
 
@@ -300,10 +300,10 @@ tenant B. Under the old slug/caption-keyed world this feature was impossible.
 ### 1. Eligibility filter (at save time)
 
 - [ ] **Classify each saved translation's (context, key).** When a tenant saves a translation via the Crest Translations editor
-  (`CrestTranslationsController.SaveAsync`), classify its (context, key):
+  (`TranslationsController.SaveAsync`), classify its (context, key):
   - **Eligible**: module literals — context `Crest.AdminTheme.Client`, or a key that exists
     as a stock msgid in the shipped catalogs. The audit classification machinery
-    (`CrestPoTranslationLookup` index + template membership, see the "three populations"
+    (`PoTranslationLookup` index + template membership, see the "three populations"
     in [Where translations come from](#where-translations-come-from-crowdin-the-mirror-and-the-private-lane))
     already answers this.
   - **Excluded**: tenant-authored contexts — `Admin Menus:{menu}`, `Content Types`,
@@ -376,8 +376,8 @@ For implementation time:
   "approved platform-wide" badges (provenance display).
 - [ ] **Culture governance:** which cultures accept suggestions (tie into
   `LocalizationSettings.SupportedCultures` of the Default tenant?).
-- [ ] **The seam in Crest's resolvers:** does the chain-rung insertion need code in Crest's resolvers (CrestMenuCaptionResolver,
-  CrestLocalizationController, CrestPoTranslationLookup)? Almost certainly yes — the
+- [ ] **The seam in Crest's resolvers:** does the chain-rung insertion need code in Crest's resolvers (MenuCaptionResolver,
+  LocalizationController, PoTranslationLookup)? Almost certainly yes — the
   feature contributes a provider the resolvers consume; keep the seam an interface.
 
 ## Notice: server machine culture and invariant globalization

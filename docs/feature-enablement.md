@@ -23,7 +23,7 @@ dependency is self-healing: it auto-enables on setup, survives another recipe's
 `5c022f2` in the `Crest` submodule, which audited every constructor-injected
 `Crest.*` type in the Server assembly against its real registration site.
 
-Note that the lazy `ICrestRequestAccess.GetRequiredService<T>()` pattern does **not**
+Note that the lazy `IRequestAccess.GetRequiredService<T>()` pattern does **not**
 remove the need for a dependency. It defers the failure from startup to request time
 instead of preventing it — the endpoint still throws "Unable to resolve service for type
 T" when the providing feature is off.
@@ -32,7 +32,7 @@ T" when the providing feature is off.
 
 - **`Crest.Tenants`** — `DefaultTenantOnly = true`. A hard dependency from an
   always-enabled feature would be invalid on every non-default tenant.
-  `CrestTenantsController` is already restricted to the default tenant and injects only
+  `TenantsController` is already restricted to the default tenant and injects only
   `IOptions<TenantsOptions>`, which always resolves to a safe default
   (`TenantRemovalAllowed = false`).
 - **`Crest.Queries.Sql`** — a *provider* of `IQuerySource`, not a requirement.

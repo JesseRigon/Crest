@@ -17,17 +17,17 @@ namespace Crest.Models;
 /// <para>
 /// MULTI-TARGET by design: a GPS tracker can be assigned to an asset AND a user AND
 /// an organization simultaneously, and every one of those is a real assignment rather
-/// than one "primary" plus extras. Each entry names its own <see cref="CrestAssignment.Kind"/>,
+/// than one "primary" plus extras. Each entry names its own <see cref="Assignment.Kind"/>,
 /// which is what lets a query ask for any one of them or all of them together.
 /// </para>
 /// </remarks>
 public class CrestAssignmentPart : ContentPart
 {
-    public List<CrestAssignment> Assignments { get; set; } = [];
+    public List<Assignment> Assignments { get; set; } = [];
 }
 
 /// <summary>One assignment: a target, and the role that target plays.</summary>
-public sealed class CrestAssignment
+public sealed class Assignment
 {
     /// <summary>
     /// The role this assignment represents - "SalesRep", "Technician", "Owner
@@ -38,7 +38,7 @@ public sealed class CrestAssignment
 
     /// <summary>
     /// What the target IS - a content type name, or
-    /// <see cref="CrestAssignmentTargets.User"/> for Crest users, who are not
+    /// <see cref="AssignmentTargets.User"/> for Crest users, who are not
     /// content items.
     /// </summary>
     public string TargetType { get; set; } = string.Empty;
@@ -50,7 +50,7 @@ public sealed class CrestAssignment
     public string TargetId { get; set; } = string.Empty;
 }
 
-public static class CrestAssignmentTargets
+public static class AssignmentTargets
 {
     /// <summary>
     /// Crest users are not content items, so they cannot be addressed by content

@@ -14,9 +14,25 @@ public sealed class ShareAccessDocument
 
     public string ObjectId { get; set; } = string.Empty;
 
+    /// <summary>Which path to the root this document is for (multi-path inheritance, F3):
+    /// empty for the primary path, else <see cref="Services.SharingResolver.PathKey"/>. An object
+    /// reached through several paths has a document per path, and lists admit it when any of
+    /// them does.</summary>
+    public string PathKey { get; set; } = string.Empty;
+
+    /// <summary>What list scopes correlate one path's rows by: the object id, followed by
+    /// <c>~</c> and the path key for a path other than the primary one.</summary>
+    public string AccessKey => KeyFor(ObjectId, PathKey);
+
+    public static string KeyFor(string objectId, string pathKey) => pathKey.Length == 0 ? objectId : $"{objectId}~{pathKey}";
+
     /// <summary>The Anyone tier grants now (when it was calculated); the rows carry the exact
     /// window.</summary>
     public bool IsPublic { get; set; }
+
+    /// <summary>Someone other than the owner may view it now through a grant other than
+    /// Anyone (when it was calculated): the "shared" access indicator (requirement 98).</summary>
+    public bool IsShared { get; set; }
 
     /// <summary>Out of use: no rows, nobody but a tenant administrator lists it.</summary>
     public bool IsInactive { get; set; }

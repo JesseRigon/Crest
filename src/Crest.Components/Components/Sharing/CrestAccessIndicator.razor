@@ -1,0 +1,33 @@
+@namespace Crest.Components.Sharing
+@using System.Globalization
+@using Crest.Components.Primitives
+@inject IServiceProvider Services
+
+@* An access indicator (docs/sharing.md, requirement 98): private, shared or public. Nothing is
+   shown when the object has none (sharing is off, or it is not calculated yet). *@
+
+@if (Indicator is { } indicator)
+{
+    <span class="crest-access-indicator crest-access-indicator--@indicator.ToString().ToLowerInvariant()" title="@Title(indicator)" data-testid="access-indicator">
+        @(indicator switch { CrestShareIndicator.Public => "🌐", CrestShareIndicator.Shared => "👥", _ => "🔒" })
+        @if (ShowText)
+        {
+            <span>@Title(indicator)</span>
+        }
+    </span>
+}
+
+@code {
+    [Parameter] public CrestShareIndicator? Indicator { get; set; }
+
+    [Parameter] public bool ShowText { get; set; }
+
+    private string Title(CrestShareIndicator indicator) => indicator switch
+    {
+        CrestShareIndicator.Public => L("Public"),
+        CrestShareIndicator.Shared => L("Shared"),
+        _ => L("Private"),
+    };
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

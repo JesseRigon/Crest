@@ -240,7 +240,7 @@ public static class StructuredQueryCompiler
 
                     if (values.Length > 0)
                     {
-                        members.Add(column + (negated ? dialect.NotInOperator(string.Join(", ", values)) : dialect.InOperator(string.Join(", ", values))));
+                        members.Add(column + InList(negated, values));
                     }
 
                     if (hasNull)
@@ -273,6 +273,13 @@ public static class StructuredQueryCompiler
         return "1 = 0";
     }
 
+    /// <summary>
+    /// " IN (@p0, @p1)" over bound scalars. Not the dialect's operator: YesSql writes a single
+    /// "@p" as " IN @p" for Dapper's list expansion, which is a syntax error for a scalar.
+    /// </summary>
+    private static string InList(bool negated, IEnumerable<string> members) =>
+        $" {(negated ? "NOT IN" : "IN")} ({string.Join(", ", members)})";
+
     /// <summary>A scope value as bound: an instant as a UTC date and time, as YesSql stores one.</summary>
     internal static object ScopeValue(object value) => value is DateTimeOffset offset ? offset.UtcDateTime : value;
 
@@ -298,7 +305,7 @@ public static class StructuredQueryCompiler
             var values = value as IEnumerable<object?> ?? (value as System.Collections.IEnumerable)?.Cast<object?>() ?? [value];
             var members = values.Where(member => member is not null).Select(member => Bind(parameters, member!)).ToArray();
 
-            return members.Length == 0 ? "1 = 0" : column + dialect.InOperator(string.Join(", ", members));
+            return members.Length == 0 ? "1 = 0" : column + InList(negated: false, members);
         }
 
         if (value is null)

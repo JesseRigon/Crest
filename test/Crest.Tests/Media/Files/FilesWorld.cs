@@ -96,7 +96,8 @@ public sealed class FilesWorld
             [Audit],
             AccessIndex is null ? [] : [AccessIndex],
             Scopes is null ? [] : [Scopes],
-            WithSharingService ? [SharingService(caller)] : []);
+            WithSharingService ? [SharingService(caller)] : [],
+            [new ShareChangeChecks(accessor, Resolver(), new ShareableKinds([Kind]))]);
     }
 
     public PersonalDriveAccessService PersonalAccess(CallerContext? caller) =>

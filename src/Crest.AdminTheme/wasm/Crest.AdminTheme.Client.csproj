@@ -4,10 +4,10 @@
        app entry with its own index.html + Program.Main) to a Razor class library. A
        Blazor Web App has exactly ONE WASM entry project - the host app's -
        which references this library (and Site's and Member's) and runs
-       CrestWebAssemblyHost. This project keeps everything else: the admin
-       pages/components, the WASM-side service implementations (registered via
-       AddCrestAdminClient in Extensions/), and the admin module registry
-       (CrestModuleAssemblyRegistry). -->
+       ClientWebAssemblyHost. This project is the admin theme's UI - pages, components,
+       AdminRoutes - and loads only when the admin shell is opened. Its services (the
+       boot path, AddAdminClient, the module registry) are
+       client-services/Crest.AdminTheme.Client.Services, loaded at boot. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -38,7 +38,7 @@
 
   <ItemGroup>
     <!-- WebAssembly package (not the full BlazorWebAssembly SDK): WASM-side service
-         classes here still use browser-only APIs (CrestAntiforgeryHandler's
+         classes here still use browser-only APIs (AntiforgeryHandler's
          IJSInProcessRuntime + SetBrowserRequestCredentials). Those code paths only ever
          execute in the browser; the assembly itself also loads server-side for SSR
          route discovery, which is fine - referencing the package doesn't require a
@@ -52,11 +52,15 @@
     <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
     <!-- The shell runtime: the lazy-module loader every shell shares. -->
     <ProjectReference Include="..\..\Crest.Shell\Crest.Shell.csproj" />
+    <!-- The admin theme's services (eager): the boot path, the HTTP pipeline, the API client,
+         the shell state. This project is the admin UI, loaded when the admin shell opens. -->
+    <ProjectReference Include="..\client-services\Crest.AdminTheme.Client.Services.csproj" />
     <ProjectReference Include="..\..\Crest.Icons\Crest.Icons.csproj" />
     <!-- Crest's own opt-in modules' admin libraries. A host's modules are never referenced
          here: the host app's WASM entry project references the module client libraries it
-         ships (source or packages), see CrestWebAssemblyHost, and CrestModuleAssemblyRegistry
+         ships (source or packages), see ClientWebAssemblyHost, and ModuleAssemblyRegistry
          finds them at runtime. -->
+    <ProjectReference Include="..\..\Crest.AuditTrail\blazor-wasm\Crest.AuditTrail.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Crest.ContentPartLists\blazor-wasm\Crest.ContentPartLists.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Crest.Parties\blazor-wasm\Crest.Parties.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Crest.Workflows\blazor-wasm\Crest.Workflows.BlazorWasm.csproj" />

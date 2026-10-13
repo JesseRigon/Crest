@@ -35,7 +35,13 @@ public sealed class MemberShellContext(HttpClient http, Crest.Components.Modules
 
     public IReadOnlyList<MemberShellOrganization> Organizations { get; private set; } = [];
 
-    public string? ActiveOrganizationId => _session?.ActiveOrganizationId;
+    // On an organization's pages the organization is the one the path names; elsewhere (the
+    // picker) the session's last choice.
+    public string? ActiveOrganizationId { get; private set; }
+
+    public string? ActiveOrganizationSlug => shell.OrganizationSlug;
+
+    public string? ImpersonatorName => _session?.ImpersonatorUserId is null ? null : _session.ImpersonatorUserName ?? _session.ImpersonatorUserId;
 
     public string? ActiveOrganizationName =>
         Organizations.FirstOrDefault(organization => organization.Id == ActiveOrganizationId)?.Name;
@@ -73,22 +79,31 @@ public sealed class MemberShellContext(HttpClient http, Crest.Components.Modules
                 // chrome rather than throwing.
                 _session = null;
                 Organizations = [];
+                ActiveOrganizationId = null;
                 return;
             }
 
             response.EnsureSuccessStatusCode();
             _session = await response.Content.ReadFromJsonAsync<MemberSessionModel>();
-            // Every later request names this organization (X-Org); the server validates it
-            // against the member's bindings on each one.
-            shell.OrganizationId = _session?.ActiveOrganizationId;
+            SiteName = _session?.SiteName is { Length: > 0 } siteName ? siteName : SiteName;
 
-            // Names come with the session, resolved by the server: an organization the
-            // member is bound to is not thereby a content item they may read.
+            // Names and slugs come with the session, resolved by the server: an organization
+            // the member is bound to is not thereby a content item they may read.
             Organizations =
             [
                 .. (_session?.Organizations ?? [])
-                    .Select(organization => new MemberShellOrganization(organization.Id, organization.Name))
+                    .Select(organization => new MemberShellOrganization(organization.Id, organization.Name, organization.Slug))
             ];
+
+            // The organization is the one this document's path names (/{member prefix}/{slug}/),
+            // so a bookmark opens it and two tabs act in two organizations; an
+            // organization-free page falls back to the session's last choice. Every later
+            // request names it (X-Org) and the server validates it against the bindings.
+            ActiveOrganizationId = shell.OrganizationSlug is { Length: > 0 } slug
+                ? Organizations.FirstOrDefault(organization => string.Equals(organization.Slug, slug, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(organization.Id, slug, StringComparison.Ordinal))?.Id
+                : _session?.ActiveOrganizationId;
+            shell.OrganizationId = ActiveOrganizationId;
         }
         catch (HttpRequestException)
         {
@@ -103,18 +118,27 @@ public sealed class MemberShellContext(HttpClient http, Crest.Components.Modules
         }
     }
 
+    // Remembers the choice as the session's last one; the shell then opens the organization's
+    // own path, which is what makes it active for that document.
     public async Task SetActiveOrganizationAsync(string organizationId)
     {
         using var response = await http.PostAsJsonAsync("api/crest/members/active-org", new { organizationId });
-        if (!response.IsSuccessStatusCode)
-        {
-            // The server refused: this member does not hold that binding. Leave the
-            // active organization as it was.
-            return;
-        }
-
-        await LoadAsync();
     }
+
+    public async Task<string?> StopImpersonationAsync()
+    {
+        using var response = await http.PostAsync("api/crest/members/impersonate/stop", null);
+        _session = null;
+        Organizations = [];
+        ActiveOrganizationId = null;
+        Changed?.Invoke();
+        return response.IsSuccessStatusCode
+            && (await response.Content.ReadFromJsonAsync<StopImpersonationResult>())?.ReturnUrl is { Length: > 0 } returnUrl
+                ? returnUrl
+                : null;
+    }
+
+    private sealed record StopImpersonationResult(string? ReturnUrl);
 
     public async Task SignOutAsync()
     {

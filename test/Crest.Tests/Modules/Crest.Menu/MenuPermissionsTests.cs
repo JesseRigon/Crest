@@ -44,10 +44,8 @@ public class MenuPermissionsTests
             new Claim(Permission.ClaimType, grantedPermission),
         };
 
-        var permissionGrantingService = new DefaultPermissionGrantingService();
 
-        Assert.True(permissionGrantingService.IsGranted(
-            new PermissionRequirement(MenuPermissions.ManageMenu),
+        Assert.True(global::Crest.Tests.Access.ImpliedPermissions.IsGranted(MenuPermissions.ManageMenu,
             claims));
     }
 
@@ -63,12 +61,10 @@ public class MenuPermissionsTests
             new Claim(Permission.ClaimType, editMenu.Name),
         };
 
-        var permissionGrantingService = new DefaultPermissionGrantingService();
         var requiredPermission = CreateMenuPermission(
             ContentTypePermissionsHelper.PermissionTemplates[permissionName]);
 
-        Assert.False(permissionGrantingService.IsGranted(
-            new PermissionRequirement(requiredPermission),
+        Assert.False(global::Crest.Tests.Access.ImpliedPermissions.IsGranted(requiredPermission,
             claims));
     }
 

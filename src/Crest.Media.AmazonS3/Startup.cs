@@ -16,8 +16,8 @@ using Crest.FileStorage.AmazonS3;
 using Crest.Media.AmazonS3.Services;
 using Crest.Media;
 using Crest.Media.Events;
-using Crest.Media.Helpers;
-using Crest.Media.Events;
+using Crest.Media.Files;
+using Crest.Media.Library;
 using Crest.Media.Services;
 using Crest.Modules;
 using Crest.Navigation;
@@ -99,39 +99,16 @@ public sealed class Startup : Modules.StartupBase
             // Registering IAmazonS3 client using AWS registration factory.
             services.AddAWSService<IAmazonS3>(storeOptions.AwsOptions);
 
-            services.Replace(ServiceDescriptor.Singleton<IMediaFileStore>(serviceProvider =>
-            {
-                var shellSettings = serviceProvider.GetRequiredService<ShellSettings>();
-                var mediaOptions = serviceProvider.GetRequiredService<IOptions<MediaOptions>>().Value;
-                var mediaEventHandlers = serviceProvider.GetServices<IMediaEventHandler>();
-                var mediaCreatingEventHandlers = serviceProvider.GetServices<IMediaCreatingEventHandler>();
-                var fileSizeHelper = serviceProvider.GetService<FileSizeHelper>();
-                var clock = serviceProvider.GetRequiredService<IClock>();
-                var logger = serviceProvider.GetRequiredService<ILogger<DefaultMediaFileStore>>();
-                var amazonS3Client = serviceProvider.GetService<IAmazonS3>();
+            // The media library's paths (ruling F1) stay the library drive; before a tenant's
+            // import has run they are this bucket, and the import reads it (docs/media.md › The
+            // media library). IMediaFileStore itself is never replaced.
+            services.Replace(ServiceDescriptor.Singleton(serviceProvider => new LibraryFileStore(new AwsFileStore(
+                serviceProvider.GetRequiredService<IClock>(),
+                serviceProvider.GetRequiredService<IOptions<AwsStorageOptions>>().Value,
+                serviceProvider.GetRequiredService<IAmazonS3>()))));
 
-                var options = serviceProvider.GetRequiredService<IOptions<AwsStorageOptions>>();
-                var fileStore = new AwsFileStore(clock, options.Value, amazonS3Client);
-
-                var mediaUrlBase = $"/{fileStore.Combine(shellSettings.RequestUrlPrefix, mediaOptions.AssetsRequestPath)}";
-
-                var originalPathBase = serviceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext
-                    ?.Features.Get<ShellContextFeature>()
-                    ?.OriginalPathBase ?? PathString.Empty;
-
-                if (originalPathBase.HasValue)
-                {
-                    mediaUrlBase = fileStore.Combine(originalPathBase.Value, mediaUrlBase);
-                }
-
-                return new DefaultMediaFileStore(fileStore,
-                    mediaUrlBase,
-                    mediaOptions.CdnBaseUrl,
-                    mediaEventHandlers,
-                    mediaCreatingEventHandlers,
-                    fileSizeHelper,
-                    logger);
-            }));
+            // File objects' bytes in S3 (requirement 11), under their own base path.
+            services.Replace(ServiceDescriptor.Singleton<IMediaStorageProvider>(S3MediaStorage.Create));
 
             services.AddSingleton<IMediaEventHandler, DefaultMediaFileStoreCacheEventHandler>();
 

@@ -8,6 +8,7 @@ using Crest.AuditTrail.Models;
 using Crest.ContentManagement;
 using Crest.ContentManagement.Display;
 using Crest.Contents.AuditTrail.Models;
+using Crest.Contents.AuditTrail.Services;
 using Crest.DisplayManagement.ModelBinding;
 using Crest.DisplayManagement.Notify;
 using Crest.Entities;
@@ -26,6 +27,7 @@ public sealed class AuditTrailContentController : Controller
     private readonly IAuthorizationService _authorizationService;
     private readonly IContentItemDisplayManager _contentItemDisplayManager;
     private readonly INotifier _notifier;
+    private readonly ContentHistory _history;
 
     internal readonly IHtmlLocalizer H;
 
@@ -36,8 +38,10 @@ public sealed class AuditTrailContentController : Controller
         IAuthorizationService authorizationService,
         IContentItemDisplayManager contentItemDisplayManager,
         INotifier notifier,
-        IHtmlLocalizer<AuditTrailContentController> htmlLocalizer)
+        IHtmlLocalizer<AuditTrailContentController> htmlLocalizer,
+        ContentHistory history)
     {
+        _history = history;
         _session = session;
         _contentManager = contentManager;
         _updateModelAccessor = updateModelAccessor;
@@ -49,17 +53,17 @@ public sealed class AuditTrailContentController : Controller
 
     public async Task<ActionResult> Display(string auditTrailEventId)
     {
-        var auditTrailContentEvent = (await _session.Query<AuditTrailEvent, AuditTrailEventIndex>(collection: AuditTrailEvent.Collection)
+        var auditTrailEvent = await _session.Query<AuditTrailEvent, AuditTrailEventIndex>(collection: AuditTrailEvent.Collection)
             .Where(index => index.EventId == auditTrailEventId)
-            .FirstOrDefaultAsync())
-            ?.GetOrCreate<AuditTrailContentEvent>();
+            .FirstOrDefaultAsync();
+        var auditTrailContentEvent = auditTrailEvent?.As<AuditTrailContentEvent>();
 
-        if (auditTrailContentEvent == null || auditTrailContentEvent.ContentItem == null)
+        // The stored form is a diff: rebuild the version the event recorded.
+        var contentItem = auditTrailEvent is null ? null : await _history.RebuildAsync(auditTrailEvent);
+        if (auditTrailContentEvent == null || contentItem == null)
         {
             return NotFound();
         }
-
-        var contentItem = auditTrailContentEvent.ContentItem;
 
         contentItem.Id = 0;
         contentItem.ContentItemVersionId = "";
@@ -88,11 +92,10 @@ public sealed class AuditTrailContentController : Controller
     [HttpPost]
     public async Task<ActionResult> Restore(string auditTrailEventId)
     {
-        var contentItem = (await _session.Query<AuditTrailEvent, AuditTrailEventIndex>(collection: AuditTrailEvent.Collection)
+        var auditTrailEvent = await _session.Query<AuditTrailEvent, AuditTrailEventIndex>(collection: AuditTrailEvent.Collection)
             .Where(index => index.EventId == auditTrailEventId)
-            .FirstOrDefaultAsync())
-            ?.GetOrCreate<AuditTrailContentEvent>()
-            ?.ContentItem;
+            .FirstOrDefaultAsync();
+        var contentItem = auditTrailEvent is null ? null : await _history.RebuildAsync(auditTrailEvent);
 
         if (contentItem == null)
         {

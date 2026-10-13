@@ -25,7 +25,7 @@ public sealed class ContentPartListsAdminMenu(IStringLocalizer<ContentPartListsA
                     .AddClass("icon-class-@iconify:mdi:format-list-bulleted")
                     .Id("content-part-lists")
                     .Url($"{adminPath}/ContentTypes/ContentPartLists")
-                    .Permission(Crest.Permissions.CrestContentPartListPermissions.ViewContentPartLists)
+                    .Permission(Crest.Permissions.ContentPartListPermissions.ViewContentPartLists)
                     .LocalNav()
                 )
             ));

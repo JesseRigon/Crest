@@ -14,6 +14,7 @@ using Crest.Settings;
 using Crest.Users;
 using Crest.Users.Models;
 using Crest.Users.Services;
+using Crest.Users.Events;
 
 namespace Crest.Members.Controllers;
 
@@ -29,15 +30,21 @@ namespace Crest.Members.Controllers;
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/members/portal")]
 public sealed class MemberPortalController(
-    CrestLoginService loginService,
+    LoginService loginService,
     MemberPortalLoginContext portalContext,
     IMemberService memberService,
+    MemberBindingService bindings,
     MemberOrganizationDirectory organizationDirectory,
     IUserService users,
     IContentManager contentManager,
     IPartyUserLinkService partyUserLink,
     ISiteService siteService,
-    SignInManager<IUser> signInManager) : ControllerBase
+    SignInManager<IUser> signInManager,
+    UserManager<IUser> userManager,
+    UserEmailService userEmails,
+    IEnumerable<IPasswordRecoveryFormEvents> recoveryEvents,
+    Microsoft.Extensions.Options.IOptions<RegistrationOptions> registrationOptions,
+    Microsoft.Extensions.Options.IOptions<Crest.Routing.MemberOptions> memberOptions) : ControllerBase
 {
     [HttpPost("login")]
     public async Task<IActionResult> LoginAsync(PortalLoginRequest request)
@@ -91,6 +98,11 @@ public sealed class MemberPortalController(
         if (organization is not { ContentType: PartiesConstants.ContentTypes.Organization })
         {
             return BadRequest(new PortalRefusal(["Unknown organization."]));
+        }
+
+        if (await bindings.MemberRefusalAsync(request.OrganizationId, HttpContext.RequestAborted) is { } refusal)
+        {
+            return BadRequest(new PortalRefusal([refusal]));
         }
 
         var person = await contentManager.NewAsync(PartiesConstants.ContentTypes.Person);
@@ -147,17 +159,101 @@ public sealed class MemberPortalController(
     // the organization stamped on the external cookie's properties so the callback's
     // gate and creation stamp treat it as a portal login. A navigation, not a fetch:
     // the challenge redirects to the provider.
+    //
+    // The organization is optional: without one an existing member signs in with any of their
+    // bindings (the portal mark is still set, empty), and an account the provider would create
+    // is refused - no user exists outside an organization (UserClassStampHandler). The return
+    // URL must be local; the member shell's external-login page passes the member base.
     [HttpGet("external-login")]
-    public IActionResult ExternalLogin([FromQuery] string provider, [FromQuery] string organizationId, [FromQuery] string? returnUrl = null)
+    public IActionResult ExternalLogin([FromQuery] string provider, [FromQuery] string? organizationId = null, [FromQuery] string? returnUrl = null)
     {
-        if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(organizationId))
+        if (string.IsNullOrWhiteSpace(provider))
         {
-            return BadRequest(new PortalRefusal(["A provider and an organization are required."]));
+            return BadRequest(new PortalRefusal(["A provider is required."]));
+        }
+
+        if (returnUrl is not null && !Url.IsLocalUrl(returnUrl))
+        {
+            returnUrl = null;
         }
 
         var redirectUrl = Url.Action("ExternalLoginCallback", "ExternalAuthentications", new { area = "Crest.Users", returnUrl });
         var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
-        properties.Items[MemberSessionKeys.PortalOrganization] = organizationId;
+        properties.Items[MemberSessionKeys.PortalOrganization] = organizationId?.Trim() ?? string.Empty;
         return Challenge(properties, provider);
+    }
+
+    // Password recovery for members, on the portal (docs/shells-and-themes.md › Member account
+    // pages): the tenant's ResetPasswordSettings apply, the email links to the member shell's
+    // reset page rather than the tenant's, and the answer never says whether the account
+    // exists. Only a member-bound account is sent a portal link; staff recover theirs at the
+    // tenant surface.
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPasswordAsync(PortalForgotPasswordRequest request)
+    {
+        if (!(await siteService.GetSettingsAsync<ResetPasswordSettings>()).AllowResetPassword)
+        {
+            return NotFound();
+        }
+
+        if (string.IsNullOrWhiteSpace(request.UserNameOrEmail)
+            || await users.GetForgotPasswordUserAsync(request.UserNameOrEmail) is not User user
+            || !UserClassSet.Bindings(user, UserClasses.Member).Any())
+        {
+            return Ok();
+        }
+
+        if (registrationOptions.Value.UsersMustValidateEmail && !await userManager.IsEmailConfirmedAsync(user))
+        {
+            return Ok();
+        }
+
+        var memberBase = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/{memberOptions.Value.MemberUrlPrefix}";
+        await userEmails.SendPasswordResetAsync(user, (_, code) =>
+            $"{memberBase}{Crest.MemberTheme.MemberRoutePaths.ResetPassword}?code={Uri.EscapeDataString(code)}");
+
+        var context = new PasswordRecoveryContext(user);
+        foreach (var handler in recoveryEvents)
+        {
+            await handler.PasswordRecoveredAsync(context);
+        }
+
+        return Ok();
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPasswordAsync(PortalResetPasswordRequest request)
+    {
+        if (!(await siteService.GetSettingsAsync<ResetPasswordSettings>()).AllowResetPassword)
+        {
+            return NotFound();
+        }
+
+        string token;
+        try
+        {
+            token = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(request.Code ?? string.Empty));
+        }
+        catch (FormatException)
+        {
+            return BadRequest(new PortalRefusal(["The reset link is not valid."]));
+        }
+
+        var errors = new List<string>();
+        if (await users.ResetPasswordAsync(request.UserNameOrEmail, token, request.NewPassword, (key, message) => errors.Add(message)))
+        {
+            if (await users.GetUserAsync(request.UserNameOrEmail) is { } reset)
+            {
+                var context = new PasswordRecoveryContext(reset);
+                foreach (var handler in recoveryEvents)
+                {
+                    await handler.PasswordResetAsync(context);
+                }
+            }
+
+            return Ok();
+        }
+
+        return BadRequest(new PortalRefusal(errors.Count > 0 ? errors : ["The password could not be reset."]));
     }
 }

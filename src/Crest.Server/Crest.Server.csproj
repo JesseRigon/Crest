@@ -62,6 +62,11 @@
     <ProjectReference Include="$(PlatformSrcDir)Crest.Recipes.Abstractions\Crest.Recipes.Abstractions.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Recipes\Crest.Recipes.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Queries\Crest.Queries.csproj" />
+    <!-- The native Settings > Debugging and Deployments pages' API (DebugSettingsController,
+         DeploymentController). -->
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Settings\Crest.Settings.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Deployment\Crest.Deployment.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Crest.Deployment.Remote\Crest.Deployment.Remote.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Localization\Crest.Localization.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Indexing.Abstractions\Crest.Indexing.Abstractions.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Crest.Indexing\Crest.Indexing.csproj" />
@@ -109,7 +114,7 @@
   <!-- Server references the theme client libraries it renders (SSR and InteractiveServer).
        The single WASM entry project (Program.Main) belongs to the HOST app, which
        references these same libraries plus the module client libraries it ships - see
-       Crest.AdminTheme.Client's CrestWebAssemblyHost. Crest never references a host's modules:
+       Crest.AdminTheme.Client's ClientWebAssemblyHost. Crest never references a host's modules:
        Startup.Configure's assembly scan (*.Client.dll / *.BlazorWasm.dll) picks up
        whatever the host brought into the app's output and feeds it to
        MapRazorComponents' route table. Which theme actually renders for a given request

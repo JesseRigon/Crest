@@ -30,6 +30,7 @@ namespace Crest.Components.Primitives
     /// &lt;CrestBadge BadgeStyle="BadgeStyle.Success" Variant="Variant.Flat" Text="Active" IsPill="true" /&gt;
     /// </code>
     /// </example>
+    [Crest.DisplayManagement.Components.BlazorComponent("Badge", DisplayName = "Badge", Category = "Basic", Icon = "sell")]
     public partial class CrestBadge : CrestComponent
     {
         /// <inheritdoc />

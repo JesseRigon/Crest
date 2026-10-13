@@ -16,7 +16,7 @@ namespace Crest.Components.Editors;
 /// field, picked by what each editor declares it edits); a template for
 /// <c>ContentEditor__{Type}</c> lays them out differently, which is a per-type designed editor.
 /// </summary>
-[CrestBlazorComponent("ContentEditor", DisplayName = "Content editor", Category = "Editors", Icon = "edit_note", Instances = ComponentInstances.Single)]
+[BlazorComponent("ContentEditor", DisplayName = "Content editor", Category = "Editors", Icon = "edit_note", Instances = ComponentInstances.Single)]
 public sealed class ContentEditor : ComponentBase, IDisposable
 {
     [Parameter]
@@ -89,7 +89,7 @@ public sealed class ContentEditor : ComponentBase, IDisposable
 }
 
 /// <summary>A titled group of editors (a part's fields).</summary>
-[CrestBlazorComponent("EditorSection", DisplayName = "Editor section", Category = "Editors", Icon = "segment")]
+[BlazorComponent("EditorSection", DisplayName = "Editor section", Category = "Editors", Icon = "segment")]
 public sealed class EditorSection : ComponentBase
 {
     [Parameter]

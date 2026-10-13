@@ -1,4 +1,4 @@
-using Crest.Global;
+using Crest.Data.Global;
 using Crest.Regions.Indexes;
 using Crest.Regions.Models;
 using NetTopologySuite.Geometries;
@@ -13,7 +13,7 @@ namespace Crest.Regions.Services;
 /// store and tests with NetTopologySuite, in-process, no network. Only grouping nodes of
 /// the point's country are tested, so a boundary set is never enumerated wholesale.
 /// </summary>
-public sealed class NetTopologySuiteBoundaryResolver(ICrestGlobalStore globalStore) : IGeoBoundaryResolver
+public sealed class NetTopologySuiteBoundaryResolver(IGlobalStore globalStore) : IGeoBoundaryResolver
 {
     private static readonly WKTReader WktReader = new();
 

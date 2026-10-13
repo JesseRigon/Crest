@@ -13,7 +13,7 @@ namespace Crest.ContentGroups;
 /// materialized sync), so the tenant chooses by-type pages, by-group pages, or both.
 /// </summary>
 public sealed class ContentGroupsMenuNavigationProvider(
-    CrestContentGroupService groups,
+    ContentGroupService groups,
     IStringLocalizer<ContentGroupsMenuNavigationProvider> stringLocalizer,
     IOptions<AdminOptions> adminOptions) : AdminNavigationProvider
 {

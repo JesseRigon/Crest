@@ -1,3 +1,5 @@
+using Crest.Access;
+using Crest.Data.Scoping;
 using Crest.Parties.Constants;
 using Crest.Parties.Indexes;
 using Crest.Parties.ViewModels;
@@ -28,7 +30,7 @@ public interface IPartyPositionsService
     Task<IReadOnlyList<OrganizationPersonModel>> ListPeopleAsync(string organizationId, CancellationToken cancellationToken = default);
 }
 
-public sealed class PartyPositionsService(IContentManager contentManager, ISession session) : IPartyPositionsService
+public sealed class PartyPositionsService(IContentManager contentManager, PartyBagElementService bags, ISession session, ICallerContextAccessor callers, IScopeSetProvider scopes) : IPartyPositionsService
 {
     private const string Part = PartiesConstants.ContentTypes.OrgPosition;
 
@@ -57,7 +59,7 @@ public sealed class PartyPositionsService(IContentManager contentManager, ISessi
 
             bag.ContentItems.Add(element);
         });
-        await contentManager.UpdateAsync(person);
+        await bags.SaveAsync(person);
 
         return ToModel(element, new Dictionary<string, string> { [organization.ContentItemId] = organization.DisplayText });
     }
@@ -87,7 +89,7 @@ public sealed class PartyPositionsService(IContentManager contentManager, ISessi
             return null;
         }
 
-        await contentManager.UpdateAsync(person);
+        await bags.SaveAsync(person);
         return ToModel(updated, new Dictionary<string, string> { [organization.ContentItemId] = organization.DisplayText });
     }
 
@@ -98,7 +100,7 @@ public sealed class PartyPositionsService(IContentManager contentManager, ISessi
 
         if (removed)
         {
-            await contentManager.UpdateAsync(person);
+            await bags.SaveAsync(person);
         }
 
         return removed;
@@ -106,7 +108,15 @@ public sealed class PartyPositionsService(IContentManager contentManager, ISessi
 
     public async Task<IReadOnlyList<OrganizationPersonModel>> ListPeopleAsync(string organizationId, CancellationToken cancellationToken = default)
     {
+        // Only the people the caller may see (docs/access.md, Domains onto the extension system).
+        var scope = callers.Current is { } caller ? (await scopes.GetAsync(caller, cancellationToken)).Require(nameof(PartyPositionIndex)) : ScopeRule.None;
+        if (scope.Kind == ScopeKind.None)
+        {
+            return [];
+        }
+
         var rows = await session.QueryIndex<PartyPositionIndex>(index => index.OrganizationId == organizationId && index.Latest)
+            .Where(ScopeExpressions.ToPredicate<PartyPositionIndex>(scope))
             .ListAsync(cancellationToken);
         var rowList = rows.ToArray();
         if (rowList.Length == 0)

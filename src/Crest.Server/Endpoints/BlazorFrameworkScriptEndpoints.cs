@@ -16,7 +16,7 @@ namespace Crest.Endpoints;
 // Served here as tenant-pipeline ENDPOINTS (not a host-level UseStaticFiles) so that
 // Crest's routing stays the single authority over the URL space: endpoint
 // matching happens after ModularTenantRouterMiddleware has stripped the tenant's
-// RequestUrlPrefix into PathBase and after BlazorAdminThemeMiddleware has stripped
+// RequestUrlPrefix into PathBase and after ShellSelectionMiddleware has stripped
 // the admin/login shell base the same way - so one registration serves the script
 // for every form a browser can request it in ("/_framework/blazor.web.js",
 // "/tenant2/_framework/...", "/tenant2/Admin/_framework/..."). A host-level

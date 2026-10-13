@@ -68,10 +68,10 @@ public sealed class ThemesController(
 
         ThemeShell[] shells =
         [
-            new(CrestShells.Site, current[RouteBucket.Site], CanReset: true),
-            new(CrestShells.Admin, current[RouteBucket.Admin], CanReset: true),
-            .. requiredBuckets.Contains(RouteBucket.Member)
-                ? [new ThemeShell(CrestShells.Member, current[RouteBucket.Member], CanReset: false)]
+            new(CrestShells.Site, current[ShellId.Site], CanReset: true),
+            new(CrestShells.Admin, current[ShellId.Admin], CanReset: true),
+            .. requiredBuckets.Contains(ShellId.Member)
+                ? [new ThemeShell(CrestShells.Member, current[ShellId.Member], CanReset: false)]
                 : Array.Empty<ThemeShell>(),
         ];
 
@@ -105,17 +105,17 @@ public sealed class ThemesController(
             return refusal;
         }
 
-        switch (bucket)
+        if (bucket == ShellId.Admin)
         {
-            case RouteBucket.Admin:
-                await adminThemeService.SetAdminThemeAsync(feature.Id);
-                break;
-            case RouteBucket.Member:
-                await memberThemeService.SetMemberThemeAsync(feature.Id);
-                break;
-            default:
-                await siteThemeService.SetSiteThemeAsync(feature.Id);
-                break;
+            await adminThemeService.SetAdminThemeAsync(feature.Id);
+        }
+        else if (bucket == ShellId.Member)
+        {
+            await memberThemeService.SetMemberThemeAsync(feature.Id);
+        }
+        else
+        {
+            await siteThemeService.SetSiteThemeAsync(feature.Id);
         }
 
         var enabledFeatures = await shellFeaturesManager.GetEnabledFeaturesAsync();
@@ -135,7 +135,7 @@ public sealed class ThemesController(
             return Forbid();
         }
 
-        if (await RefuseUnacknowledgedAsync(new PendingThemeChange(RouteBucket.Site, null), acknowledgeIncompatibilities) is { } refusal)
+        if (await RefuseUnacknowledgedAsync(new PendingThemeChange(ShellId.Site, null), acknowledgeIncompatibilities) is { } refusal)
         {
             return refusal;
         }
@@ -152,7 +152,7 @@ public sealed class ThemesController(
             return Forbid();
         }
 
-        if (await RefuseUnacknowledgedAsync(new PendingThemeChange(RouteBucket.Admin, null), acknowledgeIncompatibilities) is { } refusal)
+        if (await RefuseUnacknowledgedAsync(new PendingThemeChange(ShellId.Admin, null), acknowledgeIncompatibilities) is { } refusal)
         {
             return refusal;
         }
@@ -220,19 +220,14 @@ public sealed class ThemesController(
                 broken));
     }
 
-    private async Task<Dictionary<RouteBucket, string?>> GetCurrentThemeIdsAsync() => new()
+    private async Task<Dictionary<ShellId, string?>> GetCurrentThemeIdsAsync() => new()
     {
-        [RouteBucket.Site] = (await siteThemeService.GetSiteThemeAsync())?.Id,
-        [RouteBucket.Admin] = (await adminThemeService.GetAdminThemeAsync())?.Id,
-        [RouteBucket.Member] = await memberThemeService.GetMemberThemeIdAsync(),
+        [ShellId.Site] = (await siteThemeService.GetSiteThemeAsync())?.Id,
+        [ShellId.Admin] = (await adminThemeService.GetAdminThemeAsync())?.Id,
+        [ShellId.Member] = await memberThemeService.GetMemberThemeIdAsync(),
     };
 
-    private static string ShellOf(RouteBucket bucket) => bucket switch
-    {
-        RouteBucket.Admin => CrestShells.Admin,
-        RouteBucket.Member => CrestShells.Member,
-        _ => CrestShells.Site,
-    };
+    private static string ShellOf(ShellId bucket) => bucket.Value;
 
     private async Task<IFeatureInfo?> FindThemeAsync(string id) => (await shellFeaturesManager.GetAvailableFeaturesAsync())
         .FirstOrDefault(feature => string.Equals(feature.Id, id, StringComparison.OrdinalIgnoreCase) && IsSelectableTheme(feature));

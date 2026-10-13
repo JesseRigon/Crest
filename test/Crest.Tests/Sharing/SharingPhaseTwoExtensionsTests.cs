@@ -93,8 +93,10 @@ public class SharingPhaseTwoExtensionsTests
         var resolver = world.Resolver();
 
         Assert.Equal(AccessLevel.Editor, (await resolver.ResolveAsync(Member("al", "acme", "MemberAdmin"), Ref("spec.psd"), TestContext.Current.CancellationToken)).Level);
-        Assert.Equal(AccessLevel.None, (await resolver.ResolveAsync(Member("bo", "beta", "MemberAdmin"), Ref("spec.psd"), TestContext.Current.CancellationToken)).Level);
-        Assert.Equal(AccessLevel.None, (await resolver.ResolveAsync(User("cy", "MemberAdmin"), Ref("spec.psd"), TestContext.Current.CancellationToken)).Level);
+        // Elsewhere the role's Editor does not reach: another organization's member and a staff
+        // user with the same role name keep only Spec sheets' tenant grant (requirement 37).
+        Assert.Equal(AccessLevel.Viewer, (await resolver.ResolveAsync(Member("bo", "beta", "MemberAdmin"), Ref("spec.psd"), TestContext.Current.CancellationToken)).Level);
+        Assert.Equal(AccessLevel.Viewer, (await resolver.ResolveAsync(User("cy", "MemberAdmin"), Ref("spec.psd"), TestContext.Current.CancellationToken)).Level);
 
         // Its index row carries the organization.
         await world.IndexAllAsync();

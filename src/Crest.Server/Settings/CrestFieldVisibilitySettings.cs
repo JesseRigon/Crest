@@ -23,8 +23,8 @@ public class CrestFieldVisibilitySettings
     /// "Part.Field". Blank means the field is always visible.</summary>
     public string? Path { get; set; }
 
-    /// <summary>See <see cref="CrestFieldVisibilityOperators"/>.</summary>
-    public string Operator { get; set; } = CrestFieldVisibilityOperators.Any;
+    /// <summary>See <see cref="FieldVisibilityOperators"/>.</summary>
+    public string Operator { get; set; } = FieldVisibilityOperators.Any;
 
     /// <summary>The comparison keys for Equals/In. Ignored for Any.</summary>
     public string[] Keys { get; set; } = [];
@@ -32,7 +32,7 @@ public class CrestFieldVisibilitySettings
     public bool HasCondition => !string.IsNullOrWhiteSpace(Path);
 }
 
-public static class CrestFieldVisibilityOperators
+public static class FieldVisibilityOperators
 {
     /// <summary>Visible once the controlling field has ANY value.</summary>
     public const string Any = "Any";

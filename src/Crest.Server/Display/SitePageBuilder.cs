@@ -16,11 +16,42 @@ namespace Crest.Display;
 public sealed class SiteDisplaySettings
 {
     /// <summary>
-    /// Whether a published, routable item whose type has no template gets a page built from its
-    /// drivers and placement (the default <c>Content</c> rendering). Off by default: the API is on
-    /// for every type, a page exists only when a template is assigned (decision 10).
+    /// Whether the default <c>Content</c> template (<see cref="DefaultContentTemplate"/>) runs for a
+    /// published, routable item whose type has no template of its own: it lays out the fields the
+    /// viewer may see. Off by default: the API is on for every type, a page exists only when a
+    /// template is assigned (decision 10).
     /// </summary>
     public bool RenderUnassignedContent { get; set; }
+}
+
+/// <summary>
+/// The default <c>Content</c> template (decision 10): the item's title and every zone its drivers
+/// filled, so what it lists is what the drivers built for the viewer and the node filter let
+/// through. A shipped template, the last level of the chain below the tenant's own, and present
+/// only while the tenant's <see cref="SiteDisplaySettings.RenderUnassignedContent"/> is on, for the
+/// Detail display type; a tenant template named <c>Content</c> replaces it.
+/// </summary>
+public sealed class DefaultContentTemplate(ISiteService siteService) : IShippedTemplateProvider
+{
+    public const string Name = "Content";
+
+    public const string Source = """
+        {% compose "Content" %}
+        {% zone "Header" %}{% component "CrestHeading", text: Model.ContentItem.DisplayText, size: "H1" %}{% children "Header" %}{% endzone %}
+        {% zone "Meta" %}{% children "Meta" %}{% endzone %}
+        {% zone "Content" %}{% children "Content" %}{% endzone %}
+        {% zone "Tags" %}{% children "Tags" %}{% endzone %}
+        {% zone "Footer" %}{% children "Footer" %}{% endzone %}
+        {% endcompose %}
+        """;
+
+    private static readonly TemplateRecord s_template = new(
+        "shipped:" + Name, "shipped:" + Name, Name, Theme: null, DisplayType: "Detail", Source,
+        "The default content page: the item's title and the fields the viewer may see (decision 10).",
+        Published: true, Latest: true, ModifiedUtc: null);
+
+    public async Task<IReadOnlyList<TemplateRecord>> GetTemplatesAsync() =>
+        (await siteService.GetSiteSettingsAsync()).As<SiteDisplaySettings>().RenderUnassignedContent ? [s_template] : [];
 }
 
 /// <summary>A site page: the status it answers with, its title and its tree.</summary>
@@ -50,6 +81,7 @@ public sealed class SitePageBuilder(
     ICallerContextAccessor callers,
     IAccessDecision decision,
     TemplateResolver templates,
+    DesignedPageStore designedPages,
     IEnumerable<ILayoutTreeContributor> contributors)
 {
     public const string MainMenuAlias = "alias:main-menu";
@@ -60,6 +92,13 @@ public sealed class SitePageBuilder(
     {
         var site = await siteService.GetSiteSettingsAsync();
         var caller = callers.Current;
+
+        // A designed page of the site bucket owns its route ahead of Autoroute (decision 9).
+        if (await designedPages.MatchAsync(Crest.Templates.Models.DesignedPagesConstants.SiteBucket, Normalize(path)) is { } designed)
+        {
+            return await BuildDesignedAsync(designed.Page, designed.Values, cancellationToken);
+        }
+
         var contentItemId = await ResolveAsync(path, site);
         var item = contentItemId is null ? null : await contentManager.GetAsync(contentItemId, VersionOptions.Published);
 
@@ -80,9 +119,9 @@ public sealed class SitePageBuilder(
         var shape = await displayManager.BuildDisplayAsync(item, updaters.ModelUpdater, DetailDisplayType);
 
         // Decision 10: no page is generated for a type without a template. The template is asked
-        // for by the names the item's shape binds by (Content__{Type}, or its stereotype's).
-        if (!site.As<SiteDisplaySettings>().RenderUnassignedContent
-            && await templates.ResolveAsync(TemplateResolver.NamesOf(shape.Metadata.Type, [.. shape.Metadata.Alternates]), DetailDisplayType) is null)
+        // for by the names the item's shape binds by (Content__{Type}, or its stereotype's); the
+        // default Content template answers only where the tenant turned it on.
+        if (await templates.ResolveAsync(TemplateResolver.NamesOf(shape.Metadata.Type, [.. shape.Metadata.Alternates]), DetailDisplayType) is null)
         {
             return await ErrorPageAsync(404, "NotFound", "Not found", site, caller, cancellationToken);
         }
@@ -91,9 +130,46 @@ public sealed class SitePageBuilder(
         return new SitePage(200, title, await BuildLayoutAsync(shape, item, item.DisplayText, site, caller, cancellationToken));
     }
 
+    /// <summary>
+    /// A designed page (decision 9, § 6a): admitted by its Data permission unless it allows
+    /// anonymous callers, its tree bound as <c>DesignedPage__{Name}</c> with the route's values as
+    /// <c>Model.Route</c>, rendered inside the site layout like any page. A draft is built here
+    /// only under preview (<see cref="TemplatePreview"/> carries its source).
+    /// </summary>
+    public async Task<SitePage> BuildDesignedAsync(DesignedPageRecord page, IReadOnlyDictionary<string, string> values, CancellationToken cancellationToken = default)
+    {
+        var site = await siteService.GetSiteSettingsAsync();
+        var caller = callers.Current;
+        if (caller is null)
+        {
+            return await ErrorPageAsync(404, "NotFound", "Not found", site, caller, cancellationToken);
+        }
+
+        if (!page.AllowAnonymous
+            && !(await decision.DecideAsync(caller, DesignedPagePermissions.Data(page.Name).Name, cancellationToken: cancellationToken)).IsAllowed)
+        {
+            return await ErrorPageAsync(caller.UserId is null ? 404 : 403, caller.UserId is null ? "NotFound" : "Forbidden", caller.UserId is null ? "Not found" : "Forbidden", site, caller, cancellationToken);
+        }
+
+        var shape = await shapeFactory.CreateAsync(Crest.Templates.Models.DesignedPagesConstants.ShapeType, Arguments.From(new
+        {
+            Route = values.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.OrdinalIgnoreCase),
+            PageName = page.Name,
+            page.Title,
+            page.Description,
+        }));
+        shape.Metadata.Alternates.Add(page.ShapeName);
+
+        var title = page.Title ?? page.Name;
+        return new SitePage(200, Title(title, site), await BuildLayoutAsync(shape, item: null, title, site, caller, cancellationToken));
+    }
+
+    /// <summary>The path as pages are keyed: one leading slash, no trailing one.</summary>
+    public static string Normalize(string? path) => "/" + (path ?? string.Empty).Trim().Trim('/');
+
     private async Task<string?> ResolveAsync(string? path, ISite site)
     {
-        var normalized = "/" + (path ?? string.Empty).Trim().Trim('/');
+        var normalized = Normalize(path);
         if (normalized == "/")
         {
             return site.HomeRoute is { } home && home.TryGetValue(autorouteOptions.Value.ContentItemIdKey, out var id) ? id as string : null;

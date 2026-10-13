@@ -9,7 +9,7 @@ namespace Crest.Components.Interaction;
 /// payload that opened the enclosing overlay (<c>event</c> is the right-clicked row), then closes
 /// the overlay. An item whose workflow the viewer may not run is not in the tree at all.
 /// </summary>
-[CrestBlazorComponent("MenuAction", DisplayName = "Menu action", Category = "Overlays", Icon = "touch_app")]
+[BlazorComponent("MenuAction", DisplayName = "Menu action", Category = "Overlays", Icon = "touch_app")]
 public partial class MenuAction : ComponentBase
 {
     [Parameter]

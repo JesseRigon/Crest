@@ -9,15 +9,15 @@ using Crest.Localization.Data;
 
 namespace Crest.ViewModels;
 
-public sealed record CrestTranslations(
-    CrestTranslationCulture[] Cultures,
+public sealed record TranslationsModel(
+    TranslationCulture[] Cultures,
     string Culture,
     bool CanEdit,
-    CrestTranslationGroup[] Groups);
+    TranslationGroup[] Groups);
 
-public sealed record CrestTranslationCulture(string Value, string Label, bool CanEdit);
+public sealed record TranslationCulture(string Value, string Label, bool CanEdit);
 
-public sealed record CrestTranslationGroup(string Name, CrestTranslationString[] Strings);
+public sealed record TranslationGroup(string Name, TranslationString[] Strings);
 
 /// <param name="Orphan">A stored entry no provider currently enumerates - e.g. its feature is
 /// disabled, or its source string changed. Still applied at render time by IDataLocalizer;
@@ -26,8 +26,8 @@ public sealed record CrestTranslationGroup(string Name, CrestTranslationString[]
 /// actually renders (resolution is store edit -> PO -> invariant literal), shown as the
 /// input's placeholder. Deleting a stored value reveals this layer rather than the raw
 /// literal; saving the key itself as the value pins the literal over it.</param>
-public sealed record CrestTranslationString(string Context, string Key, string Value, bool Orphan, string? Fallback = null);
+public sealed record TranslationString(string Context, string Key, string Value, bool Orphan, string? Fallback = null);
 
-public sealed record CrestTranslationsSaveModel(string Culture, CrestTranslationSaveEntry[]? Translations);
+public sealed record TranslationsSaveModel(string Culture, TranslationSaveEntry[]? Translations);
 
-public sealed record CrestTranslationSaveEntry(string Context, string Key, string? Value);
+public sealed record TranslationSaveEntry(string Context, string Key, string? Value);

@@ -4,17 +4,34 @@ using Crest.DisplayManagement.Theming;
 namespace Crest.Templates.Services;
 
 /// <summary>
+/// Templates a module ships (decision 7: the chain ends at "the module's shipped default"): the
+/// level below the tenant's own templates. A provider may answer per request (the default
+/// <c>Content</c> template exists only where the tenant turned it on, decision 10).
+/// </summary>
+public interface IShippedTemplateProvider
+{
+    Task<IReadOnlyList<TemplateRecord>> GetTemplatesAsync();
+}
+
+/// <summary>
 /// The template hierarchy (decision 7): a shape's names, most specific first, each tried with
-/// the qualifiers dropped one at a time (theme and display type, theme, display type, none).
+/// the qualifiers dropped one at a time (theme and display type, theme, display type, none),
+/// first among the tenant's templates and then among the shipped ones.
 /// Theme is the one placement qualifier: the current request's theme is its shell's. Only
 /// published templates resolve; a draft is reached through preview only.
 /// </summary>
-public sealed class TemplateResolver(ITemplateCatalog store, IThemeManager themes)
+public sealed class TemplateResolver(ITemplateCatalog store, IThemeManager themes, IEnumerable<IShippedTemplateProvider>? shipped = null)
 {
     public async Task<TemplateRecord?> ResolveAsync(IReadOnlyList<string> names, string? displayType)
     {
         var published = await store.ListPublishedAsync();
-        if (published.Count == 0)
+        var defaults = new List<TemplateRecord>();
+        foreach (var provider in shipped ?? [])
+        {
+            defaults.AddRange(await provider.GetTemplatesAsync());
+        }
+
+        if (published.Count == 0 && defaults.Count == 0)
         {
             return null;
         }
@@ -22,22 +39,32 @@ public sealed class TemplateResolver(ITemplateCatalog store, IThemeManager theme
         var theme = (await themes.GetThemeAsync())?.Id;
         foreach (var name in names)
         {
-            var candidates = published.Where(template => string.Equals(template.Name, name, StringComparison.OrdinalIgnoreCase)).ToArray();
-            if (candidates.Length == 0)
+            if ((Match(published, name, theme, displayType) ?? Match(defaults, name, theme, displayType)) is { } match)
             {
-                continue;
+                return match;
             }
+        }
 
-            foreach (var (byTheme, byDisplayType) in new[] { (true, true), (true, false), (false, true), (false, false) })
+        return null;
+    }
+
+    private static TemplateRecord? Match(IReadOnlyList<TemplateRecord> templates, string name, string? theme, string? displayType)
+    {
+        var candidates = templates.Where(template => string.Equals(template.Name, name, StringComparison.OrdinalIgnoreCase)).ToArray();
+        if (candidates.Length == 0)
+        {
+            return null;
+        }
+
+        foreach (var (byTheme, byDisplayType) in new[] { (true, true), (true, false), (false, true), (false, false) })
+        {
+            var match = candidates.FirstOrDefault(template =>
+                (byTheme ? Same(template.Theme, theme) : string.IsNullOrEmpty(template.Theme))
+                && (byDisplayType ? Same(template.DisplayType, displayType) : string.IsNullOrEmpty(template.DisplayType)));
+
+            if (match is not null)
             {
-                var match = candidates.FirstOrDefault(template =>
-                    (byTheme ? Same(template.Theme, theme) : string.IsNullOrEmpty(template.Theme))
-                    && (byDisplayType ? Same(template.DisplayType, displayType) : string.IsNullOrEmpty(template.DisplayType)));
-
-                if (match is not null)
-                {
-                    return match;
-                }
+                return match;
             }
         }
 

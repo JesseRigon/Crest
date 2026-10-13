@@ -20,10 +20,10 @@ public class WorkflowOwnershipAndAccessTests
     [Fact]
     public void Ownership_reads_the_stored_json_shape_and_defaults_to_tenant()
     {
-        var info = WorkflowOwnershipInfo.From(Stored("""{"Crest.Ownership":"shipped","Crest.FlowKey":"accounting.quote-to-invoice","Crest.FlowVersion":3,"Crest.Forked":true}"""));
+        var info = WorkflowOwnershipInfo.From(Stored("""{"Crest.Ownership":"shipped","Crest.FlowKey":"orders.quote-to-order","Crest.FlowVersion":3,"Crest.Forked":true}"""));
 
         Assert.True(info.IsShipped);
-        Assert.Equal("accounting.quote-to-invoice", info.FlowKey);
+        Assert.Equal("orders.quote-to-order", info.FlowKey);
         Assert.Equal(3, info.FlowVersion);
         Assert.True(info.Forked);
 

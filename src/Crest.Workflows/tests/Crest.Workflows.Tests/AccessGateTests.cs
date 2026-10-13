@@ -218,6 +218,52 @@ public class AccessGateTests
         Assert.Same(System, seen);
     }
 
+    [Fact]
+    public async Task An_anonymous_run_is_refused_unless_the_definition_accepts_one()
+    {
+        var anonymous = CallerContext.Anonymous("acme", CallerSide.Site);
+        var (context, accessor) = await BurstAsync(runsAsSystem: false, input: null, current: anonymous);
+        var gate = new WorkflowAccessGateMiddleware(_ => ValueTask.CompletedTask, NullLogger<WorkflowAccessGateMiddleware>.Instance);
+
+        var refused = await Assert.ThrowsAsync<WorkflowAccessRefusedException>(async () => await gate.InvokeAsync(context));
+        Assert.Contains("does not accept anonymous runs", refused.Message);
+        Assert.Same(anonymous, accessor.Current);
+    }
+
+    [Fact]
+    public void An_anonymous_run_is_admitted_only_from_a_page_endpoint_of_a_definition_that_accepts_one()
+    {
+        var anonymous = CallerContext.Anonymous("acme", CallerSide.Site);
+        var accepting = new Workflow { CustomProperties = new Dictionary<string, object> { [WorkflowsConstants.AcceptsAnonymousRunsProperty] = true } };
+        accepting.WorkflowMetadata = new WorkflowMetadata("Contact form");
+        var plain = new Workflow { CustomProperties = new Dictionary<string, object>() };
+        plain.WorkflowMetadata = new WorkflowMetadata("Internal");
+
+        Assert.Null(WorkflowCallerResolver.AnonymousRefusal(anonymous, accepting, firstBurst: true, startsAtPageEndpoint: true));
+        Assert.Contains("page-URL HTTP endpoint", WorkflowCallerResolver.AnonymousRefusal(anonymous, accepting, firstBurst: true, startsAtPageEndpoint: false));
+        // A later burst keeps the bound anonymous actor of a run admitted that way.
+        Assert.Null(WorkflowCallerResolver.AnonymousRefusal(anonymous, accepting, firstBurst: false, startsAtPageEndpoint: false));
+        Assert.NotNull(WorkflowCallerResolver.AnonymousRefusal(anonymous, plain, firstBurst: true, startsAtPageEndpoint: true));
+        // A signed-in caller, an application and the system are never refused for it.
+        Assert.Null(WorkflowCallerResolver.AnonymousRefusal(Alice, plain, firstBurst: true, startsAtPageEndpoint: false));
+        Assert.Null(WorkflowCallerResolver.AnonymousRefusal(System, plain, firstBurst: true, startsAtPageEndpoint: false));
+    }
+
+    [Fact]
+    public async Task Accepting_anonymous_runs_takes_ManageShippedWorkflows()
+    {
+        var contentManager = Substitute.For<IContentManager>();
+        contentManager.GetAsync(Arg.Any<string>(), Arg.Any<VersionOptions>()).Returns(Task.FromResult<ContentItem>(null!));
+        var authorizer = Substitute.For<IWorkflowDefinitionAuthorizer>();
+        authorizer.AuthorizeAsync(Arg.Any<Crest.Security.Permissions.Permission>(), Arg.Any<WorkflowDefinitionAccessResource>())
+            .Returns(call => Task.FromResult(call.Arg<Crest.Security.Permissions.Permission>()!.Name != WorkflowsConstants.Permissions.ManageShipped));
+        var guard = new WorkflowOwnershipGuard(contentManager, null!, new Accessor { Current = Alice }, authorizer);
+        var definition = new Management.Entities.WorkflowDefinition { DefinitionId = "def-1", CustomProperties = new Dictionary<string, object> { [WorkflowsConstants.AcceptsAnonymousRunsProperty] = true } };
+
+        var denied = await Assert.ThrowsAsync<WorkflowChangeDeniedException>(() => guard.PrepareAsync(definition, WorkflowChange.Publish));
+        Assert.Contains("anonymous", denied.Message);
+    }
+
     private static void Resumed(WorkflowExecutionContext context) =>
         typeof(WorkflowExecutionContext).GetProperty(nameof(WorkflowExecutionContext.SubStatus))!.SetValue(context, WorkflowSubStatus.Suspended);
 
@@ -305,5 +351,22 @@ public class QueryActivityProviderTests
         var activity = (Queries.RunQuery)descriptor.Constructor(new ActivityConstructorContext(descriptor, type => new ActivityConstructionResult((IActivity)Activator.CreateInstance(type)!))).Activity;
         Assert.Equal("open-invoices", activity.QueryName);
         Assert.Equal(descriptor.TypeName, activity.Type);
+    }
+}
+
+// A connection's machine identity (docs/access.md, Anonymous actors): a webhook's run acts as
+// the connection's application caller, named by the connection's key, never as a user.
+public class WorkflowConnectionCallerTests
+{
+    [Fact]
+    public void The_connection_identity_round_trips_and_is_never_a_user_id()
+    {
+        var principal = Connectors.WorkflowConnectionCaller.Principal(new Connectors.WorkflowConnection { Key = "stripe", DisplayName = "Stripe" });
+
+        Assert.Equal("stripe", Connectors.WorkflowConnectionCaller.ConnectionKeyOf(principal.FindFirstValue(ClaimTypes.NameIdentifier)));
+        Assert.False(principal.Identity!.AuthenticationType!.StartsWith("Identity.", StringComparison.Ordinal));
+        Assert.Null(Connectors.WorkflowConnectionCaller.ConnectionKeyOf("u-1"));
+        Assert.Null(Connectors.WorkflowConnectionCaller.ConnectionKeyOf("connection:"));
+        Assert.Null(Connectors.WorkflowConnectionCaller.ConnectionKeyOf(null));
     }
 }

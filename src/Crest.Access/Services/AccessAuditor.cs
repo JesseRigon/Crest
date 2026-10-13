@@ -2,15 +2,19 @@ using Crest.Access.AuditTrail;
 using Crest.AuditTrail.Services;
 using Crest.AuditTrail.Services.Models;
 using Crest.Environment.Shell.Scope;
+using Crest.Settings;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace Crest.Access.Services;
 
-/// <summary>What the tenant records beyond the mandatory set (actions and denials).</summary>
-public sealed class AccessAuditOptions
+/// <summary>
+/// What the tenant records beyond the mandatory set (actions and denials), a site setting
+/// (docs/workflows.md › Decisions needed › What is audited).
+/// </summary>
+public sealed class AccessAuditSettings
 {
-    /// <summary>Record every read as its own event (volume is handled by retention).</summary>
+    /// <summary>Record every read, one event per operation per user request, no sampling
+    /// (volume is handled by retention).</summary>
     public bool LogReads { get; set; }
 }
 
@@ -19,13 +23,13 @@ public sealed class AccessAuditOptions
 /// on or the read is sensitive (impersonation). A denial is written in a child scope that
 /// commits on its own, so a request that fails after it does not roll it back.
 /// </summary>
-public sealed class AccessAuditor(IServiceProvider services, IOptions<AccessAuditOptions> options) : IAccessAuditor
+public sealed class AccessAuditor(IServiceProvider services) : IAccessAuditor
 {
     public async Task RecordAsync(AccessEvent accessEvent, CancellationToken cancellationToken = default)
     {
         if (accessEvent.IsRead && accessEvent.Verdict == AccessVerdict.Allow
-            && !options.Value.LogReads
-            && accessEvent.Caller.ImpersonatorUserId is null)
+            && accessEvent.Caller.ImpersonatorUserId is null
+            && !await LogsReadsAsync())
         {
             return;
         }
@@ -37,6 +41,13 @@ public sealed class AccessAuditor(IServiceProvider services, IOptions<AccessAudi
         }
 
         await WriteAsync(services, accessEvent);
+    }
+
+    private async Task<bool> LogsReadsAsync()
+    {
+        // The site document is cached per tenant and preloaded, so this is a dictionary read.
+        var sites = services.GetService<ISiteService>();
+        return sites is not null && (await sites.GetSettingsAsync<AccessAuditSettings>()).LogReads;
     }
 
     private static async Task WriteAsync(IServiceProvider provider, AccessEvent accessEvent)
@@ -55,8 +66,9 @@ public sealed class AccessAuditor(IServiceProvider services, IOptions<AccessAudi
             name,
             AccessAuditTrailEventConfiguration.Category,
             accessEvent.Resource ?? accessEvent.Operation,
-            accessEvent.Caller.UserId ?? string.Empty,
-            accessEvent.Caller.UserName ?? (accessEvent.Caller.IsSystem ? "system" : "anonymous"),
+            // A system actor's actions are its account's (requirement 36).
+            accessEvent.Caller.ActorId ?? string.Empty,
+            accessEvent.Caller.SystemAccountId is { } account ? SystemAccounts.DisplayName(account) : accessEvent.Caller.UserName ?? "anonymous",
             new AccessAuditTrailEvent
             {
                 Operation = accessEvent.Operation,

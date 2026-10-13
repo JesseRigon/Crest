@@ -60,9 +60,9 @@
                                                 @if (IsCreateMenuOpen)
                                                 {
                                                     <div class="admin-menu-actions__popover" role="menu">
-                                                        <CrestButton Text="@T["Admin Menu"]" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(CrestMenuPlacement.Admin))" />
-                                                        <CrestButton Text="@T["Local Menu"]" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(CrestMenuPlacement.Local))" />
-                                                        <CrestButton Text="@T["User Profile Menu"]" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(CrestMenuPlacement.User))" />
+                                                        <CrestButton Text="@T["Admin Menu"]" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(MenuPlacement.Admin))" />
+                                                        <CrestButton Text="@T["Local Menu"]" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(MenuPlacement.Local))" />
+                                                        <CrestButton Text="@T["User Profile Menu"]" Icon="add" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => CreateMenuAsync(MenuPlacement.User))" />
                                                     </div>
                                                 }
                                             </div>
@@ -89,7 +89,7 @@
                                                             <CrestButton Size="ButtonSize.Small" Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => StartMenuRename(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@T["Rename menu"]" />
                                                             @if (CanConvert(menu))
                                                             {
-                                                                <CrestButton Size="ButtonSize.Small" Icon="swap_horiz" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ConvertMenuAsync(menu))" Disabled="@IsBusy" title="@(menu.Placement == CrestMenuPlacement.Admin ? T["Convert to Local Menu"] : T["Convert to Admin Menu"])" />
+                                                                <CrestButton Size="ButtonSize.Small" Icon="swap_horiz" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ConvertMenuAsync(menu))" Disabled="@IsBusy" title="@(menu.Placement == MenuPlacement.Admin ? T["Convert to Local Menu"] : T["Convert to Admin Menu"])" />
                                                             }
                                                             <CrestButton Size="ButtonSize.Small" Icon="@(menu.Enabled ? "visibility_off" : "visibility")" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => ToggleMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@(menu.Enabled ? T["Hide menu"] : T["Show menu"])" />
                                                             <CrestButton Size="ButtonSize.Small" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="@(() => DuplicateMenuAsync(menu))" Disabled="@(IsBusy || menu.IsDefault)" title="@T["Duplicate menu"]" />
@@ -464,25 +464,25 @@
         IsCreateMenuOpen = !IsCreateMenuOpen;
     }
 
-    private static string PlacementBaseName(CrestMenuPlacement placement) => placement switch
+    private static string PlacementBaseName(MenuPlacement placement) => placement switch
     {
-        CrestMenuPlacement.Local => "New Local Menu",
-        CrestMenuPlacement.User => "New User Profile Menu",
+        MenuPlacement.Local => "New Local Menu",
+        MenuPlacement.User => "New User Profile Menu",
         _ => "New Admin Menu",
     };
 
     private string PlacementSuffix(AdminMenuSummary menu) => menu.Placement switch
     {
-        CrestMenuPlacement.Local => " " + T["(Local)"],
-        CrestMenuPlacement.User => " " + T["(User Profile)"],
+        MenuPlacement.Local => " " + T["(Local)"],
+        MenuPlacement.User => " " + T["(User Profile)"],
         _ => string.Empty,
     };
 
     // Admin and Local menus share the same underlying storage/rendering and can be
     // converted into each other. A User Profile Menu is stable once created.
-    private static bool CanConvert(AdminMenuSummary menu) => !menu.IsDefault && menu.Placement != CrestMenuPlacement.User;
+    private static bool CanConvert(AdminMenuSummary menu) => !menu.IsDefault && menu.Placement != MenuPlacement.User;
 
-    private async Task CreateMenuAsync(CrestMenuPlacement placement)
+    private async Task CreateMenuAsync(MenuPlacement placement)
     {
         IsCreateMenuOpen = false;
         var baseName = PlacementBaseName(placement);
@@ -504,7 +504,7 @@
 
     private async Task ConvertMenuAsync(AdminMenuSummary menu)
     {
-        var targetPlacement = menu.Placement == CrestMenuPlacement.Admin ? CrestMenuPlacement.Local : CrestMenuPlacement.Admin;
+        var targetPlacement = menu.Placement == MenuPlacement.Admin ? MenuPlacement.Local : MenuPlacement.Admin;
         var converted = await Api.Crest.Rest.AdminMenus.ConvertMenuAsync(menu.Id, new(targetPlacement));
         if (converted is not null)
         {

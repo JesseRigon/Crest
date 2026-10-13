@@ -1,8 +1,8 @@
 # Audit
 
-Not started. Impersonation sessions already carry both identities
-([shells-and-themes.md › The member portal](shells-and-themes.md#the-member-portal-login-sessions-sides)
-› Impersonation); nothing records them yet. This plan is what records them.
+Steps 1–5 built (2026-10-13), on Crest.AuditTrail and its `IAuditTrailManager` /
+`IAuditTrailEventHandler` seams; see [What landed](#what-landed-2026-10-13). Open: audit feeds
+at volume (A4), the organization-scoped view and telling the member.
 
 Who did what, to which record, when, from where, and on whose behalf. It is
 append-only: an event is never edited or deleted through the application, only aged out
@@ -54,7 +54,7 @@ before it is saved (`IAuditTrailEventHandler.CreateAsync` / `AlterAsync`). Its
 Contents audit feature already records content created, updated, published,
 unpublished, deleted and restored, with a snapshot of the item.
 
-- [ ] **1. Enable and attribute.** Enable AuditTrail and its Contents feature in
+- [x] **1. Enable and attribute.** Enable AuditTrail and its Contents feature in
   Crest's recipes and every host's. Add the actor handler. Test: a content
   item created by staff while impersonating has the member as owner and author, and its
   audit event names the staff user, the member and the organization.
@@ -71,21 +71,21 @@ unpublished, deleted and restored, with a snapshot of the item.
     UI can filter by "acted as this member" as well as "acted by this staff user".
   - **Content** (stock Contents audit): every content type, including Crest's types and
     downstream modules' types that are content items, such as parties and invoices.
-- [ ] **2. Sessions and impersonation events.** Sign-in, sign-out, failed sign-in,
+- [x] **2. Sessions and impersonation events.** Sign-in, sign-out, failed sign-in,
   impersonation start and stop. Test: one impersonation session produces a start
   event, its actions and a stop event, all sharing a correlation id.
   - **Sessions**: sign-in and sign-out on the staff and member surfaces, failed sign-ins,
     and impersonation start and stop (staff user, member, organization). Impersonation
     start and stop are Crest events, since Orchard has no impersonation.
-- [ ] **3. Non-content writes.** Crest events for the state-changing APIs listed below.
+- [x] **3. Non-content writes.** Crest events for the state-changing APIs listed below.
   Test: each API's write produces exactly one event with the right actor.
   - **Non-content writes**: Crest APIs that change state without going through the
     content manager (users, roles, members and bindings, settings, features, themes,
     workflows definitions and runs). Each records a Crest event through
     `IAuditTrailManager`, and the actor handler applies to them like any other event.
-- [ ] **Machine actors.** An API client acting without a user is recorded with its client
+- [x] **Machine actors.** An API client acting without a user is recorded with its client
   id as the actor (docs/machine-actors.md).
-- [ ] **4. Admin surface.** The audit page, the record history tab and the
+- [x] **4. Admin surface.** The audit page, the record history tab and the
   impersonation session view, behind the audit permission. Test: staff without the
   permission get 403; members never reach the page from the member shell.
   - An audit page in the admin shell: filter by actor, impersonated member,
@@ -102,7 +102,8 @@ unpublished, deleted and restored, with a snapshot of the item.
   - An organization's member admin sees nothing of the trail in the first cut. Whether
     they get an organization-scoped view is an open question.
 
-- [ ] **5. Activity feeds are filtered views of the trail** (ruling 2026-10-06). One backend:
+- [ ] **5. Activity feeds are filtered views of the trail** (ruling 2026-10-06; partial, the
+  data side is built, see What landed). One backend:
   the audit trail holds all the data, and an activity feed is a filter over it, not a
   second store. An invoice's activity is the trail filtered to that content item; a
   customer's communications activity is the communications category filtered to that
@@ -124,6 +125,77 @@ unpublished, deleted and restored, with a snapshot of the item.
     over the audit indexes, since the filters and criteria vary so much.
   - The likely start is reworking the platform's AuditTrail module in place, as the file
     system reworks Media; its storage structure decides how the indexes above are built.
+
+## What landed (2026-10-13)
+
+**Attribution.** Every event carries an `AuditTrailAttribution` (actor kind, client id, side,
+organization, functional user, impersonated member, impersonation session) and an
+`AuditTrailSubject` (record id and type, display text, owner, parties), both stored on the
+event and set through `AuditTrailContext.Attribution` / `.Subject` by a recorder or by any
+handler's `AlterAsync`. Two actor handlers fill them, each from what its module knows: Access's
+`CallerAuditTrailEventHandler` (side, organization, machine actor from the gated caller) and
+Members' `ImpersonationAuditTrailEventHandler`, the one that moves an impersonated event's user to
+the staff user and keeps the member as the functional attribution. The manager then defaults
+the functional attribution to the actor and re-normalizes the user name. The event's
+`UserId` is always the audit attribution.
+
+**Index.** `AuditTrailAttributionIndex` (one row per event: actor, functional user, impersonated
+member, session, organization, side, record, record type, owner) and `AuditTrailPartyIndex` (one
+row per party) on the stock `Audit` collection. The stock `CorrelationId` column is widened to
+255 (workflow instance ids, connection keys, role names). Migrations were edited in place: a
+tenant that enabled the audit trail before 2026-10-13 is reset.
+
+**Sessions.** Sign-in, failed sign-in (now on by default), sign-out (`LoggedOut`, recorded before
+the sign-out by the stock `LogOff` and by `api/crest/auth/logout`, so it carries the session)
+and lock-out, on both surfaces; the side tells them apart. Impersonation start and stop are the
+`Impersonation` category (`AuditTrailSessionEvents`, mandatory). The impersonation session id is
+generated at start and kept in the session (`MemberSessionKeys.ImpersonationSessionId`); it is
+the correlation id of the start and stop events and the `SessionId` of every event recorded
+inside the session, which is how a session lists with its actions. (The actions keep their own
+correlation id, the record's, so the record history still finds them.)
+
+**Non-content writes.** Users: the Users audit feature (created, updated, deleted, enabled,
+disabled, confirmed). Members: `BindingAdded`, `BindingRemoved` (member creation is a user
+creation). Roles: created, updated, removed. Features: enabled, disabled. Settings: one event per
+write naming the changed sections, never their values; site and admin theme changes are their
+own `Themes` events. Settings and themes are recorded by one decorator of `ISiteService`
+(`AuditingSiteService`), since every settings screen, the theme services and recipes write
+through it. Nothing is recorded while the shell is being set up. Workflow definitions are
+content items and are audited as content; workflow runs, see below.
+
+**Content history as diffs.** `ContentHistory` replaces the stock snapshot per event: each
+content event stores the `JsonTreeDiff` from the item's previous recorded event, the first and
+every tenth event also keep a gzip checkpoint, and the current published version's event keeps
+the full item uncompressed (the previous published snapshot is compressed into a checkpoint when
+a newer version is published). A rebuild replays at most nine diffs. `ContentHistoryIndex`
+holds each event's position. The stock detail, diff, view and restore screens rebuild the
+version they show. Every content type is audited unless the tenant excludes it
+(`ContentAuditTrailSettings.ExcludedContentTypes`, replacing the allow-list). Known limit:
+retention trims oldest first, so a version whose checkpoint was trimmed answers "not
+available" instead of a wrong version.
+
+**Workflow history.** Category `Workflows`: each burst of a run (finished, suspended, faulted,
+cancelled) with the burst's journal (the engine's execution log, capped at 200 entries) and its
+incidents; every hook attachment run (`HookRan`, `HookFailed`); every inbound webhook delivery
+(`WebhookReceived` as the connection's machine identity, `WebhookRejected` with the status and
+reason, never the body). Failures are written in a child scope that commits on its own, as access
+denials are. The engine's own stores still hold the per-activity records the designer reads.
+
+**Admin surface.** `Crest.AuditTrail.BlazorWasm` (in `Crest.AuditTrail/blazor-wasm`, isolated
+with the module): the audit page (`/Audit`: actor name, impersonated member, organization,
+category, record, dates, impersonated only), a record's history (`/Audit/Records/{RecordId}`)
+and the impersonation sessions (`/Audit/Sessions`, each with its events). API:
+`api/crest/audit` (`events`, `events/{id}`, `records/{id}`, `sessions`, `categories`), every
+call decided on `ViewAuditTrail` for the gated caller; the routes are gated on the same
+permission. `ViewAuditTrail` and `ManageAuditTrailSettings` are under the member class ceiling.
+The admin menu's Audit Trail entry opens the new page. The record history is a page, not yet
+a tab of the content editor (the editor declares no region for it).
+
+**Feeds (step 5).** The data side is built: events carry and index what feeds filter on (record,
+parties, category, owner, organization, both attributions), and every filter runs in the query
+before paging. What a module adds to the parties of its records goes in its own handler's
+`AlterAsync` (Members adds the organization of a binding). Not built: feed definitions as saved
+queries over these indexes and the caller-scoped feed API, which wait on A4.
 
 ## Decisions needed
 

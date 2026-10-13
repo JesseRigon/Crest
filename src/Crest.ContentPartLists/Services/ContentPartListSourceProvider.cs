@@ -7,9 +7,9 @@ namespace Crest.Services;
 /// list's logical key ("contentpartlist:pricing.modifier-kind"), so this one provider
 /// serves every list in the tenant.
 /// </summary>
-public sealed class ContentPartListSourceProvider(ICrestContentPartListService contentPartLists) : IOptionSourceProvider
+public sealed class ContentPartListSourceProvider(IContentPartListService contentPartLists) : IOptionSourceProvider
 {
-    public string Key => CrestOptionSourceKeys.ContentPartListProvider;
+    public string Key => OptionSourceKeys.ContentPartListProvider;
 
     public static class Columns
     {
@@ -35,6 +35,17 @@ public sealed class ContentPartListSourceProvider(ICrestContentPartListService c
         /// don't.</summary>
         public const string Category = "Category";
 
+        /// <summary>The key of the option this one sits under (lists arranged in levels);
+        /// filter on it to browse one level, the way a cascading dropdown does.</summary>
+        public const string Parent = "Parent";
+
+        /// <summary>The option's ancestors' labels and its own, top first ("Manufacturing ›
+        /// Food Manufacturing › Bakeries"): search it to find an option by any level above it.</summary>
+        public const string Path = "Path";
+
+        /// <summary>How deep the option sits: 1 at the top.</summary>
+        public const string Level = "Level";
+
         /// <summary>Prefix for custom data fields on the list's option content type,
         /// e.g. "Field:Color" - the same convention the content-item source uses for
         /// values from an item's own document.</summary>
@@ -51,6 +62,9 @@ public sealed class ContentPartListSourceProvider(ICrestContentPartListService c
             new(Columns.Value, "Value"),
             new(Columns.Source, "Source"),
             new(Columns.Category, "Category"),
+            new(Columns.Parent, "Parent"),
+            new(Columns.Path, "Path"),
+            new(Columns.Level, "Level"),
         };
 
         // Custom fields on the list's option type are advertised per qualifier, so
@@ -69,7 +83,15 @@ public sealed class ContentPartListSourceProvider(ICrestContentPartListService c
         // Selectable drops hidden options; history still resolves them through
         // GetByIdsAsync below.
         var options = await contentPartLists.GetSelectableAsync(query.Qualifier, cancellationToken);
-        var rows = options.Select(option => ToRow(option, query.Columns));
+        var byKey = ByKey((await contentPartLists.GetAsync(query.Qualifier, cancellationToken))?.Options ?? []);
+        // Filter and search columns are computed too (Parent to browse a level, Path to
+        // search every level above), whether or not the picker displays them.
+        var columns = query.Columns
+            .Concat(query.SearchColumns ?? [])
+            .Concat((query.Filters ?? []).Select(filter => filter.Path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var rows = options.Select(option => ToRow(option, columns, byKey));
 
         rows = OptionFilterMatcher.Apply(rows, query.Filters);
         rows = OptionFilterMatcher.Search(rows, query.SearchText, query.SearchColumns);
@@ -97,10 +119,15 @@ public sealed class ContentPartListSourceProvider(ICrestContentPartListService c
 
         var wanted = new HashSet<string>(ids, StringComparer.OrdinalIgnoreCase);
 
-        return [.. list.Options.Where(option => wanted.Contains(option.ContentItemId)).Select(option => ToRow(option, columns))];
+        var byKey = ByKey(list.Options);
+        return [.. list.Options.Where(option => wanted.Contains(option.ContentItemId)).Select(option => ToRow(option, columns, byKey))];
     }
 
-    private static OptionRow ToRow(CrestOptionModel option, IReadOnlyList<string> columns)
+    private static Dictionary<string, CrestOptionModel> ByKey(IEnumerable<CrestOptionModel> options) =>
+        options.GroupBy(option => option.Key, ContentPartListRules.KeyComparer)
+            .ToDictionary(group => group.Key, group => group.First(), ContentPartListRules.KeyComparer);
+
+    private static OptionRow ToRow(CrestOptionModel option, IReadOnlyList<string> columns, IReadOnlyDictionary<string, CrestOptionModel> byKey)
     {
         var requested = columns is { Count: > 0 } ? columns : [Columns.DisplayText];
         var values = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
@@ -115,6 +142,9 @@ public sealed class ContentPartListSourceProvider(ICrestContentPartListService c
                 Columns.DisplayTextPlural => option.DisplayTextPlural ?? option.DisplayText,
                 Columns.Value => option.Value,
                 Columns.Category => option.Category,
+                Columns.Parent => option.Parent,
+                Columns.Path => string.Join(" › ", ContentPartListRules.Ancestors(byKey, option).Select(ancestor => ancestor.DisplayText).Append(option.DisplayText)),
+                Columns.Level => (ContentPartListRules.Ancestors(byKey, option).Count + 1).ToString(System.Globalization.CultureInfo.InvariantCulture),
                 _ when column.StartsWith(Columns.FieldPrefix, StringComparison.OrdinalIgnoreCase) =>
                     option.Fields is not null && option.Fields.TryGetValue(column[Columns.FieldPrefix.Length..], out var fieldValue)
                         ? fieldValue

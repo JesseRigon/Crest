@@ -13,11 +13,15 @@ public class UsersByNameFilter : ILiquidFilter
 {
     private readonly ISession _session;
     private readonly UserManager<IUser> _userManager;
+    private readonly Crest.Access.IAccessDecision _decision;
+    private readonly Crest.Access.ICallerContextAccessor _callers;
 
-    public UsersByNameFilter(ISession session, UserManager<IUser> userManager)
+    public UsersByNameFilter(ISession session, UserManager<IUser> userManager, Crest.Access.IAccessDecision decision, Crest.Access.ICallerContextAccessor callers)
     {
         _session = session;
         _userManager = userManager;
+        _decision = decision;
+        _callers = callers;
     }
 
     public async ValueTask<FluidValue> ProcessAsync(FluidValue input, FilterArguments arguments, LiquidTemplateContext ctx)
@@ -29,12 +33,15 @@ public class UsersByNameFilter : ILiquidFilter
                 .Select(x => _userManager.NormalizeName(x.ToStringValue()))
                 .ToArray();
 
-            return FluidValue.Create(await _session.Query<User, UserIndex>(x => x.NormalizedUserName.IsIn(normalizedUserNames)).ListAsync(), ctx.Options);
+            return FluidValue.Create(await LiquidUserScope.VisibleAsync(await _session.Query<User, UserIndex>(x => x.NormalizedUserName.IsIn(normalizedUserNames)).ListAsync(), _decision, _callers), ctx.Options);
         }
 
         var userName = input.ToStringValue();
         var normalizedUserName = _userManager.NormalizeName(userName);
 
-        return FluidValue.Create(await _session.Query<User, UserIndex>(x => x.NormalizedUserName == normalizedUserName).FirstOrDefaultAsync(), ctx.Options);
+        var user = await _session.Query<User, UserIndex>(x => x.NormalizedUserName == normalizedUserName).FirstOrDefaultAsync();
+        return user is not null && (await LiquidUserScope.VisibleAsync([user], _decision, _callers)).Count == 1
+            ? FluidValue.Create(user, ctx.Options)
+            : NilValue.Instance;
     }
 }

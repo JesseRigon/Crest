@@ -9,7 +9,7 @@ namespace Crest.Controllers;
 [Route("api/crest/icons")]
 public sealed class IconsController(
     IAuthorizationService authorizationService,
-    CrestIconSourceStore iconSourceStore) : ControllerBase
+    IconSourceStore iconSourceStore) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<CrestIconSearchResult>> SearchAsync(

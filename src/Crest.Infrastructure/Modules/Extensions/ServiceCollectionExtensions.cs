@@ -456,6 +456,12 @@ public static class ServiceCollectionExtensions
                     // tenant prefix but may also start by a path related e.g to a virtual folder.
                 });
 
+            // A bearer-token request needs no antiforgery token (BearerRequestAntiforgery).
+            var antiforgery = collection.Single(descriptor => descriptor.ServiceType == typeof(Microsoft.AspNetCore.Antiforgery.IAntiforgery));
+            collection.Remove(antiforgery);
+            collection.AddSingleton<Microsoft.AspNetCore.Antiforgery.IAntiforgery>(provider => new Crest.Security.BearerRequestAntiforgery(
+                (Microsoft.AspNetCore.Antiforgery.IAntiforgery)ActivatorUtilities.CreateInstance(provider, antiforgery.ImplementationType!)));
+
             services.Add(collection);
         });
     }

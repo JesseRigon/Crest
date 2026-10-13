@@ -46,6 +46,7 @@ namespace Crest.Components.Primitives
     /// }
     /// </code>
     /// </example>
+    [Crest.DisplayManagement.Components.BlazorComponent("Panel", DisplayName = "Panel", Category = "Layout", Icon = "web_asset")]
     public partial class CrestPanel : CrestComponentWithChildren
     {
         /// <inheritdoc />

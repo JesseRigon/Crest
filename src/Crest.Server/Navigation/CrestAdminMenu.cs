@@ -46,6 +46,38 @@ public sealed class CrestAdminMenu(IStringLocalizer<CrestAdminMenu> stringLocali
                 .LocalNav()
             ), priority: 1);
 
+        // The tenant's upload scanning choice (Crest.Media.Scanning, always enabled): a
+        // Blazor-only page, so a .Url like the design entries above.
+        builder.Add(S["Settings"], settings => settings
+            .Add(S["Upload Scanning"], S["Upload Scanning"].PrefixPosition(), scanning => scanning
+                .AddClass("upload-scanning")
+                .Id("upload-scanning")
+                .Url($"{adminPath}/Settings/uploadScanning")
+                .Permission(SettingsPermissions.ManageSettings)
+                .LocalNav()
+            ));
+
+        // The drive browser and the file system's settings (docs/media.md § 3, § 8): Blazor-only
+        // pages. The browser carries no permission of its own: what it lists is what the
+        // file-object API returns for the caller.
+        builder.Add(S["Media"], media => media
+            .Add(S["Files"], S["Files"].PrefixPosition("0"), files => files
+                .AddClass("files")
+                .AddClass("icon-class-@iconify:mdi:folder-multiple")
+                .Id("files")
+                .Url($"{adminPath}/Files")
+                .LocalNav()
+            ));
+
+        builder.Add(S["Settings"], settings => settings
+            .Add(S["Files"], S["Files"].PrefixPosition(), files => files
+                .AddClass("file-settings")
+                .Id("file-settings")
+                .Url($"{adminPath}/Settings/files")
+                .Permission(SettingsPermissions.ManageSettings)
+                .LocalNav()
+            ));
+
         // The Content Part Lists entry under Configuration moved to the Crest.ContentPartLists
         // module's own navigation provider - it only belongs in the menu when that
         // feature is enabled.

@@ -6,9 +6,10 @@
 
 How a downstream module puts UI on a page owned by a module it must not be referenced by.
 
-Implemented as `IPageRegionContributor` / `PageRegionRegistry` / `<CrestPageRegion>` in
-`Crest.Components/Regions`, discovered over the module assemblies in
-`AdminRoutes.razor`. Crest.Parties declares regions on its party-type panes
+Implemented as `IPageRegionContributor` (now in `Crest.DisplayManagement.Abstractions`, same
+namespace) and `<CrestPageRegion>`; since 2026-10-13 the component registry collects the
+contributors with the components and the region key is an open zone key (blazor-display.md
+decision 6), declared by the owning library with `[assembly: ZoneKey(...)]`. Crest.Parties declares regions on its party-type panes
 (`PartiesPageRegions.Pane(...)`, `PartiesPageRegions.Detail(...)`) for other modules to
 contribute to. The reasoning that produced it:
 

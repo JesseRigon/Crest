@@ -17,8 +17,8 @@ using Crest.Media.Azure.Filters;
 using Crest.Media.Azure.Services;
 using Crest.Media;
 using Crest.Media.Events;
-using Crest.Media.Helpers;
-using Crest.Media.Events;
+using Crest.Media.Files;
+using Crest.Media.Library;
 using Crest.Media.Services;
 using Crest.Modules;
 using Crest.Navigation;
@@ -96,37 +96,15 @@ public sealed class Startup : Modules.StartupBase
                 return new BlobFileStore(blobStorageOptions, clock, contentTypeProvider, blobLogger);
             });
 
-            // Replace the default media file store with a blob file store.
-            services.Replace(ServiceDescriptor.Singleton<IMediaFileStore>(serviceProvider =>
-            {
-                var fileStore = serviceProvider.GetRequiredService<BlobFileStore>();
-                var shellSettings = serviceProvider.GetRequiredService<ShellSettings>();
-                var mediaOptions = serviceProvider.GetRequiredService<IOptions<MediaOptions>>().Value;
-                var mediaEventHandlers = serviceProvider.GetServices<IMediaEventHandler>();
-                var fileSizeHelper = serviceProvider.GetService<FileSizeHelper>();
-                var mediaCreatingEventHandlers = serviceProvider.GetServices<IMediaCreatingEventHandler>();
-                var logger = serviceProvider.GetRequiredService<ILogger<DefaultMediaFileStore>>();
+            // The media library's paths (ruling F1) stay the library drive; before a tenant's
+            // import has run they are this container, and the import reads it (docs/media.md ›
+            // The media library). IMediaFileStore itself is never replaced.
+            services.Replace(ServiceDescriptor.Singleton(serviceProvider =>
+                new LibraryFileStore(serviceProvider.GetRequiredService<BlobFileStore>())));
 
-                var mediaUrlBase = "/" + fileStore.Combine(shellSettings.RequestUrlPrefix, mediaOptions.AssetsRequestPath);
-
-                var originalPathBase = serviceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext
-                    ?.Features.Get<ShellContextFeature>()
-                    ?.OriginalPathBase ?? PathString.Empty;
-
-                if (originalPathBase.HasValue)
-                {
-                    mediaUrlBase = fileStore.Combine(originalPathBase.Value, mediaUrlBase);
-                }
-
-                return new DefaultMediaFileStore(
-                    fileStore,
-                    mediaUrlBase,
-                    mediaOptions.CdnBaseUrl,
-                    mediaEventHandlers,
-                    mediaCreatingEventHandlers,
-                    fileSizeHelper,
-                    logger);
-            }));
+            // File objects' bytes in Blob Storage (requirement 11), under their own base path.
+            services.AddTransient<IConfigureOptions<MediaBlobFilesStorageOptions>, MediaBlobFilesStorageOptionsConfiguration>();
+            services.Replace(ServiceDescriptor.Singleton<IMediaStorageProvider>(AzureBlobMediaStorage.Create));
 
             services.AddSingleton<IMediaEventHandler, DefaultMediaFileStoreCacheEventHandler>();
 

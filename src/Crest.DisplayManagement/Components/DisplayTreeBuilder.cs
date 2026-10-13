@@ -171,6 +171,9 @@ public sealed class DisplayTreeBuilder : IDisplayTreeBuilder
         ComponentDescriptor? descriptor;
         if (component is not null)
         {
+            // A caller-chosen component skips the resolution, not the shape's own displaying and
+            // processing phases (properties a shape sets on itself there).
+            await RunDisplayingAsync(shape, session);
             if (!_registry.TryGet(component, out descriptor))
             {
                 // A shape bound to a component the registry does not know: falling back to the

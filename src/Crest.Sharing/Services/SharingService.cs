@@ -171,6 +171,12 @@ public sealed class SharingService(
                 throw new ArgumentException($"A {entry.Principal.Kind} principal needs an id.", nameof(entries));
             }
 
+            // A system account owns; it is never shared with (requirement 34: no picker shows it).
+            if (entry.Principal.Kind == SharePrincipalKind.User && SystemAccounts.IsSystemAccount(entry.Principal.Id))
+            {
+                throw new ArgumentException("A system account cannot be shared with.", nameof(entries));
+            }
+
             if (entry.Principal.OrganizationId is not null && (entry.Principal.Kind != SharePrincipalKind.Role || string.IsNullOrWhiteSpace(entry.Principal.OrganizationId)))
             {
                 throw new ArgumentException("Only a role can be limited to an organization.", nameof(entries));

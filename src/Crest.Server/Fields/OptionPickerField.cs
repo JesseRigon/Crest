@@ -16,7 +16,7 @@ namespace Crest.Fields;
 public class OptionPickerField : ContentField
 {
     /// <summary>The source these options are drawn from (see
-    /// <see cref="Crest.Models.CrestOptionSourceKeys"/>). Mirrors the field settings,
+    /// <see cref="Crest.Models.OptionSourceKeys"/>). Mirrors the field settings,
     /// and is stored so a reader can resolve values without the type definition.</summary>
     public string SourceKey { get; set; } = string.Empty;
 

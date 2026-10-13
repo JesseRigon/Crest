@@ -8,40 +8,32 @@ namespace Crest.Routing;
 /// <see cref="CrestShellAttribute"/>.
 /// </summary>
 /// <remarks>
-/// The one place the server answers "which bucket is this assembly", so the route-table
-/// providers and the endpoint bucket stamping in Startup cannot disagree: a page in one
-/// bucket for the table and another for the gate is reachable in neither.
+/// The one place the server answers "which shell is this assembly", so the route-table
+/// providers and the endpoint shell stamping in Startup cannot disagree: a page in one
+/// shell for the table and another for the gate is reachable in neither.
 /// </remarks>
 public static class ShellAssemblies
 {
-    private const string ModuleClientSuffix = ".BlazorWasm";
-
     /// <summary>
-    /// The bucket of a Crest client assembly, or null for an assembly that is not one
+    /// The shell of a Crest client assembly, or null for an assembly that is not one
     /// (framework, server, domain libraries).
     /// </summary>
-    public static RouteBucket? GetBucket(Assembly assembly)
+    public static ShellId? GetShell(Assembly assembly)
     {
         var declared = assembly.GetCustomAttribute<CrestShellAttribute>()?.Shell;
-        if (declared is not null)
+        if (!string.IsNullOrWhiteSpace(declared))
         {
-            return declared switch
-            {
-                CrestShells.Admin => RouteBucket.Admin,
-                CrestShells.Site => RouteBucket.Site,
-                CrestShells.Member => RouteBucket.Member,
-                _ => null,
-            };
+            return new ShellId(declared);
         }
 
         // A module client library that declares nothing is admin: that is where module
         // pages have always gone, and it keeps every existing module working unchanged.
-        return assembly.GetName().Name?.EndsWith(ModuleClientSuffix, StringComparison.Ordinal) == true
-            ? RouteBucket.Admin
+        return ModuleClientAssemblies.IsModuleClient(assembly.GetName().Name)
+            ? ShellId.Admin
             : null;
     }
 
-    /// <summary>Every loaded client assembly whose pages belong to <paramref name="bucket"/>.</summary>
-    public static IEnumerable<Assembly> InBucket(RouteBucket bucket) =>
-        AppDomain.CurrentDomain.GetAssemblies().Where(assembly => GetBucket(assembly) == bucket);
+    /// <summary>Every loaded client assembly whose pages belong to <paramref name="shell"/>.</summary>
+    public static IEnumerable<Assembly> InShell(ShellId shell) =>
+        AppDomain.CurrentDomain.GetAssemblies().Where(assembly => GetShell(assembly) == shell);
 }

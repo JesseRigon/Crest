@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Crest.AuditTrail.Drivers;
 using Crest.AuditTrail.Indexes;
 using Crest.AuditTrail.Models;
@@ -39,6 +40,7 @@ public sealed class Startup : StartupBase
 
         services.AddDataMigration<Migrations>();
         services.AddIndexProvider<AuditTrailEventIndexProvider>();
+        services.AddIndexProvider<AuditTrailAttributionIndexProvider>();
         services.AddSingleton<IBackgroundTask, AuditTrailBackgroundTask>();
 
         services.AddPermissionProvider<Permissions>();
@@ -68,6 +70,21 @@ public sealed class Startup : StartupBase
         services.AddTransient<IAuditTrailAdminListFilterProvider, DefaultAuditTrailAdminListFilterProvider>();
 
         services.AddOptions<AuditTrailOptions>();
+        services.AddTransient<IConfigureOptions<AuditTrailOptions>, ImpersonationAuditTrailEventConfiguration>();
+
+        // Tenant-machinery writes (docs/audit.md › step 3): roles, features, settings, themes.
+        services.AddTransient<IConfigureOptions<AuditTrailOptions>, Recorders.TenantAuditTrailEventConfiguration>();
+        services.AddScoped<Recorders.TenantAuditTrailRecorder>();
+        services.AddScoped<Recorders.RoleAuditTrailEventHandler>();
+        services.AddScoped<Crest.Security.IRoleCreatedEventHandler>(sp => sp.GetRequiredService<Recorders.RoleAuditTrailEventHandler>());
+        services.AddScoped<Crest.Security.IRoleUpdatedEventHandler>(sp => sp.GetRequiredService<Recorders.RoleAuditTrailEventHandler>());
+        services.AddScoped<Crest.Security.IRoleRemovedEventHandler>(sp => sp.GetRequiredService<Recorders.RoleAuditTrailEventHandler>());
+        services.AddScoped<Crest.Environment.Shell.IFeatureEventHandler, Recorders.FeatureAuditTrailEventHandler>();
+        DecorateSiteService(services);
+
+        // The Crest audit pages and their API (docs/audit.md › step 4).
+        services.AddScoped<Api.AuditTrailFeedService>();
+        services.AddScoped<Crest.Access.IRoutePermissionProvider, Api.AuditTrailRoutePermissionProvider>();
 
         services.Configure<AuditTrailAdminListOptions>(options =>
         {
@@ -117,6 +134,25 @@ public sealed class Startup : StartupBase
                 .ForSort("user-desc-time-asc", b => b
                     .WithQuery((val, query) => query.With<AuditTrailEventIndex>().OrderByDescending(i => i.NormalizedUserName).ThenBy(i => i.CreatedUtc)));
         });
+    }
+
+    private static void DecorateSiteService(IServiceCollection services)
+    {
+        var descriptor = services.LastOrDefault(d => d.ServiceType == typeof(Crest.Settings.ISiteService));
+        if (descriptor is null)
+        {
+            return;
+        }
+
+        services.Remove(descriptor);
+        services.Add(new ServiceDescriptor(typeof(Crest.Settings.ISiteService), sp =>
+        {
+            var inner = descriptor.ImplementationInstance as Crest.Settings.ISiteService
+                ?? (descriptor.ImplementationFactory is not null
+                    ? (Crest.Settings.ISiteService)descriptor.ImplementationFactory(sp)
+                    : (Crest.Settings.ISiteService)ActivatorUtilities.CreateInstance(sp, descriptor.ImplementationType!));
+            return new Recorders.AuditingSiteService(inner);
+        }, descriptor.Lifetime));
     }
 }
 
