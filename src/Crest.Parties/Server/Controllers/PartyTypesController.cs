@@ -36,8 +36,7 @@ public sealed class PartyTypesController(
         }
 
         // The tree the sidebar serves, before the user's own overlay, so a user-hidden type
-        // is still found and flagged. Keys are the served keys - synced node UniqueIds, never
-        // the provider's slug (see ProviderMenuSyncService for why the slug does not survive).
+        // is still found and flagged. Keys are the page registry entry ids (KindPageSource).
         var menu = await adminMenuBuilder.BuildAsync(ControllerContext, User, applyUserPreferences: false);
 
         var adminPath = "/" + adminOptions.Value.AdminUrlPrefix.Trim('/');

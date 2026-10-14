@@ -1,4 +1,5 @@
 @page "/workflows/instances/{Id}/view"
+@attribute [PageEntry(WorkflowsConstants.Permissions.View, ClientOnly = true)]
 
 <PageTitle>Workflow instance</PageTitle>
 <StudioHost View="InstanceViewer" Parameters="@(new Dictionary<string, object> { ["InstanceId"] = Id })" @key="Id" />

@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using Crest.Validation;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -234,7 +235,6 @@ public interface IAdminMenusApi
     Task<AdminMenuSummary?> GetAsync(string menuId);
     Task<AdminMenuSummary?> CreateMenuAsync(AdminMenuEditModel model);
     Task<AdminMenuSummary?> RenameMenuAsync(string menuId, AdminMenuEditModel model);
-    Task<AdminMenuSummary?> ConvertMenuAsync(string menuId, ConvertMenuModel model);
     Task<AdminMenuSummary?> ToggleMenuAsync(string menuId);
     Task<AdminMenuSummary?> DuplicateMenuAsync(string menuId);
     Task<bool> DeleteMenuAsync(string menuId);
@@ -1338,15 +1338,6 @@ public sealed class AdminMenusApi(HttpClient http) : IAdminMenusApi
         return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
     }
 
-    public async Task<AdminMenuSummary?> ConvertMenuAsync(string menuId, ConvertMenuModel model)
-    {
-        using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/convert")
-        {
-            Content = JsonContent.Create(model),
-        }));
-        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<AdminMenuSummary>() : null;
-    }
-
     public async Task<AdminMenuSummary?> ToggleMenuAsync(string menuId)
     {
         using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Post, $"api/crest/admin-menus/{Uri.EscapeDataString(menuId)}/toggle")));
@@ -1768,7 +1759,7 @@ public sealed record TranslationGroup(string Name, TranslationString[] Strings);
 // Orphan: stored translation no provider currently enumerates (disabled feature, changed
 // source string) - still applied at render time, shown so it stays editable/deletable.
 public sealed record TranslationString(string Context, string Key, string Value, bool Orphan, string? Fallback = null);
-public sealed record TranslationsSaveModel(string Culture, TranslationSaveEntry[] Translations);
+public sealed record TranslationsSaveModel([property: NotEmpty] string Culture, TranslationSaveEntry[] Translations);
 public sealed record TranslationSaveEntry(string Context, string Key, string? Value);
 public sealed record IndexSummary(string Id,string? Name,string? Provider,string? IndexName,string? Type,string? CreatedUtc);
 public sealed record QueryCatalog(CrestQuery[] Queries, string[] Sources)
@@ -1776,7 +1767,7 @@ public sealed record QueryCatalog(CrestQuery[] Queries, string[] Sources)
     public static QueryCatalog Empty { get; } = new([], []);
 }
 public sealed record CrestQuery(string Name, string Source, string? Schema, bool ReturnContentItems, JsonObject Properties);
-public sealed record QueryWrite(string Name, string Source, string? Schema, bool ReturnContentItems, JsonObject? Properties);
+public sealed record QueryWrite([property: NotEmpty] string Name, [property: NotEmpty] string Source, string? Schema, bool ReturnContentItems, JsonObject? Properties);
 public sealed record QueryNames(string[]? Names);
 public sealed record TenantCatalog(CrestTenant[] Tenants, string[] Categories, bool TenantRemovalAllowed) { public static TenantCatalog Empty { get; } = new([], [], false); }
 public sealed record TenantBulkAction(string Action, string[]? Names);
@@ -1895,7 +1886,7 @@ public sealed record StandardMenusState(StandardMenuSummary[] Menus, StandardMen
 
 public sealed record StandardMenuNodeType(string Type, string DisplayName);
 
-public sealed record StandardMenuEditModel(string? Name, bool Published);
+public sealed record StandardMenuEditModel([property: NotEmpty] string? Name, bool Published);
 
 public sealed record StandardMenuSummary(string Id, string ContentItemId, string ContentItemVersionId, string Name, bool Published, StandardMenuNodeSummary[] Nodes);
 
@@ -1952,7 +1943,6 @@ public enum MenuPlacement
     User,
 }
 
-public sealed record ConvertMenuModel(MenuPlacement Placement);
 
 public sealed record AdminMenuSummary(string Id, string Name, bool Enabled, bool IsDefault, AdminMenuSeparatorSummary[] Separators, AdminPrimaryNavMenuSettings PrimaryNavMenuSettings, Crest.Icons.IconPack? Icons, AdminMenuNodeSummary[] Nodes, MenuPlacement Placement = MenuPlacement.Admin);
 

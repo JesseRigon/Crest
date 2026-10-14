@@ -22,7 +22,6 @@ public sealed class Startup : StartupBase
         services.AddDisplayDriver<Query, SqlQueryDisplayDriver>();
         services.AddQuerySource<SqlQuerySource>(SqlQuerySource.SourceName);
 
-        services.AddNavigationProvider<AdminMenu>();
         services.AddDataMigration<SqlQueryMigrations>();
         services.AddScoped<IQueryHandler, SqlQueryHandler>();
         services.AddScoped<SqlQueryRunner>();

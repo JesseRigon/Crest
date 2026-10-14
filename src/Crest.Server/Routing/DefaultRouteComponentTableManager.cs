@@ -1,86 +1,31 @@
-using System.Collections.Concurrent;
-using Crest.Admin;
-using Crest.Themes.Services;
-
 namespace Crest.Routing;
 
-// Mirrors DefaultShapeTableManager's actual caching shape (confirmed against
-// Crest.DisplayManagement/Descriptors/DefaultShapeTableManager.cs): a keyed
-// singleton dictionary, populated lazily per key, with NO separate invalidation
-// signal/event subscription. Crest already tears down and rebuilds the whole tenant
-// shell (and every singleton inside it, including this cache) on feature/theme change -
-// piggybacking on that is the correct, minimal amount of invalidation logic, not a gap.
-//
-// Keyed by the concrete (admin theme id, site theme id) pair currently active for this
-// shell - still a valid, useful cache key (it changes exactly when a theme change could
-// change which pages are registered). The member theme is deliberately NOT in the key:
-// member routes are registered unconditionally (see BuildAsync), so no member theme
-// change can change the table's contents, and a change of the active member theme tears
-// the shell down anyway, which drops this cache with it. Which BUCKETS are active is decided
-// below via IBlazorAdminThemeDetector, not by comparing those ids against each
-// provider's own id. Earlier code compared adminThemeId/siteThemeId directly against
-// each IRouteComponentTableProvider.ThemeId (then a raw string) via
-// "activeThemeIds.Contains(provider.ThemeId)" - the exact same bug class
-// RouteGateMatcherPolicy had: IAdminThemeService.GetAdminThemeNameAsync() returns null
-// unless a tenant/recipe explicitly called SetAdminThemeAsync, and even when it doesn't,
-// a tenant can still have the Blazor admin theme active via the "crest-blazor" extension tag
-// (see IBlazorAdminThemeDetector) - a case the old string-equality check silently missed,
-// leaving AdminRouteComponentTableProvider's routes never registered for that tenant.
-public sealed class DefaultRouteComponentTableManager(
-    IAdminThemeService adminThemeService,
-    ISiteThemeService siteThemeService,
-    IBlazorAdminThemeDetector blazorAdminThemeDetector,
-    IEnumerable<IRouteComponentTableProvider> providers,
-    ConcurrentDictionary<(string? AdminThemeId, string? SiteThemeId), Task<RouteComponentTable>> cache,
-    IEnumerable<IDataRouteComponentTableProvider> dataProviders,
-    IEnabledModuleAssemblies enabledModules)
-    : IRouteComponentTableManager
+/// <summary>
+/// The route table, a view over the page registry: one entry per route of every page entry that
+/// has a component, declared pages first, then the dynamic ones (designed pages). The registry
+/// caches the declared layer for the shell's lifetime and keys it by the active theme pair.
+/// </summary>
+public sealed class DefaultRouteComponentTableManager(IPageRegistry registry) : IRouteComponentTableManager
 {
+    private RouteComponentTable? _table;
+
     public async Task<RouteComponentTable> GetRouteComponentTableAsync()
     {
-        var adminThemeId = await adminThemeService.GetAdminThemeNameAsync();
-        var siteThemeId = await siteThemeService.GetSiteThemeNameAsync();
-        var key = (adminThemeId, siteThemeId);
-
-        var scanned = await cache.GetOrAdd(key, _ => BuildAsync());
-
-        // Data-defined pages (decision 9) change on publish, not with the shell: added per
-        // request from their own cache, after the scanned pages.
-        var data = new List<RouteComponentEntry>();
-        foreach (var provider in dataProviders)
+        if (_table is not null)
         {
-            data.AddRange(await provider.GetRouteComponentsAsync(scanned));
+            return _table;
         }
 
-        return data.Count == 0 ? scanned : new RouteComponentTable([.. scanned.Entries, .. data]);
-    }
-
-    private async Task<RouteComponentTable> BuildAsync()
-    {
-        // Site is the fallback bucket for every request the admin middleware doesn't
-        // itself claim (see RouteGateMatcherPolicy's comment) - its routes are always
-        // registered. Admin's routes are only registered when Blazor is genuinely the
-        // active admin theme for this tenant.
-        //
-        // Member's routes are always registered too, and deliberately NOT gated on the
-        // admin theme: a tenant's admin theme and member theme are independent,
-        // simultaneously-active settings, so gating the member shell on the admin one
-        // would make a product's own member portal vanish because staff switched their
-        // back-office theme. The member shell is present when the Members feature is
-        // enabled, which is what decides whether a member provider is registered at all.
-        var isBlazorAdminThemeActive = await blazorAdminThemeDetector.IsBlazorAdminThemeActiveAsync();
-
-        // A disabled module is absent for the tenant: its pages are not in the table, so their
-        // URLs resolve to no page (the admin legacy frame, the member not-found page, the
-        // site's 404) - the same as a module the host never shipped.
-        var enabled = await enabledModules.GetEnabledAsync();
-        var entries = providers
-            .Where(provider => provider.Shell != ShellId.Admin || isBlazorAdminThemeActive)
-            .SelectMany(provider => provider.GetRouteComponents())
-            .Where(entry => !ModuleClientAssemblies.IsModuleClient(entry.ComponentType.Assembly.GetName().Name)
-                || enabled.Contains(entry.ComponentType.Assembly.GetName().Name!))
-            .ToArray();
-
-        return new RouteComponentTable(entries);
+        var pages = await registry.GetAsync();
+        return _table = new RouteComponentTable([.. pages.Entries
+            .Where(entry => entry.Component is not null)
+            .SelectMany(entry => entry.Routes.Select(route => new RouteComponentEntry(
+                route,
+                entry.Component!,
+                entry.Shell,
+                IsDefaultLanding: entry.IsDefaultLanding,
+                AllowsAnonymous: entry.AllowsAnonymous,
+                IsOrganizationFree: entry.IsOrganizationFree,
+                ClientOnly: entry.ClientOnly)))]);
     }
 }

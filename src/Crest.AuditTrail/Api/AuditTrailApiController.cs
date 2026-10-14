@@ -77,16 +77,3 @@ public sealed class AuditTrailApiController(
     private Task<bool> CanViewAsync() =>
         decision.AllowsAsync(callers.Current, AuditTrailPermissions.ViewAuditTrail.Name, cancellationToken: HttpContext.RequestAborted);
 }
-
-/// <summary>The audit pages take the audit permission, as the API behind them does.</summary>
-public sealed class AuditTrailRoutePermissionProvider : IRoutePermissionProvider
-{
-    public IEnumerable<RoutePermission> GetRoutes() =>
-    [
-        new(AuditTrailRoutes.TrailAdmin, AuditTrailPermissions.ViewAuditTrail.Name),
-        new(AuditTrailRoutes.SessionsAdmin, AuditTrailPermissions.ViewAuditTrail.Name),
-        new(AuditTrailRoutes.SettingsAdmin, AuditTrailPermissions.ManageAuditTrailSettings.Name),
-        new("/Settings/AuditTrail", AuditTrailPermissions.ManageAuditTrailSettings.Name),
-        new(AuditTrailRoutes.RecordAdmin, AuditTrailPermissions.ViewAuditTrail.Name),
-    ];
-}

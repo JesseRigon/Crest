@@ -41,6 +41,10 @@ public sealed class Startup : StartupBase
 
         services.AddRecipeExecutionStep<SettingsStep>();
         services.AddSingleton<ISiteService, SiteService>();
+        services.AddScoped<SiteIdentity>();
+        services.AddApiContributor<Api.SiteSettingsApi>();
+        services.AddApiContributor<Api.BrandingSettingsApi>();
+        services.AddApiContributor<Api.DebugSettingsApi>();
 
         // The branding renditions the shipped surfaces consume (docs/branding.md); a module
         // that adds a surface registers its own the same way.
@@ -55,7 +59,6 @@ public sealed class Startup : StartupBase
         services.AddSiteDisplayDriver<ButtonsSettingsDisplayDriver>();
         services.AddSiteSettingsPermission(DefaultSiteSettingsDisplayDriver.GroupId, SettingsPermissions.ManageGeneralSettings);
         services.AddSiteSettingsPermission(DebugSettingsDisplayDriver.GroupId, SettingsPermissions.ManageDebuggingSettings);
-        services.AddNavigationProvider<AdminMenu>();
 
         services.AddScoped<ITimeZoneSelector, DefaultTimeZoneSelector>();
 

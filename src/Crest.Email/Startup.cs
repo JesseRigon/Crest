@@ -17,8 +17,7 @@ public sealed class Startup : StartupBase
             .AddSignalOptionsChangeTokenSource<EmailOptions>()
             .AddSignalOptionsChangeTokenSource<EmailProviderOptions>()
             .AddSiteSettingsPermission(EmailSettings.GroupId, EmailPermissions.ManageEmailSettings)
-            .AddPermissionProvider<Permissions>()
-            .AddNavigationProvider<AdminMenu>();
+            .AddPermissionProvider<Permissions>();
 
         services.AddDataMigration<EmailMigrations>();
     }

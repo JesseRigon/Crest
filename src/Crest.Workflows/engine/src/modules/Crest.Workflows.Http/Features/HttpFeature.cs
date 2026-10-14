@@ -14,7 +14,6 @@ using Crest.Workflows.Http.PortResolvers;
 using Crest.Workflows.Http.Resilience;
 using Crest.Workflows.Http.Selectors;
 using Crest.Workflows.Http.Services;
-using Crest.Workflows.Http.Tasks;
 using Crest.Workflows.Http.TriggerPayloadValidators;
 using Crest.Workflows.Http.UIHints;
 using Crest.Workflows.Resilience.Extensions;
@@ -165,16 +164,15 @@ public class HttpFeature(IModule module) : FeatureBase(module)
         HttpClientBuilder(httpClientBuilder);
 
         Services
-            .AddScoped<IRouteMatcher, RouteMatcher>()
-            .AddScoped<IRouteTable, RouteTable>()
             .AddScoped<IAbsoluteUrlProvider, DefaultAbsoluteUrlProvider>()
-            .AddScoped<IRouteTableUpdater, DefaultRouteTableUpdater>()
+            .AddScoped<IHttpEndpointRoutes, HttpEndpointRoutes>()
+            .AddScoped<HttpWorkflowRequestHandler>()
             .AddScoped<IHttpWorkflowLookupService, HttpWorkflowLookupService>()
             .AddScoped(ContentTypeProvider)
             .AddHttpContextAccessor()
 
             // Handlers.
-            .AddNotificationHandler<UpdateRouteTable>()
+            .AddNotificationHandler<NotifyHttpEndpointRoutesChanged>()
 
             // Content parsers.
             .AddSingleton<IHttpContentParser, JsonHttpContentParser>()
@@ -206,9 +204,7 @@ public class HttpFeature(IModule module) : FeatureBase(module)
             .AddScoped(HttpEndpointWorkflowFaultHandler)
             .AddScoped(HttpEndpointAuthorizationHandler)
             .AddScoped(_httpEndpointRouteProvider)
-            
-            // Startup tasks.
-            .AddStartupTask<UpdateRouteTableStartupTask>()
+
 
             // Downloadable content handlers.
             .AddScoped<IDownloadableManager, DefaultDownloadableManager>()

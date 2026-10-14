@@ -18,8 +18,9 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddDynamicPageSource<CustomSettingsPages>();
         services.AddScoped<CustomSettingsService>();
+        services.AddApiContributor<Api.CustomSettingsApi>();
         services.AddScoped<IStereotypesProvider, CustomSettingsStereotypesProvider>();
         // Permissions
         services.AddPermissionProvider<Permissions>();

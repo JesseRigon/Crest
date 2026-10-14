@@ -33,16 +33,10 @@ public static class WorkflowsConstants
         public const string RegistrySyncApi = "sync";
 
         /// <summary>
-        /// The admin pages (blazor-wasm), relative to the admin base. They are Studio's own
-        /// routes, so the forked Studio's navigation between them lands on them.
+        /// The Approvals page (blazor-wasm), relative to the admin base: where the Workflows menu
+        /// section opens. The pages declare their own routes with <c>@page</c>.
         /// </summary>
-        public const string DefinitionsAdmin = "/workflows/definitions";
-        public const string DefinitionEditAdmin = "/workflows/definitions/{definitionId}/edit";
-        public const string InstancesAdmin = "/workflows/instances";
-        public const string InstanceViewAdmin = "/workflows/instances/{id}/view";
-        public const string ConnectionsAdmin = "/workflows/connections";
         public const string ApprovalsAdmin = "/workflows/approvals";
-        public const string HooksAdmin = "/workflows/hooks";
 
         /// <summary>The approval queue and decisions.</summary>
         public const string ApprovalsApi = "api/crest/workflows/approvals";

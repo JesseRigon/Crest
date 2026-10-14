@@ -18,8 +18,12 @@ public interface IComponentCatalog
     IEnumerable<PageDescriptor> DescribePages() => [];
 }
 
-/// <summary>A module page (§ 6a): a routed component, one route template, and whether it admits anonymous callers.</summary>
-public sealed record PageDescriptor(Type Type, string Template, bool AllowsAnonymous);
+/// <summary>
+/// A module page (§ 6a): a routed component, one route template, whether it admits anonymous
+/// callers, and the page registry declaration (<see cref="PageEntryAttribute"/>) that covers
+/// this route, if any.
+/// </summary>
+public sealed record PageDescriptor(Type Type, string Template, bool AllowsAnonymous, PageEntryAttribute? Entry = null);
 
 /// <summary>
 /// The one component registry (§ 1), per tenant and theme on the server, per shell in the

@@ -18,7 +18,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<IContentVersionPruningService, ContentVersionPruningService>();
         services.AddSingleton<IBackgroundTask, ContentVersionPruningBackgroundTask>();
         services.AddSiteDisplayDriver<ContentVersionPruningSettingsDisplayDriver>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddPageSource<AdminPages>();
         services.AddPermissionProvider<ContentVersionPruningPermissionProvider>();
     }
 }

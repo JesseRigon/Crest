@@ -108,7 +108,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             crestWorkflows.UseLiquid();
             // Connector retries ride the engine's resilience feature: the connection's policy as a strategy.
             crestWorkflows.UseResilience(resilience => resilience.AddResilienceStrategyType<ConnectionResilienceStrategy>());
-            crestWorkflows.UseWorkflowsApi(api => api.AddFastEndpointsAssembly<CoreStartup>());
+            crestWorkflows.UseWorkflowsApi();
 
             // The access gate as engine middleware (docs/operations.md step 4): the engine's
             // default lists, kept by re-applying them, with the workflow gate inserted first
@@ -137,6 +137,9 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
         // Crest may dispose the tenant container synchronously; Crest.Workflows's tenant service is
         // async-only and would crash the process on that path (SyncDisposableTenantService).
         SyncDisposableTenantService.ReplaceIn(services);
+
+        // The engine's management API, declared in the server's API registry (docs/MVC/api.md P7).
+        services.AddApiContributor<Api.WorkflowsManagementApi>();
 
         // The two action pipelines (Units/ActionPipelines.cs names which class forms which).
         // Units of work (docs/workflows.md › Posting on workflows): a burst is one transaction
@@ -183,7 +186,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             // The registry's content operations: one descriptor per content type and operation.
             .AddScoped<IActivityProvider, Contents.ContentOperationActivityProvider>()
             .AddNotificationHandler<Fields.FieldDependencyPublishHandler>()
-            .Configure<Microsoft.AspNetCore.Mvc.MvcOptions>(options => options.Filters.Add<Hooks.WorkflowHookFailedExceptionFilter>())
+            .AddApiExceptionMapper<Hooks.WorkflowHookFailedExceptionMapper>()
             .AddScoped<IWorkflowHookSlotProvider, Hooks.WorkflowsHookSlotProvider>()
             .AddNotificationHandler<Hooks.HookAttachmentAtomicityValidator>();
         // Scheduled tasks run in a shell scope, not the engine's bare service scope.
@@ -238,12 +241,9 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<ApprovalService>()
             .AddScoped<IPropertyUIHandler, RoleOptionsProvider>();
 
-        // The admin surface: the Workflows menu root and its page gates (the Studio pages in
-        // blazor-wasm).
-        services.AddNavigationProvider<Navigation.WorkflowsAdminMenu>();
-        services.AddScoped<Navigation.WorkflowsRoutePermissionProvider>();
-        services.AddScoped<Crest.Access.IRoutePermissionProvider>(sp => sp.GetRequiredService<Navigation.WorkflowsRoutePermissionProvider>());
-        services.AddScoped<Crest.Services.IWebAssemblyRouteProvider>(sp => sp.GetRequiredService<Navigation.WorkflowsRoutePermissionProvider>());
+        // The admin surface: the Workflows menu section (its pages, in blazor-wasm, declare
+        // their own routes, permissions and menu places).
+        services.AddPageSource<Navigation.WorkflowsPages>();
 
         // The sample host set this at the process level; here it is per shell.
         services.Configure<MediatorOptions>(options => options.JobWorkerCount = 1);
@@ -302,7 +302,6 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
         app.UseWhen(
             context => context.Request.Path.StartsWithSegments(ApiSecurityMiddleware.ApiPathPrefix),
             branch => branch.UseMiddleware<ApiSecurityMiddleware>());
-        routes.MapWorkflowsApi();
         return ValueTask.CompletedTask;
     }
 }

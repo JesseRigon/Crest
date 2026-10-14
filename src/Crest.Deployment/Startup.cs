@@ -22,10 +22,10 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
+        services.AddApiContributor<Api.DeploymentApi>();
         services.TryAddTransient<FileCreationService>();
         services.AddDeploymentServices();
 
-        services.AddNavigationProvider<AdminMenu>();
         services.AddPermissionProvider<Permissions>();
 
         services.AddSingleton<IDeploymentTargetProvider, FileDownloadDeploymentTargetProvider>();

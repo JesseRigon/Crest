@@ -43,7 +43,7 @@ public sealed class ContentEditorTreeBuilder(
         {
             ["ContentType"] = item.ContentType,
             ["Content"] = stored.DeepClone(),
-            ["Definition"] = JsonSerializer.SerializeToNode(ViewModels.ContentType.From(definition), s_web),
+            ["Definition"] = JsonSerializer.SerializeToNode(Crest.ContentTypes.Api.ContentType.From(definition), s_web),
         }));
         root.Metadata.Alternates.Add("ContentEditor__" + item.ContentType);
 

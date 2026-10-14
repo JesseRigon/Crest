@@ -18,7 +18,7 @@ public static class ActionPipelines
     /// <see cref="Hooks.WorkflowHookRunner"/> (attachments inside the unit),
     /// <see cref="WorkflowAtomicityAnalyzer"/> (what may be attached),
     /// <see cref="WorkflowObjectLock"/> (one unit per object at a time) and
-    /// <see cref="Hooks.WorkflowHookFailedExceptionFilter"/> (the 409). The access gate
+    /// <see cref="Hooks.WorkflowHookFailedExceptionMapper"/> (the 409). The access gate
     /// (<see cref="Security.WorkflowAccessGateMiddleware"/>, <see cref="Security.ActivityAccessGateMiddleware"/>)
     /// runs inside every burst of both pipelines.
     /// </summary>

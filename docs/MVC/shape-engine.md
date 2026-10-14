@@ -202,7 +202,8 @@ display-variant rule counted). The runtime list comes from the `markup-fallback`
 - [ ] **C4. Component parity audit.** Every shape template (the 597 driver-shape templates and
   the 261 `Views/Items/*`, [views.md](views.md) › The inventory) has a Blazor component
   equivalent, not only the shapes on live paths; the audit's rules are in
-  [blazor-display.md](../blazor-display.md) › Rework plan, step 7. Owner: the module of each
+  [blazor-display.md](../blazor-display.md) › Rework plan, step 7; the tracker is
+  [parity.md](parity.md). Owner: the module of each
   shape. Depends on C2. Size: L. Wave 3.
 
 ## Editor halves vs the JSON APIs

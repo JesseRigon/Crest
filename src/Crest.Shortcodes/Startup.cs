@@ -64,7 +64,7 @@ public sealed class ShortcodeTemplatesStartup : StartupBase
     {
         services.AddScoped<ShortcodeTemplatesManager>();
         services.AddPermissionProvider<Permissions>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddPageSource<AdminPages>();
         services.AddScoped<IJSLocalizer, ShortcodesJSLocalizer>();
 
         services.AddRecipeExecutionStep<ShortcodeTemplateStep>();

@@ -33,7 +33,7 @@ public sealed class TwitterStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddSiteDisplayDriver<TwitterSettingsDisplayDriver>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddPageSource<TwitterPages>();
         services.AddSingleton<ITwitterSettingsService, TwitterSettingsService>();
 
         services.AddRecipeExecutionStep<TwitterSettingsStep>();
@@ -64,7 +64,7 @@ public sealed class TwitterSigninStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddNavigationProvider<AdminMenuSignIn>();
+        services.AddPageSource<TwitterSigninPages>();
         services.AddSingleton<ITwitterSigninService, TwitterSigninService>();
         services.AddSiteDisplayDriver<TwitterSigninSettingsDisplayDriver>();
 

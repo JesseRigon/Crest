@@ -54,7 +54,7 @@ This list is generated from the current resolved Orchard admin navigation for th
 | Security > OpenID Connect > Token Validation | `/Admin/OpenId/ValidationConfiguration` | native structured form (tenant or authority, metadata address, audience); saving reloads the tenant |
 
 The Deployments pages and the SQL runner read and write through `api/crest/deployment`,
-`api/crest/settings/debugging` and `api/crest/queries/sql` (in Crest.Server today); package building
+`api/crest/settings/debugging` and `api/crest/queries/sql` (Crest.Settings' `DebugSettingsApi` and Crest.Queries' `QueriesApi`); package building
 and import (`DeploymentPackages`) and the SQL run (`SqlQueryRunner`) are shared with the stock
 MVC controllers, which stay until the MVC admin is retired. A deployment step's settings are
 edited as the JSON the plan stores, so a step type a module adds needs no component; the
@@ -75,5 +75,5 @@ are a fixed, small set. The protocol endpoints (`AccessController`, `UserInfoCon
 their consent and logout confirmation are site pages
 ([shells-and-themes.md](shells-and-themes.md#account-and-protocol-pages)).
 
-The menu column is today's provider-built admin navigation; with the page registry each page
-declares its own menu placement ([admin-menu.md](admin-menu.md) › The page registry).
+Each page declares its own menu placement in the page registry
+([admin-menu.md](admin-menu.md) › The page registry).

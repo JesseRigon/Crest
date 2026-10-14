@@ -9,12 +9,6 @@ namespace Crest.Navigation;
 
 public static class NavigationHelper
 {
-
-    public static bool UseLegacyFormat()
-    {
-        return AppContext.TryGetSwitch(NavigationConstants.LegacyAdminMenuNavigationSwitchKey, out var enable) && enable;
-    }
-
     /// <summary>
     /// Populates the menu shapes.
     /// </summary>

@@ -1,5 +1,7 @@
 @page "/Sharing"
 @page "/Sharing/{Kind}/{Id}"
+@attribute [PageEntry("ManageTenantSharing", Route = "/Sharing", Id = "sharing", Parent = "accessControl", Caption = "Sharing")]
+@attribute [PageEntry("AccessAdminPanel", Route = "/Sharing/{Kind}/{Id}", Id = "sharing-item")]
 @using Crest.Components.Primitives
 @using Crest.Components.Sharing
 @inject Crest.Components.Theme.CrestApiLocalizer T

@@ -2,8 +2,9 @@ using System.Text.Json.Nodes;
 using Crest.ContentManagement.Metadata;
 using Crest.ContentManagement.Metadata.Builders;
 using Crest.ContentManagement.Metadata.Models;
-using Crest.Controllers;
-using Crest.Services;
+using Crest.ContentTypes;
+using Crest.ContentTypes.Api;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -37,20 +38,22 @@ public sealed class DefinitionSettingsTests
     [InlineData("1Article")]
     [InlineData("Blog Post")]
     [InlineData("")]
-    public async Task ATypeNeedsATechnicalName(string name)
+    public void ATypeNeedsATechnicalName(string name)
     {
-        var definitions = Substitute.For<IContentDefinitionManager>();
-        var authorization = Substitute.For<IAuthorizationService>();
-        authorization.AuthorizeAsync(Arg.Any<System.Security.Claims.ClaimsPrincipal>(), Arg.Any<object?>(), Arg.Any<IEnumerable<IAuthorizationRequirement>>())
-            .Returns(AuthorizationResult.Success());
-        var controller = new ContentDefinitionsController(definitions, authorization, new DefinitionLockGuard(definitions))
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
-        };
+        // The request's rule (docs/MVC/api.md › Validation) refuses the name before the handler runs.
+        var request = new CreateContentTypeRequest(name, "Display");
+        var results = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
 
-        var result = await controller.CreateTypeAsync(new CreateContentTypeRequest(name, "Display"));
+        var valid = System.ComponentModel.DataAnnotations.Validator.TryValidateObject(request, new System.ComponentModel.DataAnnotations.ValidationContext(request), results, validateAllProperties: true);
 
-        Assert.Equal(StatusCodes.Status400BadRequest, Assert.IsType<ObjectResult>(result).StatusCode);
-        await definitions.DidNotReceiveWithAnyArgs().StoreTypeDefinitionAsync(default!);
+        Assert.False(valid);
+        Assert.Contains(results, result => result.MemberNames.Contains("name"));
+    }
+
+    [Fact]
+    public void ATechnicalNamePasses()
+    {
+        var request = new CreateContentTypeRequest("Article", "Display");
+        Assert.True(System.ComponentModel.DataAnnotations.Validator.TryValidateObject(request, new System.ComponentModel.DataAnnotations.ValidationContext(request), [], validateAllProperties: true));
     }
 }

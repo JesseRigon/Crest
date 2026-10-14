@@ -63,6 +63,13 @@ public sealed class Startup : StartupBase
         services.AddContentServices();
         services.AddSingleton<IAnchorTag, ContentAnchorTag>();
 
+        // The content items API (docs/MVC/api.md § Placement) and the content groups it filters by
+        // (their definitions are Crest.ContentTypes'; the groups' pages list items).
+        services.AddApiContributor<Api.ContentItemsApi>();
+        services.AddScoped<Crest.ContentGroups.ContentGroupService>();
+        services.AddScoped<Crest.ContentGroups.IContentGroupEntryResolver, Crest.ContentGroups.ContentTypeGroupEntryResolver>();
+        services.AddDynamicPageSource<Crest.ContentGroups.ContentGroupPages>();
+
         services.Configure<LiquidViewOptions>(o =>
         {
             o.LiquidViewParserConfiguration.Add(parser => parser.RegisterParserTag("contentitem", parser.ArgumentsListParser, ContentItemTag.WriteToAsync));
@@ -147,7 +154,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<IScopeProvider, ContentItemScopeProvider>();
         services.AddShapeTableProvider<Shapes>();
         services.AddShapeTableProvider<AdminDashboardShapeTableProvider>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddDynamicPageSource<NewContentPages>();
         services.AddScoped<IContentDisplayDriver, ContentsDriver>();
         services.AddScoped<IContentHandler, ContentsHandler>();
         services.AddRecipeExecutionStep<ContentStep>();

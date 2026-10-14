@@ -1,0 +1,329 @@
+#nullable enable
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
+using Crest.Api;
+using Crest.Validation;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Crest.Contents;
+using Crest.ContentManagement;
+using Crest.ContentManagement.Metadata;
+using Crest.ContentManagement.Metadata.Models;
+using Crest.ContentManagement.Metadata.Settings;
+using System.Text.Json.Nodes;
+using Crest.Settings;
+
+namespace Crest.ContentTypes.Api;
+
+public sealed class ContentTypesEditorApi : ApiContributor
+{
+    public override string Name => "ContentTypesEditor";
+
+    public override string FeatureId => "Crest.ContentTypes";
+
+    public override void Map(IEndpointRouteBuilder group)
+    {
+        var routes = group.MapGroup("content-types");
+        routes.MapPut("{contentType}/menu", (HttpContext __http, [FromRoute] string contentType, [FromBody] SetContentTypeMenuRequest request) => ApiHandlers.For<ContentTypesHandlers>(__http).SetMenu(contentType, request));
+        routes.MapGet("field-types", ApiHandlers.Handle<ContentTypesHandlers>(h => h.ListFieldTypes()));
+        routes.MapPut("fields", (HttpContext __http, [FromBody] SetFieldTypeRequest request) => ApiHandlers.For<ContentTypesHandlers>(__http).SetFieldType(request));
+        routes.MapGet("", ApiHandlers.Handle<ContentTypesHandlers>(h => h.List()));
+        routes.MapGet("parts", ApiHandlers.Handle<ContentTypesHandlers>(h => h.ListParts()));
+        routes.MapPut("{contentType}/parts", (HttpContext __http, [FromRoute] string contentType, [FromBody] AttachPartRequest request) => ApiHandlers.For<ContentTypesHandlers>(__http).AttachPart(contentType, request));
+        routes.MapDelete("{contentType}/parts/{partName}", (HttpContext __http, [FromRoute] string contentType, [FromRoute] string partName) => ApiHandlers.For<ContentTypesHandlers>(__http).DetachPart(contentType, partName));
+        routes.MapPut("locks", (HttpContext __http, [FromBody] SetDefinitionLockRequest request) => ApiHandlers.For<ContentTypesHandlers>(__http).SetLock(request));
+        routes.MapGet("{contentType}", (HttpContext __http, [FromRoute] string contentType) => ApiHandlers.For<ContentTypesHandlers>(__http).Get(contentType));
+    }
+}
+
+public sealed class ContentTypesHandlers(
+    IContentDefinitionManager contentDefinitionManager,
+    IOptions<ContentOptions> contentOptions,
+    IAuthorizationService authorization,
+    DefinitionLockGuard locks) : ApiHandlers
+{
+    /// <summary>
+    /// Sets whether the type gets its own entry under the Content menu (the
+    /// generic content-items page filtered to it). Runs the provider-menu sync
+    /// afterwards: Crest's menu is materialized into the admin menu document
+    /// rather than rebuilt per request, and the automatic sync only runs once
+    /// per shell — without this the toggle would not surface until a recycle.
+    /// The sync is DEFERRED, not inline: the alter is only visible once this
+    /// scope's session commits, so an inline sync would read the pre-change
+    /// definitions and import the old state (verified live, both directions).
+    /// </summary>
+    public async Task<IResult> SetMenu(string contentType, [FromBody] SetContentTypeMenuRequest request)
+    {
+        if (!await authorization.AuthorizeAsync(User, ContentTypesPermissions.EditContentTypes)) return Forbid();
+
+        var typeDefinition = await contentDefinitionManager.GetTypeDefinitionAsync(contentType);
+        if (typeDefinition is null)
+        {
+            return NotFound();
+        }
+
+        await contentDefinitionManager.AlterTypeDefinitionAsync(contentType, type => type
+            .MergeSettings<CrestContentTypeMenuSettings>(settings =>
+                settings.ShowInContentMenu = request.ShowInContentMenu));
+
+        return NoContent();
+    }
+
+    /// <summary>The registered content field types a field can be - what the
+    /// definition screens offer in their field-type dropdown.</summary>
+    public async Task<IResult> ListFieldTypes()
+    {
+        if (!await authorization.AuthorizeAsync(User, ContentTypesPermissions.ViewContentTypes)) return Forbid();
+        return Ok(contentOptions.Value.ContentFieldOptions
+            .Select(option => option.Type.Name)
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray());
+    }
+
+    /// <summary>
+    /// Sets a field's TYPE (creating the field when absent). Conversion removes and
+    /// re-adds the field definition, keeping its position and display name; stored
+    /// content is untouched - each item's data stays in its own document, which is
+    /// what lets readers fall back to the previous shape. Converting TO an option
+    /// picker normally goes through the picker settings editor instead, so the
+    /// binding is configured in the same step.
+    /// </summary>
+    public async Task<IResult> SetFieldType([FromBody] SetFieldTypeRequest request)
+    {
+        if (!await authorization.AuthorizeAsync(User, ContentTypesPermissions.EditContentTypes)) return Forbid();
+
+        if (!contentOptions.Value.ContentFieldOptions.Any(option => string.Equals(option.Type.Name, request.FieldType, StringComparison.Ordinal)))
+        {
+            return Problem($"'{request.FieldType}' is not a registered field type.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        var existing = await contentDefinitionManager.GetPartDefinitionAsync(request.Part);
+        var current = existing?.Fields.FirstOrDefault(candidate =>
+            string.Equals(candidate.Name, request.Field, StringComparison.OrdinalIgnoreCase));
+
+        if (string.Equals(current?.FieldDefinition?.Name, request.FieldType, StringComparison.Ordinal))
+        {
+            return NoContent();
+        }
+
+        // A locked field keeps its type (docs/content-items.md › Definition locks); 409 via the lock filter.
+        if (current is not null)
+        {
+            await locks.EnsureFieldChangeAsync(request.Part, request.Field, DefinitionChanges.Retyped);
+        }
+
+        var position = current?.Settings?["ContentPartFieldSettings"]?["Position"]?.ToString();
+        var displayName = request.DisplayName
+            ?? current?.Settings?["ContentPartFieldSettings"]?["DisplayName"]?.ToString()
+            ?? request.Field;
+
+        // The remove/re-add dance would otherwise DESTROY every custom settings
+        // section on the field (visibility conditions, lock designations, picker
+        // settings). Carry them across the conversion: harmless when the new type
+        // ignores a section, and it restores intact if the type converts back.
+        // ContentPartFieldSettings is rebuilt from position/displayName above.
+        var preserved = current?.Settings?.DeepClone()?.AsObject();
+        preserved?.Remove("ContentPartFieldSettings");
+
+        if (current is not null)
+        {
+            await contentDefinitionManager.AlterPartDefinitionAsync(request.Part, part => part.RemoveField(request.Field));
+        }
+
+        await contentDefinitionManager.AlterPartDefinitionAsync(request.Part, part => part
+            .WithField(request.Field, field =>
+            {
+                field.OfType(request.FieldType).WithDisplayName(displayName);
+                if (!string.IsNullOrWhiteSpace(position))
+                {
+                    field.WithPosition(position);
+                }
+
+                if (preserved is { Count: > 0 })
+                {
+                    field.MergeSettings(preserved);
+                }
+            }));
+
+        return NoContent();
+    }
+
+    public async Task<IResult> List()
+    {
+        if (!await authorization.AuthorizeAsync(User, ContentTypesPermissions.ViewContentTypes)) return Forbid();
+        var definitions = await contentDefinitionManager.ListTypeDefinitionsAsync();
+        return Ok(definitions.Select(ContentType.From).ToArray());
+    }
+
+    /// <summary>
+    /// Every part DEFINITION, attached to a type or not, with its fields and the
+    /// types using it. The Content Parts screen edits fields HERE because a part is
+    /// shared: a field change lands on every type carrying the part.
+    /// </summary>
+    public async Task<IResult> ListParts()
+    {
+        if (!await authorization.AuthorizeAsync(User, ContentTypesPermissions.ViewContentTypes)) return Forbid();
+
+        var types = (await contentDefinitionManager.ListTypeDefinitionsAsync()).ToArray();
+        var usage = types
+            .SelectMany(type => type.Parts.Select(part => (Part: part.PartDefinition.Name, Type: type.Name)))
+            .GroupBy(entry => entry.Part, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.Select(entry => entry.Type).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToArray(), StringComparer.OrdinalIgnoreCase);
+
+        var parts = await contentDefinitionManager.ListPartDefinitionsAsync();
+        return Ok(parts
+            .Select(part => new ContentPartDefinitionModel(
+                part.Name,
+                ContentPart.From(part),
+                usage.TryGetValue(part.Name, out var usedBy) ? usedBy : []))
+            .OrderBy(part => part.Name, StringComparer.OrdinalIgnoreCase)
+            .ToArray());
+    }
+
+    /// <summary>
+    /// Attaches a part to a type, or updates the ATTACHMENT's instance settings
+    /// (display name, description, position) when it is already attached. The part's
+    /// own fields are not touched here - those belong to the part definition and are
+    /// edited on the Content Parts screen, because they are shared across every type
+    /// carrying the part.
+    /// </summary>
+    public async Task<IResult> AttachPart(string contentType, [FromBody] AttachPartRequest request)
+    {
+        if (!await authorization.AuthorizeAsync(User, ContentTypesPermissions.EditContentTypes)) return Forbid();
+
+        var typeDefinition = await contentDefinitionManager.GetTypeDefinitionAsync(contentType);
+        if (typeDefinition is null)
+        {
+            return NotFound();
+        }
+
+        // The part must exist as a definition (or be the type's own implicit part) -
+        // silently creating an empty definition from a typo helps no one.
+        var partDefinition = await contentDefinitionManager.GetPartDefinitionAsync(request.Part);
+        if (partDefinition is null && !string.Equals(request.Part, contentType, StringComparison.OrdinalIgnoreCase))
+        {
+            return Problem($"There is no content part named '{request.Part}'.", statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        await contentDefinitionManager.AlterTypeDefinitionAsync(contentType, type => type
+            .WithPart(request.Part, part =>
+            {
+                if (request.DisplayName is not null)
+                {
+                    part.WithDisplayName(request.DisplayName);
+                }
+
+                if (request.Description is not null)
+                {
+                    part.WithDescription(request.Description);
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.Position))
+                {
+                    part.WithPosition(request.Position);
+                }
+            }));
+
+        return NoContent();
+    }
+
+    /// <summary>Detaches a part from a type. The part definition and its fields
+    /// survive - other types may carry it, and stored content stays in each item's
+    /// document.</summary>
+    public async Task<IResult> DetachPart(string contentType, string partName)
+    {
+        if (!await authorization.AuthorizeAsync(User, ContentTypesPermissions.EditContentTypes)) return Forbid();
+
+        var typeDefinition = await contentDefinitionManager.GetTypeDefinitionAsync(contentType);
+        var attached = typeDefinition?.Parts.FirstOrDefault(part =>
+            string.Equals(part.Name, partName, StringComparison.OrdinalIgnoreCase));
+        if (attached is null)
+        {
+            return NotFound();
+        }
+
+        await locks.EnsureTypePartChangeAsync(contentType, partName, DefinitionChanges.Detached);
+        await contentDefinitionManager.AlterTypeDefinitionAsync(contentType, type => type.RemovePart(partName));
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Places or lifts a TENANT lock on a part definition (Part), one of its fields (Part +
+    /// Field) or a part's attachment to a type (Type + Part). Module locks never move here;
+    /// the permission is LockContentDefinitions, not EditContentTypes (docs/content-items.md
+    /// › Definition locks).
+    /// </summary>
+    public async Task<IResult> SetLock([FromBody] SetDefinitionLockRequest request)
+    {
+        if (!await authorization.AuthorizeAsync(User, ContentDefinitionPermissions.LockContentDefinitions)) return Forbid();
+
+        var requested = DefinitionLockSources.Normalize(request.Lock);
+
+        if (!string.IsNullOrWhiteSpace(request.Type))
+        {
+            var type = await contentDefinitionManager.LoadTypeDefinitionAsync(request.Type);
+            var typePart = type?.Parts.FirstOrDefault(candidate => string.Equals(candidate.Name, request.Part, StringComparison.OrdinalIgnoreCase));
+            if (typePart is null)
+            {
+                return NotFound();
+            }
+
+            DefinitionLockGuard.EnsureLockChange(typePart.GetLock(), requested, $"Part '{request.Part}' on type '{request.Type}'");
+            await contentDefinitionManager.AlterTypeDefinitionAsync(request.Type, type => type.WithPart(request.Part, part => part.Locked(requested)));
+            return NoContent();
+        }
+
+        var partDefinition = await contentDefinitionManager.LoadPartDefinitionAsync(request.Part);
+        if (partDefinition is null)
+        {
+            return NotFound();
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Field))
+        {
+            var field = partDefinition.Fields.FirstOrDefault(candidate => string.Equals(candidate.Name, request.Field, StringComparison.OrdinalIgnoreCase));
+            if (field is null)
+            {
+                return NotFound();
+            }
+
+            DefinitionLockGuard.EnsureLockChange(field.GetLock(), requested, $"Field '{request.Part}.{request.Field}'");
+            await contentDefinitionManager.AlterPartDefinitionAsync(request.Part, part => part.WithField(request.Field, builder => builder.Locked(requested)));
+            return NoContent();
+        }
+
+        DefinitionLockGuard.EnsureLockChange(partDefinition.GetLock(), requested, $"Part '{request.Part}'");
+        await contentDefinitionManager.AlterPartDefinitionAsync(request.Part, part => part.Locked(requested));
+        return NoContent();
+    }
+
+    public async Task<IResult> Get(string contentType)
+    {
+        if (!await authorization.AuthorizeAsync(User, ContentTypesPermissions.ViewContentTypes)) return Forbid();
+        var definition = await contentDefinitionManager.GetTypeDefinitionAsync(contentType);
+        return definition is null ? NotFound() : Ok(ContentType.From(definition));
+    }
+}
+
+/// <summary>Content-menu designation payload for a type.</summary>
+public sealed record SetContentTypeMenuRequest(bool ShowInContentMenu);
+
+/// <summary>Field-type change payload. Part is the part DEFINITION name; a field
+/// that does not exist yet is created.</summary>
+public sealed record SetFieldTypeRequest([property: NotEmpty] string Part, [property: NotEmpty] string Field, [property: NotEmpty] string FieldType, string? DisplayName = null);
+
+/// <summary>A part DEFINITION with its fields and the types carrying it.</summary>
+public sealed record ContentPartDefinitionModel(string Name, ContentPart Part, string[] UsedByTypes);
+
+/// <summary>Attach a part to a type / update the attachment's instance settings.
+/// Null leaves a setting unchanged.</summary>
+public sealed record AttachPartRequest([property: NotEmpty] string Part, string? DisplayName = null, string? Description = null, string? Position = null);
+
+/// <summary>A tenant lock change: Part alone, Part + Field, or Type + Part. Lock is None or Tenant.</summary>
+public sealed record SetDefinitionLockRequest([property: NotEmpty] string Part, string? Field = null, string? Type = null, string Lock = DefinitionLockSources.None);

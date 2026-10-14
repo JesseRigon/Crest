@@ -37,7 +37,6 @@ public sealed class Startup : StartupBase
         // provider among several (users and content items live in Crest.Server).
         services.AddScoped<IOptionSourceProvider, ContentPartListSourceProvider>();
 
-        services.AddNavigationProvider<ContentPartListsAdminMenu>();
 
         // Teaches content groups the "list" entry kind (an Content part list by key).
         services.AddScoped<Crest.ContentGroups.IContentGroupEntryResolver, ContentPartListGroupEntryResolver>();

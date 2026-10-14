@@ -24,6 +24,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Crest.Server.csproj" />
+    <!-- The API conformance test checks every contributor; the modules Crest.Server does not reference itself. -->
+    <ProjectReference Include="..\..\..\Crest.Roles\Crest.Roles.csproj" />
+    <ProjectReference Include="..\..\..\Crest.Workflows\Server\Crest.Workflows.csproj" />
   </ItemGroup>
 
 </Project>

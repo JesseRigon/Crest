@@ -27,8 +27,8 @@ public sealed class Startup : StartupBase
     /// <inheritdocs />
     public override void ConfigureServices(IServiceCollection services)
     {
+        services.AddApiContributor<Api.LocalizationApi>();
         services.AddSiteDisplayDriver<LocalizationSettingsDisplayDriver>();
-        services.AddNavigationProvider<AdminMenu>();
         services.AddPermissionProvider<Permissions>();
         services.AddScoped<ILocalizationService, LocalizationService>();
         services.AddScoped<IJSLocalizer, LocalizationJSLocalizer>();

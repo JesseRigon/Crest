@@ -184,7 +184,10 @@ public sealed class Startup : StartupBase
 
         // The media library drive behind /media paths and media fields (ruling F1).
         services.AddMediaLibrary();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddPageSource<AdminPages>();
+        services.AddApiContributor<Api.MediaFilesApi>();
+        services.AddApiContributor<Api.MediaOptionsApi>();
+        services.AddApiContributor<Api.MediaProfilesApi>();
 
         // Image processing pipeline (NetVips-based)
         services.AddSingleton<IImageProcessingEngine, VipsImageProcessingEngine>();
@@ -320,7 +323,7 @@ public sealed class MediaCacheStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddPermissionProvider<MediaCachePermissions>();
-        services.AddNavigationProvider<MediaCacheAdminMenu>();
+        services.AddPageSource<MediaCachePages>();
     }
 }
 
@@ -848,13 +851,6 @@ public sealed class MediaSignalRStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IMediaEventHandler, MediaSignalREventHandler>();
-    }
-
-    public override void Configure(
-        IApplicationBuilder app,
-        IEndpointRouteBuilder routes,
-        IServiceProvider serviceProvider)
-    {
-        routes.MapHub<MediaHub>("/hubs/media");
+        services.AddApiContributor<Api.MediaHubApi>();
     }
 }

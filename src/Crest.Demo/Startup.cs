@@ -87,7 +87,7 @@ public sealed class Startup : StartupBase
         services.AddSingleton<IBackgroundTask, TestBackgroundTask>();
         services.AddShapeTableProvider<DemoShapeProvider>();
         services.AddShapeAttributes<DemoShapeProvider>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddPageSource<AdminPages>();
         services.AddScoped<IContentDisplayDriver, TestContentElementDisplayDriver>();
         services.AddDataMigration<Migrations>();
         services.AddPermissionProvider<Permissions>();

@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Crest.Access;
 using Crest.Workflows.Contexts;
 using Crest.Workflows.Management;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -15,7 +14,8 @@ namespace Crest.Workflows.Tests;
 
 // The API gate, decision by decision. The middleware is the only thing between a tenant
 // cookie and the engine's endpoints, so each branch is pinned: path scope, 401, 403 (through
-// the one access decision for the request's caller), antiforgery on writes, the per-request
+// the one access decision for the request's caller; antiforgery on writes is the registry
+// group's filter, not the gate's), the per-request
 // grant mapped permission by permission onto the engine's names, the per-definition Run
 // check, and the 403 a refused change surfaces as.
 public class ApiSecurityMiddlewareTests
@@ -30,7 +30,7 @@ public class ApiSecurityMiddlewareTests
 
     private static readonly CallerContext Alice = new() { Tenant = "acme", Side = CallerSide.Admin, UserId = "u-1", UserName = "alice" };
 
-    private sealed record Gate(ApiSecurityMiddleware Middleware, DefaultHttpContext Context, IAccessDecision Decision, IAntiforgery Antiforgery, List<bool> Reached)
+    private sealed record Gate(ApiSecurityMiddleware Middleware, DefaultHttpContext Context, IAccessDecision Decision, List<bool> Reached)
     {
         // The caller is the gated one (set by the request path), as in production.
         public Task InvokeAsync(IWorkflowDefinitionAccessReader lists)
@@ -38,11 +38,11 @@ public class ApiSecurityMiddlewareTests
             var accessor = Substitute.For<ICallerContextAccessor>();
             accessor.Current.Returns(Context.User.Identity?.IsAuthenticated == true ? Alice : null);
             var callers = new WorkflowCallerResolver(Substitute.For<ICallerContextFactory>(), accessor, AccessGateTests.Seal, Substitute.For<IWorkflowInstanceStore>(), Substitute.For<IWorkflowDefinitionService>());
-            return Middleware.InvokeAsync(Context, callers, Decision, Substitute.For<IAuthorizationService>(), Policies, Antiforgery, lists, WorkflowViewListTests.InstanceAccess(Decision, lists));
+            return Middleware.InvokeAsync(Context, callers, Decision, Substitute.For<IAuthorizationService>(), Policies, lists, WorkflowViewListTests.InstanceAccess(Decision, lists));
         }
     }
 
-    private static Gate Build(string path, string method, bool authenticated, bool permitted, bool antiforgeryValid, Func<HttpContext, Task>? endpoint = null, params string[] onlyPermissions)
+    private static Gate Build(string path, string method, bool authenticated, bool permitted, Func<HttpContext, Task>? endpoint = null, params string[] onlyPermissions)
     {
         var reached = new List<bool>();
         var middleware = new ApiSecurityMiddleware(async context => { reached.Add(true); if (endpoint is not null) await endpoint(context); }, NullLogger<ApiSecurityMiddleware>.Instance);
@@ -60,10 +60,7 @@ public class ApiSecurityMiddlewareTests
                 return Task.FromResult(granted ? AccessDecision.Allowed : AccessDecision.Denied("no"));
             });
 
-        var antiforgery = Substitute.For<IAntiforgery>();
-        antiforgery.IsRequestValidAsync(Arg.Any<HttpContext>()).Returns(antiforgeryValid);
-
-        return new(middleware, context, decision, antiforgery, reached);
+        return new(middleware, context, decision, reached);
     }
 
     private static bool IsRunResource(object? resource, string definitionId, string runner) =>
@@ -74,7 +71,7 @@ public class ApiSecurityMiddlewareTests
     [Fact]
     public async Task Requests_outside_the_api_path_pass_through_untouched()
     {
-        var gate = Build("/api/crest/parties", "POST", authenticated: false, permitted: false, antiforgeryValid: false);
+        var gate = Build("/api/crest/parties", "POST", authenticated: false, permitted: false);
 
         await gate.InvokeAsync(NoLists);
 
@@ -86,7 +83,7 @@ public class ApiSecurityMiddlewareTests
     [Fact]
     public async Task Anonymous_gets_401()
     {
-        var gate = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: false, permitted: true, antiforgeryValid: true);
+        var gate = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: false, permitted: true);
 
         await gate.InvokeAsync(NoLists);
 
@@ -97,7 +94,7 @@ public class ApiSecurityMiddlewareTests
     [Fact]
     public async Task Authenticated_without_ViewWorkflows_gets_403()
     {
-        var gate = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: true, permitted: false, antiforgeryValid: true);
+        var gate = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: true, permitted: false);
 
         await gate.InvokeAsync(NoLists);
 
@@ -107,20 +104,9 @@ public class ApiSecurityMiddlewareTests
     }
 
     [Fact]
-    public async Task Write_without_antiforgery_gets_400_even_when_permitted()
+    public async Task Read_by_a_permitted_user_gets_the_engine_grant()
     {
-        var gate = Build("/crest-workflows/api/workflow-definitions", "POST", authenticated: true, permitted: true, antiforgeryValid: false);
-
-        await gate.InvokeAsync(NoLists);
-
-        Assert.Empty(gate.Reached);
-        Assert.Equal(400, gate.Context.Response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Read_by_a_permitted_user_needs_no_antiforgery_and_gets_the_engine_grant()
-    {
-        var gate = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: true, permitted: true, antiforgeryValid: false);
+        var gate = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: true, permitted: true);
 
         await gate.InvokeAsync(NoLists);
 
@@ -131,13 +117,12 @@ public class ApiSecurityMiddlewareTests
         Assert.Contains("publish:workflow-definitions", grants);
         Assert.Contains("exec:workflow-definitions", grants);
         Assert.DoesNotContain(ApiSecurityMiddleware.AllPermissionsClaim, grants);
-        await gate.Antiforgery.DidNotReceive().IsRequestValidAsync(Arg.Any<HttpContext>());
     }
 
     [Fact]
     public async Task A_view_only_user_gets_read_grants_and_nothing_else()
     {
-        var gate = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: true, permitted: true, antiforgeryValid: false, null, WorkflowsConstants.Permissions.View);
+        var gate = Build("/crest-workflows/api/workflow-definitions", "GET", authenticated: true, permitted: true, null, WorkflowsConstants.Permissions.View);
 
         await gate.InvokeAsync(NoLists);
 
@@ -154,7 +139,7 @@ public class ApiSecurityMiddlewareTests
     [Fact]
     public async Task Starting_a_definition_is_authorized_against_that_definition()
     {
-        var gate = Build("/crest-workflows/api/workflow-definitions/def-1/execute", "POST", authenticated: true, permitted: true, antiforgeryValid: true);
+        var gate = Build("/crest-workflows/api/workflow-definitions/def-1/execute", "POST", authenticated: true, permitted: true);
         var lists = Substitute.For<IWorkflowDefinitionAccessReader>();
         lists.GetAsync("def-1").Returns(new WorkflowDefinitionAccessResource("def-1", [], ["Operators", "alice"]));
 
@@ -167,7 +152,7 @@ public class ApiSecurityMiddlewareTests
     [Fact]
     public async Task Starting_a_definition_whose_Run_list_excludes_the_caller_gets_403_despite_the_permission()
     {
-        var gate = Build("/crest-workflows/api/workflow-definitions/def-1/execute", "POST", authenticated: true, permitted: true, antiforgeryValid: true);
+        var gate = Build("/crest-workflows/api/workflow-definitions/def-1/execute", "POST", authenticated: true, permitted: true);
         var lists = Substitute.For<IWorkflowDefinitionAccessReader>();
         lists.GetAsync("def-1").Returns(new WorkflowDefinitionAccessResource("def-1", [], ["Operators"]));
 
@@ -180,7 +165,7 @@ public class ApiSecurityMiddlewareTests
     [Fact]
     public async Task Starting_a_definition_without_Run_gets_403_before_the_engine()
     {
-        var gate = Build("/crest-workflows/api/workflow-definitions/def-1/dispatch", "POST", authenticated: true, permitted: true, antiforgeryValid: true, null, WorkflowsConstants.Permissions.View, WorkflowsConstants.Permissions.Edit);
+        var gate = Build("/crest-workflows/api/workflow-definitions/def-1/dispatch", "POST", authenticated: true, permitted: true, null, WorkflowsConstants.Permissions.View, WorkflowsConstants.Permissions.Edit);
 
         await gate.InvokeAsync(NoLists);
 
@@ -191,7 +176,7 @@ public class ApiSecurityMiddlewareTests
     [Fact]
     public async Task A_change_the_ownership_tier_refuses_surfaces_as_403_with_the_reason()
     {
-        var gate = Build("/crest-workflows/api/workflow-definitions/def-1/publish", "POST", authenticated: true, permitted: true, antiforgeryValid: true,
+        var gate = Build("/crest-workflows/api/workflow-definitions/def-1/publish", "POST", authenticated: true, permitted: true,
             _ => throw new Registry.WorkflowChangeDeniedException("system workflow"));
         var body = new MemoryStream();
         gate.Context.Response.Body = body;
@@ -206,7 +191,7 @@ public class ApiSecurityMiddlewareTests
     [Fact]
     public async Task Write_by_a_permitted_user_with_a_valid_token_proceeds()
     {
-        var gate = Build("/crest-workflows/api/workflow-definitions/abc/publish", "POST", authenticated: true, permitted: true, antiforgeryValid: true);
+        var gate = Build("/crest-workflows/api/workflow-definitions/abc/publish", "POST", authenticated: true, permitted: true);
 
         await gate.InvokeAsync(NoLists);
 

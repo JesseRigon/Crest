@@ -22,7 +22,6 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddNavigationProvider<AdminMenu>();
         services.AddScoped<ILayerService, LayerService>();
         services.AddScoped<LayerRuleReader>();
         services.AddScoped<ILayoutTreeContributor, LayerTreeContributor>();

@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Crest.Admin;
 using Crest.Admin.Models;
+using Crest.Admin.Api;
+using Crest.Features.Api;
 using Crest.Environment.Extensions;
 using Crest.Environment.Shell;
 using Crest.Environment.Shell.Descriptor;
@@ -24,7 +26,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Crest.ViewModels;
-using SiteSettings = Crest.ViewModels.SiteSettings;
+using SiteSettings = Crest.Settings.Api.SiteSettingsModel;
 
 namespace Crest.Controllers;
 

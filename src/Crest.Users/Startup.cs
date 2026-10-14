@@ -70,6 +70,13 @@ public sealed class Startup : StartupBase
     {
         services.AddShapeTableProvider<UserDisplayNameShapeTableProvider>();
 
+        // The sign-in, users and login settings APIs (docs/access.md: Access declares them).
+        services.AddScoped<LoginService>();
+        services.AddApiContributor<Api.UsersApi>();
+        services.AddApiContributor<Api.AuthApi>();
+        services.AddApiContributor<Api.LoginSettingsApi>();
+        services.AddApiContributor<Api.UserCultureApi>();
+
         services.AddDataMigration<ExternalAuthenticationMigrations>();
 
         services.Configure<UserOptions>(userOptions =>
@@ -124,7 +131,6 @@ public sealed class Startup : StartupBase
         services.AddScoped<IExternalLoginEventHandler, ScriptExternalLoginEventHandler>();
 
         services.AddPermissionProvider<Permissions>();
-        services.AddNavigationProvider<AdminMenu>();
 
         services.AddSiteDisplayDriver<LoginSettingsDisplayDriver>();
 
@@ -214,7 +220,6 @@ public sealed class ExternalAuthenticationStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddScoped<ILoginFormEvent, ExternalLoginFormEvents>();
-        services.AddNavigationProvider<RegistrationAdminMenu>();
         services.AddDisplayDriver<UserMenu, ExternalAuthenticationUserMenuDisplayDriver>();
         services.AddSiteDisplayDriver<ExternalLoginSettingsDisplayDriver>();
         services.AddSignalOptionsChangeTokenSource<ExternalLoginOptions>();
@@ -360,7 +365,6 @@ public sealed class ChangeEmailStartup : StartupBase
             o.MemberAccessStrategy.Register<ChangeEmailViewModel>();
         });
 
-        services.AddNavigationProvider<ChangeEmailAdminMenu>();
         services.AddDisplayDriver<UserMenu, ChangeEmailUserMenuDisplayDriver>();
     }
 }
@@ -390,7 +394,6 @@ public sealed class RegistrationStartup : StartupBase
         });
 
         services.AddDisplayDriver<User, UserRegistrationAdminDisplayDriver>();
-        services.AddNavigationProvider<RegistrationAdminMenu>();
         services.AddSignalOptionsChangeTokenSource<RegistrationOptions>();
 
         services.AddDisplayDriver<LoginForm, RegisterUserLoginFormDisplayDriver>();
@@ -467,7 +470,6 @@ public sealed class ResetPasswordStartup : StartupBase
             o.MemberAccessStrategy.Register<LostPasswordViewModel>();
         });
 
-        services.AddNavigationProvider<ResetPasswordAdminMenu>();
 
         services.AddDisplayDriver<ResetPasswordForm, ResetPasswordFormDisplayDriver>();
         services.AddDisplayDriver<LoginForm, ForgotPasswordLoginFormDisplayDriver>();

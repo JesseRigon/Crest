@@ -52,7 +52,6 @@ public class JavaScriptFeature : FeatureBase
     /// <inheritdoc />
     public override void Configure()
     {
-        Module.AddFastEndpointsAssembly<JavaScriptFeature>();
     }
 
     /// <inheritdoc />

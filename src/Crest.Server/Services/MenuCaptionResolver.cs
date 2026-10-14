@@ -24,10 +24,9 @@ namespace Crest.Services;
 /// editor overrides every fallback. Each step checks the specific culture before its parents
 /// (es-ES, then es), mirroring the localizer's own culture fallback.</para>
 ///
-/// <para>This also covers the "New" branch of the Contents menu, whose captions are content
-/// type names resolved under the admin-menus context: a content type name stored under the
-/// "Content Types" context is simply the best alternative for an ownerless caption no menu
-/// context translates.</para>
+/// <para>This also covers data captions (New › content type, content type and group pages),
+/// which are resolved ownerless: a content type name stored under the "Content Types" context is
+/// simply the best alternative for a caption no menu context translates.</para>
 ///
 /// <para>Per-request: indexes are built once per instance (scoped) from the same documents the
 /// localizer reads, and resolution itself is synchronous so the recursive item serialization
@@ -43,7 +42,6 @@ public sealed class MenuCaptionResolver(IServiceProvider serviceProvider)
     private List<Dictionary<string, List<(string Context, string Value)>>>? _poIndexes;
     // PO tier 0 provenance: node UniqueId -> the declaring provider classes' full type
     // names, recorded at sync time in Merge's value-authority order.
-    private Dictionary<string, List<string>>? _sourceContextsByNodeId;
     private bool _loaded;
 
     public async Task EnsureLoadedAsync()
@@ -87,47 +85,30 @@ public sealed class MenuCaptionResolver(IServiceProvider serviceProvider)
             _poIndexes = PoTranslationLookup.BuildCultureChainIndexes(
                 localizationManager, CultureInfo.CurrentUICulture);
         }
-
-        // Tier 0 provenance for the PO layer, recorded by the provider-menu sync.
-        var syncDocuments = serviceProvider.GetService<Crest.Documents.IDocumentManager<CrestProviderMenuSyncDocument>>();
-        if (syncDocuments is not null)
-        {
-            var syncState = await syncDocuments.GetOrCreateImmutableAsync();
-            var map = new Dictionary<string, List<string>>(StringComparer.Ordinal);
-            foreach (var entry in syncState.Entries.Values)
-            {
-                if (!string.IsNullOrEmpty(entry.UniqueId) && entry.SourceContexts.Count > 0)
-                {
-                    map.TryAdd(entry.UniqueId, entry.SourceContexts);
-                }
-            }
-
-            _sourceContextsByNodeId = map;
-        }
     }
 
     /// <param name="caption">The displayed caption - the same key upstream's admin looks up.</param>
     /// <param name="menuName">The item's owning admin menu, when the built item still has one.</param>
-    /// <param name="itemId">The item's Id - for an admin menu node its UniqueId, which keys the
-    /// PO layer's recorded provenance.</param>
-    public string Resolve(string caption, string? menuName, string? itemId) => Resolve(caption, menuName, itemId, invariant: null);
+    /// <param name="sourceContext">The type that declared the caption (a page registry entry's
+    /// <c>DeclaredBy</c>): the PO layer's first-choice <c>msgctxt</c>.</param>
+    public string Resolve(string caption, string? menuName, string? sourceContext) => Resolve(caption, menuName, sourceContext, invariant: null);
 
     /// <param name="invariant">The caption's invariant literal (MenuItem.Text.Name) when the
     /// displayed caption may already be a PO translation of it. Upstream's Contents menu
     /// builds the New branch's captions through S[displayName], so a content type upstream
     /// ships a catalog string for ("Account" → "Cuenta") arrives translated; the tenant's own
     /// translation is stored under the invariant, so the store is consulted for both.</param>
-    public string Resolve(string caption, string? menuName, string? itemId, string? invariant)
+    public string Resolve(string caption, string? menuName, string? sourceContext, string? invariant)
     {
         if (string.IsNullOrEmpty(caption))
         {
             return caption;
         }
 
-        var resolved = ResolveCore(caption, menuName, itemId, out var fromStore);
+        var resolved = ResolveCore(caption, menuName, sourceContext, out var fromStore);
         if (!fromStore && !string.IsNullOrEmpty(invariant) && !string.Equals(invariant, caption, StringComparison.Ordinal))
         {
-            var byInvariant = ResolveCore(invariant, menuName, itemId, out fromStore);
+            var byInvariant = ResolveCore(invariant, menuName, sourceContext, out fromStore);
             if (fromStore)
             {
                 return byInvariant;
@@ -137,7 +118,7 @@ public sealed class MenuCaptionResolver(IServiceProvider serviceProvider)
         return resolved;
     }
 
-    private string ResolveCore(string caption, string? menuName, string? itemId, out bool fromStore)
+    private string ResolveCore(string caption, string? menuName, string? sourceContext, out bool fromStore)
     {
         fromStore = false;
 
@@ -206,11 +187,7 @@ public sealed class MenuCaptionResolver(IServiceProvider serviceProvider)
         // see PoTranslationLookup for the tiering.
         if (_poIndexes is { Count: > 0 } poIndexes)
         {
-            List<string>? sourceContexts = null;
-            if (!string.IsNullOrEmpty(itemId))
-            {
-                _sourceContextsByNodeId?.TryGetValue(itemId, out sourceContexts);
-            }
+            List<string>? sourceContexts = string.IsNullOrEmpty(sourceContext) ? null : [sourceContext];
 
             var poValue = PoTranslationLookup.Resolve(
                 poIndexes, caption, PoTranslationLookup.AdminMenuContextSuffix, sourceContexts);

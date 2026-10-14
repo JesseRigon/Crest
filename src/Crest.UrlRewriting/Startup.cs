@@ -24,7 +24,6 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddUrlRewritingServices()
-            .AddNavigationProvider<AdminMenu>()
             .AddPermissionProvider<UrlRewritingPermissionProvider>()
             .AddResourceConfiguration<ResourceManagementOptionsConfiguration>()
             .AddDisplayDriver<RewriteRule, RewriteRulesDisplayDriver>();

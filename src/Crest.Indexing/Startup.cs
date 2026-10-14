@@ -33,8 +33,8 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<Migrations>();
 #pragma warning restore CS0618 // Type or member is obsolete
 
-        services.AddNavigationProvider<AdminMenu>();
         services.AddPermissionProvider<IndexingPermissionsProvider>();
+        services.AddApiContributor<Api.IndexesApi>();
         services.AddDataMigration<PreviewIndexingMigrations>();
 
         services

@@ -52,9 +52,9 @@ flowchart TD
     s3 -- "hit" --> show
     s3 -- "miss" --> p0
 
-    subgraph po["LAYER 2 - shipped PO catalogs (deploy-time baseline; msgctxt = declaring class, unrecoverable post-merge)"]
-        p0{"tier 0: the item's RECORDED<br/>source contexts, in upstream's<br/>authority order - first hit wins"}
-        p0 -- "miss / no record<br/>(e.g. hand-made node)" --> p1{"tier 1: any '*.AdminMenu' context<br/>(naming convention of<br/>navigation provider classes)"}
+    subgraph po["LAYER 2 - shipped PO catalogs (deploy-time baseline; msgctxt = declaring class)"]
+        p0{"tier 0: the page registry entry's<br/>declaring type (DeclaredBy)"}
+        p0 -- "miss / no declarer<br/>(e.g. hand-made node)" --> p1{"tier 1: any '*.AdminMenu' context<br/>(where the platform modules'<br/>menu captions were extracted)"}
         p1 -- "miss" --> p2{"tier 2: flat most-common,<br/>ordinal tie-break<br/>(empty + identity entries never count)"}
     end
 
@@ -66,5 +66,5 @@ flowchart TD
     show -.-> del["delete a store entry =><br/>resolution walks DOWN to PO, then literal"]
     literal -.-> pin["pin to literal: store value == key<br/>beats a shipped PO translation"]
 
-    consumers["consumers of this exact chain:<br/>sidebar + app manifest (CrestMenuCaptionResolver)<br/>seeder (CrestProviderMenuSyncService)<br/>editor Fallback placeholders (CrestTranslationsController)"]
+    consumers["consumers of this exact chain:<br/>sidebar + app manifest (MenuCaptionResolver)<br/>editor Fallback placeholders (TranslationsController)"]
     consumers -.-> caption

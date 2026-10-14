@@ -23,7 +23,7 @@ store and the geographic tree. Three modules complete it:
 | `Crest.Queries` | The read side: the structured query model (a step list compiled through YesSql into parameterised SQL with the caller's scope conjoined for every table), the SQL source for external databases with its scope rewriter, the `System` source (`item`, `user`, `site`) that display slots bind, query descriptors and the catalog the workflow engine's registry reads. Every run is paged, cancellable, typed and caller-scoped. Queries owns no connections: it consumes SQL connections from the data layer and external connections from the protocol modules ([queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)). |
 | `Crest.Workflows` | The action side: a workflow service built on a vendored fork of Elsa 3 (MIT). Its registry (activities, triggers, hook slots, flows, and queries as `RunQuery` activities) is the operation registry; units of work (one burst, one session, one transaction, with inline hooks and durable background calls); the access gate as engine middleware with the actor rule (a run acts as the caller who started it, or as the system when published so); connectors with API-key, bearer, basic and OAuth2 authentication and OpenAPI import (☐ the connection model moves into the protocol modules, the activities stay as consumers); approvals; field dependencies; ownership tiers and per-flow access; the platform modules' activities and triggers (the stock OrchardCore workflow module is gone); the designer bridge. |
 | `Crest.Money` | The money type and the `PriceField` a tenant puts on any content type: `Amount` bound to an `ICurrency`, ISO 4217 metadata from the global store so minor units are never a per-tenant guess, and a default currency. Adapted from OrchardCore.Commerce (MIT). See [types.md](types.md). |
-| `Crest.Kinds` | The kind-registry contract, server-free: `IKindDescriptor` and `KindCatalog<TKind>` (merge what the enabled features register by key, order it, find by key or content type). Party types are one registry on it; a downstream module's own registries (asset kinds, transaction kinds) are others. `KindAdminMenu<TKind>` in Crest.Navigation builds a registry's admin menu from it. |
+| `Crest.Kinds` | The kind-registry contract, server-free: `IKindDescriptor` and `KindCatalog<TKind>` (merge what the enabled features register by key, order it, find by key or content type). Party types are one registry on it; a downstream module's own registries (asset kinds, transaction kinds) are others. `KindPageSource<TKind>` in Crest.Server.Abstractions builds a registry's pages (menu items and route gates) from it. |
 
 The thesis: **all an application needs is parties, workflows and content items.** A
 party is who, a workflow is what happens, a content item is everything else. Line-of-
@@ -170,6 +170,15 @@ unless it is proprietary or depends on proprietary code. Three exist: `OptionPic
 manifests, permission names, option-set keys (`parties.*` — already unbranded), route
 constants and test names follow.
 
+**The project will be renamed.** "Crest" is already in use next to OrchardCore by another
+party (CrestApps, `orchardcore.crestapps.com`, an OrchardCore module vendor), so the name
+goes before the first public release; the new name is not chosen yet (open question below).
+The rule that follows is what makes the rename a mechanical one: it touches module, assembly
+and package names, the `Crest.` namespaces, the `Crest*` component library prefix, the
+`X-Powered-By` response header value, the `crest-workflows` and `api/crest` route prefixes (route names are the one place the brand is part of the wire
+contract, so they change with a deprecation window), the stored-by-type names listed below (at
+a tenant reset), and the docs. Nothing else may depend on the word.
+
 **"Crest" appears only in module naming.** Modules, assemblies and packages carry the
 `Crest.` prefix; nothing inside them does — not permission names, types, functions, settings
 keys or other internal names (`ManageConnections`, not `ManageCrestWorkflowConnections`). The
@@ -190,7 +199,7 @@ that still carry it, and why:
   `CrestAssignmentIndex`, `CrestOrganizationIndex`; the migrations (the migration record keys
   on the class name) `CrestContentPartListMigrations`, `CrestAssignmentIndexMigrations`,
   `CrestOrganizationIndexMigrations`; the documents `CrestAdminMenuLayoutDocument`,
-  `CrestContentGroupsDocument`, `CrestMenuPlacementDocument`, `CrestProviderMenuSyncDocument`,
+  `CrestContentGroupsDocument`, `CrestMenuPlacementDocument`,
   `CrestGlobalSchemaState`; the definition and entity settings `CrestOptionFieldSettings`,
   `CrestDefinitionLockSettings`, `CrestFieldVisibilitySettings`, `CrestContentTypeMenuSettings`,
   `CrestContentGroupsSettings`, `CrestLocalizationSettings`, `CrestMemberThemeSettings`,
@@ -201,7 +210,7 @@ that still carry it, and why:
   API view models and their client mirrors that duplicate a module's own model
   (`CrestUser`, `CrestTenant`, `CrestQuery`, `CrestLoginSettings`, `CrestTemplatePreview`,
   `CrestDeploymentPlan`, `CrestLayer`, `CrestMediaOptions`, the icon catalog records and about
-  25 more), `CrestMediaProfilesController`, `CrestAdminMenu`, `CrestAntiforgeryToken`. Each
+  25 more), `CrestMediaProfilesController`, `CrestAntiforgeryToken`. Each
   folds into its module's own model when the API it serves moves out of Crest.Server into the
   module that declares it ([MVC/api.md](MVC/api.md) § Placement).
 - **The component library**, `Crest.Components` whole, including its client plumbing
@@ -278,6 +287,9 @@ A central tenet of the application.
   other surface).
 - **Modules reference `Crest.Server.Abstractions` only** (the contributor interfaces), never
   Crest.Server, so registering creates no reference cycle.
+- **The API surface is ASP.NET minimal APIs**, not controllers and not FastEndpoints: every
+  handler names its binding source, and request DTOs carry Crest's validation ruleset
+  ([MVC/api.md › Hosting](MVC/api.md#hosting), [› Validation](MVC/api.md#validation)).
 
 ### Two layers in each registry
 
@@ -290,9 +302,10 @@ Both the API registry and the page registry have two layers:
   endpoints, generated operation endpoints and the tenant's admin-menu edits are defined
   entries.
 
-The page registry already has both layers in part: code-scanned providers
-(`IRouteComponentTableProvider`, one per shell) and data-defined entries
-(`IDataRouteComponentTableProvider`, designed pages), in `src/Crest.Server/Routing`.
+The page registry's declared layer is the routed components' `[PageEntry]` declarations and the
+modules' `IPageSource`s; its defined layer is the `IDynamicPageSource`s (designed pages, New ›
+*content type*, content groups, custom settings types) and the tenant's menu edits
+(`src/Crest.Server/Routing`, contracts in `Crest.Server.Abstractions/Routing`).
 
 ### Workflows builds on top
 
@@ -300,9 +313,8 @@ Workflows builds on the API surfaces modules register: automated emails, invoice
 budgeting, approval flows from downstream applications. A domain API is never replaced by, or
 moved into, a workflow endpoint. Workflows hosts nothing itself: its management API is declared
 and registered like any module's, and its `HttpEndpoint` routes are defined entries in the
-Server's API registry, not a private table. (Today the engine keeps its own route table,
-`IRouteTable` in `src/Crest.Workflows/engine/src/modules/Crest.Workflows.Http`; it still has
-to move into the registry, [backlog.md](backlog.md) › Registries.)
+Server's API registry, not a private table
+([workflows.md › Workflows builds on top of the module APIs](workflows.md#workflows-builds-on-top-of-the-module-apis)).
 
 ### One page registry
 
@@ -313,9 +325,8 @@ derive from that entry. The admin menu is a view over the registry plus its defi
 each user's own hide layer; per-tenant and per-user page permissions resolve through the access
 model, and the menu and the gate read the same permission. Legacy MVC pages are declared
 entries pointing at their legacy route until they are ported; dynamic items (New › *content
-type*) are a registry source. Today a page is still described in up to four lists; the target
-and the gap are in [admin-menu.md](admin-menu.md) › The page registry and tracked in
-[backlog.md](backlog.md) › Registries.
+type*) are a registry source. The mechanism is in [admin-menu.md](admin-menu.md) › The page
+registry.
 
 ## The rules that keep it composable
 
@@ -402,8 +413,8 @@ the piece lives. The global store's host-call rough edge is in [globals.md](glob
     `Crest:DataRoot` override of the shells data path: tenants, `tenants.json`, the global
     store) and `app.UseHostStaticFiles()` (`Cache-Control: no-cache`, revalidated by ETag);
   - kind-registry plumbing: `Crest.Kinds` (`IKindDescriptor`, `KindCatalog<TKind>`: merge by
-    key, first wins, ordered, `Find`, `ForContentType`, `RouteOf`), `KindAdminMenu<TKind>` in
-    Crest.Navigation, `KindRoutePermissionProvider<TKind>` in Crest.Access.Abstractions, and
+    key, first wins, ordered, `Find`, `ForContentType`, `RouteOf`), `KindPageSource<TKind>` in
+    Crest.Server.Abstractions (the section, its pages and their gates in the page registry), and
     `CrestKindBrowser<TKind>` / `CrestKindPage<TKind>` in the component library; a downstream
     registry passes its kinds endpoint, how a kind reads and its pane; a registry whose kinds
     are not pages uses the catalog only;
@@ -434,6 +445,10 @@ the piece lives. The global store's host-call rough edge is in [globals.md](glob
 
 ## Open questions
 
+- **The project's new name.** "Crest" collides with CrestApps' OrchardCore modules
+  (`orchardcore.crestapps.com`). To decide: the name, whether the `api/crest` and
+  `crest-workflows` route prefixes change with it or become brand-free (`api/`, `workflows/`),
+  and whether the rename lands before or with the stored-type-name cleanup (§ Naming).
 - **Translations of Crest's own UI.** Hosts currently ship them in their own catalogs, so a
   second host gets an untranslated admin. Ship them with Crest, or keep translations the
   host's?

@@ -46,7 +46,6 @@
   <Project Path="src/Crest.Workflows/designer/src/modules/Crest.Workflows.Studio.Workflows.Designer/Crest.Workflows.Studio.Workflows.Designer.csproj" />
   <Project Path="src/Crest.Workflows/designer/src/modules/Crest.Workflows.Studio.Workflows/Crest.Workflows.Studio.Workflows.csproj" />
   <Project Path="src/Crest.Workflows/engine/src/clients/Crest.Workflows.Api.Client/Crest.Workflows.Api.Client.csproj" />
-  <Project Path="src/Crest.Workflows/engine/src/common/Crest.Workflows.Api.Common/Crest.Workflows.Api.Common.csproj" />
   <Project Path="src/Crest.Workflows/engine/src/common/Crest.Workflows.Features/Crest.Workflows.Features.csproj" />
   <Project Path="src/Crest.Workflows/engine/src/common/Crest.Workflows.Mediator/Crest.Workflows.Mediator.csproj" />
   <Project Path="src/Crest.Workflows/engine/src/modules/Crest.Workflows.Api/Crest.Workflows.Api.csproj" />

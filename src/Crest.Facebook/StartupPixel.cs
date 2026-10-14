@@ -22,7 +22,7 @@ public sealed class StartupPixel : StartupBase
     {
         services.AddSiteDisplayDriver<FacebookPixelSettingsDisplayDriver>();
         services.AddPermissionProvider<PixelPermissionProvider>();
-        services.AddNavigationProvider<AdminMenuPixel>();
+        services.AddPageSource<FacebookPixelPages>();
 
         services.Configure<MvcOptions>((options) =>
         {

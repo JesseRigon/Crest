@@ -142,11 +142,9 @@
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 
-    [Inject]
-    private IEnumerable<global::Crest.Services.IWebAssemblyRouteProvider> WebAssemblyRouteProviders { get; set; } = default!;
 
     [Inject]
-    private global::Crest.Services.SiteIdentity SiteIdentity { get; set; } = default!;
+    private global::Crest.Settings.SiteIdentity SiteIdentity { get; set; } = default!;
 
     // The tenant's own name for the shell documents' <title> (docs/branding.md: the display
     // name IS ISite.SiteName), not the platform's, and its favicon rendition: both read
@@ -213,6 +211,16 @@
             _renderMode = RenderMode.InteractiveWebAssembly;
         }
 
+        // A page its page registry declaration marks client-only ([PageEntry(ClientOnly = true)]):
+        // its services and HTTP clients exist only in the WASM client, so it never runs in a
+        // server circuit.
+        if (pageType?.GetCustomAttributes(typeof(global::Crest.DisplayManagement.Components.PageEntryAttribute), inherit: false)
+            .OfType<global::Crest.DisplayManagement.Components.PageEntryAttribute>()
+            .Any(entry => entry.ClientOnly) == true)
+        {
+            _renderMode = RenderMode.InteractiveWebAssembly;
+        }
+
         if (HttpContext?.Items.TryGetValue(BlazorHosting.ShellBasePathItem, out var value) == true
             && value is string shellBasePath
             && !string.IsNullOrWhiteSpace(shellBasePath))
@@ -222,15 +230,6 @@
             // the same value .NET 11's <BasePath /> component will derive from
             // NavigationManager.BaseUri once available (dotnet/aspnetcore#66388).
             _adminBaseHref = (HttpContext.Request.PathBase.Value ?? shellBasePath).TrimEnd('/') + "/";
-
-            // Pages a module declared client-only (IWebAssemblyRouteProvider): the
-            // same InteractiveWebAssembly document, so they never run in a server circuit.
-            var adminRemainder = HttpContext.Request.Path.Value;
-            if (WebAssemblyRouteProviders.SelectMany(provider => provider.GetWebAssemblyRoutes())
-                .Any(template => global::Crest.Access.RouteTemplates.Matches(template, adminRemainder)))
-            {
-                _renderMode = RenderMode.InteractiveWebAssembly;
-            }
         }
     }
 }

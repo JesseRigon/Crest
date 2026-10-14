@@ -36,7 +36,7 @@ public sealed class Startup : StartupBase
     {
         services.AddIndexProfileHandler<AzureAISearchIndexProfileHandler>();
         services.AddIndexProfileHandler<AzureAISearchIndexHandler>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddPageSource<AdminPages>();
         services.AddAzureAISearchServices();
         services.AddSiteDisplayDriver<AzureAISearchDefaultSettingsDisplayDriver>();
         services.AddDataMigration<AzureAISearchIndexSettingsMigrations>();

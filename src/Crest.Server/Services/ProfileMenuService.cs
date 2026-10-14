@@ -10,21 +10,15 @@ namespace Crest.Services;
 
 // Resolves every enabled MenuPlacement.User AdminMenu document (the "User Profile
 // Menu"s created via AdminMenus.razor) into the same NavigationMenu shape
-// NavigationController.GetMenu already returns for "admin". Unlike "admin", these menus
-// are NOT INavigationProvider-registered - AdminMenuNavigationProvidersCoordinator only
-// builds menu name "adminMenu" and only for AdminMenu.Enabled documents, and
-// User-placement menus are deliberately kept Enabled = false (see
-// MenuPlacementService) so that coordinator never picks them up. This service is the
-// one place that builds User-placement menus directly from their AdminNode trees instead.
+// NavigationController.GetMenu returns for "admin". These documents are not navigation
+// providers; this service is the one place that builds them, directly from their AdminNode
+// trees (the admin sidebar is the page registry's, docs/admin-menu.md).
 //
 // There can be MORE THAN ONE User-placement menu, by design: different menus are gated by
 // different node-level permissions (e.g. one for editors, one for admins), and a user who
-// has access to several should see the union of everything they're authorized for - the
-// same way Crest's own admin sidebar merges every enabled AdminMenu document into
-// one tree (AdminMenuNavigationProvidersCoordinator.BuildNavigationAsync, the platform's Crest.AdminMenu
-// module: it iterates ALL enabled menus into one shared NavigationBuilder, then
-// permission-filters the merged result once). This service mirrors that exact
-// merge-then-filter shape rather than picking a single menu.
+// has access to several sees the union of everything they're authorized for: every menu
+// is built into one shared NavigationBuilder, then the merged result is permission-filtered
+// once.
 //
 // Shared by NavigationController (standalone fetch/refresh) and AppController (manifest).
 public sealed class ProfileMenuService(

@@ -43,7 +43,7 @@ public sealed class Startup : StartupBase
         services.AddKeyedSingleton<IRateLimiterSource, TokenBucketRateLimiterSource>(TokenBucketRateLimiterSource.SourceName)
             .AddDisplayDriver<RateLimitLimiter, TokenBucketRateLimiterDisplayDriver>();
 
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddPageSource<AdminPages>();
         services.AddPermissionProvider<Permissions>();
     }
 

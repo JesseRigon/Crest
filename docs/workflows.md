@@ -74,12 +74,16 @@ Workflows hosts nothing itself. Crest.Server's API registry has two layers
 may be generated from the operations registry (a query or an action), and a generated route is
 a registry entry like any other ([Generate the surfaces](#7-generate-the-surfaces)).
 
-Today the code differs: the engine keeps its own route table (`IRouteTable` in
-`src/Crest.Workflows/engine/src/modules/Crest.Workflows.Http`), served by
-`HttpWorkflowsMiddleware` under the `CrestWorkflows:Http` base path (default `/workflows`,
-mounted by `Server/Features/HttpStartup.cs`), and the engine API at `crest-workflows/api` is a
-FastEndpoints branch the module mounts itself. Both move into Crest.Server's API registry
-([backlog.md](backlog.md) › Registries).
+In code: `WorkflowHttpEndpointSource` (`Server/Api/WorkflowHttpEndpoints.cs`) is the defined
+source. It lists the routes of every `HttpEndpoint` trigger and waiting bookmark of the tenant
+(the engine's `IHttpEndpointRoutes`) under the `CrestWorkflows:Http` base path (default
+`/workflows`), plus a catch-all there that answers 404, and each route's request goes to the
+engine's `HttpWorkflowRequestHandler` with the route template that matched. When the engine
+indexes an added or removed `HttpEndpoint` trigger or bookmark, `NotifyHttpEndpointRoutesChanged`
+tells `WorkflowHttpEndpointsInvalidator`, which invalidates the source; a reload that yields the
+same routes leaves the tenant's endpoints alone. The engine's management API
+(`crest-workflows/api`, § The engine API) is the declared contributor `WorkflowsManagementApi`,
+behind the engine's `ApiSecurityMiddleware`.
 
 ## Architecture
 
@@ -87,7 +91,7 @@ FastEndpoints branch the module mounts itself. Both move into Crest.Server's API
  Crest admin (Blazor WASM, Radzen)
  ├─ Workflows pages: Definitions, Instances (Studio, lazy), Connections, Approvals, Hooks (Crest)
  └─ Designer: the forked Studio (MudBlazor), loaded on demand in its own container
-        │  engine API (FastEndpoints) at ~/crest-workflows/api, tenant cookie + antiforgery,
+        │  engine API (minimal APIs) at ~/crest-workflows/api, tenant cookie + antiforgery,
         │  Crest permissions mapped onto the engine's per-endpoint grants
         ▼
  Crest.Workflows  (a core registry)
@@ -105,7 +109,7 @@ the `UPSTREAM-COMMIT` files record the upstream tag and commits). Upstream is a 
 not a dependency: no `Elsa*` package exists in the graph; namespaces, assembly ids, activity
 type ids (`Crest.Workflows.WriteLine`), the API prefix (`crest-workflows/api`) and the
 YesSql collections (`CrestWorkflows_*`) are renamed. Licences: elsa-core and elsa-studio
-MIT, the original integration BSD-3-Clause, transitive FastEndpoints (MIT), Jint (BSD-2),
+MIT, the original integration BSD-3-Clause, Jint (BSD-2),
 Fluid (MIT), Polly (BSD-3), MudBlazor (MIT). At every upstream diff, refuse anything not MIT /
 Apache-2.0 / BSD.
 
@@ -140,6 +144,52 @@ builder), and from a startup gated on the `Crest.Workflows` feature registers an
 raised through `IWorkflowTriggerPublisher` from the module's own handlers. There is no stock
 workflow module, bridge or second evaluator: the platform's activities are engine activities
 (§ Platform activities).
+
+### The engine API
+
+The management API the designer, the admin pages and the browser checks consume:
+`crest-workflows/api`, 73 operations (86 route and verb pairs; definitions, instances, journal,
+descriptors, bookmarks, events, tasks, activity tests, features, resilience, the package
+version), written as ASP.NET minimal-API handlers in
+`engine/src/modules/Crest.Workflows.Api/Endpoints`, one static class per area
+(`WorkflowDefinitionEndpoints`, `WorkflowInstanceEndpoints`, `DescriptorEndpoints`,
+`ActivityExecutionEndpoints`, `RunEndpoints`, `PlatformEndpoints`, `ResilienceEndpoints`;
+execute, export and import of definitions and instances have their own files), gathered by
+`EngineApiEndpoints.MapEngineApi(prefix)`, which the declared contributor
+`WorkflowsManagementApi` calls on the registry's group (api.md › The seam: the group carries the
+antiforgery and exception filters). The Expressions.JavaScript and Resilience modules' endpoints
+live there too; no module registers endpoint assemblies.
+
+- **Binding is explicit.** Every handler parameter names its source: `[FromRoute]`,
+  `[FromQuery]` (an `[AsParameters]` class for the list queries, each property attributed),
+  `[FromForm] IFormFileCollection` for the two file imports (`.DisableAntiforgery()`, since the
+  framework's form check would double the group filter's), `[FromServices]` for services. A
+  JSON body is an `EngineBody<T>` parameter: the engine API's one `BindAsync` source, which
+  deserializes through the engine's `IApiSerializer` (the polymorphic activity JSON, expando
+  inputs and converters the host's JSON options do not know); an empty body binds a new `T`, a
+  malformed one is answered by `EngineBodyFilter` on the group with the error contract's 400.
+  Responses are written through the same options (`EngineResults.Json`), never the host's.
+- **Errors are the error contract's** (api.md): `ApiProblems.Validation` problem details, the
+  engine's non-field messages under the empty key `""`; a bare 404, 403 (a status, never the
+  scheme's Forbid), 204 and empty 200 where the engine answered so. The designer reads the
+  `errors` map through Refit's `ValidationApiException`. Routes, verbs, request and response
+  shapes and status codes are the engine's own; `EngineResults` is the one answer helper.
+- **Validation** is the request DTO's, on the shared ruleset (api.md › Validation): the DTOs
+  with rules derive from `Validated<T>` (the instance list's page, page size and status names,
+  its timestamp filter columns; bulk cancel's definition id with version options; dispatch's
+  input shape), run by the registry's validation filter before the handler, the `errors` map
+  keyed by wire name. A body bound as `EngineBody<T>` is validated through the wrapper, which
+  runs the body's rules under the body's own keys. The domain checks (not found, not published,
+  the publisher's validation errors) stay in the handlers as the error contract's 400s.
+- **Authorization** is a policy per endpoint, `RequireAuthorization(EngineApiPolicies.X)` /
+  `.AllowAnonymous()` (bookmark resume, the public event trigger, the package version and the
+  response simulator, as before): `EngineApiPolicies` names one policy per set of engine
+  permission names (`read:workflow-definitions`, `read:* | read:activity-descriptors`, ...),
+  satisfied by a `permissions` claim naming any of them or `*`, registered by
+  `WorkflowsApiFeature`. The names are what `ApiSecurityMiddleware` grants per request
+  (§ Ownership and permissions › The API gate). The read-only guard (`NotReadOnlyPolicy`, the
+  management option and a definition's read-only or system flag) is resource-based and stays
+  in the handlers.
 
 **Tenant citizenship.** One engine per shell: every engine service, store and hosted service
 lives in the tenant container. Definitions are `WorkflowDefinition` content items
@@ -245,15 +295,16 @@ DisplayText), a system flow `samples.content-published` and a shipped draft
 them.
 
 **The API gate** (`Security/ApiSecurityMiddleware`, on the engine API branch, after the
-request path's gate): no gated caller → 403; without *View workflows* → 403; a non-GET without
-the antiforgery token → 400 (the engine's endpoints validate none); the GET form of execute →
-405; then the permissions the caller holds, asked of the one decision, are mapped onto the
-engine's per-endpoint permission names as a transient claims identity for the request (claims
+request path's gate): no gated caller → 403; without *View workflows* → 403; the GET form of
+execute → 405; then the permissions the caller holds, asked of the one decision, are mapped
+onto the engine's per-endpoint permission names (`EngineApiPolicies`, § The engine API) as a
+transient claims identity for the request (claims
 already on the principal are stripped first) (`EnginePermissions`: View → every `read:*` name;
 Edit → `write:`/`delete:workflow-definitions`, refresh/reload, activity tests; Publish →
 `publish:`/`retract:workflow-definitions`; Run → `exec:`, `trigger:event`, `tasks:complete`,
 `write:`/`cancel:`/`delete:workflow-instances`). The gate evaluates the matched endpoint's own
-policy itself, so a missing permission is a 403 with a reason, never a login redirect. Starting
+policy itself, so a missing permission is a 403 with a reason, never a login redirect.
+Antiforgery on a write is the registry group's endpoint filter, as for every API. Starting
 a definition by hand (`execute`, `dispatch`, `bulk-dispatch`) is authorized against that
 definition's Run list; instance operations go through `EngineInstanceAccess` (below). A
 `WorkflowChangeDeniedException` thrown deeper down becomes a 403 with its message. Nothing is
@@ -546,8 +597,8 @@ document store and records the faulted state through a child scope). `WorkflowAf
 anything that must be after-commit uses it, never `WorkflowStateCommitted` (sent **before** the
 YesSql commit). `Hook` and `Fail unit` activities, `WorkflowHookService` (system attachments
 from `IWorkflowHookAttachmentProvider`, tenant ones in a document), `WorkflowHookRunner`,
-`WorkflowHookFailedException` → 409 through `WorkflowHookFailedExceptionFilter` for any module's
-controller, `api/crest/workflows/hooks`, `WorkflowAtomicityAnalyzer` (used at attach and,
+`WorkflowHookFailedException` → 409 through `WorkflowHookFailedExceptionMapper` (the API
+registry's error contract) for any module's API, `api/crest/workflows/hooks`, `WorkflowAtomicityAnalyzer` (used at attach and,
 through the engine's validating notification, at publish). The trigger store treats a
 re-indexed trigger as an update (delete-then-insert of one document in a session is refused by
 YesSql). `BackgroundJobContext` (the running job, for the idempotency key). The two action
@@ -690,10 +741,10 @@ token and refreshes it with the refresh token when expired; the API only says
 
 ## Designer and admin pages
 
-**Admin surface.** A "Workflows" menu root (`WorkflowsAdminMenu`) with Definitions, Instances,
-Connections, Approvals, Hooks; `WorkflowsRoutePermissionProvider` gates the routes (until the
-page registry replaces it, [access.md](access.md) › Backlog) and the Studio routes are marked
-browser-only (`IWebAssemblyRouteProvider`). Connections, Approvals and Hooks are Crest pages;
+**Admin surface.** A "Workflows" menu section (`WorkflowsPages`, a page registry source) with
+Definitions, Instances, Connections, Approvals, Hooks; each page declares its route permission
+and menu place with `[PageEntry]` ([admin-menu.md](admin-menu.md) › The page registry), and the
+Studio pages are marked browser-only (`ClientOnly`). Connections, Approvals and Hooks are Crest pages;
 Definitions/Instances (and the editor and instance viewer, on Studio's own routes
 `/workflows/definitions[/{id}/edit]`, `/workflows/instances[/{id}/view]`) are the forked
 Studio.
@@ -767,7 +818,8 @@ watch server or do not edit during a run. A build that fails on
 
 - Module: `Crest.Workflows`: `Abstractions` (contracts), `Server` (the module: `Registry`,
   `Security`, `Units`, `Hooks`, `Fields`, `Contents`, `Connectors`, `Approvals`, `Audit`,
-  `Queries`, `Stores`), `engine` (the vendored engine), `designer` (the forked Studio), `tests`.
+  `Queries`, `Stores`), `engine` (the vendored engine; its management API in
+  `src/modules/Crest.Workflows.Api/Endpoints`), `designer` (the forked Studio), `tests`.
 - The consuming module's part, e.g. an ERP module's `Server/Workflows` (provider,
   activities), `Server/Ledger`, `Server/Data/workflows/*.json` (shipped flows).
 - Admin pages: Workflows › Definitions, Instances, Connections, Approvals, Hooks, under the
@@ -1209,7 +1261,7 @@ endpoint); a module's domain API is never moved into a workflow endpoint.
 | Lucene, Elasticsearch APIs | one permission; scoped hits, raw documents only for an All rule | retired; search is a connection (8) |
 | Liquid `query` filter, scripting | per-query permission | slot binding through the gate (7); scripting removed (8) |
 | Workflow connectors, content activities | gated per activity, actor rule | connectors into the connection system (4) |
-| Workflow HTTP endpoints, engine API | the engine's own route table and FastEndpoints branch, behind the gate | defined and declared entries in the Server's API registry (4) |
+| Workflow HTTP endpoints, engine API | defined entries (`WorkflowHttpEndpointSource`) and a declared contributor (`WorkflowsManagementApi`) in the Server's API registry, behind the gate | ☑ |
 | Members, Parties | the caller carries side and organization; decisions per organization resource | routes generated (5–6) |
 
 ## Still to build

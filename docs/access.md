@@ -73,9 +73,7 @@ tests and audits): [user-stories.md](user-stories.md).
 - **A page's permission comes from the page registry.** Each page declares its permission once
   in its page registry entry ([architecture.md › One page registry](architecture.md#one-page-registry));
   the route gate and the admin menu read that same permission, resolved through the access
-  model per tenant and per user. Today the gate reads every module's hand-written
-  `IRoutePermissionProvider`; those providers retire when the page registry is built
-  ([Backlog](#backlog)).
+  model per tenant and per user ([admin-menu.md › The page registry](admin-menu.md#the-page-registry)).
 
 ## Mapper roles and priority
 
@@ -118,7 +116,7 @@ nothing ([sharing.md](sharing.md)). Tests: `test/Crest.Tests/Access/Conformance/
 | OpenId Client, Management | `Crest.OpenId` | external OIDC login; admin UI for applications and scopes |
 | External providers | `Crest.Microsoft.Authentication`, `Crest.Google`, `Crest.Facebook`, `Crest.GitHub`, `Crest.Twitter` | land in `Identity.External`, finished by the Users external-authentication feature |
 | Member portal login | `Crest.Members` `MemberPortalController`, `MemberLoginSurfaceGate` | the portal's login, register and external-login; the `ILoginFormEvent` veto that keeps members off the tenant surface and staff off the portal |
-| Crest JSON login | `LoginService`, `api/crest/auth` (in Crest.Server today; moving to Crest.Users, MVC/api.md P6) | replays the stock login event sequence and signs the one cookie |
+| Crest JSON login | `LoginService`, `api/crest/auth` (Crest.Users, `AuthApi`) | replays the stock login event sequence and signs the one cookie |
 | Workflows engine API | `Crest.Workflows` `ApiSecurityMiddleware`, order −151 | under `/crest-workflows/api`: the gated caller (none → 403), the decision, antiforgery, a transient claims identity with engine permission names, the Run list and the endpoint's policy; no authentication of its own |
 | Secure media, GraphQL, media tus, OpenApi | `Crest.Media`, `Crest.Apis.GraphQL`, `Crest.OpenApi` | authorize the gate's principal; none authenticates again |
 | Remote deployment key | `Crest.Deployment.Remote` `RemoteDeploymentKeyAuthenticationHandler` | `Authorization: RemoteDeployment {client}:{key}`, an additional `Api` scheme; the import controller is `[Authorize]` and asks `ImportRemoteInstances`, which the remote client's contributor grants its application caller; the exporting instance sends the header |
@@ -199,8 +197,10 @@ expression compiler, the structured compiler and the SQL rewriter, refused in me
 sharing's, one per shareable kind with an index table), `ScopeSet`, `IScopeSetProvider`,
 `ScopedExecution`, `ScopeRefusedException`, `IAccessAuditor` and `AccessEvent`,
 `IPermissionVersion`, `AccessGate` (the side item and header parsing), the page gate
-(`IRoutePermissionProvider`, `RoutePermission`, `RouteAccess`, `IRouteAuthorization`,
-`RouteTemplates.Matches`).
+(`RouteAccess`, `IRouteAuthorization`: the authorized routes, a path's check, and
+`AllowsAnyAsync`, the per-item question the admin menu asks). The pages and their permissions
+are the page registry's (`IPageRegistry`, `PageEntry`, `RouteTemplates` in
+`Crest.Server.Abstractions`).
 
 Implementation (module "Access", always enabled, depends on Roles, Users, Settings):
 `CallerContextFactory` (identity from the name identifier; roles from the user manager;
@@ -278,12 +278,12 @@ prefix decides the side; a valid `X-Shell` may only confirm it, a disagreeing on
 unknown value is 400; a cookie-authenticated call without the header and without a prefix side
 is 403, else Site); pages go through `IAccessGate.AdmitAsync` (authenticate, stamp the side,
 build the caller with `X-Org`); admin pages add the login redirect and the route permission
-(`IRouteAuthorization` over the registered route permissions, first template wins, no match
-denies); member pages add the login redirect only. A member-class user is refused on the admin
+(`IRouteAuthorization` over the page registry: the most specific matching page decides, any
+one of its permissions admits, no page or no declared permission denies); member pages add the login redirect only. A member-class user is refused on the admin
 side and holds no tenant rights and no organization rows on the site side.
 `RouteGateMatcherPolicy` keeps a shell from resolving another shell's endpoints; the member
-prefix is `MemberOptions.MemberUrlPrefix`. `IWebAssemblyRouteProvider` (a render-mode choice,
-not access) is the host's.
+prefix is `MemberOptions.MemberUrlPrefix`. A page's render mode (`[PageEntry(ClientOnly = true)]`)
+is a hosting choice, not access.
 
 ### Users and claims
 
@@ -361,20 +361,20 @@ The permission model):
   candidates it keeps) adds `ManageOwnOrgMember` for the caller's own Person and
   `ManageOrgMembers` re-asked against the organization for the Organization and every Person
   holding a position there. Controllers ask `IAuthorizationService` per party item.
-- `PartiesRoutePermissionProvider` registers through the Access route contract (until the page
-  registry replaces it).
+- The Parties pages are a kind page source (`PartiesPages`): All Parties and one page per
+  tenant-kind party type, each gated by `ListContent`.
 
 ### Pages
 
 The page gate is Access's: `RouteAuthorizationService` decides each route for the request's
-caller. Server, Workflows, Parties and host modules register route permissions today; the
-shell selector, `AppController`, `App.razor` and the route component table use the Access
-types. The target is the page registry ([Principles](#principles)).
+caller from the page registry's entries, and the admin menu asks it per item, so a menu item is
+shown exactly when its page would open. The shell selector and `AppController` (the manifest's
+authorized routes) use the Access types.
 
 ## Backlog
 
-- [ ] **Route gate reads the page registry.** The route gate takes each page's permission from
-  its page registry entry; the per-module `IRoutePermissionProvider`s retire
+- [x] **Route gate reads the page registry.** The route gate takes each page's permission from
+  its page registry entry; the per-module route permission providers are gone
   ([architecture.md › One page registry](architecture.md#one-page-registry)).
 - [ ] **MVC admin leftovers.** `AdminFilter` (`Crest.Admin`) and the admin controllers'
   per-type content authorization (the MVC list in `Crest.Contents` `AdminController`) go with

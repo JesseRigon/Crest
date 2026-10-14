@@ -44,7 +44,7 @@ public sealed class TemplateTreeEvaluator(
     private int _depth;
 
     /// <summary>Parses <paramref name="source"/> (cached by its hash); false with the parser's error.</summary>
-    public bool TryParse(string source, out IFluidTemplate? template, out string? error)
+    public bool TryParseTemplate(string source, out IFluidTemplate? template, out string? error)
     {
         var key = "Crest.Templates.Parsed:" + Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(source)));
         if (memoryCache.TryGetValue<IFluidTemplate>(key, out template) && template is not null)
@@ -211,7 +211,7 @@ public sealed class TemplateTreeEvaluator(
 
     private async Task<TemplateEvaluation> EvaluateCoreAsync(string source, object? model, string instanceId, IEnumerable<KeyValuePair<string, FluidValue>>? values, TemplateBudget budget)
     {
-        if (!TryParse(source, out var template, out var error))
+        if (!TryParseTemplate(source, out var template, out var error))
         {
             return Failed(instanceId, "parse", error ?? "The template does not parse.");
         }

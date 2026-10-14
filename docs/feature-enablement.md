@@ -32,10 +32,8 @@ T" when the providing feature is off.
 
 - **`Crest.Tenants`** — `DefaultTenantOnly = true`. A hard dependency from an
   always-enabled feature would be invalid on every non-default tenant.
-  `TenantsController` (in Crest.Server today, moving to Crest.Tenants, [server.md](server.md))
-  is restricted to the default tenant and injects only
-  `IOptions<TenantsOptions>`, which always resolves to a safe default
-  (`TenantRemovalAllowed = false`).
+  The tenants API (`TenantsApi`) is Crest.Tenants' own, so it exists only where the feature
+  is enabled: the default tenant.
 - **`Crest.Queries.Sql`** — a *provider* of `IQuerySource` over the data layer's SQL
   connections ([queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)), not a requirement.
   Crest enumerates whatever sources a tenant has and rejects unknown ones; declaring it

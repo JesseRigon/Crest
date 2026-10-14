@@ -32,7 +32,5 @@ public sealed class Startup : StartupBase
         services.AddScoped<IGeoLocator, CompositeGeoLocator>();
 
         // The addressing-map editor (Default tenant): menu entry and page gate.
-        services.AddNavigationProvider<Navigation.RegionsAdminMenu>();
-        services.AddScoped<Crest.Access.IRoutePermissionProvider, Navigation.RegionsRoutePermissionProvider>();
     }
 }

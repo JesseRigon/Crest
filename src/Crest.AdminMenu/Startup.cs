@@ -19,12 +19,10 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddPermissionProvider<Permissions>();
-        services.AddNavigationProvider<AdminMenu>();
         services.AddScoped<IJSLocalizer, AdminMenuJSLocalizer>();
 
         services.AddScoped<IAdminMenuService, AdminMenuService>();
         services.AddScoped<IAdminMenuAccessor, AdminMenuAccessor>();
-        services.AddScoped<AdminMenuNavigationProvidersCoordinator>();
 
         services.AddRecipeExecutionStep<AdminMenuStep>();
 

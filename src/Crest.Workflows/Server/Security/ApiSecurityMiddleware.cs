@@ -3,20 +3,20 @@ using Crest.Access;
 using Crest.Workflows.Contexts;
 using Crest.Workflows.Management;
 using Crest.Workflows.Registry;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Crest.Security.Permissions;
+using Crest.Workflows.Api.Endpoints;
 
 namespace Crest.Workflows.Security;
 
 /// <summary>
 /// The one gate on Crest.Workflows's API inside the tenant. The engine authorizes its
-/// FastEndpoints by <c>permissions</c> claims on the principal (one name per endpoint, any
-/// of them admits), not by Crest permissions; the upstream integration stamped
-/// <c>permissions=*</c> on every user at sign-in, which made any logged-in tenant user a
-/// workflow administrator. Here the grant is decided per request by the one access decision
+/// endpoints by <c>permissions</c> claims on the principal (<see cref="EngineApiPolicies"/>: one
+/// set of names per endpoint, any of them admits), not by Crest permissions; the upstream
+/// integration stamped <c>permissions=*</c> on every user at sign-in, which made any logged-in
+/// tenant user a workflow administrator. Here the grant is decided per request by the one access decision
 /// (docs/operations.md step 4) for the request's caller - the one the access gate built when
 /// it admitted the request; a request with none is refused - and added to the principal only
 /// for the duration of the request, as exactly
@@ -24,8 +24,6 @@ namespace Crest.Workflows.Security;
 /// <list type="bullet">
 /// <item>anonymous → 401; a request the path's gate built no caller for → 403;</item>
 /// <item>authenticated without <see cref="Permissions.ViewWorkflows"/> → 403;</item>
-/// <item>non-GET without a valid antiforgery token (the engine's endpoints validate none; a
-/// cookie-authenticated API without it is CSRF-exposed) → 400;</item>
 /// <item>starting a definition by hand (execute, dispatch), changing, cancelling or deleting
 /// one of its instances, a bulk action, a bookmark resume, a task completion or an event
 /// trigger without Run for the definition(s) reached - the Run list counts - → 403; an
@@ -36,15 +34,16 @@ namespace Crest.Workflows.Security;
 /// <item>otherwise the request proceeds; a change the definition's ownership tier or access
 /// lists refuse deeper down (<see cref="WorkflowChangeDeniedException"/>) → 403 with the reason.</item>
 /// </list>
+/// Antiforgery on writes is the registry group's endpoint filter, as for every API.
 /// Nothing here is cached in the cookie, so a role change takes effect on the next request.
 /// </summary>
 public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecurityMiddleware> logger)
 {
     public const string ApiPathPrefix = "/crest-workflows/api";
 
-    // The engine's claim contract (Crest.Workflows.Api.Common PermissionNames): the claim type and the wildcard.
-    public const string PermissionsClaimType = "permissions";
-    public const string AllPermissionsClaim = "*";
+    // The engine's claim contract (EngineApiPolicies): the claim type and the wildcard.
+    public const string PermissionsClaimType = EngineApiPolicies.PermissionsClaimType;
+    public const string AllPermissionsClaim = EngineApiPolicies.AllPermissions;
 
     /// <summary>The authentication type of the per-request grant identity.</summary>
     public const string GrantAuthenticationType = "WorkflowsApiGrant";
@@ -84,7 +83,7 @@ public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecur
         ];
     }
 
-    public async Task InvokeAsync(HttpContext context, WorkflowCallerResolver callers, IAccessDecision decision, IAuthorizationService authorizationService, IAuthorizationPolicyProvider policyProvider, IAntiforgery antiforgery, IWorkflowDefinitionAccessReader access, EngineInstanceAccess instanceAccess)
+    public async Task InvokeAsync(HttpContext context, WorkflowCallerResolver callers, IAccessDecision decision, IAuthorizationService authorizationService, IAuthorizationPolicyProvider policyProvider, IWorkflowDefinitionAccessReader access, EngineInstanceAccess instanceAccess)
     {
         if (!context.Request.Path.StartsWithSegments(ApiPathPrefix, out var remaining))
         {
@@ -121,16 +120,6 @@ public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecur
         {
             context.Response.StatusCode = StatusCodes.Status405MethodNotAllowed;
             return;
-        }
-
-        if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method) && !HttpMethods.IsOptions(context.Request.Method))
-        {
-            if (!await antiforgery.IsRequestValidAsync(context))
-            {
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                await context.Response.WriteAsync("Antiforgery token missing or invalid.");
-                return;
-            }
         }
 
         var granted = new List<Claim>();

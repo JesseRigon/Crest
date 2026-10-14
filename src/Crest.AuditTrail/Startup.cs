@@ -44,7 +44,6 @@ public sealed class Startup : StartupBase
         services.AddSingleton<IBackgroundTask, AuditTrailBackgroundTask>();
 
         services.AddPermissionProvider<Permissions>();
-        services.AddNavigationProvider<AuditTrailAdminMenu>();
 
 
         services.AddDisplayDriver<AuditTrailIndexOptions, AuditTrailOptionsDisplayDriver>();
@@ -82,7 +81,7 @@ public sealed class Startup : StartupBase
 
         // The Crest audit pages and their API (docs/audit.md › step 4).
         services.AddScoped<Api.AuditTrailFeedService>();
-        services.AddScoped<Crest.Access.IRoutePermissionProvider, Api.AuditTrailRoutePermissionProvider>();
+        services.AddPageSource<Navigation.AuditTrailPages>();
 
         services.Configure<AuditTrailAdminListOptions>(options =>
         {

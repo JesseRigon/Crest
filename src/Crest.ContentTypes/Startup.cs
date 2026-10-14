@@ -43,7 +43,6 @@ public sealed class Startup : StartupBase
             options.DefaultCategory = configSection.GetValue<string>("DefaultCategory");
         });
         services.AddPermissionProvider<Permissions>();
-        services.AddNavigationProvider<AdminMenu>();
         services.AddScoped<IContentDefinitionService, ContentDefinitionService>();
         services.AddScoped<IStereotypeService, StereotypeService>();
         services.AddScoped<IContentDefinitionDisplayHandler, ContentDefinitionDisplayCoordinator>();
@@ -56,6 +55,29 @@ public sealed class Startup : StartupBase
         services.AddRecipeExecutionStep<DeleteContentDefinitionStep>();
 
         services.AddTransient<IRecipeEventHandler, LuceneRecipeEventHandler>();
+
+        // The definitions APIs (docs/MVC/api.md § Placement): types, parts, content groups, field
+        // visibility and definition locks.
+        services.AddApiContributor<Api.ContentDefinitionsApi>();
+        services.AddApiContributor<Api.ContentTypesEditorApi>();
+        services.AddApiContributor<Api.ContentGroupsApi>();
+        services.AddApiContributor<Api.FieldVisibilityApi>();
+    }
+}
+
+/// <summary>
+/// Definition locks (docs/content-items.md › Definition locks). Last of all startups so the
+/// decorators wrap whatever the content-types services registered; a locked change answers 409.
+/// </summary>
+public sealed class DefinitionLocksStartup : StartupBase
+{
+    public override int Order => int.MaxValue;
+
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddPermissionProvider<ContentDefinitionPermissions>();
+        services.AddDefinitionLocks();
+        services.AddApiExceptionMapper<DefinitionLockedExceptionMapper>();
     }
 }
 

@@ -25,7 +25,7 @@ public sealed class TemplateValidator(TemplateTreeEvaluator evaluator, IComponen
             return [new(string.Empty, "invalid", "A template needs the shape or composite name it binds.")];
         }
 
-        if (!evaluator.TryParse(source ?? string.Empty, out _, out var error))
+        if (!evaluator.TryParseTemplate(source ?? string.Empty, out _, out var error))
         {
             return [new(name, "parse", error ?? "The template does not parse.")];
         }

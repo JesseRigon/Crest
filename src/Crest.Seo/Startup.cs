@@ -38,7 +38,7 @@ public sealed class Startup : StartupBase
 
         services.AddPermissionProvider<SeoPermissionProvider>();
         services.AddSiteDisplayDriver<RobotsSettingsDisplayDriver>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddPageSource<AdminPages>();
         services.AddTransient<IRobotsProvider, SiteSettingsRobotsProvider>();
     }
 

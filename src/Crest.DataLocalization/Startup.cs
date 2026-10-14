@@ -27,6 +27,8 @@ public class Startup : StartupBase
 
         services.AddScoped<TranslationsManager>();
         services.AddScoped<ITranslationsManager>(sp => sp.GetRequiredService<TranslationsManager>());
+        services.AddScoped<Crest.Localization.IClientStringOverrides, ClientStringOverrides>();
+        services.AddApiContributor<Api.TranslationsApi>();
         services.AddScoped<Crest.AdminMenu.IAdminMenuEventHandler, AdminMenuTranslationCleanup>();
         services.AddScoped<Crest.ContentTypes.Events.IContentDefinitionEventHandler, ContentTypeTranslationCleanup>();
         services.AddRecipeExecutionStep<TranslationsStep>();
@@ -35,7 +37,6 @@ public class Startup : StartupBase
         services.AddDeployment<AllDataTranslationsDeploymentSource, AllDataTranslationsDeploymentStep, AllDataTranslationsDeploymentStepDriver>();
 
         services.AddScoped<IPermissionProvider, Permissions>();
-        services.AddScoped<INavigationProvider, AdminMenu>();
 
         services.AddDataLocalization();
         services.AddSingleton<IDataTranslationProvider, DataTranslationProvider>();

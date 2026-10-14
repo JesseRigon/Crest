@@ -64,7 +64,7 @@ public sealed class ClientStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddNavigationProvider<ClientAdminMenu>();
+        services.AddPageSource<ClientPages>();
         services.AddScoped<IJSLocalizer, OpenIdJSLocalizer>();
 
         services.TryAddSingleton<IOpenIdClientService, OpenIdClientService>();
@@ -91,7 +91,6 @@ public sealed class ServerStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddNavigationProvider<ServerAdminMenu>();
 
         services.AddOpenIddict()
             .AddServer(options =>
@@ -224,7 +223,6 @@ public sealed class ValidationStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddNavigationProvider<ValidationAdminMenu>();
 
         // Used to attach RFC 9457 Problem Details bodies to the challenge responses produced
         // by the OpenIddict validation handler, honoring app-level ProblemDetails customizations.
@@ -275,7 +273,6 @@ public sealed class ManagementStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddNavigationProvider<ManagementAdminMenu>();
     }
 }
 

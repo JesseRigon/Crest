@@ -20,34 +20,15 @@ using AdminMenu = Crest.AdminMenu.Models.AdminMenu;
 public sealed class AdminMenusController(
     IAuthorizationService authorizationService,
     IAdminMenuService adminMenuService,
-    INavigationManager navigationManager,
+    AdminMenuBuilder adminMenuBuilder,
+    Crest.Routing.IPageRegistry pageRegistry,
     AdminMenuLayoutService layoutService,
     Crest.DataLocalization.Services.ITranslationsManager translationsManager,
-    ProviderMenuSyncCoordinator providerMenuSync,
-    ProviderMenuSyncService providerMenuSyncService,
     MenuPlacementService menuPlacementService,
     PrimaryNavMenuSettingsStore primaryNavMenuSettingsStore,
     AdminSettingsNormalizer adminSettingsNormalizer,
     IconController iconController) : ControllerBase
 {
-    // Re-runs the provider-menu import on demand. The import normally runs once per shell on
-    // first use; this exposes it for the case where a tenant needs it re-checked without waiting
-    // for a shell release, and reports what actually changed.
-    [HttpPost("sync-providers")]
-    public async Task<ActionResult<ProviderMenuSyncResult>> SyncProvidersAsync()
-    {
-        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
-        {
-            return Forbid();
-        }
-
-        // reseedMissingTranslations: an admin invoking the sync by hand is asking for
-        // restoration - missing PO-seeded translations are refilled even if seeded before,
-        // which is also the recovery path for seeds lost to the Translations editor's
-        // wholesale save. The automatic per-shell pass never refills a deleted one.
-        return Ok(await providerMenuSyncService.SyncAsync(ControllerContext, reseedMissingTranslations: true));
-    }
-
     [HttpGet]
     public async Task<ActionResult<AdminMenusState>> ListAsync()
     {
@@ -56,10 +37,14 @@ public sealed class AdminMenusController(
             return Forbid();
         }
 
+        // The sidebar is the page registry's tree plus the tenant's edits (the Primary
+        // Navigation); admin menu documents remain for the other placements only.
         var list = await adminMenuService.GetAdminMenuListAsync();
         var defaultMenu = await GetDefaultMenuSummaryAsync();
         var placements = await menuPlacementService.GetAllAsync();
-        return Ok(new AdminMenusState([defaultMenu, .. list.AdminMenu.Select(menu => WithPlacement(AdminMenuSummary.From(menu), placements))]));
+        return Ok(new AdminMenusState([defaultMenu, .. list.AdminMenu
+            .Where(menu => placements.TryGetValue(menu.Id, out var entry) && entry.Placement != MenuPlacement.Admin)
+            .Select(menu => WithPlacement(AdminMenuSummary.From(menu), placements))]));
     }
 
     [HttpGet("{menuId}")]
@@ -100,72 +85,20 @@ public sealed class AdminMenusController(
             return BadRequest("Menu name is required.");
         }
 
-        // Crest's own admin-menu coordinator unconditionally injects every enabled
-        // custom menu into the "admin" sidebar tree — it has no concept of placement. Menus
-        // that aren't Admin-placed stay Enabled=false here forever so that coordinator never
-        // picks them up; MenuPlacementEntry.Enabled is the "real" visible/hidden flag
-        // for those, independent of this one.
+        // The sidebar takes custom items and links in the Primary Navigation itself, not
+        // further admin menu documents. A document's own Enabled flag stays false: the
+        // placement entry's Enabled is the visible/hidden flag.
         var placement = model.Placement;
-        var menu = new AdminMenu { Name = name, Enabled = placement == MenuPlacement.Admin && model.Enabled };
-        await adminMenuService.SaveAsync(menu);
-
-        if (placement != MenuPlacement.Admin)
+        if (placement == MenuPlacement.Admin)
         {
-            await menuPlacementService.SetAsync(menu.Id, placement, model.Enabled);
+            return BadRequest("Add custom items and links to the Primary Navigation instead.");
         }
+
+        var menu = new AdminMenu { Name = name, Enabled = false };
+        await adminMenuService.SaveAsync(menu);
+        await menuPlacementService.SetAsync(menu.Id, placement, model.Enabled);
 
         return Ok(WithPlacement(AdminMenuSummary.From(menu), placement, model.Enabled));
-    }
-
-    [HttpPost("{menuId}/convert")]
-    public async Task<ActionResult<AdminMenuSummary>> ConvertMenuAsync(string menuId, ConvertMenuModel model)
-    {
-        if (!await authorizationService.AuthorizeAsync(User, Crest.AdminMenu.AdminMenuPermissions.ManageAdminMenu))
-        {
-            return Forbid();
-        }
-
-        if (menuId == AdminMenuLayoutService.DefaultMenuId)
-        {
-            return BadRequest("The Sidebar (Built In) menu cannot be converted.");
-        }
-
-        if (model.Placement == MenuPlacement.User)
-        {
-            return BadRequest("Menus cannot be converted to a User Profile Menu — create a new one instead.");
-        }
-
-        var list = await adminMenuService.GetAdminMenuListAsync();
-        var menu = adminMenuService.GetAdminMenuById(list, menuId);
-        if (menu is null)
-        {
-            return NotFound();
-        }
-
-        var currentEntry = await menuPlacementService.GetAsync(menuId);
-        if (currentEntry.Placement == MenuPlacement.User)
-        {
-            return BadRequest("A User Profile Menu cannot be converted to another type.");
-        }
-
-        if (currentEntry.Placement == model.Placement)
-        {
-            return Ok(WithPlacement(AdminMenuSummary.From(menu), currentEntry));
-        }
-
-        var enabled = currentEntry.Enabled;
-        if (model.Placement == MenuPlacement.Admin)
-        {
-            menu.Enabled = enabled;
-            await adminMenuService.SaveAsync(menu);
-            await menuPlacementService.RemoveAsync(menuId);
-            return Ok(WithPlacement(AdminMenuSummary.From(menu), MenuPlacement.Admin, enabled));
-        }
-
-        menu.Enabled = false;
-        await adminMenuService.SaveAsync(menu);
-        await menuPlacementService.SetAsync(menuId, model.Placement, enabled);
-        return Ok(WithPlacement(AdminMenuSummary.From(menu), model.Placement, enabled));
     }
 
     [HttpPost("{menuId}/rename")]
@@ -225,15 +158,8 @@ public sealed class AdminMenusController(
         }
 
         var entry = await menuPlacementService.GetAsync(menuId);
-        if (entry.Placement == MenuPlacement.Admin)
-        {
-            menu.Enabled = !menu.Enabled;
-            await adminMenuService.SaveAsync(menu);
-            return Ok(WithPlacement(AdminMenuSummary.From(menu), entry));
-        }
 
-        // AdminMenu.Enabled stays false for non-Admin placements (see CreateMenuAsync) —
-        // the placement entry's own Enabled is the real visible/hidden flag here.
+        // AdminMenu.Enabled stays false (see CreateMenuAsync) — the placement entry's own Enabled is the real visible/hidden flag here.
         var enabled = !entry.Enabled;
         await menuPlacementService.SetAsync(menuId, entry.Placement, enabled);
         return Ok(WithPlacement(AdminMenuSummary.From(menu), entry.Placement, enabled));
@@ -271,11 +197,9 @@ public sealed class AdminMenusController(
             copy.MenuItems.Add(CloneNode(node, copy.Name));
         }
 
+        copy.Enabled = false;
         await adminMenuService.SaveAsync(copy);
-        if (sourceEntry.Placement != MenuPlacement.Admin)
-        {
-            await menuPlacementService.SetAsync(copy.Id, sourceEntry.Placement, sourceEntry.Enabled);
-        }
+        await menuPlacementService.SetAsync(copy.Id, sourceEntry.Placement, sourceEntry.Enabled);
 
         return Ok(WithPlacement(AdminMenuSummary.From(copy), sourceEntry));
     }
@@ -554,21 +478,18 @@ public sealed class AdminMenusController(
             return BadRequest("A rename can only be promoted while viewing a specific culture.");
         }
 
-        // Resolved from the owning admin menu rather than from the generated primary navigation.
-        // Not every admin menu feeds that navigation, so looking the node up there would make
-        // promotion unreachable for menus that don't - and the node's own menu is where both
-        // pieces this needs actually live:
-        //   * the caption Crest looks the translation up by, and
-        //   * the menu name that scopes the IDataLocalizer context (see TheAdmin's
-        //     NavigationItemText.cshtml, which keys on the item's own MenuName).
-        var owner = await FindNodeAsync(nodeId);
+        // A Primary Navigation item is a page registry entry: its invariant caption under the
+        // menu's translation context. An item of another admin menu document is resolved from
+        // its owning menu, whose name scopes the IDataLocalizer context (TheAdmin's
+        // NavigationItemText.cshtml keys on the item's own MenuName).
+        var owner = menuId == AdminMenuLayoutService.DefaultMenuId
+            ? await FindEntryAsync(nodeId)
+            : await FindNodeAsync(nodeId);
         if (owner is null)
         {
-            // Provider-contributed items have no owning AdminMenu, so there is no DB-backed
-            // caption for IDataLocalizer to translate. Their captions come from the provider's
-            // own S["..."] resource and are translated through PO files instead, which a tenant
-            // admin cannot edit from here.
-            return BadRequest("Only items from an admin menu can be promoted; this caption comes from a module's own resources.");
+            // A custom item's text is the tenant's own; a generated item (New › content type)
+            // translates under its data's context.
+            return BadRequest("Only declared menu items can be promoted; this caption is the tenant's own or comes from data.");
         }
 
         var (menuName, sourceText) = owner.Value;
@@ -811,19 +732,20 @@ public sealed class AdminMenusController(
         }
     }
 
+    // The menu name and invariant caption of a declared Primary Navigation entry.
+    private async Task<(string MenuName, string? SourceText)?> FindEntryAsync(string entryId)
+    {
+        var entry = (await pageRegistry.GetAsync(HttpContext.RequestAborted)).Find(Crest.Routing.ShellId.Admin, entryId);
+        return entry?.Menu is { CaptionIsData: false } menu
+            ? (AdminMenuBuilder.TranslationMenuName, menu.Caption)
+            : null;
+    }
+
+    // The page registry's default tree for this caller, before the tenant's edits.
     private async Task<NavigationMenu> BuildDefaultNavigationMenuAsync()
     {
         await adminSettingsNormalizer.EnsureNewMenuEnabledAsync();
-        // Once per shell, before the menu is read, so provider items exist as admin menu nodes.
-        // Both the provider item and its imported node contribute to the same "admin" menu;
-        // NavigationManager.Merge folds each pair into one item, and because the imported node
-        // carries Priority+1, Merge's authority rule hands the survivor the node's values -
-        // including its UniqueId as the item's Id.
-        await providerMenuSync.EnsureSyncedAsync(ControllerContext);
-        var items = await navigationManager.BuildMenuAsync("admin", ControllerContext);
-        return new NavigationMenu("admin", items.OrderBy(item => item.Position, NavigationPositionComparer.Instance)
-            .Select(NavigationItem.From)
-            .ToArray());
+        return await adminMenuBuilder.BuildDefaultAsync(ControllerContext);
     }
 
     private async Task<AdminMenu?> LoadMenuForUpdateAsync(string menuId)

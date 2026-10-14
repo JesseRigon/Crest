@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Crest.Access.Abstractions\Crest.Access.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Access\Crest.Access.csproj" />
+    <ProjectReference Include="..\Crest.Server.Abstractions\Crest.Server.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Admin.Abstractions\Crest.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Deployment.Abstractions\Crest.Deployment.Abstractions.csproj" />

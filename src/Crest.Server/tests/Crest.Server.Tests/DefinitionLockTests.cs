@@ -1,3 +1,4 @@
+using Crest.ContentTypes;
 using Crest.Services;
 using Crest.Settings;
 using NSubstitute;

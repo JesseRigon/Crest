@@ -20,7 +20,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\common\Crest.Workflows.Api.Common\Crest.Workflows.Api.Common.csproj" />
         <ProjectReference Include="..\Crest.Workflows.Caching\Crest.Workflows.Caching.csproj" />
         <ProjectReference Include="..\Crest.Workflows.Core\Crest.Workflows.Core.csproj" />
     </ItemGroup>

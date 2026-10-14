@@ -40,6 +40,11 @@ public sealed class Startup : StartupBase
         services.AddScoped<IRouteAuthorization, RouteAuthorizationService>();
         services.AddScoped<IAccessAuditor, AccessAuditor>();
         services.AddScoped<IPermissionVersion, PermissionVersionService>();
+        services.AddScoped<IPermissionInvalidator, PermissionInvalidator>();
+        services.AddScoped<Crest.Security.IRoleUpdatedEventHandler, RolePermissionInvalidationHandler>();
+        services.AddApiContributor<PermissionHubApi>();
+        services.AddApiContributor<Api.AccessModelApi>();
+        services.AddApiContributor<Api.AntiforgeryApi>();
 
         // The permission model's store (docs/permissions.md): groups, overrides, the organization
         // defaults, the projection the caller is built from, and the assignable-roles ceiling.

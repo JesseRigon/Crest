@@ -474,9 +474,9 @@ drafts, the setting for instances on inaccessible pages, and the designer UI.
   renders its own error page.
 - **Two kinds of contribution, kept distinct.** Filling an *open zone* puts a component into a
   region (a layer placement into `Footer`, a module's panel into a page region). Contributing to
-  a *model* puts an item into data a component renders (a menu item through
-  `INavigationProvider`, which the `Menu` component then renders). The admin menu and the site
-  navigation are both: a model built by providers, rendered by a `Menu` component, placed in an
+  a *model* puts an item into data a component renders (an admin menu item through the page
+  registry, a site menu item through `INavigationProvider`, which the `Menu` component then
+  renders). The admin menu and the site navigation are both: a model built by sources, rendered by a `Menu` component, placed in an
   open zone of the layout. `Menu`/`MenuItem` (`Crest.Components/Interaction/LinkMenu.cs`) render
   the menu module's items, resolved in the processing phase.
 - **Layer rules.** A layer rule (all blog posts, signed-in users) places a component instance
@@ -867,9 +867,9 @@ Built: the `DesignedPage` content type (`DesignedPagePart`: name, route pattern,
 meta description, anonymous access, Liquid source) in the Templates module, read through
 `DesignedPageStore` (the published set cached and re-read on publish). Its tree is the shipped
 template `DesignedPage__{Name}` (`DesignedPageTemplates`), evaluated with the route's values as
-`Model.Route`. `IDataRouteComponentTableProvider` adds data-defined entries to the route table per
-request after the scanned pages; `DesignedPageRouteComponentTableProvider` registers the site
-bucket's pages on the site's content route component, and `SitePageBuilder` answers a matching
+`Model.Route`. `DesignedPageSource` (a dynamic page registry source) adds them to the route table
+per request after the declared pages, registering the site bucket's pages on the site's content
+route component, and `SitePageBuilder` answers a matching
 path ahead of Autoroute, inside the site layout. `api/crest/pages` (list, get, save draft,
 publish, delete, preview a draft at a path) validates the name, the bucket, the route (pattern and
 uniqueness in the bucket) and the tree; the `DesignedPages` recipe step creates and publishes
@@ -1066,7 +1066,7 @@ removed per page as its Blazor replacement exists, not all at once.
      wherever possible rather than duplicated. The inventories are
      [MVC/views.md](MVC/views.md) › The inventory (views) and
      [MVC/shape-engine.md](MVC/shape-engine.md) › Component coverage (shape templates). Liquid
-     templates are not part of the audit.
+     templates are not part of the audit. Tracker: [MVC/parity.md](MVC/parity.md).
    - ☐ **The Liquid templates updated to display trees and optionalities.** Liquid templates
      remain; each one emits a display tree through the template tags (§ 5) and reads its data
      through bindings and slots (§ 4a, decision 4) instead of rendering HTML from shapes.

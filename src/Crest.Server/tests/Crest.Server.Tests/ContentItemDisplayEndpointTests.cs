@@ -1,7 +1,7 @@
 using Crest.Access;
 using Crest.ContentManagement;
 using Crest.ContentManagement.Display;
-using Crest.Controllers;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Crest.DisplayManagement;
 using Crest.DisplayManagement.Components;
 using Crest.DisplayManagement.ModelBinding;
@@ -46,7 +46,7 @@ public sealed class ContentItemDisplayEndpointTests
 
         var result = await DisplayAsync();
 
-        var tree = Assert.IsType<DisplayTree>(Assert.IsType<OkObjectResult>(result.Result).Value);
+        var tree = Assert.IsType<DisplayTree>(Assert.IsAssignableFrom<IValueHttpResult>(result).Value);
         Assert.Equal("root", tree.Root.Id);
         await _displayManager.Received(1).BuildDisplayAsync(_item, Arg.Any<IUpdateModel>(), "Detail", Arg.Any<string>());
     }
@@ -58,7 +58,7 @@ public sealed class ContentItemDisplayEndpointTests
 
         var result = await DisplayAsync();
 
-        Assert.IsType<ForbidResult>(result.Result);
+        Assert.IsType<ForbidHttpResult>(result);
         await _displayManager.DidNotReceiveWithAnyArgs().BuildDisplayAsync(default!, default!, default!, default!);
         await _trees.DidNotReceiveWithAnyArgs().BuildAsync(default(IShape)!, default, TestContext.Current.CancellationToken);
     }
@@ -68,7 +68,7 @@ public sealed class ContentItemDisplayEndpointTests
     {
         Decide("ViewContent", new AccessDecision(AccessVerdict.NotFound));
 
-        Assert.IsType<NotFoundResult>((await DisplayAsync()).Result);
+        Assert.IsType<NotFound>(await DisplayAsync());
     }
 
     [Fact]
@@ -76,14 +76,14 @@ public sealed class ContentItemDisplayEndpointTests
     {
         _callers.Current.Returns((CallerContext?)null);
 
-        Assert.IsType<ForbidResult>((await DisplayAsync()).Result);
+        Assert.IsType<ForbidHttpResult>(await DisplayAsync());
         await _decision.DidNotReceiveWithAnyArgs().DecideAsync(default!, default!, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
     public async Task ReturnsNotFoundForAMissingItem()
     {
-        Assert.IsType<NotFoundResult>((await DisplayAsync("missing")).Result);
+        Assert.IsType<NotFound>(await DisplayAsync("missing"));
     }
 
     [Fact]
@@ -94,11 +94,11 @@ public sealed class ContentItemDisplayEndpointTests
         Decide("ViewContent", AccessDecision.Allowed);
         Decide("EditContent", AccessDecision.Denied("no"));
 
-        Assert.IsType<NotFoundResult>((await DisplayAsync("draft")).Result);
+        Assert.IsType<NotFound>(await DisplayAsync("draft"));
 
         Decide("EditContent", AccessDecision.Allowed);
 
-        Assert.IsType<OkObjectResult>((await DisplayAsync("draft")).Result);
+        Assert.IsAssignableFrom<IValueHttpResult>(await DisplayAsync("draft"));
     }
 
     [Fact]
@@ -106,29 +106,25 @@ public sealed class ContentItemDisplayEndpointTests
     {
         Decide("ViewContent", AccessDecision.Allowed);
 
-        Assert.IsType<BadRequestResult>((await DisplayAsync(displayType: "Detail__<x>")).Result);
+        Assert.IsType<BadRequest>(await DisplayAsync(displayType: "Detail__<x>"));
     }
 
     private void Decide(string permission, AccessDecision verdict) =>
         _decision.DecideAsync(_caller, permission, Arg.Any<object?>(), Arg.Any<CancellationToken>()).Returns(verdict);
 
-    private Task<ActionResult<DisplayTree>> DisplayAsync(string contentItemId = ItemId, string? displayType = null)
+    private Task<IResult> DisplayAsync(string contentItemId = ItemId, string? displayType = null)
     {
         // Only the collaborators the display action uses; the others are not touched by it.
-        var controller = new ContentItemsController(null!, null!, _contentManager, null!, null!, null!, _callers, null!)
-        {
-            ControllerContext = new ControllerContext
-            {
-                // A published item's tree is versioned (decision 12), which reads the version service.
-                HttpContext = new DefaultHttpContext { RequestServices = new ServiceCollection().AddSingleton<DisplayTreeVersions>().BuildServiceProvider() },
-            },
-        };
+        var handlers = new Crest.Contents.Api.ContentItemsHandlers(null!, null!, _contentManager, null!, null!, null!, _callers, null!);
+
+        // A published item's tree is versioned (decision 12), which reads the version service.
+        handlers.BindTo(new DefaultHttpContext { RequestServices = new ServiceCollection().AddSingleton<DisplayTreeVersions>().BuildServiceProvider() });
 
         // The node filter passes the tree through: its own tests cover what it leaves out.
         var filter = Substitute.For<IDisplayTreeFilter>();
         filter.FilterAsync(Arg.Any<DisplayNode>(), Arg.Any<Crest.Access.CallerContext?>(), Arg.Any<CancellationToken>())
             .Returns(call => call.Arg<DisplayNode>());
 
-        return controller.DisplayAsync(contentItemId, _decision, _displayManager, _trees, filter, Substitute.For<IDisplayHtmlRenderer>(), _updaters, displayType);
+        return handlers.DisplayAsync(contentItemId, _decision, _displayManager, _trees, filter, Substitute.For<IDisplayHtmlRenderer>(), _updaters, displayType);
     }
 }

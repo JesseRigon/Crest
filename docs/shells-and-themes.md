@@ -73,7 +73,7 @@ built the same way: the theme client is the router's own assembly, and module li
 of that shell reach it through the app's per-folder glob and are loaded with the shell.
 An errant public link can therefore never render an admin or member page inside the
 site, and the reverse holds for each shell. That one attribute is read everywhere the bucket
-matters - the server's route-table providers, the endpoint bucket stamping, the lazy-module
+matters - the page registry's scan, the endpoint bucket stamping, the lazy-module
 generator and each shell's router - so they cannot disagree.
 
 ### The shell runtime is eager; module UIs load per shell
@@ -187,6 +187,19 @@ layer); `RoutingOptions` keeps it and composes the admin, login and member paths
 client and in the server-side factory alike, and `ClientWebAssemblyHost.ShellOf` reads the
 shell from the path after the tenant base. Each shell keeps its own login.
 
+**Every address of a tenant is a tenant setting, and nothing composes a URL from a constant.**
+A tenant is reached on its own hosts (`ShellSettings.RequestUrlHosts`, one or many custom
+domains or subdomains) and/or its own URL prefix (`RequestUrlPrefix`); within it, the admin
+path, the login path and the member prefix are the tenant's `RoutingOptions`. So the same
+literal path means different pages on different tenants, and two tenants need not share a path
+at all. Every URL the platform composes starts from the current request (scheme, host, the
+tenant base recorded before the shell-base shift, `BlazorHosting.TenantBasePathItem`): the
+server-side loopback client, the WASM client's API and hub bases, the shell selector, the
+login redirects. Absolute URLs that leave the request (email links, OAuth callbacks, remote
+deployment targets) are built from the tenant's own host settings, never the host's. A page's
+shell is still chosen within the tenant by path prefix; a shell on its own hostname is an open
+question below.
+
 A disabled module is absent for that tenant. `IEnabledModuleAssemblies` (`Crest.Routing`,
 cached for the shell's lifetime) maps each `*.BlazorWasm` to its module by the longest module id
 (`ModuleClientAssemblies`) and keeps those whose module has an enabled feature; a library of a
@@ -197,12 +210,12 @@ gets the list with the routing options (`api/crest/routing` › `EnabledModules`
 the rest of that response, since the site shell needs it too) and `LazyModules.Restrict` loads
 only those.
 
-**Target: the page registry.** Today a page is described by the scanned route table, the
-hand-written route permission providers and the admin menu's navigation providers. In the
-target each page declares its route, shell, permission and menu placement once in Crest.Server's
-page registry, and the route table, the route gate and the admin menu all derive from that entry
-([architecture.md › One page registry](architecture.md#one-page-registry)). The shell
-machinery in this document (buckets, selection, the gate per side) is unchanged by it.
+**The page registry.** Each page declares its routes, shell, permissions and menu placement
+once in Crest.Server's page registry; the route table (`IRouteComponentTableManager`, a view over
+`IPageRegistry`), the route gate and the admin menu all derive from that entry
+([admin-menu.md › The page registry](admin-menu.md#the-page-registry)). The registry's scan reads
+each client assembly's bucket with `ShellAssemblies`, so the table and the endpoint stamping
+agree on where a page belongs.
 
 ### Auth-cookie pages render `InteractiveWebAssembly`
 
@@ -539,7 +552,7 @@ mechanism.
   decision 8), a separate plan after the display system. The theme registry and the selection
   UI are reworked so the admin, site and member themes change only by the selections inside
   them, without losing anything of this document's shell injection model.
-- [ ] **The page registry** (above): route table, route gate and admin menu derived from one
+- [x] **The page registry** (above): route table, route gate and admin menu derived from one
   entry per page.
 
 ## Later

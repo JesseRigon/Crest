@@ -44,31 +44,6 @@ public class NavigationHelperTests
     #endregion
 
     // -----------------------------------------------------------------------
-    // UseLegacyFormat
-    // -----------------------------------------------------------------------
-
-    [Fact]
-    public void UseLegacyFormat_WhenSwitchDisabled_ReturnsFalse()
-    {
-        AppContext.SetSwitch(NavigationConstants.LegacyAdminMenuNavigationSwitchKey, false);
-        Assert.False(NavigationHelper.UseLegacyFormat());
-    }
-
-    [Fact]
-    public void UseLegacyFormat_WhenSwitchEnabled_ReturnsTrue()
-    {
-        AppContext.SetSwitch(NavigationConstants.LegacyAdminMenuNavigationSwitchKey, true);
-        try
-        {
-            Assert.True(NavigationHelper.UseLegacyFormat());
-        }
-        finally
-        {
-            AppContext.SetSwitch(NavigationConstants.LegacyAdminMenuNavigationSwitchKey, false);
-        }
-    }
-
-    // -----------------------------------------------------------------------
     // CountPathSegments
     // -----------------------------------------------------------------------
 

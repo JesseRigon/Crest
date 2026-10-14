@@ -39,12 +39,15 @@ public sealed class Startup : StartupBase
 
     public override void ConfigureServices(IServiceCollection services)
     {
+        services.AddScoped<TitleBarSettingsStore>();
+        services.AddApiContributor<Api.AdminSettingsApi>();
+        services.AddApiContributor<Api.TitleBarSettingsApi>();
+        services.AddApiContributor<Api.ThemeSettingsApi>();
         services.AddNavigation();
 
         services.Configure<MvcOptions>((options) =>
         {
             options.Filters.Add<AdminFilter>();
-            options.Filters.Add<AdminMenuFilter>();
 
             // Ordered to be called before any global filter.
             options.Filters.Add<AdminZoneFilter>(-1000);
@@ -56,7 +59,6 @@ public sealed class Startup : StartupBase
         services.AddScoped<IAdminThemeService, AdminThemeService>();
         services.AddSiteDisplayDriver<AdminSiteSettingsDisplayDriver>();
         services.AddPermissionProvider<PermissionsAdminSettings>();
-        services.AddNavigationProvider<AdminMenu>();
         services.AddSingleton<IPageRouteModelProvider, AdminPageRouteModelProvider>();
         services.AddDisplayDriver<Navbar, VisitSiteNavbarDisplayDriver>();
         services.AddShapeTableProvider<AdminDashboardShapeTableProvider>();

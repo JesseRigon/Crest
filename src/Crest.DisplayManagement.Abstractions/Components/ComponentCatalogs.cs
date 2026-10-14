@@ -82,9 +82,13 @@ public static class ComponentCatalogs
             }
 
             var anonymous = type.GetCustomAttributes(inherit: false).Any(attribute => attribute.GetType().FullName == "Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute");
+            var entries = type.GetCustomAttributes<PageEntryAttribute>(inherit: false).ToArray();
             foreach (var route in type.GetCustomAttributes<Microsoft.AspNetCore.Components.RouteAttribute>(inherit: false))
             {
-                yield return new PageDescriptor(type, route.Template, anonymous);
+                // The declaration naming this route, else the one that names none.
+                var entry = entries.FirstOrDefault(candidate => string.Equals(candidate.Route, route.Template, StringComparison.OrdinalIgnoreCase))
+                    ?? entries.FirstOrDefault(candidate => candidate.Route is null);
+                yield return new PageDescriptor(type, route.Template, anonymous, entry);
             }
         }
     }

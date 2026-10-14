@@ -13,7 +13,6 @@ public sealed class Startup : StartupBase
         services
             .AddScoped<BackgroundTaskManager>()
             .AddPermissionProvider<Permissions>()
-            .AddNavigationProvider<AdminMenu>()
             .AddScoped<IBackgroundTaskSettingsProvider, BackgroundTaskSettingsProvider>();
     }
 }

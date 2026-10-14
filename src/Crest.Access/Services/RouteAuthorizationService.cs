@@ -1,41 +1,68 @@
+using Crest.Routing;
+
 namespace Crest.Access.Services;
 
 /// <summary>
-/// The page gate over every module's <see cref="IRoutePermissionProvider"/>: the one decision
-/// for each route's permission, for the request's caller. A batch projection for the client's
-/// navigation and the shell selector's check before a page renders; the services behind a page
-/// stay the authority for every data operation.
+/// The page gate over the page registry: each admin route admits a caller holding any one of the
+/// permissions its entry declares, decided by the one decision for the request's caller. A batch
+/// projection for the client's navigation, the shell selector's check before a page renders and
+/// the admin menu's check per item; the services behind a page stay the authority for every data
+/// operation.
 /// </summary>
-public sealed class RouteAuthorizationService(IAccessDecision decision, IEnumerable<IRoutePermissionProvider> providers) : IRouteAuthorization
+public sealed class RouteAuthorizationService(IAccessDecision decision, IPageRegistry registry) : IRouteAuthorization
 {
     public async Task<RouteAccess[]> GetAuthorizedRoutesAsync(CallerContext? caller, CancellationToken cancellationToken = default)
     {
-        var granted = new List<RouteAccess>();
         if (caller is null)
         {
             return [];
         }
 
-        foreach (var route in GetRoutes())
+        var pages = await registry.GetAsync(cancellationToken);
+        var granted = new List<RouteAccess>();
+        var decided = new Dictionary<PageEntry, bool>(ReferenceEqualityComparer.Instance);
+        foreach (var (entry, template) in pages.Routes(ShellId.Admin))
         {
-            if ((await decision.DecideAsync(caller, route.Permission, null, cancellationToken)).IsAllowed)
+            if (!decided.TryGetValue(entry, out var allowed))
             {
-                granted.Add(new RouteAccess(route.Template));
+                decided[entry] = allowed = await AllowsAnyAsync(caller, entry.Permissions, cancellationToken);
+            }
+
+            if (allowed)
+            {
+                granted.Add(new RouteAccess(template));
             }
         }
 
-        return granted.ToArray();
+        return [.. granted];
     }
 
     public async Task<bool> CanAccessAsync(CallerContext? caller, string? path, CancellationToken cancellationToken = default)
     {
-        var route = GetRoutes().FirstOrDefault(candidate => RouteTemplates.Matches(candidate.Template, path));
-        return route is not null && caller is not null && (await decision.DecideAsync(caller, route.Permission, null, cancellationToken)).IsAllowed;
+        if (caller is null)
+        {
+            return false;
+        }
+
+        var entry = (await registry.GetAsync(cancellationToken)).MatchRoute(ShellId.Admin, path);
+        return entry is not null && await AllowsAnyAsync(caller, entry.Permissions, cancellationToken);
     }
 
-    private RoutePermission[] GetRoutes() => providers
-        .SelectMany(provider => provider.GetRoutes())
-        .GroupBy(route => route.Template, StringComparer.OrdinalIgnoreCase)
-        .Select(group => group.First())
-        .ToArray();
+    public async Task<bool> AllowsAnyAsync(CallerContext? caller, IReadOnlyList<string> permissions, CancellationToken cancellationToken = default)
+    {
+        if (caller is null)
+        {
+            return false;
+        }
+
+        foreach (var permission in permissions)
+        {
+            if ((await decision.DecideAsync(caller, permission, null, cancellationToken)).IsAllowed)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

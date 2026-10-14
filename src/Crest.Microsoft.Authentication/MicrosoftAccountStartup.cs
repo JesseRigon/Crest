@@ -26,7 +26,7 @@ public sealed class MicrosoftAccountStartup : StartupBase
 
         services.AddSingleton<IMicrosoftAccountService, MicrosoftAccountService>();
         services.AddSiteDisplayDriver<MicrosoftAccountSettingsDisplayDriver>();
-        services.AddNavigationProvider<AdminMenuMicrosoftAccount>();
+        services.AddPageSource<MicrosoftAccountPages>();
 
         services.AddRecipeExecutionStep<MicrosoftAccountSettingsStep>();
 

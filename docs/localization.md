@@ -243,19 +243,17 @@ or **Crest-authored** (private lane only).
 Admin menu captions are **tenant data**, resolved per request culture at serialization
 time by `MenuCaptionResolver` through the layered hierarchy **store edit → PO
 translation → invariant literal** (within the store: exact menu context → parent
-contexts → best entry in the culture; within PO: `*.AdminMenu` contexts preferred, then
-most-common), with provider-item translations seeded from the PO catalogs at import and
-edited in the Crest translations page (`/Admin/DataLocalization`). Deleting a stored
+contexts → best entry in the culture; within PO: the declaring type's context, then
+`*.AdminMenu` contexts, then most-common), edited in the Crest translations page
+(`/Admin/DataLocalization`). Deleting a stored
 entry reverts to the next layer down. `docs/localization.mmd` is the full resolution
 chain as a diagram — rename overlay, store steps, PO tiers, literal — kept current with
-the resolver. `docs/admin-menu.md` documents the whole system — the provider-menu
-import, item identity, seeding, the PO layer, the translations editor, and per-culture
-renames.
+the resolver. `docs/admin-menu.md` documents the whole system — the page registry,
+item identity, the PO layer, the translations editor, and per-culture renames.
 
 Admin-menu override persistence (hidden/reordered/renamed/re-iconed state) keys items by
-`AdminNode.UniqueId` (which the node navigation builders copy onto `MenuItem.Id`), with
-the invariant `Text.Name` literal as the fallback for items no node backs — never by the
-resolved display text, which varies per culture. Renames are recorded per culture; see
+their page registry entry id — never by the resolved display text, which varies per
+culture. Renames are recorded per culture; see
 `docs/admin-menu.md`'s "Renames are per culture".
 
 The user profile dropdown menu is built from native, admin-editable `AdminMenu`

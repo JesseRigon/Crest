@@ -57,7 +57,10 @@ public sealed class Startup : StartupBase
         services.AddPermissionProvider<DesignedPagePermissions>();
 
         services.AddPermissionProvider<Permissions>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddApiContributor<Api.TemplatesApi>();
+        services.AddApiContributor<Api.ComponentOverridesApi>();
+        services.AddApiContributor<Api.DesignedPagesApi>();
+        services.AddApiContributor<Api.ComponentsApi>();
         services.AddPermissionProvider<AdminTemplatesPermissions>();
         services.AddRecipeExecutionStep<TemplateStep>();
         services.AddRecipeExecutionStep<DesignedPageStep>();

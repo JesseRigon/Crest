@@ -495,26 +495,6 @@ public class HttpEndpoint : Trigger<HttpRequest>
             .ToArray();
     }
 
-    private static RouteData GetRouteData(HttpContext httpContext, string path)
-    {
-        var routeData = httpContext.GetRouteData();
-        var routeTable = httpContext.RequestServices.GetRequiredService<IRouteTable>();
-        var routeMatcher = httpContext.RequestServices.GetRequiredService<IRouteMatcher>();
-
-        var matchingRouteQuery =
-            from route in routeTable
-            let routeValues = routeMatcher.Match(route.Route, path)
-            where routeValues != null
-            select new { route, routeValues };
-
-        var matchingRoute = matchingRouteQuery.FirstOrDefault();
-
-        if (matchingRoute == null)
-            return routeData;
-
-        foreach (var (key, value) in matchingRoute.routeValues!)
-            routeData.Values[key] = value;
-
-        return routeData;
-    }
+    // The host routed the request to this workflow's route, so the matched values are the request's.
+    private static RouteData GetRouteData(HttpContext httpContext, string path) => httpContext.GetRouteData();
 }

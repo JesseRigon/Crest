@@ -65,24 +65,24 @@ public sealed class Startup : StartupBase
         services.AddTransient<Microsoft.AspNetCore.Hosting.IStartupFilter, ShellSelectionStartupFilter>();
         services.AddSignalR();
         services.AddScoped<IRequestAccess, RequestAccess>();
-        services.AddScoped<SiteIdentity>();
-        services.AddScoped<Crest.Access.IRoutePermissionProvider, RoutePermissionProvider>();
-        services.AddScoped<LoginService>();
-        services.AddScoped<IPermissionInvalidator, PermissionInvalidator>();
+        // The API endpoint registry (docs/MVC/api.md › The seam): the declared layer is mapped in
+        // ConfigureAsync, the defined layer is this tenant's own dynamic data source.
+        services.AddSingleton<Crest.Api.DefinedApiEndpointDataSource>();
+        services.AddSingleton<Crest.Api.IDefinedApiInvalidator>(sp => sp.GetRequiredService<Crest.Api.DefinedApiEndpointDataSource>());
+        services.AddSingleton<Crest.Api.ApiEndpointRegistry>();
+        services.AddApiContributor<Crest.Api.DisplayApi>();
+        services.Configure<Microsoft.AspNetCore.Mvc.MvcOptions>(options => options.Filters.Add<Crest.Api.ApiExceptionMvcFilter>());
+        services.AddSingleton<Crest.Api.IApiEndpointRegistry>(sp => sp.GetRequiredService<Crest.Api.ApiEndpointRegistry>());
+        services.AddHealthChecks().AddCheck<Crest.Api.ApiRegistryHealthCheck>(Crest.Api.ApiRegistryHealthCheck.Name);
+        services.AddTransient<IConfigureOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>, Crest.Api.ApiJsonOptionsConfiguration>();
+        services.AddApiValidation();
         services.AddScoped<IAdminMenuLayoutInvalidator, AdminMenuLayoutInvalidator>();
-        services.AddScoped<IRoleUpdatedEventHandler, RolePermissionInvalidationHandler>();
         services.AddScoped<IThemeSelector, LegacyFrameThemeSelector>();
         services.AddScoped<AdminMenuLayoutService>();
         services.AddScoped<UserMenuPreferencesService>();
         services.AddScoped<AdminMenuBuilder>();
-        // Shell-lifetime, so the provider-menu import runs once per shell. A feature change
-        // releases the shell, which is what makes the next shell re-import.
-        services.AddSingleton<ProviderMenuSyncGate>();
-        services.AddScoped<ProviderMenuSyncService>();
-        services.AddScoped<ProviderMenuSyncCoordinator>();
-        // Runs that import right after shell activation, before any admin request, so a fresh
-        // or reset tenant never renders its first admin menu from un-imported provider items.
-        services.AddScoped<IModularTenantEvents, ProviderMenuSyncTenantEvents>();
+        // The menu's captions in the Translations editor ("Admin Menus:Primary Navigation").
+        services.AddScoped<Crest.Localization.Data.ILocalizationDataProvider, PageMenuLocalizationDataProvider>();
         // Caption resolution for the sidebar and app manifest: walks parent and sibling
         // translation contexts, then the shipped PO catalogs, before falling back to the
         // invariant literal - see the resolver's remarks.
@@ -93,14 +93,10 @@ public sealed class Startup : StartupBase
         services.AddScoped<ProfileMenuService>();
         services.AddScoped<PrimaryNavMenuSettingsStore>();
         services.AddScoped<AdminSettingsNormalizer>();
-        services.AddScoped<TitleBarSettingsStore>();
-        services.AddNavigationProvider<CrestAdminMenu>();
-        services.AddNavigationProvider<ContentTypesMenuNavigationProvider>();
+        services.AddPageSource<AdminMenuGroups>();
+        services.AddDynamicPageSource<ContentTypePages>();
         // Content groups: module-declared sets of content sources (types, option
         // lists, ...) the admin groups by; tenant reshaping lives in a document.
-        services.AddScoped<Crest.ContentGroups.ContentGroupService>();
-        services.AddScoped<Crest.ContentGroups.IContentGroupEntryResolver, Crest.ContentGroups.ContentTypeGroupEntryResolver>();
-        services.AddNavigationProvider<Crest.ContentGroups.ContentGroupsMenuNavigationProvider>();
         services.AddScoped<IIconProvider, IconifyIconProvider>();
         services.AddScoped<IIconProviderSettingsStore, IconProviderSettingsStore>();
         services.AddSingleton<IIconifyLocalMirrorPathProvider, IconifyLocalMirrorPathProvider>();
@@ -130,23 +126,14 @@ public sealed class Startup : StartupBase
         services.AddSingleton<Crest.Routing.EnabledModuleAssembliesCache>();
         services.AddScoped<Crest.Routing.IEnabledModuleAssemblies, Crest.Routing.EnabledModuleAssemblies>();
 
-        // RouteComponentTable: a per-shell, per-active-(admin+site)-theme-pair registry
-        // mapping @page route patterns to their owning Blazor component Type, mirroring
-        // DefaultShapeTableManager/ShapeTable's own caching shape (a keyed singleton
-        // dictionary, no separate invalidation signal - the shell itself is torn down and
-        // rebuilt by Crest on feature/theme change). See
-        // Crest.Routing.DefaultRouteComponentTableManager and docs/blazor-web.md's "Route
-        // reachability" section for the full rationale. Each theme supplies its own
-        // IRouteComponentTableProvider; nobody hand-maintains a central route list.
-        services.AddSingleton(new System.Collections.Concurrent.ConcurrentDictionary<
-            (string? AdminThemeId, string? SiteThemeId), Task<Crest.Routing.RouteComponentTable>>());
+        // The page registry (docs/admin-menu.md › The page registry): every page's routes, shell,
+        // permissions and menu placement, declared once. The route table, the route gate and the
+        // admin menu are views over it. Its declared layer is cached for the shell's lifetime
+        // (a feature or theme change rebuilds the shell); designed pages are dynamic entries.
+        services.AddSingleton<Crest.Routing.PageRegistryCache>();
+        services.AddScoped<Crest.Routing.IPageRegistry, Crest.Routing.PageRegistry>();
         services.AddScoped<Crest.Routing.IRouteComponentTableManager, Crest.Routing.DefaultRouteComponentTableManager>();
-        services.AddScoped<Crest.Routing.IRouteComponentTableProvider, Crest.Routing.AdminRouteComponentTableProvider>();
-        services.AddScoped<Crest.Routing.IRouteComponentTableProvider, Crest.Routing.SiteRouteComponentTableProvider>();
-        services.AddScoped<Crest.Routing.IRouteComponentTableProvider, Crest.Routing.MemberRouteComponentTableProvider>();
-        services.AddScoped<Crest.Routing.IDataRouteComponentTableProvider, Crest.Routing.DesignedPageRouteComponentTableProvider>();
-        services.AddScoped<Crest.Themes.IMemberThemeService, Crest.Themes.MemberThemeService>();
-        services.AddScoped<Crest.Themes.IShellCompatibilityService, Crest.Themes.ShellCompatibilityService>();
+        services.AddScoped<Crest.Routing.IDynamicPageSource, Crest.Routing.DesignedPageSource>();
 
         // The gate itself - see Crest.Routing.RouteGateMatcherPolicy's own comments for
         // why this is a MatcherPolicy/IEndpointSelectorPolicy and not a
@@ -214,7 +201,13 @@ public sealed class Startup : StartupBase
         services.AddScoped(sp =>
         {
             var httpContext = sp.GetRequiredService<IHttpContextAccessor>().HttpContext!;
-            var baseAddress = new Uri($"{httpContext.Request.Scheme}://{httpContext.Request.Host}{httpContext.Request.PathBase}/");
+            // The tenant's base, not Request.PathBase: ShellSelectionMiddleware shifts the shell
+            // base ("/Login", "/Admin") into PathBase for endpoint routing, and the APIs live
+            // under the tenant base, so a relative "api/crest/..." must not resolve under the shell.
+            var tenantBase = httpContext.Items.TryGetValue(BlazorHosting.TenantBasePathItem, out var item) && item is string recorded
+                ? new PathString(recorded)
+                : httpContext.Request.PathBase;
+            var baseAddress = new Uri($"{httpContext.Request.Scheme}://{httpContext.Request.Host}{tenantBase.Value?.TrimEnd('/')}/");
             var handler = sp.GetRequiredService<ForwardedAuthHandler>();
             handler.BaseAddress = baseAddress;
             handler.InnerHandler = sp.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler("Crest.Server.Loopback.Primary");
@@ -346,7 +339,7 @@ public sealed class Startup : StartupBase
         // Parent id->key resolution behind cascading filters and field-visibility
         // conditions, and the clear-on-save enforcement for hidden fields.
         services.AddScoped<OptionParentValueResolver>();
-        services.AddScoped<FieldVisibilityEnforcer>();
+        services.AddScoped<Crest.ContentTypes.IFieldVisibilityEnforcer, FieldVisibilityEnforcer>();
 
         // Per-content-type index partitioning: modules register the high-volume types
         // that get their own table, and the catch-all partition skips them.
@@ -364,11 +357,13 @@ public sealed class Startup : StartupBase
         services.TryAddScoped<IJSRuntime, UnsupportedJSRuntime>();
     }
 
+    public override async ValueTask ConfigureAsync(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider) =>
+        await Crest.Api.ApiEndpointMapper.MapApiRegistryAsync(routes, serviceProvider);
+
     public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
     {
         app.UseCors(CrestWebCors);
 
-        routes.MapHub<PermissionHub>("/api/crest/permissions");
         routes.MapHub<AdminMenuLayoutHub>("/api/crest/admin-menu-layout");
 
         // Interactive islands only (wasm/Pages/BlazorCounter.razor today) - the
@@ -420,7 +415,7 @@ public sealed class Startup : StartupBase
             // Stamps Crest.Routing.ThemeOwnerMetadata onto each @page-attributed
             // component's own endpoint (not the root), keyed off the component's
             // declaring assembly - the same assembly-name check
-            // AdminRouteComponentTableProvider/SiteRouteComponentTableProvider use, so
+            // the page registry's scan uses (ShellAssemblies), so
             // there's one source of truth for "which bucket owns this assembly's
             // routes", never a second copy. ComponentTypeMetadata (added by Blazor's own
             // RazorComponentEndpointFactory before conventions run) is what makes this
@@ -436,7 +431,7 @@ public sealed class Startup : StartupBase
                 var componentType = endpointBuilder.Metadata
                     .OfType<Microsoft.AspNetCore.Components.Endpoints.ComponentTypeMetadata>()
                     .FirstOrDefault()?.Type;
-                // Must agree with the IRouteComponentTableProvider set exactly: the table
+                // Must agree with the page registry's scan exactly: the table
                 // decides whether a URL resolves, this metadata decides which shell the
                 // matched endpoint may win in. Both read the bucket from the component's
                 // assembly (ShellAssemblies), so they cannot disagree - a page in one
@@ -464,24 +459,6 @@ public sealed class TenantMediaIconsStartup : StartupBase
         services.AddScoped<IIconProvider, TenantMediaIconProvider>();
         services.AddScoped<IPermissionProvider, Permissions.IconPermissions>();
         services.AddScoped<IPermissionProvider, Permissions.ContentPartListPermissions>();
-    }
-}
-
-/// <summary>
-/// Definition locks (docs/content-items.md › Definition locks). Last of all startups so the
-/// decorators wrap whatever the content-types module registered; the guard and the 409
-/// filter are Crest's own.
-/// </summary>
-[Feature("Crest")]
-public sealed class DefinitionLocksStartup : StartupBase
-{
-    public override int Order => int.MaxValue;
-
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddScoped<IPermissionProvider, Permissions.ContentDefinitionPermissions>();
-        services.AddDefinitionLocks();
-        services.Configure<Microsoft.AspNetCore.Mvc.MvcOptions>(options => options.Filters.Add<Filters.DefinitionLockExceptionFilter>());
     }
 }
 

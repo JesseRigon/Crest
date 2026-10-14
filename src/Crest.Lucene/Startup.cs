@@ -40,7 +40,7 @@ public sealed class Startup : StartupBase
         services.TryAddSingleton<ILuceneIndexingState, LuceneIndexingState>();
         services.TryAddSingleton<LuceneAnalyzerManager>();
         services.TryAddScoped<ILuceneSearchQueryService, LuceneSearchQueryService>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddPageSource<AdminPages>();
         services.AddPermissionProvider<Permissions>();
 
         services.Configure<LuceneOptions>(o =>

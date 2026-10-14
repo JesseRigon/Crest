@@ -31,7 +31,7 @@ public sealed class GoogleAuthenticationStartup : StartupBase
         services.AddPermissionProvider<GoogleAuthenticationPermissionProvider>();
         services.AddSingleton<GoogleAuthenticationService, GoogleAuthenticationService>();
         services.AddSiteDisplayDriver<GoogleAuthenticationSettingsDisplayDriver>();
-        services.AddNavigationProvider<GoogleAuthenticationAdminMenu>();
+        services.AddPageSource<GoogleAuthenticationPages>();
 
         // Register the options initializers required by the Google Handler.
         // Crest-specific initializers:
@@ -54,7 +54,7 @@ public sealed class GoogleAnalyticsStartup : StartupBase
         services.AddSingleton<IGoogleAnalyticsService, GoogleAnalyticsService>();
 
         services.AddSiteDisplayDriver<GoogleAnalyticsSettingsDisplayDriver>();
-        services.AddNavigationProvider<GoogleAnalyticsAdminMenu>();
+        services.AddPageSource<GoogleAnalyticsPages>();
 
         services.Configure<MvcOptions>((options) =>
         {
@@ -71,7 +71,7 @@ public sealed class GoogleTagManagerStartup : StartupBase
         services.AddPermissionProvider<GoogleTagManagerPermissionProvider>();
         services.AddSingleton<IGoogleTagManagerService, GoogleTagManagerService>();
         services.AddSiteDisplayDriver<GoogleTagManagerSettingsDisplayDriver>();
-        services.AddNavigationProvider<GoogleTagManagerAdminMenu>();
+        services.AddPageSource<GoogleTagManagerPages>();
 
         services.Configure<MvcOptions>((options) =>
         {

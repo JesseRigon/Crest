@@ -1,9 +1,12 @@
+#nullable enable
+
 using System.Text.Json.Dynamic;
 using System.Text.Json.Nodes;
-using Crest.Settings;
 using Crest.ContentManagement;
 using Crest.ContentManagement.Metadata;
 using Crest.ContentManagement.Metadata.Models;
+
+using Crest.ContentTypes;
 
 namespace Crest.Services;
 
@@ -17,7 +20,7 @@ namespace Crest.Services;
 /// </summary>
 public sealed class FieldVisibilityEnforcer(
     IContentDefinitionManager contentDefinitionManager,
-    OptionParentValueResolver parentValues)
+    OptionParentValueResolver parentValues) : IFieldVisibilityEnforcer
 {
     public async Task ClearHiddenFieldsAsync(ContentItem item, CancellationToken cancellationToken = default)
     {

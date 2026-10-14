@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using Crest.Validation;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
@@ -44,13 +45,13 @@ public sealed record DeploymentJsonImport(string Json);
 public sealed record CrestRemoteInstance(string Id, string Name, string Url, string ClientName, bool HasApiKey);
 
 /// <summary>Writes a remote instance; an empty <c>ApiKey</c> on an update keeps the stored one.</summary>
-public sealed record RemoteInstanceWrite(string Name, string Url, string ClientName, string? ApiKey);
+public sealed record RemoteInstanceWrite([property: NotEmpty] string Name, [property: NotEmpty, AbsoluteUrl] string Url, [property: NotEmpty] string ClientName, string? ApiKey);
 
 /// <summary>A client allowed to send packages to this instance. The API key is write-only.</summary>
 public sealed record CrestRemoteClient(string Id, string ClientName);
 
 /// <summary>Writes a remote client; an empty <c>ApiKey</c> on an update keeps the stored one.</summary>
-public sealed record RemoteClientWrite(string ClientName, string? ApiKey);
+public sealed record RemoteClientWrite([property: NotEmpty] string ClientName, string? ApiKey);
 
 public interface IDebugSettingsApi
 {

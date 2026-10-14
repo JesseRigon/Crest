@@ -24,12 +24,15 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 
+using Crest.Admin.Api;
+using Crest.Features.Api;
+
 namespace Crest.ViewModels;
 
 public sealed record AppManifest(
     Tenant Tenant,
     Tenant[] Tenants,
-    SiteSettings Site,
+    Crest.Settings.Api.SiteSettingsModel Site,
     AdminSettingsDto AdminSettings,
     TitleBarSettingsDto TitleBarSettings,
     AdminDescriptor Admin,
@@ -47,7 +50,7 @@ public sealed record AppManifest(
 public sealed record CultureSelector(
     string? UserDefaultCulture,
     string TenantDefaultCulture,
-    // Rung 3 - see CrestLocalizationSettings.AdminDefaultCulture (LocalizationController.cs).
+    // Rung 3 - see CrestLocalizationSettings.AdminDefaultCulture (Crest.Localization).
     // Null means no admin-specific override is configured for this tenant.
     string? AdminDefaultCulture,
     CultureOption[] Cultures,
@@ -126,30 +129,3 @@ public sealed record Tenant(
 
 public sealed record AdminDescriptor(string BasePath);
 
-public sealed record AdminSettingsDto(
-    bool DisplayThemeToggler,
-    bool DisplayMenuFilter,
-    bool DisplayNewMenu,
-    bool DisplayTitlesInTopbar)
-{
-    public static AdminSettingsDto From(AdminSettings settings) => new(
-        settings.DisplayThemeToggler,
-        settings.DisplayMenuFilter,
-        settings.DisplayNewMenu,
-        settings.DisplayTitlesInTopbar);
-}
-
-public sealed record TitleBarSettingsDto(
-    bool DisplayCultureLabel,
-    string? TenantAvatarImageUrl,
-    string TenantAvatarShape,
-    string? TenantAvatarClipPath,
-    string? TenantAvatarBorderRadius)
-{
-    public static TitleBarSettingsDto From(TitleBarSettings settings) => new(
-        settings.DisplayCultureLabel,
-        settings.TenantAvatarImageUrl,
-        settings.TenantAvatarShape,
-        settings.TenantAvatarClipPath,
-        settings.TenantAvatarBorderRadius);
-}

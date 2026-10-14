@@ -24,6 +24,10 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
+        // The API registry's route groups are minimal endpoints (docs/MVC/api.md › Hosting); the
+        // endpoints explorer describes them to both document generators, tagged per contributor.
+        services.AddEndpointsApiExplorer();
+
         services.AddOpenApi(options =>
         {
             options.ShouldInclude = operation => operation.HttpMethod != null;
@@ -69,7 +73,7 @@ public sealed class Startup : StartupBase
         });
 
         services.AddPermissionProvider<Permissions>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddPageSource<AdminPages>();
         services.AddSiteDisplayDriver<OpenApiSettingsDisplayDriver>();
     }
 

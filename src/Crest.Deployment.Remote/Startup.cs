@@ -19,11 +19,12 @@ public sealed class Startup : StartupBase
         services.AddHttpClient();
         services.TryAddTransient<FileCreationService>();
 
-        services.AddNavigationProvider<AdminMenu>();
         services.AddScoped<RemoteInstanceService>();
         services.AddScoped<RemoteClientService>();
         services.AddScoped<IDeploymentTargetProvider, RemoteInstanceDeploymentTargetProvider>();
         services.AddPermissionProvider<Permissions>();
+        services.AddScoped<IRemoteDeploymentTargets, Remote.Api.RemoteInstanceTargets>();
+        services.AddApiContributor<Remote.Api.RemoteDeploymentApi>();
 
         // The remote deployment key as an Api credential: the gate authenticates it through
         // the forwarder; the import runs as the remote client's caller.

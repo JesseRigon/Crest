@@ -15,7 +15,7 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddApiContributor<Api.RecipesApi>();
         services.AddPermissionProvider<RecipesPermissionProvider>();
         services.AddRecipeExecutionStep<CommandStep>();
         services.AddRecipeExecutionStep<RecipesStep>();

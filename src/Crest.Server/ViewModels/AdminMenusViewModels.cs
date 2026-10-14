@@ -216,7 +216,6 @@ public sealed record AdminMenuNodeSummary(
 
 public sealed record AdminMenuEditModel(string? Name, bool Enabled, MenuPlacement Placement = MenuPlacement.Admin);
 
-public sealed record ConvertMenuModel(MenuPlacement Placement);
 
 public sealed record AdminMenuNodeEditModel(
     string Type,

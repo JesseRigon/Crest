@@ -37,7 +37,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 
 ## Registries (architecture.md › Modules declare, Crest.Server registers and serves)
 
-- ☐ **One page registry** (admin-menu.md › The page registry): each page declares its route,
+- ☑ **One page registry** (admin-menu.md › The page registry): each page declares its route,
   shell, permission and menu placement (parent path, caption, position, icon) once; the route
   table, the route gate and the admin menu's default tree derive from it. The per-module
   `IRoutePermissionProvider`s, the navigation providers for native pages and
@@ -47,14 +47,24 @@ Status: ☐ open, ◐ partial, ☑ done.
   per tenant and per user resolve through the access model, one permission for menu and gate.
   Legacy MVC pages are declared entries pointing at their legacy route until ported; dynamic
   items (New › *content type*) are a registry source.
-- ☐ **The dual-layer API registry** (MVC/api.md P5, P15): the declared layer from module code
-  through `IApiContributor`, built at shell build and following feature enablement; the defined
-  layer from data through a dynamic endpoint data source invalidated on publish. The workflow
-  engine's `HttpEndpoint` routes leave its private `IRouteTable` and become defined entries;
-  generated operation endpoints (P14) are defined entries too.
-- ☐ **APIs out of Crest.Server** into their declaring modules, registered through
-  `Crest.Server.Abstractions`; Crest.Server keeps only the hosting plumbing (server.md § 1,
-  MVC/api.md P1-P9).
+- ☐ **Page registry captions in PO extraction** (admin-menu.md › The page registry): captions
+  declared on `[PageEntry]` and in page sources are not extracted into PO catalogs.
+- ☑ **The dual-layer API registry** (MVC/api.md P5, P15): the declared layer from module code
+  through `IApiContributor`, mapped at shell build and following feature enablement; the defined
+  layer from `IDefinedApiSource`s through a per-tenant dynamic endpoint data source invalidated on
+  publish. The workflow engine's `HttpEndpoint` routes are defined entries (its private route
+  table is gone) and its management API a declared contributor; generated operation endpoints
+  (P14) join the defined layer.
+- ◐ **APIs out of Crest.Server** into their declaring modules as route groups, registered
+  through `Crest.Server.Abstractions`; Crest.Server keeps the hosting plumbing, the bootstrap,
+  routing and display endpoints (server.md § 1, MVC/api.md P1-P9). Left: the admin menu and
+  navigation (page registry), the option picker (S2), the icons (a server-side icons module).
+- ☑ **Minimal APIs, explicit binding, native validation** (MVC/api.md › Hosting, › Validation):
+  every route group's handler names its binding source, request DTOs carry Crest's validation
+  ruleset (`Crest.Validation`), the mapper leaves a contributor that cannot build out and reports
+  it, and the conformance test covers every shipped contributor.
+- ☐ **In-module controllers to route groups** (MVC/api.md P16): listed in the API registry from
+  their MVC endpoints; each converted in the change that next touches its area.
 
 ## Access (access.md, permissions.md)
 
@@ -74,7 +84,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ☑ Widget replacements (widgets.md): rich text, figure, forms, validation, search box, the per-item page body (`DisplayTreePart`), visibility rules, the captcha, `FacebookPlugin` and the media picker editor
 - ☑ Step 1 leftovers: route scanner reads the catalogs, page regions as zone keys, editor facet entries, primitives annotated (icon, markdown, layout hosts, colour and media editors; the form editors stay unregistered as a parallel set, reason in blazor-display.md)
 - ◐ Step 2 leftovers: tree cache (versioned and validated, see decision 12; the unfiltered cache is left); display events for bound nodes ☑
-- ☐ Razor → Blazor component parity audit: every Razor view, shape template and widget has a Blazor component equivalent, reusing `Crest.Components` (blazor-display.md step 7; MVC/views.md, MVC/shape-engine.md, widgets.md)
+- ☐ Razor → Blazor component parity audit: every Razor view, shape template and widget has a Blazor component equivalent, reusing `Crest.Components` (blazor-display.md step 7; MVC/views.md, MVC/shape-engine.md, widgets.md; tracker: [MVC/parity.md](MVC/parity.md))
 - ☐ The Liquid templates updated to display trees and optionalities (blazor-display.md step 7)
 - ◐ Step 7 remainder: content displays (fields with localized labels, title, bag, list with its pager, taxonomy, geo point) and editors (BagPart, user picker) on the tree; MVC Menu admin, audit content screen and Flows BuildEditor deleted; left: the ContentFields/Flows edit views (still rendered by the MVC Contents Create/Edit and the Demo module), LiquidPart (HTML by design), admin-only shapes (go with TheAdmin), the MVC screens (~1,250 Razor views)
 - ◐ Decision 6: zone keys as registry entries with a schema; single or multiple instances per page: keys, contributions, validation and the single-instance check built; left: priority reordering through overrides and a `Zone` component node (designer zone settings)
@@ -92,6 +102,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ☑ Step 4: queue partitioned by correlation id, idempotency keys (unit id + slot); the object version in the payload is not built (no raiser names one)
 - ◐ `ICrestAntiforgery`; the hook attachment page ☑ and webhook insight; per-process metrics. Left: `ICrestAntiforgery` (comes with the designer move, W6 open); webhook insight and per-process metrics (as audit feeds, which wait on run history in audit)
 
+- ☑ The engine's management API as minimal APIs with explicit binding (`EngineBody<T>`, `EngineApiPolicies`, the error contract's problem details); the request DTOs on the shared validation ruleset (`Validated<T>`); FastEndpoints, FluentValidation and `Crest.Workflows.Api.Common` removed from the engine (workflows.md › The engine API)
 - ☑ The View list (`Crest.Access.View`): the ceiling, the access API, the engine API instance operations decided per definition, the instance list narrowed (workflows.md › Ownership and permissions; access.md defect closed). Left: Studio's access editor (with the designer UI list)
 
 ## Audit (audit.md)
@@ -115,6 +126,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 
 ## Shells and themes (shells-and-themes.md)
 
+- ☐ Tenant-address conformance (shells-and-themes.md › The tenant base and enabled modules): a tenant on a URL prefix and a tenant on its own host, each with non-default admin, login and member paths, log in on each shell and reach `api/crest/*`, hubs and the login redirects at the tenant's own addresses; absolute links in email and OAuth callbacks carry the tenant's host
 - ☑ A disabled module is absent per tenant; theme clients and UIs load per shell
 - ☑ Member password-reset and external-login pages; side-checking login gate
 - ☑ Organization slugs in paths and an organization picker; one device-local tenant switcher; impersonation under one account

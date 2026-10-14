@@ -25,14 +25,13 @@ both:
 
 - **Pages** - which shell pages a caller may open (site, admin, member, the login shell). The
   request path decides it: the shell selector picks the side, the gate admits the request
-  (anonymous or not), and the **route permission table** (`IRoutePermissionProvider` →
-  Access's `IRouteAuthorization` for Blazor routes, `AdminFilter`/`AccessAdminPanel` for the
-  remaining MVC admin) names the permission each page takes. It also decides which menu
-  entries show. A page grants **no data**: it is a frame. In the target the permission is
-  declared once on the page's entry in Crest.Server's page registry, and the gate and the menu
-  both read it; per-tenant and per-user page permissions resolve through the access model
+  (anonymous or not), and the page's **page registry entry** (read by Access's
+  `IRouteAuthorization` for Blazor routes; `AdminFilter`/`AccessAdminPanel` for the remaining
+  MVC admin) names the permissions each page takes. The same entry decides which menu entries
+  show. A page grants **no data**: it is a frame. Per-tenant and per-user page permissions
+  resolve through the access model
   ([architecture.md › One page registry](architecture.md#one-page-registry)). Tests name the
-  page and its permission either way.
+  page and its permission.
 - **Data and workflows** - which objects a caller may read, change or run, on any surface (the
   page's API calls, GraphQL, queries, Liquid, workflow activities, exports). The one decision
   (`IAccessDecision`) with the resource, the caller's scope (`ScopeSet`) for every read, and

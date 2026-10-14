@@ -37,7 +37,7 @@ public sealed class Startup : StartupBase
         services.AddDisplayDriver<AuditTrailEvent, AuditTrailUserEventDisplayDriver>();
         services.AddIndexProvider<AuditTrailUserEventIndexProvider>();
         services.AddDataMigration<Migrations>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddPageSource<AdminPages>();
         services.AddScoped<Crest.Access.IResourcePermissionMapper, UserAuditTrailPermissionMapper>();
 
         services.AddSingleton<Redactor>(_ => NullRedactor.Instance);

@@ -378,8 +378,9 @@ Organizations; other modules register the role types they compose. Parties regis
 of its own, so All Parties is exercised by the checks of whichever module registers one.
 
 - **The registry is the only way a type reaches the Parties UI**: no page or menu entry is
-  hand-written per type. Parties gains nothing per type. When the page registry is built, the
-  party-type catalog is one of its dynamic sources ([architecture.md › One page registry](architecture.md#one-page-registry)).
+  hand-written per type. Parties gains nothing per type: the party-type catalog is a page
+  registry source (`PartiesPages`, a `KindPageSource`), giving each type its menu item and its
+  route gate ([architecture.md › One page registry](architecture.md#one-page-registry)).
 - **A type's dedicated page belongs to its kind**: tenant kinds use Parties'
   `/Parties/{key}`; a module may register a **global kind** (a catalogue that is global and
   read-only, with the tenant's own standing kept in a tenant-side record), whose descriptor

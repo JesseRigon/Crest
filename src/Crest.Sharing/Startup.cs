@@ -51,7 +51,5 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<SharingMigrations>();
 
         // The interface (phase 4): the menu entry and the pages' gates.
-        services.AddNavigationProvider<AdminMenu>();
-        services.AddScoped<IRoutePermissionProvider, SharingRoutePermissions>();
     }
 }

@@ -13,19 +13,12 @@ It is just the server: it keeps no domain API, no database connection (`Crest.Da
 later proxy in front of many Crest instances. Its name becomes Crest.Core after the MVC
 retirement ([MVC/api.md](MVC/api.md)).
 
-**Today** Crest.Server still hosts most of the tenant APIs, because it was built as an
-application layer over OrchardCore while OrchardCore could not be changed: each API wraps a
-platform module (`api/crest/roles` wraps Crest.Roles, and so on). Since the hard fork there is
-one tree, so each API moves to the module that declares the surface and registers through
-`Crest.Server.Abstractions`. The API plan, with its seam, waves and hosting, is
-[MVC/api.md](MVC/api.md) (siblings [MVC/views.md](MVC/views.md) and
-[MVC/shape-engine.md](MVC/shape-engine.md)); this document is the inventory of what moves and
-where.
-
-Moves are made by hand, one area at a time, each compile-checked; scripts list the
-dependency chain (who uses a type, what a file needs) and nothing else. The rule for a file:
-it goes where the surface it serves is declared. A controller, its view models and the helper
-services only it uses move together. Tests move with their subject.
+Each module's API is declared by the module and registered through `Crest.Server.Abstractions`
+(`IApiContributor`, [MVC/api.md › The seam](MVC/api.md#the-seam)); Crest.Server maps the
+contributors registered in the tenant into route groups and serves them. The API plan, with its
+seam, waves and hosting, is [MVC/api.md](MVC/api.md) (siblings [MVC/views.md](MVC/views.md) and
+[MVC/shape-engine.md](MVC/shape-engine.md)); this document is the inventory of what each module
+holds and of what is still in Crest.Server.
 
 ## Inventory and homes
 
@@ -34,43 +27,58 @@ Counts are source files. "Also used by" lists modules that reference the type to
 
 ### 1. APIs and services → the declaring module
 
-| Area (files) | Home | Notes |
-| --- | --- | --- |
-| AdminMenusController, AdminMenuLayoutExportController, AdminMenuLayoutService, AdminMenuLayoutInvalidation, AdminMenuBuilder, MenuCaptionResolver, MenuPlacementService, ProfileMenuService, ProviderMenuSync{Coordinator,Gate,Service,TenantEvents}, Recipes/AdminMenuLayoutStep, AdminMenusViewModels (15) | **Crest.AdminMenu** | The tenant layer of the admin menu. The provider sync retires with the page registry ([admin-menu.md](admin-menu.md) › The page registry). |
-| NavigationController, PrimaryNavMenuSettingsStore, Navigation/CrestAdminMenu (name kept: clashes with the per-module AdminMenu classes), NavigationViewModels (4) | **Crest.Navigation** | NavigationItem view model is also used by Parties. |
-| FeaturesController, FeaturesViewModels (2) | **Crest.Features** | Feature view model also used by Parties, Workflows, Money, Regions, Members. |
-| IconsController, IconProvidersController, TenantIconsController, IconController, IconProviderSettingsStore, IconSourceStore, IconPermissions, TenantMediaIconsStartup (8) | **Crest.Icons** | |
-| IconifyServerController, IconifyLocalMirrorPathProvider, IconifyCacheBackgroundTask (3) | **Crest.Iconify** | |
-| IndexesController, IndexesViewModels (2) | **Crest.Indexing** | |
-| LocalizationController, PoTranslationLookup, LocalizationViewModels (3) | **Crest.Localization** | |
-| TranslationsController, TranslationsViewModels (2) | **Crest.DataLocalization** | |
-| UsersController, LoginSettingsController, AuthController, LoginService, UserMenuPreferencesService, UserOptionSourceProvider, Users/LoginSettings/Auth view models (9) | **Crest.Users** (an Access module) | Sign-in, account, two-factor and login settings are Access's. LoginService is also used by Members; the login page plan ([branding.md](branding.md)) makes it a workflow action later. |
-| AccessModelController | **Crest.Access** | Permission sets, groups, overrides. |
-| MediaController, MediaOptionsController, MediaProfilesController, three view-model files (6) | **Crest.Media** | |
-| QueriesController, QueriesViewModels (2) | **Crest.Queries** | The query system ([queries.md](queries.md)) replaces this endpoint later; move as is. |
-| RecipesController, RecipesViewModels (2) | **Crest.Recipes** | |
-| RolesController, RolesViewModels (2) | **Crest.Roles** | |
-| SecurityHeadersController, SecurityHeadersViewModels (2) | **Crest.Security** | |
-| SiteController, SiteViewModels (2) | **Crest.Settings** | Site name and home route; branding joins it ([branding.md](branding.md)). |
-| AdminSettingsController, AdminSettingsNormalizer, TitleBarSettingsController, TitleBarSettingsStore, ThemeController, their view models (8) | **Crest.Admin** | Admin chrome preferences: title bar, theme choice, admin settings. |
-| StandardMenusController, StandardMenusViewModels (2) | **Crest.Menu** | |
-| TemplatesController, TemplatesViewModels (2) | **Crest.Templates** | |
-| TenantsController, TenantsViewModels (2) | **Crest.Tenants** | Tenant view model also used by ContentPartLists, Parties, Workflows, Regions. |
-| ThemesController, ThemesViewModels, ThemeContracts/{IShellContractProvider, MemberThemeService, ShellCompatibilityService, ThemeBuckets}, LegacyFrameThemeSelector, Themes/Crest.LegacyFrame (9) | **Crest.Themes** | Shell buckets and compatibility are theme concerns ([shells-and-themes.md](shells-and-themes.md)). |
-| ContentItemsController, ContentItemsViewModels (2) | **Crest.Contents** | ContentItem view model is used by five modules. |
-| ContentTypesController, ContentTypesViewModels, ContentGroups/* (5), FieldVisibilityController, FieldVisibilityEnforcer, FieldVisibilityRules, CrestFieldVisibilitySettings, DefinitionLockGuard, CrestDefinitionLockSettings, DefinitionLockExceptionFilter, LockedContentDefinitionServices, DefinitionLocksStartup, ContentDefinitionPermissions, ContentTypesMenuNavigationProvider, CrestContentTypeMenuSettings (19) | **Crest.ContentTypes** | Definition locks, field visibility and content groups all act on type definitions. ContentType and ContentPart view models are used by five modules. |
-| ContentPartListPermissions (1) | **Crest.ContentPartLists** | The permission is parked in Crest.Server. |
+Every area below is a route group (minimal API, `Api/*Api.cs`) in its module, registered from
+the module's startup; its models moved with it (`<Module>.Api` namespaces). Routes are unchanged.
+Handlers name their binding sources and request DTOs carry the validation ruleset
+([MVC/api.md › Hosting](MVC/api.md#hosting), [› Validation](MVC/api.md#validation)).
 
-Likewise `DebugSettingsController` → **Crest.Settings** (it owns `DebugSettings`) and the rest of
-[MVC/api.md](MVC/api.md)'s Crest.Server rows; that table is the complete list.
+| Area | Module | Contributor(s) |
+| --- | --- | --- |
+| Roles list | **Crest.Roles** | `RolesApi` |
+| Recipes | **Crest.Recipes** | `RecipesApi` |
+| Saved queries, the SQL runner | **Crest.Queries** | `QueriesApi` |
+| Templates, overrides, designed pages, the components list | **Crest.Templates** | `TemplatesApi`, `ComponentOverridesApi`, `DesignedPagesApi`, `ComponentsApi` |
+| Tenants (`api/crest/tenants`) | **Crest.Tenants** | `TenantsApi` |
+| Security headers | **Crest.Security** | `SecurityHeadersApi` |
+| Standard menus | **Crest.Menu** | `StandardMenusApi` |
+| Media folders and files, options, profiles, the media hub | **Crest.Media** | `MediaFilesApi`, `MediaOptionsApi`, `MediaProfilesApi`, `MediaHubApi` |
+| Indexes | **Crest.Indexing** | `IndexesApi` |
+| Site settings, home route, the anonymous branding read, branding renditions, debugging; `SiteIdentity` | **Crest.Settings** | `SiteSettingsApi`, `BrandingSettingsApi`, `DebugSettingsApi` |
+| Admin settings, title bar (`TitleBarSettingsStore`), the admin theme preference | **Crest.Admin** | `AdminSettingsApi`, `TitleBarSettingsApi`, `ThemeSettingsApi` |
+| Deployment plans, steps, import, export | **Crest.Deployment** | `DeploymentApi` (the remote targets through `IRemoteDeploymentTargets`) |
+| Sending a plan to a remote instance, remote instances and clients | **Crest.Deployment.Remote** | `RemoteDeploymentApi` |
+| Custom settings | **Crest.CustomSettings** | `CustomSettingsApi` |
+| Users, sign-in (`LoginService`), login settings, the user's own culture | **Crest.Users** (an Access module) | `UsersApi`, `AuthApi`, `LoginSettingsApi`, `UserCultureApi` |
+| The access model, the antiforgery token, the permissions hub (`IPermissionInvalidator`) | **Crest.Access** | `AccessModelApi`, `AntiforgeryApi`, `PermissionHubApi` |
+| Content definitions: types, parts, content groups, field visibility, definition locks | **Crest.ContentTypes** | `ContentDefinitionsApi`, `ContentTypesEditorApi`, `ContentGroupsApi`, `FieldVisibilityApi` |
+| Content items; the content groups' services and pages | **Crest.Contents** | `ContentItemsApi` |
+| Themes and the shell contracts (`ShellContracts/`) | **Crest.Themes** | `ThemesApi` |
+| Features | **Crest.Features** | `FeaturesApi` |
+| Localization settings, the admin client's strings, `PoTranslationLookup` | **Crest.Localization** | `LocalizationApi` (stored edits through `IClientStringOverrides`) |
+| Translations | **Crest.DataLocalization** | `TranslationsApi` |
+
+Still in Crest.Server, each for a stated reason:
+
+- **Icons** (`IconsController`, `IconProvidersController`, `TenantIconsController`,
+  `IconifyServerController`, their stores, the `Crest.Icons` features): an exception to fix
+  later with a small server-side icons module. `Crest.Icons` and `Crest.Iconify` are libraries in
+  the WebAssembly client's closure, so neither can host a server module.
+- **The option picker's API** (`OptionSourcesController`, `OptionPickerAttachmentsController`)
+  waits for its home (§ 3, S2), and `FieldVisibilityEnforcer` with it: it reads the option
+  picker's parent values. Crest.ContentTypes declares `IFieldVisibilityEnforcer`; the host
+  implements it.
+- **The admin menu and navigation** (`AdminMenusController`, `AdminMenuLayoutExportController`,
+  `NavigationController`, the menu services): the page registry's work
+  ([admin-menu.md](admin-menu.md) › The page registry).
+- `ContentPartListPermissions` belongs in **Crest.ContentPartLists**.
 
 ### 2. Access → Crest.Access
 
-ShellSelectionMiddleware (the gate), RouteGateMatcherPolicy, PermissionInvalidation,
-RequestAccess's decision side (7). The route permission table is already in Access
-(`IRoutePermissionProvider`, `IRouteAuthorization`). This is the "one gate" step in
-[access.md](access.md) › The system; the move and that step are the same work. `IRequestAccess`, the
-helper every API uses, goes to Crest.Server.Abstractions.
+ShellSelectionMiddleware (the gate) and RouteGateMatcherPolicy. The page gate is already in
+Access (`IRouteAuthorization`, over the page registry's entries), and so is permission
+invalidation (`IPermissionInvalidator` in Crest.Access.Abstractions, the hub in Crest.Access).
+This is the "one gate" step in [access.md](access.md) › The system; the move and that step are
+the same work. `IRequestAccess`, the helper every API uses, is in Crest.Server.Abstractions.
 
 ### 3. The option picker field family (23): home open
 
@@ -100,31 +108,32 @@ provider and tests are deleted. Organization ownership on the row is **Crest.Par
 Components/App.razor and imports, Endpoints/BlazorFrameworkScriptEndpoints,
 Extensions/BlazorHosting, Routing/* (the route-component table, scanners, providers,
 member options, theme owner metadata), the component shape-binding resolver, the display
-endpoints and builders (Display/: the site page, the editor tree, the response status),
-RoutingController, AppController and AppViewModels (the bootstrap aggregate), ServerApiClient,
-UnsupportedJSRuntime, ShellAssemblies, DesignSystemStartup, Manifest and Startup (about 35),
-plus the API hosting plumbing [MVC/api.md](MVC/api.md) § Placement lists. This is the Blazor
-host that [blazor-display.md](blazor-display.md) describes. `AntiforgeryController` goes to
-Access.
+builders (Display/: the site page, the editor tree, the response status) and their endpoints
+(`Api/DisplayApi.cs`: `site/page`, `pages/{id}/preview`, `content-items/{id}/editor`,
+`custom-settings/{type}/editor`), RoutingController, AppController and AppViewModels (the
+bootstrap aggregate), ServerApiClient, UnsupportedJSRuntime, ShellAssemblies,
+DesignSystemStartup, Manifest and Startup, plus the API hosting plumbing in `Api/`
+([MVC/api.md](MVC/api.md) § Placement). This is the Blazor host that
+[blazor-display.md](blazor-display.md) describes.
 
 ## Consequences
 
 - ContentPartLists, Workflows, Global, Money and Regions declare a dependency on the feature
-  `Crest` today; after the moves each declares the module it actually uses.
-- The six project references to Crest.Server become references to Crest.Server.Abstractions
-  and to the modules that now hold the types (mostly the content view models, the option
-  picker, the route permission provider, the login service).
-- Every moved API keeps its route; the API surface does not change in this work.
+  `Crest`; each declares the modules it actually uses as well (ContentPartLists:
+  `Crest.ContentTypes` for the definition lock guard).
+- The modules that register APIs reference Crest.Server.Abstractions. Members, Parties,
+  ContentPartLists, Workflows, Money and Regions still reference Crest.Server for the option
+  picker and the routing types; that reference becomes Crest.Server.Abstractions and the
+  modules holding the types once the option picker has its home.
+- Every moved API kept its route.
 - Each step: move, repoint references, compile all three solutions, regenerate the graph.
 
 ## Order
 
-Smallest and cleanest first, so the host shrinks visibly and the pattern is proven: Features,
-Roles, Recipes, Queries, Templates, Tenants, Security, Menu, Media, Indexing; then Users,
-Localization and DataLocalization, AdminMenu and Navigation, Settings and Admin, Themes,
-Contents and ContentTypes, ContentPartLists; then Access (with the one-gate step); the option
-picker once its home is chosen. [MVC/api.md](MVC/api.md) § Waves schedules the same moves
-against the seam.
+What is left in Crest.Server's API, in order: the admin menu and navigation (with the page
+registry), the option picker once its home is chosen (S2), the icons (a server-side icons
+module), then Access's gate (the one-gate step). [MVC/api.md](MVC/api.md) § Waves schedules the
+rest of the API work.
 
 ## Decisions
 

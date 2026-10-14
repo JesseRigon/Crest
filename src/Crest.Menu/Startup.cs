@@ -25,7 +25,7 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<Migrations>();
         services.AddShapeTableProvider<MenuShapes>();
         services.AddPermissionProvider<Permissions>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddApiContributor<Api.StandardMenusApi>();
         services.AddScoped<IJSLocalizer, MenuJSLocalizer>();
 
         services.AddScoped<IStereotypesProvider, MenuItemStereotypesProvider>();

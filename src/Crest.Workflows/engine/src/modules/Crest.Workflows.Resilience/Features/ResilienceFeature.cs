@@ -58,7 +58,6 @@ public class ResilienceFeature(IModule module) : FeatureBase(module)
 
     public override void Configure()
     {
-        Module.AddFastEndpointsAssembly<ResilienceFeature>();
 
         Services.Configure<ExpressionOptions>(options =>
         {

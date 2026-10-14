@@ -2,7 +2,7 @@
 
 Workstream (c) of the MVC retirement, done together with moving the APIs out of Crest.Server.
 This document is the tracker for every **API surface** in `src/`: attribute-routed
-controllers, minimal-API endpoints, the workflow engine's FastEndpoints, SignalR hubs and the
+controllers, minimal-API endpoints, the workflow engine's management API, SignalR hubs and the
 machine (protocol) endpoints, and for the MVC plumbing those surfaces still depend on. Siblings:
 
 - [views.md](views.md) (workstream a): every view surface to a Blazor page. Each port there is a
@@ -14,7 +14,8 @@ machine (protocol) endpoints, and for the MVC plumbing those surfaces still depe
 - [workflows.md › Operations](../workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery):
   steps 5-8 (move reads, move writes, generate surfaces, retire) are partly absorbed here.
 
-Status: planning. Nothing here is built unless marked ☑. Sizes: **S** (hours), **M** (a day),
+Status: the seam, the defined layer and the moves out of Crest.Server are built (☑ below);
+the in-module controllers are listed in the registry and converted later. Sizes: **S** (hours), **M** (a day),
 **L** (several days), **XL** (a subsystem). Every tracked item names an owner module, its
 dependencies, a size and a wave.
 
@@ -52,9 +53,10 @@ noted).
 
 | Kind | Count | Where |
 | --- | --- | --- |
-| Attribute-routed `ControllerBase` APIs | 92 classes, 486 actions | Crest.Server 47; 25 other modules 45 |
+| Attribute-routed `ControllerBase` APIs | 56 classes | Crest.Server 11 (admin menu and navigation, icons, option picker, the host's app and routing); 25 other modules 45 |
+| Route groups (`IApiContributor`) | 43 contributors | every API moved out of Crest.Server, the hubs, the engine's management API (§ The seam) |
 | Minimal-API endpoint files | 30 (28 routes + 2 file-serving) | Media 18, Contents 3, Users 2, Facebook 1, Liquid 1, Notifications 1, UrlRewriting 1, Media.Scanning 1, Media file serving 1, Crest.Server 1 |
-| FastEndpoints (vendored engine) | 72 endpoint classes | `Crest.Workflows.Api` 68, `.Resilience` 3, `.Expressions.JavaScript` 1, under `crest-workflows/api` |
+| Workflow engine management API (vendored engine) | 72 endpoints | minimal APIs under `crest-workflows/api`, declared by `WorkflowsManagementApi` ([workflows.md](../workflows.md)) |
 | SignalR hubs | 4 | Crest.Server 2 (permissions, admin-menu layout), Media 1, engine 1 (workflow instances) |
 | Middleware / protocol endpoints | 9 | GraphQL `/api/graphql`, OpenIddict `/connect/*`, health checks, robots.txt, media files and image processing, secure media, workflow engine security |
 | MVC `Controller` classes with machine (non-view) actions | 19 | feeds, sitemaps, remote deployment, XmlRpc, OpenId user info, pickers' search, culture picker, list ordering, export files |
@@ -101,53 +103,17 @@ managers), `access` (`IRequestAccess`, `IAccessDecision`, scope sets), `shells`,
 | Crest.ReCaptcha | `ReCaptchaApiController` | `api/crest/recaptcha` | 1 | services |
 | Crest.Regions | `AddressingMapsController` | `api/crest/regions/addressing-maps` | 4 | yessql |
 | Crest.Regions | `GeoImportController` | `api/crest/regions/geo/import` | 4 | yessql |
-| Crest.Server | `AccessModelController` | `api/crest` | 21 | identity, access |
 | Crest.Server | `AdminMenuLayoutExportController` | `api/crest/admin-menu-layout` | 1 | services |
 | Crest.Server | `AdminMenusController` | `api/crest/admin-menus` | 21 | services |
-| Crest.Server | `AdminSettingsController` | `api/crest/admin-settings` | 2 | site-settings |
-| Crest.Server | `AntiforgeryController` | `api/crest/antiforgery` | 1 | services |
 | Crest.Server | `AppController` | `api/crest/app` | 1 | site-settings, identity |
-| Crest.Server | `AuthController` | `api/crest/auth` | 3 | identity |
-| Crest.Server | `BrandingController` | `api/crest/site/branding-settings` | 3 | site-settings, access, file-store |
-| Crest.Server | `ComponentOverridesController` | `api/crest/templates/overrides` | 5 | services |
-| Crest.Server | `ComponentsController` | `api/crest/components` | 2 | services |
-| Crest.Server | `ContentDefinitionsController` | `api/crest/content-types` | 14 | definitions |
-| Crest.Server | `ContentGroupsController` | `api/crest/content-groups` | 8 | services |
-| Crest.Server | `ContentItemsController` | `api/crest/content-items` | 15 | content-manager, yessql, access |
-| Crest.Server | `ContentTypesController` | `api/crest/content-types` | 9 | definitions |
-| Crest.Server | `CustomSettingsController` | `api/crest/custom-settings` | 3 | content-manager, definitions, site-settings |
-| Crest.Server | `DebugSettingsController` | `api/crest/settings/debugging` | 2 | site-settings, access |
-| Crest.Server | `DeploymentController` | `api/crest/deployment` | 21 | yessql, access |
-| Crest.Server | `DesignedPagesController` | `api/crest/pages` | 7 | services |
-| Crest.Server | `FeaturesController` | `api/crest/features` | 3 | services |
-| Crest.Server | `FieldVisibilityController` | `api/crest/field-visibility` | 2 | definitions |
 | Crest.Server | `IconProvidersController` | `api/crest/icons/providers` | 3 | services |
 | Crest.Server | `IconifyServerController` | `api/crest/iconify` | 4 | services |
 | Crest.Server | `IconsController` | `api/crest/icons` | 1 | services |
-| Crest.Server | `IndexesController` | `api/crest/indexes` | 9 | access |
-| Crest.Server | `LocalizationController` | `api/crest/localization` | 5 | site-settings, identity |
-| Crest.Server | `LoginSettingsController` | `api/crest/settings/login` | 2 | site-settings |
-| Crest.Server | `MediaController` | `api/crest/media` | 4 | file-store |
-| Crest.Server | `MediaOptionsController` | `api/crest/media/options` | 1 | services |
-| Crest.Server | `MediaProfilesController` | `api/crest/media/profiles` | 3 | services |
 | Crest.Server | `NavigationController` | `api/crest/navigation` | 5 | access |
 | Crest.Server | `OptionPickerAttachmentsController` | `api/crest/option-picker/attachment` | 3 | definitions |
 | Crest.Server | `OptionSourcesController` | `api/crest/option-sources` | 6 | definitions |
-| Crest.Server | `QueriesController` | `api/crest/queries` | 6 | access, queries |
-| Crest.Server | `RecipesController` | `api/crest/recipes` | 2 | access |
-| Crest.Server | `RolesController` | `api/crest/roles` | 1 | identity |
 | Crest.Server | `RoutingController` | `api/crest/routing` | 1 | services |
-| Crest.Server | `SecurityHeadersController` | `api/crest/security-headers` | 2 | site-settings |
-| Crest.Server | `SiteController` | `api/crest/site` | 5 | site-settings |
-| Crest.Server | `StandardMenusController` | `api/crest/menus` | 11 | content-manager, definitions |
-| Crest.Server | `TemplatesController` | `api/crest/templates` | 8 | content-manager, access |
 | Crest.Server | `TenantIconsController` | `api/crest/icons/tenant` | 3 | services |
-| Crest.Server | `TenantsController` | `api/crest/tenants` | 11 | access, shells |
-| Crest.Server | `ThemeController` | `api/crest/theme` | 2 | site-settings |
-| Crest.Server | `ThemesController` | `api/crest/themes` | 6 | services |
-| Crest.Server | `TitleBarSettingsController` | `api/crest/title-bar-settings` | 2 | services |
-| Crest.Server | `TranslationsController` | `api/crest/translations` | 2 | documents |
-| Crest.Server | `UsersController` | `api/crest/users` | 12 | yessql, identity |
 | Crest.Sharing | `SharingController` | `api/sharing` | 12 | access |
 | Crest.Tenants | `TenantApiController` | `api/tenants` | 6 | shells |
 | Crest.Users | `AccountApiController` | `api/crest/account` | 9 | site-settings, identity |
@@ -163,7 +129,7 @@ managers), `access` (`IRequestAccess`, `IAccessDecision`, scope sets), `shells`,
 | Crest.Workflows | `WorkflowDefinitionAccess` | `api/crest/workflows/definitions` | 2 | content-manager, yessql, access, workflow-engine |
 | Crest.Workflows | `PendingController` | `api/crest/workflows/pending` | 1 | yessql, workflow-engine |
 
-Not in the table: the vendored engine's own MVC-free endpoints (FastEndpoints, below) and the
+Not in the table: the vendored engine's management API (below) and the
 designer.
 
 ### Minimal-API endpoints
@@ -180,25 +146,29 @@ designer.
 | Crest.Liquid | `Crest.Liquid/Scripts/liquid-intellisense.js` | a generated script for the editors |
 | Crest.Facebook | `/Crest.Facebook/sdk/*.js` | generated scripts |
 | Crest.Server (`Endpoints/BlazorFrameworkScriptEndpoints.cs`) | `/_framework/{fileName}` | the host's Blazor framework scripts |
+| Crest.Server (`Api/DisplayApi.cs`) | `api/crest/site/page`, `pages/{id}/preview`, `content-items/{id}/editor`, `custom-settings/{type}/editor` | the host's display endpoints, a route group |
 
-### Workflow engine (FastEndpoints)
+### Workflow engine
 
-72 endpoint classes in the vendored engine, mapped by `routes.MapWorkflowsApi()`
-(`Crest.Workflows/Server/Features/CoreStartup.cs:305`) under `crest-workflows/api`, behind the
-engine's `ApiSecurityMiddleware` (`Crest.Workflows/Server/Security/ApiSecurityMiddleware.cs:43`),
-which maps each endpoint to a Crest permission. FastEndpoints does not use MVC. They are the
-workflow management API: declared by Crest.Workflows and registered in the Server's API registry
-like any module's (P7), so the OpenAPI document and the gate see one list. The engine's
-`HttpEndpoint` activity routes are a different thing: workflow-defined endpoints, which become
-defined entries in the registry (P15).
+The vendored engine's management API under `crest-workflows/api` (73 operations), declared by
+the contributor `WorkflowsManagementApi` (`Crest.Workflows/Server/Api/WorkflowsManagementApi.cs`,
+P7) like every module's API: minimal-API handlers with explicit binding (a JSON body is an
+`EngineBody<T>`, the engine's one `BindAsync` source, deserialized through the engine's
+serializer), the error contract's problem details, and a policy per endpoint
+(`EngineApiPolicies`, the engine permission names) that the engine's `ApiSecurityMiddleware`
+(`Crest.Workflows/Server/Security/ApiSecurityMiddleware.cs`) grants per request from the
+caller's Crest permissions ([workflows.md › The engine API](../workflows.md)). The engine's
+`HttpEndpoint` activity routes are
+a different thing: workflow-defined endpoints, the defined entries of `WorkflowHttpEndpointSource`
+(P15).
 
 ### SignalR hubs
 
 | Hub | Route | Module |
 | --- | --- | --- |
-| `PermissionHub` | `/api/crest/permissions` | Crest.Server (`Services/PermissionInvalidation.cs`) |
+| `PermissionHub` | `/api/crest/permissions` | Crest.Access (`Services/PermissionInvalidation.cs`, `PermissionHubApi`) |
 | `AdminMenuLayoutHub` | `/api/crest/admin-menu-layout` | Crest.Server (`Services/AdminMenuLayoutInvalidation.cs`) |
-| `MediaHub` | `/hubs/media` | Crest.Media (`Hubs/MediaHub.cs`) |
+| `MediaHub` | `/hubs/media` | Crest.Media (`Hubs/MediaHub.cs`, `MediaHubApi`) |
 | `WorkflowInstanceHub` | engine real-time | vendored engine |
 
 Hubs need no MVC. The caller lifetime on hubs is already Crest.Access's
@@ -236,8 +206,8 @@ finds **nothing**. What lives there is data-engine work and stays: documents, mi
 global store, the value types, and the scope compilation
 (`Crest.Data.YesSql/Scoping/ScopeExpressions.cs`). The API pieces that live elsewhere today:
 
-- the request access helper `IRequestAccess` (`Crest.Server/Services/RequestAccess.cs`): moves
-  to Crest.Server.Abstractions so registering modules can use it;
+- the request access helper `IRequestAccess` (`Crest.Server.Abstractions/Api/RequestAccess.cs`),
+  which registering modules use;
 - `ProblemDetailsApiControllerExtensions` (`Crest.Abstractions`), `ApiProblemDetailsMiddleware`
   (`Crest.Infrastructure/ErrorHandling`), `DocumentSystemTextJsonOutputFormatter` and
   `MvcOptionsConfiguration` (`Crest.Infrastructure/Extensions`): API plumbing in the core
@@ -281,9 +251,10 @@ Applied to every surface:
    | Workflow management | `Crest.Workflows` |
    | Everything else (menus, icons, localization, templates, indexes, queries, ...) | the module it serves ([server.md](../server.md) § 1) |
 
-5. **Crest.Server.Abstractions** (new) holds what a registering module needs: the registration
-   interfaces, route conventions, `IRequestAccess`, the error contract types, and the common
-   DTOs modules reuse today from Crest.Server (until each folds into its declaring module).
+5. **Crest.Server.Abstractions** holds what a registering module needs: the registration
+   interfaces (`Api/`), route conventions, `IRequestAccess`, the error contract types, the
+   handler base (`ApiHandlers`), and the page registry's contracts (`Routing/`). Each moved
+   API's models moved with it into its module.
 6. **Not here:** database connections (Crest.Data, Crest.Data.YesSql) and search indexes
    (`Crest.Indexing` profiles, registered by their module like any other surface).
 
@@ -293,62 +264,83 @@ Owner is where the code ends up. Wave numbers are § Waves.
 
 | ☐ | Item | Today | Target | Owner | Deps | Size | Wave |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ☐ | P1. Crest.Server.Abstractions project | — | create: `IApiContributor` (registration), `ApiRouteGroups`, `IRequestAccess`, error contract, shared DTOs | Crest.Server.Abstractions | — | M | 1 |
-| ☐ | P2. The 47 Crest.Server controllers | Crest.Server, MVC-hosted | every area moves to its declaring module per § Placement and [server.md](../server.md) § 1, and registers through the seam: tenants, features, site settings, recipes and setup to their modules; content items to `Crest.Contents`; content types, groups, field visibility and definition locks to `Crest.ContentTypes`; `AccessModelController` to `Crest.Access`; users and roles to `Crest.Users` / `Crest.Roles`; `AuthController`, `LoginSettingsController` and `AntiforgeryController` to Access (P6); media to `Crest.Media` (P9); indexes to `Crest.Indexing`; debug settings to `Crest.Settings`; menus, icons, localization, templates, themes and the rest to their modules. Only `AppController` and `RoutingController` stay, as host endpoints | each declaring module | P1, P5 | L | 2-3 |
-| ☐ | P3. Platform-module APIs already in their modules | Email, Email.Smtp, AuditTrail (2), BackgroundTasks, Layers, Placements, Notifications portal, Media.Scanning settings, Users settings, ContentFields user picker, Contents audit, Tenants `api/tenants`, ReCaptcha, Sharing, OpenId admin + consent | stay in their modules and register through the seam under their feature gates; `api/tenants` merges with the tenants API Crest.Tenants takes over (P2) | each module | P1, P5 | M | 2 |
-| ☐ | P4. App-layer module APIs | Parties (6), Members (2), Regions (2), ContentPartLists (2), Workflows (10) | stay in the module and register through the seam; the module references Crest.Server.Abstractions instead of Crest.Server, and the shared models move from Crest.Server to Crest.Server.Abstractions (or to the module that declares them) | each module | P1, P5 | M | 3 |
-| ☐ | P5. The seam | — | § The seam: registration, gating, the API registry (declared layer) | Crest.Server, Crest.Server.Abstractions | P1 | M | 1 |
-| ☐ | P6. Access APIs | `api/crest/account` (Users), `api/crest/auth`, `api/crest/settings/login` and `api/crest/antiforgery` (Crest.Server), two-factor SendCode endpoints (Users), `EmailConfirmationController`, `AdminTwoFactorAuthenticationController` | declared by the Access modules: Crest.Users for account, sign-in, two-factor and login settings (`AuthController` and `LoginSettingsController` move out of Crest.Server into Crest.Users), the antiforgery token API to Crest.Access; registered through the seam; other modules register their access systems with Access | Crest.Users, Crest.Access | P5 | M | 3 |
-| ☐ | P7. The workflow engine's FastEndpoints | engine-hosted under `crest-workflows/api` | the workflow management API, declared by Crest.Workflows and registered as declared entries in the Server's API registry (OpenAPI, gate) | Crest.Workflows | P5 | S | 3 |
-| ☐ | P8. Hubs | Server 2, Media 1, engine 1 | each with its declaring module, registered through the seam: `PermissionHub` with permission invalidation (Access), `AdminMenuLayoutHub` with the admin-menu layout, `MediaHub` stays in Crest.Media, engine's stays | each module | P5 | S | 3 |
-| ☐ | P9. Media APIs | `api/files` (`FilesController`, 26 actions), `api/media/*` (17 minimal endpoints), `api/crest/media*` in Crest.Server | `api/files` stays in Crest.Media, `api/crest/media*` moves from Crest.Server into Crest.Media; registered through the seam; `api/media/*` dies with the MVC media library ([views.md](views.md)) once the native library and pickers use `api/files` | Crest.Media | P5, views.md | L | 3 |
+| ☑ | P1. Crest.Server.Abstractions project | — | `Api/`: `IApiContributor` / `ApiContributor`, `ApiRoutes`, `IRequestAccess`, `IApiExceptionMapper`, `ApiProblems` / `ApiResults`, `ApiHandlers`, `IDefinedApiSource`, `IDefinedApiInvalidator`, `IApiEndpointRegistry` | Crest.Server.Abstractions | — | M | 1 |
+| ◐ | P2. The 47 Crest.Server controllers | Crest.Server, MVC-hosted | moved to their declaring modules as route groups ([server.md](../server.md) § 1); the display actions are the host's display endpoints (`Api/DisplayApi.cs`); `AppController` and `RoutingController` stay as host endpoints. Left: the admin menu and navigation (page registry), the option picker (server.md S2), the icons (a server-side icons module) | each declaring module | P1, P5 | L | 2-3 |
+| ◐ | P3. Platform-module APIs already in their modules | Email, Email.Smtp, AuditTrail (2), BackgroundTasks, Layers, Placements, Notifications portal, Media.Scanning settings, Users settings, ContentFields user picker, Contents audit, Tenants `api/tenants`, ReCaptcha, Sharing, OpenId admin + consent | listed in the registry from their MVC action endpoints (`IApiEndpointRegistry.Controllers`) ☑; converted to route groups registered through the seam ☐ (P16); `api/tenants` merges with `TenantsApi` then | each module | P1, P5 | M | 2 |
+| ◐ | P4. App-layer module APIs | Parties (6), Members (2), Regions (2), ContentPartLists (2), Workflows (10), Fruitful's three | listed in the registry from their MVC endpoints ☑; converted ☐ (P16); the modules reference Crest.Server.Abstractions, and Crest.Server only for the option picker and routing types until those leave | each module | P1, P5 | M | 3 |
+| ☑ | P5. The seam | — | § The seam: `ApiEndpointMapper` maps the tenant's contributors into route groups; `ApiEndpointRegistry` lists them, the controllers and the defined entries | Crest.Server, Crest.Server.Abstractions | P1 | M | 1 |
+| ◐ | P6. Access APIs | `api/crest/account` (Users), two-factor SendCode endpoints (Users), `EmailConfirmationController`, `AdminTwoFactorAuthenticationController` | `AuthApi`, `LoginSettingsApi`, `UsersApi` (with `LoginService`) in Crest.Users, `AntiforgeryApi` and `AccessModelApi` in Crest.Access ☑; the in-module account and two-factor surfaces with P12 and P16 ☐ | Crest.Users, Crest.Access | P5 | M | 3 |
+| ☑ | P7. The workflow engine's management API | engine-hosted under `crest-workflows/api` | `WorkflowsManagementApi`, a declared contributor keeping the engine's path; minimal APIs like every contributor ([workflows.md](../workflows.md)) | Crest.Workflows | P5 | S | 3 |
+| ◐ | P8. Hubs | Server 2, Media 1, engine 1 | `PermissionHubApi` (Crest.Access) and `MediaHubApi` (Crest.Media) ☑; `AdminMenuLayoutHub` goes with the admin menu (page registry) ☐; the engine's stays | each module | P5 | S | 3 |
+| ◐ | P9. Media APIs | `api/files` (`FilesController`, 26 actions), `api/media/*` (17 minimal endpoints) | `api/crest/media*` is Crest.Media's (`MediaFilesApi`, `MediaOptionsApi`, `MediaProfilesApi`) ☑; `api/files` converted with P16 ☐; `api/media/*` dies with the MVC media library ([views.md](views.md)) once the native library and pickers use `api/files` ☐ | Crest.Media | P5, views.md | L | 3 |
 | ☐ | P10. Setup API (only if views.md § Setup chooses a pre-database page) | MVC `SetupController` | `POST api/crest/setup`, anonymous, runs in the setup shell before any store | Crest.Setup | views.md § Setup | M | 4 |
 | ☐ | P11. Protocol endpoints | GraphQL, OpenIddict, health, robots, media serving, feeds, sitemaps, remote deployment import, scanner callback, XmlRpc/RSD | stay in their modules; the MVC-hosted ones (feeds, sitemaps, remote import, OpenId user info, XmlRpc/RSD) become minimal endpoints in their module's startup | each module | H3 | M | 4 |
 | ☐ | P12. MVC JSON/redirect actions | the 11 listed above | each to an API in its P2/P3/P6 group, or deleted with its MVC screen | per group | views.md | M | 3-4 |
 | ☐ | P13. Retirements (workflows.md step 8) | `api/content` (Contents), `api/queries` (Queries), `api/lucene`, `api/elasticsearch`, `Notifications/MarkAsRead`, `url-rewriting/resort`, `api/demo` | deleted when their replacements land: content API (Crest.Contents, P2), query operations (workflows.md steps 5-7), search as a connection, the native notifications and rewriting pages | each declaring module | step 5-7, views.md | M | 4 |
 | ☐ | P14. Generated surfaces (workflows.md step 7) | — | REST + OpenAPI over the operation registry under `api/crest/ops/*` (route fixed in P14), entered as defined entries in the Server's API registry beside the declared ones; a module's declared API may be implemented by a generated route, never replaced by a workflow endpoint; GraphQL and RPC later | Crest.Server (registry), Crest.Workflows | P15, workflows.md step 3 | XL | 5 |
-| ☐ | P15. The defined layer | the engine's private route table for `HttpEndpoint` activities (`IRouteTable`, `src/Crest.Workflows/engine/src/modules/Crest.Workflows.Http`) | the API registry's defined layer: entries stored as data, served through a dynamic endpoint data source invalidated on publish; the workflow `HttpEndpoint` routes become defined entries and the private table goes | Crest.Server, Crest.Workflows | P5 | M | 4 |
+| ☑ | P15. The defined layer | — | `DefinedApiEndpointDataSource`, one per tenant, reloaded after the scope that invalidated it; the workflow `HttpEndpoint` routes are `WorkflowHttpEndpointSource`'s entries served by the engine's `HttpWorkflowRequestHandler`; the engine's `IRouteTable`, `IRouteMatcher`, route table updater and `HttpWorkflowsMiddleware` are gone | Crest.Server, Crest.Workflows | P5 | M | 4 |
+| ☐ | P16. Convert the in-module controllers | P3, P4 and Fruitful's, listed from their MVC endpoints | each a route group registered through the seam, in the change that next touches its area | each module | H3 | L | 3-5 |
 
 ## The seam
 
-Every module that declares an API (P2-P4, P6-P9, P11) registers it; Crest.Server holds the
-registry and serves it. The registration interface, in Crest.Server.Abstractions:
+Every module that declares an API registers it; Crest.Server holds the registry and serves it.
+The registration interface, in Crest.Server.Abstractions (`Api/IApiContributor.cs`):
 
 ```csharp
 public interface IApiContributor
 {
-    /// <summary>The feature whose enablement turns these endpoints on, in this tenant.</summary>
+    /// <summary>The registry name: unique per tenant, the OpenAPI tag. A later registration
+    /// of a name replaces an earlier one (a downstream module's override).</summary>
+    string Name { get; }
+
+    /// <summary>The feature whose enablement turns these endpoints on.</summary>
     string FeatureId { get; }
 
-    /// <summary>Maps the contributor's endpoints into the group the server hands it
-    /// (prefix, antiforgery, JSON options, error contract and OpenAPI tags already applied).</summary>
+    /// <summary>The group prefix: "api/crest" unless the API keeps a path of its own.</summary>
+    string RoutePrefix { get; }
+
+    /// <summary>Maps the contributor's endpoints into the group the server hands it.</summary>
     void Map(IEndpointRouteBuilder group);
 }
 ```
 
-- **Two layers.** *Declared* entries come from module code (`IApiContributor`): built into the
-  tenant's endpoint table when the shell builds, following feature enablement, never stored in
-  the database. *Defined* entries are data (workflow `HttpEndpoint` routes, generated operation
-  endpoints): changeable at runtime, served through a dynamic endpoint data source that is
-  invalidated on publish (P15). This mirrors the page registry's code-scanned and data-defined
-  providers in `src/Crest.Server/Routing`.
-- **Per-tenant gating.** A module's `StartupBase.Configure(IApplicationBuilder,
-  IEndpointRouteBuilder, IServiceProvider)` runs in each tenant's pipeline only when its feature
-  is enabled, so a minimal endpoint exists only in tenants that enabled it. Contributors are
-  registered from such startups (`services.AddApiContributor<PartiesApi>()`), and Crest.Server
-  maps the contributors registered in **this** tenant's container in its own `Configure`: an
-  endpoint of a disabled feature is not in the tenant's route table at all.
-- **What the group carries** (applied once by Crest.Server): the `api/crest` prefix (protocols
-  keep their own paths), the antiforgery endpoint filter for cookie-authenticated calls
-  (§ Plumbing), the Crest JSON options (documents and entities as today), the exception mapping
-  (§ The error contract), the access helper, OpenAPI tags per contributor, and the gate's route
-  metadata.
-- **The API registry.** Crest.Server keeps the registered contributors, route groups and defined
-  entries per tenant (working name `IApiEndpointRegistry`). The OpenAPI document, the gate and
-  the conformance suite read it. A downstream module overrides a registration through it.
-- **Controllers during the transition.** A contributor may still be an attribute-routed
-  controller in its module until its area is converted (§ Hosting); its gating stays the MVC
-  application-part gating until then.
+A module derives from `ApiContributor` (the `api/crest` prefix) and registers it from the
+startup of the feature that owns the API: `services.AddApiContributor<RolesApi>()`. Its handlers
+are static methods, or an `ApiHandlers` class (services by constructor, the request through
+`HttpContext`) created per request with `ApiHandlers.For<T>(httpContext)`; `ApiResults` keeps
+the text bodies the controller-hosted APIs answered with, `ApiProblems` answers problem details.
+
+- **Two layers.** *Declared* entries come from module code: mapped into the tenant's route
+  builder when the shell's pipeline is built (`ApiEndpointMapper.MapApiRegistryAsync`, from
+  Crest.Server's `ConfigureAsync`), never stored. *Defined* entries are data: an
+  `IDefinedApiSource` registered in the tenant (`services.AddDefinedApiSource<T>()`) returns
+  `DefinedApiEntry`s (route pattern, methods, request delegate, metadata, order), served by the
+  tenant's `DefinedApiEndpointDataSource`. `IDefinedApiInvalidator.Invalidate(source)` (a publish)
+  reloads the sources after the current shell scope completes, so the reload reads committed
+  data; a reload that yields the same routes leaves the endpoints alone, and one failing source
+  leaves the others served. The workflow `HttpEndpoint` routes are the first defined source
+  (P15); generated operation endpoints join them (P14). This mirrors the page registry's
+  declared and data-defined sources (`Crest.Server.Abstractions/Routing`).
+- **Per tenant.** Contributors and sources are registered in the tenant's container from the
+  startups of enabled features, and the data source is a singleton of the tenant's container
+  added to the tenant's own route builder: a disabled feature's endpoints are not in the
+  tenant's route table, and one tenant's defined entries never route in another.
+- **What the group carries** (applied once by Crest.Server): the prefix, the antiforgery
+  endpoint filter (`ApiAntiforgeryEndpointFilter`: a state-changing call validates the
+  `RequestVerificationToken` header through the tenant's `IAntiforgery`, which passes bearer
+  callers; `.SkipApiAntiforgery()` exempts an endpoint), the exception mapping
+  (`ApiExceptionEndpointFilter`, § The error contract), the OpenAPI tag (the contributor's name)
+  and `ApiContributorMetadata`. JSON is the tenant's HTTP JSON options, with documents and
+  entities written with the document serializer options (`ApiJsonOptionsConfiguration`).
+- **The API registry.** `IApiEndpointRegistry` lists the declared contributors with their
+  routes, the controllers still hosted by MVC (from their action endpoints under `api/`), and
+  the defined entries. The OpenAPI document reads the endpoints through the endpoints explorer.
+- **Explicit binding, built at mapping.** Every handler parameter names its binding source,
+  and each contributor's endpoints are built as it maps them; one that cannot be built is left
+  out and reported (§ Hosting).
+- **Controllers during the transition.** An attribute-routed controller in a module stays
+  until its area is converted (P16, § Hosting); its gating stays the MVC application-part
+  gating, and the registry lists it.
 
 ## The error contract
 
@@ -356,32 +348,80 @@ One shape for every API error, so shape-engine.md's validation sink (U1) and the
 settings APIs agree:
 
 - `application/problem+json` (RFC 9457) with `type`, `title`, `status`, `detail`, and an
-  `errors` map `{ key: [messages] }` for validation (the sink's errors, keyed by field path
-  `Part.Field` or by setting name).
-- Mapped exceptions, registered with the server (`IApiExceptionMapper` in
-  Crest.Server.Abstractions): `DefinitionLockedException` → 409 (today
-  `DefinitionLockExceptionFilter`), `WorkflowHookFailedException` → 409 (today
-  `WorkflowHookFailedExceptionFilter`), `ContentSaveRefusedException` → 400 with `errors`,
-  `ExchangeRateUnavailableException` → 409, access denials → 403 or 404 (deny-as-not-found)
-  from the decision.
-- One implementation: an `IExceptionHandler` plus the existing `ApiProblemDetailsMiddleware`,
-  moved into Crest.Server; it works for controllers, minimal endpoints and FastEndpoints alike.
+  `errors` map `{ key: [messages] }` for validation: the key is the member's wire name (the JSON
+  name the client sent, `items[2].name` for nested members, `""` for the object), the same for a
+  request DTO's rules (§ Validation), a handler's own checks (`ApiProblems.Validation`) and the
+  sink's errors (keyed by field path `Part.Field` or by setting name).
+- Mapped exceptions, registered by the module that owns the exception
+  (`services.AddApiExceptionMapper<T>()`, `IApiExceptionMapper` in Crest.Server.Abstractions):
+  `DefinitionLockedException` → 409 (`DefinitionLockedExceptionMapper`, Crest.ContentTypes),
+  `WorkflowHookFailedException` → 409 with the slot and the attachment
+  (`WorkflowHookFailedExceptionMapper`, Crest.Workflows); to come: `ContentSaveRefusedException`
+  → 400 with `errors`, `ExchangeRateUnavailableException` → 409, access denials → 403 or 404
+  (deny-as-not-found) from the decision.
+- One set of mappers for every host: the route groups' `ApiExceptionEndpointFilter` and, for
+  the controllers still hosted by MVC, `ApiExceptionMvcFilter` (goes with `AddControllers()`).
+  `ApiProblemDetailsMiddleware` (`Crest.Infrastructure/ErrorHandling`, host level) writes the
+  body of a bare 401 and 403.
 
 | ☐ | Item | Owner | Deps | Size | Wave |
 | --- | --- | --- | --- | --- | --- |
-| ☐ | E1. Error contract types and `IApiExceptionMapper` | Crest.Server.Abstractions | P1 | S | 1 |
-| ☐ | E2. The exception handler and problem-details middleware in Crest.Server; the two MVC exception filters deleted | Crest.Server | E1 | S | 2 |
+| ☑ | E1. Error contract types and `IApiExceptionMapper` | Crest.Server.Abstractions | P1 | S | 1 |
+| ◐ | E2. The mappers on route groups and MVC; the two MVC exception filters deleted ☑. The problem-details middleware stays host level until the tenant pipeline can wrap the authorization middleware ☐ | Crest.Server | E1 | S | 2 |
 | ☐ | E3. Validation sink errors (shape-engine.md U1) rendered as `errors` | Crest.Server | E1, shape-engine U1 | S | 2 |
+
+## Validation
+
+Request validation is **ASP.NET's native validation** (`services.AddValidation()`, per tenant,
+in Crest.Server's startup) over **Crest's own ruleset**: the rule catalog FluentValidation
+offers where DataAnnotations is thin, written as `ValidationAttribute`s so the same rules run in
+ASP.NET's validation filter and in Blazor's `DataAnnotationsValidator` unchanged.
+
+- **Home:** `Crest.DisplayManagement.Abstractions/Validation`, namespace `Crest.Validation`: the
+  smallest assembly both the WebAssembly client (through Crest.Components) and every API module
+  (through Crest.Server.Abstractions) reach, so a DTO shared with the client carries the same
+  rules on both sides.
+- **The rules, as attributes:** `NotEmpty` (whitespace-aware; empty collections and value-type
+  defaults fail), `MinimumLength`, `MaximumLength`, `LengthBetween`, `Matches`, `Email`,
+  `AbsoluteUrl`, `EqualTo` / `NotEqualTo` (another property), `GreaterThan`,
+  `GreaterThanOrEqual`, `LessThan`, `LessThanOrEqual` (a value or another property),
+  `InclusiveBetween`, `ExclusiveBetween`, `PrecisionScale`, `Must` (a predicate method of the
+  object), `ValidateChild` (a nested object or each item of a collection, for Blazor, which does
+  not recurse; the server does).
+- **The rules, fluent:** a DTO derives from `Validated<T>` and declares cross-field, conditional
+  and collection rules once in `Rules(RuleSet<T>)`: `For(x => x.Prop).NotEmpty().Length(..)`,
+  `.Equal(x => x.Other)`, `.GreaterThan(x => x.Other)`, `.Must(...)`, `.When(...)` /
+  `.Unless(...)`, `.WithMessage(...)`, `ForEach(x => x.Items, item => ...)`, `Child(x => x.Nested)`,
+  object-level `Must(...)`. They run through `IValidatableObject`, so both hosts see them.
+- **Service-backed rules** run in the handler after the shape passed: `AsyncRules<T>` with
+  `MustAsync` per member or per object, or `ValidationErrors` filled by hand, answered by
+  `ApiProblems.Validation(errors)`.
+- **Keys and messages.** Errors are keyed by the member's wire name (`MemberKey`: the
+  `[JsonPropertyName]`, else the camel-cased property; `parent.child`, `items[2].name`); the
+  admin client's forms read the map case-insensitively. Messages are invariant templates on the
+  rules (`{0}` the field, then the rule's arguments), translated through
+  `IValidationMessageLocalizer` when the validation context offers one: Crest.Server backs it
+  with the platform's string localizer (`StringLocalizerValidationMessages`), so a message
+  localizes like any other string.
+- **On the server.** The route groups carry ASP.NET's validation filter. The DTOs live in the
+  modules, where the compile-time validation generator cannot see them, so Crest.Server resolves
+  their rules by reflection (`ReflectionValidatableInfoResolver`: the properties carrying rules,
+  the nested objects and collections the framework recurses into, the `IValidatableObject`).
+  A failing request is answered with the framework's `HttpValidationProblemDetails`, adopted as
+  is because its shape is the error contract's (`errors` map, wire-name keys): no mapping filter.
+- **Tests:** `Crest.Server.Tests/ValidationRulesTests.cs` (each rule, both forms, the map's
+  shape, the localizer) and `ApiConformanceTests.cs` (a request that breaks its rules is answered
+  with the map through a mapped endpoint).
 
 ## Relation to other plans
 
 - **[server.md](../server.md)** is the per-area inventory: each wrapper goes to the module that
   declares the surface (P2); the APIs already in modules stay there (P3). The option picker's
   API (`api/crest/option-sources`, `option-picker/attachment`) goes with the option picker to
-  whichever module server.md S2 picks. The access gate pieces (middleware, route permission
-  table, permission invalidation, `RequestAccess`'s decision side) go to Crest.Access;
-  `IRequestAccess` the helper goes to Crest.Server.Abstractions (P1) because every API uses it.
-  The Blazor host (route table, `App.razor`, display endpoints) stays in Crest.Server.
+  whichever module server.md S2 picks. The access gate pieces (the shell selector, the route
+  gate) go to Crest.Access, where permission invalidation already is; `IRequestAccess`, the
+  helper every API uses, is in Crest.Server.Abstractions (P1). The Blazor host (route table,
+  `App.razor`, display endpoints) stays in Crest.Server.
 - **[workflows.md › Operations](../workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)**:
   - Steps 5 and 6 (move the reads and the writes onto the pipelines) are executed inside each
     declaring module's area (P2-P4): when an area is converted to route groups, its reads go
@@ -399,36 +439,54 @@ settings APIs agree:
 
 ## Hosting
 
-Every API moves to **minimal APIs**, and the MVC module (`Crest.Mvc`,
-`Crest.Mvc.Abstractions`, `AddMvc`) is deleted. Staged: the views half goes first (views.md,
-shape-engine.md); `AddControllers()` stays while P2-P4 regroup the areas; each area is converted
-to a route group in the change that moves it, so it is touched once; `AddControllers()` and
-`Crest.Mvc` are deleted when the last area is converted. Not a permanent `AddControllers()`
-half, because two hosting models mean two gating mechanisms, two antiforgery paths and two
-error paths, and `ModelState` and the application-part machinery would stay reachable.
+Crest's API surface is **ASP.NET minimal APIs**: not controllers, not FastEndpoints. Every API is
+a route group a contributor maps (§ The seam); the engine's management API is one like any other.
+The MVC module (`Crest.Mvc`, `Crest.Mvc.Abstractions`, `AddMvc`) goes with the last controller
+(H4): `AddControllers()` stays only while the in-module controllers are converted (P16), because
+two hosting models would mean two gating mechanisms, two antiforgery paths and two error paths.
 
-- Gating: no work beyond the seam: minimal endpoints are mapped per tenant from feature-gated
-  startups (§ The seam), which is already how Media's and Contents' endpoints are gated.
-- Antiforgery: an endpoint filter on the registry's route groups, asking Access to validate the
-  `RequestVerificationToken` header for cookie-authenticated, state-changing calls (the gate
-  already distinguishes cookie from `Api` scheme); replaces the global MVC filter.
-- JSON: `ConfigureHttpJsonOptions` with the same converters `DocumentSystemTextJsonOutputFormatter`
-  applies to `IDocument` / `IEntity`.
-- Errors: the error contract's `IExceptionHandler` (E2) replaces both filters, and covers
-  minimal endpoints and FastEndpoints too.
-- ModelState: gone; the validation sink (shape-engine.md U1) is the only error collector.
-- OpenAPI: Microsoft.AspNetCore.OpenApi describes minimal endpoints; Swashbuckle's ApiExplorer
-  works with them through `AddEndpointsApiExplorer`.
-- Size: 92 controllers and 486 actions rewritten as route groups (mechanical: one route group
-  per controller, a handler per action, the same DTOs), 11 MVC JSON actions, the login
-  service's MVC types (§ Plumbing), the URL helpers, converted area by area with the area's API
-  tests.
+- **Explicit binding.** Every handler parameter names its binding source: `[FromBody]`,
+  `[FromRoute]`, `[FromQuery]`, `[FromHeader]`, `[FromForm]`, `[AsParameters]` or
+  `[FromServices]`; only the framework's own types (`HttpContext`, `ClaimsPrincipal`,
+  `CancellationToken`, `HttpRequest`/`HttpResponse`, streams, form collections) need nothing.
+  Minimal APIs otherwise infer the source from the type, and a service type with a `TryParse`
+  or `BindAsync` member is taken for a route value: the endpoint cannot be built, and the
+  failure surfaces at the tenant's first request. The conformance test
+  (`Crest.Server.Tests/ApiConformanceTests.cs`) maps every contributor Crest ships and fails on
+  a parameter without a source, so a wrong signature fails the suite, never a tenant.
+- **Request shape.** One request DTO per endpoint where it is cheap (REPR); the DTO carries
+  its rules (§ Validation); services come by `[FromServices]` or through the `ApiHandlers`
+  base.
+- **Never a bare `HttpContext`-only lambda.** `MapGet(pattern, (HttpContext http) => ...)`
+  binds to the `RequestDelegate` overload, which awaits the task and discards the `IResult`
+  it returns: the endpoint answers 200 with an empty body. A handler with no bound parameters
+  is mapped with `ApiHandlers.Handle<THandlers>(h => h.Method())`, which goes through the
+  request delegate factory. The conformance test fails any endpoint mapped as a raw
+  `RequestDelegate` whose delegate returns a result.
+- **Built at mapping.** `ApiEndpointMapper` builds each contributor's endpoints right after it
+  maps them: a contributor that throws is left out, logged with an `ApiContributorException`
+  naming the contributor, its type, feature and the usual fix, kept in
+  `IApiEndpointRegistry.Failures` and reported by the `api-registry` health check; the other
+  contributors keep serving.
+- Gating: minimal endpoints are mapped per tenant from feature-gated startups (§ The seam).
+- Antiforgery: `ApiAntiforgeryEndpointFilter` on the registry's route groups validates the
+  `RequestVerificationToken` header for cookie-authenticated, state-changing calls through the
+  tenant's `IAntiforgery` (bearer callers pass); it replaces the global MVC filter.
+- JSON: the tenant's HTTP JSON options, with the document converters for `IDocument` /
+  `IEntity` (`ApiJsonOptionsConfiguration`).
+- Errors: the error contract's mappers on the route groups (and on the remaining controllers
+  through `ApiExceptionMvcFilter`), § The error contract.
+- Validation: ASP.NET's native validation over Crest's ruleset, § Validation; `ModelState` is
+  gone from the converted areas, and the validation sink (shape-engine.md U1) is the content
+  manager's only error collector.
+- OpenAPI: the endpoints explorer describes the route groups; Crest.OpenApi's documents read
+  them, tagged per contributor.
 
 | ☐ | Item | Owner | Deps | Size | Wave |
 | --- | --- | --- | --- | --- | --- |
-| ☐ | H1. Antiforgery endpoint filter | Crest.Server | P1 | S | 1 |
-| ☐ | H2. Crest JSON options for minimal endpoints | Crest.Server | — | S | 1 |
-| ☐ | H3. Convert areas to route groups, with P2-P4 | each declaring module | H1, H2, E2, P5 | XL | 2-3 |
+| ☑ | H1. Antiforgery endpoint filter (`ApiAntiforgeryEndpointFilter`) | Crest.Server | P1 | S | 1 |
+| ☑ | H2. Crest JSON options for minimal endpoints (`ApiJsonOptionsConfiguration`) | Crest.Server | — | S | 1 |
+| ◐ | H3. Convert areas to route groups: every area moved out of Crest.Server ☑; the in-module controllers (P16) ☐ | each declaring module | H1, H2, E2, P5 | XL | 2-3 |
 | ☐ | H4. Delete `AddControllers()`, `Crest.Mvc`, `Crest.Mvc.Abstractions` | Crest.Server | H3, views.md wave 4, shape-engine.md wave 4 | M | 5 |
 
 ## Plumbing
@@ -438,12 +496,13 @@ Where each piece of MVC non-UI plumbing lives after the refactor:
 | ☐ | Piece | Today | After | Owner | Deps | Size | Wave |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | ☐ | Per-tenant feature gating of controllers | `Crest.Mvc/ShellFeatureApplicationPart.cs`, `ModularApplicationModelProvider.cs` | gone; the seam's startup gating | — | H3 | — | 5 |
-| ☐ | Global antiforgery | `Crest.Mvc/Startup.cs:93` (`AutoValidateAntiforgeryTokenAttribute`) | antiforgery endpoint filter on the registry's route groups | Crest.Server | H1 | S | 1 |
-| ☐ | `IDocument` / `IEntity` JSON | `Crest.Infrastructure/Extensions/DocumentSystemTextJsonOutputFormatter.cs`, `MvcOptionsConfiguration.cs:18` | `ConfigureHttpJsonOptions` in Crest.Server | Crest.Server | H2 | S | 1 |
-| ☐ | Exception filters | `Crest.Server/Filters/DefinitionLockExceptionFilter.cs`, `Crest.Workflows/Server/Hooks/WorkflowHookFailedExceptionFilter.cs` | `IApiExceptionMapper` registrations; filters deleted | Crest.Server / Crest.Workflows | E2 | S | 2 |
+| ◐ | Global antiforgery | `Crest.Mvc/Startup.cs:93` (`AutoValidateAntiforgeryTokenAttribute`) | the antiforgery endpoint filter on the registry's route groups ☑; the global MVC filter goes with the last controller ☐ | Crest.Server | H1 | S | 1 |
+| ◐ | `IDocument` / `IEntity` JSON | `Crest.Infrastructure/Extensions/DocumentSystemTextJsonOutputFormatter.cs`, `MvcOptionsConfiguration.cs:18` | `ApiJsonOptionsConfiguration` in Crest.Server for the route groups ☑; the MVC formatter goes with the last controller ☐ | Crest.Server | H2 | S | 1 |
+| ☑ | Exception filters | — | `IApiExceptionMapper` registrations (`DefinitionLockedExceptionMapper`, `WorkflowHookFailedExceptionMapper`); the filters are deleted | Crest.ContentTypes / Crest.Workflows | E2 | S | 2 |
 | ☐ | Problem details | `Crest.Abstractions/ProblemDetailsApiControllerExtensions.cs`, `Crest.Infrastructure/ErrorHandling/ApiProblemDetailsMiddleware.cs` | Crest.Server (middleware, handler) and Crest.Server.Abstractions (types); the controller extensions deleted with the controllers | Crest.Server(.Abstractions) | E1 | S | 2 |
 | ☐ | ModelState as the content manager's sink | `Crest.ContentManagement/DefaultContentManager.cs:408, 412, 480` via `IUpdateModelAccessor` (`Crest.Mvc.Abstractions`) | the validation sink (shape-engine.md U1, U2); the API returns its `errors` | Crest.Data.Abstractions / Crest.ContentManagement | shape-engine U1 | S | 2 |
-| ☐ | `LoginService` TempData / ActionContext | `Crest.Server/Services/LoginService.cs:34, 43, 128-130` (translates `ILoginFormEvent` vetoes from redirect results and TempData) | moves to Crest.Users (Access); the login events return a refusal (`LoginRefusal`) instead of an `IActionResult` + TempData, so no `ActionContext` is needed | Crest.Users | P6 | M | 3 |
+| ☑ | Request validation | hand checks in handlers, `ModelState` | ASP.NET native validation over the ruleset (§ Validation); the hand checks the rules cover are gone | Crest.Server / Crest.DisplayManagement.Abstractions | — | M | 2 |
+| ◐ | `LoginService` TempData / ActionContext | `Crest.Users/Services/LoginService.cs` (translates `ILoginFormEvent` vetoes from redirect results and TempData) | in Crest.Users ☑; the login events return a refusal (`LoginRefusal`) instead of an `IActionResult` + TempData, so no `ActionContext` is needed ☐ (`AuthApi` builds one for now) | Crest.Users | P6 | M | 3 |
 | ☐ | `IUrlHelper` | 23 files (Navigation, Sitemaps, Seo handlers, Liquid filters, tag helpers, link field driver, ...) | `LinkGenerator` with a shell-aware helper (`IShellLinkGenerator`) in Crest.Abstractions; the Razor-only users (tag helpers, `UrlHelperExtensions`) go with the views | Crest.Abstractions | — | M | 3 |
 | ☐ | `ShellRouteValuesAddressScheme` | `Crest.Abstractions/Routing/`, registered from `Crest.Mvc/Extensions/PlatformBuilderExtensions.cs` | stays in Crest.Abstractions (it is routing, used by `LinkGenerator` for Autoroute, HomeRoute, Sitemaps); its registration moves to Crest.Infrastructure | Crest.Infrastructure | — | S | 3 |
 | ☐ | `FormValueRequiredMatcherPolicy` | `Crest.Abstractions/Routing/`, registered in `Crest.Mvc/Startup.cs:102` | gone (form-post submit-button routing for MVC screens) | — | views.md wave 4 | S | 5 |

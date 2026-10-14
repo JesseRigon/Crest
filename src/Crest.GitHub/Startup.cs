@@ -27,7 +27,7 @@ public sealed class GitHubLoginStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddSiteDisplayDriver<GitHubAuthenticationSettingsDisplayDriver>();
-        services.AddNavigationProvider<AdminMenuGitHubLogin>();
+        services.AddPageSource<GitHubLoginPages>();
 
         // Register the options initializers required by the GitHub Handler.
         services.AddTransient<IConfigureOptions<AuthenticationOptions>, AuthenticationOptionsConfiguration>();

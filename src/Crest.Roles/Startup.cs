@@ -44,7 +44,7 @@ public sealed class Startup : StartupBase
         services.Replace(ServiceDescriptor.Scoped<IRoleStore<IRole>>(sp => sp.GetRequiredService<RoleStore>()));
         services.AddRecipeExecutionStep<RolesStep>();
         services.AddPermissionProvider<Permissions>();
-        services.AddNavigationProvider<AdminMenu>();
+        services.AddApiContributor<Api.RolesApi>();
         services.Configure<SystemRoleOptions>(options =>
         {
             var adminRoleName = _shellConfiguration.GetSection("Crest_Roles").GetValue<string>("AdminRoleName");

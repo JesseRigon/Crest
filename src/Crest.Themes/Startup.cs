@@ -27,9 +27,12 @@ public sealed class Startup : StartupBase
         services.AddPermissionProvider<Permissions>();
         services.AddScoped<IThemeSelector, SiteThemeSelector>();
         services.AddScoped<ISiteThemeService, SiteThemeService>();
-        services.AddNavigationProvider<AdminMenu>();
         services.AddScoped<IThemeService, ThemeService>();
         services.AddScoped<ThemeTogglerService>();
+        // The shell contracts (docs/shells-and-themes.md): the member theme and shell compatibility.
+        services.AddScoped<IMemberThemeService, MemberThemeService>();
+        services.AddScoped<IShellCompatibilityService, ShellCompatibilityService>();
+        services.AddApiContributor<Api.ThemesApi>();
         services.AddDeployment<ThemesDeploymentSource, ThemesDeploymentStep, ThemesDeploymentStepDriver>();
         services.AddDisplayDriver<ThemeEntry, ThemeEntryDisplayDriver>();
         services.AddShapeTableProvider<AdminDashboardShapeTableProvider>();

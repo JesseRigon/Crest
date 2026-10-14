@@ -1,4 +1,5 @@
 @page "/workflows/definitions/{DefinitionId}/edit"
+@attribute [PageEntry(WorkflowsConstants.Permissions.View, ClientOnly = true)]
 
 <PageTitle>Workflow designer</PageTitle>
 <StudioHost View="DefinitionEditor" Parameters="@(new Dictionary<string, object> { ["DefinitionId"] = DefinitionId })" @key="DefinitionId" />

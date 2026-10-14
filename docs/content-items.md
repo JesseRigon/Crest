@@ -80,7 +80,7 @@ disable the frozen controls.
 
 > **Gotcha — enforcement is for TENANT writes only, and lives in two places.** Crest's
 > definition controllers ask `DefinitionLockGuard` before altering (409 with the
-> reason, through `DefinitionLockExceptionFilter`); the stock content-types module's
+> reason, through `DefinitionLockedExceptionMapper`, the API registry's error contract); the stock content-types module's
 > `IContentDefinitionService` and `IContentDefinitionDisplayManager` are decorated
 > (`LockedContentDefinitionServices`, registered last) so its admin obeys the same locks if
 > a tenant enables it (it is not in the host recipe; the decorators are unit-tested,
@@ -134,41 +134,18 @@ rides the ContentDefinition recipe step/deployment for free. Toggled on the
 Content Types screen via `PUT api/crest/content-types/{type}/menu`
 (`EditContentTypes`).
 
-`ContentTypesMenuNavigationProvider` emits one entry per flagged type under the
-stock "Content" section: caption = the type's DisplayName, URL = the generic
-content-items page filtered by `?type=`, permission = the dynamic
-`ListContent_{Type}` when the type is Securable, plain `ListContent` otherwise
-(the dynamic name is only REGISTERED for securable types; an unregistered
-permission name is silently dropped by role resolution and would leave the item
-visible to everyone).
-
-> **Gotcha — Crest's menu is materialized.** Stock Orchard rebuilds admin nav per
-> request; Crest SYNCS provider output into the admin-menu document once per
-> shell. The menu endpoint therefore triggers the provider sync itself — as a
-> deferred task (see read-after-write above). Definition changes made elsewhere
-> (a migration setting the flag) surface on the next shell release, which is when
-> migrations run anyway.
-
-> **Gotcha — renaming a type re-keys its menu entry.** The sync's match key is
-> parent path + invariant caption, and the caption is the DisplayName. Renaming
-> the display name disables the old node and creates a fresh one, so layout
-> overrides stored against the old node no longer apply — re-place and re-export
-> the layout. Two types sharing a DisplayName collide on the match key: don't do
-> that. (Stock's `ContentTypesAdminNode` snapshots display names too; same
-> property.)
+`ContentTypePages` (a dynamic page registry source, read per request) emits one entry per
+flagged type under the "Content" section: caption = the type's DisplayName, URL = the generic
+content-items page filtered by `?type=`, permission = the dynamic `ListContent_{Type}` when the
+type is Securable (with plain `ListContent`, which implies it, as the alternative), plain
+`ListContent` otherwise. The entry id is `content-type-{name}`, so the tenant's menu edits
+follow the type through a DisplayName change; a flag change shows on the next request.
 
 Every flagged type lands on the generic content-items surface; a designed per-type page
 can replace that per type without touching the menu mechanism.
 
-**Target: the page registry.** The materialized menu and its caption-keyed sync are today's
-mechanism. In the target, each page declares its route, shell, permission and menu placement
-once in Crest.Server's page registry, the admin menu is a view over that registry plus the
-tenant's edits (applied by stable entry id) and each user's hide layer, and the caption-matching
-import disappears; dynamic items such as one entry per flagged type are a registry source
-([architecture.md › One page registry](architecture.md#one-page-registry),
-[admin-menu.md › The page registry](admin-menu.md#the-page-registry)). The two gotchas above
-go with the sync. Module-declared pages (e.g. Parties › Customers) are unaffected — this
-is the additive path for types no module owns.
+Module-declared pages (e.g. Parties › Customers) are unaffected — this is the additive path
+for types no module owns ([admin-menu.md › The page registry](admin-menu.md#the-page-registry)).
 
 ## Content groups — grouping by KIND of content, across modules
 
@@ -484,8 +461,8 @@ Not built by decision; do not build without a new one:
   NARROWING-ONLY — intersected with the attachment's configured filters, never
   able to widen them (the query endpoint's no-client-filters rule stands).
 - [ ] **`ListsAdminNode`-style item-per-container-instance menus** (each Blog as its
-  own entry): out of scope. If wanted, it is a SECOND navigation provider, not a
-  change to `ContentTypesMenuNavigationProvider`.
+  own entry): out of scope. If wanted, it is a SECOND dynamic page source, not a
+  change to `ContentTypePages`.
 - [ ] **Real cross-table partitioning by year/open-closed** for picker indexes:
   YesSql will not route queries across partitions, so the query layer would have
   to. The snapshot rule (posted documents are closed records) keeps the door

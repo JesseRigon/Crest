@@ -17,7 +17,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\common\Crest.Workflows.Api.Common\Crest.Workflows.Api.Common.csproj" />
       <ProjectReference Include="..\Crest.Workflows.Expressions\Crest.Workflows.Expressions.csproj" />
       <ProjectReference Include="..\Crest.Workflows.Management\Crest.Workflows.Management.csproj" />
     </ItemGroup>

@@ -80,7 +80,6 @@
     <Project Path="src/Crest.Workflows/engine/src/clients/Crest.Workflows.Api.Client/Crest.Workflows.Api.Client.csproj" />
   </Folder>
   <Folder Name="/Crest.Workflows/engine/src/common/">
-    <Project Path="src/Crest.Workflows/engine/src/common/Crest.Workflows.Api.Common/Crest.Workflows.Api.Common.csproj" />
     <Project Path="src/Crest.Workflows/engine/src/common/Crest.Workflows.Features/Crest.Workflows.Features.csproj" />
     <Project Path="src/Crest.Workflows/engine/src/common/Crest.Workflows.Mediator/Crest.Workflows.Mediator.csproj" />
   </Folder>

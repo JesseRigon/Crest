@@ -22,6 +22,8 @@
     <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Navigation.Abstractions\Crest.Navigation.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Kinds\Crest.Kinds.csproj" />
+    <!-- The page registry contracts every module's admin pages register through. -->
+    <ProjectReference Include="..\Crest.Server.Abstractions\Crest.Server.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

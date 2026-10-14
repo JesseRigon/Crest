@@ -1,8 +1,6 @@
 using Crest.Workflows.Extensions;
 using Crest.Workflows.Http;
 using Crest.Workflows.Security;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Crest.Environment.Shell.Configuration;
@@ -38,10 +36,10 @@ public class HttpStartup(IShellConfiguration shellConfiguration) : StartupBase
         services
             .AddScoped<HttpWorkflowEndpointAuthorizationHandler>()
             .AddScoped<IHttpWorkflowInputContributor, HttpWorkflowActorContributor>();
-    }
 
-    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        app.UseWorkflows();
+        // The workflows' HTTP endpoints are defined entries of the tenant's API registry
+        // (docs/MVC/api.md P15), reloaded when the engine indexes a change to them.
+        services.AddDefinedApiSource<Api.WorkflowHttpEndpointSource>();
+        services.AddScoped<IHttpEndpointRoutesObserver, Api.WorkflowHttpEndpointsInvalidator>();
     }
 }

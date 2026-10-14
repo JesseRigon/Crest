@@ -46,7 +46,7 @@ public class ShellCompatibilityTests
     {
         string[] modules = ["Crest", "Crest.Members", "Crest.ContentPartLists", "Crest.Member"];
 
-        Assert.Equal(expected, ShellCompatibilityService.OwningExtensionId(assemblyName, modules));
+        Assert.Equal(expected, Crest.Routing.ModuleClientAssemblies.OwningExtensionId(assemblyName, modules));
     }
 
     [Fact]

@@ -10,6 +10,7 @@
    and swallows Crest's Liquid homepage) is handled in Crest.Server's App.razor, which
    only renders AdminRoutes when the middleware marked the request as an admin shell. *@
 @page "/"
+@attribute [PageEntry("AccessAdminPanel")]
 @using Crest.AdminTheme.State
 @using Crest.AdminTheme.Options
 @using Crest.Components.Primitives
