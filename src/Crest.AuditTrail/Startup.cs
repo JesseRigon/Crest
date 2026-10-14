@@ -46,8 +46,6 @@ public sealed class Startup : StartupBase
         services.AddPermissionProvider<Permissions>();
         services.AddNavigationProvider<AuditTrailAdminMenu>();
 
-        services.AddSiteDisplayDriver<AuditTrailSettingsDisplayDriver>();
-        services.AddSiteDisplayDriver<AuditTrailTrimmingSettingsDisplayDriver>();
 
         services.AddDisplayDriver<AuditTrailIndexOptions, AuditTrailOptionsDisplayDriver>();
 

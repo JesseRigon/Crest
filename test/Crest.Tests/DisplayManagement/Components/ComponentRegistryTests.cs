@@ -250,6 +250,20 @@ public class ComponentRegistryTests
         Assert.Contains(DisplayTreeValidator.Validate(root, registry), diagnostic => diagnostic.Action == "instances");
     }
 
+    [Fact]
+    public void ADisplayVariantFallsBackToTheShapesOwnComponentButAnEditorNever()
+    {
+        var registry = Registry(null, Component("TextField"), Component("TitlePart"), Component("TitlePart_Summary"));
+
+        Assert.True(registry.TryResolve("TextField_Display__Header", [], out var header));
+        Assert.Equal("TextField", header.Name);
+        Assert.True(registry.TryResolve("TitlePart_Summary", [], out var summary));
+        Assert.Equal("TitlePart_Summary", summary.Name);
+        Assert.True(registry.TryResolve("TitlePart_SummaryAdmin", [], out var admin));
+        Assert.Equal("TitlePart", admin.Name);
+        Assert.False(registry.TryResolve("TextField_Edit", [], out _));
+    }
+
     private sealed class KeyCatalog(IEnumerable<ZoneKeyDescriptor> keys, IEnumerable<ZoneContribution> contributions) : IComponentCatalog
     {
         public IEnumerable<ComponentDescriptor> Describe() => [];

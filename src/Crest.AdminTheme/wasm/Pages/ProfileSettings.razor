@@ -1,4 +1,5 @@
 @page "/Profile/Settings"
+@attribute [Crest.Components.Modules.SetsAuthenticationCookie]
 @using Crest.AdminTheme.Api
 @using Crest.AdminTheme.State
 @using Crest.Components.Primitives
@@ -41,6 +42,11 @@
                 <CrestText TextStyle="TextStyle.Caption" Text="@T["Leave unset to follow the tenant's default culture."]" />
             }
         </CrestStack>
+    </CrestCard>
+
+    @* Password, email and external logins (step 7: the MVC account screens are retired). *@
+    <CrestCard data-testid="profile-settings-account">
+        <Crest.Components.Account.CrestAccountSecurity />
     </CrestCard>
 </CrestStack>
 

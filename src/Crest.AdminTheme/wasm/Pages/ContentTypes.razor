@@ -28,6 +28,8 @@
         <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
     }
 
+    <ContentDefinitionCreate Kind="type" Created="OnTypeCreatedAsync" />
+
     @* Standard master-detail structure: this region takes the page's remaining
        height; the list's items and the detail pane's body do the scrolling. *@
     <div style="display: flex; flex-wrap: wrap; gap: 1rem; flex: 1 1 auto; min-height: 0; align-items: stretch;">
@@ -149,6 +151,8 @@
                             <CrestButton Text="@T["Attach"]" Icon="add_link" Size="ButtonSize.Small"
                                          Click="AttachPartAsync" Disabled="@(IsLoading || string.IsNullOrWhiteSpace(PartToAttach))" data-testid="attach-part" />
                         </CrestStack>
+
+                        <ContentTypeDefinitionEditor TypeName="@SelectedType.Name" Changed="LoadAsync" Deleted="OnTypeDeletedAsync" />
                     </ChildContent>
                 </CrestDetailPane>
             }
@@ -157,6 +161,18 @@
 </CrestStack>
 
 @code {
+    private async Task OnTypeCreatedAsync(string name)
+    {
+        SelectedTypeName = name;
+        await LoadAsync();
+    }
+
+    private async Task OnTypeDeletedAsync()
+    {
+        SelectedTypeName = null;
+        await LoadAsync();
+    }
+
     private ContentType[] AllContentTypes { get; set; } = [];
     private string[] AllPartNames { get; set; } = [];
     private string? SelectedTypeName { get; set; }

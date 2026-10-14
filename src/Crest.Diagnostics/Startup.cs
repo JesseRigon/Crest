@@ -1,24 +1,18 @@
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Crest.Diagnostics;
 
+/// <summary>
+/// The status code pages and the exception handler re-execute "/Error/{status}" (and "/Error"),
+/// which each shell answers with its own error page (Crest.Components' CrestErrorPage; step 7:
+/// the MVC Diagnostics controller and views are retired). The re-execution runs inside the shell
+/// that answered the original request, so its shell stamp and base path still hold.
+/// </summary>
 public sealed class Startup : Modules.StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IStartupFilter, DiagnosticsStartupFilter>();
-    }
-
-    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        routes.MapAreaControllerRoute(
-            name: "Diagnostics.Error",
-            areaName: "Crest.Diagnostics",
-            pattern: "Error/{status?}",
-            defaults: new { controller = "Diagnostics", action = "Error" }
-        );
     }
 }

@@ -28,7 +28,6 @@ namespace Crest.Users.Workflows;
 [FlowNode("Done", "Failed")]
 public class CreateUser : Activity
 {
-    private static readonly string s_emailConfirmationControllerName = typeof(Controllers.EmailConfirmationController).ControllerName();
 
     [Input(DisplayName = "Email", UIHint = InputUIHints.SingleLine)]
     public Input<string> Email { get; set; } = null!;
@@ -102,11 +101,7 @@ public class CreateUser : Activity
             }
 
             var code = await context.GetRequiredService<UserManager<IUser>>().GenerateEmailConfirmationTokenAsync(user);
-            var url = context.GetRequiredService<LinkGenerator>().GetUriByAction(
-                httpContext,
-                nameof(Controllers.EmailConfirmationController.ConfirmEmail),
-                s_emailConfirmationControllerName,
-                new { area = UserConstants.Features.Users, userId = user.UserId, code });
+            var url = Services.AccountPages.ConfirmEmailUrl(httpContext.Request, user.UserId, code);
             ConfirmationUrl.Set(context, url);
 
             var body = (ConfirmationEmailBody.GetOrDefault(context) ?? string.Empty).Replace("{{ConfirmationUrl}}", url, StringComparison.OrdinalIgnoreCase);

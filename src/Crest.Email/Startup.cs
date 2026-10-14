@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Crest.Data.Migration;
 using Crest.DisplayManagement.Handlers;
-using Crest.Email.Drivers;
 using Crest.Email.Migrations;
 using Crest.Email.Services;
 using Crest.Modules;
@@ -17,7 +16,6 @@ public sealed class Startup : StartupBase
         services.AddEmailServices()
             .AddSignalOptionsChangeTokenSource<EmailOptions>()
             .AddSignalOptionsChangeTokenSource<EmailProviderOptions>()
-            .AddSiteDisplayDriver<EmailSettingsDisplayDriver>()
             .AddSiteSettingsPermission(EmailSettings.GroupId, EmailPermissions.ManageEmailSettings)
             .AddPermissionProvider<Permissions>()
             .AddNavigationProvider<AdminMenu>();

@@ -11,6 +11,8 @@ using Crest.Settings.Deployment;
 using Crest.Users;
 using Crest.Users.Events;
 using Crest.Users.Models;
+using Crest.Workflows;
+using Crest.Workflows.Extensions;
 
 namespace Crest.ReCaptcha;
 
@@ -66,5 +68,17 @@ public sealed class UsersRegistrationStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddDisplayDriver<RegisterUserForm, RegisterUserFormDisplayDriver>();
+    }
+}
+
+[Feature("Crest.ReCaptcha")]
+[RequireFeatures(Crest.Workflows.WorkflowsConstants.FeatureId)]
+public sealed class WorkflowsStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        // The form captcha's check (docs/widgets.md): the token verified by a workflow activity.
+        services.AddScoped<IWorkflowActivityProvider, Workflows.ReCaptchaWorkflowProvider>();
+        services.ConfigureCrestWorkflows(workflows => workflows.AddActivitiesFrom<WorkflowsStartup>());
     }
 }

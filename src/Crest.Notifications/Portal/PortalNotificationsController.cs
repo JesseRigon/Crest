@@ -90,6 +90,52 @@ public sealed class PortalNotificationsController(
         return NoContent();
     }
 
+    [HttpPost("{id}/unread")]
+    public async Task<ActionResult<PortalNotificationDto>> MarkUnreadAsync(string id)
+    {
+        if (await UserIdAsync() is not { } userId)
+        {
+            return Forbid();
+        }
+
+        var notification = await session.Query<Notification, NotificationIndex>(index => index.NotificationId == id && index.UserId == userId, collection: NotificationConstants.NotificationCollection).FirstOrDefaultAsync();
+        if (notification is null)
+        {
+            return NotFound();
+        }
+
+        var readInfo = notification.GetOrCreate<NotificationReadInfo>();
+        if (readInfo.IsRead)
+        {
+            readInfo.IsRead = false;
+            readInfo.ReadAtUtc = null;
+            notification.Put(readInfo);
+            await session.SaveAsync(notification, collection: NotificationConstants.NotificationCollection);
+            await tagCache.RemoveTagAsync(NotificationsHelper.GetUnreadUserNotificationTagKey(User.Identity?.Name));
+        }
+
+        return Ok(ToDto(notification));
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteAsync(string id)
+    {
+        if (await UserIdAsync() is not { } userId)
+        {
+            return Forbid();
+        }
+
+        var notification = await session.Query<Notification, NotificationIndex>(index => index.NotificationId == id && index.UserId == userId, collection: NotificationConstants.NotificationCollection).FirstOrDefaultAsync();
+        if (notification is null)
+        {
+            return NotFound();
+        }
+
+        session.Delete(notification, collection: NotificationConstants.NotificationCollection);
+        await tagCache.RemoveTagAsync(NotificationsHelper.GetUnreadUserNotificationTagKey(User.Identity?.Name));
+        return NoContent();
+    }
+
     /// <summary>The caller's own user id, when they may manage their notifications.</summary>
     private async Task<string?> UserIdAsync()
     {

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
+using Crest.Admin;
 using Crest.Navigation;
+using Microsoft.Extensions.Options;
 using Crest.Users.Drivers;
 using Crest.Users.Models;
 
@@ -16,9 +18,12 @@ public sealed class AdminMenu : AdminNavigationProvider
 
     internal readonly IStringLocalizer S;
 
-    public AdminMenu(IStringLocalizer<AdminMenu> stringLocalizer)
+    private readonly string _adminPath;
+
+    public AdminMenu(IStringLocalizer<AdminMenu> stringLocalizer, IOptions<AdminOptions> adminOptions)
     {
         S = stringLocalizer;
+        _adminPath = "/" + adminOptions.Value.AdminUrlPrefix.Trim('/');
     }
 
     protected override ValueTask BuildAsync(NavigationBuilder builder)
@@ -32,7 +37,7 @@ public sealed class AdminMenu : AdminNavigationProvider
                     .Add(S["Users"], S["Users"].PrefixPosition(), users => users
                         .AddClass("users")
                         .Id("users")
-                        .Action("Index", "Admin", UserConstants.Features.Users)
+                        .Url($"{_adminPath}/Users/Index")
                         .Permission(UsersPermissions.ListUsers)
                         .Resource(new User())
                         .LocalNav()
@@ -56,7 +61,7 @@ public sealed class AdminMenu : AdminNavigationProvider
                 .Add(S["Users"], S["Users"].PrefixPosition(), users => users
                     .AddClass("users")
                     .Id("users")
-                    .Action("Index", "Admin", UserConstants.Features.Users)
+                    .Url($"{_adminPath}/Users/Index")
                     .Permission(UsersPermissions.ListUsers)
                     .Resource(new User())
                     .LocalNav()

@@ -27,7 +27,6 @@ public sealed class Startup : StartupBase
         services.AddContentPart<AuditTrailPart>()
             .UseDisplayDriver<AuditTrailPartDisplayDriver>();
 
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, AuditTrailPartSettingsDisplayDriver>();
         services.AddScoped<IContentDisplayDriver, AuditTrailContentsDriver>();
 
         services.AddTransient<IConfigureOptions<AuditTrailOptions>, ContentAuditTrailEventConfiguration>();

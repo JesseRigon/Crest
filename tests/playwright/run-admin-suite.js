@@ -109,7 +109,7 @@ function buildSharedAdminChecks() {
 // buildSharedAdminChecks() and then whichever of these it needs. Running Crest on its
 // own takes the lot.
 function buildCrestModuleChecks() {
-  const module = (name, relative) => ({ name, fn: require(`../../${relative}`) });
+  const module = (name, relative) => ({ name, fn: require(`../../src/${relative}`) });
   return [
     module('parties-contacts-api', 'Crest.Parties/tests/playwright/checks/party-contacts-api'),
     module('parties-positions-api', 'Crest.Parties/tests/playwright/checks/party-positions-api'),
@@ -118,6 +118,13 @@ function buildCrestModuleChecks() {
     module('workflows-approvals', 'Crest.Workflows/tests/playwright/checks/workflows-approvals'),
     module('workflows-designer', 'Crest.Workflows/tests/playwright/checks/workflows-designer'),
     module('members-portal-api', 'Crest.Members/tests/playwright/checks/members-portal-api'),
+    // Workflow checks on Crest's own fixtures (the sample role and Crest.Workflows.Samples):
+    // the enable runs first, tenant isolation last (it provisions a second tenant).
+    module('workflows-fixtures-enable', 'Crest.Workflows/tests/playwright/checks/workflows-fixtures-enable'),
+    module('workflows-parties', 'Crest.Workflows/tests/playwright/checks/workflows-parties'),
+    module('workflows-ownership', 'Crest.Workflows/tests/playwright/checks/workflows-ownership'),
+    module('workflows-connectors', 'Crest.Workflows/tests/playwright/checks/workflows-connectors'),
+    module('workflows-tenant-isolation', 'Crest.Workflows/tests/playwright/checks/workflows-tenant-isolation'),
   ];
 }
 

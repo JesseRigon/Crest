@@ -10,7 +10,7 @@ public sealed class ChangeEmailAdminMenu : AdminNavigationProvider
     private static readonly RouteValueDictionary s_routeValues = new()
     {
         { "area", "Crest.Settings" },
-        { "groupId", ChangeEmailSettingsDisplayDriver.GroupId },
+        { "groupId", "userChangeEmail" },
     };
 
     internal readonly IStringLocalizer S;

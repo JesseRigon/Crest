@@ -146,15 +146,81 @@ public sealed class AutoroutePartEditor : FieldEditorBase
 }
 
 [BlazorComponent("HtmlEditor", DisplayName = "HTML", Category = "Editors", Icon = "code", Edits = ["HtmlField", "HtmlBodyPart"])]
-public sealed class HtmlEditor : FieldEditorBase
+public sealed class HtmlEditor : MediaInsertingEditor
 {
-    protected override void RenderInput(RenderTreeBuilder builder) => TextAreaInput(builder, 0, "Html", 10);
+    protected override string Property => "Html";
+
+    protected override string Snippet(Files.CrestFileItem file) => MediaSnippets.Html(file);
 }
 
 [BlazorComponent("MarkdownEditor", DisplayName = "Markdown", Category = "Editors", Icon = "notes", Edits = ["MarkdownField", "MarkdownBodyPart"])]
-public sealed class MarkdownEditor : FieldEditorBase
+public sealed class MarkdownEditor : MediaInsertingEditor
 {
-    protected override void RenderInput(RenderTreeBuilder builder) => TextAreaInput(builder, 0, "Markdown", 10);
+    protected override string Property => "Markdown";
+
+    protected override string Snippet(Files.CrestFileItem file) => MediaSnippets.Markdown(file);
+}
+
+/// <summary>
+/// A body editor that inserts media by drive placement (docs/media.md, F1): the file chosen in
+/// <see cref="Files.CrestDrivePicker"/> from any drive goes in as its <c>files/{placementId}</c>
+/// URL, never a library path, appended at the end of the text.
+/// </summary>
+public abstract class MediaInsertingEditor : FieldEditorBase
+{
+    private bool _picking;
+
+    protected abstract string Property { get; }
+
+    protected abstract string Snippet(Files.CrestFileItem file);
+
+    protected override void RenderInput(RenderTreeBuilder builder)
+    {
+        TextAreaInput(builder, 0, Property, 10);
+        builder.OpenComponent<CrestButton>(10);
+        builder.AddComponentParameter(11, nameof(CrestButton.Text), "Insert media");
+        builder.AddComponentParameter(12, nameof(CrestButton.Icon), "add_photo_alternate");
+        builder.AddComponentParameter(13, nameof(CrestButton.Size), ButtonSize.Small);
+        builder.AddComponentParameter(14, nameof(CrestButton.ButtonStyle), ButtonStyle.Light);
+        builder.AddComponentParameter(15, nameof(CrestButton.Disabled), Disabled);
+        builder.AddComponentParameter(16, nameof(CrestButton.Click), EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(this, () => _picking = true));
+        builder.CloseComponent();
+        builder.OpenComponent<Files.CrestDrivePicker>(17);
+        builder.AddComponentParameter(18, nameof(Files.CrestDrivePicker.Open), _picking);
+        builder.AddComponentParameter(19, nameof(Files.CrestDrivePicker.OpenChanged), EventCallback.Factory.Create<bool>(this, open => _picking = open));
+        builder.AddComponentParameter(20, nameof(Files.CrestDrivePicker.Picked), EventCallback.Factory.Create<Files.CrestFileItem>(this, Insert));
+        builder.CloseComponent();
+    }
+
+    private void Insert(Files.CrestFileItem file)
+    {
+        var text = Text(Property) ?? string.Empty;
+        var separator = text.Length == 0 || text.EndsWith('\n') ? string.Empty : "\n";
+        Set(Property, JsonValue.Create(text + separator + Snippet(file)));
+    }
+}
+
+/// <summary>What an inserted file becomes in a body: an image for an image, a link otherwise, by its placement URL.</summary>
+public static class MediaSnippets
+{
+    public static string Url(Files.CrestFileItem file) => "files/" + Uri.EscapeDataString(file.Id);
+
+    public static bool IsImage(Files.CrestFileItem file) =>
+        file.Type?.StartsWith("image/", StringComparison.OrdinalIgnoreCase) == true
+        || file.Extension is "png" or "jpg" or "jpeg" or "gif" or "webp" or "svg" or "avif";
+
+    public static string Html(Files.CrestFileItem file)
+    {
+        var url = System.Net.WebUtility.HtmlEncode(Url(file));
+        var text = System.Net.WebUtility.HtmlEncode(file.Metadata.AlternativeText ?? file.Metadata.Title ?? file.Name);
+        return IsImage(file) ? $"<img src=\"{url}\" alt=\"{text}\" />" : $"<a href=\"{url}\">{text}</a>";
+    }
+
+    public static string Markdown(Files.CrestFileItem file)
+    {
+        var text = (file.Metadata.AlternativeText ?? file.Metadata.Title ?? file.Name).Replace("]", "\\]", StringComparison.Ordinal).Replace("[", "\\[", StringComparison.Ordinal);
+        return IsImage(file) ? $"![{text}]({Url(file)})" : $"[{text}]({Url(file)})";
+    }
 }
 
 [BlazorComponent("LinkFieldEditor", DisplayName = "Link", Category = "Editors", Icon = "link", Edits = ["LinkField"])]

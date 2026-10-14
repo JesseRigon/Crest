@@ -52,6 +52,11 @@
             : RendererInfo.IsInteractive
                 ? "/" + Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0].TrimStart('/')
                 : Services.GetService<IShellRequestPath>()?.Path ?? "/";
+        // The query travels with the path (a list's ?pagenum=2): the page is built for both.
+        var query = RendererInfo.IsInteractive
+            ? new Uri(Navigation.Uri).Query
+            : Services.GetService<IShellRequestPath>()?.Query ?? string.Empty;
+        path += query.Length > 1 ? query : string.Empty;
         if (State is null || State.Path != path)
         {
             SitePage? page = null;
@@ -59,7 +64,7 @@
             {
                 page = RendererInfo.IsInteractive
                     ? await FetchKeptAsync(path)
-                    : await Http.GetFromJsonAsync<SitePage>($"api/crest/site/page?path={Uri.EscapeDataString(path)}");
+                    : await Http.GetFromJsonAsync<SitePage>(PageUrl(path));
             }
             catch (HttpRequestException)
             {
@@ -75,6 +80,16 @@
         }
     }
 
+    // "/blog?pagenum=2" → api/crest/site/page?path=%2Fblog&pagenum=2: the page's own query
+    // parameters reach the drivers (a list's pager reads them from the request).
+    private static string PageUrl(string pathAndQuery)
+    {
+        var separator = pathAndQuery.IndexOf('?');
+        var path = separator < 0 ? pathAndQuery : pathAndQuery[..separator];
+        var query = separator < 0 ? string.Empty : pathAndQuery[(separator + 1)..];
+        return $"api/crest/site/page?path={Uri.EscapeDataString(path)}" + (query.Length > 0 ? "&" + query : string.Empty);
+    }
+
     private const string KeptPrefix = "crest.site.page:";
     private const string KeptScope = "crest.site.scope";
     private const string KeptIndex = "crest.site.pages";
@@ -84,7 +99,7 @@
     private async Task<SitePage?> FetchKeptAsync(string path)
     {
         var kept = await ReadAsync<KeptPage>(KeptPrefix + path);
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"api/crest/site/page?path={Uri.EscapeDataString(path)}");
+        using var request = new HttpRequestMessage(HttpMethod.Get, PageUrl(path));
         if (kept?.ETag is { Length: > 0 } etag)
         {
             request.Headers.TryAddWithoutValidation("If-None-Match", etag);

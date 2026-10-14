@@ -72,8 +72,8 @@
         try
         {
             RoleNames = (await Api.Crest.Rest.Roles.ListAsync()).Select(role => role.Name).ToArray();
-            var users = await Http.GetFromJsonAsync<UserListResult>("api/crest/users?pageSize=100");
-            Users = (users?.Items ?? []).Select(user => new UserChoice(user.Id, user.UserName ?? user.Email ?? user.Id)).ToArray();
+            // Only the users the caller manages (the hierarchy bound, docs/permissions.md).
+            Users = (await Http.GetFromJsonAsync<List<ManagedUserInfo>>("api/crest/access/managed-users") ?? []).Select(user => new UserChoice(user.Id, user.Label)).ToArray();
             await LoadDefaultsAsync();
         }
         catch (Exception ex)

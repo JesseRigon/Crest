@@ -1,8 +1,150 @@
 @page "/indexing"
-@using Crest.AdminTheme.Api
+@using System.Net.Http.Json
+@using System.Text.Json
+@using System.Text.Json.Nodes
 @using Crest.Components.Primitives
-@using Crest.Components.Primitives
-@inject IApi Api
+@inject HttpClient Http
 @inject Crest.Components.Theme.CrestApiLocalizer T
-<CrestStack Gap="1rem" data-testid="indexes-page"><CrestText TextStyle="TextStyle.H4" Text="@T["Indexes"]"/>@if(Model is null){<CrestProgressBar Mode="ProgressBarMode.Indeterminate"/>}else{<CrestDataGrid Data="Model" TItem="IndexSummary"><Columns><CrestDataGridColumn TItem="IndexSummary" Property="Name" Title="@T["Name"]"/><CrestDataGridColumn TItem="IndexSummary" Property="Provider" Title="@T["Provider"]"/><CrestDataGridColumn TItem="IndexSummary" Property="Type" Title="@T["Source"]"/><CrestDataGridColumn TItem="IndexSummary" Property="CreatedUtc" Title="@T["Created"]"/><CrestDataGridColumn TItem="IndexSummary" Title="@T["Actions"]"><Template Context="index"><CrestButton Text="@T["Rebuild"]" Icon="refresh" Click="@(()=>Rebuild(index))"/></Template></CrestDataGridColumn></Columns></CrestDataGrid>}</CrestStack>
-@code { IndexSummary[]? Model; protected override async Task OnInitializedAsync()=>Model=await Api.Crest.Rest.Indexes.ListAsync(); async Task Rebuild(IndexSummary index){await Api.Crest.Rest.Indexes.RebuildAsync(index.Id);Model=await Api.Crest.Rest.Indexes.ListAsync();} }
+
+@* Index profiles (Crest.Indexing): every index the providers keep, with rebuild, reset,
+   synchronize and delete; create one of a provider's kinds, and edit a profile as its JSON (the
+   shape its recipe step writes - provider-specific forms come later). *@
+<CrestStack Gap="1rem" data-testid="indexes-page">
+    <CrestText TextStyle="TextStyle.H4" Text="@T["Indexes"]" />
+    @if (Error is { } error) { <CrestAlert AlertStyle="AlertStyle.Danger" AllowClose="false">@error</CrestAlert> }
+    @if (Message is { } message) { <CrestAlert AlertStyle="AlertStyle.Info" AllowClose="false">@message</CrestAlert> }
+
+    <CrestCard data-testid="index-create">
+        <CrestStack Gap="0.5rem">
+            <CrestText TextStyle="TextStyle.Subtitle1" Text="@T["New index"]" />
+            <CrestDropDown TValue="string" @bind-Value="NewSource" Data="@SourceChoices" TextProperty="Label" ValueProperty="Value" Placeholder="@T["Kind of index"]" Style="max-width: 24rem" />
+            <CrestTextArea @bind-Value="NewJson" Rows="6" Style="width: 100%; font-family: monospace" Placeholder="@T["The profile as JSON, e.g. { \"Name\": \"Search\", \"IndexName\": \"search\" }"]" />
+            <div><CrestButton Text="@T["Create"]" Icon="add" Click="CreateAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(NewSource))" /></div>
+        </CrestStack>
+    </CrestCard>
+
+    @if (Profiles is null)
+    {
+        <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        @foreach (var profile in Profiles)
+        {
+            <CrestCard data-index="@profile.Id">
+                <CrestStack Gap="0.5rem">
+                    <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                        <div>
+                            <CrestText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@profile.Name</CrestText>
+                            <CrestText TextStyle="TextStyle.Caption">@profile.Provider · @profile.Type · @profile.IndexName</CrestText>
+                        </div>
+                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem" Wrap="FlexWrap.Wrap">
+                            <CrestButton Text="@T["Rebuild"]" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => PostAsync(profile, "rebuild", T["Rebuilt."]))" Disabled="Busy" />
+                            <CrestButton Text="@T["Reset"]" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => PostAsync(profile, "reset", T["Reset; synchronizing in the background."]))" Disabled="Busy" />
+                            <CrestButton Text="@T["Synchronize"]" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => PostAsync(profile, "synchronize", T["Synchronizing in the background."]))" Disabled="Busy" />
+                            <CrestButton Text="@T["Edit"]" Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => EditAsync(profile))" Disabled="Busy" />
+                            <CrestButton Text="@T["Delete"]" Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@(() => DeleteAsync(profile, false))" Disabled="Busy" />
+                            <CrestButton Text="@T["Force delete"]" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteAsync(profile, true))" Disabled="Busy" />
+                        </CrestStack>
+                    </CrestStack>
+                    @if (EditingId == profile.Id)
+                    {
+                        <CrestTextArea @bind-Value="EditJson" Rows="12" Style="width: 100%; font-family: monospace" />
+                        <div><CrestButton Text="@T["Save"]" Icon="save" Click="@(() => SaveAsync(profile))" Disabled="Busy" /></div>
+                    }
+                </CrestStack>
+            </CrestCard>
+        }
+    }
+</CrestStack>
+
+@code {
+    private const string Api = "api/crest/indexes";
+    private static readonly JsonSerializerOptions s_indented = new() { WriteIndented = true };
+
+    private Summary[]? Profiles;
+    private Source[] Sources = [];
+    private string? NewSource;
+    private string? NewJson = "{}";
+    private string? EditingId;
+    private string? EditJson;
+    private string? Error;
+    private string? Message;
+    private bool Busy;
+
+    private Choice[] SourceChoices => Sources.Select(source => new Choice($"{source.ProviderName}|{source.Type}", $"{source.DisplayName} ({source.ProviderName})")).ToArray();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { Sources = await Http.GetFromJsonAsync<Source[]>($"{Api}/sources") ?? []; }
+        catch (Exception exception) { Error = exception.Message; }
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try { Profiles = await Http.GetFromJsonAsync<Summary[]>(Api); }
+        catch (Exception exception) { Error = exception.Message; }
+    }
+
+    private async Task CreateAsync()
+    {
+        if (ParseJson(NewJson) is not { } data) return;
+        var parts = NewSource!.Split('|', 2);
+        await SendAsync(() => Http.PostAsJsonAsync(Api, new { ProviderName = parts[0], Type = parts[1], Data = data }), T["Created; synchronizing in the background."]);
+        if (Error is null) NewJson = "{}";
+    }
+
+    private async Task EditAsync(Summary profile)
+    {
+        if (EditingId == profile.Id) { EditingId = null; return; }
+        try
+        {
+            var node = await Http.GetFromJsonAsync<JsonNode>($"{Api}/{Uri.EscapeDataString(profile.Id)}");
+            EditJson = node?.ToJsonString(s_indented);
+            EditingId = profile.Id;
+        }
+        catch (Exception exception) { Error = exception.Message; }
+    }
+
+    private async Task SaveAsync(Summary profile)
+    {
+        if (ParseJson(EditJson) is not { } data) return;
+        await SendAsync(() => Http.PutAsJsonAsync($"{Api}/{Uri.EscapeDataString(profile.Id)}", new { Data = data }), T["Saved."]);
+        if (Error is null) EditingId = null;
+    }
+
+    private Task PostAsync(Summary profile, string action, string done) => SendAsync(() => Http.PostAsync($"{Api}/{Uri.EscapeDataString(profile.Id)}/{action}", null), done);
+
+    private Task DeleteAsync(Summary profile, bool force) => SendAsync(() => Http.DeleteAsync($"{Api}/{Uri.EscapeDataString(profile.Id)}?force={force.ToString().ToLowerInvariant()}"), T["Deleted."]);
+
+    private JsonObject? ParseJson(string? text)
+    {
+        try
+        {
+            if (JsonNode.Parse(string.IsNullOrWhiteSpace(text) ? "{}" : text) is JsonObject value) return value;
+            Error = T["The profile must be a JSON object."];
+        }
+        catch (JsonException exception) { Error = exception.Message; }
+        return null;
+    }
+
+    private async Task SendAsync(Func<Task<HttpResponseMessage>> call, string done)
+    {
+        Busy = true;
+        Error = null;
+        Message = null;
+        try
+        {
+            using var response = await call();
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            Message = done;
+            await LoadAsync();
+        }
+        finally { Busy = false; }
+    }
+
+    private sealed record Summary(string Id, string? Name, string? Provider, string? IndexName, string? Type, string? CreatedUtc);
+    private sealed record Source(string ProviderName, string Type, string DisplayName, string? Description);
+    private sealed record Choice(string Value, string Label);
+}

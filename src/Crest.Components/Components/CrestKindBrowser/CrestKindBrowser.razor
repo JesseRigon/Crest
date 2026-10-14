@@ -1,0 +1,244 @@
+@namespace Crest.Components.Model
+@typeparam TKind
+@using System.Net.Http.Json
+@using Crest.Components.Primitives
+@inject HttpClient Http
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* A kind registry's "All" page (docs/architecture.md › Kind-registry plumbing): every kind the
+   registry serves down the left, the selected kind's pane in the main section. The registry
+   supplies the kinds endpoint, how a kind reads, and its pane; the page is the same for party
+   types, asset kinds and transaction kinds. When the kinds carry their admin menu item's key,
+   the "Panes" settings hide a kind for the signed-in user (their own hidden-items preference
+   on that key, so the sidebar link goes with it). *@
+
+<CrestStack Gap="1rem" class="@($"crest-kind-browser {Class}")" data-testid="@TestId">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <div>
+            <CrestText TextStyle="TextStyle.H4" class="rz-m-0">@Title</CrestText>
+            @if (!string.IsNullOrWhiteSpace(Description))
+            {
+                <CrestText TextStyle="TextStyle.Body2" class="rz-color-secondary">@Description</CrestText>
+            }
+        </div>
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            @if (CanHide)
+            {
+                <CrestButton Icon="tune" Text="@T["Panes"]" ButtonStyle="ButtonStyle.Light" Click="@(() => ShowSettings = !ShowSettings)" data-testid="@($"{TestId}-panes-toggle")" />
+            }
+            <CrestButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="IsLoading" />
+        </CrestStack>
+    </CrestStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" Summary="@ErrorSummary" Detail="@Error" />
+    }
+
+    @if (ShowSettings && CanHide)
+    {
+        <CrestCard data-testid="@($"{TestId}-pane-settings")">
+            <CrestStack Gap="0.5rem">
+                <CrestText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@T["Panes you see"]</CrestText>
+                <CrestText TextStyle="TextStyle.Caption">@T["Your own view only: a pane you hide here leaves this list and your menu, nobody else's. A kind missing from this list was hidden for the whole tenant in the admin menu layout."]</CrestText>
+                @foreach (var kind in Kinds)
+                {
+                    var key = KeySelector(kind);
+                    <div>
+                        <CrestCheckBox TValue="bool" Value="@(!IsHidden(kind))" ValueChanged="@((bool visible) => SetVisibleAsync(kind, visible))" Name="@($"pane-{key}")" Disabled="@(IsSaving || MenuItemKeySelector!(kind) is null)" />
+                        <CrestLabel Text="@TextSelector(kind)" Component="@($"pane-{key}")" />
+                    </div>
+                }
+            </CrestStack>
+        </CrestCard>
+    }
+
+    <CrestStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Stretch" class="crest-kind-browser__layout">
+        <CrestModelList TItem="TKind"
+                        Title="@ListTitle"
+                        Items="@VisibleKinds"
+                        SelectedKey="@SelectedKey"
+                        KeySelector="@(kind => KeySelector(kind))"
+                        TextSelector="@(kind => TextSelector(kind))"
+                        DescriptionSelector="DescriptionSelector"
+                        ShowCreate="false"
+                        ShowSearch="false"
+                        Select="@(kind => SelectAsync(KeySelector(kind)))"
+                        EmptyText="@EmptyText"
+                        IsBusy="IsLoading"
+                        Actions="ListActions" />
+
+        <div style="flex: 1; min-width: 0;">
+            @if (SelectedKind is { } selected)
+            {
+                @Pane(selected)
+            }
+            else if (!IsLoading && !string.IsNullOrWhiteSpace(NoSelectionText))
+            {
+                <CrestCard><CrestText TextStyle="TextStyle.Body1">@NoSelectionText</CrestText></CrestCard>
+            }
+        </div>
+    </CrestStack>
+</CrestStack>
+
+@code {
+    /// <summary>GET endpoint answering the registry's kinds (base-relative).</summary>
+    [Parameter, EditorRequired] public string KindsUrl { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired] public Func<TKind, string> KeySelector { get; set; } = default!;
+
+    /// <summary>The kind's caption, already translated.</summary>
+    [Parameter, EditorRequired] public Func<TKind, string> TextSelector { get; set; } = default!;
+
+    [Parameter] public Func<TKind, string?>? DescriptionSelector { get; set; }
+
+    /// <summary>The selected kind's pane.</summary>
+    [Parameter, EditorRequired] public RenderFragment<TKind> Pane { get; set; } = default!;
+
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public string ListTitle { get; set; } = "Kinds";
+    [Parameter] public string EmptyText { get; set; } = "No kinds are registered.";
+    [Parameter] public string? NoSelectionText { get; set; }
+    [Parameter] public string ErrorSummary { get; set; } = "Could not load the kinds";
+    [Parameter] public string TestId { get; set; } = "kind-browser";
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>The kind to open first (a query parameter); the first visible one otherwise.</summary>
+    [Parameter] public string? InitialKey { get; set; }
+
+    /// <summary>The kind's admin menu item key; with <see cref="HiddenByUserSelector"/> it turns on the per-user "Panes" settings.</summary>
+    [Parameter] public Func<TKind, string?>? MenuItemKeySelector { get; set; }
+
+    /// <summary>Whether the signed-in user hid the kind's menu item, as the kinds endpoint reports it.</summary>
+    [Parameter] public Func<TKind, bool>? HiddenByUserSelector { get; set; }
+
+    /// <summary>The user's hidden menu items endpoint (GET and PUT <c>{ hiddenItemKeys }</c>).</summary>
+    [Parameter] public string HiddenItemsUrl { get; set; } = "api/crest/navigation/me/hidden";
+
+    /// <summary>Row actions besides "Hide for me" (open the kind's page and the like).</summary>
+    [Parameter] public IReadOnlyList<CrestModelListAction<TKind>> Actions { get; set; } = [];
+
+    [Parameter] public EventCallback<TKind> SelectedChanged { get; set; }
+
+    public TKind[] Kinds { get; private set; } = [];
+
+    public string? SelectedKey { get; private set; }
+
+    public TKind? SelectedKind => VisibleKinds.FirstOrDefault(kind => KeySelector(kind) == SelectedKey);
+
+    private readonly HashSet<string> _hidden = new(StringComparer.Ordinal);
+    private bool CanHide => MenuItemKeySelector is not null && HiddenByUserSelector is not null;
+    private TKind[] VisibleKinds => Kinds.Where(kind => !IsHidden(kind)).ToArray();
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool ShowSettings { get; set; }
+    private string? Error { get; set; }
+
+    private IReadOnlyList<CrestModelListAction<TKind>> ListActions => CanHide
+        ? [.. Actions, new() { Icon = "visibility_off", Title = T["Hide for me"], Callback = EventCallback.Factory.Create<TKind>(this, kind => SetVisibleAsync(kind, false)), Disabled = kind => MenuItemKeySelector!(kind) is null }]
+        : Actions;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    /// <summary>Selects a kind by key (a conversion landing in another kind's pane, a query parameter).</summary>
+    public async Task SelectAsync(string? key)
+    {
+        SelectedKey = key;
+        if (SelectedKind is { } kind)
+        {
+            await SelectedChanged.InvokeAsync(kind);
+        }
+
+        StateHasChanged();
+    }
+
+    private bool IsHidden(TKind kind) => _hidden.Contains(KeySelector(kind));
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        Error = null;
+        try
+        {
+            Kinds = await Http.GetFromJsonAsync<TKind[]>(KindsUrl) ?? [];
+            _hidden.Clear();
+            if (HiddenByUserSelector is not null)
+            {
+                foreach (var kind in Kinds.Where(HiddenByUserSelector))
+                {
+                    _hidden.Add(KeySelector(kind));
+                }
+            }
+
+            SelectedKey = VisibleKinds.Any(kind => KeySelector(kind) == SelectedKey) ? SelectedKey
+                : VisibleKinds.FirstOrDefault(kind => string.Equals(KeySelector(kind), InitialKey, StringComparison.OrdinalIgnoreCase)) is { } initial ? KeySelector(initial)
+                : VisibleKinds.Select(KeySelector).FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    // One write path: the user's full hidden-key set, with this kind's key added or removed.
+    // Keys hidden for other reasons (other pages' items) are read first and kept.
+    private async Task SetVisibleAsync(TKind kind, bool visible)
+    {
+        if (MenuItemKeySelector?.Invoke(kind) is not { } menuItemKey)
+        {
+            return;
+        }
+
+        IsSaving = true;
+        Error = null;
+        try
+        {
+            var current = await Http.GetFromJsonAsync<HiddenItems>(HiddenItemsUrl) ?? new([]);
+            var keys = current.HiddenItemKeys.ToHashSet(StringComparer.Ordinal);
+            if (visible)
+            {
+                keys.Remove(menuItemKey);
+            }
+            else
+            {
+                keys.Add(menuItemKey);
+            }
+
+            var response = await Http.PutAsJsonAsync(HiddenItemsUrl, new HiddenItems(keys.ToArray()));
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            if (visible)
+            {
+                _hidden.Remove(KeySelector(kind));
+            }
+            else
+            {
+                _hidden.Add(KeySelector(kind));
+            }
+
+            if (!visible && SelectedKey == KeySelector(kind))
+            {
+                SelectedKey = VisibleKinds.Select(KeySelector).FirstOrDefault();
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private sealed record HiddenItems(string[] HiddenItemKeys);
+}

@@ -6,6 +6,7 @@ using Crest.Data;
 using Crest.Data.Migration;
 using Crest.Modules;
 using Crest.Security;
+using Crest.Security.Permissions;
 using Crest.Users.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -47,6 +48,9 @@ public sealed class Startup : StartupBase
         services.AddIndexProvider<Store.UserAccessOverrideIndexProvider>();
         services.AddIndexProvider<Store.UserAccessIndexProvider>();
         AddPermissionModelServices(services);
+        services.AddPermissionProvider<AccessPermissionProvider>();
+        services.AddScoped<IPermissionSetProvider, AccessPermissionSetProvider>();
+        services.AddScoped<IResourcePermissionMapper, OrganizationReachPermissionMapper>();
 
         // The version is an invalidation token, not a counter anyone reads: two writers that
         // both move v to v + 1 still invalidate every state built at v. Optimistic concurrency

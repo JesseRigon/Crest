@@ -18,12 +18,15 @@ public sealed class MemberAuditTrailEventConfiguration : IConfigureOptions<Audit
 
     public const string ActiveOrganizationChanged = nameof(ActiveOrganizationChanged);
 
+    public const string OwnershipTransferred = nameof(OwnershipTransferred);
+
     public void Configure(AuditTrailOptions options)
     {
         options.For<MemberAuditTrailEventConfiguration>(Category, S => S["Members"])
             .WithEvent(BindingAdded, S => S["Binding added"], S => S["A member was bound to an organization."], true)
             .WithEvent(BindingRemoved, S => S["Binding removed"], S => S["A member's binding to an organization was removed."], true)
-            .WithEvent(ActiveOrganizationChanged, S => S["Organization switched"], S => S["A member session switched its active organization."], false);
+            .WithEvent(ActiveOrganizationChanged, S => S["Organization switched"], S => S["A member session switched its active organization."], false)
+            .WithEvent(OwnershipTransferred, S => S["Ownership transferred"], S => S["An organization's ownership moved to another user."], true);
     }
 }
 
@@ -39,6 +42,9 @@ public sealed class MemberAuditTrailEvent
     public List<string> Roles { get; set; } = [];
 
     public bool IsMemberAdmin { get; set; }
+
+    /// <summary>On an ownership transfer: the owner before it.</summary>
+    public string? PreviousOwnerUserId { get; set; }
 }
 
 /// <summary>

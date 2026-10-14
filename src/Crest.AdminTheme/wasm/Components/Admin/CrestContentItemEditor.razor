@@ -3,6 +3,7 @@
 @using Crest.AdminTheme.Display
 @using Crest.Components.Primitives
 @using Crest.DisplayManagement.Components
+@inject HttpClient Http
 @inject IApi Api
 @inject NavigationManager Navigation
 @inject NotificationService Notifications
@@ -44,8 +45,17 @@
 
         <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
             <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="Cancel" Disabled="@IsSaving" />
+            @if (!IsCreate)
+            {
+                <CrestButton Text="@T["Save draft"]" Icon="edit_note" ButtonStyle="ButtonStyle.Light" Click="SaveDraftAsync" Disabled="@IsSaving" data-testid="content-item-save-draft" />
+            }
             <CrestButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsSaving" data-testid="content-item-save" />
         </CrestStack>
+
+        @if (!IsCreate && ContentItemId is not null)
+        {
+            <ContentItemVersionActions ContentItemId="@ContentItemId" />
+        }
     }
 </CrestStack>
 
@@ -151,6 +161,35 @@
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    // Saves the edits as a draft beside the published version (api .../draft): the published
+    // version stays live until the draft is published or discarded.
+    private async Task SaveDraftAsync()
+    {
+        if (EditedContent() is not { } content || EditedType is null || ContentItemId is null)
+        {
+            ErrorMessage = T["There is nothing to save."];
+            return;
+        }
+
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            using var response = await Http.PutAsJsonAsync($"api/crest/content-items/{Uri.EscapeDataString(ContentItemId)}/draft", new ContentItemWriteRequest(EditedType, DisplayText, content, false));
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["Draft saved."]);
         }
         finally
         {

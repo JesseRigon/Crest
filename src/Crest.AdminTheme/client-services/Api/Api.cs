@@ -54,6 +54,8 @@ public interface IRestApi
     IBrandingApi Branding { get; }
     IRegionsApi Regions { get; }
     ITenantsApi Tenants { get; }
+    ITenantEditorApi TenantEditor { get; }
+    IOpenIdAdminApi OpenId { get; }
     IIconsApi Icons { get; }
     IContentGroupsApi ContentGroups { get; }
 }
@@ -297,6 +299,8 @@ public sealed class RestApi(HttpClient http, IAntiforgeryTokenStore antiforgery)
     public IBrandingApi Branding { get; } = new BrandingApi(http);
     public IRegionsApi Regions { get; } = new RegionsApi(http);
     public ITenantsApi Tenants { get; } = new TenantsApi(http);
+    public ITenantEditorApi TenantEditor { get; } = new TenantEditorApi(http);
+    public IOpenIdAdminApi OpenId { get; } = new OpenIdAdminApi(http);
     public IIconsApi Icons { get; } = new IconsApi(http);
     public IContentGroupsApi ContentGroups { get; } = new ContentGroupsApi(http);
 }
@@ -1907,7 +1911,12 @@ public sealed record StandardMenuNodeSummary(
     int Order,
     string? ParentId,
     string[] PermissionNames,
-    StandardMenuNodeSummary[] Items);
+    StandardMenuNodeSummary[] Items)
+{
+    public string? ContentItemId { get; init; }
+
+    public bool CheckContentPermissions { get; init; }
+}
 
 public sealed record StandardMenuNodeEditModel(
     string Type,
@@ -1917,7 +1926,9 @@ public sealed record StandardMenuNodeEditModel(
     string? Html,
     string[]? PermissionNames,
     string? ParentNodeId,
-    int? Position);
+    int? Position,
+    string? ContentItemId = null,
+    bool CheckContentPermissions = false);
 
 public sealed record StandardMenuNodeMoveModel(string? ParentNodeId, int? Position);
 

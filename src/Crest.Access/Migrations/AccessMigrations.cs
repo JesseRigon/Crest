@@ -1,4 +1,8 @@
 using Crest.Access.Store;
+using Crest.Environment.Shell.Scope;
+using Crest.Security;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Crest.Data.Migration;
 using YesSql.Sql;
 
@@ -40,6 +44,36 @@ public sealed class AccessMigrations : DataMigration
         await SchemaBuilder.AlterIndexTableAsync<UserAccessIndex>(table => table
             .CreateIndex("IDX_UserAccessIndex_User", "DocumentId", "UserId", "OrganizationId", "Kind"));
 
-        return 1;
+        EnsureManagementSets();
+        return 2;
+    }
+
+    /// <summary>The management sets (docs/permissions.md › Who manages the permission model),
+    /// created from their defaults and held by the Administrator role.</summary>
+    public int UpdateFrom1()
+    {
+        EnsureManagementSets();
+        return 2;
+    }
+
+    private static void EnsureManagementSets()
+    {
+        ShellScope.AddDeferredTask(async scope =>
+        {
+            var services = scope.ServiceProvider;
+            await services.GetRequiredService<IPermissionSetService>().EnsureDefaultsAsync();
+            var roles = services.GetRequiredService<RoleManager<IRole>>();
+            if (await roles.FindByNameAsync(PlatformConstants.Roles.Administrator) is Role administrator)
+            {
+                var missing = new[] { AccessPermissions.ManagePermissionsSet, AccessPermissions.ManageGroupsSet }
+                    .Where(set => !administrator.PermissionSets.Contains(set, StringComparer.OrdinalIgnoreCase))
+                    .ToArray();
+                if (missing.Length > 0)
+                {
+                    administrator.PermissionSets.AddRange(missing);
+                    await roles.UpdateAsync(administrator);
+                }
+            }
+        });
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -14,14 +15,15 @@ using Crest.Users.Services;
 
 namespace Crest.Users.Controllers;
 
+// Only the resend remains MVC (the stock two-factor and legacy user-list screens post to it);
+// confirming an email and the "confirmation sent" message are the site shell's account pages
+// (step 7), and the account API resends for the native pages.
 public sealed class EmailConfirmationController : Controller
 {
     private readonly UserManager<IUser> _userManager;
     private readonly IAuthorizationService _authorizationService;
     private readonly INotifier _notifier;
-    private readonly IEnumerable<IUserEventHandler> _userEventHandlers;
     private readonly UserEmailService _userEmailService;
-    private readonly ILogger _logger;
 
     internal readonly IHtmlLocalizer H;
     internal readonly IStringLocalizer S;
@@ -30,53 +32,17 @@ public sealed class EmailConfirmationController : Controller
         UserManager<IUser> userManager,
         IAuthorizationService authorizationService,
         INotifier notifier,
-        IEnumerable<IUserEventHandler> userEventHandlers,
         UserEmailService userEmailService,
-        ILogger<EmailConfirmationController> logger,
         IHtmlLocalizer<EmailConfirmationController> htmlLocalizer,
         IStringLocalizer<EmailConfirmationController> stringLocalizer)
     {
         _userManager = userManager;
         _authorizationService = authorizationService;
         _notifier = notifier;
-        _userEventHandlers = userEventHandlers;
         _userEmailService = userEmailService;
-        _logger = logger;
         H = htmlLocalizer;
         S = stringLocalizer;
     }
-
-    [AllowAnonymous]
-    public async Task<IActionResult> ConfirmEmail(string userId, string code)
-    {
-        if (userId == null || code == null)
-        {
-            return NotFound();
-        }
-
-        var user = await _userManager.FindByIdAsync(userId);
-
-        if (user == null)
-        {
-            return NotFound();
-        }
-
-        var result = await _userManager.ConfirmEmailAsync(user, code);
-
-        if (result.Succeeded)
-        {
-            var userContext = new UserConfirmContext(user) { ConfirmationType = UserConfirmationType.Email };
-            await _userEventHandlers.InvokeAsync((handler, context) => handler.ConfirmedAsync(userContext), userContext, _logger);
-
-            return View();
-        }
-
-        return NotFound();
-    }
-
-    [AllowAnonymous]
-    public IActionResult ConfirmEmailSent(string returnUrl = null)
-        => View(new { ReturnUrl = returnUrl });
 
     [Authorize]
     [HttpPost]
@@ -116,6 +82,6 @@ public sealed class EmailConfirmationController : Controller
             return Redirect(returnUrl);
         }
 
-        return RedirectToAction(nameof(AdminController.Index), typeof(AdminController).ControllerName());
+        return LocalRedirect($"~/{HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<Crest.Admin.AdminOptions>>().Value.AdminUrlPrefix.Trim('/')}/Users/Index");
     }
 }

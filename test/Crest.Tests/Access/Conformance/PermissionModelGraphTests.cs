@@ -50,6 +50,16 @@ public class PermissionModelGraphTests
         public IUserAccessReader Reader { get; } = reader;
     }
 
+    /// <summary>Members' ownership reaches the groups (it places a new owner in them).</summary>
+    private sealed class Ownership(IAccessGroupService groups) : IOrganizationOwnership
+    {
+        public IAccessGroupService Groups { get; } = groups;
+        public string OwnerRoleName => "Member Administrator";
+        public Task<string> GetOwnerAsync(string organizationId, CancellationToken cancellationToken = default) => Task.FromResult<string>(null);
+        public Task<bool> EnsureOwnerAsync(string organizationId, string userId, CancellationToken cancellationToken = default) => Task.FromResult(false);
+        public Task TransferAsync(string organizationId, string newOwnerUserId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
     [Fact]
     public async Task The_user_manager_and_the_projection_resolve_in_one_scope()
     {
@@ -64,6 +74,7 @@ public class PermissionModelGraphTests
         services.AddScoped(sp => new UserManager<IUser>(sp.GetRequiredService<IUserStore<IUser>>(), null, null, null, null, null, null, sp, null));
         services.AddScoped<IUserEventHandler, PlacingHandler>();
         services.AddScoped<IUserEventHandler, ReadingHandler>();
+        services.AddScoped<IOrganizationOwnership, Ownership>();
         global::Crest.Access.Startup.AddPermissionModelServices(services);
 
         await using var provider = services.BuildServiceProvider();
@@ -76,6 +87,7 @@ public class PermissionModelGraphTests
             Assert.NotNull(scope.ServiceProvider.GetRequiredService<IUserAccessReader>());
             Assert.NotNull(scope.ServiceProvider.GetRequiredService<IAccessGroupService>());
             Assert.NotNull(scope.ServiceProvider.GetRequiredService<IUserAccessOverrideService>());
+            Assert.NotNull(scope.ServiceProvider.GetRequiredService<IOrganizationOwnership>());
         }, TestContext.Current.CancellationToken);
 
         await resolve.WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);

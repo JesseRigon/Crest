@@ -8,7 +8,6 @@ using Crest.Flows.Drivers;
 using Crest.Flows.Handlers;
 using Crest.Flows.Indexing;
 using Crest.Flows.Models;
-using Crest.Flows.Settings;
 using Crest.Flows.ViewModels;
 using Crest.Indexing;
 using Crest.DisplayManagement;
@@ -31,8 +30,6 @@ public sealed class Startup : StartupBase
         services.AddContentPart<BagPart>()
             .UseDisplayDriver<BagPartDisplayDriver>()
             .AddHandler<BagPartHandler>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, BagPartSettingsDisplayDriver>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, BagPartBlocksEditorSettingsDriver>();
         services.AddScoped<IContentPartIndexHandler, BagPartIndexHandler>();
 
         // The content cards the BagPart editor is built from (moved here from the retired

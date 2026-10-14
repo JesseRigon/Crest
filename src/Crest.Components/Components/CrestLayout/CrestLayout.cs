@@ -32,6 +32,8 @@ namespace Crest.Components.Primitives
     /// &lt;/CrestLayout&gt;
     /// </code>
     /// </example>
+    // Named App* so the app-frame hosts do not collide with the themes' Layout component or the zone keys.
+    [Crest.DisplayManagement.Components.BlazorComponent("AppLayout", DisplayName = "App layout", Category = "Layout", Icon = "layout_dashboard", IsHost = true)]
     public partial class CrestLayout : CrestComponentWithChildren, IDisposable
     {
         [Inject]

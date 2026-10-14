@@ -96,6 +96,15 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             // guarded on every save path: the picker's allowed types are enforced by the
             // content picker's save guard, the cycle refusal by Parties' relationship
             // handler (ParentOrganizationRelationshipHandler).
+            // An Individual organization: the organization of one person in a business
+            // relationship (a regular customer), created when an organization role is added
+            // to a person; exactly one member; converted to an ordinary one only when the
+            // tenant allows (docs/parties.md, ruling 2026-10-14).
+            .WithField(PartiesConstants.OrganizationFields.Individual, field => field
+                .OfType("BooleanField")
+                .WithDisplayName("Individual")
+                .WithDescription("The organization of one person; it reads as the person.")
+                .WithPosition("2"))
             .WithField(PartiesConstants.OrganizationFields.ParentOrganization, field => field
                 .OfType("ContentPickerField")
                 .WithDisplayName("Parent organization")

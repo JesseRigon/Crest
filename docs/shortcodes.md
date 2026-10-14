@@ -1,11 +1,10 @@
 # Shortcodes
 
-Status: **retiring** (ruling 2026-10-12, [blazor-display.md](blazor-display.md) › Rulings
-2026-10-12): shortcodes become Liquid components and templates; this file becomes the migration
-record. Started 2026-10-11 as a tracking document. Shortcodes are the tags editors type into content
-text (`[image]…[/image]`, `[asset_url]`, `[locale en]…[/locale]`, and template shortcodes an admin
-defines in Liquid). This file tracks their updates: media references by id and by path now, and
-the question of folding shortcodes into Liquid ([§ Liquid and shortcodes](#liquid-and-shortcodes)).
+Status: **retiring.** Shortcodes are removed; what they do becomes Liquid templates and
+components ([blazor-display.md](blazor-display.md)). Until the code is gone, this file records
+how they work and the media-reference work on them. Shortcodes are the tags editors type into
+content text (`[image]…[/image]`, `[asset_url]`, `[locale en]…[/locale]`, and template
+shortcodes an admin defines in Liquid).
 
 ## How they work today
 
@@ -28,7 +27,7 @@ the question of folding shortcodes into Liquid ([§ Liquid and shortcodes](#liqu
 - **Liquid's side**: the `shortcode` Liquid filter (`Crest.Liquid`, when Shortcodes is on)
   expands shortcodes inside a string from a template; template shortcodes are themselves Liquid.
 
-## Media references: ids and paths (ruling F1, docs/media.md)
+## Media references: ids and paths ([media.md](media.md))
 
 Media is stored by placement id; a path is a placement in the library drive. A shortcode must work
 with both, because content written before ids existed holds paths, and new content should hold ids
@@ -49,9 +48,9 @@ never cached for everyone (docs/media.md › Serving and CDNs).
 
 ### Tasks
 
-- [x] **Resolve ids and paths** in `[image]` and `[asset_url]` (F1 migration, 2026-10-11).
+- [x] **Resolve ids and paths** in `[image]` and `[asset_url]`.
 - [x] **Explicit `id` and `path` arguments**, id first with the path as fallback
-  (`Crest.Media/Shortcodes/MediaShortcodeReference.cs`, 2026-10-11; compiled, not yet tested).
+  (`Crest.Media/Shortcodes/MediaShortcodeReference.cs`; compiled, not yet tested).
 - [ ] **Tests** for the explicit forms (id, path, both, id gone with path fallback, private file
   signed, invisible file rendering nothing).
 - [ ] **Write ids on save**: a content handler that rewrites path-form media shortcodes in body
@@ -66,11 +65,6 @@ never cached for everyone (docs/media.md › Serving and CDNs).
 
 ## Liquid and shortcodes
 
-Open (2026-10-11): whether shortcodes become Liquid-based, stay a separate system, or merge with
-the templating system. The options and their trade-offs are being discussed; record the ruling
-here.
-
-## Decisions needed
-
-- [x] **Liquid-based shortcodes** (§ Liquid and shortcodes). Ruled 2026-10-12: shortcodes are
-  removed; everything is Liquid templates and components (blazor-display.md).
+Shortcodes do not stay a separate system: everything they do is Liquid templates and
+components (blazor-display.md). Template shortcodes are already Liquid, and media reaches
+Liquid through `asset_url`, which takes ids and paths.

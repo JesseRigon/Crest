@@ -28,7 +28,11 @@ both:
   (anonymous or not), and the **route permission table** (`IRoutePermissionProvider` →
   Access's `IRouteAuthorization` for Blazor routes, `AdminFilter`/`AccessAdminPanel` for the
   remaining MVC admin) names the permission each page takes. It also decides which menu
-  entries show. A page grants **no data**: it is a frame.
+  entries show. A page grants **no data**: it is a frame. In the target the permission is
+  declared once on the page's entry in Crest.Server's page registry, and the gate and the menu
+  both read it; per-tenant and per-user page permissions resolve through the access model
+  ([architecture.md › One page registry](architecture.md#one-page-registry)). Tests name the
+  page and its permission either way.
 - **Data and workflows** - which objects a caller may read, change or run, on any surface (the
   page's API calls, GraphQL, queries, Liquid, workflow activities, exports). The one decision
   (`IAccessDecision`) with the resource, the caller's scope (`ScopeSet`) for every read, and
@@ -204,9 +208,9 @@ Refusals:
   GraphQL, exports) - the organization scope applies everywhere.
 - Never acts on the admin side (refused at the gate); on the site side holds no org rows.
 - Never holds a ceilinged permission, whatever a role grants (the member class ceiling,
-  a final denial). **Gap (2026-10-11): the ceiling is registered but configured with no
-  permissions, so today it denies nothing.** The list to ceiling (at least everything ⚠ in
-  §§ 10-13, `ManageTenants`, `ManageFeatures`, `ManageRoles`, `ManageSettings`) is a ruling.
+  a final denial). **Gap: the ceiling is registered but configured with no permissions, so
+  today it denies nothing.** Which permissions it lists (at least everything ⚠ in §§ 10-13,
+  `ManageTenants`, `ManageFeatures`, `ManageRoles`, `ManageSettings`) is an open question.
 - A staff grant the same user holds as staff never reaches the member side (dual users).
 - A revoked binding stops working on the next request (the version bumps on binding writes).
 
@@ -559,7 +563,7 @@ Three kinds:
   APIs with a bearer token.
 - **Remote deployment client**: another instance pushing a deployment package
   (`Authorization: RemoteDeployment {client}:{key}`).
-- **Webhook connection identity** (ruled 2026-10-11): an external system calling a
+- **Webhook connection identity**: an external system calling a
   connection's webhook; its signature authenticates it and the run acts as the connection's
   application caller with the roles assigned on the connection.
 

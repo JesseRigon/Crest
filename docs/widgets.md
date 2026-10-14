@@ -1,10 +1,13 @@
 # Widget replacements
 
-Widgets were retired on 2026-10-12 (docs/blazor-display.md, rulings, second batch). This is the
-list of what the deleted widgets did and what replaces each one in the new system: a registered
-Blazor component (`[BlazorComponent]`) that templates place with `{% component %}`, a
-composite template built from components, or a layer placement. Keep it current: when a
-replacement lands, set its status and name the component.
+Widgets are not part of the display system ([blazor-display.md](blazor-display.md) § 6): a
+widget was a content item placed into a zone, and components placed into zone keys do that now.
+This is the list of what the deleted widgets did and what replaces each one: a registered Blazor
+component (`[BlazorComponent]`) that templates place with `{% component %}`, a composite template
+built from components, an item's own tree (`DisplayTreePart`), or a layer placement. Keep it
+current: when a replacement exists, set its status and name the component. The content and form
+components live in `Crest.Components` (`Components/Content`, `Components/Forms`), styled in
+`CrestComponents.css`.
 
 Status: **done** (a replacement exists and is registered), **partial** (it exists but misses
 something the widget did), **missing** (nothing yet), **dropped** (not recreated, with the reason).
@@ -15,7 +18,7 @@ something the widget did), **missing** (nothing yet), **dropped** (not recreated
 | --- | --- | --- |
 | Layer widgets (a widget content item in a layer's zone) | `LayerPlacement` (layer, zone, component, properties, position) via `/Layers` and the `Layers` recipe step | done |
 | `WidgetsListPart` (zones of widgets on one content item) | A `{Type}` template (`Content__{Type}`) places components per type. Per-item placement has no equivalent | partial |
-| `FlowPart` / `Container` (a page body composed of widgets) | `Container`/`Stack` in a template, `BagPart` for item-held children, and `DisplayTreePart` for a body authored per item (ruling below) | done |
+| `FlowPart` / `Container` (a page body composed of widgets) | `Container`/`Stack` in a template, `BagPart` for item-held children, and `DisplayTreePart` for a body authored per item ([blazor-display.md](blazor-display.md) § 7) | done |
 | `BlazorComponent` content type (place one component with a properties JSON) | The `component` tag in a template, or a layer placement | done |
 | `LiquidWidget` (a Liquid template as a widget) | A `Template` content item, as a composite when it takes inputs | done |
 | `Widget.Wrapper` and zone/type alternates | Component variants and overrides (§ 5a) | done |
@@ -27,8 +30,8 @@ something the widget did), **missing** (nothing yet), **dropped** (not recreated
 | --- | --- | --- | --- |
 | Paragraph | Rich text (`HtmlField`) | `RichText` (`Html`, a `markup` parameter): the tree filter sanitizes markup parameters before a tree leaves the server, and the renderer never feeds a browser-bound value into one | done |
 | Blockquote | A quote (`TextField`) | `CrestQuote` | done |
-| Image (`ImageWidget`) | A media item and a caption | `Figure` (`Path`, `AlternateText`, `Caption`); its `Path` declares the `media` editor kind. No media picker editor component exists yet to serve that kind | partial |
-| RawHtml | Unsanitized HTML | The rich-text component above. Unsanitized HTML and scripts are not recreated (scripting ruling) | dropped |
+| Image (`ImageWidget`) | A media item and a caption | `Figure` (`Path`, `AlternateText`, `Caption`); its `Path` is a `media` property, edited by `MediaPicker` (a file from any drive, stored as its placement id) and rendered as `files/{id}` | done |
+| RawHtml | Unsanitized HTML | The rich-text component above. Unsanitized HTML and scripts are not recreated: templates are data, never code (blazor-display.md § 10) | dropped |
 | Container | Groups widgets (`FlowPart`) | `Container`, `Stack`, `Card` | done |
 | LinkMenuItem | A menu link | `MenuItem` inside `Menu` | done |
 
@@ -49,15 +52,15 @@ template is saved and when the form is submitted.
 | Button | Submit button with text | `Button` with an `on click` → `submit` or `run_workflow`; inside a `Form`, `button_type: "Submit"` submits the form | done |
 | Validation | Field error message | Inputs show the errors the run returns for their name: the run endpoint answers a refused contract check with `errors` by input (`UiActionContract.CheckByInput`), the dispatcher raises `DisplayActionException`, and the runner keeps them in `DisplayState` under the form's node (`InstanceId`, filled by the renderer) | done |
 | ValidationSummary | All errors of the form | `ValidationSummary`, reading the same errors | done |
-| Visibility rules (`FormInputElementVisibilityPart`) | Show or hide an input by another input's value (is, is not, empty, contains, starts with, greater than…) | Every input's `Visible`, bound to a comparison (`visible: nodes.country.value == "US"`, ruling below); a hidden input is neither required nor submitted | done |
-| ReCaptcha (`Crest.ReCaptcha` Forms feature) | A captcha in a form | A `Captcha` component that adds its token to the form's arguments, checked by a workflow activity or the action endpoint. ReCaptcha's login and registration use is unaffected | missing |
+| Visibility rules (`FormInputElementVisibilityPart`) | Show or hide an input by another input's value (is, is not, empty, contains, starts with, greater than…) | Every input's `Visible`, bound to a comparison (`visible: nodes.country.value == "US"`, blazor-display.md § 4a); a hidden input is neither required nor submitted | done |
+| ReCaptcha (`Crest.ReCaptcha` Forms feature) | A captcha in a form | `Captcha` (a form input, required, named `captcha` by default) renders the widget with the site key from `api/crest/recaptcha` and submits its token; the workflow checks it with the `Verify captcha` activity, through the same `ReCaptchaService` login and registration use | done |
 
 ## Other modules
 
 | Widget | What it did | Replacement | Status |
 | --- | --- | --- | --- |
-| SearchForm (`Crest.Search`) | A search box posting to the search page | `SearchBox`: a GET form to `search/{index}?Terms=`, so it works before the page is interactive. `SearchFormPart` still exists in `Crest.Search.Abstractions` and is now unused | done |
-| Facebook Chat, Comments, Continue With, Like, Quote, Save, Share | Facebook SDK embeds, each rendered from a Liquid snippet in the part settings | One `FacebookPlugin` component in `Crest.Facebook` with a `Kind` parameter. It loads the SDK itself (module code, so the scripting ruling allows it). Low priority | missing |
+| SearchForm (`Crest.Search`) | A search box posting to the search page | `SearchBox`: a GET form to `search/{index}?Terms=`, so it works before the page is interactive. `SearchFormPart` still exists in `Crest.Search.Abstractions`, unused | done |
+| Facebook Chat, Comments, Continue With, Like, Quote, Save, Share | Facebook SDK embeds, each rendered from a Liquid snippet in the part settings | `FacebookPlugin` (`Kind`, `Href`, `PageId`, `Layout`, `Size`, `Width`, `NumberOfPosts`) in the module's site library `Crest.Facebook.BlazorWasm`; its script loads the SDK through the module's own `sdk/init.js` and `sdk/sdk.{culture}.js` endpoints and parses the element | done |
 
 ## Not recreated
 
@@ -65,69 +68,12 @@ Test-only widget types (`TestWidgetA`, `TestWidgetB`, `EsModuleTestFieldsWidget`
 `EsModuleTestLiquidWidget`, `SeoMetaPartTestWidget`, `FormsFieldEditorTestWidget`) went with
 their tests. The es-module and SEO fixtures keep their non-widget types.
 
-## What landed (2026-10-13)
+## Left
 
-`RichText`, `Figure`, `Form`, `TextInput`, `TextArea`, `Select`, `ValidationSummary` and
-`SearchBox` in `Crest.Components` (`Components/Content`, `Components/Forms`), styled in
-`CrestComponents.css`; the `markup` and `media` editor kinds (`ComponentSchema.Editors`); markup
-sanitized by `DisplayTreeFilter`; refused arguments returned by input name. The SiteTheme blog
-recipe now ships `Content__Article`, `Content__BlogPost` and `Content__Blog` templates, so the
-sample pages render again under decision 10. The Contact page is still empty: its body needs the
-per-item page body (2 below) and a contact workflow with a UI action trigger.
-
-Left: the per-item page body (2, ruled 2026-10-13, below), visibility rules (ruled
-2026-10-13, below), the captcha, Facebook, and a media picker editor for the `media` kind.
-
-**Ruled 2026-10-13: comparisons in bindings.** A binding may compare: `visible:
-nodes.country.value == "US"`. The left side is a binding source as today (a node output, a
-page variable, the event); the operator is one of a fixed list (`==`, `!=`, `empty`, `not
-empty`, `contains`, `starts_with`, `ends_with`, `>`, `<`); the right side is a literal or
-another binding source; `and` / `or` join comparisons, `not` negates. Nothing else: no calls,
-no filters, no arbitrary expressions - the scripting ruling stands, this is a predicate
-grammar over bindings. The template parser stores it as data (`DisplayBinding` with
-`Operator`, `Operand`, `Combinator`), `DisplayTreeValidator` checks the operator and the
-sources, and `DisplayState` evaluates it in the browser when a source changes. Any
-parameter may bind this way, not only `visible`. To build.
-
-**Ruled 2026-10-13: the per-item page body is a `DisplayTreePart`.** The part stores the
-item's own display tree - the same node format templates produce (components, properties,
-zones, bindings) - as JSON on the item. Rendering goes through the existing tree builder: the
-part's tree is mapped into the item's shape zone like any other part, so templates, layer
-placements and item bodies are one system, and the node filter, validator and overrides apply
-to it unchanged. Editing: the designer canvas scoped to one item once it exists; until then a
-JSON editor with `DisplayTreeValidator` validation (components must be registered, properties
-must fit the schema, no scripting). A template referenced by the tree runs with the same
-limits. Replaces the old flow body; the Contact page is its first use. To build.
-
-**What landed (2026-10-13), both rulings above.**
-
-- **Comparisons in bindings.** `DisplayBinding` carries `Operator`, `Operand`, `Combinator` and
-  `Terms` as data; `DisplayPredicates` holds the fixed lists and evaluates. The template parser
-  takes a logical expression as a tag argument and `TemplateTreePredicates` reads it off the
-  parsed expression without evaluating it: Liquid's `==`, `!=`, `contains`, `startswith`,
-  `endswith`, `>`, `<`, `== empty` / `!= empty`, `and`, `or`, and a leading `not` (`>=` and `<=`
-  are stored as `not <` and `not >`). A comparison with no binding in it is evaluated by Liquid
-  as before. `DisplayState.Read` evaluates a predicate whenever the tree re-renders on a change;
-  text that reads as a number compares as one against a number. `DisplayTreeValidator` checks the
-  operator, the operand and every source, and the cycle check and the node filter's unlinking
-  follow the nested sources. Every form input has `Visible`.
-- **`DisplayTreePart`** (Templates module): `Tree` (the node JSON; a node without an id gets one
-  from its position, `DisplayTreeJson`), attachable. Its shape binds through
-  `DisplayTreePartBinding`, an `IDisplayTemplateBinding`, so the builder fills, filters and
-  overrides it like a template's tree: ids and every reference to them are scoped under the
-  part's instance id, markup leaves are sanitized, a node naming a published template is
-  expanded as a composite under the template limits, and the node budget counts. Saving
-  validates it (`DisplayTreePartHandler`: `DisplayTreeValidator.ValidateStored`, which adds the
-  schema check of stored properties, zones and required parameters, plus the workflow action
-  validators). The editor is `DisplayTreeEditor` (`Edits = ["DisplayTreePart"]`), JSON with the
-  same validation as you type. The SiteTheme blog recipe's `Page` type has the part and the
-  Contact page's body is rich text and a contact form. The form has no workflow to send to yet:
-  the recipe ships no UI-action workflow, so its submit only checks the required inputs.
-
-## Order
-
-1. Rich text and the image caption: the sample blog pages lost their bodies and need them back.
-2. A per-item page body: `DisplayTreePart` (ruled above), so an editor can compose one page without a template.
-3. Forms: `Form`, `TextInput`, `TextArea`, `Select`, validation, then visibility rules and the captcha.
-4. `SearchBox`.
-5. Facebook.
+- ☐ The Razor → Blazor component parity audit covers every widget: each has a Blazor component
+  equivalent, reusing `Crest.Components` ([blazor-display.md](blazor-display.md) › Rework plan,
+  step 7).
+- ☐ The SiteTheme blog recipe's Contact page has a body (rich text and a contact form) but no
+  UI-action workflow to send to, so its submit only checks the required inputs.
+- ☐ Per-item placement of components into zones (what `WidgetsListPart` did) has no equivalent;
+  an item composes its own body with `DisplayTreePart` instead.

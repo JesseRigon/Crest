@@ -430,6 +430,28 @@ public sealed class TemplateTreeTests
         Assert.Contains(problems, problem => problem.Reason.Contains("no zone 'Footer'", StringComparison.Ordinal));
     }
 
+    // The shipped account email bodies (step 7: the Razor email shapes are retired) evaluate with
+    // UserEmailService's model to markup carrying the user and the link.
+    [Theory]
+    [InlineData(Crest.Display.AccountEmailTemplates.ConfirmEmailSource)]
+    [InlineData(Crest.Display.AccountEmailTemplates.LostPasswordSource)]
+    public async Task TheShippedAccountEmailsEvaluateWithTheirModel(string source)
+    {
+        var evaluation = await EvaluateAsync(source, model: new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["UserName"] = "ada",
+            ["Email"] = "ada@example.com",
+            ["Url"] = "https://example.com/link",
+            ["ExpiresInMinutes"] = 60,
+        });
+
+        Assert.Empty(evaluation.Diagnostics);
+        var tree = System.Text.Json.JsonSerializer.Serialize(evaluation.Root);
+        Assert.Contains("ada", tree, StringComparison.Ordinal);
+        Assert.Contains("https://example.com/link", tree, StringComparison.Ordinal);
+        Assert.Contains("60", tree, StringComparison.Ordinal);
+    }
+
     private static async Task<TemplateEvaluation> EvaluateAsync(
         string template,
         object? model = null,

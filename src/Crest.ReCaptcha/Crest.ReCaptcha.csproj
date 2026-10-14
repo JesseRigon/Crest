@@ -26,6 +26,9 @@
     <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
     <ProjectReference Include="..\Crest.ResourceManagement.Abstractions\Crest.ResourceManagement.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.ReCaptcha.Abstractions\Crest.ReCaptcha.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Workflows\Abstractions\Crest.Workflows.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Workflows\engine\src\modules\Crest.Workflows.Core\Crest.Workflows.Core.csproj" />
+    <ProjectReference Include="..\Crest.Workflows\engine\src\modules\Crest.Workflows.Engine\Crest.Workflows.Engine.csproj" />
   </ItemGroup>
 
   <ItemGroup>

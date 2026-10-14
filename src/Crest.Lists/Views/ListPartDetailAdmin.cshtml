@@ -16,7 +16,7 @@
 @if (!Model.ContainedContentTypeDefinitions.Any())
 {
     <div class="alert alert-warning">
-        <a asp-action="EditTypePart" asp-controller="Admin" asp-route-area="Crest.ContentTypes" asp-route-id="@Model.ListPart.ContentItem.ContentType" asp-route-name="ListPart">@T["Please specify at least one contained content type."]</a>
+        <a href="~/Admin/ContentTypes/List">@T["Please specify at least one contained content type."]</a>
     </div>
 }
 else

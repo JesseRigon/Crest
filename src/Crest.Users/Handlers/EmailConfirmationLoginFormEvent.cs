@@ -35,19 +35,10 @@ internal sealed class EmailConfirmationLoginFormEvent : LoginFormEventBase
             return null;
         }
 
-        var model = new RouteValueDictionary()
-        {
-            { "Area", UserConstants.Features.Users },
-        };
-
-        if (_httpContextAccessor.HttpContext.Request.Query.TryGetValue("returnUrl", out var returnUrlValue))
-        {
-            model.Add("returnUrl", returnUrlValue);
-        }
-
-        return new RedirectToActionResult(
-            actionName: nameof(EmailConfirmationController.ConfirmEmailSent),
-            controllerName: typeof(EmailConfirmationController).ControllerName(),
-            routeValues: model);
+        // The "confirmation sent" page is the site shell's (step 7: the MVC view is retired).
+        var query = _httpContextAccessor.HttpContext.Request.Query.TryGetValue("returnUrl", out var back) && !string.IsNullOrEmpty(back)
+            ? "?returnUrl=" + Uri.EscapeDataString(back.ToString())
+            : string.Empty;
+        return new LocalRedirectResult("~" + Services.AccountPages.ConfirmEmailSent + query);
     }
 }

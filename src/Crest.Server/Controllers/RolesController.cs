@@ -14,7 +14,7 @@ public sealed class RolesController(IRoleService roleService, IAuthorizationServ
     [HttpGet]
     public async Task<ActionResult<Role[]>> List()
     {
-        if (!await authorization.AuthorizeAsync(User, RolesPermissions.ManageRoles)) return Forbid();
+        if (!await authorization.AuthorizeAsync(User, Crest.Access.AccessPermissions.ReadRoles)) return Forbid();
         var roles = await roleService.GetRolesAsync();
         var result = new List<Role>();
 

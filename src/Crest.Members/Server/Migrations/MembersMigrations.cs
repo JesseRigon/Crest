@@ -47,8 +47,9 @@ public sealed class MembersMigrations : DataMigration
             .CreateIndex("IDX_UserHierarchyClosure_Descendant", "DocumentId", "OrganizationId", "DescendantId"));
 
         DeferEnsureMemberRoleTemplates();
+        await CreateOwnerIndexAsync();
 
-        return 2;
+        return 3;
     }
 
     /// <summary>
@@ -65,6 +66,39 @@ public sealed class MembersMigrations : DataMigration
         });
 
         return 2;
+    }
+
+    /// <summary>
+    /// The organization owner (docs/permissions.md › The organization owner): the owner index,
+    /// and an owner for every organization that has members, taken from its member admins
+    /// (the stored data does not say which was bound first; one admin is chosen).
+    /// </summary>
+    public async Task<int> UpdateFrom2Async()
+    {
+        await CreateOwnerIndexAsync();
+        ShellScope.AddDeferredTask(async scope =>
+        {
+            var services = scope.ServiceProvider;
+            var ownership = services.GetRequiredService<Crest.Access.IOrganizationOwnership>();
+            var admins = await services.GetRequiredService<ISession>()
+                .QueryIndex<UserConnectionIndex>(index => index.Class == Crest.Members.Constants.UserClasses.Member && index.IsMemberAdmin)
+                .ListAsync();
+            foreach (var organization in admins.GroupBy(row => row.OrganizationId))
+            {
+                await ownership.EnsureOwnerAsync(organization.Key, organization.OrderBy(row => row.Id).First().UserId);
+            }
+        });
+
+        return 3;
+    }
+
+    private async Task CreateOwnerIndexAsync()
+    {
+        await SchemaBuilder.CreateMapIndexTableAsync<Services.OrganizationOwnerIndex>(table => table
+            .Column<string>(nameof(Services.OrganizationOwnerIndex.OrganizationId), column => column.WithLength(26))
+            .Column<string>(nameof(Services.OrganizationOwnerIndex.OwnerUserId), column => column.WithLength(26)));
+        await SchemaBuilder.AlterIndexTableAsync<Services.OrganizationOwnerIndex>(table => table
+            .CreateIndex("IDX_OrganizationOwnerIndex_Organization", "DocumentId", "OrganizationId"));
     }
 
     // The member ROLE TEMPLATES are ordinary Crest roles the tenant shapes in the

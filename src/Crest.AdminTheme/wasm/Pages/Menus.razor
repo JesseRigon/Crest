@@ -131,8 +131,16 @@
                             <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Type"]" Style="width: 100%;"><CrestDropDown @bind-Value="NodeDialogModel.Type" Data="AvailableNodeTypes" TextProperty="DisplayName" ValueProperty="Type" Disabled="@(EditingNodeId is not null)" Style="width: 100%;" /></CrestFormField></CrestColumn>
                             <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Parent"]" Style="width: 100%;"><CrestDropDown @bind-Value="NodeDialogModel.ParentNodeId" Data="ParentOptions" TextProperty="Text" ValueProperty="Id" AllowClear="true" Placeholder="@T["Root"]" Style="width: 100%;" /></CrestFormField></CrestColumn>
                             <CrestColumn Size="12"><CrestFormField Text="@T["Text"]" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Text" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                            <CrestColumn Size="12" SizeMD="8"><CrestFormField Text="@T["Url"]" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Url" Style="width: 100%;" /></CrestFormField></CrestColumn>
-                            <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="@T["Target"]" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Target" Placeholder="_blank" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                            @if (string.Equals(NodeDialogModel.Type, "ContentMenuItem", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <CrestColumn Size="12" SizeMD="8"><CrestFormField Text="@T["Content item id"]" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.ContentItemId" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                                <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="@T["Check content permissions"]" Style="width: 100%;"><CrestCheckBox @bind-Value="NodeDialogModel.CheckContentPermissions" TValue="bool" /></CrestFormField></CrestColumn>
+                            }
+                            else
+                            {
+                                <CrestColumn Size="12" SizeMD="8"><CrestFormField Text="@T["Url"]" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Url" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                                <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="@T["Target"]" Style="width: 100%;"><CrestTextBox @bind-Value="NodeDialogModel.Target" Placeholder="_blank" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                            }
                             @if (string.Equals(NodeDialogModel.Type, "HtmlMenuItem", StringComparison.OrdinalIgnoreCase))
                             {
                                 <CrestColumn Size="12"><CrestFormField Text="@T["Html"]" Style="width: 100%;"><CrestTextArea @bind-Value="NodeDialogModel.Html" Rows="5" Style="width: 100%;" /></CrestFormField></CrestColumn>
@@ -179,7 +187,7 @@
     private string NodeDialogTitle { get; set; } = "Menu item";
 
     private StandardMenuSummary? SelectedMenu => State.Menus.FirstOrDefault(menu => menu.Id == SelectedMenuId);
-    private StandardMenuNodeType[] AvailableNodeTypes => State.AvailableNodeTypes.Length == 0 ? [new("LinkMenuItem", T["Link Menu Item"]), new("HtmlMenuItem", T["Html Menu Item"])] : State.AvailableNodeTypes;
+    private StandardMenuNodeType[] AvailableNodeTypes => State.AvailableNodeTypes.Length == 0 ? [new("LinkMenuItem", T["Link Menu Item"]), new("HtmlMenuItem", T["Html Menu Item"]), new("ContentMenuItem", T["Content Menu Item"])] : State.AvailableNodeTypes;
     private ParentOption[] ParentOptions => SelectedMenu is null ? [] : [new(null, T["Root"]), .. FlattenNodes(SelectedMenu.Nodes).Where(node => node.Id != EditingNodeId).Select(node => new ParentOption(node.Id, $"{new string('—', node.Depth)} {node.Text}"))];
 
     private StandardMenuSummary[] FilteredMenus => State.Menus
@@ -316,7 +324,7 @@
         }
     </li>;
 
-    private static bool CanEdit(StandardMenuNodeSummary node) => string.Equals(node.Type, "LinkMenuItem", StringComparison.OrdinalIgnoreCase) || string.Equals(node.Type, "HtmlMenuItem", StringComparison.OrdinalIgnoreCase);
+    private static bool CanEdit(StandardMenuNodeSummary node) => node.Type is "LinkMenuItem" or "HtmlMenuItem" or "ContentMenuItem";
     private static IEnumerable<StandardMenuNodeSummary> FlattenNodes(IEnumerable<StandardMenuNodeSummary> nodes) => nodes.SelectMany(node => new[] { node }.Concat(FlattenNodes(node.Items)));
     private static string NodeMeta(StandardMenuNodeSummary node) => string.Join(" • ", new[] { node.Type, node.Url, !string.IsNullOrWhiteSpace(node.Target) ? $"Target: {node.Target}" : null, node.PermissionNames.Length > 0 ? $"Permissions: {string.Join(", ", node.PermissionNames)}" : null }.Where(value => !string.IsNullOrWhiteSpace(value)));
 
@@ -337,9 +345,11 @@
         public string? PermissionNamesText { get; set; }
         public string? ParentNodeId { get; set; }
         public int? Position { get; set; }
+        public string? ContentItemId { get; set; }
+        public bool CheckContentPermissions { get; set; }
 
-        public static NodeFormModel From(StandardMenuNodeSummary node) => new() { Type = node.Type, Text = node.Text, Url = node.Url, Target = node.Target, Html = node.Html, PermissionNamesText = string.Join(", ", node.PermissionNames), ParentNodeId = node.ParentId, Position = node.Order };
-        public StandardMenuNodeEditModel ToEditModel() => new(Type, Text, Url, Target, Html, PermissionNamesText?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? [], ParentNodeId, Position);
+        public static NodeFormModel From(StandardMenuNodeSummary node) => new() { Type = node.Type, Text = node.Text, Url = node.Url, Target = node.Target, Html = node.Html, PermissionNamesText = string.Join(", ", node.PermissionNames), ParentNodeId = node.ParentId, Position = node.Order, ContentItemId = node.ContentItemId, CheckContentPermissions = node.CheckContentPermissions };
+        public StandardMenuNodeEditModel ToEditModel() => new(Type, Text, Url, Target, Html, PermissionNamesText?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? [], ParentNodeId, Position, ContentItemId, CheckContentPermissions);
     }
 
     private sealed record ParentOption(string? Id, string Text);

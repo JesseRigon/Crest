@@ -10,7 +10,6 @@ using Crest.Title.Drivers;
 using Crest.Title.Handlers;
 using Crest.Title.Indexing;
 using Crest.Title.Models;
-using Crest.Title.Settings;
 using Crest.Title.ViewModels;
 
 namespace Crest.Title;
@@ -31,7 +30,6 @@ public sealed class Startup : StartupBase
             .AddHandler<TitlePartHandler>();
 
         services.AddScoped<IContentPartIndexHandler, TitlePartIndexHandler>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, TitlePartSettingsDisplayDriver>();
 
         services.AddDataMigration<Migrations>();
     }

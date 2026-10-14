@@ -85,6 +85,8 @@ public sealed class AuditTrailRoutePermissionProvider : IRoutePermissionProvider
     [
         new(AuditTrailRoutes.TrailAdmin, AuditTrailPermissions.ViewAuditTrail.Name),
         new(AuditTrailRoutes.SessionsAdmin, AuditTrailPermissions.ViewAuditTrail.Name),
+        new(AuditTrailRoutes.SettingsAdmin, AuditTrailPermissions.ManageAuditTrailSettings.Name),
+        new("/Settings/AuditTrail", AuditTrailPermissions.ManageAuditTrailSettings.Name),
         new(AuditTrailRoutes.RecordAdmin, AuditTrailPermissions.ViewAuditTrail.Name),
     ];
 }

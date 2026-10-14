@@ -21,6 +21,14 @@ using Crest.Modules.Manifest;
 )]
 
 [assembly: Feature(
+    Id = "Crest.Workflows.Samples",
+    Name = "Workflow samples",
+    Description = "Fixtures for exercising workflows with no host module: a content-published registry trigger, a system sample flow and a shipped draft template. Off by default.",
+    Category = "Samples",
+    Dependencies = ["Crest.Workflows"]
+)]
+
+[assembly: Feature(
     Id = "Crest.Workflows.Http",
     Name = "HTTP Activities",
     Description = "Crest.Workflows HTTP endpoint and request activities.",

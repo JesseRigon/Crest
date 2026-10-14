@@ -18,7 +18,8 @@ public sealed class ContentPartListsController(
     IContentPartListService contentPartLists,
     IMeasurementPreferenceService measurementPreferences,
     IAuthorizationService authorizationService,
-    DefinitionLockGuard locks) : ControllerBase
+    DefinitionLockGuard locks,
+    IContentPartListImporter importer) : ControllerBase
 {
     /// <summary>
     /// The culture-to-units dataset: which measurement system the culture uses and
@@ -141,6 +142,32 @@ public sealed class ContentPartListsController(
         {
             return Problem(exception.Message, statusCode: StatusCodes.Status400BadRequest);
         }
+    }
+
+    /// <summary>Imports options by key (<see cref="IContentPartListImporter"/>): new keys are added
+    /// with the row's label, existing ones take the row's data and keep the tenant's label.
+    /// Refused while the list is locked for editing.</summary>
+    [HttpPost("{key}/import")]
+    public async Task<ActionResult<ContentPartListImportResult>> ImportAsync(string key, [FromBody] ImportOptionsRequest request)
+    {
+        if (!await CanManageAsync())
+        {
+            return Forbid();
+        }
+
+        var list = await contentPartLists.GetAsync(key, HttpContext.RequestAborted);
+        if (list is null)
+        {
+            return NotFound();
+        }
+
+        if (ContentPartListRules.LockActive(list.EditLock))
+        {
+            return LockedProblem("Options cannot be imported while the list is locked for editing.");
+        }
+
+        var rows = (request.Rows ?? []).Select(row => new ContentPartListImportRow(row.Key, row.DisplayText, row.Category, row.Value, row.Fields, row.Parent));
+        return Ok(await importer.ImportAsync(key, rows, cancellationToken: HttpContext.RequestAborted));
     }
 
     /// <summary>Rewrites the list's manual order: Position becomes the index in the
@@ -400,6 +427,9 @@ public sealed class ContentPartListsController(
 }
 
 public sealed record CreateContentPartListRequest(string Key, string DisplayText);
+
+/// <summary>Rows to import; see <see cref="IContentPartListImporter"/>.</summary>
+public sealed record ImportOptionsRequest(IReadOnlyList<AddOptionRequest>? Rows);
 
 public sealed record AddOptionRequest(string Key, string DisplayText, int Position = 0, string? Category = null, string? DisplayTextPlural = null, string? Value = null, Dictionary<string, string?>? Fields = null, string? Parent = null);
 

@@ -6,7 +6,6 @@
 
 @inject IOptions<TenantsOptions> TenantsOptions
 
-<a asp-action="Edit" asp-route-id="@Model.Value.Name" class="btn btn-primary btn-sm edit">@T["Edit"]</a>
 @if (Model.Value.ShellSettings.IsRunning())
 {
     <a class="btn btn-info btn-sm view" href="@ViewContext.HttpContext.GetEncodedUrl(Model.Value, appendQuery: false)" target="_blank">@T["View"]</a>

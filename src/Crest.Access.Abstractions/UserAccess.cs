@@ -214,3 +214,70 @@ public sealed record OrganizationMemberResource(string OrganizationId, string Us
 {
     public override string ToString() => $"member {UserId} of {OrganizationId}";
 }
+
+/// <summary>
+/// Who may manage which users (docs/permissions.md › Who manages the permission model): the
+/// user hierarchy bounds every write to a user's overrides and group memberships, and the user
+/// lists the editors show. A manager manages the users under them in the hierarchy of the
+/// reach (an organization's own; the tenant organization's for the tenant reach); there is no
+/// managing without a position, and the super user is not narrowed. Implemented by the module
+/// that owns the hierarchy; with none registered, only the super user manages users.
+/// </summary>
+public interface IUserManagementReach
+{
+    /// <summary>The users <paramref name="caller"/> manages at <paramref name="reach"/> (for the super user, every user of the reach).</summary>
+    Task<IReadOnlySet<string>?> ManagedUsersAsync(CallerContext caller, AccessReach reach, CancellationToken cancellationToken = default);
+}
+
+public static class UserManagementReachExtensions
+{
+    public static async Task<bool> ManagesAsync(this IUserManagementReach? reach, CallerContext? caller, AccessReach at, string userId, CancellationToken cancellationToken = default)
+    {
+        if (caller is null)
+        {
+            return false;
+        }
+
+        if (caller.IsSuperUser)
+        {
+            return true;
+        }
+
+        if (reach is null)
+        {
+            return false;
+        }
+
+        var managed = await reach.ManagedUsersAsync(caller, at, cancellationToken);
+        return managed is null || managed.Contains(userId);
+    }
+}
+
+/// <summary>
+/// The organization owner (docs/permissions.md › The organization owner): one user account
+/// per organization, recorded on it; always an org-admin; the only holder of the owner-locked
+/// permissions there. The first member bound to an organization becomes its owner; ownership
+/// moves only by transfer. Implemented by Members; other domains (Parties' portal promotion)
+/// resolve it when it is registered.
+/// </summary>
+public interface IOrganizationOwnership
+{
+    /// <summary>The role the owner always holds in the organization (its org-admin role).</summary>
+    string OwnerRoleName { get; }
+
+    Task<string?> GetOwnerAsync(string organizationId, CancellationToken cancellationToken = default);
+
+    /// <summary>Records <paramref name="userId"/> as the owner when the organization has none; true when they became it.</summary>
+    Task<bool> EnsureOwnerAsync(string organizationId, string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Moves ownership to <paramref name="newOwnerUserId"/>, a user of the tenant: bound to the
+    /// organization as a member when they are not, made an org-admin, recorded as owner, and
+    /// audited. The previous owner keeps their binding and org-admin role, unprotected.
+    /// Authorization is the caller's (staff with the tenant permission, or the current owner).
+    /// </summary>
+    Task TransferAsync(string organizationId, string newOwnerUserId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>A write that would take the owner's org-admin role away; refused whoever asks.</summary>
+public sealed class OwnerProtectionException(string message) : InvalidOperationException(message);

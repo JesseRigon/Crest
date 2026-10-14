@@ -34,6 +34,9 @@
     <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
     <ProjectReference Include="..\..\Crest.Icons\Crest.Icons.csproj" />
     <ProjectReference Include="..\..\Crest.Shell\Crest.Shell.csproj" />
+    <!-- The site-shell libraries of modules (CrestShell(Site)): the site router and the
+         component registry read them, as the admin client reads the admin ones. -->
+    <ProjectReference Include="..\..\Crest.Facebook\site-wasm\Crest.Facebook.BlazorWasm.csproj" />
   </ItemGroup>
 
 </Project>

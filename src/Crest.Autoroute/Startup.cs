@@ -11,7 +11,6 @@ using Crest.Autoroute.Indexing;
 using Crest.Autoroute.Models;
 using Crest.Autoroute.Routing;
 using Crest.Autoroute.Services;
-using Crest.Autoroute.Settings;
 using Crest.Autoroute.Sitemaps;
 using Crest.Autoroute.ViewModels;
 using Crest.ContentLocalization.Handlers;
@@ -78,7 +77,6 @@ public sealed class Startup : StartupBase
         services.AddScoped<IContentHandler, DefaultRouteContentHandler>();
         services.AddScoped<IContentHandler, AutorouteContentHandler>();
         services.AddPermissionProvider<Permissions>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, AutoroutePartSettingsDisplayDriver>();
         services.AddScoped<IContentPartIndexHandler, AutoroutePartIndexHandler>();
 
         services.AddScoped<AutoroutePartIndexProvider>();

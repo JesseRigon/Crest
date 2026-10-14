@@ -11,7 +11,8 @@
     var partName = Model.PartFieldDefinition.PartDefinition.Name;
     var fieldName = Model.PartFieldDefinition.Name;
     var contentTypeName = Model.TypePartDefinition.Name;
-    var searchUrl = Url.RouteUrl(new { area = "Crest.ContentFields", controller = "UserPickerAdmin", action = "SearchUsers", part = partName, field = fieldName, contentType = contentTypeName });
+    // The search API the Blazor editor uses too (UserPickerApiController).
+    var searchUrl = Url.Content("~/api/crest/content-fields/users") + "?part=" + Uri.EscapeDataString(partName) + "&field=" + Uri.EscapeDataString(fieldName) + "&contentType=" + Uri.EscapeDataString(contentTypeName);
     var vueElementId = $"UserPicker_{partName}_{fieldName}_{Guid.NewGuid().ToString("n")}";
     var multiple = settings.Multiple.ToString().ToLowerInvariant();
     string localizedFieldName = D[Model.PartFieldDefinition.DisplayName(), DataLocalizationContext.ContentField(Model.PartFieldDefinition.PartDefinition.Name)];

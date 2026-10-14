@@ -92,6 +92,8 @@
 
                         <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
                             <CrestButton Text="@T["Save role"]" Icon="save" Click="SaveAsync" Disabled="@IsLoading" data-testid="role-save" />
+                            <CrestTextBox @bind-Value="CloneName" Placeholder="@T["Copy as..."]" Style="width: 12rem" data-testid="role-clone-name" />
+                            <CrestButton Text="@T["Clone"]" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Click="CloneAsync" Disabled="@(IsLoading || string.IsNullOrWhiteSpace(CloneName))" data-testid="role-clone" />
                             @if (!Detail.IsSystem)
                             {
                                 <CrestButton Text="@T["Delete role"]" Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="@IsLoading" />
@@ -115,6 +117,7 @@
     private HashSet<string> DraftPermissions { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     private string? PermissionFilter { get; set; }
     private string? NewRoleName { get; set; }
+    private string? CloneName { get; set; }
     private bool IsLoading { get; set; }
     private string? ErrorMessage { get; set; }
 
@@ -173,6 +176,22 @@
         await RunAsync(() => Http.PostAsJsonAsync("api/crest/roles", new RoleWrite(NewRoleName!.Trim(), null, [], [])));
         SelectedRoleName = NewRoleName?.Trim();
         NewRoleName = null;
+        await LoadAsync();
+    }
+
+    // A clone is a new role with the source's description, permission sets and permissions as
+    // stored (unsaved edits on the source are not copied).
+    private async Task CloneAsync()
+    {
+        var name = CloneName?.Trim();
+        if (Detail is null || string.IsNullOrWhiteSpace(name)) return;
+        await RunAsync(() => Http.PostAsJsonAsync("api/crest/roles", new RoleWrite(name, Detail.Description, [.. Detail.Sets], [.. Detail.Permissions])));
+        if (ErrorMessage is null)
+        {
+            SelectedRoleName = name;
+            CloneName = null;
+        }
+
         await LoadAsync();
     }
 

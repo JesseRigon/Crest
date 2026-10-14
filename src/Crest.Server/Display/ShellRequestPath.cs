@@ -11,6 +11,8 @@ namespace Crest.Display;
 /// </summary>
 public sealed class ShellRequestPath(IHttpContextAccessor httpContextAccessor) : IShellRequestPath
 {
+    public string? Query => httpContextAccessor.HttpContext?.Request.QueryString.Value;
+
     public string? Path
     {
         get

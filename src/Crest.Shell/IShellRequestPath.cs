@@ -12,4 +12,7 @@ public interface IShellRequestPath
 {
     /// <summary>The original request path, shell-relative ("/about"), or null outside a prerender.</summary>
     string? Path { get; }
+
+    /// <summary>The original request's query string ("?pagenum=2"), or null outside a prerender.</summary>
+    string? Query => null;
 }

@@ -1,10 +1,10 @@
-# Orchard Crest design system plan
+# Design systems
 
-This plan defines the direction for tenant and user design systems in Orchard Crest UI Framework using Orchard as the system of record. The canonical `--crest-*` primitive token contract, its packaged default CSS and the current Site-Settings-backed Design System page are built: see [Crest.Components/README.md](../Crest.Components/README.md) › Design tokens.
+Tenant and user design systems, stored as content so the platform is the system of record. A design system is the **visual language and the branding**: tokens, type scales, heading settings, presets; the theme is structure ([blazor-display.md](blazor-display.md) › decision 8). The canonical `--crest-*` primitive token contract, its packaged default CSS and the current Site-Settings-backed Design System page are built: see [Crest.Components/README.md](../Crest.Components/README.md) › Design tokens.
 
-Planned:
+Not built:
 
-- Orchard content type and content-part storage;
+- the content type and content-part storage;
 - tenant/user selection and resolution;
 - permissions and publishing workflow;
 - recipe/deployment integration;
@@ -12,11 +12,7 @@ Planned:
 
 ## Content model
 
-### Core decision
-
-Design systems should be Orchard content, not Crest-only JSON files.
-
-Use a first-party Orchard content type for design systems so Orchard owns:
+Design systems are content, not JSON files of their own. A first-party content type means the platform owns:
 
 - persistence;
 - versioning/drafts/publishing;
@@ -27,14 +23,14 @@ Use a first-party Orchard content type for design systems so Orchard owns:
 - audit/history where enabled;
 - search/indexing where enabled.
 
-Crest.AdminTheme should provide the Blazor editor, preview, selector, and token application layer. It should not create a parallel storage or permission model.
+Crest.AdminTheme provides the Blazor editor, preview, selector, and token application layer, with no parallel storage or permission model.
 
-- [ ] **Define token taxonomy and content part model.** Suggested `CrestDesignSystemPart` fields/properties:
+- [ ] **Content part model.** The token taxonomy is fixed ([Token taxonomy](#token-taxonomy)); the part shape is open (see Open questions). Suggested `DesignSystemPart` fields/properties:
 
   ```json
   {
     "name": "Default",
-    "description": "Default Orchard Crest admin design system.",
+    "description": "Default admin design system.",
     "scope": "Tenant | User | Shared",
     "target": "Admin | Site | Both",
     "baseSystemContentItemId": null,
@@ -62,40 +58,36 @@ Crest.AdminTheme should provide the Blazor editor, preview, selector, and token 
   }
   ```
 
-  The exact JSON shape can evolve, but the important rule is that the stored document describes Crest-owned primitive/semantic tokens, not direct Radzen token names and not component implementation variables.
+  The exact JSON shape can evolve; the rule is that the stored document describes Crest-owned semantic tokens, not direct Radzen token names and not component implementation variables.
 
   Component-specific variables such as primary-navigation width, panel-menu rail width, indentation, or animation timing remain component mechanics. They are configured by component parameters/settings when needed, not by the primitive token contract.
 
-- [ ] **Add `CrestDesignSystem` content type/part and permissions.** Create a content type:
-
-  ```text
-  CrestDesignSystem
-  ```
+- [ ] **`DesignSystem` content type/part and permissions.** The content type is `DesignSystem`.
 
   Suggested parts:
 
   - `TitlePart`
   - `AliasPart`
   - `AutoroutePart` optional, mostly useful if design systems get public previews later
-  - `OwnerEditor` / ownership through Orchard content ownership
-  - custom `CrestDesignSystemPart`
+  - `OwnerEditor` / content ownership
+  - `DesignSystemPart`
 
-  Use Orchard permissions. Do not add Crest-local role checks.
+  Permissions are the platform's; there are no local role checks.
 
   Suggested permissions:
 
-  - `ManageCrestDesignSystems`
-  - `ViewCrestDesignSystems`
-  - `CreateCrestDesignSystems`
-  - `EditOwnCrestDesignSystems`
-  - `EditTenantCrestDesignSystems`
-  - `PublishCrestDesignSystems`
-  - `SetTenantDefaultCrestDesignSystem`
-  - `SetOwnCrestDesignSystem`
+  - `ManageDesignSystems`
+  - `ViewDesignSystems`
+  - `CreateDesignSystems`
+  - `EditOwnDesignSystems`
+  - `EditTenantDesignSystems`
+  - `PublishDesignSystems`
+  - `SetTenantDefaultDesignSystem`
+  - `SetOwnDesignSystem`
 
-  Where possible, map to or compose with Orchard content permissions rather than duplicating them. If Orchard content permissions are sufficient for a step, use them directly.
+  Where the content permissions suffice for a step, they are used directly instead of a new permission.
 
-- [ ] **Seed packaged default into tenant content via recipe/setup.** Keep a static CSS file such as:
+- [ ] **Seed the packaged default into tenant content via recipe/setup.** A static CSS file stays:
 
   ```text
   Crest.AdminTheme/wasm/wwwroot/CrestAdmin.DesignSystem.Default.css
@@ -114,9 +106,7 @@ Crest.AdminTheme should provide the Blazor editor, preview, selector, and token 
   - not where tenant/user overrides live;
   - not the runtime-only customization model.
 
-  On setup, Crest can seed a `CrestDesignSystem` content item from this default token map. After setup, tenant/user choices come from Orchard content.
-
-  Recipes can create the default `CrestDesignSystem` content item on setup.
+  On setup, a recipe creates the default `DesignSystem` content item from this default token map. After setup, tenant/user choices come from content.
 
   - [x] The default file's token contract is built: see [Crest.Components/README.md](../Crest.Components/README.md) › Design tokens.
 
@@ -132,11 +122,11 @@ Used only when no tenant/user design system can be resolved.
 
 #### Tenant design systems
 
-Tenant-scoped Orchard content items.
+Tenant-scoped content items.
 
-Tenant admins can create, edit, publish, archive, and set tenant defaults according to Orchard permissions.
+Tenant admins create, edit, publish, archive, and set tenant defaults according to their permissions.
 
-Multiple tenant design systems should be allowed, for example:
+A tenant may have several design systems, for example:
 
 - Default Admin;
 - Compact Admin;
@@ -144,16 +134,16 @@ Multiple tenant design systems should be allowed, for example:
 - Seasonal;
 - Department-specific.
 
-- [ ] **Add resolver service for current user/tenant design system.** When building the admin shell manifest, resolve design system in this order:
+- [ ] **Resolver for the current user/tenant design system.** The shell manifest resolves the design system in this order:
 
   1. Authenticated user's selected personal design system, if valid and permissioned.
   2. Authenticated user's selected shared tenant design system, if valid and permissioned.
   3. Tenant default design system content item.
   4. Crest packaged default design system.
 
-  Every resolution step must verify Orchard content permissions for the current user.
+  Every resolution step checks the current user's content permissions.
 
-- [ ] **Add the full content-item design-system payload to the admin manifest.** Crest.AdminTheme should convert the selected design system content item into a compact client payload:
+- [ ] **The design-system payload in the shell manifest.** Crest.AdminTheme converts the selected design system content item into a compact client payload:
 
   ```json
   {
@@ -167,20 +157,20 @@ Multiple tenant design systems should be allowed, for example:
 
   The admin shell applies this payload by setting CSS custom properties on the admin root element. How components consume those `--crest-*` variables is built: see [Crest.Components/README.md](../Crest.Components/README.md) › Design tokens.
 
-  **Token source mapping.** Keep a provider pattern only at the source-to-Crest-token boundary.
+  **Token source mapping.** A provider pattern exists only at the source-to-Crest-token boundary.
 
   Examples:
 
   - Radzen theme variables to Crest primitive tokens.
   - MudBlazor theme variables to Crest primitive tokens.
   - Bootstrap variables to Crest primitive tokens.
-  - A stored `CrestDesignSystem` content item to Crest primitive tokens.
+  - A stored `DesignSystem` content item to Crest primitive tokens.
 
   The provider does not style individual components and does not emit primary-navigation/panel-menu implementation variables. Its output is the canonical primitive token contract.
 
 ## Admin UI and user workflow
 
-- [ ] **Build Blazor Design System page over Orchard content services.** Add or extend the Design System page in Crest.AdminTheme.
+- [ ] **Blazor Design System page over the content services**, extending the Design System page in Crest.AdminTheme.
 
   Primary areas:
 
@@ -194,23 +184,15 @@ Multiple tenant design systems should be allowed, for example:
   - publish/share controls;
   - permission-aware action buttons.
 
-  The page should use Orchard content APIs or thin Crest adapters over Orchard content services only when the built-in APIs do not provide the needed admin projection.
+  **API boundary.** The design-system API is declared by the module that owns design systems and registered with Crest.Server's API registry, like every module API ([server.md](server.md)). It uses the content API where that suffices and adds only admin-specific projections, validation, token compilation and current-user resolution. It:
 
-  **API boundary.** Preferred access order:
-
-  1. Orchard content APIs if enabled and sufficient.
-  2. Orchard GraphQL for read projections if it fits.
-  3. Thin `api/crest/*` adapter only for admin-specific projections, validation, token compilation, or current-user resolution.
-
-  Any Crest adapter must:
-
-  - authorize through Orchard permissions;
-  - use the real request principal;
-  - use Orchard content manager/services;
+  - authorizes through the platform's permissions;
+  - uses the real request principal;
+  - uses the content manager/services;
   - avoid parallel state;
   - not expose private user design systems to other users.
 
-- [ ] **Add user duplicate/edit/select/publish workflow.** Users can create personal design systems if granted permission.
+- [ ] **User duplicate/edit/select/publish.** Users with the permission create personal design systems.
 
   Users can:
 
@@ -220,29 +202,21 @@ Multiple tenant design systems should be allowed, for example:
   - keep it private;
   - publish/share it to the tenant if granted permission.
 
-  Publishing a user design system should not bypass Orchard moderation/publishing rules. If the content type has drafts, the normal Orchard draft/publish flow applies.
+  Publishing a user design system goes through the normal draft/publish flow; it never bypasses moderation.
 
 ## Recipes and deployment
 
-Because design systems are Orchard content:
+Because design systems are content, defaults are seeded through recipes and design systems move through deployment plans; there is no hand-maintained JSON store.
 
-- seed default design systems through Orchard recipes;
-- export/import through Orchard deployment plans where possible;
-- avoid hand-maintained Crest-specific JSON stores.
+- [ ] **Deployment/recipe export path.** Host apps can provide their own design-system recipe steps without modifying Crest source.
+- [ ] **Cache invalidation/refresh on design system changes.** The client may cache the resolved token payload, but the server is authoritative. A changed user/tenant design system invalidates or refreshes the client design payload through the same manifest refresh mechanism used for admin permissions/navigation.
 
-- [ ] **Add deployment/recipe export path.** Host apps can provide their own design-system recipe steps without modifying Crest source.
-- [ ] **Add cache invalidation/refresh for active design system changes.** The client may cache the resolved token payload for performance, but the server remains authoritative. A changed user/tenant design system should invalidate or refresh the client design payload through the same manifest refresh mechanism used for admin permissions/navigation.
-
-**Localizable by default (ruling 2026-10-09).** Tokens and the style schema expose only
+**Localizable by default.** Tokens and the style schema expose only
 direction-aware, logical values; the shell root sets `dir` from the culture. A Master mode allows
 raw CSS and physical properties, with a notice on every such edit that it breaks localization.
 Detail in [blazor-display.md](blazor-display.md) › Design systems.
 
-## Token taxonomy (ruling 2026-10-09)
-
-A design system is the **visual language and the branding**: tokens, type scales, heading
-settings, presets. It is separate from the theme, which is structure
-([blazor-display.md](blazor-display.md) › decision 8).
+## Token taxonomy
 
 - **Two layers.** A **reference palette** (raw values: `blue.500`, `space.4`) feeds the
   **semantic tokens**, so `color.bg.dark` and `color.accent.shadow` can point at the same palette
@@ -272,8 +246,8 @@ settings, presets. It is separate from the theme, which is structure
   model: a tenant's or user's system is overrides over a base, and the compiled token set is
   produced on publish, which gives drafts and preview for branding.
 
-## Decisions needed
+## Open questions
 
 - [ ] **Part, fields or hybrid.** Whether design system content should use a custom part only, fields only, or a hybrid.
-- [ ] **Where the user default is stored.** Whether user default selection is stored on the User object, User profile content item, or as a small user-scoped Orchard setting.
-- [ ] **Where the tenant default is stored.** Whether tenant default selection should be stored in Site Settings or as a flag on the design system content item. Prefer Site Settings if the setting is tenant-wide.
+- [ ] **Where the user default is stored.** Whether user default selection is stored on the User object, User profile content item, or as a small user-scoped setting.
+- [ ] **Where the tenant default is stored.** Site Settings or a flag on the design system content item (Site Settings preferred, since the setting is tenant-wide).

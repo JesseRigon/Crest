@@ -12,7 +12,6 @@ using Crest.Indexing.Handlers;
 using Crest.Indexing.Recipes;
 using Crest.Indexing.DataMigrations;
 using Crest.Indexing.Deployments;
-using Crest.Indexing.Drivers;
 using Crest.Indexing.Indexing;
 using Crest.Indexing.Models;
 using Crest.Modules;
@@ -35,7 +34,6 @@ public sealed class Startup : StartupBase
 #pragma warning restore CS0618 // Type or member is obsolete
 
         services.AddNavigationProvider<AdminMenu>();
-        services.AddDisplayDriver<IndexProfile, IndexProfileDisplayDriver>();
         services.AddPermissionProvider<IndexingPermissionsProvider>();
         services.AddDataMigration<PreviewIndexingMigrations>();
 
@@ -54,7 +52,6 @@ public sealed class ContentStartup : StartupBase
         services.AddScoped<IContentHandler, CreateIndexingTaskContentHandler>();
         services.TryAddScoped<ContentIndexingService>();
         services.AddIndexProfileHandler<ContentIndexProfileHandler>();
-        services.AddDisplayDriver<IndexProfile, ContentIndexProfileDisplayDriver>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IModularTenantEvents, ContentIndexInitializerService>());
         services.AddDataMigration<WorkerFeatureMigrations>();
     }

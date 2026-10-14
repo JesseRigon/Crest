@@ -33,7 +33,8 @@ public sealed class RichText : ComponentBase
 
 /// <summary>
 /// An image with a caption (docs/widgets.md, the Image widget): a <c>figure</c> around the image
-/// and its <c>figcaption</c>. The path is a media picker's value; the caption is plain text.
+/// and its <c>figcaption</c>. The path is a media picker's value, a placement id rendered as its
+/// <c>/files</c> URL (<see cref="Files.MediaReference"/>); the caption is plain text.
 /// </summary>
 [BlazorComponent("Figure", DisplayName = "Figure", Category = "Basic", Icon = "image")]
 public sealed class Figure : ComponentBase
@@ -58,10 +59,10 @@ public sealed class Figure : ComponentBase
     {
         builder.OpenElement(0, "figure");
         builder.AddAttribute(1, "class", string.IsNullOrEmpty(Class) ? "crest-figure" : "crest-figure " + Class);
-        if (SafeUrl.IsSafe(Path))
+        if (Files.MediaReference.Url(Path) is { } source)
         {
             builder.OpenElement(2, "img");
-            builder.AddAttribute(3, "src", Path);
+            builder.AddAttribute(3, "src", source);
             builder.AddAttribute(4, "alt", AlternateText ?? string.Empty);
             builder.AddAttribute(5, "loading", "lazy");
             builder.CloseElement();

@@ -20,13 +20,18 @@ public sealed record GroupUserRequest(string UserId);
 
 public sealed record UserOverridesModel(IReadOnlyList<UserAccessOverride> Overrides);
 
+public sealed record ManagedUser(string Id, string Label);
+
 /// <summary>
-/// The editors' API for the permission model (docs/permissions.md › Editors): the permission
-/// catalog, permission sets, roles with their sets and loose permissions, groups at a reach,
-/// per-user overrides and the organization defaults. Tenant-reach writes take
-/// <c>ManageRoles</c>; an organization's groups and overrides take <c>ManageOrgMembers</c>
-/// against the organization, so staff edit every organization's and an organization's admin
-/// only their own. An organization's groups hold only roles from the tenant's assignable list.
+/// The editors' API for the permission model (docs/permissions.md › Editors, Who manages the
+/// permission model): the permission catalog, permission sets, roles with their sets and loose
+/// permissions, groups at a reach, per-user overrides and the organization defaults. Each
+/// operation takes its CRUD permission (the "Manage permissions" and "Manage groups" sets),
+/// asked against the organization at an organization's reach, so staff hold it for every
+/// organization and an organization's admin for their own. Writing a user's overrides or group
+/// membership is further bounded by the hierarchy (<see cref="IUserManagementReach"/>): only
+/// the users under the caller there. An organization's groups hold only roles from the
+/// tenant's assignable list; owner-locked permissions are never granted by override.
 /// </summary>
 [ApiController]
 [AutoValidateAntiforgeryToken]
@@ -41,14 +46,18 @@ public sealed class AccessModelController(
     IAccessGroupService groups,
     IUserAccessOverrideService overrides,
     IOrganizationAccessDefaultsService defaults,
-    IUserAccessReader access) : ControllerBase
+    IUserAccessReader access,
+    UserManager<Crest.Users.IUser> userManager,
+    IServiceProvider services) : ControllerBase
 {
+    private IUserManagementReach? Hierarchy => services.GetService(typeof(IUserManagementReach)) as IUserManagementReach;
+
     // --- Catalog and sets (tenant schema) ---
 
     [HttpGet("permission-catalog")]
     public async Task<ActionResult<IReadOnlyList<PermissionInfo>>> CatalogAsync([FromQuery] string? organizationId = null)
     {
-        if (!await CanEditAsync(organizationId))
+        if (!await CanAsync(AccessPermissions.ReadPermissionCatalog, organizationId))
         {
             return Forbid();
         }
@@ -63,7 +72,7 @@ public sealed class AccessModelController(
     [HttpGet("permission-sets")]
     public async Task<ActionResult<IReadOnlyList<PermissionSetInfo>>> ListSetsAsync()
     {
-        if (!await CanEditAsync(null))
+        if (!await CanAsync(AccessPermissions.ReadPermissionSets, null))
         {
             return Forbid();
         }
@@ -74,7 +83,7 @@ public sealed class AccessModelController(
     [HttpPut("permission-sets/{name}")]
     public async Task<ActionResult<PermissionSetInfo>> SaveSetAsync(string name, PermissionSetInfo write)
     {
-        if (!await CanEditAsync(null))
+        if (!await CanAsync((await sets.FindAsync(name, HttpContext.RequestAborted) is null ? AccessPermissions.CreatePermissionSets : AccessPermissions.UpdatePermissionSets), null))
         {
             return Forbid();
         }
@@ -91,7 +100,7 @@ public sealed class AccessModelController(
     [HttpDelete("permission-sets/{name}")]
     public async Task<IActionResult> DeleteSetAsync(string name)
     {
-        if (!await CanEditAsync(null))
+        if (!await CanAsync(AccessPermissions.DeletePermissionSets, null))
         {
             return Forbid();
         }
@@ -104,7 +113,7 @@ public sealed class AccessModelController(
     [HttpGet("roles/{name}")]
     public async Task<ActionResult<RoleDetail>> GetRoleAsync(string name)
     {
-        if (!await CanEditAsync(null))
+        if (!await CanAsync(AccessPermissions.ReadRoles, null))
         {
             return Forbid();
         }
@@ -115,7 +124,7 @@ public sealed class AccessModelController(
     [HttpPost("roles")]
     public async Task<ActionResult<RoleDetail>> CreateRoleAsync(RoleWrite write)
     {
-        if (!await CanEditAsync(null))
+        if (!await CanAsync(AccessPermissions.CreateRoles, null))
         {
             return Forbid();
         }
@@ -134,7 +143,7 @@ public sealed class AccessModelController(
     [HttpPut("roles/{name}")]
     public async Task<ActionResult<RoleDetail>> UpdateRoleAsync(string name, RoleWrite write)
     {
-        if (!await CanEditAsync(null))
+        if (!await CanAsync(AccessPermissions.UpdateRoles, null))
         {
             return Forbid();
         }
@@ -152,7 +161,7 @@ public sealed class AccessModelController(
     [HttpDelete("roles/{name}")]
     public async Task<IActionResult> DeleteRoleAsync(string name)
     {
-        if (!await CanEditAsync(null))
+        if (!await CanAsync(AccessPermissions.DeleteRoles, null))
         {
             return Forbid();
         }
@@ -171,7 +180,7 @@ public sealed class AccessModelController(
     [HttpGet("access/groups")]
     public async Task<ActionResult<IReadOnlyList<AccessGroupModel>>> ListGroupsAsync([FromQuery] string? organizationId = null)
     {
-        if (!await CanEditAsync(organizationId))
+        if (!await CanAsync(AccessPermissions.ReadGroups, organizationId))
         {
             return Forbid();
         }
@@ -182,7 +191,7 @@ public sealed class AccessModelController(
     [HttpPost("access/groups")]
     public async Task<ActionResult<AccessGroupModel>> CreateGroupAsync([FromQuery] string? organizationId, AccessGroupWrite write)
     {
-        if (!await CanEditAsync(organizationId))
+        if (!await CanAsync(AccessPermissions.CreateGroups, organizationId))
         {
             return Forbid();
         }
@@ -205,7 +214,7 @@ public sealed class AccessModelController(
             return NotFound();
         }
 
-        if (!await CanEditAsync(group.Reach.OrganizationId))
+        if (!await CanAsync(AccessPermissions.UpdateGroups, group.Reach.OrganizationId))
         {
             return Forbid();
         }
@@ -215,7 +224,14 @@ public sealed class AccessModelController(
             return BadRequest(new { error = refusal });
         }
 
-        return Ok(await groups.UpdateAsync(groupId, write, HttpContext.RequestAborted));
+        try
+        {
+            return Ok(await groups.UpdateAsync(groupId, write, HttpContext.RequestAborted));
+        }
+        catch (OwnerProtectionException protection)
+        {
+            return BadRequest(new { error = protection.Message });
+        }
     }
 
     [HttpDelete("access/groups/{groupId}")]
@@ -226,12 +242,20 @@ public sealed class AccessModelController(
             return NotFound();
         }
 
-        if (!await CanEditAsync(group.Reach.OrganizationId))
+        if (!await CanAsync(AccessPermissions.DeleteGroups, group.Reach.OrganizationId))
         {
             return Forbid();
         }
 
-        await groups.DeleteAsync(groupId, HttpContext.RequestAborted);
+        try
+        {
+            await groups.DeleteAsync(groupId, HttpContext.RequestAborted);
+        }
+        catch (OwnerProtectionException protection)
+        {
+            return BadRequest(new { error = protection.Message });
+        }
+
         return NoContent();
     }
 
@@ -243,10 +267,10 @@ public sealed class AccessModelController(
             return NotFound();
         }
 
-        // An organization's group takes that organization's members only (the root guard):
-        // staff are never members of an organization's groups.
-        var resource = group.Reach.IsTenant ? null : (object)new OrganizationMemberResource(group.Reach.OrganizationId!, request.UserId);
-        if (!await CanEditAsync(group.Reach.OrganizationId, resource))
+        // An organization's group takes that organization's members only (the root guard), and
+        // the caller manages only the users under them (the hierarchy).
+        if (!await CanAsync(AccessPermissions.CreateGroupMembership, group.Reach.OrganizationId, group.Reach.IsTenant ? null : new OrganizationMemberResource(group.Reach.OrganizationId!, request.UserId))
+            || !await ManagesAsync(group.Reach, request.UserId))
         {
             return Forbid();
         }
@@ -263,13 +287,45 @@ public sealed class AccessModelController(
             return NotFound();
         }
 
-        if (!await CanEditAsync(group.Reach.OrganizationId))
+        if (!await CanAsync(AccessPermissions.DeleteGroupMembership, group.Reach.OrganizationId) || !await ManagesAsync(group.Reach, userId))
         {
             return Forbid();
         }
 
-        await groups.RemoveUserAsync(groupId, userId, HttpContext.RequestAborted);
+        try
+        {
+            await groups.RemoveUserAsync(groupId, userId, HttpContext.RequestAborted);
+        }
+        catch (OwnerProtectionException protection)
+        {
+            return BadRequest(new { error = protection.Message });
+        }
+
         return NoContent();
+    }
+
+    /// <summary>The users the editors list at a reach: the ones the caller manages there.</summary>
+    [HttpGet("access/managed-users")]
+    public async Task<ActionResult<IReadOnlyList<ManagedUser>>> ManagedUsersAsync([FromQuery] string? organizationId = null)
+    {
+        if (!await CanAsync(AccessPermissions.ReadGroupMembership, organizationId) && !await CanAsync(AccessPermissions.ReadUserOverrides, organizationId))
+        {
+            return Forbid();
+        }
+
+        var managed = callers.Current is { } caller && Hierarchy is { } hierarchy
+            ? await hierarchy.ManagedUsersAsync(caller, Reach(organizationId), HttpContext.RequestAborted) ?? new HashSet<string>()
+            : new HashSet<string>();
+        var users = new List<ManagedUser>();
+        foreach (var userId in managed)
+        {
+            if (await userManager.FindByIdAsync(userId) is { } user)
+            {
+                users.Add(new ManagedUser(userId, user.UserName ?? userId));
+            }
+        }
+
+        return Ok(users.OrderBy(user => user.Label, StringComparer.OrdinalIgnoreCase).ToArray());
     }
 
     // --- Per-user overrides and the resolved view ---
@@ -277,7 +333,7 @@ public sealed class AccessModelController(
     [HttpGet("access/users/{userId}/overrides")]
     public async Task<ActionResult<UserOverridesModel>> GetOverridesAsync(string userId, [FromQuery] string? organizationId = null)
     {
-        if (!await CanEditAsync(organizationId))
+        if (!await CanAsync(AccessPermissions.ReadUserOverrides, organizationId) || !await ManagesAsync(Reach(organizationId), userId))
         {
             return Forbid();
         }
@@ -288,8 +344,12 @@ public sealed class AccessModelController(
     [HttpPut("access/users/{userId}/overrides")]
     public async Task<ActionResult<UserOverridesModel>> SetOverridesAsync(string userId, [FromQuery] string? organizationId, UserOverridesModel model)
     {
-        var resource = organizationId is null ? null : (object)new OrganizationMemberResource(organizationId, userId);
-        if (!await CanEditAsync(organizationId, resource))
+        var existing = await overrides.GetAsync(userId, Reach(organizationId), HttpContext.RequestAborted);
+        var permission = model.Overrides.Count == 0
+            ? AccessPermissions.DeleteUserOverrides
+            : existing.Count == 0 ? AccessPermissions.CreateUserOverrides : AccessPermissions.UpdateUserOverrides;
+        var resource = organizationId is null ? null : new OrganizationMemberResource(organizationId, userId);
+        if (!await CanAsync(permission, organizationId, resource) || !await ManagesAsync(Reach(organizationId), userId))
         {
             return Forbid();
         }
@@ -300,13 +360,24 @@ public sealed class AccessModelController(
             return BadRequest(new { error = refusal });
         }
 
+        // Owner-locked permissions are never placed in an organization's overrides.
+        if (organizationId is not null)
+        {
+            var locked = new HashSet<string>((await defaults.GetAsync(HttpContext.RequestAborted)).OwnerLockedPermissions, StringComparer.OrdinalIgnoreCase);
+            var placed = model.Overrides.Where(entry => entry.Level == OverrideLevel.Permission && entry.Effect == OverrideEffect.Grant && locked.Contains(entry.Name)).Select(entry => entry.Name).ToArray();
+            if (placed.Length > 0)
+            {
+                return BadRequest(new { error = $"Only the organization's owner holds {string.Join(", ", placed)}." });
+            }
+        }
+
         try
         {
             await overrides.SetAsync(userId, Reach(organizationId), model.Overrides, HttpContext.RequestAborted);
         }
-        catch (AccessOverrideConflictException conflict)
+        catch (InvalidOperationException refused) when (refused is AccessOverrideConflictException or OwnerProtectionException)
         {
-            return BadRequest(new { error = conflict.Message });
+            return BadRequest(new { error = refused.Message });
         }
 
         return Ok(new UserOverridesModel(await overrides.GetAsync(userId, Reach(organizationId), HttpContext.RequestAborted)));
@@ -316,7 +387,7 @@ public sealed class AccessModelController(
     [HttpGet("access/users/{userId}")]
     public async Task<ActionResult<UserAccess>> GetUserAccessAsync(string userId, [FromQuery] string? organizationId = null)
     {
-        if (!await CanEditAsync(organizationId))
+        if (!await CanAsync(AccessPermissions.ReadUserOverrides, organizationId) || !await ManagesAsync(Reach(organizationId), userId))
         {
             return Forbid();
         }
@@ -329,7 +400,7 @@ public sealed class AccessModelController(
     [HttpGet("access/organization-defaults")]
     public async Task<ActionResult<OrganizationAccessDefaults>> GetDefaultsAsync()
     {
-        if (!await CanEditAsync(null))
+        if (!await CanAsync(AccessPermissions.ReadGroups, null))
         {
             return Forbid();
         }
@@ -340,7 +411,7 @@ public sealed class AccessModelController(
     [HttpPut("access/organization-defaults")]
     public async Task<ActionResult<OrganizationAccessDefaults>> SetDefaultsAsync(OrganizationAccessDefaults model)
     {
-        if (!await CanEditAsync(null))
+        if (!await CanAsync(AccessPermissions.UpdateGroups, null))
         {
             return Forbid();
         }
@@ -354,7 +425,7 @@ public sealed class AccessModelController(
     [HttpGet("access/assignable-roles")]
     public async Task<ActionResult<IReadOnlyList<string>>> AssignableRolesAsync([FromQuery] string organizationId)
     {
-        if (!await CanEditAsync(organizationId))
+        if (!await CanAsync(AccessPermissions.ReadGroups, organizationId))
         {
             return Forbid();
         }
@@ -382,17 +453,14 @@ public sealed class AccessModelController(
         return outside.Length == 0 ? null : $"An organization's groups may hold only the roles the tenant lets organizations assign; not {string.Join(", ", outside)}.";
     }
 
-    /// <summary>The tenant reach takes ManageRoles; an organization's takes ManageOrgMembers against it.</summary>
-    private async Task<bool> CanEditAsync(string? organizationId, object? resource = null)
-    {
-        var caller = callers.Current;
-        if (organizationId is null)
-        {
-            return await decision.AllowsAsync(caller, RolesPermissions.ManageRoles.Name, null, HttpContext.RequestAborted);
-        }
+    /// <summary>The operation's CRUD permission: as it is at the tenant reach, against the
+    /// organization (or the member, for the root guard) at an organization's reach.</summary>
+    private Task<bool> CanAsync(Permission permission, string? organizationId, object? resource = null) =>
+        decision.AllowsAsync(callers.Current, permission.Name, organizationId is null ? null : resource ?? new OrganizationResource(organizationId), HttpContext.RequestAborted);
 
-        return await decision.AllowsAsync(caller, OrganizationPermissionNames.ManageOrgMembers, resource ?? new OrganizationResource(organizationId), HttpContext.RequestAborted);
-    }
+    /// <summary>The hierarchy bound: the caller manages the user at the reach.</summary>
+    private Task<bool> ManagesAsync(AccessReach reach, string userId) =>
+        Hierarchy.ManagesAsync(callers.Current, reach, userId, HttpContext.RequestAborted);
 
     private static AccessReach Reach(string? organizationId) =>
         string.IsNullOrWhiteSpace(organizationId) ? AccessReach.Tenant : AccessReach.Organization(organizationId);

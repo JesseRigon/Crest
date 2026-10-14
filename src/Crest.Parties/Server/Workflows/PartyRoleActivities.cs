@@ -32,7 +32,7 @@ public class CreatePartyRole : Activity
     [Input(DisplayName = "Party type", Description = "The registered party type key of the role, e.g. customers or prospects.", UIHint = InputUIHints.SingleLine)]
     public Input<string> TypeKey { get; set; } = null!;
 
-    [Input(DisplayName = "Party id", Description = "The Person or Organization. Empty = the PartyId of the trigger payload.", UIHint = InputUIHints.SingleLine)]
+    [Input(DisplayName = "Party id", Description = "The Person or Organization. An organization role given to a person lands on their Individual organization. Empty = the PartyId of the trigger payload.", UIHint = InputUIHints.SingleLine)]
     public Input<string?> PartyId { get; set; } = null!;
 
     [Output(Description = "The role's content item id (new or existing).")]
@@ -62,44 +62,21 @@ public class CreatePartyRole : Activity
             partyId = payload is not null && payload.TryGetValue("PartyId", out var id) ? id?.ToString() : null;
         }
 
-        var contentManager = context.GetRequiredService<IContentManager>();
-        var party = string.IsNullOrWhiteSpace(partyId) ? null : await contentManager.GetAsync(partyId, VersionOptions.Latest);
-        if (party is null || party.ContentType is not (PartiesConstants.ContentTypes.Person or PartiesConstants.ContentTypes.Organization))
+        // The role's base decides where it lands (ruling 2026-10-14): an organization role
+        // given to a person goes on their Individual organization. The service authorizes the
+        // burst's caller (viewing the party, publishing the role).
+        try
         {
-            await FailAsync(context, $"'{partyId}' is not a Person or Organization.");
-            return;
-        }
-
-        var existing = await FindRoleAsync(context.GetRequiredService<ISession>(), type.ContentType, party.ContentItemId);
-        if (existing is not null)
-        {
-            RoleId.Set(context, existing.ContentItemId);
-            Created.Set(context, false);
+            var result = await context.GetRequiredService<IPartyRoleService>().AddRoleAsync(
+                type.ContentType!, partyId ?? string.Empty, context.GetRequiredService<ICallerContextAccessor>().Current, context.CancellationToken);
+            RoleId.Set(context, result.RoleId);
+            Created.Set(context, result.Created);
             await context.CompleteActivityWithOutcomesAsync("Done");
-            return;
         }
-
-        // Creating the role is a content write by the burst's caller: viewing the party and
-        // publishing the role item (its type decides the per-type variation).
-        var decision = context.GetRequiredService<IAccessDecision>();
-        await decision.RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, "ViewContent", party, context.CancellationToken);
-        var role = await contentManager.NewAsync(type.ContentType);
-        await decision.RequireAsync(context.GetRequiredService<ICallerContextAccessor>().Current, "PublishContent", role, context.CancellationToken);
-        role.DisplayText = party.DisplayText;
-        role.Alter<ContentPart>(type.ContentType, part => part.Alter<ContentPickerField>("Party", field => field.ContentItemIds = [party.ContentItemId]));
-        await contentManager.CreateAsync(role, VersionOptions.Published);
-
-        RoleId.Set(context, role.ContentItemId);
-        Created.Set(context, true);
-        await context.CompleteActivityWithOutcomesAsync("Done");
-    }
-
-    // Roles of one type are few per tenant compared to parties; the picker lives in the item
-    // JSON, so the match is made in memory over the type's latest items.
-    private static async Task<ContentItem?> FindRoleAsync(ISession session, string contentType, string partyId)
-    {
-        var roles = await session.Query<ContentItem, ContentItemIndex>(i => i.ContentType == contentType && i.Latest).ListAsync();
-        return roles.FirstOrDefault(r => r.Get<ContentPart>(contentType)?.Get<ContentPickerField>("Party")?.ContentItemIds?.Contains(partyId) == true);
+        catch (InvalidOperationException exception)
+        {
+            await FailAsync(context, exception.Message);
+        }
     }
 
     private async ValueTask FailAsync(ActivityExecutionContext context, string reason)

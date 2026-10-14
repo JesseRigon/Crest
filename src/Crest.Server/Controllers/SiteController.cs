@@ -75,7 +75,7 @@ public sealed class SiteController(
             return Ok(new SitePageResult(refused.Status, refused.Title, refused.Tree));
         }
 
-        var version = await versions.ComputeAsync(parts, ["site-page", Crest.Display.SitePageBuilder.Normalize(path), caller.ScopeSignature], cancellationToken);
+        var version = await versions.ComputeAsync(parts, ["site-page", Crest.Display.SitePageBuilder.Normalize(path), Request.QueryString.Value, caller.ScopeSignature], cancellationToken);
         var shared = caller.UserId is null && !caller.IsSuperUser && !caller.IsSystem;
         Response.Headers.ETag = DisplayTreeVersions.ETag(version);
         Response.Headers.CacheControl = shared ? "public, no-cache" : "private, no-cache";

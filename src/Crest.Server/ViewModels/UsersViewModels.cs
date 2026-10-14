@@ -20,3 +20,7 @@ public sealed record CrestUser(string Id, string? UserName, string? Email, strin
 public sealed record UserWrite(string? UserName, string? Email, string? PhoneNumber, bool EmailConfirmed, bool IsEnabled, string[]? Roles, string? Password);
 
 public sealed record UserEnabled(bool Enabled);
+
+public sealed record UserStatus(bool IsLockedOut, DateTimeOffset? LockoutEnd, int AccessFailedCount);
+
+public sealed record UserExternalLogin(string LoginProvider, string ProviderKey, string? ProviderDisplayName);

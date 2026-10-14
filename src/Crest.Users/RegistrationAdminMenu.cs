@@ -10,7 +10,7 @@ public sealed class RegistrationAdminMenu : AdminNavigationProvider
     private static readonly RouteValueDictionary s_routeValues = new()
     {
         { "area", "Crest.Settings" },
-        { "groupId", RegistrationSettingsDisplayDriver.GroupId },
+        { "groupId", "userRegistration" },
     };
 
     internal readonly IStringLocalizer S;

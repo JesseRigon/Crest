@@ -31,6 +31,14 @@ public abstract class ContentTypePartDefinitionBuilder
         return this;
     }
 
+    /// <summary>Replaces every settings section with <paramref name="settings"/> (the admin's JSON settings editor).</summary>
+    public ContentTypePartDefinitionBuilder ReplaceSettings(JsonObject settings)
+    {
+        _settings.Clear();
+        _settings.Merge(settings?.DeepClone() as JsonObject ?? [], ContentBuilderSettings.JsonMergeSettings);
+        return this;
+    }
+
     public ContentTypePartDefinitionBuilder MergeSettings(JsonObject settings)
     {
         _settings.Merge(settings, ContentBuilderSettings.JsonMergeSettings);

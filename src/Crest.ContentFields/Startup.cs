@@ -1,3 +1,4 @@
+using Crest.DisplayManagement;
 using Fluid;
 using Microsoft.Extensions.DependencyInjection;
 using Crest.ContentFields.Drivers;
@@ -25,6 +26,9 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
+        // The field displays' data-localized labels (docs/blazor-display.md rework step 7).
+        services.AddShapeTableProvider<FieldDisplayLabels>();
+
         services.AddHtmlServices();
         
         services.AddResourceConfiguration<ResourceManagementOptionsConfiguration>();
@@ -59,25 +63,17 @@ public sealed class Startup : StartupBase
         // Boolean Field
         services.AddContentField<BooleanField>()
             .UseDisplayDriver<BooleanFieldDisplayDriver>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, BooleanFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, BooleanFieldIndexHandler>();
 
         // Text Field
         services.AddContentField<TextField>()
             .UseDisplayDriver<TextFieldDisplayDriver>()
             .AddHandler<TextFieldHandler>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, TextFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, TextFieldIndexHandler>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, TextFieldPredefinedListEditorSettingsDriver>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, TextFieldMonacoEditorSettingsDriver>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, TextFieldHeaderDisplaySettingsDriver>();
 
         // Html Field
         services.AddContentField<HtmlField>()
             .UseDisplayDriver<HtmlFieldDisplayDriver>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, HtmlFieldSettingsDriver>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, HtmlFieldTrumbowygEditorSettingsDriver>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, HtmlFieldMonacoEditorSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, HtmlFieldIndexHandler>();
 
         // Link Field
@@ -85,7 +81,6 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<LinkFieldDisplayDriver>()
             .AddHandler<LinkFieldHandler>();
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, LinkFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, LinkFieldIndexHandler>();
 
         // MultiText Field
@@ -93,7 +88,6 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<MultiTextFieldDisplayDriver>()
             .AddHandler<MultiTextFieldHandler>();
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, MultiTextFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, MultiTextFieldIndexHandler>();
 
         // Numeric Field
@@ -101,7 +95,6 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<NumericFieldDisplayDriver>()
             .AddHandler<NumericFieldHandler>();
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, NumericFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, NumericFieldIndexHandler>();
 
         // DateTime Field
@@ -109,7 +102,6 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<DateTimeFieldDisplayDriver>()
             .AddHandler<DateTimeFieldHandler>();
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, DateTimeFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, DateTimeFieldIndexHandler>();
 
         // Date Field
@@ -117,7 +109,6 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<DateFieldDisplayDriver>()
             .AddHandler<DateFieldHandler>();
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, DateFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, DateFieldIndexHandler>();
 
         // Time Field
@@ -125,7 +116,6 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<TimeFieldDisplayDriver>()
             .AddHandler<TimeFieldHandler>();
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, TimeFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, TimeFieldIndexHandler>();
 
         // Video field
@@ -133,7 +123,6 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<YoutubeFieldDisplayDriver>()
             .AddHandler<YoutubeFieldHandler>();
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, YoutubeFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, YoutubeFieldIndexHandler>();
 
         // Content picker field
@@ -141,7 +130,6 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<ContentPickerFieldDisplayDriver>()
             .AddHandler<ContentPickerFieldHandler>();
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, ContentPickerFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, ContentPickerFieldIndexHandler>();
         services.AddScoped<IContentPickerResultProvider, DefaultContentPickerResultProvider>();
         // The picker's server side on every save path: allowed target types and the
@@ -162,7 +150,6 @@ public sealed class LocalizationSetContentPickerStartup : StartupBase
             .UseDisplayDriver<LocalizationSetContentPickerFieldDisplayDriver>()
             .AddHandler<LocalizationSetContentPickerFieldHandler>();
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, LocalizationSetContentPickerFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, LocalizationSetContentPickerFieldIndexHandler>();
     }
 }
@@ -203,7 +190,6 @@ public sealed class UserPickerStartup : StartupBase
             .UseDisplayDriver<UserPickerFieldUserNamesDisplayDriver>(d => string.Equals(d, "UserNames", StringComparison.OrdinalIgnoreCase))
             .AddHandler<UserPickerFieldHandler>();
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, UserPickerFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, UserPickerFieldIndexHandler>();
         services.AddScoped<IUserPickerResultProvider, DefaultUserPickerResultProvider>();
     }

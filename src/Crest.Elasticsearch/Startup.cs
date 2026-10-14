@@ -140,7 +140,6 @@ public sealed class ElasticContentPickerStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddScoped<IContentPickerResultProvider, ElasticsearchContentPickerResultProvider>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, ContentPickerFieldElasticEditorSettingsDriver>();
         services.AddShapeAttributes<ElasticContentPickerShapeProvider>();
     }
 }
@@ -150,8 +149,6 @@ public sealed class ContentTypesStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, ContentTypePartIndexSettingsDisplayDriver>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, ContentPartFieldIndexSettingsDisplayDriver>();
     }
 }
 

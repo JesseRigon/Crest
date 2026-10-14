@@ -1,0 +1,158 @@
+@page "/OpenId/Scope"
+@page "/OpenId/Scope/Create"
+@page "/OpenId/Scope/Edit/{Id}"
+@using Crest.AdminTheme.Api
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NavigationManager Navigation
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* The OpenID Connect scopes, listed and edited in place (step 7: the MVC Scope screens are
+   retired). The Create and Edit routes the stock links use open the editor here. *@
+
+<CrestStack Gap="1rem" data-testid="openid-scopes-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="@T["OpenID Connect scopes"]" />
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["The scopes applications can request, and the resources each grants."]" />
+        </CrestStack>
+        <CrestButton Text="@T["Add scope"]" Icon="add" Click="@(() => Edit(null))" Disabled="@IsBusy" data-testid="openid-scope-add" />
+    </CrestStack>
+
+    @foreach (var message in Errors.Where(error => error.Key is not (nameof(OpenIdScopeModel.Name) or nameof(OpenIdScopeModel.Resources))).Select(error => error.Message))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@message</CrestAlert>
+    }
+
+    @if (Draft is not null)
+    {
+        <CrestCard data-testid="openid-scope-editor">
+            <CrestStack Gap="1rem">
+                <CrestText TextStyle="TextStyle.H5" Text="@(string.IsNullOrEmpty(Draft.Id) ? T["New scope"] : T["Edit {0}", Draft.Name ?? string.Empty])" />
+                <CrestRow Gap="1rem">
+                    <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Name"]" Style="width: 100%;"><CrestTextBox @bind-Value="Draft.Name" Style="width: 100%;" data-testid="openid-scope-name" /></CrestFormField><FieldMessage Text="@ErrorFor(nameof(OpenIdScopeModel.Name))" /></CrestColumn>
+                    <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Display name"]" Style="width: 100%;"><CrestTextBox @bind-Value="Draft.DisplayName" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                    <CrestColumn Size="12"><CrestFormField Text="@T["Description"]" Style="width: 100%;"><CrestTextBox @bind-Value="Draft.Description" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                    <CrestColumn Size="12"><CrestFormField Text="@T["Resources (space-separated)"]" Style="width: 100%;"><CrestTextBox @bind-Value="Draft.Resources" Style="width: 100%;" /></CrestFormField><FieldMessage Text="@ErrorFor(nameof(OpenIdScopeModel.Resources))" /></CrestColumn>
+                </CrestRow>
+                <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="Close" Disabled="@IsBusy" />
+                    <CrestButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" data-testid="openid-scope-save" />
+                </CrestStack>
+            </CrestStack>
+        </CrestCard>
+    }
+
+    <CrestCard>
+        @if (Items is null)
+        {
+            <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (Items.Length == 0)
+        {
+            <CrestText TextStyle="TextStyle.Body2" Text="@T["No scopes yet."]" />
+        }
+        else
+        {
+            <CrestDataGrid Data="@Items" TItem="OpenIdScopeModel" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <CrestDataGridColumn TItem="OpenIdScopeModel" Property="Name" Title="@T["Name"]" />
+                    <CrestDataGridColumn TItem="OpenIdScopeModel" Property="DisplayName" Title="@T["Display name"]" />
+                    <CrestDataGridColumn TItem="OpenIdScopeModel" Property="Resources" Title="@T["Resources"]" />
+                    <CrestDataGridColumn TItem="OpenIdScopeModel" Title="@T["Actions"]" Width="10rem">
+                        <Template Context="item">
+                            <CrestStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                <CrestButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(item))" title="@T["Edit"]" />
+                                <CrestButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteAsync(item))" title="@T["Delete"]" />
+                            </CrestStack>
+                        </Template>
+                    </CrestDataGridColumn>
+                </Columns>
+            </CrestDataGrid>
+        }
+    </CrestCard>
+</CrestStack>
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    private OpenIdScopeModel[]? Items { get; set; }
+    private OpenIdScopeModel? Draft { get; set; }
+    private OpenIdFieldError[] Errors { get; set; } = [];
+    private bool IsBusy { get; set; }
+
+    private string? ErrorFor(string key) => Errors.FirstOrDefault(error => string.Equals(error.Key, key, StringComparison.OrdinalIgnoreCase))?.Message;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+        var path = Navigation.ToBaseRelativePath(Navigation.Uri);
+        if (!string.IsNullOrEmpty(Id))
+        {
+            Edit(Items?.FirstOrDefault(item => item.Id == Id));
+        }
+        else if (path.StartsWith("OpenId/Scope/Create", StringComparison.OrdinalIgnoreCase))
+        {
+            Edit(null);
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        Items = await Api.Crest.Rest.OpenId.ListScopesAsync();
+        if (Items is null)
+        {
+            Errors = [new OpenIdFieldError(string.Empty, T["The scopes could not be loaded."])];
+            Items = [];
+        }
+    }
+
+    private void Edit(OpenIdScopeModel? item)
+    {
+        Errors = [];
+        Draft = item is null
+            ? new OpenIdScopeModel()
+            : new OpenIdScopeModel { Id = item.Id, Name = item.Name, DisplayName = item.DisplayName, Description = item.Description, Resources = item.Resources };
+    }
+
+    private void Close()
+    {
+        Draft = null;
+        Errors = [];
+    }
+
+    private async Task SaveAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var result = await Api.Crest.Rest.OpenId.SaveScopeAsync(Draft!);
+            Errors = result.Errors;
+            if (result.Succeeded)
+            {
+                Notifications.Notify(NotificationSeverity.Success, T["Scope saved"], Draft!.Name ?? string.Empty);
+                Draft = null;
+                await LoadAsync();
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task DeleteAsync(OpenIdScopeModel item)
+    {
+        if (item.Id is not null && await Api.Crest.Rest.OpenId.DeleteScopeAsync(item.Id))
+        {
+            Notifications.Notify(NotificationSeverity.Success, T["Scope deleted"], item.Name ?? string.Empty);
+            await LoadAsync();
+        }
+        else
+        {
+            Notifications.Notify(NotificationSeverity.Error, T["Delete failed"], T["The scope could not be deleted."]);
+        }
+    }
+}

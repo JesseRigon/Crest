@@ -1,233 +1,116 @@
-# Blazor Component Workbench & WYSIWYG Editor
+# Blazor designer (component workbench and WYSIWYG editor)
 
-> Audit note (2026-10-09): § 3's registry, attributes and `ComponentNode` are superseded by the
-> one component registry and `Template.Tree` in [blazor-display.md](blazor-display.md) (Audit,
-> contradictions 3 and 4); Phase 1 is rewritten to consume them once the open rulings land.
+**Status: not started.** Nothing in this document is implemented.
 
-**Status: not started.** This is a stored plan only — nothing here has been implemented.
+The designer is the UI layer over the display system in [blazor-display.md](blazor-display.md):
+a canvas, a component palette, a property pane, undo and a verification engine. It does not
+define a component model, a registry or a node format of its own:
 
-**Builds on [blazor-display.md](blazor-display.md)** (2026-10-09): the backend comes first. The
-designer edits a template's component tree and reads the component registry's parameter schema,
-both defined there. What this plan calls `IWorkbenchComponentRegistry` is that registry, and
-`ComponentNode` is a node of the display tree; neither is built separately. The `[WorkbenchComponent]`
-attribute folds into the one component attribute. The Appsmith-derived canvas, palette, property
-pane and verification engine remain this document's scope.
+- **The component registry** (blazor-display.md § 1) is the palette's source and the property
+  pane's schema. Components are marked with `[BlazorComponent]` and `[ComponentParameter]`;
+  there is no workbench registry, workbench attribute or reflection scan of its own.
+- **The node is the display tree's** (`DisplayNode`). Layout is a container primitive's
+  parameters (stack, grid, flow), never fixed grid coordinates on every node.
+- **What it edits is Liquid template text** (blazor-display.md § 11): known tags become
+  editable nodes, everything else is preserved verbatim as opaque blocks; preview is a server
+  evaluation of the edited text, rendered by the live renderer.
+- **The canvas is the real page in an overlay** (blazor-display.md › decision 11): the content
+  is rendered unmodified; a designer layer above it draws selection, hover, snap guides and drop
+  markers from measured rectangles, and a drop becomes a template edit.
+- **Overrides** (blazor-display.md § 5a): the default mode edits an instance; a separate mode
+  edits a base node under the shared-component permission. Instance ids are written into the
+  tags and never regenerated.
+- **Three objects, edited differently.** A *template* (a tree bound to a shape name, no URL), a
+  *designed page* (a page record with its route, bucket and permissions plus its tree; no
+  overrides, blazor-display.md § 6a and decision 9) and an *item body* (an item's own
+  `DisplayTreePart`, blazor-display.md § 7). The content editor is the designer in a reduced
+  mode: the same trees, a palette limited by role.
+- **Permissions** are the per-page sets of blazor-display.md § 10 (Design, Schema, Data, Shared
+  components, Publish). A designer sees the schema without the data unless it has the data
+  permission.
 
-**Reference systems** (ruling 2026-10-09; verify each licence before porting anything):
-- [Blazing Story](https://github.com/jsakamoto/BlazingStory) (MIT, Blazor): the Storybook
-  equivalent. Merged into this plan as the **component catalog**: every registry entry gets
-  stories (parameter presets) that the palette previews, the property pane uses as examples
-  and the verification engine (Phase 3) snapshots. Port its story model and catalog UI rather
-  than building a catalog from scratch.
-- Appsmith (Apache-2.0): canvas, palette, property pane, as already planned.
-- Craft.js and Puck (MIT, React): the editor's node/resolver/drag-drop architecture and typed
+Custom data types are the registry's editor components (blazor-display.md › Vocabulary, Editor
+kind) over the value types of `Crest.Data.Types`. Types a tenant creates without code reach the
+designer through them; tenant-made party roles are the first such case and need their own design
+before the designer is done ([parties.md](parties.md) › Tenant-defined party roles).
+
+## Reference systems
+
+Verify each licence before porting anything.
+
+- **[Appsmith](https://github.com/appsmithorg/appsmith)** (Apache-2.0, cloned at
+  `/workspaces/appsmith`): the reference architecture for the canvas, palette, property pane and
+  IDE shell, ported to Blazor's component model. A `NOTICE` entry credits it once any of these
+  pieces exist, even though no literal source is copied.
+- **[Blazing Story](https://github.com/jsakamoto/BlazingStory)** (MIT, Blazor): the Storybook
+  equivalent, merged in as the **component catalog**: every registry entry gets stories
+  (parameter presets) that the palette previews, the property pane uses as examples and the
+  verification engine snapshots. Its story model and catalog UI are ported rather than built
+  from scratch. They map onto the registry's `templates` (presets).
+- **Craft.js and Puck** (MIT, React): the editor's node/resolver/drag-drop architecture and typed
   field schemas; design references only.
 - Backend references for the data model are in [blazor-display.md](blazor-display.md).
-A self-owned Component Workbench & WYSIWYG design surface, native to OrchardCore/Blazor,
-using Appsmith's widget/canvas/layout architecture as the model — reimplemented for
-Blazor's `RenderFragment`/component-parameter model in place of Appsmith's
-React/Redux/DSL-JSON model. The routing registry it builds on is documented in
-[blazor-web.md](blazor-web.md) ("Route reachability").
 
-Originally captured in response to "is there a storybook and chromium addon equivalent
-for C# Blazor components?" (no permissive-license equivalent exists). Uses [appsmithorg/appsmith](https://github.com/appsmithorg/appsmith)
-(cloned locally to `/workspaces/appsmith`, Apache 2.0) as the reference architecture for
-the UI/editor/canvas layer, ported to Blazor's component model instead of reimplemented
-from scratch. Appsmith is a low-code app builder: drag-and-drop widget canvas, a widget
-property/style panel, a layout engine, and a page/app IDE shell — functionally the same
-shape as the "component workbench" this plan already wanted, and a mature, battle-tested
-implementation of it. License is Apache 2.0 (permissive, attribution required) — safe to
-port from with a `NOTICE`/attribution entry once implementation starts.
+## What Appsmith gives to port
 
-**Prerequisite before it is done: custom data types.** The designer will hook into the
-custom data types system to build UIs for types a tenant creates without code. How such
-types reach the registries and their pages has to be designed first; tenant-made party
-roles are the first case ([parties.md](parties.md) › Tenant-defined party roles). Far down
-the pipeline.
+Paths are under `/workspaces/appsmith/app/client/src/` unless noted.
 
-Verification (structural + pixel snapshotting) stays in the
-same spirit as the Playwright screenshot-diff harness already built under
-`modules/Crest/tests/playwright/harness/`.
-
-## Phase 0: Study pass (Day 0)
-
-### §1. What Appsmith gives us to port (source reference)
-
-Reference paths below are all under `/workspaces/appsmith/app/client/src/` unless noted.
-
-| Appsmith concept | Location | Blazor port target |
+| Appsmith concept | Location | Blazor target |
 |---|---|---|
-| Widget base class (`BaseWidget.tsx`) — every widget's common prop contract (position, size, `widgetId`, `parentId`, style config) | `widgets/BaseWidget.tsx` | `WorkbenchComponentBase` — a Blazor base component every registered component wraps, carrying `Id`, `ParentId`, `Position`, `Size`, `StyleConfig` |
-| Widget registry/factory (how a widget type name resolves to a React component + default props + property-pane schema) | `WidgetProvider/` | `IWorkbenchComponentRegistry` — reflection-based scan of OrchardCore module assemblies for `[WorkbenchComponent]`-attributed Razor components, analogous to how Appsmith's registry maps a `type` string to a factory |
-| Canvas rendering + drop targets + resize handles | `layoutSystems/common/canvasViewer/`, `layoutSystems/common/dropTarget/`, `layoutSystems/common/resizer/` | `WorkbenchCanvas.razor` — recursive tree renderer using `RenderTreeBuilder`/`DynamicComponent`, with JS-interop-backed drop targets and resize handles (Blazor has no native HTML5 drag/drop bridge to C# state, so this stays JS-interop like Appsmith's own DOM-level drag logic — nothing to "port" here except behavior, not code) |
-| Fixed vs. responsive/auto layout systems (three interchangeable layout engines) | `layoutSystems/fixedlayout/`, `layoutSystems/autolayout/`, `layoutSystems/anvil/` | Start with the fixed-layout system only (`fixedlayout/` is the simplest — explicit x/y/w/h grid positions, no flex reflow math). Auto-layout/Anvil are v2 stretch goals — do not port their reflow algorithms into v1 |
-| Selection/highlight overlays on the currently-selected widget | `layoutSystems/common/widgetComponent/`, editor selection sagas (`sagas/WidgetSelectionSagas.ts`) | Border-overlay directive driven by a `SelectedComponentId` field on workbench state, same visual behavior, no Redux — plain Blazor cascading state |
-| Property/style pane (right-hand "knobs" panel driven by a per-widget property schema) | `PluginActionEditor/`, widget-specific `*.editor.ts`/property-pane config files colocated per widget folder | `PropertyPaneRenderer.razor` reflecting a component's public `[Parameter]`s (+ an optional `[WorkbenchProperty(Group, Editor)]` attribute for grouping/control-type hints) instead of Appsmith's hand-authored JSON property-pane schema per widget |
-| IDE shell (page list, top bar, canvas, property pane composed together) | `IDE/Components/`, `IDE/Structure/` | `WorkbenchShell.razor` — top-level page composing palette + canvas + property pane, modeled 1:1 on `IDE/Structure`'s layout regions |
-| Widget catalog/toolbox (draggable palette of available widget types) | `pages/Editor` widget sidebar, `WidgetQueryGenerators/` | `ComponentPalette.razor` — lists everything the registry discovers, grouped by module of origin |
-| Undo/redo | Redux-based, `sagas/` action history | A dedicated `WorkbenchHistoryStack` service (command-pattern mutation log), since Blazor has no Redux equivalent to lean on — this is new code, not a port, but same *behavior contract* as Appsmith's |
+| Canvas rendering, drop targets, resize handles | `layoutSystems/common/canvasViewer/`, `layoutSystems/common/dropTarget/`, `layoutSystems/common/resizer/` | The overlay layer over the live renderer (decision 11): JS-interop drag-over detection, ghost preview and handle hit-testing with the same behaviour contract; nothing to port but behaviour |
+| Selection/highlight overlays | `layoutSystems/common/widgetComponent/`, `sagas/WidgetSelectionSagas.ts` | Overlay boundaries for the hovered and selected instance ids, from designer state (plain Blazor cascading state, no Redux) |
+| Property/style pane | widget-specific property-pane config files | The property pane generated from the registry schema (parameter kinds, groups, `hidden`/`advanced`/`readOnly` rules) and the editor components of each kind |
+| IDE shell (page list, top bar, canvas, property pane) | `IDE/Components/`, `IDE/Structure/` | The designer shell: palette left, canvas centre, property pane right, modelled on `IDE/Structure`'s regions |
+| Widget catalog/toolbox | `pages/Editor` widget sidebar | The palette: registry entries and registered overrides first, grouped by category, any placed component reachable through search, favorites per user; its own layout is a tree overridable per tenant and user |
+| Undo/redo | Redux action history in `sagas/` | A command-pattern history of template text edits; new code with the same behaviour contract |
 
-**Deliberately not porting (v1):** Appsmith's JS/Python query-datasource system
-(`PluginActionEditor`, `Datasource/`), its Git-backed app versioning (`git/`,
-`git-artifact-helpers/`), and the Anvil/auto-layout reflow engines. These solve problems
-(remote data binding, app-level version control, responsive reflow) this plan doesn't need
-yet — OrchardCore already has its own content/data layer and this workbench is scoped to
-component layout/preview only. Revisit only if a concrete need shows up.
+Not ported: Appsmith's query-datasource system (slots bind the query system instead), its
+Git-backed app versioning (templates have drafts, publish and history), and the Anvil/auto-layout
+reflow engines (layout is container primitives).
 
-### Study items
+## Phase 0: study pass
 
-- [ ] **Read the widget contract.** Read `widgets/BaseWidget.tsx`, `WidgetProvider/`, and one concrete simple widget end
-  to end (`widgets/ButtonWidget/` is the smallest complete example) to confirm the
-  prop/registry contract before writing `WorkbenchComponentBase`.
-- [ ] **Read the fixed layout system.** Read `layoutSystems/fixedlayout/` (editor + canvas + common) end to end — this is the
-  only layout system being ported in v1.
-- [ ] **Scope drag/drop and resize.** Read `layoutSystems/common/dropTarget/` and `layoutSystems/common/resizer/` to scope
-  exactly what JS interop needs to replicate (drag-over detection, ghost preview, resize
-  handle hit-testing) versus what's pure React state that has no DOM analog to port.
+- [ ] **Read the widget contract.** `widgets/BaseWidget.tsx`, `WidgetProvider/`, and one simple
+  widget end to end (`widgets/ButtonWidget/`), to map Appsmith's prop contract onto the registry
+  schema.
+- [ ] **Scope drag/drop and resize.** Read `layoutSystems/common/dropTarget/` and
+  `layoutSystems/common/resizer/` to scope what the overlay's JS interop replicates (drag-over
+  detection, ghost preview, resize handle hit-testing) versus pure React state with no DOM
+  analog.
 
-## Phase 1: Core Engine & State Foundation
+## Phase 1: designer state over the template text
 
-Goal: a thread-safe, multi-tenant state container capable of compiling component nodes
-into living DOM interfaces, modeled on Appsmith's widget-tree + registry split.
+- [ ] **Designer state** (scoped service, one per editor session): the template being edited (its
+  Liquid text and the parsed statements), the evaluated tree from the last preview, the selected
+  instance id, and the undo history.
+- [ ] **Parse and write back.** Map the known tags to editable nodes and write a node's changed
+  arguments back into the tag; keep unknown statements as opaque blocks.
+- [ ] **Preview round trip** through the templates preview endpoint (`api/crest/templates`), the
+  canvas rendering the returned tree with `DisplayTreeRenderer`.
 
-### §2. System Architecture
+## Phase 2: the design studio
 
-```mermaid
-graph TD
-    Orchard[OrchardCore Module Pipeline]
-    Registry[IWorkbenchComponentRegistry<br>- Reflection scan for attributed Razor components<br>- Type to default-parameters + property-schema map]
-    State[WorkbenchState Service<br>- ComponentNode Tree Hierarchy<br>- WorkbenchHistoryStack Undo/Redo<br>- SelectedComponentId]
-    Palette[ComponentPalette.razor<br>- Grouped by owning module<br>- Drag source]
-    Properties[PropertyPaneRenderer.razor<br>- Reflects Parameter attrs<br>- WorkbenchProperty grouping hints]
-    Canvas[WorkbenchCanvas.razor<br>- Recursive RenderTreeBuilder/DynamicComponent<br>- JS-interop drop targets + resize<br>- Selection overlay]
-    Engines[Verification<br>- AngleSharp structural HTML diff<br>- Puppeteer Sharp headless snapshot<br>- ImageSharp/PixelMatch pixel diff]
+- [ ] **The shell**: palette, canvas, property pane.
+- [ ] **The palette** from `api/crest/components?shell=` (components, composites, variants).
+- [ ] **The overlay**: instance-id markers, measuring, hover and selection boundaries, snapping,
+  drop into a zone as a tag move.
+- [ ] **The property pane**: one input per parameter kind through the registry's editor
+  components, writing back into the tag; slots offer the query picker; outputs offer bindings.
+- [ ] **Override modes**: instance (default) and base node, with the permission gate.
+- [ ] **Designed page editor** over `api/crest/pages`; **item body editor** replacing the JSON
+  `DisplayTreeEditor`.
+- [ ] **The Appsmith `NOTICE` entry.**
 
-    Orchard --> Registry
-    Registry --> Palette
-    Palette -->|Drag to canvas| State
-    State -->|Renders tree| Canvas
-    Canvas -->|Select node| State
-    State -->|Selected node schema| Properties
-    Properties -->|Mutate parameters| State
-    Canvas -->|Snapshot request| Engines
-```
+## Phase 3: headless verification engine
 
-### §3. Core Data Models (`Crest.Module.Workbench.Core`)
-
-- [ ] **Build `IWorkbenchComponentRegistry` on the routing registry's plumbing (§0, §3c).** Build `IWorkbenchComponentRegistry`: reflection scan of loaded module assemblies for
-  `[WorkbenchComponent]`-attributed Razor components at OrchardCore startup, producing a
-  `type name -> (Type, default ComponentNode, property schema)` map, analogous to
-  `WidgetProvider/`'s registry.
-  - Sub-task: only scan module assemblies within the same trust boundary as
-    `modules/Crest/` and this workbench module itself. **Never auto-register
-    third-party/vendored assemblies** (e.g. `OrchardCore.Commerce`'s vendored subtree,
-    see [[project-crest-test-plan]]'s note on that project's separate upstream/CI) without
-    an explicit opt-in list.
-
-  Component Registration Attribute:
-
-  ```csharp
-  [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-  public sealed class WorkbenchComponentAttribute : Attribute
-  {
-      public string DisplayName { get; init; } = string.Empty;
-      public string Group { get; init; } = "General"; // palette grouping, mirrors Appsmith widget categories
-  }
-
-  [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-  public sealed class WorkbenchPropertyAttribute : Attribute
-  {
-      public string Group { get; init; } = "Content"; // e.g. Content / Style / Layout, mirrors Appsmith's property-pane tabs
-      public string? Editor { get; init; } // hint for PropertyPaneRenderer's control-type selection
-  }
-  ```
-
-  **§0. What's available from the routing implementation ([docs/blazor-web.md](blazor-web.md))**
-
-  Site/Admin's routing-reachability fix (`RouteComponentTable`/`IRouteComponentTableProvider`) has shipped and is documented in [docs/blazor-web.md](blazor-web.md)'s "Route reachability" section. Record here, concretely, what that leaves behind for this plan to build on.
-
-  **`RouteComponentTable` and `IRouteComponentTableProvider`** (`Crest.Server/Routing/`, documented in `docs/blazor-web.md`) — a per-tenant, per-active-theme, convention-scanned registry mapping a route pattern to a Blazor component `Type`, built once per shell (mirroring `DefaultShapeTableManager`/`ShapeTable`'s cache-per-`themeId` shape) and invalidated on shell/feature/theme change, never rebuilt per request. Each Blazor theme (Admin, Site, and this workbench once it exists) supplies its own `IRouteComponentTableProvider`, self-reporting its own `@page`-attributed components via reflection — nobody hand-maintains a central route list.
-
-  **Why this matters for the workbench specifically:** this document's §3's `IWorkbenchComponentRegistry` (reflection scan of `[WorkbenchComponent]`-attributed Razor components, `type name -> (Type, default ComponentNode, property schema)` map) is architecturally the *same* primitive as `IRouteComponentTableProvider` (reflection scan of `@page`-attributed Razor components, `route pattern -> Type` map) — both are "convention-scanned, theme/shell-scoped, Orchard-native registry," just keyed differently (component type name vs. route pattern) and serving different consumers (canvas palette vs. HTTP routing). **Do not build `IWorkbenchComponentRegistry` as an unrelated, parallel mechanism.**
-
-  - **Reuse the scanning/caching infrastructure, not just the pattern.** `AdminRouteComponentTableProvider` and `SiteRouteComponentTableProvider` (`Crest.Server/Routing/AssemblyRouteComponentScanner.cs`) are already two consumers of the same scan logic before the workbench is even a third — `AssemblyScanningWorkbenchComponentRegistry` should factor out and reuse a shared "scan these assemblies for components carrying attribute `TAttribute`, cache per shell, invalidate on theme/feature change" helper with `WorkbenchComponentAttribute`, instead of duplicating the scan/cache logic from scratch.
-  - **`WorkbenchComponentAttribute` and any future `[RouteComponent]`-style marker (if `@page` itself isn't judged sufficient as the routing implementation's registration point) should be designed to coexist on the same component class.** A component usable both as a routable page *and* a placeable workbench widget is a real, expected case (e.g. `CrestCounter`, already both a `[BlazorComponent]`-marked shape-pipeline component *and* a routable `@page "/blazor-counter/{ContentItemId}"` island) — the two attributes are orthogonal facts about the same type, not competing registration systems.
-  - **Theme/shell scoping is inherited for free.** Because the workbench's own registry follows the same per-shell-cache shape as `RouteComponentTable`, a tenant with the workbench feature disabled simply has an empty/absent registry — no separate feature-gating logic needs inventing for "is the workbench available on this tenant," it falls out of the same `IShellFeaturesManager`-driven invalidation `RouteComponentTable` already uses.
-  - **No invented literals here either.** `IWorkbenchComponentRegistry`'s `type name -> Type` keys must come from the same place `RouteComponentTable`'s route patterns do — the attribute/reflection scan itself — never a hand-typed registration list in a `Startup.cs`. This plan already designed it this way (§3c); this section exists to make explicit that the routing implementation is not just a *precedent* for that design, it's the literal shared plumbing to build it on top of.
-
-  **What is NOT shared:** `ComponentNode`'s tenant-editable tree persistence (§3, `CrestBlazorComponentPart`) and `RouteComponentTable`'s routing gate are unrelated at the data layer — a workbench-placed component instance is content (a `ContentItem`), not a route. The shared piece is strictly the *discovery* mechanism (how a component `Type` gets found and cached per tenant), not anything about where instances of it live or how they're addressed.
-
-- [ ] **Build `WorkbenchState` and the `ComponentNode` tree (§3).** Build `WorkbenchState` (scoped DI service, one per editor session/tenant) — the
-  `ComponentNode` tree, `SelectedComponentId`, and a `WorkbenchHistoryStack` for undo/redo.
-
-  Component Tree Node:
-
-  ```csharp
-  namespace Crest.Module.Workbench.Core;
-
-  public class ComponentNode
-  {
-      public Guid Id { get; set; } = Guid.NewGuid();
-      public Guid? ParentId { get; set; }
-      public string ComponentTypeFullName { get; set; } = string.Empty;
-
-      // Fixed-layout position/size, mirrors Appsmith's fixedlayout grid fields
-      // (topRow/leftColumn/bottomRow/rightColumn) collapsed to a simpler rect.
-      public int Row { get; set; }
-      public int Column { get; set; }
-      public int RowSpan { get; set; } = 1;
-      public int ColumnSpan { get; set; } = 1;
-
-      // Tracks [Parameter] values modified via the property pane.
-      public Dictionary<string, object?> Parameters { get; set; } = new(StringComparer.Ordinal);
-
-      public List<ComponentNode> Children { get; set; } = new();
-  }
-  ```
-
-- [ ] **Build the canvas render step.** Build `WorkbenchCanvas.razor`'s recursive render step using `RenderTreeBuilder` (or
-  `DynamicComponent` if parameter binding proves simpler that way) to instantiate each
-  node's resolved `Type` with its `Parameters` dictionary.
-
-## Phase 2: User Interface Design Studio
-
-Goal: reproduce Appsmith's editor shell layout and interaction model, ported to Blazor.
-
-- [ ] **Build the workbench shell.** Build `WorkbenchShell.razor` composing `ComponentPalette` (left) / `WorkbenchCanvas`
-  (center) / `PropertyPaneRenderer` (right), matching `IDE/Structure`'s region layout.
-- [ ] **Build the component palette.** Build `ComponentPalette.razor` listing registry entries grouped by
-  `WorkbenchComponentAttribute.Group`, matching Appsmith's widget-category sidebar.
-- [ ] **Implement drag, reposition and resize.** Implement JS-interop drag-from-palette + drag-to-reposition + resize handles, scoped
-  to what Phase 0's read of `dropTarget`/`resizer` found necessary — expect this to be new
-  JS interop code with the *same behavior contract* as Appsmith's DOM logic, not a literal
-  code port (Appsmith's drag/drop is deeply wired into React's synthetic event system and
-  Redux dispatch, neither of which exists in Blazor).
-- [ ] **Implement selection overlays.** Implement selection border overlays driven by `WorkbenchState.SelectedComponentId`.
-- [ ] **Build the property pane.** Build `PropertyPaneRenderer.razor`: reflect the selected node's `Type` for public
-  `[Parameter]` properties (+ `[WorkbenchProperty]` hints for grouping/editor control type),
-  rendering an appropriate input per CLR type (string → text box, bool → checkbox, enum →
-  dropdown, etc.), writing back into `ComponentNode.Parameters` on change.
-- [ ] **Add the Appsmith `NOTICE` entry.** **Attribution requirement:** since the widget/registry/canvas/property-pane *design* is
-  ported from Appsmith (Apache 2.0), add a `NOTICE` entry crediting appsmithorg/appsmith
-  once any of the Phase 1–2 components land, even though no literal source is copied
-  (TypeScript/React → C#/Razor is a redesign, not a transliteration) — attribution is the
-  safer read of Apache 2.0 §4 for a derived-architecture situation like this.
-
-## Phase 3: Headless Verification Engine
-
-Goal: verification without external web hooks or heavy runtime overhead, same spirit as
-the existing Playwright screenshot-diff harness but for Blazor component output.
-
-### §5. Technical Specifications & Dependencies
+Verification without external web hooks, in the same spirit as the Playwright screenshot-diff
+harness under `modules/Crest/tests/playwright/harness/`.
 
 | Dependency | Purpose | License | Tier |
 |---|---|---|---|
 | AngleSharp | Normalizes structural HTML trees for DOM validation | MIT | Core |
-| Puppeteer Sharp | Spins up Chromium viewports for pixel snapshotting | MIT | Optional/Engine |
-| System.Text.Json | Serializes the active workspace tree to clear text | MIT / Native | Core |
-| (reference only, not a runtime dependency) appsmithorg/appsmith | Architecture/UX reference for widget registry, canvas, property pane, IDE shell | Apache 2.0 | Reference |
-
-### Snapshot & System Manifest
+| Puppeteer Sharp | Chromium viewports for pixel snapshotting | MIT | Optional |
+| System.Text.Json | Serializes the evaluated tree to clear text | MIT | Core |
 
 ```csharp
 public class DesignSnapshot
@@ -241,43 +124,24 @@ public class DesignSnapshot
 }
 ```
 
-### Verification items
-
-- [ ] **Normalize structural HTML with AngleSharp.** Pull in AngleSharp (MIT) to strip runtime tokens (Blazor's `_bl_*` marker attributes,
-  auto-generated element IDs) and compile static layout trees to predictable raw text
-  signatures.
-- [ ] **Record canvas snapshots with Puppeteer Sharp.** Integrate Puppeteer Sharp (MIT) into an isolated OrchardCore background task running
-  local Chromium targets to record canvas renderings into baseline binaries — same
+- [ ] **Normalize structural HTML with AngleSharp**: strip runtime tokens (Blazor's `_bl_*`
+  marker attributes, generated element ids) so the same tree yields the same text signature.
+- [ ] **Record snapshots with Puppeteer Sharp** in an isolated background task, with the same
   base/new/`UPDATE_BASE=1` promotion convention as
-  `modules/Crest/tests/playwright/harness/screenshot-diff.js`, for consistency
-  across both harnesses.
-- [ ] **Write or adopt the image-difference processor.** Write a deterministic image-difference processor using standard mathematical color
-  delta loops (`dE = sqrt((r1-r2)^2 + (g1-g2)^2 + (b1-b2)^2)`), or evaluate reusing
-  `Verify.XunitV3`'s image-comparison support (see
-  [[project-crest-test-stack]]) instead of hand-rolling this — check before Phase 3 starts
-  whether Verify already covers this well enough to drop the custom delta loop.
+  `modules/Crest/tests/playwright/harness/screenshot-diff.js`.
+- [ ] **Image difference**: reuse `Verify.XunitV3`'s image comparison if it covers the need,
+  otherwise a deterministic colour-delta loop (`dE = sqrt((r1-r2)^2 + (g1-g2)^2 + (b1-b2)^2)`).
 
-## Phase 4: Convert an existing Crest component as the pilot
+## Phase 4: pilot
 
-- [ ] **Register a real Crest component as the pilot.** Pick one real, already-built Crest component (a good candidate: something in
-  `modules/Crest/src/Crest.Components/`) and register it via
-  `[WorkbenchComponent]` as the first end-to-end proof — palette → canvas → property pane
-  → snapshot, no synthetic test-only component.
+- [ ] **One real component end to end**: a registered component from `Crest.Components` through
+  palette → canvas → property pane → snapshot, no synthetic test-only component.
 
-## §6. Verification & Testing Matrix
+## Verification matrix
 
-- [ ] **State Mutation Stability.**
-  - Test case: changing a single integer parameter input field in the property pane.
-  - Success metric: `WorkbenchState` updates only that component node without resetting
-    child layout states or wiping structural attributes.
-- [ ] **Structural Snapshot Precision.**
-  - Test case: injecting a Blazor component with shifting `_bl_*`/GUID attributes into the
-    rendering loop.
-  - Success metric: the AngleSharp validation process clears out non-deterministic string
-    values, emitting matching HTML string outputs across subsequent renders.
-- [ ] **Pixel-Perfect Contrast Processing.**
-  - Test case: running a visual delta scan between two baseline component images
-    containing a 3px color boundary offset.
-  - Success metric: the mathematical loop (or `Verify.XunitV3`'s image comparer, if adopted
-    in Phase 3) catches the exact color difference, flags the item as failed, and calculates
-    a precise error ratio (e.g. 0.0015%).
+- [ ] **State mutation stability.** Changing one parameter in the property pane changes only that
+  node's tag; child nodes, instance ids and overrides are untouched.
+- [ ] **Structural snapshot precision.** A component with shifting `_bl_*`/GUID attributes yields
+  the same normalized HTML across renders.
+- [ ] **Pixel contrast.** A visual delta scan between two baselines with a 3px colour boundary
+  offset flags the item as failed with a precise error ratio.

@@ -27,6 +27,7 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<CrestContentPartListMigrations>();
         services.AddScoped<Crest.Data.Global.Lists.IGlobalListReader, Crest.Data.Global.Lists.GlobalListReader>();
         services.AddScoped<IContentPartListService, ContentPartListService>();
+        services.AddScoped<IContentPartListImporter, ContentPartListImporter>();
 
         // Culture -> measurement system -> preferred units (CLDR-derived data);
         // stateless, so a singleton.

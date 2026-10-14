@@ -234,40 +234,4 @@ public sealed class AccountController : AccountBaseController
 
         return RedirectToLocal(returnUrl);
     }
-
-    public IActionResult ChangePassword(string returnUrl = null)
-    {
-        ViewData["ReturnUrl"] = returnUrl;
-
-        return View();
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model, string returnUrl = null)
-    {
-        if (ModelState.IsValid)
-        {
-            var user = await _userService.GetAuthenticatedUserAsync(User);
-
-            if (await _userService.ChangePasswordAsync(user, model.CurrentPassword, model.Password, ModelState.AddModelError))
-            {
-                if (Url.IsLocalUrl(returnUrl))
-                {
-                    await _notifier.SuccessAsync(H["Your password has been changed successfully."]);
-
-                    return this.Redirect(returnUrl, true);
-                }
-
-                return Redirect(Url.Action(nameof(ChangePasswordConfirmation)));
-            }
-        }
-
-        ViewData["ReturnUrl"] = returnUrl;
-
-        return View(model);
-    }
-
-    [HttpGet]
-    public IActionResult ChangePasswordConfirmation()
-        => View();
 }

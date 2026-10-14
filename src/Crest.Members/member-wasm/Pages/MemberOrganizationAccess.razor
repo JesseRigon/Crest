@@ -26,6 +26,12 @@
         {
             <CrestAccessGroupsEditor OrganizationId="@organizationId" Users="@Users" Roles="@Roles" />
         }
+
+        @if (ShellContext.ActiveOrganizationId is { } ownedId)
+        {
+            @* The owner's settings: transferring the organization (docs/permissions.md › The organization owner). *@
+            <CrestOrganizationOwnerPanel OrganizationId="@ownedId" />
+        }
     </CrestStack>
 </div>
 
@@ -51,15 +57,16 @@
 
         _loadedFor = organizationId;
         var query = $"organizationId={Uri.EscapeDataString(organizationId)}";
-        using var members = await Http.GetAsync($"api/crest/members?{query}");
-        if (!members.IsSuccessStatusCode)
+        // Only the members under the caller in the organization's hierarchy.
+        using var managed = await Http.GetAsync($"api/crest/access/managed-users?{query}");
+        if (!managed.IsSuccessStatusCode)
         {
             Error = "Only the organization's administrators manage its access.";
             return;
         }
 
-        Users = ((await members.Content.ReadFromJsonAsync<List<MemberModel>>()) ?? [])
-            .Select(member => new UserChoice(member.UserId, member.UserName))
+        Users = ((await managed.Content.ReadFromJsonAsync<List<ManagedUserInfo>>()) ?? [])
+            .Select(user => new UserChoice(user.Id, user.Label))
             .ToArray();
         Roles = await Http.GetFromJsonAsync<List<string>>($"api/crest/access/assignable-roles?{query}") ?? [];
     }

@@ -27,7 +27,6 @@ using Crest.Contents.Models;
 using Crest.Contents.Recipes;
 using Crest.Contents.Security;
 using Crest.Contents.Services;
-using Crest.Contents.Settings;
 using Crest.Contents.Sitemaps;
 using Crest.Contents.TagHelpers;
 using Crest.Contents.ViewModels;
@@ -42,7 +41,6 @@ using Crest.DisplayManagement.Views;
 using Crest.Feeds;
 using Crest.Indexing;
 using Crest.Liquid;
-using Crest.Lists.Settings;
 using Crest.Localization.Data;
 using Crest.Modules;
 using Crest.Mvc.Utilities;
@@ -167,10 +165,8 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<DateEditorDriver>()
             .UseDisplayDriver<OwnerEditorDriver>();
 
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, CommonPartSettingsDisplayDriver>();
 
         // FullTextAspect
-        services.AddScoped<IContentTypeDefinitionDisplayDriver, FullTextAspectSettingsDisplayDriver>();
         services.AddScoped<IContentHandler, FullTextAspectContentHandler>();
 
         services.AddTagHelpers<ContentLinkTagHelper>();

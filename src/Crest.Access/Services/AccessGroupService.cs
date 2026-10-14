@@ -15,8 +15,34 @@ public sealed class AccessGroupService(
     Crest.Entities.IIdGenerator ids,
     IPermissionVersion permissionVersion,
     IOrganizationAccessDefaultsService defaults,
-    IUserAccessProjector projector) : IAccessGroupService
+    IUserAccessProjector projector,
+    IServiceProvider services) : IAccessGroupService
 {
+    /// <summary>
+    /// The owner keeps their org-admin role whoever writes (docs/permissions.md › The
+    /// organization owner): a change to an organization's groups that would leave its owner in
+    /// no group holding the owner role is refused. Ownership is resolved when used (Members
+    /// owns it and reaches this service), never in the constructor.
+    /// </summary>
+    private async Task GuardOwnerAsync(string organizationId, Func<AccessGroup, AccessGroup?> after, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(organizationId) || services.GetService(typeof(IOrganizationOwnership)) is not IOrganizationOwnership ownership
+            || await ownership.GetOwnerAsync(organizationId, cancellationToken) is not { } owner)
+        {
+            return;
+        }
+
+        var holds = (await session.Query<AccessGroup, AccessGroupIndex>(index => index.OrganizationId == organizationId).ListAsync(cancellationToken))
+            .Select(after)
+            .Any(group => group is not null
+                && group.UserIds.Contains(owner, StringComparer.Ordinal)
+                && group.Roles.Contains(ownership.OwnerRoleName, StringComparer.OrdinalIgnoreCase));
+        if (!holds)
+        {
+            throw new OwnerProtectionException($"The organization's owner must keep the {ownership.OwnerRoleName} role; transfer ownership first.");
+        }
+    }
+
     public async Task<IReadOnlyList<AccessGroupModel>> ListAsync(AccessReach reach, CancellationToken cancellationToken = default)
     {
         var key = reach.Key;
@@ -49,6 +75,10 @@ public sealed class AccessGroupService(
             return null;
         }
 
+        var changed = new AccessGroup { GroupId = group.GroupId, OrganizationId = group.OrganizationId, UserIds = group.UserIds, TemplateId = group.TemplateId };
+        Apply(changed, write);
+        await GuardOwnerAsync(group.OrganizationId, candidate => candidate.GroupId == group.GroupId ? changed : candidate, cancellationToken);
+
         Apply(group, write);
         await session.SaveAsync(group);
         await TouchedAsync(group.UserIds, cancellationToken);
@@ -63,6 +93,7 @@ public sealed class AccessGroupService(
             return false;
         }
 
+        await GuardOwnerAsync(group.OrganizationId, candidate => candidate.GroupId == group.GroupId ? null : candidate, cancellationToken);
         session.Delete(group);
         await TouchedAsync(group.UserIds, cancellationToken);
         return true;
@@ -85,11 +116,15 @@ public sealed class AccessGroupService(
     public async Task RemoveUserAsync(string groupId, string userId, CancellationToken cancellationToken = default)
     {
         var group = await FindAsync(groupId, cancellationToken);
-        if (group is null || group.UserIds.RemoveAll(id => string.Equals(id, userId, StringComparison.Ordinal)) == 0)
+        if (group is null || !group.UserIds.Contains(userId, StringComparer.Ordinal))
         {
             return;
         }
 
+        await GuardOwnerAsync(group.OrganizationId, candidate => candidate.GroupId == group.GroupId
+            ? new AccessGroup { GroupId = group.GroupId, Roles = group.Roles, UserIds = group.UserIds.Where(id => id != userId).ToList() }
+            : candidate, cancellationToken);
+        group.UserIds.RemoveAll(id => string.Equals(id, userId, StringComparison.Ordinal));
         await session.SaveAsync(group);
         await TouchedAsync([userId], cancellationToken);
     }
@@ -211,7 +246,7 @@ public sealed class AccessGroupService(
 }
 
 /// <summary>The overrides store: one document per (user, reach); a same-level conflict is refused.</summary>
-public sealed class UserAccessOverrideService(ISession session, IPermissionVersion permissionVersion, IUserAccessProjector projector) : IUserAccessOverrideService
+public sealed class UserAccessOverrideService(ISession session, IPermissionVersion permissionVersion, IUserAccessProjector projector, IServiceProvider services) : IUserAccessOverrideService
 {
     public async Task<IReadOnlyList<UserAccessOverride>> GetAsync(string userId, AccessReach reach, CancellationToken cancellationToken = default) =>
         (await FindAsync(userId, reach, cancellationToken))?.Entries.ToArray() ?? [];
@@ -227,6 +262,15 @@ public sealed class UserAccessOverrideService(ISession session, IPermissionVersi
         if (AccessResolution.Conflict(cleaned) is { } conflict)
         {
             throw conflict;
+        }
+
+        // No override takes the owner's org-admin role away (docs/permissions.md › The organization owner).
+        if (!reach.IsTenant
+            && services.GetService(typeof(IOrganizationOwnership)) is IOrganizationOwnership ownership
+            && cleaned.Any(entry => entry.Level == OverrideLevel.Role && entry.Effect == OverrideEffect.Deny && string.Equals(entry.Name, ownership.OwnerRoleName, StringComparison.OrdinalIgnoreCase))
+            && await ownership.GetOwnerAsync(reach.OrganizationId!, cancellationToken) == userId)
+        {
+            throw new OwnerProtectionException($"The organization's owner must keep the {ownership.OwnerRoleName} role; transfer ownership first.");
         }
 
         var document = await FindAsync(userId, reach, cancellationToken);

@@ -1,0 +1,230 @@
+@namespace Crest.Components.Account
+@using System.Globalization
+@using Crest.Components.Primitives
+@inject HttpClient Http
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+
+@* The signed-in user's own account (step 7: the MVC ChangePassword, ChangeEmail,
+   EmailConfirmation and ExternalLogins screens are retired): the password, the email and its
+   confirmation, and the external logins linked to the account. The same component in every
+   shell - the admin profile, the member account page, the site's account pages - over the one
+   account API; Section narrows it to one part for a page that shows only that. *@
+
+@if (Account is null)
+{
+    @if (LoadFailed)
+    {
+        <CrestText TextStyle="TextStyle.Body2" Text="@L("Sign in to manage your account.")" data-testid="account-signed-out" />
+    }
+    else
+    {
+        <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+}
+else
+{
+    <CrestStack Gap="1.5rem" data-testid="account-security">
+        @if (Shows("password"))
+        {
+            <CrestStack Gap="0.75rem" data-testid="account-password">
+                <CrestText TextStyle="TextStyle.H6" Text="@L("Password")" />
+                @if (!Account.HasPassword)
+                {
+                    <CrestText TextStyle="TextStyle.Body2" Text="@L("This account signs in with an external provider and has no password.")" />
+                }
+                else
+                {
+                    <CrestFormField Text="@L("Current password")" Style="width: 100%;"><CrestPassword @bind-Value="CurrentPassword" Style="width: 100%;" data-testid="account-current-password" /></CrestFormField>
+                    <CrestFormField Text="@L("New password")" Style="width: 100%;"><CrestPassword @bind-Value="NewPassword" Style="width: 100%;" data-testid="account-new-password" /></CrestFormField>
+                    <CrestFormField Text="@L("Confirm the new password")" Style="width: 100%;"><CrestPassword @bind-Value="ConfirmPassword" Style="width: 100%;" data-testid="account-confirm-password" /></CrestFormField>
+                    <Messages Errors="PasswordErrors" Success="@PasswordSaved" SuccessText="@L("Your password has been changed.")" />
+                    <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                        <CrestButton Text="@L("Change password")" Click="ChangePasswordAsync" Disabled="@(Busy || !RendererInfo.IsInteractive)" data-testid="account-change-password" />
+                    </CrestStack>
+                }
+            </CrestStack>
+        }
+
+        @if (Shows("email"))
+        {
+            <CrestStack Gap="0.75rem" data-testid="account-email">
+                <CrestText TextStyle="TextStyle.H6" Text="@L("Email")" />
+                <CrestText TextStyle="TextStyle.Body1" Text="@(Account.Email ?? L("No email address"))" />
+                @if (!string.IsNullOrEmpty(Account.Email) && !Account.EmailConfirmed)
+                {
+                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <CrestText TextStyle="TextStyle.Caption" Text="@L("Not confirmed yet.")" data-testid="account-email-unconfirmed" />
+                        <CrestButton ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Text="@L("Send the confirmation again")" Click="ResendAsync" Disabled="@(Busy || !RendererInfo.IsInteractive)" data-testid="account-resend-confirmation" />
+                    </CrestStack>
+                }
+                @if (Account.AllowChangeEmail)
+                {
+                    <CrestFormField Text="@L("New email")" Style="width: 100%;"><CrestTextBox @bind-Value="NewEmail" Style="width: 100%;" data-testid="account-new-email" /></CrestFormField>
+                    <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                        <CrestButton Text="@L("Change email")" Click="ChangeEmailAsync" Disabled="@(Busy || !RendererInfo.IsInteractive)" data-testid="account-change-email" />
+                    </CrestStack>
+                }
+                <Messages Errors="EmailErrors" Success="@(EmailMessage is not null)" SuccessText="@EmailMessage" />
+            </CrestStack>
+        }
+
+        @if (Shows("logins") && (Account.Logins.Length > 0 || Account.OtherProviders.Length > 0))
+        {
+            <CrestStack Gap="0.75rem" data-testid="account-logins">
+                <CrestText TextStyle="TextStyle.H6" Text="@L("External logins")" />
+                @foreach (var login in Account.Logins)
+                {
+                    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" data-testid="account-login">
+                        <CrestText Text="@(login.ProviderDisplayName ?? login.LoginProvider)" Style="flex: 1 1 auto;" />
+                        @if (Account.CanRemoveLogin)
+                        {
+                            <CrestButton ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Text="@L("Remove")" Click="@(() => RemoveLoginAsync(login))" Disabled="@(Busy || !RendererInfo.IsInteractive)" />
+                        }
+                    </CrestStack>
+                }
+                @foreach (var provider in Account.OtherProviders)
+                {
+                    <CrestButton ButtonStyle="ButtonStyle.Light" Text="@string.Format(CultureInfo.CurrentCulture, L("Link {0}"), provider.DisplayName)" Click="@(() => LinkAsync(provider))" Disabled="@(Busy || !RendererInfo.IsInteractive)" data-testid="account-link-provider" />
+                }
+                <Messages Errors="LoginErrors" Success="false" SuccessText="" />
+            </CrestStack>
+        }
+    </CrestStack>
+}
+
+@code {
+    /// <summary>"password", "email" or "logins" to show one part; null shows all.</summary>
+    [Parameter]
+    public string? Section { get; set; }
+
+    private AccountModel? Account { get; set; }
+    private bool LoadFailed { get; set; }
+    private bool Busy { get; set; }
+    private string? CurrentPassword { get; set; }
+    private string? NewPassword { get; set; }
+    private string? ConfirmPassword { get; set; }
+    private string? NewEmail { get; set; }
+    private bool PasswordSaved { get; set; }
+    private string? EmailMessage { get; set; }
+    private AccountFieldError[] PasswordErrors { get; set; } = [];
+    private AccountFieldError[] EmailErrors { get; set; } = [];
+    private AccountFieldError[] LoginErrors { get; set; } = [];
+
+    private bool Shows(string section) => Section is null || string.Equals(Section, section, StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        Account = await AccountApi.GetAsync<AccountModel>(Http, AccountApi.Root);
+        LoadFailed = Account is null;
+    }
+
+    private async Task ChangePasswordAsync()
+    {
+        Busy = true;
+        PasswordSaved = false;
+        try
+        {
+            var result = await AccountApi.SendAsync<AccountResult>(Http, HttpMethod.Post, $"{AccountApi.Root}/password", new { CurrentPassword, NewPassword, ConfirmPassword })
+                ?? AccountResult.Failed(L("The password could not be changed."));
+            PasswordErrors = result.Errors ?? [];
+            PasswordSaved = result.Succeeded;
+            if (result.Succeeded)
+            {
+                CurrentPassword = NewPassword = ConfirmPassword = null;
+            }
+        }
+        finally
+        {
+            Busy = false;
+        }
+    }
+
+    private async Task ChangeEmailAsync()
+    {
+        Busy = true;
+        EmailMessage = null;
+        try
+        {
+            var result = await AccountApi.SendAsync<AccountResult>(Http, HttpMethod.Post, $"{AccountApi.Root}/email", new { Email = NewEmail })
+                ?? AccountResult.Failed(L("The email could not be changed."));
+            EmailErrors = result.Errors ?? [];
+            if (result.Succeeded)
+            {
+                NewEmail = null;
+                EmailMessage = L("Your email has been changed.");
+                await LoadAsync();
+            }
+        }
+        finally
+        {
+            Busy = false;
+        }
+    }
+
+    private async Task ResendAsync()
+    {
+        Busy = true;
+        EmailMessage = null;
+        try
+        {
+            var result = await AccountApi.SendAsync<AccountResult>(Http, HttpMethod.Post, $"{AccountApi.Root}/email/send-confirmation", null)
+                ?? AccountResult.Failed(L("The confirmation email could not be sent."));
+            EmailErrors = result.Errors ?? [];
+            if (result.Succeeded)
+            {
+                EmailMessage = L("A confirmation email has been sent.");
+            }
+        }
+        finally
+        {
+            Busy = false;
+        }
+    }
+
+    private async Task RemoveLoginAsync(AccountLogin login)
+    {
+        Busy = true;
+        try
+        {
+            var result = await AccountApi.SendAsync<AccountResult>(Http, HttpMethod.Delete, $"{AccountApi.Root}/logins/{Uri.EscapeDataString(login.LoginProvider)}?key={Uri.EscapeDataString(login.ProviderKey)}", null)
+                ?? AccountResult.Failed(L("The login could not be removed."));
+            LoginErrors = result.Errors ?? [];
+            if (result.Succeeded)
+            {
+                await LoadAsync();
+            }
+        }
+        finally
+        {
+            Busy = false;
+        }
+    }
+
+    // A fetch (antiforgery-checked) for a short-lived ticket, then a navigation to the provider:
+    // its callback adds the login and comes back here.
+    private async Task LinkAsync(AccountProvider provider)
+    {
+        Busy = true;
+        try
+        {
+            var back = new Uri(Navigation.Uri).PathAndQuery;
+            var result = await AccountApi.SendAsync<AccountResult>(Http, HttpMethod.Post, $"{AccountApi.Root}/logins/link", new { Provider = provider.Name, ReturnUrl = back });
+            if (result is { Succeeded: true, Redirect: { Length: > 0 } redirect })
+            {
+                Navigation.NavigateTo(redirect, forceLoad: true);
+                return;
+            }
+
+            LoginErrors = result?.Errors ?? [new AccountFieldError(string.Empty, L("The login could not be linked."))];
+        }
+        finally
+        {
+            Busy = false;
+        }
+    }
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

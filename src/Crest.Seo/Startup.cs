@@ -16,7 +16,6 @@ using Crest.Seo.Drivers;
 using Crest.Seo.Indexes;
 using Crest.Seo.Models;
 using Crest.Seo.Services;
-using Crest.SeoMeta.Settings;
 
 namespace Crest.Seo;
 
@@ -32,7 +31,6 @@ public sealed class Startup : StartupBase
             .AddHandler<SeoMetaPartHandler>();
 
         services.AddScoped<IContentDisplayDriver, SeoContentDriver>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, SeoMetaPartSettingsDisplayDriver>();
 
         // This must be last, and the module dependent on Contents so this runs after the part handlers.
         services.AddScoped<IContentHandler, SeoMetaSettingsHandler>();

@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+using Crest.Admin;
 using Microsoft.Extensions.Localization;
 using Crest.Navigation;
 
@@ -7,9 +9,14 @@ public sealed class ServerAdminMenu : AdminNavigationProvider
 {
     internal readonly IStringLocalizer S;
 
-    public ServerAdminMenu(IStringLocalizer<ClientAdminMenu> stringLocalizer)
+    // The native admin page (step 7: the MVC OpenId screens are retired) is addressed by its
+    // route under the tenant's admin prefix, not by an MVC action.
+    private readonly string _adminPath;
+
+    public ServerAdminMenu(IStringLocalizer<ClientAdminMenu> stringLocalizer, IOptions<AdminOptions> adminOptions)
     {
         S = stringLocalizer;
+        _adminPath = "/" + adminOptions.Value.AdminUrlPrefix.Trim('/');
     }
 
     protected override ValueTask BuildAsync(NavigationBuilder builder)
@@ -23,7 +30,7 @@ public sealed class ServerAdminMenu : AdminNavigationProvider
                        .Id("openid")
                        .Add(S["Settings"], S["Settings"].PrefixPosition(), settings => settings
                             .Add(S["Authorization Server"], S["Authorization Server"].PrefixPosition(), server => server
-                                .Action("Index", "ServerConfiguration", "Crest.OpenId")
+                                .Url(_adminPath + "/OpenId/ServerConfiguration")
                                 .Permission(OpenIdPermissions.ManageServerSettings)
                                 .LocalNav()
                             )
@@ -40,7 +47,7 @@ public sealed class ServerAdminMenu : AdminNavigationProvider
                     .AddClass("openid")
                     .Id("openid")
                     .Add(S["Authorization Server"], S["Authorization Server"].PrefixPosition(), server => server
-                        .Action("Index", "ServerConfiguration", "Crest.OpenId")
+                        .Url(_adminPath + "/OpenId/ServerConfiguration")
                         .Permission(OpenIdPermissions.ManageServerSettings)
                         .LocalNav()
                     )

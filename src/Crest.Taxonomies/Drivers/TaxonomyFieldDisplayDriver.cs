@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Localization;
 using Crest.ContentManagement;
 using Crest.ContentManagement.Display.ContentDisplay;
@@ -27,11 +28,23 @@ public sealed class TaxonomyFieldDisplayDriver : ContentFieldDisplayDriver<Taxon
 
     public override IDisplayResult Display(TaxonomyField field, BuildFieldDisplayContext context)
     {
-        return Initialize<DisplayTaxonomyFieldViewModel>(GetDisplayShapeType(context), model =>
+        return Initialize<DisplayTaxonomyFieldViewModel>(GetDisplayShapeType(context), async model =>
         {
             model.Field = field;
             model.Part = context.ContentPart;
             model.PartFieldDefinition = context.PartFieldDefinition;
+
+            // The terms the item holds, in the field's order, from the taxonomy that owns them.
+            var taxonomy = string.IsNullOrEmpty(field.TaxonomyContentItemId) ? null : await _contentManager.GetAsync(field.TaxonomyContentItemId);
+            var terms = new Dictionary<string, ContentItem>(StringComparer.Ordinal);
+            if (taxonomy?.As<TaxonomyPart>() is { } part)
+            {
+                Collect(part.Terms, terms);
+            }
+
+            model.Items = [.. (field.TermContentItemIds ?? [])
+                .Where(terms.ContainsKey)
+                .Select(id => new TaxonomyTermLink(terms[id].DisplayText ?? id, TaxonomyLinks.TermPath(terms[id])))];
         }).Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");
     }
@@ -100,5 +113,18 @@ public sealed class TaxonomyFieldDisplayDriver : ContentFieldDisplayDriver<Taxon
         }
 
         return Edit(field, context);
+    }
+
+    private static void Collect(IEnumerable<ContentItem> terms, Dictionary<string, ContentItem> into)
+    {
+        foreach (var term in terms ?? [])
+        {
+            into[term.ContentItemId] = term;
+            System.Text.Json.Nodes.JsonObject content = term.Content;
+            if (content["Terms"] is System.Text.Json.Nodes.JsonArray children)
+            {
+                Collect(children.Deserialize<List<ContentItem>>() ?? [], into);
+            }
+        }
     }
 }

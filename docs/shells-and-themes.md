@@ -101,6 +101,11 @@ shell:
   **services**, `Crest.AdminTheme.Client.Services` (`[assembly: CrestEager]`, with
   `Crest.Shell`); `Program.cs` calls `ClientWebAssemblyHost` there and names no theme UI. The
   site and member theme clients have no services anything eager needs, so they load whole.
+  The lazy-module generator makes every theme client a lazy root, names the eager roots by
+  `[CrestEager]`, and emits each shell's theme (`themes:`); `LazyModules` keeps loaded theme
+  UIs apart from modules (`LoadedThemes`, which the shell's component registry reads). Hosts
+  reference `Crest.AdminTheme.Client.Services` directly. Between the first interactive render
+  and the theme UI's arrival the root renders nothing.
 
 ### One theme, per-member authorization
 
@@ -144,13 +149,12 @@ Dispatch is a registry of shells, with Site as the fallback:
   (admin) route authorization, then `PathBase += shellBase; Path = @page literal`, and the
   Path-only strip for `_framework`/`_content`/`_blazor`/`api` requests. It stamps the shell
   (`BlazorHosting.ShellBucketItem`).
-- **The site is resolved the same way** (ruling 2026-10-13: **one routing system, on the
-  Blazor side**, which forwards a URL to the legacy MVC shell when a legacy page owns it,
-  until MVC is gone; endpoint routing is never left to referee between a Blazor catch-all
-  page and MVC or static files). For a page request no entry claimed, the middleware matches
-  the site route table (`SiteRouteResolver`): a module site page is served at its literal; a
-  designed page or a content path becomes the content page, `/` — `ContentPage`'s only route
-  since the ruling, which reads the real path from `IShellRequestPath` (the middleware's
+- **The site is resolved the same way.** There is **one routing system, on the Blazor side**,
+  which forwards a URL to the legacy MVC shell when a legacy page owns it, until MVC is gone;
+  endpoint routing is never left to referee between a Blazor catch-all page and MVC or static
+  files. For a page request no entry claimed, the middleware matches the site route table
+  (`SiteRouteResolver`): a module site page is served at its literal; a designed page or a
+  content path becomes the content page, `/` — `ContentPage`'s only route, which reads the real path from `IShellRequestPath` (the middleware's
   stash) while prerendering and from the navigation manager once interactive, and which the
   site `Routes` renders for every URL it has no page for; **except** when a legacy endpoint
   owns the path, which passes through untouched — the forward to the legacy shell.
@@ -160,9 +164,9 @@ Dispatch is a registry of shells, with Site as the fallback:
   area route per action) and inline constraints; compiled once, rebuilt on the data source's
   change token, prefiltered by the first literal segment. API paths and files are untouched.
   Legacy-frame requests (`?legacy-frame=1`, an iframe) bypass the middleware and reach MVC,
-  since no Blazor catch-all exists any more. *Landed 2026-10-13; the former `/{*Path}`
-  catch-all on `ContentPage` won over MVC routes and module assets, and the "last order"
-  endpoint convention never took effect.*
+  since there is no Blazor catch-all. Not a `/{*Path}` catch-all on `ContentPage`: it wins
+  over MVC routes and module assets, and no endpoint ordering convention reliably prevents
+  that.
 - **`RouteGateMatcherPolicy`** reads that stamp: that shell is valid, Site is the fallback — a
   decision made once per request, never a theme-id comparison (see
   [blazor-web.md](blazor-web.md) for why that distinction is load-bearing). It never referees
@@ -174,6 +178,31 @@ Dispatch is a registry of shells, with Site as the fallback:
 `Program.cs`, one lazy-module graph and one asset set; the shells are libraries inside it.
 A third shell therefore adds a theme, a client library, a bucket and a branch — not a
 third build output.
+
+### The tenant base and enabled modules
+
+The server provides the tenant base; the client never derives it. `api/crest/routing` returns
+`TenantBase` (the request's PathBase, which the Path-only API rewrite leaves at the tenant
+layer); `RoutingOptions` keeps it and composes the admin, login and member paths on it, on the
+client and in the server-side factory alike, and `ClientWebAssemblyHost.ShellOf` reads the
+shell from the path after the tenant base. Each shell keeps its own login.
+
+A disabled module is absent for that tenant. `IEnabledModuleAssemblies` (`Crest.Routing`,
+cached for the shell's lifetime) maps each `*.BlazorWasm` to its module by the longest module id
+(`ModuleClientAssemblies`) and keeps those whose module has an enabled feature; a library of a
+module that is not installed is absent too (fail closed). The route table leaves their pages
+out (admin URLs fall to the legacy frame, member URLs to not-found) and `RouteGateMatcherPolicy`
+vetoes their endpoints (the site's pages, which endpoint routing matches directly). The browser
+gets the list with the routing options (`api/crest/routing` › `EnabledModules`, anonymous like
+the rest of that response, since the site shell needs it too) and `LazyModules.Restrict` loads
+only those.
+
+**Target: the page registry.** Today a page is described by the scanned route table, the
+hand-written route permission providers and the admin menu's navigation providers. In the
+target each page declares its route, shell, permission and menu placement once in Crest.Server's
+page registry, and the route table, the route gate and the admin menu all derive from that entry
+([architecture.md › One page registry](architecture.md#one-page-registry)). The shell
+machinery in this document (buckets, selection, the gate per side) is unchanged by it.
 
 ### Auth-cookie pages render `InteractiveWebAssembly`
 
@@ -240,8 +269,7 @@ active and is the home for the session's last active organization and for the im
 identity; attaching items at sign-in needs `SignInManager.SignInAsync(user, properties,
 method)`.
 
-**The side comes from the request, not the user** (ruling 2026-10-06, landed 2026-10-10 as
-the caller of [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)). Pages carry the side in the path (the
+**The side comes from the request, not the user** (the caller of [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)). Pages carry the side in the path (the
 admin prefix or the member prefix); API calls carry it in `X-Shell` (`admin` or `member`)
 and, on the member side, the organization in `X-Org`, both sent by each shell's HttpClient
 (`CrestShellContext`). A cookie-authenticated API call without `X-Shell` is malformed and
@@ -249,8 +277,8 @@ denied, never defaulted; a member-side request whose organization the user holds
 binding to is denied; a marker that disagrees with the shell the path selected is denied.
 The caller is then built per request: on the staff side the user's tenant roles and no
 organization; on the member side only the binding's roles with the class ceiling applied,
-so the admin role of a dual user never reaches the portal. The active organization is no
-longer written into the cookie, so switching never re-signs it and two tabs on two
+so the admin role of a dual user never reaches the portal. The active organization is not
+written into the cookie, so switching never re-signs it and two tabs on two
 organizations are independent; the session only remembers the last choice
 (`MemberSessionService`) for a request that names none.
 
@@ -277,8 +305,7 @@ act in two organizations, and switching is a navigation. Pages marked
 not-found) are served at the member base instead, and **act in no organization: the page
 request is admitted on the site side** (`ShellSelectionMiddleware.SideFor`), its caller a
 visitor with no tenant rights, so a staff-only user or a member without bindings sees the page
-rather than the member caller's "must name an organization" refusal (live finding
-2026-10-13); the page's own API calls - the sign-in, the session - declare the member side
+rather than the member caller's "must name an organization" refusal; the page's own API calls - the sign-in, the session - declare the member side
 themselves and are gated as member-side requests; the shell selector serves each kind only
 in its place and the member router applies the same split on client-side navigation. The
 slug is derived from the organization's name and is unique among the signed-in member's own
@@ -287,8 +314,9 @@ the infrastructure segments are reserved, and the organization id always resolve
 server resolves it only among that user's bindings (`IShellOrganizationResolver`, implemented
 by Members), so a path can never name an organization the user may not act for — anything
 else is not found. A bare member base goes to the organization picker
-(`MemberRoutePaths.Organizations`), which opens the only organization straight away. The
-document base of an organization page is `{member base}/{slug}/`; the client reads the slug
+(`MemberRoutePaths.Organizations`), which opens the only organization straight away. Slugs
+are derived from the name, so renaming an organization changes its slug (the id still
+resolves). The document base of an organization page is `{member base}/{slug}/`; the client reads the slug
 off it (`CrestShellContext.OrganizationSlug`) and sends the matching organization as `X-Org`.
 
 **One switcher, device-local tenants.** `CrestShellSwitcher` (`Crest.Components`) is the same
@@ -299,7 +327,10 @@ tenant's organizations from the user's own bindings (`AppManifest.Organizations`
 side, the member session on the member side). Choosing a tenant opens it; choosing an
 organization opens the member portal at that organization's path. No server data links
 accounts across tenants: the app manifest lists only its own tenant, and no other tenant's
-shell is started to look for a user of the same name.
+shell is started to look for a user of the same name. **E-mail is never an identity link.**
+The device list is browser storage, which is per origin: tenants on one origin (addressed by
+path) share it; tenants on subdomains of one site do not yet (that needs a cookie on the
+parent domain); a tenant on an unrelated custom domain sees only its own.
 
 **Impersonation.** Staff enter a member portal for support through an impersonation
 session (`MemberImpersonationService`: the member principal signed in with the staff
@@ -315,7 +346,7 @@ scope is the member's organization, the portal renders as that member sees it) a
 member alone ([audit.md](audit.md)). The session carries both identities so no write path
 knows about impersonation.
 
-**The session cache and offline (ruling 2026-10-06).** The client keeps one session copy
+**The session cache and offline.** The client keeps one session copy
 per (user, tenant, side, organization), the built caller and the access policies' verdict,
 fed from the server's state cache under the tenant's permission version
 ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery) › Caller lifetime) and never authority. The session
@@ -330,6 +361,56 @@ key; reads are the real exposure, so the server decides by permission at downloa
 what goes offline and sends only that; offline actions are audited on sync, flagged
 offline. A refusing access policy removes access to that organization on the member side
 only; it never signs the user out of the staff side.
+
+**Tenant SSO stays staff-side.** Tenant SSO (the Default tenant as an OpenID Connect IdP, the
+stock OpenId Server, Client and Validation features) is for tenant users across a person's
+tenants; members are excluded, and a dual user gets it on the admin side only. A member of two
+tenants has two member accounts.
+
+## Account and protocol pages
+
+The account and protocol pages a signed-in or signing-in user meets are shell pages
+([blazor-display.md](blazor-display.md) › Rework plan, step 7):
+
+- **Account security** is one shared component, `CrestAccountSecurity` (Crest.Components,
+  `Account/`), over `api/crest/account` (Crest.Users' `AccountApiController`): change the
+  password, change the email (where the tenant allows) and resend its confirmation, list,
+  remove and link external logins (linking is a fetch for a five-minute data-protected ticket,
+  then a navigation to the provider, so another site cannot start it). The admin profile
+  settings page, the member account page and the site pages `/ChangePassword`,
+  `/ChangeEmail`, `/ExternalLogins` show it - the paths the MVC screens had, so existing links
+  keep working (`AccountPages` composes the server's links).
+- **Email confirmation**: `/ConfirmEmail` (confirms once interactive, never in the prerender a
+  mail scanner's GET would trigger) and `/ConfirmEmailSent`, site pages; the confirmation link
+  and the login veto point there. The MVC resend action stays for the remaining MVC screens
+  (two-factor, the legacy user list).
+- **External sign-in completion**: when the platform's callback cannot finish on its own it
+  redirects to the site pages `/ExternalLogin/Register` (a new account, with what the tenant's
+  external registration settings still ask) or `/ExternalLogin/Link` (the existing account with
+  the provider's email, by its password), which complete through
+  `api/crest/account/external-login{,/register,/link}`; the MVC views and the manage actions are
+  deleted, the rate limits kept on the same route names.
+- **OpenID consent and logout confirmation**: the authorization and logout endpoints redirect
+  to the site pages `/connect/consent` and `/connect/logout-confirm` with the request's
+  parameters; the decision stays a plain form post back to the endpoint (OpenIddict answers in
+  that request), with an antiforgery token from `api/crest/openid/consent`. Token and UserInfo
+  stay protocol endpoints.
+- **Error pages**: every shell has one (`CrestErrorPage`; admin, member - organization-free -
+  and site pages at `/Error/{status}`). The status code pages re-execute inside the shell that
+  answered (the shell stamp and base survive), so an admin URL's error shows in the admin
+  document; API paths keep their bare status. The MVC Diagnostics controller and views are
+  deleted. Not changed: an API refusal that redirects to `/Error/403` (Diagnostics
+  re-execution of a page).
+- Pages that make the browser receive a cookie (the account pages, the external sign-in
+  completion, the consent page for its antiforgery cookie) declare `[SetsAuthenticationCookie]`,
+  honoured in every shell, the site included.
+- **Setup stays MVC**, the last island: an uninitialized tenant runs the
+  minimum shell (the host's setup features, Crest.Setup and Recipes, no database), while the
+  Blazor host - `MapRazorComponents`, the shell selection, the theme clients - is the `Crest`
+  feature, which depends on database-backed modules and cannot run before setup. The native
+  Tenants page sets a tenant up from the Default tenant without it. SiteTheme's
+  `Views/Layout.cshtml` therefore stays too, with the account screens still on MVC (login,
+  registration, password reset for staff, two-factor).
 
 ## Theme compatibility
 
@@ -356,6 +437,13 @@ simple mods": a child theme inherits its parent's shapes and assets, so
 `BaseTheme = Crest.AdminTheme` is a compatible admin theme. Every compatibility
 check walks the `BaseTheme` chain, never a single id.
 
+**Theme structure and branding.** A theme is page structures (templates, composites, zone
+settings) with the design system (branding) layered on top, so either can be swapped or
+imported alone; data themes and compiled module themes register through one mechanism; a
+public marketplace carries data themes only ([blazor-display.md](blazor-display.md) ›
+decision 8). The compatibility contract in this section (buckets, `crest-blazor`, contracts,
+the two guards, the route gate) holds for the compiled part of a theme.
+
 ### How a module declares what it needs
 
 A module's contract follows from what it ships: a module with a `blazor-wasm/` library
@@ -364,7 +452,10 @@ one with `site-wasm/` a `crest-blazor` site theme. The libraries are named for t
 (`Crest.Members.Member.BlazorWasm` belongs to `Crest.Members`), so every feature of that
 module carries the contract with no declaration to keep in sync. A module whose needs go
 beyond what it ships adds an `IShellContractProvider`. The check resolves each contract
-against the active theme of that bucket and its `BaseTheme` ancestors. Contracts are per
+against the active theme of that bucket and its `BaseTheme` ancestors. A client library
+belongs to the module with the longest id its assembly name starts with
+(`ShellCompatibilityService.OwningExtensionId`; `Crest.Members.Member.BlazorWasm` is
+`Crest.Members`, not `Crest`), and `ShippedContracts` credits it only to that module. Contracts are per
 module, not per contributed page set: a module's pages are written against one shell
 contract in practice, and per-page granularity would multiply the declarations without
 changing any answer.
@@ -430,189 +521,46 @@ mechanism.
 
 ## Still to build
 
-- [x] **The server provides the tenant base** (ruling 2026-10-06). The client never derives
-  it: today `ClientWebAssemblyHost` guesses by stripping "admin" or "login" off the page base,
-  which keeps `/t2/members/` under a prefixed tenant and breaks cross-shell links. The server
-  sends the tenant base path (and each shell's path) with the routing options the client
-  already fetches at startup, and the client keeps it for reference wherever a link or the
-  switcher needs it. Each shell keeps its own login.
-  *What landed (2026-10-13):* `api/crest/routing` returns `TenantBase` (the request's
-  PathBase, which the Path-only API rewrite leaves at the tenant layer); `RoutingOptions`
-  keeps it and composes Admin/Login/Member paths on it, on the client and in the server-side
-  factory alike. `ClientWebAssemblyHost.ShellOf` reads the shell from the path after the tenant
-  base; nothing peels suffixes any more.
-- [x] **Theme compatibility matches an assembly to its module by the longest module id**
-  (ruling 2026-10-06, a bug fix). `ShellCompatibilityService` credits an assembly to a
-  module when its name starts with the module id plus a dot, so `Crest.Members.Member.BlazorWasm`
-  and `Crest.ContentPartLists.BlazorWasm` count as the always-enabled `Crest` and every tenant
-  appears to need a member theme. The assembly belongs to the module with the longest
-  matching id — the `*.BlazorWasm` naming convention the lazy loader already relies on — not
-  an attribute.
-  *What landed (2026-10-13):* `ShellCompatibilityService.OwningExtensionId` picks the
-  longest extension id the assembly name starts with; `ShippedContracts` credits a client
-  library only to that module. Covered in `ShellCompatibilityTests`.
-- [x] **A disabled module is absent for that tenant** (ruling 2026-10-06). An assembly →
-  feature map (each `*.BlazorWasm` belongs to a module) filters by the tenant's enabled
-  features: on the server, the route table and the page gate skip pages of disabled modules,
-  so their URLs give a proper 404 (the table is cached per tenant); on the client, the
-  manifest the shell receives at sign-in lists the enabled modules and the lazy loader
-  fetches only those. Today every tenant routes and downloads every module the host ships.
-  *What landed (2026-10-13):* `IEnabledModuleAssemblies` (`Crest.Routing`, cached for the
-  shell's lifetime) maps each `*.BlazorWasm` to its module by the longest module id
-  (`ModuleClientAssemblies`) and keeps those whose module has an enabled feature; a library
-  of a module that is not installed is absent too (fail closed). The route table leaves
-  their pages out (admin URLs fall to the legacy frame, member URLs to not-found) and
-  `RouteGateMatcherPolicy` vetoes their endpoints (the site's pages, which endpoint routing
-  matches directly). The browser gets the list with the routing options it already fetches
-  at boot (`api/crest/routing` › `EnabledModules`, anonymous like the rest of that response,
-  since the site shell needs it too) and `LazyModules.Restrict` loads only those.
-- [x] **Theme clients load per shell** (ruling 2026-10-06). The admin, site and member theme
-  clients no longer load together on first visit; each loads when its shell is opened, the
-  way module assemblies already load on demand. *Landed 2026-10-13: see › Theme UIs load per
-  shell.*
-- [ ] **`/{prefix}/_framework/dotnet.js` served with an empty MIME type** (S2, a bug, ruled
-  2026-10-06: **diagnose afterwards**, once the display and operations work is in). Under a
-  tenant addressed by path prefix the Blazor runtime file comes back with no content type,
-  so the browser refuses it and the admin shell does not boot; the workflows isolation check
-  signs in through `api/crest/auth/login` instead. The cause is unknown: something other
-  than the static-asset endpoint answers (the per-tenant static files, the host's
-  `UseStaticFiles`, or a fingerprint mismatch); `App.razor` also has no `<ImportMap/>`.
-  Diagnose by comparing response headers on prefixed and unprefixed URLs, in development
-  and published builds, then fix the actual cause; do not add `<ImportMap/>` and a
+- [ ] **`/{prefix}/_framework/dotnet.js` served with an empty MIME type** (S2, a bug; diagnosed
+  after the display and operations work). Under a tenant addressed by path prefix the Blazor
+  runtime file comes back with no content type, so the browser refuses it and the admin shell
+  does not boot; the workflows isolation check signs in through `api/crest/auth/login` instead.
+  The cause is unknown: something other than the static-asset endpoint answers (the per-tenant
+  static files, the host's `UseStaticFiles`, or a fingerprint mismatch); `App.razor` also has no
+  `<ImportMap/>`. Diagnose by comparing response headers on prefixed and unprefixed URLs, in
+  development and published builds, then fix the actual cause; do not add `<ImportMap/>` and a
   `_framework/{**path}` tenant endpoint blind.
-- **Every tenant reserves the member prefix (ruling 2026-10-06).** The member route table and
-  the middleware's member-prefix match stay registered whether or not Members is enabled;
-  a tenant without Members does not get that path back for site content.
+- [ ] **A live check of the per-shell theme boot path** after the repack.
+- [ ] **Stable organization slugs**: a stored slug, owned by Parties, so renaming an
+  organization does not change its paths.
+- [ ] **The device account list across subdomains** of one site (a cookie on the parent
+  domain).
+- [ ] **The theme system reworked as structure plus design system** (blazor-display.md ›
+  decision 8), a separate plan after the display system. The theme registry and the selection
+  UI are reworked so the admin, site and member themes change only by the selections inside
+  them, without losing anything of this document's shell injection model.
+- [ ] **The page registry** (above): route table, route gate and admin menu derived from one
+  entry per page.
 
-The three shells (admin, site, member), shell dispatch, per-assembly UI isolation, theme
-compatibility and the per-shell theme-selection UI are built and documented above. This
-section holds what is not built yet.
+## Later
 
-### Theme UIs load per shell
+- **The super tenant.** Cross-tenant read access for the Default tenant's users is a later
+  design; the sanctioned mechanism is `IShellHost.GetScopeAsync` into the target tenant's shell
+  (never shared-database queries), behind an opt-in per-type contract registry, fail-closed,
+  read-only first, audited. Nothing depends on it.
 
-- [x] **2b. Theme UIs load per shell.** Each theme client split into its services (eager)
-  and its UI (lazy), one eager root component rendering the served shell's `Routes`
-  dynamically, `Program.cs` naming no theme UI assembly.
-  *What landed (2026-10-13):* the admin client's `Api`, `Display`, `Extensions`, `Options`,
-  `State` and `Theme` folders moved to `src/Crest.AdminTheme/client-services`
-  (`Crest.AdminTheme.Client.Services`, same namespaces, eager); `Crest.AdminTheme.Client` is
-  the admin UI. The lazy-module generator makes every theme client a lazy root, names the
-  eager roots by `[CrestEager]`, and emits each shell's theme (`themes:`);
-  `LazyModules` keeps loaded theme UIs apart from modules (`LoadedThemes`, which the
-  shell's component registry reads). `App.razor` mounts `<CrestShellRoot Shell="…">` in every
-  branch. Hosts reference `Crest.AdminTheme.Client.Services` directly (Program.cs calls into
-  it). Between the first interactive render and the theme UI's arrival the root renders
-  nothing, as `MemberRoutes` already did while it loaded its modules; the boot path needs a
-  live check after the repack.
+## Open questions
 
-### Member account pages
-
-- [x] **Member password-reset and external-login pages.** The member shell owns the member login and registration pages at the member base; the
-  member **password-reset and external-login pages** belong there too, so every staff and
-  member login surface is separate by construction.
-  *What landed (2026-10-13):* `MemberForgotPassword`, `MemberResetPassword` and
-  `MemberExternalLogin` (organization-free, anonymous) on `IMemberAuthenticationService`'s new
-  members, backed by `api/crest/members/portal/forgot-password`, `reset-password` and the
-  existing `external-login` (organization now optional, return URL checked local). The reset
-  email links to the member reset page (`UserEmailService.SendPasswordResetAsync` overload
-  taking the link). The member login links to both.
-
-### Member sessions and sides
-
-- [x] **The login gate checks the side.** The admin login accepts a user holding staff;
-  the member portal's login accepts a user with at least one organization binding (today
-  the gate checks the class).
-  *What landed (2026-10-13):* see › The login-channel gate above (`MemberLoginSurfaceGate`).
-- [x] **Organization slugs in member page paths and the organization picker.** Member
-  pages carry the organization in the path, `/{member prefix}/{org slug}/…`, so bookmarks
-  open the right organization and the switcher simply navigates; a member with several
-  organizations and none chosen goes to an organization picker.
-  *What landed (2026-10-13):* see › The organization is in the path above. Open: slugs are
-  derived from the name, so renaming an organization changes its slug (the id still
-  resolves); a stored, stable slug would belong to Parties.
-- [x] **Tenants in the switcher are the accounts added on this device** (ruling
-  2026-10-06). Like Google or Zoho: the user signs in to one tenant, "adds an account" by
-  signing in to another, and switches between them. The list is kept **on the device**,
-  not the server, so a tenant signed out of stays in the menu until removed and no server
-  data links accounts across tenants; today's code, which lists a tenant when anyone
-  there shares the username and starts every tenant's shell on each manifest load, is
-  removed. **Organizations are server data**: only the active tenant's organizations are
-  listed, from its bindings. **E-mail is never an identity link.** Tenants addressed by
-  path or by subdomains of one site share the device list; a tenant on an unrelated custom
-  domain sees only its own, and switching across unrelated domains is downstream.
-  *What landed (2026-10-13):* see › One switcher, device-local tenants above. Open: the list
-  is browser storage, which is per origin, so tenants on subdomains of one site do not share
-  it yet (that needs a cookie on the parent domain).
-- [x] **One switcher, the same on both sides**: tenants on top, a separator, then
-  organizations; choosing a tenant switches tenant, choosing an organization opens the
-  member portal with it active. *Landed 2026-10-13 (`CrestShellSwitcher`).*
-- [x] **Impersonation under one account** (ruling 2026-10-06): an impersonated session acts
-  on the member side (staff rights stripped like any member-side request); a dual user can
-  be impersonated; stopping restores the staff session exactly, its own active organization
-  included; the audit records both people.
-  *What landed (2026-10-13):* see › Impersonation above (`MemberCallerContributor`,
-  `MemberImpersonationService`, the member shell's impersonation banner). The audit already
-  recorded both people.
-- [ ] **Tenant SSO stays staff-side.** Tenant SSO (the Default tenant as an OpenID Connect
-  IdP, the stock OpenId Server, Client and Validation features) is for tenant users across
-  a person's tenants; members are excluded by ruling, and a dual user gets it on the admin
-  side only. A member of two tenants has two member accounts.
-- [ ] **The super tenant (deferred by ruling, 2026-09-08).** Cross-tenant read access for
-  the Default tenant's users is a later design; the sanctioned mechanism is
-  `IShellHost.GetScopeAsync` into the target tenant's shell (never shared-database
-  queries), behind an opt-in per-type contract registry, fail-closed, read-only first,
-  audited. Nothing depends on it.
-
-### A registry of shells
-
-Built 2026-10-13; see › Shell dispatch above.
-
-- [x] **`RouteBucket`** → a shell id carried by `RouteComponentEntry` and by the
-  `ThemeOwnerMetadata` endpoint marker.
-- [x] **`BlazorAdminThemeMiddleware`** + `BlazorAdminThemeOptions` + `IBlazorAdminThemeDetector`
-  know one shell base pair (`AdminPath`/`LoginPath`) plus the member prefix. They become a
-  shell **selector** over a registered list of shells, each with its base path, bucket,
-  theme detector and authentication policy. The `PathBase += shellBase; Path = @page
-  literal` move, the `IStartupFilter` registration (it must run before `UseRouting`), and
-  the Path-only strip for `_framework`/`_content`/`_blazor`/`api` requests are unchanged —
-  a further shell reuses all of it.
-  - [x] **The selector takes the request.** The shell selector matches on the **request**, not on a path prefix string, and keeps its
-    matching rules in options. Path prefixes are the only rule it implements: every shell is
-    selected by its prefix, and the site shell is the fallback when none matches.
-
-    Taking the request rather than a prefix costs nothing now and is what keeps other matching
-    rules — a shell on its own hostname, say — addable later without reshaping the selector.
-- [x] **The auth-cookie render-mode rule is declared by the page** that sets the cookie, not
-  special-cased per shell in `App.razor` (`[SetsAuthenticationCookie]`).
-  *What landed (2026-10-13):* `ShellId`, `ShellRegistryOptions`/`ShellDescriptor`,
-  `IShellSelector` (`PathPrefixShellSelector`) and `ShellSelectionMiddleware`, which replaces
-  `BlazorAdminThemeMiddleware`. `BlazorAdminThemeOptions` stays as the admin shell's configured
-  paths, the source of the admin entries; `IBlazorAdminThemeDetector` is the admin entries'
-  theme detector.
-
-### Decisions needed
-
-- [ ] **The theme system is reworked as structure plus design system** (ruling 2026-10-09,
-  [blazor-display.md](blazor-display.md) › decision 8; a separate plan after the display
-  system). A theme becomes its page structures (templates, composites, zone settings) with the
-  design system (branding) layered on top, so either can be swapped or imported alone; data
-  themes and compiled module themes register through one mechanism; a public marketplace carries
-  data themes only. The admin, site and member themes may then stop changing the way OrchardCore
-  themes change, with only the selections inside them changing. The theme registry and the
-  selection UI are reworked for that, and nothing in this document's shell injection model
-  (buckets, `crest-blazor`, contracts, the two guards, the route gate) may be lost.
-
-- [ ] **Shells on their own hostnames, and on their own servers** (open, 2026-10-06; to discuss
-  in depth later). Today a tenant's admin, site and member shells share one hostname and one
-  server, told apart by path. Open:
+- **Shells on their own hostnames, and on their own servers.** Today a tenant's admin, site
+  and member shells share one hostname and one server, told apart by path. Open:
   - **Hostnames per shell** — a subdomain or custom domain for the public site, another for
     the member portal, another for the admin (e.g. `www.`, `members.`, `admin.`), alongside
     the tenant's own custom domains and subdomains.
-  - **Separate systems per shell** — in future, the admin, public and member shells on
-    separate servers and back ends, still sharing data, permissions and users. The aim is
-    isolation: an attack that takes down the public site must not take down the business's
-    admin; and a business could run the admin on a local server sheltered from the internet
-    without affecting the member portal or the public site.
+  - **Separate systems per shell** — the admin, public and member shells on separate servers
+    and back ends, still sharing data, permissions and users. The aim is isolation: an attack
+    that takes down the public site must not take down the business's admin; and a business
+    could run the admin on a local server sheltered from the internet without affecting the
+    member portal or the public site.
   - What that requires of the shared pieces — the data store, the permission system (see
     [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery) › Decisions on running it on separate hardware), sign-in and sessions across
     hosts, and which shell owns which writes.

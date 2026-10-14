@@ -318,6 +318,7 @@ public sealed class Startup : StartupBase
         // The public site on the display tree (docs/blazor-display.md rework step 3).
         services.AddScoped<Crest.Display.SitePageBuilder>();
         services.AddScoped<Crest.Templates.Services.IShippedTemplateProvider, Crest.Display.DefaultContentTemplate>();
+        services.AddScoped<Crest.Templates.Services.IShippedTemplateProvider, Crest.Display.AccountEmailTemplates>();
         services.AddScoped<IDisplayTreeVersionPart, Crest.Display.SiteTreeVersion>();
         services.AddScoped<Crest.ContentManagement.Handlers.IContentHandler, Crest.Display.DisplayTreeContentHandler>();
         services.AddScoped<Crest.Display.ContentEditorTreeBuilder>();
@@ -337,23 +338,6 @@ public sealed class Startup : StartupBase
         // the field ignorant of what it is picking (content part lists today; users, content
         // items and other entity sources later).
         services.AddContentField<Fields.OptionPickerField>();
-        // Assignment scoping. AssignmentScopedTypes is a SINGLETON policy registry -
-        // which types are assignment-scoped is a deployment decision, declared once,
-        // not something a request can vary.
-        services.AddSingleton<AssignmentScopedTypes>();
-        services.AddScoped<IAssignmentService, AssignmentService>();
-        services.AddSingleton<IIndexProvider, AssignmentIndexProvider>();
-        services.AddDataMigration<CrestAssignmentIndexMigrations>();
-        services.AddContentPart<CrestAssignmentPart>();
-
-        services.AddScoped<Crest.Access.IScopeProvider, AssignmentScopeProvider>();
-        // Organization ownership on the row (docs/operations.md: owner part + index; assignments
-        // are grants). OrganizationScopedTypes is the same kind of deployment-time registry.
-        // The organization row scope itself is Members' (it reads the acting organization).
-        services.AddSingleton<OrganizationScopedTypes>();
-        services.AddSingleton<IIndexProvider, OrganizationIndexProvider>();
-        services.AddDataMigration<CrestOrganizationIndexMigrations>();
-        services.AddContentPart<CrestOrganizationPart>();
         services.AddScoped<IOptionSourceProvider, UserOptionSourceProvider>();
         services.AddScoped<IOptionSourceProvider, ContentItemOptionSourceProvider>();
         services.AddScoped<IOptionSourceProvider, TimeZoneOptionSourceProvider>();

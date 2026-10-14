@@ -1,6 +1,8 @@
 @namespace Crest.Parties.BlazorWasm.Components
 @using Crest.Components.Regions
 @using Crest.Parties.PartyTypes
+@using Crest.Parties.Constants
+@using Crest.Parties.ViewModels
 @inject HttpClient Http
 @inject Crest.Components.Theme.CrestApiLocalizer T
 
@@ -37,7 +39,7 @@
                         SelectedKey="@SelectedId"
                         KeySelector="@(item => item.ContentItem?.ContentItemId)"
                         TextSelector="@(item => item.ContentItem?.DisplayText)"
-                        DescriptionSelector="@(item => item.ContentItem?.ContentItemId)"
+                        DescriptionSelector="@Describe"
                         SearchPredicate="MatchesSearch"
                         Select="Select"
                         Create="CreateAsync"
@@ -80,6 +82,11 @@
                             <CrestText><strong>@T["Party"]:</strong> @PartyReference</CrestText>
                         }
                     </CrestStack>
+
+                    @if (ContentType is PartiesConstants.ContentTypes.Person or PartiesConstants.ContentTypes.Organization && SelectedId is not null)
+                    {
+                        <PartyRecordActions PartyId="@SelectedId" ContentType="@ContentType" Content="@(Selected.ContentItem?.Content as JsonObject)" Changed="LoadAsync" />
+                    }
 
                     <CrestPageRegion Key="@PartiesPageRegions.Detail(Type.Key)" Context="@SelectedId" />
 
@@ -179,7 +186,9 @@
             var view = await Http.GetFromJsonAsync<Dictionary<string, JsonNode?>>($"api/crest/content-items/{Uri.EscapeDataString(partyId)}/view");
             var text = view is not null && view.TryGetValue("DisplayText", out var node) ? node?.ToString() : null;
             var type = view is not null && view.TryGetValue("ContentType", out var typeNode) ? typeNode?.ToString() : null;
-            PartyReference = string.IsNullOrWhiteSpace(text) ? partyId : $"{text} ({type ?? "party"}, {partyId})";
+            var content = view is not null && view.TryGetValue("Content", out var contentNode) ? contentNode as JsonObject : null;
+            // An Individual organization reads as its person (ruling 2026-10-14).
+            PartyReference = string.IsNullOrWhiteSpace(text) ? partyId : $"{text} ({T[PartyDisplay.KindLabel(type, content)]}, {partyId})";
         }
         catch
         {
@@ -298,6 +307,13 @@
     }
 
     private void CloseEditor() => IsEditing = false;
+
+    // An Individual organization is listed as its person: its name is the person's, and the
+    // description says "Individual" rather than presenting a company.
+    private string? Describe(CrestModel item) =>
+        PartyDisplay.IsIndividual(item.ContentItem?.ContentType, item.ContentItem?.Content as JsonObject)
+            ? $"{T["Individual"]} · {item.ContentItem?.ContentItemId}"
+            : item.ContentItem?.ContentItemId;
 
     private bool MatchesSearch(CrestModel item, string search) =>
         item.ContentItem?.DisplayText?.Contains(search, StringComparison.OrdinalIgnoreCase) == true

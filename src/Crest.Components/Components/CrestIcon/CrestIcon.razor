@@ -16,14 +16,6 @@
 }
 
 @code {
-    [Parameter] public string? IconKey { get; set; }
-    [Parameter] public string? Size { get; set; }
-    [Parameter] public string? Color { get; set; }
-    [Parameter] public string? Alt { get; set; }
-    [Parameter] public string? Class { get; set; }
-    [Parameter] public string? Style { get; set; }
-    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
-
     private string? _svgMarkup;
     private string? _resolvedKey;
     private long _registryVersion = -1;

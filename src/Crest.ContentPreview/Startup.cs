@@ -5,7 +5,6 @@ using Crest.ContentManagement.Display.ContentDisplay;
 using Crest.ContentPreview.Drivers;
 using Crest.ContentPreview.Handlers;
 using Crest.ContentPreview.Models;
-using Crest.ContentPreview.Settings;
 using Crest.ContentTypes.Editors;
 using Crest.Data.Migration;
 
@@ -24,7 +23,6 @@ public sealed class Startup : Modules.StartupBase
             .AddHandler<PreviewPartHandler>();
 
         services.AddDataMigration<Migrations>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, PreviewPartSettingsDisplayDriver>();
         services.AddSingleton<IStartupFilter, PreviewStartupFilter>();
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -43,6 +44,6 @@ public sealed class AdminTwoFactorAuthenticationController : Controller
             await _userManager.SetTwoFactorEnabledAsync(user, false);
         }
 
-        return RedirectToAction(nameof(AdminController.Index), typeof(AdminController).ControllerName());
+        return LocalRedirect($"~/{HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<Crest.Admin.AdminOptions>>().Value.AdminUrlPrefix.Trim('/')}/Users/Index");
     }
 }

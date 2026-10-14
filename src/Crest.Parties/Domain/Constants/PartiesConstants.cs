@@ -29,6 +29,10 @@ public static class PartiesConstants
     {
         /// <summary>The organization this one belongs to; restricted to Organization, cycles refused.</summary>
         public const string ParentOrganization = "ParentOrganization";
+
+        /// <summary>True for an Individual organization (ruling 2026-10-14): one person in a
+        /// business relationship, exactly one member, read as the person.</summary>
+        public const string Individual = "Individual";
     }
 
     public static class ContentTypes

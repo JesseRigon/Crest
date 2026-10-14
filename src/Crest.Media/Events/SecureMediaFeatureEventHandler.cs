@@ -33,8 +33,8 @@ internal sealed class SecureMediaFeatureEventHandler : FeatureEventHandler
 
         H ??= ShellScope.Services.GetRequiredService<IHtmlLocalizer<SecureMediaFeatureEventHandler>>();
 
-        var linkGenerator = ShellScope.Services.GetRequiredService<LinkGenerator>();
-        var rolesUrl = linkGenerator.GetPathByAction("Index", "Admin", new { area = "Crest.Roles" });
+        var adminOptions = ShellScope.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<Crest.Admin.AdminOptions>>().Value;
+        var rolesUrl = $"/{adminOptions.AdminUrlPrefix.Trim('/')}/Roles/Index";
 
         var message = H["<p><strong>Secure Media</strong> is now enabled. Review and update role <strong>permissions</strong> to ensure users can access only the media they should.</p><p>Open the <a href=\"{0}\">Roles page</a> to configure permissions.<br />For guidance, see the <a href=\"https://docs.orchardcore.net/en/latest/reference/modules/Media/#secure-media\" target=\"_blank\" rel=\"noopener noreferrer\">secure media documentation</a>.</p>", rolesUrl];
 

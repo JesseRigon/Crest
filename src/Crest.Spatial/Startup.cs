@@ -24,7 +24,6 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<GeoPointFieldDisplayDriver>()
             .AddHandler<GeoPointFieldHandler>();
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, GeoPointFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, GeoPointFieldIndexHandler>();
 
         // Registering both field types and shape types are necessary as they can

@@ -58,3 +58,33 @@ public sealed class FormTests
     [InlineData("", false)]
     public void ComponentsEmitOnlySafeUrls(string url, bool safe) => Assert.Equal(safe, SafeUrl.IsSafe(url));
 }
+
+// Media by drive placement (docs/media.md, F1): component values and inserted bodies use the
+// placement's /files URL, never a library path.
+public sealed class MediaReferenceTests
+{
+    [Theory]
+    [InlineData("01JABCDEF123", "files/01JABCDEF123")]
+    [InlineData("/media/about-bg.jpg", "/media/about-bg.jpg")]
+    [InlineData("javascript:alert(1)", null)]
+    [InlineData("", null)]
+    public void APlacementIdBecomesItsFilesUrl(string value, string? expected) =>
+        Assert.Equal(expected, Crest.Components.Files.MediaReference.Url(value));
+
+    [Fact]
+    public void InsertedMediaIsAnImageOrALinkByPlacement()
+    {
+        var image = File("p1", "photo.jpg", "image/jpeg", alternativeText: "A \"view\"");
+        var document = File("p2", "terms.pdf", "application/pdf");
+
+        Assert.Equal("<img src=\"files/p1\" alt=\"A &quot;view&quot;\" />", Crest.Components.Editors.MediaSnippets.Html(image));
+        Assert.Equal("<a href=\"files/p2\">terms.pdf</a>", Crest.Components.Editors.MediaSnippets.Html(document));
+        Assert.Equal("![A \"view\"](files/p1)", Crest.Components.Editors.MediaSnippets.Markdown(image));
+        Assert.Equal("[terms.pdf](files/p2)", Crest.Components.Editors.MediaSnippets.Markdown(document));
+    }
+
+    private static Crest.Components.Files.CrestFileItem File(string id, string name, string type, string? alternativeText = null) => new(
+        id, "c-" + id, "folder", "drive", name, Crest.Components.Files.CrestFileKind.File, null, null, false,
+        new Crest.Components.Files.CrestFileMetadata(null, null, alternativeText, null), 10, type, 1, true,
+        DateTimeOffset.UnixEpoch, null, DateTimeOffset.UnixEpoch, null, []);
+}

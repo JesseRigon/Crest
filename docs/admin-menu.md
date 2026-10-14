@@ -1,6 +1,12 @@
 # Admin menu layout
 
-Crest treats the built-in Orchard admin menu as a generated primary navigation. Tenant node/order/icon/separator changes made in the Admin Menus page are stored in the tenant document store as layout overrides.
+The admin menu is a view over the page registry: its default tree is derived from the pages
+modules declare, the tenant's edits are a layer over it, and each user can hide items for
+themselves (§ The page registry). **Today** the menu is still built from the platform's
+navigation providers, imported into an admin menu and overlaid with the tenant's layout; the
+rest of this document describes that machinery, which stays until the page registry replaces
+it. Tenant node, order, icon and separator changes made in the Admin Menus page are stored in
+the tenant document store as layout overrides.
 
 Primary navigation component settings, such as collapse behavior, tier spacing, generated separators, and tier backgrounds, are tenant site settings. They are edited from the same Admin Menus page for UX, but they are not part of the menu layout overlay JSON.
 
@@ -41,7 +47,42 @@ The export endpoint is enabled automatically in `Development`. In other environm
 
 The endpoint still requires the current user to have Orchard's admin menu management permission.
 
-## Provider items are imported into the admin menu system
+## The page registry
+
+Not yet built ([backlog.md](backlog.md) › Registries). Part of the tenet
+[architecture.md › Modules declare, Crest.Server registers and serves](architecture.md#modules-declare-crestserver-registers-and-serves).
+
+**Today a page is described in up to four lists:**
+
+| List | Where | How it is filled |
+| --- | --- | --- |
+| Route table | `IRouteComponentTableProvider` (`src/Crest.Server/Routing`), plus `IDataRouteComponentTableProvider` for designed pages | scanned `@page` attributes, per shell |
+| Admin menu | `INavigationProvider` items, imported into the `AdminNode` menu "Primary Navigation" (below) | hand-written per module, matched by caption |
+| Route gate | `IRoutePermissionProvider` (`Crest.Access.Abstractions`) | hand-written per module |
+| WASM routes | `IWebAssemblyRouteProvider` (`Crest.Server/Services/RoutePermissionProvider.cs`) | hand-written per module |
+
+**Target: one page registry, owned by Crest.Server.** Each page declares once its route, its
+shell, its permission and its menu placement (parent path, caption, position, icon). From that
+one entry:
+
+- the route table, the route gate and the admin menu's default tree are derived; the
+  per-module route-permission providers and the navigation providers for native pages retire;
+- the admin menu is a view over the registry, plus the registry's **defined layer**, the
+  tenant's edits (renames, hides, moves, custom placements and links), applied by the entry's
+  stable id, plus each user's own hide layer (§ Two hide layers). The caption-matching import
+  and sync below disappear;
+- per-tenant and per-user page permissions resolve through the access model, and the menu and
+  the gate read the same permission, so a menu item is shown exactly when its page would open;
+- legacy MVC pages are declared entries pointing at their legacy route (a small list per
+  module) until they are ported;
+- dynamic items (New › *content type*) are a registry source, not a special branch.
+
+Like the API registry, the page registry has a **declared** layer (from module code, built when
+the tenant shell builds, following feature enablement, never stored) and a **defined** layer
+(tenant data, changeable at runtime, invalidated on publish: designed pages and the tenant's
+menu edits).
+
+## Provider items are imported into the admin menu system (today)
 
 Menu items contributed by a module's `INavigationProvider` are materialized as DB-backed
 `AdminNode`s in an admin menu named **Primary Navigation**, so Crest's sidebar and menu editor
@@ -89,27 +130,25 @@ from a rename) always wins — and each caption/culture pair is seeded **at most
 document tracks every pair it has seeded or found already translated, so a translation an admin
 deliberately deleted stays deleted across shell restarts instead of being refilled from PO
 (`sync-providers` is the exception — invoking it by hand refills anything missing, which is also
-the recovery path for the lossy-save trap below). Adding a supported culture seeds that culture
+the recovery path should a translation go missing). Adding a supported culture seeds that culture
 on the next shell start or `sync-providers` call; a pass with nothing new loads no PO catalogs
 at all. PO entries are keyed by
 contributing class, which merging erases, so the seed matches the caption across the whole
 catalog and takes the most common translation when contexts disagree. The result: every
 imported caption is a first-class, per-tenant-editable entry in Orchard's own translations
 editor (Configuration → Localization → Translations, under the "Primary Navigation" group),
-pre-filled with what PO would have shown. Since the caption resolver gained its live PO
-layer, seeding is no longer load-bearing for rendering — a never-seeded caption renders its
-PO translation anyway, and a deleted entry reverts to it. Seeding's remaining value is
-materializing PO values as editable store rows; the old caveat (a PO catalog update never
-reaches an already-seeded value) still applies to the *stored copy*, but deleting the stale
-entry now reverts the rendered caption to the updated PO value instead of the literal.
+pre-filled with what PO would have shown. Seeding is not load-bearing for rendering: the
+caption resolver has a live PO layer, so a never-seeded caption renders its PO translation
+anyway, and a deleted entry reverts to it. Seeding materializes PO values as editable store
+rows; a PO catalog update never reaches an already-seeded *stored copy*, but deleting the stale
+entry reverts the rendered caption to the updated PO value.
 
 Crest's sidebar and app manifest resolve these captions against the tenant translation store
 per request culture at serialization time — the same place in the pipeline where TheAdmin's
 `NavigationItemText.cshtml` resolves at render time — through `MenuCaptionResolver`,
-which adds what a bare `IDataLocalizer` lookup lacks. (`NavigationManager.Merge` once dropped
-`MenuName` from the surviving instance of a merged pair, so an item could resolve under the
-generic context and miss its translation; the platform's `Merge` now copies `MenuName` with
-the other eleven properties, fixed in place 2026-10-10.)
+which adds what a bare `IDataLocalizer` lookup lacks. The platform's `NavigationManager.Merge`
+copies `MenuName` to the surviving instance of a merged pair, so an item resolves under its own
+menu context.
 
 **No default context.** Contexts are strict namespaces: a translation stored under one is
 invisible to a lookup under any other, and upstream falls back to the invariant literal even
@@ -156,7 +195,7 @@ non-menu contexts, because a `Content Types` entry is about that very type while
 entry sharing the literal is about a different item (the same `Account` type flagged into
 the Content menu seeds "Account" under `Primary Navigation`).
 
-This subsumes the earlier special-cased "New"-branch fallback: a content type translated in
+So the "New" branch needs no special case: a content type translated in
 the Translations editor ("Content Types" group) is simply the best alternative for its New
 menu caption, which no "Admin Menus" context translates — one translation covers every
 surface a type name appears on.
@@ -173,18 +212,16 @@ the save **merges**: only the rows the page displayed are replaced (blank delete
 else in the store is carried over untouched. Nothing the page never showed can be destroyed by
 saving.
 
-**Fixed in the platform (2026-10-10): the Translations editor's Save was lossy for deep
-captions.** The admin node localization providers enumerated top-level nodes only, and the
-editor's Save replaced a culture's whole list with what was enumerated, so a save silently
-deleted every child caption's stored translation. Now the providers walk the whole tree
-(`AdminNodeDataLocalizationProvider.AllNodes`, one row per distinct caption), Save merges
-(only the entries the editor displayed are replaced; an emptied value removes one), the
-editor's lookups tolerate a duplicate stored row, the translation cache is evicted again
-after the document commits, and the admin menu service raises `IAdminMenuEventHandler`
-events that `AdminMenuTranslationCleanup` (in `Crest.DataLocalization`) uses to drop the
-entries no node carries any more and a deleted menu's whole context;
-`ContentTypeTranslationCleanup` does the same for a removed content type's display name.
-Should a translation still go missing, `sync-providers` refills any seeded entry on demand.
+**The platform's Translations editor saves without loss.** The admin node localization
+providers walk the whole tree (`AdminNodeDataLocalizationProvider.AllNodes`, one row per
+distinct caption), so deep captions are enumerated; Save merges (only the entries the editor
+displayed are replaced; an emptied value removes one); the editor's lookups tolerate a
+duplicate stored row; the translation cache is evicted again after the document commits. The
+admin menu service raises `IAdminMenuEventHandler` events that `AdminMenuTranslationCleanup`
+(in `Crest.DataLocalization`) uses to drop the entries no node carries any more and a deleted
+menu's whole context; `ContentTypeTranslationCleanup` does the same for a removed content
+type's display name. Should a translation still go missing, `sync-providers` refills any
+seeded entry on demand.
 
 **Timing.** The import runs once per shell, right after tenant activation
 (`ProviderMenuSyncTenantEvents`): activation itself has no request, and the import
@@ -219,7 +256,7 @@ Layout overrides are stored against each item's key, never against its caption �
 translated, so keying on it would orphan every override as soon as the admin's culture changed.
 Two mechanisms supply that key, and `NavigationItem.Key` prefers the first:
 
-- `Id` — for items whose provider set one. Every stock admin node builder now copies
+- `Id` — for items whose provider set one. Every stock admin node builder copies
   `AdminNode.UniqueId` (a GUID assigned when the node is created, unaffected by later edits)
   onto `MenuItem.Id`, so DB-backed Admin Menu nodes have a stable identity that survives a
   caption being rewritten.

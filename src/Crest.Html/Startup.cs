@@ -28,9 +28,6 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<HtmlBodyPartDisplayDriver>()
             .AddHandler<HtmlBodyPartHandler>();
 
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, HtmlBodyPartSettingsDisplayDriver>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, HtmlBodyPartTrumbowygEditorSettingsDriver>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, HtmlBodyPartMonacoEditorSettingsDriver>();
         services.AddDataMigration<Migrations>();
         services.AddScoped<IContentPartIndexHandler, HtmlBodyPartIndexHandler>();
     }

@@ -1,4 +1,4 @@
-const { fetchAntiforgeryToken } = require('../../../../../Crest/tests/playwright/harness/antiforgery');
+const { fetchAntiforgeryToken } = require('../../../../../tests/playwright/harness/antiforgery');
 
 // Units of work and hooks (docs/workflows.md › Posting on workflows):
 //  - a burst is one transaction: a host flow creates content, then runs a hook whose required

@@ -105,3 +105,8 @@ public sealed class AuditFilter
         return string.Join('&', parts);
     }
 }
+
+/// <summary>A content event's version, rebuilt and shown as a display tree.</summary>
+public sealed record AuditContentVersion(string ContentItemId, string ContentType, string? DisplayText, int VersionNumber, Crest.DisplayManagement.Components.DisplayTree Tree);
+
+public sealed record AuditContentRestoreResult(bool Restored, string ContentItemId, IReadOnlyList<string> Errors);

@@ -1,0 +1,273 @@
+@page "/Tenants/Create"
+@page "/Tenants/Edit/{Name}"
+@using Crest.AdminTheme.Api
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NavigationManager Navigation
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* Create and edit a tenant, and set an uninitialized one up (step 7: the MVC Tenants
+   Create/Edit screens are retired). The rules are the server's (TenantAdministration):
+   validation, the host's database presets and patterns, and what an initialized tenant may
+   still change - its database settings and recipe are its database, never shown. The
+   connection string of an uninitialized tenant is shown with the password redacted; sending
+   it back unchanged keeps the stored one. *@
+
+<CrestStack Gap="1rem" data-testid="tenant-edit-page">
+    <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <CrestStack Gap="0.25rem">
+            <CrestText TextStyle="TextStyle.H4" Text="@(IsNew ? T["Add Tenant"] : T["Edit {0}", Name ?? string.Empty])" />
+            @if (Editor is { IsNew: false, IsUninitialized: true })
+            {
+                <CrestText TextStyle="TextStyle.Body2" Text="@T["This tenant is not set up yet."]" />
+            }
+        </CrestStack>
+        <CrestButton Text="@T["Back to tenants"]" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => Navigation.NavigateTo("Tenants"))" />
+    </CrestStack>
+
+    @foreach (var error in FormErrors)
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false" data-testid="tenant-edit-error">@error</CrestAlert>
+    }
+
+    @if (Editor is null)
+    {
+        <CrestCard><CrestProgressBar Mode="ProgressBarMode.Indeterminate" /></CrestCard>
+    }
+    else
+    {
+        <CrestCard>
+            <CrestRow Gap="1rem">
+                <CrestColumn Size="12" SizeMD="6">
+                    <CrestFormField Text="@T["Name"]" Style="width: 100%;">
+                        <CrestTextBox @bind-Value="Form.Name" Disabled="@(!IsNew)" Style="width: 100%;" data-testid="tenant-name" />
+                    </CrestFormField>
+                    @FieldError(nameof(TenantForm.Name))
+                </CrestColumn>
+                <CrestColumn Size="12" SizeMD="6">
+                    <CrestFormField Text="@T["Category"]" Style="width: 100%;"><CrestTextBox @bind-Value="Form.Category" Style="width: 100%;" /></CrestFormField>
+                </CrestColumn>
+                <CrestColumn Size="12">
+                    <CrestFormField Text="@T["Description"]" Style="width: 100%;"><CrestTextBox @bind-Value="Form.Description" Style="width: 100%;" /></CrestFormField>
+                </CrestColumn>
+                <CrestColumn Size="12" SizeMD="6">
+                    <CrestFormField Text="@T["Host (comma-separated)"]" Style="width: 100%;"><CrestTextBox @bind-Value="Form.RequestUrlHost" Placeholder="example.com" Style="width: 100%;" data-testid="tenant-host" /></CrestFormField>
+                    @FieldError(nameof(TenantForm.RequestUrlHost))
+                </CrestColumn>
+                <CrestColumn Size="12" SizeMD="6">
+                    <CrestFormField Text="@T["URL prefix"]" Style="width: 100%;"><CrestTextBox @bind-Value="Form.RequestUrlPrefix" Placeholder="tenant1" Style="width: 100%;" data-testid="tenant-prefix" /></CrestFormField>
+                    @FieldError(nameof(TenantForm.RequestUrlPrefix))
+                </CrestColumn>
+            </CrestRow>
+        </CrestCard>
+
+        @if (Editor.FeatureProfiles.Length > 0)
+        {
+            <CrestCard>
+                <CrestStack Gap="0.5rem">
+                    <CrestText TextStyle="TextStyle.H6" Text="@T["Feature profiles"]" />
+                    @foreach (var profile in Editor.FeatureProfiles)
+                    {
+                        <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <CrestCheckBox Value="@Form.FeatureProfiles.Contains(profile.Value)" Change="@((bool value) => ToggleProfile(profile.Value, value))" Name="@($"profile-{profile.Value}")" />
+                            <CrestText Text="@profile.Text" />
+                        </CrestStack>
+                    }
+                </CrestStack>
+            </CrestCard>
+        }
+
+        @if (Editor.IsUninitialized)
+        {
+            <CrestCard data-testid="tenant-database">
+                <CrestStack Gap="0.75rem">
+                    <CrestText TextStyle="TextStyle.H6" Text="@T["Database and recipe"]" />
+                    @if (Editor.DatabaseConfigurationPreset)
+                    {
+                        <CrestText TextStyle="TextStyle.Body2" Text="@T["The database is configured by the host; every tenant uses it."]" />
+                    }
+                    <CrestRow Gap="1rem">
+                        <CrestColumn Size="12" SizeMD="6">
+                            <CrestFormField Text="@T["Database provider"]" Style="width: 100%;">
+                                <CrestDropDown @bind-Value="Form.DatabaseProvider" Data="@Editor.DatabaseProviders" TextProperty="Text" ValueProperty="Value" AllowClear="true" Disabled="@(Editor.DatabaseProviderPreset)" Style="width: 100%;" />
+                            </CrestFormField>
+                            @FieldError(nameof(TenantForm.DatabaseProvider))
+                        </CrestColumn>
+                        <CrestColumn Size="12" SizeMD="6">
+                            <CrestFormField Text="@T["Recipe"]" Style="width: 100%;">
+                                <CrestDropDown @bind-Value="Form.RecipeName" Data="@Editor.Recipes" TextProperty="Text" ValueProperty="Value" AllowClear="true" Style="width: 100%;" />
+                            </CrestFormField>
+                            @FieldError(nameof(TenantForm.RecipeName))
+                        </CrestColumn>
+                        @if (SelectedProviderHasConnectionString && !Editor.DatabaseConfigurationPreset)
+                        {
+                            <CrestColumn Size="12">
+                                <CrestFormField Text="@T["Connection string"]" Style="width: 100%;"><CrestTextBox @bind-Value="Form.ConnectionString" Style="width: 100%;" /></CrestFormField>
+                                @FieldError(nameof(TenantForm.ConnectionString))
+                            </CrestColumn>
+                        }
+                        <CrestColumn Size="12" SizeMD="6">
+                            <CrestFormField Text="@(Editor.HasTablePrefixPattern ? T["Table prefix (from the host's pattern: {0})", Editor.ResolvedTablePrefix ?? "—"] : T["Table prefix"])" Style="width: 100%;">
+                                <CrestTextBox @bind-Value="Form.TablePrefix" Disabled="@Editor.HasTablePrefixPattern" Style="width: 100%;" />
+                            </CrestFormField>
+                            @FieldError(nameof(TenantForm.TablePrefix))
+                        </CrestColumn>
+                        <CrestColumn Size="12" SizeMD="6">
+                            <CrestFormField Text="@(Editor.HasSchemaPattern ? T["Schema (from the host's pattern: {0})", Editor.ResolvedSchema ?? "—"] : T["Schema"])" Style="width: 100%;">
+                                <CrestTextBox @bind-Value="Form.Schema" Disabled="@(Editor.HasSchemaPattern || Editor.DatabaseConfigurationPreset)" Style="width: 100%;" />
+                            </CrestFormField>
+                            @FieldError(nameof(TenantForm.Schema))
+                        </CrestColumn>
+                    </CrestRow>
+                </CrestStack>
+            </CrestCard>
+        }
+
+        <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Navigation.NavigateTo("Tenants"))" Disabled="@IsBusy" />
+            @if (IsNew)
+            {
+                <CrestButton Text="@T["Create and set up"]" Icon="rocket_launch" ButtonStyle="ButtonStyle.Light" Click="@(() => SaveAsync(setUp: true))" Disabled="@IsBusy" data-testid="tenant-create-setup" />
+            }
+            <CrestButton Text="@(IsNew ? T["Create"] : T["Save"])" Icon="save" Click="@(() => SaveAsync(setUp: false))" Disabled="@IsBusy" data-testid="tenant-save" />
+        </CrestStack>
+
+        @if (Editor is { IsNew: false, IsUninitialized: true })
+        {
+            <CrestCard data-testid="tenant-setup">
+                <CrestStack Gap="0.75rem">
+                    <CrestText TextStyle="TextStyle.H6" Text="@T["Set up"]" />
+                    <CrestText TextStyle="TextStyle.Body2" Text="@T["Set the tenant up here, or open its own setup page with a link valid for 24 hours."]" />
+                    <CrestRow Gap="1rem">
+                        <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Site name"]" Style="width: 100%;"><CrestTextBox @bind-Value="Setup.SiteName" Style="width: 100%;" data-testid="tenant-setup-site" /></CrestFormField>@FieldError(nameof(TenantSetupRequest.SiteName))</CrestColumn>
+                        <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Time zone"]" Style="width: 100%;"><CrestTextBox @bind-Value="Setup.SiteTimeZone" Placeholder="Europe/Zurich" Style="width: 100%;" /></CrestFormField></CrestColumn>
+                        <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="@T["Administrator user name"]" Style="width: 100%;"><CrestTextBox @bind-Value="Setup.UserName" Style="width: 100%;" data-testid="tenant-setup-user" /></CrestFormField>@FieldError(nameof(TenantSetupRequest.UserName))</CrestColumn>
+                        <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="@T["Email"]" Style="width: 100%;"><CrestTextBox @bind-Value="Setup.Email" Style="width: 100%;" data-testid="tenant-setup-email" /></CrestFormField>@FieldError(nameof(TenantSetupRequest.Email))</CrestColumn>
+                        <CrestColumn Size="12" SizeMD="4"><CrestFormField Text="@T["Password"]" Style="width: 100%;"><CrestPassword @bind-Value="Setup.Password" Style="width: 100%;" data-testid="tenant-setup-password" /></CrestFormField>@FieldError(nameof(TenantSetupRequest.Password))</CrestColumn>
+                    </CrestRow>
+                    <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                        <CrestButton Text="@T["Open the setup page"]" Icon="open_in_new" ButtonStyle="ButtonStyle.Light" Click="OpenSetupPageAsync" Disabled="@IsBusy" />
+                        <CrestButton Text="@T["Set up now"]" Icon="rocket_launch" Click="SetupAsync" Disabled="@IsBusy" data-testid="tenant-setup-submit" />
+                    </CrestStack>
+                </CrestStack>
+            </CrestCard>
+        }
+    }
+</CrestStack>
+
+@code {
+    [Parameter]
+    public string? Name { get; set; }
+
+    private TenantEditor? Editor { get; set; }
+    private TenantForm Form { get; set; } = new();
+    private TenantSetupRequest Setup { get; set; } = new();
+    private TenantFieldError[] Errors { get; set; } = [];
+    private bool IsBusy { get; set; }
+    private bool IsNew => string.IsNullOrWhiteSpace(Name);
+
+    private IEnumerable<string> FormErrors => Errors.Where(error => string.IsNullOrEmpty(error.Key) || !KnownFields.Contains(error.Key)).Select(error => error.Message);
+
+    private static readonly HashSet<string> KnownFields = new(StringComparer.OrdinalIgnoreCase)
+    {
+        nameof(TenantForm.Name), nameof(TenantForm.RequestUrlHost), nameof(TenantForm.RequestUrlPrefix),
+        nameof(TenantForm.DatabaseProvider), nameof(TenantForm.RecipeName), nameof(TenantForm.ConnectionString),
+        nameof(TenantForm.TablePrefix), nameof(TenantForm.Schema), nameof(TenantSetupRequest.SiteName),
+        nameof(TenantSetupRequest.UserName), nameof(TenantSetupRequest.Email), nameof(TenantSetupRequest.Password),
+    };
+
+    private bool SelectedProviderHasConnectionString =>
+        Editor?.DatabaseProviders.FirstOrDefault(provider => string.Equals(provider.Value, Form.DatabaseProvider, StringComparison.OrdinalIgnoreCase))?.HasConnectionString == true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Errors = [];
+        Editor = await Api.Crest.Rest.TenantEditor.GetAsync(Name);
+        if (Editor is null)
+        {
+            Errors = [new TenantFieldError(string.Empty, T["The tenant could not be loaded."])];
+            return;
+        }
+
+        Form = Editor.Form;
+        Form.FeatureProfiles ??= [];
+    }
+
+    private RenderFragment? FieldError(string key) => Errors.FirstOrDefault(error => string.Equals(error.Key, key, StringComparison.OrdinalIgnoreCase)) is { } error
+        ? builder =>
+        {
+            builder.OpenComponent<CrestText>(0);
+            builder.AddAttribute(1, nameof(CrestText.TextStyle), TextStyle.Caption);
+            builder.AddAttribute(2, nameof(CrestText.Text), error.Message);
+            builder.AddAttribute(3, "Style", "color: var(--crest-color-danger, #b3261e);");
+            builder.CloseComponent();
+        }
+        : null;
+
+    private void ToggleProfile(string profile, bool selected) =>
+        Form.FeatureProfiles = selected
+            ? [.. Form.FeatureProfiles.Append(profile).Distinct(StringComparer.OrdinalIgnoreCase)]
+            : [.. Form.FeatureProfiles.Where(value => !string.Equals(value, profile, StringComparison.OrdinalIgnoreCase))];
+
+    private async Task SaveAsync(bool setUp)
+    {
+        IsBusy = true;
+        try
+        {
+            var result = IsNew
+                ? await Api.Crest.Rest.TenantEditor.CreateAsync(Form)
+                : await Api.Crest.Rest.TenantEditor.EditAsync(Name!, Form);
+            Errors = result.Errors;
+            if (!result.Succeeded)
+            {
+                return;
+            }
+
+            Notifications.Notify(NotificationSeverity.Success, T["Tenant saved"], T["{0} was saved.", result.Tenant?.Name ?? Form.Name ?? string.Empty]);
+            Navigation.NavigateTo(setUp && result.Tenant is { } created
+                ? $"Tenants/Edit/{Uri.EscapeDataString(created.Name)}"
+                : "Tenants");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task SetupAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            Setup.RecipeName ??= Form.RecipeName;
+            Setup.DatabaseProvider ??= Form.DatabaseProvider;
+            Setup.TablePrefix ??= Form.TablePrefix;
+            Setup.Schema ??= Form.Schema;
+            var result = await Api.Crest.Rest.TenantEditor.SetupAsync(Name!, Setup);
+            Errors = result.Errors;
+            if (result.Succeeded)
+            {
+                Notifications.Notify(NotificationSeverity.Success, T["Tenant set up"], T["{0} is running.", Name ?? string.Empty]);
+                Navigation.NavigateTo("Tenants");
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    // The tenant's own setup page lives on the tenant's host/prefix: a full navigation.
+    private async Task OpenSetupPageAsync()
+    {
+        if (await Api.Crest.Rest.TenantEditor.GetSetupUrlAsync(Name!) is { Length: > 0 } url)
+        {
+            Navigation.NavigateTo(url, forceLoad: true);
+        }
+        else
+        {
+            Errors = [new TenantFieldError(string.Empty, T["The setup link could not be created."])];
+        }
+    }
+}

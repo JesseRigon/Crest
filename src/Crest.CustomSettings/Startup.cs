@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Crest.ContentManagement;
 using Crest.ContentManagement.Metadata.Models;
 using Crest.CustomSettings.Deployment;
-using Crest.CustomSettings.Drivers;
 using Crest.CustomSettings.Recipes;
 using Crest.CustomSettings.Services;
 using Crest.Deployment;
@@ -19,7 +18,6 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteDisplayDriver<CustomSettingsDisplayDriver>();
         services.AddNavigationProvider<AdminMenu>();
         services.AddScoped<CustomSettingsService>();
         services.AddScoped<IStereotypesProvider, CustomSettingsStereotypesProvider>();

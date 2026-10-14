@@ -412,6 +412,77 @@ public sealed class ContentItemsController(
         return await contentManager.RemoveAsync(item) ? NoContent() : Conflict();
     }
 
+    /// <summary>Copies the item into a new draft (CloneContent).</summary>
+    [HttpPost("{contentItemId}/clone")]
+    public async Task<ActionResult<ContentItem>> CloneAsync(string contentItemId)
+    {
+        var item = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
+        if (item is null) return NotFound();
+        if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.CloneContent, item)) return Forbid();
+        try
+        {
+            return Ok(ContentItem.From(await contentManager.CloneAsync(item)));
+        }
+        catch (ContentSaveRefusedException refused)
+        {
+            return BadRequest(new { errors = refused.Errors });
+        }
+    }
+
+    /// <summary>Saves the editor's state as a draft, leaving the published version as it is.</summary>
+    [HttpPut("{contentItemId}/draft")]
+    public async Task<ActionResult<ContentItem>> SaveDraftAsync(string contentItemId, [FromBody] ContentItemWriteRequest request)
+    {
+        var item = await contentManager.GetAsync(contentItemId, VersionOptions.DraftRequired);
+        if (item is null) return NotFound();
+        if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.EditContent, item)) return Forbid();
+
+        item.DisplayText = request.DisplayText?.Trim() ?? string.Empty;
+        ReplaceContent(item, request.Content);
+        await visibilityEnforcer.ClearHiddenFieldsAsync(item, HttpContext.RequestAborted);
+        try
+        {
+            await contentManager.SaveDraftAsync(item);
+        }
+        catch (ContentSaveRefusedException refused)
+        {
+            return BadRequest(new { errors = refused.Errors });
+        }
+
+        return Ok(ContentItem.From(item));
+    }
+
+    /// <summary>Drops the item's draft; the published version becomes the latest again.</summary>
+    [HttpPost("{contentItemId}/discard-draft")]
+    public async Task<ActionResult<ContentItem>> DiscardDraftAsync(string contentItemId)
+    {
+        var item = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
+        if (item is null) return NotFound();
+        // Discarding a draft deletes a version, as the retired MVC action required.
+        if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.DeleteContent, item)) return Forbid();
+        if (item.Published) return BadRequest("The item has no draft.");
+        if (await contentManager.GetAsync(contentItemId, VersionOptions.Published) is null) return BadRequest("The item was never published; delete it instead.");
+
+        await contentManager.DiscardDraftAsync(item);
+        var published = await contentManager.GetAsync(contentItemId, VersionOptions.Published);
+        return Ok(ContentItem.From(published!));
+    }
+
+    /// <summary>Every stored version of the item, newest first.</summary>
+    [HttpGet("{contentItemId}/versions")]
+    public async Task<ActionResult<IReadOnlyList<ContentItemVersion>>> VersionsAsync(string contentItemId)
+    {
+        var item = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
+        if (item is null) return NotFound();
+        if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.ViewContent, item)) return Forbid();
+
+        var versions = await session.QueryIndex<ContentItemIndex>(index => index.ContentItemId == contentItemId).ListAsync();
+        return Ok(versions
+            .OrderByDescending(index => index.ModifiedUtc ?? index.CreatedUtc)
+            .Select(index => new ContentItemVersion(index.ContentItemVersionId, index.Published, index.Latest, index.DisplayText, index.Author, index.ModifiedUtc, index.PublishedUtc))
+            .ToArray());
+    }
+
     [HttpGet("by-handle/{handle}")]
     public async Task<ActionResult<ContentItem>> GetByHandle(string handle)
     {

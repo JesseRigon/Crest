@@ -10,7 +10,7 @@ public sealed class ResetPasswordAdminMenu : AdminNavigationProvider
     private static readonly RouteValueDictionary s_routeValues = new()
     {
         { "area", "Crest.Settings" },
-        { "groupId", ResetPasswordSettingsDisplayDriver.GroupId },
+        { "groupId", "userResetPassword" },
     };
 
     internal readonly IStringLocalizer S;

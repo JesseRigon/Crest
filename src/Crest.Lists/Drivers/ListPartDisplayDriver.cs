@@ -1,3 +1,5 @@
+using Crest.ContentManagement.Display;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Crest.ContentManagement.Display.ContentDisplay;
@@ -22,14 +24,17 @@ public sealed class ListPartDisplayDriver : ContentPartDisplayDriver<ListPart>
     private readonly IUpdateModelAccessor _updateModelAccessor;
     private readonly IShapeFactory _shapeFactory;
     private readonly PagerOptions _pagerOptions;
+    private readonly IServiceProvider _serviceProvider;
 
     public ListPartDisplayDriver(
         IContentDefinitionManager contentDefinitionManager,
         IContainerService containerService,
         IUpdateModelAccessor updateModelAccessor,
         IShapeFactory shapeFactory,
-        IOptions<PagerOptions> pagerOptions)
+        IOptions<PagerOptions> pagerOptions,
+        IServiceProvider serviceProvider)
     {
+        _serviceProvider = serviceProvider;
         _contentDefinitionManager = contentDefinitionManager;
         _containerService = containerService;
         _updateModelAccessor = updateModelAccessor;
@@ -221,6 +226,28 @@ public sealed class ListPartDisplayDriver : ContentPartDisplayDriver<ListPart>
                     containedItemOptions);
 
                 model.Pager = await _shapeFactory.PagerSlimAsync(pagerSlim);
+            }
+        })
+        // The contained items' summaries as the shape's items (docs/blazor-display.md rework
+        // step 7): the display tree maps them as the ListPart component's children. The Razor
+        // view builds its own and ignores them.
+        .Processing(async shape =>
+        {
+            if (shape is not ListPartViewModel { ContentItems: { } items } list)
+            {
+                return;
+            }
+
+            var displayManager = _serviceProvider.GetRequiredService<IContentItemDisplayManager>();
+            foreach (var item in items)
+            {
+                await shape.AddAsync(await displayManager.BuildDisplayAsync(item, context.Updater, PlatformConstants.DisplayType.Summary, context.GroupId));
+            }
+
+            // The pager after the items, mapped to its own component.
+            if (list.Pager is IShape pager)
+            {
+                await shape.AddAsync(pager);
             }
         })
         .Location(PlatformConstants.DisplayType.Detail, "Content:10");

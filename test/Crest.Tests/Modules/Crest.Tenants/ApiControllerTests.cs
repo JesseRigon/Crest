@@ -468,15 +468,11 @@ public class ApiControllerTests
             authorizeServiceMock.Object,
             shellSettingsManagerMock.Object,
             dataProtectionProviderMock.Object,
-            Mock.Of<ISetupService>(),
             _clockMock.Object,
-            Mock.Of<IEmailAddressValidator>(),
-            Options.Create(new IdentityOptions()),
             Options.Create(tenantOptions),
             databaseProviders,
             tenantValidator,
             tenantDatabasePatternResolver,
-            Mock.Of<ITempDirectoryProvider>(),
             tenantApiLocalizerMock.Object,
             Mock.Of<ILogger<TenantApiController>>())
         {

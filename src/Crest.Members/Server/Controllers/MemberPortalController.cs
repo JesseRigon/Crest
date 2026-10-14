@@ -34,6 +34,7 @@ public sealed class MemberPortalController(
     MemberPortalLoginContext portalContext,
     IMemberService memberService,
     MemberBindingService bindings,
+    IIndividualOrganizationService individuals,
     MemberOrganizationDirectory organizationDirectory,
     IUserService users,
     IContentManager contentManager,
@@ -89,20 +90,21 @@ public sealed class MemberPortalController(
     [HttpPost("register")]
     public async Task<IActionResult> RegisterAsync(PortalRegisterRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.OrganizationId))
+        // No organization named: the registration creates the person's Individual organization
+        // (ruling 2026-10-14) together with the person and the account.
+        var named = !string.IsNullOrWhiteSpace(request.OrganizationId);
+        if (named)
         {
-            return BadRequest(new PortalRefusal(["An organization is required."]));
-        }
+            var organization = await contentManager.GetAsync(request.OrganizationId!, VersionOptions.Published);
+            if (organization is not { ContentType: PartiesConstants.ContentTypes.Organization })
+            {
+                return BadRequest(new PortalRefusal(["Unknown organization."]));
+            }
 
-        var organization = await contentManager.GetAsync(request.OrganizationId, VersionOptions.Published);
-        if (organization is not { ContentType: PartiesConstants.ContentTypes.Organization })
-        {
-            return BadRequest(new PortalRefusal(["Unknown organization."]));
-        }
-
-        if (await bindings.MemberRefusalAsync(request.OrganizationId, HttpContext.RequestAborted) is { } refusal)
-        {
-            return BadRequest(new PortalRefusal([refusal]));
+            if (await bindings.MemberRefusalAsync(request.OrganizationId!, HttpContext.RequestAborted) is { } refusal)
+            {
+                return BadRequest(new PortalRefusal([refusal]));
+            }
         }
 
         var person = await contentManager.NewAsync(PartiesConstants.ContentTypes.Person);
@@ -114,7 +116,10 @@ public sealed class MemberPortalController(
         });
         await contentManager.CreateAsync(person, VersionOptions.Published);
 
-        portalContext.MarkPortal(request.OrganizationId, person.ContentItemId);
+        var organizationId = named
+            ? request.OrganizationId!
+            : (await individuals.EnsureForPersonAsync(person, HttpContext.RequestAborted)).ContentItemId;
+        portalContext.MarkPortal(organizationId, person.ContentItemId);
 
         var errors = new List<string>();
         var user = await users.RegisterAsync(
@@ -123,6 +128,11 @@ public sealed class MemberPortalController(
 
         if (user is null)
         {
+            if (!named && await contentManager.GetAsync(organizationId, VersionOptions.Latest) is { } individual)
+            {
+                await contentManager.RemoveAsync(individual);
+            }
+
             await contentManager.RemoveAsync(person);
             return BadRequest(new PortalRefusal(errors.Count > 0 ? errors : ["Registration failed."]));
         }
@@ -140,7 +150,7 @@ public sealed class MemberPortalController(
             var principal = await users.CreatePrincipalAsync(user);
             await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, principal, new AuthenticationProperties
             {
-                Items = { [MemberSessionKeys.ActiveOrganization] = request.OrganizationId },
+                Items = { [MemberSessionKeys.ActiveOrganization] = organizationId },
             });
         }
 

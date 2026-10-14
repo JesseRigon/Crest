@@ -12,6 +12,7 @@ using Crest.ContentManagement.Handlers;
 using Crest.ContentManagement.Metadata;
 using Crest.ContentManagement.Metadata.Models;
 using Crest.Contents;
+using Crest.DisplayManagement;
 using Crest.DisplayManagement.Notify;
 using Crest.DisplayManagement.Views;
 using Crest.Flows.Models;
@@ -63,11 +64,28 @@ public sealed class BagPartDisplayDriver : ContentPartDisplayDriver<BagPart>
     {
         var hasItems = bagPart.ContentItems.Count > 0;
 
+        var settings = context.TypePartDefinition.GetSettings<BagPartSettings>();
         return Initialize<BagPartViewModel>(hasItems ? "BagPart" : "BagPart_Empty", m =>
         {
             m.BagPart = bagPart;
             m.BuildPartDisplayContext = context;
-            m.Settings = context.TypePartDefinition.GetSettings<BagPartSettings>();
+            m.Settings = settings;
+        })
+        // The contained items' displays as the shape's items, built while the shape is processed:
+        // the display tree maps them as the BagPart component's children (rework step 7). The
+        // Razor view builds its own and ignores them.
+        .Processing(async shape =>
+        {
+            if (!hasItems || shape is not IShape bag)
+            {
+                return;
+            }
+
+            var displayManager = _serviceProvider.GetRequiredService<IContentItemDisplayManager>();
+            foreach (var item in bagPart.ContentItems)
+            {
+                await bag.AddAsync(await displayManager.BuildDisplayAsync(item, context.Updater, settings.DisplayType ?? "Summary", context.GroupId));
+            }
         })
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");

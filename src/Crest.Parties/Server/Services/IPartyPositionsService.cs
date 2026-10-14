@@ -46,7 +46,7 @@ public sealed class PartyPositionsService(IContentManager contentManager, PartyB
 
     public async Task<PositionModel> AddAsync(ContentItem person, PositionWriteModel write, CancellationToken cancellationToken = default)
     {
-        var organization = await RequireOrganizationAsync(write.OrganizationId);
+        var organization = await RequireOrganizationAsync(write.OrganizationId, person.ContentItemId);
         var element = await contentManager.NewAsync(PartiesConstants.ContentTypes.OrgPosition);
         Apply(element, write, organization);
 
@@ -66,7 +66,7 @@ public sealed class PartyPositionsService(IContentManager contentManager, PartyB
 
     public async Task<PositionModel?> UpdateAsync(ContentItem person, string positionId, PositionWriteModel write, CancellationToken cancellationToken = default)
     {
-        var organization = await RequireOrganizationAsync(write.OrganizationId);
+        var organization = await RequireOrganizationAsync(write.OrganizationId, person.ContentItemId);
         ContentItem? updated = null;
 
         person.Alter<BagPart>(PartiesConstants.Bags.Positions, bag =>
@@ -145,7 +145,7 @@ public sealed class PartyPositionsService(IContentManager contentManager, PartyB
         static string? Department(PartyPositionIndex _) => null;
     }
 
-    private async Task<ContentItem> RequireOrganizationAsync(string organizationId)
+    private async Task<ContentItem> RequireOrganizationAsync(string organizationId, string personId)
     {
         if (string.IsNullOrWhiteSpace(organizationId))
         {
@@ -156,6 +156,13 @@ public sealed class PartyPositionsService(IContentManager contentManager, PartyB
         if (organization is not { ContentType: PartiesConstants.ContentTypes.Organization })
         {
             throw new InvalidOperationException($"'{organizationId}' is not an Organization content item.");
+        }
+
+        // An Individual organization has exactly one member (ruling 2026-10-14).
+        if (IndividualOrganizationService.IsIndividual(organization)
+            && await session.QueryIndex<PartyPositionIndex>(index => index.OrganizationId == organizationId && index.Latest && index.ContentItemId != personId).CountAsync() > 0)
+        {
+            throw new InvalidOperationException($"'{organization.DisplayText}' is an Individual organization; it has one member only.");
         }
 
         return organization;

@@ -1,0 +1,68 @@
+@namespace Crest.Parties.BlazorWasm.Components
+@using Crest.Parties.ViewModels
+@inject HttpClient Http
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* The Parties tenant settings (docs/parties.md, ruling 2026-10-14), contributed to the general
+   settings page. Hidden when the caller may not read them or Parties is not enabled. *@
+
+@if (Model is not null)
+{
+    <CrestCard data-testid="parties-settings">
+        <CrestStack Gap="0.75rem">
+            <CrestText TextStyle="TextStyle.H5" Text="@T["Parties"]" />
+            <CrestStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <CrestSwitch Value="@Model.AllowIndividualConversion" Change="@(value => SaveAsync((bool)value))" Disabled="IsBusy" data-testid="parties-allow-individual-conversion" />
+                <CrestText Text="@T["Allow converting an Individual organization into an ordinary one"]" />
+            </CrestStack>
+            <CrestText TextStyle="TextStyle.Caption" Text="@T["An Individual organization is the organization of one person (a regular customer); converted, it takes more members."]" />
+            @if (!string.IsNullOrWhiteSpace(Error))
+            {
+                <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</CrestAlert>
+            }
+        </CrestStack>
+    </CrestCard>
+}
+
+@code {
+    [Parameter] public object? Context { get; set; }
+
+    private PartiesSettingsModel? Model { get; set; }
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var response = await Http.GetAsync("api/crest/parties/settings");
+            Model = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<PartiesSettingsModel>() : null;
+        }
+        catch
+        {
+            Model = null;
+        }
+    }
+
+    private async Task SaveAsync(bool allow)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            using var response = await Http.PutAsJsonAsync("api/crest/parties/settings", new PartiesSettingsModel(allow));
+            if (response.IsSuccessStatusCode)
+            {
+                Model = await response.Content.ReadFromJsonAsync<PartiesSettingsModel>();
+            }
+            else
+            {
+                Error = await response.Content.ReadAsStringAsync();
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

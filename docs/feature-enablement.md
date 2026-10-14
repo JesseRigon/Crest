@@ -12,16 +12,16 @@ from that recipe, so the gap silently returns for every other host, and for anyo
 toggles features by hand.
 
 **If it is a site-level choice about what this particular deployment runs**, it belongs
-in the host's setup recipe (the host's setup recipe).
+in the host's setup recipe.
 
 ## Why the manifest is the real fix
 
 `Crest` is `IsAlwaysEnabled = true`, and Orchard's feature system refuses to
 disable a feature while an enabled dependent declares it. So a correct manifest
 dependency is self-healing: it auto-enables on setup, survives another recipe's
-`feature.disable` list, and survives manual toggling in the admin UI. See commit
-`5c022f2` in the `Crest` submodule, which audited every constructor-injected
-`Crest.*` type in the Server assembly against its real registration site.
+`feature.disable` list, and survives manual toggling in the admin UI. Every
+constructor-injected `Crest.*` type in the Server assembly is matched by a manifest
+dependency on the feature that registers it.
 
 Note that the lazy `IRequestAccess.GetRequiredService<T>()` pattern does **not**
 remove the need for a dependency. It defers the failure from startup to request time
@@ -32,10 +32,12 @@ T" when the providing feature is off.
 
 - **`Crest.Tenants`** — `DefaultTenantOnly = true`. A hard dependency from an
   always-enabled feature would be invalid on every non-default tenant.
-  `TenantsController` is already restricted to the default tenant and injects only
+  `TenantsController` (in Crest.Server today, moving to Crest.Tenants, [server.md](server.md))
+  is restricted to the default tenant and injects only
   `IOptions<TenantsOptions>`, which always resolves to a safe default
   (`TenantRemovalAllowed = false`).
-- **`Crest.Queries.Sql`** — a *provider* of `IQuerySource`, not a requirement.
+- **`Crest.Queries.Sql`** — a *provider* of `IQuerySource` over the data layer's SQL
+  connections ([queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)), not a requirement.
   Crest enumerates whatever sources a tenant has and rejects unknown ones; declaring it
   would force a SQL query feature onto every tenant.
 - **A host's business modules** — standalone modules that depend on Crest, not the reverse.

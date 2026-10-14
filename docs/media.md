@@ -1,12 +1,11 @@
 # Media: files and drives
 
-Status: requirements agreed and audited; build started 2026-10-11; the backlog's media items
-landed 2026-10-13 (compiled, tests not run) (scope: upload security, file
-objects and drives, storage providers, serving, administrator access to personal drives, and a
-minimal browser page to confirm the system answers; the full interface later). Previously: not started. This plan covers Crest's
-file system, drives and access control, in build order; nothing of it is built yet, and the
-Crest APIs it replaces are listed under "Crest today" below. The phases are the build order.
-Each phase ends with the full suite green and its own checks.
+Crest's file system: upload security, file objects and drives, storage providers, serving and
+CDNs, administrator access to personal drives, and the drive browser. The numbered
+requirements are the spec; each section then says how it is built. Most of it is built and
+compiled; the tests under `test/Crest.Tests/Media/` are written but not yet run, and the cloud
+storage providers and CDN signers are not verified against live accounts. Status is tracked in
+[backlog.md](backlog.md) › Media; the Crest APIs it replaces are under [Crest today](#crest-today).
 
 ## Example
 
@@ -18,10 +17,10 @@ Crest gets a file system with sharing modelled on Google Drive's behaviour, in i
 implementation and under its own names, and applied the way a Unix file system applies
 permissions: every file, folder and drive is a file object, and access is overlaid on it.
 
-Access to files is **sharing**, which is its own module since 2026-10-11 ([sharing.md](sharing.md)):
-file objects are one shareable kind, registered by Media. Until file objects exist Media registers
-its paths as the kind (`MediaShareableKind`, while the Sharing feature is on; [sharing.md](sharing.md)
-› Phases).
+Access to files is **sharing**, its own module ([sharing.md](sharing.md)): file objects are one
+shareable kind, registered by Media (the "file" kind). Media also registers its library paths as
+the path-based "media" kind (`MediaShareableKind`, while the Sharing feature is on); the library
+import copies those entries to placements ([The media library](#the-media-library-f1)).
 
 Publishing is separate. Published says which version readers get; access says who the readers
 are. Content items use the same model, with their content type in the chain.
@@ -39,10 +38,10 @@ are. Content items use the same model, with their content type in the chain.
 - **Principal**: Anyone (public), Tenant, Organization, Role or User.
 - **Role**: any group the business recognises: staff roles (Editor, Sales Rep, Marketing) and
   business roles (Customer, Vendor, Lead, Member).
-- **No-permission role (shim, 2026-10-05)**: a role that grants no permissions and exists
+- **No-permission role (shim)**: a role that grants no permissions and exists
   only so people can be shared with as a set ("everyone on this drive"). It is a **shim**:
   Crest has no group concept yet, and how grouping should work is open
-  ([parties.md](parties.md) › Decisions needed › Grouping). The code that introduces it is
+  ([parties.md](parties.md) › Open questions › Grouping). The code that introduces it is
   marked as a shim, so it is found and replaced when grouping is decided.
 - **Access level**, each including the ones before it:
   - **Viewer**: read.
@@ -51,7 +50,7 @@ are. Content items use the same model, with their content type in the chain.
   - **Manager**: create, read, update and delete.
   - **Drive Admin**: a Manager who can also change sharing and rules. Granted only on a drive
     itself, never inside it.
-- **Tenant administrator**: Orchard's administrator role for the tenant. A different thing from
+- **Tenant administrator**: the platform's administrator role for the tenant. A different thing from
   Drive Admin: it is not an access level and is never granted on a drive. Tenant
   administrators hold every permission on everything within their tenant.
 - **Entry**: a grant ("Customer: Viewer") or a block ("Sam: Blocked") on one object, optionally
@@ -73,7 +72,7 @@ Moved to [sharing.md](sharing.md) § 1 (the sharing feature, system accounts, th
 
 The scanner and type-detection provider interfaces, the quarantine store and flow, the ClamAV and libmagic providers, every upload path (including resumable uploads and Crest's own) routed through it. Host-wide, independent of sharing.
 
-- [ ] **Build host-wide upload scanning.**
+- [ ] **Host-wide upload scanning.**
   86. Upload scanning is one host-level system shared by every tenant, independent of the sharing
       feature. Every upload from any user in any tenant is scanned before it is usable, because
       tenants share storage, processes and the host. No tenant can run without scanning.
@@ -106,8 +105,8 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
       ClamAV for malware and libmagic for type detection (91); pattern-rule scanning such as YARA is an
       optional later provider. See "Scanner candidates".
 
-  Built 2026-10-11 in `src/Crest.Media.Scanning` (always-enabled feature; compiled, tests written
-  in `test/Crest.Tests/Media/Scanning`, not yet run):
+  Built in `src/Crest.Media.Scanning` (always-enabled feature; tests in
+  `test/Crest.Tests/Media/Scanning`):
   - [x] **Quarantine flow** (88, 92, 93): `IUploadQuarantine` writes to the storage provider's
     quarantine area under `MediaBlobKeys.ForVersion`, records a scan job (YesSql, per tenant, 89),
     and runs detection and scanners server-side in a deferred task, with a background task for
@@ -126,42 +125,36 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
   - [x] **Type detection** (87, 91): libmagic through the `Mime` package, or the built-in signature
     detector when libmagic is not configured. The type check compares the content with the
     claimed type and the name's extension.
-  - [x] **Location removal** (87): EXIF GPS and GPS-bearing XMP removed from JPEGs before commit,
-    without re-encoding. *What landed (2026-10-13):* PNG (`eXIf`, uncompressed XMP `iTXt`, CRC
-    recomputed), WebP (`EXIF`, `XMP `) and HEIC/HEIF (the `Exif` and XMP items the `meta` box's
-    `iinf`/`iloc` locate, single-extent items) too, in place and size-preserving
-    (`ImageLocationStripper`, `MetadataLocationBlanker`): the GPS IFD is emptied and GPS XMP
-    properties overwritten with spaces. Compressed XMP in PNG is not inspected.
+  - [x] **Location removal** (87): EXIF GPS and GPS-bearing XMP removed before commit, without
+    re-encoding, from JPEG, PNG (`eXIf`, uncompressed XMP `iTXt`, CRC recomputed), WebP (`EXIF`,
+    `XMP `) and HEIC/HEIF (the `Exif` and XMP items the `meta` box's `iinf`/`iloc` locate,
+    single-extent items), in place and size-preserving (`ImageLocationStripper`,
+    `MetadataLocationBlanker`): the GPS IFD is emptied and GPS XMP properties overwritten with
+    spaces. Compressed XMP in PNG is not inspected.
   - [x] Every upload path routed through the quarantine: the file-object store (§ 3), Tus (below),
     and, once the media library is active, every write through `IMediaFileStore` (the media
     admin's upload, the `media` recipe step, attached fields), which the library drive backs (F1).
-  - [x] An admin editor for the tenant's scanning settings, with the secret protected at rest.
-    *What landed (2026-10-13):* `Settings › Upload Scanning` (`/Settings/uploadScanning`,
+  - [x] An admin editor for the tenant's scanning settings, with the secret protected at rest:
+    `Settings › Upload Scanning` (`/Settings/uploadScanning`,
     `ManageSettings`) over `api/crest/media/scanning/settings`. The secret is write-only: the API
     reports only whether one is set; a new one is stored through data protection
     (`SiteTenantScanningSettings.UpdateAsync`), and a secret written in clear before the editor
     still works until the next save protects it. An external scanner needs a secret and an
     absolute http(s) address.
 
-- [x] **Resumable uploads land in quarantine like every upload** (ruling 2026-10-06). Every
-  upload is quarantined while pending; resuming changes nothing. Orchard's Tus completion
-  writes straight into the store (bypassing `FileCreationService`), so the reworked Media module routes
-  it into quarantine with a pending placement, and the verdict commits or rejects it.
-  Where (2026-10-11): `OnFileCompleteAsync` in `src/Crest.Media/Startup.cs` calls
-  `mediaFileStore.CreateFileFromStreamAsync`; it must instead create the file object's version
-  and submit the Tus temp stream to `IUploadQuarantine.SubmitAsync`, then delete the temp file.
-  Partly landed 2026-10-11: a Tus upload whose metadata carries `parentPlacementId` completes
-  through `IMediaObjectService.UploadAsync` (quarantined like every upload) and its temp file is
-  deleted. Landed with F1: an upload by `destinationPath` resolves the destination to its folder
-  in the media library drive and goes through `IMediaObjectService.UploadAsync` too
-  (`MediaLibraryUploads`). Until a tenant's library import has finished it still goes to the media
-  folder, through `FileCreationService` (the antivirus hook), and the import scans it again.
-- [x] **Module-generated files go through the same pipeline, with exemptions** (ruling
-  2026-10-05). A module that generates files server-side writes them as new file objects or
+- [x] **Resumable uploads land in quarantine like every upload.** Every upload is quarantined
+  while pending; resuming changes nothing. The Tus completion (`OnFileCompleteAsync` in
+  `src/Crest.Media/Startup.cs`) does not write into the store: a Tus upload whose metadata carries
+  `parentPlacementId` completes through `IMediaObjectService.UploadAsync` (quarantined like every
+  upload) and its temp file is deleted; an upload by `destinationPath` resolves the destination
+  to its folder in the media library drive and goes through `IMediaObjectService.UploadAsync`
+  too (`MediaLibraryUploads`). Until a tenant's library import has finished it goes to the media
+  folder through `FileCreationService` (the antivirus hook), and the import scans it again.
+- [x] **Module-generated files go through the same pipeline, with exemptions.** A module that generates files server-side writes them as new file objects or
   versions through the file-object API, so they are scanned like uploads. Not every write:
   the goal is cooperative real-time editing, so whether a write is scanned depends on the
   document type and the module creating it, and modules can be whitelisted.
-  *What landed (2026-10-13):* `IMediaGeneratedFiles` (`CreateAsync`, `WriteVersionAsync`, by
+  `IMediaGeneratedFiles` (`CreateAsync`, `WriteVersionAsync`, by
   module) writes with the caller's access, as an upload would. `MediaScanExemptionOptions` lists
   the exempt modules and their types (MIME types, `text/*` families, `.ext` extensions or `*`):
   modules add theirs with `services.Configure<MediaScanExemptionOptions>(o => o.Exempt(...))`,
@@ -173,13 +166,13 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
 
 Documents, opaque blob keys, versions, metadata; the drive class, drive types and settings, organization drives with their admins, personal drives, inactive drives; the file-object API and the byte-serving endpoint.
 
-**Built 2026-10-11** (compiled; tests written, not run), in `src/Crest.Media/Files/` on the
-contracts in `src/Crest.Media.Abstractions/Files/`:
+Built in `src/Crest.Media/Files/` on the contracts in `src/Crest.Media.Abstractions/Files/`
+(tests in `test/Crest.Tests/Media/Files/`):
 - Storage: `MediaContentDocument` and `MediaPlacementDocument` in the default collection,
   with content (kind, drive type, owner), placement (parent, drive, content, name, link target,
-  access id, kind) and ancestor indexes, and `FileMigrations`. A separate collection was tried
-  and dropped: sharing's semi-join reads `ShareAccessIndex` in the query's own collection.
-- The graph (`MediaGraph`, ruling F4): a folder's children belong to its content, so every hard
+  access id, kind) and ancestor indexes, and `FileMigrations`. Not a separate collection:
+  sharing's semi-join reads `ShareAccessIndex` in the query's own collection.
+- The graph (`MediaGraph`, F4): a folder's children belong to its content, so every hard
   placement of a folder shows them. Each placement document carries its closure (every
   placement above it through any path, with depth), mapped to `MediaAncestorIndex`. It is
   recalculated for what a create, move, link or delete touches and everything below that. A
@@ -207,11 +200,11 @@ contracts in `src/Crest.Media.Abstractions/Files/`:
   only, requirement 31). Organization drives are excluded because their admins are the
   organization's own (17); tenant administrators can still add others. Personal drives are
   excluded because an administrator gets in only through § 7.
-- Requirement 19 (2026-10-11): on a personal drive only its owner holds Admin. The kind says so
+- Requirement 19: on a personal drive only its owner holds Admin. The kind says so
   through sharing's `IShareableAdminEligibility`. The sharing service refuses an Admin grant to
   anyone else, whoever asks, tenant administrators included. The resolver counts any other
   Admin grant on it, stored or contributed, as Manager. Tests: `DriveAdminTests.cs`.
-- Lists in the query (2026-10-11, sharing phase 2): while sharing is on, children and drives
+- Lists in the query: while sharing is on, children and drives
   are filtered by sharing's scope (`IShareScopes`) on the placement index and paged in the
   query (`IMediaObjectListing.ListChildrenPageAsync`). With sharing off, the media permissions
   decide each object and the page is cut from the filtered list. The service keeps the access
@@ -225,14 +218,10 @@ contracts in `src/Crest.Media.Abstractions/Files/`:
   makes its drives inactive, and turning it on makes them active again. Single drives use
   `POST api/files/drives/{id}/inactive`. Reactivation either keeps the sharing or resets it
   (stored entries and rules on the drive and below removed).
-- A test page at `/Admin/Files/Test`, removed 2026-10-13 when the drive browser landed (§ 8).
 - `LocalMediaStorageProvider` (`App_Data/Sites/<tenant>/Files`, `Quarantine` and `Committed`).
-- The byte endpoint `GET /files/{placementId}[/v/{n}]` and `HmacMediaUrlSigner` (§ Serving and
-  CDNs). The CDN signers landed 2026-10-13.
+- The byte endpoint `GET /files/{placementId}[/v/{n}]` and `HmacMediaUrlSigner`, plus the CDN
+  signers (› Serving and CDNs).
 - The REST API `api/files` (`Controllers/FilesController.cs`).
-- Tests: `test/Crest.Tests/Media/Files/`.
-
-**What landed (2026-10-13)** (compiled; tests not run):
 - **Settings screen**: `Settings › Files` (`/Settings/files`, Blazor) over `api/files/settings`:
   the drive types, the organization admin role, reset-on-reactivation, and administrator
   access to personal drives (notice by email and/or portal, delay, override, durations).
@@ -250,16 +239,16 @@ contracts in `src/Crest.Media.Abstractions/Files/`:
   (`Crest_Media_Azure_Files`, or the media account and container under `{BasePath}-files`,
   `crest-files` when the base path is empty), with read-only SAS URLs for offsite scanners;
   `Crest.Media.AmazonS3` over an `AwsFileStore` in the media bucket
-  (`Crest_Media_AmazonS3:FilesBasePath`, same default), with presigned GET URLs. Both modules no
-  longer replace `IMediaFileStore`: they replace the library's pre-import store, so the media
-  library stays the drive and the import reads the container or bucket. Not verified against
-  live cloud accounts.
+  (`Crest_Media_AmazonS3:FilesBasePath`, same default), with presigned GET URLs. Neither module
+  replaces `IMediaFileStore`: they replace the library's pre-import store, so the media library
+  stays the drive and the import reads the container or bucket. Not verified against live cloud
+  accounts.
 - **CDN signers** and **the private resize cache**: see › Serving and CDNs.
 - **Multi-path inheritance** (F3, [sharing.md](sharing.md)): a child of a hard-linked folder
   inherits through every hard placement of the folder (`ShareableObject.OtherParents`); the
   resolver resolves each path and gives the most any active path gives; the access index keeps
   a document per path and lists admit an object when any path does.
-- **Delete and move through sharing's checks** (2026-10-13): `MediaObjectService` checks the
+- **Delete and move through sharing's checks**: `MediaObjectService` checks the
   placement itself (Manager; the personal-drive and inactive-drive rules stay Media's), then,
   while sharing is on, hands everything below to sharing's `IShareChangeChecks`
   (`RequireDeleteAsync`, `RequireMoveAsync`: Manager on everything below through every
@@ -275,7 +264,7 @@ contracts in `src/Crest.Media.Abstractions/Files/`:
   through a hard-linked folder.
 
 **Left:**
-- With sharing off, file objects fall back to the global media permissions, which have no
+- ☐ With sharing off, file objects fall back to the global media permissions, which have no
   per-object owner rule.
 
 - [x] **Store file objects.**
@@ -287,7 +276,7 @@ contracts in `src/Crest.Media.Abstractions/Files/`:
      type, size, and who created and last modified it, and when.
   5. Replacing a file keeps its earlier versions, so a published version can be rolled back.
 
-- [x] **Hard links: one file, several places** (ruling 2026-10-06). A file can be placed in
+- [x] **Hard links: one file, several places.** A file can be placed in
   more than one folder, like a Linux hard link. The only real file is its content record
   (the id in the database, with its versions); every location is a virtual placement of
   it. Each placement is a full citizen of its folder: its own URL, its own permissions and
@@ -300,10 +289,10 @@ contracts in `src/Crest.Media.Abstractions/Files/`:
   - Folders can be hard-linked too (unlike Linux), with a **loop gate**: placing a folder
     is refused when the target is the folder itself or anything inside it, through any of
     its placements, so no folder ever contains itself. Checked on every placement and move.
-  - This changes requirement 6 (one URL per file becomes one URL per placement, still no
-    copies) and makes the access index per placement, not per file. Expected permission
-    issues — such as someone with Editor on one placement changing content another
-    placement's viewers see — are fixed as they are hit, not designed away up front.
+  - Requirement 6 is therefore one URL per placement (still no copies), and the access index is
+    per placement, not per file. Permission issues such as someone with Editor on one placement
+    changing content another placement's viewers see are fixed as they are hit, not designed
+    away up front.
 
 - [ ] **One file system, built into the platform's Media module.**
   6. Files and media are one system. Every file has one URL; there is no separate media library
@@ -317,19 +306,19 @@ contracts in `src/Crest.Media.Abstractions/Files/`:
      stored content and other modules are built against their types. See "Reworking the
      Media module".
   9. `/media/...` URLs keep their form and are served by Crest from the drive tree, after the
-     access check: public files cached as today, private files only to those with access.
-     Built 2026-10-11 (F1): the media library drive; see › Reworking the Media module.
+     access check: public files cached, private files only to those with access. Built as the
+     media library drive ([The media library](#the-media-library-f1)).
 
-- [x] **Add storage providers.** Azure Blob and S3 landed 2026-10-13 (see Left above).
+- [x] **Storage providers**, local disk, Azure Blob and S3 (above).
   10. File bytes are stored through Crest storage providers behind one Crest interface, the same
       pattern as icon and tax providers. A provider stores and serves bytes under opaque keys
       (object and version), keeps quarantined uploads apart from committed files, and keeps each
       tenant's bytes in that tenant's own root.
-  11. Local disk is the first provider. Azure Blob and Amazon S3 providers follow, built on
-      Orchard's storage libraries (`Crest.FileStorage.AzureBlob`,
-      `Crest.FileStorage.AmazonS3`) rather than Orchard's Media storage modules.
+  11. Local disk is the first provider; Azure Blob and Amazon S3 providers are built on the
+      platform's storage libraries (`Crest.FileStorage.AzureBlob`, `Crest.FileStorage.AmazonS3`)
+      rather than its Media storage modules.
 
-- [x] **Build the drive class and drive types.**
+- [x] **The drive class and drive types.**
   12. Personal, shared and organization drives are one class with the same file objects, levels,
      sharing, rules, resolution, enforcement and interface. They differ only in their defaults:
 
@@ -344,7 +333,7 @@ contracts in `src/Crest.Media.Abstractions/Files/`:
      and labels drives by ("My drive", "Shared drives", "Organization drives"). It never changes
      how access is resolved.
 
-- [ ] **Set drive ownership and Drive Admin.**
+- [ ] **Drive ownership and Drive Admin.**
   14. Everything in a drive is owned by the drive's owner, except in a personal drive, where its
      owner owns what they create. Members' portal uploads are owned by the drive they land in,
      normally their organization's.
@@ -354,8 +343,8 @@ contracts in `src/Crest.Media.Abstractions/Files/`:
      drive do not apply to them. Full permissions in a drive (create, read, update, delete, and
      changing sharing and rules) belong to its Drive Admins.
 
-- [x] **Add organization and personal drives.** Built 2026-10-11; automatic creation with each
-  organization or staff user landed 2026-10-13 (see What landed above).
+- [x] **Organization and personal drives**, created automatically with each organization or
+  staff user (above).
   17. An organization's admins are its drive's Drive Admins by default, and follow the
       organization: someone who becomes an organization admin gains it, someone who stops loses
       it. Other Drive Admins can be added like any grant.
@@ -367,18 +356,18 @@ contracts in `src/Crest.Media.Abstractions/Files/`:
       administrators reach personal drives is set by the settings in "Administrator access to
       personal drives".
 
-- [x] **Make drives inactive.**
+- [x] **Inactive drives.**
   21. A drive can be **inactive**: kept, with its contents and sharing intact, but out of use.
       Turning off the organization or personal drive setting makes the existing drives of that
       type inactive rather than deleting them, and a deleted user's drive can be kept inactive.
       What eventually happens to an inactive drive is for the retention system to decide.
 
-- [x] **Hide inactive drives.**
+- [x] **Inactive drives are hidden.**
   23. Inactive drives are visible only to tenant administrators. Drive Admins, holders of the
       shared-drive permission and everyone with a grant inside lose access while it is inactive;
       nothing in it is reachable by link, search or listing.
 
-- [x] **Add shared-drive administration.**
+- [x] **Shared-drive administration.**
   31. Managing shared drives is a tenant permission, separate from any access level: creating
       shared drives, assigning and removing their Drive Admins, and editing their base share
       settings (the entries on the drive itself). By default only the tenant administrator role
@@ -404,7 +393,14 @@ Moved to [sharing.md](sharing.md) § 6.
 
 ## 7. Administrator access to personal drives
 
-**Built 2026-10-11** (compiled; tests written, not run: `test/Crest.Tests/Media/Files/PersonalDriveAccessTests.cs`,
+Tenant administrators always have full permissions on personal drives (the standing rule). Their
+access is always a separate, deliberate step, and the tenant settings below decide what goes with
+it: notice, delay and override. Together they let a tenant meet workplace-privacy requirements: a
+legitimate reason, proportionate access, and telling people it can happen. The major drive
+products take the same approach: admin access to a personal drive exists, but as a deliberate,
+logged action rather than something in the admin's everyday view.
+
+Built (tests: `test/Crest.Tests/Media/Files/PersonalDriveAccessTests.cs`,
 `DriveAdministrationTests.cs`):
 - `PersonalDriveAccessService` implements `IPersonalDriveAccessService`. The file-object API
   refuses a tenant administrator in another user's personal drive, as "not found", unless an
@@ -416,8 +412,10 @@ Moved to [sharing.md](sharing.md) § 6.
 - Settings: `PersonalDriveAccessSettings` is a site settings section (`GET`/`PUT
   api/files/settings`).
 - Notice: email, portal, both or none, through `IPersonalDriveNotifier`. Its default sends
-  through `Crest.Notifications`: portal is the stored notification, email is the Email method.
-  A failed send is recorded on the access and in the audit trail, and the access proceeds.
+  through `Crest.Notifications`: portal is the stored notification (written as the notification
+  service writes one, with its events, but not sent through the user's own methods), email is
+  the Email method. Each chosen channel gets the notice exactly once. A failed send is recorded
+  on the access and in the audit trail, and the access proceeds.
 - Delay: enforced server-side. It counts only when a notice is on.
 - Override: needs the tenant setting, the new `OverridePersonalDriveNoticeDelay` permission
   and a reason. The reason is recorded and put in the notice.
@@ -431,34 +429,21 @@ Moved to [sharing.md](sharing.md) § 6.
   - keep inactive;
   - delete.
 - Reactivation (22): keep the sharing, or reset it to the drive type's defaults (§ 3).
+- The drive opens in its own window (`/Files/user-drive/{driveId}`, marked as administrator
+  access, closed when the access ends; reached from "Open a user's drive" on the drive browser).
 
-**Landed 2026-10-13:** the portal notification display (30, below); opening the drive in its own
-window (`/Files/user-drive/{driveId}`, marked as administrator access, closed when the access
-ends; reached from "Open a user's drive" on the drive browser).
+**Left:** ☐ asking the user-deletion choices from the user-deletion flow itself (the API exists).
 
-**Left:** asking these choices from the user-deletion flow itself (the API exists). Each chosen channel gets the notice exactly once. A portal notice is only
-the stored notification, written as the notification service writes one, with its events, but
-not sent through the user's own methods.
-
-Notice, delay, override, duration and logging; portal notifications; reactivation and user-deletion choices.
-
-Tenant administrators always have full permissions on personal drives (the standing rule). Their
-access is always a separate, deliberate step, and the tenant settings below decide what goes with
-it: notice, delay and override. Together they let a tenant meet workplace-privacy requirements: a
-legitimate reason, proportionate access, and telling people it can happen. The major drive
-products take the same approach: admin access to a personal drive exists, but as a deliberate,
-logged action rather than something in the admin's everyday view.
-
-- [x] **Open users' drives separately.**
+- [x] **Users' drives are opened separately.**
   24. **Separate access.** Other users' personal drives never appear in a tenant administrator's
       everyday drive view. They are reached only through a separate "open a user's drive" button,
       which opens the drive in its own window, clearly marked as administrator access. This is
       fixed, not a setting.
 
-- [x] **Notify the owner.**
+- [x] **The owner is notified.**
   25. **Notice.** When a tenant administrator opens another user's personal drive, the owner can
       be notified by email, by a portal notification, by both, or not at all. Default: not at all.
-      Notices go through Orchard's notification service (`Crest.Notifications`), which sends
+      Notices go through the platform's notification service (`Crest.Notifications`), which sends
       through each enabled method: email through its Email Notifications feature, and portal
       notifications through the stored, per-user notifications that Crest's portal notifications
       feature displays (requirement 30). Crest adds no delivery of its own. If a notice cannot be
@@ -466,60 +451,57 @@ logged action rather than something in the admin's everyday view.
       failure is recorded with it. Requiring an approval instead waits for the approvals system
       ([permissions.md](permissions.md) › Approvals).
 
-- [x] **Add the notice delay.**
+- [x] **Notice delay.**
   26. **Notice delay.** A tenant can set a delay between the notice and the access: with 30
       minutes, the administrator cannot open the drive until 30 minutes after the notice was
       sent, whether or not the owner has read it. Default: no delay. A delay requires notice to
       be on.
 
-- [x] **Allow overriding the delay.**
+- [x] **Delay override.**
   27. **Delay override.** A tenant can allow the delay to be overridden. When allowed, a user with
       the "override personal drive notice delay" permission can open the drive at once, but must
       enter a reason, which is recorded and included in the notice. Default: not allowed.
 
-- [x] **Limit the access duration.**
+- [x] **Limited access duration.**
   28. **Access duration.** When opening a user's drive, the administrator chooses how long the
       access lasts from a list the tenant sets and can edit. Default list: 30 minutes, 1 hour,
       1 hour 30 minutes, 2 hours, and until closed. When the time runs out the access ends and
       the window closes; continuing needs a new access, with notice and delay applied again.
 
-- [x] **Log every step.**
+- [x] **Every step is logged.**
   29. **Logging.** Every step is recorded in the audit trail: the access request, the notice and
       how it was sent, any override and its reason, the opening itself and its chosen duration,
       and when and how the access ended.
 
-- [x] **Add portal notifications.** *What landed (2026-10-13):* the `Crest.Notifications.Portal`
-  feature (enabled by the Crest setup recipes, can be turned off) with
+- [x] **Portal notifications.** The `Crest.Notifications.Portal` feature (enabled by the Crest setup recipes, can be turned off) with
   `GET api/crest/notifications`, `POST .../{id}/read` and `POST .../read-all`, the caller's own
   notifications only. `CrestPortalNotifications` (Crest.Components) shows the indicator, the list
   and marking as read in the admin title bar and the member shell header, and renders nothing
   while the feature is off. A portal notice of § 7 counts as not sent while it is off.
   30. **Portal notifications** are a Crest feature, enabled by default when a tenant is created and
-      able to be turned off. It shows each user's stored Orchard notifications in Crest's admin and
-      member shells: a notification indicator, the list, and marking as read. Orchard's own display
-      of them lives in its classic admin, which Crest's shells do not use. While an administrator
+      able to be turned off. It shows each user's stored notifications in Crest's admin and
+      member shells: a notification indicator, the list, and marking as read. While an administrator
       is in another user's personal drive, every action they take there is recorded too, marked as
       administrator access.
 
-- [x] **Offer user-deletion choices for personal drives.**
+- [x] **User-deletion choices for personal drives** (through the API; see Left above).
   20. Deleting a user asks the person deleting them what happens to that user's personal drive,
       together with the rest of their data: transfer it to another user, move it into a shared
       drive, keep it inactive, or delete it. Which choices are allowed is set by the tenant's
       retention policies and legal requirements, once the retention system exists (a separate
       system, not yet planned); until then all four are offered.
 
-- [x] **Ask how to reactivate a drive.**
+- [x] **Reactivation asks how.**
   22. Reactivating a drive, whether by turning its setting back on or individually, asks the
       person doing it whether to keep the drive's previous sharing and rules or start fresh with
       its drive type's defaults. Its contents are kept either way.
 
-- [x] **Scope: Crest owns drives, sharing, the CDN, version control, and the viewer pane
-  with its add-on seam** (ruling 2026-10-06). Add-ons themselves (PDF, document, image and
-  spreadsheet editors), bulk editing, version compare/merge, multi-provider redundancy and
-  sync clients are downstream — provided by downstream modules or by anyone else. They
-  work on files the way Google Drive add-ons do: through the file-object API with the
-  user's own access, saving back as a new version or file object through the same pipeline
-  as uploads. The file-object API must serve them.
+**Scope.** Crest owns drives, sharing, the CDN, version control, and the viewer pane with its
+add-on seam. Add-ons themselves (PDF, document, image and spreadsheet editors), bulk editing,
+version compare/merge, multi-provider redundancy and sync clients are downstream — provided by
+downstream modules or by anyone else. They work on files the way Google Drive add-ons do: through
+the file-object API with the user's own access, saving back as a new version or file object
+through the same pipeline as uploads. The file-object API serves them.
 
 ## 8. Interface
 
@@ -528,13 +510,13 @@ Drive browser, Share panel, Rules screens, access indicators, the user editor's 
 The Share panel, Rules screens, access indicators and pickers are sharing's
 ([sharing.md](sharing.md) § 8).
 
-- [x] **Build the viewer pane and its add-on seam** (ruling 2026-10-06). The drive browser
+- [x] **The viewer pane and its add-on seam.** The drive browser
   has a viewer pane for the selected file. Add-ons register against file types and hook
   into it, so a file can be edited **in place** — simple edits to a document or an image
   right in the pane, without opening a separate app — or opened full in the add-on's own
   editor. With no add-on for a type, the pane previews. Add-ons can come from any module
   or third party; the pane and the seam are Crest's.
-  *What landed (2026-10-13), in `Crest.Components/Components/Files`:* `CrestDriveBrowser` (drives
+  Built in `Crest.Components/Components/Files`: `CrestDriveBrowser` (drives
   grouped as "My drive", "Shared drives", "Organization drives"; path, children, upload, new
   folder, rename, delete, new shared drive; pick mode for the picker), `CrestFileViewerPane`
   (image, video, audio, PDF and text previews, open and download, versions with publish) and
@@ -543,34 +525,32 @@ The Share panel, Rules screens, access indicators and pickers are sharing's
   full; it saves back through `Context.SaveVersionAsync` (a new version through the upload
   pipeline, published once clean: `PUT api/files/{id}/content?publish=true`). A built-in text
   add-on (`CrestTextFileAddOn`) edits plain text, Markdown, CSV and JSON. Pages: `/Files` in the
-  admin shell (menu Media › Files) and `/files` in the member shell; the `/Admin/Files/Test`
-  page is gone.
+  admin shell (menu Media › Files) and `/files` in the member shell.
 
 ## Platform audit
 
-Audited against the platform (and before it the OrchardCore fork on branch `Crest`) and
-against Crest as it stands. What each area gives us, and what Crest builds.
+What each area of the platform gives the file system, and what Crest builds.
 
 ### Files and storage
 
 - **Bytes: reuse.** `IFileStore` / `IMediaFileStore` store bytes on local disk (per tenant,
   `App_Data/Sites/<tenant>/Media`), Azure Blob or S3. Crest keeps using it as a byte store, under
   opaque keys (object id and version), never user-visible paths.
-- **File objects: build.** Orchard media has no database record, id, owner or metadata: a file
+- **File objects: build.** Platform media has no database record, id, owner or metadata: a file
   is its path, so a move or rename breaks every reference (`MediaField` stores path strings) and
   there are no versions. Crest stores file objects as YesSql documents with their own indexes;
   names and folders live in the records, so renaming and moving never touch the bytes, and each
   version is an immutable blob.
-- **Serving: build.** `/media` is static-file serving keyed by path, publicly cached, and a CDN
-  bypasses Orchard entirely. Secure Media can only restrict per top-level folder, by role.
+- **Serving: build.** Stock `/media` is static-file serving keyed by path, publicly cached, and a
+  CDN bypasses the application entirely. Secure Media can only restrict per top-level folder, by role.
   Crest serves file bytes from its own endpoint, by object id, after the index check; drive
-  files live in a storage root of their own, outside the media tree, so Orchard's media
+  files live in a storage root of their own, outside the media tree, so the stock media
   endpoints, GraphQL `MediaAssets` and `/media` never reach them.
 - **Upload hooks: partly reusable.** `IFileEventHandler` (through `FileCreationService`) can
-  reject or replace an upload stream, but runs synchronously inside the request, and Orchard's
+  reject or replace an upload stream, but runs synchronously inside the request, and the stock
   resumable (Tus) upload path skips it. Crest's quarantine flow is its own: uploads land in
   quarantine storage, providers return verdicts asynchronously, and only then is the file
-  committed. Orchard's ClamAV connector (`Crest.Antivirus`) is wrapped as the first
+  committed. The platform's ClamAV connector (`Crest.Antivirus`) is wrapped as the first
   malware provider.
 - **Text extraction: reuse later.** `IMediaFileTextProvider` (PDF, Word, PowerPoint, text)
   can feed search for file objects.
@@ -587,7 +567,7 @@ Moved to [sharing.md](sharing.md) › Platform audit.
 - **Notifications: reuse.** `INotificationService` stores a per-user notification and sends it
   by email or SMS; one recipient per send.
 - **Audit: reuse, extend.** `IAuditTrailEventHandler` can set the recorded user, which is how
-  impersonated and system actions are attributed. Orchard records no file access or view events,
+  impersonated and system actions are attributed. The platform records no file access or view events,
   so Crest records its own (requirement 29).
 - **Email: reuse.** `IEmailService` with SMTP or Azure providers, configured per tenant.
 
@@ -595,11 +575,8 @@ Moved to [sharing.md](sharing.md) › Platform audit.
 
 Crest's file system is built **into the platform's `Crest.Media` module**
 (`Crest.Media`), so files and media are one system with one
-URL per file while every module that depends on Media keeps working (requirements 6–11).
-Since the hard fork (2026-10-09) this is an in-place rework. The earlier plan, a
-Crest-owned copy carrying the stock module id with the stock assembly excluded from hosts
-(proved by a spike on 2026-10-05), is retired, and so are its diff check against stock and
-its asset-naming MSBuild fix.
+URL per file while every module that depends on Media keeps working (requirements 6–11). It is
+an in-place rework of the module, not a Crest-owned copy beside it.
 
 **What the module is.** Media is two layers:
 
@@ -622,18 +599,15 @@ its asset-naming MSBuild fix.
 - *Services:* dependents resolve services the module registers, `IMediaFileStore` first
   (Seo's handler needs it; without it the tenant fails to start).
 
-**Decisions.**
+**Design.**
 
-- **Storage is Crest's own provider interface** (the icon and tax provider pattern; ruling
-  2026-10-05). Local disk first; Azure and S3 providers later, on the platform's storage
-  libraries. The stock `Media.Azure` and `Media.AmazonS3` modules are reworked onto it or
-  removed.
+- **Storage is Crest's own provider interface** (the icon and tax provider pattern): local
+  disk, Azure and S3 on the platform's storage libraries; `Media.Azure` and `Media.AmazonS3`
+  are reworked onto it.
 - **Versions.** The local feed is 4.0.0-local, and Crest's compatibility and assembly
   versions are 4.0.0.
 
-**Still to do and to watch.**
-
-- [x] **Inventory the module** (2026-10-11). Every service, route, shape, filter and handler
+**Inventory.** Every service, route, shape, filter and handler
   that a dependent or existing content relies on, and where each stands after the media library
   (F1, below). "Library" means it now works on the library drive's placements; "path" means it
   still works on `IMediaFileStore` paths, which the library drive now backs.
@@ -655,7 +629,7 @@ its asset-naming MSBuild fix.
   - *Request pipeline:* `MediaLibraryRequestMiddleware` (new: `/media` and `/files` resizing,
     after the decision), `MediaFileStoreResolverMiddleware` (remote stores only),
     `MediaImageProcessingMiddleware` and the static files (the media folder on disk, until the
-    library is active), `SecureMediaMiddleware` (superseded once active: `/media` never reaches it).
+    library is active), `SecureMediaMiddleware` (unused once the library is active: `/media` never reaches it).
   - *Shapes and views:* `MediaField` (display: library), `MediaField_Edit` and its `Attached`
     and `Gallery` editors (the media picker on paths; ids kept: library), `MediaField_Option`,
     `MediaField_DisplayOption`, `MediaFieldSettings_Edit`, `MediaApiSettings_Edit`,
@@ -697,17 +671,18 @@ its asset-naming MSBuild fix.
   - *Stored state:* `MediaField` JSON (`Paths`, `MediaTexts`, `Anchors`, `AttachedFileNames`,
     new `PlacementIds`), `MediaProfilesDocument`, `MediaApiSettings` and `MediaTokenSettings`
     site settings, new `MediaLibraryDocument`, sharing entries of the "media" kind (paths).
-- [x] **Route Tus uploads through `FileCreationService`** so `IFileEventHandler` (antivirus)
-  runs on them, and into quarantine (§ 2). Once the library is active a `destinationPath`
-  upload goes through `IMediaObjectService.UploadAsync` (quarantine); before, it goes to the
-  media folder through `FileCreationService`.
+- **Tus uploads** go into quarantine (§ 2): once the library is active through
+  `IMediaObjectService.UploadAsync`; before, to the media folder through `FileCreationService`,
+  so `IFileEventHandler` (antivirus) runs on them.
 - **Risks.** Recipes, deployment plans and admin menus that target the module's settings and
   endpoints must be updated along with it.
 
 #### The media library (F1)
 
-Built 2026-10-11 (compiled; tests written, not run) in `src/Crest.Media/Library/`, on contracts in
-`src/Crest.Media.Abstractions/Library/` and `Fields/`.
+Built in `src/Crest.Media/Library/`, on contracts in `src/Crest.Media.Abstractions/Library/` and
+`Fields/` (tests in `test/Crest.Tests/Media/Migration/`: path resolution, field reading with ids
+and paths, the import of a small tree (scanned and trusted, re-run, field rewrite, sharing
+grants), `asset_url`, Tus routing).
 
 - [x] **`MediaField` stores placement ids.** `PlacementIds` beside `Paths`, position for
   position; `GetReferences()` reads the id first and the path second, so unmigrated content
@@ -729,7 +704,7 @@ Built 2026-10-11 (compiled; tests written, not run) in `src/Crest.Media/Library/
   (or `"TrustExisting": true` on the recipe step) records them clean with the reason
   "imported, pre-existing" through `IMediaObjectWrites.ImportTrustedAsync` (system actor only),
   so a public site keeps serving them. They are never handed to the scanners: a file is scanned
-  or trusted, never both (2026-10-11). Scanning is
+  or trusted, never both. Scanning is
   the default because the tree was never scanned and the trust option cannot be undone per file.
   Dev tenants can be reset instead: a new tenant gets an empty library from the same migration.
 - [x] **Incoming `/media/...` paths** resolve to their placement in the library drive (path,
@@ -739,8 +714,8 @@ Built 2026-10-11 (compiled; tests written, not run) in `src/Crest.Media/Library/
   Anything else under `/media` is a 404.
 - [x] **Resizing after the decision** (F2). On `/media` and `/files`, resize commands run only
   after the access check. A public file (an Anyone grant) is resized into the shared cache keyed
-  by placement, version and commands; a private one is resized per request and never enters it
-  (TODO: the private resize cache).
+  by placement, version and commands; a private one goes to the private resize cache
+  (› Serving and CDNs) and never enters the shared one.
 - [x] **Media URLs are `/files/{placementId}`**, consistently: `asset_url`, the `a` tag,
   shortcodes, tag helpers, the field display, GraphQL and SEO all produce them, from a placement
   id, a `/files` or `/media` URL or a library path. A public file's URL carries the CDN base. A
@@ -750,21 +725,21 @@ Built 2026-10-11 (compiled; tests written, not run) in `src/Crest.Media/Library/
   crawlers do not carry the caller. The synchronous path APIs (`IMediaFileStore.MapPathToPublicUrl`,
   `Platform.AssetUrl`) keep the `/media` form, which resolves; a value that resolves to nothing
   keeps it too.
-- [x] **Overwrites are published once clean** (2026-10-11). `LibraryFileStore` replaces a file
+- [x] **Overwrites are published once clean.** `LibraryFileStore` replaces a file
   with `IMediaObjectWrites.ReplaceAsync(..., publishWhenClean: true)`: the new version becomes
   the published one as soon as its verdict is clean (kept on the content document as
   `PublishWhenClean`). A plain replace still waits to be published.
-- [x] **Signed URLs never reach another caller's page** (2026-10-11). The platform has no
+- [x] **Signed URLs never reach another caller's page.** The platform has no
   response or output cache middleware; its dynamic cache (shape and `{% cache %}`/`<cache>`
   blocks) can keep a rendered fragment for everyone. When `MediaReferenceResolver` signs a URL
   it adds the `user` context to the enclosing cache scope and expires it while the URL still has
   half its life. It also marks the response `Cache-Control: private, no-store`, so no CDN or
-  proxy keeps the page. Tests: `test/Crest.Tests/Media/Files/SignedUrlCachingTests.cs`. The
-  `user` context does not vary by acting organization; a URL signed for a member acting for one
-  organization can show again on their page while acting for another, for at most half its
-  lifetime.
+  proxy keeps the page. Tests: `test/Crest.Tests/Media/Files/SignedUrlCachingTests.cs`. Known
+  gap: the `user` context does not vary by acting organization, so a URL signed for a member
+  acting for one organization can show again on their page while acting for another, for at most
+  half its lifetime.
 - [x] **Name lookups go through the store** (`IMediaObjectStore.GetChildrenNamedAsync`, one
-  indexed query); `YesSqlPlacementNameLookup` no longer queries the placement index itself.
+  indexed query), not through `YesSqlPlacementNameLookup` querying the placement index itself.
 - [x] **Tus.** The `destinationPath` branch resolves the destination to its library folder
   (creating a missing one through the store, as the caller) and uploads through
   `IMediaObjectService` (`MediaLibraryUploads`).
@@ -773,43 +748,37 @@ Built 2026-10-11 (compiled; tests written, not run) in `src/Crest.Media/Library/
   fields work on file objects. Reads are path lookups, as the folder on disk was: those surfaces
   decide by path first. Writes go through `IMediaObjectService` as the caller (the system actor
   for server-side work with none).
-- [x] **Secure Media is superseded by sharing on the library drive.** With sharing on, the import
+- [x] **Sharing on the library drive replaces Secure Media.** With sharing on, the import
   copies "media"-kind entries and rules from each path to its placement; without Secure Media it
   shares the drive with Anyone (the media folder was public); with it, each role's folder rights
   become Viewer grants (`ViewMediaContent` on the drive, `ViewMediaContent_{folder}` on the
   folder, `ViewRootMediaContent` on root files, `ViewOthersMediaContent` on the users folder;
   Anonymous is Anyone, Authenticated the tenant). With sharing off,
   `LibraryPlacementPermissionMapper` decides a library placement by its path, so Secure Media and
-  the media folder permissions keep applying unchanged.
+  the media folder permissions keep applying unchanged. The import also grants each user their
+  own folder (Viewer with `ViewOwnMediaContent`, Manager with `ManageOwnMediaContent`, by their
+  roles). An attached-field folder (`mediafields/{type}/{id}` at the library root) has its
+  content item as a further sharing parent, so its files follow the item's access when content
+  items are shareable; a change to the item's sharing reaches the folder's list rows at their
+  next recalculation, single decisions see it at once.
 - [x] **Recipes and deployment.** Content arriving by recipe or deployment has its field paths
   resolved in this tenant's library and foreign ids dropped (`MediaFieldImportHandler`); the
   media deployment step exports clean files only.
-- [x] Tests in `test/Crest.Tests/Media/Migration/`: path resolution, field reading with ids and
-  paths, the import of a small tree (scanned and trusted, re-run, field rewrite, sharing grants),
-  `asset_url`, Tus routing.
+- [x] **The drive-aware picker.** The Blazor admin chooses files from any drive through
+  `CrestDrivePicker`: `MediaFieldEditor` (the Blazor editor for `MediaField`) stores placement
+  ids, position for position with the field's paths, texts and anchors; the HTML and Markdown
+  editors insert a chosen file as its `files/{placementId}` URL (an image for an image, a link
+  otherwise, appended to the text); the display system's `media` property kind is edited by
+  `MediaPicker`, which stores the placement id.
 
-**Landed (F1, 2026-10-13):**
-- Secure Media mapping gaps closed. The import grants each user their own folder (Viewer with
-  `ViewOwnMediaContent`, Manager with `ManageOwnMediaContent`, by their roles). An attached-field
-  folder (`mediafields/{type}/{id}` at the library root) has its content item as a further
-  sharing parent, so its files follow the item's access when content items are shareable.
-  A change to the item's sharing reaches the folder's list rows at their next recalculation;
-  single decisions see it at once.
-- The drive-aware picker: `MediaFieldEditor` (the Blazor editor for `MediaField`) chooses files
-  from any drive through `CrestDrivePicker` and stores placement ids, position for position
-  with the field's paths, texts and anchors.
-- The private resize cache and the CDN signers (› Serving and CDNs).
-- `Media.Azure` and `Media.AmazonS3` are reworked onto storage providers (§ 3 What landed); the
-  import reads their container or bucket.
-
-**Left (F1):**
+Limits and what is left:
 - The path cache lives 30 seconds per server; a move is seen within that time (a rename or a
   delete at once). A name lookup is one indexed query per segment.
-- The classic (Razor) media picker, the media admin and the HTML and Markdown editors' insert
-  still work on library paths (`api/media`); the Blazor admin uses the drive-aware picker.
+- ☐ The classic (Razor) media picker and the media admin still work on library paths
+  (`api/media`); they go with the MVC admin.
 - Media fields in site settings (custom settings) are read by path until edited; the rewrite
   covers content items only. Older content versions keep their paths (they still resolve).
-- The large-tree import runs in one scope; very large libraries may want batching.
+- ☐ The large-tree import runs in one scope; very large libraries may want batching.
 
 ### Crest today
 
@@ -832,8 +801,8 @@ Built 2026-10-11 (compiled; tests written, not run) in `src/Crest.Media/Library/
 
 ## Serving and CDNs
 
-How a CDN keeps private files private while still caching them (researched 2026-10-11), and
-how that meets the access gate.
+How a CDN keeps private files private while still caching them, and how that meets the access
+gate.
 
 **What the CDNs offer.** None of them knows Crest's users or permissions; all of them can
 check a **signed token** that the origin issued, and cache the bytes independently of it:
@@ -867,14 +836,14 @@ the only decision**:
    the private origin itself requires the same token, so the CDN is never an open door.
 4. **Revocation** takes effect for new tokens at once; a token already issued lives until it
    expires, so the token lifetime is the bound on how long a removed share can still be read
-   from the cache. Keep it short (minutes) for staff and member assets.
+   from the cache. It is short (minutes) for staff and member assets.
 5. **No CDN configured**: the same flow against Crest's own origin, with its own public and
    private resize caches.
 
 The signer is a provider behind one Crest interface (Cloudflare HMAC, CloudFront key pair, Bunny
 token), configured per tenant, like storage and scanner providers.
 
-**What landed (2026-10-13)** (compiled; not verified against live CDNs):
+**Implementation** (not verified against live CDNs):
 - `IMediaUrlSigner` gains the zone's `BaseUrl` and `Verify`. The tenant's shell configuration
   `Crest_Media:Cdn` names the private zone (`PrivateBaseUrl`), the `Signer` (`cloudflare`,
   `cloudfront`, `bunny`) and its secret (`Cloudflare:Secret` and `TtlSeconds`,
@@ -891,7 +860,7 @@ token), configured per tenant, like storage and scanner providers.
   and kept in the storage provider's `Derived` area, keyed by placement, version and a hash of
   the commands, served `private, no-store`, and deleted with the placement.
 
-**Known gap (2026-10-11):** a cached fragment holding a signed `/files` URL varies by user, not
+**Known gap:** a cached fragment holding a signed `/files` URL varies by user, not
 by acting organization, so a member can see a URL signed while acting for one organization on a
 page rendered while acting for another, for at most half the URL's lifetime.
 
@@ -900,22 +869,21 @@ page rendered while acting for another, for at most half the URL's lifetime.
 Research for the scanner and type-detection providers (requirements 90 and 91). Licences checked October 2026; nothing here
 is legal advice.
 
-- **Crest.Antivirus** (Orchard, BSD-3): Orchard's own module, in the Orchard build the
-  hosts use. It scans through a file-storage hook before a file is stored, using a ClamAV daemon
+- **Crest.Antivirus** (BSD-3): the platform's own module. It scans through a file-storage hook before a file is stored, using a ClamAV daemon
   over its socket, and rejects the upload synchronously. It is the obvious first provider, but
   it rejects rather than quarantines, so Crest adapts it to the asynchronous verdict (92).
 - **ClamAV** (GPLv2): the only mature open-source engine with a maintained signature database.
   It runs as a separate daemon reached over a socket rather than linked into Crest, on the same
   machine or a dedicated scanning server (requirement 94), which is
-  how Orchard's module and most products use it. No MIT, BSD or Apache engine matches its
+  how the platform's module and most products use it. No MIT, BSD or Apache engine matches its
   coverage. ClamAV identifies file types from content, but as its own type codes
   (`CL_TYPE_PDF`), not MIME types, and the daemon does not return them: its
   `GenerateMetadataJson` option only prints to its debug log or writes into its temp
   directory. The command-line scanner can output them but reloads its whole signature
   database per file, too slow per upload. So ClamAV is a malware provider, not the type
   detector.
-- **nClam** (Apache-2.0): a .NET client for the ClamAV daemon, an alternative to Orchard's own
-  connector.
+- **nClam** (Apache-2.0): a .NET client for the ClamAV daemon, an alternative to the platform's
+  own connector.
 - **YARA / YARA-X** (BSD-3): a pattern-matching engine that runs detection rules on top of
   ClamAV's signatures, such as "Office documents with macros" or "PDFs containing JavaScript".
   Not a scanner on its own and not type detection; it needs rule sets, which carry their own
@@ -927,35 +895,30 @@ is legal advice.
   and Linux and packaged for Windows (vcpkg). The `Mime` .NET wrapper (MIT) ships libmagic
   binaries for Windows (x86, x64, arm64), macOS (x64, arm64) and Linux (x64, arm64, musl),
   covering every server platform; it has no iOS or Android build, which detection never needs
-  because it runs on the server (requirement 93). Mime-Detective, the pure .NET alternative,
-  was set aside: only its smaller default signature pack is free for commercial use.
+  because it runs on the server (requirement 93). Not Mime-Detective, the pure .NET
+  alternative: only its smaller default signature pack is free for commercial use.
 - **External services** (a tenant's own provider): cloud malware scanning such as the storage
   scanning offered by the large cloud providers, behind the same interface.
 
-## Decisions needed
+## Decisions
 
-- [x] **Paths versus ids (F1).** Ruled 2026-10-11: **ids are stored**, so hard and soft links
-  work. A file object is its id (the content record and its versions); a **path is a
-  placement** of that id, and every placement is a full citizen of its folder: sharing's
-  entries and rules apply to the placement, which carries its own settings and access.
-  Fields (`MediaField` and every reference) store placement ids; existing path references are
-  migrated once, and incoming `/media/...` paths resolve to their placement.
-  - [x] Built 2026-10-11 (compiled, tests not run): the "Media library" drive, the import and
-    field rewrite, `/media` served from the drive, `/files` URLs everywhere, Tus, Secure Media
-    moved to sharing. Left: › Reworking the Media module › The media library (F1).
-- [x] **Serving, resizing and the CDN (F2).** Ruled 2026-10-11: **public and private caches**,
-  both behind the access gate and the integrated sharing pipeline. Public files (an Anyone
-  grant) keep the fast path, a public resize cache and a **public CDN** for the site. Private
-  files are served only after the decision, from a **private resize cache** keyed by placement,
-  version and size, through a **private CDN** for admin and member assets served to staff and
-  members. No private byte ever reaches a public cache. (How CDNs such as Cloudflare support
-  private caching, and how that meets the access gate: § Serving and CDNs below.)
-- [x] **Access-index size and recalculation (F3).** Moved to [sharing.md](sharing.md) › Decisions needed.
-
-- [x] **Folder hard links and the loop gate (F4).** Ruled 2026-10-11: **folders are media
-  objects like files; they just have children**, and they can be hard-linked like files. The
-  graph exists (an ancestor closure over placements) and is **recalculated only on create,
-  move, rename and delete**; otherwise it is cached and baked in. The loop gate checks the
-  closure inside the same transaction, and placements and moves are serialized per tenant
-  against races. Quotas count content once, whatever its placements.
-- [x] **Search filtering (F5).** Moved to [sharing.md](sharing.md) › Decisions needed.
+- **F1. Paths versus ids: ids are stored**, so hard and soft links work. A file object is its id
+  (the content record and its versions); a **path is a placement** of that id, and every
+  placement is a full citizen of its folder: sharing's entries and rules apply to the placement,
+  which carries its own settings and access. Fields (`MediaField` and every reference) store
+  placement ids; existing path references are migrated once, and incoming `/media/...` paths
+  resolve to their placement ([The media library](#the-media-library-f1)).
+- **F2. Serving, resizing and the CDN: public and private caches**, both behind the access gate
+  and the integrated sharing pipeline. Public files (an Anyone grant) keep the fast path, a
+  public resize cache and a **public CDN** for the site. Private files are served only after the
+  decision, from a **private resize cache** keyed by placement, version and size, through a
+  **private CDN** for admin and member assets served to staff and members. No private byte ever
+  reaches a public cache ([Serving and CDNs](#serving-and-cdns)).
+- **F3. Access-index size and recalculation**: [sharing.md](sharing.md).
+- **F4. Folder hard links and the loop gate: folders are media objects like files; they just
+  have children**, and they can be hard-linked like files. The graph (an ancestor closure over
+  placements) is **recalculated only on create, move, rename and delete**; otherwise it is
+  cached and baked in. The loop gate checks the closure inside the same transaction, and
+  placements and moves are serialized per tenant against races. Quotas count content once,
+  whatever its placements.
+- **F5. Search filtering**: [sharing.md](sharing.md).

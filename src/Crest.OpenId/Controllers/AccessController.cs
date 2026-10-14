@@ -168,11 +168,10 @@ public sealed class AccessController : Controller
                 }), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
             default:
-                return View(new AuthorizeViewModel
-                {
-                    ApplicationName = await _applicationManager.GetLocalizedDisplayNameAsync(application),
-                    Scope = request.Scope,
-                });
+                // The consent page is the site shell's (step 7: the MVC Authorize view is
+                // retired). It posts the same parameters back here with submit.Accept or
+                // submit.Deny and an antiforgery token, which AuthorizeAccept requires.
+                return LocalRedirect("~" + ConsentPage + RequestParameters());
         }
     }
 
@@ -358,7 +357,31 @@ public sealed class AccessController : Controller
             }
         }
 
-        return View();
+        // The confirmation page is the site shell's (step 7: the MVC Logout view is retired).
+        return LocalRedirect("~" + LogoutConfirmationPage + RequestParameters());
+    }
+
+    /// <summary>The consent page (Crest.SiteTheme.Client's OpenIdConsent).</summary>
+    public const string ConsentPage = "/connect/consent";
+
+    /// <summary>The logout confirmation page (Crest.SiteTheme.Client's OpenIdLogoutConfirmation).</summary>
+    public const string LogoutConfirmationPage = "/connect/logout-confirm";
+
+    // The request's OpenID parameters (query, or form for a POST request), as a query string the
+    // page carries back in its form.
+    private string RequestParameters()
+    {
+        IEnumerable<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> parameters = Request.HasFormContentType ? Request.Form : Request.Query;
+        var query = QueryString.Empty;
+        foreach (var (key, values) in parameters)
+        {
+            foreach (var value in values)
+            {
+                query = query.Add(key, value ?? string.Empty);
+            }
+        }
+
+        return query.ToUriComponent();
     }
 
     [ActionName(nameof(Logout)), AllowAnonymous, DisableCors]

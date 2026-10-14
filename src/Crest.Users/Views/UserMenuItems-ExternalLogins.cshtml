@@ -1,5 +1,5 @@
 <li>
-    <a class="dropdown-item" asp-route-area="@UserConstants.Features.Users" asp-controller="ExternalAuthentications" asp-action="ExternalLogins">
+    <a class="dropdown-item" href="@Url.Content("~" + Crest.Users.Services.AccountPages.ExternalLogins)">
         <i class="fa-solid fa-user-lock" aria-hidden="true"></i> @T["External Logins"]
     </a>
 </li>

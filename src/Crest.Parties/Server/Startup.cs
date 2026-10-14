@@ -1,3 +1,4 @@
+using Crest.ContentManagement;
 using Crest.Services;
 using Crest.ContentFields.Relationships;
 using Crest.Parties.Constants;
@@ -39,6 +40,8 @@ public sealed class Startup : StartupBase
         services.AddScoped<IPartyNamesService, PartyNamesService>();
         services.AddScoped<ITenantOrganizationService, TenantOrganizationService>();
         services.AddScoped<IPartyAssociationService, PartyAssociationService>();
+        services.AddScoped<IIndividualOrganizationService, IndividualOrganizationService>();
+        services.AddScoped<IPartyRoleService, PartyRoleService>();
         // The parent picker's cycle rule, on every save path (docs/content-items.md ›
         // Picker relationship handlers).
         services.AddContentPickerRelationshipHandler<ParentOrganizationRelationshipHandler>(
@@ -63,5 +66,14 @@ public sealed class Startup : StartupBase
         // when its content item is (docs/access.md, Domains onto the extension system).
         services.AddScoped<Crest.Access.IScopeProvider>(provider => new PartyScopeProvider(nameof(LocationIndex), provider));
         services.AddScoped<Crest.Access.IScopeProvider>(provider => new PartyScopeProvider(nameof(PartyPositionIndex), provider));
+
+        // Organization ownership on the row (ruled 2026-10-14, moved here from Crest.Server and
+        // Crest.Members): the owner part and index, the deployment-time registry of
+        // organization-scoped types, and the organization row scope.
+        services.AddSingleton<Organizations.OrganizationScopedTypes>();
+        services.AddIndexProvider<Organizations.OrganizationIndexProvider>();
+        services.AddDataMigration<Organizations.CrestOrganizationIndexMigrations>();
+        services.AddContentPart<Organizations.CrestOrganizationPart>();
+        services.AddScoped<Crest.Access.IScopeProvider, Organizations.OrganizationScopeProvider>();
     }
 }

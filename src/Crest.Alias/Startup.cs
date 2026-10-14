@@ -70,7 +70,6 @@ public sealed class Startup : StartupBase
             .AddHandler<AliasPartHandler>();
 
         services.AddScoped<IContentPartIndexHandler, AliasPartIndexHandler>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, AliasPartSettingsDisplayDriver>();
     }
 }
 

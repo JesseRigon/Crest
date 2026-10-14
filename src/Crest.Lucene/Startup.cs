@@ -127,7 +127,6 @@ public sealed class LuceneContentPickerStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddScoped<IContentPickerResultProvider, LuceneContentPickerResultProvider>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, ContentPickerFieldLuceneEditorSettingsDriver>();
         services.AddShapeAttributes<LuceneContentPickerShapeProvider>();
     }
 }
@@ -137,8 +136,6 @@ public sealed class ContentTypesStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, ContentTypePartIndexSettingsDisplayDriver>();
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, ContentPartFieldIndexSettingsDisplayDriver>();
     }
 }
 

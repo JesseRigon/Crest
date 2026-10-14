@@ -12,6 +12,9 @@ namespace Crest.ViewModels;
 
 public sealed record ContentItemListResult(ContentItem[] Items, int Total, int Page, int PageSize);
 
+/// <summary>One stored version of a content item (the editor's versions list).</summary>
+public sealed record ContentItemVersion(string ContentItemVersionId, bool Published, bool Latest, string? DisplayText, string? Author, DateTime? ModifiedUtc, DateTime? PublishedUtc);
+
 public sealed record ContentItemWriteRequest(string ContentType, string? DisplayText, JsonObject? Content, bool Publish);
 
 public sealed record ContentItem(

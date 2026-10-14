@@ -1,0 +1,17 @@
+@attribute [Route("/Error")]
+@attribute [Route("/Error/{Status:int}")]
+@attribute [AllowAnonymous]
+@attribute [Crest.Components.Modules.OrganizationFreePage]
+@namespace Crest.MemberTheme.Pages
+
+@* The member shell's error page: the status code pages re-execute "/Error/{status}" inside the
+   member shell for a member URL (CrestErrorPage). *@
+
+<PageTitle>Error</PageTitle>
+
+<Crest.Components.Errors.CrestErrorPage Status="@Status" />
+
+@code {
+    [Parameter]
+    public int? Status { get; set; }
+}

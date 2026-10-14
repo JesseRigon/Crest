@@ -33,7 +33,9 @@ public sealed class MemberBindingService(
     Crest.Access.IPermissionVersion permissionVersion,
     MemberAuditRecorder audit,
     IEnumerable<Crest.Roles.IDerivedRoleProvider> derivedRoles,
-    MemberOrganizationGroups organizationGroups)
+    MemberOrganizationGroups organizationGroups,
+    Crest.Access.IOrganizationOwnership ownership,
+    Crest.Roles.ISystemRoleProvider systemRoles)
 {
     /// <summary>
     /// Puts a binding on a user that is not saved yet (creation paths). The hierarchy node
@@ -51,7 +53,7 @@ public sealed class MemberBindingService(
         {
             // The USER, not its id: on the explicit creation path the id is assigned later.
             DeferMemberBound(organizationId, user, binding.IsMemberAdmin);
-            DeferPlaceInGroups(organizationId, user, binding.Roles);
+            DeferPlaceInGroups(organizationId, user, binding.Roles, binding.IsMemberAdmin);
         }
 
         return binding;
@@ -72,8 +74,10 @@ public sealed class MemberBindingService(
 
         if (userClass == UserClasses.Member)
         {
-            // The binding's roles are the organization's groups' (docs/permissions.md).
+            // The binding's roles are the organization's groups' (docs/permissions.md); the
+            // first member becomes the owner and an org-admin.
             await organizationGroups.PlaceAsync(organizationId, user.UserId, binding.Roles, cancellationToken);
+            await ClaimOwnershipAsync(organizationId, user.UserId, binding.IsMemberAdmin, cancellationToken);
             DeferMemberBound(organizationId, user, binding.IsMemberAdmin);
         }
 
@@ -92,6 +96,12 @@ public sealed class MemberBindingService(
         if (info.Bindings.Count == 1)
         {
             throw new InvalidOperationException("This is the user's last organization; a user cannot exist outside every organization.");
+        }
+
+        // The owner stays a member and an org-admin while they own the organization.
+        if (userClass == UserClasses.Member && await ownership.GetOwnerAsync(organizationId, cancellationToken) == user.UserId)
+        {
+            throw new Crest.Access.OwnerProtectionException("The organization's owner keeps their binding; transfer ownership first.");
         }
 
         info.Bindings.Remove(target);
@@ -127,12 +137,62 @@ public sealed class MemberBindingService(
         try
         {
             await hierarchy.EnsureNodeAsync(organizationId, userId, cancellationToken);
+            await PlaceUnderAdminsAsync(organizationId, userId, cancellationToken);
         }
         catch
         {
             await session.CancelAsync();
             throw;
         }
+    }
+
+    /// <summary>
+    /// The default hierarchy (docs/permissions.md › Who manages the permission model): admins
+    /// are the roots - an organization's org-admins, the tenant organization's tenant admins -
+    /// and every other user is placed under them when bound, so a fresh organization or tenant
+    /// is manageable before anyone builds a hierarchy. A user who already has a manager, or is
+    /// an admin there, is left as they are.
+    /// </summary>
+    private async Task PlaceUnderAdminsAsync(string organizationId, string userId, CancellationToken cancellationToken)
+    {
+        var node = (await hierarchy.GetNodesForUserAsync(userId, cancellationToken)).FirstOrDefault(candidate => candidate.OrganizationId == organizationId);
+        if (node is null || node.ManagerIds.Count > 0)
+        {
+            return;
+        }
+
+        var admins = await AdminsAsync(organizationId, cancellationToken);
+        if (admins.Contains(userId))
+        {
+            return;
+        }
+
+        foreach (var admin in admins)
+        {
+            await hierarchy.AddManagerAsync(organizationId, userId, admin, cancellationToken);
+        }
+    }
+
+    /// <summary>The roots of an organization's hierarchy: its org-admins, or for the tenant
+    /// organization the staff holding the tenant's admin role. Only users with a node there.</summary>
+    private async Task<HashSet<string>> AdminsAsync(string organizationId, CancellationToken cancellationToken)
+    {
+        var admins = new HashSet<string>(StringComparer.Ordinal);
+        if (await tenantOrganization.IsTenantOrganizationAsync(organizationId, cancellationToken))
+        {
+            var adminRole = systemRoles.GetAdminRole().RoleName;
+            var staff = await session.Query<User, UserConnectionIndex>(index => index.OrganizationId == organizationId && index.Class == UserClasses.Staff).ListAsync(cancellationToken);
+            admins.UnionWith(staff.Where(user => user.RoleNames.Contains(adminRole, StringComparer.OrdinalIgnoreCase)).Select(user => user.UserId));
+        }
+        else
+        {
+            admins.UnionWith((await session.QueryIndex<UserConnectionIndex>(index => index.OrganizationId == organizationId && index.Class == UserClasses.Member && index.IsMemberAdmin).ListAsync(cancellationToken))
+                .Select(row => row.UserId));
+        }
+
+        var placed = (await hierarchy.GetNodesAsync(organizationId, cancellationToken)).Select(candidate => candidate.UserId).ToHashSet(StringComparer.Ordinal);
+        admins.IntersectWith(placed);
+        return admins;
     }
 
     /// <summary>
@@ -179,11 +239,29 @@ public sealed class MemberBindingService(
     /// (default: blocked). Endpoints that want a clean refusal before they start (portal
     /// registration) ask this; every write asks it again.
     /// </summary>
-    public async Task<string?> MemberRefusalAsync(string organizationId, CancellationToken cancellationToken = default) =>
-        await tenantOrganization.IsTenantOrganizationAsync(organizationId, cancellationToken)
-        && !(await siteService.GetSettingsAsync<MembersSettings>()).AllowMembersOnTenantOrganization
-            ? "Members cannot be bound to the tenant's own organization."
-            : null;
+    /// <remarks>The target must be an Organization content item, and an Individual organization
+    /// takes one member only (ruling 2026-10-14).</remarks>
+    public async Task<string?> MemberRefusalAsync(string organizationId, CancellationToken cancellationToken = default)
+    {
+        var organization = await session
+            .Query<Crest.ContentManagement.ContentItem, Crest.ContentManagement.Records.ContentItemIndex>(index => index.ContentItemId == organizationId && index.Latest)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (organization is not { ContentType: Crest.Parties.Constants.PartiesConstants.ContentTypes.Organization })
+        {
+            return "A member binding must point at an Organization.";
+        }
+
+        if (Crest.Parties.Services.IndividualOrganizationService.IsIndividual(organization)
+            && !await IsFirstMemberOfOrganizationAsync(organizationId, cancellationToken))
+        {
+            return $"'{organization.DisplayText}' is an Individual organization; it has one member only.";
+        }
+
+        return await tenantOrganization.IsTenantOrganizationAsync(organizationId, cancellationToken)
+            && !(await siteService.GetSettingsAsync<MembersSettings>()).AllowMembersOnTenantOrganization
+                ? "Members cannot be bound to the tenant's own organization."
+                : null;
+    }
 
     public async Task<bool> IsFirstMemberOfOrganizationAsync(string organizationId, CancellationToken cancellationToken = default) =>
         await session.QueryIndex<UserConnectionIndex>(index => index.OrganizationId == organizationId && index.Class == UserClasses.Member)
@@ -322,15 +400,29 @@ public sealed class MemberBindingService(
     }
 
     /// <summary>Puts a member created in this unit into the organization's groups once it has its id.</summary>
-    private static void DeferPlaceInGroups(string organizationId, User user, IReadOnlyList<string> roles)
+    private static void DeferPlaceInGroups(string organizationId, User user, IReadOnlyList<string> roles, bool isFirstMember)
     {
         ShellScope.AddDeferredTask(async scope =>
         {
             if (!string.IsNullOrWhiteSpace(user.UserId))
             {
                 await scope.ServiceProvider.GetRequiredService<MemberOrganizationGroups>().PlaceAsync(organizationId, user.UserId, roles);
+                await scope.ServiceProvider.GetRequiredService<MemberBindingService>().ClaimOwnershipAsync(organizationId, user.UserId, isFirstMember);
             }
         });
+    }
+
+    /// <summary>
+    /// The first member bound to an organization becomes its owner and its default org-admin
+    /// (docs/permissions.md › The organization owner); an organization that already has an
+    /// owner keeps it.
+    /// </summary>
+    public async Task ClaimOwnershipAsync(string organizationId, string userId, bool isFirstMember, CancellationToken cancellationToken = default)
+    {
+        if (isFirstMember && await ownership.EnsureOwnerAsync(organizationId, userId, cancellationToken))
+        {
+            await organizationGroups.PlaceAsync(organizationId, userId, [ownership.OwnerRoleName], cancellationToken);
+        }
     }
 
     /// <summary>Leaving an organization ends the (user, organization) relationship; what

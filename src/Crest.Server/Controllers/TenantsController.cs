@@ -10,6 +10,13 @@ using Crest.ViewModels;
 using CrestTenant = Crest.AdminTheme.Api.CrestTenant;
 using TenantBulkAction = Crest.AdminTheme.Api.TenantBulkAction;
 using TenantCatalog = Crest.AdminTheme.Api.TenantCatalog;
+using TenantEditor = Crest.AdminTheme.Api.TenantEditor;
+using TenantChoice = Crest.AdminTheme.Api.TenantChoice;
+using TenantFieldError = Crest.AdminTheme.Api.TenantFieldError;
+using TenantSaveResult = Crest.AdminTheme.Api.TenantSaveResult;
+using TenantSetupRequest = Crest.AdminTheme.Api.TenantSetupRequest;
+using WireTenantForm = Crest.AdminTheme.Api.TenantForm;
+using Crest.Tenants.Services;
 
 namespace Crest.Controllers;
 
@@ -62,6 +69,127 @@ public sealed class TenantsController(IRequestAccess requestAccess) : Controller
         var removalAllowed = access.GetRequiredService<IOptions<TenantsOptions>>().Value.TenantRemovalAllowed;
         return Ok(new TenantCatalog(entries.ToArray(), categories, removalAllowed));
     }
+
+    // Create, edit and setup (step 7: the MVC Tenants Create/Edit screens are retired). The rules
+    // are TenantAdministration's, shared with the stock tenants API.
+    [HttpGet("editor")]
+    public async Task<ActionResult<TenantEditor>> GetEditorAsync([FromQuery] string? name = null)
+    {
+        var access = await GetDefaultTenantAccessAsync();
+        if (access is null) return Forbid();
+
+        var state = await access.GetRequiredService<TenantAdministration>().GetEditorAsync(name);
+        if (state is null) return NotFound();
+
+        return Ok(new TenantEditor(
+            ToWire(state.Form),
+            state.IsNew,
+            state.IsUninitialized,
+            state.CanEditDatabase,
+            state.DatabaseProviderPreset,
+            state.DatabaseConfigurationPreset,
+            state.RequireTablePrefix,
+            state.HasTablePrefixPattern,
+            state.HasSchemaPattern,
+            state.ResolvedTablePrefix,
+            state.ResolvedSchema,
+            [.. state.Recipes.Select(ToChoice)],
+            [.. state.FeatureProfiles.Select(ToChoice)],
+            [.. state.DatabaseProviders.Select(ToChoice)]));
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<TenantSaveResult>> CreateAsync([FromBody] WireTenantForm form, [FromQuery] bool setupUrl = false)
+    {
+        var access = await GetDefaultTenantAccessAsync();
+        if (access is null) return Forbid();
+
+        var administration = access.GetRequiredService<TenantAdministration>();
+        var result = await administration.CreateAsync(FromWire(form));
+        return ToResponse(result, setupUrl && result.Settings is { } created ? administration.SetupUrl(HttpContext, created.Name) : null);
+    }
+
+    [HttpPut("{name}")]
+    public async Task<ActionResult<TenantSaveResult>> EditAsync(string name, [FromBody] WireTenantForm form)
+    {
+        var access = await GetDefaultTenantAccessAsync();
+        if (access is null) return Forbid();
+
+        return ToResponse(await access.GetRequiredService<TenantAdministration>().EditAsync(name, FromWire(form)), null);
+    }
+
+    [HttpPost("{name}/setup")]
+    public async Task<ActionResult<TenantSaveResult>> SetupAsync(string name, [FromBody] TenantSetupRequest request)
+    {
+        var access = await GetDefaultTenantAccessAsync();
+        if (access is null) return Forbid();
+
+        return ToResponse(await access.GetRequiredService<TenantAdministration>().SetupAsync(name, new TenantSetupForm
+        {
+            SiteName = request.SiteName,
+            UserName = request.UserName,
+            Email = request.Email,
+            Password = request.Password,
+            RecipeName = request.RecipeName,
+            SiteTimeZone = request.SiteTimeZone,
+            DatabaseProvider = request.DatabaseProvider,
+            ConnectionString = request.ConnectionString,
+            TablePrefix = request.TablePrefix,
+            Schema = request.Schema,
+        }), null);
+    }
+
+    [HttpGet("{name}/setup-url")]
+    public async Task<IActionResult> GetSetupUrlAsync(string name)
+    {
+        var access = await GetDefaultTenantAccessAsync();
+        if (access is null) return Forbid();
+
+        var url = access.GetRequiredService<TenantAdministration>().SetupUrl(HttpContext, name);
+        return url is null ? NotFound() : Ok(new { url });
+    }
+
+    private ActionResult<TenantSaveResult> ToResponse(TenantResult result, string? setupUrl)
+    {
+        var response = new TenantSaveResult(
+            result.Succeeded,
+            [.. result.Errors.Select(error => new TenantFieldError(error.Key, error.Message))],
+            result.Settings is { } settings ? ToTenant(settings) : null,
+            setupUrl);
+        return result.Succeeded ? Ok(response) : BadRequest(response);
+    }
+
+    private static TenantChoice ToChoice(TenantOption option) => new(option.Value, option.Text, option.HasConnectionString);
+
+    private static WireTenantForm ToWire(Crest.Tenants.Services.TenantForm form) => new()
+    {
+        Name = form.Name,
+        Description = form.Description,
+        Category = form.Category,
+        RequestUrlHost = form.RequestUrlHost,
+        RequestUrlPrefix = form.RequestUrlPrefix,
+        DatabaseProvider = form.DatabaseProvider,
+        ConnectionString = form.ConnectionString,
+        TablePrefix = form.TablePrefix,
+        Schema = form.Schema,
+        RecipeName = form.RecipeName,
+        FeatureProfiles = form.FeatureProfiles ?? [],
+    };
+
+    private static Crest.Tenants.Services.TenantForm FromWire(WireTenantForm form) => new()
+    {
+        Name = form.Name?.Trim(),
+        Description = form.Description,
+        Category = form.Category,
+        RequestUrlHost = form.RequestUrlHost,
+        RequestUrlPrefix = form.RequestUrlPrefix,
+        DatabaseProvider = form.DatabaseProvider,
+        ConnectionString = form.ConnectionString,
+        TablePrefix = form.TablePrefix,
+        Schema = form.Schema,
+        RecipeName = form.RecipeName,
+        FeatureProfiles = form.FeatureProfiles ?? [],
+    };
 
     [HttpPost("{name}/enable")]
     public Task<ActionResult<CrestTenant>> EnableAsync(string name) => ChangeStateAsync(name, "Enable");

@@ -16,12 +16,17 @@ public sealed record AddBindingRequest(string OrganizationId, IReadOnlyList<stri
 public sealed record SetActiveOrgRequest(string OrganizationId);
 public sealed record ImpersonateRequest(string UserId);
 public sealed record HierarchyEdgeRequest(string ReportId, string ManagerId);
+public sealed record InviteToPortalRequest(string PersonId, string OrganizationId, string UserName, string? Email, IReadOnlyList<string>? Roles);
+public sealed record OwnershipModel(string OrganizationId, string? OwnerUserId, bool CanTransfer);
+public sealed record TransferOwnershipRequest(string UserId);
 
 [ApiController]
 [AutoValidateAntiforgeryToken]
 [Route("api/crest/members")]
 public sealed class MembersController(
     IMemberService memberService,
+    Crest.Parties.Services.IPartyUserLinkService partyUserLink,
+    YesSql.ISession session,
     MemberBindingService bindings,
     UserClassService userClasses,
     IUserHierarchyService hierarchy,
@@ -32,7 +37,8 @@ public sealed class MembersController(
     MemberImpersonationService impersonationService,
     IAuthorizationService authorizationService,
     Crest.Access.IAccessDecision decision,
-    Crest.Access.ICallerContextAccessor callerAccessor) : ControllerBase
+    Crest.Access.ICallerContextAccessor callerAccessor,
+    Crest.Access.IOrganizationOwnership ownership) : ControllerBase
 {
     [HttpGet("me")]
     [Authorize]
@@ -108,6 +114,52 @@ public sealed class MembersController(
 
         var member = await memberService.GetAsync(((Crest.Users.Models.User)created).UserId, HttpContext.RequestAborted);
         return Ok(member);
+    }
+
+    /// <summary>
+    /// Portal access as a promotion (ruling 2026-10-14): a contact Person who holds a position
+    /// in the organization becomes a user linked to that person and bound to the organization;
+    /// the first member is the organization's owner. The account has no password: the person
+    /// sets one through the portal's password recovery.
+    /// </summary>
+    [HttpPost("invite")]
+    public async Task<ActionResult<MemberModel>> InviteAsync(InviteToPortalRequest request)
+    {
+        if (!await CanManageAsync(new MemberOrganizationResource(request.OrganizationId)))
+        {
+            return Forbid();
+        }
+
+        if (await partyUserLink.GetPortalUserIdAsync(request.PersonId, HttpContext.RequestAborted) is not null)
+        {
+            return BadRequest(new { error = "The person already has an account." });
+        }
+
+        var holdsPosition = await session.QueryIndex<Crest.Parties.Indexes.PartyPositionIndex>(index =>
+                index.ContentItemId == request.PersonId && index.OrganizationId == request.OrganizationId && index.Latest)
+            .CountAsync(HttpContext.RequestAborted) > 0;
+        if (!holdsPosition)
+        {
+            return BadRequest(new { error = "Only a person who holds a position in the organization can be invited to its portal." });
+        }
+
+        try
+        {
+            var created = await memberService.CreateMemberAsync(
+                new CreateMemberRequest(request.UserName, request.Email, null, request.PersonId, request.OrganizationId, request.Roles),
+                (key, message) => ModelState.AddModelError(key, message),
+                HttpContext.RequestAborted);
+            if (created is null)
+            {
+                return ValidationProblem(ModelState);
+            }
+
+            return Ok(await memberService.GetAsync(((Crest.Users.Models.User)created).UserId, HttpContext.RequestAborted));
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
     }
 
     [HttpPost("{userId}/bindings")]
@@ -303,6 +355,50 @@ public sealed class MembersController(
             return BadRequest(new { error = exception.Message });
         }
     }
+
+    // The organization owner (docs/permissions.md › The organization owner). Reading takes
+    // ManageOrgMembers against the organization, or being its owner; a transfer is started by
+    // staff holding TransferOrganizationOwnership or by the current owner, no one else.
+    [HttpGet("organizations/{organizationId}/owner")]
+    public async Task<ActionResult<OwnershipModel>> GetOwnerAsync(string organizationId)
+    {
+        var owner = await ownership.GetOwnerAsync(organizationId, HttpContext.RequestAborted);
+        var isOwner = owner is not null && owner == callerAccessor.Current?.UserId;
+        if (!isOwner && !await CanManageAsync(new MemberOrganizationResource(organizationId)))
+        {
+            return Forbid();
+        }
+
+        return Ok(new OwnershipModel(organizationId, owner, isOwner || await CanTransferAsTenantAsync()));
+    }
+
+    [HttpPost("organizations/{organizationId}/owner")]
+    public async Task<ActionResult<OwnershipModel>> TransferOwnershipAsync(string organizationId, TransferOwnershipRequest request)
+    {
+        var caller = callerAccessor.Current;
+        var owner = await ownership.GetOwnerAsync(organizationId, HttpContext.RequestAborted);
+        var isOwner = owner is not null && caller?.UserId == owner;
+        if (!isOwner && !await CanTransferAsTenantAsync())
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            await ownership.TransferAsync(organizationId, request.UserId, HttpContext.RequestAborted);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+
+        return Ok(new OwnershipModel(organizationId, request.UserId, await CanTransferAsTenantAsync()));
+    }
+
+    /// <summary>The tenant permission, held at tenant reach only (staff; it is on the member ceiling).</summary>
+    private async Task<bool> CanTransferAsTenantAsync() =>
+        callerAccessor.Current is { OrganizationId: null } caller
+        && await decision.AllowsAsync(caller, Permissions.MembersPermissions.TransferOrganizationOwnership.Name, null, HttpContext.RequestAborted);
 
     // Through the user store (the request's unit of work), not a session query of its own.
     private async Task<Crest.Users.Models.User> RequireUserAsync(string userId) =>

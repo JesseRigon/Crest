@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- The Facebook module's site-shell library (docs/widgets.md, the Facebook widgets): the
+       FacebookPlugin component templates place. Declares [assembly: CrestShell(CrestShells.Site)]
+       in CrestShell.cs; the site shell loads its modules up front, so the component is in the
+       browser's registry before the first tree renders. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Crest.Facebook.BlazorWasm</AssemblyName>
+    <RootNamespace>Crest.Facebook.Client</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Crest.Components\Crest.Components.csproj" />
+  </ItemGroup>
+</Project>

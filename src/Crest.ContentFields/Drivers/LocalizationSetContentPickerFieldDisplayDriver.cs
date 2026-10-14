@@ -33,11 +33,13 @@ public sealed class LocalizationSetContentPickerFieldDisplayDriver : ContentFiel
 
     public override IDisplayResult Display(LocalizationSetContentPickerField field, BuildFieldDisplayContext context)
     {
-        return Initialize<DisplayLocalizationSetContentPickerFieldViewModel>(GetDisplayShapeType(context), model =>
+        return Initialize<DisplayLocalizationSetContentPickerFieldViewModel>(GetDisplayShapeType(context), async model =>
         {
             model.Field = field;
             model.Part = context.ContentPart;
             model.PartFieldDefinition = context.PartFieldDefinition;
+            var items = await _contentLocalizationManager.GetItemsForSetsAsync(field.LocalizationSets ?? [], System.Globalization.CultureInfo.CurrentUICulture.Name);
+            model.Items = items.Select(item => new DisplayLinkItem(item.DisplayText ?? item.ContentItemId, ContentItemLinks.SitePath(item))).ToArray();
         })
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");

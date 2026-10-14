@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using Crest.CustomSettings.Services;
 using Crest.Mvc.Utilities;
+using Crest.Admin;
 using Crest.Navigation;
+using Microsoft.Extensions.Options;
 
 namespace Crest.CustomSettings;
 
@@ -15,12 +17,16 @@ public sealed class AdminMenu : AdminNavigationProvider
 
     internal readonly IStringLocalizer S;
 
+    private readonly string _adminPath;
+
     public AdminMenu(
         IStringLocalizer<AdminMenu> localizer,
-        CustomSettingsService customSettingsService)
+        CustomSettingsService customSettingsService,
+        IOptions<AdminOptions> adminOptions)
     {
         S = localizer;
         _customSettingsService = customSettingsService;
+        _adminPath = "/" + adminOptions.Value.AdminUrlPrefix.Trim('/');
     }
 
     protected override async ValueTask BuildAsync(NavigationBuilder builder)
@@ -46,7 +52,7 @@ public sealed class AdminMenu : AdminNavigationProvider
                 .Add(S["Configuration"], configuration => configuration
                     .Add(S["Settings"], settings => settings
                         .Add(new LocalizedString(type.DisplayName, type.DisplayName), type.DisplayName.PrefixPosition(), customSettings => customSettings
-                            .Action("Index", "Admin", routeValues)
+                            .Url($"{_adminPath}/CustomSettings/{Uri.EscapeDataString(type.Name)}")
                             .AddClass(htmlName)
                             .Id(htmlName)
                             .Permission(Permissions.CreatePermissionForType(type))
@@ -62,7 +68,7 @@ public sealed class AdminMenu : AdminNavigationProvider
             builder
                 .Add(S["Settings"], settings => settings
                     .Add(new LocalizedString(type.DisplayName, type.DisplayName), type.DisplayName.PrefixPosition(), layers => layers
-                        .Action("Index", "Admin", routeValues)
+                        .Url($"{_adminPath}/CustomSettings/{Uri.EscapeDataString(type.Name)}")
                         .AddClass(htmlName)
                         .Id(htmlName)
                         .Permission(Permissions.CreatePermissionForType(type))

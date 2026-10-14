@@ -23,6 +23,21 @@ using Crest.Users.ViewModels;
 
 namespace Crest.Users.Controllers;
 
+/// <summary>A pending external sign-in, as the site shell's completion page shows it.</summary>
+public sealed record PendingExternalLoginModel(
+    string LoginProvider,
+    string ProviderDisplayName,
+    string UserName,
+    string Email,
+    bool NoPassword,
+    bool NoEmail,
+    bool NoUsername,
+    bool RegistrationDisabled,
+    string LinkUserName);
+
+/// <summary>The outcome of completing an external sign-in.</summary>
+public sealed record ExternalLoginResult(bool Succeeded, string[] Errors, string Redirect);
+
 [Feature(UserConstants.Features.ExternalAuthentication)]
 public sealed class ExternalAuthenticationsController : AccountBaseController
 {
@@ -177,10 +192,9 @@ public sealed class ExternalAuthenticationsController : AccountBaseController
                 }
             }
 
-            // Link external login to an existing user.
-            ViewData["UserName"] = iUser.UserName;
-
-            return View(nameof(LinkExternalLogin));
+            // Link external login to an existing user: the account page asks for its password
+            // (step 7: the MVC LinkExternalLogin view is retired).
+            return RedirectToExternalLoginPage(LinkPage, returnUrl);
         }
 
         var settings = await _siteService.GetSettingsAsync<ExternalRegistrationSettings>();
@@ -226,9 +240,7 @@ public sealed class ExternalAuthenticationsController : AccountBaseController
             {
                 _logger.LogError("Unable to create internal account and link it to the external user.");
 
-                await _notifier.ErrorAsync(H["Unable to create internal account and link it to the external user."]);
-
-                return View(nameof(RegisterExternalLogin), externalLoginViewModel);
+                return RedirectToExternalLoginPage(RegisterPage, returnUrl, S["Unable to create internal account and link it to the external user."]);
             }
 
             var identityResult = await _userManager.AddLoginAsync(iUser, new UserLoginInfo(info.LoginProvider, info.ProviderKey, info.ProviderDisplayName));
@@ -273,34 +285,84 @@ public sealed class ExternalAuthenticationsController : AccountBaseController
             AddErrorsToModelState(identityResult.Errors);
         }
 
-        return View(nameof(RegisterExternalLogin), externalLoginViewModel);
+        // The account page completes the registration (step 7: the MVC RegisterExternalLogin
+        // view is retired); it reads what the provider sent from the external cookie.
+        return RedirectToExternalLoginPage(RegisterPage, returnUrl, ModelState.Values.SelectMany(state => state.Errors).FirstOrDefault()?.ErrorMessage);
     }
 
-    [HttpPost("/Crest.Users/ExternalAuthentications/RegisterExternalLogin", Name = RateLimitRouteNames.RegisterExternalLogin)]
-    [AllowAnonymous]
-    [RateLimitGroup(UserRateLimiterPolicyNames.UserRegistration)]
-    public async Task<IActionResult> RegisterExternalLogin(RegisterExternalLoginViewModel model, string returnUrl = null)
+    /// <summary>Where a pending external sign-in completes, on the site shell (Crest.SiteTheme.Client).</summary>
+    public const string RegisterPage = "/ExternalLogin/Register";
+
+    /// <summary>Where a pending external sign-in links to the existing account with the same email.</summary>
+    public const string LinkPage = "/ExternalLogin/Link";
+
+    private IActionResult RedirectToExternalLoginPage(string page, string returnUrl, string error = null)
     {
-        var settings = await _siteService.GetSettingsAsync<ExternalRegistrationSettings>();
-
-        if (settings.DisableNewRegistrations)
+        var query = new List<string>();
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
-            await _notifier.ErrorAsync(H["New registrations are disabled for this site."]);
-
-            return RedirectToLogin(returnUrl);
+            query.Add("returnUrl=" + Uri.EscapeDataString(returnUrl));
         }
 
-        var info = await _signInManager.GetExternalLoginInfoAsync();
+        if (!string.IsNullOrEmpty(error))
+        {
+            query.Add("error=" + Uri.EscapeDataString(error));
+        }
 
+        return LocalRedirect("~" + page + (query.Count > 0 ? "?" + string.Join('&', query) : string.Empty));
+    }
+
+    /// <summary>
+    /// The pending external sign-in the account page completes: who the provider says the user
+    /// is, what the tenant's external registration settings still ask for, and - when an account
+    /// with the same email exists - that account's user name to link to.
+    /// </summary>
+    [HttpGet("/api/crest/account/external-login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> PendingExternalLogin()
+    {
+        var info = await _signInManager.GetExternalLoginInfoAsync();
         if (info == null)
         {
-            _logger.LogWarning("Error loading external login info.");
-
             return NotFound();
         }
 
-        ViewData["ReturnUrl"] = returnUrl;
-        ViewData["LoginProvider"] = info.LoginProvider;
+        var settings = await _siteService.GetSettingsAsync<ExternalRegistrationSettings>();
+        var email = info.GetEmail();
+        var existing = _identityOptions.User.RequireUniqueEmail && !string.IsNullOrWhiteSpace(email)
+            ? await _userManager.FindByEmailAsync(email)
+            : null;
+
+        return Ok(new PendingExternalLoginModel(
+            info.LoginProvider,
+            info.ProviderDisplayName ?? info.LoginProvider,
+            await GenerateUsernameAsync(info),
+            email,
+            settings.NoPassword,
+            settings.NoEmail,
+            settings.NoUsername,
+            settings.DisableNewRegistrations,
+            existing?.UserName));
+    }
+
+    [HttpPost("/api/crest/account/external-login/register", Name = RateLimitRouteNames.RegisterExternalLogin)]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    [RateLimitGroup(UserRateLimiterPolicyNames.UserRegistration)]
+    public async Task<IActionResult> RegisterExternalLogin([FromBody] RegisterExternalLoginViewModel model, [FromQuery] string returnUrl = null)
+    {
+        var settings = await _siteService.GetSettingsAsync<ExternalRegistrationSettings>();
+        if (settings.DisableNewRegistrations)
+        {
+            return BadRequest(ExternalResult(S["New registrations are disabled for this site."]));
+        }
+
+        var info = await _signInManager.GetExternalLoginInfoAsync();
+        if (info == null)
+        {
+            _logger.LogWarning("Error loading external login info.");
+            return NotFound();
+        }
 
         model.NoPassword = settings.NoPassword;
         model.NoEmail = settings.NoEmail;
@@ -337,18 +399,18 @@ public sealed class ExternalAuthenticationsController : AccountBaseController
 
                         if (loginResult != null)
                         {
-                            return loginResult;
+                            return BadRequest(ExternalResult(loginResult));
                         }
                     }
 
-                    // we have created/linked to the local user, so we must verify the login.
-                    // If it does not succeed, the user is not allowed to login
+                    // We have created/linked to the local user, so we must verify the login.
+                    // If it does not succeed, the user is not allowed to login.
                     var loginSettings = await _siteService.GetSettingsAsync<LoginSettings>();
                     var signInResult = await ExternalSignInAsync(iUser, info, GetRememberMe(info, loginSettings));
 
                     if (signInResult.Succeeded)
                     {
-                        return await LoggedInActionResultAsync(iUser, returnUrl, info);
+                        return Ok(ExternalResult(await LoggedInActionResultAsync(iUser, returnUrl, info), succeeded: true));
                     }
                 }
 
@@ -356,179 +418,80 @@ public sealed class ExternalAuthenticationsController : AccountBaseController
             }
         }
 
-        return View(model);
+        return BadRequest(ExternalResult((IActionResult)null));
     }
 
-    [HttpPost("/Crest.Users/ExternalAuthentications/LinkExternalLogin", Name = RateLimitRouteNames.LinkExternalLogin)]
+    [HttpPost("/api/crest/account/external-login/link", Name = RateLimitRouteNames.LinkExternalLogin)]
     [AllowAnonymous]
+    [ValidateAntiForgeryToken]
     [RateLimitGroup(UserRateLimiterPolicyNames.PasswordAuthentication)]
-    public async Task<IActionResult> LinkExternalLogin(LinkExternalLoginViewModel model, string returnUrl = null)
+    public async Task<IActionResult> LinkExternalLogin([FromBody] LinkExternalLoginViewModel model, [FromQuery] string returnUrl = null)
     {
         var info = await _signInManager.GetExternalLoginInfoAsync();
-
         if (info == null)
         {
             _logger.LogWarning("Error loading external login info.");
-
             return NotFound();
         }
 
         var user = await _userManager.FindByEmailAsync(info.GetEmail());
-
         if (user == null)
         {
             _logger.LogWarning("Suspicious login detected from external provider. {LoginProvider} with key [{ProviderKey}] for {Identity}",
                 info.LoginProvider, info.ProviderKey, info.Principal?.Identity?.Name);
 
-            return Redirect("~/");
+            return BadRequest(ExternalResult(S["Invalid login attempt."]));
         }
 
+        await _loginFormEvents.InvokeAsync((e, model, modelState) => e.LoggingInAsync(user.UserName, (key, message) => modelState.AddModelError(key, message)), model, ModelState, _logger);
         if (ModelState.IsValid)
         {
-            await _loginFormEvents.InvokeAsync((e, model, modelState) => e.LoggingInAsync(user.UserName, (key, message) => modelState.AddModelError(key, message)), model, ModelState, _logger);
-
             var signInResult = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
-
             if (!signInResult.Succeeded)
             {
-                user = null;
-                ModelState.AddModelError(string.Empty, S["Invalid login attempt."]);
+                return BadRequest(ExternalResult(S["Invalid login attempt."]));
             }
-            else
+
+            var identityResult = await _userManager.AddLoginAsync(user, new UserLoginInfo(info.LoginProvider, info.ProviderKey, info.ProviderDisplayName));
+            if (identityResult.Succeeded)
             {
-                var identityResult = await _userManager.AddLoginAsync(user, new UserLoginInfo(info.LoginProvider, info.ProviderKey, info.ProviderDisplayName));
-
-                if (identityResult.Succeeded)
+                if (_logger.IsEnabled(LogLevel.Information))
                 {
-                    if (_logger.IsEnabled(LogLevel.Information))
-                    {
-                        _logger.LogInformation(3, "User account linked to {LoginProvider} provider.", info.LoginProvider);
-                    }
-                    // we have created/linked to the local user, so we must verify the login. If it does not succeed,
-                    // the user is not allowed to login.
-                    var loginSettings = await _siteService.GetSettingsAsync<LoginSettings>();
-
-                    if ((await ExternalSignInAsync(user, info, GetRememberMe(info, loginSettings))).Succeeded)
-                    {
-                        return await LoggedInActionResultAsync(user, returnUrl, info);
-                    }
+                    _logger.LogInformation(3, "User account linked to {LoginProvider} provider.", info.LoginProvider);
                 }
 
-                AddErrorsToModelState(identityResult.Errors);
+                // We have created/linked to the local user, so we must verify the login. If it
+                // does not succeed, the user is not allowed to login.
+                var loginSettings = await _siteService.GetSettingsAsync<LoginSettings>();
+                if ((await ExternalSignInAsync(user, info, GetRememberMe(info, loginSettings))).Succeeded)
+                {
+                    return Ok(ExternalResult(await LoggedInActionResultAsync(user, returnUrl, info), succeeded: true));
+                }
             }
+
+            AddErrorsToModelState(identityResult.Errors);
         }
 
-        CopyModelStateErrorsToTempData(null);
-
-        return RedirectToLogin();
+        return BadRequest(ExternalResult((IActionResult)null));
     }
 
-    public async Task<IActionResult> ExternalLogins()
+    // The JSON answer of a completion: the model state's errors, and where a redirecting result
+    // (a sign-in's return URL, a login veto's redirect) sends the browser.
+    private ExternalLoginResult ExternalResult(IActionResult result, bool succeeded = false) => new(
+        succeeded,
+        [.. ModelState.Values.SelectMany(state => state.Errors).Select(error => error.ErrorMessage).Where(message => !string.IsNullOrEmpty(message))],
+        result switch
+        {
+            RedirectResult redirect => Url.Content(redirect.Url),
+            LocalRedirectResult local => Url.Content(local.Url),
+            RedirectToActionResult action => Url.Action(action.ActionName, action.ControllerName, action.RouteValues),
+            _ => null,
+        });
+
+    private ExternalLoginResult ExternalResult(string error)
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user == null)
-        {
-            return Forbid();
-        }
-
-        var model = new ExternalLoginsViewModel
-        {
-            CurrentLogins = await _userManager.GetLoginsAsync(user),
-        };
-        model.ShowRemoveButton = await _userManager.HasPasswordAsync(user) || model.CurrentLogins.Count > 1;
-        model.OtherLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync())
-            .Where(auth => model.CurrentLogins.All(ul => auth.Name != ul.LoginProvider))
-            .ToArray();
-
-        CopyTempDataErrorsToModelState();
-
-        return View(model);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> LinkLogin(string provider)
-    {
-        // Clear the existing external cookie to ensure a clean login process.
-        await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-
-        // Request a redirect to the external login provider to link a login for the current user.
-        var redirectUrl = Url.Action(nameof(LinkLoginCallback));
-        var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl, _userManager.GetUserId(User));
-
-        return new ChallengeResult(provider, properties);
-    }
-
-    public async Task<IActionResult> LinkLoginCallback()
-    {
-        var user = await _userManager.GetUserAsync(User);
-
-        if (user == null)
-        {
-            _logger.LogError("Unable to load user with ID '{UserId}'.", _userManager.GetUserId(User));
-
-            return RedirectToLogin();
-        }
-
-        var info = await _signInManager.GetExternalLoginInfoAsync();
-
-        if (info == null)
-        {
-            _logger.LogError("Unexpected error occurred loading external login info for user '{UserName}'.", user.UserName);
-
-            return RedirectToLogin();
-        }
-
-        var result = await _userManager.AddLoginAsync(user, new UserLoginInfo(info.LoginProvider, info.ProviderKey, info.ProviderDisplayName));
-
-        if (!result.Succeeded)
-        {
-            _logger.LogError("Unexpected error occurred adding external login info for user '{UserName}'.", user.UserName);
-
-            return RedirectToLogin();
-        }
-
-        // Clear the existing external cookie to ensure a clean login process.
-        await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-
-        // Perform External Login SignIn.
-        await ExternalSignInAsync(user, info);
-
-        return RedirectToAction(nameof(ExternalLogins));
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> RemoveLogin(RemoveLoginViewModel model)
-    {
-        var user = await _userManager.GetUserAsync(User);
-
-        if (user == null || user is not User u)
-        {
-            _logger.LogError("Unable to load user with ID '{UserId}'.", _userManager.GetUserId(User));
-
-            return Redirect("~/");
-        }
-
-        var result = await _userManager.RemoveLoginAsync(user, model.LoginProvider, model.ProviderKey);
-
-        if (!result.Succeeded)
-        {
-            _logger.LogError("Unexpected error occurred removing external login info for user '{UserName}'.", user.UserName);
-
-            return RedirectToLogin();
-        }
-
-        // Remove External Authentication Tokens.
-        foreach (var item in u.UserTokens.Where(c => c.LoginProvider == model.LoginProvider).ToList())
-        {
-            if (!(await _userManager.RemoveAuthenticationTokenAsync(user, model.LoginProvider, item.Name)).Succeeded)
-            {
-                _logger.LogError("Could not remove '{TokenName}' token while unlinking '{LoginProvider}' provider from user '{UserName}'.", item.Name, model.LoginProvider, user.UserName);
-            }
-        }
-
-        await _signInManager.SignInAsync(user, isPersistent: false);
-
-        return RedirectToAction(nameof(ExternalLogins));
+        ModelState.AddModelError(string.Empty, error);
+        return ExternalResult((IActionResult)null);
     }
 
     private async Task UpdateAndValidatePasswordAsync(RegisterExternalLoginViewModel model, bool noPassword)

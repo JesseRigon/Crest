@@ -63,7 +63,7 @@
             @if (await AuthorizationService.AuthorizeAsync(ViewContext.HttpContext.User, AdminPermissions.AccessAdminPanel))
             {
                 <li>
-                    <a class="dropdown-item fw-bold" asp-action="List" asp-controller="Admin" asp-area="@NotificationConstants.Features.Notifications">@T["Notification Center"]</a>
+                    <a class="dropdown-item fw-bold" href="~/Admin/notifications">@T["Notification Center"]</a>
                 </li>
             }
         </ul>

@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+using Crest.Admin;
 using Microsoft.Extensions.Localization;
 using Crest.Navigation;
 
@@ -7,9 +9,14 @@ public sealed class ManagementAdminMenu : AdminNavigationProvider
 {
     internal readonly IStringLocalizer S;
 
-    public ManagementAdminMenu(IStringLocalizer<ManagementAdminMenu> stringLocalizer)
+    // The native admin pages (step 7: the MVC OpenId screens are retired) are addressed by
+    // their route under the tenant's admin prefix, not by an MVC action.
+    private readonly string _adminPath;
+
+    public ManagementAdminMenu(IStringLocalizer<ManagementAdminMenu> stringLocalizer, IOptions<AdminOptions> adminOptions)
     {
         S = stringLocalizer;
+        _adminPath = "/" + adminOptions.Value.AdminUrlPrefix.Trim('/');
     }
 
     protected override ValueTask BuildAsync(NavigationBuilder builder)
@@ -23,12 +30,12 @@ public sealed class ManagementAdminMenu : AdminNavigationProvider
                     .Id("openid")
                     .Add(S["Management"], S["Management"].PrefixPosition(), management => management
                         .Add(S["Applications"], S["Applications"].PrefixPosition(), applications => applications
-                            .Action("Index", "Application", "Crest.OpenId")
+                            .Url(_adminPath + "/OpenId/Application")
                             .Permission(OpenIdPermissions.ManageApplications)
                             .LocalNav()
                         )
                         .Add(S["Scopes"], S["Scopes"].PrefixPosition(), applications => applications
-                            .Action("Index", "Scope", "Crest.OpenId")
+                            .Url(_adminPath + "/OpenId/Scope")
                             .Permission(OpenIdPermissions.ManageScopes)
                             .LocalNav()
                         )
@@ -45,12 +52,12 @@ public sealed class ManagementAdminMenu : AdminNavigationProvider
                     .AddClass("openid")
                     .Id("openid")
                     .Add(S["Applications"], S["Applications"].PrefixPosition(), applications => applications
-                        .Action("Index", "Application", "Crest.OpenId")
+                        .Url(_adminPath + "/OpenId/Application")
                         .Permission(OpenIdPermissions.ManageApplications)
                         .LocalNav()
                     )
                     .Add(S["Scopes"], S["Scopes"].PrefixPosition(), applications => applications
-                        .Action("Index", "Scope", "Crest.OpenId")
+                        .Url(_adminPath + "/OpenId/Scope")
                         .Permission(OpenIdPermissions.ManageScopes)
                         .LocalNav()
                     )

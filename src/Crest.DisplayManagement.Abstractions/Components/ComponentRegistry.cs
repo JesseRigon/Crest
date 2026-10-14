@@ -68,6 +68,8 @@ public static class ComponentRegistryExtensions
 /// </summary>
 public sealed class ComponentRegistry : IComponentRegistry
 {
+    private static readonly string[] DisplayVariants = ["_Display__", "_SummaryAdmin", "_DetailAdmin", "_Summary", "_Detail"];
+
     private readonly Dictionary<string, ComponentDescriptor> _byName = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, ZoneKeyDescriptor> _zoneKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<ZoneContribution> _contributions = [];
@@ -128,6 +130,18 @@ public sealed class ComponentRegistry : IComponentRegistry
         for (var name = type; name.Length > 0; name = name.LastIndexOf("__", StringComparison.Ordinal) is var cut and > 0 ? name[..cut] : string.Empty)
         {
             if (TryGet(name, out descriptor))
+            {
+                return true;
+            }
+        }
+
+        // A field's display mode ("TextField_Display__Header") or a part's display type shape
+        // ("TitlePart_Summary") falls back to the shape's own component when the variant has none,
+        // as the Razor views fell back to the shape's own view. Editor shapes never do.
+        foreach (var marker in DisplayVariants)
+        {
+            var index = type.IndexOf(marker, StringComparison.Ordinal);
+            if (index > 0 && TryGet(type[..index], out descriptor))
             {
                 return true;
             }

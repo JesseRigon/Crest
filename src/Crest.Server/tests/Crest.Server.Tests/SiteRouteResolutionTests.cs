@@ -137,3 +137,16 @@ public sealed class LegacyRouteOwnershipTests
         Assert.False(service.Owns(context, "/members/acme"));
     }
 }
+
+// The shipped account email templates are registered under the names UserEmailService renders.
+public sealed class AccountEmailTemplatesTests
+{
+    [Fact]
+    public async Task BothAccountEmailsShipUnderTheirNames()
+    {
+        var templates = await new Crest.Display.AccountEmailTemplates().GetTemplatesAsync();
+
+        Assert.Contains(templates, template => template.Name == Crest.Users.Services.UserEmailService.ConfirmEmailTemplate && template.Published);
+        Assert.Contains(templates, template => template.Name == Crest.Users.Services.UserEmailService.LostPasswordTemplate && template.Published);
+    }
+}

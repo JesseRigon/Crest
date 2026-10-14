@@ -127,6 +127,79 @@ public sealed class UsersController(UserManager<IUser> userManager, IUserService
         return result.Succeeded ? NoContent() : BadRequest(result.Errors.Select(error => error.Description));
     }
 
+    /// <summary>The account's state the editor shows beside its fields: lockout and failed sign-ins.</summary>
+    [HttpGet("{id}/status")]
+    public async Task<ActionResult<UserStatus>> StatusAsync(string id)
+    {
+        var user = await FindAsync(id); if (user is null) return NotFound();
+        if (!await authorization.AuthorizeAsync(User, UsersPermissions.ViewUsers, user)) return Forbid();
+        var lockoutEnd = await userManager.GetLockoutEndDateAsync(user);
+        return Ok(new UserStatus(lockoutEnd is { } end && end > DateTimeOffset.UtcNow, lockoutEnd, await userManager.GetAccessFailedCountAsync(user)));
+    }
+
+    /// <summary>Clears a lockout and the failed sign-in count.</summary>
+    [HttpPost("{id}/unlock")]
+    public async Task<ActionResult<UserStatus>> UnlockAsync(string id)
+    {
+        var user = await FindAsync(id); if (user is null) return NotFound();
+        if (!await authorization.AuthorizeAsync(User, UsersPermissions.EditUsers, user)) return Forbid();
+        await userManager.ResetAccessFailedCountAsync(user);
+        var result = await userManager.SetLockoutEndDateAsync(user, null);
+        if (!result.Succeeded)
+        {
+            await session.CancelAsync();
+            return BadRequest(result.Errors.Select(error => error.Description));
+        }
+
+        return Ok(new UserStatus(false, null, 0));
+    }
+
+    /// <summary>Confirms the user's email address on the administrator's word.</summary>
+    [HttpPost("{id}/confirm-email")]
+    public async Task<ActionResult<CrestUser>> ConfirmEmailAsync(string id)
+    {
+        var user = await FindAsync(id); if (user is null) return NotFound();
+        if (!await authorization.AuthorizeAsync(User, UsersPermissions.EditUsers, user)) return Forbid();
+        if (!await userManager.IsEmailConfirmedAsync(user))
+        {
+            var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            var result = await userManager.ConfirmEmailAsync(user, token);
+            if (!result.Succeeded) return BadRequest(result.Errors.Select(error => error.Description));
+        }
+
+        return Ok(CrestUser.From(user));
+    }
+
+    /// <summary>Sends the user a new email verification message (needs Crest.Email).</summary>
+    [HttpPost("{id}/send-verification")]
+    public async Task<IActionResult> SendVerificationAsync(string id)
+    {
+        var user = await FindAsync(id); if (user is null) return NotFound();
+        if (!await authorization.AuthorizeAsync(User, UsersPermissions.EditUsers, user)) return Forbid();
+        if (await userManager.IsEmailConfirmedAsync(user)) return BadRequest("The email address is already confirmed.");
+        if (HttpContext.RequestServices.GetService(typeof(UserEmailService)) is not UserEmailService email) return BadRequest("Email is not enabled on this tenant.");
+        return await email.SendEmailConfirmationAsync(user) ? NoContent() : BadRequest("The verification message could not be sent.");
+    }
+
+    /// <summary>The external sign-ins (Microsoft, Google, OpenID...) linked to the account.</summary>
+    [HttpGet("{id}/external-logins")]
+    public async Task<ActionResult<IReadOnlyList<UserExternalLogin>>> ExternalLoginsAsync(string id)
+    {
+        var user = await FindAsync(id); if (user is null) return NotFound();
+        if (!await authorization.AuthorizeAsync(User, UsersPermissions.ViewUsers, user)) return Forbid();
+        return Ok((await userManager.GetLoginsAsync(user)).Select(login => new UserExternalLogin(login.LoginProvider, login.ProviderKey, login.ProviderDisplayName)).ToArray());
+    }
+
+    /// <summary>Unlinks one external sign-in from the account.</summary>
+    [HttpDelete("{id}/external-logins/{provider}/{key}")]
+    public async Task<IActionResult> RemoveExternalLoginAsync(string id, string provider, string key)
+    {
+        var user = await FindAsync(id); if (user is null) return NotFound();
+        if (!await authorization.AuthorizeAsync(User, UsersPermissions.EditUsers, user)) return Forbid();
+        var result = await userManager.RemoveLoginAsync(user, provider, key);
+        return result.Succeeded ? NoContent() : BadRequest(result.Errors.Select(error => error.Description));
+    }
+
     private async Task<User?> FindAsync(string id) => await userManager.FindByIdAsync(id) as User;
     private static void Apply(UserWrite request, User user) { user.UserName = request.UserName?.Trim(); user.Email = request.Email?.Trim(); user.PhoneNumber = request.PhoneNumber?.Trim(); user.EmailConfirmed = request.EmailConfirmed; user.IsEnabled = request.IsEnabled; }
     private async Task SetRolesAsync(User user, string[]? roles)

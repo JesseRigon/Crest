@@ -42,6 +42,8 @@ public sealed class Startup : StartupBase
         services.AddScoped<TemplateStore>();
         services.AddScoped<ITemplateCatalog>(sp => sp.GetRequiredService<TemplateStore>());
         services.AddScoped<TemplateResolver>();
+        // Named templates to HTML (email bodies; step 7 retires the Razor email shapes).
+        services.AddScoped<Crest.DisplayManagement.Components.ITemplateHtmlRenderer, TemplateHtmlRenderer>();
         services.AddScoped<TemplateValidator>();
         services.AddScoped<TemplatePreview>();
         services.AddScoped<IDisplayTemplateBinding, TemplateDisplayBinding>();

@@ -25,6 +25,8 @@
         <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</CrestAlert>
     }
 
+    <ContentDefinitionCreate Kind="part" Created="OnPartCreatedAsync" />
+
     @* Standard master-detail structure: this region takes the page's remaining
        height; the list's items and the detail pane's body do the scrolling. *@
     <div style="display: flex; flex-wrap: wrap; gap: 1rem; flex: 1 1 auto; min-height: 0; align-items: stretch;">
@@ -153,6 +155,8 @@
                             </CrestStack>
                         </CrestFieldset>
 
+                        <ContentPartDefinitionEditor PartName="@SelectedPart.Name" Changed="LoadAsync" Deleted="OnPartDeletedAsync" />
+
                         <CrestFieldset Text="@T["Used by content types"]" AllowCollapse="true" Collapsed="false">
                             @if (SelectedPart.UsedByTypes.Length == 0)
                             {
@@ -176,6 +180,18 @@
 </CrestStack>
 
 @code {
+    private async Task OnPartCreatedAsync(string name)
+    {
+        SelectedPartName = name;
+        await LoadAsync();
+    }
+
+    private async Task OnPartDeletedAsync()
+    {
+        SelectedPartName = null;
+        await LoadAsync();
+    }
+
     private PartDefinition[] Parts { get; set; } = [];
     private string? SelectedPartName { get; set; }
     private bool IsLoading { get; set; }

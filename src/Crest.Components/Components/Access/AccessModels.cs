@@ -72,3 +72,11 @@ public static class AccessApi
 
 /// <summary>A user a group editor may add: the id and how to show it.</summary>
 public sealed record UserChoice(string Id, string Label);
+
+/// <summary>A user the caller manages at a reach (api/crest/access/managed-users).</summary>
+public sealed record ManagedUserInfo(string Id, string Label);
+
+/// <summary>An organization's owner, and whether the caller may transfer it.</summary>
+public sealed record OwnershipInfo(string OrganizationId, string? OwnerUserId, bool CanTransfer);
+
+public sealed record TransferOwnershipRequest(string UserId);

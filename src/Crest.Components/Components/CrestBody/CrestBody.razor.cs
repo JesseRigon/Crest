@@ -14,6 +14,8 @@ namespace Crest.Components.Primitives
     /// <summary>
     /// CrestBody component.
     /// </summary>
+    // Named App* so the app-frame hosts do not collide with the themes' Layout component or the zone keys.
+    [Crest.DisplayManagement.Components.BlazorComponent("AppBody", DisplayName = "App body", Category = "Layout", Icon = "article")]
     public partial class CrestBody : CrestComponentWithChildren
     {
         private const string DefaultStyle = "margin-top: 51px; margin-bottom: 57px; margin-left:250px;";

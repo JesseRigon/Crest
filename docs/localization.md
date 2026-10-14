@@ -26,12 +26,10 @@ definitions are a business-context concern, not part of this system.
 
 **The Blazor WASM client is the source of truth for which culture to display and which
 culture to tell the server about.** The server does not guess culture from a chain of
-independent `IRequestCultureProvider`s — that approach (multiple providers racing inside
-`RequestLocalizationMiddleware`) was tried and abandoned: providers that each prepended
-themselves via `AddInitialRequestCultureProvider` raced for the front slot, so whichever
-module's `ConfigureServices` ran last silently won — determined by module load order, not
-anything a site admin controls. Since 2026-10-10 `Crest.Localization` is the one owner of
-the provider list and assigns it rather than inserting into it.
+independent `IRequestCultureProvider`s: providers that each prepend themselves via
+`AddInitialRequestCultureProvider` race for the front slot, so module load order, not anything
+a site admin controls, would decide. `Crest.Localization` is the one owner of the provider list
+and assigns it rather than inserting into it.
 
 Instead:
 
@@ -86,9 +84,9 @@ extra plumbing needed.
 
 ## Front end and anonymous visitors (server-rendered)
 
-The tenant's front-end site (`Crest.SiteTheme`) is plain server-rendered
-Razor/Liquid — no WASM client to resolve anything itself. It relies on the stock ASP.NET
-Core `RequestLocalizationOptions` pipeline instead:
+The tenant's front-end site (`Crest.SiteTheme`) is prerendered on the server before any client
+runs, and an anonymous visitor has no manifest to resolve from, so the server's culture comes
+from the stock ASP.NET Core `RequestLocalizationOptions` pipeline:
 
 1. `Crest.Localization`'s `RequestLocalizationOptionsConfigurations` assigns
    `RequestCultureProviders` as
@@ -99,8 +97,7 @@ Core `RequestLocalizationOptions` pipeline instead:
 2. The list is assigned, not inserted into, and the platform is its only owner: ASP.NET
    Core does not guarantee configure-delegate ordering across independent DI
    registrations, so two modules each inserting at index 0 would race for the front slot.
-   The admin-only `AdminCookieCultureProvider` and Crest.Server's post-configure rebuild
-   are gone (fixed in place 2026-10-10).
+   No other module adds a provider or rebuilds the list.
 3. The tenant's actual supported/default cultures come from `LocalizationSettings`
    (`Crest.Localization`'s site settings, editable at `/Admin/Settings/localization`
    or via a recipe's `settings` step) — **as top-level keys of the step itself**
@@ -116,7 +113,7 @@ An anonymous visitor with no cookie yet gets whatever their browser sends via
 
 ## Culture-aware date/number formatting
 
-`DisplayManager` assigns the resolved culture to `CultureInfo.CurrentCulture`,
+`AdminShellState` assigns the resolved culture to `CultureInfo.CurrentCulture`,
 `CurrentUICulture`, `DefaultThreadCurrentCulture`, and `DefaultThreadCurrentUICulture` in
 the WASM process whenever it re-resolves culture. Every ambient-culture format call
 (data grid columns, date pickers, schedulers, treemaps) then formats correctly without
@@ -173,9 +170,9 @@ Two independent mechanisms, by project:
     Storing the literal itself as the value pins the literal over a shipped translation.
   - Client: `CrestApiLocalizer` (`Crest.Components.Theme.CrestApiLocalizer`) implements
     `ILocalizer`, exposes the `T["..."]` indexer, caches per culture, and renders the
-    literal itself on a miss rather than throwing. Loaded whenever `DisplayManager`
+    literal itself on a miss rather than throwing. Loaded whenever `AdminShellState`
     resolves a new culture. Convention: `@inject Crest.Components.Theme.CrestApiLocalizer T`.
-  - **Translation content lives in the HOST, not in Crest** (ruling 2026-08-22): the
+  - **Translation content lives in the HOST, not in Crest**: the
     Crest repo ships literals only and stays as stock-localized as upstream makes it —
     its aligned literals inherit whatever the host's catalogs provide. The host project
     supplies editorial translations as its own distinctly-named files next to the
@@ -202,17 +199,14 @@ on **Crowdin** (crowdin.com) via the `OrchardCore.Translations` repo:
 3. **Packaging** — exports are packed into the `OrchardCore.Translations.{lang}` /
    `.All` NuGet packages per OrchardCore release.
 
-**After the platform rename** (ruling 2026-10-09), the platform's own names are no longer
-`Crest.*`, but the Crowdin packages still are: their `msgctxt` values are OrchardCore
-type and view names. Internally, translations take a generic name (for example
-`Translations.*`, not a project name), and a mapping rewrites the packages' `Crest.*`
-contexts to the renamed platform names when they are loaded, so the community translations
-keep applying. Built: `TranslationContextMap` (`Crest.Localization/PortableObject`) is
-applied by the PO parser to every entry it reads, with the same rules as the rename
-(`OrchardCore.*` → `Crest.*`; the stock workflow module's own prefix rule went with the
-module 2026-10-10,
-identifiers carrying the name made neutral); contexts that never carried the name pass through
-unchanged.
+**Context mapping.** The platform's own names are `Crest.*`, but the Crowdin packages' `msgctxt`
+values are upstream OrchardCore type and view names. Internally, translations take a generic
+name (for example `Translations.*`, not a project name), and a mapping rewrites the packages'
+upstream contexts to the platform's names when they are loaded, so the community translations
+keep applying: `TranslationContextMap` (`Crest.Localization/PortableObject`) is applied by the
+PO parser to every entry it reads, with the same rules as the platform rename (`OrchardCore.*` →
+`Crest.*`, identifiers carrying the name made neutral); contexts that never carried the name
+pass through unchanged.
 
 Two consequences: **coverage lag** (extraction is automatic, translation is human — new
 strings sit untranslated until a volunteer does them) and **release lag** (strings added
@@ -239,8 +233,7 @@ case, where never-touched gaps quietly gain translations. Adding your own entry
 permanently shadows upstream's version, and pin-to-literal (store the literal as the
 value) vetoes a shipped translation outright.
 
-Every Crest literal therefore falls into one of three populations (audit sweep,
-2026-08-22): **inheriting** (matches a translated upstream msgid), **Crowdin
+Every Crest literal therefore falls into one of three populations: **inheriting** (matches a translated upstream msgid), **Crowdin
 candidates** (matches an untranslated upstream msgid — translating it on Crowdin's
 OrchardCore project benefits everyone and flows in at the next Translations release),
 or **Crest-authored** (private lane only).
@@ -289,13 +282,13 @@ to **every** tenant. Tenant-generated content types and content items are explic
 out of scope: their keys are tenant data and mean nothing in another tenant.
 
 This is the internal analogue of upstream's Crowdin pipeline (suggest → proofread →
-distribute), with none of the external dependency — which also fits the air-gap
-ruling: the host becomes its own translation platform.
+distribute), with none of the external dependency, which fits the air-gap rule: the host
+is its own translation platform.
 
-**Why this works now (and didn't before).** The invariant-literal key ruling is the enabler: module-string keys
-(`msgctxt "Crest.AdminTheme.Client"` literals, stock msgids) are **tenant-independent by
-construction**, so a translation authored in tenant A is semantically valid in
-tenant B. Under the old slug/caption-keyed world this feature was impossible.
+**Why this works.** Module-string keys are invariant literals (`msgctxt
+"Crest.AdminTheme.Client"` literals, stock msgids), so they are **tenant-independent by
+construction**, and a translation authored in tenant A is semantically valid in tenant B. A
+slug- or caption-keyed scheme could not support this.
 
 ### 1. Eligibility filter (at save time)
 
@@ -342,8 +335,7 @@ tenant B. Under the old slug/caption-keyed world this feature was impossible.
   (suggestions → independent model review → batch approve) pointed inward — an
   auto-reviewer that screens suggestions (bad-faith content, placeholder fidelity,
   terminology consistency) before or instead of manual review. Same code, different
-  target. (Inspired by the Crowdin two-pass exploration — MT suggestions + ML review
-  approvals via API — 2026-08-22 session.)
+  target.
 
 ### 4. Distribution layer (new rung in the resolution chain)
 
@@ -363,7 +355,7 @@ tenant B. Under the old slug/caption-keyed world this feature was impossible.
     approval → delete/reject that → reveal PO → literal.
   - Pin-to-literal keeps working at every level.
 
-### Decisions needed
+### Open questions
 
 For implementation time:
 

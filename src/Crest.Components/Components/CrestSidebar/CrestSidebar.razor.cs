@@ -37,6 +37,8 @@ namespace Crest.Components.Primitives
     /// &lt;/CrestSidebar&gt;
     /// </code>
     /// </example>
+    // Named App* so the app-frame hosts do not collide with the themes' Layout component or the zone keys.
+    [Crest.DisplayManagement.Components.BlazorComponent("AppSidebar", DisplayName = "App sidebar", Category = "Layout", Icon = "view_sidebar")]
     public partial class CrestSidebar : CrestComponentWithChildren
     {
         private const string DefaultStyle = "top:51px;bottom:57px;width:250px;";

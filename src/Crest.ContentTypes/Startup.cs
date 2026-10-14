@@ -48,10 +48,6 @@ public sealed class Startup : StartupBase
         services.AddScoped<IStereotypeService, StereotypeService>();
         services.AddScoped<IContentDefinitionDisplayHandler, ContentDefinitionDisplayCoordinator>();
         services.AddScoped<IContentDefinitionDisplayManager, DefaultContentDefinitionDisplayManager>();
-        services.AddScoped<IContentPartDefinitionDisplayDriver, ContentPartSettingsDisplayDriver>();
-        services.AddScoped<IContentTypeDefinitionDisplayDriver, ContentTypeSettingsDisplayDriver>();
-        services.AddScoped<IContentTypeDefinitionDisplayDriver, DefaultContentTypeDisplayDriver>();
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, ContentTypePartSettingsDisplayDriver>();
 
         // TODO: Put in its own feature to be able to execute this recipe without having to enable
         // Content Types management UI

@@ -1,0 +1,231 @@
+@page "/Settings/email"
+@page "/Email/Test"
+@using System.Net.Http.Json
+@using Crest.Components.Primitives
+@inject HttpClient Http
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* Settings › Email (Crest.Email, Crest.Email.Smtp): the default provider, the SMTP provider and
+   a test send - the retired MVC settings group and Email Test page in one. The SMTP password is
+   write-only: an empty box keeps the stored one. *@
+<CrestStack Gap="1rem" data-testid="email-settings-page">
+    <CrestText TextStyle="TextStyle.H4" Text="@T["Email"]" />
+    @if (Error is { } error) { <CrestAlert AlertStyle="AlertStyle.Danger" AllowClose="false">@error</CrestAlert> }
+
+    @if (Settings is null)
+    {
+        <CrestProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        <CrestCard>
+            <CrestStack Gap="0.5rem">
+                <CrestText TextStyle="TextStyle.Subtitle1" Text="@T["Default provider"]" />
+                <CrestDropDown TValue="string" @bind-Value="DefaultProvider" Data="@Settings.Providers" TextProperty="DisplayName" ValueProperty="Name" AllowClear="true" Placeholder="@T["None"]" Style="max-width: 24rem" Name="default-provider" />
+                <div><CrestButton Text="@T["Save"]" Icon="save" Click="SaveProviderAsync" Disabled="IsSaving" data-testid="email-provider-save" /></div>
+            </CrestStack>
+        </CrestCard>
+    }
+
+    @if (Smtp is not null)
+    {
+        <CrestCard data-testid="smtp-settings">
+            <CrestStack Gap="0.5rem">
+                <CrestText TextStyle="TextStyle.Subtitle1" Text="@T["SMTP"]" />
+                <div><CrestCheckBox @bind-Value="Smtp.IsEnabled" Name="smtp-enabled" /><label for="smtp-enabled"> @T["Enable the SMTP provider"]</label></div>
+                @if (Smtp.IsEnabled)
+                {
+                    <CrestLabel Text="@T["Default sender"]" Component="smtp-sender" />
+                    <CrestTextBox @bind-Value="Smtp.DefaultSender" Name="smtp-sender" Style="max-width: 24rem" />
+                    <CrestLabel Text="@T["Delivery method"]" Component="smtp-delivery" />
+                    <CrestDropDown TValue="int" @bind-Value="Smtp.DeliveryMethod" Data="@DeliveryMethods" TextProperty="Text" ValueProperty="Value" Name="smtp-delivery" Style="max-width: 24rem" />
+                    @if (Smtp.DeliveryMethod == 1)
+                    {
+                        <CrestLabel Text="@T["Pickup directory"]" Component="smtp-pickup" />
+                        <CrestTextBox @bind-Value="Smtp.PickupDirectoryLocation" Name="smtp-pickup" Style="width: 100%" />
+                    }
+                    else
+                    {
+                        <CrestLabel Text="@T["Host"]" Component="smtp-host" />
+                        <CrestTextBox @bind-Value="Smtp.Host" Name="smtp-host" Style="max-width: 24rem" />
+                        <CrestLabel Text="@T["Port"]" Component="smtp-port" />
+                        <CrestNumeric TValue="int" @bind-Value="Smtp.Port" Name="smtp-port" Min="0" Max="65535" />
+                        <div><CrestCheckBox @bind-Value="Smtp.AutoSelectEncryption" Name="smtp-auto" /><label for="smtp-auto"> @T["Choose the encryption automatically"]</label></div>
+                        @if (!Smtp.AutoSelectEncryption)
+                        {
+                            <CrestDropDown TValue="int" @bind-Value="Smtp.EncryptionMethod" Data="@EncryptionMethods" TextProperty="Text" ValueProperty="Value" Name="smtp-encryption" Style="max-width: 24rem" />
+                        }
+                        <div><CrestCheckBox @bind-Value="Smtp.RequireCredentials" Name="smtp-credentials" /><label for="smtp-credentials"> @T["The server requires credentials"]</label></div>
+                        @if (Smtp.RequireCredentials)
+                        {
+                            <div><CrestCheckBox @bind-Value="Smtp.UseDefaultCredentials" Name="smtp-default-credentials" /><label for="smtp-default-credentials"> @T["Use the process's Windows credentials"]</label></div>
+                            @if (!Smtp.UseDefaultCredentials)
+                            {
+                                <CrestLabel Text="@T["User name"]" Component="smtp-user" />
+                                <CrestTextBox @bind-Value="Smtp.UserName" Name="smtp-user" Style="max-width: 24rem" />
+                                <CrestLabel Text="@(Smtp.HasPassword ? T["Password (stored; type a new one to change it)"] : T["Password"])" Component="smtp-password" />
+                                <CrestPassword @bind-Value="Password" Name="smtp-password" Style="max-width: 24rem" />
+                            }
+                        }
+                        <CrestLabel Text="@T["Proxy host and port"]" Component="smtp-proxy" />
+                        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <CrestTextBox @bind-Value="Smtp.ProxyHost" Name="smtp-proxy" />
+                            <CrestNumeric TValue="int" @bind-Value="Smtp.ProxyPort" Min="0" Max="65535" />
+                        </CrestStack>
+                        <div><CrestCheckBox @bind-Value="Smtp.IgnoreInvalidSslCertificate" Name="smtp-ignore-ssl" /><label for="smtp-ignore-ssl"> @T["Accept an invalid SSL certificate"]</label></div>
+                    }
+                }
+                <div><CrestButton Text="@T["Save SMTP settings"]" Icon="save" Click="SaveSmtpAsync" Disabled="IsSaving" data-testid="smtp-save" /></div>
+            </CrestStack>
+        </CrestCard>
+    }
+
+    <CrestCard data-testid="email-test">
+        <CrestStack Gap="0.5rem">
+            <CrestText TextStyle="TextStyle.Subtitle1" Text="@T["Send a test message"]" />
+            @if (Settings is not null)
+            {
+                <CrestDropDown TValue="string" @bind-Value="Test.Provider" Data="@Settings.Providers" TextProperty="DisplayName" ValueProperty="Name" AllowClear="true" Placeholder="@T["The default provider"]" Style="max-width: 24rem" Name="test-provider" />
+            }
+            <CrestLabel Text="@T["To"]" Component="test-to" />
+            <CrestTextBox @bind-Value="Test.To" Name="test-to" Style="max-width: 24rem" />
+            <CrestLabel Text="@T["From (optional)"]" Component="test-from" />
+            <CrestTextBox @bind-Value="Test.From" Name="test-from" Style="max-width: 24rem" />
+            <CrestLabel Text="@T["Cc, Bcc, Reply to (optional)"]" Component="test-cc" />
+            <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <CrestTextBox @bind-Value="Test.Cc" Name="test-cc" Placeholder="Cc" />
+                <CrestTextBox @bind-Value="Test.Bcc" Placeholder="Bcc" />
+                <CrestTextBox @bind-Value="Test.ReplyTo" Placeholder="@T["Reply to"]" />
+            </CrestStack>
+            <CrestLabel Text="@T["Subject"]" Component="test-subject" />
+            <CrestTextBox @bind-Value="Test.Subject" Name="test-subject" Style="width: 100%" />
+            <CrestLabel Text="@T["Body"]" Component="test-body" />
+            <CrestTextArea @bind-Value="Test.Body" Name="test-body" Rows="4" Style="width: 100%" />
+            <div><CrestButton Text="@T["Send"]" Icon="send" Click="SendTestAsync" Disabled="IsSending" data-testid="email-test-send" /></div>
+            @if (TestResult is { } result)
+            {
+                <CrestAlert AlertStyle="@(result.Succeeded ? AlertStyle.Success : AlertStyle.Danger)" AllowClose="false">
+                    @(result.Succeeded ? T["Message sent."] : string.Join(" ", result.Errors))
+                </CrestAlert>
+            }
+        </CrestStack>
+    </CrestCard>
+</CrestStack>
+
+@code {
+    private const string Api = "api/crest/settings/email";
+
+    private EmailSettingsModel? Settings;
+    private string? DefaultProvider;
+    private SmtpModel? Smtp;
+    private string? Password;
+    private TestModel Test = new();
+    private TestResultModel? TestResult;
+    private string? Error;
+    private bool IsSaving;
+    private bool IsSending;
+
+    private readonly Option[] DeliveryMethods = [new(0, "Network"), new(1, "Pickup directory")];
+    private readonly Option[] EncryptionMethods = [new(0, "None"), new(1, "SSL/TLS"), new(2, "STARTTLS")];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Settings = await Http.GetFromJsonAsync<EmailSettingsModel>(Api);
+            DefaultProvider = Settings?.DefaultProvider;
+        }
+        catch (Exception exception) { Error = exception.Message; }
+
+        // The SMTP section exists only when Crest.Email.Smtp is enabled.
+        try { Smtp = await Http.GetFromJsonAsync<SmtpModel>($"{Api}/smtp"); }
+        catch (HttpRequestException) { Smtp = null; }
+    }
+
+    private async Task SaveProviderAsync()
+    {
+        IsSaving = true;
+        try
+        {
+            var response = await Http.PutAsJsonAsync(Api, new { DefaultProvider });
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            Settings = await response.Content.ReadFromJsonAsync<EmailSettingsModel>();
+            Error = null;
+            Notifications.Notify(NotificationSeverity.Success, T["Settings saved"], T["The default email provider was saved."]);
+        }
+        finally { IsSaving = false; }
+    }
+
+    private async Task SaveSmtpAsync()
+    {
+        if (Smtp is null) return;
+        IsSaving = true;
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"{Api}/smtp", new
+            {
+                Smtp.IsEnabled, Smtp.DefaultSender, Smtp.DeliveryMethod, Smtp.PickupDirectoryLocation, Smtp.Host, Smtp.Port,
+                Smtp.AutoSelectEncryption, Smtp.EncryptionMethod, Smtp.RequireCredentials, Smtp.UseDefaultCredentials,
+                Smtp.UserName, Password, Smtp.ProxyHost, Smtp.ProxyPort, Smtp.IgnoreInvalidSslCertificate,
+            });
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            Smtp = await response.Content.ReadFromJsonAsync<SmtpModel>();
+            Password = null;
+            Error = null;
+            Settings = await Http.GetFromJsonAsync<EmailSettingsModel>(Api);
+            DefaultProvider = Settings?.DefaultProvider;
+            Notifications.Notify(NotificationSeverity.Success, T["Settings saved"], T["The SMTP settings were saved."]);
+        }
+        finally { IsSaving = false; }
+    }
+
+    private async Task SendTestAsync()
+    {
+        IsSending = true;
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Api}/test", Test);
+            TestResult = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<TestResultModel>()
+                : new TestResultModel(false, [await response.Content.ReadAsStringAsync()]);
+        }
+        finally { IsSending = false; }
+    }
+
+    private sealed record Option(int Value, string Text);
+    private sealed record EmailProvider(string Name, string DisplayName);
+    private sealed record EmailSettingsModel(string? DefaultProvider, EmailProvider[] Providers);
+    private sealed record TestResultModel(bool Succeeded, string[] Errors);
+
+    private sealed class TestModel
+    {
+        public string? Provider { get; set; }
+        public string? To { get; set; }
+        public string? From { get; set; }
+        public string? Cc { get; set; }
+        public string? Bcc { get; set; }
+        public string? ReplyTo { get; set; }
+        public string? Subject { get; set; } = "Test message";
+        public string? Body { get; set; } = "This is a test message.";
+    }
+
+    private sealed class SmtpModel
+    {
+        public bool IsEnabled { get; set; }
+        public string? DefaultSender { get; set; }
+        public int DeliveryMethod { get; set; }
+        public string? PickupDirectoryLocation { get; set; }
+        public string? Host { get; set; }
+        public int Port { get; set; }
+        public bool AutoSelectEncryption { get; set; }
+        public int EncryptionMethod { get; set; }
+        public bool RequireCredentials { get; set; }
+        public bool UseDefaultCredentials { get; set; }
+        public string? UserName { get; set; }
+        public bool HasPassword { get; set; }
+        public string? ProxyHost { get; set; }
+        public int ProxyPort { get; set; }
+        public bool IgnoreInvalidSslCertificate { get; set; }
+    }
+}

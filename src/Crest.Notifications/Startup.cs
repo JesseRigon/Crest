@@ -41,13 +41,10 @@ public sealed class Startup : StartupBase
 
         services.AddDataMigration<NotificationMigrations>();
         services.AddIndexProvider<NotificationIndexProvider>();
-        services.AddScoped<INotificationsAdminListQueryService, DefaultNotificationsAdminListQueryService>();
         services.Configure<StoreCollectionOptions>(o => o.Collections.Add(NotificationConstants.NotificationCollection));
         services.AddScoped<INotificationEvents, CoreNotificationEventsHandler>();
 
         services.AddPermissionProvider<NotificationPermissionsProvider>();
-        services.AddDisplayDriver<ListNotificationOptions, ListNotificationOptionsDisplayDriver>();
-        services.AddDisplayDriver<Notification, NotificationDisplayDriver>();
         services.AddTransient<INotificationAdminListFilterProvider, DefaultNotificationsAdminListFilterProvider>();
         services.AddSingleton<INotificationAdminListFilterParser>(sp =>
         {

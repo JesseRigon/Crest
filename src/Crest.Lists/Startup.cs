@@ -25,7 +25,6 @@ using Crest.Lists.Indexes;
 using Crest.Lists.Liquid;
 using Crest.Lists.Models;
 using Crest.Lists.Services;
-using Crest.Lists.Settings;
 using Crest.Lists.ViewModels;
 using Crest.Localization.Data;
 using Crest.Modules;
@@ -56,7 +55,6 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<ListPartDisplayDriver>()
             .AddHandler<ListPartHandler>();
 
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, ListPartSettingsDisplayDriver>();
         services.AddDataMigration<Migrations>();
         services.AddScoped<IDocumentIndexHandler, ContainedPartContentIndexHandler>();
         services.AddScoped<IContainerService, ContainerService>();

@@ -6,6 +6,8 @@ namespace Crest.Components.Primitives
     /// <summary>
     /// CrestHeader component.
     /// </summary>
+    // Named App* so the app-frame hosts do not collide with the themes' Layout component or the zone keys.
+    [Crest.DisplayManagement.Components.BlazorComponent("AppHeader", DisplayName = "App header", Category = "Layout", Icon = "web_asset")]
     public partial class CrestHeader : CrestComponentWithChildren
     {
         /// <summary>

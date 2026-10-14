@@ -28,7 +28,9 @@ public sealed record StandardMenuNodeEditModel(
     string? Html,
     string[]? PermissionNames,
     string? ParentNodeId,
-    int? Position);
+    int? Position,
+    string? ContentItemId = null,
+    bool CheckContentPermissions = false);
 
 public sealed record StandardMenuNodeMoveModel(string? ParentNodeId, int? Position);
 
@@ -76,6 +78,11 @@ public sealed record StandardMenuNodeSummary(
     string[] PermissionNames,
     StandardMenuNodeSummary[] Items)
 {
+    /// <summary>The item a content menu item links to.</summary>
+    public string? ContentItemId { get; init; }
+
+    public bool CheckContentPermissions { get; init; }
+
     public static StandardMenuNodeSummary From(JsonObject item, string? parentId, int depth, int order)
     {
         var id = ReadString(item, "ContentItemId") ?? $"menu-node-{depth}-{order}";
@@ -89,7 +96,12 @@ public sealed record StandardMenuNodeSummary(
             .Select((child, index) => From(child, id, depth + 1, index))
             .ToArray();
 
-        return new(id, type, text, url, target, html, true, depth, order, parentId, permissions, children);
+        var contentPart = item["ContentMenuItemPart"] as JsonObject;
+        return new(id, type, text, url, target, html, true, depth, order, parentId, permissions, children)
+        {
+            ContentItemId = (contentPart?["SelectedContentItem"]?["ContentItemIds"] as JsonArray)?.FirstOrDefault()?.GetValue<string>(),
+            CheckContentPermissions = contentPart?["CheckContentPermissions"] is JsonValue check && check.TryGetValue<bool>(out var value) && value,
+        };
     }
 
     private static string? ReadString(JsonObject source, string propertyName) =>

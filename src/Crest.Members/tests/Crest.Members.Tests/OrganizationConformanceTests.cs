@@ -2,7 +2,7 @@ using Crest.Access;
 using Crest.Members.Constants;
 using Crest.Members.Indexes;
 using Crest.Members.Services;
-using Crest.Services;
+using Crest.Parties.Organizations;
 using Xunit;
 
 namespace Crest.Members.Tests;

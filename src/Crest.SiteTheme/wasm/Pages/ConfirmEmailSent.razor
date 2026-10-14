@@ -1,0 +1,14 @@
+@page "/ConfirmEmailSent"
+@using Crest.Components.Primitives
+
+@* Where a sign-in with an unconfirmed email lands (EmailConfirmationLoginFormEvent; step 7: the
+   MVC view is retired). *@
+
+<PageTitle>Confirm your email</PageTitle>
+
+<div style="max-width: 32rem; margin: 2rem auto; padding: 0 1rem;" data-testid="site-confirm-email-sent-page">
+    <CrestStack Gap="0.75rem">
+        <CrestText TextStyle="TextStyle.H5" Text="Confirm your email" />
+        <CrestText TextStyle="TextStyle.Body1" Text="Your email address is not confirmed yet. Follow the link in the email we sent you, then sign in again." />
+    </CrestStack>
+</div>

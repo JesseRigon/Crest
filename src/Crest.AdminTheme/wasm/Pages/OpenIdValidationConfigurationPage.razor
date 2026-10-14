@@ -1,0 +1,84 @@
+@page "/OpenId/ValidationConfiguration"
+@using Crest.AdminTheme.Api
+@using Crest.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* Token validation as a structured form (step 7: the MVC editor and its display driver are
+   retired): either a local tenant's server or a remote authority issues the tokens this tenant
+   accepts. Saving validates through the validation service and reloads the tenant. *@
+
+<CrestStack Gap="1rem" data-testid="openid-validation-page">
+    <CrestStack Gap="0.25rem">
+        <CrestText TextStyle="TextStyle.H4" Text="@T["Token validation"]" />
+        <CrestText TextStyle="TextStyle.Body2" Text="@T["Either a tenant or an authority issues the tokens; saving reloads the tenant."]" />
+    </CrestStack>
+
+    @foreach (var message in Errors.Where(error => !Fields.Contains(error.Key)).Select(error => error.Message))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@message</CrestAlert>
+    }
+
+    @if (Model is null)
+    {
+        <CrestCard><CrestProgressBar Mode="ProgressBarMode.Indeterminate" /></CrestCard>
+    }
+    else
+    {
+        <CrestCard>
+            <CrestRow Gap="1rem">
+                <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Tenant (a local OpenID server)"]" Style="width: 100%;"><CrestTextBox @bind-Value="Model.Tenant" Style="width: 100%;" /></CrestFormField><FieldMessage Text="@ErrorFor(nameof(OpenIdValidationConfiguration.Tenant))" /></CrestColumn>
+                <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Authority (a remote server)"]" Style="width: 100%;"><CrestTextBox @bind-Value="Model.Authority" Style="width: 100%;" /></CrestFormField><FieldMessage Text="@ErrorFor(nameof(OpenIdValidationConfiguration.Authority))" /></CrestColumn>
+                <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Metadata address"]" Style="width: 100%;"><CrestTextBox @bind-Value="Model.MetadataAddress" Style="width: 100%;" /></CrestFormField><FieldMessage Text="@ErrorFor(nameof(OpenIdValidationConfiguration.MetadataAddress))" /></CrestColumn>
+                <CrestColumn Size="12" SizeMD="6"><CrestFormField Text="@T["Audience"]" Style="width: 100%;"><CrestTextBox @bind-Value="Model.Audience" Style="width: 100%;" /></CrestFormField><FieldMessage Text="@ErrorFor(nameof(OpenIdValidationConfiguration.Audience))" /></CrestColumn>
+            </CrestRow>
+            <SettingsSwitch @bind-Value="Model.DisableTokenTypeValidation" Label="@T["Disable token type validation"]" />
+        </CrestCard>
+
+        <CrestStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <CrestButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" data-testid="openid-validation-save" />
+        </CrestStack>
+    }
+</CrestStack>
+
+@code {
+    private OpenIdValidationConfiguration? Model { get; set; }
+    private OpenIdFieldError[] Errors { get; set; } = [];
+    private bool IsBusy { get; set; }
+
+    private static readonly HashSet<string> Fields = new(StringComparer.OrdinalIgnoreCase)
+    {
+        nameof(OpenIdValidationConfiguration.Tenant), nameof(OpenIdValidationConfiguration.Authority),
+        nameof(OpenIdValidationConfiguration.MetadataAddress), nameof(OpenIdValidationConfiguration.Audience),
+    };
+
+    private string? ErrorFor(string key) => Errors.FirstOrDefault(error => string.Equals(error.Key, key, StringComparison.OrdinalIgnoreCase))?.Message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Api.Crest.Rest.OpenId.GetValidationAsync();
+        if (Model is null)
+        {
+            Errors = [new OpenIdFieldError(string.Empty, T["The validation configuration could not be loaded."])];
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var result = await Api.Crest.Rest.OpenId.SaveValidationAsync(Model!);
+            Errors = result.Errors;
+            if (result.Succeeded)
+            {
+                Notifications.Notify(NotificationSeverity.Success, T["Token validation saved"], T["The tenant reloads with the new configuration."]);
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

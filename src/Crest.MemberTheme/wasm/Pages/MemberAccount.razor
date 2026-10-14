@@ -1,4 +1,6 @@
 @attribute [Route(MemberRoutePaths.Account)]
+@* Changing the password or an external login re-issues the session cookie: the browser must receive it. *@
+@attribute [Crest.Components.Modules.SetsAuthenticationCookie]
 @namespace Crest.MemberTheme.Pages
 
 @* "My account": the member's own view of themselves - who they are signed in as, and
@@ -47,6 +49,9 @@
                 }
             </CrestStack>
         }
+
+        @* Password, email and external logins (step 7: the MVC account screens are retired). *@
+        <Crest.Components.Account.CrestAccountSecurity />
     </CrestStack>
 </div>
 

@@ -17,6 +17,7 @@
   <Project Path="src/Crest.Members/Domain/Crest.Members.Domain.csproj" />
   <Project Path="src/Crest.Members/Server/Crest.Members.csproj" />
   <Project Path="src/Crest.Members/member-wasm/Crest.Members.Member.BlazorWasm.csproj" />
+  <Project Path="src/Crest.Facebook/site-wasm/Crest.Facebook.BlazorWasm.csproj" />
   <Project Path="src/Crest.Money/Crest.Money.csproj" />
   <Project Path="src/Crest.Money/Domain/Crest.Money.Domain.csproj" />
   <Project Path="src/Crest.Parties/Domain/Crest.Parties.Domain.csproj" />

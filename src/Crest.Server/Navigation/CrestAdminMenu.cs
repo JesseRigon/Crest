@@ -52,13 +52,13 @@ public sealed class CrestAdminMenu(IStringLocalizer<CrestAdminMenu> stringLocali
                 .AddClass("permission-sets")
                 .Id("permission-sets")
                 .Url($"{adminPath}/PermissionSets")
-                .Permission(Crest.Roles.RolesPermissions.ManageRoles)
+                .Permission(Crest.Access.AccessPermissions.ReadPermissionSets)
                 .LocalNav())
             .Add(S["Groups"], S["Groups"].PrefixPosition(), groups => groups
                 .AddClass("access-groups")
                 .Id("access-groups")
                 .Url($"{adminPath}/Groups")
-                .Permission(Crest.Roles.RolesPermissions.ManageRoles)
+                .Permission(Crest.Access.AccessPermissions.ReadGroups)
                 .LocalNav()));
 
         // The tenant's upload scanning choice (Crest.Media.Scanning, always enabled): a

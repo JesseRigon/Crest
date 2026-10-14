@@ -319,7 +319,8 @@ public sealed class StandardMenusController(
 
     private static bool IsSupportedNodeType(string? type) =>
         string.Equals(type, "LinkMenuItem", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(type, "HtmlMenuItem", StringComparison.OrdinalIgnoreCase);
+        string.Equals(type, "HtmlMenuItem", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(type, "ContentMenuItem", StringComparison.OrdinalIgnoreCase);
 
     private async Task<JsonObject> CreateNodeObjectAsync(StandardMenuNodeEditModel model)
     {
@@ -337,7 +338,20 @@ public sealed class StandardMenusController(
         node["DisplayText"] = model.Text?.Trim() ?? string.Empty;
         var type = ReadString(node, "ContentType") ?? model.Type;
 
-        if (string.Equals(type, "HtmlMenuItem", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(type, "ContentMenuItem", StringComparison.OrdinalIgnoreCase))
+        {
+            // A content menu item links to a content item, chosen by id (the MVC menu admin's
+            // ContentMenuItemPart editor, ported).
+            node["ContentMenuItemPart"] = new JsonObject
+            {
+                ["CheckContentPermissions"] = model.CheckContentPermissions,
+                ["SelectedContentItem"] = new JsonObject
+                {
+                    ["ContentItemIds"] = string.IsNullOrWhiteSpace(model.ContentItemId) ? new JsonArray() : new JsonArray(JsonValue.Create(model.ContentItemId.Trim())),
+                },
+            };
+        }
+        else if (string.Equals(type, "HtmlMenuItem", StringComparison.OrdinalIgnoreCase))
         {
             node["HtmlMenuItemPart"] = new JsonObject
             {

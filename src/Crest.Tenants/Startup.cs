@@ -36,6 +36,8 @@ public sealed class Startup : StartupBase
         services.AddPermissionProvider<Permissions>();
         services.AddScoped<TenantDatabasePatternResolver>();
         services.AddScoped<ITenantValidator, TenantValidator>();
+        // Create, edit and setup for the native Tenants page and the tenants API alike.
+        services.AddScoped<TenantAdministration>();
         services.AddShapeTableProvider<TenantShapeTableProvider>();
         services.AddSetup();
 

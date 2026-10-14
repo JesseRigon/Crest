@@ -62,14 +62,12 @@ public sealed class Startup : StartupBase
             .UseDisplayDriver<TaxonomyFieldDisplayDriver>(d => !string.Equals(d, "Tags", StringComparison.OrdinalIgnoreCase))
             .AddHandler<TaxonomyFieldHandler>();
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, TaxonomyFieldSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, TaxonomyFieldIndexHandler>();
 
         // Taxonomy Tags Display Mode and Editor.
         services.AddContentField<TaxonomyField>()
             .UseDisplayDriver<TaxonomyFieldTagsDisplayDriver>(d => string.Equals(d, "Tags", StringComparison.OrdinalIgnoreCase));
 
-        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, TaxonomyFieldTagsEditorSettingsDriver>();
 
         services.AddScopedIndexProvider<TaxonomyIndexProvider>();
 

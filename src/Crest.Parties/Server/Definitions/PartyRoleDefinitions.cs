@@ -3,15 +3,21 @@ using Crest.ContentFields.Settings;
 using Crest.ContentManagement.Metadata;
 using Crest.ContentManagement.Metadata.Builders;
 using Crest.ContentManagement.Metadata.Settings;
+using Crest.ContentManagement.Metadata.Models;
 
 namespace Crest.Parties.Definitions;
 
 public static class PartyRoleDefinitions
 {
-    // A party-role content type is a profile (Customer, Vendor, Partner, Employee...)
-    // that points at exactly one Person or Organization via its Party field. Domain
+    public const string PartyField = "Party";
+
+    // A party-role content type is a profile (Customer, Vendor, Employee...) that points at
+    // exactly one party via its Party field. Each role declares its BASE (ruling 2026-10-14):
+    // business relationships are organization roles (an individual is an Individual
+    // organization), roles describing the person are person roles. The picker accepts the base
+    // type only, and the content picker save guard enforces that on every save path. Domain
     // modules call this from their migrations so every role type carries the same
-    // Party/Number/Terms base shape and stays consistent with the party model.
+    // Party/Number/Terms shape.
     public static async Task CreatePartyRoleDefinitionsAsync(
         this IContentDefinitionManager contentDefinitionManager,
         string contentType,
@@ -19,25 +25,29 @@ public static class PartyRoleDefinitions
         string partDescription,
         string numberFieldDisplayName,
         string termsFieldDisplayName,
+        PartyRoleBase roleBase,
         Func<ContentPartDefinitionBuilder, ContentPartDefinitionBuilder>? extraFields = null)
     {
+        var baseType = roleBase.ContentType();
         await contentDefinitionManager.AlterPartDefinitionAsync(contentType, part =>
         {
             part.Attachable()
                 .Reusable(false)
                 .WithDisplayName(displayName)
                 .WithDescription(partDescription)
-                .WithField("Party", field => field
+                .WithField(PartyField, field => field
                     .OfType("ContentPickerField")
-                    .WithDisplayName("Party")
-                    .WithDescription("The Person or Organization this role belongs to.")
+                    .WithDisplayName(roleBase == PartyRoleBase.Organization ? "Organization" : "Person")
+                    .WithDescription(roleBase == PartyRoleBase.Organization
+                        ? "The organization this role belongs to (an individual is an Individual organization)."
+                        : "The person this role belongs to.")
                     .WithPosition("0")
                     .MergeSettings<ContentPickerFieldSettings>(settings =>
                     {
                         settings.Multiple = false;
                         settings.DisplayAllContentTypes = false;
-                        settings.DisplayedContentTypes =
-                            [PartiesConstants.ContentTypes.Person, PartiesConstants.ContentTypes.Organization];
+                        settings.Required = true;
+                        settings.DisplayedContentTypes = [baseType];
                     }))
                 .WithField("Number", field => field
                     .OfType("TextField")
@@ -60,5 +70,38 @@ public static class PartyRoleDefinitions
             .Securable()
             .WithPart("TitlePart", part => part.WithPosition("0"))
             .WithPart(contentType, part => part.WithPosition("1")));
+    }
+}
+
+/// <summary>What a party role is composed on (ruling 2026-10-14).</summary>
+public enum PartyRoleBase
+{
+    /// <summary>A business relationship: Customer, Vendor, Partner, Lead, Prospect.</summary>
+    Organization,
+
+    /// <summary>A role describing the person: Employee, Member, Sales rep.</summary>
+    Person,
+}
+
+public static class PartyRoleBases
+{
+    public static string ContentType(this PartyRoleBase roleBase) => roleBase == PartyRoleBase.Organization
+        ? PartiesConstants.ContentTypes.Organization
+        : PartiesConstants.ContentTypes.Person;
+
+    /// <summary>The base a role type declared, read from its Party picker; null when the type
+    /// is not a party role.</summary>
+    public static async Task<PartyRoleBase?> GetAsync(IContentDefinitionManager definitions, string roleContentType)
+    {
+        var part = (await definitions.GetTypeDefinitionAsync(roleContentType))?.Parts
+            .FirstOrDefault(candidate => candidate.Name == roleContentType);
+        var field = part?.PartDefinition.Fields.FirstOrDefault(candidate => candidate.Name == PartyRoleDefinitions.PartyField);
+        var types = field?.GetSettings<ContentPickerFieldSettings>().DisplayedContentTypes ?? [];
+        return types switch
+        {
+            [PartiesConstants.ContentTypes.Organization] => PartyRoleBase.Organization,
+            [PartiesConstants.ContentTypes.Person] => PartyRoleBase.Person,
+            _ => null,
+        };
     }
 }

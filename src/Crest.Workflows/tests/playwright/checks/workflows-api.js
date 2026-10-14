@@ -1,7 +1,7 @@
-const { createInstance } = require('../../../../../Crest/tests/playwright/harness/instance');
-const { loginAsUser } = require('../../../../../Crest/tests/playwright/harness/auth');
-const { ensureTestUser } = require('../../../../../Crest/tests/playwright/harness/testUsers');
-const { fetchAntiforgeryToken } = require('../../../../../Crest/tests/playwright/harness/antiforgery');
+const { createInstance } = require('../../../../../tests/playwright/harness/instance');
+const { loginAsUser } = require('../../../../../tests/playwright/harness/auth');
+const { ensureTestUser } = require('../../../../../tests/playwright/harness/testUsers');
+const { fetchAntiforgeryToken } = require('../../../../../tests/playwright/harness/antiforgery');
 
 // Phase 0a of docs/workflows.md: the Crest.Workflows engine runs inside the tenant and its API is
 // gated by Crest. As admin: list definitions; create + publish a one-activity flow;

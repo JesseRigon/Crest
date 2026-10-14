@@ -26,23 +26,15 @@ namespace Crest.Tenants.Controllers;
 [Admin("Tenants/{action}/{id?}", "Tenants{action}")]
 public sealed class AdminController : Controller
 {
-    public const string CreateAndSetupValue = "createAndSetup";
-
     private readonly IShellHost _shellHost;
-    private readonly IShellSettingsManager _shellSettingsManager;
     private readonly IShellRemovalManager _shellRemovalManager;
     private readonly IAuthorizationService _authorizationService;
     private readonly ShellSettings _currentShellSettings;
-    private readonly IFeatureProfilesService _featureProfilesService;
-    private readonly IEnumerable<IRecipeHarvester> _recipeHarvesters;
     private readonly IDataProtectionProvider _dataProtectorProvider;
     private readonly IClock _clock;
     private readonly INotifier _notifier;
-    private readonly ITenantValidator _tenantValidator;
     private readonly PagerOptions _pagerOptions;
     private readonly TenantsOptions _tenantsOptions;
-    private readonly TenantDatabasePatternResolver _tenantDatabasePatternResolver;
-    private readonly Dictionary<string, DatabaseProvider> _databaseProviderLookup;
     private readonly ILogger _logger;
     private readonly IShapeFactory _shapeFactory;
 
@@ -51,40 +43,28 @@ public sealed class AdminController : Controller
 
     public AdminController(
         IShellHost shellHost,
-        IShellSettingsManager shellSettingsManager,
         IShellRemovalManager shellRemovalManager,
         IAuthorizationService authorizationService,
         ShellSettings currentShellSettings,
-        IFeatureProfilesService featureProfilesService,
-        IEnumerable<IRecipeHarvester> recipeHarvesters,
         IDataProtectionProvider dataProtectorProvider,
         IClock clock,
         INotifier notifier,
-        ITenantValidator tenantValidator,
-        IEnumerable<DatabaseProvider> databaseProviders,
         IOptions<PagerOptions> pagerOptions,
         IOptions<TenantsOptions> tenantsOptions,
-        TenantDatabasePatternResolver tenantDatabasePatternResolver,
         ILogger<AdminController> logger,
         IShapeFactory shapeFactory,
         IStringLocalizer<AdminController> stringLocalizer,
         IHtmlLocalizer<AdminController> htmlLocalizer)
     {
         _shellHost = shellHost;
-        _shellSettingsManager = shellSettingsManager;
         _shellRemovalManager = shellRemovalManager;
         _authorizationService = authorizationService;
         _currentShellSettings = currentShellSettings;
-        _featureProfilesService = featureProfilesService;
-        _recipeHarvesters = recipeHarvesters;
         _dataProtectorProvider = dataProtectorProvider;
         _clock = clock;
         _notifier = notifier;
-        _tenantValidator = tenantValidator;
         _pagerOptions = pagerOptions.Value;
         _tenantsOptions = tenantsOptions.Value;
-        _tenantDatabasePatternResolver = tenantDatabasePatternResolver;
-        _databaseProviderLookup = databaseProviders.ToDictionary(provider => provider.Value, StringComparer.OrdinalIgnoreCase);
         _logger = logger;
         _shapeFactory = shapeFactory;
         S = stringLocalizer;
@@ -298,300 +278,6 @@ public sealed class AdminController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public async Task<IActionResult> Create()
-    {
-        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageTenants))
-        {
-            return Forbid();
-        }
-
-        if (!_currentShellSettings.IsDefaultShell())
-        {
-            return Forbid();
-        }
-
-        var recipeCollections = await Task.WhenAll(_recipeHarvesters.Select(x => x.HarvestRecipesAsync()));
-        var recipes = recipeCollections.SelectMany(x => x).Where(x => x.IsSetupRecipe).OrderBy(r => r.DisplayName).ToArray();
-
-        // Creates a default shell settings based on the configuration.
-        using var shellSettings = _shellSettingsManager
-            .CreateDefaultSettings()
-            .AsUninitialized()
-            .AsDisposable();
-
-        var currentFeatureProfiles = shellSettings.GetFeatureProfiles();
-        var featureProfiles = await GetFeatureProfilesAsync(currentFeatureProfiles);
-
-        var model = new EditTenantViewModel
-        {
-            Recipes = recipes,
-            RequestUrlHost = shellSettings.RequestUrlHost,
-            RequestUrlPrefix = shellSettings.RequestUrlPrefix,
-            RecipeName = shellSettings["RecipeName"],
-            FeatureProfiles = currentFeatureProfiles,
-            FeatureProfilesItems = featureProfiles,
-            DatabaseProvider = shellSettings["DatabaseProvider"],
-            ConnectionString = shellSettings["ConnectionString"],
-            TablePrefix = shellSettings["TablePrefix"],
-            Schema = shellSettings["Schema"],
-            RequireTablePrefix = _tenantsOptions.RequireTablePrefix,
-            HasTablePrefixPattern = !string.IsNullOrWhiteSpace(_tenantsOptions.TablePrefixPattern),
-            HasSchemaPattern = !string.IsNullOrWhiteSpace(_tenantsOptions.SchemaPattern),
-        };
-
-        ApplyPresetDatabaseConfiguration(model);
-        ApplyConfiguredDatabasePatterns(model);
-
-        model.Recipes = recipes;
-
-        return View(model);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> Create(EditTenantViewModel model, string action)
-    {
-        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageTenants))
-        {
-            return Forbid();
-        }
-
-        if (!_currentShellSettings.IsDefaultShell())
-        {
-            return Forbid();
-        }
-
-        model.RequireTablePrefix = _tenantsOptions.RequireTablePrefix;
-        model.HasTablePrefixPattern = !string.IsNullOrWhiteSpace(_tenantsOptions.TablePrefixPattern);
-        model.HasSchemaPattern = !string.IsNullOrWhiteSpace(_tenantsOptions.SchemaPattern);
-        ApplyPresetDatabaseConfiguration(model);
-        ApplyConfiguredDatabasePatterns(model);
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                await ValidateViewModelAsync(model, true);
-            }
-            catch (Exception ex) when (!ex.IsFatal())
-            {
-                _logger.LogError(ex, "An error occurred while validating the tenant '{TenantName}'.", model.Name);
-                ModelState.AddModelError(string.Empty, S["An error occurred while validating the tenant database settings."]);
-            }
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                // Creates a default shell settings based on the configuration.
-                using var shellSettings = _shellSettingsManager
-                    .CreateDefaultSettings()
-                    .AsUninitialized()
-                    .AsDisposable();
-
-                shellSettings.Name = model.Name;
-                shellSettings.RequestUrlHost = model.RequestUrlHost;
-                shellSettings.RequestUrlPrefix = model.RequestUrlPrefix;
-
-                shellSettings["Category"] = model.Category;
-                shellSettings["Description"] = model.Description;
-                shellSettings["ConnectionString"] = model.ConnectionString;
-                shellSettings["TablePrefix"] = model.TablePrefix;
-                shellSettings["Schema"] = model.Schema;
-                shellSettings["DatabaseProvider"] = model.DatabaseProvider;
-                shellSettings["Secret"] = Guid.NewGuid().ToString();
-                shellSettings["RecipeName"] = model.RecipeName;
-                shellSettings["FeatureProfile"] = string.Join(',', model.FeatureProfiles ?? []);
-
-                await _shellHost.UpdateShellSettingsAsync(shellSettings);
-
-                if (action == CreateAndSetupValue)
-                {
-                    var dataProtector = _dataProtectorProvider.CreateProtector("Tokens").ToTimeLimitedDataProtector();
-
-                    var entry = new ShellSettingsEntry
-                    {
-                        Name = shellSettings.Name,
-                        ShellSettings = shellSettings,
-                        Token = dataProtector.Protect(shellSettings["Secret"], _clock.UtcNow.Add(new TimeSpan(24, 0, 0))),
-                    };
-
-                    return Redirect(HttpContext.GetEncodedUrl(entry));
-                }
-
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex) when (!ex.IsFatal())
-            {
-                _logger.LogError(ex, "An error occurred while saving the tenant '{TenantName}'.", model.Name);
-                ModelState.AddModelError(string.Empty, S["An error occurred while saving the tenant settings."]);
-            }
-        }
-
-        var recipeCollections = await Task.WhenAll(_recipeHarvesters.Select(x => x.HarvestRecipesAsync()));
-        var recipes = recipeCollections.SelectMany(x => x).Where(x => x.IsSetupRecipe).OrderBy(r => r.DisplayName).ToArray();
-        model.Recipes = recipes;
-        model.FeatureProfilesItems = await GetFeatureProfilesAsync(model.FeatureProfiles);
-
-        // If we got this far, something failed, redisplay form
-        return View(model);
-    }
-
-    public async Task<IActionResult> Edit(string id)
-    {
-        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageTenants))
-        {
-            return Forbid();
-        }
-
-        if (!_currentShellSettings.IsDefaultShell())
-        {
-            return Forbid();
-        }
-
-        if (!_shellHost.TryGetSettings(id, out var shellSettings))
-        {
-            return NotFound();
-        }
-
-        var currentFeatureProfiles = shellSettings.GetFeatureProfiles();
-
-        var featureProfiles = await GetFeatureProfilesAsync(currentFeatureProfiles);
-
-        var model = new EditTenantViewModel
-        {
-            Category = shellSettings["Category"],
-            Description = shellSettings["Description"],
-            Name = shellSettings.Name,
-            RequestUrlHost = shellSettings.RequestUrlHost,
-            RequestUrlPrefix = shellSettings.RequestUrlPrefix,
-            FeatureProfiles = currentFeatureProfiles,
-            FeatureProfilesItems = featureProfiles,
-            RequireTablePrefix = _tenantsOptions.RequireTablePrefix,
-            HasTablePrefixPattern = !string.IsNullOrWhiteSpace(_tenantsOptions.TablePrefixPattern),
-            HasSchemaPattern = !string.IsNullOrWhiteSpace(_tenantsOptions.SchemaPattern),
-        };
-
-        // The user can change the 'preset' database information only if the
-        // tenant has not been initialized yet
-        if (shellSettings.IsUninitialized())
-        {
-            var recipeCollections = await Task.WhenAll(_recipeHarvesters.Select(x => x.HarvestRecipesAsync()));
-            var recipes = recipeCollections.SelectMany(x => x).Where(x => x.IsSetupRecipe).OrderBy(r => r.DisplayName).ToArray();
-            model.Recipes = recipes;
-
-            model.DatabaseProvider = shellSettings["DatabaseProvider"];
-            model.TablePrefix = shellSettings["TablePrefix"];
-            model.Schema = shellSettings["Schema"];
-            model.ConnectionString = GetDisplayedConnectionString(shellSettings["ConnectionString"]);
-            model.RecipeName = shellSettings["RecipeName"];
-            ApplyPresetDatabaseConfiguration(model);
-            ApplyConfiguredDatabasePatterns(model);
-            model.CanEditDatabasePresets = !model.DatabaseConfigurationPreset;
-        }
-
-        return View(model);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> Edit(EditTenantViewModel model)
-    {
-        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageTenants))
-        {
-            return Forbid();
-        }
-
-        if (!_currentShellSettings.IsDefaultShell())
-        {
-            return Forbid();
-        }
-
-        if (!_shellHost.TryGetSettings(model.Name, out var shellSettings))
-        {
-            return NotFound();
-        }
-
-        if (shellSettings.IsUninitialized())
-        {
-            model.ConnectionString = TenantConnectionStringRedactor.RestoreIfRedacted(shellSettings["ConnectionString"], model.ConnectionString);
-        }
-
-        model.RequireTablePrefix = _tenantsOptions.RequireTablePrefix;
-        model.HasTablePrefixPattern = !string.IsNullOrWhiteSpace(_tenantsOptions.TablePrefixPattern);
-        model.HasSchemaPattern = !string.IsNullOrWhiteSpace(_tenantsOptions.SchemaPattern);
-        ApplyPresetDatabaseConfiguration(model);
-        ApplyConfiguredDatabasePatterns(model);
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                await ValidateViewModelAsync(model, false);
-            }
-            catch (Exception ex) when (!ex.IsFatal())
-            {
-                _logger.LogError(ex, "An error occurred while validating the tenant '{TenantName}'.", model.Name);
-                ModelState.AddModelError(string.Empty, S["An error occurred while validating the tenant database settings."]);
-            }
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                shellSettings["Description"] = model.Description;
-                shellSettings["Category"] = model.Category;
-                shellSettings.RequestUrlPrefix = model.RequestUrlPrefix;
-                shellSettings.RequestUrlHost = model.RequestUrlHost;
-                shellSettings["FeatureProfile"] = string.Join(',', model.FeatureProfiles ?? []);
-
-                // The user can change the 'preset' database information only if the
-                // tenant has not been initialized yet
-                if (shellSettings.IsUninitialized())
-                {
-                    shellSettings["DatabaseProvider"] = model.DatabaseProvider;
-                    shellSettings["TablePrefix"] = model.TablePrefix;
-                    shellSettings["Schema"] = model.Schema;
-                    shellSettings["ConnectionString"] = model.ConnectionString;
-                    shellSettings["RecipeName"] = model.RecipeName;
-                    shellSettings["Secret"] = Guid.NewGuid().ToString();
-                }
-
-                await _shellHost.UpdateShellSettingsAsync(shellSettings);
-
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex) when (!ex.IsFatal())
-            {
-                _logger.LogError(ex, "An error occurred while saving the tenant '{TenantName}'.", model.Name);
-                ModelState.AddModelError(string.Empty, S["An error occurred while saving the tenant settings."]);
-            }
-        }
-
-        // If we got this far, something failed. Reinitialize the model and re-display form.
-
-        // The user can change the 'preset' database information only if the
-        // tenant has not been initialized yet
-        if (shellSettings.IsUninitialized())
-        {
-            model.DatabaseProvider = shellSettings["DatabaseProvider"];
-            model.TablePrefix = shellSettings["TablePrefix"];
-            model.Schema = shellSettings["Schema"];
-            model.ConnectionString = GetDisplayedConnectionString(shellSettings["ConnectionString"]);
-            model.RecipeName = shellSettings["RecipeName"];
-            ApplyPresetDatabaseConfiguration(model);
-            ApplyConfiguredDatabasePatterns(model);
-            model.CanEditDatabasePresets = !model.DatabaseConfigurationPreset;
-        }
-
-        var recipeCollections = await Task.WhenAll(_recipeHarvesters.Select(x => x.HarvestRecipesAsync()));
-        var recipes = recipeCollections.SelectMany(x => x).Where(x => x.IsSetupRecipe).OrderBy(r => r.DisplayName).ToArray();
-        model.Recipes = recipes;
-        model.FeatureProfilesItems = await GetFeatureProfilesAsync(model.FeatureProfiles);
-
-        return View(model);
-    }
-
     [HttpPost]
     public async Task<IActionResult> Disable(string id)
     {
@@ -727,65 +413,4 @@ public sealed class AdminController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private async Task<List<SelectListItem>> GetFeatureProfilesAsync(IEnumerable<string> currentFeatureProfiles)
-    {
-        var featureProfiles = (await _featureProfilesService.GetFeatureProfilesAsync())
-            .Select(x => new SelectListItem(x.Value.Name ?? x.Key, x.Key, currentFeatureProfiles != null && currentFeatureProfiles.Contains(x.Key)))
-            .ToList();
-
-        return featureProfiles;
-    }
-
-    private async Task ValidateViewModelAsync(EditTenantViewModel model, bool isNewTenant)
-    {
-        model.IsNewTenant = isNewTenant;
-
-        ModelState.AddModelErrors(await _tenantValidator.ValidateAsync(model));
-    }
-
-    private void ApplyPresetDatabaseConfiguration(EditTenantViewModel model)
-    {
-        model.DatabaseProviderPreset = false;
-        model.DatabaseConfigurationPreset = false;
-
-        // Read from the root application configuration, not from the current
-        // shell settings which may have tenant-specific overrides (e.g., the
-        // Default tenant was set up with SQLite while root config says SqlConnection).
-        using var defaultSettings = _shellSettingsManager.CreateDefaultSettings().AsDisposable();
-        var databaseProvider = defaultSettings["DatabaseProvider"];
-
-        if (string.IsNullOrEmpty(databaseProvider) ||
-            !_databaseProviderLookup.TryGetValue(databaseProvider, out var provider))
-        {
-            return;
-        }
-
-        model.DatabaseProviderPreset = true;
-        model.DatabaseProvider = databaseProvider;
-
-        var connectionString = defaultSettings["ConnectionString"];
-        if (!provider.HasConnectionString || !string.IsNullOrWhiteSpace(connectionString))
-        {
-            model.DatabaseConfigurationPreset = true;
-            model.ConnectionString = connectionString;
-            model.Schema = defaultSettings["Schema"];
-        }
-    }
-
-    private static string GetDisplayedConnectionString(string connectionString) =>
-        TenantConnectionStringRedactor.RedactPassword(connectionString);
-
-    private void ApplyConfiguredDatabasePatterns(EditTenantViewModel model)
-    {
-        if (string.IsNullOrWhiteSpace(model.Name))
-        {
-            model.ResolvedTablePrefix = model.HasTablePrefixPattern ? string.Empty : model.TablePrefix;
-            model.ResolvedSchema = model.HasSchemaPattern ? string.Empty : model.Schema;
-            return;
-        }
-
-        var databasePatternResolution = _tenantDatabasePatternResolver.Apply(model);
-        model.ResolvedTablePrefix = databasePatternResolution.TablePrefix;
-        model.ResolvedSchema = databasePatternResolution.Schema;
-    }
 }

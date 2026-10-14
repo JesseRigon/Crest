@@ -44,12 +44,15 @@ public sealed class ContentPickerFieldDisplayDriver : ContentFieldDisplayDriver<
 
     public override IDisplayResult Display(ContentPickerField field, BuildFieldDisplayContext fieldDisplayContext)
     {
-        return Initialize<DisplayContentPickerFieldViewModel, ContentPickerField, BuildFieldDisplayContext> (GetDisplayShapeType(fieldDisplayContext), static (model, field, fieldDisplayContext) =>
+        return Initialize<DisplayContentPickerFieldViewModel>(GetDisplayShapeType(fieldDisplayContext), async model =>
         {
             model.Field = field;
             model.Part = fieldDisplayContext.ContentPart;
             model.PartFieldDefinition = fieldDisplayContext.PartFieldDefinition;
-        }, field, fieldDisplayContext)
+            model.Items = (await _contentManager.GetAsync(field.ContentItemIds ?? []))
+                .Select(item => new DisplayLinkItem(item.DisplayText ?? item.ContentItemId, ContentItemLinks.SitePath(item)))
+                .ToArray();
+        })
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");
     }

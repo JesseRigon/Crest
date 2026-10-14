@@ -197,6 +197,22 @@
                 ? stampedBucket
                 : global::Crest.Routing.ShellId.Site;
 
+        // A page that sets an authentication cookie renders InteractiveWebAssembly, and the
+        // page declares it ([SetsAuthenticationCookie]) - read here off the routed page,
+        // never off a list of shell paths. Under InteractiveAuto's first-visit server
+        // circuit the credential POST goes out on the server-side loopback HttpClient: the
+        // auth Set-Cookie lands in that handler, never in the browser, and the "successful"
+        // login leaves the browser anonymous. InteractiveWebAssembly keeps the prerendered
+        // form but runs the interactive phase in the browser, where the fetch's Set-Cookie
+        // is stored. In every shell, the site's included: its account, email-confirmation and
+        // consent pages need the browser to receive a cookie too.
+        var pageType = HttpContext?.GetEndpoint()?.Metadata
+            .GetMetadata<Microsoft.AspNetCore.Components.Endpoints.ComponentTypeMetadata>()?.Type;
+        if (pageType?.IsDefined(typeof(global::Crest.Components.Modules.SetsAuthenticationCookieAttribute), inherit: false) == true)
+        {
+            _renderMode = RenderMode.InteractiveWebAssembly;
+        }
+
         if (HttpContext?.Items.TryGetValue(BlazorHosting.ShellBasePathItem, out var value) == true
             && value is string shellBasePath
             && !string.IsNullOrWhiteSpace(shellBasePath))
@@ -206,21 +222,6 @@
             // the same value .NET 11's <BasePath /> component will derive from
             // NavigationManager.BaseUri once available (dotnet/aspnetcore#66388).
             _adminBaseHref = (HttpContext.Request.PathBase.Value ?? shellBasePath).TrimEnd('/') + "/";
-
-            // A page that sets an authentication cookie renders InteractiveWebAssembly, and the
-            // page declares it ([SetsAuthenticationCookie]) - read here off the routed page,
-            // never off a list of shell paths. Under InteractiveAuto's first-visit server
-            // circuit the credential POST goes out on the server-side loopback HttpClient: the
-            // auth Set-Cookie lands in that handler, never in the browser, and the "successful"
-            // login leaves the browser anonymous. InteractiveWebAssembly keeps the prerendered
-            // form but runs the interactive phase in the browser, where the fetch's Set-Cookie
-            // is stored.
-            var pageType = HttpContext.GetEndpoint()?.Metadata
-                .GetMetadata<Microsoft.AspNetCore.Components.Endpoints.ComponentTypeMetadata>()?.Type;
-            if (pageType?.IsDefined(typeof(global::Crest.Components.Modules.SetsAuthenticationCookieAttribute), inherit: false) == true)
-            {
-                _renderMode = RenderMode.InteractiveWebAssembly;
-            }
 
             // Pages a module declared client-only (IWebAssemblyRouteProvider): the
             // same InteractiveWebAssembly document, so they never run in a server circuit.

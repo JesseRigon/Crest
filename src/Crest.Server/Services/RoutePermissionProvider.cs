@@ -59,10 +59,12 @@ public sealed class RoutePermissionProvider : IRoutePermissionProvider
         new("/Users/Create", UsersPermissions.EditUsers.Name),
         new("/Users/Edit/{Id}", UsersPermissions.EditUsers.Name),
         new("/Tenants", Crest.Tenants.Permissions.ManageTenants.Name),
-        new("/Roles/Index", RolesPermissions.ManageRoles.Name),
-        // The permission model's editors (docs/permissions.md › Editors).
-        new("/PermissionSets", RolesPermissions.ManageRoles.Name),
-        new("/Groups", RolesPermissions.ManageRoles.Name),
+        new("/Tenants/Create", Crest.Tenants.Permissions.ManageTenants.Name),
+        new("/Tenants/Edit/{name}", Crest.Tenants.Permissions.ManageTenants.Name),
+        // The permission model's editors (docs/permissions.md › Who manages the permission model).
+        new("/Roles/Index", Crest.Access.AccessPermissions.ReadRoles.Name),
+        new("/PermissionSets", Crest.Access.AccessPermissions.ReadPermissionSets.Name),
+        new("/Groups", Crest.Access.AccessPermissions.ReadGroups.Name),
         new("/Media", MediaPermissions.ManageMedia.Name),
         new("/Media/Options", MediaPermissions.ViewMediaOptions.Name),
         new("/MediaProfiles", MediaPermissions.ManageMediaProfiles.Name),
@@ -70,6 +72,14 @@ public sealed class RoutePermissionProvider : IRoutePermissionProvider
         new("/Queries/Index", Crest.Queries.Permissions.ManageQueries.Name),
         new("/Queries/Sql/Query", Crest.Queries.QueriesPermissions.ManageSqlQueries.Name),
         new("/Settings/debugging", SettingsPermissions.ManageDebuggingSettings.Name),
+        // Step 7 native pages (docs/blazor-display.md); permission names as the owning modules declare them.
+        new("/Settings/email", "ManageEmailSettings"),
+        new("/Email/Test", "ManageEmailSettings"),
+        new("/BackgroundTasks", "ManageBackgroundTasks"),
+        new("/notifications", "ManageNotifications"),
+        // Custom settings: the API checks each type's own permission (ManageCustomSettings_{type}).
+        new("/CustomSettings", AdminPermissions.AccessAdminPanel.Name),
+        new("/CustomSettings/{Type}", AdminPermissions.AccessAdminPanel.Name),
         // Deployments (Pages/Deployment*.razor): the stock MVC URLs, so the menu lands on them.
         new("/DeploymentPlan/Index", Crest.Deployment.DeploymentPermissions.ManageDeploymentPlan.Name),
         new("/DeploymentPlan/Display/{Id}", Crest.Deployment.DeploymentPermissions.ManageDeploymentPlan.Name),
@@ -91,6 +101,9 @@ public sealed class RoutePermissionProvider : IRoutePermissionProvider
         new("/DataLocalization", Crest.Localization.Data.DataLocalizationPermissions.ViewDynamicTranslations.Name),
         new("/DataLocalization/Index", Crest.Localization.Data.DataLocalizationPermissions.ViewDynamicTranslations.Name),
         new("/Settings/userLogin", UsersPermissions.ManageUsers.Name),
+        new("/Settings/userRegistration", UsersPermissions.ManageUsers.Name),
+        new("/Settings/userResetPassword", UsersPermissions.ManageUsers.Name),
+        new("/Settings/userChangeEmail", UsersPermissions.ManageUsers.Name),
         new("/Settings/uploadScanning", SettingsPermissions.ManageSettings.Name),
         new("/Settings/files", SettingsPermissions.ManageSettings.Name),
         // The drive browser: the file-object API decides what is listed (docs/media.md § 8).

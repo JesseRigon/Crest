@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Localization;
+using Crest.Admin;
 using Crest.Navigation;
+using Microsoft.Extensions.Options;
 
 namespace Crest.Roles;
 
@@ -7,9 +9,12 @@ public sealed class AdminMenu : AdminNavigationProvider
 {
     internal readonly IStringLocalizer S;
 
-    public AdminMenu(IStringLocalizer<AdminMenu> stringLocalizer)
+    private readonly string _adminPath;
+
+    public AdminMenu(IStringLocalizer<AdminMenu> stringLocalizer, IOptions<AdminOptions> adminOptions)
     {
         S = stringLocalizer;
+        _adminPath = "/" + adminOptions.Value.AdminUrlPrefix.Trim('/');
     }
 
     protected override ValueTask BuildAsync(NavigationBuilder builder)
@@ -21,7 +26,7 @@ public sealed class AdminMenu : AdminNavigationProvider
                     .Add(S["Roles"], S["Roles"].PrefixPosition(), roles => roles
                         .AddClass("roles")
                         .Id("roles")
-                        .Action("Index", "Admin", "Crest.Roles")
+                        .Url($"{_adminPath}/Roles/Index")
                         .Permission(RolesPermissions.ViewRoles)
                         .LocalNav()
                     )
@@ -35,7 +40,7 @@ public sealed class AdminMenu : AdminNavigationProvider
                 .Add(S["Roles"], S["Roles"].PrefixPosition(), roles => roles
                     .AddClass("roles")
                     .Id("roles")
-                    .Action("Index", "Admin", "Crest.Roles")
+                    .Url($"{_adminPath}/Roles/Index")
                     .Permission(RolesPermissions.ViewRoles)
                     .LocalNav()
                 )

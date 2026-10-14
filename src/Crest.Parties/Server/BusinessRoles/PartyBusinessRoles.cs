@@ -5,6 +5,8 @@ using Crest.ContentManagement.Handlers;
 using Crest.ContentManagement.Records;
 using Crest.Modules;
 using Crest.Parties.Constants;
+using Crest.Parties.Definitions;
+using Crest.ContentManagement.Metadata;
 using Crest.Parties.Indexes;
 using Crest.Parties.PartyTypes;
 using Crest.Parties.Services;
@@ -18,9 +20,11 @@ namespace Crest.Parties.BusinessRoles;
 /// <summary>
 /// Party relationships as business roles (docs/sharing.md § 5, requirements 39-43, 48): every
 /// party role a module composes (a content type a party-type provider registers, other than
-/// Person and Organization: Customer, Vendor, Lead, ...) is a derived role of the same name. A
-/// user holds it when a published role item points at their person (whatever they act for), or
-/// at the organization they act for (only while acting for it, requirement 42). Nothing is
+/// Person and Organization) is a derived role of the same name. Where it comes from follows
+/// the role's base (ruling 2026-10-14): an organization role (Customer, Vendor, Lead, ...) is
+/// held by a user acting for an organization that holds it (only while acting for it,
+/// requirement 42); a person role (Employee, Sales rep, ...) is held by the user whose person
+/// holds it, whatever they act for. Nothing is
 /// stored on the user: the role items are the only source of truth. The party-role index is the
 /// content picker field index over the role items' <c>Party</c> field.
 /// </summary>
@@ -90,11 +94,27 @@ public sealed class PartyDerivedRoleProvider(
                 index.SelectedContentItemId.IsIn(partyIds))
             .ListAsync(cancellationToken);
 
+        var definitions = services.GetRequiredService<IContentDefinitionManager>();
+        var bases = new Dictionary<string, PartyRoleBase?>(StringComparer.Ordinal);
+        foreach (var roleType in roleTypes)
+        {
+            bases[roleType] = await PartyRoleBases.GetAsync(definitions, roleType);
+        }
+
         var titles = await TitlesAsync(parties, cancellationToken);
         var grants = new List<DerivedRoleGrant>();
         foreach (var row in rows)
         {
-            if (row.SelectedContentItemId == personId)
+            // A role counts only through its own base: a business role through the
+            // organization acted for, a person role through the person.
+            var roleBase = bases.GetValueOrDefault(row.ContentType);
+            var isPersonRow = row.SelectedContentItemId == personId;
+            if ((roleBase == PartyRoleBase.Organization && isPersonRow) || (roleBase == PartyRoleBase.Person && !isPersonRow))
+            {
+                continue;
+            }
+
+            if (isPersonRow)
             {
                 grants.Add(new DerivedRoleGrant(row.ContentType, $"{row.ContentType}: {titles.GetValueOrDefault(personId!) ?? "their own person"}", null, row.ContentItemId));
             }

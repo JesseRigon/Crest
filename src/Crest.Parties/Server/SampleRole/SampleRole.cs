@@ -37,7 +37,8 @@ public sealed class SampleRoleMigrations(IContentDefinitionManager contentDefini
             "Sample role",
             "A sample party role for exercising the generic role pages.",
             "Sample number",
-            "Sample terms");
+            "Sample terms",
+            PartyRoleBase.Organization);
 
         return 1;
     }

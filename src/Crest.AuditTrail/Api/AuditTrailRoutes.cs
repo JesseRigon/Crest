@@ -13,5 +13,7 @@ public static class AuditTrailRoutes
 
     public const string SessionsAdmin = "/Audit/Sessions";
 
+    public const string SettingsAdmin = "/Audit/Settings";
+
     public const string RecordAdmin = "/Audit/Records/{RecordId}";
 }

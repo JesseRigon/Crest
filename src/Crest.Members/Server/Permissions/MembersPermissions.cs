@@ -25,6 +25,11 @@ public static class MembersPermissions
     /// organization), a member through an organization group (that organization only).</summary>
     public static readonly Permission ManageOrgMembers = new(Crest.Access.OrganizationPermissionNames.ManageOrgMembers, "Manage an organization's members and contacts");
 
+    /// <summary>Moves an organization's ownership to another user of the tenant (docs/permissions.md
+    /// › The organization owner). A tenant permission: staff only, on the member ceiling; the
+    /// current owner transfers from their own account without it.</summary>
+    public static readonly Permission TransferOrganizationOwnership = new("TransferOrganizationOwnership", "Transfer an organization's ownership", isSecurityCritical: true);
+
 }
 
 /// <summary>The Members feature's own permissions: who is a member, and staff actions
@@ -38,6 +43,7 @@ public sealed class MembersPermissionProvider : IPermissionProvider
         MembersPermissions.ConvertUserClass,
         MembersPermissions.ManageOwnOrgMember,
         MembersPermissions.ManageOrgMembers,
+        MembersPermissions.TransferOrganizationOwnership,
     ];
 
     public Task<IEnumerable<Permission>> GetPermissionsAsync()

@@ -10,7 +10,14 @@
     <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
   </PropertyGroup>
 
-    <ItemGroup>
+    <!-- The site-shell library is its own project (site-wasm/, Crest.Facebook.BlazorWasm). -->
+  <ItemGroup>
+    <Compile Remove="site-wasm/**/*.cs" />
+    <Content Remove="site-wasm/**" />
+    <None Remove="site-wasm/**" />
+  </ItemGroup>
+
+  <ItemGroup>
       <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 

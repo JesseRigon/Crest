@@ -19,6 +19,14 @@ public abstract class ContentPartFieldDefinitionBuilder
         _settings = field.Settings.Clone();
     }
 
+    /// <summary>Replaces every settings section with <paramref name="settings"/> (the admin's JSON settings editor).</summary>
+    public ContentPartFieldDefinitionBuilder ReplaceSettings(JsonObject settings)
+    {
+        _settings.Clear();
+        _settings.Merge(settings?.DeepClone() as JsonObject ?? [], ContentBuilderSettings.JsonMergeSettings);
+        return this;
+    }
+
     public ContentPartFieldDefinitionBuilder MergeSettings(JsonObject settings)
     {
         _settings.Merge(settings, ContentBuilderSettings.JsonMergeSettings);

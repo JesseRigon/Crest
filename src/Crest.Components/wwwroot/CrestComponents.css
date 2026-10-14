@@ -230,3 +230,6 @@
 .crest-validation-summary { margin: 0; padding-inline-start: var(--crest-space-4, 1rem); }
 .crest-search-box { display: flex; gap: var(--crest-space-2, 0.5rem); }
 .crest-search-box input { flex: 1; font: inherit; padding-block: var(--crest-space-2, 0.5rem); padding-inline: var(--crest-space-3, 0.75rem); border: 1px solid var(--crest-border, var(--rz-base-300)); border-radius: var(--crest-radius-md, 0.25rem); }
+.crest-pager ul { display: flex; flex-wrap: wrap; gap: var(--crest-space-1, 0.25rem); list-style: none; margin: 0; padding: 0; }
+.crest-pager--slim { display: flex; justify-content: space-between; }
+.crest-pager__page--current span { font-weight: 600; }

@@ -33,6 +33,11 @@ public sealed class Startup : StartupBase
         services.AddScoped<Crest.Routing.IShellOrganizationResolver, MemberOrganizationSlugResolver>();
         services.AddScoped<MemberBindingService>();
         services.AddScoped<MemberOrganizationGroups>();
+        // The organization owner and the hierarchy bound on managing users (docs/permissions.md).
+        services.AddIndexProvider<OrganizationOwnerIndexProvider>();
+        services.AddScoped<Crest.Access.IOrganizationOwnership, OrganizationOwnershipService>();
+        services.AddScoped<Crest.Access.IUserManagementReach, MemberHierarchyReach>();
+        services.AddScoped<Crest.Access.IAccessCeiling, OwnerLockedCeiling>();
         services.AddScoped<Crest.ContentManagement.Handlers.IContentHandler, OrganizationAccessGroupsHandler>();
         services.AddScoped<UserClassService>();
         services.AddScoped<MemberPortalLoginContext>();
@@ -49,7 +54,6 @@ public sealed class Startup : StartupBase
         // organization row scope on content.
         services.AddScoped<Crest.Access.IResourcePermissionMapper, MemberResourcePermissionMapper>();
         services.AddScoped<Crest.Access.IScopeProvider, UserConnectionScopeProvider>();
-        services.AddScoped<Crest.Access.IScopeProvider, OrganizationScopeProvider>();
         services.AddPermissionProvider<MembersPermissionProvider>();
 
         // Class foundation: the connection index, the creation stamp (every new user is
@@ -98,6 +102,7 @@ public sealed class Startup : StartupBase
                 Permissions.MembersPermissions.ManageMembers.Name,
                 Permissions.MembersPermissions.ImpersonateMembers.Name,
                 Permissions.MembersPermissions.ConvertUserClass.Name,
+                Permissions.MembersPermissions.TransferOrganizationOwnership.Name,
                 // The audit trail is staff-only: members see functional attribution only
                 // (docs/audit.md › step 4).
                 "ViewAuditTrail",

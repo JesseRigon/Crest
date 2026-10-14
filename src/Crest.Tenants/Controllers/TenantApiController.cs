@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
@@ -37,15 +38,11 @@ public sealed class TenantApiController : ControllerBase
     private readonly IAuthorizationService _authorizationService;
     private readonly IShellSettingsManager _shellSettingsManager;
     private readonly IDataProtectionProvider _dataProtectorProvider;
-    private readonly ISetupService _setupService;
     private readonly IClock _clock;
-    private readonly IEmailAddressValidator _emailAddressValidator;
-    private readonly IdentityOptions _identityOptions;
     private readonly TenantsOptions _tenantsOptions;
     private readonly Dictionary<string, DatabaseProvider> _databaseProviderLookup;
     private readonly ITenantValidator _tenantValidator;
     private readonly TenantDatabasePatternResolver _tenantDatabasePatternResolver;
-    private readonly ITempDirectoryProvider _tempDirectoryProvider;
     private readonly ILogger _logger;
 
     internal readonly IStringLocalizer S;
@@ -57,15 +54,11 @@ public sealed class TenantApiController : ControllerBase
         IAuthorizationService authorizationService,
         IShellSettingsManager shellSettingsManager,
         IDataProtectionProvider dataProtectorProvider,
-        ISetupService setupService,
         IClock clock,
-        IEmailAddressValidator emailAddressValidator,
-        IOptions<IdentityOptions> identityOptions,
         IOptions<TenantsOptions> tenantsOptions,
         IEnumerable<DatabaseProvider> databaseProviders,
         ITenantValidator tenantValidator,
         TenantDatabasePatternResolver tenantDatabasePatternResolver,
-        ITempDirectoryProvider tempDirectoryProvider,
         IStringLocalizer<TenantApiController> stringLocalizer,
         ILogger<TenantApiController> logger)
     {
@@ -75,15 +68,11 @@ public sealed class TenantApiController : ControllerBase
         _authorizationService = authorizationService;
         _dataProtectorProvider = dataProtectorProvider;
         _shellSettingsManager = shellSettingsManager;
-        _setupService = setupService;
         _clock = clock;
-        _emailAddressValidator = emailAddressValidator;
-        _identityOptions = identityOptions.Value;
         _tenantsOptions = tenantsOptions.Value;
         _databaseProviderLookup = databaseProviders.ToDictionary(provider => provider.Value, StringComparer.OrdinalIgnoreCase);
         _tenantValidator = tenantValidator;
         _tenantDatabasePatternResolver = tenantDatabasePatternResolver;
-        _tempDirectoryProvider = tempDirectoryProvider;
         S = stringLocalizer;
         _logger = logger;
     }
@@ -352,194 +341,38 @@ public sealed class TenantApiController : ControllerBase
             return this.ChallengeOrForbid(PlatformConstants.AuthenticationSchemes.Api);
         }
 
-        if (!string.IsNullOrEmpty(model.UserName) && model.UserName.Any(c => !_identityOptions.User.AllowedUserNameCharacters.Contains(c)))
-        {
-            ModelState.AddModelError(nameof(model.UserName), S["User name '{0}' is invalid, can only contain letters or digits.", model.UserName]);
-        }
-
-        // Only add additional error if attribute validation has passed.
-        if (!string.IsNullOrEmpty(model.Email) && !_emailAddressValidator.Validate(model.Email))
-        {
-            ModelState.AddModelError(nameof(model.Email), S["The email is invalid."]);
-        }
-
         if (!ModelState.IsValid)
         {
             return BadRequest();
         }
 
-        if (!_shellHost.TryGetSettings(model.Name, out var shellSettings))
+        // The setup itself is the tenant administration's, shared with the native Tenants page.
+        var result = await HttpContext.RequestServices.GetRequiredService<TenantAdministration>().SetupAsync(model.Name, new TenantSetupForm
         {
-            ModelState.AddModelError(nameof(SetupApiViewModel.Name), S["Tenant not found: '{0}'", model.Name]);
+            SiteName = model.SiteName,
+            UserName = model.UserName,
+            Email = model.Email,
+            Password = model.Password,
+            RecipeName = model.RecipeName,
+            Recipe = model.Recipe,
+            SiteTimeZone = model.SiteTimeZone,
+            DatabaseProvider = model.DatabaseProvider,
+            ConnectionString = model.ConnectionString,
+            TablePrefix = model.TablePrefix,
+            Schema = model.Schema,
+        });
+
+        if (result.Succeeded && result.ExecutionId is null && result.Settings is { } running)
+        {
+            return Created(GetEncodedUrl(running, null), null);
         }
 
-        if (shellSettings.IsRunning())
+        foreach (var error in result.Errors)
         {
-            return Created(GetEncodedUrl(shellSettings, null), null);
+            ModelState.AddModelError(error.Key, error.Message);
         }
 
-        if (!shellSettings.IsUninitialized())
-        {
-            return BadRequest(S["The tenant can't be setup."]);
-        }
-
-        var databaseProvider = shellSettings["DatabaseProvider"];
-
-        if (string.IsNullOrEmpty(databaseProvider))
-        {
-            databaseProvider = model.DatabaseProvider;
-        }
-
-        var presetDatabaseConfiguration = GetPresetDatabaseConfiguration();
-        if (presetDatabaseConfiguration.HasDatabaseProviderPreset)
-        {
-            databaseProvider = presetDatabaseConfiguration.DatabaseProvider;
-        }
-
-        if (string.IsNullOrEmpty(databaseProvider))
-        {
-            return BadRequest(S["The database provider is not defined."]);
-        }
-
-        if (!_databaseProviderLookup.TryGetValue(databaseProvider, out var selectedProvider))
-        {
-            return BadRequest(S["The database provider is not supported."]);
-        }
-
-        var tablePrefix = shellSettings["TablePrefix"];
-        var databasePatternResolution = _tenantDatabasePatternResolver.Resolve(shellSettings);
-
-        if (!string.IsNullOrEmpty(databasePatternResolution.TablePrefixError))
-        {
-            ModelState.AddModelError(nameof(model.TablePrefix), databasePatternResolution.TablePrefixError);
-        }
-
-        if (!string.IsNullOrEmpty(databasePatternResolution.SchemaError))
-        {
-            ModelState.AddModelError(nameof(model.Schema), databasePatternResolution.SchemaError);
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        if (databasePatternResolution.HasTablePrefixPattern)
-        {
-            tablePrefix = databasePatternResolution.TablePrefix;
-        }
-        else if (string.IsNullOrEmpty(tablePrefix))
-        {
-            tablePrefix = model.TablePrefix;
-        }
-
-        var schema = shellSettings["Schema"];
-
-        if (databasePatternResolution.HasSchemaPattern)
-        {
-            schema = databasePatternResolution.Schema;
-        }
-        else if (string.IsNullOrEmpty(schema))
-        {
-            schema = model.Schema;
-        }
-
-        if (presetDatabaseConfiguration.HasConnectionStringPreset)
-        {
-            schema = presetDatabaseConfiguration.Schema;
-        }
-
-        var connectionString = shellSettings["connectionString"];
-
-        if (string.IsNullOrEmpty(connectionString))
-        {
-            connectionString = model.ConnectionString;
-        }
-
-        if (presetDatabaseConfiguration.HasConnectionStringPreset)
-        {
-            connectionString = presetDatabaseConfiguration.ConnectionString;
-        }
-
-        if (selectedProvider.HasConnectionString && string.IsNullOrEmpty(connectionString))
-        {
-            return BadRequest(S["The connection string is required for this database provider."]);
-        }
-
-        var recipeName = shellSettings["RecipeName"];
-
-        if (string.IsNullOrEmpty(recipeName))
-        {
-            recipeName = model.RecipeName;
-        }
-
-        RecipeDescriptor recipeDescriptor = null;
-
-        if (string.IsNullOrEmpty(recipeName))
-        {
-            if (model.Recipe == null)
-            {
-                return BadRequest(S["Either a 'recipe' file or 'RecipeName' is required."]);
-            }
-
-            var tempFilename = _tempDirectoryProvider.GetTempFileName();
-
-            await System.IO.File.WriteAllTextAsync(tempFilename, model.Recipe);
-
-            var fileProvider = new PhysicalFileProvider(Path.GetDirectoryName(tempFilename));
-
-            recipeDescriptor = new RecipeDescriptor
-            {
-                FileProvider = fileProvider,
-                BasePath = string.Empty,
-                RecipeFileInfo = fileProvider.GetFileInfo(Path.GetFileName(tempFilename)),
-            };
-        }
-        else
-        {
-            var setupRecipes = await _setupService.GetSetupRecipesAsync();
-            recipeDescriptor = setupRecipes.FirstOrDefault(x => string.Equals(x.Name, recipeName, StringComparison.OrdinalIgnoreCase));
-
-            if (recipeDescriptor == null)
-            {
-                return BadRequest(S["Recipe '{0}' not found.", recipeName]);
-            }
-        }
-
-        var setupContext = new SetupContext
-        {
-            ShellSettings = shellSettings,
-            EnabledFeatures = null, // default list,
-            Errors = new Dictionary<string, string>(),
-            Recipe = recipeDescriptor,
-            Properties = new Dictionary<string, object>
-            {
-                { SetupConstants.SiteName, model.SiteName },
-                { SetupConstants.AdminUsername, model.UserName },
-                { SetupConstants.AdminEmail, model.Email },
-                { SetupConstants.AdminPassword, model.Password },
-                { SetupConstants.SiteTimeZone, model.SiteTimeZone },
-                { SetupConstants.DatabaseProvider, selectedProvider.Value },
-                { SetupConstants.DatabaseConnectionString, connectionString },
-                { SetupConstants.DatabaseTablePrefix, tablePrefix },
-                { SetupConstants.DatabaseSchema, schema },
-            },
-        };
-
-        var executionId = await _setupService.SetupAsync(setupContext);
-
-        // Check if a component in the Setup failed.
-        if (setupContext.Errors.Count > 0)
-        {
-            foreach (var error in setupContext.Errors)
-            {
-                ModelState.AddModelError(error.Key, error.Value);
-            }
-
-            return this.InternalServerError(ModelState);
-        }
-
-        return Ok(executionId);
+        return result.Succeeded ? Ok(result.ExecutionId) : BadRequest(ModelState);
     }
 
     private string GetEncodedUrl(ShellSettings shellSettings, string token)

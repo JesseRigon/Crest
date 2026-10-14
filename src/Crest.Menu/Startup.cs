@@ -52,7 +52,6 @@ public sealed class Startup : StartupBase
         services.AddContentPart<MenuItemPermissionPart>()
             .UseDisplayDriver<MenuItemPermissionPartDisplayDriver>();
 
-        services.AddScoped<IContentTypePartDefinitionDisplayDriver, HtmlMenuItemPartSettingsDisplayDriver>();
         services.AddTagHelpers<MenuTagHelper>();
     }
 }

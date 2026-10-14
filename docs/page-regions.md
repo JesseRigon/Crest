@@ -1,34 +1,31 @@
 # Page regions — UI injection across modules
 
-> Audit note (2026-10-09): under the fluid display model this seam is the first implementation
-> of a *slot with a contribution key* and folds into it; see
-> [blazor-display.md](blazor-display.md) › Audit, contradiction 2 and decision 6.
-
 How a downstream module puts UI on a page owned by a module it must not be referenced by.
-
-Implemented as `IPageRegionContributor` (now in `Crest.DisplayManagement.Abstractions`, same
-namespace) and `<CrestPageRegion>`; since 2026-10-13 the component registry collects the
-contributors with the components and the region key is an open zone key (blazor-display.md
-decision 6), declared by the owning library with `[assembly: ZoneKey(...)]`. Crest.Parties declares regions on its party-type panes
-(`PartiesPageRegions.Pane(...)`, `PartiesPageRegions.Detail(...)`) for other modules to
-contribute to. The reasoning that produced it:
 
 A downstream module often must appear on screens it does not own: a tax module's per-line
 tax and document summary on a transaction editor, an exemption panel on the party editor.
 The dependency rule applies — **the page's module must not reference the downstream module
-to render its contribution** — so the UI contribution has to be injected the way a
-downstream module's content parts are.
+to render its contribution** — so the UI contribution is injected the way a downstream
+module's content parts are. `RenderFragment` slots do not do this: they are caller-supplied,
+letting a page pass content into a component it uses, not letting a foreign module push
+content into a page.
 
-**No seam existed for this.** `RenderFragment` slots across `Crest.Components`
-are *caller-supplied*: they let a page pass content into a component it uses, not a foreign
-module push content into a page. `IRouteComponentTableProvider` is the right *shape* —
-modules declare their own contributions, the host discovers by convention — but it registers
-whole routes, not regions within a page.
+**The seam:** pages declare named regions, downstream modules register components against
+region keys with an order, the shell resolves at render. Nothing registered renders nothing,
+which is the correct disabled behaviour. Region keys belong to the module owning the page,
+in its `Domain`.
 
-The seam is its page-region analogue: pages declare named regions, downstream modules
-register components against region keys with an order, the shell resolves at render. Nothing
-registered renders nothing, which is the correct disabled behaviour. Region keys belong to
-the module owning the page, in its `Domain`.
+- `IPageRegionContributor` lives in `Crest.DisplayManagement.Abstractions`; the
+  `<CrestPageRegion>` component in Crest.Components.
+- The component registry collects the contributors with the components. A region key is an
+  open zone key, declared by the owning library with `[assembly: ZoneKey(...)]`: a page region
+  is a *slot with a contribution key* in the display model
+  ([blazor-display.md](blazor-display.md) decision 6).
+- Crest.Parties declares regions on its party-type panes (`PartiesPageRegions.Pane(...)`,
+  `PartiesPageRegions.Detail(...)`) for other modules to contribute to; the general settings
+  page opens `SettingsPageRegions.General` (Crest.Components) for modules' own tenant-setting
+  sections (Parties' is the first).
 
-It is a **Crest platform concern**, since every module contributing UI to another's screen
-hits it, which is why it lives in Crest.Components.
+It is a platform concern, since every module contributing UI to another's screen needs it.
+Whole pages are not regions: a module declares those in the page registry
+([architecture.md › Modules declare, Crest.Server registers and serves](architecture.md#modules-declare-crestserver-registers-and-serves)).

@@ -57,7 +57,6 @@ namespace Crest.Users;
 public sealed class Startup : StartupBase
 {
     private static readonly string s_accountControllerName = typeof(AccountController).ControllerName();
-    private static readonly string s_emailConfirmationControllerName = typeof(EmailConfirmationController).ControllerName();
     private readonly string _tenantName;
 
     private UserOptions _userOptions;
@@ -184,28 +183,6 @@ public sealed class Startup : StartupBase
         );
 
         routes.MapAreaControllerRoute(
-            name: "ChangePassword",
-            areaName: UserConstants.Features.Users,
-            pattern: _userOptions.ChangePasswordUrl,
-            defaults: new
-            {
-                controller = s_accountControllerName,
-                action = nameof(AccountController.ChangePassword),
-            }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: "ChangePasswordConfirmation",
-            areaName: UserConstants.Features.Users,
-            pattern: _userOptions.ChangePasswordConfirmationUrl,
-            defaults: new
-            {
-                controller = s_accountControllerName,
-                action = nameof(AccountController.ChangePasswordConfirmation),
-            }
-        );
-
-        routes.MapAreaControllerRoute(
             name: "UsersLogOff",
             areaName: UserConstants.Features.Users,
             pattern: _userOptions.LogoffPath,
@@ -213,28 +190,6 @@ public sealed class Startup : StartupBase
             {
                 controller = s_accountControllerName,
                 action = nameof(AccountController.LogOff),
-            }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: "ConfirmEmail",
-            areaName: UserConstants.Features.Users,
-            pattern: "ConfirmEmail",
-            defaults: new
-            {
-                controller = s_emailConfirmationControllerName,
-                action = nameof(EmailConfirmationController.ConfirmEmail),
-            }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: "ConfirmEmailSent",
-            areaName: UserConstants.Features.Users,
-            pattern: "ConfirmEmailSent",
-            defaults: new
-            {
-                controller = s_emailConfirmationControllerName,
-                action = nameof(EmailConfirmationController.ConfirmEmailSent),
             }
         );
 
@@ -256,35 +211,14 @@ public sealed class RateLimitsStartup : StartupBase
 [Feature(UserConstants.Features.ExternalAuthentication)]
 public sealed class ExternalAuthenticationStartup : StartupBase
 {
-    private static readonly string _accountControllerName = typeof(AccountController).ControllerName();
-
-    private UserOptions _userOptions;
-
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddScoped<ILoginFormEvent, ExternalLoginFormEvents>();
         services.AddNavigationProvider<RegistrationAdminMenu>();
         services.AddDisplayDriver<UserMenu, ExternalAuthenticationUserMenuDisplayDriver>();
-        services.AddSiteDisplayDriver<ExternalRegistrationSettingsDisplayDriver>();
         services.AddSiteDisplayDriver<ExternalLoginSettingsDisplayDriver>();
         services.AddSignalOptionsChangeTokenSource<ExternalLoginOptions>();
         services.AddTransient<IConfigureOptions<ExternalLoginOptions>, ExternalLoginOptionsConfigurations>();
-    }
-
-    public override void Configure(IApplicationBuilder builder, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        _userOptions ??= serviceProvider.GetRequiredService<IOptions<UserOptions>>().Value;
-
-        routes.MapAreaControllerRoute(
-            name: "ExternalLogins",
-            areaName: UserConstants.Features.Users,
-            pattern: _userOptions.ExternalLoginsUrl,
-            defaults: new
-            {
-                controller = _accountControllerName,
-                action = nameof(ExternalAuthenticationsController.ExternalLogins),
-            }
-        );
     }
 }
 
@@ -413,35 +347,8 @@ public sealed class LoginDeploymentStartup : StartupBase
 [Feature("Crest.Users.ChangeEmail")]
 public sealed class ChangeEmailStartup : StartupBase
 {
-    private const string ChangeEmailPath = "ChangeEmail";
-    private const string ChangeEmailConfirmationPath = "ChangeEmailConfirmation";
-    private const string ChangeEmailControllerName = "ChangeEmail";
-
-    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        routes.MapAreaControllerRoute(
-            name: "ChangeEmail",
-            areaName: UserConstants.Features.Users,
-            pattern: ChangeEmailPath,
-            defaults: new
-            {
-                controller = ChangeEmailControllerName,
-                action = nameof(ChangeEmailController.Index),
-            }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: "ChangeEmailConfirmation",
-            areaName: UserConstants.Features.Users,
-            pattern: ChangeEmailConfirmationPath,
-            defaults: new
-            {
-                controller = ChangeEmailControllerName,
-                action = nameof(ChangeEmailController.ChangeEmailConfirmation),
-            }
-        );
-    }
-
+    // The change-email page is the account components' (step 7: the MVC ChangeEmail screens are
+    // retired); this feature keeps its settings and identity options.
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddTransient<IConfigureOptions<IdentityOptions>, ChangeEmailIdentityOptionsConfigurations>()
@@ -453,7 +360,6 @@ public sealed class ChangeEmailStartup : StartupBase
             o.MemberAccessStrategy.Register<ChangeEmailViewModel>();
         });
 
-        services.AddSiteDisplayDriver<ChangeEmailSettingsDisplayDriver>();
         services.AddNavigationProvider<ChangeEmailAdminMenu>();
         services.AddDisplayDriver<UserMenu, ChangeEmailUserMenuDisplayDriver>();
     }
@@ -473,7 +379,6 @@ public sealed class ChangeEmailDeploymentStartup : StartupBase
 public sealed class RegistrationStartup : StartupBase
 {
     private const string RegisterPath = nameof(RegistrationController.Register);
-    private const string ConfirmEmailSent = nameof(EmailConfirmationController.ConfirmEmailSent);
     private const string RegistrationPending = nameof(RegistrationController.RegistrationPending);
     private const string RegistrationControllerName = "Registration";
 
@@ -485,7 +390,6 @@ public sealed class RegistrationStartup : StartupBase
         });
 
         services.AddDisplayDriver<User, UserRegistrationAdminDisplayDriver>();
-        services.AddSiteDisplayDriver<RegistrationSettingsDisplayDriver>();
         services.AddNavigationProvider<RegistrationAdminMenu>();
         services.AddSignalOptionsChangeTokenSource<RegistrationOptions>();
 
@@ -506,17 +410,6 @@ public sealed class RegistrationStartup : StartupBase
             {
                 controller = RegistrationControllerName,
                 action = RegisterPath,
-            }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: ConfirmEmailSent,
-            areaName: UserConstants.Features.Users,
-            pattern: ConfirmEmailSent,
-            defaults: new
-            {
-                controller = RegistrationControllerName,
-                action = ConfirmEmailSent,
             }
         );
 
@@ -574,7 +467,6 @@ public sealed class ResetPasswordStartup : StartupBase
             o.MemberAccessStrategy.Register<LostPasswordViewModel>();
         });
 
-        services.AddSiteDisplayDriver<ResetPasswordSettingsDisplayDriver>();
         services.AddNavigationProvider<ResetPasswordAdminMenu>();
 
         services.AddDisplayDriver<ResetPasswordForm, ResetPasswordFormDisplayDriver>();

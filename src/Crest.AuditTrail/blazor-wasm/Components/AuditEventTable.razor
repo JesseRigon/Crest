@@ -79,6 +79,26 @@
                     <dt>@T["Correlation"]</dt><dd>@Selected.CorrelationId</dd>
                     <dt>@T["Client IP"]</dt><dd>@Selected.ClientIpAddress</dd>
                 </dl>
+                @if (Selected.Category == "Content")
+                {
+                    @* The version this event recorded, as the site would display it, and its
+                       restore (rework step 7: replaces the MVC AuditTrail/Content screen). *@
+                    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                        <CrestButton Icon="visibility" Text="@T["Show this version"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="ShowVersionAsync" Disabled="@VersionBusy" />
+                        <CrestButton Icon="restore" Text="@T["Restore this version"]" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" Click="RestoreAsync" Disabled="@VersionBusy" />
+                    </CrestStack>
+                    @if (!string.IsNullOrEmpty(VersionMessage))
+                    {
+                        <CrestAlert AlertStyle="@(VersionFailed ? AlertStyle.Danger : AlertStyle.Success)" Detail="@VersionMessage" />
+                    }
+                    @if (Version is not null)
+                    {
+                        <div class="audit-version" data-testid="audit-content-version">
+                            <CrestText TextStyle="TextStyle.Subtitle2">@T["Version {0}", Version.VersionNumber]</CrestText>
+                            <Crest.DisplayManagement.Components.DisplayTreeRenderer Node="Version.Tree.Root" />
+                        </div>
+                    }
+                }
                 @if (Selected.Data is not null)
                 {
                     <pre class="audit-data" style="max-height: 24rem; overflow: auto; white-space: pre-wrap;">@Selected.Data.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
@@ -100,8 +120,56 @@
     private static string RecordPath(string recordId) =>
         AuditTrailRoutes.RecordAdmin.TrimStart('/').Replace("{RecordId}", Uri.EscapeDataString(recordId));
 
+    private AuditContentVersion? Version { get; set; }
+    private bool VersionBusy { get; set; }
+    private string? VersionMessage { get; set; }
+    private bool VersionFailed { get; set; }
+
+    private string VersionApi => $"api/crest/audit/content/{Uri.EscapeDataString(Selected!.EventId)}";
+
+    private async Task ShowVersionAsync()
+    {
+        VersionBusy = true;
+        VersionMessage = null;
+        try
+        {
+            Version = await Http.GetFromJsonAsync<AuditContentVersion>(VersionApi);
+        }
+        catch (HttpRequestException exception)
+        {
+            (VersionFailed, VersionMessage) = (true, exception.Message);
+        }
+        finally
+        {
+            VersionBusy = false;
+        }
+    }
+
+    private async Task RestoreAsync()
+    {
+        VersionBusy = true;
+        try
+        {
+            using var response = await Http.PostAsync(VersionApi + "/restore", null);
+            var result = await response.Content.ReadFromJsonAsync<AuditContentRestoreResult>();
+            (VersionFailed, VersionMessage) = response.IsSuccessStatusCode
+                ? (false, T["The version has been restored."].ToString())
+                : (true, T["The version was not restored: {0}", string.Join(", ", result?.Errors ?? [])].ToString());
+        }
+        catch (Exception exception) when (exception is HttpRequestException or System.Text.Json.JsonException)
+        {
+            (VersionFailed, VersionMessage) = (true, exception.Message);
+        }
+        finally
+        {
+            VersionBusy = false;
+        }
+    }
+
     private async Task OpenAsync(AuditEvent item)
     {
+        Version = null;
+        VersionMessage = null;
         Selected = await Http.GetFromJsonAsync<AuditEvent>($"{AuditTrailRoutes.Api}/events/{Uri.EscapeDataString(item.EventId)}") ?? item;
     }
 }

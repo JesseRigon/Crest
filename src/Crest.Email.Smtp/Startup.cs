@@ -2,7 +2,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Crest.DisplayManagement.Handlers;
-using Crest.Email.Smtp.Drivers;
 using Crest.Email.Smtp.Extensions;
 using Crest.Email.Smtp.Services;
 using Crest.Environment.Options;
@@ -22,7 +21,6 @@ public sealed class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSmtpEmailProvider()
-            .AddSiteDisplayDriver<SmtpSettingsDisplayDriver>()
             .AddSignalOptionsChangeTokenSource<SmtpOptions>()
             .AddTransient<IConfigureOptions<SmtpOptions>, SmtpOptionsConfiguration>()
             .AddTransient<IPostConfigureOptions<DefaultSmtpOptions>, DefaultSmtpOptionsConfiguration>();

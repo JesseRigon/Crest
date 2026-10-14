@@ -1,26 +1,21 @@
-> **Ruling 2026-10-09 (renamed 2026-10-13):** this module becomes `Crest.Data.Global`, the home of the standardized
-> global data set imports and loading and of the global data registry; see
-> [blazor-display.md](blazor-display.md) › Rulings.
-
 # The global store — tenant-less reference data
 
 Reference data that is the same for every tenant is stored **once**, in a YesSql store that
 belongs to no tenant (`Crest.Data.Global`). The Default tenant is its only editor. Tenants read it
-and may layer their own additions and presentation over it; they never modify it. What is not
-built yet is in [globals.md](globals.md).
+and may layer their own additions and presentation over it; they never modify it. `Crest.Data.Global` is the home of the standardized global data set
+imports and loading and of the global data registry, so no module reimplements either
+([blazor-display.md](blazor-display.md) › Module homes). What is not built yet is under
+[Still to build](#still-to-build).
 
 ## Why
 
-Every `global.*` list used to be seeded **per tenant** from compiled C# arrays
-(`GlobalReferenceData.cs`, `GlobalContentPartListsMigrations.cs`, both since deleted) into
-Content Part Lists — content items in each tenant's own store. That was fine at hundreds of rows and
-ten lists. It fails on what comes next: the geo tree is ~60k nodes for the US alone before
-boundaries; postal codes ~40k; authority catalogues; classification lists. Copying that into
-every tenant is waste, and correcting it means N migrations instead of one.
+Reference data that is the same for every tenant is not copied into every tenant. The geo tree
+is ~60k nodes for the US alone before boundaries; postal codes ~40k; authority catalogues;
+classification lists. A copy per tenant is waste, and correcting it would mean N migrations
+instead of one.
 
-It also got the ownership wrong. A tenant could *edit* the country list. Nothing
-about "Illinois" or "ISO 4217 JPY = 0 decimals" is a tenant's to edit; only labels,
-ordering, visibility and additions are.
+Ownership decides it too. Nothing about "Illinois" or "ISO 4217 JPY = 0 decimals" is a tenant's
+to edit; only labels, ordering, visibility and additions are.
 
 ## The mechanism — Orchard's own precedent
 
@@ -96,7 +91,7 @@ from a **fresh install** as from a dev tenant that has been re-migrated, every t
 
 - The global store's schema and its loader run from an empty database to the full standard
   layer with no manual step. A new host starts, and the data is there.
-- Superseded migration *steps* are deleted rather than accumulated, so the migration that
+- Obsolete migration *steps* are deleted rather than accumulated, so the migration that
   ships is the direct declarative statement of the desired state, not a history of how we
   got there. `Create` describes the target; there is no `UpdateFrom3` telling a story.
 - The loader is idempotent on re-run against a populated store and a no-op when the data
@@ -194,41 +189,21 @@ global store.
 
 ## Still to build
 
-Built: see [docs/globals.md](globals.md) — the tenant-less store, the
-overlay, the loaders, the super-tenant permission and API, and the version-keyed cache.
-This section is the checklist of what remains.
-
 ### Super-tenant editing UI
 
 Editing UIs for the global store are generated for the functions a super-tenant needs and
 are visible **only** in the Default tenant — an ordinary tenant has no route to them, not a
-hidden one.
+hidden one. The permission and the Default-only controllers exist (above); nothing edits global
+rows from a page yet, only the API and import endpoints.
 
-- [x] **Permission and Default-only controllers.** `ManageGlobalReferenceData`
-      permission; Default-shell-only controllers (`api/crest/global/lists`, geo import).
-      Documented above.
-- [ ] **Build the first generated editing UI.** The first generated editing UI, Default
-      tenant only. Nothing edits global rows from a page yet; only the API and import
-      endpoints exist.
+- [ ] **Build the first generated editing UI**, Default tenant only.
 
-### Known rough edge: the global store needs a host call
+### Global data registry
 
-- [x] **Make the global store need no host call.** `Crest.Data.Global`'s `IGlobalStore` is
-  registered by an `PlatformBuilder` extension (`AddCrestGlobalStore()`), not by the
-  feature, because the store is one database shared by every tenant and so belongs to the
-  host's service collection. A host that enables `Crest.Data.Global`, `Crest.Regions` or
-  `Crest.Money` without making that call gets no warning: the features enable, and setup
-  then fails with "Unable to resolve service for type IGlobalStore". Enabling a
-  feature should not depend on an invisible second step — either the features should fail
-  enablement with a clear message, or the registration should happen where the feature is.
-  Recorded rather than fixed; it bit the standalone host first and will bite the next one.
-  *What landed (2026-10-13):* the registration happens where the feature is. `Crest.Data.Global`'s
-  Startup registers the store and cache through `GlobalHost`, one instance per host
-  (keyed by its `IHostApplicationLifetime`, so test hosts in one process never share), built
-  from host-level services only; the store no longer holds a service provider, and global
-  migrations take no services. `AddCrestGlobalStore()` and the host call are gone.
+- [ ] **The global data registry beyond the store**: one registry modules declare their global
+  data sets in, so imports and loading are standardized.
 
-### Decisions needed
+### Open questions
 
 - [ ] **Super-tenant UI scope.** Which global tables get a generated editor first — geo
   groupings and authority catalogues are the ones with no upstream file. Whether the editor

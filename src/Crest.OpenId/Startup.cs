@@ -106,7 +106,6 @@ public sealed class ServerStartup : StartupBase
         services.AddDataMigration<DefaultScopesMigration>();
         services.AddDataMigration<PushedAuthorizationRequestsMigration>();
 
-        services.AddDisplayDriver<OpenIdServerSettings, OpenIdServerSettingsDisplayDriver>();
 
         // Note: the following services are registered using TryAddEnumerable to prevent duplicate registrations.
         services.TryAddEnumerable(new[]
@@ -242,7 +241,6 @@ public sealed class ValidationStartup : StartupBase
         services.TryAddSingleton<IOpenIdValidationService, OpenIdValidationService>();
 
         // Note: the following services are registered using TryAddEnumerable to prevent duplicate registrations.
-        services.AddDisplayDriver<OpenIdValidationSettings, OpenIdValidationSettingsDisplayDriver>();
 
         services.AddRecipeExecutionStep<OpenIdValidationSettingsStep>();
 

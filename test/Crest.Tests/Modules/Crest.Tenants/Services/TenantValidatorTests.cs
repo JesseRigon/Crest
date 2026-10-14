@@ -38,7 +38,7 @@ public class TenantValidatorTests : SiteContext
         var tenantValidator = CreateTenantValidator(defaultTenant: false);
 
         // Act
-        var viewModel = new EditTenantViewModel
+        var viewModel = new TenantForm
         {
             Name = name,
             RequestUrlPrefix = urlPrefix,
@@ -69,7 +69,7 @@ public class TenantValidatorTests : SiteContext
 
         var tenantValidator = CreateTenantValidator();
 
-        var viewModel = new EditTenantViewModel
+        var viewModel = new TenantForm
         {
             Name = "Tenant5",
             RequestUrlPrefix = "tenant4",
@@ -102,7 +102,7 @@ public class TenantValidatorTests : SiteContext
         await ShellHost.InitializeAsync();
 
         var tenantValidator = CreateTenantValidator(defaultTenant: false, requireTablePrefix: true);
-        var viewModel = new EditTenantViewModel
+        var viewModel = new TenantForm
         {
             Name = "Tenant10",
             RequestUrlPrefix = "tenant10",
@@ -128,7 +128,7 @@ public class TenantValidatorTests : SiteContext
         await ShellHost.InitializeAsync();
 
         var tenantValidator = CreateTenantValidator(defaultTenant: false, requireTablePrefix: true);
-        var viewModel = new EditTenantViewModel
+        var viewModel = new TenantForm
         {
             Name = "Tenant11",
             RequestUrlPrefix = "tenant11",
@@ -152,7 +152,7 @@ public class TenantValidatorTests : SiteContext
         await ShellHost.InitializeAsync();
 
         var tenantValidator = CreateTenantValidator(defaultTenant: false, tablePrefixPattern: "{{ ShellSettings.Name }}");
-        var viewModel = new EditTenantViewModel
+        var viewModel = new TenantForm
         {
             Name = "Tenant12",
             RequestUrlPrefix = "tenant12",
@@ -176,7 +176,7 @@ public class TenantValidatorTests : SiteContext
         await ShellHost.InitializeAsync();
 
         var tenantValidator = CreateTenantValidator(defaultTenant: false, tablePrefixPattern: "tenant-{{ ShellSettings.Name }}");
-        var viewModel = new EditTenantViewModel
+        var viewModel = new TenantForm
         {
             Name = "Tenant13",
             RequestUrlPrefix = "tenant13",
@@ -201,7 +201,7 @@ public class TenantValidatorTests : SiteContext
         await ShellHost.InitializeAsync();
 
         var tenantValidator = CreateTenantValidator(defaultTenant: false);
-        var viewModel = new EditTenantViewModel
+        var viewModel = new TenantForm
         {
             Name = "Tenant14",
             RequestUrlPrefix = "tenant14",
@@ -231,7 +231,7 @@ public class TenantValidatorTests : SiteContext
         var tenantValidator = CreateTenantValidator(
             defaultTenant: false,
             dbConnectionValidatorMock: dbConnectionValidatorMock);
-        var viewModel = new EditTenantViewModel
+        var viewModel = new TenantForm
         {
             Name = "../Tenant",
             RequestUrlPrefix = "unique-tenant-prefix",

@@ -21,6 +21,7 @@
         <CrestLabel Text="@T["Roles (comma-separated)"]" Component="roles" /><CrestTextBox Name="roles" @bind-Value="Roles" Style="width:100%" />
         @* Derived (business) roles, read-only beneath the assigned ones (docs/sharing.md, requirement 47). *@
         @if (!IsNew) { <Crest.Components.Sharing.CrestDerivedRoles UserId="@(Id ?? string.Empty)" /> }
+        @if (!IsNew) { <UserAccountActions UserId="@(Id ?? string.Empty)" EmailConfirmed="Model.EmailConfirmed" EmailConfirmedChanged="@(() => Model.EmailConfirmed = true)" /> }
         <CrestStack Orientation="Orientation.Horizontal"><CrestButton Text="@T["Save"]" Icon="save" Click="SaveAsync" /><CrestButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="Cancel" /></CrestStack>
         @if (!string.IsNullOrWhiteSpace(Error)) { <CrestText Style="color: var(--rz-danger)">@Error</CrestText> }
     }

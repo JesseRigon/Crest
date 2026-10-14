@@ -275,7 +275,7 @@ Locations with points and floor areas and no apportionment, which is correct.
 Business-Context/document-driven validation (address, postal code, currency, precision,
 measurement, business policy), never UI-language-driven.
 
-**Decision: validation rules are pulled from Orchard at runtime, not compiled into a shared
+**Validation rules are pulled from the platform at runtime, not compiled into a shared
 static library.** Rule *definitions* — the addressing maps above (global store),
 allowed-currency lists a downstream module attaches per Regional Profile (tenant store),
 required-field sets per document type — are Orchard-managed data, never compiled in. Both the
@@ -296,82 +296,56 @@ currency in the allowed list) from the same rule source; authoritative checks ro
 the server. "Same validation everywhere" does not mean every check literally runs twice
 with no network.
 
+## Addressing map editing
+
+The maps are global-store documents seeded from `addressing-maps.json`, and the Default tenant
+edits them at runtime. `global.country-codes`, `global.subdivisions` and
+`global.postal-formats` are levels 1 and 2 of the tree plus one column of the map, and are
+replaced by them.
+
+- `api/crest/regions/addressing-maps` (`AddressingMapsController`): `GET {country}` answers the
+  applicable map (the generic one when the country has none) to any signed-in caller of any
+  tenant, so the client resolves the same rule the server's `IGeoService` does; `GET`,
+  `PUT {country}` and `DELETE {country}` (revert) are Default-tenant only behind
+  `ManageGlobalReferenceData`.
+- A write is checked by `AddressingMapValidator` (`Crest.Regions.Domain`, shared with the
+  client: level 1 present, levels and fields unique, fields known or naming a declared level, the
+  locality level declared, the postal pattern a valid regex) and marks the map `Edited`; the
+  data-file loader skips an edited map, and a revert restores the shipped one
+  (`GeoGlobalSchema.ShippedMap`: the authored map, or the generic map with the country's postal
+  pattern) or, for a country the files do not know, removes it. The global store's version bump
+  invalidates every host's cached map.
+- Settings › Addressing maps (Default tenant only, `Pages/AddressingMaps.razor`) lists the maps,
+  edits one as JSON and reverts it.
+
+## Loading postal codes and boundaries
+
+`POST api/crest/regions/geo/import/postal-codes` (`format=table`: a header row with Country,
+Code, NodeIds, Latitude, Longitude; or `format=geonames`: the GeoNames postal dump, whose admin
+codes name `{CC}-{admin1}` and `{CC}-{admin1}-{admin2}`) and `POST .../geo/import/boundaries` (a
+GeoJSON FeatureCollection; `idProperty` and `idFormat`, e.g. `COUNTYFP` and `US-IL-{0}`, compose
+the node id; Polygon and MultiPolygon stored as WKT MultiPolygons, which the built-in resolver
+reads). Both are Default-tenant only behind `ManageGlobalReferenceData`, upsert, normalize codes
+the way lookups do, merge a code's rows, and report nodes the tree lacks as warnings instead of
+storing them dangling. Parsers: `GeoDataParsers.cs`; tests: `GeoDataLoadingTests`.
+
 ## Still to build
 
-Built: see [docs/regions.md](regions.md) — Regional Profiles, the geo tree and its
-overlay, addressing maps, the `Address` part over the geo stack, Locations, the first county
-import, and the boundary and geocoding seams. This section is the checklist of what remains.
+- [ ] **Postal-code and boundary rows.** The schema and the loaders exist; no rows ship. Waits on
+  the data-sourcing and licence decision below. Candidate open sources, none verified: Census
+  TIGER/FIPS (counties, places, ZCTAs, boundaries; US Government work, no copyright), INSEE for
+  France, ONS for the UK. Postal-code → place data is the hard part and is commercial in many
+  countries.
+- [ ] **A tenant's label overlay on addressing maps** (described above).
+- [ ] **A geocoder.** `IGeocoder` / `IGeoLocator` and `CompositeGeoLocator` exist; no provider
+  does.
 
-### Addressing maps as runtime rules
+## Open questions
 
-`global.country-codes`, `global.subdivisions` and `global.postal-formats` are levels 1 and
-2 of the tree plus one column of the map, and are replaced by them.
-
-- [x] **Make maps runtime rules.** Maps as **Orchard-backed runtime rules** editable by the
-  super-tenant — today they are data-file only.
-  *What landed (2026-10-13):* the maps were already global-store documents seeded from
-  `addressing-maps.json`; now the Default tenant edits them at runtime.
-  `api/crest/regions/addressing-maps` (`AddressingMapsController`): `GET {country}` answers
-  the applicable map (the generic one when the country has none) to any signed-in caller of
-  any tenant, so the client resolves the same rule the server's `IGeoService` does; `GET`,
-  `PUT {country}` and `DELETE {country}` (revert) are Default-tenant only behind
-  `ManageGlobalReferenceData`. A write is checked by `AddressingMapValidator`
-  (`Crest.Regions.Domain`, shared with the client: level 1 present, levels and fields unique,
-  fields known or naming a declared level, the locality level declared, the postal pattern a
-  valid regex) and marks the map `Edited`; the data-file loader skips an edited map, and a
-  revert restores the shipped one (`GeoGlobalSchema.ShippedMap`: the authored map, or the
-  generic map with the country's postal pattern) or, for a country the files do not know,
-  removes it. The global store's version bump invalidates every host's cached map. Settings ›
-  Addressing maps (Default tenant only, `Pages/AddressingMaps.razor`) lists the maps,
-  edits one as JSON and reverts it. Not done: a tenant's label overlay (described above, not
-  required for this item), and the libaddressinput dataset (licence unverified).
-
-  Candidate open dataset for the maps: Google's libaddressinput address metadata (it
-  encodes exactly this — field order, required fields, postal pattern, subdivision lists,
-  per country). **Licence unverified**; check before bundling, the same standard as any
-  classification source.
-
-### The shared validation engine
-
-The validation engine is a genuinely shared piece of code referenced by both client and
-server — worth fixing regardless, since `CrestTenant` today is hand-duplicated between
-`Crest.AdminTheme/client-services/Api/Api.cs` and
-`Crest.Server/ViewModels/TenantsViewModels.cs` with nothing keeping the two
-in sync. That duplication is the concrete proof this problem is real.
-
-- [x] **Fix the `CrestTenant` duplication.** The `CrestTenant` duplication fix.
-  *What landed (2026-10-13):* the server's copies (`CrestTenant`, `TenantCatalog`,
-  `TenantBulkAction`) are deleted; `TenantsController` returns the admin client's
-  records from `Crest.AdminTheme.Api`, which Crest.Server already references.
-
-### Populating the tree
-
-Candidate open sources, none verified: Census TIGER/FIPS (counties, places, ZCTAs,
-boundaries; US Government work, no copyright), INSEE for France, ONS for the UK.
-Postal-code → place data is the hard part and is commercial in many countries.
-
-- [ ] **Load postal codes and boundaries.** Postal-code records and boundaries loaded from
-      data — schema only, no rows ship.
-      *Partly landed (2026-10-13): the loaders.* `POST api/crest/regions/geo/import/postal-codes`
-      (`format=table`: a header row with Country, Code, NodeIds, Latitude, Longitude; or
-      `format=geonames`: the GeoNames postal dump, whose admin codes name `{CC}-{admin1}` and
-      `{CC}-{admin1}-{admin2}`) and `POST .../geo/import/boundaries` (a GeoJSON
-      FeatureCollection; `idProperty` and `idFormat`, e.g. `COUNTYFP` and `US-IL-{0}`, compose
-      the node id; Polygon and MultiPolygon stored as WKT MultiPolygons, which the built-in
-      resolver reads). Both are Default-tenant only behind `ManageGlobalReferenceData`,
-      upsert, normalize codes the way lookups do, merge a code's rows, and report nodes the tree
-      lacks as warnings instead of storing them dangling. Parsers: `GeoDataParsers.cs`; tests:
-      `GeoDataLoadingTests`. Left: rows to load, which waits on the data sourcing and licence
-      decision below.
-
-### Geocoding
-
-- [ ] **Add a geocoder.** Any geocoder implementation. `IGeocoder` / `IGeoLocator` and
-      `CompositeGeoLocator` exist; no provider does.
-
-### Decisions needed
-
-- [ ] **Data sourcing and licence** for the tree below level 2 and for the addressing maps —
-  see Populating the tree. Nothing is verified.
+- [ ] **Data sourcing and licence** for the tree below level 2 and for the addressing maps.
+  Nothing is verified. A candidate for the maps is Google's libaddressinput address metadata
+  (field order, required fields, postal pattern, subdivision lists, per country); its licence is
+  unverified, so it is not bundled until checked, the same standard as any classification
+  source.
 - [ ] **Geocoding provider.** Geocoding (address → `Point`) is a provider seam like boundary
-  resolution; no built-in exists for it, so the first external provider is undecided.
+  resolution; no built-in exists, so the first external provider is undecided.
