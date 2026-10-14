@@ -1,3 +1,4 @@
+using Crest.ContentManagement.Display.ContentDisplay;
 using Crest.ContentManagement;
 using Crest.Data.Migration;
 using Crest.Deployment;
@@ -27,6 +28,12 @@ public sealed class Startup : StartupBase
     {
         services.AddContentPart<TemplatePart>();
         services.AddContentPart<DesignedPagePart>();
+
+        // The per-item page body (docs/widgets.md): its shape binds to its stored tree, validated on save.
+        services.AddContentPart<DisplayTreePart>()
+            .UseDisplayDriver<Drivers.DisplayTreePartDisplayDriver>()
+            .AddHandler<DisplayTreePartHandler>();
+        services.AddScoped<IDisplayTemplateBinding, DisplayTreePartBinding>();
         services.AddDataMigration<Migrations>();
         services.AddScoped<Crest.ContentManagement.Handlers.IContentHandler, TemplatePublishHandler>();
 

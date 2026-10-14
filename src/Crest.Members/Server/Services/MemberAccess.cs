@@ -93,7 +93,8 @@ public sealed class MemberClassCeiling(IOptions<MemberPermissionCeilingOptions> 
 public sealed class MemberCallerContributor(
     UserManager<IUser> userManager,
     RoleManager<IRole> roleManager,
-    YesSql.ISession session) : ICallerContextContributor
+    YesSql.ISession session,
+    IUserAccessReader? access = null) : ICallerContextContributor
 {
     public async Task ContributeAsync(CallerContextBuilder builder, CancellationToken cancellationToken = default)
     {
@@ -188,7 +189,9 @@ public sealed class MemberCallerContributor(
         }
 
         builder.OrganizationId = organizationId;
-        await ReplaceRolesAsync(builder, binding.Roles);
+        // What the member holds here is the organization's reach of the one store: its groups,
+        // their roles and sets, the member's overrides there - never the tenant reach.
+        await ReplaceWithOrganizationAsync(builder, user.UserId, organizationId, binding.Roles);
     }
 
     private async Task ActAsOrganizationAdminAsync(CallerContextBuilder builder, string organizationId)
@@ -197,6 +200,22 @@ public sealed class MemberCallerContributor(
         var admins = await session
             .Query<User, UserConnectionIndex>(index => index.OrganizationId == organizationId && index.Class == UserClasses.Member && index.IsMemberAdmin)
             .ListAsync();
+        if (access is not null)
+        {
+            // The organization's admins' roles and permissions at its reach, together.
+            await ReplaceRolesAsync(builder, []);
+            foreach (var admin in admins)
+            {
+                if (await access.ReadAsync(admin.UserId, AccessReach.Organization(organizationId)) is { } projected)
+                {
+                    builder.Roles.UnionWith(projected.Roles);
+                    builder.Permissions.UnionWith(projected.PermissionNames);
+                }
+            }
+
+            return;
+        }
+
         var roles = admins
             .SelectMany(admin => admin.TryGet<CrestMemberInfo>(out var info) ? info.Bindings : [])
             .Where(binding => binding.Class == UserClasses.Member && string.Equals(binding.OrganizationId, organizationId, StringComparison.Ordinal))
@@ -204,6 +223,26 @@ public sealed class MemberCallerContributor(
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
         await ReplaceRolesAsync(builder, roles);
+    }
+
+    /// <summary>On the member side the caller holds the organization's reach and nothing
+    /// else: the Anonymous and Authenticated roles, plus the projection's roles and
+    /// permissions there. Without the store (a host that does not register it) the binding's
+    /// stored roles stand in.</summary>
+    private async Task ReplaceWithOrganizationAsync(CallerContextBuilder builder, string userId, string organizationId, IEnumerable<string> storedRoles)
+    {
+        if (access is null)
+        {
+            await ReplaceRolesAsync(builder, storedRoles);
+            return;
+        }
+
+        await ReplaceRolesAsync(builder, []);
+        if (await access.ReadAsync(userId, AccessReach.Organization(organizationId)) is { } projected)
+        {
+            builder.Roles.UnionWith(projected.Roles);
+            builder.Permissions.UnionWith(projected.PermissionNames);
+        }
     }
 
     /// <summary>On the member side the caller holds the binding's roles and nothing else; the

@@ -18,21 +18,31 @@ namespace Crest.Workflows.Security;
 
 /// <summary>
 /// The resource a workflow permission is evaluated against: the definition's own lists of
-/// who may edit and who may run it (docs/workflows.md, phase 5). Passed as the resource of
+/// who may edit it, who may run it and who may read its instances (docs/workflows.md, phase
+/// 5; the View list ruled 2026-10-13). Passed as the resource of
 /// <c>AuthorizeAsync(user, permission, resource)</c>, so the check stays one Crest
 /// authorization call; <see cref="WorkflowDefinitionAccessCeiling"/> is the part of the
 /// decision that reads it.
 /// </summary>
-public sealed record WorkflowDefinitionAccessResource(string DefinitionId, IReadOnlyList<string> Edit, IReadOnlyList<string> Run)
+public sealed record WorkflowDefinitionAccessResource(string DefinitionId, IReadOnlyList<string> Edit, IReadOnlyList<string> Run, IReadOnlyList<string> View)
 {
-    public static WorkflowDefinitionAccessResource From(string definitionId, IDictionary<string, object>? properties) =>
-        new(definitionId, Names(properties, WorkflowsConstants.AccessEditProperty), Names(properties, WorkflowsConstants.AccessRunProperty));
+    public WorkflowDefinitionAccessResource(string definitionId, IReadOnlyList<string> edit, IReadOnlyList<string> run)
+        : this(definitionId, edit, run, [])
+    {
+    }
 
-    public WorkflowDefinitionAccessModel ToModel() => new(Edit, Run);
+    public static WorkflowDefinitionAccessResource From(string definitionId, IDictionary<string, object>? properties) =>
+        new(definitionId, Names(properties, WorkflowsConstants.AccessEditProperty), Names(properties, WorkflowsConstants.AccessRunProperty), Names(properties, WorkflowsConstants.AccessViewProperty));
+
+    /// <summary>A definition with no lists: tenant-wide, narrowed by nothing.</summary>
+    public static WorkflowDefinitionAccessResource Open(string definitionId) => new(definitionId, [], [], []);
+
+    public WorkflowDefinitionAccessModel ToModel() => new(Edit, Run, View);
 
     /// <summary>
     /// The veto the lists express, for a built caller: an edit permission against the Edit
-    /// list, Run against the Run list; a user name admits that user, a role name its members;
+    /// list, Run against the Run list, View (an instance read) against the View list, none
+    /// implying another; a user name admits that user, a role name its members;
     /// an empty list admits everyone; the super user and administrators are never narrowed.
     /// The one access decision answers the permission only, so its direct callers consult
     /// this beside it (the ceiling makes the decision itself answer it).
@@ -53,6 +63,7 @@ public sealed record WorkflowDefinitionAccessResource(string DefinitionId, IRead
     {
         Set(properties, WorkflowsConstants.AccessEditProperty, access.Edit);
         Set(properties, WorkflowsConstants.AccessRunProperty, access.Run);
+        Set(properties, WorkflowsConstants.AccessViewProperty, access.View);
     }
 
     public static IReadOnlyList<string> Clean(IEnumerable<string>? names) =>
@@ -93,7 +104,8 @@ public sealed record WorkflowDefinitionAccessResource(string DefinitionId, IRead
 
 /// <summary>
 /// The lists as the one decision's deny-only rule: an edit permission (Edit, Manage
-/// shipped, Publish) is vetoed by a definition's Edit list, Run by its Run list, when the
+/// shipped, Publish) is vetoed by a definition's Edit list, Run by its Run list, View - an
+/// instance read, asked with the definition as the resource - by its View list, when the
 /// caller is named in neither (a user name is the per-user override; a role name admits its
 /// members). A definition with no list changes nothing; the super user and the system are
 /// never narrowed. Evaluated inside the decision, so the authorization-service path and the
@@ -115,25 +127,25 @@ public sealed class WorkflowDefinitionAccessCeiling : Crest.Access.IAccessCeilin
             return null;
         }
 
-        return $"Workflow '{definition.DefinitionId}' limits who may {(EditPermissions.Contains(permission) ? "edit" : "run")} it.";
+        var what = EditPermissions.Contains(permission) ? "edit it" : permission == WorkflowsConstants.Permissions.View ? "read its instances" : "run it";
+        return $"Workflow '{definition.DefinitionId}' limits who may {what}.";
     }
 
-    /// <summary>The list a permission is checked against: Edit for the edit permissions, Run for Run, none for the rest.</summary>
-    public static IReadOnlyList<string>? ListFor(string permissionName, WorkflowDefinitionAccessResource resource)
-    {
-        if (EditPermissions.Contains(permissionName))
-        {
-            return resource.Edit;
-        }
-
-        return permissionName == WorkflowsConstants.Permissions.Run ? resource.Run : null;
-    }
+    /// <summary>The list a permission is checked against: Edit for the edit permissions, Run for Run, View for View, none for the rest.</summary>
+    public static IReadOnlyList<string>? ListFor(string permissionName, WorkflowDefinitionAccessResource resource) =>
+        EditPermissions.Contains(permissionName) ? resource.Edit
+        : permissionName == WorkflowsConstants.Permissions.Run ? resource.Run
+        : permissionName == WorkflowsConstants.Permissions.View ? resource.View
+        : null;
 }
 
 /// <summary>Loads a definition's access lists (the API gate's view of the service below).</summary>
 public interface IWorkflowDefinitionAccessReader
 {
     Task<WorkflowDefinitionAccessResource?> GetAsync(string definitionId);
+
+    /// <summary>Every definition's lists (the latest version of each), for the narrowing of an instance list.</summary>
+    Task<IReadOnlyList<WorkflowDefinitionAccessResource>> ListAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>Authorizes the gated caller against a definition in one decision (the ownership guard's view of the service below).</summary>
@@ -154,8 +166,16 @@ public sealed class WorkflowDefinitionAccessService(
     ISession session,
     WorkflowDefinitionPartMapper partMapper,
     IWorkflowDefinitionCacheManager definitionCacheManager,
-    ICacheManager cacheManager) : IWorkflowDefinitionAccessReader, IWorkflowDefinitionAuthorizer
+    ICacheManager cacheManager,
+    IWorkflowDefinitionStore definitions) : IWorkflowDefinitionAccessReader, IWorkflowDefinitionAuthorizer
 {
+    public async Task<IReadOnlyList<WorkflowDefinitionAccessResource>> ListAsync(CancellationToken cancellationToken = default) =>
+        (await definitions.FindManyAsync(new Management.Filters.WorkflowDefinitionFilter { VersionOptions = Crest.Workflows.Common.Models.VersionOptions.Latest }, cancellationToken))
+            .Select(definition => From(definition.DefinitionId, definition.CustomProperties))
+            .ToList();
+
+    private static WorkflowDefinitionAccessResource From(string definitionId, IDictionary<string, object>? properties) => WorkflowDefinitionAccessResource.From(definitionId, properties);
+
     public async Task<WorkflowDefinitionAccessResource?> GetAsync(string definitionId)
     {
         var contentItem = await contentManager.GetAsync(definitionId, VersionOptions.Latest);
@@ -168,7 +188,7 @@ public sealed class WorkflowDefinitionAccessService(
 
     public async Task<bool> AuthorizeAsync(Permission permission, string definitionId)
     {
-        var resource = await GetAsync(definitionId) ?? new WorkflowDefinitionAccessResource(definitionId, [], []);
+        var resource = await GetAsync(definitionId) ?? WorkflowDefinitionAccessResource.Open(definitionId);
         return await AuthorizeAsync(permission, resource);
     }
 
@@ -184,7 +204,7 @@ public sealed class WorkflowDefinitionAccessService(
             return null;
         }
 
-        var clean = new WorkflowDefinitionAccessModel(WorkflowDefinitionAccessResource.Clean(access.Edit), WorkflowDefinitionAccessResource.Clean(access.Run));
+        var clean = new WorkflowDefinitionAccessModel(WorkflowDefinitionAccessResource.Clean(access.Edit), WorkflowDefinitionAccessResource.Clean(access.Run), WorkflowDefinitionAccessResource.Clean(access.View));
         foreach (var version in versions)
         {
             var model = partMapper.MapModel(version.Get<WorkflowDefinitionPart>(typeof(WorkflowDefinitionPart).Name));
@@ -196,11 +216,11 @@ public sealed class WorkflowDefinitionAccessService(
 
         await definitionCacheManager.EvictWorkflowDefinitionAsync(definitionId, cancellationToken);
         await cacheManager.TriggerTokenAsync(typeof(CachingWorkflowDefinitionStore).FullName!, cancellationToken);
-        return new(definitionId, clean.Edit, clean.Run);
+        return new(definitionId, clean.Edit, clean.Run, clean.View);
     }
 }
 
-/// <summary>Who may edit and run one definition. Reading takes View; writing takes the right to edit the definition itself.</summary>
+/// <summary>Who may edit and run one definition, and read its instances. Reading the lists takes View; writing them takes the right to edit the definition itself.</summary>
 [ApiController, AutoValidateAntiforgeryToken, Route(WorkflowsConstants.Routes.DefinitionsApi)]
 public sealed class WorkflowDefinitionAccessController(WorkflowDefinitionAccessService access, WorkflowOwnershipGuard ownership, IAuthorizationService authorizationService) : ControllerBase
 {

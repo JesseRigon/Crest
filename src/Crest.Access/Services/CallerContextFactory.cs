@@ -25,7 +25,8 @@ public sealed class CallerContextFactory(
     CallerStateCache cache,
     IEnumerable<ICallerRequestResolver> resolvers,
     IEnumerable<ICallerContextContributor> contributors,
-    IEnumerable<IDerivedRoleProvider>? derivedRoles = null) : ICallerContextFactory
+    IEnumerable<IDerivedRoleProvider>? derivedRoles = null,
+    IUserAccessReader? access = null) : ICallerContextFactory
 {
     public async Task<CallerContext> CreateAsync(CallerRequest request, CancellationToken cancellationToken = default)
     {
@@ -203,10 +204,23 @@ public sealed class CallerContextFactory(
             {
                 isUser = true;
                 builder.UserName ??= user.UserName;
-                foreach (var roleName in await userManager.GetRolesAsync(user))
+
+                // The tenant-reach projection (docs/permissions.md › Projection): the user's
+                // roles from their groups and assignments, and the permissions those resolve to
+                // with the overrides applied. The member side replaces it with the acting
+                // organization's (the Members contributor).
+                if (access is not null && await access.ReadAsync(userId, AccessReach.Tenant, cancellationToken) is { } projected)
                 {
-                    roleNames.Add(roleName);
-                    builder.Roles.Add(roleName);
+                    builder.Roles.UnionWith(projected.Roles);
+                    builder.Permissions.UnionWith(projected.PermissionNames);
+                }
+                else
+                {
+                    foreach (var roleName in await userManager.GetRolesAsync(user))
+                    {
+                        roleNames.Add(roleName);
+                        builder.Roles.Add(roleName);
+                    }
                 }
             }
             else if (!exists && principal is not null && !IsIdentityCookie(principal))

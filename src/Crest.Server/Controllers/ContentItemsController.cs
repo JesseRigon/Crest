@@ -49,22 +49,9 @@ public sealed class ContentItemsController(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        // A type-filtered list authorizes against a stand-in item of that type
-        // (stock's own AuthorizeContentTypeDefinitionsAsync pattern), so Securable
-        // types enforce their dynamic ListContent_{Type} permission through the
-        // standard handler chain; the unfiltered list keeps the global check.
-        if (string.IsNullOrWhiteSpace(contentType))
-        {
-            if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.ListContent))
-            {
-                return Forbid();
-            }
-        }
-        else if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.ListContent, await contentManager.NewAsync(contentType)))
-        {
-            return Forbid();
-        }
-
+        // No up-front permission check (docs/access.md § One decision, ruled 2026-10-13): the
+        // route gate admits the page, and the query below carries the caller's view scope as a
+        // server-side predicate, so a holder of only ListContent_{type} gets that one type.
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 100);
         // The caller's content scope, from the one scope set: a list never returns a row the

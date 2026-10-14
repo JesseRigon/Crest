@@ -14,7 +14,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 3,
-   "title": "Crest.Access\\nreferenced by 2, references 7, packages 0"
+   "title": "Crest.Access\\nreferenced by 2, references 8, packages 1"
   },
   {
    "id": "Crest.Access.Abstractions",
@@ -429,8 +429,8 @@
    "label": "Crest.Data",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 9,
-   "title": "Crest.Data\\nreferenced by 8, references 3, packages 0"
+   "value": 10,
+   "title": "Crest.Data\\nreferenced by 9, references 3, packages 0"
   },
   {
    "id": "Crest.Data.Abstractions",
@@ -5011,6 +5011,11 @@
   {
    "from": "Crest.Access",
    "to": "Crest.Data.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Crest.Access",
+   "to": "Crest.Data",
    "arrows": "to"
   },
   {
@@ -9756,6 +9761,9 @@
   "Crest.Configuration.KeyVault": [
    "Azure.Extensions.AspNetCore.Configuration.Secrets",
    "Azure.Identity"
+  ],
+  "Crest.Access": [
+   "YesSql.Abstractions"
   ],
   "Crest.Logging.Serilog": [
    "Serilog.AspNetCore"

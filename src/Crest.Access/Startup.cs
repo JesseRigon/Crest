@@ -2,6 +2,8 @@ using Crest.Access.AuditTrail;
 using Crest.Access.Services;
 using Crest.AuditTrail.Services.Models;
 using Crest.BackgroundTasks;
+using Crest.Data;
+using Crest.Data.Migration;
 using Crest.Modules;
 using Crest.Security;
 using Crest.Users.Handlers;
@@ -38,6 +40,14 @@ public sealed class Startup : StartupBase
         services.AddScoped<IAccessAuditor, AccessAuditor>();
         services.AddScoped<IPermissionVersion, PermissionVersionService>();
 
+        // The permission model's store (docs/permissions.md): groups, overrides, the organization
+        // defaults, the projection the caller is built from, and the assignable-roles ceiling.
+        services.AddDataMigration<Migrations.AccessMigrations>();
+        services.AddIndexProvider<Store.AccessGroupIndexProvider>();
+        services.AddIndexProvider<Store.UserAccessOverrideIndexProvider>();
+        services.AddIndexProvider<Store.UserAccessIndexProvider>();
+        AddPermissionModelServices(services);
+
         // The version is an invalidation token, not a counter anyone reads: two writers that
         // both move v to v + 1 still invalidate every state built at v. Optimistic concurrency
         // would instead roll back the whole unit (a setup recipe writing roles and users from
@@ -73,6 +83,24 @@ public sealed class Startup : StartupBase
         // version; the security stamp stays for sign-out and credential change, re-validated
         // at this explicit interval.
         services.Configure<Microsoft.AspNetCore.Identity.SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.FromMinutes(30));
+    }
+
+    /// <summary>
+    /// The permission model's services. The projector reaches the user manager only when it
+    /// is used: the user store's event handlers reach the group service (Members places a new
+    /// user in organization groups), which rebuilds through the projector, and the caller
+    /// factory reads the projector - a constructor dependency on the user manager anywhere in
+    /// that chain is a resolution cycle that hangs every scope (setup included).
+    /// </summary>
+    public static void AddPermissionModelServices(IServiceCollection services)
+    {
+        services.AddScoped<IAccessGroupService, AccessGroupService>();
+        services.AddScoped<IUserAccessOverrideService, UserAccessOverrideService>();
+        services.AddScoped<IOrganizationAccessDefaultsService, OrganizationAccessDefaultsService>();
+        services.AddScoped<UserAccessProjector>();
+        services.AddScoped<IUserAccessReader>(sp => sp.GetRequiredService<UserAccessProjector>());
+        services.AddScoped<IUserAccessProjector>(sp => sp.GetRequiredService<UserAccessProjector>());
+        services.AddScoped<IAccessCeiling, OrganizationAssignableRolesCeiling>();
     }
 
     public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)

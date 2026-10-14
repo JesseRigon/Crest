@@ -1,0 +1,123 @@
+@namespace Crest.Components.Access
+@using System.Net.Http.Json
+@using Crest.Components.Primitives
+@using Crest.Components.Model
+@using Crest.Components.Models
+@inject HttpClient Http
+@inject Crest.Components.Theme.CrestApiLocalizer T
+
+@* One user's overrides at one reach (docs/permissions.md › Overrides): a role, a set or a
+   permission, granted or denied. The override belongs to the user, not to the group it is
+   edited under, so every editor shows the same list. A grant and a deny of one name at one
+   level is refused by the server. Below, what the user holds with where each permission came from. *@
+
+<CrestStack Gap="0.75rem" data-testid="overrides-editor">
+    <CrestText TextStyle="TextStyle.H6" Text="@T["Overrides for {0}", UserLabel ?? UserId]" />
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <CrestAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</CrestAlert>
+    }
+
+    @foreach (var entry in Entries)
+    {
+        <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+            <CrestBadge Text="@entry.Level.ToString()" BadgeStyle="BadgeStyle.Secondary" />
+            <CrestText Text="@entry.Name" />
+            <CrestBadge Text="@entry.Effect.ToString()" BadgeStyle="@(entry.Effect == OverrideEffect.Grant ? BadgeStyle.Success : BadgeStyle.Danger)" />
+            <CrestButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Entries.Remove(entry))" />
+        </CrestStack>
+    }
+
+    <CrestStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
+        <CrestDropDown TValue="OverrideLevel" @bind-Value="NewLevel" Data="@Levels" Style="width: 9rem;" />
+        <CrestTextBox @bind-Value="NewName" Placeholder="@T["Role, set or permission name"]" Style="width: 16rem;" />
+        <CrestDropDown TValue="OverrideEffect" @bind-Value="NewEffect" Data="@Effects" Style="width: 8rem;" />
+        <CrestButton Text="@T["Add"]" Icon="add" ButtonStyle="ButtonStyle.Light" Click="Add" Disabled="@string.IsNullOrWhiteSpace(NewName)" />
+    </CrestStack>
+
+    <CrestButton Text="@T["Save overrides"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" data-testid="overrides-save" />
+
+    @if (Resolved is not null)
+    {
+        <CrestText TextStyle="TextStyle.Subtitle2" Text="@T["What the user holds here"]" />
+        <CrestText TextStyle="TextStyle.Body2" Text="@($"{T["Groups"]}: {string.Join(", ", Resolved.Groups)} · {T["Roles"]}: {string.Join(", ", Resolved.Roles)} · {T["Sets"]}: {string.Join(", ", Resolved.Sets)}")" />
+        @foreach (var grant in Resolved.Permissions.Where(grant => grant.Permission.Length > 0))
+        {
+            <CrestText TextStyle="TextStyle.Caption" Text="@($"{grant.Permission} - {grant.Source}")" />
+        }
+    }
+</CrestStack>
+
+@code {
+    [Parameter, EditorRequired] public string UserId { get; set; } = string.Empty;
+    [Parameter] public string? UserLabel { get; set; }
+    [Parameter] public string? OrganizationId { get; set; }
+
+    private List<UserAccessOverride> Entries { get; set; } = [];
+    private UserAccessInfo? Resolved { get; set; }
+    private OverrideLevel NewLevel { get; set; } = OverrideLevel.Permission;
+    private OverrideEffect NewEffect { get; set; } = OverrideEffect.Grant;
+    private string? NewName { get; set; }
+    private string? Error { get; set; }
+    private bool IsBusy { get; set; }
+    private string? _loadedFor;
+
+    private static readonly OverrideLevel[] Levels = Enum.GetValues<OverrideLevel>();
+    private static readonly OverrideEffect[] Effects = Enum.GetValues<OverrideEffect>();
+
+    private string Query => string.IsNullOrWhiteSpace(OrganizationId) ? string.Empty : $"?organizationId={Uri.EscapeDataString(OrganizationId)}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var key = UserId + "|" + OrganizationId;
+        if (_loadedFor == key)
+        {
+            return;
+        }
+
+        _loadedFor = key;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        Error = null;
+        try
+        {
+            Entries = (await Http.GetFromJsonAsync<UserOverridesModel>($"api/crest/access/users/{Uri.EscapeDataString(UserId)}/overrides{Query}"))?.Overrides ?? [];
+            Resolved = await Http.GetFromJsonAsync<UserAccessInfo>($"api/crest/access/users/{Uri.EscapeDataString(UserId)}{Query}");
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+
+    private void Add()
+    {
+        Entries.Add(new UserAccessOverride(NewLevel, NewName!.Trim(), NewEffect));
+        NewName = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            using var response = await Http.PutAsJsonAsync($"api/crest/access/users/{Uri.EscapeDataString(UserId)}/overrides{Query}", new UserOverridesModel(Entries));
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await AccessApi.ErrorAsync(response);
+                return;
+            }
+
+            await LoadAsync();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

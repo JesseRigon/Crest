@@ -46,6 +46,21 @@ public sealed class CrestAdminMenu(IStringLocalizer<CrestAdminMenu> stringLocali
                 .LocalNav()
             ), priority: 1);
 
+        // The permission model's editors (docs/permissions.md › Editors): Blazor-only pages.
+        builder.Add(S["Access Control"], accessControl => accessControl
+            .Add(S["Permission Sets"], S["Permission Sets"].PrefixPosition(), sets => sets
+                .AddClass("permission-sets")
+                .Id("permission-sets")
+                .Url($"{adminPath}/PermissionSets")
+                .Permission(Crest.Roles.RolesPermissions.ManageRoles)
+                .LocalNav())
+            .Add(S["Groups"], S["Groups"].PrefixPosition(), groups => groups
+                .AddClass("access-groups")
+                .Id("access-groups")
+                .Url($"{adminPath}/Groups")
+                .Permission(Crest.Roles.RolesPermissions.ManageRoles)
+                .LocalNav()));
+
         // The tenant's upload scanning choice (Crest.Media.Scanning, always enabled): a
         // Blazor-only page, so a .Url like the design entries above.
         builder.Add(S["Settings"], settings => settings

@@ -178,4 +178,6 @@ public static class WorkflowsConstants
     /// </summary>
     public const string AccessEditProperty = "Crest.Access.Edit";
     public const string AccessRunProperty = "Crest.Access.Run";
+    /// <summary>Who may read the definition's instances (list, journal, variables, export); empty = every View holder (ruled 2026-10-13).</summary>
+    public const string AccessViewProperty = "Crest.Access.View";
 }

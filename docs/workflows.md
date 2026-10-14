@@ -242,6 +242,29 @@ roles, and Run against the Run list; it acts only when the resource is a
 direct `DecideAsync` give the same answer everywhere (guard, gate, linker, access API), and
 the super user and the system are never narrowed.
 
+**Ruled 2026-10-13: a third list, View.** `Crest.Access.View` lists who may read a
+definition's instances (list, journal, variables, export) beside Edit and Run. The ceiling
+vetoes an instance read when the View list is non-empty and names neither the caller nor
+one of their roles; Edit and Run do not imply View. A definition with no View list is a
+tenant-wide ("global") one: everyone holding `ViewCrestWorkflows` reads its instances even
+when they can neither edit nor run it. The new list is set the same way as the other two
+(the access API and Studio's access editor), and the engine API instance reads and bulk
+actions ask the decision with the resource, closing the access.md defect.
+*What landed (2026-10-13):* `Crest.Access.View` on `WorkflowDefinitionAccessResource`,
+`WorkflowDefinitionAccessModel` and the access API (`GET`/`PUT .../{definitionId}/access`);
+the ceiling vetoes View against it; `EngineInstanceAccess` (`Server/Security`), called by
+the API gate, decides every engine instance operation with the definition(s) it reaches as
+the resource: get, journal (the posted filter too), variables, execution state, export and
+the activity-execution reads take View; cancel, delete, variables, the bulk cancel, delete
+and export (export takes View), a bookmark resume (the instance its token names), a task
+completion (the bookmarks the task's stimulus hashes to) and an event trigger (the triggers
+and bookmarks the event hashes to, or the instance named) take Run; a bulk action that
+names nothing takes Run on every definition. The instance list is narrowed in the request
+itself (the definition filter intersected with, or set to, the definitions whose View list
+admits the caller; a filter left empty is refused), so the engine never sees the question.
+Studio has no access editor yet (the designer list below); the API sets the list. Not
+narrowed: the instance import (its instances come in files; the dispatcher stamps the actor).
+
 **Studio follows the same decisions.** `WorkflowDefinitionLinker` replaces the
 engine's static linker: a definition's write links (`publish`, `retract`, `delete`, `import`,
 `update-references`) are present only for what the acting user may do to that definition,
@@ -1623,6 +1646,16 @@ Built today: see [docs/workflows.md › Designer and admin pages](workflows.md#d
 
 ### Decisions needed
 
+- [ ] **Workflows as permissioned, shareable assets (raised 2026-10-13, to discuss).** Treat
+  workflow definitions the way the media system treats files: owned, permissioned, shared
+  and approved through the same mechanisms ([media.md](media.md), [sharing.md](sharing.md)),
+  so people build and deploy workflows together, and a person can keep workflows only they
+  use - a personal drive of workflows - sandboxed from the tenant's. Questions: what a
+  definition's share levels map to (View, Run, Edit, Publish), whether a personal workflow
+  may touch tenant data or only the owner's, how approval (publish) fits the approvals
+  system ([permissions.md](permissions.md) § Approvals), and what "sandboxed" bounds (the
+  actor it runs as, connectors it may use). The View list above is the first step; the rest
+  waits on this discussion.
 - [ ] **Design a flow's output contract.** **Still to design:** a flow's *output* contract (what a composable flow promises its
   caller), and version checks beyond the object lock should a conflict rate ever ask for
   them.

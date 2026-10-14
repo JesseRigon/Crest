@@ -17,6 +17,14 @@ public static class MembersPermissions
     /// the class decides which login surfaces accept the account.</summary>
     public static readonly Permission ConvertUserClass = new("ConvertUserClass", "Convert a user between staff and member", isSecurityCritical: true);
 
+    /// <summary>A member's own Person, contact points and positions in the organizations they
+    /// are bound to (docs/access.md § Members, ruling 2026-10-13). Not on the member ceiling.</summary>
+    public static readonly Permission ManageOwnOrgMember = new(Crest.Access.OrganizationPermissionNames.ManageOwnOrgMember, "Manage one's own member record");
+
+    /// <summary>An organization's members and contacts: staff at tenant reach (every
+    /// organization), a member through an organization group (that organization only).</summary>
+    public static readonly Permission ManageOrgMembers = new(Crest.Access.OrganizationPermissionNames.ManageOrgMembers, "Manage an organization's members and contacts");
+
 }
 
 /// <summary>The Members feature's own permissions: who is a member, and staff actions
@@ -28,6 +36,8 @@ public sealed class MembersPermissionProvider : IPermissionProvider
         MembersPermissions.ManageMembers,
         MembersPermissions.ImpersonateMembers,
         MembersPermissions.ConvertUserClass,
+        MembersPermissions.ManageOwnOrgMember,
+        MembersPermissions.ManageOrgMembers,
     ];
 
     public Task<IEnumerable<Permission>> GetPermissionsAsync()

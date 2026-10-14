@@ -2,6 +2,7 @@ using Crest.Members.Indexes;
 using Microsoft.Extensions.DependencyInjection;
 using Crest.Data.Migration;
 using Crest.Environment.Shell.Scope;
+using YesSql;
 using YesSql.Sql;
 
 namespace Crest.Members.Migrations;
@@ -47,7 +48,23 @@ public sealed class MembersMigrations : DataMigration
 
         DeferEnsureMemberRoleTemplates();
 
-        return 1;
+        return 2;
+    }
+
+    /// <summary>
+    /// The one permission model (docs/permissions.md): a binding's stored roles become the
+    /// organization's groups, one per role, holding the members that had it. The bindings keep
+    /// the class and the membership.
+    /// </summary>
+    public int UpdateFrom1()
+    {
+        ShellScope.AddDeferredTask(async scope =>
+        {
+            var users = await scope.ServiceProvider.GetRequiredService<ISession>().Query<Crest.Users.Models.User>().ListAsync();
+            await scope.ServiceProvider.GetRequiredService<Services.MemberOrganizationGroups>().MigrateBindingRolesAsync(users);
+        });
+
+        return 2;
     }
 
     // The member ROLE TEMPLATES are ordinary Crest roles the tenant shapes in the

@@ -7,6 +7,7 @@ using Crest.Documents;
 using Crest.Modules;
 using Crest.Roles.Models;
 using Crest.Security;
+using Crest.Security.Permissions;
 
 namespace Crest.Roles.Services;
 
@@ -15,6 +16,7 @@ public class RoleStore : IRoleClaimStore<IRole>, IQueryableRoleStore<IRole>
     private readonly IServiceProvider _serviceProvider;
     private readonly ISystemRoleProvider _systemRoleProvider;
     private readonly IDocumentManager<RolesDocument> _documentManager;
+    private readonly IPermissionSetService _permissionSets;
     private readonly ILogger _logger;
 
     protected readonly IStringLocalizer S;
@@ -25,12 +27,14 @@ public class RoleStore : IRoleClaimStore<IRole>, IQueryableRoleStore<IRole>
         IServiceProvider serviceProvider,
         ISystemRoleProvider systemRoleProvider,
         IDocumentManager<RolesDocument> documentManager,
+        IPermissionSetService permissionSets,
         IStringLocalizer<RoleStore> stringLocalizer,
         ILogger<RoleStore> logger)
     {
         _serviceProvider = serviceProvider;
         _systemRoleProvider = systemRoleProvider;
         _documentManager = documentManager;
+        _permissionSets = permissionSets;
         S = stringLocalizer;
         _logger = logger;
     }
@@ -234,16 +238,32 @@ public class RoleStore : IRoleClaimStore<IRole>, IQueryableRoleStore<IRole>
         return Task.CompletedTask;
     }
 
-    public Task<IList<Claim>> GetClaimsAsync(IRole role, CancellationToken cancellationToken = default)
+    /// <summary>The role's claims: its loose claims plus a permission claim for every
+    /// permission its sets grant (docs/permissions.md), so every reader of a role's
+    /// permissions sees the sets without knowing them.</summary>
+    public async Task<IList<Claim>> GetClaimsAsync(IRole role, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(role);
 
-        if (role is Role r)
+        if (role is not Role r)
         {
-            return Task.FromResult<IList<Claim>>(r.RoleClaims.Select(x => x.ToClaim()).ToArray());
+            return [];
         }
 
-        return Task.FromResult<IList<Claim>>([]);
+        var claims = r.RoleClaims.Select(x => x.ToClaim()).ToList();
+        if (r.PermissionSets.Count > 0)
+        {
+            var loose = new HashSet<string>(r.RoleClaims.Where(x => x.ClaimType == Permission.ClaimType).Select(x => x.ClaimValue), StringComparer.OrdinalIgnoreCase);
+            foreach (var permission in await _permissionSets.ExpandAsync(r.PermissionSets, cancellationToken))
+            {
+                if (loose.Add(permission))
+                {
+                    claims.Add(new Claim(Permission.ClaimType, permission));
+                }
+            }
+        }
+
+        return claims;
     }
 
     public Task RemoveClaimAsync(IRole role, Claim claim, CancellationToken cancellationToken = default)

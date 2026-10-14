@@ -21,6 +21,8 @@
     <ProjectReference Include="..\Crest.Module.Targets\Crest.Module.Targets.csproj" />
     <ProjectReference Include="..\Crest.Infrastructure.Abstractions\Crest.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Data.Abstractions\Crest.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Crest.Data\Crest.Data.csproj" />
+    <PackageReference Include="YesSql.Abstractions" />
     <ProjectReference Include="..\Crest.Roles.Abstractions\Crest.Roles.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.Users.Abstractions\Crest.Users.Abstractions.csproj" />
     <ProjectReference Include="..\Crest.AuditTrail.Abstractions\Crest.AuditTrail.Abstractions.csproj" />

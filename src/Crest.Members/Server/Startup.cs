@@ -32,6 +32,8 @@ public sealed class Startup : StartupBase
         // the signed-in user's own bindings.
         services.AddScoped<Crest.Routing.IShellOrganizationResolver, MemberOrganizationSlugResolver>();
         services.AddScoped<MemberBindingService>();
+        services.AddScoped<MemberOrganizationGroups>();
+        services.AddScoped<Crest.ContentManagement.Handlers.IContentHandler, OrganizationAccessGroupsHandler>();
         services.AddScoped<UserClassService>();
         services.AddScoped<MemberPortalLoginContext>();
         services.AddScoped<MemberImpersonationService>();

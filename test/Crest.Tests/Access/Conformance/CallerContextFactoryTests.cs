@@ -102,8 +102,11 @@ public class CallerContextFactoryTests
                 Version,
                 new CallerStateCache(Cache),
                 Resolvers,
-                Contributors);
+                Contributors,
+                access: Access);
         }
+
+        public IUserAccessReader Access { get; set; }
     }
 
     private static ClaimsPrincipal Signed(string userId, params Claim[] extra) =>
@@ -161,6 +164,43 @@ public class CallerContextFactoryTests
         Assert.True((await factory.CreateAsync(Request(Signed("u-admin")), TestContext.Current.CancellationToken)).IsSuperUser);
         Assert.True((await factory.CreateAsync(Request(Signed("u-owner")), TestContext.Current.CancellationToken)).IsSuperUser);
         Assert.False((await factory.CreateAsync(Request(Signed("u-editor")), TestContext.Current.CancellationToken)).IsSuperUser);
+    }
+
+    private sealed class Projection(UserAccess access) : IUserAccessReader
+    {
+        public List<AccessReach> Reads { get; } = [];
+
+        public Task<UserAccess> ReadAsync(string userId, AccessReach reach, CancellationToken cancellationToken = default)
+        {
+            Reads.Add(reach);
+            return Task.FromResult(userId == access.UserId && reach == access.Reach ? access : null);
+        }
+    }
+
+    [Fact]
+    public async Task ASignedInUserHoldsTheTenantProjectionNotTheRolesOnTheirRecord()
+    {
+        // docs/permissions.md › Projection: the caller is built from the user's tenant rows
+        // (groups, roles, sets, overrides resolved), plus the baseline every caller has.
+        var world = new World();
+        var projection = new Projection(new UserAccess(
+            "u-editor",
+            AccessReach.Tenant,
+            new HashSet<string>(["Support desk"]),
+            new HashSet<string>(["Support"], StringComparer.OrdinalIgnoreCase),
+            new HashSet<string>(),
+            [new UserAccessGrant("ManageOrgMembers", "role:Support")],
+            1));
+        world.Access = projection;
+
+        var caller = await world.Factory().CreateAsync(Request(Signed("u-editor")), TestContext.Current.CancellationToken);
+
+        Assert.Equal([AccessReach.Tenant], projection.Reads);
+        Assert.Contains("Support", caller.Roles);
+        Assert.DoesNotContain("Editor", caller.Roles);
+        Assert.Contains("ManageOrgMembers", caller.Permissions);
+        Assert.DoesNotContain("PublishContent", caller.Permissions);
+        Assert.Contains("ViewOwnProfile", caller.Permissions);
     }
 
     [Fact]

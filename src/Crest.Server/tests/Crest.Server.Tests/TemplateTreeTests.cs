@@ -356,6 +356,80 @@ public sealed class TemplateTreeTests
         Assert.Null(await new TemplateResolver(Catalog(), Theme("SiteTheme"), [shipped]).ResolveAsync(["Content__Page", "Content"], "Summary"));
     }
 
+    [Fact]
+    public async Task AComparisonOverABindingIsStoredAsAPredicate()
+    {
+        var evaluation = await EvaluateAsync("""
+            {% component "Input", id: "country" %}
+            {% component "Input", id: "state", visible: nodes.country.value == "US" %}
+            {% component "Input", id: "zip", visible: nodes.country.value != empty and nodes.state.value startswith "N" %}
+            {% component "Input", id: "note", visible: not nodes.country.value contains "U" %}
+            {% component "Label", text: "plain", count: 2 > 1 %}
+            """, instanceId: "page");
+
+        var nodes = evaluation.Root.Zones["ChildContent"];
+        var state = nodes[1].Bindings!["Visible"];
+        Assert.Equal((DisplayPredicates.Equal, "page.country", "Value"), (state.Operator, state.Node, state.Output));
+        Assert.Equal("US", state.Operand!.Value!.GetValue<string>());
+
+        var zip = nodes[2].Bindings!["Visible"];
+        Assert.Equal(DisplayPredicates.And, zip.Combinator);
+        Assert.Equal([DisplayPredicates.NotEmpty, DisplayPredicates.StartsWith], zip.Terms!.Select(term => term.Operator));
+
+        var note = nodes[3].Bindings!["Visible"];
+        Assert.Equal(DisplayPredicates.Not, note.Combinator);
+        Assert.Equal(DisplayPredicates.Contains, Assert.Single(note.Terms!).Operator);
+
+        // No binding in it: Liquid evaluates it as always.
+        Assert.Null(nodes[4].Bindings);
+        Assert.Empty(DisplayTreeValidator.Validate(evaluation.Root, Registry()));
+    }
+
+    [Fact]
+    public async Task AnItemsPageBodyBindsAsItsStoredTreeScopedUnderThePart()
+    {
+        var services = Services(Registry());
+        var shape = new Crest.DisplayManagement.Shapes.Shape();
+        shape.Properties["Tree"] = JsonNode.Parse("""
+            { "component": "Card", "zones": { "ChildContent": [
+              { "id": "country", "component": "Input" },
+              { "component": "Input", "bindings": { "Visible": { "node": "country", "output": "Value", "operator": "==", "operand": { "value": "US" } } } },
+              { "component": "Markup", "properties": { "html": "<p>Hi</p><script>alert(1)</script>" } }
+            ] } }
+            """);
+        var binding = new DisplayTreePartBinding(
+            services.GetRequiredService<TemplateTreeEvaluator>(), Registry(), Options.Create(new DisplayTreeOptions()), services);
+
+        var root = await binding.BindAsync(new DisplayTemplateRequest(shape, "item.body", "DisplayTreePart", [], "Detail"), TestContext.Current.CancellationToken);
+
+        Assert.Equal("Card", root!.Component);
+        var children = root.Zones["ChildContent"];
+        Assert.Equal("item.body.country", children[0].Id);
+        Assert.Equal("item.body.country", children[1].Bindings!["Visible"].Node);
+        Assert.DoesNotContain("script", children[2].Properties[DisplayNode.MarkupProperty]!.GetValue<string>(), StringComparison.Ordinal);
+        Assert.Null(await binding.BindAsync(new DisplayTemplateRequest(shape, "x", "TitlePart", [], null), TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void AStoredTreeIsCheckedAgainstTheSchema()
+    {
+        Assert.True(DisplayTreeJson.TryParse(JsonNode.Parse("""
+            { "component": "Card", "zones": { "ChildContent": [
+              { "component": "Label", "properties": { "Count": "many", "Colour": "red" } },
+              { "component": "Script" },
+              { "component": "Input", "bindings": { "Visible": { "node": "n1", "output": "Value", "operator": "matches", "operand": { "value": "x" } } } }
+            ], "Footer": [] } }
+            """), out var root, out _));
+
+        var problems = DisplayTreeValidator.ValidateStored(root!, Registry());
+
+        Assert.Contains(problems, problem => problem.Reason.Contains("'Count' is not a valid", StringComparison.Ordinal));
+        Assert.Contains(problems, problem => problem.Reason.Contains("'Colour' is not a parameter", StringComparison.Ordinal));
+        Assert.Contains(problems, problem => problem.Reason.Contains("'Script' is not a registered component", StringComparison.Ordinal));
+        Assert.Contains(problems, problem => problem.Reason.Contains("'matches' is not one of", StringComparison.Ordinal));
+        Assert.Contains(problems, problem => problem.Reason.Contains("no zone 'Footer'", StringComparison.Ordinal));
+    }
+
     private static async Task<TemplateEvaluation> EvaluateAsync(
         string template,
         object? model = null,
@@ -450,6 +524,15 @@ public sealed class TemplateTreeTests
             [],
             ComponentSchema.AllShells),
         new ComponentDescriptor("Overlay", typeof(ComponentBase), [], [new ZoneDescriptor("ChildContent", [])], ComponentSchema.AllShells, IsOverlay: true),
+        new ComponentDescriptor(
+            "Input",
+            typeof(ComponentBase),
+            [
+                new ParameterDescriptor("Visible", typeof(bool), ParameterKind.Boolean, "bool"),
+                new ParameterDescriptor("Value", typeof(EventCallback<JsonNode?>), ParameterKind.Output, "output", ValueType: typeof(JsonNode)),
+            ],
+            [],
+            ComponentSchema.AllShells),
     ])]);
 
     private sealed class ListCatalog(IEnumerable<ComponentDescriptor> components) : IComponentCatalog

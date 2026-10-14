@@ -26,8 +26,12 @@ namespace Crest.Workflows.Security;
 /// <item>authenticated without <see cref="Permissions.ViewWorkflows"/> → 403;</item>
 /// <item>non-GET without a valid antiforgery token (the engine's endpoints validate none; a
 /// cookie-authenticated API without it is CSRF-exposed) → 400;</item>
-/// <item>starting a definition by hand (execute, dispatch), or changing one of its instances,
-/// without Run for that definition - its Run list counts - → 403; the GET form of execute → 405;</item>
+/// <item>starting a definition by hand (execute, dispatch), changing, cancelling or deleting
+/// one of its instances, a bulk action, a bookmark resume, a task completion or an event
+/// trigger without Run for the definition(s) reached - the Run list counts - → 403; an
+/// instance read (list, journal, variables, export) outside a definition's View list → 403,
+/// the instance list narrowed to the definitions the caller may read
+/// (<see cref="EngineInstanceAccess"/>); the GET form of execute → 405;</item>
 /// <item>engine permission claims already on the principal are dropped before the grant;</item>
 /// <item>otherwise the request proceeds; a change the definition's ownership tier or access
 /// lists refuse deeper down (<see cref="WorkflowChangeDeniedException"/>) → 403 with the reason.</item>
@@ -80,7 +84,7 @@ public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecur
         ];
     }
 
-    public async Task InvokeAsync(HttpContext context, WorkflowCallerResolver callers, IAccessDecision decision, IAuthorizationService authorizationService, IAuthorizationPolicyProvider policyProvider, IAntiforgery antiforgery, IWorkflowDefinitionAccessReader access, IWorkflowInstanceStore instances)
+    public async Task InvokeAsync(HttpContext context, WorkflowCallerResolver callers, IAccessDecision decision, IAuthorizationService authorizationService, IAuthorizationPolicyProvider policyProvider, IAntiforgery antiforgery, IWorkflowDefinitionAccessReader access, EngineInstanceAccess instanceAccess)
     {
         if (!context.Request.Path.StartsWithSegments(ApiPathPrefix, out var remaining))
         {
@@ -138,20 +142,21 @@ public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecur
             }
         }
 
-        // Starting a definition by hand, and changing one of its instances (cancel, delete,
-        // variables, import), are authorized against that definition (its Run list).
-        var started = StartedDefinitionId(remaining);
-        if (started is null && !HttpMethods.IsGet(context.Request.Method) && ChangedInstanceId(remaining) is { } instanceId)
-        {
-            var instance = await instances.FindAsync(new Management.Filters.WorkflowInstanceFilter { Id = instanceId }, context.RequestAborted);
-            started = instance?.DefinitionId;
-        }
-
-        if (started is not null && !await MayRunAsync(caller, started, decision, access))
+        // Starting a definition by hand is authorized against that definition (its Run list);
+        // the instance operations against the definitions they reach (View or Run lists).
+        if (StartedDefinitionId(remaining) is { } started && !await MayRunAsync(caller, started, decision, access))
         {
             logger.LogWarning("Workflow run denied for '{User}' on definition {DefinitionId}.", context.User.Identity.Name, started);
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             await context.Response.WriteAsync("You may not run this workflow.");
+            return;
+        }
+
+        if (await instanceAccess.CheckAsync(context, remaining, caller, context.RequestAborted) is { } refusal)
+        {
+            logger.LogWarning("Workflow API request denied for '{User}' on {Method} {Path}: {Reason}", context.User.Identity.Name, context.Request.Method, context.Request.Path, refusal);
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsync(refusal);
             return;
         }
 
@@ -199,18 +204,8 @@ public sealed class ApiSecurityMiddleware(RequestDelegate next, ILogger<ApiSecur
     // Run on the definition: the decision for the permission, and the definition's Run list as the veto.
     private static async Task<bool> MayRunAsync(CallerContext caller, string definitionId, IAccessDecision decision, IWorkflowDefinitionAccessReader access)
     {
-        var resource = await access.GetAsync(definitionId) ?? new WorkflowDefinitionAccessResource(definitionId, [], []);
+        var resource = await access.GetAsync(definitionId) ?? WorkflowDefinitionAccessResource.Open(definitionId);
         return (await decision.DecideAsync(caller, WorkflowsConstants.Permissions.Run, resource)).IsAllowed && resource.Admits(caller, WorkflowsConstants.Permissions.Run);
-    }
-
-    // /workflow-instances/{instanceId}[/...] (cancel, delete, variables, import of one instance).
-    private static string? ChangedInstanceId(PathString path)
-    {
-        var segments = path.Value?.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
-        return segments is { Length: >= 2 } && string.Equals(segments[0], "workflow-instances", StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(segments[1], "bulk", StringComparison.OrdinalIgnoreCase)
-            ? Uri.UnescapeDataString(segments[1])
-            : null;
     }
 
     // /workflow-definitions/{definitionId}/execute|dispatch|bulk-dispatch (the engine's own routes).

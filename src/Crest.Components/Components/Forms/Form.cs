@@ -204,6 +204,15 @@ public abstract class FormInputBase : ComponentBase, IDisposable
     [ComponentParameter(Advanced = true)]
     public string? Class { get; set; }
 
+    /// <summary>
+    /// Whether the input is shown (docs/widgets.md, visibility rules): a template binds it to a
+    /// comparison on another input's value (<c>visible: nodes.country.value == "US"</c>). A
+    /// hidden input is not registered with the form, so it is neither required nor submitted.
+    /// </summary>
+    [Parameter]
+    [ComponentParameter(Group = "Content")]
+    public bool Visible { get; set; } = true;
+
     /// <summary>The current value, published on every change.</summary>
     [Parameter]
     [ComponentOutput(DisplayName = "Value")]
@@ -231,7 +240,23 @@ public abstract class FormInputBase : ComponentBase, IDisposable
             }
         }
 
-        if (_subscribed is not null && (_field is null || _field.Name != Name || _field.Label != Label || _field.Required != Required))
+        if (_subscribed is null)
+        {
+            return;
+        }
+
+        if (!Visible)
+        {
+            if (_field is not null)
+            {
+                _subscribed.Unregister(_field);
+                _field = null;
+            }
+
+            return;
+        }
+
+        if (_field is null || _field.Name != Name || _field.Label != Label || _field.Required != Required)
         {
             if (_field is not null)
             {
@@ -251,6 +276,11 @@ public abstract class FormInputBase : ComponentBase, IDisposable
     /// <summary>The label, the control (<paramref name="control"/>) and the errors, in one block.</summary>
     protected void RenderField(RenderTreeBuilder builder, string kind, RenderFragment control)
     {
+        if (!Visible)
+        {
+            return;
+        }
+
         var errors = Errors;
         builder.OpenElement(0, "div");
         builder.AddAttribute(1, "class", $"crest-form-field crest-form-field--{kind}" + (errors.Count > 0 ? " crest-form-field--invalid" : string.Empty) + (string.IsNullOrEmpty(Class) ? string.Empty : " " + Class));

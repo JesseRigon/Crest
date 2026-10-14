@@ -60,6 +60,9 @@ public sealed class RoutePermissionProvider : IRoutePermissionProvider
         new("/Users/Edit/{Id}", UsersPermissions.EditUsers.Name),
         new("/Tenants", Crest.Tenants.Permissions.ManageTenants.Name),
         new("/Roles/Index", RolesPermissions.ManageRoles.Name),
+        // The permission model's editors (docs/permissions.md › Editors).
+        new("/PermissionSets", RolesPermissions.ManageRoles.Name),
+        new("/Groups", RolesPermissions.ManageRoles.Name),
         new("/Media", MediaPermissions.ManageMedia.Name),
         new("/Media/Options", MediaPermissions.ViewMediaOptions.Name),
         new("/MediaProfiles", MediaPermissions.ManageMediaProfiles.Name),

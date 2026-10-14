@@ -24,7 +24,8 @@ public sealed class Migrations(IContentDefinitionManager contentDefinitionManage
             .Securable());
 
         await CreateDesignedPagesAsync();
-        return 2;
+        await CreateDisplayTreePartAsync();
+        return 3;
     }
 
     public async Task<int> UpdateFrom1Async()
@@ -32,6 +33,18 @@ public sealed class Migrations(IContentDefinitionManager contentDefinitionManage
         await CreateDesignedPagesAsync();
         return 2;
     }
+
+    public async Task<int> UpdateFrom2Async()
+    {
+        await CreateDisplayTreePartAsync();
+        return 3;
+    }
+
+    // The per-item page body (docs/widgets.md, ruling 2026-10-13): attachable to any type.
+    private Task CreateDisplayTreePartAsync() =>
+        contentDefinitionManager.AlterPartDefinitionAsync(nameof(DisplayTreePart), part => part
+            .Attachable()
+            .WithDescription("The item's own page body: a display tree of components, zones and bindings, edited as data."));
 
     // Drafts and publish, no overrides: a page record is edited directly (decision 9).
     private async Task CreateDesignedPagesAsync()

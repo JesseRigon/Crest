@@ -16,6 +16,40 @@ organization is a customer, a vendor and a partner, each role with its own numbe
 terms and history. This is composition, never inheritance; the reasoning is in
 [Why not inheritance?](#why-not-inheritance) below.
 
+**Ruling 2026-10-14: each role declares its base; business roles are organization roles.**
+Roles composed on a party declare which base they point at, instead of one picker taking
+either:
+
+- **Organization roles**: Customer, Vendor, Partner, Lead, Prospect, and every role that is
+  a business relationship. An individual - a coffee shop's regular, a street vendor - is an
+  **Individual organization**: an `Organization` of kind *Individual*, named after the person,
+  created automatically when an organization role is added to a person; the person holds a
+  position in it and is its owner. An Individual organization has exactly one member; it
+  reads as the person in the UI. A household or a job site (the roofer's house) is an
+  ordinary organization with many members, not an Individual organization. An Individual
+  organization can be converted into an ordinary one (it then takes more members); whether
+  that is allowed is a tenant setting, beside self-registration.
+- **Person roles**: Employee, Member, Sales rep, and roles that describe the person
+  themselves. Modules declare them (CRM declares Sales rep as a composable person role with
+  its own fields, adds its fields to transactions, and grants real permission roles in its
+  code); a person's links to organizations are positions, associations and member bindings,
+  through the standard member and hierarchy system.
+- Access follows from this: a business role reaches through its organization (a caller acting
+  for an organization that is a Customer holds Customer - the derived role comes from the
+  organization's roles); a person role derives from the person. A transaction's party is an
+  organization role.
+- **Portal access is a promotion.** A contact `Person` with a position in an organization is
+  promoted ("invite to portal") to a user linked to it and bound to that organization (the
+  first member is the organization's owner and an org-admin, [permissions.md](permissions.md)).
+  Self-registration and external-login registration stay as tenant settings (with the
+  Individual-to-ordinary conversion setting); when on they
+  create the Person, the organization (an Individual organization if none is named) and the
+  user together. A member binding checks that its target is an `Organization`.
+- To build: a base setting per role definition (replacing the Person-or-Organization picker),
+  the Individual organization kind and its automatic creation, the promotion endpoint and UI,
+  the organization-derived business roles, the transaction party check, the binding target
+  check, and the Accounting and CRM role definitions. Dev tenants reset; no data migration.
+
 - A `Person` represents a human contact.
 - An `Organization` represents a company, nonprofit, agency, household, or other legal/social organization.
 - A person is not an Orchard user account.

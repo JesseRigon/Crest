@@ -30,3 +30,45 @@ public sealed class OrganizationDriveHandler : ContentHandlerBase
         return Task.CompletedTask;
     }
 }
+
+/// <summary>
+/// A new organization's default permission system (docs/permissions.md › Layers): the
+/// tenant's allow-listed groups, cloned with their roles when the organization is published,
+/// then the organization's own. Idempotent by template, so a republish clones nothing new.
+/// The tenant's own organization holds staff, whose groups are the tenant's: it gets none.
+/// </summary>
+public sealed class OrganizationAccessGroupsHandler : ContentHandlerBase
+{
+    public override Task PublishedAsync(PublishContentContext context)
+    {
+        if (context.ContentItem.ContentType != PartiesConstants.ContentTypes.Organization)
+        {
+            return Task.CompletedTask;
+        }
+
+        var id = context.ContentItem.ContentItemId;
+        ShellScope.AddDeferredTask(async scope =>
+        {
+            var services = scope.ServiceProvider;
+            if (services.GetService<Crest.Parties.Services.ITenantOrganizationService>() is { } tenant && await tenant.IsTenantOrganizationAsync(id))
+            {
+                return;
+            }
+
+            await services.GetRequiredService<Crest.Access.IAccessGroupService>().CloneDefaultsAsync(id);
+        });
+        return Task.CompletedTask;
+    }
+
+    public override Task RemovedAsync(RemoveContentContext context)
+    {
+        if (context.ContentItem.ContentType != PartiesConstants.ContentTypes.Organization || !context.NoActiveVersionLeft)
+        {
+            return Task.CompletedTask;
+        }
+
+        var id = context.ContentItem.ContentItemId;
+        ShellScope.AddDeferredTask(scope => scope.ServiceProvider.GetRequiredService<Crest.Access.IAccessGroupService>().RemoveOrganizationAsync(id));
+        return Task.CompletedTask;
+    }
+}

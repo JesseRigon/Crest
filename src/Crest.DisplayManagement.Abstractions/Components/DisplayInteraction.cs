@@ -29,7 +29,37 @@ public sealed class DisplayBinding
     /// <summary>A path into the value: dot-separated members, <c>[n]</c> for an index.</summary>
     public string? Path { get; init; }
 
+    /// <summary>
+    /// A comparison (docs/widgets.md, comparisons in bindings): the operator applied to this
+    /// binding's value and <see cref="Operand"/>, one of <see cref="DisplayPredicates.Operators"/>;
+    /// the value read is then a boolean. <c>empty</c> and <c>not empty</c> take no operand.
+    /// </summary>
+    public string? Operator { get; init; }
+
+    /// <summary>The right side of the comparison: a literal or another binding source.</summary>
+    public DisplayBinding? Operand { get; init; }
+
+    /// <summary><c>and</c>, <c>or</c> over <see cref="Terms"/>, or <c>not</c> over one term; the value read is a boolean.</summary>
+    public string? Combinator { get; init; }
+
+    public List<DisplayBinding>? Terms { get; init; }
+
     public static DisplayBinding Literal(JsonNode? value) => new() { Value = value };
+
+    /// <summary>A comparison of <paramref name="source"/> with <paramref name="operand"/>.</summary>
+    public static DisplayBinding Compare(DisplayBinding source, string @operator, DisplayBinding? operand = null) => new()
+    {
+        Node = source.Node,
+        Output = source.Output,
+        Variable = source.Variable,
+        Event = source.Event,
+        Value = source.Value,
+        Path = source.Path,
+        Operator = @operator,
+        Operand = operand,
+    };
+
+    public static DisplayBinding Combine(string combinator, IEnumerable<DisplayBinding> terms) => new() { Combinator = combinator, Terms = [.. terms] };
 
     public static DisplayBinding FromOutput(string node, string output, string? path = null) => new() { Node = node, Output = output, Path = path };
 
@@ -37,8 +67,12 @@ public sealed class DisplayBinding
 
     public static DisplayBinding FromEvent(string? path = null) => new() { Event = true, Path = path };
 
+    /// <summary>A comparison or a combination: read as a boolean, re-read when a source changes.</summary>
     [JsonIgnore]
-    public bool IsLiteral => Node is null && Variable is null && !Event;
+    public bool IsPredicate => Operator is not null || Combinator is not null;
+
+    [JsonIgnore]
+    public bool IsLiteral => Node is null && Variable is null && !Event && !IsPredicate;
 }
 
 /// <summary>

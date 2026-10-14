@@ -157,7 +157,7 @@ public sealed class DisplayTreeFilter(IComponentRegistry registry, IServiceProvi
     {
         if (node.Bindings is { } bindings)
         {
-            foreach (var name in bindings.Where(pair => pair.Value.Node is { } source && dropped.Contains(source)).Select(pair => pair.Key).ToArray())
+            foreach (var name in bindings.Where(pair => DisplayPredicates.Sources(pair.Value).Any(dropped.Contains)).Select(pair => pair.Key).ToArray())
             {
                 bindings.Remove(name);
             }

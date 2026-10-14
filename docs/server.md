@@ -110,5 +110,5 @@ rulings last.
 
 - **S1. Wrappers go to the module they wrap** (2026-10-10, proposed): see § 1.
 - **S2. Option picker home**: open (§ 3).
-- **S3. Assignment and organization parts home**: open (§ 4).
+- **S3. Assignment and organization parts home**: ruled 2026-10-14 (§ 4) - `CrestAssignmentPart` retired, `CrestOrganizationPart` and the organization scope to Crest.Parties ([access.md](access.md) › Members).
 - **S4. The host keeps the `Crest` feature id**: proposed.

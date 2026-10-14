@@ -6,40 +6,43 @@ using YesSql;
 
 namespace Crest.Members.Services;
 
-/// <summary>An organization's members as the resource <c>ManageMembers</c> is asked against (list, create).</summary>
+/// <summary>An organization's members as the resource <c>ManageOrgMembers</c> is asked against (list, create).</summary>
 public sealed record MemberOrganizationResource(string OrganizationId)
 {
     public override string ToString() => $"organization {OrganizationId}";
 }
 
-/// <summary>One user's binding to an organization as the resource <c>ManageMembers</c> is asked against (add, remove).</summary>
+/// <summary>One user's binding to an organization as the resource <c>ManageOrgMembers</c> is asked against (add, remove).</summary>
 public sealed record MemberBindingResource(string UserId, string OrganizationId)
 {
     public override string ToString() => $"binding of {UserId} to {OrganizationId}";
 }
 
 /// <summary>
-/// Members' resource mapper (docs/access.md, Domains onto the extension system): decides
-/// <c>ManageMembers</c> against an organization or a binding instead of one global check. Staff
-/// (and applications) answer with the tenant-wide permission. A caller acting in an
-/// organization (the member side, an organization system actor) answers only for its own
-/// organization, with the permission its binding's role template grants there, and for a
-/// binding only when the user is already within that organization's hierarchy root (the root
-/// guard bounds the who; the template the what). Any other organization is denied.
+/// Members' resource mapper (docs/access.md § Members, ruling 2026-10-13): decides
+/// <c>ManageOrgMembers</c> against an organization (<see cref="OrganizationResource"/>,
+/// <see cref="MemberOrganizationResource"/>) or a binding. The same permission at a different
+/// reach, read from the caller's acting organization, never from the side: a caller acting in
+/// no organization (staff, at tenant reach) answers with the permission for every
+/// organization; a caller acting in one answers only for that one, and for a binding only when
+/// the user already holds a member binding there (the root guard). <c>ManageMembers</c> stays
+/// staff-only and is not mapped.
 /// </summary>
 public sealed class MemberResourcePermissionMapper(ISession session) : IResourcePermissionMapper
 {
     public async ValueTask<IReadOnlyList<PermissionCandidate>?> MapAsync(string permission, object resource, CallerContext caller, CancellationToken cancellationToken = default)
     {
-        if (permission != MembersPermissions.ManageMembers.Name)
+        if (permission != OrganizationPermissionNames.ManageOrgMembers)
         {
             return null;
         }
 
         var (organizationId, userId) = resource switch
         {
-            MemberOrganizationResource organization => (organization.OrganizationId, (string?)null),
+            OrganizationResource organization => (organization.OrganizationId, (string?)null),
+            MemberOrganizationResource organization => (organization.OrganizationId, null),
             MemberBindingResource binding => (binding.OrganizationId, binding.UserId),
+            OrganizationMemberResource member => (member.OrganizationId, member.UserId),
             _ => (null, null),
         };
 
@@ -48,14 +51,16 @@ public sealed class MemberResourcePermissionMapper(ISession session) : IResource
             return null;
         }
 
-        if (!ActsInOrganization(caller))
-        {
-            return [permission];
-        }
-
-        if (!string.Equals(caller.OrganizationId, organizationId, StringComparison.Ordinal))
+        if (caller.OrganizationId is not null && !string.Equals(caller.OrganizationId, organizationId, StringComparison.Ordinal))
         {
             return [];
+        }
+
+        // The root guard holds at every reach for a member of an organization's groups: staff
+        // are never members of them, so only the organization's members may be put there.
+        if (caller.OrganizationId is null && resource is not OrganizationMemberResource)
+        {
+            return [permission];
         }
 
         if (userId is not null)

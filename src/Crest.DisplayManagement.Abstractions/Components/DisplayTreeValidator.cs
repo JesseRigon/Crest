@@ -1,11 +1,13 @@
+using System.Text.Json.Nodes;
+
 namespace Crest.DisplayManagement.Components;
 
 /// <summary>
 /// Checks a tree's interaction wiring against the registry (§ 4a › Validation): a binding names
 /// a node of the tree and one of its outputs, or a page variable; an event names an event or
 /// output parameter; an open, close or toggle targets an overlay node; a workflow action names a
-/// workflow; bindings form no cycle; a component declared single per page (decision 6) appears
-/// once. Used on save (templates, pages) and by the designer. The
+/// workflow; a predicate uses a known operator over binding sources (docs/widgets.md); bindings
+/// form no cycle; a component declared single per page (decision 6) appears once. Used on save (templates, pages) and by the designer. The
 /// errors are paths into the tree with the reason; an empty list is a valid tree.
 /// </summary>
 public static class DisplayTreeValidator
@@ -74,6 +76,60 @@ public static class DisplayTreeValidator
         if (FindCycle(nodes) is { } cycle)
         {
             errors.Add(new(cycle[0], "cycle", $"The bindings form a cycle: {string.Join(" → ", cycle)}."));
+        }
+
+        return errors;
+    }
+
+    /// <summary>
+    /// The wiring check plus the schema check of every node's stored properties (a tree authored
+    /// as data, docs/widgets.md: an item's <c>DisplayTreePart</c>): each property is a value
+    /// parameter of the component and converts to its type; a required parameter has a value, a
+    /// binding or a slot. Nothing here can be code: the tree names registered components only.
+    /// </summary>
+    public static IReadOnlyList<DisplayDiagnostic> ValidateStored(DisplayNode root, IComponentRegistry registry)
+    {
+        var errors = new List<DisplayDiagnostic>(Validate(root, registry));
+        foreach (var node in Walk(root))
+        {
+            if (!registry.TryGet(node.Component, out var descriptor))
+            {
+                continue;
+            }
+
+            foreach (var (name, value) in node.Properties)
+            {
+                var path = $"{node.Id}.{name}";
+                if (descriptor.Parameter(name) is not { } parameter)
+                {
+                    errors.Add(new(path, "property", $"'{name}' is not a parameter of '{descriptor.Name}'."));
+                }
+                else if (parameter.IsEvent)
+                {
+                    errors.Add(new(path, "property", $"'{parameter.Name}' is an event: bind its actions under events."));
+                }
+                else if (parameter.Choices is { Count: > 0 } choices && value is JsonValue text && text.TryGetValue<string>(out var choice) && !choices.Contains(choice, StringComparer.OrdinalIgnoreCase))
+                {
+                    errors.Add(new(path, "property", $"'{parameter.Name}' must be one of {string.Join(", ", choices)}."));
+                }
+                else if (!ComponentParameters.TryConvert(value, parameter.ClrType, out _, out var error))
+                {
+                    errors.Add(new(path, "property", $"'{parameter.Name}' is not a valid {parameter.ClrType.Name}: {error}"));
+                }
+            }
+
+            foreach (var parameter in descriptor.Parameters.Where(parameter => parameter.Required && !parameter.IsEvent))
+            {
+                if (!node.Properties.ContainsKey(parameter.Name) && node.Bindings?.ContainsKey(parameter.Name) != true && node.Slots?.ContainsKey(parameter.Name) != true)
+                {
+                    errors.Add(new($"{node.Id}.{parameter.Name}", "property", $"The required parameter '{parameter.Name}' of '{descriptor.Name}' has no value."));
+                }
+            }
+
+            foreach (var zone in node.Zones.Keys.Where(zone => descriptor.Zone(zone) is null))
+            {
+                errors.Add(new($"{node.Id}.{zone}", "zone", $"'{descriptor.Name}' has no zone '{zone}'."));
+            }
         }
 
         return errors;
@@ -150,6 +206,58 @@ public static class DisplayTreeValidator
             return;
         }
 
+        if (binding.Combinator is { } combinator)
+        {
+            if (!DisplayPredicates.Combinators.Contains(combinator, StringComparer.Ordinal))
+            {
+                errors.Add(new(path, "binding", $"'{combinator}' is not one of {string.Join(", ", DisplayPredicates.Combinators)}."));
+                return;
+            }
+
+            var terms = binding.Terms ?? [];
+            if (terms.Count == 0 || (combinator == DisplayPredicates.Not && terms.Count != 1))
+            {
+                errors.Add(new(path, "binding", combinator == DisplayPredicates.Not ? "'not' takes one term." : $"'{combinator}' needs its terms."));
+                return;
+            }
+
+            for (var i = 0; i < terms.Count; i++)
+            {
+                CheckBinding(terms[i], $"{path}[{i}]", nodes, registry, errors, parameter: null, inEvent);
+            }
+
+            return;
+        }
+
+        if (binding.Operator is { } @operator)
+        {
+            if (!DisplayPredicates.Operators.Contains(@operator, StringComparer.Ordinal))
+            {
+                errors.Add(new(path, "binding", $"'{@operator}' is not one of {string.Join(", ", DisplayPredicates.Operators)}."));
+                return;
+            }
+
+            if (binding.Node is null && binding.Variable is null && !binding.Event)
+            {
+                errors.Add(new(path, "binding", "A comparison compares a binding source (a node's output, a page variable, the event)."));
+                return;
+            }
+
+            if (DisplayPredicates.TakesOperand(@operator) && binding.Operand is null)
+            {
+                errors.Add(new(path, "binding", $"'{@operator}' needs a right side."));
+                return;
+            }
+
+            if (binding.Operand is { } operand)
+            {
+                CheckBinding(operand, path + ".operand", nodes, registry, errors, parameter: null, inEvent);
+            }
+
+            // Then the left side, as any binding.
+            parameter = null;
+        }
+
         if (binding.Node is not { } nodeId)
         {
             return;
@@ -197,7 +305,7 @@ public static class DisplayTreeValidator
     {
         var edges = nodes.Values.ToDictionary(
             node => node.Id,
-            node => (node.Bindings?.Values ?? Enumerable.Empty<DisplayBinding>()).Select(binding => binding.Node).OfType<string>().Where(nodes.ContainsKey).Distinct().ToList(),
+            node => (node.Bindings?.Values ?? Enumerable.Empty<DisplayBinding>()).SelectMany(DisplayPredicates.Sources).Where(nodes.ContainsKey).Distinct().ToList(),
             StringComparer.Ordinal);
 
         var state = new Dictionary<string, int>(StringComparer.Ordinal);

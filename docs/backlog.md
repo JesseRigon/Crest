@@ -37,17 +37,18 @@ Status: ☐ open, ◐ partial, ☑ done.
 ## Access (access.md, permissions.md)
 
 - ☑ Anonymous actors: machine identity and roles on connections, the "accepts anonymous runs" flag, login and registration triggers run as the user the event names
-- ◐ Members onto the extension system (resource mapper, scope provider on the org binding index, `OrganizationScopeProvider` out of Server). Left: the member ceiling denies `ManageMembers` before the mapper, so member admins need a ruling (access.md)
-- ◐ Parties onto the extension system (mapper, scope provider, route permissions off `ICrestRoutePermissionProvider`). Left: the mapper, whose rules are not ruled (access.md)
+- ☑ Members onto the extension system (resource mapper, scope provider on the org binding index, `OrganizationScopeProvider` out of Server); member admins through `ManageOrgMembers` (ruling 2026-10-13)
+- ☑ Parties onto the extension system (mapper, scope provider, route permissions off `ICrestRoutePermissionProvider`); the mapper per the 2026-10-13 ruling
 - ◐ Page and route gates move to Access (`ICrestRoutePermissionProvider`, `CrestRouteAuthorizationService`, `AssignmentScopeProvider`; `AdminFilter` goes). Left: `AssignmentScopeProvider` (S3 open), `AdminFilter` (goes with the MVC admin)
-- ☐ Admin controllers' per-type content authorization goes; the scope is the filter
+- ☑ Admin controllers' per-type content authorization goes; the scope is the filter (content-items list; the MVC list goes with the MVC admin)
 - ☑ Version bumps only for rights writes; implied-by resolved from the permission instance; the revocation check run (the check is in the suite; it runs with the tests at the end)
 - ◐ Recorded defects: SSRF guard on messaging and HTTP activities, per-definition narrowing of engine instance reads, `UsersController` scoped. Left: instance-read narrowing (which list narrows a read is not ruled)
 - ☑ Per-part permissions as scope providers (permissions.md, ruling 2026-10-10): the seam; the first rule comes with the first type that needs one
+- ◐ The permission model (permissions.md, ruling 2026-10-13): sets, groups, overrides, the projection, the editors, Fruitful's groups folded in. Left: owner-locked permissions are stored, not enforced (no owner account is defined); Fruitful compiles after the repack
 
 ## Display (blazor-display.md, widgets.md)
 
-- ◐ Widget replacements (widgets.md): rich text, figure, forms, validation, search box landed; left: per-item page body (storage not ruled), visibility rules (needs an expression form), captcha, Facebook, a media picker editor
+- ◐ Widget replacements (widgets.md): rich text, figure, forms, validation, search box, the per-item page body (`DisplayTreePart`) and visibility rules (comparisons in bindings) landed; left: captcha, Facebook, a media picker editor
 - ◐ Step 1 leftovers: route scanner reads the catalogs ☑, page regions as zone keys ☑, editor facet entries ☑, primitives annotated (seven more; icon, markdown, layout hosts and editors left, reasons in blazor-display.md)
 - ◐ Step 2 leftovers: tree cache (versioned and validated, see decision 12; the unfiltered cache is left); display events for bound nodes ☑
 - ◐ Step 7 remainder: `IHtmlDisplay`, Razor/Liquid shape engines, tag helpers and the markup fallback retired: body shapes got components; the retirement waits on the stock MVC pages (~1,250 Razor views) getting component pages
@@ -65,6 +66,8 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ◐ Step 3: typed per-type content operations ☑ (Copy/Move fields write through them). Left: one registry (`WorkflowRegistryCatalog` folded) and per-tenant operation names, both waiting on a ruling (workflows.md › Tasks › 3)
 - ☑ Step 4: queue partitioned by correlation id, idempotency keys (unit id + slot); the object version in the payload is not built (no raiser names one)
 - ◐ `ICrestAntiforgery`; the hook attachment page ☑ and webhook insight; per-process metrics. Left: `ICrestAntiforgery` (ruled to come with the designer move, W6 open); webhook insight and per-process metrics (ruled as audit feeds, which wait on run history in audit)
+
+- ☑ The View list (`Crest.Access.View`): the ceiling, the access API, the engine API instance operations decided per definition, the instance list narrowed (workflows.md › Ownership and permissions; access.md defect closed). Left: Studio's access editor (with the designer UI list)
 
 ## Audit (audit.md)
 

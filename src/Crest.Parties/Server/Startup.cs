@@ -47,6 +47,8 @@ public sealed class Startup : StartupBase
         services.AddScoped<IPartyContactsService>(provider => provider.GetRequiredService<PartyContactsService>());
         services.AddScoped<IPartyUserLinkService, PartyUserLinkService>();
         services.AddScoped<IPartyPositionsService, PartyPositionsService>();
+        // A person's own record and an organization's contacts (docs/access.md § Members).
+        services.AddScoped<Crest.Access.IResourcePermissionMapper, PartyPermissionMapper>();
         services.AddScoped<PartyMapper>();
 
         services.AddIndexProvider<PartyPositionIndexProvider>();

@@ -126,7 +126,7 @@ public class OrganizationConformanceTests
     public async Task ManagingAnOrganizationsMembersAnswersPerTheTable(ManageCase @case)
     {
         var candidates = await new MemberResourcePermissionMapper(null!).MapAsync(
-            "ManageMembers", new MemberOrganizationResource(@case.Organization), @case.Caller, TestContext.Current.CancellationToken);
+            "ManageOrgMembers", new MemberOrganizationResource(@case.Organization), @case.Caller, TestContext.Current.CancellationToken);
 
         Assert.NotNull(candidates);
         Assert.Equal(@case.Answers, candidates!.Count > 0);

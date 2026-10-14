@@ -39,6 +39,7 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<RolesMigrations>();
 
         services.AddScoped<RoleStore>();
+        services.AddScoped<IPermissionSetService, PermissionSetService>();
         services.Replace(ServiceDescriptor.Scoped<IRoleClaimStore<IRole>>(sp => sp.GetRequiredService<RoleStore>()));
         services.Replace(ServiceDescriptor.Scoped<IRoleStore<IRole>>(sp => sp.GetRequiredService<RoleStore>()));
         services.AddRecipeExecutionStep<RolesStep>();

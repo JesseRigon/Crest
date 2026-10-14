@@ -253,7 +253,7 @@ public sealed class MembersController(
     }
 
     // The reports-to hierarchy of one organization (the staff hierarchy is the tenant
-    // organization's). ManageMembers against the organization: staff tenant-wide, a member
+    // organization's). ManageOrgMembers against the organization: staff tenant-wide, a member
     // admin only in their own organization.
     [HttpGet("hierarchy/{organizationId}")]
     public async Task<ActionResult<IReadOnlyList<HierarchyNodeModel>>> GetHierarchyAsync(string organizationId)
@@ -352,10 +352,10 @@ public sealed class MembersController(
     }
 
     /// <summary>
-    /// <c>ManageMembers</c> asked against the organization or the binding, so Members' mapper
-    /// decides who: staff tenant-wide, a caller acting in an organization only there
-    /// (docs/access.md, Domains onto the extension system).
+    /// <c>ManageOrgMembers</c> asked against the organization or the binding (docs/access.md §
+    /// Members, ruling 2026-10-13), so Members' mapper decides the reach: staff every
+    /// organization, a caller acting in an organization only there.
     /// </summary>
     private Task<bool> CanManageAsync(object resource) =>
-        decision.AllowsAsync(callerAccessor.Current, Permissions.MembersPermissions.ManageMembers.Name, resource, HttpContext.RequestAborted);
+        decision.AllowsAsync(callerAccessor.Current, Permissions.MembersPermissions.ManageOrgMembers.Name, resource, HttpContext.RequestAborted);
 }

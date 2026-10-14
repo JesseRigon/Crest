@@ -314,10 +314,12 @@ Still open from this audit:
 - [ ] **Messaging activities** (e-mail, SMS, Twitter, Meta, notifications) and the engine's
   HTTP activities run for any caller; the HTTP ones have no SSRF guard and are not unit
   boundaries (`DownloadHttpFile` is now in the atomicity analyzer's list).
-- [ ] **Engine API instance reads** (list, journal, variables, export) take View only, with no
+- [x] **Engine API instance reads** (list, journal, variables, export) take View only, with no
   per-definition narrowing; bulk instance actions, bookmark resume, task completion and event
-  triggers are not checked against the Run list; antiforgery on every write blocks bearer
-  callers.
+  triggers are not checked against the Run list. *Closed 2026-10-13:* the View list and
+  `EngineInstanceAccess` (workflows.md › Ownership and permissions, "a third list, View").
+  Still open from this line: antiforgery on every write blocks bearer callers
+  (machine-actors.md).
 - [ ] **The member class ceiling denies nothing**: `MemberClassCeiling` is registered but
   `MemberPermissionCeilingOptions` is never configured, so a member role granted a tenant
   permission would hold it. Which permissions to ceiling is a ruling
@@ -332,9 +334,10 @@ Still open from this audit:
   providers' endpoints are tenant settings), so they have nothing to guard; who may run them is
   still the open item above. `UsersController` lists only the users the caller may list:
   everyone under the base `ListUsers`, else the users of the roles `ListUsers` is granted on
-  (`ListUsersInRole_{role}`). Not built: the per-definition narrowing of instance reads, since
-  no list narrows reading today (a definition's lists are Edit and Run, and reading takes View);
-  which list, if any, narrows an instance read is a ruling.
+  (`ListUsersInRole_{role}`). Not built: the per-definition narrowing of instance reads.
+  Ruled 2026-10-13: a third list, `Crest.Access.View`, narrows them; an empty View list means
+  a tenant-wide definition readable by every `ViewCrestWorkflows` holder (workflows.md ›
+  Ownership and permissions). Built the same day.
 
 ## Domains onto the extension system (2026-10-11)
 
@@ -365,9 +368,47 @@ module by module (abstractions placed per file, not by script).
   member only its organization's bindings. `OrganizationScopeProvider` moved to Members;
   `OrganizationScopedTypes`, the part and the index stay in Server until S3 is ruled. Left: the
   member class ceiling lists `ManageMembers`, and a ceiling runs before any mapper, so a member
-  admin is still refused on their own organization; whether the ceiling lets `ManageMembers`
-  through against the caller's own organization is a ruling. The organization system actor's
+  admin is still refused on their own organization. The organization system actor's
   lookup of member admins (`MemberCallerContributor`) builds a caller and stays unscoped.
+- **Ruling (2026-10-13): one permission model for staff and members, two reaches.** The
+  model (sets, roles, groups, per-user overrides, the projection index, the editors) is in
+  [permissions.md](permissions.md) § 3. What it means here:
+  - Two organization permissions, neither on the member ceiling: `ManageOwnOrgMember` (every
+    member; their own Person, contact points and positions in the organizations they are
+    bound to - the Parties mapper grants view and edit of the caller's own Person through it)
+    and `ManageOrgMembers` (an organization's members and contacts). Staff hold them through
+    tenant groups and reach every organization; a member holds them through an organization
+    group and reaches that organization only. The same permission, a different reach - no
+    mapper reads the side. `ManageMembers` stays staff-only; the member class ceiling stays a
+    hard line and is never conditional.
+  - Staff are never members of an organization's groups (those are the organization's own,
+    visible to its admins), and staff reach is the tenant: a new customer needs no grant.
+    Narrowing a rep to particular organizations is a scope concern for later (Fruitful
+    territories), not this store.
+  - `MembersController` asks `ManageOrgMembers` against the organization or binding
+    resource; the mapper grants it for the caller's own organization on the member side.
+  - Ruled 2026-10-14: derived roles stay derived and feed the same index - business roles
+    derive from the organization's roles, person roles from the person ([parties.md](parties.md)
+    › Core party records). `CrestAssignmentPart`, its index, `AssignmentService` and
+    `AssignmentScopeProvider` are retired (unused; per-item grants are Sharing's, a rep's
+    customers are a CRM person role plus associations). `CrestOrganizationPart`, its
+    index, `OrganizationScopedTypes` and `OrganizationScopeProvider` (back from Members) move
+    out of Crest.Server into **Crest.Parties**: row ownership by organization concerns staff as
+    well as members, and Crest.Members holds organization-to-member logic only (bindings, the
+    acting organization, the member caller). Closes server.md S3.
+  - **What landed (2026-10-13).** `ManageOwnOrgMember` and `ManageOrgMembers` (Members'
+    permissions, names in `OrganizationPermissionNames`), not on the member ceiling.
+    `MemberResourcePermissionMapper` maps `ManageOrgMembers` against an organization, a binding
+    or an `OrganizationMemberResource`: a caller acting in no organization holds it for every
+    one, a caller acting in one only there; the root guard (a member binding there) holds for
+    bindings, and for putting a user in an organization's groups at every reach. The reach is
+    the caller's acting organization, never the side. `MembersController` asks
+    `ManageOrgMembers`; `ManageMembers` stays staff-only (settings). `PartyPermissionMapper`
+    (Parties, feature priority 1 so it answers before the content mapper, whose candidates it
+    keeps) adds `ManageOwnOrgMember` for the caller's own Person and `ManageOrgMembers` re-asked
+    against the organization for the Organization and every Person holding a position there.
+    The model itself: permissions.md § "What landed". The three proposals above stay
+    unbuilt until confirmed.
 
 **Parties** (`Crest.Parties`)
 - Already: controllers ask `IAuthorizationService` per party item (routed to the decision).
@@ -570,11 +611,13 @@ nothing ([sharing.md](sharing.md)). Tests: `test/Crest.Tests/Access/Conformance/
   `AuthController.Me` read the caller (landed 2026-10-10).
 - [ ] The admin controllers' per-type content authorization goes; the scope is the filter
   (with the Crest.Server extraction, [server.md](server.md)).
-  Open (2026-10-13): the content-items list asks `ListContent` against a stand-in item of the
-  filtered type, so a holder of only `ListContent_{type}` lists that type. Dropping it leaves
-  either the global `ListContent` (and such holders lose the list) or no up-front check (the
-  view scope alone decides, so any caller with a view right gets the admin list). Which one
-  is a ruling; the MVC list (`Crest.Contents` `AdminController`) goes with the MVC admin.
+  **Ruled (2026-10-13): no up-front permission check on the admin content list.** The
+  route gate (`AccessAdminPanel`) admits the page; the list query carries the caller's view
+  scope as a server-side predicate (the scope-set provider's rule, never a client filter), so
+  a holder of only `ListContent_{type}` gets the list with that one type and nothing else.
+  The stand-in `ListContent` check goes; the MVC list (`Crest.Contents` `AdminController`)
+  goes with the MVC admin. **Landed 2026-10-13**: `ContentItemsController.ListAsync` asks
+  nothing up front; its query carries the view scope.
 - [x] `IAccessDecision` records every denial itself (landed 2026-10-10); reads per the
   audit ruling stay the operation's.
 

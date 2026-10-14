@@ -421,7 +421,7 @@ public sealed class AdminController : Controller
             Side = CallerSide.Admin,
             UserName = role.RoleName,
             Roles = new HashSet<string>([role.RoleName], StringComparer.OrdinalIgnoreCase),
-            Permissions = PermissionsOf(role),
+            Permissions = await PermissionsOfAsync(role),
         };
         var result = new HashSet<string>(StringComparer.Ordinal);
 
@@ -450,7 +450,7 @@ public sealed class AdminController : Controller
             UserName = role.RoleName,
             IsSuperUser = string.Equals(role.RoleName, _systemRoleProvider.GetAdminRole().RoleName, StringComparison.OrdinalIgnoreCase),
             Roles = new HashSet<string>([role.RoleName], StringComparer.OrdinalIgnoreCase),
-            Permissions = PermissionsOf(role),
+            Permissions = await PermissionsOfAsync(role),
         };
 
         var result = new Dictionary<string, Permission>(StringComparer.Ordinal);
@@ -466,8 +466,9 @@ public sealed class AdminController : Controller
         return result;
     }
 
-    private static HashSet<string> PermissionsOf(Role role) => new(
-        role.RoleClaims.Where(c => string.Equals(c.ClaimType, Permission.ClaimType, StringComparison.OrdinalIgnoreCase)).Select(c => c.ClaimValue),
+    /// <summary>The role's loose permissions and those of its sets, as the store expands them.</summary>
+    private async Task<HashSet<string>> PermissionsOfAsync(Role role) => new(
+        (await _roleManager.GetClaimsAsync(role)).Where(c => string.Equals(c.Type, Permission.ClaimType, StringComparison.OrdinalIgnoreCase)).Select(c => c.Value),
         StringComparer.OrdinalIgnoreCase);
 
     private IEnumerable<RoleClaim> ExtractSelectedPermissions()

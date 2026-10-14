@@ -8,6 +8,8 @@ using Fluid.Ast;
 using Fluid.Values;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Parlot.Fluent;
+using static Parlot.Fluent.Parsers;
 
 namespace Crest.Templates.Services;
 
@@ -30,20 +32,31 @@ public sealed class TemplateTreeParser : FluidParser
     public TemplateTreeParser(IOptions<FluidParserOptions> options)
         : base(options.Value)
     {
-        RegisterParserTag("component", ArgumentsList, TemplateTreeTags.ComponentAsync);
-        RegisterParserBlock("compose", ArgumentsList, TemplateTreeTags.ComposeAsync);
-        RegisterParserBlock("zone", ArgumentsList, TemplateTreeTags.ZoneAsync);
-        RegisterParserTag("children", ArgumentsList, TemplateTreeTags.ChildrenAsync);
-        RegisterParserTag("slot", ArgumentsList, TemplateTreeTags.SlotAsync);
-        RegisterParserTag("shape", ArgumentsList, TemplateTreeTags.ShapeAsync);
-        RegisterParserBlock("on", ArgumentsList, TemplateTreeTags.OnAsync);
-        RegisterParserTag("set_variable", ArgumentsList, TemplateTreeTags.SetVariableAsync);
-        RegisterParserTag("open", ArgumentsList, (arguments, writer, encoder, context) => TemplateTreeTags.OverlayAsync(DisplayActionKind.Open, arguments, context));
-        RegisterParserTag("close", ArgumentsList, (arguments, writer, encoder, context) => TemplateTreeTags.OverlayAsync(DisplayActionKind.Close, arguments, context));
-        RegisterParserTag("toggle", ArgumentsList, (arguments, writer, encoder, context) => TemplateTreeTags.OverlayAsync(DisplayActionKind.Toggle, arguments, context));
-        RegisterParserTag("run_workflow", ArgumentsList, TemplateTreeTags.RunWorkflowAsync);
-        RegisterParserTag("navigate", ArgumentsList, TemplateTreeTags.NavigateAsync);
-        RegisterParserTag("submit", ArgumentsList, TemplateTreeTags.SubmitAsync);
+        // Arguments take a logical expression, not only a primary, so a comparison over bindings
+        // (visible: nodes.country.value == "US", docs/widgets.md) parses; the tags read it off
+        // the expression (TemplateTreePredicates) instead of evaluating it.
+        // "not" negates the comparison after it (Liquid has no negation of its own).
+        var value = OneOf(
+            Terms.Text("not ").SkipAnd(LogicalExpression).Then<Expression>(operand => new TemplateTreePredicates.NotExpression(operand)),
+            LogicalExpression);
+        var arguments = Separated(Comma, OneOf(
+            Identifier.AndSkip(Colon).And(value).Then(argument => new FilterArgument(argument.Item1, argument.Item2)),
+            value.Then(argument => new FilterArgument(null, argument))));
+
+        RegisterParserTag("component", arguments, TemplateTreeTags.ComponentAsync);
+        RegisterParserBlock("compose", arguments, TemplateTreeTags.ComposeAsync);
+        RegisterParserBlock("zone", arguments, TemplateTreeTags.ZoneAsync);
+        RegisterParserTag("children", arguments, TemplateTreeTags.ChildrenAsync);
+        RegisterParserTag("slot", arguments, TemplateTreeTags.SlotAsync);
+        RegisterParserTag("shape", arguments, TemplateTreeTags.ShapeAsync);
+        RegisterParserBlock("on", arguments, TemplateTreeTags.OnAsync);
+        RegisterParserTag("set_variable", arguments, TemplateTreeTags.SetVariableAsync);
+        RegisterParserTag("open", arguments, (arguments, writer, encoder, context) => TemplateTreeTags.OverlayAsync(DisplayActionKind.Open, arguments, context));
+        RegisterParserTag("close", arguments, (arguments, writer, encoder, context) => TemplateTreeTags.OverlayAsync(DisplayActionKind.Close, arguments, context));
+        RegisterParserTag("toggle", arguments, (arguments, writer, encoder, context) => TemplateTreeTags.OverlayAsync(DisplayActionKind.Toggle, arguments, context));
+        RegisterParserTag("run_workflow", arguments, TemplateTreeTags.RunWorkflowAsync);
+        RegisterParserTag("navigate", arguments, TemplateTreeTags.NavigateAsync);
+        RegisterParserTag("submit", arguments, TemplateTreeTags.SubmitAsync);
     }
 }
 
@@ -145,7 +158,7 @@ public static class TemplateTreeTags
         var parameters = new Dictionary<string, DisplayBinding>(StringComparer.Ordinal);
         foreach (var argument in arguments)
         {
-            var value = await argument.Expression.EvaluateAsync(context);
+            var value = await TemplateTreePredicates.EvaluateArgumentAsync(argument.Expression, context);
             if (string.IsNullOrEmpty(argument.Name))
             {
                 positional.Add(value.ToStringValue());
@@ -195,7 +208,7 @@ public static class TemplateTreeTags
         var properties = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
         foreach (var argument in arguments)
         {
-            var value = await argument.Expression.EvaluateAsync(context);
+            var value = await TemplateTreePredicates.EvaluateArgumentAsync(argument.Expression, context);
             if (string.IsNullOrEmpty(argument.Name) || argument.Name == "type")
             {
                 type ??= value.ToStringValue();
@@ -309,7 +322,7 @@ public static class TemplateTreeTags
         var input = new Dictionary<string, DisplayBinding>(StringComparer.Ordinal);
         foreach (var argument in arguments)
         {
-            var value = await argument.Expression.EvaluateAsync(context);
+            var value = await TemplateTreePredicates.EvaluateArgumentAsync(argument.Expression, context);
             switch (argument.Name)
             {
                 case null or "" or "workflow":
@@ -381,7 +394,7 @@ public static class TemplateTreeTags
         var named = new List<(string Name, FluidValue Value)>();
         foreach (var argument in arguments)
         {
-            var value = await argument.Expression.EvaluateAsync(context);
+            var value = await TemplateTreePredicates.EvaluateArgumentAsync(argument.Expression, context);
             if (string.IsNullOrEmpty(argument.Name))
             {
                 name ??= value.ToStringValue();
@@ -470,7 +483,7 @@ public static class TemplateTreeTags
         return new Created(node, descriptor);
     }
 
-    private static FluidValue ToFluid(JsonNode? value) => value switch
+    internal static FluidValue ToFluid(JsonNode? value) => value switch
     {
         null => NilValue.Instance,
         JsonValue scalar when scalar.TryGetValue<string>(out var text) => StringValue.Create(text),
@@ -525,7 +538,7 @@ public static class TemplateTreeTags
         var values = new List<FluidValue>();
         foreach (var argument in arguments)
         {
-            values.Add(await argument.Expression.EvaluateAsync(context));
+            values.Add(await TemplateTreePredicates.EvaluateArgumentAsync(argument.Expression, context));
         }
 
         return values;

@@ -158,6 +158,32 @@ public sealed class DisplayState
     /// literal.</summary>
     public JsonNode? Read(DisplayBinding binding, JsonNode? eventPayload = null)
     {
+        // A predicate (docs/widgets.md, comparisons in bindings) reads its sources and answers a
+        // boolean; it is re-read with every change, like any binding.
+        if (binding.Combinator is { } combinator)
+        {
+            var terms = binding.Terms ?? [];
+            return JsonValue.Create(combinator switch
+            {
+                DisplayPredicates.And => terms.All(term => DisplayPredicates.IsTrue(Read(term, eventPayload))),
+                DisplayPredicates.Or => terms.Any(term => DisplayPredicates.IsTrue(Read(term, eventPayload))),
+                DisplayPredicates.Not => terms.Count > 0 && !DisplayPredicates.IsTrue(Read(terms[0], eventPayload)),
+                _ => false,
+            });
+        }
+
+        if (binding.Operator is { } @operator)
+        {
+            var left = ReadSource(binding, eventPayload);
+            var right = binding.Operand is { } operand ? Read(operand, eventPayload) : null;
+            return JsonValue.Create(DisplayPredicates.Evaluate(@operator, left, right));
+        }
+
+        return ReadSource(binding, eventPayload);
+    }
+
+    private JsonNode? ReadSource(DisplayBinding binding, JsonNode? eventPayload)
+    {
         JsonNode? source = binding switch
         {
             { Event: true } => eventPayload?.DeepClone(),
@@ -166,12 +192,13 @@ public sealed class DisplayState
             _ => binding.Value?.DeepClone(),
         };
 
-        if (!binding.IsLiteral && binding.Path is { Length: > 0 } path)
+        var literal = binding.Node is null && binding.Variable is null && !binding.Event;
+        if (!literal && binding.Path is { Length: > 0 } path)
         {
             source = Navigate(source, path);
         }
 
-        return source ?? (binding.IsLiteral ? null : binding.Value?.DeepClone());
+        return source ?? (literal ? null : binding.Value?.DeepClone());
     }
 
     /// <summary>Converts a CLR value to the JSON form the state holds (the renderer's options).</summary>

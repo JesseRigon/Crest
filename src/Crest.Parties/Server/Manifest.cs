@@ -23,7 +23,10 @@ using Crest.Modules.Manifest;
         "Crest.ContentPartLists",
         "Crest.Regions"
     ],
-    Category = "Business"
+    Category = "Business",
+    // Above Contents: the parties mapper answers for party items before the content mapper,
+    // whose candidates it keeps (docs/access.md, mapper roles and priority).
+    Priority = "1"
 )]
 
 [assembly: Feature(

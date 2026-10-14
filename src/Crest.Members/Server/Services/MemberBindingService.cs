@@ -32,7 +32,8 @@ public sealed class MemberBindingService(
     ISiteService siteService,
     Crest.Access.IPermissionVersion permissionVersion,
     MemberAuditRecorder audit,
-    IEnumerable<Crest.Roles.IDerivedRoleProvider> derivedRoles)
+    IEnumerable<Crest.Roles.IDerivedRoleProvider> derivedRoles,
+    MemberOrganizationGroups organizationGroups)
 {
     /// <summary>
     /// Puts a binding on a user that is not saved yet (creation paths). The hierarchy node
@@ -50,6 +51,7 @@ public sealed class MemberBindingService(
         {
             // The USER, not its id: on the explicit creation path the id is assigned later.
             DeferMemberBound(organizationId, user, binding.IsMemberAdmin);
+            DeferPlaceInGroups(organizationId, user, binding.Roles);
         }
 
         return binding;
@@ -70,6 +72,8 @@ public sealed class MemberBindingService(
 
         if (userClass == UserClasses.Member)
         {
+            // The binding's roles are the organization's groups' (docs/permissions.md).
+            await organizationGroups.PlaceAsync(organizationId, user.UserId, binding.Roles, cancellationToken);
             DeferMemberBound(organizationId, user, binding.IsMemberAdmin);
         }
 
@@ -104,6 +108,9 @@ public sealed class MemberBindingService(
 
         if (userClass == UserClasses.Member)
         {
+            // Leaving an organization ends its groups for the user; the overrides stay with
+            // the user (they belong to the user, not to a group).
+            await organizationGroups.LeaveAsync(organizationId, user.UserId, cancellationToken);
             DeferMemberUnbound(organizationId, user.UserId);
         }
 
@@ -310,6 +317,18 @@ public sealed class MemberBindingService(
             foreach (var handler in scope.ServiceProvider.GetServices<IMemberLifecycleHandler>())
             {
                 await handler.MemberBoundAsync(context);
+            }
+        });
+    }
+
+    /// <summary>Puts a member created in this unit into the organization's groups once it has its id.</summary>
+    private static void DeferPlaceInGroups(string organizationId, User user, IReadOnlyList<string> roles)
+    {
+        ShellScope.AddDeferredTask(async scope =>
+        {
+            if (!string.IsNullOrWhiteSpace(user.UserId))
+            {
+                await scope.ServiceProvider.GetRequiredService<MemberOrganizationGroups>().PlaceAsync(organizationId, user.UserId, roles);
             }
         });
     }

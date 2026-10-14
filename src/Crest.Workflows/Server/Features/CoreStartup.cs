@@ -209,6 +209,7 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
         services
             .AddScoped<WorkflowOwnershipGuard>()
             .AddScoped<WorkflowDefinitionAccessService>()
+            .AddScoped<EngineInstanceAccess>()
             .AddScoped<IWorkflowDefinitionAccessReader>(sp => sp.GetRequiredService<WorkflowDefinitionAccessService>())
             .AddScoped<IWorkflowDefinitionAuthorizer>(sp => sp.GetRequiredService<WorkflowDefinitionAccessService>())
             .AddScoped<Crest.Access.IAccessCeiling, WorkflowDefinitionAccessCeiling>();

@@ -38,7 +38,7 @@ public class ApiSecurityMiddlewareTests
             var accessor = Substitute.For<ICallerContextAccessor>();
             accessor.Current.Returns(Context.User.Identity?.IsAuthenticated == true ? Alice : null);
             var callers = new WorkflowCallerResolver(Substitute.For<ICallerContextFactory>(), accessor, AccessGateTests.Seal, Substitute.For<IWorkflowInstanceStore>(), Substitute.For<IWorkflowDefinitionService>());
-            return Middleware.InvokeAsync(Context, callers, Decision, Substitute.For<IAuthorizationService>(), Policies, Antiforgery, lists, Substitute.For<IWorkflowInstanceStore>());
+            return Middleware.InvokeAsync(Context, callers, Decision, Substitute.For<IAuthorizationService>(), Policies, Antiforgery, lists, WorkflowViewListTests.InstanceAccess(Decision, lists));
         }
     }
 

@@ -411,5 +411,9 @@ public sealed record WorkflowPendingInstanceModel(string Id, string? DefinitionI
 
 public sealed record WorkflowPendingJobModel(string JobId, string WorkflowInstanceId, string ActivityNodeId, string Status, int Attempts, DateTime CreatedUtc, DateTime? StartedUtc, string? Error);
 
-/// <summary>A definition's access lists as the API shows and takes them (role names and user names).</summary>
-public sealed record WorkflowDefinitionAccessModel(IReadOnlyList<string> Edit, IReadOnlyList<string> Run);
+/// <summary>A definition's access lists as the API shows and takes them (role names and user names): who may edit it, run it, and read its instances.</summary>
+public sealed record WorkflowDefinitionAccessModel(IReadOnlyList<string> Edit, IReadOnlyList<string> Run, IReadOnlyList<string>? View = null)
+{
+    /// <summary>Who may read the definition's instances; empty = every View holder.</summary>
+    public IReadOnlyList<string> View { get; init; } = View ?? [];
+}

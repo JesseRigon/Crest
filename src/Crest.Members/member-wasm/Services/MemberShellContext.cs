@@ -46,9 +46,10 @@ public sealed class MemberShellContext(HttpClient http, Crest.Components.Modules
     public string? ActiveOrganizationName =>
         Organizations.FirstOrDefault(organization => organization.Id == ActiveOrganizationId)?.Name;
 
-    // This module contributes no member pages of its own - the shell already links the
-    // generic ones (account, sign out) - so it adds no nav entries.
-    public IReadOnlyList<MemberShellNavigationEntry> NavigationEntries { get; } = [];
+    // The organization's access page (its groups and overrides). Shown to every member: the
+    // server decides who may use it (an organization's admins).
+    public IReadOnlyList<MemberShellNavigationEntry> NavigationEntries { get; } =
+        [new(Crest.MemberTheme.Services.MemberShellLinks.Relative(Pages.MemberOrganizationAccess.Route), "Organization access", 100)];
 
     public string AccountPath => Crest.MemberTheme.MemberRoutePaths.Account;
 

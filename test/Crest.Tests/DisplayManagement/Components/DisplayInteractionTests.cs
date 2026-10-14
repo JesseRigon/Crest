@@ -30,6 +30,41 @@ public class DisplayInteractionTests
     }
 
     [Fact]
+    public void StateEvaluatesComparisonsOverItsSourcesWhenTheyChange()
+    {
+        var state = new DisplayState();
+        var country = DisplayBinding.FromOutput("country", "Value");
+        var isUs = DisplayBinding.Compare(country, DisplayPredicates.Equal, DisplayBinding.Literal("US"));
+        var hasZip = DisplayBinding.Compare(DisplayBinding.FromOutput("zip", "Value"), DisplayPredicates.NotEmpty);
+        var both = DisplayBinding.Combine(DisplayPredicates.And, [isUs, hasZip]);
+        var notUs = DisplayBinding.Combine(DisplayPredicates.Not, [isUs]);
+
+        Assert.False(state.Read(isUs)!.GetValue<bool>());
+        Assert.True(state.Read(notUs)!.GetValue<bool>());
+
+        state.SetOutput("country", "Value", "US");
+        Assert.True(state.Read(isUs)!.GetValue<bool>());
+        Assert.False(state.Read(both)!.GetValue<bool>());
+
+        state.SetOutput("zip", "Value", "10001");
+        Assert.True(state.Read(both)!.GetValue<bool>());
+        Assert.True(state.Read(DisplayBinding.Compare(DisplayBinding.FromOutput("zip", "Value"), DisplayPredicates.StartsWith, DisplayBinding.Literal("100")))!.GetValue<bool>());
+        Assert.True(state.Read(DisplayBinding.Compare(DisplayBinding.FromOutput("zip", "Value"), DisplayPredicates.Greater, DisplayBinding.Literal(9999)))!.GetValue<bool>());
+        Assert.True(state.Read(DisplayBinding.Compare(country, DisplayPredicates.Equal, DisplayBinding.FromVariable("home")))!.GetValue<bool>() is false);
+    }
+
+    [Theory]
+    [InlineData(DisplayPredicates.Contains, "[\"a\",\"b\"]", "\"b\"", true)]
+    [InlineData(DisplayPredicates.Contains, "\"abc\"", "\"bc\"", true)]
+    [InlineData(DisplayPredicates.EndsWith, "\"abc\"", "\"bc\"", true)]
+    [InlineData(DisplayPredicates.Less, "2", "10", true)]
+    [InlineData(DisplayPredicates.Equal, "2", "2.0", true)]
+    [InlineData(DisplayPredicates.NotEqual, "\"a\"", "\"A\"", true)]
+    [InlineData(DisplayPredicates.Empty, "[]", "null", true)]
+    public void PredicatesCompareJsonValues(string @operator, string left, string right, bool expected) =>
+        Assert.Equal(expected, DisplayPredicates.Evaluate(@operator, JsonNode.Parse(left), JsonNode.Parse(right)));
+
+    [Fact]
     public void StateOpensAndClosesOverlaysAndRaisesChanges()
     {
         var state = new DisplayState();

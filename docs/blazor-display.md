@@ -225,6 +225,11 @@ wiring down; the renderer connects it in the browser.
   `PropertyList`, `Container`, `Fragment`; `Button`, `Link`, `Image`, `Card`, `Stack` are
   registered.
 
+- **Comparisons and item bodies (2026-10-13, rulings in [widgets.md](widgets.md)).** A binding
+  may be a predicate (`Operator`/`Operand`, `Combinator`/`Terms`) evaluated by `DisplayState`;
+  an item's own tree is a `DisplayTreePart` bound through the template binding seam. Details in
+  widgets.md › What landed.
+
 ### 5. Templates
 
 A template is content (`Template` content type, in the reworked Templates module):
