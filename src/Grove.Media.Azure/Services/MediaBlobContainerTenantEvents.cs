@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Grove.Environment.Shell;
 using Grove.Environment.Shell.Removing;
-using Grove.FileStorage.AzureBlob;
+using Grove.Data.Storage.AzureBlob;
 using Grove.Modules;
 
 namespace Grove.Media.Azure.Services;

@@ -15,7 +15,7 @@ The `Arguments` class is used throughout Grove to convert objects into named arg
 #### Quick Start
 
 ```csharp
-using Grove.DisplayManagement;
+using Grove.Display.Management;
 
 [GenerateArguments]
 public partial class MyShapeArguments
@@ -266,7 +266,7 @@ Check for generated files after building:
 ```
 obj/Debug/net10.0/generated/
   Grove.SourceGenerators/
-    Grove.DisplayManagement.SourceGenerators.ArgumentsFromInterceptor/
+    Grove.Display.Management.SourceGenerators.ArgumentsFromInterceptor/
       ArgumentsFromInterceptors.g.cs
 ```
 

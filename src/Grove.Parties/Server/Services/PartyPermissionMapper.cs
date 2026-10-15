@@ -1,6 +1,6 @@
 using Grove.Access;
-using Grove.ContentFields.Fields;
-using Grove.ContentManagement;
+using Grove.Contents.Fields.Fields;
+using Grove.Contents.Management;
 using Grove.Contents;
 using Grove.Contents.Security;
 using Grove.Parties.Constants;

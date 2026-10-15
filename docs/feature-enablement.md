@@ -36,22 +36,22 @@ Grove.Contents, opt-in per tenant. Its startups, controllers and permissions are
 feature (`[Feature]` on the startup and controller classes), and its client library is named for
 the feature (`Grove.Contents.PartLists.BlazorWasm`), so its page is served only while the feature
 is enabled. A consumer declares the feature id, not the module's (`Grove.Parties`,
-`Grove.Members` and the Fruitful modules declare `Grove.Contents.PartLists`).
+`Grove.Access.Members` and the Fruitful modules declare `Grove.Contents.PartLists`).
 
 ## What is deliberately NOT a Grove dependency
 
-- **`Grove.Tenants`** — `DefaultTenantOnly = true`. A hard dependency from an
+- **`Grove.Infrastructure.Tenants`** — `DefaultTenantOnly = true`. A hard dependency from an
   always-enabled feature would be invalid on every non-default tenant.
-  The tenants API (`TenantsApi`) is Grove.Tenants' own, so it exists only where the feature
+  The tenants API (`TenantsApi`) is Grove.Infrastructure.Tenants' own, so it exists only where the feature
   is enabled: the default tenant.
-- **`Grove.Queries.Sql`** — a *provider* of `IQuerySource` over the data layer's SQL
+- **`Grove.Data.Queries.Sql`** — a *provider* of `IQuerySource` over the data layer's SQL
   connections ([queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)), not a requirement.
   Grove enumerates whatever sources a tenant has and rejects unknown ones; declaring it
   would force a SQL query feature onto every tenant.
 - **A host's business modules** — standalone modules that depend on Grove, not the reverse.
 
 These are host choices, which is why the ones a host wants (its business modules,
-`Grove.Tenants`) are listed in its setup recipe's `feature`
+`Grove.Infrastructure.Tenants`) are listed in its setup recipe's `feature`
 step. Everything else Grove needs arrives through the dependency
 graph.
 

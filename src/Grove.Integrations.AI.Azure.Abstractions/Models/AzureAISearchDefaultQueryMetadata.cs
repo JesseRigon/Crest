@@ -1,0 +1,8 @@
+namespace Grove.Integrations.AI.Azure.Models;
+
+public sealed class AzureAISearchDefaultQueryMetadata
+{
+    public string QueryAnalyzerName { get; set; }
+
+    public string[] DefaultSearchFields { get; set; }
+}

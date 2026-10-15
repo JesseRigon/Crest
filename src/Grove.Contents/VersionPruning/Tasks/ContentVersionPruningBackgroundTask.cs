@@ -4,7 +4,7 @@ using Grove.BackgroundTasks;
 using Grove.Contents.VersionPruning.Models;
 using Grove.Contents.VersionPruning.Services;
 using Grove.Modules;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Contents.VersionPruning.Tasks;
 

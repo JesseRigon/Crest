@@ -6,7 +6,7 @@ builder.Host.UseNLogHost();
 
 builder.Services
     .AddPlatformCms()
-    .AddSetupFeatures("Grove.AutoSetup");
+    .AddSetupFeatures("Grove.Infrastructure.Setup.Auto");
 
 var app = builder.Build();
 

@@ -8,16 +8,16 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Grove.DisplayManagement.SourceGenerators;
+namespace Grove.Display.Management.SourceGenerators;
 
 [Generator]
 public class ShapeFactoryGenerator : IIncrementalGenerator
 {
-    private const string GenerateShapeAttributeFullName = "Grove.DisplayManagement.GenerateShapeAttribute";
-    private const string ShapeFactoryExtensionsFullName = "Grove.DisplayManagement.ShapeFactoryExtensions";
-    private const string IShapeFactoryFullName = "Grove.DisplayManagement.IShapeFactory";
-    private const string IShapeFullName = "Grove.DisplayManagement.IShape";
-    private const string DisplayDriverBaseFullName = "Grove.DisplayManagement.Handlers.DisplayDriverBase";
+    private const string GenerateShapeAttributeFullName = "Grove.Display.Management.GenerateShapeAttribute";
+    private const string ShapeFactoryExtensionsFullName = "Grove.Display.Management.ShapeFactoryExtensions";
+    private const string IShapeFactoryFullName = "Grove.Display.Management.IShapeFactory";
+    private const string IShapeFullName = "Grove.Display.Management.IShape";
+    private const string DisplayDriverBaseFullName = "Grove.Display.Management.Handlers.DisplayDriverBase";
     private const string ValueTaskFullName = "System.Threading.Tasks.ValueTask";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -418,7 +418,7 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
 
                     }
 
-                    namespace Grove.DisplayManagement.Generated
+                    namespace Grove.Display.Management.Generated
                     {
                     """);
 
@@ -427,7 +427,7 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
             sb.Append("""
                         file static class ShapeFactoryInterceptorHelpers
                         {
-                            public static async global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> Awaited(global::System.Threading.Tasks.ValueTask task, global::Grove.DisplayManagement.IShape shape)
+                            public static async global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> Awaited(global::System.Threading.Tasks.ValueTask task, global::Grove.Display.Management.IShape shape)
                             {
                                 await task;
                                 return shape;
@@ -480,9 +480,9 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
         var baseTypeName = modelType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var generatedTypeName = GetGeneratedTypeName(modelType);
 
-        sb.AppendLine($"    public sealed class {generatedTypeName} : {baseTypeName}, global::Grove.DisplayManagement.IShape, global::Grove.DisplayManagement.IPositioned");
+        sb.AppendLine($"    public sealed class {generatedTypeName} : {baseTypeName}, global::Grove.Display.Management.IShape, global::Grove.Display.Management.IPositioned");
         sb.AppendLine("    {");
-        sb.AppendLine("        private global::Grove.DisplayManagement.Shapes.ShapeMetadata? _metadata;");
+        sb.AppendLine("        private global::Grove.Display.Management.Shapes.ShapeMetadata? _metadata;");
         sb.AppendLine();
         sb.AppendLine("        private global::System.Collections.Generic.List<string>? _classes;");
         sb.AppendLine();
@@ -492,9 +492,9 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine("        private bool _sorted;");
         sb.AppendLine();
-        sb.AppendLine("        private global::System.Collections.Generic.List<global::Grove.DisplayManagement.IPositioned>? _items;");
+        sb.AppendLine("        private global::System.Collections.Generic.List<global::Grove.Display.Management.IPositioned>? _items;");
         sb.AppendLine();
-        sb.AppendLine($"        public {GetMemberHidingModifier(modelType, "Metadata")}global::Grove.DisplayManagement.Shapes.ShapeMetadata Metadata => _metadata ??= new global::Grove.DisplayManagement.Shapes.ShapeMetadata();");
+        sb.AppendLine($"        public {GetMemberHidingModifier(modelType, "Metadata")}global::Grove.Display.Management.Shapes.ShapeMetadata Metadata => _metadata ??= new global::Grove.Display.Management.Shapes.ShapeMetadata();");
         sb.AppendLine();
         sb.AppendLine($"        public {GetMemberHidingModifier(modelType, "Position")}string Position");
         sb.AppendLine("        {");
@@ -512,7 +512,7 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine($"        public {GetMemberHidingModifier(modelType, "Properties")}global::System.Collections.Generic.IDictionary<string, object> Properties => _properties ??= [];");
         sb.AppendLine();
-        sb.AppendLine($"        public {GetMemberHidingModifier(modelType, "Items")}global::System.Collections.Generic.IReadOnlyList<global::Grove.DisplayManagement.IPositioned> Items");
+        sb.AppendLine($"        public {GetMemberHidingModifier(modelType, "Items")}global::System.Collections.Generic.IReadOnlyList<global::Grove.Display.Management.IPositioned> Items");
         sb.AppendLine("        {");
         sb.AppendLine("            get");
         sb.AppendLine("            {");
@@ -520,7 +520,7 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine("                if (!_sorted && _items.Count > 0)");
         sb.AppendLine("                {");
-        sb.AppendLine("                    _items = global::System.Linq.Enumerable.ToList(global::System.Linq.Enumerable.OrderBy(_items, static x => x, global::Grove.DisplayManagement.Zones.FlatPositionComparer.Instance));");
+        sb.AppendLine("                    _items = global::System.Linq.Enumerable.ToList(global::System.Linq.Enumerable.OrderBy(_items, static x => x, global::Grove.Display.Management.Zones.FlatPositionComparer.Instance));");
         sb.AppendLine("                    _sorted = true;");
         sb.AppendLine("                }");
         sb.AppendLine();
@@ -528,24 +528,24 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
         sb.AppendLine("            }");
         sb.AppendLine("        }");
         sb.AppendLine();
-        sb.AppendLine($"        public {GetMemberHidingModifier(modelType, "AddAsync", 2)}global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> AddAsync(object item, string position)");
+        sb.AppendLine($"        public {GetMemberHidingModifier(modelType, "AddAsync", 2)}global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> AddAsync(object item, string position)");
         sb.AppendLine("        {");
         sb.AppendLine("            if (item == null)");
         sb.AppendLine("            {");
-        sb.AppendLine("                return global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.DisplayManagement.IShape>(this);");
+        sb.AppendLine("                return global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.Display.Management.IShape>(this);");
         sb.AppendLine("            }");
         sb.AppendLine();
         sb.AppendLine("            position ??= string.Empty;");
         sb.AppendLine("            _sorted = false;");
         sb.AppendLine("            _items ??= [];");
         sb.AppendLine();
-        sb.AppendLine("            var wrapped = global::Grove.DisplayManagement.PositionWrapper.TryWrap(item, position);");
+        sb.AppendLine("            var wrapped = global::Grove.Display.Management.PositionWrapper.TryWrap(item, position);");
         sb.AppendLine("            if (wrapped is not null)");
         sb.AppendLine("            {");
         sb.AppendLine("                _items.Add(wrapped);");
         sb.AppendLine("            }");
         sb.AppendLine();
-        sb.AppendLine("            return global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.DisplayManagement.IShape>(this);");
+        sb.AppendLine("            return global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.Display.Management.IShape>(this);");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
         sb.AppendLine();
@@ -575,9 +575,9 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
         var keyword = modelType.IsRecord ? "partial record" : "partial class";
         var accessibility = GetAccessibilityText(modelType.DeclaredAccessibility, modelType.ContainingType is not null);
 
-        sb.AppendLine($"{currentIndent}{accessibility} {keyword} {modelType.Name} : global::Grove.DisplayManagement.IShape, global::Grove.DisplayManagement.IPositioned");
+        sb.AppendLine($"{currentIndent}{accessibility} {keyword} {modelType.Name} : global::Grove.Display.Management.IShape, global::Grove.Display.Management.IPositioned");
         sb.AppendLine($"{currentIndent}{{");
-        sb.AppendLine($"{currentIndent}    private global::Grove.DisplayManagement.Shapes.ShapeMetadata? _metadata;");
+        sb.AppendLine($"{currentIndent}    private global::Grove.Display.Management.Shapes.ShapeMetadata? _metadata;");
         sb.AppendLine();
         sb.AppendLine($"{currentIndent}    private global::System.Collections.Generic.List<string>? _classes;");
         sb.AppendLine();
@@ -587,9 +587,9 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine($"{currentIndent}    private bool _sorted;");
         sb.AppendLine();
-        sb.AppendLine($"{currentIndent}    private global::System.Collections.Generic.List<global::Grove.DisplayManagement.IPositioned>? _items;");
+        sb.AppendLine($"{currentIndent}    private global::System.Collections.Generic.List<global::Grove.Display.Management.IPositioned>? _items;");
         sb.AppendLine();
-        sb.AppendLine($"{currentIndent}    public global::Grove.DisplayManagement.Shapes.ShapeMetadata Metadata => _metadata ??= new global::Grove.DisplayManagement.Shapes.ShapeMetadata();");
+        sb.AppendLine($"{currentIndent}    public global::Grove.Display.Management.Shapes.ShapeMetadata Metadata => _metadata ??= new global::Grove.Display.Management.Shapes.ShapeMetadata();");
         sb.AppendLine();
         sb.AppendLine($"{currentIndent}    public string Position");
         sb.AppendLine($"{currentIndent}    {{");
@@ -607,7 +607,7 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine($"{currentIndent}    public global::System.Collections.Generic.IDictionary<string, object> Properties => _properties ??= [];");
         sb.AppendLine();
-        sb.AppendLine($"{currentIndent}    public global::System.Collections.Generic.IReadOnlyList<global::Grove.DisplayManagement.IPositioned> Items");
+        sb.AppendLine($"{currentIndent}    public global::System.Collections.Generic.IReadOnlyList<global::Grove.Display.Management.IPositioned> Items");
         sb.AppendLine($"{currentIndent}    {{");
         sb.AppendLine($"{currentIndent}        get");
         sb.AppendLine($"{currentIndent}        {{");
@@ -615,7 +615,7 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine($"{currentIndent}            if (!_sorted && _items.Count > 0)");
         sb.AppendLine($"{currentIndent}            {{");
-        sb.AppendLine($"{currentIndent}                _items = global::System.Linq.Enumerable.ToList(global::System.Linq.Enumerable.OrderBy(_items, static x => x, global::Grove.DisplayManagement.Zones.FlatPositionComparer.Instance));");
+        sb.AppendLine($"{currentIndent}                _items = global::System.Linq.Enumerable.ToList(global::System.Linq.Enumerable.OrderBy(_items, static x => x, global::Grove.Display.Management.Zones.FlatPositionComparer.Instance));");
         sb.AppendLine($"{currentIndent}                _sorted = true;");
         sb.AppendLine($"{currentIndent}            }}");
         sb.AppendLine();
@@ -623,24 +623,24 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
         sb.AppendLine($"{currentIndent}        }}");
         sb.AppendLine($"{currentIndent}    }}");
         sb.AppendLine();
-        sb.AppendLine($"{currentIndent}    public global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> AddAsync(object item, string position)");
+        sb.AppendLine($"{currentIndent}    public global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> AddAsync(object item, string position)");
         sb.AppendLine($"{currentIndent}    {{");
         sb.AppendLine($"{currentIndent}        if (item == null)");
         sb.AppendLine($"{currentIndent}        {{");
-        sb.AppendLine($"{currentIndent}            return global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.DisplayManagement.IShape>(this);");
+        sb.AppendLine($"{currentIndent}            return global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.Display.Management.IShape>(this);");
         sb.AppendLine($"{currentIndent}        }}");
         sb.AppendLine();
         sb.AppendLine($"{currentIndent}        position ??= string.Empty;");
         sb.AppendLine($"{currentIndent}        _sorted = false;");
         sb.AppendLine($"{currentIndent}        _items ??= [];");
         sb.AppendLine();
-        sb.AppendLine($"{currentIndent}        var wrapped = global::Grove.DisplayManagement.PositionWrapper.TryWrap(item, position);");
+        sb.AppendLine($"{currentIndent}        var wrapped = global::Grove.Display.Management.PositionWrapper.TryWrap(item, position);");
         sb.AppendLine($"{currentIndent}        if (wrapped is not null)");
         sb.AppendLine($"{currentIndent}        {{");
         sb.AppendLine($"{currentIndent}            _items.Add(wrapped);");
         sb.AppendLine($"{currentIndent}        }}");
         sb.AppendLine();
-        sb.AppendLine($"{currentIndent}        return global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.DisplayManagement.IShape>(this);");
+        sb.AppendLine($"{currentIndent}        return global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.Display.Management.IShape>(this);");
         sb.AppendLine($"{currentIndent}    }}");
         sb.AppendLine($"{currentIndent}}}");
 
@@ -857,10 +857,10 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
 
     private static void GenerateDisplayDriverTypedInterceptor(StringBuilder sb, InvocationInfo invocation, string generatedTypeName, string modelTypeName)
     {
-        sb.AppendLine($"        public static global::Grove.DisplayManagement.Views.ShapeResult InterceptInitialize(this global::Grove.DisplayManagement.Handlers.DisplayDriverBase driver, {GetDisplayDriverInterceptParameters(invocation, modelTypeName)})");
+        sb.AppendLine($"        public static global::Grove.Display.Management.Views.ShapeResult InterceptInitialize(this global::Grove.Display.Management.Handlers.DisplayDriverBase driver, {GetDisplayDriverInterceptParameters(invocation, modelTypeName)})");
         sb.AppendLine("            => driver.Factory(");
         sb.AppendLine($"                {(HasDisplayDriverShapeType(invocation.Kind) ? "shapeType" : $"\"{invocation.ModelType.Name}\"")},");
-        sb.AppendLine($"                static (context, builderState) => global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.DisplayManagement.IShape>((global::Grove.DisplayManagement.IShape)new {generatedTypeName}()),");
+        sb.AppendLine($"                static (context, builderState) => global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.Display.Management.IShape>((global::Grove.Display.Management.IShape)new {generatedTypeName}()),");
         sb.AppendLine("                (object?)null,");
         sb.AppendLine("                static (shape, state) =>");
         sb.AppendLine("                {");
@@ -881,44 +881,44 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
         switch (invocation.Kind)
         {
             case InvocationKind.DisplayDriverWithoutShapeType:
-                sb.AppendLine("        public static global::Grove.DisplayManagement.Views.ShapeResult InterceptInitialize(this global::Grove.DisplayManagement.Handlers.DisplayDriverBase driver)");
+                sb.AppendLine("        public static global::Grove.Display.Management.Views.ShapeResult InterceptInitialize(this global::Grove.Display.Management.Handlers.DisplayDriverBase driver)");
                 sb.AppendLine($"            => driver.Factory(\"{invocation.ModelType.Name}\",");
-                sb.AppendLine($"                static _ => global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.DisplayManagement.IShape>((global::Grove.DisplayManagement.IShape)new {generatedTypeName}()),");
+                sb.AppendLine($"                static _ => global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.Display.Management.IShape>((global::Grove.Display.Management.IShape)new {generatedTypeName}()),");
                 sb.AppendLine("                null);");
                 break;
 
             case InvocationKind.DisplayDriverWithoutInitialize:
-                sb.AppendLine("        public static global::Grove.DisplayManagement.Views.ShapeResult InterceptInitialize(this global::Grove.DisplayManagement.Handlers.DisplayDriverBase driver, string shapeType)");
+                sb.AppendLine("        public static global::Grove.Display.Management.Views.ShapeResult InterceptInitialize(this global::Grove.Display.Management.Handlers.DisplayDriverBase driver, string shapeType)");
                 sb.AppendLine("            => driver.Factory(shapeType,");
-                sb.AppendLine($"                static _ => global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.DisplayManagement.IShape>((global::Grove.DisplayManagement.IShape)new {generatedTypeName}()),");
+                sb.AppendLine($"                static _ => global::System.Threading.Tasks.ValueTask.FromResult<global::Grove.Display.Management.IShape>((global::Grove.Display.Management.IShape)new {generatedTypeName}()),");
                 sb.AppendLine("                null);");
                 break;
 
             case InvocationKind.ActionWithoutShapeType:
-                sb.AppendLine($"        public static global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> InterceptCreateAsync(this global::Grove.DisplayManagement.IShapeFactory factory, global::System.Action<{modelTypeName}>? initialize = null)");
+                sb.AppendLine($"        public static global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> InterceptCreateAsync(this global::Grove.Display.Management.IShapeFactory factory, global::System.Action<{modelTypeName}>? initialize = null)");
                 sb.AppendLine("            => factory.CreateAsync(");
                 sb.AppendLine($"                \"{invocation.ModelType.Name}\",");
                 sb.AppendLine("                static initialize => ShapeFactory(initialize),");
                 sb.AppendLine("                initialize);");
                 sb.AppendLine();
-                sb.AppendLine($"        private static global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> ShapeFactory(global::System.Action<{modelTypeName}>? initialize)");
+                sb.AppendLine($"        private static global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> ShapeFactory(global::System.Action<{modelTypeName}>? initialize)");
                 sb.AppendLine("        {");
-                sb.AppendLine($"            var shape = (global::Grove.DisplayManagement.IShape)new {generatedTypeName}();");
+                sb.AppendLine($"            var shape = (global::Grove.Display.Management.IShape)new {generatedTypeName}();");
                 sb.AppendLine($"            initialize?.Invoke(({modelTypeName})shape);");
                 sb.AppendLine("            return global::System.Threading.Tasks.ValueTask.FromResult(shape);");
                 sb.AppendLine("        }");
                 break;
 
             case InvocationKind.ActionWithShapeType:
-                sb.AppendLine($"        public static global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> InterceptCreateAsync(this global::Grove.DisplayManagement.IShapeFactory factory, string shapeType, global::System.Action<{modelTypeName}>? initialize = null)");
+                sb.AppendLine($"        public static global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> InterceptCreateAsync(this global::Grove.Display.Management.IShapeFactory factory, string shapeType, global::System.Action<{modelTypeName}>? initialize = null)");
                 sb.AppendLine("            => factory.CreateAsync(");
                 sb.AppendLine("                shapeType,");
                 sb.AppendLine("                static initialize => ShapeFactory(initialize),");
                 sb.AppendLine("                initialize);");
                 sb.AppendLine();
-                sb.AppendLine($"        private static global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> ShapeFactory(global::System.Action<{modelTypeName}>? initialize)");
+                sb.AppendLine($"        private static global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> ShapeFactory(global::System.Action<{modelTypeName}>? initialize)");
                 sb.AppendLine("        {");
-                sb.AppendLine($"            var shape = (global::Grove.DisplayManagement.IShape)new {generatedTypeName}();");
+                sb.AppendLine($"            var shape = (global::Grove.Display.Management.IShape)new {generatedTypeName}();");
                 sb.AppendLine($"            initialize?.Invoke(({modelTypeName})shape);");
                 sb.AppendLine("            return global::System.Threading.Tasks.ValueTask.FromResult(shape);");
                 sb.AppendLine("        }");
@@ -926,30 +926,30 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
 
             case InvocationKind.ActionWithState:
                 var actionStateType = invocation.StateTypes[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                sb.AppendLine($"        public static global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> InterceptCreateAsync(this global::Grove.DisplayManagement.IShapeFactory factory, string shapeType, global::System.Action<{modelTypeName}, {actionStateType}> initialize, {actionStateType} state)");
+                sb.AppendLine($"        public static global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> InterceptCreateAsync(this global::Grove.Display.Management.IShapeFactory factory, string shapeType, global::System.Action<{modelTypeName}, {actionStateType}> initialize, {actionStateType} state)");
                 sb.AppendLine("            => factory.CreateAsync(");
                 sb.AppendLine("                shapeType,");
                 sb.AppendLine("                static state => ShapeFactory(state.initialize, state.state),");
                 sb.AppendLine("                (initialize, state));");
                 sb.AppendLine();
-                sb.AppendLine($"        private static global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> ShapeFactory(global::System.Action<{modelTypeName}, {actionStateType}> initialize, {actionStateType} state)");
+                sb.AppendLine($"        private static global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> ShapeFactory(global::System.Action<{modelTypeName}, {actionStateType}> initialize, {actionStateType} state)");
                 sb.AppendLine("        {");
-                sb.AppendLine($"            var shape = (global::Grove.DisplayManagement.IShape)new {generatedTypeName}();");
+                sb.AppendLine($"            var shape = (global::Grove.Display.Management.IShape)new {generatedTypeName}();");
                 sb.AppendLine($"            initialize?.Invoke(({modelTypeName})shape, state);");
                 sb.AppendLine("            return global::System.Threading.Tasks.ValueTask.FromResult(shape);");
                 sb.AppendLine("        }");
                 break;
 
             case InvocationKind.FuncWithoutShapeType:
-                sb.AppendLine($"        public static global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> InterceptCreateAsync(this global::Grove.DisplayManagement.IShapeFactory factory, global::System.Func<{modelTypeName}, global::System.Threading.Tasks.ValueTask> initializeAsync)");
+                sb.AppendLine($"        public static global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> InterceptCreateAsync(this global::Grove.Display.Management.IShapeFactory factory, global::System.Func<{modelTypeName}, global::System.Threading.Tasks.ValueTask> initializeAsync)");
                 sb.AppendLine("            => factory.CreateAsync(");
                 sb.AppendLine($"                \"{invocation.ModelType.Name}\",");
                 sb.AppendLine("                static initializeAsync => ShapeFactory(initializeAsync),");
                 sb.AppendLine("                initializeAsync);");
                 sb.AppendLine();
-                sb.AppendLine($"        private static global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> ShapeFactory(global::System.Func<{modelTypeName}, global::System.Threading.Tasks.ValueTask> initializeAsync)");
+                sb.AppendLine($"        private static global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> ShapeFactory(global::System.Func<{modelTypeName}, global::System.Threading.Tasks.ValueTask> initializeAsync)");
                 sb.AppendLine("        {");
-                sb.AppendLine($"            var shape = (global::Grove.DisplayManagement.IShape)new {generatedTypeName}();");
+                sb.AppendLine($"            var shape = (global::Grove.Display.Management.IShape)new {generatedTypeName}();");
                 sb.AppendLine($"            var task = initializeAsync?.Invoke(({modelTypeName})shape) ?? global::System.Threading.Tasks.ValueTask.CompletedTask;");
                 sb.AppendLine();
                 sb.AppendLine("            if (!task.IsCompletedSuccessfully)");
@@ -962,15 +962,15 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
                 break;
 
             case InvocationKind.FuncWithShapeType:
-                sb.AppendLine($"        public static global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> InterceptCreateAsync(this global::Grove.DisplayManagement.IShapeFactory factory, string shapeType, global::System.Func<{modelTypeName}, global::System.Threading.Tasks.ValueTask> initializeAsync)");
+                sb.AppendLine($"        public static global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> InterceptCreateAsync(this global::Grove.Display.Management.IShapeFactory factory, string shapeType, global::System.Func<{modelTypeName}, global::System.Threading.Tasks.ValueTask> initializeAsync)");
                 sb.AppendLine("            => factory.CreateAsync(");
                 sb.AppendLine("                shapeType,");
                 sb.AppendLine("                static initializeAsync => ShapeFactory(initializeAsync),");
                 sb.AppendLine("                initializeAsync);");
                 sb.AppendLine();
-                sb.AppendLine($"        private static global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> ShapeFactory(global::System.Func<{modelTypeName}, global::System.Threading.Tasks.ValueTask> initializeAsync)");
+                sb.AppendLine($"        private static global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> ShapeFactory(global::System.Func<{modelTypeName}, global::System.Threading.Tasks.ValueTask> initializeAsync)");
                 sb.AppendLine("        {");
-                sb.AppendLine($"            var shape = (global::Grove.DisplayManagement.IShape)new {generatedTypeName}();");
+                sb.AppendLine($"            var shape = (global::Grove.Display.Management.IShape)new {generatedTypeName}();");
                 sb.AppendLine($"            var task = initializeAsync?.Invoke(({modelTypeName})shape) ?? global::System.Threading.Tasks.ValueTask.CompletedTask;");
                 sb.AppendLine();
                 sb.AppendLine("            if (!task.IsCompletedSuccessfully)");
@@ -984,15 +984,15 @@ public class ShapeFactoryGenerator : IIncrementalGenerator
 
             case InvocationKind.FuncWithState:
                 var funcStateType = invocation.StateTypes[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                sb.AppendLine($"        public static global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> InterceptCreateAsync(this global::Grove.DisplayManagement.IShapeFactory factory, string shapeType, global::System.Func<{modelTypeName}, {funcStateType}, global::System.Threading.Tasks.ValueTask> initializeAsync, {funcStateType} state)");
+                sb.AppendLine($"        public static global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> InterceptCreateAsync(this global::Grove.Display.Management.IShapeFactory factory, string shapeType, global::System.Func<{modelTypeName}, {funcStateType}, global::System.Threading.Tasks.ValueTask> initializeAsync, {funcStateType} state)");
                 sb.AppendLine("            => factory.CreateAsync(");
                 sb.AppendLine("                shapeType,");
                 sb.AppendLine("                static state => ShapeFactory(state.initializeAsync, state.state),");
                 sb.AppendLine("                (initializeAsync, state));");
                 sb.AppendLine();
-                sb.AppendLine($"        private static global::System.Threading.Tasks.ValueTask<global::Grove.DisplayManagement.IShape> ShapeFactory(global::System.Func<{modelTypeName}, {funcStateType}, global::System.Threading.Tasks.ValueTask> initializeAsync, {funcStateType} state)");
+                sb.AppendLine($"        private static global::System.Threading.Tasks.ValueTask<global::Grove.Display.Management.IShape> ShapeFactory(global::System.Func<{modelTypeName}, {funcStateType}, global::System.Threading.Tasks.ValueTask> initializeAsync, {funcStateType} state)");
                 sb.AppendLine("        {");
-                sb.AppendLine($"            var shape = (global::Grove.DisplayManagement.IShape)new {generatedTypeName}();");
+                sb.AppendLine($"            var shape = (global::Grove.Display.Management.IShape)new {generatedTypeName}();");
                 sb.AppendLine($"            var task = initializeAsync?.Invoke(({modelTypeName})shape, state) ?? global::System.Threading.Tasks.ValueTask.CompletedTask;");
                 sb.AppendLine();
                 sb.AppendLine("            if (!task.IsCompletedSuccessfully)");

@@ -17,16 +17,22 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Grove.Infrastructure" />
     <InternalsVisibleTo Include="Grove.Tests" />
-    <InternalsVisibleTo Include="Grove.Abstractions.Tests" />
+    <InternalsVisibleTo Include="Grove.Infrastructure.Abstractions.Tests" />
     <InternalsVisibleTo Include="Grove.Data.YesSql" />
-    <InternalsVisibleTo Include="Grove.ContentManagement.GraphQL" />
-    <InternalsVisibleTo Include="Grove.DisplayManagement" />
-    <InternalsVisibleTo Include="Grove.DynamicCache" />
+    <InternalsVisibleTo Include="Grove.Contents.Management.GraphQL" />
+    <InternalsVisibleTo Include="Grove.Display.Management" />
+    <InternalsVisibleTo Include="Grove.Data.Cache.Dynamic" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Grove.Abstractions\Grove.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.ResourceManagement.Abstractions\Grove.ResourceManagement.Abstractions.csproj" />
+    <PackageReference Include="AnyAscii" />
+    <PackageReference Include="JsonPath.Net" />
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" />
+    <PackageReference Include="ZString" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Display.Resources.Management.Abstractions\Grove.Display.Resources.Management.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

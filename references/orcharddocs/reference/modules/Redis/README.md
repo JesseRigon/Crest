@@ -1,4 +1,4 @@
-# Redis (`Grove.Redis`)
+# Redis (`Grove.Integrations.Redis`)
 
 Integrates Redis into Grove. Provides the following features:
 
@@ -18,7 +18,7 @@ This module provides a health check to report the status for the Redis server. R
 
 ## Data Protection
 
-The `Grove.Redis.DataProtection` feature enables storing data protection keys in Redis, providing a high-performance solution for distributed applications.
+The `Grove.Integrations.Redis.DataProtection` feature enables storing data protection keys in Redis, providing a high-performance solution for distributed applications.
 
 ### Purpose
 
@@ -31,8 +31,8 @@ Data Protection is a critical security feature in ASP.NET Core that Grove levera
 Before configuring Redis Data Protection, ensure you have:
 
 1. A running Redis instance
-2. The `Grove.Redis` module enabled
-3. The `Grove.Redis.DataProtection` feature enabled
+2. The `Grove.Integrations.Redis` module enabled
+3. The `Grove.Integrations.Redis.DataProtection` feature enabled
 
 ### Configuration
 

@@ -1,6 +1,6 @@
 #nullable enable
 
-using Grove.DisplayManagement.Extensions;
+using Grove.Display.Management.Extensions;
 using Grove.Environment.Extensions;
 using Grove.Modules.Manifest;
 using Grove.Routing;
@@ -20,7 +20,7 @@ namespace Grove.Themes;
 /// <para>
 /// <strong>Descendants count.</strong> Grove's <c>BaseTheme</c> chain is exactly "a
 /// child fork with simple modifications": a child theme inherits its parent's shapes and
-/// assets, so <c>BaseTheme = "Grove.AdminTheme"</c> IS a compatible admin theme.
+/// assets, so <c>BaseTheme = "Grove.Themes.Admin"</c> IS a compatible admin theme.
 /// Every check here walks that chain rather than comparing a single id - a fork is the
 /// normal way to brand a shell, and an id comparison would reject every fork.
 /// </para>

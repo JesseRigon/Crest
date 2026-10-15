@@ -1,9 +1,0 @@
-@page "/Recipes"
-@attribute [PageEntry("ManageRecipes", Id = "recipes", Parent = "tools", Caption = "Recipes", Icon = "@iconify:mdi:chef-hat")]
-@using Grove.AdminTheme.Api
-@using Grove.Components.Primitives
-@using Grove.Components.Primitives
-@inject IApi Api
-@inject Grove.Components.Theme.GroveApiLocalizer T
-<GroveStack Gap="1rem" data-testid="recipes-page"><GroveText TextStyle="TextStyle.H4" Text="@T["Recipes"]"/>@if(Model is null){<GroveProgressBar Mode="ProgressBarMode.Indeterminate"/>}else{<GroveDataGrid Data="Model" TItem="Recipe"><Columns><GroveDataGridColumn TItem="Recipe" Property="DisplayName" Title="@T["Recipe"]"/><GroveDataGridColumn TItem="Recipe" Property="Description" Title="@T["Description"]"/><GroveDataGridColumn TItem="Recipe" Title="@T["Actions"]"><Template Context="recipe"><GroveButton Text="@T["Run"]" Click="@(()=>Run(recipe))"/></Template></GroveDataGridColumn></Columns></GroveDataGrid>}</GroveStack>
-@code { Recipe[]? Model; protected override async Task OnInitializedAsync()=>Model=await Api.Grove.Rest.Recipes.ListAsync(); async Task Run(Recipe x){await Api.Grove.Rest.Recipes.ExecuteAsync(new(x.BasePath,x.FileName));} }

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 
-namespace Grove.Email;
+namespace Grove.Communications.Email;
 
 /// <summary>
 /// Validates an email address.

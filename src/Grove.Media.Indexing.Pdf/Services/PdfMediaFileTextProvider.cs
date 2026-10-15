@@ -1,5 +1,5 @@
 using Cysharp.Text;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using UglyToad.PdfPig;
 
 namespace Grove.Media.Indexing;

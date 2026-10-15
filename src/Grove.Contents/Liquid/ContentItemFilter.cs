@@ -1,6 +1,6 @@
 using Grove.Access;
-using Grove.ContentManagement;
-using Grove.Liquid;
+using Grove.Contents.Management;
+using Grove.Display.Liquid;
 using Fluid;
 using Fluid.Values;
 

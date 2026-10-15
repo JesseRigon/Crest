@@ -66,7 +66,7 @@ only) when you do.
   antiforgery, per-request engine grant), `Contexts/*` (acting-user snapshot and
   authorizer), `Activities/RequirePermission`, per-shell file lock directory,
   `RequiredPermission` on the content triggers, acting user on every content stimulus,
-  `Controllers/WorkflowTriggersController` (stored-trigger diagnostics and re-index),
+  `Api/WorkflowTriggersApi` (stored-trigger diagnostics and re-index),
   `Services/SyncDisposableTenantService` (Grove disposes containers synchronously;
   Elsa's tenant service is async-only and crashed the process on shell release).
 - Fixed: `ContentItemWorkflowDefinitionPublisher.PublishAsync` stores the draft before

@@ -5,18 +5,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.AdminMenu;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Display;
-using Grove.ContentManagement.Display.ContentDisplay;
-using Grove.ContentManagement.Handlers;
-using Grove.ContentManagement.Metadata.Models;
-using Grove.ContentManagement.Routing;
+using Grove.Contents.AdminMenu;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Display;
+using Grove.Contents.Management.Display.ContentDisplay;
+using Grove.Contents.Management.Handlers;
+using Grove.Contents.Management.Metadata.Models;
+using Grove.Contents.Management.Routing;
 using Grove.Contents.AdminNodes;
 using Grove.Contents.AuditTrail.Settings;
 using Grove.Contents;
 using Grove.Contents.Deployment;
-using Grove.Contents.Endpoints.Api;
 using Grove.Contents.Feeds.Builders;
 using Grove.Contents.Handlers;
 using Grove.Contents.Indexing;
@@ -26,29 +25,27 @@ using Grove.Contents.Recipes;
 using Grove.Contents.Security;
 using Grove.Contents.Services;
 using Grove.Contents.Sitemaps;
-using Grove.Contents.TagHelpers;
-using Grove.ContentTypes.Editors;
 using Grove.Data.Migration;
 using Grove.Deployment;
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.Handlers;
-using Grove.DisplayManagement.Liquid;
-using Grove.DisplayManagement.Liquid.Tags;
-using Grove.DisplayManagement.Views;
-using Grove.Feeds;
-using Grove.Indexing;
-using Grove.Liquid;
-using Grove.Localization.Data;
+using Grove.Display.Management;
+using Grove.Display.Management.Handlers;
+using Grove.Display.Management.Views;
+using Grove.Data.Feeds;
+using Grove.Data.Indexing;
+using Grove.Display.Liquid;
+using Grove.Data.Localization.Data;
 using Grove.Modules;
-using Grove.Mvc.Utilities;
-using Grove.Navigation;
-using Grove.Recipes;
+using Grove.Utilities;
+using Grove.Display.Navigation;
+using Grove.Infrastructure.Recipes;
 using Grove.Security.Permissions;
-using Grove.Settings.Deployment;
-using Grove.Sitemaps.Builders;
-using Grove.Sitemaps.Handlers;
-using Grove.Sitemaps.Models;
-using Grove.Sitemaps.Services;
+using Grove.Infrastructure.Settings.Deployment;
+using Grove.Seo.Sitemaps.Builders;
+using Grove.Seo.Sitemaps.Handlers;
+using Grove.Seo.Sitemaps.Models;
+using Grove.Seo.Sitemaps.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing.Patterns;
 
 namespace Grove.Contents;
 
@@ -56,20 +53,14 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddContentServices();
-        services.AddSingleton<IAnchorTag, ContentAnchorTag>();
-
         // The content items API (docs/MVC/api.md § Placement) and the content groups it filters by
-        // (their definitions are Grove.ContentTypes'; the groups' pages list items).
+        // (their definitions are Grove.Contents.Types'; the groups' pages list items).
         services.AddApiContributor<Api.ContentItemsApi>();
+        services.AddApiExceptionMapper<Api.ContentSaveRefusedExceptionMapper>();
         services.AddScoped<Grove.ContentGroups.ContentGroupService>();
         services.AddScoped<Grove.ContentGroups.IContentGroupEntryResolver, Grove.ContentGroups.ContentTypeGroupEntryResolver>();
         services.AddDynamicPageSource<Grove.ContentGroups.ContentGroupPages>();
 
-        services.Configure<LiquidViewOptions>(o =>
-        {
-            o.LiquidViewParserConfiguration.Add(parser => parser.RegisterParserTag("contentitem", parser.ArgumentsListParser, ContentItemTag.WriteToAsync));
-        });
 
         services.Configure<TemplateOptions>(o =>
         {
@@ -167,8 +158,6 @@ public sealed class Startup : StartupBase
         // FullTextAspect
         services.AddScoped<IContentHandler, FullTextAspectContentHandler>();
 
-        services.AddTagHelpers<ContentLinkTagHelper>();
-        services.AddTagHelpers<ContentItemTagHelper>();
         services.Configure<AutorouteOptions>(options =>
         {
             if (options.GlobalRouteValues.Count == 0)
@@ -191,20 +180,23 @@ public sealed class Startup : StartupBase
 
     public override void Configure(IApplicationBuilder builder, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
     {
-        routes.AddGetContentEndpoint()
-            .AddCreateContentEndpoint()
-            .AddDeleteContentEndpoint();
-
         // Generation only: the site shell's content route serves "Contents/ContentItems/{id}" on the
         // display tree (docs/blazor-display.md rework step 3); links to items without an autoroute
         // are still generated from this route's values.
-        routes.MapAreaControllerRoute(
-            name: "DisplayContentItem",
-            areaName: "Grove.Contents",
-            pattern: "Contents/ContentItems/{contentItemId}",
-            defaults: new { controller = "Item", action = "Display" },
-            constraints: new { contentItemId = new Grove.Routing.GenerationOnlyRouteConstraint() }
-        );
+        // The route values below are the item's display route values (ContentItemMetadata), so the
+        // address scheme finds this endpoint by them; the constraint keeps it out of matching.
+        var displayValues = new { area = "Grove.Contents", controller = "Item", action = "Display" };
+        var pattern = RoutePatternFactory.Parse(
+            "Contents/ContentItems/{contentItemId}",
+            defaults: displayValues,
+            parameterPolicies: new { contentItemId = new Grove.Routing.GenerationOnlyRouteConstraint() },
+            requiredValues: displayValues);
+        routes.Map(pattern, context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                return Task.CompletedTask;
+            })
+            .WithMetadata(new RouteNameMetadata("DisplayContentItem"));
     }
 }
 
@@ -219,7 +211,7 @@ public sealed class DeploymentStartup : StartupBase
     }
 }
 
-[RequireFeatures("Grove.AdminMenu")]
+[RequireFeatures("Grove.Contents.AdminMenu")]
 public sealed class AdminMenuStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -237,7 +229,7 @@ public sealed class FileContentDefinitionStartup : StartupBase
     }
 }
 
-[RequireFeatures("Grove.Sitemaps")]
+[RequireFeatures("Grove.Seo.Sitemaps")]
 public sealed class SitemapsStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -251,7 +243,7 @@ public sealed class SitemapsStartup : StartupBase
     }
 }
 
-[RequireFeatures("Grove.Feeds")]
+[RequireFeatures("Grove.Data.Feeds")]
 public sealed class FeedsStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -261,7 +253,7 @@ public sealed class FeedsStartup : StartupBase
     }
 }
 
-[RequireFeatures("Grove.DataLocalization")]
+[RequireFeatures("Grove.Data.Localization.Translations")]
 public sealed class DataLocalizationStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -272,10 +264,10 @@ public sealed class DataLocalizationStartup : StartupBase
 }
 
 // ContentTypesAdminNodeDataLocalizationProvider depends on IAdminMenuAccessor, which is only
-// registered when Grove.AdminMenu is enabled (see AdminMenu/Startup.cs) - without this
-// separate feature-gated registration, enabling Grove.DataLocalization alone throws an
+// registered when Grove.Contents.AdminMenu is enabled (see AdminMenu/Startup.cs) - without this
+// separate feature-gated registration, enabling Grove.Data.Localization.Translations alone throws an
 // unresolved-service exception on every /Admin/DataLocalization/Index request.
-[RequireFeatures("Grove.DataLocalization", "Grove.AdminMenu")]
+[RequireFeatures("Grove.Data.Localization.Translations", "Grove.Contents.AdminMenu")]
 public sealed class DataLocalizationAdminMenuStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -290,7 +282,7 @@ public sealed class DataLocalizationAdminMenuStartup : StartupBase
 /// <see cref="ContentItemScopeProvider"/> keeps only the version rule, and the role-based content
 /// mapper still answers the permissions sharing does not map. Off, nothing here is registered.
 /// </summary>
-[RequireFeatures("Grove.Sharing")]
+[RequireFeatures("Grove.Access.Sharing")]
 public sealed class ContentSharingStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -298,10 +290,10 @@ public sealed class ContentSharingStartup : StartupBase
         services.AddScoped<Grove.Contents.Sharing.IContentShareLookup, Grove.Contents.Sharing.ContentShareLookup>();
         services.AddScoped<Grove.Contents.Sharing.ContentTypeShareableKind>();
         services.AddScoped<Grove.Contents.Sharing.ContentShareableKind>();
-        services.AddScoped<Grove.Sharing.IShareableKind>(provider => provider.GetRequiredService<Grove.Contents.Sharing.ContentTypeShareableKind>());
-        services.AddScoped<Grove.Sharing.IShareableKind>(provider => provider.GetRequiredService<Grove.Contents.Sharing.ContentShareableKind>());
+        services.AddScoped<Grove.Access.Sharing.IShareableKind>(provider => provider.GetRequiredService<Grove.Contents.Sharing.ContentTypeShareableKind>());
+        services.AddScoped<Grove.Access.Sharing.IShareableKind>(provider => provider.GetRequiredService<Grove.Contents.Sharing.ContentShareableKind>());
         services.AddScoped<IContentHandler, Grove.Contents.Sharing.ContentSharingHandler>();
-        services.AddScoped<Grove.ContentTypes.Events.IContentDefinitionEventHandler, Grove.Contents.Sharing.ContentTypeSharingHandler>();
+        services.AddScoped<Grove.Contents.Types.Events.IContentDefinitionEventHandler, Grove.Contents.Sharing.ContentTypeSharingHandler>();
         services.AddScoped<Grove.Environment.Shell.IFeatureEventHandler, Grove.Contents.Sharing.DefaultViewGrantsRemover>();
     }
 }

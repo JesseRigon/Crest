@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Routing;
 
 namespace Grove.Media.Services;

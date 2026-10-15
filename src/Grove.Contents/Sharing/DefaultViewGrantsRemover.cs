@@ -18,7 +18,7 @@ namespace Grove.Contents.Sharing;
 /// </summary>
 public sealed class DefaultViewGrantsRemover(IServiceProvider services, ILogger<DefaultViewGrantsRemover> logger) : FeatureEventHandler
 {
-    public const string SharingFeatureId = "Grove.Sharing";
+    public const string SharingFeatureId = "Grove.Access.Sharing";
 
     public static readonly string[] Roles = [PlatformConstants.Roles.Anonymous, PlatformConstants.Roles.Authenticated];
 

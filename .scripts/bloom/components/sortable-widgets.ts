@@ -1,5 +1,5 @@
 /**
- * Cross-container widget drag-and-drop shared by Grove.Flows' FlowPart/BagPart
+ * Cross-container widget drag-and-drop shared by Grove.Contents.Flows' FlowPart/BagPart
  * editors and Grove.Widgets' WidgetsListPart editor: each renders its widgets
  * into a "widget-template-placeholder" container, and widgets can be dragged not just
  * to reorder within one container but into any OTHER compatible container on the page

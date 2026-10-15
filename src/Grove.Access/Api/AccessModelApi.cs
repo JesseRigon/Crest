@@ -1,7 +1,7 @@
 #nullable enable
 
 using Grove.Access;
-using Grove.Roles;
+using Grove.Access.Roles;
 using Grove.Security;
 using Grove.Security.Permissions;
 using Grove.Security.Services;
@@ -85,7 +85,7 @@ public sealed class AccessModelHandlers(
     IUserAccessOverrideService overrides,
     IOrganizationAccessDefaultsService defaults,
     IUserAccessReader access,
-    UserManager<Grove.Users.IUser> userManager,
+    UserManager<Grove.Access.Users.IUser> userManager,
     IServiceProvider services) : ApiHandlers
 {
     private IUserManagementReach? Hierarchy => services.GetService(typeof(IUserManagementReach)) as IUserManagementReach;

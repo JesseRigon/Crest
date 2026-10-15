@@ -1,4 +1,4 @@
-# Grove.DisplayManagement
+# Grove.Display.Management
 
 ## Shapes
 

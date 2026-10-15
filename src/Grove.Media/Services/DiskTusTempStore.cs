@@ -1,7 +1,7 @@
 using System.IO.Pipelines;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 
 namespace Grove.Media.Services;
 

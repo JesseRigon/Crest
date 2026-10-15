@@ -1,0 +1,13 @@
+@inherits GroveComponentWithChildren
+
+@namespace Grove.Display.Components.Primitives
+@if (Visible)
+{
+    @if (IsResponsive)
+    {
+        <GroveMediaQuery Query="@Query" Change=@OnChange />
+    }
+    <div @ref="@Element" style="@GetStyle()" @attributes="Attributes" class="@GetCssClass()" id="@GetId()" inert="@Collapsed">
+        @ChildContent
+    </div>
+}

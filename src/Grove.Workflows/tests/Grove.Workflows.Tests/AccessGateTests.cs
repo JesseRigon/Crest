@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Xunit;
 
 namespace Grove.Workflows.Tests;
@@ -344,16 +344,16 @@ public class QueryActivityProviderTests
     [Fact]
     public void A_query_descriptor_becomes_a_run_query_activity_descriptor()
     {
-        var query = new Grove.Queries.QueryDescriptor("open-invoices", "Open invoices",
-            [new Grove.Queries.Structured.QueryParameter("CustomerId", Grove.Queries.Structured.QueryParameterType.String, Required: true), new Grove.Queries.Structured.QueryParameter("PageSize", Grove.Queries.Structured.QueryParameterType.Int)],
-            [new Grove.Queries.QueryColumn("Number", typeof(string)), new Grove.Queries.QueryColumn("Amount", typeof(decimal))],
+        var query = new Grove.Data.Queries.QueryDescriptor("open-invoices", "Open invoices",
+            [new Grove.Data.Queries.Structured.QueryParameter("CustomerId", Grove.Data.Queries.Structured.QueryParameterType.String, Required: true), new Grove.Data.Queries.Structured.QueryParameter("PageSize", Grove.Data.Queries.Structured.QueryParameterType.Int)],
+            [new Grove.Data.Queries.QueryColumn("Number", typeof(string)), new Grove.Data.Queries.QueryColumn("Amount", typeof(decimal))],
             "structured");
         var template = new ActivityDescriptor { Inputs = [new InputDescriptor { Name = "PageSize", Type = typeof(int?) }], Outputs = [new OutputDescriptor { Name = "Rows", Type = typeof(IList<object>) }] };
 
         var descriptor = Queries.QueryActivityProvider.Describe(query, template);
 
         Assert.Equal(typeof(Queries.RunQuery), descriptor.ClrType);
-        Assert.Equal("Grove.Queries.open_invoices", descriptor.TypeName);
+        Assert.Equal("Grove.Data.Queries.open_invoices", descriptor.TypeName);
         Assert.Equal("open-invoices", descriptor.CustomProperties[WorkflowsConstants.QueryNameDescriptorProperty]);
         Assert.Equal("ExecuteApi_open-invoices", ActivityAccessGateMiddleware.RequiredPermission(descriptor));
         Assert.True(descriptor.CustomProperties.ContainsKey(WorkflowsConstants.QuerySchemaDescriptorProperty));

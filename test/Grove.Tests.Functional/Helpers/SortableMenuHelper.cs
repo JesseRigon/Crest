@@ -5,7 +5,7 @@ namespace Grove.Tests.Functional.Helpers;
 
 /// <summary>
 /// Drives the SortableJS-based nested drag-and-drop hierarchy editor shared by
-/// Grove.Menu and Grove.Taxonomies (@grove/bloom's
+/// Grove.Contents.SiteMenu and Grove.Contents.Taxonomies (@grove/bloom's
 /// sortable-menu.ts): "#menu" &gt; "li.menu-item[data-depth]" items, dragged via
 /// their ".menu-item-title" handle.
 /// </summary>

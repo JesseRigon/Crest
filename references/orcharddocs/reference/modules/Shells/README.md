@@ -34,7 +34,7 @@ The Azure Shells Configuration supports a root `appsettings.json` and `appsettin
 
 ### Enable Azure Shells Configuration
 
-The Azure Shells Configuration is provided by a separate NuGet package: `Grove.Shells.Azure`
+The Azure Shells Configuration is provided by a separate NuGet package: `Grove.Infrastructure.Shells.Azure`
 
 The Azure Shells Configuration is configured via the `appsettings.json` section in the web host project.
 

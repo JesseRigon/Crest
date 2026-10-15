@@ -1,0 +1,110 @@
+using GraphQL;
+using GraphQL.DataLoader;
+using GraphQL.Execution;
+using GraphQL.Validation;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Grove.Data.Protocols.GraphQL.Json;
+using Grove.Data.Protocols.GraphQL.Services;
+using Grove.Data.Protocols.GraphQL.ValidationRules;
+using Grove.Environment.Shell.Configuration;
+using Grove.Json;
+using Grove.Json.Extensions;
+using Grove.Modules;
+using Grove.Display.Navigation;
+using Grove.Security.Permissions;
+
+namespace Grove.Data.Protocols.GraphQL;
+
+public sealed class Startup : StartupBase
+{
+    private readonly IHostEnvironment _hostingEnvironment;
+
+    public Startup(IHostEnvironment hostingEnvironment)
+    {
+        _hostingEnvironment = hostingEnvironment;
+    }
+
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddSingleton<IDocumentExecuter, DocumentExecuter>();
+        services.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>();
+        services.AddSingleton<IDocumentExecutionListener, DataLoaderDocumentListener>();
+
+        services.AddSingleton<ISchemaFactory, SchemaService>();
+        services.AddScoped<IValidationRule, MaxNumberOfResultsValidationRule>();
+        services.AddScoped<IValidationRule, RequiresPermissionValidationRule>();
+
+        services.AddSingleton<IErrorInfoProvider>(services =>
+        {
+            var settings = services.GetRequiredService<IOptions<GraphQLSettings>>();
+            return new ErrorInfoProvider(new ErrorInfoProviderOptions { ExposeExceptionDetails = settings.Value.ExposeExceptions });
+        });
+
+        services.AddPermissionProvider<Permissions>();
+        services.AddSingleton<GraphQLMiddleware>();
+
+        services.AddGraphQL(builder => builder.AddSystemTextJson((options, sp) =>
+        {
+            // Common types of converters are already configured in the assembly "GraphQL.SystemTextJson".
+            options.Converters.Add(GraphQLNamedQueryRequestJsonConverter.Instance);
+
+            var documentJsonSerializerOptions = sp.GetRequiredService<IOptions<DocumentJsonSerializerOptions>>().Value;
+            options.Merge(documentJsonSerializerOptions.SerializerOptions);
+        }));
+
+        services.AddOptions<GraphQLSettings>().Configure<IShellConfiguration>((c, configuration) =>
+        {
+            var exposeExceptions = configuration.GetValue(
+                $"Grove_Apis_GraphQL:{nameof(GraphQLSettings.ExposeExceptions)}",
+                _hostingEnvironment.IsDevelopment());
+
+            var maxNumberOfResultsValidationMode = configuration.GetValue<MaxNumberOfResultsValidationMode?>($"Grove_Apis_GraphQL:{nameof(GraphQLSettings.MaxNumberOfResultsValidationMode)}")
+                                                    ?? MaxNumberOfResultsValidationMode.Default;
+
+            if (maxNumberOfResultsValidationMode == MaxNumberOfResultsValidationMode.Default)
+            {
+                maxNumberOfResultsValidationMode = _hostingEnvironment.IsDevelopment() ? MaxNumberOfResultsValidationMode.Enabled : MaxNumberOfResultsValidationMode.Disabled;
+            }
+
+            c.BuildUserContext = ctx => new GraphQLUserContext
+            {
+                User = ctx.User,
+            };
+            c.ExposeExceptions = exposeExceptions;
+            c.MaxDepth = configuration.GetValue<int?>($"Grove_Apis_GraphQL:{nameof(GraphQLSettings.MaxDepth)}") ?? 100;
+            c.MaxComplexity = configuration.GetValue<int?>($"Grove_Apis_GraphQL:{nameof(GraphQLSettings.MaxComplexity)}");
+            c.FieldImpact = configuration.GetValue<double?>($"Grove_Apis_GraphQL:{nameof(GraphQLSettings.FieldImpact)}");
+            c.MaxNumberOfResults = configuration.GetValue<int?>($"Grove_Apis_GraphQL:{nameof(GraphQLSettings.MaxNumberOfResults)}") ?? 1000;
+            c.MaxNumberOfResultsValidationMode = maxNumberOfResultsValidationMode;
+            c.DefaultNumberOfResults = configuration.GetValue<int?>($"Grove_Apis_GraphQL:{nameof(GraphQLSettings.DefaultNumberOfResults)}") ?? 100;
+        });
+    }
+
+    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
+    {
+        var path = serviceProvider.GetRequiredService<IOptions<GraphQLSettings>>().Value.Path;
+
+        if (!path.HasValue)
+        {
+            return;
+        }
+
+        var graphQLMiddleware = serviceProvider.GetRequiredService<GraphQLMiddleware>();
+        var pipeline = routes.CreateApplicationBuilder()
+            .Use(next => context => graphQLMiddleware.InvokeAsync(context, next))
+            .Build();
+
+        routes.Map(path, pipeline);
+
+        var prefixPattern = path == "/"
+            ? "/{**graphQLPath}"
+            : $"{path}/{{**graphQLPath}}";
+
+        routes.Map(prefixPattern, pipeline);
+    }
+}

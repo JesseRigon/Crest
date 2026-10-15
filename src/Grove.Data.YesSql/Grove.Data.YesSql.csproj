@@ -19,7 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Grove.Data\Grove.Data.csproj" />
     <ProjectReference Include="..\Grove.Data.YesSql.Abstractions\Grove.Data.YesSql.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Abstractions\Grove.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
   </ItemGroup>
 

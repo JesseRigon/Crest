@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Grove.Api;
-using Grove.Admin;
+using Grove.Infrastructure.Shells.Admin;
 using Grove.Environment.Shell;
 using Grove.Security;
 

@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Grove.Deployment.Remote.Services;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Modules;
-using Grove.Navigation;
+using Grove.Display.Navigation;
 using Grove.Security.Permissions;
 
 namespace Grove.Deployment.Remote;
@@ -23,6 +23,7 @@ public sealed class Startup : StartupBase
         services.AddPermissionProvider<Permissions>();
         services.AddScoped<IRemoteDeploymentTargets, Remote.Api.RemoteInstanceTargets>();
         services.AddApiContributor<Remote.Api.RemoteDeploymentApi>();
+        services.AddApiContributor<Remote.Api.RemoteImportApi>();
 
         // The remote deployment key as an Api credential: the gate authenticates it through
         // the forwarder; the import runs as the remote client's caller.

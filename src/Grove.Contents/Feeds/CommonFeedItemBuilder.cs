@@ -1,9 +1,8 @@
 using System.Xml.Linq;
-using Microsoft.AspNetCore.Mvc;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Models;
-using Grove.Feeds;
-using Grove.Feeds.Models;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Models;
+using Grove.Data.Feeds;
+using Grove.Data.Feeds.Models;
 
 namespace Grove.Contents.Feeds.Builders;
 
@@ -35,8 +34,7 @@ public class CommonFeedItemBuilder : IFeedItemBuilder
 
                 context.Response.Contextualize(contextualize =>
                 {
-                    var request = contextualize.Url.ActionContext.HttpContext.Request;
-                    var url = contextualize.Url.Action(routes["action"].ToString(), routes["controller"].ToString(), routes, request.Scheme);
+                    var url = contextualize.Links.GetUriByRouteValues(routes);
 
                     link.Add(url);
                     guid.Add(url);
@@ -64,8 +62,7 @@ public class CommonFeedItemBuilder : IFeedItemBuilder
             {
                 context.Response.Contextualize(contextualize =>
                 {
-                    var request = contextualize.Url.ActionContext.HttpContext.Request;
-                    var url = contextualize.Url.Action(routes["action"].ToString(), routes["controller"].ToString(), routes, request.Scheme);
+                    var url = contextualize.Links.GetUriByRouteValues(routes);
 
                     context.Builder.AddProperty(context, feedItem, "link", url);
                 });

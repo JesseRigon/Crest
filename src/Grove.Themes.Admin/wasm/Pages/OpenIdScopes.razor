@@ -1,0 +1,159 @@
+@page "/OpenId/Scope"
+@page "/OpenId/Scope/Create"
+@page "/OpenId/Scope/Edit/{Id}"
+@attribute [PageEntry("ManageScopes", Id = "openid-scopes", Parent = "openid", Caption = "Scopes")]
+@using Grove.Themes.Admin.Api
+@using Grove.Display.Components.Primitives
+@inject IApi Api
+@inject NavigationManager Navigation
+@inject NotificationService Notifications
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The OpenID Connect scopes, listed and edited in place (step 7: the MVC Scope screens are
+   retired). The Create and Edit routes the stock links use open the editor here. *@
+
+<GroveStack Gap="1rem" data-testid="openid-scopes-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <GroveStack Gap="0.25rem">
+            <GroveText TextStyle="TextStyle.H4" Text="@T["OpenID Connect scopes"]" />
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["The scopes applications can request, and the resources each grants."]" />
+        </GroveStack>
+        <GroveButton Text="@T["Add scope"]" Icon="add" Click="@(() => Edit(null))" Disabled="@IsBusy" data-testid="openid-scope-add" />
+    </GroveStack>
+
+    @foreach (var message in Errors.Where(error => error.Key is not (nameof(OpenIdScopeModel.Name) or nameof(OpenIdScopeModel.Resources))).Select(error => error.Message))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@message</GroveAlert>
+    }
+
+    @if (Draft is not null)
+    {
+        <GroveCard data-testid="openid-scope-editor">
+            <GroveStack Gap="1rem">
+                <GroveText TextStyle="TextStyle.H5" Text="@(string.IsNullOrEmpty(Draft.Id) ? T["New scope"] : T["Edit {0}", Draft.Name ?? string.Empty])" />
+                <GroveRow Gap="1rem">
+                    <GroveColumn Size="12" SizeMD="6"><GroveFormField Text="@T["Name"]" Style="width: 100%;"><GroveTextBox @bind-Value="Draft.Name" Style="width: 100%;" data-testid="openid-scope-name" /></GroveFormField><FieldMessage Text="@ErrorFor(nameof(OpenIdScopeModel.Name))" /></GroveColumn>
+                    <GroveColumn Size="12" SizeMD="6"><GroveFormField Text="@T["Display name"]" Style="width: 100%;"><GroveTextBox @bind-Value="Draft.DisplayName" Style="width: 100%;" /></GroveFormField></GroveColumn>
+                    <GroveColumn Size="12"><GroveFormField Text="@T["Description"]" Style="width: 100%;"><GroveTextBox @bind-Value="Draft.Description" Style="width: 100%;" /></GroveFormField></GroveColumn>
+                    <GroveColumn Size="12"><GroveFormField Text="@T["Resources (space-separated)"]" Style="width: 100%;"><GroveTextBox @bind-Value="Draft.Resources" Style="width: 100%;" /></GroveFormField><FieldMessage Text="@ErrorFor(nameof(OpenIdScopeModel.Resources))" /></GroveColumn>
+                </GroveRow>
+                <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="Close" Disabled="@IsBusy" />
+                    <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" data-testid="openid-scope-save" />
+                </GroveStack>
+            </GroveStack>
+        </GroveCard>
+    }
+
+    <GroveCard>
+        @if (Items is null)
+        {
+            <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (Items.Length == 0)
+        {
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["No scopes yet."]" />
+        }
+        else
+        {
+            <GroveDataGrid Data="@Items" TItem="OpenIdScopeModel" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <GroveDataGridColumn TItem="OpenIdScopeModel" Property="Name" Title="@T["Name"]" />
+                    <GroveDataGridColumn TItem="OpenIdScopeModel" Property="DisplayName" Title="@T["Display name"]" />
+                    <GroveDataGridColumn TItem="OpenIdScopeModel" Property="Resources" Title="@T["Resources"]" />
+                    <GroveDataGridColumn TItem="OpenIdScopeModel" Title="@T["Actions"]" Width="10rem">
+                        <Template Context="item">
+                            <GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                <GroveButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(item))" title="@T["Edit"]" />
+                                <GroveButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteAsync(item))" title="@T["Delete"]" />
+                            </GroveStack>
+                        </Template>
+                    </GroveDataGridColumn>
+                </Columns>
+            </GroveDataGrid>
+        }
+    </GroveCard>
+</GroveStack>
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    private OpenIdScopeModel[]? Items { get; set; }
+    private OpenIdScopeModel? Draft { get; set; }
+    private OpenIdFieldError[] Errors { get; set; } = [];
+    private bool IsBusy { get; set; }
+
+    private string? ErrorFor(string key) => Errors.FirstOrDefault(error => string.Equals(error.Key, key, StringComparison.OrdinalIgnoreCase))?.Message;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+        var path = Navigation.ToBaseRelativePath(Navigation.Uri);
+        if (!string.IsNullOrEmpty(Id))
+        {
+            Edit(Items?.FirstOrDefault(item => item.Id == Id));
+        }
+        else if (path.StartsWith("OpenId/Scope/Create", StringComparison.OrdinalIgnoreCase))
+        {
+            Edit(null);
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        Items = await Api.Grove.Rest.OpenId.ListScopesAsync();
+        if (Items is null)
+        {
+            Errors = [new OpenIdFieldError(string.Empty, T["The scopes could not be loaded."])];
+            Items = [];
+        }
+    }
+
+    private void Edit(OpenIdScopeModel? item)
+    {
+        Errors = [];
+        Draft = item is null
+            ? new OpenIdScopeModel()
+            : new OpenIdScopeModel { Id = item.Id, Name = item.Name, DisplayName = item.DisplayName, Description = item.Description, Resources = item.Resources };
+    }
+
+    private void Close()
+    {
+        Draft = null;
+        Errors = [];
+    }
+
+    private async Task SaveAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var result = await Api.Grove.Rest.OpenId.SaveScopeAsync(Draft!);
+            Errors = result.Errors;
+            if (result.Succeeded)
+            {
+                Notifications.Notify(NotificationSeverity.Success, T["Scope saved"], Draft!.Name ?? string.Empty);
+                Draft = null;
+                await LoadAsync();
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task DeleteAsync(OpenIdScopeModel item)
+    {
+        if (item.Id is not null && await Api.Grove.Rest.OpenId.DeleteScopeAsync(item.Id))
+        {
+            Notifications.Notify(NotificationSeverity.Success, T["Scope deleted"], item.Name ?? string.Empty);
+            await LoadAsync();
+        }
+        else
+        {
+            Notifications.Notify(NotificationSeverity.Error, T["Delete failed"], T["The scope could not be deleted."]);
+        }
+    }
+}

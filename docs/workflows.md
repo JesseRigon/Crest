@@ -58,14 +58,14 @@ e-mails, invoice-to-bill, budgeting, approval flows from downstream applications
 operations and APIs their modules registered. A module's domain API is never replaced by, or
 moved into, a workflow endpoint ([architecture.md › Workflows builds on top](architecture.md#workflows-builds-on-top)).
 
-Workflows hosts nothing itself. Grove.Server's API registry has two layers
+Workflows hosts nothing itself. Grove.Infrastructure.Server's API registry has two layers
 ([architecture.md › Two layers in each registry](architecture.md#two-layers-in-each-registry)):
 
 - **Declared**: from module code, built when the tenant shell builds, following feature
   enablement, never stored in the database. Grove.Workflows' management API
   (`api/grove/workflows/*`: definitions' access, registry, hooks, connections, approvals,
   pending, triggers) is declared like any module's and registered there.
-- **Defined**: data in the tenant database, changeable at runtime, served by Grove.Server
+- **Defined**: data in the tenant database, changeable at runtime, served by Grove.Infrastructure.Server
   through a dynamic source invalidated on publish. A published workflow's `HttpEndpoint`
   routes are defined entries in the Server's API registry, as are the operation endpoints
   generated from the operations registry, not a private table of the engine's.
@@ -859,8 +859,8 @@ Priorities, in order: speed, runtime adaptability, ease of maintenance.
 - **One access machinery** (`Grove.Access`) in front of all four: caller, decision, scope,
   audit. Nothing reaches data except through it; the surfaces are generated from the
   registry so they cannot check permissions on their own.
-- **Modules declare, Grove.Server serves.** Every surface, declared or generated, is an entry
-  in Grove.Server's API registry ([Workflows builds on top of the module APIs](#workflows-builds-on-top-of-the-module-apis)).
+- **Modules declare, Grove.Infrastructure.Server serves.** Every surface, declared or generated, is an entry
+  in Grove.Infrastructure.Server's API registry ([Workflows builds on top of the module APIs](#workflows-builds-on-top-of-the-module-apis)).
 - **The caller is built per request on the server**, from the authenticated identity plus
   server-held state cached under the tenant's permission version; the client's session copy
   is for the UI only and never authority.
@@ -1037,7 +1037,7 @@ background action.
   its last consumer moves. (How each catalog kind maps is open, [Open questions](#open-questions).)
 - **HTTP-endpoint workflows** are served under `/workflows/`, consolidated so a caller knows
   it is calling an action; later `/workflows/{group}/{name}` once workflows have groups and an
-  organization system. Their routes are defined entries in Grove.Server's API registry
+  organization system. Their routes are defined entries in Grove.Infrastructure.Server's API registry
   ([above](#workflows-builds-on-top-of-the-module-apis)); the trigger's `Authorize`/`Policy`
   inputs give way to the operation's decision, and the run is the request's unit of work.
 - **Structured queries compiled through YesSql, not SQL text.** A tenant-authored query is a
@@ -1055,7 +1055,7 @@ background action.
   access implementation and query → surfaces, with workflows on query: `Grove.Access.Abstractions`
   (`ICallerContext`, `IAccessDecision`, `IScopeProvider`, `ScopeSet`, `ScopedExecution`) below
   `Grove.Data`, because the data layer hands out `ScopedExecution` instead of raw sessions;
-  `Grove.Access` (caller builder, decision, cache, gate) beside `Grove.Queries`, because
+  `Grove.Access` (caller builder, decision, cache, gate) beside `Grove.Data.Queries`, because
   building a caller reads roles, bindings and policies from the store.
 - **System actors.** The **tenant system actor acts as a tenant admin**, always; an
   **organization system actor acts as that organization's admin**, always (background work
@@ -1086,7 +1086,7 @@ principal with no user record is an application caller), caller lifetime for cir
 websockets and bursts, the two projects. Details: [access.md](access.md). The clients send
 `X-Shell`/`X-Org` (`GroveShellContext`), the loopback client forwards them.
 
-- [ ] **The analyzer** in `Grove.Build` that refuses `ISession`, content-manager writes,
+- [ ] **The analyzer** in `Grove.Infrastructure.Build` that refuses `ISession`, content-manager writes,
   `IDbConnectionAccessor` and `IQueryManager` outside `Grove.Access` and the registered
   sources.
 - [ ] **The conformance suite**: fixtures (callers, organizations, roles, policies, rows) and
@@ -1096,7 +1096,7 @@ websockets and bursts, the two projects. Details: [access.md](access.md). The cl
   `CallerContextFactoryTests`, with revocation between two requests and a subscription policy
   as a fixture; `AccessGateTests`; `HandDownTests`; `DataAccessBoundaryTests`, the analyzer's
   rules over the source, failing on the known bypasses by design),
-  `Grove.Members.Tests/OrganizationConformanceTests`, `ConnectionCallerTests`, and on the
+  `Grove.Access.Members.Tests/OrganizationConformanceTests`, `ConnectionCallerTests`, and on the
   workflow side `AccessGateTests`, `WorkflowCallerLifetimeTests`,
   `ActorStampingDispatcherTests`. Still to add: the workflow activity gate and the query
   pipeline running the table.
@@ -1125,7 +1125,7 @@ built-in query. Every run pages.
 - [ ] **The read job**: the asynchronous read pipeline on the durable background machinery;
   streaming through `DbDataReader`.
 - [ ] **The connection system**: the protocol modules `Grove.Http`, `Grove.Rest`, `Grove.Soap`,
-  `Grove.GraphQL` (with `Grove.Apis.GraphQL.Client` becoming or folding into the GraphQL one),
+  `Grove.GraphQL` (with `Grove.Data.Protocols.GraphQL.Client` becoming or folding into the GraphQL one),
   owning the model, sealed secrets, OAuth, retries with `Retry-After`, rate limits and the SSRF
   guard, moved down from Workflows; SQL connections (host and external) in the data layer;
   Queries' sources over both; search engines as connections (Lucene and Elasticsearch sources
@@ -1230,8 +1230,8 @@ the background consumers).
 
 #### 7. Generate the surfaces
 
-Every generated route is an entry in Grove.Server's API endpoint registry, beside the APIs
-modules declare ([architecture.md › Modules declare, Grove.Server registers and serves](architecture.md#modules-declare-groveserver-registers-and-serves)).
+Every generated route is an entry in Grove.Infrastructure.Server's API endpoint registry, beside the APIs
+modules declare ([architecture.md › Modules declare, Grove.Infrastructure.Server registers and serves](architecture.md#modules-declare-groveserver-registers-and-serves)).
 A generated route implements a module's declared API, or is a defined entry (an operation
 endpoint); a module's domain API is never moved into a workflow endpoint.
 
@@ -1257,7 +1257,7 @@ endpoint); a module's domain API is never moved into a workflow endpoint.
 
 | Path | Today | Fate |
 | --- | --- | --- |
-| `api/grove/*` (about 25 controllers) | one permission per controller, no scope on lists | declared by their module and registered in Grove.Server's API registry; implementations generated over operations (5–7) |
+| `api/grove/*` (about 25 controllers) | one permission per controller, no scope on lists | declared by their module and registered in Grove.Infrastructure.Server's API registry; implementations generated over operations (5–7) |
 | `api/grove/option-sources` | one gate; content scoped by scope providers; user provider unscoped | generated (7) |
 | Platform `api/content` | `AccessContentApi` + resource checks | retired (8) |
 | GraphQL | execute permission, scoped content filters, hand-written query types | regenerated (7) |

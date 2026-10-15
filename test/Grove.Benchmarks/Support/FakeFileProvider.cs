@@ -1,7 +1,7 @@
 using System.Threading;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
-using Grove.DisplayManagement.FileProviders;
+using Grove.Display.Management.FileProviders;
 
 namespace Grove.Benchmarks.Support;
 

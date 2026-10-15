@@ -1,3 +1,4 @@
+using Grove.Api;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Options;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Media.Services;
 using Grove.Media.ViewModels;
 
@@ -19,9 +20,8 @@ public static class GetAllMediaItemsEndpoint
 {
     public static IEndpointRouteBuilder AddGetAllMediaItemsEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapGet("api/media/GetAllMediaItems", HandleAsync)
+        builder.MapGet("GetAllMediaItems", HandleAsync)
             .WithName("ApiGetAllMediaItems")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
             .Produces<IEnumerable<FileStoreEntryDto>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -33,13 +33,13 @@ public static class GetAllMediaItemsEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        IContentTypeProvider contentTypeProvider,
-        IFileVersionProvider fileVersionProvider,
-        IOptions<MediaOptions> options,
-        IUserAssetFolderNameProvider userAssetFolderNameProvider,
-        string extensions)
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromServices] IContentTypeProvider contentTypeProvider,
+        [FromServices] IFileVersionProvider fileVersionProvider,
+        [FromServices] IOptions<MediaOptions> options,
+        [FromServices] IUserAssetFolderNameProvider userAssetFolderNameProvider,
+        [FromQuery] string extensions)
     {
         if (!await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMedia)
             || !await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMediaFolder, (object)string.Empty))

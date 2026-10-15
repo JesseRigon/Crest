@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using Grove.DisplayManagement.Components;
+using Grove.Display.Management.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.Web;

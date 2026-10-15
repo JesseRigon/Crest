@@ -10,7 +10,7 @@ accounting and tax plans).
 ## Scope and boundary
 
 This is an **optional, additive feature set** over the platform's standard localization
-module (`Grove.Localization`) — nothing else in the codebase requires it. If it were
+module (`Grove.Data.Localization`) — nothing else in the codebase requires it. If it were
 stripped out entirely, other modules keep working correctly using only the platform's
 localization
 (tenant culture); they don't get a required new dependency, cascading parameter, or
@@ -28,7 +28,7 @@ definitions are a business-context concern, not part of this system.
 culture to tell the server about.** The server does not guess culture from a chain of
 independent `IRequestCultureProvider`s: providers that each prepend themselves via
 `AddInitialRequestCultureProvider` race for the front slot, so module load order, not anything
-a site admin controls, would decide. `Grove.Localization` is the one owner of the provider list
+a site admin controls, would decide. `Grove.Data.Localization` is the one owner of the provider list
 and assigns it rather than inserting into it.
 
 Instead:
@@ -49,7 +49,7 @@ Instead:
       supported cultures.
    5. **Tenant default culture** — final fallback.
 3. **Client writes one cookie** with the fully-resolved value — the tenant-wide
-   `culture_{shellVersionId}` cookie (`Grove.Localization.CultureCookie`) — in the stock
+   `culture_{shellVersionId}` cookie (`Grove.Data.Localization.CultureCookie`) — in the stock
    ASP.NET Core cookie format (`c=<culture>|uic=<culture>`), scoped tenant-wide (not
    `/admin`-only). The stock `CookieRequestCultureProvider` reads it back server-side.
 4. **Server reads back exactly what the client decided.** No ordering race remains,
@@ -75,20 +75,14 @@ source tab's override for free, because browsers clone `sessionStorage` into the
 at open time — this is standard spec'd behavior, distinct from an independently-opened
 tab (typed URL, bookmark) which correctly starts blank.
 
-### Legacy/iframe pages
-
-`LegacyAdminFrame.razor` embeds legacy Orchard admin pages same-origin, same path
-prefix. Because the culture cookie is tenant-wide (not `/admin`-scoped) and the iframe is
-same-site, the browser sends the cookie automatically on the iframe's own request — no
-extra plumbing needed.
 
 ## Front end and anonymous visitors (server-rendered)
 
-The tenant's front-end site (`Grove.SiteTheme`) is prerendered on the server before any client
+The tenant's front-end site (`Grove.Themes.Site`) is prerendered on the server before any client
 runs, and an anonymous visitor has no manifest to resolve from, so the server's culture comes
 from the stock ASP.NET Core `RequestLocalizationOptions` pipeline:
 
-1. `Grove.Localization`'s `RequestLocalizationOptionsConfigurations` assigns
+1. `Grove.Data.Localization`'s `RequestLocalizationOptionsConfigurations` assigns
    `RequestCultureProviders` as
    `[CookieRequestCultureProvider, AcceptLanguageHeaderRequestCultureProvider]` —
    the tenant-wide culture cookie (the same one the admin's client-side chain writes)
@@ -99,7 +93,7 @@ from the stock ASP.NET Core `RequestLocalizationOptions` pipeline:
    registrations, so two modules each inserting at index 0 would race for the front slot.
    No other module adds a provider or rebuilds the list.
 3. The tenant's actual supported/default cultures come from `LocalizationSettings`
-   (`Grove.Localization`'s site settings, editable at `/Admin/Settings/localization`
+   (`Grove.Data.Localization`'s site settings, editable at `/Admin/Settings/localization`
    or via a recipe's `settings` step) — **as top-level keys of the step itself**
    (`LocalizationSettings`, not wrapped in an extra `Properties` key). `SettingsStep.cs`'s
    recipe handler writes any key it doesn't special-case directly into
@@ -130,7 +124,7 @@ data (the SDK's default trimmed set only covers a handful of cultures).
   from the supported-cultures list) means "no admin-specific override, use the tenant
   default everywhere."
 - **Per-user stored default** — `UserLocalizationSettings.Culture` (upstream
-  `Grove.Users.Localization`'s storage, via `User.Properties`). Read/write via
+  `Grove.Access.Users.Localization`'s storage, via `User.Properties`). Read/write via
   `GET`/`PUT api/grove/localization/me`, scoped to the current user.
 - **Session override** — client-only, `sessionStorage`, keyed by user name. Never touches
   the server unless explicitly saved as the new stored default.
@@ -139,12 +133,12 @@ data (the SDK's default trimmed set only covers a handful of cultures).
 
 Two independent mechanisms, by project:
 
-- **`Grove.Components`, `Grove.SiteTheme`** — compiled-resource /
+- **`Grove.Display.Components`, `Grove.Themes.Site`** — compiled-resource /
   `.po`-based mechanisms (`GroveStrings.resx` + `ILocalizer`/`Localizer` for Components;
   a `.po`-based theme mechanism for Site). New languages are `.po`/API content, not new
   `GroveStrings.{culture}.resx` files.
-- **`Grove.AdminTheme` (headless Blazor WASM) and any project that can reference
-  `Grove.Components`** — pulls its string catalog at runtime via an API rather than
+- **`Grove.Themes.Admin` (headless Blazor WASM) and any project that can reference
+  `Grove.Display.Components`** — pulls its string catalog at runtime via an API rather than
   compiled resources:
   - Keys are **invariant literals**, native Orchard style: `T["Some text"]`, or
     `T["Signed in as {0}", name]` for format strings. The literal is simultaneously the
@@ -163,21 +157,21 @@ Two independent mechanisms, by project:
     `LocalizationController` serves a **layered** per-culture dictionary, callable
     pre-login, resolving each literal as **stored edit → PO → miss** (the client then
     renders the literal): tenant translation store entries under context
-    `Grove.AdminTheme.Client` first; then PO — a `Grove.AdminTheme.Client`-context entry if one
+    `Grove.Themes.Admin.Client` first; then PO — a `Grove.Themes.Admin.Client`-context entry if one
     exists, else the most common translation of the literal across **all** shipped
     catalogs (via `PoTranslationLookup`, the same helper the menu caption chain
     uses). Every layer falls back from a region culture (`es-ES`) to its parent (`es`).
     Storing the literal itself as the value pins the literal over a shipped translation.
-  - Client: `GroveApiLocalizer` (`Grove.Components.Theme.GroveApiLocalizer`) implements
+  - Client: `GroveApiLocalizer` (`Grove.Display.Components.Theme.GroveApiLocalizer`) implements
     `ILocalizer`, exposes the `T["..."]` indexer, caches per culture, and renders the
     literal itself on a miss rather than throwing. Loaded whenever `AdminShellState`
-    resolves a new culture. Convention: `@inject Grove.Components.Theme.GroveApiLocalizer T`.
+    resolves a new culture. Convention: `@inject Grove.Display.Components.Theme.GroveApiLocalizer T`.
   - **Translation content lives in the HOST, not in Grove**: the
     Grove repo ships literals only and stays as stock-localized as upstream makes it —
     its aligned literals inherit whatever the host's catalogs provide. The host project
     supplies editorial translations as its own distinctly-named files next to the
     mirror (a host, for example: `Localization/{culture}/Admin.po`, literal msgids,
-    `msgctxt "Grove.AdminTheme.Client"`; front-site strings in `Site.po`). Distinct
+    `msgctxt "Grove.Themes.Admin.Client"`; front-site strings in `Site.po`). Distinct
     filenames survive a mirror refresh. Host modules that are not part of Grove (e.g. a
     line-of-business module) may keep module-local `Localization/{culture}.po` inside the host repo.
 
@@ -203,7 +197,7 @@ on **Crowdin** (crowdin.com) via the `OrchardCore.Translations` repo:
 values are upstream OrchardCore type and view names. Internally, translations take a generic
 name (for example `Translations.*`, not a project name), and a mapping rewrites the packages'
 upstream contexts to the platform's names when they are loaded, so the community translations
-keep applying: `TranslationContextMap` (`Grove.Localization/PortableObject`) is applied by the
+keep applying: `TranslationContextMap` (`Grove.Data.Localization/PortableObject`) is applied by the
 PO parser to every entry it reads, with the same rules as the platform rename (`OrchardCore.*` →
 `Grove.*`, identifiers carrying the name made neutral); contexts that never carried the name
 pass through unchanged.
@@ -217,7 +211,7 @@ package's content. Treat it as **read-only upstream output** — never hand-edit
 next refresh from the package clobbers local edits. Nothing refreshes it automatically.
 
 **The private lane**: everything Grove authors lives in module-local catalogs
-(`Grove.Server/Localization/{culture}.po` etc.) and the tenant translation
+(`Grove.Infrastructure.Server/Localization/{culture}.po` etc.) and the tenant translation
 store. Crowdin has no knowledge of these in either direction — nothing uploads them,
 no refresh touches them. Grove-authored literals (strings that are not upstream msgids)
 can **only** be translated here; they never appear in Crowdin's template, so modules
@@ -227,7 +221,7 @@ localizes identically.
 
 **Where the two worlds meet** — literals that are also upstream msgids (the point of
 literal-key alignment). Resolution order arbitrates: store edit → own `.po` entry
-(`Grove.AdminTheme.Client` context) → upstream catalog → the literal. A Crowdin refresh can
+(`Grove.Themes.Admin.Client` context) → upstream catalog → the literal. A Crowdin refresh can
 only change what renders when layers 1–2 say nothing about a string — the desirable
 case, where never-touched gaps quietly gain translations. Adding your own entry
 permanently shadows upstream's version, and pin-to-literal (store the literal as the
@@ -261,6 +255,20 @@ documents (`MenuPlacement.User`), merged across every enabled menu of that
 placement the current user has permission to see, the same way OrchardCore merges its
 own admin sidebar.
 
+## Localization is a registry
+
+Localization is a registry like the others ([architecture.md](architecture.md) › Modules declare,
+Grove.Infrastructure.Server registers and serves). `Grove.Data.Localization` owns it; each module declares the
+localization sources for the data types it owns, and the registry resolves a value's display
+text per culture through them. Grove.Data.Regions declares country, subdivision and place names;
+Grove.Data.Types.Money declares currency names; a content type, an admin menu entry and a page registry
+entry are data localization sources like any other. The translations editor lists every
+declared source, so a tenant edits all of its translated data in one place.
+
+`Grove.Data.Localization` is one module with its features kept apart: `Grove.Data.Localization` (UI
+strings, PO files, culture resolution), `Grove.Data.Localization.Translations` (stored translations of tenant
+data), `Grove.Data.Localization.ContentLanguageHeader` and `Grove.Data.Localization.AdminCulturePicker`.
+
 ## CMS content
 
 Localized page/content-item text goes through stock Orchard Core Content Localization —
@@ -284,7 +292,7 @@ distribute), with none of the external dependency, which fits the air-gap rule: 
 is its own translation platform.
 
 **Why this works.** Module-string keys are invariant literals (`msgctxt
-"Grove.AdminTheme.Client"` literals, stock msgids), so they are **tenant-independent by
+"Grove.Themes.Admin.Client"` literals, stock msgids), so they are **tenant-independent by
 construction**, and a translation authored in tenant A is semantically valid in tenant B. A
 slug- or caption-keyed scheme could not support this.
 
@@ -292,7 +300,7 @@ slug- or caption-keyed scheme could not support this.
 
 - [ ] **Classify each saved translation's (context, key).** When a tenant saves a translation via the Grove Translations editor
   (`TranslationsController.SaveAsync`), classify its (context, key):
-  - **Eligible**: module literals — context `Grove.AdminTheme.Client`, or a key that exists
+  - **Eligible**: module literals — context `Grove.Themes.Admin.Client`, or a key that exists
     as a stock msgid in the shipped catalogs. The audit classification machinery
     (`PoTranslationLookup` index + template membership, see the "three populations"
     in [Where translations come from](#where-translations-come-from-crowdin-the-mirror-and-the-private-lane))
@@ -309,7 +317,7 @@ slug- or caption-keyed scheme could not support this.
   class TranslationSuggestion
   {
       string Culture;         // "es"
-      string Context;         // "Grove.AdminTheme.Client" or stock msgctxt
+      string Context;         // "Grove.Themes.Admin.Client" or stock msgctxt
       string Key;             // invariant literal
       string Value;           // the suggested translation
       string SourceTenant;    // provenance
@@ -390,8 +398,8 @@ check `LANG` on that host before assuming it's a code bug.
 ## Testing
 
 - **C# unit tests** exist per `Grove.*` subproject
-  (`Grove.Server.Tests`, `.Admin.Tests`, etc.), following the
-  `Grove.Icons.Tests` convention (xUnit + Verify + NSubstitute), discovered
+  (`Grove.Infrastructure.Server.Tests`, `.Admin.Tests`, etc.), following the
+  `Grove.Display.Icons.Tests` convention (xUnit + Verify + NSubstitute), discovered
   automatically by `tests/run-tests.sh`. Localization-specific coverage: the culture
   resolution priority chain (table-driven over all rungs and combinations),
   `IsUnderAdminPath()`, `CultureSelector.FromAsync`, and `LocalizationController.SaveAsync`'s

@@ -1,5 +1,5 @@
 #nullable enable
-using Grove.ContentManagement.Handlers;
+using Grove.Contents.Management.Handlers;
 
 namespace Grove.Media.Library;
 

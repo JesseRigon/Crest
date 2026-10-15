@@ -1,6 +1,6 @@
 # Temporary File Storage
 
-When Grove needs to write a file temporarily — an in-progress chunked or resumable (TUS) upload, an extracted deployment/recipe archive, or a recipe written to disk before setup — it goes through the `ITempDirectoryProvider` abstraction (`Grove.FileStorage`) instead of writing directly to the operating system temporary directory.
+When Grove needs to write a file temporarily — an in-progress chunked or resumable (TUS) upload, an extracted deployment/recipe archive, or a recipe written to disk before setup — it goes through the `ITempDirectoryProvider` abstraction (`Grove.Data.Storage`) instead of writing directly to the operating system temporary directory.
 
 The default implementation, `DefaultTempDirectoryProvider`, is filesystem based. It stores everything under a **tenant-scoped** sub-directory of a configurable base path, so operators can relocate temporary storage onto a larger or shared volume, and every tenant's temporary files stay separated from one another.
 
@@ -77,7 +77,7 @@ If your feature writes temporary files, inject `ITempDirectoryProvider` instead 
 | `CreateTempSubdirectory(prefix)` | A newly created, unique sub-directory — for extracting an archive into, or exposing through a `PhysicalFileProvider`. An optional prefix can be prepended to its generated name. |
 
 ```csharp
-using Grove.FileStorage;
+using Grove.Data.Storage;
 
 public sealed class MyImportService
 {

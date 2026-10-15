@@ -16,10 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Grove.Indexing.Abstractions\Grove.Indexing.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Indexing.Abstractions\Grove.Data.Indexing.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Media.Abstractions\Grove.Media.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
-    <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
+    <ProjectReference Include="..\Grove.Display.Resources.Management\Grove.Display.Resources.Management.csproj" />
   </ItemGroup>
 
   <ItemGroup>

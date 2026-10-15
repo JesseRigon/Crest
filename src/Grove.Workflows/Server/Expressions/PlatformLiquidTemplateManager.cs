@@ -5,7 +5,7 @@ using Fluid;
 using Fluid.Values;
 using Microsoft.Extensions.Options;
 using EngineLiquid = Grove.Workflows.Expressions.Liquid.Contracts.ILiquidTemplateManager;
-using PlatformLiquid = Grove.Liquid.ILiquidTemplateManager;
+using PlatformLiquid = Grove.Display.Liquid.ILiquidTemplateManager;
 
 namespace Grove.Workflows.Expressions;
 

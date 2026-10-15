@@ -1,4 +1,4 @@
-// /Admin/Contents/ContentItems is a NATIVE Grove Blazor page (Grove.AdminTheme wasm
+// /Admin/Contents/ContentItems is a NATIVE Grove Blazor page (Grove.Themes.Admin wasm
 // Pages/ContentItems.razor), not the legacy Grove iframe an earlier version of this
 // check guarded (the duplicated-shell-inside-iframe bug can no longer occur on this
 // route). This verifies the native replacement: the page renders without any legacy

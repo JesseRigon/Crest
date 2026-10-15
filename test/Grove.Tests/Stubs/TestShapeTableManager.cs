@@ -1,5 +1,5 @@
-using Grove.DisplayManagement.Descriptors;
-using Grove.DisplayManagement.Theming;
+using Grove.Display.Management.Descriptors;
+using Grove.Display.Management.Theming;
 using Grove.Environment.Extensions;
 
 namespace Grove.Tests.Stubs;

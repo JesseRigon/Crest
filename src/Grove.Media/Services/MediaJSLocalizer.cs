@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Localization;
-using Grove.Localization;
+using Grove.Data.Localization;
 
 namespace Grove.Media.Services;
 

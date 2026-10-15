@@ -1,6 +1,5 @@
-using Microsoft.AspNetCore.Mvc.Localization;
-using Grove.DisplayManagement.Extensions;
-using Grove.DisplayManagement.Notify;
+using Microsoft.Extensions.Localization;
+using Grove.Display.Management.Extensions;
 using Grove.Environment.Extensions;
 using Grove.Environment.Shell;
 
@@ -10,23 +9,20 @@ public class ThemeService : IThemeService
 {
     private readonly IExtensionManager _extensionManager;
     private readonly IShellFeaturesManager _shellFeaturesManager;
-    private readonly INotifier _notifier;
     private readonly ISiteThemeService _siteThemeService;
-    protected readonly IHtmlLocalizer H;
+    protected readonly IStringLocalizer S;
 
     public ThemeService(
         IExtensionManager extensionManager,
         IShellFeaturesManager shellFeaturesManager,
         ISiteThemeService siteThemeService,
-        IHtmlLocalizer<ThemeService> htmlLocalizer,
-        INotifier notifier)
+        IStringLocalizer<ThemeService> localizer)
     {
         _extensionManager = extensionManager;
         _shellFeaturesManager = shellFeaturesManager;
         _siteThemeService = siteThemeService;
 
-        _notifier = notifier;
-        H = htmlLocalizer;
+        S = localizer;
     }
 
     public async Task DisableThemeFeaturesAsync(string themeName)
@@ -36,7 +32,7 @@ public class ThemeService : IThemeService
         {
             if (themes.Contains(themeName))
             {
-                throw new InvalidOperationException(H["The theme \"{0}\" is already in the stack of themes that need features disabled.", themeName].ToString());
+                throw new InvalidOperationException(S["The theme \"{0}\" is already in the stack of themes that need features disabled.", themeName].ToString());
             }
 
             var theme = _extensionManager.GetExtension(themeName);
@@ -73,7 +69,7 @@ public class ThemeService : IThemeService
         {
             if (themes.Contains(themeName))
             {
-                throw new InvalidOperationException(H["The theme \"{0}\" is already in the stack of themes that need features enabled.", themeName].ToString());
+                throw new InvalidOperationException(S["The theme \"{0}\" is already in the stack of themes that need features enabled.", themeName].ToString());
             }
 
             themes.Push(themeName);
@@ -113,11 +109,7 @@ public class ThemeService : IThemeService
             .GetFeatures()
             .Where(x => featureIds.Contains(x.Id));
 
-        var enabledFeatures = (await _shellFeaturesManager.EnableFeaturesAsync(featuresToEnable, force)).ToArray();
-        if (enabledFeatures.Length > 0)
-        {
-            await _notifier.SuccessAsync(H.Plural(enabledFeatures.Length, "The feature {1} was enabled.", "The following features were enabled: {1}.", string.Join(", ", enabledFeatures.Select(f => f.Name ?? f.Id))));
-        }
+        await _shellFeaturesManager.EnableFeaturesAsync(featuresToEnable, force);
     }
 
     /// <summary>
@@ -140,10 +132,6 @@ public class ThemeService : IThemeService
             .GetFeatures()
             .Where(x => featureIds.Contains(x.Id));
 
-        var features = (await _shellFeaturesManager.DisableFeaturesAsync(featuresToDisable, force)).ToArray();
-        if (features.Length > 0)
-        {
-            await _notifier.SuccessAsync(H.Plural(features.Length, "The feature {1} was disabled.", "The following features were disabled: {1}.", string.Join(", ", features.Select(f => f.Name ?? f.Id))));
-        }
+        await _shellFeaturesManager.DisableFeaturesAsync(featuresToDisable, force);
     }
 }

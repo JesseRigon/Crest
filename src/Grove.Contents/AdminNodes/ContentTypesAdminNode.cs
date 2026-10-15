@@ -1,4 +1,4 @@
-using Grove.AdminMenu.Models;
+using Grove.Contents.AdminMenu.Models;
 
 namespace Grove.Contents.AdminNodes;
 

@@ -1,5 +1,5 @@
-using Grove.Localization;
-using Grove.Localization.PortableObject;
+using Grove.Data.Localization;
+using Grove.Data.Localization.PortableObject;
 
 namespace Grove.Tests.Localization;
 
@@ -368,7 +368,6 @@ public class PortableObjectStringLocalizerTests
         public void ConfigureServices(IServiceCollection services)
 #pragma warning restore CA1822 // Mark members as static
         {
-            services.AddMvc();
             services.AddPortableObjectLocalization();
         }
 

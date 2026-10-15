@@ -1,0 +1,209 @@
+@page "/Sitemaps/List"
+@page "/SitemapIndexes/List"
+@attribute [PageEntry("ManageSitemaps", Id = "sitemaps", Route = "/Sitemaps/List", Parent = "sitemaps-seo", Caption = "Sitemaps", Position = "1")]
+@attribute [PageEntry("ManageSitemaps", Id = "sitemap-indexes", Route = "/SitemapIndexes/List", Parent = "sitemaps-seo", Caption = "Sitemap Indexes", Position = "2")]
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The tenant's sitemaps (/Sitemaps/List) and sitemap indexes (/SitemapIndexes/List): name, path
+   and whether each is served; a sitemap's sources are edited on its own page, an index lists the
+   sitemaps it contains. *@
+
+<PageTitle>@Title</PageTitle>
+
+<GroveStack Gap="1rem" data-testid="@(IsIndex ? "sitemap-indexes-page" : "sitemaps-page")">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <GroveStack Gap="0.25rem">
+            <GroveText TextStyle="TextStyle.H4" class="rz-m-0">@Title</GroveText>
+            <GroveText TextStyle="TextStyle.Body2">@(IsIndex ? T["A sitemap index lists sitemaps for search engines."] : T["Each sitemap is served at its path and built from its sources."])</GroveText>
+        </GroveStack>
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <GroveTextBox @bind-Value="Search" Placeholder="@T["Search"]" Style="width: 14rem" />
+            <GroveButton Icon="add" Text="@(IsIndex ? T["Add sitemap index"] : T["Add sitemap"])" Click="New" Disabled="IsBusy" data-testid="sitemaps-add" />
+        </GroveStack>
+    </GroveStack>
+
+    @if (Error is not null)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="true">@Error</GroveAlert>
+    }
+
+    @if (Draft is not null)
+    {
+        <GroveCard data-testid="sitemap-editor">
+            <GroveStack Gap="0.75rem">
+                <GroveText TextStyle="TextStyle.H5" class="rz-m-0">@(DraftId is null ? (IsIndex ? T["New sitemap index"] : T["New sitemap"]) : T["Edit {0}", Draft.Name])</GroveText>
+                <GroveRow Gap="1rem">
+                    <GroveColumn Size="12" SizeMD="6">
+                        <GroveFormField Text="@T["Name"]" Style="width: 100%;"><GroveTextBox @bind-Value="Draft.Name" Style="width: 100%;" Name="name" /></GroveFormField>
+                        @FieldError("name")
+                    </GroveColumn>
+                    <GroveColumn Size="12" SizeMD="6">
+                        <GroveFormField Text="@T["Path (empty: the name's slug, ending in .xml)"]" Style="width: 100%;"><GroveTextBox @bind-Value="Draft.Path" Style="width: 100%;" Name="path" /></GroveFormField>
+                        @FieldError("path")
+                    </GroveColumn>
+                </GroveRow>
+                <div><GroveCheckBox TValue="bool" @bind-Value="Draft.Enabled" Name="sitemap-enabled" /> <GroveLabel Text="@T["Served (included in routing)"]" Component="sitemap-enabled" /></div>
+                @if (IsIndex)
+                {
+                    <GroveFormField Text="@T["Sitemaps in this index"]" Style="width: 100%;">
+                        <GroveDropDown TValue="IEnumerable<string>" @bind-Value="Contained" Data="@ContainableSitemaps" TextProperty="Name" ValueProperty="SitemapId" Multiple="true" Chips="true" AllowClear="true" Style="width: 100%;" />
+                    </GroveFormField>
+                }
+                <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Draft = null)" Disabled="IsBusy" />
+                    <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="IsBusy" data-testid="sitemap-save" />
+                </GroveStack>
+            </GroveStack>
+        </GroveCard>
+    }
+
+    <GroveCard>
+        @if (Items is null)
+        {
+            <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (!Shown.Any())
+        {
+            <GroveText TextStyle="TextStyle.Body2">@(IsIndex ? T["No sitemap indexes yet."] : T["No sitemaps yet."])</GroveText>
+        }
+        else
+        {
+            <GroveDataGrid Data="@Shown" TItem="SitemapModel" AllowPaging="true" PageSize="20" Density="Density.Compact">
+                <Columns>
+                    <GroveDataGridColumn TItem="SitemapModel" Property="Name" Title="@T["Name"]" />
+                    <GroveDataGridColumn TItem="SitemapModel" Property="Path" Title="@T["Path"]" />
+                    <GroveDataGridColumn TItem="SitemapModel" Title="@T["Served"]" Width="7rem">
+                        <Template Context="item">@(item.Enabled ? T["Yes"] : T["No"])</Template>
+                    </GroveDataGridColumn>
+                    @if (IsIndex)
+                    {
+                        <GroveDataGridColumn TItem="SitemapModel" Title="@T["Sitemaps"]">
+                            <Template Context="item">@string.Join(", ", item.ContainedSitemapIds.Select(id => Items.FirstOrDefault(sitemap => sitemap.SitemapId == id)?.Name ?? id))</Template>
+                        </GroveDataGridColumn>
+                    }
+                    <GroveDataGridColumn TItem="SitemapModel" Title="@T["Actions"]" Width="14rem">
+                        <Template Context="item">
+                            <GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                @if (!IsIndex)
+                                {
+                                    <GroveButton Icon="list" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Navigation.NavigateTo("Sitemaps/Display/" + Uri.EscapeDataString(item.SitemapId)))" title="@T["Sources"]" />
+                                }
+                                <GroveButton Icon="@(item.Enabled ? "toggle_on" : "toggle_off")" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => ToggleAsync(item))" Disabled="IsBusy" title="@(item.Enabled ? T["Disable"] : T["Enable"])" />
+                                <GroveButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(item))" title="@T["Edit"]" />
+                                <GroveButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteAsync(item))" Disabled="IsBusy" title="@T["Delete"]" />
+                            </GroveStack>
+                        </Template>
+                    </GroveDataGridColumn>
+                </Columns>
+            </GroveDataGrid>
+        }
+    </GroveCard>
+</GroveStack>
+
+@code {
+    private SitemapModel[]? Items;
+    private string? Search;
+    private SitemapWrite? Draft;
+    private string? DraftId;
+    private IEnumerable<string> Contained = [];
+    private Dictionary<string, string[]> Errors = new(StringComparer.OrdinalIgnoreCase);
+    private bool IsBusy;
+    private string? Error;
+
+    private bool IsIndex => Navigation.Uri.Contains("/SitemapIndexes/", StringComparison.OrdinalIgnoreCase);
+
+    private string Kind => IsIndex ? SitemapKinds.Index : SitemapKinds.Sitemap;
+
+    private string Title => IsIndex ? T["Sitemap Indexes"] : T["Sitemaps"];
+
+    private IEnumerable<SitemapModel> Shown => (Items ?? [])
+        .Where(item => item.Kind == Kind)
+        .Where(item => string.IsNullOrWhiteSpace(Search) || item.Name.Contains(Search, StringComparison.OrdinalIgnoreCase) || item.Path.Contains(Search, StringComparison.OrdinalIgnoreCase));
+
+    private IEnumerable<SitemapModel> ContainableSitemaps => (Items ?? []).Where(item => item.Kind == SitemapKinds.Sitemap);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Draft = null;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try { Items = await Http.GetFromJsonAsync<SitemapModel[]>(SitemapsApiPaths.Base) ?? []; }
+        catch (Exception exception) { Error = exception.Message; }
+    }
+
+    private void New()
+    {
+        Draft = new SitemapWrite { Kind = Kind };
+        DraftId = null;
+        Contained = [];
+        Errors.Clear();
+    }
+
+    private void Edit(SitemapModel item)
+    {
+        Draft = new SitemapWrite { Kind = item.Kind, Name = item.Name, Path = item.Path, Enabled = item.Enabled };
+        DraftId = item.SitemapId;
+        Contained = item.ContainedSitemapIds;
+        Errors.Clear();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (Draft is null) return;
+        Draft.ContainedSitemapIds = [.. Contained];
+        IsBusy = true;
+        Errors.Clear();
+        Error = null;
+        try
+        {
+            using var response = DraftId is null
+                ? await Http.PostAsJsonAsync(SitemapsApiPaths.Base, Draft)
+                : await Http.PutAsJsonAsync(SitemapsApiPaths.Sitemap(DraftId), Draft);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ApiProblem.ReadAsync(response);
+                if (problem.Errors is { Count: > 0 } errors) Errors = new(errors, StringComparer.OrdinalIgnoreCase);
+                else Error = problem.Message;
+                return;
+            }
+
+            Draft = null;
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task ToggleAsync(SitemapModel item)
+    {
+        IsBusy = true;
+        try
+        {
+            using var response = await Http.PutAsJsonAsync(SitemapsApiPaths.Sitemap(item.SitemapId),
+                new SitemapWrite { Kind = item.Kind, Name = item.Name, Path = item.Path, Enabled = !item.Enabled, ContainedSitemapIds = item.ContainedSitemapIds });
+            if (!response.IsSuccessStatusCode) Error = (await ApiProblem.ReadAsync(response)).Message;
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task DeleteAsync(SitemapModel item)
+    {
+        IsBusy = true;
+        try
+        {
+            using var response = await Http.DeleteAsync(SitemapsApiPaths.Sitemap(item.SitemapId));
+            if (!response.IsSuccessStatusCode) Error = T["{0} could not be deleted.", item.Name];
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private RenderFragment? FieldError(string key) => Errors.TryGetValue(key, out var messages)
+        ? @<GroveText TextStyle="TextStyle.Caption" class="rz-color-danger">@string.Join(" ", messages)</GroveText>
+        : null;
+}

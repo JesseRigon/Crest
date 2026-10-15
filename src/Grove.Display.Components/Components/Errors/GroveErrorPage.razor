@@ -1,0 +1,45 @@
+@namespace Grove.Display.Components.Errors
+@using System.Globalization
+@using Grove.Display.Components.Primitives
+@inject IServiceProvider Services
+
+@* The error page every shell renders (step 7: the MVC Diagnostics error view is retired). The
+   status code pages re-execute "/Error/{status}" inside the shell that answered - the request's
+   shell base and shell stamp survive the re-execution - so an admin URL's error shows in the
+   admin document, a member URL's in the member document, the rest on the site. API paths keep
+   their bare status. *@
+
+<div style="max-width: 36rem; margin: 3rem auto; padding: 0 1rem;" data-testid="error-page" data-status="@Status">
+    <GroveStack Gap="0.75rem">
+        <GroveText TextStyle="TextStyle.H3" Text="@Title" />
+        <GroveText TextStyle="TextStyle.Body1" Text="@Message" />
+    </GroveStack>
+</div>
+
+@code {
+    /// <summary>The HTTP status; null for an unhandled exception (500).</summary>
+    [Parameter]
+    public int? Status { get; set; }
+
+    private string Title => (Status ?? 500) switch
+    {
+        400 => L("Bad request"),
+        401 => L("Unauthorized"),
+        403 => L("Forbidden"),
+        404 => L("Not found"),
+        429 => L("Too many requests"),
+        var status => status >= 500 ? L("An error occurred") : string.Format(CultureInfo.CurrentCulture, L("Error {0}"), status),
+    };
+
+    private string Message => (Status ?? 500) switch
+    {
+        400 => L("The request could not be understood."),
+        401 => L("You need to sign in to see this page."),
+        403 => L("You do not have access to this page."),
+        404 => L("The page you are looking for does not exist."),
+        429 => L("Too many requests were sent. Wait a moment and try again."),
+        _ => L("Something went wrong while processing your request."),
+    };
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

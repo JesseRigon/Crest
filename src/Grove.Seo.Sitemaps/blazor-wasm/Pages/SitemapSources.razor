@@ -1,0 +1,323 @@
+@page "/Sitemaps/Display/{SitemapId}"
+@attribute [PageEntry("ManageSitemaps")]
+@inject HttpClient Http
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* A sitemap's sources: the content types source (routable types, all or a chosen set, or one
+   type with a skip/take window, each with its change frequency and priority) and custom paths
+   have their own editors; a source type another module adds is edited as its JSON. *@
+
+<PageTitle>@(Sitemap?.Name ?? T["Sitemap"])</PageTitle>
+
+<GroveStack Gap="1rem" data-testid="sitemap-sources-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <GroveStack Gap="0.25rem">
+            <GroveText TextStyle="TextStyle.H4" class="rz-m-0">@(Sitemap?.Name ?? T["Sitemap"])</GroveText>
+            @if (Sitemap is not null)
+            {
+                <GroveText TextStyle="TextStyle.Body2">/@Sitemap.Path</GroveText>
+            }
+        </GroveStack>
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+            <GroveLink Path="Sitemaps/List" Text="@T["Sitemaps"]" />
+            @foreach (var type in SourceTypes)
+            {
+                <GroveButton Icon="add" Text="@T["Add {0}", Caption(type)]" Click="@(() => New(type))" Disabled="IsBusy" data-testid="@($"sitemap-add-{type}")" />
+            }
+        </GroveStack>
+    </GroveStack>
+
+    @if (Error is not null)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="true">@Error</GroveAlert>
+    }
+
+    @if (Draft is not null)
+    {
+        <GroveCard data-testid="sitemap-source-editor">
+            <GroveStack Gap="0.75rem">
+                <GroveText TextStyle="TextStyle.H5" class="rz-m-0">@(DraftId is null ? T["New {0}", Caption(DraftType!)] : T["Edit {0}", Caption(DraftType!)])</GroveText>
+                @if (DraftType == ContentTypesSource && ContentTypesDraft is { } content)
+                {
+                    <div><GroveCheckBox TValue="bool" @bind-Value="content.LimitItems" Name="source-limit" /> <GroveLabel Text="@T["Limit the items of one content type (a skip and take window)"]" Component="source-limit" /></div>
+                    @if (content.LimitItems)
+                    {
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.75rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
+                            <GroveFormField Text="@T["Content type"]"><GroveDropDown TValue="string" @bind-Value="content.LimitedContentType.ContentTypeName" Data="ContentTypes" TextProperty="DisplayName" ValueProperty="Name" Style="width: 14rem" /></GroveFormField>
+                            <GroveFormField Text="@T["Skip"]"><GroveNumeric TValue="int" @bind-Value="content.LimitedContentType.Skip" Min="0" Style="width: 7rem" /></GroveFormField>
+                            <GroveFormField Text="@T["Take"]"><GroveNumeric TValue="int" @bind-Value="content.LimitedContentType.Take" Min="0" Style="width: 7rem" /></GroveFormField>
+                            <GroveFormField Text="@T["Change frequency"]"><GroveDropDown TValue="string" @bind-Value="content.LimitedContentType.ChangeFrequency" Data="Frequencies" Style="width: 9rem" /></GroveFormField>
+                            <GroveFormField Text="@T["Priority (0-10)"]"><GroveNumeric TValue="int" @bind-Value="content.LimitedContentType.Priority" Min="0" Max="10" Style="width: 7rem" /></GroveFormField>
+                        </GroveStack>
+                    }
+                    else
+                    {
+                        <div><GroveCheckBox TValue="bool" @bind-Value="content.IndexAll" Name="source-index-all" /> <GroveLabel Text="@T["Every routable content type"]" Component="source-index-all" /></div>
+                        @if (content.IndexAll)
+                        {
+                            <GroveStack Orientation="Orientation.Horizontal" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                                <GroveFormField Text="@T["Change frequency"]"><GroveDropDown TValue="string" @bind-Value="content.ChangeFrequency" Data="Frequencies" Style="width: 9rem" /></GroveFormField>
+                                <GroveFormField Text="@T["Priority (0-10)"]"><GroveNumeric TValue="int" @bind-Value="content.Priority" Min="0" Max="10" Style="width: 7rem" /></GroveFormField>
+                            </GroveStack>
+                        }
+                        else
+                        {
+                            @foreach (var type in ContentTypes)
+                            {
+                                var entry = content.ContentTypes.FirstOrDefault(candidate => candidate.ContentTypeName == type.Name);
+                                <GroveStack Orientation="Orientation.Horizontal" Gap="0.75rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                                    <div style="min-width: 14rem"><GroveCheckBox TValue="bool" Value="@(entry is not null)" ValueChanged="@((bool on) => ToggleType(content, type.Name, on))" Name="@($"source-type-{type.Name}")" /> <GroveLabel Text="@type.DisplayName" Component="@($"source-type-{type.Name}")" /></div>
+                                    @if (entry is not null)
+                                    {
+                                        <GroveDropDown TValue="string" @bind-Value="entry.ChangeFrequency" Data="Frequencies" Style="width: 9rem" />
+                                        <GroveNumeric TValue="int" @bind-Value="entry.Priority" Min="0" Max="10" Style="width: 7rem" />
+                                    }
+                                </GroveStack>
+                            }
+                        }
+                    }
+                }
+                else if (DraftType == CustomPathSource && CustomPathDraft is { } custom)
+                {
+                    <GroveFormField Text="@T["Path"]" Style="width: 100%;"><GroveTextBox @bind-Value="custom.Path" Style="width: 100%;" Name="path" /></GroveFormField>
+                    @FieldError("data.path")
+                    <GroveStack Orientation="Orientation.Horizontal" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                        <GroveFormField Text="@T["Change frequency"]"><GroveDropDown TValue="string" @bind-Value="custom.ChangeFrequency" Data="Frequencies" Style="width: 9rem" /></GroveFormField>
+                        <GroveFormField Text="@T["Priority (0-10)"]"><GroveNumeric TValue="int" @bind-Value="custom.Priority" Min="0" Max="10" Style="width: 7rem" /></GroveFormField>
+                    </GroveStack>
+                }
+                else
+                {
+                    <GroveFormField Text="@T["Settings (JSON)"]" Style="width: 100%;"><GroveTextArea @bind-Value="JsonDraft" Rows="10" Style="width: 100%; font-family: monospace;" /></GroveFormField>
+                }
+                <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Draft = null)" Disabled="IsBusy" />
+                    <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="IsBusy" data-testid="sitemap-source-save" />
+                </GroveStack>
+            </GroveStack>
+        </GroveCard>
+    }
+
+    <GroveCard>
+        @if (Sitemap is null)
+        {
+            <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (Sitemap.Sources.Length == 0)
+        {
+            <GroveText TextStyle="TextStyle.Body2">@T["This sitemap has no sources yet."]</GroveText>
+        }
+        else
+        {
+            <GroveDataGrid Data="@Sitemap.Sources" TItem="SitemapSourceModel" Density="Density.Compact">
+                <Columns>
+                    <GroveDataGridColumn TItem="SitemapSourceModel" Title="@T["Source"]" Width="14rem">
+                        <Template Context="source">@Caption(source.Type)</Template>
+                    </GroveDataGridColumn>
+                    <GroveDataGridColumn TItem="SitemapSourceModel" Title="@T["Settings"]">
+                        <Template Context="source">@Summary(source)</Template>
+                    </GroveDataGridColumn>
+                    <GroveDataGridColumn TItem="SitemapSourceModel" Title="@T["Actions"]" Width="8rem">
+                        <Template Context="source">
+                            <GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                <GroveButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(source))" title="@T["Edit"]" />
+                                <GroveButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteAsync(source))" Disabled="IsBusy" title="@T["Delete"]" />
+                            </GroveStack>
+                        </Template>
+                    </GroveDataGridColumn>
+                </Columns>
+            </GroveDataGrid>
+        }
+    </GroveCard>
+</GroveStack>
+
+@code {
+    private const string ContentTypesSource = "ContentTypesSitemapSource";
+    private const string CustomPathSource = "CustomPathSitemapSource";
+
+    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
+
+    private static readonly string[] Frequencies = ["Always", "Hourly", "Daily", "Weekly", "Monthly", "Yearly", "Never"];
+
+    [Parameter]
+    public string SitemapId { get; set; } = string.Empty;
+
+    private SitemapModel? Sitemap;
+    private string[] SourceTypes = [];
+    private RoutableContentTypeModel[] ContentTypes = [];
+    private object? Draft;
+    private string? DraftId;
+    private string? DraftType;
+    private string JsonDraft = "{}";
+    private Dictionary<string, string[]> Errors = new(StringComparer.OrdinalIgnoreCase);
+    private bool IsBusy;
+    private string? Error;
+
+    private ContentTypesSourceModel? ContentTypesDraft => Draft as ContentTypesSourceModel;
+
+    private CustomPathSourceModel? CustomPathDraft => Draft as CustomPathSourceModel;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            SourceTypes = await Http.GetFromJsonAsync<string[]>(SitemapsApiPaths.SourceTypes) ?? [];
+            ContentTypes = await Http.GetFromJsonAsync<RoutableContentTypeModel[]>(SitemapsApiPaths.ContentTypes) ?? [];
+        }
+        catch (Exception exception) { Error = exception.Message; }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try { Sitemap = await Http.GetFromJsonAsync<SitemapModel>(SitemapsApiPaths.Sitemap(SitemapId)); }
+        catch (Exception exception) { Error = exception.Message; }
+    }
+
+    private string Caption(string type) => type switch
+    {
+        ContentTypesSource => T["Content types"],
+        CustomPathSource => T["Custom path"],
+        _ => type.EndsWith("SitemapSource", StringComparison.Ordinal) ? type[..^"SitemapSource".Length] : type,
+    };
+
+    private string Summary(SitemapSourceModel source)
+    {
+        switch (source.Type)
+        {
+            case ContentTypesSource:
+                var content = source.Data.Deserialize<ContentTypesSourceModel>(Json) ?? new();
+                return content.LimitItems
+                    ? T["{0}: skip {1}, take {2}", content.LimitedContentType.ContentTypeName ?? string.Empty, content.LimitedContentType.Skip, content.LimitedContentType.Take]
+                    : content.IndexAll ? T["Every routable content type"] : string.Join(", ", content.ContentTypes.Select(entry => entry.ContentTypeName));
+            case CustomPathSource:
+                return source.Data.Deserialize<CustomPathSourceModel>(Json)?.Path ?? string.Empty;
+            default:
+                return source.Data.ToJsonString();
+        }
+    }
+
+    private void New(string type)
+    {
+        DraftType = type;
+        DraftId = null;
+        Draft = Create(type, null);
+        JsonDraft = "{}";
+        Errors.Clear();
+    }
+
+    private void Edit(SitemapSourceModel source)
+    {
+        DraftType = source.Type;
+        DraftId = source.Id;
+        Draft = Create(source.Type, source.Data);
+        JsonDraft = source.Data.ToJsonString(Json);
+        Errors.Clear();
+    }
+
+    private static object Create(string type, JsonObject? data) => type switch
+    {
+        ContentTypesSource => data?.Deserialize<ContentTypesSourceModel>(Json) ?? new ContentTypesSourceModel(),
+        CustomPathSource => data?.Deserialize<CustomPathSourceModel>(Json) ?? new CustomPathSourceModel(),
+        _ => new object(),
+    };
+
+    private static void ToggleType(ContentTypesSourceModel content, string name, bool on)
+    {
+        content.ContentTypes = on
+            ? [.. content.ContentTypes.Where(entry => entry.ContentTypeName != name), new ContentTypeEntryModel { ContentTypeName = name }]
+            : [.. content.ContentTypes.Where(entry => entry.ContentTypeName != name)];
+    }
+
+    private async Task SaveAsync()
+    {
+        if (Draft is null || DraftType is null) return;
+
+        JsonObject data;
+        try
+        {
+            data = Draft switch
+            {
+                ContentTypesSourceModel content => JsonSerializer.SerializeToNode(content, Json)!.AsObject(),
+                CustomPathSourceModel custom => JsonSerializer.SerializeToNode(custom, Json)!.AsObject(),
+                _ => JsonNode.Parse(JsonDraft)?.AsObject() ?? [],
+            };
+        }
+        catch (Exception exception)
+        {
+            Error = T["The settings are not valid JSON: {0}", exception.Message];
+            return;
+        }
+
+        IsBusy = true;
+        Error = null;
+        Errors.Clear();
+        try
+        {
+            var write = new SitemapSourceWrite { Type = DraftType, Data = data };
+            using var response = DraftId is null
+                ? await Http.PostAsJsonAsync(SitemapsApiPaths.Sources(SitemapId), write)
+                : await Http.PutAsJsonAsync(SitemapsApiPaths.Source(SitemapId, DraftId), write);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ApiProblem.ReadAsync(response);
+                if (problem.Errors is { Count: > 0 } errors) Errors = new(errors, StringComparer.OrdinalIgnoreCase);
+                Error = problem.Message;
+                return;
+            }
+
+            Draft = null;
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task DeleteAsync(SitemapSourceModel source)
+    {
+        IsBusy = true;
+        try
+        {
+            using var response = await Http.DeleteAsync(SitemapsApiPaths.Source(SitemapId, source.Id));
+            if (!response.IsSuccessStatusCode) Error = T["The source could not be deleted."];
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private RenderFragment? FieldError(string key) => Errors.TryGetValue(key, out var messages)
+        ? @<GroveText TextStyle="TextStyle.Caption" class="rz-color-danger">@string.Join(" ", messages)</GroveText>
+        : null;
+
+    // The two built-in sources' settings, as the API's camel-case JSON carries them.
+    private sealed class ContentTypesSourceModel
+    {
+        public bool IndexAll { get; set; } = true;
+        public bool LimitItems { get; set; }
+        public string ChangeFrequency { get; set; } = "Daily";
+        public int Priority { get; set; } = 5;
+        public ContentTypeEntryModel[] ContentTypes { get; set; } = [];
+        public LimitedEntryModel LimitedContentType { get; set; } = new();
+    }
+
+    private class ContentTypeEntryModel
+    {
+        public string? ContentTypeName { get; set; }
+        public string ChangeFrequency { get; set; } = "Daily";
+        public int Priority { get; set; } = 5;
+    }
+
+    private sealed class LimitedEntryModel : ContentTypeEntryModel
+    {
+        public int Skip { get; set; }
+        public int Take { get; set; }
+    }
+
+    private sealed class CustomPathSourceModel
+    {
+        public string? Path { get; set; }
+        public DateTime? LastUpdate { get; set; }
+        public string ChangeFrequency { get; set; } = "Daily";
+        public int Priority { get; set; } = 5;
+    }
+}

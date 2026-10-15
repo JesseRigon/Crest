@@ -1,7 +1,7 @@
 using Grove.Access;
 using Grove.Modules;
-using Grove.Sharing;
-using Grove.Sharing.Services;
+using Grove.Access.Sharing;
+using Grove.Access.Sharing.Services;
 
 namespace Grove.Tests.Sharing;
 

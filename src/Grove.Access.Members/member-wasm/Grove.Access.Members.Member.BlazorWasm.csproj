@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- The Members module's member-shell library: everything this module contributes to the
+       member shell, and nothing it contributes to the admin one. One library per shell,
+       because a shell's router routes every page in the assemblies it is handed - see
+       GroveShellAttribute. Declares [assembly: GroveShell(GroveShells.Member)] in
+       GroveShell.cs.
+
+       The shell's seams: IMemberShellContext (who this member is, which organizations they are
+       bound to, which one is active) and IMemberAuthenticationService (what signing in means).
+       Grove owns the shell and the interfaces; this module owns what a member IS and supplies
+       them. Lazily loaded: the member shell loads its modules before it renders and activates
+       these against the container. And the member's access pages: sign-in, registration,
+       password recovery, external sign-in and the account page (members are an Access concern),
+       the account part from the Users module's shared components. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Grove.Access.Members.Member.BlazorWasm</AssemblyName>
+    <RootNamespace>Grove.Access.Members.Member</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Grove.Access.Members.Domain.csproj" />
+    <ProjectReference Include="..\..\Grove.Display.Components\Grove.Display.Components.csproj" />
+    <ProjectReference Include="..\..\Grove.Themes.Members\wasm\Grove.Themes.Members.Client.csproj" />
+    <ProjectReference Include="..\..\Grove.Access.Users\components\Grove.Access.Users.Components.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Grove.Access.Members.Tests" />
+  </ItemGroup>
+</Project>

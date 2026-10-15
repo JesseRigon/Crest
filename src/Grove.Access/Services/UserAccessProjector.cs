@@ -1,7 +1,7 @@
 using Grove.Access.Store;
 using Grove.Security;
 using Grove.Security.Permissions;
-using Grove.Users;
+using Grove.Access.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using YesSql;
@@ -82,7 +82,7 @@ public sealed class UserAccessProjector(
         var count = 0;
         foreach (var user in UserManager.Users.ToList())
         {
-            if (user is Grove.Users.Models.User { UserId: { Length: > 0 } userId })
+            if (user is Grove.Access.Users.Models.User { UserId: { Length: > 0 } userId })
             {
                 await RebuildUserAsync(userId, cancellationToken);
                 count++;
@@ -94,7 +94,7 @@ public sealed class UserAccessProjector(
 
     private async Task<UserAccess> ResolveAsync(IUser user, AccessReach reach, long version, CancellationToken cancellationToken)
     {
-        var userId = (user as Grove.Users.Models.User)?.UserId ?? await UserManager.GetUserIdAsync(user);
+        var userId = (user as Grove.Access.Users.Models.User)?.UserId ?? await UserManager.GetUserIdAsync(user);
         // Direct role assignments are tenant reach: an organization's roles come from its groups only.
         var directRoles = reach.IsTenant ? (await UserManager.GetRolesAsync(user)).ToArray() : [];
         // Read from the relation stores directly (the group and override services rebuild

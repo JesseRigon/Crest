@@ -1,0 +1,92 @@
+@namespace Grove.Themes.Admin.Components.Admin
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* Below the content item editor: clone the item, discard its draft (back to the published
+   version), and the stored versions newest first (the retired MVC Clone and DiscardDraft
+   actions, and the versions the MVC editor never listed). *@
+<GroveCard data-testid="content-item-versions">
+    <GroveStack Gap="0.5rem">
+        <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <GroveText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@T["Versions"]</GroveText>
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                @if (HasDraftOverPublished)
+                {
+                    <GroveButton Text="@T["Discard draft"]" Icon="undo" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="DiscardDraftAsync" Disabled="Busy" data-testid="content-item-discard-draft" />
+                }
+                <GroveButton Text="@T["Clone"]" Icon="content_copy" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="CloneAsync" Disabled="Busy" data-testid="content-item-clone" />
+            </GroveStack>
+        </GroveStack>
+        @if (Error is { } error) { <GroveAlert AlertStyle="AlertStyle.Danger" AllowClose="false">@error</GroveAlert> }
+        @if (Versions is { } versions)
+        {
+            <table style="width: 100%">
+                <thead><tr><th style="text-align: left">@T["Modified"]</th><th style="text-align: left">@T["Title"]</th><th style="text-align: left">@T["Author"]</th><th style="text-align: left">@T["State"]</th></tr></thead>
+                <tbody>
+                    @foreach (var version in versions)
+                    {
+                        <tr data-version="@version.ContentItemVersionId">
+                            <td>@version.ModifiedUtc?.ToLocalTime().ToString("g")</td>
+                            <td>@version.DisplayText</td>
+                            <td>@version.Author</td>
+                            <td>@(version.Published ? T["Published"] : version.Latest ? T["Draft"] : T["Earlier"])</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </GroveStack>
+</GroveCard>
+
+@code {
+    [Parameter, EditorRequired] public string ContentItemId { get; set; } = string.Empty;
+
+    private VersionModel[]? Versions;
+    private string? Error;
+    private bool Busy;
+
+    private string Base => $"api/grove/content-items/{Uri.EscapeDataString(ContentItemId)}";
+
+    // A latest version that is not the published one, while a published one exists.
+    private bool HasDraftOverPublished => Versions is { } versions && versions.Any(version => version.Published) && versions.Any(version => version.Latest && !version.Published);
+
+    protected override Task OnParametersSetAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try { Versions = await Http.GetFromJsonAsync<VersionModel[]>($"{Base}/versions"); }
+        catch (Exception exception) { Error = exception.Message; }
+    }
+
+    private async Task CloneAsync()
+    {
+        Busy = true;
+        try
+        {
+            using var response = await Http.PostAsync($"{Base}/clone", null);
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            var clone = await response.Content.ReadFromJsonAsync<ClonedItem>();
+            if (clone is not null) Navigation.NavigateTo($"Contents/ContentItems/{Uri.EscapeDataString(clone.ContentItemId)}/Edit");
+        }
+        finally { Busy = false; }
+    }
+
+    private async Task DiscardDraftAsync()
+    {
+        Busy = true;
+        try
+        {
+            using var response = await Http.PostAsync($"{Base}/discard-draft", null);
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            // The editor reloads the published version.
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true, replace: true);
+            await LoadAsync();
+        }
+        finally { Busy = false; }
+    }
+
+    private sealed record VersionModel(string ContentItemVersionId, bool Published, bool Latest, string? DisplayText, string? Author, DateTime? ModifiedUtc, DateTime? PublishedUtc);
+    private sealed record ClonedItem(string ContentItemId);
+}

@@ -1,5 +1,5 @@
-using Grove.Recipes.Models;
-using Grove.Recipes.Services;
+using Grove.Infrastructure.Recipes.Models;
+using Grove.Infrastructure.Recipes.Services;
 
 namespace Grove.Tests.Apis.Context;
 

@@ -1,6 +1,6 @@
 #nullable enable
 using Grove.Access;
-using Grove.Queries.Sql;
+using Grove.Data.Queries.Sql;
 using YesSql.Provider.Sqlite;
 
 namespace Grove.Tests.Queries;

@@ -3,7 +3,7 @@ using Grove.Tests.Functional.Helpers;
 
 namespace Grove.Tests.Functional.Tests.Cms;
 
-// Covers Grove.Users' user-fields.ts (80 net-new lines): the password
+// Covers Grove.Access.Users' user-fields.ts (80 net-new lines): the password
 // generator/copy/show-hide wiring on the "Create User" admin form
 // (only rendered when Model.IsNewRequest, i.e. /Admin/Users/Create).
 //

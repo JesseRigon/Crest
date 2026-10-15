@@ -1,6 +1,6 @@
-# Grove.AdminTheme.Client localization fixtures
+# Grove.Themes.Admin.Client localization fixtures
 
-Reference copies of the hand-written `msgctxt "Grove.AdminTheme.Client"` `.po` entries that
+Reference copies of the hand-written `msgctxt "Grove.Themes.Admin.Client"` `.po` entries that
 seed the WASM `.Admin` client string catalog (`GroveApiLocalizer`, served via
 `GET api/grove/localization/strings` — see `docs/localization.md`). The files actually consumed at runtime live in the HOST
 project at `Localization/{culture}/Admin.po` (the host) — by ruling,

@@ -61,7 +61,7 @@ There are two things going on here;
 The last part is to tell the Grove Subsystem about your new type, once this is done, the GraphQL subsystem will pick up your new object from its dependency tree. To do this, simple register it in a Startup class;
 
 ```csharp
-[RequireFeatures("Grove.Apis.GraphQL")]
+[RequireFeatures("Grove.Data.Protocols.GraphQL")]
 public class sealed Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -110,7 +110,7 @@ public class AutorouteInputObjectType : InputObjectGraphType<AutoroutePart>
 Update Startup class like below.
 
 ```csharp
-[RequireFeatures("Grove.Apis.GraphQL")]
+[RequireFeatures("Grove.Data.Protocols.GraphQL")]
 public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -261,7 +261,7 @@ public class AutoroutePartIndexAliasProvider : IIndexAliasProvider
 Update Startup class like below.
 
 ```csharp
-[RequireFeatures("Grove.Apis.GraphQL")]
+[RequireFeatures("Grove.Data.Protocols.GraphQL")]
 public sealed class Startup : StartupBase
 {
     // Assuming we've added the necessary using directives.

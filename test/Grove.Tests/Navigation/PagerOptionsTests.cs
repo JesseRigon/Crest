@@ -1,4 +1,4 @@
-using Grove.Navigation;
+using Grove.Display.Navigation;
 
 namespace Grove.Tests.Navigation;
 

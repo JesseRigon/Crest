@@ -1,7 +1,7 @@
 using Grove.Environment.Shell.Scope;
 using Grove.Media.Library;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement.Metadata;
+using Grove.Contents.Management.Metadata;
 using Grove.Data.Migration;
 using Grove.Environment.Shell;
 using Grove.Environment.Shell.Descriptor.Models;

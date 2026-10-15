@@ -5,11 +5,7 @@
     <Title>Target for Modular Grove CMS Application</Title>
     <Description>$(OCCMSDescription)
 
-    Converts the application into a modular Grove CMS application with following themes.
-
-    - TheAdmin Theme
-    - SafeMode Theme
-    </Description>
+    Converts the application into a modular Grove CMS application.</Description>
     <PackageTags>$(PackageTags) PlatformCMS CMS</PackageTags>
   </PropertyGroup>
 
@@ -28,7 +24,6 @@
     <!--
       When adding a reference to this list, please keep it ordered alphabetically, and set PrivateAssets="none"
     -->
-    <ProjectReference Include="..\SafeMode\SafeMode.csproj" PrivateAssets="none" />
   </ItemGroup>
 
   <ItemGroup>

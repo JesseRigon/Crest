@@ -2,7 +2,7 @@
 @attribute [PageEntry("AccessAdminPanel", Id = "workflows-approvals", Parent = "workflows", Caption = "Approvals", Position = "30")]
 @using Grove.Workflows
 @inject HttpClient Http
-@inject Grove.Components.Theme.GroveApiLocalizer T
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
 
 @* The signed-in user's approval queue (docs/workflows.md, phase 4): the Request approval
    tasks their roles or permissions let them decide. Deciding resumes the waiting workflow

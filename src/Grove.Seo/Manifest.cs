@@ -10,7 +10,7 @@ using Grove.Modules.Manifest;
     Dependencies =
     [
         "Grove.Contents",
-        "Grove.Recipes.Core",
+        "Grove.Infrastructure.Recipes.Core",
         "Grove.Media",
         "Grove.Shortcodes",
     ]

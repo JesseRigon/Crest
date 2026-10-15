@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Options;
-using Grove.Localization;
+using Grove.Data.Localization;
 using Grove.Modules.Services;
 
 namespace Grove.Media.Services;

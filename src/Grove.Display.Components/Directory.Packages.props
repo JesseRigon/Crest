@@ -1,0 +1,32 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.13" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authorization" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Forms" Version="10.0.13" />
+    <PackageVersion Include="Grove.Infrastructure.Shells.Admin.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Contents.Management" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Display.Management" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Communications.Email.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Contents.SiteMenu" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Module.Targets" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Display.Resources.Management" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Infrastructure.Setup" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Infrastructure.Setup.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Access.Users" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Access.Users.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Radzen.Blazor" Version="11.0.4" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageVersion Include="Verify.XunitV3" Version="31.27.0" />
+    <PackageVersion Include="NSubstitute" Version="6.0.0" />
+  </ItemGroup>
+</Project>

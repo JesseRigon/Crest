@@ -8,8 +8,8 @@ const { loginAsAdmin } = require('./harness/auth');
 // calls buildSharedAdminChecks() and appends its own repo-specific checks to the list
 // before calling runSuite — same shared browser instance, same login, no extra cost.
 //
-// STATUS: 34 of the ~55 pre-existing raw scripts under Grove.AdminTheme,
-// Grove.Icons, and the shared Grove/tests/playwright directory
+// STATUS: 34 of the ~55 pre-existing raw scripts under Grove.Themes.Admin,
+// Grove.Display.Icons, and the shared Grove/tests/playwright directory
 // have been converted into this checks/ convention. The Icons subproject is fully
 // converted. Remaining un-converted (still standalone, not wired in here): the menu
 // editor scripts (drag/drop, icon overrides, layout export), primary-nav-menu
@@ -117,7 +117,7 @@ function buildGroveModuleChecks() {
     module('workflows-units', 'Grove.Workflows/tests/playwright/checks/workflows-units'),
     module('workflows-approvals', 'Grove.Workflows/tests/playwright/checks/workflows-approvals'),
     module('workflows-designer', 'Grove.Workflows/tests/playwright/checks/workflows-designer'),
-    module('members-portal-api', 'Grove.Members/tests/playwright/checks/members-portal-api'),
+    module('members-portal-api', 'Grove.Access.Members/tests/playwright/checks/members-portal-api'),
     // Workflow checks on Grove's own fixtures (the sample role and Grove.Workflows.Samples):
     // the enable runs first, tenant isolation last (it provisions a second tenant).
     module('workflows-fixtures-enable', 'Grove.Workflows/tests/playwright/checks/workflows-fixtures-enable'),

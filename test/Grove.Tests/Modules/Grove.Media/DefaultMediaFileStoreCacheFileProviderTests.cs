@@ -1,4 +1,4 @@
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Media;
 
 namespace Grove.Tests.Modules.Grove.Media;

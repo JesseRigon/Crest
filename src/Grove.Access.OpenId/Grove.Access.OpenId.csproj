@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Grove OpenId</Title>
+    <Description>$(OCCMSDescription)
+
+    Provides OpenId Connect client, server and management features.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS OpenId</PackageTags>
+    
+    <!-- Required to build on net10.0 with validation interceptors until it's part of the SDK -->
+    <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.Http.Validation.Generated</InterceptorsNamespaces>
+  </PropertyGroup>
+
+  <!-- The site-shell pages are their own project (site-wasm/, Grove.Access.OpenId.Site.BlazorWasm). -->
+  <ItemGroup>
+    <Compile Remove="site-wasm/**/*.cs" />
+    <Content Remove="site-wasm/**" />
+    <None Remove="site-wasm/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management.Abstractions\Grove.Contents.Management.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Abstractions\Grove.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Deployment.Abstractions\Grove.Deployment.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Display.Management\Grove.Display.Management.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.Display.Navigation\Grove.Display.Navigation.csproj" />
+    <ProjectReference Include="..\Grove.Security.RateLimits\Grove.Security.RateLimits.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Recipes.Abstractions\Grove.Infrastructure.Recipes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Display.Resources.Management\Grove.Display.Resources.Management.csproj" />
+    <ProjectReference Include="..\Grove.Access.Roles\Grove.Access.Roles.csproj" />
+    <ProjectReference Include="..\Grove.Access.Users.Abstractions\Grove.Access.Users.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.YesSql\Grove.Data.YesSql.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.OpenId.Abstractions\Grove.Access.OpenId.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Settings.Abstractions\Grove.Infrastructure.Settings.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Server.Abstractions\Grove.Infrastructure.Server.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" />
+    <PackageReference Include="OpenIddict.Server.AspNetCore" />
+    <PackageReference Include="OpenIddict.Server.DataProtection" />
+    <PackageReference Include="OpenIddict.Validation.AspNetCore" />
+    <PackageReference Include="OpenIddict.Validation.DataProtection" />
+    <PackageReference Include="OpenIddict.Validation.SystemNetHttp" />
+    <PackageReference Include="OpenIddict.Core" />
+  </ItemGroup>
+
+</Project>

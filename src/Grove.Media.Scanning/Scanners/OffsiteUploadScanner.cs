@@ -130,7 +130,7 @@ public sealed class OffsiteUploadScanner : IUploadScanner
 
         var prefix = _shellSettings.RequestUrlPrefix;
 
-        return baseUrl.TrimEnd('/') + (string.IsNullOrEmpty(prefix) ? string.Empty : "/" + prefix) + "/" + Endpoints.VerdictCallbackEndpoint.Route;
+        return baseUrl.TrimEnd('/') + (string.IsNullOrEmpty(prefix) ? string.Empty : "/" + prefix) + "/" + Api.ScanVerdictApi.Route;
     }
 
     internal sealed record OffsiteScanJob(string ScanId, string Scanner, string Tenant, string Name, string? ClaimedType, long Size, string? FileUrl, string? CallbackUrl);

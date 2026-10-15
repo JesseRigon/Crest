@@ -1,7 +1,7 @@
 @page "/Audit/Records/{RecordId}"
 @attribute [PageEntry("ViewAuditTrail")]
 @inject HttpClient Http
-@inject Grove.Components.Theme.GroveApiLocalizer T
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
 
 @* A record's history (docs/audit.md › step 4): every event for one record - a content item, a
    user, a workflow run - newest first, impersonated actions marked. *@

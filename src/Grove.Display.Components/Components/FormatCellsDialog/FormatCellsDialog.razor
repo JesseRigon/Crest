@@ -1,0 +1,77 @@
+@using Microsoft.AspNetCore.Components
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Primitives.Spreadsheet
+@using Grove.Display.Components.Primitives.Documents.Spreadsheet
+@inherits SpreadsheetDialogBase
+
+@namespace Grove.Display.Components.Primitives.Spreadsheet
+<GroveStack Orientation="Orientation.Horizontal" Gap="1rem">
+    <GroveListBox @bind-Value=@selectedCategory Data=@categories TValue="NumberFormatCategory"
+                  InputSize="InputSize.Small" Style="width: 140px" Change=@OnCategoryChanged />
+
+    <GroveStack Orientation="Orientation.Vertical" Gap="0.5rem" Style="flex: 1">
+        <GroveStack Orientation="Orientation.Vertical" Gap="0.25rem">
+            <GroveLabel class="rz-text-subtitle2" Text=@L(nameof(GroveStrings.Spreadsheet_Sample)) Component="sample"
+                        Style="align-self: start" />
+            <GroveTextBox Value=@preview ReadOnly="true" Name="sample" InputSize="InputSize.Small"
+                          Style="font-weight: bold" />
+        </GroveStack>
+
+        @if (ShowDecimalPlaces)
+        {
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                <GroveLabel class="rz-text-subtitle2" Text=@L(nameof(GroveStrings.Spreadsheet_DecimalPlaces))
+                            Component="decimalPlaces" Style="width: 8rem; text-align: end" />
+                <GroveNumeric @bind-Value=@decimalPlaces Min="0" Max="30" Name="decimalPlaces" InputSize="InputSize.Small"
+                              Style="width: 80px" Change=@OnOptionChanged TValue="int" />
+            </GroveStack>
+        }
+
+        @if (ShowThousandsSeparator)
+        {
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center"
+                        Style="padding-inline-start: 8.5rem">
+                <GroveCheckBox @bind-Value=@useThousandsSeparator TValue="bool" Name="useThousandsSeparator"
+                               Change=@OnOptionChanged />
+                <GroveLabel class="rz-text-subtitle2" Text=@L(nameof(GroveStrings.Spreadsheet_UseThousandsSeparator))
+                            Component="useThousandsSeparator" />
+            </GroveStack>
+        }
+
+        @if (ShowCurrencySymbol)
+        {
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                <GroveLabel class="rz-text-subtitle2" Text=@L(nameof(GroveStrings.Spreadsheet_Symbol))
+                            Component="currencySymbol" Style="width: 8rem; text-align: end" />
+                <GroveDropDown @bind-Value=@currencySymbol Data=@FormatCodeBuilder.CurrencySymbols Name="currencySymbol"
+                               InputSize="InputSize.Small" Style="width: 80px" Change=@OnOptionChanged TValue="string" />
+            </GroveStack>
+        }
+
+        @if (ShowPresetList)
+        {
+            <GroveStack Orientation="Orientation.Vertical" Gap="0.25rem">
+                <GroveLabel class="rz-text-subtitle2" Text=@L(nameof(GroveStrings.Spreadsheet_Type)) Component="presetType"
+                            Style="align-self: start" />
+                <GroveListBox @bind-Value=@selectedPreset Data=@presets TextProperty="Item1" ValueProperty="Item2"
+                              Name="presetType" InputSize="InputSize.Small" Style="height: 130px" TValue="string"
+                              Change=@OnPresetChanged />
+            </GroveStack>
+        }
+
+        <GroveStack Orientation="Orientation.Vertical" Gap="0.25rem">
+            <GroveLabel class="rz-text-subtitle2" Text=@L(nameof(GroveStrings.Spreadsheet_FormatCode))
+                        Component="formatCode" Style="align-self: start" />
+            <GroveTextBox @bind-Value=@customFormatCode Name="formatCode" InputSize="InputSize.Small"
+                          Style="width: 100%" Change=@OnFormatCodeChanged />
+        </GroveStack>
+    </GroveStack>
+</GroveStack>
+
+<GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End"
+            class="rz-spreadsheet-dialog-actions">
+    <GroveButton Text=@L(nameof(GroveStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base"
+                 Variant="Variant.Outlined" />
+    <GroveButton Text=@L(nameof(GroveStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary"
+                 Variant="Variant.Flat" />
+</GroveStack>

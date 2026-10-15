@@ -7,7 +7,7 @@ using Grove.Media.Middleware;
 using Grove.Media.Models;
 using Grove.Media.Processing;
 using Grove.Media.Sharing;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Settings;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Settings;
 using Grove.Environment.Shell.Scope;
 using Grove.Media;
 using Grove.Media.Fields;

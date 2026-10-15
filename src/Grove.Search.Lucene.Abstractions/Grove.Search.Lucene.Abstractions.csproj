@@ -19,6 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Grove.Queries.Abstractions\Grove.Queries.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Indexing.Abstractions\Grove.Data.Indexing.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Queries.Abstractions\Grove.Data.Queries.Abstractions.csproj" />
   </ItemGroup>
 </Project>

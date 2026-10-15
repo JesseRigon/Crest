@@ -1,4 +1,4 @@
-using Grove.Indexing.Models;
+using Grove.Data.Indexing.Models;
 
 namespace Grove.Search.Abstractions;
 

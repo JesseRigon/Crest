@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Deployment.Remote.Services;
 using Grove.Deployment.Remote.ViewModels;
 
@@ -32,8 +32,7 @@ public class BlogPostDeploymentContext : SiteContext
 
         BlogPostContentItemId = result["data"]["blogPost"][0]["contentItemId"].ToString();
 
-        var content = await Client.GetAsync($"api/content/{BlogPostContentItemId}");
-        OriginalBlogPost = await content.Content.ReadAsAsync<ContentItem>();
+        OriginalBlogPost = await GetContentItemAsync(BlogPostContentItemId);
         OriginalBlogPostVersionId = OriginalBlogPost.ContentItemVersionId;
 
         await UsingTenantScopeAsync(scope =>

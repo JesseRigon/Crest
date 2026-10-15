@@ -4,10 +4,10 @@ using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
-using Grove.Apis.GraphQL;
-using Grove.Apis.GraphQL.Resolvers;
-using Grove.ContentManagement.GraphQL.Options;
-using Grove.FileStorage;
+using Grove.Data.Protocols.GraphQL;
+using Grove.Data.Protocols.GraphQL.Resolvers;
+using Grove.Contents.Management.GraphQL.Options;
+using Grove.Data.Storage;
 
 namespace Grove.Media.GraphQL;
 

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <Title>Grove Antivirus ClamAV</Title>
+    <Description>$(OCCMSDescription)
+
+    Provides a ClamAV-backed antivirus scanner for Grove uploads.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS ContentManagement Security</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Data.Storage.Abstractions\Grove.Data.Storage.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+  </ItemGroup>
+
+</Project>

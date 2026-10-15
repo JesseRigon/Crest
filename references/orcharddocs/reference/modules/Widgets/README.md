@@ -88,7 +88,7 @@ Alternates are available per Content Type.
 
 As mentioned in the previous section, the `Layers` module uses a template to wrap the widgets that it renders and insert a custom title for each of them.
 
-The actual template for this wrapper shape can be found in `src/Grove.Modules/Grove.Layers/Views/Widget.Wrapper.cshtml`.
+The actual template for this wrapper shape can be found in `src/Grove.Modules/Grove.Display.Layers/Views/Widget.Wrapper.cshtml`.
 
 A common requirement is to remove these tags, which can be done by creating this template instead:
 

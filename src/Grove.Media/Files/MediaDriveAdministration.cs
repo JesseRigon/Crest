@@ -1,6 +1,6 @@
 #nullable enable
 using Grove.Access;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 
 namespace Grove.Media.Files;
 
@@ -27,7 +27,7 @@ public interface IMediaObjectListing
     /// <summary>One page of the children with the given access indicator (docs/sharing.md,
     /// requirement 98), filtered in the query while sharing is on; with sharing off there are no
     /// indicators and the filter is ignored.</summary>
-    Task<MediaPage> ListChildrenPageAsync(string placementId, int skip, int take, Grove.Sharing.ShareIndicator? access, CancellationToken cancellationToken = default) =>
+    Task<MediaPage> ListChildrenPageAsync(string placementId, int skip, int take, Grove.Access.Sharing.ShareIndicator? access, CancellationToken cancellationToken = default) =>
         ListChildrenPageAsync(placementId, skip, take, cancellationToken);
 }
 

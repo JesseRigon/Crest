@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
-using Grove.DisplayManagement.Descriptors;
-using Grove.DisplayManagement.Implementation;
+using Grove.Display.Management.Descriptors;
+using Grove.Display.Management.Implementation;
 
 namespace Grove.Benchmarks.Support;
 
@@ -34,8 +34,6 @@ public class OriginalShapeDescriptor
     public virtual string BindingSource =>
         Bindings.TryGetValue(ShapeType, out var binding) ? binding.BindingSource : null;
 
-    public virtual Func<DisplayContext, Task<IHtmlContent>> Binding =>
-        Bindings[ShapeType].BindingAsync;
 
     public virtual IDictionary<string, ShapeBinding> Bindings { get; } = new Dictionary<string, ShapeBinding>(StringComparer.OrdinalIgnoreCase);
 

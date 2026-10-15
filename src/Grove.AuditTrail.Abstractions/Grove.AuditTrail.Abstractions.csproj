@@ -16,8 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Grove.ContentManagement.Abstractions\Grove.ContentManagement.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.ContentManagement.Display\Grove.ContentManagement.Display.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management.Abstractions\Grove.Contents.Management.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management.Display\Grove.Contents.Management.Display.csproj" />
   </ItemGroup>
   
   <ItemGroup>

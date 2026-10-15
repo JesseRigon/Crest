@@ -1,6 +1,6 @@
-# Response Compression (`Grove.ResponseCompression`)
+# Response Compression (`Grove.Data.ResponseCompression`)
 
-The `Grove.ResponseCompression` module enables ASP.NET Core [response compression](https://learn.microsoft.com/aspnet/core/performance/response-compression) for the tenant, reducing the size of HTTP responses sent to clients.
+The `Grove.Data.ResponseCompression` module enables ASP.NET Core [response compression](https://learn.microsoft.com/aspnet/core/performance/response-compression) for the tenant, reducing the size of HTTP responses sent to clients.
 
 ## Usage
 

@@ -1,5 +1,5 @@
 using Grove.Access;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management.Records;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Grove.Parties.Services;

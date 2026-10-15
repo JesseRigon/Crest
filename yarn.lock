@@ -2606,9 +2606,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/adminmenu@workspace:Grove.AdminMenu/Assets":
+"@grove/adminmenu@workspace:Grove.Contents.AdminMenu/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/adminmenu@workspace:Grove.AdminMenu/Assets"
+  resolution: "@grove/adminmenu@workspace:Grove.Contents.AdminMenu/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
@@ -2616,15 +2616,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/alias@workspace:Grove.Alias/Assets":
+"@grove/alias@workspace:Grove.Contents.Alias/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/alias@workspace:Grove.Alias/Assets"
+  resolution: "@grove/alias@workspace:Grove.Contents.Alias/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/apis-graphql@workspace:Grove.Apis.GraphQL/Assets":
+"@grove/apis-graphql@workspace:Grove.Data.Protocols.GraphQL/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/apis-graphql@workspace:Grove.Apis.GraphQL/Assets"
+  resolution: "@grove/apis-graphql@workspace:Grove.Data.Protocols.GraphQL/Assets"
   dependencies:
     "@babel/cli": "npm:^7.22.10"
     "@babel/core": "npm:^7.22.11"
@@ -2733,21 +2733,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/autoroute@workspace:Grove.Autoroute/Assets":
+"@grove/autoroute@workspace:Grove.Routes.Auto/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/autoroute@workspace:Grove.Autoroute/Assets"
+  resolution: "@grove/autoroute@workspace:Grove.Routes.Auto/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/azureai@workspace:Grove.AzureAI/Assets":
+"@grove/azureai@workspace:Grove.Integrations.AI.Azure/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/azureai@workspace:Grove.AzureAI/Assets"
+  resolution: "@grove/azureai@workspace:Grove.Integrations.AI.Azure/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/backgroundtasks@workspace:Grove.BackgroundTasks/Assets":
+"@grove/backgroundtasks@workspace:Grove.Workflows.BackgroundTasks/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/backgroundtasks@workspace:Grove.BackgroundTasks/Assets"
+  resolution: "@grove/backgroundtasks@workspace:Grove.Workflows.BackgroundTasks/Assets"
   languageName: unknown
   linkType: soft
 
@@ -2764,9 +2764,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/contentfields@workspace:Grove.ContentFields/Assets":
+"@grove/contentfields@workspace:Grove.Contents.Fields/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/contentfields@workspace:Grove.ContentFields/Assets"
+  resolution: "@grove/contentfields@workspace:Grove.Contents.Fields/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
@@ -2775,9 +2775,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/contentpreview@workspace:Grove.ContentPreview/Assets":
+"@grove/contentpreview@workspace:Grove.Contents.Preview/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/contentpreview@workspace:Grove.ContentPreview/Assets"
+  resolution: "@grove/contentpreview@workspace:Grove.Contents.Preview/Assets"
   languageName: unknown
   linkType: soft
 
@@ -2787,27 +2787,27 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/contenttypes@workspace:Grove.ContentTypes/Assets":
+"@grove/contenttypes@workspace:Grove.Contents.Types/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/contenttypes@workspace:Grove.ContentTypes/Assets"
+  resolution: "@grove/contenttypes@workspace:Grove.Contents.Types/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/cors@workspace:Grove.Cors/Assets":
+"@grove/cors@workspace:Grove.Security.Cors/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/cors@workspace:Grove.Cors/Assets"
+  resolution: "@grove/cors@workspace:Grove.Security.Cors/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/customsettings@workspace:Grove.CustomSettings/Assets":
+"@grove/customsettings@workspace:Grove.Infrastructure.CustomSettings/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/customsettings@workspace:Grove.CustomSettings/Assets"
+  resolution: "@grove/customsettings@workspace:Grove.Infrastructure.CustomSettings/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/datalocalization@workspace:Grove.DataLocalization/Assets":
+"@grove/datalocalization@workspace:Grove.Data.Localization.Translations/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/datalocalization@workspace:Grove.DataLocalization/Assets"
+  resolution: "@grove/datalocalization@workspace:Grove.Data.Localization.Translations/Assets"
   languageName: unknown
   linkType: soft
 
@@ -2823,39 +2823,39 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/elasticsearch@workspace:Grove.Elasticsearch/Assets":
+"@grove/elasticsearch@workspace:Grove.Search.Elasticsearch/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/elasticsearch@workspace:Grove.Elasticsearch/Assets"
+  resolution: "@grove/elasticsearch@workspace:Grove.Search.Elasticsearch/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/email-smtp@workspace:Grove.Email.Smtp/Assets":
+"@grove/email-smtp@workspace:Grove.Data.Protocols.Smtp/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/email-smtp@workspace:Grove.Email.Smtp/Assets"
+  resolution: "@grove/email-smtp@workspace:Grove.Data.Protocols.Smtp/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/email@workspace:Grove.Email/Assets":
+"@grove/email@workspace:Grove.Communications.Email/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/email@workspace:Grove.Email/Assets"
+  resolution: "@grove/email@workspace:Grove.Communications.Email/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/facebook@workspace:Grove.Facebook/Assets":
+"@grove/facebook@workspace:Grove.Integrations.Facebook/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/facebook@workspace:Grove.Facebook/Assets"
+  resolution: "@grove/facebook@workspace:Grove.Integrations.Facebook/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/features@workspace:Grove.Features/Assets":
+"@grove/features@workspace:Grove.Infrastructure.Features/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/features@workspace:Grove.Features/Assets"
+  resolution: "@grove/features@workspace:Grove.Infrastructure.Features/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/flows@workspace:Grove.Flows/Assets":
+"@grove/flows@workspace:Grove.Contents.Flows/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/flows@workspace:Grove.Flows/Assets"
+  resolution: "@grove/flows@workspace:Grove.Contents.Flows/Assets"
   languageName: unknown
   linkType: soft
 
@@ -2865,55 +2865,55 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/html@workspace:Grove.Html/Assets":
+"@grove/html@workspace:Grove.Data.Protocols.Html/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/html@workspace:Grove.Html/Assets"
+  resolution: "@grove/html@workspace:Grove.Data.Protocols.Html/Assets"
   dependencies:
     grove-media-gallery: "workspace:*"
   languageName: unknown
   linkType: soft
 
-"@grove/indexing@workspace:Grove.Indexing/Assets":
+"@grove/indexing@workspace:Grove.Data.Indexing/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/indexing@workspace:Grove.Indexing/Assets"
+  resolution: "@grove/indexing@workspace:Grove.Data.Indexing/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/layers@workspace:Grove.Layers/Assets":
+"@grove/layers@workspace:Grove.Display.Layers/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/layers@workspace:Grove.Layers/Assets"
+  resolution: "@grove/layers@workspace:Grove.Display.Layers/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/liquid@workspace:Grove.Liquid/Assets":
+"@grove/liquid@workspace:Grove.Display.Liquid/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/liquid@workspace:Grove.Liquid/Assets"
+  resolution: "@grove/liquid@workspace:Grove.Display.Liquid/Assets"
   dependencies:
     monaco-editor: "npm:0.52.2"
   languageName: unknown
   linkType: soft
 
-"@grove/lists@workspace:Grove.Lists/Assets":
+"@grove/lists@workspace:Grove.Display.Lists/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/lists@workspace:Grove.Lists/Assets"
+  resolution: "@grove/lists@workspace:Grove.Display.Lists/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/localization@workspace:Grove.Localization/Assets":
+"@grove/localization@workspace:Grove.Data.Localization/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/localization@workspace:Grove.Localization/Assets"
+  resolution: "@grove/localization@workspace:Grove.Data.Localization/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/lucene@workspace:Grove.Lucene/Assets":
+"@grove/lucene@workspace:Grove.Search.Lucene/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/lucene@workspace:Grove.Lucene/Assets"
+  resolution: "@grove/lucene@workspace:Grove.Search.Lucene/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/markdown@workspace:Grove.Markdown/Assets":
+"@grove/markdown@workspace:Grove.Contents.Markdown/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/markdown@workspace:Grove.Markdown/Assets"
+  resolution: "@grove/markdown@workspace:Grove.Contents.Markdown/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
@@ -2922,21 +2922,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/menu@workspace:Grove.Menu/Assets":
+"@grove/menu@workspace:Grove.Contents.SiteMenu/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/menu@workspace:Grove.Menu/Assets"
+  resolution: "@grove/menu@workspace:Grove.Contents.SiteMenu/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/notifications@workspace:Grove.Notifications/Assets":
+"@grove/notifications@workspace:Grove.Communications/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/notifications@workspace:Grove.Notifications/Assets"
+  resolution: "@grove/notifications@workspace:Grove.Communications/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/openapi-ui-auth@workspace:Grove.OpenApi/Assets/openapi-ui-auth":
+"@grove/openapi-ui-auth@workspace:Grove.Data.Protocols.OpenApi/Assets/openapi-ui-auth":
   version: 0.0.0-use.local
-  resolution: "@grove/openapi-ui-auth@workspace:Grove.OpenApi/Assets/openapi-ui-auth"
+  resolution: "@grove/openapi-ui-auth@workspace:Grove.Data.Protocols.OpenApi/Assets/openapi-ui-auth"
   dependencies:
     oidc-client-ts: "npm:^3.1.0"
     typescript: "npm:^5.7.3"
@@ -2944,39 +2944,39 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/openid@workspace:Grove.OpenId/Assets":
+"@grove/openid@workspace:Grove.Access.OpenId/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/openid@workspace:Grove.OpenId/Assets"
+  resolution: "@grove/openid@workspace:Grove.Access.OpenId/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/placements@workspace:Grove.Placements/Assets":
+"@grove/placements@workspace:Grove.Display.Placements/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/placements@workspace:Grove.Placements/Assets"
+  resolution: "@grove/placements@workspace:Grove.Display.Placements/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/queries@workspace:Grove.Queries/Assets":
+"@grove/queries@workspace:Grove.Data.Queries/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/queries@workspace:Grove.Queries/Assets"
+  resolution: "@grove/queries@workspace:Grove.Data.Queries/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/rate-limits@workspace:Grove.RateLimits/Assets":
+"@grove/rate-limits@workspace:Grove.Security.RateLimits/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/rate-limits@workspace:Grove.RateLimits/Assets"
+  resolution: "@grove/rate-limits@workspace:Grove.Security.RateLimits/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/recipes@workspace:Grove.Recipes/Assets":
+"@grove/recipes@workspace:Grove.Infrastructure.Recipes/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/recipes@workspace:Grove.Recipes/Assets"
+  resolution: "@grove/recipes@workspace:Grove.Infrastructure.Recipes/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/resources@workspace:Grove.Resources/Assets":
+"@grove/resources@workspace:Grove.Display.Resources/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/resources@workspace:Grove.Resources/Assets"
+  resolution: "@grove/resources@workspace:Grove.Display.Resources/Assets"
   dependencies:
     "@crestapps/bootstrap-select": "npm:1.2.4"
     "@fortawesome/fontawesome-free": "npm:7.3.1"
@@ -3011,9 +3011,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/roles@workspace:Grove.Roles/Assets":
+"@grove/roles@workspace:Grove.Access.Roles/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/roles@workspace:Grove.Roles/Assets"
+  resolution: "@grove/roles@workspace:Grove.Access.Roles/Assets"
   languageName: unknown
   linkType: soft
 
@@ -3041,9 +3041,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/rules@workspace:Grove.Rules/Assets":
+"@grove/rules@workspace:Grove.Display.Rules/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/rules@workspace:Grove.Rules/Assets"
+  resolution: "@grove/rules@workspace:Grove.Display.Rules/Assets"
   languageName: unknown
   linkType: soft
 
@@ -3059,9 +3059,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/setup@workspace:Grove.Setup/Assets":
+"@grove/setup@workspace:Grove.Infrastructure.Setup/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/setup@workspace:Grove.Setup/Assets"
+  resolution: "@grove/setup@workspace:Grove.Infrastructure.Setup/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
@@ -3077,55 +3077,55 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/signalr@workspace:Grove.SignalR/Assets":
+"@grove/signalr@workspace:Grove.Data.Protocols.SignalR/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/signalr@workspace:Grove.SignalR/Assets"
+  resolution: "@grove/signalr@workspace:Grove.Data.Protocols.SignalR/Assets"
   dependencies:
     "@microsoft/signalr": "npm:10.0.0"
   languageName: unknown
   linkType: soft
 
-"@grove/sitemaps@workspace:Grove.Sitemaps/Assets":
+"@grove/sitemaps@workspace:Grove.Seo.Sitemaps/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/sitemaps@workspace:Grove.Sitemaps/Assets"
+  resolution: "@grove/sitemaps@workspace:Grove.Seo.Sitemaps/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/sms@workspace:Grove.Sms/Assets":
+"@grove/sms@workspace:Grove.Communications.Sms/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/sms@workspace:Grove.Sms/Assets"
+  resolution: "@grove/sms@workspace:Grove.Communications.Sms/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/spatial@workspace:Grove.Spatial/Assets":
+"@grove/spatial@workspace:Grove.Data.Types.Spatial/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/spatial@workspace:Grove.Spatial/Assets"
+  resolution: "@grove/spatial@workspace:Grove.Data.Types.Spatial/Assets"
   dependencies:
     leaflet: "npm:1.9.4"
   languageName: unknown
   linkType: soft
 
-"@grove/taxonomies@workspace:Grove.Taxonomies/Assets":
+"@grove/taxonomies@workspace:Grove.Contents.Taxonomies/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/taxonomies@workspace:Grove.Taxonomies/Assets"
+  resolution: "@grove/taxonomies@workspace:Grove.Contents.Taxonomies/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/templates@workspace:Grove.Templates/Assets":
+"@grove/templates@workspace:Grove.Display.Templates/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/templates@workspace:Grove.Templates/Assets"
+  resolution: "@grove/templates@workspace:Grove.Display.Templates/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/tenants@workspace:Grove.Tenants/Assets":
+"@grove/tenants@workspace:Grove.Infrastructure.Tenants/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/tenants@workspace:Grove.Tenants/Assets"
+  resolution: "@grove/tenants@workspace:Grove.Infrastructure.Tenants/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/theadmin@workspace:TheAdmin/Assets":
+"@grove/theadmin@workspace:Grove.Themes.TheAdmin/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/theadmin@workspace:TheAdmin/Assets"
+  resolution: "@grove/theadmin@workspace:Grove.Themes.TheAdmin/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     "@types/js-cookie": "npm:^3.0.6"
@@ -3180,15 +3180,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@grove/title@workspace:Grove.Title/Assets":
+"@grove/title@workspace:Grove.Contents.Title/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/title@workspace:Grove.Title/Assets"
+  resolution: "@grove/title@workspace:Grove.Contents.Title/Assets"
   languageName: unknown
   linkType: soft
 
-"@grove/users@workspace:Grove.Users/Assets":
+"@grove/users@workspace:Grove.Access.Users/Assets":
   version: 0.0.0-use.local
-  resolution: "@grove/users@workspace:Grove.Users/Assets"
+  resolution: "@grove/users@workspace:Grove.Access.Users/Assets"
   dependencies:
     qrcodejs: "npm:^1.0.0"
   languageName: unknown

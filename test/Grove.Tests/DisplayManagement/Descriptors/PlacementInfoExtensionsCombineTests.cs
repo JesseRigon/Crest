@@ -1,4 +1,4 @@
-using Grove.DisplayManagement.Descriptors;
+using Grove.Display.Management.Descriptors;
 
 namespace Grove.Tests.DisplayManagement.Descriptors;
 

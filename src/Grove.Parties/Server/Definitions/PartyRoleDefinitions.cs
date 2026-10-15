@@ -1,11 +1,11 @@
 using Grove.Parties.Constants;
-using Grove.ContentFields.Settings;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Builders;
-using Grove.ContentManagement.Metadata.Settings;
-using Grove.ContentManagement.Metadata.Models;
+using Grove.Contents.Fields.Settings;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Builders;
+using Grove.Contents.Management.Metadata.Settings;
+using Grove.Contents.Management.Metadata.Models;
 using Grove.Fields;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Grove.Models;
 
 namespace Grove.Parties.Definitions;

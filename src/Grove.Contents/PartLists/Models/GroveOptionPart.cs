@@ -1,4 +1,4 @@
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 
 namespace Grove.Models;
 

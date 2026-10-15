@@ -1,4 +1,4 @@
-namespace Grove.FileStorage;
+namespace Grove.Data.Storage;
 
 /// <summary>
 /// Options controlling where <see cref="ITempDirectoryProvider"/> places temporary files.

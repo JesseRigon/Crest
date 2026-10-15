@@ -4,7 +4,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Grove.FileStorage.AmazonS3;
+using Grove.Data.Storage.AmazonS3;
 using Grove.Media;
 
 namespace Grove.Media.AmazonS3.Services;

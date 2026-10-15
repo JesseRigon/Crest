@@ -1,7 +1,7 @@
 using Cysharp.Text;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Models;
-using Grove.Indexing;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Models;
+using Grove.Data.Indexing;
 
 namespace Grove.Contents.Indexing;
 

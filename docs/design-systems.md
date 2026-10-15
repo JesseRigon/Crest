@@ -1,6 +1,6 @@
 # Design systems
 
-Tenant and user design systems, stored as content so the platform is the system of record. A design system is the **visual language and the branding**: tokens, type scales, heading settings, presets; the theme is structure ([blazor-display.md](blazor-display.md) › decision 8). The canonical `--grove-*` primitive token contract, its packaged default CSS and the current Site-Settings-backed Design System page are built: see [Grove.Components/README.md](../Grove.Components/README.md) › Design tokens.
+Tenant and user design systems, stored as content so the platform is the system of record. A design system is the **visual language and the branding**: tokens, type scales, heading settings, presets; the theme is structure ([blazor-display.md](blazor-display.md) › decision 8). The canonical `--grove-*` primitive token contract, its packaged default CSS and the current Site-Settings-backed Design System page are built: see [Grove.Display.Components/README.md](../Grove.Display.Components/README.md) › Design tokens.
 
 Not built:
 
@@ -23,7 +23,7 @@ Design systems are content, not JSON files of their own. A first-party content t
 - audit/history where enabled;
 - search/indexing where enabled.
 
-Grove.AdminTheme provides the Blazor editor, preview, selector, and token application layer, with no parallel storage or permission model.
+Grove.Themes.Admin provides the Blazor editor, preview, selector, and token application layer, with no parallel storage or permission model.
 
 - [ ] **Content part model.** The token taxonomy is fixed ([Token taxonomy](#token-taxonomy)); the part shape is open (see Open questions). Suggested `DesignSystemPart` fields/properties:
 
@@ -90,7 +90,7 @@ Grove.AdminTheme provides the Blazor editor, preview, selector, and token applic
 - [ ] **Seed the packaged default into tenant content via recipe/setup.** A static CSS file stays:
 
   ```text
-  Grove.AdminTheme/wasm/wwwroot/GroveAdmin.DesignSystem.Default.css
+  Grove.Themes.Admin/wasm/wwwroot/GroveAdmin.DesignSystem.Default.css
   ```
 
   Purpose:
@@ -108,7 +108,7 @@ Grove.AdminTheme provides the Blazor editor, preview, selector, and token applic
 
   On setup, a recipe creates the default `DesignSystem` content item from this default token map. After setup, tenant/user choices come from content.
 
-  - [x] The default file's token contract is built: see [Grove.Components/README.md](../Grove.Components/README.md) › Design tokens.
+  - [x] The default file's token contract is built: see [Grove.Display.Components/README.md](../Grove.Display.Components/README.md) › Design tokens.
 
 ## Resolution and runtime
 
@@ -116,7 +116,7 @@ Grove.AdminTheme provides the Blazor editor, preview, selector, and token applic
 
 #### System fallback
 
-Static packaged defaults loaded from Grove.AdminTheme.
+Static packaged defaults loaded from Grove.Themes.Admin.
 
 Used only when no tenant/user design system can be resolved.
 
@@ -143,7 +143,7 @@ A tenant may have several design systems, for example:
 
   Every resolution step checks the current user's content permissions.
 
-- [ ] **The design-system payload in the shell manifest.** Grove.AdminTheme converts the selected design system content item into a compact client payload:
+- [ ] **The design-system payload in the shell manifest.** Grove.Themes.Admin converts the selected design system content item into a compact client payload:
 
   ```json
   {
@@ -155,7 +155,7 @@ A tenant may have several design systems, for example:
   }
   ```
 
-  The admin shell applies this payload by setting CSS custom properties on the admin root element. How components consume those `--grove-*` variables is built: see [Grove.Components/README.md](../Grove.Components/README.md) › Design tokens.
+  The admin shell applies this payload by setting CSS custom properties on the admin root element. How components consume those `--grove-*` variables is built: see [Grove.Display.Components/README.md](../Grove.Display.Components/README.md) › Design tokens.
 
   **Token source mapping.** A provider pattern exists only at the source-to-Grove-token boundary.
 
@@ -170,7 +170,7 @@ A tenant may have several design systems, for example:
 
 ## Admin UI and user workflow
 
-- [ ] **Blazor Design System page over the content services**, extending the Design System page in Grove.AdminTheme.
+- [ ] **Blazor Design System page over the content services**, extending the Design System page in Grove.Themes.Admin.
 
   Primary areas:
 
@@ -184,7 +184,7 @@ A tenant may have several design systems, for example:
   - publish/share controls;
   - permission-aware action buttons.
 
-  **API boundary.** The design-system API is declared by the module that owns design systems and registered with Grove.Server's API registry, like every module API ([server.md](server.md)). It uses the content API where that suffices and adds only admin-specific projections, validation, token compilation and current-user resolution. It:
+  **API boundary.** The design-system API is declared by the module that owns design systems and registered with Grove.Infrastructure.Server's API registry, like every module API ([server.md](server.md)). It uses the content API where that suffices and adds only admin-specific projections, validation, token compilation and current-user resolution. It:
 
   - authorizes through the platform's permissions;
   - uses the real request principal;

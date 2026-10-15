@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using Grove.Admin;
+using Grove.Infrastructure.Shells.Admin;
 using Grove.Deployment;
 using Grove.Themes.Services;
 

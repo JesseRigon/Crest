@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Grove.Contents.Settings;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Grove.Validation;
 
 namespace Grove.Contents.VersionPruning.Models;

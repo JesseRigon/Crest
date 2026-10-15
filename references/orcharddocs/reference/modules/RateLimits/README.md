@@ -1,4 +1,4 @@
-# Rate Limits (`Grove.RateLimits`)
+# Rate Limits (`Grove.Security.RateLimits`)
 
 The Rate Limits module centralizes ASP.NET Core request rate limiting for Grove tenants.
 

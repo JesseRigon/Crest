@@ -1,7 +1,7 @@
 {
   "name": "Blog",
   "displayName": "Blog",
-  "description": "The platform integration tests' site: the Blog content model with no sample theme (SafeMode).",
+  "description": "The platform integration tests' site: the Blog content model with no sample theme.",
   "author": "The Grove Team",
   "website": "https://orchardcore.net",
   "version": "1.0.0",
@@ -29,55 +29,53 @@
       "name": "feature",
       "enable": [
         "Grove.HomeRoute",
-        "Grove.Admin",
+        "Grove.Infrastructure.Shells.Admin",
         "Grove.Diagnostics",
-        "Grove.DynamicCache",
-        "Grove.Features",
-        "Grove.Navigation",
-        "Grove.Recipes",
-        "Grove.Resources",
-        "Grove.Roles",
+        "Grove.Data.Cache.Dynamic",
+        "Grove.Infrastructure.Features",
+        "Grove.Display.Navigation",
+        "Grove.Infrastructure.Recipes",
+        "Grove.Display.Resources",
+        "Grove.Access.Roles",
         "Grove.Security",
-        "Grove.Settings",
+        "Grove.Infrastructure.Settings",
         "Grove.Themes",
-        "Grove.Users",
-        "Grove.Alias",
-        "Grove.AdminMenu",
-        "Grove.Autoroute",
-        "Grove.Html",
-        "Grove.ContentFields",
-        "Grove.ContentPreview",
+        "Grove.Access.Users",
+        "Grove.Contents.Alias",
+        "Grove.Contents.AdminMenu",
+        "Grove.Routes.Auto",
+        "Grove.Data.Protocols.Html",
+        "Grove.Contents.Fields",
+        "Grove.Contents.Preview",
         "Grove.Contents",
-        "Grove.ContentTypes",
-        "Grove.CustomSettings",
+        "Grove.Contents.Types",
+        "Grove.Infrastructure.CustomSettings",
         "Grove.Deployment",
         "Grove.Deployment.Remote",
-        "Grove.Feeds",
-        "Grove.Flows",
-        "Grove.Indexing",
-        "Grove.Layers",
-        "Grove.Lists",
-        "Grove.Markdown",
+        "Grove.Data.Feeds",
+        "Grove.Contents.Flows",
+        "Grove.Data.Indexing",
+        "Grove.Display.Layers",
+        "Grove.Display.Lists",
+        "Grove.Contents.Markdown",
         "Grove.Media",
-        "Grove.Menu",
-        "Grove.Placements",
-        "Grove.Queries",
-        "Grove.Queries.Sql",
+        "Grove.Contents.SiteMenu",
+        "Grove.Display.Placements",
+        "Grove.Data.Queries",
+        "Grove.Data.Queries.Sql",
         "Grove.Shortcodes.Templates",
-        "Grove.Rules",
-        "Grove.Taxonomies",
-        "Grove.Title",
-        "Grove.Templates",
+        "Grove.Display.Rules",
+        "Grove.Contents.Taxonomies",
+        "Grove.Contents.Title",
+        "Grove.Display.Templates",
         "Grove.Search",
-        "Grove.Lucene",
-        "TheAdmin",
-        "SafeMode"
+        "Grove.Search.Lucene"
       ]
     },
     {
       "name": "themes",
-      "admin": "TheAdmin",
-      "site": "SafeMode"
+      "admin": "Grove.Themes.Admin",
+      "site": "Grove.Themes.Site"
     },
     {
       "name": "Roles",
@@ -886,7 +884,7 @@
             "ConditionId": "[js: uuid()]",
             "Conditions": [
               {
-                "$type": "Grove.Rules.Models.BooleanCondition, Grove.Rules",
+                "$type": "Grove.Display.Rules.Models.BooleanCondition, Grove.Display.Rules",
                 "Name": "BooleanCondition",
                 "Value": true,
                 "ConditionId": "[js: uuid()]"
@@ -901,7 +899,7 @@
             "ConditionId": "[js: uuid()]",
             "Conditions": [
               {
-                "$type": "Grove.Rules.Models.HomepageCondition, Grove.Rules",
+                "$type": "Grove.Display.Rules.Models.HomepageCondition, Grove.Display.Rules",
                 "Name": "HomepageCondition",
                 "Value": true,
                 "ConditionId": "[js: uuid()]"
@@ -1017,7 +1015,7 @@
           "Enabled": true,
           "MenuItems": [
             {
-              "$type": "Grove.AdminMenu.AdminNodes.LinkAdminNode, Grove.AdminMenu",
+              "$type": "Grove.Contents.AdminMenu.AdminNodes.LinkAdminNode, Grove.Contents.AdminMenu",
               "LinkText": "Blog",
               "LinkUrl": "[js: variables('adminUrlPrefix') + '/Contents/ContentItems/' +  variables('blogContentItemId') + '/Display']",
               "IconClass": "fas fa-rss",
@@ -1037,7 +1035,7 @@
               "MenuName": "Admin menus"
             },
             {
-              "$type": "Grove.AdminMenu.AdminNodes.LinkAdminNode, Grove.AdminMenu",
+              "$type": "Grove.Contents.AdminMenu.AdminNodes.LinkAdminNode, Grove.Contents.AdminMenu",
               "LinkText": "Main Menu",
               "LinkUrl": "[js: variables('adminUrlPrefix') + '/Contents/ContentItems/' +  variables('menuContentItemId') + '/Edit']",
               "IconClass": "fas fa-sitemap",
@@ -1057,7 +1055,7 @@
               "MenuName": "Admin menus"
             },
             {
-              "$type": "Grove.AdminMenu.AdminNodes.PlaceholderAdminNode, Grove.AdminMenu",
+              "$type": "Grove.Contents.AdminMenu.AdminNodes.PlaceholderAdminNode, Grove.Contents.AdminMenu",
               "LinkText": "Content",
               "IconClass": null,
               "PermissionNames": [],
@@ -1073,7 +1071,7 @@
               "Culture": null,
               "Items": [
                 {
-                  "$type": "Grove.AdminMenu.AdminNodes.LinkAdminNode, Grove.AdminMenu",
+                  "$type": "Grove.Contents.AdminMenu.AdminNodes.LinkAdminNode, Grove.Contents.AdminMenu",
                   "LinkText": "Content Items",
                   "LinkUrl": "[js: variables('adminUrlPrefix') + '/Contents/ContentItems/']",
                   "IconClass": null,

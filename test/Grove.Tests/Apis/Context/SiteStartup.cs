@@ -1,7 +1,7 @@
 using Grove.Data.YesSql;
 using Grove.Modules;
 using Grove.Modules.Manifest;
-using Grove.Recipes.Services;
+using Grove.Infrastructure.Recipes.Services;
 
 namespace Grove.Tests.Apis.Context;
 
@@ -20,11 +20,11 @@ public class SiteStartup
     {
         services.AddPlatformCms(builder =>
             builder.AddSetupFeatures(
-                "Grove.Tenants"
+                "Grove.Infrastructure.Tenants"
             )
             .AddTenantFeatures(
-                "Grove.Localization",
-                "Grove.Apis.GraphQL"
+                "Grove.Data.Localization",
+                "Grove.Data.Protocols.GraphQL"
             )
             .ConfigureServices(collection =>
             {
@@ -41,8 +41,8 @@ public class SiteStartup
                     return new PermissionContextAuthorizationHandler(sp.GetRequiredService<IHttpContextAccessor>(), PermissionsContexts);
                 });
             })
-            // The declared API route groups (Grove.Users' sign-in, registration, password and
-            // two-factor APIs, Grove.Access' antiforgery token, ...): Grove.Server maps them in a
+            // The declared API route groups (Grove.Access.Users' sign-in, registration, password and
+            // two-factor APIs, Grove.Access' antiforgery token, ...): Grove.Infrastructure.Server maps them in a
             // real host and is not part of this one, so the harness maps them the same way, one
             // group per contributor, last registration of a name winning. The antiforgery filter
             // is left out: the tests call the APIs without a browser.

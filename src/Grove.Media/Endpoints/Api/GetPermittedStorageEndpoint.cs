@@ -1,3 +1,4 @@
+using Grove.Api;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -13,9 +14,8 @@ public static class GetPermittedStorageEndpoint
 {
     public static IEndpointRouteBuilder AddGetPermittedStorageEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapGet("api/media/GetPermittedStorage", HandleAsync)
+        builder.MapGet("GetPermittedStorage", HandleAsync)
             .WithName("ApiGetPermittedStorage")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
             .Produces<PermittedStorageDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -27,10 +27,10 @@ public static class GetPermittedStorageEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        IStringLocalizer<MediaApiEndpoints> localizer,
-        FileSizeHelper fileSizeHelper)
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromServices] IStringLocalizer<MediaApiEndpoints> localizer,
+        [FromServices] FileSizeHelper fileSizeHelper)
     {
         if (!await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMedia)
             || !await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMediaFolder, (object)string.Empty))

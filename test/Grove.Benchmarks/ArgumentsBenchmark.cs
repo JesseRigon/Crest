@@ -1,5 +1,5 @@
 using BenchmarkDotNet.Attributes;
-using Grove.DisplayManagement;
+using Grove.Display.Management;
 
 namespace Grove.Benchmarks;
 

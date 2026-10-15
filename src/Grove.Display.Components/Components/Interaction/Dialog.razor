@@ -1,0 +1,10 @@
+@namespace Grove.Display.Components.Interaction
+
+<div class="grove-overlay-backdrop" @onclick="CloseAsync"></div>
+<div class="grove-dialog" role="dialog" aria-modal="true" aria-label="@Title">
+    <div class="grove-dialog__header">
+        <span class="grove-dialog__title">@Title</span>
+        <button type="button" class="grove-dialog__close" aria-label="Close" @onclick="CloseAsync">×</button>
+    </div>
+    <div class="grove-dialog__body">@ChildContent</div>
+</div>

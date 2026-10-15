@@ -1,6 +1,6 @@
 using System.Text;
 using System.Text.Json.Nodes;
-using Grove.Recipes.Models;
+using Grove.Infrastructure.Recipes.Models;
 
 namespace Grove.Deployment;
 

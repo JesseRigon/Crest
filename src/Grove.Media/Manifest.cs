@@ -13,7 +13,7 @@ using Grove.Modules.Manifest;
     Description = "The media module adds media management support.",
     Dependencies =
     ["Grove.Access",
-        "Grove.ContentTypes",
+        "Grove.Contents.Types",
         // Every upload is scanned (docs/media.md, requirement 86): no Media without scanning.
         "Grove.Media.Scanning",
     ],
@@ -75,7 +75,7 @@ using Grove.Modules.Manifest;
     ],
     After =
     [
-        "Grove.Users"
+        "Grove.Access.Users"
     ],
     Before =
     [
@@ -102,7 +102,7 @@ using Grove.Modules.Manifest;
     Dependencies =
     [
         "Grove.Media",
-        "Grove.SignalR"
+        "Grove.Data.Protocols.SignalR"
     ],
     Category = "Content Management"
 )]

@@ -1,0 +1,93 @@
+{
+  "name": "Blank",
+  "displayName": "Blank site",
+  "description": "Creates a blank site with content management features.",
+  "author": "The Grove Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "default" ],
+  "tags": [ "blank" ],
+
+  // The variables are evaluated the first time they are accessed, and reused across steps
+  "variables": {
+    // "now": "[js: new Date().toISOString()]"
+  },
+
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        // SaaS
+        "Grove.HomeRoute",
+        "Grove.Infrastructure.Shells.Admin",
+        "Grove.Diagnostics",
+        "Grove.Data.Cache.Dynamic",
+        "Grove.Infrastructure.Features",
+        "Grove.Display.Navigation",
+        "Grove.Infrastructure.Recipes",
+        "Grove.Display.Resources",
+        "Grove.Access.Roles",
+        "Grove.Security",
+        "Grove.Infrastructure.Settings",
+        "Grove.Themes",
+        "Grove.Access.Users",
+
+        // Content Management
+        "Grove.Contents.Alias",
+        "Grove.Routes.Auto",
+        "Grove.Data.Protocols.Html",
+        "Grove.Contents.Fields",
+        "Grove.Contents.Preview",
+        "Grove.Contents",
+        "Grove.Contents.Types",
+        "Grove.Infrastructure.CustomSettings",
+        "Grove.Deployment",
+        "Grove.Deployment.Remote",
+        "Grove.Contents.Flows",
+        "Grove.Data.Indexing",
+        "Grove.Display.Layers",
+        "Grove.Display.Lists",
+        "Grove.Contents.Markdown",
+        "Grove.Media",
+        "Grove.Contents.SiteMenu",
+        "Grove.Data.Queries",
+        "Grove.Shortcodes.Templates",
+        "Grove.Contents.Title",
+        "Grove.Display.Templates"
+
+        // Themes
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "Grove.Themes.Admin",
+      "site": ""
+    },
+    {
+      "name": "Roles",
+      "Roles": [
+        {
+          "Name": "Moderator",
+          "Description": "Grants users the ability to moderate content.",
+          "Permissions": []
+        },
+        {
+          "Name": "Editor",
+          "Description": "Grants users the ability to edit existing content.",
+          "Permissions": []
+        },
+        {
+          "Name": "Author",
+          "Description": "Grants users the ability to create content.",
+          "Permissions": []
+        },
+        {
+          "Name": "Contributor",
+          "Description": "Grants users the ability to contribute content.",
+          "Permissions": []
+        }
+      ]
+    }
+  ]
+}

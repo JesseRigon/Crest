@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Grove.Data.Types.Money.Domain</AssemblyName>
+    <RootNamespace>Grove.Data.Types.Money</RootNamespace>
+  </PropertyGroup>
+  <!-- Server-free: the money type, the currency table and their JSON converters, shared
+       by the server and the Blazor WASM client so both round and serialize amounts the
+       same way. Never reference Grove. -->
+</Project>

@@ -1,4 +1,4 @@
-# Autoroute (`Grove.Autoroute`)
+# Autoroute (`Grove.Routes.Auto`)
 
 This module allows you to specify custom URLs (permalinks) for your content items.
 

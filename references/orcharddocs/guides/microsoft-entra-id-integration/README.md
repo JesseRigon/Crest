@@ -1,6 +1,6 @@
 # Use Microsoft Entra ID (Azure AD) as an external identity provider
 
-In order to authenticate users with Microsoft Entra ID (Azure AD), you must enable and configure The `Grove.MicrosoftAuthentication.AzureAD` (you can learn more about [here](../../reference/modules/Microsoft.Authentication/README.md)) and the `Grove.Users.Registration` features
+In order to authenticate users with Microsoft Entra ID (Azure AD), you must enable and configure The `Grove.MicrosoftAuthentication.AzureAD` (you can learn more about [here](../../reference/modules/Microsoft.Authentication/README.md)) and the `Grove.Access.Users.Registration` features
 
 ## What you will build
 
@@ -50,7 +50,7 @@ The last step is to copy Application Id and Tenant Id from Azure Portal
 
 ![image](assets/get-appid-tenantid-from-portal.jpg)
 
-[Navigate to Settings/Security/Authentication/Microsoft Entra ID](https://localhost:5001/Admin/Settings/Grove.Microsoft.Authentication.AzureAD) in Grove Admin to configure the AzureAD app.
+[Navigate to Settings/Security/Authentication/Microsoft Entra ID](https://localhost:5001/Admin/Settings/Grove.Integrations.Microsoft.AzureAD) in Grove Admin to configure the AzureAD app.
 
 ![image](assets/configure-grove-azuread.jpg)
 

@@ -1,7 +1,7 @@
 using Grove.Media.Scanning;
 using Grove.Media.Scanning.Services;
 using Grove.Entities;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging.Abstractions;
 

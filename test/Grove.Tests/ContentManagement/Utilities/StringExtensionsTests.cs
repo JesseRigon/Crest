@@ -1,4 +1,4 @@
-namespace Grove.ContentManagement.Utilities.Tests;
+namespace Grove.Contents.Management.Utilities.Tests;
 
 public class StringExtensionsTests
 {

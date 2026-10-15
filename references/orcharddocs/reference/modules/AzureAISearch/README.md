@@ -1,4 +1,4 @@
-# Azure AI Search (`Grove.AzureAI`)
+# Azure AI Search (`Grove.Integrations.AI.Azure`)
 
 The Azure AI Search module allows you to manage Azure AI Search indices.
 
@@ -50,13 +50,13 @@ If you want the UI to capture custom data related to your source, implement `Dis
 If your custom source emits embeddings, add a vector field to `AzureAISearchIndexMetadata.IndexMappings` and define the corresponding vector search profile in `AzureAISearchIndexMetadata.VectorSearch`.
 
 ```csharp
-using Grove.AzureAI;
-using Grove.AzureAI.Models;
+using Grove.Integrations.AI.Azure;
+using Grove.Integrations.AI.Azure.Models;
 using Grove.Entities;
-using Grove.Indexing;
-using Grove.Indexing.Core.Handlers;
-using Grove.Indexing.Models;
-using static Grove.Indexing.DocumentIndex;
+using Grove.Data.Indexing;
+using Grove.Data.Indexing.Core.Handlers;
+using Grove.Data.Indexing.Models;
+using static Grove.Data.Indexing.DocumentIndex;
 
 public sealed class ProductIndexProfileHandler : IndexProfileHandlerBase
 {
@@ -158,9 +158,9 @@ The built-in `ISearchService` and the Site Search UI execute full-text search. T
 ```csharp
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
-using Grove.AzureAI;
-using Grove.AzureAI.Services;
-using Grove.Indexing;
+using Grove.Integrations.AI.Azure;
+using Grove.Integrations.AI.Azure.Services;
+using Grove.Data.Indexing;
 
 public sealed class ProductVectorSearchService
 {

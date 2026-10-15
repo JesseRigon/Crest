@@ -21,7 +21,7 @@ export default [
             "**/eslintrc.cjs",
             "**/docs/assets/js/**",
             // TODO: large, jQuery-heavy legacy codebases; deferred to a dedicated follow-up.
-            "**/Grove.Resources/**",
+            "**/Grove.Display.Resources/**",
             "**/Grove.Media/**",
             // Hand-authored ambient type declarations for the untyped third-party jsPlumb library
             // (not from DefinitelyTyped) - a typing compatibility shim, not application code.

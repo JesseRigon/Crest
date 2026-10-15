@@ -1,0 +1,22 @@
+using Grove.Contents.Management.GraphQL.Queries;
+using Grove.Display.Lists.Indexes;
+
+namespace Grove.Display.Lists.GraphQL;
+
+public class ContainedPartIndexAliasProvider : IIndexAliasProvider
+{
+    private static readonly IndexAlias[] s_aliases =
+    [
+        new IndexAlias
+        {
+            Alias = "containedPart",
+            Index = nameof(ContainedPartIndex),
+            IndexType = typeof(ContainedPartIndex),
+        }
+    ];
+
+    public ValueTask<IEnumerable<IndexAlias>> GetAliasesAsync()
+    {
+        return ValueTask.FromResult<IEnumerable<IndexAlias>>(s_aliases);
+    }
+}

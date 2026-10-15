@@ -1,10 +1,10 @@
 #nullable enable
 using Grove.Access;
 using Grove.Media.Files;
-using Grove.Sharing;
-using Grove.Sharing.Indexes;
-using Grove.Sharing.Migrations;
-using Grove.Sharing.Services;
+using Grove.Access.Sharing;
+using Grove.Access.Sharing.Indexes;
+using Grove.Access.Sharing.Migrations;
+using Grove.Access.Sharing.Services;
 using YesSql;
 using YesSql.Provider.Sqlite;
 using YesSql.Sql;

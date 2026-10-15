@@ -2,10 +2,10 @@
 
 using System.Text.Json.Nodes;
 using Grove.Access;
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.Components;
-using Grove.DisplayManagement.Implementation;
-using Grove.DisplayManagement.Shapes;
+using Grove.Display.Management;
+using Grove.Display.Management.Components;
+using Grove.Display.Management.Implementation;
+using Grove.Display.Management.Shapes;
 using Grove.Infrastructure.Html;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
@@ -165,27 +165,22 @@ public sealed class DisplayTreeBuilderTests
     }
 
     [Fact]
-    public async Task FallsBackToTheHtmlDisplayAsASanitizedMarkupLeaf()
+    public async Task AShapeWithoutAComponentIsAnErrorNodeNamingItsType()
     {
-        var htmlDisplay = new Mock<IHtmlDisplay>();
-        htmlDisplay.Setup(display => display.ExecuteAsync(It.IsAny<DisplayContext>()))
-            .ReturnsAsync(new HtmlString("<p>Legacy</p><script>alert(1)</script>"));
-        var builder = DisplayTreeTestHost.Builder(htmlDisplay: htmlDisplay.Object);
+        var builder = DisplayTreeTestHost.Builder();
 
         var root = (await builder.BuildAsync(DisplayTreeTestHost.NewShape("Legacy__Widget"))).Root;
 
-        Assert.Equal(DisplayNode.MarkupComponent, root.Component);
-        var html = root.Properties[DisplayNode.MarkupProperty]!.GetValue<string>();
-        Assert.Contains("<p>Legacy</p>", html);
-        Assert.DoesNotContain("<script", html);
-        Assert.Contains(root.Diagnostics!, d => d.Action == "markup-fallback");
+        Assert.Equal(DisplayNode.ErrorComponent, root.Component);
+        var diagnostic = Assert.Single(root.Diagnostics!);
+        Assert.Equal("no-component", diagnostic.Action);
+        Assert.Contains("Legacy__Widget", diagnostic.Reason);
     }
 
     [Fact]
     public async Task ABoundComponentTheRegistryDoesNotKnowIsAnErrorNotAFallback()
     {
-        var htmlDisplay = new Mock<IHtmlDisplay>(MockBehavior.Strict);
-        var builder = DisplayTreeTestHost.Builder(htmlDisplay: htmlDisplay.Object);
+        var builder = DisplayTreeTestHost.Builder();
 
         var root = (await builder.BuildAsync(DisplayTreeTestHost.NewShape("Anything"), component: "Unregistered")).Root;
 
@@ -277,7 +272,6 @@ internal static class DisplayTreeTestHost
 
     public static DisplayTreeBuilder Builder(
         IAccessDecision? decision = null,
-        IHtmlDisplay? htmlDisplay = null,
         DisplayTreeOptions? options = null,
         CallerContext? caller = null,
         bool noCaller = false)
@@ -288,11 +282,6 @@ internal static class DisplayTreeTestHost
         services.AddSingleton<IHtmlSanitizerService>(new HtmlSanitizerService(Options.Create(new HtmlSanitizerOptions())));
         services.AddSingleton<ICallerContextAccessor>(new TestCallerAccessor { Current = noCaller ? null : caller ?? Caller });
         services.AddSingleton(decision ?? Allow());
-        if (htmlDisplay is not null)
-        {
-            services.AddSingleton(htmlDisplay);
-        }
-
         var provider = services.BuildServiceProvider();
 
         return new DisplayTreeBuilder(

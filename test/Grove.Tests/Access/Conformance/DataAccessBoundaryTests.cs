@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 namespace Grove.Tests.Access.Conformance;
 
 /// <summary>
-/// The boundary the analyzer in Grove.Build will enforce (docs/workflows.md › Tasks › 1, the
+/// The boundary the analyzer in Grove.Infrastructure.Build will enforce (docs/workflows.md › Tasks › 1, the
 /// analyzer), checked over the source until it exists: raw connections and Dapper only in
 /// the data layer, the query sources and migrations; no surface that answers a caller
 /// (controllers, endpoints, GraphQL, Liquid) queries the session itself - reads go through
@@ -47,11 +47,11 @@ public partial class DataAccessBoundaryTests
         "src/Grove.Data.YesSql/",
         "src/Grove.Data.Abstractions/",
         "src/Grove.Data.YesSql.Abstractions/",
-        "src/Grove.Setup/",
-        "src/Grove.MiniProfiler/",
-        "src/Grove.Queries/Sql/SqlQuerySource.cs",
-        "src/Grove.Queries/Structured/StructuredQuerySource.cs",
-        "src/Grove.Queries.Abstractions/",
+        "src/Grove.Infrastructure.Setup/",
+        "src/Grove.Diagnostics.MiniProfiler/",
+        "src/Grove.Data.Queries/Sql/SqlQuerySource.cs",
+        "src/Grove.Data.Queries/Structured/StructuredQuerySource.cs",
+        "src/Grove.Data.Queries.Abstractions/",
     ];
 
     [Fact]

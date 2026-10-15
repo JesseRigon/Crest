@@ -1,6 +1,6 @@
-# Roles (`Grove.Roles`)
+# Roles (`Grove.Access.Roles`)
 
-Enabling the `Grove.Roles` module will allow you to manage the user roles.
+Enabling the `Grove.Access.Roles` module will allow you to manage the user roles.
 
 ## Predefined Roles
 

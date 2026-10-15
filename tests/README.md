@@ -51,10 +51,10 @@ modules/Grove/
       harness/                   <- auth, health, instance bootstrap, screenshot-diff
       run-admin-suite.js
       run-client-suite.js
-  Grove.Icons/
+  Grove.Display.Icons/
     tests/
-      Grove.Icons.Tests/
-        Grove.Icons.Tests.csproj   <- discovered and run by run-tests.sh
+      Grove.Display.Icons.Tests/
+        Grove.Display.Icons.Tests.csproj   <- discovered and run by run-tests.sh
   Grove.<OtherProject>/
     tests/
       <OtherProject>.Tests/...                 <- same convention
@@ -69,7 +69,7 @@ parent project's own compile glob** — SDK-style projects (especially
 `Microsoft.NET.Sdk.Razor` ones) default-glob every `.cs` file under the project
 directory, so without an explicit exclusion the parent project will try to compile the
 test files itself and fail on missing test package references. See
-`Grove.Icons.csproj`'s `<Compile Remove="tests\**\*.cs" />` for the pattern
+`Grove.Display.Icons.csproj`'s `<Compile Remove="tests\**\*.cs" />` for the pattern
 to copy.
 
 ## Why the host repos don't do this scan themselves

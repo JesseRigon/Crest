@@ -1,7 +1,7 @@
-using Grove.ContentManagement;
-using Grove.Sitemaps.Handlers;
-using Grove.Sitemaps.Models;
-using Grove.Sitemaps.Services;
+using Grove.Contents.Management;
+using Grove.Seo.Sitemaps.Handlers;
+using Grove.Seo.Sitemaps.Models;
+using Grove.Seo.Sitemaps.Services;
 
 namespace Grove.Contents.Sitemaps;
 

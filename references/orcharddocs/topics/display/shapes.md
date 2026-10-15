@@ -158,7 +158,7 @@ shape.Attributes["data-brand"] = "Toyota";
 The template can use those values consistently:
 
 ```cshtml
-@using Grove.DisplayManagement
+@using Grove.Display.Management
 @{
     var shape = (IShape)Model;
     var tagBuilder = shape.GetTagBuilder("div");

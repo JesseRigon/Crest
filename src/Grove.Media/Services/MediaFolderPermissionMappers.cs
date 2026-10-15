@@ -1,6 +1,6 @@
 using Grove.Access;
-using Grove.ContentManagement;
-using Grove.FileStorage;
+using Grove.Contents.Management;
+using Grove.Data.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 

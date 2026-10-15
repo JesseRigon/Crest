@@ -1,4 +1,4 @@
-# Bag (`Grove.Flows`)
+# Bag (`Grove.Contents.Flows`)
 
 The BagPart is part of the Flows module, and is a content part that can contain multiple types of content items directly within it.
 
@@ -97,10 +97,10 @@ to build the display shapes for the content items, then `DisplayAsync` is used t
 === "Razor"
 
     ``` html
-    @using Grove.Flows.ViewModels
+    @using Grove.Contents.Flows.ViewModels
 
     @model BagPartViewModel
-    @inject Grove.ContentManagement.Display.IContentItemDisplayManager ContentItemDisplayManager
+    @inject Grove.Contents.Management.Display.IContentItemDisplayManager ContentItemDisplayManager
 
     <section class="flow">
         @foreach (var item in Model.BagPart.ContentItems)

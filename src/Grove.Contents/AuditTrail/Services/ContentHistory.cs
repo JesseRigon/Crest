@@ -2,7 +2,7 @@
 
 using System.Text.Json.Nodes;
 using Grove.AuditTrail.Models;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Contents.AuditTrail.Indexes;
 using Grove.Contents.AuditTrail.Models;
 using Grove.Entities;

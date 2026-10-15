@@ -1,12 +1,12 @@
-# Feeds (`Grove.Feeds`)
+# Feeds (`Grove.Data.Feeds`)
 
-The `Grove.Feeds` module provides an extensible infrastructure for exposing content as syndication feeds, such as RSS. It does not expose any feed on its own: other modules plug into it to describe **what** to syndicate, while this module handles **how** the feed document is built and served.
+The `Grove.Data.Feeds` module provides an extensible infrastructure for exposing content as syndication feeds, such as RSS. It does not expose any feed on its own: other modules plug into it to describe **what** to syndicate, while this module handles **how** the feed document is built and served.
 
 ## How it works
 
 A feed request is served by the `Feed` controller and resolved through two extension points:
 
-- `IFeedBuilderProvider` — selects the output format. The built-in `rss` builder is provided by `Grove.Feeds.Core`. The desired format is passed with the `format` query value (e.g. `format=rss`).
+- `IFeedBuilderProvider` — selects the output format. The built-in `rss` builder is provided by `Grove.Data.Feeds.Core`. The desired format is passed with the `format` query value (e.g. `format=rss`).
 - `IFeedQueryProvider` — selects the items to include, based on the request (for example, the items of a given list).
 
 The highest-priority matching builder and query are used. If neither matches, the controller returns `404`.

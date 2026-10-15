@@ -1,5 +1,5 @@
-using Grove.DisplayManagement;
-using Arguments = Grove.DisplayManagement.Arguments;
+using Grove.Display.Management;
+using Arguments = Grove.Display.Management.Arguments;
 
 namespace Grove.Tests.DisplayManagement;
 

@@ -1,6 +1,6 @@
 # Money
 
-`Grove.Money` is the money type and the `PriceField` a tenant puts on any content type:
+`Grove.Data.Types.Money` is the money type and the `PriceField` a tenant puts on any content type:
 `Amount` bound to an `ICurrency`, ISO 4217 metadata from the global store so minor units are
 never a per-tenant guess, and a default currency. It is Grove's because every content field
 type is ([architecture.md](architecture.md) › Every content field type lives in Grove): an
@@ -10,15 +10,15 @@ application on Grove alone must be able to model prices without a line-of-busine
 
 | Project | Contents |
 | --- | --- |
-| `Grove.Money/Domain` (server-free, the shape `Grove.Regions.Domain` has) | `Amount`, `Currency`, `CurrencyProvider`, `KnownCurrencyTable`, the `ICurrency`/`ICurrencyProvider`/`ICurrencySelector`/`IMoneyService` abstractions, the JSON converters (`AmountConverter`, `CurrencyConverter`), the culture extensions |
-| `Grove.Money` (server side) | `PriceField`, `PriceFieldSettings`, `MoneyService`, `CurrencySettings`, `GlobalCurrencyProvider`, the currency global schema and `currencies.json` |
+| `Grove.Data.Types.Money/Domain` (server-free, the shape `Grove.Data.Regions.Domain` has) | `Amount`, `Currency`, `CurrencyProvider`, `KnownCurrencyTable`, the `ICurrency`/`ICurrencyProvider`/`ICurrencySelector`/`IMoneyService` abstractions, the JSON converters (`AmountConverter`, `CurrencyConverter`), the culture extensions |
+| `Grove.Data.Types.Money` (server side) | `PriceField`, `PriceFieldSettings`, `MoneyService`, `CurrencySettings`, `GlobalCurrencyProvider`, the currency global schema and `currencies.json` |
 
 Nothing in it is proprietary: the money types and `PriceField` are adapted from
 OrchardCore.Commerce (MIT, attribution headers kept, `Domain/README.md` and `NOTICE.md`
 record it) and `GlobalCurrencyProvider` reads `Grove.Data.Global`, which is Grove's already.
 
 The currency reference data (`Data/currencies.json`, `CurrencyGlobalSchema`, stored under
-the schema name `Grove.Money.Currencies`) is `Grove.Money`'s, since ISO 4217 minor units are
+the schema name `Grove.Data.Types.Money.Currencies`) is `Grove.Data.Types.Money`'s, since ISO 4217 minor units are
 reference data every application needs and the global store is Grove's
 ([globals.md](globals.md)).
 
@@ -66,7 +66,7 @@ kind. Identity is kind (ordinal) plus code (ignoring case, as currency codes com
   whole (`kind`, `code`, `precision`, `symbol`, `englishname`, `unit`, `format`) so it reads
   back with no provider.
 
-Tests are in `Grove.Money.Tests/DenominationTests.cs`.
+Tests are in `Grove.Data.Types.Money.Tests/DenominationTests.cs`.
 
 ### Exchange rates, the wire shape and the currency picker
 

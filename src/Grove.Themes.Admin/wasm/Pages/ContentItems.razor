@@ -1,0 +1,508 @@
+@page "/Contents/ContentItems"
+@attribute [PageEntry("AccessAdminPanel", Id = "content-items", Parent = "content", Caption = "Content Items", Position = "before", Icon = "@iconify:mdi:file-document-outline")]
+@using Grove.Themes.Admin.Api
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Primitives
+@inject IApi Api
+@inject NavigationManager Navigation
+@inject NotificationService Notifications
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+@inject HttpClient Http
+@inject IJSRuntime Js
+
+<GroveStack Gap="1rem" data-testid="content-items-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <GroveStack Gap="0.25rem">
+            <GroveText TextStyle="TextStyle.H4" Text="@PageHeading" />
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["Browse, filter, publish, unpublish, and remove content items."]" />
+        </GroveStack>
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <GroveButton Text="@T["New content"]" Icon="add" Click="StartCreate" Disabled="@(IsBusy || CreatableTypes.Length == 0)" />
+            <GroveButton Text="@T["Refresh"]" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="@(() => LoadAsync())" Disabled="@IsBusy" />
+        </GroveStack>
+    </GroveStack>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</GroveAlert>
+    }
+
+    <GroveCard>
+        <GroveRow Gap="0.75rem">
+            <GroveColumn Size="12" SizeMD="4"><GroveTextBox @bind-Value="SearchText" @oninput="OnSearchInput" Placeholder="@T["Search content titles..."]" Style="width: 100%;" /></GroveColumn>
+            <GroveColumn Size="12" SizeMD="2"><GroveDropDown @bind-Value="SelectedGroup" Data="GroupOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => LoadAsync(1))" Style="width: 100%;" data-testid="content-items-group-filter" /></GroveColumn>
+            <GroveColumn Size="12" SizeMD="2"><GroveDropDown @bind-Value="SelectedContentType" Data="ContentTypeOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => ContentTypeChangedAsync())" Style="width: 100%;" data-testid="content-items-type-filter" /></GroveColumn>
+            <GroveColumn Size="12" SizeMD="2"><GroveDropDown @bind-Value="SelectedStatus" Data="StatusOptions" TextProperty="Text" ValueProperty="Value" Change="@(_ => LoadAsync())" Style="width: 100%;" /></GroveColumn>
+            <GroveColumn Size="12" SizeMD="2"><GroveText Text="@(T["{0:n0} items", Result.Total])" TextStyle="TextStyle.Caption" Style="line-height: 2.5rem;" /></GroveColumn>
+            @* The filters modules add (a culture, a taxonomy's terms): content-items/filters. *@
+            @foreach (var filter in ListFilters)
+            {
+                <GroveColumn Size="12" SizeMD="2">
+                    <GroveDropDown TValue="string" Value="@FilterValue(filter.Name)" ValueChanged="@(value => SetFilterAsync(filter.Name, value))" Data="@FilterOptions(filter)" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" data-testid="@($"content-items-filter-{filter.Name}")" />
+                </GroveColumn>
+            }
+        </GroveRow>
+    </GroveCard>
+
+    @if (IsLoading)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (Result.Items.Length == 0)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["No content items match the current filters."]</GroveAlert>
+    }
+    else
+    {
+        @if (HasBulkActions && Selected.Count > 0)
+        {
+            <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" data-testid="content-items-bulk">
+                <GroveText TextStyle="TextStyle.Body2" Text="@(T["{0} selected", Selected.Count])" />
+                @if (Deployment?.Plans is not null)
+                {
+                    <GroveButton Text="@T["Add to deployment plan"]" Icon="playlist_add" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OpenAction(ContentAction.AddToPlan, null))" Disabled="@IsBusy" />
+                }
+                @if (Deployment?.Targets is not null)
+                {
+                    <GroveButton Text="@T["Export to deployment target"]" Icon="cloud_upload" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OpenAction(ContentAction.Export, null))" Disabled="@IsBusy" />
+                }
+            </GroveStack>
+        }
+        <GroveDataGrid Data="@Result.Items" TItem="ContentItem" AllowPaging="false" Responsive="true" data-testid="content-items-grid">
+            <Columns>
+                @if (HasBulkActions)
+                {
+                    <GroveDataGridColumn TItem="ContentItem" Width="3.5rem" Sortable="false" Filterable="false">
+                        <HeaderTemplate><GroveCheckBox Value="@(Result.Items.Length > 0 && Result.Items.All(item => Selected.Contains(item.ContentItemId)))" Change="@((bool value) => ToggleAll(value))" Name="select-all-content-items" /></HeaderTemplate>
+                        <Template Context="item"><GroveCheckBox Value="@Selected.Contains(item.ContentItemId)" Change="@((bool value) => Toggle(item.ContentItemId, value))" Name="@($"content-item-{item.ContentItemId}")" /></Template>
+                    </GroveDataGridColumn>
+                }
+                <GroveDataGridColumn TItem="ContentItem" Title="@T["Title"]">
+                    <Template Context="item"><GroveText TextStyle="TextStyle.Subtitle2" Text="@item.DisplayText" /><GroveText TextStyle="TextStyle.Caption" Text="@item.ContentItemId" /></Template>
+                </GroveDataGridColumn>
+                <GroveDataGridColumn TItem="ContentItem" Title="@T["Type"]"><Template Context="item">@item.ContentType</Template></GroveDataGridColumn>
+                @if (ShowsCulture)
+                {
+                    <GroveDataGridColumn TItem="ContentItem" Title="@T["Culture"]"><Template Context="item">@(Culture(item) is { } culture ? culture : T["—"])</Template></GroveDataGridColumn>
+                }
+                <GroveDataGridColumn TItem="ContentItem" Title="@T["Status"]"><Template Context="item"><GroveBadge Text="@(item.Published ? T["Published"] : T["Draft"])" BadgeStyle="@(item.Published ? BadgeStyle.Success : BadgeStyle.Warning)" /></Template></GroveDataGridColumn>
+                <GroveDataGridColumn TItem="ContentItem" Title="@T["Modified"]"><Template Context="item">@(item.ModifiedUtc?.ToLocalTime().ToString("g") ?? T["—"])</Template></GroveDataGridColumn>
+                <GroveDataGridColumn TItem="ContentItem" Title="@T["Actions"]" Sortable="false" Filterable="false" Width="17.5rem">
+                    <Template Context="item">
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                            @if (item.Published)
+                            {
+                                <GroveButton Icon="unpublished" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Unpublish"]" Click="@(() => ChangePublicationAsync(item, false))" Disabled="@IsBusy" />
+                            }
+                            else
+                            {
+                                <GroveButton Icon="publish" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Publish"]" Click="@(() => ChangePublicationAsync(item, true))" Disabled="@IsBusy" />
+                            }
+                            <GroveButton Icon="visibility" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Display"]" Click="@(() => Display(item))" Disabled="@IsBusy" data-testid="content-item-display" />
+                            <GroveButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Edit"]" Click="@(() => Edit(item))" Disabled="@IsBusy" />
+                            <GroveButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Delete"]" Click="@(() => RequestDelete(item))" Disabled="@IsBusy" />
+                            @if (HasItemActions)
+                            {
+                                <GroveButton Icon="more_horiz" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["More actions"]" Click="@(() => OpenAction(ContentAction.Menu, item))" Disabled="@IsBusy" data-testid="content-item-more" />
+                            }
+                        </GroveStack>
+                    </Template>
+                </GroveDataGridColumn>
+            </Columns>
+        </GroveDataGrid>
+        <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center" Gap="0.75rem">
+            <GroveButton Text="@T["Previous"]" ButtonStyle="ButtonStyle.Light" Click="PreviousPageAsync" Disabled="@(IsBusy || Result.Page <= 1)" />
+            <GroveText Text="@(T["Page {0} of {1}", Result.Page, PageCount])" />
+            <GroveButton Text="@T["Next"]" ButtonStyle="ButtonStyle.Light" Click="NextPageAsync" Disabled="@(IsBusy || Result.Page >= PageCount)" />
+        </GroveStack>
+    }
+
+    @if (CreateDialogOpen)
+    {
+        <div class="content-items-dialog-backdrop"><GroveCard class="content-items-dialog"><GroveStack Gap="1rem"><GroveText TextStyle="TextStyle.H5" Text="@T["Create Content"]" /><GroveDropDown @bind-Value="CreateContentType" Data="CreatableTypes" TextProperty="Text" ValueProperty="Value" Style="width: 100%;" /><GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CloseCreate" /><GroveButton Text="@T["Continue"]" Click="Create" Disabled="@string.IsNullOrWhiteSpace(CreateContentType)" /></GroveStack></GroveStack></GroveCard></div>
+    }
+    @if (DeleteCandidate is not null)
+    {
+        <div class="content-items-dialog-backdrop"><GroveCard class="content-items-dialog"><GroveStack Gap="1rem"><GroveText TextStyle="TextStyle.H5" Text="@T["Delete content item?"]" /><GroveText Text="@(T["This permanently removes {0}.", DeleteCandidate.DisplayText])" /><GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CancelDelete" /><GroveButton Text="@T["Delete"]" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="@IsBusy" /></GroveStack></GroveStack></GroveCard></div>
+    }
+    @if (Action is { } action)
+    {
+        <CascadingValue Value="ActionOverlay">
+            <Grove.Display.Components.Interaction.Dialog Title="@ActionTitle(action)">
+                <GroveStack Gap="0.75rem" data-testid="content-items-action-dialog">
+                    @if (ActionItem is { } actionItem)
+                    {
+                        <GroveText TextStyle="TextStyle.Subtitle2" Text="@actionItem.DisplayText" />
+                    }
+                    else
+                    {
+                        <GroveText TextStyle="TextStyle.Body2" Text="@(T["{0} selected items (their published versions).", Selected.Count])" />
+                    }
+                    @switch (action)
+                    {
+                        case ContentAction.Menu:
+                            @if (Deployment?.Plans is not null)
+                            {
+                                <GroveButton Text="@T["Add to deployment plan"]" Icon="playlist_add" ButtonStyle="ButtonStyle.Light" Click="@(() => Action = ContentAction.AddToPlan)" />
+                            }
+                            @if (Deployment?.Targets is not null)
+                            {
+                                <GroveButton Text="@T["Export to deployment target"]" Icon="cloud_upload" ButtonStyle="ButtonStyle.Light" Click="@(() => Action = ContentAction.Export)" />
+                            }
+                            @if (Deployment?.Download == true)
+                            {
+                                <GroveButton Text="@T["View as JSON"]" Icon="data_object" ButtonStyle="ButtonStyle.Light" Click="ViewJsonAsync" />
+                                <GroveButton Text="@T["Download as JSON"]" Icon="download" ButtonStyle="ButtonStyle.Light" Click="DownloadJsonAsync" />
+                            }
+                            @if (ActionItem is { Published: false })
+                            {
+                                <div><GroveCheckBox @bind-Value="UseLatest" Name="content-action-latest" /><label for="content-action-latest"> @T["The draft (latest version), not the published one"]</label></div>
+                            }
+                            break;
+                        case ContentAction.AddToPlan:
+                            <GroveDropDown TValue="long?" @bind-Value="SelectedPlanId" Data="@(Deployment?.Plans ?? [])" TextProperty="Name" ValueProperty="Id" Placeholder="@T["Choose a deployment plan"]" Style="width: 100%;" data-testid="content-action-plan" />
+                            <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                                <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CloseAction" />
+                                <GroveButton Text="@T["Add"]" Click="AddToPlanAsync" Disabled="@(IsBusy || SelectedPlanId is null)" />
+                            </GroveStack>
+                            break;
+                        case ContentAction.Export:
+                            @if (ActionItem is { Published: false })
+                            {
+                                <div><GroveCheckBox @bind-Value="UseLatest" Name="content-export-latest" /><label for="content-export-latest"> @T["The draft (latest version), not the published one"]</label></div>
+                            }
+                            @foreach (var target in Deployment?.Targets ?? [])
+                            {
+                                <GroveCard>
+                                    <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                        <GroveStack Gap="0.1rem"><GroveText TextStyle="TextStyle.Subtitle2" Text="@target.Name" /><GroveText TextStyle="TextStyle.Caption" Text="@target.Description" /></GroveStack>
+                                        <GroveButton Text="@T["Select"]" Size="ButtonSize.Small" Click="@(() => ExportAsync(target))" Disabled="@IsBusy" />
+                                    </GroveStack>
+                                </GroveCard>
+                            }
+                            break;
+                        case ContentAction.Json:
+                            <pre style="max-height: 60vh; overflow: auto; margin: 0;" data-testid="content-action-json">@JsonText</pre>
+                            break;
+                    }
+                </GroveStack>
+            </Grove.Display.Components.Interaction.Dialog>
+        </CascadingValue>
+    }
+</GroveStack>
+
+@code {
+    // The Content-menu entries for designated types link here with ?type=<Name>
+    // (query string, not a route segment, so the existing route registration and
+    // its permission gate cover the filtered view). Navigating between two such
+    // menu items reuses this component - only the query changes - so filter
+    // changes land in OnParametersSetAsync, not OnInitializedAsync.
+    [SupplyParameterFromQuery(Name = "type")]
+    public string? TypeFilter { get; set; }
+    private string? AppliedTypeFilter;
+
+    // Group pages (tenant setting "content group pages in menu") link here with
+    // ?group=<key>; a group is a set of content SOURCES the modules declared, so the
+    // list is filtered server-side to whatever those sources cover.
+    [SupplyParameterFromQuery(Name = "group")]
+    public string? GroupFilter { get; set; }
+    private string? AppliedGroupFilter;
+
+    private ContentItemListResult Result { get; set; } = ContentItemListResult.Empty;
+    private ContentType[] ContentTypes { get; set; } = [];
+    private ContentGroup[] Groups { get; set; } = [];
+    private string? SelectedContentType { get; set; }
+    private string? SelectedGroup { get; set; }
+    private string SelectedStatus { get; set; } = "latest";
+    private string? SearchText { get; set; }
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsBusy => IsLoading || IsSaving;
+    private string? ErrorMessage { get; set; }
+    private bool CreateDialogOpen { get; set; }
+    private string? CreateContentType { get; set; }
+    private ContentItem? DeleteCandidate { get; set; }
+    private CancellationTokenSource? SearchCancellation;
+
+    private FilterOption[] StatusOptions => [new("latest", T["Latest"]), new("published", T["Published"]), new("draft", T["Unpublished"])];
+    private FilterOption[] ContentTypeOptions => [new(string.Empty, T["All content types"]), .. ContentTypes.Select(type => new FilterOption(type.Name, type.DisplayName))];
+    private FilterOption[] GroupOptions => [new(string.Empty, T["All groups"]), .. Groups.Where(group => !group.Hidden).Select(group => new FilterOption(group.Key, group.DisplayName))];
+    private FilterOption[] CreatableTypes => ContentTypes.Select(type => new FilterOption(type.Name, type.DisplayName)).ToArray();
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(Result.Total / (double)Result.PageSize));
+
+    private string PageHeading =>
+        (string.IsNullOrWhiteSpace(TypeFilter)
+            ? null
+            : ContentTypes.FirstOrDefault(type => string.Equals(type.Name, TypeFilter, StringComparison.OrdinalIgnoreCase))?.DisplayName)
+        ?? (string.IsNullOrWhiteSpace(GroupFilter)
+            ? null
+            : Groups.FirstOrDefault(group => string.Equals(group.Key, GroupFilter, StringComparison.OrdinalIgnoreCase))?.DisplayName)
+        ?? T["Content Items"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        ContentTypes = await Api.Grove.Rest.Content.Types.ListAsync();
+        Groups = await Api.Grove.Rest.ContentGroups.ListAsync();
+        await LoadActionsAsync();
+        AppliedTypeFilter = TypeFilter;
+        AppliedGroupFilter = GroupFilter;
+        SelectedContentType = string.IsNullOrWhiteSpace(TypeFilter) ? SelectedContentType : TypeFilter;
+        SelectedGroup = string.IsNullOrWhiteSpace(GroupFilter) ? SelectedGroup : GroupFilter;
+        await LoadFiltersAsync();
+        await LoadAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.Equals(TypeFilter, AppliedTypeFilter, StringComparison.Ordinal)
+            && string.Equals(GroupFilter, AppliedGroupFilter, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        AppliedTypeFilter = TypeFilter;
+        AppliedGroupFilter = GroupFilter;
+        SelectedContentType = string.IsNullOrWhiteSpace(TypeFilter) ? null : TypeFilter;
+        SelectedGroup = string.IsNullOrWhiteSpace(GroupFilter) ? null : GroupFilter;
+        await LoadFiltersAsync();
+        await LoadAsync(1);
+    }
+
+    private async Task LoadAsync(int? page = null)
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try { Result = await Api.Grove.Rest.Content.Items.ListAsync(SelectedContentType, SelectedStatus, SearchText, page ?? Result.Page, Result.PageSize, SelectedGroup, FilterValues); Selected.Clear(); }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsLoading = false; }
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs args)
+    {
+        SearchText = args.Value?.ToString();
+        SearchCancellation?.Cancel();
+        SearchCancellation = new CancellationTokenSource();
+        try { await Task.Delay(300, SearchCancellation.Token); await LoadAsync(1); }
+        catch (OperationCanceledException) { }
+    }
+
+    private Task PreviousPageAsync() => LoadAsync(Result.Page - 1);
+    private Task NextPageAsync() => LoadAsync(Result.Page + 1);
+    private void StartCreate() { CreateContentType = CreatableTypes.FirstOrDefault()?.Value; CreateDialogOpen = true; }
+    private void CloseCreate() => CreateDialogOpen = false;
+    private void Create() { if (!string.IsNullOrWhiteSpace(CreateContentType)) Navigation.NavigateTo($"Contents/ContentTypes/{Uri.EscapeDataString(CreateContentType)}/Create"); }
+    private void Edit(ContentItem item) => Navigation.NavigateTo($"Contents/ContentItems/{Uri.EscapeDataString(item.ContentItemId)}/Edit");
+    private void Display(ContentItem item) => Navigation.NavigateTo($"Contents/ContentItems/{Uri.EscapeDataString(item.ContentItemId)}/Display");
+    private void RequestDelete(ContentItem item) => DeleteCandidate = item;
+    private void CancelDelete() => DeleteCandidate = null;
+
+    private async Task ChangePublicationAsync(ContentItem item, bool publish)
+    {
+        IsSaving = true;
+        try { var result = publish ? await Api.Grove.Rest.Content.Items.PublishAsync(item.ContentItemId) : await Api.Grove.Rest.Content.Items.UnpublishAsync(item.ContentItemId); if (!result) throw new InvalidOperationException(T["The publish state could not be changed."]); Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["{0} was {1}. ", item.DisplayText, publish ? T["Published"] : T["Unpublished"]]); await LoadAsync(); }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (DeleteCandidate is null) return;
+        IsSaving = true;
+        try { if (!await Api.Grove.Rest.Content.Items.DeleteAsync(DeleteCandidate.ContentItemId)) throw new InvalidOperationException(T["The content item could not be deleted."]); Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["{0} was deleted.", DeleteCandidate.DisplayText]); DeleteCandidate = null; await LoadAsync(); }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private sealed record FilterOption(string Value, string Text);
+
+    // Module filters (Grove.Contents' IContentItemListFilter): culture, taxonomy terms.
+
+    private ListFilter[] ListFilters { get; set; } = [];
+    private Dictionary<string, string> FilterValues { get; } = new(StringComparer.OrdinalIgnoreCase);
+    private bool ShowsCulture => ListFilters.Any(filter => filter.Part == "LocalizationPart");
+
+    private async Task LoadFiltersAsync()
+    {
+        try
+        {
+            var uri = string.IsNullOrWhiteSpace(SelectedContentType) ? "api/grove/content-items/filters" : $"api/grove/content-items/filters?contentType={Uri.EscapeDataString(SelectedContentType)}";
+            ListFilters = await Http.GetFromJsonAsync<ListFilter[]>(uri) ?? [];
+        }
+        catch (HttpRequestException) { ListFilters = []; }
+
+        foreach (var name in FilterValues.Keys.Where(name => ListFilters.All(filter => filter.Name != name)).ToArray())
+        {
+            FilterValues.Remove(name);
+        }
+    }
+
+    private async Task ContentTypeChangedAsync()
+    {
+        await LoadFiltersAsync();
+        await LoadAsync();
+    }
+
+    private string FilterValue(string name) => FilterValues.TryGetValue(name, out var value) ? value : string.Empty;
+
+    private FilterOption[] FilterOptions(ListFilter filter) =>
+        [new(string.Empty, T["All: {0}", filter.Label]), .. filter.Options.Select(option => new FilterOption(option.Value, new string('\u00A0', option.Level * 2) + option.Text))];
+
+    private async Task SetFilterAsync(string name, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) FilterValues.Remove(name);
+        else FilterValues[name] = value;
+        await LoadAsync(1);
+    }
+
+    private static string? Culture(ContentItem item) =>
+        item.Content.ValueKind == System.Text.Json.JsonValueKind.Object
+        && item.Content.TryGetProperty("LocalizationPart", out var part)
+        && part.ValueKind == System.Text.Json.JsonValueKind.Object
+        && part.TryGetProperty("Culture", out var culture)
+        && culture.ValueKind == System.Text.Json.JsonValueKind.String
+            ? culture.GetString()
+            : null;
+
+    private sealed record ListFilter(string Name, string Label, ListFilterOption[] Options, string? Part);
+    private sealed record ListFilterOption(string Value, string Text, int Level);
+
+    // Deployment actions (the Contents deployment features): add to a plan, export to a target,
+    // download as JSON; offered as content-items/deployment says.
+
+    private enum ContentAction { Menu, AddToPlan, Export, Json }
+
+    private DeploymentActions? Deployment { get; set; }
+    private HashSet<string> Selected { get; } = new(StringComparer.Ordinal);
+    private ContentAction? Action { get; set; }
+    private ContentItem? ActionItem { get; set; }
+    private long? SelectedPlanId { get; set; }
+    private bool UseLatest { get; set; }
+    private string? JsonText { get; set; }
+    private bool HasBulkActions => Deployment?.Plans is not null || Deployment?.Targets is not null;
+    private bool HasItemActions => HasBulkActions || Deployment?.Download == true;
+
+    private DisplayOverlay ActionOverlay => new() { NodeId = "content-items-action", CloseAsync = () => { CloseAction(); StateHasChanged(); return Task.CompletedTask; } };
+
+    private async Task LoadActionsAsync()
+    {
+        try { Deployment = await Http.GetFromJsonAsync<DeploymentActions>("api/grove/content-items/deployment"); }
+        catch (HttpRequestException) { Deployment = null; }
+    }
+
+    private void Toggle(string contentItemId, bool selected)
+    {
+        if (selected) Selected.Add(contentItemId);
+        else Selected.Remove(contentItemId);
+    }
+
+    private void ToggleAll(bool selected)
+    {
+        foreach (var item in Result.Items) Toggle(item.ContentItemId, selected);
+    }
+
+    private void OpenAction(ContentAction action, ContentItem? item)
+    {
+        Action = action;
+        ActionItem = item;
+        UseLatest = item is { Published: false };
+        SelectedPlanId = Deployment?.Plans?.FirstOrDefault()?.Id;
+        JsonText = null;
+    }
+
+    private void CloseAction()
+    {
+        Action = null;
+        ActionItem = null;
+    }
+
+    private string ActionTitle(ContentAction action) => action switch
+    {
+        ContentAction.AddToPlan => T["Add to deployment plan"],
+        ContentAction.Export => T["Export to deployment target"],
+        ContentAction.Json => T["Content item JSON"],
+        _ => T["More actions"],
+    };
+
+    private string[] ActionItemIds => ActionItem is { } item ? [item.ContentItemId] : [.. Selected];
+
+    private async Task AddToPlanAsync()
+    {
+        if (SelectedPlanId is not { } planId) return;
+        IsSaving = true;
+        try
+        {
+            using var response = await Http.PostAsJsonAsync($"api/grove/content-items/deployment/plans/{planId}", new { ContentItemIds = ActionItemIds });
+            if (!response.IsSuccessStatusCode) throw new InvalidOperationException(T["Couldn't add the selected content to the deployment plan."]);
+            Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["Content added successfully to the deployment plan."]);
+            CloseAction();
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private async Task ExportAsync(DeploymentTarget target)
+    {
+        if (Deployment?.ExportPlanId is not { } planId) return;
+        IsSaving = true;
+        try
+        {
+            // The export plan's step reads the items from the query string.
+            var query = string.Join('&', ActionItemIds.Select(id => $"contentItemId={Uri.EscapeDataString(id)}").Append($"latest={(ActionItem is not null && UseLatest).ToString().ToLowerInvariant()}"));
+            if (target.Id == "file")
+            {
+                using var response = await Http.GetAsync($"api/grove/deployment/plans/{planId}/package?{query}");
+                if (!response.IsSuccessStatusCode) throw new InvalidOperationException(T["The package could not be built."]);
+                var fileName = response.Content.Headers.ContentDisposition?.FileNameStar ?? response.Content.Headers.ContentDisposition?.FileName?.Trim('"') ?? "deployment.zip";
+                using var stream = new MemoryStream(await response.Content.ReadAsByteArrayAsync());
+                using var reference = new DotNetStreamReference(stream);
+                await Js.InvokeVoidAsync("Grove.downloadFile", fileName, reference, "application/zip");
+            }
+            else
+            {
+                using var response = await Http.PostAsync($"api/grove/deployment/plans/{planId}/remote/{Uri.EscapeDataString(target.Id)}?{query}", null);
+                var result = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<DeploymentOutcome>() : null;
+                if (result is not { Succeeded: true }) throw new InvalidOperationException(result?.Message ?? T["The export failed."]);
+                Notifications.Notify(NotificationSeverity.Success, T["Content Items"], result.Message);
+            }
+
+            CloseAction();
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private async Task<HttpResponseMessage?> GetJsonAsync()
+    {
+        if (ActionItem is not { } item) return null;
+        var response = await Http.GetAsync($"api/grove/content-items/{Uri.EscapeDataString(item.ContentItemId)}/json?latest={UseLatest.ToString().ToLowerInvariant()}");
+        if (response.IsSuccessStatusCode) return response;
+        response.Dispose();
+        ErrorMessage = UseLatest ? T["The content item could not be read."] : T["The content item has no published version to read."];
+        CloseAction();
+        return null;
+    }
+
+    private async Task ViewJsonAsync()
+    {
+        using var response = await GetJsonAsync();
+        if (response is null) return;
+        JsonText = await response.Content.ReadAsStringAsync();
+        Action = ContentAction.Json;
+    }
+
+    private async Task DownloadJsonAsync()
+    {
+        using var response = await GetJsonAsync();
+        if (response is null) return;
+        var fileName = response.Content.Headers.ContentDisposition?.FileNameStar ?? response.Content.Headers.ContentDisposition?.FileName?.Trim('"') ?? $"{ActionItem!.ContentItemId}.json";
+        using var stream = new MemoryStream(await response.Content.ReadAsByteArrayAsync());
+        using var reference = new DotNetStreamReference(stream);
+        await Js.InvokeVoidAsync("Grove.downloadFile", fileName, reference, "application/json");
+        CloseAction();
+    }
+
+    private sealed record DeploymentActions(DeploymentPlanOption[]? Plans, long? ExportPlanId, DeploymentTarget[]? Targets, bool Download);
+    private sealed record DeploymentPlanOption(long Id, string Name);
+    private sealed record DeploymentTarget(string Id, string Name, string Description);
+    private sealed record DeploymentOutcome(bool Succeeded, string Message);
+}

@@ -1,0 +1,16 @@
+@using System.Net.Http
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@* Server's own RootNamespace (Grove) puts this folder's inferred
+   namespace at Grove.Components; global:: avoids Razor resolving the
+   bare "Grove.Display.Components.*" segment below as a relative sibling of that (which
+   fails to find "Components" nested twice) instead of the Grove.Display.Components
+   *project*'s actual RootNamespace ("Grove.Display.Components", an unrelated assembly). *@
+@using global::Grove.Display.Components.Primitives
+@using global::Grove.Display.Components.Layout
+@using global::Grove.Display.Components.Navigation
+@using global::Grove.Display.Components.Display
+@using global::Grove.Display.Icons.Components

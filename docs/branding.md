@@ -53,7 +53,7 @@ A logo is not one file: the app consumes specific renditions in specific places.
   never hard-code surface knowledge; a module that adds a surface registers the rendition it
   consumes. `BrandingRendition` (name, label, where it is used, intended size, accepted types,
   reserved) is registered with `services.AddBrandingRendition(...)` into `BrandingOptions`
-  (`Grove.Infrastructure.Abstractions/Settings/Branding.cs`); `Grove.Settings` registers the
+  (`Grove.Infrastructure.Abstractions/Settings/Branding.cs`); `Grove.Infrastructure.Settings` registers the
   four above.
 - [x] **Files live in Media**, in a tenant-relative folder the service owns (resolved through
   `IMediaFileStore`, never a hand-typed absolute path), uploaded through the media pipeline so

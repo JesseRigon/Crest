@@ -1,4 +1,4 @@
-# Users (`Grove.Users`)
+# Users (`Grove.Access.Users`)
 
 The Users module enables authentication UI and user management.
 
@@ -26,11 +26,11 @@ If you override the affected shapes (see the changes in the [relevant pull reque
 
 To use this shape:
 
-1. Add the `Grove.DisplayManagement` package to your project if you haven't already.
+1. Add the `Grove.Display.Management` package to your project if you haven't already.
 2. In `_ViewImports.cshtml`, add:
 
 ```csharp
-@addTagHelper *, Grove.DisplayManagement
+@addTagHelper *, Grove.Display.Management
 ```
 
 You can then display a user's name like this:

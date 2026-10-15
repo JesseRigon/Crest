@@ -4,7 +4,7 @@ using Grove.Environment.Extensions.Features;
 using Grove.Environment.Shell;
 using Grove.Environment.Shell.Removing;
 using Grove.Modules;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Media.Processing;
 

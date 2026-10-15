@@ -63,7 +63,7 @@ public interface IContentPartListService
 
     /// <summary>
     /// Sets the per-field lock designation for a custom data field on the list's
-    /// option content type (see <see cref="Grove.Settings.GroveOptionFieldSettings"/>):
+    /// option content type (see <see cref="Grove.Infrastructure.Settings.GroveOptionFieldSettings"/>):
     /// true makes the field machine surface (frozen under the list's data lock),
     /// false makes it display surface. Fails when the option type has no such field.
     /// NOTE: like every service method, this trusts its caller - the controller
@@ -115,5 +115,5 @@ public interface IContentPartListService
     /// columns, ...) after the defaults are applied; it runs on every (re)attach, so
     /// migrations declare the settings idempotently.
     /// </summary>
-    Task AttachToContentTypeAsync(string listKey, string contentType, string fieldName, string? displayName = null, Action<Grove.Settings.OptionPickerFieldSettings>? configure = null, CancellationToken cancellationToken = default);
+    Task AttachToContentTypeAsync(string listKey, string contentType, string fieldName, string? displayName = null, Action<Grove.Infrastructure.Settings.OptionPickerFieldSettings>? configure = null, CancellationToken cancellationToken = default);
 }

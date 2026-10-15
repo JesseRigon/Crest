@@ -1,4 +1,4 @@
-# Publish Later (`Grove.PublishLater`)
+# Publish Later (`Grove.Contents.PublishLater`)
 
 The Publish Later module schedules a draft content item to be published at a specific date and time.
 

@@ -3,7 +3,7 @@ using Grove.AuditTrail.Services.Models;
 using Grove.Environment.Shell;
 using Grove.Environment.Shell.Models;
 using Grove.Modules;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;

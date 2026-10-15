@@ -1,9 +1,9 @@
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Infrastructure.Html;
 using Grove.Media;
 using Grove.Media.Helpers;
 using Grove.Media.Shortcodes;
-using Grove.ResourceManagement;
+using Grove.Display.Resources.Management;
 using Grove.Shortcodes.Services;
 
 namespace Grove.Tests.Modules.Grove.Media;

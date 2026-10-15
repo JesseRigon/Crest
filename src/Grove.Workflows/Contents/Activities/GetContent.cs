@@ -6,7 +6,7 @@ using Grove.Workflows.Activities.Flowchart.Attributes;
 using Grove.Workflows.Attributes;
 using Grove.Workflows.Models;
 using JetBrains.Annotations;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 
 namespace Grove.Workflows.Contents.Activities;
 

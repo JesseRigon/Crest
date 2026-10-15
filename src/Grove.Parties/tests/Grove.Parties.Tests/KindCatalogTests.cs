@@ -1,11 +1,11 @@
-using Grove.Kinds;
+using Grove.Data.Kinds;
 using Grove.Parties.PartyTypes;
 using Grove.Parties.Services;
 using Xunit;
 
 namespace Grove.Parties.Tests;
 
-// The generic kind registry (Grove.Kinds) as Parties uses it: merged by key, first
+// The generic kind registry (Grove.Data.Kinds) as Parties uses it: merged by key, first
 // registration wins, ordered by position then name, found ignoring case.
 public sealed class KindCatalogTests
 {

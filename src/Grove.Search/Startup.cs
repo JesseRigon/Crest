@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Deployment;
-using Grove.Localization.Data;
+using Grove.Data.Localization.Data;
 using Grove.Modules;
 using Grove.Search.Abstractions;
 using Grove.Search.Api;
@@ -35,7 +35,7 @@ public sealed class DeploymentStartup : StartupBase
     }
 }
 
-[RequireFeatures("Grove.DataLocalization")]
+[RequireFeatures("Grove.Data.Localization.Translations")]
 public sealed class DataLocalizationStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)

@@ -1,5 +1,5 @@
 @inject HttpClient Http
-@inject Grove.Components.Theme.GroveApiLocalizer T
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
 
 @* The trail as a table: one row per event, newest first, impersonated actions marked; a row
    opens the event's details (both attributions, the subject and the recorded data). Shared by
@@ -94,13 +94,13 @@
                     }
                     @if (Diff is not null)
                     {
-                        <Grove.Components.Content.ContentDiff Before="Diff.Before" After="Diff.After" BeforeLabel="@T["Previous version"]" AfterLabel="@T["This version"]" />
+                        <Grove.Display.Components.Content.ContentDiff Before="Diff.Before" After="Diff.After" BeforeLabel="@T["Previous version"]" AfterLabel="@T["This version"]" />
                     }
                     @if (Version is not null)
                     {
                         <div class="audit-version" data-testid="audit-content-version">
                             <GroveText TextStyle="TextStyle.Subtitle2">@T["Version {0}", Version.VersionNumber]</GroveText>
-                            <Grove.DisplayManagement.Components.DisplayTreeRenderer Node="Version.Tree.Root" />
+                            <Grove.Display.Management.Components.DisplayTreeRenderer Node="Version.Tree.Root" />
                         </div>
                     }
                 }

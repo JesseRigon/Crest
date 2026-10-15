@@ -68,7 +68,7 @@ server's culture) — no local translations file needed.
      to edit.
    - **Real deployment**: run **MediaApiStandalone** (`media-api-standalone.recipe.json`) and replace
      the placeholder origins first.
-   Either recipe: enables **Grove.Cors** with a **default** policy allowing the app origin for
+   Either recipe: enables **Grove.Security.Cors** with a **default** policy allowing the app origin for
    the Media API, `/connect/token`, and `/hubs/media` (bearer-only → `AllowCredentials` false); adds
    the app-origin `callback.html` + `silent-callback.html` redirect URIs to the `media_gallery`
    client; and ends with a **`ReloadTenant`** step so the CORS policy takes effect immediately (CORS

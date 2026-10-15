@@ -23,7 +23,6 @@ public sealed class Permissions : IPermissionProvider
         CommonPermissions.PreviewOwnContent,
         CommonPermissions.CloneContent,
         CommonPermissions.CloneOwnContent,
-        CommonPermissions.AccessContentApi,
         CommonPermissions.ListContent,
         CommonPermissions.EditContentOwner,
     ];
@@ -43,8 +42,7 @@ public sealed class Permissions : IPermissionProvider
                 CommonPermissions.DeleteContent,
                 CommonPermissions.PreviewContent,
                 CommonPermissions.CloneContent,
-                CommonPermissions.AccessContentApi,
-                CommonPermissions.ListContent,
+                        CommonPermissions.ListContent,
                 CommonPermissions.EditContentOwner,
             ],
         },

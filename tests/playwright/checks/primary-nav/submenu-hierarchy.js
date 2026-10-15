@@ -1,4 +1,4 @@
-// Converted from Grove.AdminTheme/tests/playwright/primary-nav-menu-submenu-hierarchy.js.
+// Converted from Grove.Themes.Admin/tests/playwright/primary-nav-menu-submenu-hierarchy.js.
 // Verifies mixed icon/no-icon level-1 items align their text, and that expanding a
 // third-tier submenu renders a visible, indented, themed container.
 //

@@ -1,0 +1,211 @@
+@page "/Layers"
+@attribute [PageEntry("ManageLayers", Id = "layers", Parent = "design", Caption = "Layers", Icon = "@iconify:mdi:layers")]
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Grove.Themes.Admin.Api
+@using Grove.Display.Components.Editors
+@inject IApi Api
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* Layers (docs/blazor-display.md rework step 6; rulings 2026-10-12: widgets are retired): a
+   layer's rule (its conditions, in the recipe format) decides on which pages it applies; its
+   placements put component instances into zone keys there, ordered by position. Placements are
+   checked against the site registry's schema on the server. *@
+<GroveStack Gap="1rem" data-testid="layers-page">
+    <GroveText TextStyle="TextStyle.H4" Text="@T["Layers"]" />
+
+    @if (_errors.Length > 0)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false" data-testid="layers-errors">
+            @foreach (var error in _errors)
+            {
+                <div>@error</div>
+            }
+        </GroveAlert>
+    }
+
+    <GroveCard>
+        <GroveStack Gap="0.75rem">
+            <GroveText TextStyle="TextStyle.H6" Text="@T["Layers and rules"]" />
+            @foreach (var layer in _layers)
+            {
+                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                    <strong>@layer.Name</strong>
+                    <span>@layer.Description</span>
+                    <GroveButton Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => EditLayer(layer))" />
+                    <GroveButton Icon="delete" ButtonStyle="ButtonStyle.Light" Click="@(() => DeleteLayerAsync(layer.Name))" />
+                </GroveStack>
+            }
+
+            <GroveStack Gap="0.5rem">
+                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    <GroveTextBox @bind-Value="_layerName" Placeholder="@T["Layer name"]" data-testid="layers-name" />
+                    <GroveTextBox @bind-Value="_layerDescription" Placeholder="@T["Description"]" />
+                </GroveStack>
+                @* The rule's conditions (Grove.Display.Rules): each condition type's editor is a
+                   registered component; the server checks the conditions before the layer is saved. *@
+                <div data-testid="layers-conditions">
+                    <RuleEditor @key="_editorKey" @ref="_ruleEditor" Conditions="_layerConditions" />
+                </div>
+                <GroveButton Text="@T["Save layer"]" Icon="save" Click="SaveLayerAsync" data-testid="layers-save" />
+            </GroveStack>
+        </GroveStack>
+    </GroveCard>
+
+    <GroveCard>
+        <GroveStack Gap="0.75rem">
+            <GroveText TextStyle="TextStyle.H6" Text="@T["Placements"]" />
+            <GroveDataGrid Data="@_placements" TItem="GroveLayerPlacement" data-testid="layers-placements">
+                <Columns>
+                    <GroveDataGridColumn TItem="GroveLayerPlacement" Property="Layer" Title="@T["Layer"]" />
+                    <GroveDataGridColumn TItem="GroveLayerPlacement" Property="Zone" Title="@T["Zone"]" />
+                    <GroveDataGridColumn TItem="GroveLayerPlacement" Property="Component" Title="@T["Component"]" />
+                    <GroveDataGridColumn TItem="GroveLayerPlacement" Property="Position" Title="@T["Position"]" />
+                    <GroveDataGridColumn TItem="GroveLayerPlacement" Title="@T["Actions"]">
+                        <Template Context="placement">
+                            <GroveButton Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => EditPlacement(placement))" />
+                            <GroveButton Icon="delete" ButtonStyle="ButtonStyle.Light" Click="@(() => DeletePlacementAsync(placement.Id))" />
+                        </Template>
+                    </GroveDataGridColumn>
+                </Columns>
+            </GroveDataGrid>
+
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                <GroveTextBox @bind-Value="_placementLayer" Placeholder="@T["Layer"]" />
+                <GroveTextBox @bind-Value="_placementZone" Placeholder="@T["Zone key (Footer, Sidebar, ...)"]" />
+                <GroveTextBox @bind-Value="_placementComponent" Placeholder="@T["Component"]" list="grove-layer-components" />
+                <GroveNumeric TValue="double" @bind-Value="_placementPosition" />
+            </GroveStack>
+            <datalist id="grove-layer-components">
+                @foreach (var component in _components)
+                {
+                    <option value="@component.Name">@(component.DisplayName ?? component.Name)</option>
+                }
+            </datalist>
+            @if (_components.FirstOrDefault(component => component.Name == _placementComponent) is { } selected)
+            {
+                <small>@T["Parameters"]: @string.Join(", ", selected.Parameters.Where(parameter => !parameter.Hidden && parameter.Kind is not ("EventHandler" or "Output")).Select(parameter => parameter.Required ? parameter.Name + "*" : parameter.Name))</small>
+            }
+            <GroveTextArea @bind-Value="_placementProperties" Rows="4" Placeholder='{ "Text": "Hello" }' Style="font-family: var(--grove-font-mono, monospace);" />
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <GroveButton Text="@T["Save placement"]" Icon="save" Click="SavePlacementAsync" data-testid="layers-placement-save" />
+                <GroveButton Text="@T["New placement"]" Icon="add" ButtonStyle="ButtonStyle.Light" Click="NewPlacement" />
+            </GroveStack>
+        </GroveStack>
+    </GroveCard>
+</GroveStack>
+
+@code {
+    private GroveLayer[] _layers = [];
+    private GroveLayerPlacement[] _placements = [];
+    private GroveComponentSchema[] _components = [];
+    private string[] _errors = [];
+
+    private string? _layerName;
+    private string? _layerDescription;
+    private JsonArray _layerConditions = [];
+    private RuleEditor? _ruleEditor;
+    private int _editorKey;
+
+    private string _placementId = string.Empty;
+    private string? _placementLayer;
+    private string? _placementZone;
+    private string? _placementComponent;
+    private double _placementPosition;
+    private string? _placementProperties = "{}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _components = await Api.Grove.Rest.Components.ListAsync("site");
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        var layers = await Api.Grove.Rest.Layers.GetAsync();
+        _layers = layers?.Layers ?? [];
+        _placements = layers?.Placements ?? [];
+    }
+
+    private void EditLayer(GroveLayer layer)
+    {
+        _layerName = layer.Name;
+        _layerDescription = layer.Description;
+        _layerConditions = layer.Conditions?.DeepClone() as JsonArray ?? [];
+        _editorKey++;
+    }
+
+    private async Task SaveLayerAsync()
+    {
+        if (_ruleEditor is not null && !await _ruleEditor.CheckAsync())
+        {
+            _errors = [T["Fix the conditions marked below before saving the layer."]];
+            return;
+        }
+
+        Show(await Api.Grove.Rest.Layers.SaveLayerAsync(_layerName ?? string.Empty, new GroveLayer(_layerName ?? string.Empty, _layerDescription, _layerConditions)));
+        await ReloadAsync();
+    }
+
+    private async Task DeleteLayerAsync(string name)
+    {
+        Show(await Api.Grove.Rest.Layers.DeleteLayerAsync(name));
+        await ReloadAsync();
+    }
+
+    private void NewPlacement()
+    {
+        _placementId = string.Empty;
+        _placementLayer = _placementZone = _placementComponent = null;
+        _placementPosition = 0;
+        _placementProperties = "{}";
+    }
+
+    private void EditPlacement(GroveLayerPlacement placement)
+    {
+        _placementId = placement.Id;
+        _placementLayer = placement.Layer;
+        _placementZone = placement.Zone;
+        _placementComponent = placement.Component;
+        _placementPosition = placement.Position;
+        _placementProperties = placement.Properties.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    private async Task SavePlacementAsync()
+    {
+        if (!TryParse<JsonObject>(_placementProperties, T["The parameters are not a JSON object."], out var properties))
+        {
+            return;
+        }
+
+        Show(await Api.Grove.Rest.Layers.SavePlacementAsync(new GroveLayerPlacement(_placementId, _placementLayer ?? string.Empty, _placementZone ?? string.Empty, _placementComponent ?? string.Empty, properties ?? [], _placementPosition, null)));
+        await ReloadAsync();
+    }
+
+    private async Task DeletePlacementAsync(string id)
+    {
+        await Api.Grove.Rest.Layers.DeletePlacementAsync(id);
+        await ReloadAsync();
+    }
+
+    private bool TryParse<TNode>(string? text, string error, out TNode? node) where TNode : JsonNode
+    {
+        try
+        {
+            node = JsonNode.Parse(string.IsNullOrWhiteSpace(text) ? (typeof(TNode) == typeof(JsonArray) ? "[]" : "{}") : text) as TNode;
+            if (node is not null)
+            {
+                return true;
+            }
+        }
+        catch (JsonException)
+        {
+        }
+
+        node = null;
+        _errors = [error];
+        return false;
+    }
+
+    private void Show(LayersResult result) => _errors = result.Succeeded ? [] : result.Errors;
+}

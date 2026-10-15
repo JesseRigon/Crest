@@ -1,0 +1,81 @@
+@page "/Contents/ContentItems/{ContentItemId}/Display"
+@attribute [PageEntry("ViewContent")]
+@using Grove.Themes.Admin.Api
+@using Grove.Display.Management.Components
+@using Microsoft.Extensions.DependencyInjection
+@inject IApi Api
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The first consumer of the display tree (docs/blazor-display.md › Rework plan, step 2): the
+   item as the platform's display drivers and placement build it, mapped to the tree on the
+   server and drawn by the one renderer. The tree crosses to the client once, as persisted
+   state, so hydration does not fetch it again (§ 4). *@
+<GroveStack Gap="1rem" data-testid="content-item-display-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <GroveText TextStyle="TextStyle.H4" Text="@(Version == "latest" ? T["Preview of the latest version"] : T["Display"])" />
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <GroveButton Text="@T["Edit"]" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="Edit" />
+            <GroveButton Text="@T["Back"]" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="Back" />
+        </GroveStack>
+    </GroveStack>
+
+    @if (State is null)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (State.Tree is null)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T["This content item cannot be displayed."]</GroveAlert>
+    }
+    else if (Registry is null)
+    {
+        @* The shell registers the browser's IComponentRegistry (Grove.Infrastructure.Shell, ClientWebAssemblyHost);
+           its absence means a host that skipped that boot path. *@
+        <GroveAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["The component registry is not available in this runtime yet."]</GroveAlert>
+    }
+    else
+    {
+        <div class="grove-display" data-testid="content-item-display-tree">
+            <DisplayTreeRenderer Node="State.Tree.Root" />
+        </div>
+    }
+</GroveStack>
+
+@code {
+    [Parameter] public string? ContentItemId { get; set; }
+
+    [SupplyParameterFromQuery] public string? DisplayType { get; set; }
+
+    /// <summary><c>latest</c>: the latest version, a draft included (the preview of a draft).</summary>
+    [SupplyParameterFromQuery] public string? Version { get; set; }
+
+    /// <summary>The tree the prerender fetched, handed to the interactive render.</summary>
+    [PersistentState] public DisplayPageState? State { get; set; }
+
+    private IComponentRegistry? Registry => Services.GetService<IComponentRegistry>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(ContentItemId))
+        {
+            State = new(string.Empty, DisplayType, Version, null);
+            return;
+        }
+
+        if (State is { } state && state.ContentItemId == ContentItemId && state.DisplayType == DisplayType && state.Version == Version)
+        {
+            return;
+        }
+
+        State = null;
+        State = new(ContentItemId, DisplayType, Version, await Api.Grove.Rest.Content.Items.DisplayAsync(ContentItemId, DisplayType, Version));
+    }
+
+    private void Edit() => Navigation.NavigateTo($"Contents/ContentItems/{Uri.EscapeDataString(ContentItemId ?? string.Empty)}/Edit");
+
+    private void Back() => Navigation.NavigateTo("Contents/ContentItems");
+
+    public sealed record DisplayPageState(string ContentItemId, string? DisplayType, string? Version, DisplayTree? Tree);
+}

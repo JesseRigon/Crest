@@ -46,7 +46,7 @@ By default a new Grove CMS website will only accept the default system culture. 
 To enable Grove CMS to use these new files, we need to enable the Localization feature.
 
 - In the __Modules__ page search for __Localization__ and click __Enable__. If the feature is already enabled you don't need to do anything.
-- In the current url, add `?culture=fr`, the link should look like <https://localhost:44300/blog/Grove.Features/Admin/Features?culture=fr>.
+- In the current url, add `?culture=fr`, the link should look like <https://localhost:44300/blog/Grove.Infrastructure.Features/Admin/Features?culture=fr>.
 
 At that point most texts should be displayed in French.  
 From now on if a browser is configured with French as its default culture, the Admin will be displayed using the French text translations we downloaded.  

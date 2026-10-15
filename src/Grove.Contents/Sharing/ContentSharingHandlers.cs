@@ -1,8 +1,8 @@
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
-using Grove.ContentTypes.Events;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
+using Grove.Contents.Types.Events;
 using Grove.Environment.Shell.Scope;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Grove.Contents.Sharing;

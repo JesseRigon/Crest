@@ -1,3 +1,4 @@
+using Grove.Api;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -14,9 +15,8 @@ public static class GetMediaItemEndpoint
 {
     public static IEndpointRouteBuilder AddGetMediaItemEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapGet("api/media/GetMediaItem", HandleAsync)
+        builder.MapGet("GetMediaItem", HandleAsync)
             .WithName("ApiGetMediaItem")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
             .Produces<FileStoreEntryDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -29,11 +29,11 @@ public static class GetMediaItemEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        IContentTypeProvider contentTypeProvider,
-        IFileVersionProvider fileVersionProvider,
-        string path)
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromServices] IContentTypeProvider contentTypeProvider,
+        [FromServices] IFileVersionProvider fileVersionProvider,
+        [FromQuery] string path)
     {
         if (!await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMedia)
             || !await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMediaFolder, (object)(path ?? string.Empty)))

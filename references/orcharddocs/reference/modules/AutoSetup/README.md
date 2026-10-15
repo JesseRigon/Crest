@@ -1,4 +1,4 @@
-# Auto Setup (`Grove.AutoSetup`)
+# Auto Setup (`Grove.Infrastructure.Setup.Auto`)
 
 The auto-setup module allows to automatically install the application/tenants on the first request.
 
@@ -139,7 +139,7 @@ To enable the Auto Setup feature, it is necessary to add it in the Web project's
     {
         services
             .AddPlatformCms()
-            .AddSetupFeatures("Grove.AutoSetup");
+            .AddSetupFeatures("Grove.Infrastructure.Setup.Auto");
     }
 ```
 
@@ -158,7 +158,7 @@ You should enable the Redis Lock feature in the startup file.
     {
         services
             .AddPlatformCms()
-            .AddSetupFeatures("Grove.Redis.Lock", "Grove.AutoSetup");
+            .AddSetupFeatures("Grove.Integrations.Redis.Lock", "Grove.Infrastructure.Setup.Auto");
     }
 ```
 
@@ -186,4 +186,4 @@ Lock configuration parameters are optional and can be set via environment variab
 
 Please refer to separate sections for additional information on setup:
 
-- [Grove.Setup - setting up an empty site](../Setup/README.md)
+- [Grove.Infrastructure.Setup - setting up an empty site](../Setup/README.md)

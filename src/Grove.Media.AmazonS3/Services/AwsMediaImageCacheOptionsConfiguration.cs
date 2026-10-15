@@ -3,8 +3,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Grove.Environment.Shell;
 using Grove.Environment.Shell.Configuration;
-using Grove.FileStorage.AmazonS3;
-using Grove.Liquid.Abstractions;
+using Grove.Data.Storage.AmazonS3;
+using Grove.Display.Liquid.Abstractions;
 
 namespace Grove.Media.AmazonS3.Services;
 

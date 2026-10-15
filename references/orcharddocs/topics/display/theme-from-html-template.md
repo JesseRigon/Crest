@@ -41,7 +41,7 @@ Create a `ResourceManagementOptionsConfiguration.cs` file in the theme project:
 
 ```csharp
 using Microsoft.Extensions.Options;
-using Grove.ResourceManagement;
+using Grove.Display.Resources.Management;
 
 namespace MyTheme;
 

@@ -2,10 +2,10 @@ using Grove.Migrations;
 using Grove.Models;
 using Grove.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Data.Migration;
 using Grove.Modules;
-using Grove.Liquid;
+using Grove.Display.Liquid;
 using Fluid;
 using Grove.Security.Permissions;
 
@@ -35,12 +35,15 @@ public sealed class Startup : StartupBase
 
         // Teaches content groups the "list" entry kind (a content part list by key).
         services.AddScoped<Grove.ContentGroups.IContentGroupEntryResolver, ContentPartListGroupEntryResolver>();
+
+        services.AddApiContributor<Api.ContentPartListsApi>();
+        services.AddApiContributor<Api.GlobalListsApi>();
     }
 }
 
 // option_list / option_label over the same service the API wraps (docs/content-items.md).
 [Feature(PartListsFeature.Id)]
-[RequireFeatures("Grove.Liquid")]
+[RequireFeatures("Grove.Display.Liquid")]
 public sealed class LiquidStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)

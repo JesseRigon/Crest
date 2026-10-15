@@ -6,7 +6,7 @@ namespace Grove.Services;
 /// The "list" content-group entry kind: an Content part list by its logical key, resolved
 /// to the ONE content item that holds it (the list is a content item carrying
 /// GroveContentPartListPart; its options are part data, not items). Lives here, not
-/// in Grove.Server, because Server cannot reference the lists feature - the kind
+/// in Grove.Infrastructure.Server, because Server cannot reference the lists feature - the kind
 /// resolver seam is exactly what lets a feature teach the group system a new kind.
 /// </summary>
 public sealed class ContentPartListGroupEntryResolver(IContentPartListService lists) : IContentGroupEntryResolver

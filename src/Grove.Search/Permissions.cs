@@ -1,4 +1,4 @@
-using Grove.Indexing;
+using Grove.Data.Indexing;
 using Grove.Security.Permissions;
 
 namespace Grove.Search;

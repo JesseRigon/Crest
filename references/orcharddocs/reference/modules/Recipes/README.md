@@ -1,8 +1,8 @@
-# Recipes (`Grove.Recipes`)
+# Recipes (`Grove.Infrastructure.Recipes`)
 
 ## Overview
 
-The `Grove.Recipes` module allows you to automate Grove tenant setup and configuration using JSON-based recipe files. Recipes can install features, set themes, create content types, provision content, and much more.
+The `Grove.Infrastructure.Recipes` module allows you to automate Grove tenant setup and configuration using JSON-based recipe files. Recipes can install features, set themes, create content types, provision content, and much more.
 
 ---
 
@@ -89,7 +89,7 @@ Enables or disables features (modules/themes).
 ```json
 {
   "name": "feature",
-  "enable": [ "Grove.Admin", "MyCustomTheme" ],
+  "enable": [ "Grove.Infrastructure.Shells.Admin", "MyCustomTheme" ],
   "disable": []
 }
 ```
@@ -106,7 +106,7 @@ Sets the active frontend and admin themes.
 ```json
 {
   "name": "themes",
-  "admin": "TheAdmin",
+  "admin": "Grove.Themes.TheAdmin",
   "site": "MyCustomTheme"
 }
 ```

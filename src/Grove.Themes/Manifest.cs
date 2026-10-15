@@ -6,6 +6,6 @@ using Grove.Modules.Manifest;
     Website = ManifestConstants.PlatformWebsite,
     Version = ManifestConstants.PlatformVersion,
     Description = "The Themes modules allows you to specify the Front and the Admin theme.",
-    Dependencies = ["Grove.Admin"],
+    Dependencies = ["Grove.Infrastructure.Shells.Admin"],
     Category = "Theming"
 )]

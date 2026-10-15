@@ -1,0 +1,11 @@
+@page "/GraphQL"
+@attribute [PageEntry("ExecuteGraphQL", Id = "graphiql", Parent = "tools", Caption = "GraphiQL")]
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* GraphiQL in the admin frame: the static page Grove.Data.Protocols.GraphQL serves
+   ({tenant}/Grove.Data.Protocols.GraphQL/graphiql.html), relative to the admin's base. *@
+
+<PageTitle>GraphiQL</PageTitle>
+
+<iframe src="../Grove.Data.Protocols.GraphQL/graphiql.html" title="@T["GraphiQL"]" data-testid="graphiql-frame"
+        style="width: 100%; height: calc(100vh - 8rem); border: 0;"></iframe>

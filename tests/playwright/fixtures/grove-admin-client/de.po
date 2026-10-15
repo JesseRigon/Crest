@@ -8,107 +8,107 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Language: de\n"
 
-# Hand-written test/seed content for the Grove.Admin.Client context - see es.po in this
+# Hand-written test/seed content for the Grove.Infrastructure.Shells.Admin.Client context - see es.po in this
 # same directory for the full explanation.
-#: Grove.Admin/wasm/Pages/AdminMenus.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/AdminMenus.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading admin menus..."
 msgstr "Admin-Menüs werden geladen..."
 
-#: Grove.Admin/wasm/Pages/AdminMenus.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/AdminMenus.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No admin menus found."
 msgstr "Keine Admin-Menüs gefunden."
 
 # Representative sample added 2026-08-07 covering phase 6's newly-converted files
 # (Login, Profile, Menus, Indexes, Templates, AdminStatus) - proves the .po -> API ->
 # GroveApiLocalizer -> rendered UI pipeline end-to-end without translating every key.
-#: Grove.Admin/wasm/Pages/Login.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Login.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Signed in as {0}"
 msgstr "Angemeldet als {0}"
 
-#: Grove.Admin/wasm/Pages/Login.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Login.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Log out"
 msgstr "Abmelden"
 
-#: Grove.Admin/wasm/Pages/Login.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Login.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Username or email"
 msgstr "Benutzername oder E-Mail"
 
-#: Grove.Admin/wasm/Pages/Login.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Login.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Password"
 msgstr "Passwort"
 
-#: Grove.Admin/wasm/Pages/Login.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Login.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Log in"
 msgstr "Anmelden"
 
-#: Grove.Admin/wasm/Pages/Profile.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Profile.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Your account."
 msgstr "Ihr Konto."
 
-#: Grove.Admin/wasm/Pages/Profile.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Profile.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Account"
 msgstr "Konto"
 
-#: Grove.Admin/wasm/Pages/Profile.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Profile.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "User Name"
 msgstr "Benutzername"
 
-#: Grove.Admin/wasm/Pages/Profile.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Profile.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: Grove.Admin/wasm/Pages/Menus.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Menus.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Menus"
 msgstr "Menüs"
 
-#: Grove.Admin/wasm/Pages/Menus.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Menus.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "New menu"
 msgstr "Neues Menü"
 
-#: Grove.Admin/wasm/Pages/Indexes.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Indexes.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Indexes"
 msgstr "Indizes"
 
-#: Grove.Admin/wasm/Pages/Indexes.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Indexes.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Rebuild"
 msgstr "Neu erstellen"
 
-#: Grove.Admin/wasm/Pages/Templates.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Templates.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Templates"
 msgstr "Vorlagen"
 
-#: Grove.Admin/wasm/Pages/Templates.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Templates.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "New template"
 msgstr "Neue Vorlage"
 
-#: Grove.Admin/wasm/Pages/Templates.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/Pages/Templates.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Save"
 msgstr "Speichern"
 
-#: Grove.Admin/wasm/DisplayManagement/AdminStatus.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/DisplayManagement/AdminStatus.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Grove Admin"
 msgstr "Grove Admin"
 
-#: Grove.Admin/wasm/DisplayManagement/AdminStatus.razor
-msgctxt "Grove.Admin.Client"
+#: Grove.Infrastructure.Shells.Admin/wasm/DisplayManagement/AdminStatus.razor
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Signed in as {0}"
 msgstr "Angemeldet als {0}"

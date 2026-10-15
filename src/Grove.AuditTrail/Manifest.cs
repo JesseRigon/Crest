@@ -14,5 +14,5 @@ using Grove.Modules.Manifest;
     Description = "Provides a log for recording and viewing back-end changes.",
     Category = "Security",
     // After Settings: the audit trail decorates the site service to record settings writes.
-    Dependencies = ["Grove.Settings"]
+    Dependencies = ["Grove.Infrastructure.Settings"]
 )]

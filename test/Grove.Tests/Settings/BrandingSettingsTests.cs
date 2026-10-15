@@ -2,9 +2,9 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Grove.Access;
 using Grove.Entities;
-using Grove.Queries;
-using Grove.Queries.Builtin;
-using Grove.Settings;
+using Grove.Data.Queries;
+using Grove.Data.Queries.Builtin;
+using Grove.Infrastructure.Settings;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Grove.Tests.Settings;

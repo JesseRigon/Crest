@@ -6,12 +6,12 @@ using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
 
-namespace Grove.DisplayManagement.SourceGenerators;
+namespace Grove.Display.Management.SourceGenerators;
 
 [Generator]
 public class ArgumentsProviderGenerator : IIncrementalGenerator
 {
-    private const string GenerateArgumentsAttributeFullName = "Grove.DisplayManagement.GenerateArgumentsAttribute";
+    private const string GenerateArgumentsAttributeFullName = "Grove.Display.Management.GenerateArgumentsAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -113,7 +113,7 @@ public class ArgumentsProviderGenerator : IIncrementalGenerator
         var keyword = isRecord ? "partial record" : "partial class";
         var accessibilityStr = GetAccessibilityText(typeSymbol.DeclaredAccessibility, typeSymbol.ContainingType != null);
 
-        sb.AppendLine($"{currentIndent}{accessibilityStr} {keyword} {typeSymbol.Name} : global::Grove.DisplayManagement.PropertyBasedNamedEnumerable");
+        sb.AppendLine($"{currentIndent}{accessibilityStr} {keyword} {typeSymbol.Name} : global::Grove.Display.Management.PropertyBasedNamedEnumerable");
         sb.AppendLine($"{currentIndent}{{");
 
         // Generate static property names array

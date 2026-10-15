@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <!-- NuGet properties-->
     <Title>Grove Contents</Title>
     <Description>
@@ -30,39 +29,37 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Grove.ContentTypes\Grove.ContentTypes.csproj" />
-    <ProjectReference Include="..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.AdminMenu.Abstractions\Grove.AdminMenu.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Types\Grove.Contents.Types.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Server.Abstractions\Grove.Infrastructure.Server.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.AdminMenu.Abstractions\Grove.Contents.AdminMenu.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.AuditTrail.Abstractions\Grove.AuditTrail.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.ContentFields\Grove.ContentFields.csproj" />
-    <ProjectReference Include="..\Grove.ContentManagement.GraphQL\Grove.ContentManagement.GraphQL.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Fields\Grove.Contents.Fields.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management.GraphQL\Grove.Contents.Management.GraphQL.csproj" />
     <ProjectReference Include="..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Sharing.Abstractions\Grove.Sharing.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Roles.Abstractions\Grove.Roles.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Contents.TagHelpers\Grove.Contents.TagHelpers.csproj" />
+    <ProjectReference Include="..\Grove.Access.Sharing.Abstractions\Grove.Access.Sharing.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.Roles.Abstractions\Grove.Access.Roles.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Contents.Abstractions\Grove.Contents.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.ContentManagement\Grove.ContentManagement.csproj" />
-    <ProjectReference Include="..\Grove.ContentManagement.Display\Grove.ContentManagement.Display.csproj" />
-    <ProjectReference Include="..\Grove.ContentTypes.Abstractions\Grove.ContentTypes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management\Grove.Contents.Management.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management.Display\Grove.Contents.Management.Display.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Types.Abstractions\Grove.Contents.Types.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Deployment.Abstractions\Grove.Deployment.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Deployment\Grove.Deployment.csproj" />
-    <ProjectReference Include="..\Grove.DisplayManagement.Liquid\Grove.DisplayManagement.Liquid.csproj" />
-    <ProjectReference Include="..\Grove.Feeds.Abstractions\Grove.Feeds.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Indexing.Abstractions\Grove.Indexing.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Feeds.Abstractions\Grove.Data.Feeds.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Indexing.Abstractions\Grove.Data.Indexing.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
-    <ProjectReference Include="..\Grove.Liquid.Abstractions\Grove.Liquid.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Localization.Abstractions\Grove.Localization.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Navigation\Grove.Navigation.csproj" />
-    <ProjectReference Include="..\Grove.Recipes.Abstractions\Grove.Recipes.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
-    <ProjectReference Include="..\Grove.Settings\Grove.Settings.csproj" />
-    <ProjectReference Include="..\Grove.Sitemaps.Abstractions\Grove.Sitemaps.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Users.Abstractions\Grove.Users.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Display.Liquid.Abstractions\Grove.Display.Liquid.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Localization.Abstractions\Grove.Data.Localization.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Display.Navigation\Grove.Display.Navigation.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Recipes.Abstractions\Grove.Infrastructure.Recipes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Display.Resources.Management\Grove.Display.Resources.Management.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Settings\Grove.Infrastructure.Settings.csproj" />
+    <ProjectReference Include="..\Grove.Seo.Sitemaps.Abstractions\Grove.Seo.Sitemaps.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.Users.Abstractions\Grove.Access.Users.Abstractions.csproj" />
     <!-- The Grove.Contents.PartLists feature: part lists plug into the option picker as a
-         source through its abstractions only (Grove.OptionPicker references this module),
+         source through its abstractions only (Grove.Contents.OptionPicker references this module),
          and ship shared global sets through Grove.Data.Global. -->
-    <ProjectReference Include="..\Grove.OptionPicker.Abstractions\Grove.OptionPicker.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.OptionPicker.Abstractions\Grove.Contents.OptionPicker.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Data.Global\Grove.Data.Global.csproj" />
   </ItemGroup>
 

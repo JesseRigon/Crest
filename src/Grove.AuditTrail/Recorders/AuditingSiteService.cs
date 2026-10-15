@@ -2,7 +2,7 @@
 
 using System.Text.Json.Nodes;
 using Grove.Environment.Shell.Scope;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Grove.AuditTrail.Recorders;

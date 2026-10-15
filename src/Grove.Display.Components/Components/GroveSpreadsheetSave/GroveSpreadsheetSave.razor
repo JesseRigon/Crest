@@ -1,0 +1,82 @@
+@using Grove.Display.Components.Primitives.Documents.Spreadsheet
+@using Microsoft.JSInterop
+@using System.IO
+@inject IJSRuntime JSRuntime
+
+@namespace Grove.Display.Components.Primitives.Spreadsheet.Tools
+<GroveSplitButton ButtonAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_Save))) OpenAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_Save))) title=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_Save))) Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Icon="download" ButtonType="ButtonType.Button" Size="ButtonSize.Small"
+    Disabled=@(Workbook is null) Click=@OnClickAsync>
+    <ChildContent>
+        <GroveSplitButtonItem Text="Excel (.xlsx)" Icon="table_view" Value="xlsx" />
+        <GroveSplitButtonItem Text="CSV (.csv)" Icon="description" Value="csv" />
+    </ChildContent>
+</GroveSplitButton>
+
+@code {
+#nullable enable
+
+    [CascadingParameter]
+    public Worksheet? Worksheet { get; set; }
+
+    [CascadingParameter]
+    public ISpreadsheet? Spreadsheet { get; set; }
+
+    private Workbook? Workbook => Worksheet?.Workbook;
+
+    [Parameter]
+    public string FileName { get; set; } = "sheet.xlsx";
+
+    [Parameter]
+    public CsvExportOptions? CsvExportOptions { get; set; }
+
+    private async Task OnClickAsync(GroveSplitButtonItem? item)
+    {
+        if (Workbook is null) return;
+
+        // Primary button (item is null) defaults to Excel.
+        if (item is null || item.Value == "xlsx")
+        {
+            await DownloadXlsxAsync();
+        }
+        else if (item.Value == "csv")
+        {
+            await DownloadCsvAsync();
+        }
+    }
+
+    private async Task DownloadXlsxAsync()
+    {
+        var stream = new MemoryStream();
+        Workbook!.SaveToStream(stream);
+        stream.Position = 0;
+
+        using var streamRef = new DotNetStreamReference(stream);
+        await JSRuntime.InvokeVoidAsync("Grove.downloadFile", FileName, streamRef);
+    }
+
+    private async Task DownloadCsvAsync()
+    {
+        var options = CsvExportOptions is null
+            ? new CsvExportOptions { Sheet = Worksheet }
+            : new CsvExportOptions
+            {
+                Separator = CsvExportOptions.Separator,
+                QuoteChar = CsvExportOptions.QuoteChar,
+                Quoting = CsvExportOptions.Quoting,
+                Encoding = CsvExportOptions.Encoding,
+                LineEnding = CsvExportOptions.LineEnding,
+                Sheet = CsvExportOptions.Sheet ?? Worksheet,
+            };
+
+        var stream = new MemoryStream();
+        Workbook!.SaveAsCsv(stream, options);
+        stream.Position = 0;
+
+        using var streamRef = new DotNetStreamReference(stream);
+        var csvName = string.IsNullOrEmpty(FileName)
+            ? "sheet.csv"
+            : Path.ChangeExtension(FileName, ".csv");
+
+        await JSRuntime.InvokeVoidAsync("Grove.downloadFile", csvName, streamRef);
+    }
+}

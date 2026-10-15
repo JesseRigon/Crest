@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -19,14 +18,6 @@ public static partial class PlatformBuilderExtensions
         builder.ConfigureServices(services =>
         {
             services.AddAuthorization();
-
-            services.Configure<AuthenticationOptions>((options) =>
-            {
-                if (!options.Schemes.Any(x => x.Name == PlatformConstants.AuthenticationSchemes.Api))
-                {
-                    options.AddScheme<ApiAuthenticationHandler>(PlatformConstants.AuthenticationSchemes.Api, null);
-                }
-            });
 
             services.AddScoped<IPermissionService, DefaultPermissionService>();
         });

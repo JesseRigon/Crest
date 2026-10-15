@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Grove Elasticsearch</Title>
+    <Description>
+      $(OCCMSDescription)
+
+      Creates Elasticsearch Search indexes to support search scenarios, introduces a preconfigured container-enabled content type.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Elastic.Clients.Elasticsearch" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management.GraphQL\Grove.Contents.Management.GraphQL.csproj" />
+    <ProjectReference Include="..\Grove.Display.Management\Grove.Display.Management.csproj" />
+    <ProjectReference Include="..\Grove.Display.Navigation\Grove.Display.Navigation.csproj" />
+    <ProjectReference Include="..\Grove.Data.Queries\Grove.Data.Queries.csproj" />
+    <ProjectReference Include="..\Grove.Display.Resources.Management\Grove.Display.Resources.Management.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Localization.Abstractions\Grove.Contents.Localization.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Abstractions\Grove.Contents.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management\Grove.Contents.Management.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Preview.Abstractions\Grove.Contents.Preview.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Types.Abstractions\Grove.Contents.Types.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Deployment.Abstractions\Grove.Deployment.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Indexing.Abstractions\Grove.Data.Indexing.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Indexing\Grove.Data.Indexing.csproj" />
+    <ProjectReference Include="..\Grove.Display.Liquid.Abstractions\Grove.Display.Liquid.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Queries.Abstractions\Grove.Data.Queries.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.Roles.Abstractions\Grove.Access.Roles.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Search.Abstractions\Grove.Search.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Search.Elasticsearch.Abstractions\Grove.Search.Elasticsearch.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

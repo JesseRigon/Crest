@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Grove.Environment.Shell;
 using Grove.Environment.Shell.Configuration;
-using Grove.FileStorage.AzureBlob;
+using Grove.Data.Storage.AzureBlob;
 
 namespace Grove.Media.Azure.Services;
 

@@ -1,9 +1,9 @@
 using System.Text.Json.Nodes;
 using Fluid;
 using Fluid.Values;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Models;
-using Grove.Liquid;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Models;
+using Grove.Display.Liquid;
 
 namespace Grove.Contents.Liquid;
 

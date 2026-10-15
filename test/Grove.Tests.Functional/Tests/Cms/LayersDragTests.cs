@@ -4,7 +4,7 @@ using Grove.Tests.Functional.Helpers;
 namespace Grove.Tests.Functional.Tests.Cms;
 
 // Covers the SortableJS-based widget/zone drag-and-drop on the Layers admin
-// page (src/Grove.Modules/Grove.Layers/Views/Admin/Index.cshtml),
+// page (src/Grove.Modules/Grove.Display.Layers/Views/Admin/Index.cshtml),
 // which persists via one fetch() POST per drop (rather than a form submit)
 // and shows an undo banner - the Blog recipe ships a single "Footer" widget
 // (RawHtml) in the "Always" layer's "Footer" zone, with "Content" as the

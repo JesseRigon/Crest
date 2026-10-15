@@ -2,10 +2,10 @@
 using Grove.Access;
 using Grove.Media.Files;
 using Grove.Media.Sharing;
-using Grove.Notifications;
-using Grove.Sharing;
+using Grove.Communications;
+using Grove.Access.Sharing;
 using Grove.Tests.Sharing;
-using Grove.Users;
+using Grove.Access.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using static Grove.Tests.Media.Files.FilesWorld;

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Benchmarks.Support;
-using Grove.DisplayManagement.Descriptors;
+using Grove.Display.Management.Descriptors;
 using Grove.Environment.Extensions;
 using Grove.Tests.Apis.Context;
 

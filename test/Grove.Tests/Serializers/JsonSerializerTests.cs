@@ -1,9 +1,9 @@
 using System.Text.Json;
-using Grove.ContentFields.Settings;
+using Grove.Contents.Fields.Settings;
 using Grove.Tests.Apis.Context;
-using Grove.Users.Json;
-using Grove.Users.Indexes;
-using Grove.Users.Models;
+using Grove.Access.Users.Json;
+using Grove.Access.Users.Indexes;
+using Grove.Access.Users.Models;
 
 namespace Grove.Tests.Serializers;
 

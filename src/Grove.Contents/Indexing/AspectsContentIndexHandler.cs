@@ -1,7 +1,7 @@
-using Grove.ContentManagement;
-using Grove.ContentManagement.Models;
-using Grove.Indexing;
-using Grove.Mvc.Utilities;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Models;
+using Grove.Data.Indexing;
+using Grove.Utilities;
 
 namespace Grove.Contents.Indexing;
 

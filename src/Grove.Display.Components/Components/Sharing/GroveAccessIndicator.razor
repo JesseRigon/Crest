@@ -1,0 +1,33 @@
+@namespace Grove.Display.Components.Sharing
+@using System.Globalization
+@using Grove.Display.Components.Primitives
+@inject IServiceProvider Services
+
+@* An access indicator (docs/sharing.md, requirement 98): private, shared or public. Nothing is
+   shown when the object has none (sharing is off, or it is not calculated yet). *@
+
+@if (Indicator is { } indicator)
+{
+    <span class="grove-access-indicator grove-access-indicator--@indicator.ToString().ToLowerInvariant()" title="@Title(indicator)" data-testid="access-indicator">
+        @(indicator switch { GroveShareIndicator.Public => "🌐", GroveShareIndicator.Shared => "👥", _ => "🔒" })
+        @if (ShowText)
+        {
+            <span>@Title(indicator)</span>
+        }
+    </span>
+}
+
+@code {
+    [Parameter] public GroveShareIndicator? Indicator { get; set; }
+
+    [Parameter] public bool ShowText { get; set; }
+
+    private string Title(GroveShareIndicator indicator) => indicator switch
+    {
+        GroveShareIndicator.Public => L("Public"),
+        GroveShareIndicator.Shared => L("Shared"),
+        _ => L("Private"),
+    };
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

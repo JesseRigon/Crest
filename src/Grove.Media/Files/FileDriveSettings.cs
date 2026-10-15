@@ -1,6 +1,6 @@
 #nullable enable
 using Grove.Entities;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Media.Files;
 

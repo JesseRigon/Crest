@@ -1,4 +1,4 @@
-using Grove.DisplayManagement.Components;
+using Grove.Display.Management.Components;
 using Grove.Environment.Extensions;
 using Grove.Environment.Extensions.Features;
 using Grove.Environment.Shell.Builders.Models;

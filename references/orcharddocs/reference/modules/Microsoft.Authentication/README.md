@@ -1,4 +1,4 @@
-# Microsoft Authentication (`Grove.Microsoft.Authentication`)
+# Microsoft Authentication (`Grove.Integrations.Microsoft`)
 
 This module configures Grove to support Microsoft Account and/or Microsoft Entra ID (Azure Active Directory) accounts.
 
@@ -92,7 +92,7 @@ The Microsoft Entra ID can be set during recipes using the settings step. Here i
 
 ## User Registration
 
-- Enable the `Grove.Users.Registration` feature when you want local site registration in addition to Microsoft Account or Microsoft Entra ID authentication.
+- Enable the `Grove.Access.Users.Registration` feature when you want local site registration in addition to Microsoft Account or Microsoft Entra ID authentication.
 - New external-user creation and profile generation are controlled from the Users module's [`ExternalRegistrationSettings`](../Users/README.md#external-authentication-settings).
 - Apart from during login, existing users can link their account to their Microsoft Account and/or Microsoft Entra ID login through the External Logins link from User menu.
 
@@ -144,7 +144,7 @@ Both Microsoft Account and Microsoft Entra ID settings can also be configured us
 
 ## Microsoft Account & Microsoft Entra ID (Azure Active Directory) Settings Configuration
 
-The `Grove.Microsoft.Authentication` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureMicrosoftAccountSettings()` or `ConfigureAzureADSettings()` extension methods on `PlatformBuilder` when initializing the app.
+The `Grove.Integrations.Microsoft` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureMicrosoftAccountSettings()` or `ConfigureAzureADSettings()` extension methods on `PlatformBuilder` when initializing the app.
 
 The following configuration values can be customized:
 

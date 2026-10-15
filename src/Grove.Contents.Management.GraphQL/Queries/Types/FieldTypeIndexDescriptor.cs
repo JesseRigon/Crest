@@ -1,0 +1,10 @@
+namespace Grove.Contents.Management.GraphQL.Queries.Types;
+
+public sealed class FieldTypeIndexDescriptor
+{
+    public required string Index { get; set; }
+
+    public required string AliasName { get; set; }
+
+    public required Type IndexType { get; set; }
+}

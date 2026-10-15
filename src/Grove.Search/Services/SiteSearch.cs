@@ -1,12 +1,12 @@
 using System.Security.Claims;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Records;
-using Grove.Indexing;
-using Grove.Indexing.Models;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Records;
+using Grove.Data.Indexing;
+using Grove.Data.Indexing.Models;
 using Grove.Modules;
 using Grove.Search.Abstractions;
 using Grove.Search.Models;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

@@ -8,7 +8,7 @@ using Grove.AuditTrail.Settings;
 using Grove.Entities;
 using Grove.Environment.Shell;
 using Grove.Modules;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using YesSql;
 
 namespace Grove.AuditTrail.Services;

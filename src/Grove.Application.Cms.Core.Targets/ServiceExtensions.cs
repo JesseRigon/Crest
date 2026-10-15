@@ -1,5 +1,3 @@
-using Grove.ResourceManagement.TagHelpers;
-
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ServiceExtensions
@@ -16,13 +14,11 @@ public static class ServiceExtensions
             .AddCommands()
 
             .AddSecurity()
-            .AddApiProblemDetails()
-            .AddMvc()
             .AddIdGeneration()
             .AddEmailAddressValidator()
             .AddPhoneFormatValidator()
             .AddHtmlSanitizer()
-            .AddSetupFeatures("Grove.Setup")
+            .AddSetupFeatures("Grove.Infrastructure.Setup")
 
             .AddDataAccess()
             .AddDataStorage()
@@ -30,20 +26,14 @@ public static class ServiceExtensions
             .AddScripting()
 
             .AddTheming()
-            .AddGlobalFeatures("Grove.Liquid.Core")
+            .AddGlobalFeatures("Grove.Display.Liquid.Core")
             .AddCaching();
 
-        // PlatformBuilder is not available in Grove.ResourceManagement as it has to
+        // PlatformBuilder is not available in Grove.Display.Resources.Management as it has to
         // remain independent from Grove.
         builder.ConfigureServices(s =>
         {
             s.AddResourceManagement();
-
-            s.AddTagHelpers<LinkTagHelper>();
-            s.AddTagHelpers<MetaTagHelper>();
-            s.AddTagHelpers<ResourcesTagHelper>();
-            s.AddTagHelpers<ScriptTagHelper>();
-            s.AddTagHelpers<StyleTagHelper>();
         });
 
         return builder;

@@ -1,7 +1,7 @@
 using System.Text;
 using Microsoft.Extensions.Options;
-using Grove.Admin;
-using Grove.Settings;
+using Grove.Infrastructure.Shells.Admin;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Seo.Services;
 

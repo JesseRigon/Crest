@@ -1,9 +1,8 @@
-using Grove.ContentManagement;
-using Grove.ContentManagement.Models;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Models;
 using Grove.Contents.Feeds.Builders;
-using Grove.DisplayManagement.ModelBinding;
-using Grove.Feeds.Models;
-using Grove.Feeds.Rss;
+using Grove.Data.Feeds.Models;
+using Grove.Data.Feeds.Rss;
 
 namespace Grove.Tests.Modules.Contents.Feeds;
 
@@ -83,11 +82,11 @@ public class RssFeedTests
 
     private static FeedContext CreateFeedContext(string format)
     {
-        var feedContextMock = new Mock<FeedContext>(Mock.Of<IUpdateModel>(), format);
+        var feedContext = new FeedContext(new Microsoft.AspNetCore.Http.DefaultHttpContext(), format);
 
-        feedContextMock.Object.Response.Element = new XElement("Feed");
-        feedContextMock.Object.Builder = new RssFeedBuilder();
+        feedContext.Response.Element = new XElement("Feed");
+        feedContext.Builder = new RssFeedBuilder();
 
-        return feedContextMock.Object;
+        return feedContext;
     }
 }

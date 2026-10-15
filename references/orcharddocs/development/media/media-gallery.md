@@ -19,7 +19,7 @@ This document records the agreed target architecture and the ordered implementat
 3. **Remove `openMediaPicker` from `media-gallery`** — it does not belong in the library browser.
 4. **Lazy-load `media-gallery`** — the full browser bundle (~3 MB) is only fetched when the user
    actually opens the picker, not on every page that contains an HTML/Markdown field.
-5. **Deduplicate the trumbowyg source files** — `Grove.ContentFields` and `Grove.Html`
+5. **Deduplicate the trumbowyg source files** — `Grove.Contents.Fields` and `Grove.Data.Protocols.Html`
    each carry identical copies; they should share a single canonical source.
 6. **Favor pure ES module exports** — no new `window.*` globals. Cross-bundle communication uses
    the browser's ES module cache via `import()`, not window properties.
@@ -55,7 +55,7 @@ media-field app  (grove-media-field → media-field2.js)
 - Every Razor page with an HTML/Markdown editor pre-fetches the full 3 MB `media-gallery` bundle even
   if the picker is never opened.
 - `trumbowyg.media.tag.ts` and `trumbowyg.media.url.ts` are copied verbatim into both
-  `Grove.ContentFields` and `Grove.Html`.
+  `Grove.Contents.Fields` and `Grove.Data.Protocols.Html`.
 
 ---
 
@@ -177,7 +177,7 @@ wrapper views.
 
 ### 4. Trumbowyg source deduplication
 
-`Grove.ContentFields` and `Grove.Html` both compile
+`Grove.Contents.Fields` and `Grove.Data.Protocols.Html` both compile
 `trumbowyg.media.tag.ts` and `trumbowyg.media.url.ts` with Parcel. The source files are now
 identical (after the `data-media-picker-config` refactor). They should be moved into the
 `grove-media-gallery` package under `src/trumbowyg/` and re-exported, so both modules import
@@ -244,9 +244,9 @@ In all three wrapper views:
 
 | Module | View |
 |--------|------|
-| `Grove.ContentFields` | `Media-HtmlField.Wrapper.cshtml` |
-| `Grove.Html` | `Media-HtmlBodyPart.Wrapper.cshtml` |
-| `Grove.Markdown` | `Media-MarkdownBodyPart.Wrapper.cshtml` |
+| `Grove.Contents.Fields` | `Media-HtmlField.Wrapper.cshtml` |
+| `Grove.Data.Protocols.Html` | `Media-HtmlBodyPart.Wrapper.cshtml` |
+| `Grove.Contents.Markdown` | `Media-MarkdownBodyPart.Wrapper.cshtml` |
 
 1. Replace `<script asp-name="media">` with `<script asp-name="media-picker">`.
 2. Keep `<style asp-name="media" at="Head">` — the media-gallery stylesheet must remain eagerly loaded
@@ -271,7 +271,7 @@ Media module with `SetAttribute("type", "module")` — consistent with `media` a
 1. Move `trumbowyg.media.tag.ts` and `trumbowyg.media.url.ts` into
    `media-gallery/src/trumbowyg/` (they live in `grove-media-gallery` which is already a dep of both
    consuming modules).
-2. In `Grove.ContentFields/Assets/js/` and `Grove.Html/Assets/`, replace the local
+2. In `Grove.Contents.Fields/Assets/js/` and `Grove.Data.Protocols.Html/Assets/`, replace the local
    `.ts` files with thin re-exports:
    ```ts
    export { } from 'grove-media-gallery/src/trumbowyg/trumbowyg.media.tag';
@@ -330,19 +330,19 @@ the built output no longer includes a separate stylesheet for either app.
 - `ResourceManagementOptionsConfiguration.cs` — add `media-picker` resource, update paths; remove
   stylesheet registrations for both apps once CSS files are eliminated
 
-### `Grove.ContentFields`
+### `Grove.Contents.Fields`
 
 - `Assets/js/trumbowyg.media.tag.ts` — becomes re-export of shared source
 - `Assets/js/trumbowyg.media.url.ts` — becomes re-export of shared source
 - `Views/Media-HtmlField.Wrapper.cshtml` — swap `media` script for `media-picker`, add `data-picker-src`
 
-### `Grove.Html`
+### `Grove.Data.Protocols.Html`
 
 - `Assets/trumbowyg.media.tag.ts` — becomes re-export of shared source
 - `Assets/trumbowyg.media.url.ts` — becomes re-export of shared source
 - `Views/Media-HtmlBodyPart.Wrapper.cshtml` — swap `media` script for `media-picker`, add `data-picker-src`
 
-### `Grove.Markdown`
+### `Grove.Contents.Markdown`
 
 - `Assets/Scripts/mde.mediatoolbar.ts` — no source change; `picker-api.ts` update is transparent
 - `Views/Media-MarkdownBodyPart.Wrapper.cshtml` — swap `media` script for `media-picker`, add `data-picker-src`

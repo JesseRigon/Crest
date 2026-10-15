@@ -1,4 +1,4 @@
-using Grove.DisplayManagement.Components;
+using Grove.Display.Management.Components;
 
 // The open zone keys this library's pages own (decision 6, docs/page-regions.md): one pane and
 // one detail region per party type, filled by downstream modules' page-region contributors.

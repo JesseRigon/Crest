@@ -1,9 +1,9 @@
 using Grove.Access;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Data;
 using Grove.Data.Migration;
 using Grove.Modules;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 using Microsoft.Extensions.DependencyInjection;
 using YesSql;
 using YesSql.Indexes;
@@ -127,7 +127,7 @@ public sealed class ContentShareFolders(
 }
 
 /// <summary>Requirement 74's services, while sharing is on.</summary>
-[RequireFeatures("Grove.Sharing")]
+[RequireFeatures("Grove.Access.Sharing")]
 public sealed class ContentShareFoldersStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)

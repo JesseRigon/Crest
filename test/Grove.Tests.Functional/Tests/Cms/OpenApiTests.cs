@@ -19,13 +19,13 @@ public sealed class OpenApiTests : CmsTestBase, IClassFixture<CmsSetupFixture>
     private async Task EnableOpenApiAsync(IPage page)
     {
         await AuthHelper.LoginAsync(page, $"/{Tenant.Prefix}");
-        await FeatureHelper.EnableFeatureAsync(page, $"/{Tenant.Prefix}", "Grove.OpenApi");
+        await FeatureHelper.EnableFeatureAsync(page, $"/{Tenant.Prefix}", "Grove.Data.Protocols.OpenApi");
     }
 
     private async Task EnableOpenApiWithSwaggerUIAsync(IPage page)
     {
         await EnableOpenApiAsync(page);
-        await FeatureHelper.EnableFeatureAsync(page, $"/{Tenant.Prefix}", "Grove.OpenApi.SwaggerUI");
+        await FeatureHelper.EnableFeatureAsync(page, $"/{Tenant.Prefix}", "Grove.Data.Protocols.OpenApi.SwaggerUI");
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public sealed class OpenApiTests : CmsTestBase, IClassFixture<CmsSetupFixture>
     /// generation depends on: running the OpenApiGeneration recipe must both enable the
     /// OpenApi feature and turn on AllowAnonymousSchemaAccess, and the change must be
     /// live (shell released) once the recipe reports success. Runs on the Default tenant
-    /// because the recipe enables Grove.Tenants, which is Default-tenant-only.
+    /// because the recipe enables Grove.Infrastructure.Tenants, which is Default-tenant-only.
     /// </summary>
     [Fact]
     public async Task OpenApiGenerationRecipeEnablesAnonymousSchemaAccess()
@@ -182,7 +182,7 @@ public sealed class OpenApiTests : CmsTestBase, IClassFixture<CmsSetupFixture>
     {
         var page = await Fixture.CreatePageAsync();
         await EnableOpenApiAsync(page);
-        await FeatureHelper.EnableFeatureAsync(page, $"/{Tenant.Prefix}", "Grove.OpenApi.ReDocUI");
+        await FeatureHelper.EnableFeatureAsync(page, $"/{Tenant.Prefix}", "Grove.Data.Protocols.OpenApi.ReDocUI");
 
         await page.GotoAsync($"/{Tenant.Prefix}/redoc");
         await Assertions.Expect(page).ToHaveTitleAsync(new Regex("Grove OpenAPI Documentation"));
@@ -194,7 +194,7 @@ public sealed class OpenApiTests : CmsTestBase, IClassFixture<CmsSetupFixture>
     {
         var page = await Fixture.CreatePageAsync();
         await EnableOpenApiAsync(page);
-        await FeatureHelper.EnableFeatureAsync(page, $"/{Tenant.Prefix}", "Grove.OpenApi.ScalarUI");
+        await FeatureHelper.EnableFeatureAsync(page, $"/{Tenant.Prefix}", "Grove.Data.Protocols.OpenApi.ScalarUI");
 
         await page.GotoAsync($"/{Tenant.Prefix}/scalar/v1");
         await Assertions.Expect(page).ToHaveTitleAsync(new Regex("Grove OpenAPI Documentation"));
@@ -273,8 +273,8 @@ public sealed class OpenApiTests : CmsTestBase, IClassFixture<CmsSetupFixture>
 
     private static async Task ConfigureOpenIdServerForAuthorizationCodeAsync(IPage page, string prefix)
     {
-        await FeatureHelper.EnableFeatureAsync(page, prefix, "Grove.OpenId.Server");
-        await FeatureHelper.EnableFeatureAsync(page, prefix, "Grove.OpenId.Validation");
+        await FeatureHelper.EnableFeatureAsync(page, prefix, "Grove.Access.OpenId.Server");
+        await FeatureHelper.EnableFeatureAsync(page, prefix, "Grove.Access.OpenId.Validation");
 
         await page.GotoAsync($"{prefix}/Admin/OpenId/ServerConfiguration");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
@@ -403,7 +403,7 @@ public sealed class OpenApiTests : CmsTestBase, IClassFixture<CmsSetupFixture>
         // only checks the page title, which is why it slipped through before.
         var page = await Fixture.CreatePageAsync();
         await EnableOpenApiAsync(page);
-        await FeatureHelper.EnableFeatureAsync(page, $"/{Tenant.Prefix}", "Grove.OpenApi.ScalarUI");
+        await FeatureHelper.EnableFeatureAsync(page, $"/{Tenant.Prefix}", "Grove.Data.Protocols.OpenApi.ScalarUI");
 
         var response = await page.RunAndWaitForResponseAsync(
             async () =>
@@ -425,7 +425,7 @@ public sealed class OpenApiTests : CmsTestBase, IClassFixture<CmsSetupFixture>
         var page = await Fixture.CreatePageAsync();
         await EnableOpenApiWithSwaggerUIAsync(page);
 
-        var redirectUri = $"{Fixture.BaseUrl}/{Tenant.Prefix}/Grove.OpenApi/openapi-oidc-silent.html";
+        var redirectUri = $"{Fixture.BaseUrl}/{Tenant.Prefix}/Grove.Data.Protocols.OpenApi/openapi-oidc-silent.html";
 
         await ConfigureOpenIdServerForAuthorizationCodeAsync(page, $"/{Tenant.Prefix}");
         await RegisterOpenApiSilentClientAsync(page, $"/{Tenant.Prefix}", redirectUri);
@@ -449,7 +449,7 @@ public sealed class OpenApiTests : CmsTestBase, IClassFixture<CmsSetupFixture>
 
         var response = await page.RunAndWaitForResponseAsync(
             async () => await operation.Locator("button.execute").ClickAsync(),
-            r => r.Url.Contains("/api/content/"));
+            r => r.Url.Contains("/api/grove/queries"));
 
         Assert.NotEqual(401, response.Status);
         Assert.NotEqual(403, response.Status);
@@ -462,9 +462,9 @@ public sealed class OpenApiTests : CmsTestBase, IClassFixture<CmsSetupFixture>
     {
         var page = await Fixture.CreatePageAsync();
         await EnableOpenApiAsync(page);
-        await FeatureHelper.EnableFeatureAsync(page, $"/{Tenant.Prefix}", "Grove.OpenApi.ScalarUI");
+        await FeatureHelper.EnableFeatureAsync(page, $"/{Tenant.Prefix}", "Grove.Data.Protocols.OpenApi.ScalarUI");
 
-        var redirectUri = $"{Fixture.BaseUrl}/{Tenant.Prefix}/Grove.OpenApi/openapi-oidc-silent.html";
+        var redirectUri = $"{Fixture.BaseUrl}/{Tenant.Prefix}/Grove.Data.Protocols.OpenApi/openapi-oidc-silent.html";
 
         await ConfigureOpenIdServerForAuthorizationCodeAsync(page, $"/{Tenant.Prefix}");
         await RegisterOpenApiSilentClientAsync(page, $"/{Tenant.Prefix}", redirectUri);
@@ -486,7 +486,7 @@ public sealed class OpenApiTests : CmsTestBase, IClassFixture<CmsSetupFixture>
         // versions. An unauthenticated call to this endpoint returns 401; a silently-authenticated
         // one does not, even for a nonexistent content item id.
         var status = await page.EvaluateAsync<int>(
-            $"async () => (await fetch('/{Tenant.Prefix}/api/content/does-not-exist')).status");
+            $"async () => (await fetch('/{Tenant.Prefix}/api/grove/queries')).status");
 
         Assert.NotEqual(401, status);
         Assert.NotEqual(403, status);

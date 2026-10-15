@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Localization;
-using Grove.Recipes.Models;
-using Grove.Recipes.Services;
+using Grove.Infrastructure.Recipes.Models;
+using Grove.Infrastructure.Recipes.Services;
 using Grove.Routes.Models;
 
 namespace Grove.Routes.Recipes;

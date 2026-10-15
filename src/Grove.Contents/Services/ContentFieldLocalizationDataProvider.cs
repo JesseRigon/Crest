@@ -1,7 +1,7 @@
-using Grove.ContentFields;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Models;
-using Grove.Localization.Data;
+using Grove.Contents.Fields;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Models;
+using Grove.Data.Localization.Data;
 
 namespace Grove.Contents.Services;
 

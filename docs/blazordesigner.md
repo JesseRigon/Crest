@@ -134,7 +134,7 @@ public class DesignSnapshot
 
 ## Phase 4: pilot
 
-- [ ] **One real component end to end**: a registered component from `Grove.Components` through
+- [ ] **One real component end to end**: a registered component from `Grove.Display.Components` through
   palette → canvas → property pane → snapshot, no synthetic test-only component.
 
 ## Verification matrix

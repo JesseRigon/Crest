@@ -10,7 +10,7 @@ using System.Text;
 // Nothing depends on where a project sits on disk, so a module referenced as a NuGet package
 // is treated exactly like one built from source:
 // - a module client library is a *.BlazorWasm assembly - the same naming convention
-//   Grove.Server's Startup uses to feed module pages to the server-side route table, so the
+//   Grove.Infrastructure.Server's Startup uses to feed module pages to the server-side route table, so the
 //   two runtimes cannot disagree about which assemblies are modules;
 // - a module that loads libraries itself (the workflow designer) embeds their names as the
 //   grove-lazy-assemblies.txt manifest resource. Those are libraries, not modules, even when
@@ -37,10 +37,10 @@ var regionAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 // The shell each client assembly declares ([assembly: GroveShell(...)]). A module library
 // declaring none is admin; theme clients always declare theirs.
 var shellOf = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-const string GroveShellAttributeName = "Grove.Components.Modules.GroveShellAttribute";
+const string GroveShellAttributeName = "Grove.Display.Components.Modules.GroveShellAttribute";
 // Assemblies that load at boot whatever shell the document serves (the shell runtime, a
 // theme's services): [assembly: GroveEager].
-const string GroveEagerAttributeName = "Grove.Components.Modules.GroveEagerAttribute";
+const string GroveEagerAttributeName = "Grove.Display.Components.Modules.GroveEagerAttribute";
 var eagerMarked = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 const string LazyAssembliesResourceName = "grove-lazy-assemblies.txt";
 
@@ -93,7 +93,7 @@ foreach (var pair in byName)
                         var blob = md.GetBlobReader(attribute.Value);
                         if (blob.ReadUInt16() == 1) routes.Add(new KeyValuePair<string, string>(blob.ReadSerializedString(), pair.Key));
                     }
-                    else if (attributeName == "Grove.Components.Modules.GroveJSComponentAttribute")
+                    else if (attributeName == "Grove.Display.Components.Modules.GroveJSComponentAttribute")
                     {
                         jsComponentAssemblies.Add(pair.Key);
                     }
@@ -129,7 +129,7 @@ var extra = new HashSet<string>(extraLazy.Select(s => s.Trim()).Where(s => s.Len
 // A library a module loads itself is not a module of its own.
 moduleNames.ExceptWith(extra);
 // Theme clients (an assembly declaring its shell that is not a module) are lazy too: each
-// theme UI loads when its shell's document boots (Grove.Shell.GroveShellRoot), so a browser
+// theme UI loads when its shell's document boots (Grove.Infrastructure.Shell.GroveShellRoot), so a browser
 // on the public site never downloads the admin UI (docs/shells-and-themes.md › Theme UIs load
 // per shell). One marked [GroveEager] stays eager.
 var themeClients = shellOf.Keys.Where(n => !moduleNames.Contains(n) && !eagerMarked.Contains(n)).OrderBy(n => n).ToArray();
@@ -155,7 +155,7 @@ code.AppendLine("namespace " + appAssembly + ";");
 code.AppendLine("internal static class LazyModulesManifest");
 code.AppendLine("{");
 Func<string, string> shellOfModule = n => shellOf.TryGetValue(n, out var declared) ? declared : "admin";
-code.AppendLine("    public static Grove.Shell.LazyModules Create() => new(");
+code.AppendLine("    public static Grove.Infrastructure.Shell.LazyModules Create() => new(");
 // Every module client library, eager or lazy - the browser's module registry.
 code.AppendLine("        modules: new string[] { " + string.Join(", ", moduleNames.OrderBy(n => n).Select(quote)) + " },");
 code.AppendLine("        routes: new (string Template, string Assembly, string Shell)[] {");

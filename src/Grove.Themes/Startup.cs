@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Deployment;
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.Handlers;
-using Grove.DisplayManagement.Theming;
+using Grove.Display.Management;
+using Grove.Display.Management.Handlers;
+using Grove.Display.Management.Theming;
 using Grove.Modules;
-using Grove.Navigation;
-using Grove.Recipes;
+using Grove.Display.Navigation;
+using Grove.Infrastructure.Recipes;
 using Grove.Security.Permissions;
 using Grove.Themes.Deployment;
 using Grove.Themes.Recipes;

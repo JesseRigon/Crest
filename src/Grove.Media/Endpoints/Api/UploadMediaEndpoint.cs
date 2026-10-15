@@ -1,3 +1,4 @@
+using Grove.Api;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -6,14 +7,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Media.ViewModels;
 
 namespace Grove.Media.Endpoints.Api;
@@ -22,11 +22,9 @@ public static class UploadMediaEndpoint
 {
     public static IEndpointRouteBuilder AddUploadMediaEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapPost("api/media/Upload", HandleAsync)
+        builder.MapPost("Upload", HandleAsync)
             .WithName("ApiUploadMedia")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
-            .AddEndpointFilter<MediaApiAntiforgeryEndpointFilter>()
             .Produces<UploadFilesResultDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden);
@@ -37,19 +35,19 @@ public static class UploadMediaEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        IMediaNameNormalizerService mediaNameNormalizerService,
-        IContentTypeProvider contentTypeProvider,
-        IFileVersionProvider fileVersionProvider,
-        IChunkFileUploadService chunkFileUploadService,
-        FileCreationService fileCreationService,
-        IServiceProvider serviceProvider,
-        IOptions<MediaOptions> options,
-        ILogger<MediaApiEndpoints> logger,
-        IStringLocalizer<MediaApiEndpoints> localizer,
-        string path,
-        string extensions)
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromServices] IMediaNameNormalizerService mediaNameNormalizerService,
+        [FromServices] IContentTypeProvider contentTypeProvider,
+        [FromServices] IFileVersionProvider fileVersionProvider,
+        [FromServices] IChunkFileUploadService chunkFileUploadService,
+        [FromServices] FileCreationService fileCreationService,
+        [FromServices] IServiceProvider serviceProvider,
+        [FromServices] IOptions<MediaOptions> options,
+        [FromServices] ILogger<MediaApiEndpoints> logger,
+        [FromServices] IStringLocalizer<MediaApiEndpoints> localizer,
+        [FromQuery] string path,
+        [FromQuery] string extensions)
     {
         if (string.IsNullOrEmpty(path))
         {
@@ -73,11 +71,11 @@ public static class UploadMediaEndpoint
 
         var requestedExtensions = MediaEndpointHelpers.GetRequestedExtensions(extensions);
 
-        var actionResult = await chunkFileUploadService.ProcessRequestAsync(
+        return await chunkFileUploadService.ProcessRequestAsync(
             httpContext.Request,
 
             // We need this empty object because the frontend expects a JSON object in the response.
-            (_, _, _) => Task.FromResult<IActionResult>(new OkObjectResult(new { })),
+            (_, _, _) => Task.FromResult<IResult>(TypedResults.Ok(new { })),
             async (files) =>
             {
                 var result = new List<UploadFileResultDto>();
@@ -177,12 +175,8 @@ public static class UploadMediaEndpoint
                     }
                 }
 
-                return new OkObjectResult(new UploadFilesResultDto { Files = result });
+                return (IResult)TypedResults.Ok(new UploadFilesResultDto { Files = result });
             });
-
-        // The chunk upload service is expressed in MVC IActionResult terms; bridge its result to
-        // the minimal-API IResult pipeline by executing it against the current HttpContext.
-        return new ActionResultResult(actionResult);
     }
 
     // Mirrors Grove.Media.Services.MediaSizeLimitAttribute's InternalMediaSizeFilter, applied
@@ -206,23 +200,6 @@ public static class UploadMediaEndpoint
         if (maxRequestBodySizeFeature != null && !maxRequestBodySizeFeature.IsReadOnly)
         {
             maxRequestBodySizeFeature.MaxRequestBodySize = maxFileSize;
-        }
-    }
-
-    // Adapts an MVC IActionResult to a minimal-API IResult so an endpoint can return the result
-    // produced by IChunkFileUploadService.ProcessRequestAsync.
-    private sealed class ActionResultResult : IResult
-    {
-        private readonly IActionResult _actionResult;
-
-        public ActionResultResult(IActionResult actionResult)
-            => _actionResult = actionResult;
-
-        public Task ExecuteAsync(HttpContext httpContext)
-        {
-            var actionContext = new ActionContext(httpContext, new RouteData(httpContext.Request.RouteValues), new ActionDescriptor());
-
-            return _actionResult.ExecuteResultAsync(actionContext);
         }
     }
 }

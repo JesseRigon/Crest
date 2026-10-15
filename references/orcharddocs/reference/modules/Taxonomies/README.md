@@ -1,4 +1,4 @@
-# Taxonomies (`Grove.Taxonomies`)
+# Taxonomies (`Grove.Contents.Taxonomies`)
 
 This module provides a Taxonomy content type that is used to define managed vocabularies (categories) of any type.  
 Taxonomy content items are made of terms organized as a hierarchy. Using the Taxonomy Field allows any content item

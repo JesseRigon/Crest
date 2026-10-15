@@ -1,0 +1,223 @@
+@namespace Grove.Display.Components.Access
+@using System.Net.Http.Json
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Model
+@using Grove.Display.Components.Models
+@inject HttpClient Http
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The groups of one reach (docs/permissions.md › Layers, Editors): the tenant's (staff) or one
+   organization's. A group binds users to roles; a user in several groups holds every role of
+   each. An organization's groups hold only the roles the tenant lets organizations assign (the
+   server refuses others) and take only that organization's members. Selecting a member opens
+   their overrides at this reach. Nothing here decides access: the server does. *@
+
+<GroveStack Gap="1rem" data-testid="access-groups-editor">
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</GroveAlert>
+    }
+
+    <GroveRow Gap="1rem">
+        <GroveColumn Size="12" SizeLG="4">
+            <GroveModelList TItem="AccessGroupInfo"
+                            Title="@T["Groups"]"
+                            Items="@Groups"
+                            SelectedKey="@SelectedId"
+                            KeySelector="@(group => group.Id)"
+                            TextSelector="@(group => group.Name)"
+                            DescriptionSelector="@(group => string.Join(", ", group.Roles))"
+                            Select="@((AccessGroupInfo group) => SelectAsync(group))"
+                            ShowCreate="false"
+                            IsBusy="@IsBusy"
+                            EmptyText="@T["No groups yet."]" />
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" Style="margin-top: 0.5rem;">
+                <GroveTextBox @bind-Value="NewGroupName" Placeholder="@T["New group name"]" Style="flex: 1 1 auto;" />
+                <GroveButton Text="@T["Add"]" Icon="add" Click="CreateAsync" Disabled="@string.IsNullOrWhiteSpace(NewGroupName)" data-testid="access-group-create" />
+            </GroveStack>
+        </GroveColumn>
+        <GroveColumn Size="12" SizeLG="8">
+            @if (Selected is null)
+            {
+                <GroveCard><GroveText Text="@T["Select a group."]" /></GroveCard>
+            }
+            else
+            {
+                <GroveCard data-testid="access-group-detail">
+                    <GroveStack Gap="0.75rem">
+                        <GroveFormField Text="@T["Name"]"><GroveTextBox @bind-Value="DraftName" Style="width: 100%;" /></GroveFormField>
+                        <GroveFormField Text="@T["Description"]"><GroveTextBox @bind-Value="DraftDescription" Style="width: 100%;" /></GroveFormField>
+
+                        <GroveText TextStyle="TextStyle.Subtitle2" Text="@T["Roles"]" />
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
+                            @foreach (var role in Roles)
+                            {
+                                var name = role;
+                                <label style="display: inline-flex; gap: 0.25rem; align-items: center;">
+                                    <GroveCheckBox TValue="bool" Value="@DraftRoles.Contains(name)" Change="@((bool on) => Toggle(DraftRoles, name, on))" />
+                                    @name
+                                </label>
+                            }
+                        </GroveStack>
+
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <GroveButton Text="@T["Save group"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" data-testid="access-group-save" />
+                            <GroveButton Text="@T["Delete group"]" Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="@IsBusy" />
+                        </GroveStack>
+
+                        <GroveText TextStyle="TextStyle.Subtitle2" Text="@T["Members"]" />
+                        @foreach (var userId in Selected.UserIds)
+                        {
+                            var id = userId;
+                            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                <GroveButton Text="@LabelOf(id)" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OverridesFor = id)" />
+                                <GroveButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => RemoveUserAsync(id))" />
+                            </GroveStack>
+                        }
+
+                        @if (Candidates.Count > 0)
+                        {
+                            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
+                                <GroveDropDown TValue="string" @bind-Value="NewUserId" Data="@Candidates" TextProperty="Label" ValueProperty="Id" AllowFiltering="true" Style="width: 18rem;" Placeholder="@T["Add a user"]" />
+                                <GroveButton Text="@T["Add"]" Icon="person_add" Click="AddUserAsync" Disabled="@string.IsNullOrWhiteSpace(NewUserId)" data-testid="access-group-add-user" />
+                            </GroveStack>
+                        }
+
+                        @if (OverridesFor is not null)
+                        {
+                            <GroveAccessOverridesEditor UserId="@OverridesFor" UserLabel="@LabelOf(OverridesFor)" OrganizationId="@OrganizationId" />
+                        }
+                    </GroveStack>
+                </GroveCard>
+            }
+        </GroveColumn>
+    </GroveRow>
+</GroveStack>
+
+@code {
+    /// <summary>The organization whose groups these are; null for the tenant's.</summary>
+    [Parameter] public string? OrganizationId { get; set; }
+
+    /// <summary>The users that may be put in the groups (the tenant's staff, the organization's members).</summary>
+    [Parameter] public IReadOnlyList<UserChoice> Users { get; set; } = [];
+
+    /// <summary>The roles the groups may hold.</summary>
+    [Parameter] public IReadOnlyList<string> Roles { get; set; } = [];
+
+    private List<AccessGroupInfo> Groups { get; set; } = [];
+    private string? SelectedId { get; set; }
+    private AccessGroupInfo? Selected => Groups.FirstOrDefault(group => group.Id == SelectedId);
+    private string? DraftName { get; set; }
+    private string? DraftDescription { get; set; }
+    private HashSet<string> DraftRoles { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    private string? NewGroupName { get; set; }
+    private string? NewUserId { get; set; }
+    private string? OverridesFor { get; set; }
+    private string? Error { get; set; }
+    private bool IsBusy { get; set; }
+    private string? _loadedFor = "\u0000";
+
+    private string Query => string.IsNullOrWhiteSpace(OrganizationId) ? string.Empty : $"?organizationId={Uri.EscapeDataString(OrganizationId)}";
+
+    private List<UserChoice> Candidates => Users.Where(user => Selected is not null && !Selected.UserIds.Contains(user.Id)).ToList();
+
+    private string LabelOf(string userId) => Users.FirstOrDefault(user => user.Id == userId)?.Label ?? userId;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedFor != OrganizationId)
+        {
+            _loadedFor = OrganizationId;
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            using var response = await Http.GetAsync($"api/grove/access/groups{Query}");
+            Groups = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<List<AccessGroupInfo>>() ?? [] : [];
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await AccessApi.ErrorAsync(response);
+            }
+
+            if (Selected is { } selected)
+            {
+                Draft(selected);
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private Task SelectAsync(AccessGroupInfo group)
+    {
+        SelectedId = group.Id;
+        OverridesFor = null;
+        Draft(group);
+        return Task.CompletedTask;
+    }
+
+    private void Draft(AccessGroupInfo group)
+    {
+        DraftName = group.Name;
+        DraftDescription = group.Description;
+        DraftRoles = new HashSet<string>(group.Roles, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static void Toggle(HashSet<string> set, string name, bool on)
+    {
+        if (on) set.Add(name); else set.Remove(name);
+    }
+
+    private async Task CreateAsync()
+    {
+        await RunAsync(() => Http.PostAsJsonAsync($"api/grove/access/groups{Query}", new AccessGroupWrite(NewGroupName!.Trim(), null, [])));
+        NewGroupName = null;
+    }
+
+    private Task SaveAsync() =>
+        RunAsync(() => Http.PutAsJsonAsync($"api/grove/access/groups/{SelectedId}", new AccessGroupWrite(DraftName ?? string.Empty, DraftDescription, [.. DraftRoles])));
+
+    private async Task DeleteAsync()
+    {
+        await RunAsync(() => Http.DeleteAsync($"api/grove/access/groups/{SelectedId}"));
+        SelectedId = null;
+    }
+
+    private async Task AddUserAsync()
+    {
+        await RunAsync(() => Http.PostAsJsonAsync($"api/grove/access/groups/{SelectedId}/users", new GroupUserRequest(NewUserId!)));
+        NewUserId = null;
+    }
+
+    private Task RemoveUserAsync(string userId) =>
+        RunAsync(() => Http.DeleteAsync($"api/grove/access/groups/{SelectedId}/users/{Uri.EscapeDataString(userId)}"));
+
+    private async Task RunAsync(Func<Task<HttpResponseMessage>> call)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            using var response = await call();
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await AccessApi.ErrorAsync(response);
+                return;
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
+        await LoadAsync();
+    }
+}

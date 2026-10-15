@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Compliance.Redaction;
-using Grove.Users.AuditTrail.Services;
+using Grove.Access.Users.AuditTrail.Services;
 
 namespace Grove.Tests.Security;
 

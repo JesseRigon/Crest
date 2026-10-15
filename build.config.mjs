@@ -1,5 +1,5 @@
 export const assetsLookupGlob = "src/*/Assets.json";
-export const parcelBundleOutput = "src/Grove.Resources/wwwroot/Scripts/bundle"
+export const parcelBundleOutput = "src/Grove.Display.Resources/wwwroot/Scripts/bundle"
 
 export function parcel() {
   return {

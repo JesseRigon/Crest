@@ -1,5 +1,5 @@
-using Grove.ContentManagement;
-using Grove.ContentManagement.Metadata.Models;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Metadata.Models;
 using Grove.Media.Fields;
 
 namespace Grove.Media.ViewModels;

@@ -88,7 +88,7 @@ Implementation:
   (`api/grove/members/me`). Lists describe an Individual organization as "Individual" and a
   role's party reference says "Individual" rather than Organization (`PartyDisplay`, Domain,
   tested). The Parties settings section is contributed to the general settings page through
-  the `SettingsPageRegions.General` region (Grove.Components).
+  the `SettingsPageRegions.General` region (Grove.Display.Components).
 
 Parties owns the **party-type registry** (`IPartyTypeProvider`). A module registers a
 descriptor for each role it composes and gets, without further code, its Parties menu
@@ -139,7 +139,7 @@ hides survive every reseed.
 - **Contact points and addresses**: two named BagParts on Person and Organization,
   `ContactPoints` (element type `ContactPoint`: Kind picker, Value, Label, Preferred,
   PhoneCountry picker) and `Addresses` (element type `Address`: Kind picker, Line1/2,
-  Locality, `Geo` (a `GeoStackField` from `Grove.Regions` whose level 1 is the country),
+  Locality, `Geo` (a `GeoStackField` from `Grove.Data.Regions` whose level 1 is the country),
   PostalCode, Preferred). Person and Organization carry no scalar Email/Phone/Website fields.
 - **One bag-element service.** The platform stores bags but edits them only through its MVC
   editor, so Parties owns the write surface: `PartyBagElementService` over `PartyBag`
@@ -208,9 +208,9 @@ hides survive every reseed.
 ## Party ↔ user link
 
 `Person.PortalUser` is a stock `UserPickerField`, indexed by
-`Grove.ContentFields.Indexing.SQL.UserPicker` so person-for-user is a query.
+`Grove.Contents.Fields.Indexing.SQL.UserPicker` so person-for-user is a query.
 `IPartyUserLinkService` (Parties) owns the writes and the lookup;
-`Grove.Members.CreateMemberAsync` calls it when a `PersonId` is supplied (unknown person →
+`Grove.Access.Members.CreateMemberAsync` calls it when a `PersonId` is supplied (unknown person →
 error), so the link is recorded on both sides by the module that creates the account. Who a
 member is, and the bindings and hierarchy around the link, are under
 [Members](#members-persons-who-act-for-an-organization) below.
@@ -230,7 +230,7 @@ vendor's person) through a user account; **staff** are the tenant's own people. 
 ordinary platform users in the tenant's user store, with the same user management, the same
 roles and permissions machinery and the same hierarchy; what differs is the organization
 they act for and the shell they sign in to. The party model carries the relationship, the
-user record carries authentication and roles. `Grove.Members` owns it, on `Grove.Parties`
+user record carries authentication and roles. `Grove.Access.Members` owns it, on `Grove.Parties`
 (a member is a Person with a portal user; a binding points at an Organization) and on the
 platform's user, role and permission pipelines; nothing in it is specific to a line of
 business. The sign-in side (the member portal, sessions, sides) is
@@ -256,7 +256,7 @@ through `IMemberLifecycleHandler` (`MemberBoundAsync` / `MemberUnboundAsync`, re
 fresh scope after the binding write commits) and knows nothing more about its consumers.
 
 **The link.** `Person.PortalUser` (above) is the person ↔ account link, written through
-`IPartyUserLinkService.LinkPortalUserAsync` by `Grove.Members.CreateMemberAsync` whenever a
+`IPartyUserLinkService.LinkPortalUserAsync` by `Grove.Access.Members.CreateMemberAsync` whenever a
 `PersonId` is supplied, and the person's org position links to the Organization.
 
 **Bindings.** One account can hold several **organization bindings**, with different roles
@@ -343,7 +343,7 @@ ToPerson, ToOrganization, Type from `parties.association-type`), `AssociationInd
 grants; default nothing) and `GET api/grove/parties/associations/me`. Module types are built
 in and not editable; tenant types are additions to the list; resolvers come from modules.
 
-### What `Grove.Members` contains on the party side
+### What `Grove.Access.Members` contains on the party side
 
 - Bindings: the `GroveMemberInfo` aspect, `UserConnectionIndex`, `MemberBindingService`,
   `MemberService` (reads, member creation), `UserClassService` (add or remove a class), the

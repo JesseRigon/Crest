@@ -1,4 +1,4 @@
-using DisplayManagementArguments = Grove.DisplayManagement.Arguments;
+using DisplayManagementArguments = Grove.Display.Management.Arguments;
 
 #nullable enable
 
@@ -127,7 +127,7 @@ public partial class ArgumentsInterceptorTests
 /// </summary>
 public partial class ArgumentsNamedTypeTests
 {
-    [global::Grove.DisplayManagement.GenerateArguments]
+    [global::Grove.Display.Management.GenerateArguments]
     public partial class ProductArguments
     {
         public int Id { get; set; }

@@ -1,4 +1,4 @@
-namespace Grove.Settings;
+namespace Grove.Infrastructure.Settings;
 
 public enum CacheMode
 {

@@ -33,7 +33,7 @@ In addition, you will need to specify the name of your Azure Key Vault and optio
 In the `Program.cs`, add `AddPlatformAzureKeyVault()` to the Generic Host in `CreateHostBuilder()`.
 
 ```csharp
-using Grove.Configuration.KeyVault.Extensions;
+using Grove.Security.KeyVault.Extensions;
 
 public class Program
 {

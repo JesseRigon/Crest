@@ -1,0 +1,56 @@
+@namespace Grove.Display.Components.Sharing
+@using System.Globalization
+@using Grove.Display.Components.Primitives
+@inject HttpClient Http
+@inject IServiceProvider Services
+
+@* A user's derived (business) roles, read-only (docs/sharing.md, requirement 47): each with the
+   relationship that grants it ("Customer, member of Acme Corp"), linking to that relationship,
+   since changing it is the only way to change the role. Shown beneath the assigned roles. *@
+
+@if (Roles is { Count: > 0 } roles)
+{
+    <div class="grove-derived-roles" data-testid="derived-roles">
+        <div class="grove-derived-roles__title">@L("Derived roles")</div>
+        <ul>
+            @foreach (var role in roles)
+            {
+                <li>
+                    <strong>@role.RoleName</strong>
+                    —
+                    @if (role.RelationshipId is { } relationship)
+                    {
+                        <a href="@($"Contents/ContentItems/{Uri.EscapeDataString(relationship)}/Edit")">@role.Relationship</a>
+                    }
+                    else
+                    {
+                        @role.Relationship
+                    }
+                </li>
+            }
+        </ul>
+        <small>@L("Derived roles come from relationships and cannot be assigned here.")</small>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public string UserId { get; set; } = string.Empty;
+
+    private List<GroveDerivedRole>? Roles;
+    private string? _loaded;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrEmpty(UserId) || _loaded == UserId)
+        {
+            return;
+        }
+
+        _loaded = UserId;
+
+        // Sharing off, or no right to list users: nothing is shown.
+        Roles = (await new GroveSharingClient(Http).GetDerivedRolesAsync(UserId)).Value;
+    }
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

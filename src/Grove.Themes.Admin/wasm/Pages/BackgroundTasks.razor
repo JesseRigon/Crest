@@ -1,0 +1,121 @@
+@page "/BackgroundTasks"
+@attribute [PageEntry("ManageBackgroundTasks", Id = "background-tasks", Parent = "tools", Caption = "Background Tasks")]
+@using System.Net.Http.Json
+@using Grove.Display.Components.Primitives
+@inject HttpClient Http
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* Background tasks (Grove.BackgroundTasks): every registered task, enable or disable it, change its
+   schedule and lock settings, or run it once now. *@
+<GroveStack Gap="1rem" data-testid="background-tasks-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+        <GroveText TextStyle="TextStyle.H4" Text="@T["Background tasks"]" />
+        <GroveTextBox @bind-Value="Search" Placeholder="@T["Search"]" Style="width: 16rem" />
+    </GroveStack>
+    @if (Error is { } error) { <GroveAlert AlertStyle="AlertStyle.Danger" AllowClose="false">@error</GroveAlert> }
+    @if (Tasks is null)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        @foreach (var task in Visible)
+        {
+            <GroveCard data-task="@task.Name">
+                <GroveStack Gap="0.5rem">
+                    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                        <div>
+                            <GroveText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@(task.Title ?? task.Name)</GroveText>
+                            <GroveText TextStyle="TextStyle.Caption">@task.Name · @(task.Enable ? T["enabled"] : T["disabled"]) · @task.Schedule</GroveText>
+                        </div>
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <GroveButton Text="@(task.Enable ? T["Disable"] : T["Enable"])" ButtonStyle="ButtonStyle.Light" Click="@(() => SaveAsync(task, task with { Enable = !task.Enable }))" Disabled="Busy" />
+                            <GroveButton Text="@T["Run now"]" Icon="play_arrow" ButtonStyle="ButtonStyle.Light" Click="@(() => RunAsync(task))" Disabled="Busy" data-testid="@($"task-run-{task.Name}")" />
+                            <GroveButton Text="@T["Edit"]" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => Editing = Editing?.Name == task.Name ? null : new Editor(task))" />
+                        </GroveStack>
+                    </GroveStack>
+                    @if (!string.IsNullOrWhiteSpace(task.Description)) { <GroveText TextStyle="TextStyle.Body2">@task.Description</GroveText> }
+                    @if (Results.TryGetValue(task.Name, out var result)) { <GroveText TextStyle="TextStyle.Caption">@result</GroveText> }
+                    @if (Editing?.Name == task.Name)
+                    {
+                        <GroveLabel Text="@T["Schedule (cron; the default is {0})", task.DefaultSchedule]" Component="task-schedule" />
+                        <GroveTextBox @bind-Value="Editing.Schedule" Name="task-schedule" Style="max-width: 16rem" />
+                        <GroveLabel Text="@T["Description"]" Component="task-description" />
+                        <GroveTextBox @bind-Value="Editing.Description" Name="task-description" Style="width: 100%" />
+                        <GroveLabel Text="@T["Lock timeout and expiration (milliseconds; both above zero make the task atomic across instances)"]" Component="task-lock-timeout" />
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <GroveNumeric TValue="int" @bind-Value="Editing.LockTimeout" Min="0" Name="task-lock-timeout" />
+                            <GroveNumeric TValue="int" @bind-Value="Editing.LockExpiration" Min="0" />
+                        </GroveStack>
+                        <div><GroveCheckBox @bind-Value="Editing.UsePipeline" Name="task-pipeline" /><label for="task-pipeline"> @T["Run with the tenant's request pipeline (needed by tasks that build URLs or render)"]</label></div>
+                        <div><GroveButton Text="@T["Save"]" Icon="save" Click="@(() => SaveAsync(task, Editing.Apply(task)))" Disabled="Busy" /></div>
+                    }
+                </GroveStack>
+            </GroveCard>
+        }
+    }
+</GroveStack>
+
+@code {
+    private const string Api = "api/grove/background-tasks";
+
+    private TaskModel[]? Tasks;
+    private string? Search;
+    private Editor? Editing;
+    private string? Error;
+    private bool Busy;
+    private readonly Dictionary<string, string> Results = [];
+
+    private IEnumerable<TaskModel> Visible => (Tasks ?? []).Where(task => string.IsNullOrWhiteSpace(Search)
+        || (task.Title ?? task.Name).Contains(Search, StringComparison.OrdinalIgnoreCase)
+        || (task.Description?.Contains(Search, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { Tasks = await Http.GetFromJsonAsync<TaskModel[]>(Api); }
+        catch (Exception exception) { Error = exception.Message; }
+    }
+
+    private async Task SaveAsync(TaskModel task, TaskModel changed)
+    {
+        Busy = true;
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"{Api}/{Uri.EscapeDataString(task.Name)}", new { changed.Enable, changed.Schedule, changed.Description, changed.LockTimeout, changed.LockExpiration, changed.UsePipeline });
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            var saved = await response.Content.ReadFromJsonAsync<TaskModel>();
+            Tasks = Tasks!.Select(t => t.Name == task.Name && saved is not null ? saved : t).ToArray();
+            Editing = null;
+            Error = null;
+        }
+        finally { Busy = false; }
+    }
+
+    private async Task RunAsync(TaskModel task)
+    {
+        Busy = true;
+        try
+        {
+            var response = await Http.PostAsync($"{Api}/{Uri.EscapeDataString(task.Name)}/run", null);
+            var result = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<RunResult>() : null;
+            Results[task.Name] = result is null ? T["The task could not be run."]
+                : result.Succeeded ? T["Ran in {0:0} ms.", result.Milliseconds] : T["Failed: {0}", result.Error ?? string.Empty];
+        }
+        finally { Busy = false; }
+    }
+
+    private sealed record TaskModel(string Name, string? Title, string? Description, bool Enable, string Schedule, string DefaultSchedule, int LockTimeout, int LockExpiration, bool UsePipeline);
+    private sealed record RunResult(bool Succeeded, string? Error, double Milliseconds);
+
+    private sealed class Editor(TaskModel task)
+    {
+        public string Name { get; } = task.Name;
+        public string? Schedule { get; set; } = task.Schedule;
+        public string? Description { get; set; } = task.Description;
+        public int LockTimeout { get; set; } = task.LockTimeout;
+        public int LockExpiration { get; set; } = task.LockExpiration;
+        public bool UsePipeline { get; set; } = task.UsePipeline;
+
+        public TaskModel Apply(TaskModel original) => original with { Schedule = Schedule ?? original.Schedule, Description = Description, LockTimeout = LockTimeout, LockExpiration = LockExpiration, UsePipeline = UsePipeline };
+    }
+}

@@ -21,7 +21,7 @@
   -->
   <Import Project="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.targets"
           Condition="'$(ModuleType)' != '' And '$(_IsPlatformProject)' != 'true'" />
-  <Import Project="$(PlatformSrcDir)Grove.Theme.Targets\Grove.Theme.Targets.targets"
+  <Import Project="$(PlatformSrcDir)Grove.Themes.Targets\Grove.Themes.Targets.targets"
           Condition="'$(ModuleType)' == 'Theme' And '$(_IsPlatformProject)' != 'true'" />
 
   <!-- The component catalog generator for Grove's own component libraries (theme *.Client,
@@ -31,10 +31,10 @@
   <PropertyGroup Condition="'$(_IsPlatformProject)' != 'true'">
     <ComponentCatalogGeneratorProject>$(MSBuildThisFileDirectory)src\Grove.SourceGenerators\Grove.SourceGenerators.csproj</ComponentCatalogGeneratorProject>
   </PropertyGroup>
-  <Import Project="$(MSBuildThisFileDirectory)src\Grove.DisplayManagement.Abstractions\buildTransitive\Grove.DisplayManagement.Abstractions.targets"
+  <Import Project="$(MSBuildThisFileDirectory)src\Grove.Display.Management.Abstractions\buildTransitive\Grove.Display.Management.Abstractions.targets"
           Condition="'$(_IsPlatformProject)' != 'true'" />
 
   <!-- The platform projects: what the former src/*/Directory.Build.targets files imported. -->
-  <Import Project="src\Grove.Build\Grove.Commons.targets" Condition="'$(_PlatformKind)' == 'Library' Or '$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
+  <Import Project="src\Grove.Infrastructure.Build\Grove.Commons.targets" Condition="'$(_PlatformKind)' == 'Library' Or '$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
   <Import Project="src\Grove.Module.Targets\Grove.Module.Targets.targets" Condition="'$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
 </Project>

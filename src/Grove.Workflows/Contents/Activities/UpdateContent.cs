@@ -8,8 +8,8 @@ using Grove.Workflows.Attributes;
 using Grove.Workflows.Models;
 using Grove.Workflows.UIHints;
 using JetBrains.Annotations;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
 using Grove.Workflows.Contents.UIHints;
 
 namespace Grove.Workflows.Contents.Activities;

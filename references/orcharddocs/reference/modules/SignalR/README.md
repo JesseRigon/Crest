@@ -1,20 +1,20 @@
-# SignalR (`Grove.SignalR`)
+# SignalR (`Grove.Data.Protocols.SignalR`)
 
 The SignalR module provides the shared infrastructure required to host and consume [SignalR](https://learn.microsoft.com/aspnet/core/signalr/introduction) hubs in Grove. Any module that declares a hub can depend on this module instead of registering SignalR itself, which keeps hub hosting, client resources, authentication, and scale-out backplanes consistent across the application.
 
-The scale-out backplanes ship as separate modules so the base `Grove.SignalR` module stays free of Redis and Azure dependencies. Install only the backplane you need:
+The scale-out backplanes ship as separate modules so the base `Grove.Data.Protocols.SignalR` module stays free of Redis and Azure dependencies. Install only the backplane you need:
 
 | Module | Feature | Purpose |
 | --- | --- | --- |
-| `Grove.SignalR` | `Grove.SignalR` | Base SignalR hosting, client resources, and the authorization policy used by secured hubs. |
-| `Grove.SignalR.Redis` | `Grove.SignalR.Redis` | Redis scale-out backplane. Brings the Redis dependencies. |
-| `Grove.SignalR.Azure` | `Grove.SignalR.Azure` | Azure SignalR Service backplane. Brings the Azure dependencies. |
+| `Grove.Data.Protocols.SignalR` | `Grove.Data.Protocols.SignalR` | Base SignalR hosting, client resources, and the authorization policy used by secured hubs. |
+| `Grove.Data.Protocols.SignalR.Redis` | `Grove.Data.Protocols.SignalR.Redis` | Redis scale-out backplane. Brings the Redis dependencies. |
+| `Grove.Data.Protocols.SignalR.Azure` | `Grove.Data.Protocols.SignalR.Azure` | Azure SignalR Service backplane. Brings the Azure dependencies. |
 
 ## Features
 
-- **`Grove.SignalR`** — Registers SignalR with a camel-cased JSON protocol, the SignalR JavaScript client as a named resource (`signalr`), and the `SignalR` authorization policy used by secured hubs.
-- **`Grove.SignalR.Redis`** — Uses Redis as the SignalR backplane, enabling multi-instance deployments. Each tenant's traffic is isolated on a dedicated Redis channel prefix. Provided by the separate `Grove.SignalR.Redis` module and depends on `Grove.Redis`.
-- **`Grove.SignalR.Azure`** — Uses the Azure SignalR Service as the backplane, enabling multi-instance deployments. Provided by the separate `Grove.SignalR.Azure` module.
+- **`Grove.Data.Protocols.SignalR`** — Registers SignalR with a camel-cased JSON protocol, the SignalR JavaScript client as a named resource (`signalr`), and the `SignalR` authorization policy used by secured hubs.
+- **`Grove.Data.Protocols.SignalR.Redis`** — Uses Redis as the SignalR backplane, enabling multi-instance deployments. Each tenant's traffic is isolated on a dedicated Redis channel prefix. Provided by the separate `Grove.Data.Protocols.SignalR.Redis` module and depends on `Grove.Integrations.Redis`.
+- **`Grove.Data.Protocols.SignalR.Azure`** — Uses the Azure SignalR Service as the backplane, enabling multi-instance deployments. Provided by the separate `Grove.Data.Protocols.SignalR.Azure` module.
 
 ## Declaring a hub in another module
 
@@ -31,7 +31,7 @@ public sealed class MyHub : Hub
 }
 ```
 
-The feature that hosts the hub depends on `Grove.SignalR` and maps the hub in its `Startup`:
+The feature that hosts the hub depends on `Grove.Data.Protocols.SignalR` and maps the hub in its `Startup`:
 
 ```csharp
 public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
@@ -63,7 +63,7 @@ services.Configure<HubOptions>(options =>
 
 ## Backplane configuration
 
-Each backplane is a separate module and only registers once its feature is enabled. The Redis backplane (`Grove.SignalR.Redis`) reuses the `Grove.Redis` connection string (`Grove_Redis:Configuration`):
+Each backplane is a separate module and only registers once its feature is enabled. The Redis backplane (`Grove.Data.Protocols.SignalR.Redis`) reuses the `Grove.Integrations.Redis` connection string (`Grove_Redis:Configuration`):
 
 ```json
 {
@@ -73,7 +73,7 @@ Each backplane is a separate module and only registers once its feature is enabl
 }
 ```
 
-The Azure SignalR Service backplane (`Grove.SignalR.Azure`) uses its own connection string:
+The Azure SignalR Service backplane (`Grove.Data.Protocols.SignalR.Azure`) uses its own connection string:
 
 ```json
 {

@@ -1,7 +1,7 @@
 #nullable enable
-using Grove.ContentManagement.Records;
-using Grove.Queries;
-using Grove.Queries.Structured;
+using Grove.Contents.Management.Records;
+using Grove.Data.Queries;
+using Grove.Data.Queries.Structured;
 using YesSql.Indexes;
 
 namespace Grove.Tests.Queries;

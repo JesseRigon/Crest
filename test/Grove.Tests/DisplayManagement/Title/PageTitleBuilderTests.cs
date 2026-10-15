@@ -1,6 +1,6 @@
 using Cysharp.Text;
 
-namespace Grove.DisplayManagement.Title;
+namespace Grove.Display.Management.Title;
 
 public class PageTitleBuilderTests
 {

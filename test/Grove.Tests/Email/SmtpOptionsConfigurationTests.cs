@@ -4,12 +4,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
-using Grove.Email;
-using Grove.Email.Smtp.Services;
+using Grove.Communications.Email;
+using Grove.Data.Protocols.Smtp.Services;
 using Grove.Entities;
 using Grove.Environment.Shell;
 using Grove.Environment.Shell.Configuration;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Tests.Email;
 

@@ -1,6 +1,6 @@
-using Grove.ContentFields.Fields;
-using Grove.ContentFields.Relationships;
-using Grove.ContentManagement;
+using Grove.Contents.Fields.Fields;
+using Grove.Contents.Fields.Relationships;
+using Grove.Contents.Management;
 using Grove.Parties.Constants;
 using Grove.Fields;
 

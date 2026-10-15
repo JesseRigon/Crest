@@ -1,5 +1,5 @@
 #nullable enable
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Media.Files;
 using Grove.Modules;
 using Microsoft.AspNetCore.StaticFiles;

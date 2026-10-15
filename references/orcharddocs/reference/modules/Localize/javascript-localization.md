@@ -11,8 +11,8 @@ When a Vue, TypeScript, or plain JavaScript component needs translated strings, 
 
 | Type                                      | Location                                  | Description                                                                                                            |
 |-------------------------------------------|-------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
-| `IJSLocalizer`                            | `Grove.Localization.Abstractions`   | Contract that returns an `IDictionary<string, string>` for a requested group.                                          |
-| `LocalizationPlatformHelperExtensions`     | `Grove.Localization.Abstractions`   | Razor / Liquid helper (`Platform.GetJSLocalizations(…)`) that aggregates all registered `IJSLocalizer` implementations. |
+| `IJSLocalizer`                            | `Grove.Data.Localization.Abstractions`   | Contract that returns an `IDictionary<string, string>` for a requested group.                                          |
+| `LocalizationPlatformHelperExtensions`     | `Grove.Data.Localization.Abstractions`   | Razor / Liquid helper (`Platform.GetJSLocalizations(…)`) that aggregates all registered `IJSLocalizer` implementations. |
 | `getTranslations()` / `setTranslations()` | `.scripts/bloom/helpers/localizations.ts` | Framework-agnostic helpers for seeding and reading a shared translations record in JavaScript or TypeScript.           |
 
 ## Registering a custom implementation
@@ -23,7 +23,7 @@ Create a class that implements `IJSLocalizer` and inject `IStringLocalizer<T>` t
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Localization;
-using Grove.Localization;
+using Grove.Data.Localization;
 
 namespace MyModule.Services;
 

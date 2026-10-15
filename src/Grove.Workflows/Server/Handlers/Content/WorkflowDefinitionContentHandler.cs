@@ -4,8 +4,8 @@ using Grove.Workflows.Management.Mappers;
 using Grove.Workflows.Management.Models;
 using Grove.Workflows.Management.Notifications;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
 using Grove.Workflows.Parts;
 using Grove.Workflows.Services;
 

@@ -1,9 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Display;
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.Descriptors;
-using Grove.DisplayManagement.ModelBinding;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Display;
+using Grove.Display.Management;
+using Grove.Display.Management.Descriptors;
 
 namespace Grove.Contents;
 
@@ -48,7 +47,6 @@ public class Shapes : ShapeTableProvider
                 var contentManager = context.ServiceProvider.GetRequiredService<IContentManager>();
                 var handleManager = context.ServiceProvider.GetRequiredService<IContentHandleManager>();
                 var displayManager = context.ServiceProvider.GetRequiredService<IContentItemDisplayManager>();
-                var updateModelAccessor = context.ServiceProvider.GetRequiredService<IUpdateModelAccessor>();
 
                 var contentItemId = await handleManager.GetContentItemIdAsync(handle);
 
@@ -66,7 +64,7 @@ public class Shapes : ShapeTableProvider
 
                 content.Properties["ContentItem"] = contentItem;
 
-                var displayShape = await displayManager.BuildDisplayAsync(contentItem, updateModelAccessor.ModelUpdater, displayType);
+                var displayShape = await displayManager.BuildDisplayAsync(contentItem, displayType);
 
                 if (!string.IsNullOrEmpty(alternate))
                 {

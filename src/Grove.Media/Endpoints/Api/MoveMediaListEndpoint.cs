@@ -1,3 +1,4 @@
+using Grove.Api;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Media.ViewModels;
 
 namespace Grove.Media.Endpoints.Api;
@@ -16,11 +17,9 @@ public static class MoveMediaListEndpoint
 {
     public static IEndpointRouteBuilder AddMoveMediaListEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapPost("api/media/MoveMediaList", HandleAsync)
+        builder.MapPost("MoveMediaList", HandleAsync)
             .WithName("ApiMoveMediaList")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
-            .AddEndpointFilter<MediaApiAntiforgeryEndpointFilter>()
             .Produces(StatusCodes.Status200OK)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -33,10 +32,10 @@ public static class MoveMediaListEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        IStringLocalizer<MediaApiEndpoints> localizer,
-        MoveMedias model)
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromServices] IStringLocalizer<MediaApiEndpoints> localizer,
+        [FromBody] MoveMedias model)
     {
         if (!await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMedia)
             || !await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMediaFolder, (object)model.sourceFolder)

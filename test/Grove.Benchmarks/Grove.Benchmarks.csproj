@@ -12,7 +12,7 @@
     <!-- Without this, we get an "error CS0017: Program has more than one entry point defined." due to
     BenchmarkDotNet's auto-generated entry point. -->
     <StartupObject>Grove.Benchmarks.Program</StartupObject>
-    <InterceptorsNamespaces>$(InterceptorsNamespaces);Grove.DisplayManagement.Generated</InterceptorsNamespaces>
+    <InterceptorsNamespaces>$(InterceptorsNamespaces);Grove.Display.Management.Generated</InterceptorsNamespaces>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +29,6 @@
     <ProjectReference Include="..\..\src\Grove.SourceGenerators\Grove.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
-  <Import Project="..\..\src\Grove.Build\Grove.Commons.targets" />
+  <Import Project="..\..\src\Grove.Infrastructure.Build\Grove.Commons.targets" />
 
 </Project>

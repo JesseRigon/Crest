@@ -1,0 +1,102 @@
+@inherits GroveComponent
+
+@namespace Grove.Display.Components.Primitives
+@if (Visible)
+{
+    <div @ref="@Element" @attributes="Attributes" class="@GetCssClass()" style="@Style" id="@GetId()">
+        @if (FormFieldVariant != null)
+        {
+            <GroveStack>
+                <GroveFormField Text="@UserText" Variant="@FormFieldVariant.Value">
+                    <ChildContent>
+                        <GroveTextBox AutoComplete=@AutoComplete AutoCompleteType=@UserNameAutoCompleteType id=@Id("username") Name="Username" @bind-Value=@username />
+                    </ChildContent>
+                    <Helper>
+                        <GroveRequiredValidator Component="Username" Text=@UserRequired />
+                    </Helper>
+                </GroveFormField>
+                <GroveFormField Text="@PasswordText" Variant="@FormFieldVariant.Value">
+                    <ChildContent>
+                        <GrovePassword id=@Id("password") AutoComplete=@AutoComplete AutoCompleteType=@PasswordAutoCompleteType Name="Password" @bind-Value=@password />
+                    </ChildContent>
+                    <Helper>
+                        <GroveRequiredValidator Component="Password" Text=@PasswordRequired />
+                    </Helper>
+                </GroveFormField>
+                @if (AllowRememberMe)
+                {
+                    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <GroveSwitch @bind-Value="@rememberMe" id=@Id("rememberMe") Name="RememberMe" />
+                        <label class="rz-label" for="RememberMe">@RememberMeText</label>
+                    </GroveStack>
+                }
+            </GroveStack>
+            <GroveStack style="margin-top:1rem;" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                @if(ShowLoginButton)
+                {
+                <GroveButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text=@LoginText Click=@OnLogin />
+                }
+                @if (AllowResetPassword)
+                {
+                <GroveButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Text" Text=@ResetPasswordText Click=@OnReset />
+                }
+            </GroveStack>
+            @if (AllowRegister)
+            {
+                <div class="rz-register">
+                    @RegisterMessageText
+                    <GroveButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Shade="Shade.Lighter" Text=@RegisterText Click=@OnRegister />
+                </div>
+            }
+        }
+        else
+        {
+        <div class="rz-form">
+            <div class="rz-form-row">
+                <label class="rz-label" for=@Id("username")>@UserText</label>
+                <div class="rz-form-input-wrapper">
+                    <GroveTextBox AutoComplete=@AutoComplete AutoCompleteType=@UserNameAutoCompleteType id=@Id("username") Name="Username" @bind-Value=@username />
+                    <GroveRequiredValidator Component="Username" Text=@UserRequired />
+                </div>
+            </div>
+            <div class="rz-form-row">
+                <label class="rz-label" for=@Id("password")>@PasswordText</label>
+                <div class="rz-form-input-wrapper">
+                    <GrovePassword id=@Id("password") AutoComplete=@AutoComplete AutoCompleteType=@PasswordAutoCompleteType Name="Password" @bind-Value=@password />
+                    <GroveRequiredValidator Component="Password" Text=@PasswordRequired />
+                </div>
+            </div>
+@if (AllowRememberMe)
+{
+            <div class="rz-form-row">
+                <label class="rz-label"></label>
+                <div class="rz-form-input-wrapper">
+                    <GroveSwitch @bind-Value="@rememberMe" id=@Id("rememberMe") Name="RememberMe" />
+                    <label class="rz-label" for="RememberMe">@RememberMeText</label>
+                </div>
+            </div>
+}
+            <div class="rz-form-row">
+                <label class="rz-label"></label>
+                <div class="rz-form-input-wrapper rz-login-buttons">
+                    @if (ShowLoginButton)
+                    {
+                    <GroveButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text=@LoginText Click=@OnLogin />
+                    }
+                    @if (AllowResetPassword)
+                    {
+                    <GroveButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Text" Text=@ResetPasswordText Click=@OnReset />
+                    }
+                </div>
+            </div>
+        </div>
+        @if (AllowRegister)
+        {
+            <div class="rz-register">
+                @RegisterMessageText
+                <GroveButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Flat" Shade="Shade.Lighter" Text=@RegisterText Click=@OnRegister />
+            </div>
+        }
+        }
+    </div>
+}

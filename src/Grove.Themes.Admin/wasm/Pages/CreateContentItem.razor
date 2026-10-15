@@ -1,0 +1,9 @@
+@page "/Contents/ContentTypes/{ContentType}/Create"
+@attribute [PageEntry("EditContent")]
+@using Grove.Themes.Admin.Components.Admin
+
+<Grove.Themes.Admin.Components.Admin.GroveContentItemEditor ContentType="@ContentType" />
+
+@code {
+    [Parameter] public string? ContentType { get; set; }
+}

@@ -3,7 +3,7 @@ using Grove.Tests.Functional.Helpers;
 
 namespace Grove.Tests.Functional.Tests.Cms;
 
-// Covers Grove.AzureAI's azure-ai-search-default-settings.ts: a small classic
+// Covers Grove.Integrations.AI.Azure's azure-ai-search-default-settings.ts: a small classic
 // (non-module) script toggling the API-key vs. managed-identity wrapper based on the
 // selected Authentication Type.
 public sealed class AzureAiSearchSettingsTests : CmsTestBase<AzureAiSearchSettingsTestsFixture>, IClassFixture<AzureAiSearchSettingsTestsFixture>

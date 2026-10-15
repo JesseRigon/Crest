@@ -1,5 +1,5 @@
 using Grove.Access;
-using Grove.DisplayManagement.Components;
+using Grove.Display.Management.Components;
 using Grove.Workflows.Display;
 using Grove.Workflows.Security;
 using NSubstitute;

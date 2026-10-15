@@ -1,3 +1,4 @@
+using Grove.Api;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,11 +20,9 @@ public static class CopyMediaEndpoint
 {
     public static IEndpointRouteBuilder AddCopyMediaEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapPost("api/media/CopyMedia", HandleAsync)
+        builder.MapPost("CopyMedia", HandleAsync)
             .WithName("ApiCopyMedia")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
-            .AddEndpointFilter<MediaApiAntiforgeryEndpointFilter>()
             .Produces<FileStoreEntryDto>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -36,14 +35,14 @@ public static class CopyMediaEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        IContentTypeProvider contentTypeProvider,
-        IFileVersionProvider fileVersionProvider,
-        IOptions<MediaOptions> options,
-        IStringLocalizer<MediaApiEndpoints> localizer,
-        string oldPath,
-        string newPath)
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromServices] IContentTypeProvider contentTypeProvider,
+        [FromServices] IFileVersionProvider fileVersionProvider,
+        [FromServices] IOptions<MediaOptions> options,
+        [FromServices] IStringLocalizer<MediaApiEndpoints> localizer,
+        [FromQuery] string oldPath,
+        [FromQuery] string newPath)
     {
         if (!await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMedia)
             || !await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMediaFolder, (object)oldPath)

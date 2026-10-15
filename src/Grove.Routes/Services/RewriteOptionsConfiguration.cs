@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Grove.Admin;
+using Grove.Infrastructure.Shells.Admin;
 using Grove.Routes.Rules;
 
 namespace Grove.Routes.Services;

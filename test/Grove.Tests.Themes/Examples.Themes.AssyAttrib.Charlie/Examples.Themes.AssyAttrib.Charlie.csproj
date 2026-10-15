@@ -1,26 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\..\src\Grove.Build\Grove.Commons.props" />
+  <Import Project="..\..\..\src\Grove.Infrastructure.Build\Grove.Commons.props" />
   <Import Project="..\..\..\src\Grove.Module.Targets\Grove.Module.Targets.props" />
-  <Import Project="..\..\..\src\Grove.Theme.Targets\Grove.Theme.Targets.props" />
+  <Import Project="..\..\..\src\Grove.Themes.Targets\Grove.Themes.Targets.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(CommonTargetFrameworks)</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Grove.Theme.Targets\Grove.Theme.Targets.csproj" />
-    <ProjectReference Include="..\..\..\src\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+    <ProjectReference Include="..\..\..\src\Grove.Themes.Targets\Grove.Themes.Targets.csproj" />
+    <ProjectReference Include="..\..\..\src\Grove.Display.Management\Grove.Display.Management.csproj" />
   </ItemGroup>
 
   <!-- TODO: TBD: do we need to import both MODULE+THEME targets? -->
   <Import Project="..\..\..\src\Grove.Module.Targets\Grove.Module.Targets.targets" />
-  <Import Project="..\..\..\src\Grove.Theme.Targets\Grove.Theme.Targets.targets" />
-  <Import Project="..\..\..\src\Grove.Build\Grove.Commons.targets" />
+  <Import Project="..\..\..\src\Grove.Themes.Targets\Grove.Themes.Targets.targets" />
+  <Import Project="..\..\..\src\Grove.Infrastructure.Build\Grove.Commons.targets" />
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>Grove.Abstractions.Tests</_Parameter1>
+      <_Parameter1>Grove.Infrastructure.Abstractions.Tests</_Parameter1>
     </AssemblyAttribute>
 
     <!-- Ctor arguments by position:
@@ -36,7 +36,7 @@
     10: , object alwaysEnabled
     11: , object enabledByDependencyOnly
     -->
-    <AssemblyAttribute Include="Grove.DisplayManagement.Manifest.ThemeAttribute">
+    <AssemblyAttribute Include="Grove.Display.Management.Manifest.ThemeAttribute">
       <_Parameter1>one</_Parameter1>
       <_Parameter2>two</_Parameter2>
       <_Parameter3>three</_Parameter3>

@@ -1,3 +1,4 @@
+using Grove.Api;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -14,11 +15,9 @@ public static class DeleteFolderEndpoint
 {
     public static IEndpointRouteBuilder AddDeleteFolderEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapPost("api/media/DeleteFolder", HandleAsync)
+        builder.MapPost("DeleteFolder", HandleAsync)
             .WithName("ApiDeleteFolder")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
-            .AddEndpointFilter<MediaApiAntiforgeryEndpointFilter>()
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
@@ -30,13 +29,13 @@ public static class DeleteFolderEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        IOptions<MediaOptions> options,
-        AttachedMediaFieldFileService attachedMediaFieldFileService,
-        MediaDirectoryTreeCache directoryTreeCache,
-        IStringLocalizer<MediaApiEndpoints> localizer,
-        string path)
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromServices] IOptions<MediaOptions> options,
+        [FromServices] AttachedMediaFieldFileService attachedMediaFieldFileService,
+        [FromServices] MediaDirectoryTreeCache directoryTreeCache,
+        [FromServices] IStringLocalizer<MediaApiEndpoints> localizer,
+        [FromQuery] string path)
     {
         if (!await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMedia)
             || !await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMediaFolder, (object)path))

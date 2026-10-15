@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- The option picker's UI (docs/server.md § 3): the picker component, registered as a
+         placeable component, and the OptionPickerField editor (the editor facet). The
+         *.BlazorWasm suffix makes it the module client library of Grove.Contents.OptionPicker; it is
+         eager ([assembly: GroveEager]) because every content editor needs the field editor. -->
+    <AssemblyName>Grove.Contents.OptionPicker.BlazorWasm</AssemblyName>
+    <RootNamespace>Grove.Contents.OptionPicker.BlazorWasm</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Grove.Display.Components\Grove.Display.Components.csproj" />
+    <ProjectReference Include="..\..\Grove.Contents.OptionPicker.Abstractions\Grove.Contents.OptionPicker.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

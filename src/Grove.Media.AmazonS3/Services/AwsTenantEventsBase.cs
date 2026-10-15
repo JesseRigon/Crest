@@ -5,7 +5,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Grove.Environment.Shell;
 using Grove.Environment.Shell.Removing;
-using Grove.FileStorage.AmazonS3;
+using Grove.Data.Storage.AmazonS3;
 using Grove.Modules;
 
 namespace Grove.Media.AmazonS3.Services;

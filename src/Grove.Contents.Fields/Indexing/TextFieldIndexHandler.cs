@@ -1,0 +1,19 @@
+using Grove.Contents.Fields.Fields;
+using Grove.Data.Indexing;
+
+namespace Grove.Contents.Fields.Indexing;
+
+public class TextFieldIndexHandler : ContentFieldIndexHandler<TextField>
+{
+    public override Task BuildIndexAsync(TextField field, BuildFieldIndexContext context)
+    {
+        var options = context.Settings.ToOptions();
+
+        foreach (var key in context.Keys)
+        {
+            context.DocumentIndex.Set(key, field.Text, options);
+        }
+
+        return Task.CompletedTask;
+    }
+}

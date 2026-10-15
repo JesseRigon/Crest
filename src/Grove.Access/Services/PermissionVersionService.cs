@@ -1,7 +1,7 @@
 using Grove.Data.Documents;
 using Grove.Documents;
 using Grove.Security;
-using Grove.Users.Handlers;
+using Grove.Access.Users.Handlers;
 
 namespace Grove.Access.Services;
 

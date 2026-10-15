@@ -1,4 +1,4 @@
-using Grove.Components.Modules;
+using Grove.Display.Components.Modules;
 using Grove.Workflows.Studio.Contracts;
 using Grove.Workflows.Studio.Core.BlazorWasm.Extensions;
 using Grove.Workflows.Studio.Extensions;

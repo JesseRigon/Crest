@@ -1,8 +1,8 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using Grove.Environment.Shell.Configuration;
-using Grove.FileStorage;
-using Grove.FileStorage.AmazonS3;
+using Grove.Data.Storage;
+using Grove.Data.Storage.AmazonS3;
 using Grove.Media.Files;
 using Grove.Modules;
 using Microsoft.Extensions.Configuration;

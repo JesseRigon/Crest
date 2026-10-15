@@ -1,0 +1,122 @@
+@page "/Settings/files"
+@attribute [PageEntry("ManageSettings", Id = "file-settings", Parent = "settings", Caption = "Files")]
+@using Grove.Display.Components.Files
+@using Grove.Display.Components.Primitives
+@inject HttpClient Http
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The file system's tenant settings (docs/media.md § 3 and § 7): which drive types the tenant
+   uses (requirement 18), the role an organization's admins hold (17), and administrator access
+   to personal drives - notice, delay, override and durations (24-28). Turning a drive type off
+   makes its drives inactive; turning it on reactivates them, keeping or resetting their
+   sharing (22), and creates drives for everyone who has none. Tenant administrators only. *@
+<GroveStack Gap="1rem" data-testid="file-settings-page">
+    <GroveText TextStyle="TextStyle.H4" Text="@T["Files"]" />
+    @if (Model is null)
+    {
+        @if (Error is { } loadError) { <GroveText Style="color: var(--rz-danger)">@loadError</GroveText> }
+        else { <GroveProgressBar Mode="ProgressBarMode.Indeterminate" /> }
+    }
+    else
+    {
+        <GroveFieldset Text="@T["Drives"]">
+            <GroveCheckBox @bind-Value="OrganizationDrives" Name="organization-drives" /><label for="organization-drives"> @T["Organization drives (one per organization)"]</label><br />
+            <GroveCheckBox @bind-Value="PersonalDrives" Name="personal-drives" /><label for="personal-drives"> @T["Personal drives (one per staff user; members never have one)"]</label><br />
+            <GroveLabel Text="@T["Role of an organization's admins (Drive Admin on its drive)"]" Component="organization-admin-role" />
+            <GroveTextBox @bind-Value="OrganizationAdminRole" Name="organization-admin-role" Style="width:100%" /><br />
+            <GroveCheckBox @bind-Value="ResetSharing" Name="reset-sharing" /><label for="reset-sharing"> @T["When a drive type is turned back on, reset its drives' sharing to the defaults"]</label>
+        </GroveFieldset>
+
+        <GroveFieldset Text="@T["Administrator access to personal drives"]">
+            <GroveCheckBox @bind-Value="NoticeEmail" Name="notice-email" /><label for="notice-email"> @T["Notify the owner by email"]</label><br />
+            <GroveCheckBox @bind-Value="NoticePortal" Name="notice-portal" /><label for="notice-portal"> @T["Notify the owner in the portal"]</label><br />
+            <GroveLabel Text="@T["Delay after the notice, in minutes (needs a notice)"]" Component="notice-delay" />
+            <GroveNumeric TValue="int" @bind-Value="DelayMinutes" Min="0" Name="notice-delay" /><br />
+            <GroveCheckBox @bind-Value="AllowOverride" Name="allow-override" /><label for="allow-override"> @T["Allow the delay to be overridden, with a reason"]</label><br />
+            <GroveLabel Text="@T["Durations offered, in minutes, comma separated (0 for until closed)"]" Component="durations" />
+            <GroveTextBox @bind-Value="Durations" Name="durations" Style="width:100%" />
+        </GroveFieldset>
+
+        <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" data-testid="file-settings-save" />
+        @if (Error is { } error) { <GroveText TextStyle="TextStyle.Body2" Style="color: var(--rz-danger)">@error</GroveText> }
+        @if (Saved) { <GroveText TextStyle="TextStyle.Body2">@T["Saved."]</GroveText> }
+    }
+</GroveStack>
+
+@code {
+    private GroveFileSettings? Model;
+    private bool OrganizationDrives;
+    private bool PersonalDrives;
+    private string? OrganizationAdminRole;
+    private bool ResetSharing;
+    private bool NoticeEmail;
+    private bool NoticePortal;
+    private int DelayMinutes;
+    private bool AllowOverride;
+    private string? Durations;
+    private string? Error;
+    private bool Saved;
+
+    private GroveFilesClient Files => _files ??= new GroveFilesClient(Http);
+    private GroveFilesClient? _files;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var loaded = await Files.GetSettingsAsync();
+        Error = loaded.Error;
+        if (loaded.Value is { } settings)
+        {
+            Load(settings);
+        }
+    }
+
+    private void Load(GroveFileSettings settings)
+    {
+        Model = settings;
+        OrganizationDrives = settings.Drives.OrganizationDrives;
+        PersonalDrives = settings.Drives.PersonalDrives;
+        OrganizationAdminRole = settings.Drives.OrganizationAdminRole;
+        NoticeEmail = settings.PersonalDriveAccess.Notice.HasFlag(GrovePersonalDriveNotice.Email);
+        NoticePortal = settings.PersonalDriveAccess.Notice.HasFlag(GrovePersonalDriveNotice.Portal);
+        DelayMinutes = (int)settings.PersonalDriveAccess.Delay.TotalMinutes;
+        AllowOverride = settings.PersonalDriveAccess.AllowDelayOverride;
+        Durations = string.Join(", ", settings.PersonalDriveAccess.Durations.Select(duration => duration is { } span ? ((int)span.TotalMinutes).ToString() : "0"));
+    }
+
+    private async Task SaveAsync()
+    {
+        Error = null;
+        Saved = false;
+        var durations = new List<TimeSpan?>();
+        foreach (var part in (Durations ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!int.TryParse(part, out var minutes) || minutes < 0)
+            {
+                Error = T["Durations are whole minutes, 0 for until closed."];
+                return;
+            }
+
+            durations.Add(minutes == 0 ? null : TimeSpan.FromMinutes(minutes));
+        }
+
+        if (durations.Count == 0)
+        {
+            Error = T["Offer at least one duration."];
+            return;
+        }
+
+        var notice = (NoticeEmail ? GrovePersonalDriveNotice.Email : GrovePersonalDriveNotice.None) | (NoticePortal ? GrovePersonalDriveNotice.Portal : GrovePersonalDriveNotice.None);
+        var settings = new GroveFileSettings(
+            new GroveFileDriveSettings(OrganizationDrives, PersonalDrives, string.IsNullOrWhiteSpace(OrganizationAdminRole) ? "Member Administrator" : OrganizationAdminRole.Trim()),
+            new GrovePersonalDriveAccessSettings(notice, TimeSpan.FromMinutes(Math.Max(0, DelayMinutes)), AllowOverride, durations));
+        var saved = await Files.SaveSettingsAsync(settings, ResetSharing);
+        if (!saved.Succeeded)
+        {
+            Error = saved.Error;
+            return;
+        }
+
+        Load(settings);
+        Saved = true;
+    }
+}

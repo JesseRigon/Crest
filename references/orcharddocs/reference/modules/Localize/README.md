@@ -1,4 +1,4 @@
-# Localization (`Grove.Localization`)
+# Localization (`Grove.Data.Localization`)
 
 This module provides the infrastructure necessary to support the PO (Portable Object) localization file format.  
 It also supports plural forms.
@@ -83,12 +83,12 @@ The context string must match the view location up to the module folder.
 
 #### View
 
-Assuming the view's path is `TheAdmin\Views\Layout.cshtml`.
+Assuming the view's path is `Grove.Themes.TheAdmin\Views\Layout.cshtml`.
 
 #### PO File
 
 ```
-msgctxt "TheAdmin.Views.Layout"
+msgctxt "Grove.Themes.TheAdmin.Views.Layout"
 msgid "Hello"
 msgstr "Bonjour"
 ```
@@ -130,12 +130,12 @@ msgstr "Bonjour"
 ## Pluralization
 
 This module also provides support for pluralization.
-It is necessary to reference the `Grove.Localization.Abstractions` package in order to be able to use it.
+It is necessary to reference the `Grove.Data.Localization.Abstractions` package in order to be able to use it.
 
 ### Sample PO file
 
 ```
-msgctxt "TheAdmin.Views.Layout"
+msgctxt "Grove.Themes.TheAdmin.Views.Layout"
 msgid "{0} book"
 msgid_plural "{0} books"
 msgstr[0] "[{0} livre]"

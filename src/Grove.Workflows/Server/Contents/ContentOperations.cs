@@ -1,8 +1,8 @@
 using System.Text.Json.Nodes;
 using Grove.Access;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Models;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Models;
 using Grove.Contents;
 using Grove.Workflows.Activities.Flowchart.Attributes;
 using Grove.Workflows.Attributes;

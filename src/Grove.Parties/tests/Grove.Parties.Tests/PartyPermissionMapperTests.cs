@@ -1,5 +1,5 @@
 using Grove.Access;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Parties.Services;
 using Xunit;
 

@@ -2,7 +2,7 @@ using Grove.Access.AuditTrail;
 using Grove.AuditTrail.Services;
 using Grove.AuditTrail.Services.Models;
 using Grove.Environment.Shell.Scope;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Grove.Access.Services;

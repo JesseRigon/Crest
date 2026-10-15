@@ -3,16 +3,16 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
-namespace Grove.DisplayManagement.SourceGenerators;
+namespace Grove.Display.Management.SourceGenerators;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class SealedShapeTypeAnalyzer : DiagnosticAnalyzer
 {
     public const string DiagnosticId = "OCSG001";
 
-    private const string IShapeMetadataName = "Grove.DisplayManagement.IShape";
-    private const string ShapeFactoryExtensionsMetadataName = "Grove.DisplayManagement.ShapeFactoryExtensions";
-    private const string DisplayDriverBaseMetadataName = "Grove.DisplayManagement.Handlers.DisplayDriverBase";
+    private const string IShapeMetadataName = "Grove.Display.Management.IShape";
+    private const string ShapeFactoryExtensionsMetadataName = "Grove.Display.Management.ShapeFactoryExtensions";
+    private const string DisplayDriverBaseMetadataName = "Grove.Display.Management.Handlers.DisplayDriverBase";
 
     private static readonly DiagnosticDescriptor Rule = new(
         DiagnosticId,

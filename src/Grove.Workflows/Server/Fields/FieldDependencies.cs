@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 using VersionOptions = Grove.Workflows.Common.Models.VersionOptions;
-using PlatformVersionOptions = Grove.ContentManagement.VersionOptions;
+using PlatformVersionOptions = Grove.Contents.Management.VersionOptions;
 using Grove.Workflows.Contents;
 using Grove.Workflows.Management;
 using Grove.Workflows.Management.Activities.WorkflowDefinitionActivity;
@@ -10,9 +10,9 @@ using Grove.Workflows.Mediator.Contracts;
 using Grove.Workflows.Models;
 using Grove.Workflows.Activities;
 using Microsoft.Extensions.Logging;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Models;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Models;
 
 namespace Grove.Workflows.Fields;
 

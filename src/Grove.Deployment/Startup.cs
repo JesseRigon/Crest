@@ -8,11 +8,11 @@ using Grove.Deployment.Deployment;
 using Grove.Deployment.Indexes;
 using Grove.Deployment.Recipes;
 using Grove.Deployment.Steps;
-using Grove.DisplayManagement.Handlers;
-using Grove.FileStorage;
+using Grove.Display.Management.Handlers;
+using Grove.Data.Storage;
 using Grove.Modules;
-using Grove.Navigation;
-using Grove.Recipes;
+using Grove.Display.Navigation;
+using Grove.Infrastructure.Recipes;
 using Grove.Security.Permissions;
 
 namespace Grove.Deployment;

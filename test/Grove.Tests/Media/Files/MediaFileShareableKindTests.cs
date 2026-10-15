@@ -2,7 +2,7 @@
 using Grove.Media;
 using Grove.Media.Files;
 using Grove.Media.Sharing;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 using static Grove.Tests.Media.Files.FilesWorld;
 using DriveType = Grove.Media.Files.DriveType;
 

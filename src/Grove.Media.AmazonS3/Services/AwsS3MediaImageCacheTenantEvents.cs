@@ -3,7 +3,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Grove.Environment.Shell;
-using Grove.FileStorage.AmazonS3;
+using Grove.Data.Storage.AmazonS3;
 
 namespace Grove.Media.AmazonS3.Services;
 

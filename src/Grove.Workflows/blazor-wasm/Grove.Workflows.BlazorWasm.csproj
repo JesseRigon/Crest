@@ -24,7 +24,7 @@
        (grove-lazy-assemblies.txt) and nothing here touches their types. -->
   <ItemGroup>
     <ProjectReference Include="..\Abstractions\Grove.Workflows.Abstractions.csproj" />
-    <ProjectReference Include="..\..\Grove.Components\Grove.Components.csproj" />
+    <ProjectReference Include="..\..\Grove.Display.Components\Grove.Display.Components.csproj" />
     <ProjectReference Include="..\studio-host\Grove.Workflows.Studio.Host.csproj" />
   </ItemGroup>
 

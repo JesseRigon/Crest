@@ -3,12 +3,12 @@
 using System.Net.Http.Headers;
 using Grove.Api;
 using Grove.Validation;
-using Grove.ContentManagement.Utilities;
+using Grove.Contents.Management.Utilities;
 using Grove.Deployment.Api;
 using Grove.Deployment.Remote.Services;
 using Grove.Deployment.Services;
-using Grove.FileStorage;
-using Grove.Recipes.Models;
+using Grove.Data.Storage;
+using Grove.Infrastructure.Recipes.Models;
 using Grove.Security.Permissions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

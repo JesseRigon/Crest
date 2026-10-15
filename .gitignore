@@ -56,7 +56,7 @@ appsettings.Development.json
 # translation .po files into a project-local "Localization/" folder on every build -
 # references that package/SDK in this submodule, so scoped to just its directory (not a
 # bare "Localization/" pattern) - every other Localization/ folder here (e.g.
-# Grove.Server/Localization/, Grove.Site/Localization/) is
+# Grove.Infrastructure.Server/Localization/, Grove.Site/Localization/) is
 # genuine hand-authored .po source content and must stay tracked.
 
 # Local databases
@@ -279,11 +279,9 @@ node_modules/
 .parcel-cache
 
 /src/Grove.Cms.Web/wwwroot
-/src/Grove.Mvc.Web/wwwroot
 /src/Grove.AspireHost/wwwroot
 /test/**/wwwroot
 /src/Grove.Cms.Web/Localization/**/*.po
-/src/Grove.Mvc.Web/Localization/**/*.po
 /test/**/Localization/**/*.po
 !test/Grove.Tests/Localization/**/*.po
 /Grove.sln.GhostDoc.xml

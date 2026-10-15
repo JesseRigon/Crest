@@ -1,0 +1,23 @@
+@using Grove.Display.Components.Primitives.Rendering
+
+@namespace Grove.Display.Components.Primitives
+<EditorDropDown Title=@Title Value=@(Editor?.State?.FontName) Change=@OnChange Placeholder="@Placeholder"
+    Style="width:140px" PopupStyle="width: 200px; max-height: 200px; overflow: auto;">
+    <CascadingValue Value=@this>
+        @if (ChildContent != null)
+        {
+            @ChildContent
+        }
+        else
+        {
+            <GroveHtmlEditorFontNameItem Text="Arial" Value="Arial" />
+            <GroveHtmlEditorFontNameItem Text="Georgia" Value="Georgia" />
+            <GroveHtmlEditorFontNameItem Text="Helvetica" Value="Helvetica" />
+            <GroveHtmlEditorFontNameItem Text="Monospace" Value="monospace" />
+            <GroveHtmlEditorFontNameItem Text="Segoe UI" Value='"Segoe UI"' />
+            <GroveHtmlEditorFontNameItem Text="Tahoma" Value="Tahoma" />
+            <GroveHtmlEditorFontNameItem Text="Times New Roman" Value='"Times New Roman"' />
+            <GroveHtmlEditorFontNameItem Text="Verdana" Value="Verdana" />
+        }
+    </CascadingValue>
+</EditorDropDown>

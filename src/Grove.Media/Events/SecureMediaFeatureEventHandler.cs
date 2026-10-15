@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Mvc.Localization;
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.DisplayManagement.Notify;
 using Grove.Environment.Extensions.Features;
 using Grove.Environment.Shell;
 using Grove.Environment.Shell.Scope;
@@ -10,8 +9,6 @@ namespace Grove.Media.Events;
 
 internal sealed class SecureMediaFeatureEventHandler : FeatureEventHandler
 {
-    internal IHtmlLocalizer H;
-
     public override Task EnablingAsync(IFeatureInfo feature)
     {
         if (feature.Id == "Grove.Media.Security")
@@ -22,22 +19,12 @@ internal sealed class SecureMediaFeatureEventHandler : FeatureEventHandler
         return base.EnablingAsync(feature);
     }
 
-    private async Task NotifyMediaSecurityFeatureEnabledAsync()
+    // The roles decide who may see secure media: the enabling is logged as a warning to review them.
+    private Task NotifyMediaSecurityFeatureEnabledAsync()
     {
-        var notifier = ShellScope.Services.GetService<INotifier>();
+        ShellScope.Services.GetService<Microsoft.Extensions.Logging.ILogger<SecureMediaFeatureEventHandler>>()?.LogWarning(
+            "Secure Media is now enabled. Review and update the role permissions so users can access only the media they should.");
 
-        if (notifier == null)
-        {
-            return;
-        }
-
-        H ??= ShellScope.Services.GetRequiredService<IHtmlLocalizer<SecureMediaFeatureEventHandler>>();
-
-        var adminOptions = ShellScope.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<Grove.Admin.AdminOptions>>().Value;
-        var rolesUrl = $"/{adminOptions.AdminUrlPrefix.Trim('/')}/Roles/Index";
-
-        var message = H["<p><strong>Secure Media</strong> is now enabled. Review and update role <strong>permissions</strong> to ensure users can access only the media they should.</p><p>Open the <a href=\"{0}\">Roles page</a> to configure permissions.<br />For guidance, see the <a href=\"https://docs.orchardcore.net/en/latest/reference/modules/Media/#secure-media\" target=\"_blank\" rel=\"noopener noreferrer\">secure media documentation</a>.</p>", rolesUrl];
-
-        await notifier.WarningAsync(message);
+        return Task.CompletedTask;
     }
 }

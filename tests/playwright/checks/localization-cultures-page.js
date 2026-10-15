@@ -1,6 +1,6 @@
 // Converted from the old admin-localization-page.js at
 // modules/Grove/tests/playwright/admin-localization-page.js — the PLAIN Grove
-// tests dir, NOT modules/Grove/Grove.AdminTheme/tests/playwright/
+// tests dir, NOT modules/Grove/Grove.Themes.Admin/tests/playwright/
 // admin-localization-page.js (a different, more thorough script that asserts culture cards,
 // Grove dropdown option counts, etc. — that one is presumed to be converted separately,
 // possibly under a name like "localization-page.js"). This file is named

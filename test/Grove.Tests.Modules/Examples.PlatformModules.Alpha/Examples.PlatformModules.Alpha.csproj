@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\..\src\Grove.Build\Grove.Commons.props" />
+  <Import Project="..\..\..\src\Grove.Infrastructure.Build\Grove.Commons.props" />
   <Import Project="..\..\..\src\Grove.Module.Targets\Grove.Module.Targets.props" />
 
   <PropertyGroup>
@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Grove.Abstractions\Grove.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\src\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\src\Grove.Module.Targets\Grove.Module.Targets.csproj" />
   </ItemGroup>
 
@@ -51,11 +51,11 @@
   </ItemGroup>
 
   <Import Project="..\..\..\src\Grove.Module.Targets\Grove.Module.Targets.targets" />
-  <Import Project="..\..\..\src\Grove.Build\Grove.Commons.targets" />
+  <Import Project="..\..\..\src\Grove.Infrastructure.Build\Grove.Commons.targets" />
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>Grove.Abstractions.Tests</_Parameter1>
+      <_Parameter1>Grove.Infrastructure.Abstractions.Tests</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 

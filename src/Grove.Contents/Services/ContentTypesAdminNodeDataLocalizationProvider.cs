@@ -1,7 +1,7 @@
-using Grove.AdminMenu;
-using Grove.AdminMenu.Services;
+using Grove.Contents.AdminMenu;
+using Grove.Contents.AdminMenu.Services;
 using Grove.Contents.AdminNodes;
-using Grove.Localization.Data;
+using Grove.Data.Localization.Data;
 
 namespace Grove.Contents.Services;
 
@@ -16,7 +16,7 @@ public class ContentTypesAdminNodeDataLocalizationProvider : AdminNodeDataLocali
         var adminMenuList = await GetAdminMenusAsync();
 
         return adminMenuList.SelectMany(m => Descriptors(
-            Grove.AdminMenu.DataLocalizationContext.AdminMenu(m.Name),
+            Grove.Contents.AdminMenu.DataLocalizationContext.AdminMenu(m.Name),
             AllNodes(m.MenuItems).OfType<ContentTypesAdminNode>()
                 .SelectMany(n => n.ContentTypes)
                 .Select(e => e.ContentTypeDisplayName)));

@@ -1,7 +1,7 @@
 using GraphQL.Types;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Localization;
-using Grove.ResourceManagement;
+using Grove.Display.Resources.Management;
 
 namespace Grove.Seo.GraphQL;
 

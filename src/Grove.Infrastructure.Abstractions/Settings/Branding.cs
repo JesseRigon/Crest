@@ -2,7 +2,7 @@
 using Grove.Entities;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Grove.Settings;
+namespace Grove.Infrastructure.Settings;
 
 /// <summary>
 /// The tenant's branding group on its site settings (docs/branding.md): one media path per

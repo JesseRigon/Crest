@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Metadata;
-using Grove.Indexing;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Metadata;
+using Grove.Data.Indexing;
 using Grove.Modules;
 
 namespace Grove.Contents.Indexing;

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Contents.AdminMenu</RootNamespace>
+
+    <!-- NuGet properties-->
+    <Title>Grove AdminMenu Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for AdminMenu Module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Display.Navigation\Grove.Display.Navigation.csproj" />
+  </ItemGroup>
+
+</Project>
+

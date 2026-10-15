@@ -1,3 +1,4 @@
+using Grove.Api;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Media.Services;
 using Grove.Media.ViewModels;
 
@@ -17,11 +18,9 @@ public static class CreateFolderEndpoint
 {
     public static IEndpointRouteBuilder AddCreateFolderEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapPost("api/media/CreateFolder", HandleAsync)
+        builder.MapPost("CreateFolder", HandleAsync)
             .WithName("ApiCreateFolder")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
-            .AddEndpointFilter<MediaApiAntiforgeryEndpointFilter>()
             .Produces<FileStoreEntryDto>(StatusCodes.Status200OK)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -33,15 +32,15 @@ public static class CreateFolderEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        IMediaNameNormalizerService mediaNameNormalizerService,
-        IOptions<MediaOptions> options,
-        AttachedMediaFieldFileService attachedMediaFieldFileService,
-        MediaDirectoryTreeCache directoryTreeCache,
-        IStringLocalizer<MediaApiEndpoints> localizer,
-        string path,
-        string name)
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromServices] IMediaNameNormalizerService mediaNameNormalizerService,
+        [FromServices] IOptions<MediaOptions> options,
+        [FromServices] AttachedMediaFieldFileService attachedMediaFieldFileService,
+        [FromServices] MediaDirectoryTreeCache directoryTreeCache,
+        [FromServices] IStringLocalizer<MediaApiEndpoints> localizer,
+        [FromQuery] string path,
+        [FromQuery] string name)
     {
         if (string.IsNullOrEmpty(path))
         {

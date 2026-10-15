@@ -1,7 +1,7 @@
 using Grove.Parties.Constants;
-using Grove.ContentFields.Fields;
-using Grove.ContentFields.Indexing.SQL;
-using Grove.ContentManagement;
+using Grove.Contents.Fields.Fields;
+using Grove.Contents.Fields.Indexing.SQL;
+using Grove.Contents.Management;
 using YesSql;
 
 namespace Grove.Parties.Services;
@@ -10,7 +10,7 @@ namespace Grove.Parties.Services;
 /// The party ↔ user account link, from the party side: a Person may carry the
 /// Grove user that IS that person (a member's portal account, an employee's staff
 /// account) in its PortalUser picker. The user side of the same link is owned by
-/// whichever module creates the account (Grove.Members stamps the person id on
+/// whichever module creates the account (Grove.Access.Members stamps the person id on
 /// the member).
 /// </summary>
 public interface IPartyUserLinkService

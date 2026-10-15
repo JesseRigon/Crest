@@ -1,4 +1,4 @@
-# Navigation (`Grove.Navigation`)
+# Navigation (`Grove.Display.Navigation`)
 
 ## Purpose
 
@@ -7,10 +7,10 @@ Provides the `Navigation`, `Pager` and `PagerSlim` shapes.
 ## Theming
 
 Navigation can be themed by adding the appropriate partial view files to your theme's views folder.
-A good example can be found in the [`TheAdmin` theme project](https://github.com/OrchardCMS/OrchardCore/tree/dev/src/OrchardCore.Themes/TheAdmin).
+A good example can be found in the [`Grove.Themes.TheAdmin` theme project](https://github.com/OrchardCMS/OrchardCore/tree/dev/src/OrchardCore.Themes/Grove.Themes.TheAdmin).
 
 That theme creates the standard, vertical navigation menu that is found on the admin dashboard of any Grove application.
-The `TheAdmin` theme provides the following alternates to the default ones provided in the `Navigation` module:  
+The `Grove.Themes.TheAdmin` theme provides the following alternates to the default ones provided in the `Navigation` module:  
 
 - `Navigation-admin.cshtml`  
 - `NavigationItem-admin.cshtml`  
@@ -190,7 +190,7 @@ This provider will be called as long as the site is using a theme that includes 
 
 Examples of extending the admin navigation can be found in various Grove modules. Searching the repository for `AdminMenu` will locate various settings. Below is a partial list:
 
-- `Grove.Modules/Grove.Admin/AdminFilter.cs`
+- `Grove.Modules/Grove.Infrastructure.Shells.Admin/AdminFilter.cs`
 - `Grove.Modules/Grove.Media/AdminMenu.cs`
 
 At this time, the Admin Menu is the only navigation with code dynamically adding items in the Grove git repository. However, as the example above shows, the pattern can be used to control any named navigation.

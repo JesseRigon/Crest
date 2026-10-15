@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 
 namespace Grove.Contents.AuditTrail.Models;
 

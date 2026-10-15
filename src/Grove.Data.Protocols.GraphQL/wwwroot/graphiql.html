@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GraphiQL</title>
+    <!-- GraphiQL, a static page served by Grove.Data.Protocols.GraphQL at {tenant}/Grove.Data.Protocols.GraphQL/graphiql.html
+         (the admin's GraphiQL page frames it). It queries the tenant's GraphQL endpoint with the
+         caller's cookie; the endpoint checks ExecuteGraphQL. -->
+    <style>
+        html, body { height: 100%; margin: 0; }
+        #graphiql { position: absolute; inset: 0; }
+        .loader {
+            position: absolute; left: 46%; top: 46%; z-index: 1;
+            border: 5px solid #f3f3f3; border-top: 5px solid #555; border-radius: 50%;
+            width: 50px; height: 50px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        :root .graphiql-container .CodeMirror { height: 100% !important; }
+    </style>
+</head>
+<body>
+    <div id="graphiql" data-introspection-url="../api/graphql">
+        <div class="loader"></div>
+    </div>
+    <script src="Scripts/graphiql-platform.js"></script>
+</body>
+</html>

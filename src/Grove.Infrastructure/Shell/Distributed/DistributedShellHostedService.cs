@@ -14,7 +14,7 @@ namespace Grove.Environment.Shell.Distributed;
 /// </summary>
 internal sealed class DistributedShellHostedService : BackgroundService
 {
-    private const string DistributedFeatureId = "Grove.Tenants.Distributed";
+    private const string DistributedFeatureId = "Grove.Infrastructure.Tenants.Distributed";
 
     private const string ShellChangedIdKey = "SHELL_CHANGED_ID";
     private const string ShellCountChangedIdKey = "SHELL_COUNT_CHANGED_ID";

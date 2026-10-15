@@ -38,9 +38,9 @@ The next step is to reference the module from the application, by adding a proje
 
 ```dotnet add MySite reference MyModule```
 
-We also need a reference to the `Grove.Admin` package in order to be able to implement the required interfaces:
+We also need a reference to the `Grove.Infrastructure.Shells.Admin` package in order to be able to implement the required interfaces:
 
-```dotnet add .\MyModule\MyModule.csproj package Grove.Admin --version 3.0.1-*```
+```dotnet add .\MyModule\MyModule.csproj package Grove.Infrastructure.Shells.Admin --version 3.0.1-*```
 
 !!! note
     To use the development branch of the template add ` --source https://nuget.cloudsmith.io/orchardcore/preview/v3/index.json --version 3.0.1-*`
@@ -60,7 +60,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Grove.Admin;
+using Grove.Infrastructure.Shells.Admin;
 
 namespace MyModule.Controllers;
 
@@ -110,7 +110,7 @@ By convention, we call these classes `AdminMenu.cs` and put it in the root of ou
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Localization;
-using Grove.Navigation;
+using Grove.Display.Navigation;
 
 namespace MyModule;
 
@@ -172,7 +172,7 @@ Then you have to register this service in the `Startup.cs` file of the module.
 At the top of the `Startup.cs` file, add this `using` statement:
 
 ```csharp
-using Grove.Navigation;
+using Grove.Display.Navigation;
 ```
 
 Add this line to the `ConfigureServices()` method:

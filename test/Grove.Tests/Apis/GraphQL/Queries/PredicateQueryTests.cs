@@ -1,5 +1,5 @@
-using Grove.ContentManagement.GraphQL.Queries;
-using Grove.ContentManagement.GraphQL.Queries.Predicates;
+using Grove.Contents.Management.GraphQL.Queries;
+using Grove.Contents.Management.GraphQL.Queries.Predicates;
 using YesSql.Indexes;
 using YesSql.Provider.MySql;
 using YesSql.Provider.PostgreSql;

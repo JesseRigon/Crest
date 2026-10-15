@@ -30,16 +30,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Grove.Application.Cms.Targets\Grove.Application.Cms.Targets.csproj" />
-    <ProjectReference Include="..\..\src\Grove.Server\Grove.Server.csproj" />
-    <ProjectReference Include="..\..\src\Grove.Server\Themes\Grove.LegacyFrame\Grove.LegacyFrame.csproj" />
-    <ProjectReference Include="..\..\src\Grove.AdminTheme\Grove.AdminTheme.csproj" />
-    <ProjectReference Include="..\..\src\Grove.SiteTheme\Grove.SiteTheme.csproj" />
-    <ProjectReference Include="..\..\src\Grove.MemberTheme\Grove.MemberTheme.csproj" />
-    <ProjectReference Include="..\..\src\Grove.Icons\Grove.Icons.csproj" />
-    <ProjectReference Include="..\..\src\Grove.Regions\Grove.Regions.csproj" />
-    <ProjectReference Include="..\..\src\Grove.Money\Grove.Money.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Infrastructure.Server\Grove.Infrastructure.Server.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Themes.Admin\Grove.Themes.Admin.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Themes.Site\Grove.Themes.Site.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Themes.Members\Grove.Themes.Members.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Display.Icons\Grove.Display.Icons.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Data.Regions\Grove.Data.Regions.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Data.Types.Money\Grove.Data.Types.Money.csproj" />
     <ProjectReference Include="..\..\src\Grove.Parties\Server\Grove.Parties.csproj" />
-    <ProjectReference Include="..\..\src\Grove.Members\Server\Grove.Members.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Access.Members\Server\Grove.Access.Members.csproj" />
     <ProjectReference Include="..\..\src\Grove.Workflows\Server\Grove.Workflows.csproj" />
     <ProjectReference Include="..\..\src\Grove.Workflows\Contents\Grove.Workflows.Contents.csproj" />
   </ItemGroup>

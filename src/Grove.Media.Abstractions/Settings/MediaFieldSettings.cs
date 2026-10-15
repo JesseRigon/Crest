@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Grove.ContentManagement.Metadata.Settings;
+using Grove.Contents.Management.Metadata.Settings;
 
 namespace Grove.Media.Settings;
 

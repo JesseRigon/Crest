@@ -1,4 +1,4 @@
-# Azure Communication Services Email (`Grove.Email.Azure`)
+# Azure Communication Services Email (`Grove.Integrations.Email.Azure`)
 
 This module adds Email providers for sending emails through [Azure Communication Services](https://learn.microsoft.com/en-us/azure/communication-services/concepts/email/email-overview).
 
@@ -8,7 +8,7 @@ Enabling this module will introduce a new tab labeled **Azure Communication Serv
 
 | Setting            | Description                                                                                                           |
 |--------------------|-----------------------------------------------------------------------------------------------------------------------|
-| `DefaultSender`    | The email of the sender. This will override the `DefaultSender` setting in [`Grove.Email`](../Email/README.md). |
+| `DefaultSender`    | The email of the sender. This will override the `DefaultSender` setting in [`Grove.Communications.Email`](../Email/README.md). |
 | `ConnectionString` | The ACS connection string that will be used to deliver the email.                                                     |
 
 ## **Default Azure Communication Services** Provider Configuration

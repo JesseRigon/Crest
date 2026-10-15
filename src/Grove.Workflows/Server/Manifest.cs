@@ -17,7 +17,7 @@ using Grove.Modules.Manifest;
     Name = "Grove Workflows",
     Description = "Grove.Workflows 3 as the tenant's workflow engine: definitions as content items, per-shell stores, the Grove.Workflows API behind Grove permissions.",
     Category = "Grove.Workflows",
-    Dependencies = ["Grove.Access", "Grove.Contents", "Grove.Liquid", "Grove.Scripting", "Grove"]
+    Dependencies = ["Grove.Access", "Grove.Contents", "Grove.Display.Liquid", "Grove.Scripting", "Grove"]
 )]
 
 [assembly: Feature(

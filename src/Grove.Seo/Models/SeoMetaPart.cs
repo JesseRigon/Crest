@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Media.Fields;
-using Grove.ResourceManagement;
+using Grove.Display.Resources.Management;
 
 namespace Grove.Seo.Models;
 

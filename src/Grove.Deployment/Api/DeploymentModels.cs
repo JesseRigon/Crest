@@ -4,7 +4,7 @@ using System.Text.Json.Nodes;
 
 namespace Grove.Deployment.Api;
 
-// The Deployments pages' wire shapes (the admin client's Grove.AdminTheme.Api records).
+// The Deployments pages' wire shapes (the admin client's Grove.Themes.Admin.Api records).
 
 public sealed record DeploymentPlanSummary(long Id, string Name, int StepCount);
 

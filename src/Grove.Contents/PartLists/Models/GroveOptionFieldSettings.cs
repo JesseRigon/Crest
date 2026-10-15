@@ -1,4 +1,4 @@
-namespace Grove.Settings;
+namespace Grove.Infrastructure.Settings;
 
 /// <summary>
 /// Per-field settings for a custom data field on an option content type. Custom

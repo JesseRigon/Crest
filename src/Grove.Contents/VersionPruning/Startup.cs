@@ -2,9 +2,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Grove.BackgroundTasks;
 using Grove.Contents.VersionPruning.Services;
 using Grove.Contents.VersionPruning.Tasks;
-using Grove.DisplayManagement.Handlers;
+using Grove.Display.Management.Handlers;
 using Grove.Modules;
-using Grove.Navigation;
+using Grove.Display.Navigation;
 using Grove.Security.Permissions;
 
 namespace Grove.Contents.VersionPruning;

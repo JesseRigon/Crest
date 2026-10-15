@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <!-- NuGet properties-->
     <Title>Grove Media Azure</Title>
     <Description>$(OCCMSDescription)
@@ -20,11 +19,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.ContentManagement.Display\Grove.ContentManagement.Display.csproj" />
-    <ProjectReference Include="..\Grove.FileStorage.AzureBlob\Grove.FileStorage.AzureBlob.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management.Display\Grove.Contents.Management.Display.csproj" />
+    <ProjectReference Include="..\Grove.Data.Storage.AzureBlob\Grove.Data.Storage.AzureBlob.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Navigation\Grove.Navigation.csproj" />
+    <ProjectReference Include="..\Grove.Display.Navigation\Grove.Display.Navigation.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
     <ProjectReference Include="..\Grove.Media\Grove.Media.csproj" />
   </ItemGroup>

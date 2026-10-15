@@ -1,4 +1,4 @@
-using Grove.Localization;
+using Grove.Data.Localization;
 using Grove.Modules.Services;
 
 namespace Grove.Tests.Tokens.Content;

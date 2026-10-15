@@ -1,5 +1,5 @@
 using Grove.Environment.Extensions;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Themes.Services;
 

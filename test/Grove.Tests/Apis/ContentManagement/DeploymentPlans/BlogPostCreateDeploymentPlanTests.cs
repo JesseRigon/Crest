@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
-using Grove.Autoroute.Models;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Records;
+using Grove.Routes.Auto.Models;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Records;
 using Grove.Tests.Apis.Context;
 using ISession = YesSql.ISession;
 
@@ -54,8 +54,7 @@ public class BlogPostCreateDeploymentPlanTests
         // Setup
         await context.InitializeAsync();
 
-        var content = await context.Client.PostAsJsonAsync("api/content?draft=true", context.OriginalBlogPost);
-        var draftContentItemVersionId = (await content.Content.ReadAsAsync<ContentItem>()).ContentItemVersionId;
+        var draftContentItemVersionId = (await context.SaveContentItemAsync(context.OriginalBlogPost, draft: true)).ContentItemVersionId;
 
         // Act
         var recipe = BlogPostDeploymentContext.GetContentStepRecipe(context.OriginalBlogPost, jItem =>
@@ -97,8 +96,7 @@ public class BlogPostCreateDeploymentPlanTests
         // Setup
         await context.InitializeAsync();
 
-        var content = await context.Client.PostAsJsonAsync("api/content?draft=true", context.OriginalBlogPost);
-        var draftContentItemVersionId = (await content.Content.ReadAsAsync<ContentItem>()).ContentItemVersionId;
+        var draftContentItemVersionId = (await context.SaveContentItemAsync(context.OriginalBlogPost, draft: true)).ContentItemVersionId;
 
         // Act
         var recipe = BlogPostDeploymentContext.GetContentStepRecipe(context.OriginalBlogPost, jItem =>

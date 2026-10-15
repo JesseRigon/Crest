@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Fluid;
 using Fluid.Values;
-using Grove.Liquid;
+using Grove.Display.Liquid;
 using Grove.Media.Fields;
 using Grove.Media.Library;
 

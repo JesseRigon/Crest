@@ -37,7 +37,7 @@ Call `CreateAsync()` before writing the file. If the returned result did not suc
 
 ```csharp
 using Microsoft.AspNetCore.Http;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 
 public sealed class CustomUploadService
 {
@@ -82,7 +82,7 @@ Return `FileCreatingResult.Failed(...)` from `IFileEventHandler.CreatingAsync()`
 
 ```csharp
 using Microsoft.Extensions.Localization;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Infrastructure;
 
 namespace MyModule.Services;

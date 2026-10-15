@@ -1,5 +1,5 @@
 using Grove.Deployment;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Contents.Deployment.ExportContentToDeploymentTarget;
 

@@ -1,11 +1,11 @@
 #nullable enable
 using System.Text.Json.Nodes;
-using Grove.FileStorage.FileSystem;
+using Grove.Data.Storage.FileSystem;
 using Grove.Media;
 using Grove.Media.Files;
 using Grove.Media.Filters;
 using Grove.Media.Library;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 using Grove.Tests.Media.Files;
 using Fluid;
 using Fluid.Values;

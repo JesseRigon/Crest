@@ -12,20 +12,18 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Grove.BackgroundTasks;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Display.ContentDisplay;
-using Grove.ContentManagement.Handlers;
-using Grove.ContentTypes.Editors;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Display.ContentDisplay;
+using Grove.Contents.Management.Handlers;
 using Grove.Data.Migration;
 using Grove.Deployment;
-using Grove.DisplayManagement.Handlers;
-using Grove.DisplayManagement.Liquid.Tags;
+using Grove.Display.Management.Handlers;
 using Grove.Environment.Shell;
-using Grove.FileStorage;
-using Grove.FileStorage.FileSystem;
-using Grove.Indexing;
-using Grove.Liquid;
-using Grove.Localization;
+using Grove.Data.Storage;
+using Grove.Data.Storage.FileSystem;
+using Grove.Data.Indexing;
+using Grove.Display.Liquid;
+using Grove.Data.Localization;
 using Grove.Media;
 using Grove.Media.Helpers;
 using Grove.Media.Deployment;
@@ -39,21 +37,19 @@ using Grove.Media.Handlers;
 using Grove.Media.Hubs;
 using Grove.Media.Library;
 using Grove.Media.Indexing;
-using Grove.Media.Liquid;
 using Grove.Media.Middleware;
 using Grove.Media.Processing;
 using Grove.Media.Recipes;
 using Grove.Media.Services;
 using Grove.Media.Settings;
 using Grove.Media.Shortcodes;
-using Grove.Media.TagHelpers;
 using Grove.Media.ViewModels;
 using Grove.Modules;
 using Grove.Modules.FileProviders;
-using Grove.Navigation;
-using Grove.Recipes;
+using Grove.Display.Navigation;
+using Grove.Infrastructure.Recipes;
 using Grove.Security.Permissions;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Grove.Shortcodes;
 using tusdotnet;
 using tusdotnet.Models;
@@ -68,8 +64,6 @@ public sealed class Startup : StartupBase
     {
         services.AddHttpClient();
         services.AddSingleton<IJSLocalizer, MediaJSLocalizer>();
-        services.AddSingleton<IAnchorTag, MediaAnchorTag>();
-
         // In-memory directory tree cache (built lazily, invalidated on folder mutations).
         services.AddSingleton<MediaDirectoryTreeCache>();
 
@@ -129,7 +123,7 @@ public sealed class Startup : StartupBase
         });
 
         // Branding renditions are media paths; the site query resolves them through the store.
-        services.AddSingleton<Grove.Settings.IBrandingUrlResolver, MediaBrandingUrlResolver>();
+        services.AddSingleton<Grove.Infrastructure.Settings.IBrandingUrlResolver, MediaBrandingUrlResolver>();
 
         services.AddSingleton<IMediaFileStore>(serviceProvider =>
         {
@@ -190,6 +184,8 @@ public sealed class Startup : StartupBase
         services.AddApiContributor<Api.MediaFilesApi>();
         services.AddApiContributor<Api.MediaOptionsApi>();
         services.AddApiContributor<Api.MediaProfilesApi>();
+        services.AddApiContributor<Api.MediaApi>();
+        services.AddApiContributor<Api.FilesApi>();
 
         // Image processing pipeline (NetVips-based)
         services.AddSingleton<IImageProcessingEngine, VipsImageProcessingEngine>();
@@ -231,10 +227,6 @@ public sealed class Startup : StartupBase
         // MIME types
         services.TryAddSingleton<IContentTypeProvider, FileExtensionContentTypeProvider>();
 
-        services.AddTagHelpers<ImageTagHelper>();
-        services.AddTagHelpers<ImageResizeTagHelper>();
-        services.AddTagHelpers<AnchorTagHelper>();
-
         // Media Profiles
         services.AddScoped<MediaProfilesManager>();
         services.AddScoped<IMediaProfileService, MediaProfileService>();
@@ -253,24 +245,6 @@ public sealed class Startup : StartupBase
         IServiceProvider serviceProvider
     )
     {
-        routes.AddGetLocalizationsEndpoint()
-            .AddGetPermittedStorageEndpoint()
-            .AddGetDirectoryTreeEndpoint()
-            .AddGetFoldersEndpoint()
-            .AddGetMediaItemsEndpoint()
-            .AddGetDirectoryContentEndpoint()
-            .AddGetMediaItemEndpoint()
-            .AddGetMediaFieldItemsEndpoint()
-            .AddGetAllMediaItemsEndpoint()
-            .AddCopyMediaEndpoint()
-            .AddDeleteFolderEndpoint()
-            .AddDeleteMediaEndpoint()
-            .AddMoveMediaEndpoint()
-            .AddDeleteMediaListEndpoint()
-            .AddMoveMediaListEndpoint()
-            .AddCreateFolderEndpoint()
-            .AddUploadMediaEndpoint();
-
         routes.MapFileServing();
 
         var mediaFileProvider = serviceProvider.GetRequiredService<IMediaFileProvider>();
@@ -446,13 +420,13 @@ public sealed class SecureMediaStartup : StartupBase
 /// authority for media paths and for file objects' placements (docs/sharing.md). Off, the
 /// media folder permissions and the media permissions decide.
 /// </summary>
-[RequireFeatures("Grove.Sharing")]
+[RequireFeatures("Grove.Access.Sharing")]
 public sealed class MediaSharingStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddScoped<Grove.Sharing.IShareableKind, Sharing.MediaShareableKind>();
-        services.AddScoped<Grove.Sharing.IShareableKind, Sharing.MediaFileShareableKind>();
+        services.AddScoped<Grove.Access.Sharing.IShareableKind, Sharing.MediaShareableKind>();
+        services.AddScoped<Grove.Access.Sharing.IShareableKind, Sharing.MediaFileShareableKind>();
     }
 }
 
@@ -485,6 +459,10 @@ public sealed class MediaTusStartup : StartupBase
         services.AddSingleton<DistributedMediaTusStore>();
         services.AddSingleton<DistributedTusUploadMetadataStore>();
         services.AddSingleton<DistributedFileLockProvider>();
+
+        // The TusFileInfo endpoint depends on DistributedTusUploadMetadataStore, which is only
+        // registered by this feature.
+        services.AddApiContributor<Api.MediaTusApi>();
     }
 
     public override void Configure(
@@ -528,10 +506,6 @@ public sealed class MediaTusStartup : StartupBase
                 await next();
             }
         );
-
-        // The TusFileInfo endpoint depends on DistributedTusUploadMetadataStore, which is only
-        // registered by this feature, so it must be mapped here (not in the base Media feature).
-        routes.AddGetTusFileInfoEndpoint();
 
         routes.MapTus(
             "/api/media/tus",

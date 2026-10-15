@@ -1,4 +1,4 @@
-using Grove.Apis.GraphQL.Client;
+using Grove.Data.Protocols.GraphQL.Client;
 
 namespace Grove.Tests.Apis.GraphQL.Client;
 

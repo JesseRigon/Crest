@@ -1,0 +1,84 @@
+@namespace Grove.Access.Users.Components
+@using Grove.Display.Management.Components
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+
+@* What the enabled features contribute to a sign-in form (api/grove/auth/form/{form}): the
+   sections inside the form (a captcha: a component named in the shell's component registry,
+   whose value the form sends as the extension's header), the provider buttons (navigations to
+   an external sign-in) or the links under it. One part per instance, so the form places each. *@
+
+@switch (Part)
+{
+    case "sections":
+        if (RendererInfo.IsInteractive)
+        {
+            foreach (var section in Of("Section"))
+            {
+                if (Resolve(section) is { } type)
+                {
+                    <div data-testid="@($"access-section-{section.Id}")">
+                        <DynamicComponent Type="type" Parameters="@SectionParameters(section)" />
+                    </div>
+                }
+            }
+        }
+        break;
+
+    case "providers":
+        if (Of("Provider").Any())
+        {
+            <GroveStack Gap="0.5rem" data-testid="access-providers">
+                <GroveText TextStyle="TextStyle.Caption" Text="@L("Use another service to log in")" />
+                @foreach (var provider in Of("Provider"))
+                {
+                    @* A full navigation: the challenge answers with a redirect to the provider. *@
+                    <GroveButton Text="@provider.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Navigation.NavigateTo(provider.Url ?? string.Empty, forceLoad: true))" Disabled="@(!RendererInfo.IsInteractive)" data-testid="@($"access-provider-{provider.Id}")" />
+                }
+            </GroveStack>
+        }
+        break;
+
+    default:
+        foreach (var link in Of("Link"))
+        {
+            <GroveLink Path="@link.Url" Text="@L(link.Text)" data-testid="@($"access-link-{link.Id}")" />
+        }
+        break;
+}
+
+@code {
+    [Parameter]
+    public AccessFormExtension[] Extensions { get; set; } = [];
+
+    /// <summary>"sections", "providers" or "links".</summary>
+    [Parameter]
+    public string Part { get; set; } = "links";
+
+    /// <summary>The headers the form sends with its submission; a section's value is written here under the section's header.</summary>
+    [Parameter]
+    public Dictionary<string, string?> Headers { get; set; } = [];
+
+    private IEnumerable<AccessFormExtension> Of(string kind) =>
+        Extensions.Where(extension => string.Equals(extension.Kind, kind, StringComparison.OrdinalIgnoreCase)).OrderBy(extension => extension.Order);
+
+    private Type? Resolve(AccessFormExtension section) =>
+        section.Component is { Length: > 0 } name
+        && Services.GetService(typeof(IComponentRegistry)) is IComponentRegistry registry
+        && registry.TryGet(name, out var descriptor)
+            ? descriptor.Type
+            : null;
+
+    private Dictionary<string, object> SectionParameters(AccessFormExtension section) => new()
+    {
+        ["ValueChanged"] = EventCallback.Factory.Create<string?>(this, value =>
+        {
+            if (!string.IsNullOrEmpty(section.Header))
+            {
+                Headers[section.Header] = value;
+            }
+        }),
+    };
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

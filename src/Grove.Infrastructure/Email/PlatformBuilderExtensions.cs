@@ -1,4 +1,4 @@
-using Grove.Email;
+using Grove.Communications.Email;
 
 namespace Microsoft.Extensions.DependencyInjection;
 

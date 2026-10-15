@@ -1,7 +1,7 @@
 using System.IO.Compression;
 using Grove.Deployment.Steps;
-using Grove.FileStorage;
-using Grove.Recipes.Models;
+using Grove.Data.Storage;
+using Grove.Infrastructure.Recipes.Models;
 using Microsoft.Extensions.FileProviders;
 
 namespace Grove.Deployment.Services;

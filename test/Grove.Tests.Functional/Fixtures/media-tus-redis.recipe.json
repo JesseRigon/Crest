@@ -14,30 +14,28 @@
       "name": "feature",
       "enable": [
         "Grove.HomeRoute",
-        "Grove.Admin",
+        "Grove.Infrastructure.Shells.Admin",
         "Grove.Diagnostics",
-        "Grove.Features",
-        "Grove.Navigation",
-        "Grove.Recipes",
-        "Grove.Resources",
-        "Grove.Roles",
+        "Grove.Infrastructure.Features",
+        "Grove.Display.Navigation",
+        "Grove.Infrastructure.Recipes",
+        "Grove.Display.Resources",
+        "Grove.Access.Roles",
         "Grove.Security",
-        "Grove.Settings",
+        "Grove.Infrastructure.Settings",
         "Grove.Themes",
-        "Grove.Users",
+        "Grove.Access.Users",
         "Grove.Contents",
-        "Grove.ContentTypes",
+        "Grove.Contents.Types",
         "Grove.Media",
         "Grove.Media.SignalR",
         "Grove.Media.Tus",
-        "Grove.Redis",
-        "TheAdmin",
-        "SafeMode"
+        "Grove.Integrations.Redis"
       ]
     },
     {
       "name": "themes",
-      "admin": "TheAdmin",
+      "admin": "Grove.Themes.Admin",
       "site": ""
     }
   ]

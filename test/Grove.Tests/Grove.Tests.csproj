@@ -5,7 +5,7 @@
     <!-- Remove the underscores from member name -->
     <OutputType>Exe</OutputType>
     <NoWarn>$(NoWarn);CA1707;EnableGenerateDocumentationFile</NoWarn>
-    <InterceptorsNamespaces>$(InterceptorsNamespaces);Grove.DisplayManagement.Generated</InterceptorsNamespaces>
+    <InterceptorsNamespaces>$(InterceptorsNamespaces);Grove.Display.Management.Generated</InterceptorsNamespaces>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,10 +23,10 @@
     <None Remove="Apis\Recipes\blog.recipe.json" />
     <None Remove="Apis\Lucene\Recipes\luceneQueryTest.json" />
     <None Remove="Apis\GraphQL\ContentManagement\Recipes\DynamicContentTypeQueryTest.json" />
-    <None Remove="Modules\Grove.OpenId\RecipeFiles\app-recipe1.json" />
-    <None Remove="Modules\Grove.OpenId\RecipeFiles\app-recipe2.json" />
-    <None Remove="Modules\Grove.OpenId\RecipeFiles\app-recipe3.json" />
-    <None Remove="Modules\Grove.OpenId\RecipeFiles\scope-recipe.json" />
+    <None Remove="Modules\Grove.Access.OpenId\RecipeFiles\app-recipe1.json" />
+    <None Remove="Modules\Grove.Access.OpenId\RecipeFiles\app-recipe2.json" />
+    <None Remove="Modules\Grove.Access.OpenId\RecipeFiles\app-recipe3.json" />
+    <None Remove="Modules\Grove.Access.OpenId\RecipeFiles\scope-recipe.json" />
     <None Remove="Recipes\RecipeFiles\recipe1.json" />
     <None Remove="Recipes\RecipeFiles\recipe2.json" />
     <None Remove="Recipes\RecipeFiles\recipe3.json" />
@@ -40,10 +40,10 @@
     <EmbeddedResource Include="Apis\Recipes\blog.recipe.json" />
     <EmbeddedResource Include="Apis\Lucene\Recipes\luceneQueryTest.json" />
     <EmbeddedResource Include="Apis\GraphQL\ContentManagement\Recipes\DynamicContentTypeQueryTest.json" />
-    <EmbeddedResource Include="Modules\Grove.OpenId\RecipeFiles\app-recipe3.json" />
-    <EmbeddedResource Include="Modules\Grove.OpenId\RecipeFiles\app-recipe2.json" />
-    <EmbeddedResource Include="Modules\Grove.OpenId\RecipeFiles\app-recipe1.json" />
-    <EmbeddedResource Include="Modules\Grove.OpenId\RecipeFiles\scope-recipe.json" />
+    <EmbeddedResource Include="Modules\Grove.Access.OpenId\RecipeFiles\app-recipe3.json" />
+    <EmbeddedResource Include="Modules\Grove.Access.OpenId\RecipeFiles\app-recipe2.json" />
+    <EmbeddedResource Include="Modules\Grove.Access.OpenId\RecipeFiles\app-recipe1.json" />
+    <EmbeddedResource Include="Modules\Grove.Access.OpenId\RecipeFiles\scope-recipe.json" />
     <EmbeddedResource Include="Recipes\RecipeFiles\recipe1.json" />
     <EmbeddedResource Include="Recipes\RecipeFiles\recipe2.json" />
     <EmbeddedResource Include="Recipes\RecipeFiles\recipe3.json" />
@@ -54,19 +54,19 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Grove.Cms.Web\Grove.Cms.Web.csproj" />
-    <ProjectReference Include="..\..\src\Grove.Antivirus\Grove.Antivirus.csproj" />
-    <ProjectReference Include="..\..\src\Grove.DynamicCache\Grove.DynamicCache.csproj" />
-    <ProjectReference Include="..\..\src\Grove.RateLimits\Grove.RateLimits.csproj" />
-    <ProjectReference Include="..\..\src\Grove.SignalR.Azure\Grove.SignalR.Azure.csproj" />
-    <ProjectReference Include="..\..\src\Grove.SignalR.Redis\Grove.SignalR.Redis.csproj" />
-    <ProjectReference Include="..\..\src\Grove.Apis.GraphQL.Abstractions\Grove.Apis.GraphQL.Abstractions.csproj" />
-    <ProjectReference Include="..\..\src\Grove.Apis.GraphQL.Client\Grove.Apis.GraphQL.Client.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Security.Antivirus\Grove.Security.Antivirus.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Data.Cache.Dynamic\Grove.Data.Cache.Dynamic.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Security.RateLimits\Grove.Security.RateLimits.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Data.Protocols.SignalR.Azure\Grove.Data.Protocols.SignalR.Azure.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Data.Protocols.SignalR.Redis\Grove.Data.Protocols.SignalR.Redis.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Data.Protocols.GraphQL.Abstractions\Grove.Data.Protocols.GraphQL.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Data.Protocols.GraphQL.Client\Grove.Data.Protocols.GraphQL.Client.csproj" />
     <ProjectReference Include="..\..\src\Grove.Media\Grove.Media.csproj" />
     <ProjectReference Include="..\..\src\Grove.SourceGenerators\Grove.SourceGenerators.csproj" OutputItemType="Analyzer" />
-    <ProjectReference Include="..\..\src\Grove.Autoroute\Grove.Autoroute.csproj" />
-    <ProjectReference Include="..\..\src\Grove.ContentManagement\Grove.ContentManagement.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Routes.Auto\Grove.Routes.Auto.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Contents.Management\Grove.Contents.Management.csproj" />
     <ProjectReference Include="..\..\src\Grove.Access\Grove.Access.csproj" />
-    <ProjectReference Include="..\..\src\Grove.Sharing\Grove.Sharing.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Access.Sharing\Grove.Access.Sharing.csproj" />
     <ProjectReference Include="..\..\src\Grove.AuditTrail\Grove.AuditTrail.csproj" />
     <ProjectReference Include="..\..\src\Grove.Deployment.Remote\Grove.Deployment.Remote.csproj" />
     <ProjectReference Include="..\..\src\Grove.Media.Scanning\Grove.Media.Scanning.csproj" />
@@ -100,7 +100,7 @@
     </None>
   </ItemGroup>
 
-  <Import Project="..\..\src\Grove.Build\Grove.Commons.targets" />
+  <Import Project="..\..\src\Grove.Infrastructure.Build\Grove.Commons.targets" />
 
   <Target Name="EnsureTestWwwRootExists" BeforeTargets="Build">
     <MakeDir Directories="$(OutputPath)wwwroot" />

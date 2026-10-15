@@ -1,9 +1,9 @@
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Environment.Shell.Scope;
-using Grove.Recipes.Models;
-using Grove.Recipes.Services;
+using Grove.Infrastructure.Recipes.Models;
+using Grove.Infrastructure.Recipes.Services;
 
 namespace Grove.Contents.Recipes;
 

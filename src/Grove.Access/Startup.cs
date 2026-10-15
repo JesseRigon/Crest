@@ -7,7 +7,7 @@ using Grove.Data.Migration;
 using Grove.Modules;
 using Grove.Security;
 using Grove.Security.Permissions;
-using Grove.Users.Handlers;
+using Grove.Access.Users.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -85,6 +85,16 @@ public sealed class Startup : StartupBase
         // An API path never redirects: the identity cookie's challenge and forbid answer
         // status codes there (docs/access.md § One gate).
         services.AddTransient<IPostConfigureOptions<Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions>, ApiCookieResponses>();
+
+        // The "Api" scheme: delegates to the API credential scheme and the other machine
+        // credentials modules register (docs/access.md § Machine callers).
+        services.Configure<Microsoft.AspNetCore.Authentication.AuthenticationOptions>(options =>
+        {
+            if (!options.Schemes.Any(scheme => scheme.Name == PlatformConstants.AuthenticationSchemes.Api))
+            {
+                options.AddScheme<ApiAuthenticationHandler>(PlatformConstants.AuthenticationSchemes.Api, null);
+            }
+        });
 
         services.AddTransient<IConfigureOptions<AuditTrailOptions>, AccessAuditTrailEventConfiguration>();
         services.AddScoped<Grove.AuditTrail.Services.IAuditTrailEventHandler, CallerAuditTrailEventHandler>();

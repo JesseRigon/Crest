@@ -1,5 +1,5 @@
 using Grove.Access;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 using static Grove.Tests.Sharing.SharingWorld;
 
 namespace Grove.Tests.Sharing;

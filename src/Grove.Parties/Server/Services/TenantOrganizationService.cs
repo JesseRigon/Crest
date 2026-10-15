@@ -1,7 +1,7 @@
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Entities;
 using Grove.Parties.Constants;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Parties.Services;
 

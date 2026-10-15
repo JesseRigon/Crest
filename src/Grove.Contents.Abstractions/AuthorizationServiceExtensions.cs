@@ -1,6 +1,6 @@
 using System.Security.Claims;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Metadata.Models;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Metadata.Models;
 using Grove.Contents;
 using Grove.Contents.Security;
 using Grove.Security.Permissions;

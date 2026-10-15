@@ -1,6 +1,6 @@
-using Grove.ContentManagement.Metadata;
-using Grove.ContentTypes;
-using Grove.Localization.Data;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Types;
+using Grove.Data.Localization.Data;
 
 namespace Grove.Contents.Services;
 

@@ -2,10 +2,10 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Media.Services;
-using Grove.Recipes.Models;
-using Grove.Recipes.Services;
+using Grove.Infrastructure.Recipes.Models;
+using Grove.Infrastructure.Recipes.Services;
 
 namespace Grove.Media.Recipes;
 

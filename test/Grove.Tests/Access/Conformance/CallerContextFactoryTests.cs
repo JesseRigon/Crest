@@ -2,11 +2,11 @@ using System.Security.Claims;
 using Grove.Access;
 using Grove.Access.Services;
 using Grove.Environment.Shell;
-using Grove.Roles;
+using Grove.Access.Roles;
 using Grove.Security;
 using Grove.Security.Permissions;
-using Grove.Settings;
-using Grove.Users;
+using Grove.Infrastructure.Settings;
+using Grove.Access.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -74,7 +74,7 @@ public class CallerContextFactoryTests
         {
             var users = new Mock<UserManager<IUser>>(Mock.Of<IUserStore<IUser>>(), null, null, null, null, null, null, null, null);
             users.Setup(m => m.FindByIdAsync(It.IsAny<string>())).ReturnsAsync((string id) => Users.TryGetValue(id, out var user) ? user : null);
-            users.Setup(m => m.GetRolesAsync(It.IsAny<IUser>())).ReturnsAsync((IUser user) => user is TestUser test ? test.RoleNames.ToList() : ((global::Grove.Users.Models.User)user).RoleNames.ToList());
+            users.Setup(m => m.GetRolesAsync(It.IsAny<IUser>())).ReturnsAsync((IUser user) => user is TestUser test ? test.RoleNames.ToList() : ((global::Grove.Access.Users.Models.User)user).RoleNames.ToList());
 
             var roles = new Mock<RoleManager<IRole>>(Mock.Of<IRoleStore<IRole>>(), Array.Empty<IRoleValidator<IRole>>(), null, null, null);
             roles.Setup(m => m.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((string name) =>
@@ -358,7 +358,7 @@ public class CallerContextFactoryTests
         // Disabled while signed in, or the actor of a running workflow: the account's roles
         // stop counting at once (the disable bumps the version).
         var world = new World();
-        world.Users["u-off"] = new global::Grove.Users.Models.User { UserId = "u-off", UserName = "off", RoleNames = ["Editor", "Administrator"], IsEnabled = false };
+        world.Users["u-off"] = new global::Grove.Access.Users.Models.User { UserId = "u-off", UserName = "off", RoleNames = ["Editor", "Administrator"], IsEnabled = false };
 
         var caller = await world.Factory().CreateAsync(Request(Signed("u-off")), TestContext.Current.CancellationToken);
 

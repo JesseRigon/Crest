@@ -1,4 +1,4 @@
-using Grove.ContentManagement.Metadata.Models;
+using Grove.Contents.Management.Metadata.Models;
 using Grove.Security.Permissions;
 
 

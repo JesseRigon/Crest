@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Dynamic;
 using System.Text.Json.Nodes;
-using Grove.ContentFields.Fields;
-using Grove.ContentManagement;
+using Grove.Contents.Fields.Fields;
+using Grove.Contents.Management;
 using Grove.Json.Serialization;
 
 namespace Grove.Tests.Data;

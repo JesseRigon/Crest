@@ -1,4 +1,4 @@
-# Admin (`Grove.Admin`)
+# Admin (`Grove.Infrastructure.Shells.Admin`)
 
 The Admin module provides an admin dashboard for your site.
 
@@ -7,9 +7,9 @@ The Admin module provides an admin dashboard for your site.
 The `AdminDashboard` shape renders an `AdminDashboardContent` child shape. Features can add their own positioned content to this shape by registering a shape table provider:
 
 ```csharp
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.Descriptors;
-using Grove.DisplayManagement.Views;
+using Grove.Display.Management;
+using Grove.Display.Management.Descriptors;
+using Grove.Display.Management.Views;
 
 public sealed class AdminDashboardShapeTableProvider : ShapeTableProvider
 {
@@ -62,7 +62,7 @@ Here are samples using logo and favicon from media module.
     {% zone "HeadMeta" %}
         {% link rel:'shortcut icon', type:'image/x-icon', src:favicon_url %}
     {% endzone %}
-    {% a area: 'Grove.Admin', controller: 'Admin' , action: 'Index', class: 'ta-navbar-brand' %}
+    {% a area: 'Grove.Infrastructure.Shells.Admin', controller: 'Admin' , action: 'Index', class: 'ta-navbar-brand' %}
         <div class="d-flex align-items-center">
             <img src="{{ 'logo.png' | asset_url }}" alt="{{ Site.SiteName }}" class="pe-2" />
             <span>{{ Site.SiteName }}</span>
@@ -76,7 +76,7 @@ Here are samples using logo and favicon from media module.
     <zone name="HeadMeta">
         <link asp-src="~/media/favicon.ico" type="image/x-icon" rel="shortcut icon" />
     </zone>
-    <a class="ta-navbar-brand" asp-route-area="Grove.Admin" asp-controller="Admin" asp-action="Index">
+    <a class="ta-navbar-brand" asp-route-area="Grove.Infrastructure.Shells.Admin" asp-controller="Admin" asp-action="Index">
         <div class="d-flex align-items-center">
             <img src=@Url.Content("~/media/logo.png") alt="@Site.SiteName" class="pe-2" />
             <span>@Site.SiteName</span>
@@ -86,7 +86,7 @@ Here are samples using logo and favicon from media module.
 
 ## Navbar Shape
 
-The navigation bar shape is available in two display types `Detail` for the frontend and `DetailAdmin` for the backend admin. The `Navbar` shape is composed and used `TheAdmin` and `TheTheme` themes. If you wish to compose and use the `Navbar` shape in other themes, you may create it using two steps
+The navigation bar shape is available in two display types `Detail` for the frontend and `DetailAdmin` for the backend admin. The `Navbar` shape is composed and used `Grove.Themes.TheAdmin` and `TheTheme` themes. If you wish to compose and use the `Navbar` shape in other themes, you may create it using two steps
 
 === "Liquid"
 

@@ -1,3 +1,4 @@
+using Grove.Api;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -15,9 +16,8 @@ public static class GetTusFileInfoEndpoint
 {
     public static IEndpointRouteBuilder AddGetTusFileInfoEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapGet("api/media/TusFileInfo/{uploadId}", HandleAsync)
+        builder.MapGet("TusFileInfo/{uploadId}", HandleAsync)
             .WithName("ApiGetTusFileInfo")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
             .Produces<FileStoreEntryDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -29,12 +29,12 @@ public static class GetTusFileInfoEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        IContentTypeProvider contentTypeProvider,
-        IFileVersionProvider fileVersionProvider,
-        DistributedTusUploadMetadataStore tusMetadataStore,
-        string uploadId)
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromServices] IContentTypeProvider contentTypeProvider,
+        [FromServices] IFileVersionProvider fileVersionProvider,
+        [FromServices] DistributedTusUploadMetadataStore tusMetadataStore,
+        [FromRoute] string uploadId)
     {
         if (!await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMedia))
         {

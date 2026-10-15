@@ -1,5 +1,5 @@
-using Grove.Localization;
-using Grove.Localization.PortableObject;
+using Grove.Data.Localization;
+using Grove.Data.Localization.PortableObject;
 
 namespace Grove.Tests.Localization;
 
@@ -57,12 +57,12 @@ public class PoParserTests
     [Fact]
     public async Task ParseAsync_Default_SetsContext()
     {
-        // msgctxt "Grove.Localization"
+        // msgctxt "Grove.Data.Localization"
         // msgid "Unknown system error"
         // msgstr "Error desconegut del sistema"
         var entries = await ParseTextAsync("EntryWithContext");
 
-        Assert.Equal("Grove.Localization|Unknown system error", entries[0].Key, ignoreCase: true);
+        Assert.Equal("Grove.Data.Localization|Unknown system error", entries[0].Key, ignoreCase: true);
     }
 
     [Fact]
@@ -75,13 +75,13 @@ public class PoParserTests
 
         // #| msgctxt previous-context
         // #| msgid previous-untranslated-string
-        // msgctxt "Grove.Localization"
+        // msgctxt "Grove.Data.Localization"
         // msgid "Unknown system error"
         // msgstr "Error desconegut del sistema"
 
         var entries = await ParseTextAsync("EntryWithComments");
 
-        Assert.Equal("Grove.Localization|Unknown system error", entries[0].Key, ignoreCase: true);
+        Assert.Equal("Grove.Data.Localization|Unknown system error", entries[0].Key, ignoreCase: true);
         Assert.Equal("Error desconegut del sistema", entries[0].Translations[0]);
     }
 
@@ -253,12 +253,12 @@ public class PoParserTests
     [Fact]
     public void Parse_Default_SetsContext()
     {
-        // msgctxt "Grove.Localization"
+        // msgctxt "Grove.Data.Localization"
         // msgid "Unknown system error"
         // msgstr "Error desconegut del sistema"
         var entries = ParseText("EntryWithContext");
 
-        Assert.Equal("Grove.Localization|Unknown system error", entries[0].Key, ignoreCase: true);
+        Assert.Equal("Grove.Data.Localization|Unknown system error", entries[0].Key, ignoreCase: true);
     }
 
     [Fact]
@@ -271,13 +271,13 @@ public class PoParserTests
 
         // #| msgctxt previous-context
         // #| msgid previous-untranslated-string
-        // msgctxt "Grove.Localization"
+        // msgctxt "Grove.Data.Localization"
         // msgid "Unknown system error"
         // msgstr "Error desconegut del sistema"
 
         var entries = ParseText("EntryWithComments");
 
-        Assert.Equal("Grove.Localization|Unknown system error", entries[0].Key, ignoreCase: true);
+        Assert.Equal("Grove.Data.Localization|Unknown system error", entries[0].Key, ignoreCase: true);
         Assert.Equal("Error desconegut del sistema", entries[0].Translations[0]);
     }
 

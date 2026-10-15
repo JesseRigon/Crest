@@ -1,0 +1,9 @@
+@page "/not-found"
+@attribute [PageEntry("AccessAdminPanel")]
+
+@* An admin URL no page answers: the server's shell selection rewrites it here (the admin
+   shell's NotFoundPage), and the client router shows the same in its NotFound branch. *@
+
+<PageTitle>Not found</PageTitle>
+
+<Grove.Display.Components.Errors.GroveErrorPage Status="404" />

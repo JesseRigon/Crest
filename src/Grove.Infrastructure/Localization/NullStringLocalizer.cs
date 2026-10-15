@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Localization;
 
-namespace Grove.Localization;
+namespace Grove.Data.Localization;
 
 /// <summary>
 /// Minimalistic localizer that does nothing.

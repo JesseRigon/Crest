@@ -15,21 +15,21 @@
       "name": "feature",
       "disable": [],
       "enable": [
-        "Grove.Admin",
-        "Grove.Recipes",
-        "Grove.Roles",
-        "Grove.Users",
-        "Grove.Indexing",
+        "Grove.Infrastructure.Shells.Admin",
+        "Grove.Infrastructure.Recipes",
+        "Grove.Access.Roles",
+        "Grove.Access.Users",
+        "Grove.Data.Indexing",
 
         // Content Management
-        "Grove.Alias",
-        "Grove.ContentFields",
-        "Grove.ContentFields.Indexing.SQL",
-        "Grove.ContentTypes",
+        "Grove.Contents.Alias",
+        "Grove.Contents.Fields",
+        "Grove.Contents.Fields.Indexing.SQL",
+        "Grove.Contents.Types",
         "Grove.Contents",
         "Grove.Contents.FileContentDefinition",
-        "Grove.Html",
-        "Grove.Lucene"
+        "Grove.Data.Protocols.Html",
+        "Grove.Search.Lucene"
       ]
     },
     {

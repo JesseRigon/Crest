@@ -41,8 +41,6 @@ public static class CommonPermissions
 
     public static readonly Permission EditContentOwner = new("EditContentOwner", "Edit the owner of a content item");
 
-    public static readonly Permission AccessContentApi = new("AccessContentApi", "Access content via the api");
-
     public static readonly Dictionary<string, Permission> OwnerPermissionsByName = [];
 
     static CommonPermissions()

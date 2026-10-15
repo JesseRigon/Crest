@@ -12,9 +12,9 @@
     {
       "name": "feature",
       "enable": [
-        "Grove.OpenId.Management",
-        "Grove.OpenId.Server",
-        "Grove.OpenId.Validation"
+        "Grove.Access.OpenId.Management",
+        "Grove.Access.OpenId.Server",
+        "Grove.Access.OpenId.Validation"
       ]
     },
     {

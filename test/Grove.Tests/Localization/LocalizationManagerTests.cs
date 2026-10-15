@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using Grove.Localization;
+using Grove.Data.Localization;
 using Grove.Tests.Apis.Context;
 
 namespace Grove.Tests.Localization;
@@ -92,8 +92,8 @@ public class LocalizationManagerTests : IDisposable
                 {
                     "enable", new JsonArray
                     {
-                        "Grove.Localization",
-                        "Grove.Localization.ContentLanguageHeader",
+                        "Grove.Data.Localization",
+                        "Grove.Data.Localization.ContentLanguageHeader",
                     }
                 },
             },

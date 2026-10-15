@@ -1,11 +1,11 @@
 using System.Text.Json.Nodes;
-using Grove.Apis.GraphQL;
-using Grove.Autoroute.Models;
-using Grove.ContentFields.Fields;
-using Grove.ContentManagement;
-using Grove.Lists.Models;
+using Grove.Data.Protocols.GraphQL;
+using Grove.Routes.Auto.Models;
+using Grove.Contents.Fields.Fields;
+using Grove.Contents.Management;
+using Grove.Display.Lists.Models;
 using Grove.Tests.Apis.Context;
-using GraphQLApi = Grove.Apis.GraphQL;
+using GraphQLApi = Grove.Data.Protocols.GraphQL;
 
 namespace Grove.Tests.Apis.GraphQL;
 

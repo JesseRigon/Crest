@@ -1,8 +1,8 @@
 #nullable enable
 using Grove.Environment.Shell.Scope;
 using Grove.Media.Library;
-using Grove.Users;
-using Grove.Users.Handlers;
+using Grove.Access.Users;
+using Grove.Access.Users.Handlers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

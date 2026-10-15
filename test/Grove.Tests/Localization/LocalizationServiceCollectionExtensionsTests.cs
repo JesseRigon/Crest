@@ -1,6 +1,6 @@
-using Grove.Localization.Data;
+using Grove.Data.Localization.Data;
 
-namespace Grove.Localization.Tests;
+namespace Grove.Data.Localization.Tests;
 
 public class LocalizationServiceCollectionExtensionsTests
 {

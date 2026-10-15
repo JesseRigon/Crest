@@ -1,4 +1,4 @@
-using Grove.ContentManagement.Handlers;
+using Grove.Contents.Management.Handlers;
 using Grove.Media.Services;
 
 namespace Grove.Media.Handlers;

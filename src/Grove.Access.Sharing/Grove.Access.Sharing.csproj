@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Access.Sharing</RootNamespace>
+    <Nullable>enable</Nullable>
+    <!-- NuGet properties-->
+    <Title>Grove Sharing</Title>
+    <Description>$(OCCMSDescription)
+
+    Sharing for any module's items: grants and blocks that flow down a tree, ordered rules, and their resolution, registered with the access gate.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Sharing</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="YesSql.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Access.Sharing.Abstractions\Grove.Access.Sharing.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Server.Abstractions\Grove.Infrastructure.Server.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.YesSql.Abstractions\Grove.Data.YesSql.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Recipes.Abstractions\Grove.Infrastructure.Recipes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.Roles.Abstractions\Grove.Access.Roles.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.Users.Abstractions\Grove.Access.Users.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Display.Navigation\Grove.Display.Navigation.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using Grove.Apis.GraphQL;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Records;
+using Grove.Data.Protocols.GraphQL;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Records;
 using Grove.Tests.Apis.Context;
 using YesSql;
 

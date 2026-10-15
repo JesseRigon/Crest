@@ -3,7 +3,7 @@
 
     tools/fold-project.py OLD INTO [--dry-run] [--ns=NAMESPACE]
 
-OLD and INTO are project names under src/ (for example Grove.Rules.Core and Grove.Rules).
+OLD and INTO are project names under src/ (for example Grove.Display.Rules.Core and Grove.Display.Rules).
 Run from anywhere inside the repository. The script:
 
 1. Moves every tracked file of OLD into INTO at the same relative path (`git mv`).
@@ -21,7 +21,7 @@ Run from anywhere inside the repository. The script:
 4. Renames the namespace OLD to INTO (or to --ns=NAMESPACE) in code: `namespace`, `using` and qualified
    references outside string literals, and InternalsVisibleTo("OLD") attributes and
    items. String literals are left alone on purpose: feature ids such as
-   "Grove.Roles.Core" are tenant data, not project names.
+   "Grove.Access.Roles.Core" are tenant data, not project names.
 5. Deletes what is left of OLD, build output included.
 
 Nothing is committed. Dry run prints the plan and changes nothing.

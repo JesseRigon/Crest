@@ -4,13 +4,13 @@ using System.Net.Mime;
 using System.Text.Json.Nodes;
 using System.Text;
 using Grove.Api;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Contents.Deployment.AddToDeploymentPlan;
 using Grove.Contents.Deployment.ExportContentToDeploymentTarget;
 using Grove.Deployment;
 using Grove.Deployment.Services;
 using Grove.Environment.Shell;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Grove.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -200,7 +200,7 @@ internal static class ContentItemListFilters
     public static async Task<IResult> DescribeAsync(HttpContext httpContext, string? contentType)
     {
         // The choices are tenant data (cultures, taxonomy terms): for the admin's list page.
-        if (!await httpContext.RequestServices.GetRequiredService<IAuthorizationService>().AuthorizeAsync(httpContext.User, Grove.Admin.AdminPermissions.AccessAdminPanel))
+        if (!await httpContext.RequestServices.GetRequiredService<IAuthorizationService>().AuthorizeAsync(httpContext.User, Grove.Infrastructure.Shells.Admin.AdminPermissions.AccessAdminPanel))
         {
             return TypedResults.Forbid();
         }

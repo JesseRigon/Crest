@@ -1,0 +1,16 @@
+@using Microsoft.AspNetCore.Components
+@using Grove.Display.Components.Primitives
+@inherits SpreadsheetDialogBase
+
+@namespace Grove.Display.Components.Primitives.Spreadsheet
+<GroveStack Orientation="Orientation.Vertical" Gap="1rem">
+    <GroveTextBox @bind-Value=@Name Style="width: 100%" />
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <GroveText TextStyle="TextStyle.Caption" Style="color: var(--rz-form-error-color, #f44336)">@error</GroveText>
+    }
+    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End" class="rz-spreadsheet-dialog-actions">
+        <GroveButton Text=@L(nameof(GroveStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
+        <GroveButton Text=@L(nameof(GroveStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" />
+    </GroveStack>
+</GroveStack>

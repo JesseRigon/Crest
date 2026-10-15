@@ -4,7 +4,7 @@ using Fluid;
 using Fluid.Values;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
-using Grove.Liquid;
+using Grove.Display.Liquid;
 using Grove.Media.Fields;
 using Grove.Media.Models;
 using Grove.Media.Services;

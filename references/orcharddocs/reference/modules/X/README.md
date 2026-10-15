@@ -1,4 +1,4 @@
-# X (Twitter) (`Grove.Twitter`)
+# X (Twitter) (`Grove.Integrations.Twitter`)
 
 This module adds Twitter for Websites features to Grove.
 
@@ -36,7 +36,7 @@ If no value is provided, setup Callback URL in Twitter app to use the default pa
 
 ### Users Registration
 
-- Enable the `Grove.Users.Registration` feature when you also want local site registration.
+- Enable the `Grove.Access.Users.Registration` feature when you also want local site registration.
 - New external-user creation and profile generation are controlled from the Users module's [`ExternalRegistrationSettings`](../Users/README.md#external-authentication-settings).
 - An existing user can link the account through the External Logins link from the user menu.
 
@@ -69,7 +69,7 @@ X (Twitter) settings can be configured using the `Settings` recipe step:
 
 ## X (Twitter) Settings Configuration
 
-The `Grove.Twitter` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureTwitterSettings()` extension method on `PlatformBuilder` when initializing the app.
+The `Grove.Integrations.Twitter` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureTwitterSettings()` extension method on `PlatformBuilder` when initializing the app.
 
 The following configuration values can be customized:
 

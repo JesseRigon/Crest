@@ -7,7 +7,7 @@ using Grove.Workflows.UIHints;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 
 namespace Grove.Workflows.Contents;
 

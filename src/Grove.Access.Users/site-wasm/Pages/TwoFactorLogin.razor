@@ -1,0 +1,35 @@
+@page "/LoginWithTwoFactorAuthentication"
+@page "/LoginWithRecoveryCode"
+@attribute [Grove.Display.Components.Modules.SetsAuthenticationCookie]
+@inject NavigationManager Navigation
+
+@* The second sign-in step on its own page, for a sign-in that did not start on a login page that
+   asks for it in place; the recovery code path opens the recovery code. *@
+
+<PageTitle>Two-factor authentication</PageTitle>
+
+<div style="max-width: 32rem; margin: 2rem auto; padding: 0 1rem;" data-testid="site-two-factor-login-page">
+    <TwoFactorChallenge RememberMe="@RememberMe" RecoveryCode="@IsRecovery" SignedIn="@SignedInAsync" Restart="@Restart" />
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromQuery(Name = "rememberMe")]
+    public string? RememberMeQuery { get; set; }
+
+    private bool RememberMe => string.Equals(RememberMeQuery, "true", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsRecovery => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("LoginWithRecoveryCode", StringComparison.OrdinalIgnoreCase);
+
+    // A new document: the session was just issued.
+    private Task SignedInAsync(SignInAnswer answer)
+    {
+        var local = ReturnUrl is { Length: > 1 } url && url[0] == '/' && url[1] != '/' && url[1] != '\\';
+        Navigation.NavigateTo(answer.Redirect ?? (local ? ReturnUrl! : Navigation.BaseUri), forceLoad: true);
+        return Task.CompletedTask;
+    }
+
+    private void Restart() => Navigation.NavigateTo(Navigation.BaseUri, forceLoad: true);
+}

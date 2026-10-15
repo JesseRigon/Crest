@@ -1,6 +1,6 @@
 using Grove.Environment.Extensions.Features;
-using Grove.Sharing;
-using Grove.Sharing.Services;
+using Grove.Access.Sharing;
+using Grove.Access.Sharing.Services;
 using Moq;
 
 namespace Grove.Tests.Sharing;

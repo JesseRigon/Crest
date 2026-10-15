@@ -217,7 +217,7 @@ Queue update requests only after validation succeeds and only for the options ty
 
 For named options, register `IOptionsChangeTokenSource<TOptions>` manually with `SignalOptionsChangeTokenSource<TOptions>` for the matching name and call `RequestUpdate<TOptions>(name)` with the same value.
 
-In multi-node environments, use a distributed `ISignal` implementation such as the Redis Bus feature from [`Grove.Redis`](../Redis/README.md). This ensures every node invalidates its local `IOptionsMonitor<TOptions>` cache and rebuilds the updated options from the committed tenant state.
+In multi-node environments, use a distributed `ISignal` implementation such as the Redis Bus feature from [`Grove.Integrations.Redis`](../Redis/README.md). This ensures every node invalidates its local `IOptionsMonitor<TOptions>` cache and rebuilds the updated options from the committed tenant state.
 
 ### `ORCHARD_APP_DATA` Environment Variable
 

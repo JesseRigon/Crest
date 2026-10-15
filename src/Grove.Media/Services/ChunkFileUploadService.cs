@@ -2,11 +2,10 @@ using System.IO.Hashing;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Grove.Environment.Shell;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Modules;
 
 namespace Grove.Media.Services;
@@ -37,10 +36,10 @@ public sealed class ChunkFileUploadService : IChunkFileUploadService
         _tempFileNamePrefix = $"{shellSettings.TenantId}_";
     }
 
-    public async Task<IActionResult> ProcessRequestAsync(
+    public async Task<IResult> ProcessRequestAsync(
         HttpRequest request,
-        Func<Guid, IFormFile, ContentRangeHeaderValue, Task<IActionResult>> chunkAsync,
-        Func<IEnumerable<IFormFile>, Task<IActionResult>> completedAsync)
+        Func<Guid, IFormFile, ContentRangeHeaderValue, Task<IResult>> chunkAsync,
+        Func<IEnumerable<IFormFile>, Task<IResult>> completedAsync)
     {
         var contentRangeHeader = request.Headers.ContentRange;
 
@@ -59,7 +58,7 @@ public sealed class ChunkFileUploadService : IChunkFileUploadService
             contentRange.Length > _options.Value.MaxFileSize ||
             contentRange.To - contentRange.From > _options.Value.MaxUploadChunkSize)
         {
-            return new BadRequestResult();
+            return Results.BadRequest();
         }
 
         var formFile = request.Form.Files[0];
@@ -77,10 +76,10 @@ public sealed class ChunkFileUploadService : IChunkFileUploadService
             : await chunkAsync(uploadId, formFile, contentRange);
     }
 
-    private async Task<IActionResult> CompleteUploadAsync(
+    private async Task<IResult> CompleteUploadAsync(
         Guid uploadId,
         IFormFile formFile,
-        Func<IEnumerable<IFormFile>, Task<IActionResult>> completedAsync)
+        Func<IEnumerable<IFormFile>, Task<IResult>> completedAsync)
     {
         try
         {

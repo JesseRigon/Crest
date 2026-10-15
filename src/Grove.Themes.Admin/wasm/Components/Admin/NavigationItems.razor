@@ -1,0 +1,41 @@
+@using Grove.Themes.Admin.Api
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Primitives
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@if (Items.Length == 0)
+{
+    <GroveText TextStyle="TextStyle.Body2" Text="@T["No menu items returned."]" />
+}
+else
+{
+    <ul class="navigation-items">
+        @foreach (var item in Items)
+        {
+            <li>
+                <GroveStack Gap="0.25rem">
+                    <GroveText Text="@item.Text" />
+                    <GroveText TextStyle="TextStyle.Caption" Text="@GetDetails(item)" />
+                    @if (item.Items.Length > 0)
+                    {
+                        <NavigationItems Items="item.Items" />
+                    }
+                </GroveStack>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter]
+    public NavigationItem[] Items { get; set; } = [];
+
+    private string GetDetails(NavigationItem item)
+    {
+        var href = !string.IsNullOrWhiteSpace(item.Href) ? item.Href : item.Url;
+        var position = !string.IsNullOrWhiteSpace(item.Position) ? T["position: {0}", item.Position] : null;
+        var id = !string.IsNullOrWhiteSpace(item.Id) ? T["id: {0}", item.Id] : null;
+
+        return string.Join(" · ", new[] { href, position, id }.Where(value => !string.IsNullOrWhiteSpace(value)));
+    }
+}

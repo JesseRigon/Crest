@@ -4,17 +4,17 @@
        Grove.LazyModules package, or directly when the host builds Grove from source.
 
        Every module client library the host references is lazy, with the assemblies only it
-       needs; the admin router loads a route's module before it matches (Grove.AdminTheme's
+       needs; the admin router loads a route's module before it matches (Grove.Themes.Admin's
        LazyModules), and a page region loads the modules that contribute to regions
        before it renders. Worked out at build time by the Grove.LazyModules tool from the
        referenced assemblies themselves, so nothing is listed by hand and nothing depends on
        where a module sits on disk (source or package):
        - lazy roots: every referenced module client library (*.BlazorWasm - the same
-         convention Grove.Server uses for the server-side route table), plus
+         convention Grove.Infrastructure.Server uses for the server-side route table), plus
          any assembly a module names in its embedded grove-lazy-assemblies.txt resource (a
          library it loads itself, e.g. the workflow designer);
        - lazy too: each theme client (an assembly declaring its shell that is not a module),
-         loaded when its shell's document boots (Grove.Shell.GroveShellRoot);
+         loaded when its shell's document boots (Grove.Infrastructure.Shell.GroveShellRoot);
        - eager roots: assemblies declaring [assembly: GroveEager] (the shell runtime, a
          theme's services - the boot path Program.cs calls);
        - kept eager: a module assembly declaring [GroveJSComponent] (JS components register

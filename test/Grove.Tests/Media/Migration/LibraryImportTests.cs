@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Text.Json.Nodes;
 using Grove.Access;
 using Grove.Access.Services;
-using Grove.FileStorage.FileSystem;
+using Grove.Data.Storage.FileSystem;
 using Grove.Media;
 using Grove.Media.Files;
 using Grove.Media.Library;
@@ -11,7 +11,7 @@ using Grove.Media.Services;
 using Grove.Security;
 using Grove.Security.Permissions;
 using Grove.Security.Services;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 using Grove.Tests.Media.Files;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -267,7 +267,7 @@ public sealed class LibraryImportTests : IDisposable
             return Task.FromResult(0);
         }
 
-        public Task<bool> RewriteAsync(global::Grove.ContentManagement.ContentItem contentItem, CancellationToken cancellationToken = default) => Task.FromResult(false);
+        public Task<bool> RewriteAsync(global::Grove.Contents.Management.ContentItem contentItem, CancellationToken cancellationToken = default) => Task.FromResult(false);
     }
 
     private sealed class FakeRoles(Dictionary<string, string[]> permissions) : IRoleService

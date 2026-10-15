@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <!-- NuGet properties-->
     <Title>Grove Search</Title>
     <Description>$(OCCMSDescription)
@@ -22,15 +21,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Grove.ContentManagement\Grove.ContentManagement.csproj" />
-    <ProjectReference Include="..\Grove.ContentTypes.Abstractions\Grove.ContentTypes.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
-    <ProjectReference Include="..\Grove.Indexing.Abstractions\Grove.Indexing.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Indexing\Grove.Indexing.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management\Grove.Contents.Management.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Types.Abstractions\Grove.Contents.Types.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Display.Management\Grove.Display.Management.csproj" />
+    <ProjectReference Include="..\Grove.Data.Indexing.Abstractions\Grove.Data.Indexing.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Indexing\Grove.Data.Indexing.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
-    <ProjectReference Include="..\Grove.Navigation\Grove.Navigation.csproj" />
+    <ProjectReference Include="..\Grove.Display.Navigation\Grove.Display.Navigation.csproj" />
     <ProjectReference Include="..\Grove.Search.Abstractions\Grove.Search.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Server.Abstractions\Grove.Infrastructure.Server.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Deployment.Abstractions\Grove.Deployment.Abstractions.csproj" />
   </ItemGroup>
 

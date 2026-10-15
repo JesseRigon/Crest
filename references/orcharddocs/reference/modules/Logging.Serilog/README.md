@@ -1,10 +1,10 @@
-# Grove.Logging.Serilog
+# Grove.Diagnostics.Logging.Serilog
 
-`Grove.Logging.Serilog` integrates [Serilog](https://serilog.net/) structured logging with Grove.
+`Grove.Diagnostics.Logging.Serilog` integrates [Serilog](https://serilog.net/) structured logging with Grove.
 
 ## How to use
 
-Add a reference to `Grove.Logging.Serilog`.
+Add a reference to `Grove.Diagnostics.Logging.Serilog`.
 
 ### Add serilog configuration in `appsettings.json`
 

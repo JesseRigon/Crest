@@ -1,0 +1,283 @@
+@page "/Settings/email"
+@page "/Email/Test"
+@attribute [PageEntry("ManageEmailSettings", Route = "/Settings/email", Id = "email", Parent = "settings-communication", Caption = "Email")]
+@attribute [PageEntry("ManageEmailSettings", Route = "/Email/Test", Id = "emailtest", Parent = "testing", Caption = "Email Test")]
+@using System.Net.Http.Json
+@using Grove.Display.Components.Primitives
+@inject HttpClient Http
+@inject NotificationService Notifications
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* Settings › Email (Grove.Communications.Email, Grove.Data.Protocols.Smtp): the default provider, the SMTP provider and
+   a test send - the retired MVC settings group and Email Test page in one. The SMTP password is
+   write-only: an empty box keeps the stored one. *@
+<GroveStack Gap="1rem" data-testid="email-settings-page">
+    <GroveText TextStyle="TextStyle.H4" Text="@T["Email"]" />
+    @if (Error is { } error) { <GroveAlert AlertStyle="AlertStyle.Danger" AllowClose="false">@error</GroveAlert> }
+
+    @if (Settings is null)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        <GroveCard>
+            <GroveStack Gap="0.5rem">
+                <GroveText TextStyle="TextStyle.Subtitle1" Text="@T["Default provider"]" />
+                <GroveDropDown TValue="string" @bind-Value="DefaultProvider" Data="@Settings.Providers" TextProperty="DisplayName" ValueProperty="Name" AllowClear="true" Placeholder="@T["None"]" Style="max-width: 24rem" Name="default-provider" />
+                <div><GroveButton Text="@T["Save"]" Icon="save" Click="SaveProviderAsync" Disabled="IsSaving" data-testid="email-provider-save" /></div>
+            </GroveStack>
+        </GroveCard>
+    }
+
+    @if (Smtp is not null)
+    {
+        <GroveCard data-testid="smtp-settings">
+            <GroveStack Gap="0.5rem">
+                <GroveText TextStyle="TextStyle.Subtitle1" Text="@T["SMTP"]" />
+                <div><GroveCheckBox @bind-Value="Smtp.IsEnabled" Name="smtp-enabled" /><label for="smtp-enabled"> @T["Enable the SMTP provider"]</label></div>
+                @if (Smtp.IsEnabled)
+                {
+                    <GroveLabel Text="@T["Default sender"]" Component="smtp-sender" />
+                    <GroveTextBox @bind-Value="Smtp.DefaultSender" Name="smtp-sender" Style="max-width: 24rem" />
+                    <GroveLabel Text="@T["Delivery method"]" Component="smtp-delivery" />
+                    <GroveDropDown TValue="int" @bind-Value="Smtp.DeliveryMethod" Data="@DeliveryMethods" TextProperty="Text" ValueProperty="Value" Name="smtp-delivery" Style="max-width: 24rem" />
+                    @if (Smtp.DeliveryMethod == 1)
+                    {
+                        <GroveLabel Text="@T["Pickup directory"]" Component="smtp-pickup" />
+                        <GroveTextBox @bind-Value="Smtp.PickupDirectoryLocation" Name="smtp-pickup" Style="width: 100%" />
+                    }
+                    else
+                    {
+                        <GroveLabel Text="@T["Host"]" Component="smtp-host" />
+                        <GroveTextBox @bind-Value="Smtp.Host" Name="smtp-host" Style="max-width: 24rem" />
+                        <GroveLabel Text="@T["Port"]" Component="smtp-port" />
+                        <GroveNumeric TValue="int" @bind-Value="Smtp.Port" Name="smtp-port" Min="0" Max="65535" />
+                        <div><GroveCheckBox @bind-Value="Smtp.AutoSelectEncryption" Name="smtp-auto" /><label for="smtp-auto"> @T["Choose the encryption automatically"]</label></div>
+                        @if (!Smtp.AutoSelectEncryption)
+                        {
+                            <GroveDropDown TValue="int" @bind-Value="Smtp.EncryptionMethod" Data="@EncryptionMethods" TextProperty="Text" ValueProperty="Value" Name="smtp-encryption" Style="max-width: 24rem" />
+                        }
+                        <div><GroveCheckBox @bind-Value="Smtp.RequireCredentials" Name="smtp-credentials" /><label for="smtp-credentials"> @T["The server requires credentials"]</label></div>
+                        @if (Smtp.RequireCredentials)
+                        {
+                            <div><GroveCheckBox @bind-Value="Smtp.UseDefaultCredentials" Name="smtp-default-credentials" /><label for="smtp-default-credentials"> @T["Use the process's Windows credentials"]</label></div>
+                            @if (!Smtp.UseDefaultCredentials)
+                            {
+                                <GroveLabel Text="@T["User name"]" Component="smtp-user" />
+                                <GroveTextBox @bind-Value="Smtp.UserName" Name="smtp-user" Style="max-width: 24rem" />
+                                <GroveLabel Text="@(Smtp.HasPassword ? T["Password (stored; type a new one to change it)"] : T["Password"])" Component="smtp-password" />
+                                <GrovePassword @bind-Value="Password" Name="smtp-password" Style="max-width: 24rem" />
+                            }
+                        }
+                        <GroveLabel Text="@T["Proxy host and port"]" Component="smtp-proxy" />
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <GroveTextBox @bind-Value="Smtp.ProxyHost" Name="smtp-proxy" />
+                            <GroveNumeric TValue="int" @bind-Value="Smtp.ProxyPort" Min="0" Max="65535" />
+                        </GroveStack>
+                        <div><GroveCheckBox @bind-Value="Smtp.IgnoreInvalidSslCertificate" Name="smtp-ignore-ssl" /><label for="smtp-ignore-ssl"> @T["Accept an invalid SSL certificate"]</label></div>
+                    }
+                }
+                <div><GroveButton Text="@T["Save SMTP settings"]" Icon="save" Click="SaveSmtpAsync" Disabled="IsSaving" data-testid="smtp-save" /></div>
+            </GroveStack>
+        </GroveCard>
+    }
+
+    @if (Azure is not null)
+    {
+        @* Grove.Integrations.Email.Azure: the connection string is write-only, like the SMTP password. *@
+        <GroveCard data-testid="azure-email-settings">
+            <GroveStack Gap="0.5rem">
+                <GroveText TextStyle="TextStyle.Subtitle1" Text="@T["Azure Communication Services"]" />
+                <div><GroveCheckBox @bind-Value="Azure.IsEnabled" Name="azure-email-enabled" /><label for="azure-email-enabled"> @T["Enable the Azure Communication Services provider"]</label></div>
+                @if (Azure.IsEnabled)
+                {
+                    <GroveLabel Text="@T["Default sender"]" Component="azure-email-sender" />
+                    <GroveTextBox @bind-Value="Azure.DefaultSender" Name="azure-email-sender" Style="max-width: 24rem" />
+                    <GroveLabel Text="@(Azure.HasConnectionString ? T["Connection string (stored; type a new one to change it)"] : T["Connection string"])" Component="azure-email-connection" />
+                    <GrovePassword @bind-Value="AzureConnectionString" Name="azure-email-connection" Style="width: 100%" />
+                }
+                <div><GroveButton Text="@T["Save Azure settings"]" Icon="save" Click="SaveAzureAsync" Disabled="IsSaving" data-testid="azure-email-save" /></div>
+            </GroveStack>
+        </GroveCard>
+    }
+
+    <GroveCard data-testid="email-test">
+        <GroveStack Gap="0.5rem">
+            <GroveText TextStyle="TextStyle.Subtitle1" Text="@T["Send a test message"]" />
+            @if (Settings is not null)
+            {
+                <GroveDropDown TValue="string" @bind-Value="Test.Provider" Data="@Settings.Providers" TextProperty="DisplayName" ValueProperty="Name" AllowClear="true" Placeholder="@T["The default provider"]" Style="max-width: 24rem" Name="test-provider" />
+            }
+            <GroveLabel Text="@T["To"]" Component="test-to" />
+            <GroveTextBox @bind-Value="Test.To" Name="test-to" Style="max-width: 24rem" />
+            <GroveLabel Text="@T["From (optional)"]" Component="test-from" />
+            <GroveTextBox @bind-Value="Test.From" Name="test-from" Style="max-width: 24rem" />
+            <GroveLabel Text="@T["Cc, Bcc, Reply to (optional)"]" Component="test-cc" />
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <GroveTextBox @bind-Value="Test.Cc" Name="test-cc" Placeholder="Cc" />
+                <GroveTextBox @bind-Value="Test.Bcc" Placeholder="Bcc" />
+                <GroveTextBox @bind-Value="Test.ReplyTo" Placeholder="@T["Reply to"]" />
+            </GroveStack>
+            <GroveLabel Text="@T["Subject"]" Component="test-subject" />
+            <GroveTextBox @bind-Value="Test.Subject" Name="test-subject" Style="width: 100%" />
+            <GroveLabel Text="@T["Body"]" Component="test-body" />
+            <GroveTextArea @bind-Value="Test.Body" Name="test-body" Rows="4" Style="width: 100%" />
+            <div><GroveButton Text="@T["Send"]" Icon="send" Click="SendTestAsync" Disabled="IsSending" data-testid="email-test-send" /></div>
+            @if (TestResult is { } result)
+            {
+                <GroveAlert AlertStyle="@(result.Succeeded ? AlertStyle.Success : AlertStyle.Danger)" AllowClose="false">
+                    @(result.Succeeded ? T["Message sent."] : string.Join(" ", result.Errors))
+                </GroveAlert>
+            }
+        </GroveStack>
+    </GroveCard>
+</GroveStack>
+
+@code {
+    private const string Api = "api/grove/settings/email";
+
+    private EmailSettingsModel? Settings;
+    private string? DefaultProvider;
+    private SmtpModel? Smtp;
+    private AzureModel? Azure;
+    private string? AzureConnectionString;
+    private string? Password;
+    private TestModel Test = new();
+    private TestResultModel? TestResult;
+    private string? Error;
+    private bool IsSaving;
+    private bool IsSending;
+
+    private readonly Option[] DeliveryMethods = [new(0, "Network"), new(1, "Pickup directory")];
+    private readonly Option[] EncryptionMethods = [new(0, "None"), new(1, "SSL/TLS"), new(2, "STARTTLS")];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Settings = await Http.GetFromJsonAsync<EmailSettingsModel>(Api);
+            DefaultProvider = Settings?.DefaultProvider;
+        }
+        catch (Exception exception) { Error = exception.Message; }
+
+        // The SMTP section exists only when Grove.Data.Protocols.Smtp is enabled.
+        try { Smtp = await Http.GetFromJsonAsync<SmtpModel>($"{Api}/smtp"); }
+        catch (HttpRequestException) { Smtp = null; }
+
+        // The Azure section exists only when Grove.Integrations.Email.Azure is enabled.
+        try { Azure = await Http.GetFromJsonAsync<AzureModel>($"{Api}/azure"); }
+        catch (HttpRequestException) { Azure = null; }
+    }
+
+    private async Task SaveAzureAsync()
+    {
+        if (Azure is null) return;
+        IsSaving = true;
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"{Api}/azure", new { Azure.IsEnabled, Azure.DefaultSender, ConnectionString = AzureConnectionString });
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            Azure = await response.Content.ReadFromJsonAsync<AzureModel>();
+            AzureConnectionString = null;
+            Error = null;
+            Settings = await Http.GetFromJsonAsync<EmailSettingsModel>(Api);
+            DefaultProvider = Settings?.DefaultProvider;
+            Notifications.Notify(NotificationSeverity.Success, T["Settings saved"], T["The Azure Communication Services settings were saved."]);
+        }
+        finally { IsSaving = false; }
+    }
+
+    private async Task SaveProviderAsync()
+    {
+        IsSaving = true;
+        try
+        {
+            var response = await Http.PutAsJsonAsync(Api, new { DefaultProvider });
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            Settings = await response.Content.ReadFromJsonAsync<EmailSettingsModel>();
+            Error = null;
+            Notifications.Notify(NotificationSeverity.Success, T["Settings saved"], T["The default email provider was saved."]);
+        }
+        finally { IsSaving = false; }
+    }
+
+    private async Task SaveSmtpAsync()
+    {
+        if (Smtp is null) return;
+        IsSaving = true;
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"{Api}/smtp", new
+            {
+                Smtp.IsEnabled, Smtp.DefaultSender, Smtp.DeliveryMethod, Smtp.PickupDirectoryLocation, Smtp.Host, Smtp.Port,
+                Smtp.AutoSelectEncryption, Smtp.EncryptionMethod, Smtp.RequireCredentials, Smtp.UseDefaultCredentials,
+                Smtp.UserName, Password, Smtp.ProxyHost, Smtp.ProxyPort, Smtp.IgnoreInvalidSslCertificate,
+            });
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            Smtp = await response.Content.ReadFromJsonAsync<SmtpModel>();
+            Password = null;
+            Error = null;
+            Settings = await Http.GetFromJsonAsync<EmailSettingsModel>(Api);
+            DefaultProvider = Settings?.DefaultProvider;
+            Notifications.Notify(NotificationSeverity.Success, T["Settings saved"], T["The SMTP settings were saved."]);
+        }
+        finally { IsSaving = false; }
+    }
+
+    private async Task SendTestAsync()
+    {
+        IsSending = true;
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Api}/test", Test);
+            TestResult = response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<TestResultModel>()
+                : new TestResultModel(false, [await response.Content.ReadAsStringAsync()]);
+        }
+        finally { IsSending = false; }
+    }
+
+    private sealed record Option(int Value, string Text);
+    private sealed record EmailProvider(string Name, string DisplayName);
+    private sealed record EmailSettingsModel(string? DefaultProvider, EmailProvider[] Providers);
+    private sealed record TestResultModel(bool Succeeded, string[] Errors);
+
+    private sealed class TestModel
+    {
+        public string? Provider { get; set; }
+        public string? To { get; set; }
+        public string? From { get; set; }
+        public string? Cc { get; set; }
+        public string? Bcc { get; set; }
+        public string? ReplyTo { get; set; }
+        public string? Subject { get; set; } = "Test message";
+        public string? Body { get; set; } = "This is a test message.";
+    }
+
+    private sealed class AzureModel
+    {
+        public bool IsEnabled { get; set; }
+        public string? DefaultSender { get; set; }
+        public bool HasConnectionString { get; set; }
+    }
+
+    private sealed class SmtpModel
+    {
+        public bool IsEnabled { get; set; }
+        public string? DefaultSender { get; set; }
+        public int DeliveryMethod { get; set; }
+        public string? PickupDirectoryLocation { get; set; }
+        public string? Host { get; set; }
+        public int Port { get; set; }
+        public bool AutoSelectEncryption { get; set; }
+        public int EncryptionMethod { get; set; }
+        public bool RequireCredentials { get; set; }
+        public bool UseDefaultCredentials { get; set; }
+        public string? UserName { get; set; }
+        public bool HasPassword { get; set; }
+        public string? ProxyHost { get; set; }
+        public int ProxyPort { get; set; }
+        public bool IgnoreInvalidSslCertificate { get; set; }
+    }
+}

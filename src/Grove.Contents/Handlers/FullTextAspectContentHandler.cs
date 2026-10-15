@@ -3,12 +3,12 @@ using Fluid;
 using Fluid.Values;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Models;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Models;
 using Grove.Contents.Models;
-using Grove.Liquid;
+using Grove.Display.Liquid;
 
 namespace Grove.Contents.Handlers;
 

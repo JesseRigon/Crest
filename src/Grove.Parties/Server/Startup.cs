@@ -1,6 +1,6 @@
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Services;
-using Grove.ContentFields.Relationships;
+using Grove.Contents.Fields.Relationships;
 using Grove.Parties.Constants;
 using Grove.Workflows.Extensions;
 using Grove.Parties.Indexes;
@@ -12,8 +12,9 @@ using Grove.Parties.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Data;
 using Grove.Data.Migration;
+using Grove.Api;
 using Grove.Modules;
-using Grove.Navigation;
+using Grove.Display.Navigation;
 
 namespace Grove.Parties;
 
@@ -29,7 +30,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<IPartyTypeProvider, BasePartyTypeProvider>();
         // Registered with the workflow registry: role created/removed, raised from the content handler.
         services.AddScoped<Grove.Workflows.IWorkflowTriggerProvider, Workflows.PartiesWorkflowProvider>();
-        services.AddScoped<Grove.ContentManagement.Handlers.IContentHandler, Workflows.PartyRoleWorkflowHandler>();
+        services.AddScoped<Grove.Contents.Management.Handlers.IContentHandler, Workflows.PartyRoleWorkflowHandler>();
         services.AddScoped<Grove.Workflows.IWorkflowActivityProvider, Workflows.PartiesWorkflowProvider>();
         services.ConfigureGroveWorkflows(workflows => workflows.AddActivitiesFrom<Startup>());
 
@@ -52,6 +53,13 @@ public sealed class Startup : StartupBase
         services.AddScoped<Grove.Access.IResourcePermissionMapper, PartyPermissionMapper>();
         services.AddScoped<PartyMapper>();
 
+        services.AddApiContributor<Api.PartyAssociationsApi>();
+        services.AddApiContributor<Api.PartyContactsApi>();
+        services.AddApiContributor<Api.PartyNamesApi>();
+        services.AddApiContributor<Api.PartyPositionsApi>();
+        services.AddApiContributor<Api.PartyRolesApi>();
+        services.AddApiContributor<Api.PartyTypesApi>();
+
         services.AddIndexProvider<PartyPositionIndexProvider>();
         services.AddIndexProvider<AddressGeoNodeIndexProvider>();
         services.AddIndexProvider<LocationIndexProvider>();
@@ -65,8 +73,8 @@ public sealed class Startup : StartupBase
         services.AddScoped<Grove.Access.IScopeProvider>(provider => new PartyScopeProvider(nameof(LocationIndex), provider));
         services.AddScoped<Grove.Access.IScopeProvider>(provider => new PartyScopeProvider(nameof(PartyPositionIndex), provider));
 
-        // Organization ownership on the row (ruled 2026-10-14, moved here from Grove.Server and
-        // Grove.Members): the owner part and index, the deployment-time registry of
+        // Organization ownership on the row (ruled 2026-10-14, moved here from Grove.Infrastructure.Server and
+        // Grove.Access.Members): the owner part and index, the deployment-time registry of
         // organization-scoped types, and the organization row scope.
         services.AddSingleton<Organizations.OrganizationScopedTypes>();
         services.AddIndexProvider<Organizations.OrganizationIndexProvider>();

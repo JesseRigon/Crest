@@ -35,17 +35,17 @@ independently packageable.
 ```text
 Grove/
   src/                every project, platform and application alike
-    Grove.Infrastructure/, Grove.Abstractions/, Grove.ContentManagement/, Grove.Users/, Grove.Media/, ...
+    Grove.Infrastructure/, Grove.Infrastructure.Abstractions/, Grove.Contents.Management/, Grove.Access.Users/, Grove.Media/, ...
                       the platform, forked from OrchardCore and renamed Grove.*:
                       tenants, users, permissions, content, features, settings, the
-                      module system. Listed by kind in src/Grove.Build/Platform.Projects.props.
-    Grove.Build/      the platform's build settings
-    Grove.Server/     the application layer's server module
-    Grove.Components/ the Blazor component library
-    Grove.Iconify/    Iconify provider
-    Grove.Icons/      icon registry and UI
-    Grove.Parties/ Grove.Members/ Grove.Workflows/ Grove.Money/ ...
-    Grove.AdminTheme/ Grove.SiteTheme/ Grove.MemberTheme/
+                      module system. Listed by kind in src/Grove.Infrastructure.Build/Platform.Projects.props.
+    Grove.Infrastructure.Build/      the platform's build settings
+    Grove.Infrastructure.Server/     the application layer's server module
+    Grove.Display.Components/ the Blazor component library
+    Grove.Display.Icons.Iconify/    Iconify provider
+    Grove.Display.Icons/      icon registry and UI
+    Grove.Parties/ Grove.Access.Members/ Grove.Workflows/ Grove.Data.Types.Money/ ...
+    Grove.Themes.Admin/ Grove.Themes.Site/ Grove.Themes.Members/
   test/               the platform's tests (Grove's modules keep theirs in their own tests/ folders)
   tests/              the browser suites
   tools/              build tools (Grove.LazyModules)
@@ -54,33 +54,33 @@ Grove/
 
 `Grove.Platform.slnx` builds the platform; `Grove.slnx` builds the Grove modules, which
 reference the platform's projects directly (`$(PlatformSrcDir)`, the `src/` folder). Platform
-and application projects sit side by side under `src/`; `src/Grove.Build/Platform.Projects.props`
+and application projects sit side by side under `src/`; `src/Grove.Infrastructure.Build/Platform.Projects.props`
 says which is which, and `Directory.Build.props` gives the platform projects their own build
 settings.
 
 ## Project roles
 
-`Grove.Server` is the application layer's server module. It serves the active Blazor
+`Grove.Infrastructure.Server` is the application layer's server module. It serves the active Blazor
 admin shell when a Grove-compatible admin theme is selected, exposes the `api/grove/*`
 JSON endpoints the Blazor shells need, and owns shared infrastructure such as legacy
 frame theme selection. It calls the platform's services and enforces its permissions; it
 does not keep a second copy of content, auth, menu or theme state.
 
-`Grove.Components` is the shared Radzen-derived Blazor component layer. It owns reusable
+`Grove.Display.Components` is the shared Radzen-derived Blazor component layer. It owns reusable
 primitives, forms, model/editor UI, and client-safe UI contracts. It must not reference
 feature modules.
 
-`Grove.Iconify` owns the Iconify-specific C# API, provider settings, and optional
-full-library cache integration. It does not depend on `Grove.Icons`.
+`Grove.Display.Icons.Iconify` owns the Iconify-specific C# API, provider settings, and optional
+full-library cache integration. It does not depend on `Grove.Display.Icons`.
 
-`Grove.Icons` owns the generic icon provider contract, registry/search/used-icon pack
+`Grove.Display.Icons` owns the generic icon provider contract, registry/search/used-icon pack
 services, tenant/media icon cache behavior, icon UI such as `IconSelector`, and
-icon-specific CSS/JS/assets. It depends on `Grove.Iconify` for the default Iconify provider.
+icon-specific CSS/JS/assets. It depends on `Grove.Display.Icons.Iconify` for the default Iconify provider.
 
-Admin and site themes are composition roots. They reference `Grove.Components`,
-`Grove.Icons`, and the feature UI modules they want compiled into the WASM app.
+Admin and site themes are composition roots. They reference `Grove.Display.Components`,
+`Grove.Display.Icons`, and the feature UI modules they want compiled into the WASM app.
 
-Application modules that build UI reference `Grove.Components` explicitly. For example, a
+Application modules that build UI reference `Grove.Display.Components` explicitly. For example, a
 new module `Example.BlazorWasm` would reference the components project and contribute
 Blazor routes/components to the admin WASM build.
 
@@ -111,43 +111,27 @@ Preferred data-access order for the Blazor shells:
 
 ## Blazor admin theme serving
 
-`Grove.Server` installs middleware that checks the selected admin theme. If it is
-`Grove.AdminTheme` or carries the `grove-blazor` manifest tag (itself or through its
+`Grove.Infrastructure.Server` installs middleware that checks the selected admin theme. If it is
+`Grove.Themes.Admin` or carries the `grove-blazor` manifest tag (itself or through its
 `BaseTheme` chain), the middleware serves the Grove admin WASM files for admin routes and
 Blazor assets.
 
-The admin shell's assets live under `Grove.AdminTheme/wasm`; the theme manifest project
-is `Grove.AdminTheme`.
+The admin shell's assets live under `Grove.Themes.Admin/wasm`; the theme manifest project
+is `Grove.Themes.Admin`.
 
 ## Component system boundary
 
 The current UI implementation is Radzen-derived. Shared primitives belong in
-`Grove.Components`. Feature UI and assets belong with their feature modules; theme chrome
+`Grove.Display.Components`. Feature UI and assets belong with their feature modules; theme chrome
 belongs with theme projects.
 
 Shared runtime contracts and infrastructure should not depend on Radzen. Future component
 systems should be able to reuse the server runtime, JSON contracts, route/theme
-conventions and legacy frame infrastructure without copying Radzen-specific code.
+conventions without copying Radzen-specific code.
 
 The planned neutral client/core package has not been extracted yet. Until it exists, some
-client contracts and display-management ideas still live inside `Grove.Components` or the
+client contracts and display-management ideas still live inside `Grove.Display.Components` or the
 Grove admin WASM project.
-
-## Legacy frame system (transitional)
-
-Legacy framing lets a stock Razor admin page render inside the Grove admin shell when no
-Blazor page exists for it yet. It goes away with the last stock admin page.
-
-The pieces live in `Grove.Server`:
-
-```text
-Grove.Server/LegacyFrameThemeSelector.cs
-Grove.Server/Themes/Grove.LegacyFrame
-```
-
-Requests with `legacy-frame=1` or `legacy-frame=true` use the stripped `Grove.LegacyFrame`
-admin theme. It keeps the admin resources available while hiding the normal admin chrome,
-so the page can sit inside an iframe.
 
 ## Packaging direction
 
@@ -155,10 +139,10 @@ The repository stays a single git repository while publishing separate NuGet pac
 intended package boundaries are:
 
 - The platform's packages (`Grove.*`; the implementation library is `Grove.Infrastructure`).
-- `Grove.Server`: the server module and shared server infrastructure.
-- `Grove.Components`: the component layer.
-- `Grove.Iconify`: Iconify provider API and optional full-library cache.
-- `Grove.Icons`: icon providers, icon UI, and icon-owned assets.
+- `Grove.Infrastructure.Server`: the server module and shared server infrastructure.
+- `Grove.Display.Components`: the component layer.
+- `Grove.Display.Icons.Iconify`: Iconify provider API and optional full-library cache.
+- `Grove.Display.Icons`: icon providers, icon UI, and icon-owned assets.
 - Theme packages: admin/site/member composition roots.
 - Future `Grove.Client`: UI-library-neutral client contracts, display manager, routing
   helpers, and the legacy frame client component.
@@ -169,7 +153,7 @@ before publishing.
 
 ## Development recipes
 
-Reusable development recipes live under `Grove.SiteTheme/Recipes`: `GroveBasicDev` for a
+Reusable development recipes live under `Grove.Themes.Site/Recipes`: `GroveBasicDev` for a
 focused admin shell and `GroveFullDev` for broad feature testing. Host apps keep
 tenant/user autosetup recipes in the host repo.
 

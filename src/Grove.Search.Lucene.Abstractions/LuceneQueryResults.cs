@@ -1,4 +1,4 @@
-using Grove.Queries;
+using Grove.Data.Queries;
 
 namespace Grove.Search.Lucene;
 

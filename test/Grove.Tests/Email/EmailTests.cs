@@ -1,6 +1,6 @@
 using MimeKit;
-using Grove.Email;
-using Grove.Email.Smtp.Services;
+using Grove.Communications.Email;
+using Grove.Data.Protocols.Smtp.Services;
 
 namespace Grove.Tests.Email;
 

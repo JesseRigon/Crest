@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- The Users module's shared client components: the account security, email confirmation and
+       external sign-in completion parts, the sign-in form with its extensions and second step
+       (TwoFactorChallenge), the two-factor page (TwoFactorSetup) and the registration and
+       password recovery forms. Every shell shows them: the admin theme's login and profile pages,
+       the member portal's pages (Grove.Access.Members' member-wasm), and this module's site pages
+       (site-wasm). Not a module client library (no *.BlazorWasm name, no pages): it loads with
+       the libraries that reference it. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Grove.Access.Users.Components</AssemblyName>
+    <RootNamespace>Grove.Access.Users.Components</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Grove.Display.Components\Grove.Display.Components.csproj" />
+  </ItemGroup>
+</Project>

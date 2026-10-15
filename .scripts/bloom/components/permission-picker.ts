@@ -1,6 +1,6 @@
 import { getTranslations, setTranslations } from "../helpers/localizations";
 
-// Shared by Grove.Menu's MenuItemPermissionPart.Edit.cshtml and Grove.AdminMenu's
+// Shared by Grove.Contents.SiteMenu's MenuItemPermissionPart.Edit.cshtml and Grove.Contents.AdminMenu's
 // LinkAdminNode/PlaceholderAdminNode.Fields.TreeEdit.cshtml - both views ship byte-identical
 // X-Templates and Vue instances (menu-permission-picker.js / admin-menu-permission-picker.js),
 // differing only in the CustomEvent name they dispatch afterward. One shared component replaces

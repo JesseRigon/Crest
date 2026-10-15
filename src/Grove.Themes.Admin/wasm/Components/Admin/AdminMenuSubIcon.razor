@@ -1,0 +1,29 @@
+@using Grove.Themes.Admin.Components.Shared
+@using Grove.Themes.Admin.State
+@using Grove.Display.Icons.Components
+
+@if (Icon is not null)
+{
+    <PlatformIcon Name="@Icon?.Name"
+                 IconKey="@Icon?.Key"
+                 Library="@Icon?.Library"
+                 Version="@Icon?.Version"
+                 SvgMarkup="@Icon?.SvgMarkup"
+                 Alt="@Alt"
+                 Size="calc(var(--grove-panel-menu-level-base-size, 1rem) * 1.1)"
+                 BoxSize="calc(var(--grove-panel-menu-level-base-size, 1rem) * 1.35)"
+                 Opacity="0.8"
+                 Class="rz-navigation-item-icon primary-nav-menu__icon" />
+}
+else
+{
+    <span class="rz-navigation-item-icon primary-nav-menu__icon primary-nav-menu__icon-placeholder primary-nav-menu__icon-placeholder--dot" aria-hidden="true"></span>
+}
+
+@code {
+    [Parameter]
+    public DisplayIcon? Icon { get; set; }
+
+    [Parameter]
+    public string? Alt { get; set; }
+}

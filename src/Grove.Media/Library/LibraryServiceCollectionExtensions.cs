@@ -1,8 +1,8 @@
 #nullable enable
 using Grove.Access;
-using Grove.ContentManagement.Handlers;
+using Grove.Contents.Management.Handlers;
 using Grove.Environment.Shell.Configuration;
-using Grove.Recipes;
+using Grove.Infrastructure.Recipes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

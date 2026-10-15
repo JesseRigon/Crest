@@ -19,5 +19,5 @@ using Grove.Modules.Manifest;
     Name = "Shortcode Templates",
     Description = "The Shortcode Templates feature provides a way to write custom shortcode templates from the admin.",
     Category = "Content",
-    Dependencies = ["Grove.Liquid", "Grove.Shortcodes"]
+    Dependencies = ["Grove.Display.Liquid", "Grove.Shortcodes"]
 )]

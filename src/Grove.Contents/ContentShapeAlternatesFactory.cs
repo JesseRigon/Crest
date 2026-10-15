@@ -1,5 +1,5 @@
 using System.Collections.Concurrent;
-using Grove.DisplayManagement.Utilities;
+using Grove.Display.Management.Utilities;
 
 namespace Grove.Contents;
 

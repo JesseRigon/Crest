@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Nodes;
 using Grove;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Records;
 using Grove.Contents;
 using Grove.Security.Permissions;
 using YesSql;
@@ -33,7 +33,7 @@ public sealed record ContentItem(
     string Author,
     object Content)
 {
-    public static ContentItem From(Grove.ContentManagement.ContentItem source) => new(
+    public static ContentItem From(Grove.Contents.Management.ContentItem source) => new(
         source.ContentItemId,
         source.ContentItemVersionId,
         source.ContentType,

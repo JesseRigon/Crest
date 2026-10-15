@@ -6,7 +6,7 @@ using Grove.Routes.ContentRoutes;
 using Grove.Routes.Models;
 using Grove.Routes.Services;
 using Grove.Routing;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

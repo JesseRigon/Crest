@@ -1,8 +1,8 @@
 #nullable enable
 using System.Text.Json.Nodes;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Records;
 using Grove.Media.Fields;
 using Grove.Media.Files;
 using Microsoft.Extensions.Logging;

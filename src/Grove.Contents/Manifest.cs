@@ -13,8 +13,8 @@ using Grove.Modules.Manifest;
     Description = "The contents module enables the edition and rendering of content items.",
     Dependencies =
     ["Grove.Access", 
-        "Grove.Settings",
-        "Grove.Liquid"
+        "Grove.Infrastructure.Settings",
+        "Grove.Display.Liquid"
     ],
     Category = "Content Management"
 )]
@@ -43,7 +43,7 @@ using Grove.Modules.Manifest;
     [
         "Grove.Contents",
         "Grove.Deployment",
-        "Grove.Recipes.Core",
+        "Grove.Infrastructure.Recipes.Core",
     ],
     Category = "Content Management"
 )]
@@ -71,5 +71,5 @@ using Grove.Modules.Manifest;
     Name = "Content Part Lists",
     Description = "Named, tenant-editable sets of options that content types can reference. Ships shared global sets (country codes, units of measure) every enabling tenant receives.",
     Category = "Content Management",
-    Dependencies = ["Grove", "Grove.Contents", "Grove.ContentTypes", "Grove.ContentFields", "Grove.Data.Global", "Grove.OptionPicker"]
+    Dependencies = ["Grove", "Grove.Contents", "Grove.Contents.Types", "Grove.Contents.Fields", "Grove.Data.Global", "Grove.Contents.OptionPicker"]
 )]

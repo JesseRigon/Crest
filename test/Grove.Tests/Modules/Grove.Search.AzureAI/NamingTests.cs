@@ -1,4 +1,4 @@
-using Grove.AzureAI;
+using Grove.Integrations.AI.Azure;
 
 namespace Grove.Tests.Modules.Grove.AzureAI;
 

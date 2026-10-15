@@ -1,4 +1,4 @@
-# OpenAPI (`Grove.OpenApi`)
+# OpenAPI (`Grove.Data.Protocols.OpenApi`)
 
 The OpenAPI module exposes an OpenAPI (Swagger) specification for your Grove site and provides auto-generated TypeScript and C# clients via [NSwag](https://github.com/RicoSuter/NSwag).
 
@@ -14,7 +14,7 @@ It also ships UI explorers — Swagger UI, ReDoc, and Scalar — so developers c
 
 ## Getting Started
 
-1. Enable the **Grove.OpenApi** feature and the desired UI sub-feature(s) — **OpenApi Swagger UI**, **OpenApi ReDoc UI**, **OpenApi Scalar UI** — from the admin dashboard (Configuration → Features).
+1. Enable the **Grove.Data.Protocols.OpenApi** feature and the desired UI sub-feature(s) — **OpenApi Swagger UI**, **OpenApi ReDoc UI**, **OpenApi Scalar UI** — from the admin dashboard (Configuration → Features).
 2. Log in with an account that has the **ViewOpenApiContent** permission (granted to Administrators by default).
 3. To make "Try it out" / "Send" requests work against secured API endpoints, run the **OpenAPI Documentation — Bearer/PKCE** recipe (Configuration → Recipes) — see [API Authentication](#api-authentication) below. Browsing the documentation itself needs no extra setup.
 4. Navigate to one of the explorer URLs listed above.
@@ -41,7 +41,7 @@ Run the **OpenAPI Documentation — Bearer/PKCE** recipe (Configuration → Reci
 
 - enables the **OpenApi**, **OpenID Authorization Server**, **OpenID Token Validation**, and **OpenID Management** features;
 - turns on the authorization-code flow with **PKCE required** and enables local (same-tenant) token validation for the `"Api"` scheme;
-- registers a **public** (secret-less) OpenID application with client ID `openapi`, whose redirect URI points at the module's silent-renew page (`/Grove.OpenApi/openapi-oidc-silent.html`).
+- registers a **public** (secret-less) OpenID application with client ID `openapi`, whose redirect URI points at the module's silent-renew page (`/Grove.Data.Protocols.OpenApi/openapi-oidc-silent.html`).
 
 Before running it, adjust two things to your environment:
 
@@ -61,7 +61,7 @@ The injected script is a self-contained ES module configured through `data-*` at
 
 ## OpenAPI Client Generation
 
-The module uses an NSwag configuration (`Grove.OpenApi.nswag`) to generate typed clients from the live OpenAPI specification.
+The module uses an NSwag configuration (`Grove.Data.Protocols.OpenApi.nswag`) to generate typed clients from the live OpenAPI specification.
 
 ### Automated regeneration (recommended)
 
@@ -72,7 +72,7 @@ dotnet run --project tools/OpenApiClientGenerator -c Release
 yarn build   # refreshes the bundled JS against the regenerated TypeScript client
 ```
 
-It boots the CMS in-process on an ephemeral port, provisions the Default tenant via `Grove.AutoSetup` with the `OpenApiGenerationSetup` recipe (the same feature set as the `OpenApiGeneration` recipe), captures `swagger.json`, and shells out to the NSwag CLI (the same prerequisite as the manual path below). Generation is deterministic: operations are sorted by route path + HTTP verb, so regenerating without API changes produces byte-identical clients.
+It boots the CMS in-process on an ephemeral port, provisions the Default tenant via `Grove.Infrastructure.Setup.Auto` with the `OpenApiGenerationSetup` recipe (the same feature set as the `OpenApiGeneration` recipe), captures `swagger.json`, and shells out to the NSwag CLI (the same prerequisite as the manual path below). Generation is deterministic: operations are sorted by route path + HTTP verb, so regenerating without API changes produces byte-identical clients.
 
 The manual procedure below remains useful when you want to regenerate against a real running dev server or inspect `swagger.json` interactively.
 
@@ -113,8 +113,8 @@ Open the Swagger UI to confirm your endpoints are listed:
 From the module directory:
 
 ```powershell
-cd src/Grove.Modules/Grove.OpenApi
-nswag run Grove.OpenApi.nswag
+cd src/Grove.Modules/Grove.Data.Protocols.OpenApi
+nswag run Grove.Data.Protocols.OpenApi.nswag
 ```
 
 This generates two clients:
@@ -135,7 +135,7 @@ yarn build
 
 ### NSwag Configuration
 
-The generation is configured via `Grove.OpenApi.nswag`:
+The generation is configured via `Grove.Data.Protocols.OpenApi.nswag`:
 
 - **Source URL**: `https://localhost:5001/swagger/v1/swagger.json`
 - **JSON library (C#)**: `System.Text.Json` — Newtonsoft.Json is **not** used.
@@ -363,7 +363,7 @@ The `SeverityLevel` enum (`@bloom/services/notifications/interfaces`) defines fo
 ### `401 Unauthorized` on "Try it out" Requests
 
 - **Run the OpenApiPkce recipe**: The most common cause is that the silent-auth client is not provisioned, or the **OpenID Token Validation** feature is disabled — without it the API cannot validate Bearer tokens. The recipe sets up both; see [API Authentication](#api-authentication).
-- **Redirect URI mismatch**: The registered redirect URI must exactly match your tenant's origin plus `/Grove.OpenApi/openapi-oidc-silent.html` (including any tenant URL prefix). A mismatch makes the silent sign-in fail — check the browser console for `[openapi-ui]` errors.
+- **Redirect URI mismatch**: The registered redirect URI must exactly match your tenant's origin plus `/Grove.Data.Protocols.OpenApi/openapi-oidc-silent.html` (including any tenant URL prefix). A mismatch makes the silent sign-in fail — check the browser console for `[openapi-ui]` errors.
 - **Missing roles**: A token is acquired but the endpoint returns `401`/`403` — verify the signed-in user has roles granting the API permissions being exercised; the `roles` scope carries them into the token.
 - **Stale token after re-setup**: If the site was set up again while a documentation tab stayed open, the first rejected request triggers one automatic silent re-sign-in and retry; at worst, reload the page.
 

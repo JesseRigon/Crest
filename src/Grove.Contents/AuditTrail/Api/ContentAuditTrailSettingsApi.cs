@@ -2,10 +2,10 @@
 
 using Grove.Api;
 using Grove.AuditTrail;
-using Grove.ContentManagement.Metadata;
+using Grove.Contents.Management.Metadata;
 using Grove.Contents.AuditTrail.Settings;
 using Grove.Entities;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

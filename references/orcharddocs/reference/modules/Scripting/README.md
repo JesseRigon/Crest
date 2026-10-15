@@ -165,7 +165,7 @@ var plainText = decrypt(encryptedValue);
 | `deleteContentItemAsync(contentItem: IContent): Promise`                                                   | Deletes an existing content item                                    |
 | `getUrlPrefix(path: String): String`                                                                       | Prefixes the path with the Tenant prefix (if specified)             |
 
-#### Layers (`Grove.Layers`)
+#### Layers (`Grove.Display.Layers`)
 
 | Function                         | Description                                                                                                                          |
 |----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
@@ -175,7 +175,7 @@ var plainText = decrypt(encryptedValue);
 | `url(url: String): Boolean`      | Returns true if the current URL matches the provided URL. Add a `*` to the end of the URL parameter to match any URL that starts with the provided value. |
 | `culture(name: String): Boolean` | Returns true if the current culture name or the current culture's parent name matches the `name` argument                            |
 
-#### Queries (`Grove.Queries`)
+#### Queries (`Grove.Data.Queries`)
 
 | Function                                                                                               | Description                      |
 |--------------------------------------------------------------------------------------------------------|----------------------------------|
@@ -193,7 +193,7 @@ var plainText = decrypt(encryptedValue);
 | `requestForm(name: String): String`                                  | Array`                                                                                                                                                                      | Returns the value(s) of the form field name passed in as an argument. |
 | `deserializeRequestDataAsync(): Promise<Dictionary<string, object>>` | Deserializes the request data as a Dictionary<string, object> for requests that send JSON or form data. Replaces deprecated queryStringAsJson and requestFormAsJson methods |
 
-#### Recipes (`Grove.Recipes`)
+#### Recipes (`Grove.Infrastructure.Recipes`)
 
 | Function                                                   | Description                                                                                                                                                                                                            |
 |------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

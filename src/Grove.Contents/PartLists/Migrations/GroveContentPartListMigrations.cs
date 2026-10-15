@@ -1,6 +1,6 @@
 using Grove.Models;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Settings;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Settings;
 using Grove.Data.Migration;
 
 namespace Grove.Migrations;
@@ -12,7 +12,7 @@ namespace Grove.Migrations;
 // Liquid shapes), and everything carrying TaxonomyPart is listed under Configuration >
 // Taxonomies. Configuration data wants none of that, and the word is jargon to
 // tenants - so these types carry their own option storage, and Grove takes NO
-// dependency on Grove.Taxonomies.
+// dependency on Grove.Contents.Taxonomies.
 //
 // Nothing here modifies Grove; the types are ordinary content types built from
 // stock building blocks.

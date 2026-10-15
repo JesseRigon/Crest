@@ -1,5 +1,5 @@
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
 using Grove.Modules;
 using Microsoft.Extensions.DependencyInjection;
 

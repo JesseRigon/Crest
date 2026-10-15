@@ -1,6 +1,6 @@
-# Features (`Grove.Features`)
+# Features (`Grove.Infrastructure.Features`)
 
-The `Grove.Features` module lets the administrator of a site manage the installed modules and enable or disable the features they provide.
+The `Grove.Infrastructure.Features` module lets the administrator of a site manage the installed modules and enable or disable the features they provide.
 
 ## Managing features
 
@@ -31,7 +31,7 @@ Features can be enabled or disabled from a recipe using the `Feature` step. List
       "name": "Feature",
       "enable": [
         "Grove.Contents",
-        "Grove.Lists"
+        "Grove.Display.Lists"
       ],
       "disable": [
         "Grove.HomeRoute"

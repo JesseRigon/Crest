@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Data.Localization</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Grove Localization Abstractions</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Abstractions for Localization
+    </Description>
+    <PackageTags>$(PackageTags) PlatformFramework Localization</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

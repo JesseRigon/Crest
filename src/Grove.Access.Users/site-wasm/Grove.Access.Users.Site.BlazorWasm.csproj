@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- The Users module's site-shell library: the account pages a visitor and a signed-in user
+       meet on the site (docs/shells-and-themes.md › Account and protocol pages) - account
+       security, email confirmation, external sign-in completion, registration, password
+       recovery, the two-factor page and the second sign-in step. Declares
+       [assembly: GroveShell(GroveShells.Site)] in GroveShell.cs; the parts are the module's
+       shared components (components/, Grove.Access.Users.Components). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Grove.Access.Users.Site.BlazorWasm</AssemblyName>
+    <RootNamespace>Grove.Access.Users.Site</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Grove.Display.Components\Grove.Display.Components.csproj" />
+    <ProjectReference Include="..\components\Grove.Access.Users.Components.csproj" />
+  </ItemGroup>
+</Project>

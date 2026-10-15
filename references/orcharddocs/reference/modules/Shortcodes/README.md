@@ -180,7 +180,7 @@ The following parameters can be used:
 ### `[locale]`
 
 The `locale` shortcode conditionally renders content in the specified language. Output is based on the current thread culture.
-This shortcode is only available when the `Grove.Localization` module is enabled.
+This shortcode is only available when the `Grove.Data.Localization` module is enabled.
 
 Example
 

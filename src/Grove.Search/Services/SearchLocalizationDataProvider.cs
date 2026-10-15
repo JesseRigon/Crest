@@ -1,6 +1,6 @@
-using Grove.Localization.Data;
+using Grove.Data.Localization.Data;
 using Grove.Search.Models;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Search.Services;
 

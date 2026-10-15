@@ -1,8 +1,8 @@
-# OpenID (`Grove.OpenId`)
+# OpenID (`Grove.Access.OpenId`)
 
 ## OpenID Connect Module
 
-`Grove.OpenId` provides robust OpenID Connect functionality, enabling Grove to act as an OpenID Connect server and client. The following features are available:
+`Grove.Access.OpenId` provides robust OpenID Connect functionality, enabling Grove to act as an OpenID Connect server and client. The following features are available:
 
 - **OpenID Connect Core Services**
 - **OpenID Connect Authorization Server**
@@ -226,7 +226,7 @@ $mypwd = ConvertTo-SecureString -String "MySecretPassword123" -Force -AsPlainTex
 Import-PfxCertificate -FilePath C:\securelocation\connect.example.com.pfx cert:\localMachine\my -Password $mypwd
 ```
 
-**Important:** In order for the `Grove.OpenId` module to use the certificate's keys for signing, it requires `Read` access to the certificate in the store. This can be granted in various ways, for example:
+**Important:** In order for the `Grove.Access.OpenId` module to use the certificate's keys for signing, it requires `Read` access to the certificate in the store. This can be granted in various ways, for example:
 
 - `MMC.exe`
     1. Add Snap-In 'Certificates' for Computer Account

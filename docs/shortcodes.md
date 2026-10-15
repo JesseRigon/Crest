@@ -24,7 +24,7 @@ shortcodes an admin defines in Liquid).
   | template shortcodes | Shortcodes (Templates feature) | defined in the admin, body written in Liquid |
   | options shortcodes | Shortcodes | registered in code |
 
-- **Liquid's side**: the `shortcode` Liquid filter (`Grove.Liquid`, when Shortcodes is on)
+- **Liquid's side**: the `shortcode` Liquid filter (`Grove.Display.Liquid`, when Shortcodes is on)
   expands shortcodes inside a string from a template; template shortcodes are themselves Liquid.
 
 ## Media references: ids and paths ([media.md](media.md))

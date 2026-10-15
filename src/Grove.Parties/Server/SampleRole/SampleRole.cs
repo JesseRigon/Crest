@@ -1,4 +1,4 @@
-using Grove.ContentManagement.Metadata;
+using Grove.Contents.Management.Metadata;
 using Grove.Data.Migration;
 using Grove.Modules;
 using Grove.Parties.Definitions;

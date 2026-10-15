@@ -6,9 +6,9 @@ using Grove.Workflows.Management.Mappers;
 using Grove.Workflows.Management.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
+using Grove.Contents.Management.Records;
 using Grove.Workflows.Indexes;
 using Grove.Workflows.Parts;
 using Grove.Workflows.Registry;
@@ -16,7 +16,7 @@ using Grove.Workflows.Services;
 using Grove.Workflows.Extensions;
 using Grove.Modules;
 using YesSql;
-using VersionOptions = Grove.ContentManagement.VersionOptions;
+using VersionOptions = Grove.Contents.Management.VersionOptions;
 
 namespace Grove.Workflows.Stores;
 

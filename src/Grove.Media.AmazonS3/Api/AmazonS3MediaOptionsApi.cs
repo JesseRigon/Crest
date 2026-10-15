@@ -1,7 +1,7 @@
 #nullable enable
 
 using Grove.Api;
-using Grove.FileStorage.AmazonS3;
+using Grove.Data.Storage.AmazonS3;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

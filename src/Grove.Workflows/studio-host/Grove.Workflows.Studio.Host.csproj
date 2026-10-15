@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Abstractions\Grove.Workflows.Abstractions.csproj" />
-    <ProjectReference Include="..\..\Grove.Components\Grove.Components.csproj" />
+    <ProjectReference Include="..\..\Grove.Display.Components\Grove.Display.Components.csproj" />
     <ProjectReference Include="..\designer\src\framework\Grove.Workflows.Studio.Core.BlazorWasm\Grove.Workflows.Studio.Core.BlazorWasm.csproj" />
     <ProjectReference Include="..\designer\src\framework\Grove.Workflows.Studio.Shell\Grove.Workflows.Studio.Shell.csproj" />
     <ProjectReference Include="..\designer\src\modules\Grove.Workflows.Studio.Workflows\Grove.Workflows.Studio.Workflows.csproj" />

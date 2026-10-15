@@ -1,4 +1,4 @@
-# Tenants (`Grove.Tenants`)
+# Tenants (`Grove.Infrastructure.Tenants`)
 
 The `Tenants` module allows you to manage tenants from the admin.
 
@@ -79,7 +79,7 @@ Rules are processed in the order they are supplied, so reversing the order of th
 
 #### Defining Feature Profiles in Recipes
 
-By using the `FeatureProfiles` recipe step, you can define profiles from recipes as well (don't forget to also enable the `Grove.Tenants.FeatureProfiles` feature in the recipe too):
+By using the `FeatureProfiles` recipe step, you can define profiles from recipes as well (don't forget to also enable the `Grove.Infrastructure.Tenants.FeatureProfiles` feature in the recipe too):
 
 ```json
 {
@@ -93,15 +93,15 @@ By using the `FeatureProfiles` recipe step, you can define profiles from recipes
         },
         {
           "Rule": "Exclude",
-          "Expression": "Grove.MiniProfiler"
+          "Expression": "Grove.Diagnostics.MiniProfiler"
         },
         {
           "Rule": "Exclude",
-          "Expression": "Grove.Placements.FileStorage"
+          "Expression": "Grove.Display.Placements.FileStorage"
         },
         {
           "Rule": "Exclude",
-          "Expression": "Grove.Tenants.FileProvider"
+          "Expression": "Grove.Infrastructure.Tenants.FileProvider"
         },
         {
           "Rule": "Exclude",

@@ -1,4 +1,4 @@
-using Grove.Alias.Indexes;
+using Grove.Contents.Alias.Indexes;
 using YesSql;
 using YesSql.Services;
 

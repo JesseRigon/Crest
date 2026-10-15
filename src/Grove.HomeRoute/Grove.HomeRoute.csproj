@@ -16,7 +16,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
-    <ProjectReference Include="..\Grove.Mvc\Grove.Mvc.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Localization;
-using Grove.ContentManagement.Handlers;
-using Grove.ContentManagement.Metadata.Models;
+using Grove.Contents.Management.Handlers;
+using Grove.Contents.Management.Metadata.Models;
 using Grove.Media.Fields;
 using Grove.Media.Settings;
 

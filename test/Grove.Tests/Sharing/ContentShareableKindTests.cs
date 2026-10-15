@@ -1,9 +1,9 @@
 using Grove.Access;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Contents.Security;
 using Grove.Contents.Sharing;
-using Grove.Sharing;
-using Grove.Sharing.Services;
+using Grove.Access.Sharing;
+using Grove.Access.Sharing.Services;
 using static Grove.Tests.Sharing.SharingWorld;
 
 namespace Grove.Tests.Sharing;

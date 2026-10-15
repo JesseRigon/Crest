@@ -1,7 +1,7 @@
 using Grove.AuditTrail.Models;
 using Grove.AuditTrail.Services;
 using Grove.AuditTrail.Services.Models;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Contents.AuditTrail.Models;
 using Grove.Entities;
 

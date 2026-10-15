@@ -1,13 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>Grove.Elasticsearch</RootNamespace>
+    <RootNamespace>Grove.Search.Elasticsearch</RootNamespace>
     <!-- NuGet properties-->
-    <Title>Grove Elasticsearch Search Abstractions</Title>
-    <Description>
-      $(OCCMSDescription)
+    <Title>Grove Elasticsearch Abstractions</Title>
+    <Description>$(OCCMSDescription)
 
-      Abstractions for Elasticsearch Search.</Description>
+    Abstractions for the Elasticsearch module.</Description>
     <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
   </PropertyGroup>
 
@@ -20,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Grove.Queries.Abstractions\Grove.Queries.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Abstractions\Grove.Contents.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Indexing.Abstractions\Grove.Data.Indexing.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Queries.Abstractions\Grove.Data.Queries.Abstractions.csproj" />
   </ItemGroup>
+
 </Project>

@@ -2,7 +2,7 @@
 
 using Grove.Entities;
 using Grove.Environment.Extensions;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Themes;
 
@@ -34,7 +34,7 @@ public interface IMemberThemeService
 public sealed class MemberThemeService(ISiteService siteService, IExtensionManager extensionManager) : IMemberThemeService
 {
     /// <summary>Grove's own member theme, used until a tenant selects another.</summary>
-    public const string DefaultThemeId = "Grove.MemberTheme";
+    public const string DefaultThemeId = "Grove.Themes.Members";
 
     public async Task<string> GetMemberThemeIdAsync()
     {

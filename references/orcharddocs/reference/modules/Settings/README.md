@@ -1,6 +1,6 @@
-# Settings (`Grove.Settings`)
+# Settings (`Grove.Infrastructure.Settings`)
 
-The `Grove.Settings` module provides the **site settings** infrastructure: a single, per-tenant container of configuration that other modules contribute to. It is always enabled and cannot be disabled.
+The `Grove.Infrastructure.Settings` module provides the **site settings** infrastructure: a single, per-tenant container of configuration that other modules contribute to. It is always enabled and cannot be disabled.
 
 Site settings are where global, site-wide options live (site name, time zone, page size, …) as opposed to per-content-item data. Modules extend these settings by adding their own groups (for example, the SMTP settings, the search settings, or the reCAPTCHA settings all appear as additional sections of the site settings).
 
@@ -79,7 +79,7 @@ In Liquid, the current site settings are available through the `Site` accessor:
 This accessor has all properties of `ISite`, with two security limitations:
 
 1. `ISite.SiteSalt` may not be accessed. If you try to use `{{ Site.SiteSalt }}` in Liquid, you will get `[REDACTED]` instead of the actual value.
-2. `ISite.Properties` is filtered. By default, this object appears empty in Liquid. You can configure the `Grove.Settings.SettingsLiquidOptions` object to specify which properties should be exposed through Liquid. For example using _appsettings.json_:
+2. `ISite.Properties` is filtered. By default, this object appears empty in Liquid. You can configure the `Grove.Infrastructure.Settings.SettingsLiquidOptions` object to specify which properties should be exposed through Liquid. For example using _appsettings.json_:
    ```json
    {
      "Grove": {

@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <RootNamespace>Grove.Media.Scanning</RootNamespace>
     <Nullable>enable</Nullable>
     <!-- NuGet properties-->
@@ -25,11 +24,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Grove.Media.Abstractions\Grove.Media.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Antivirus\Grove.Antivirus.csproj" />
+    <ProjectReference Include="..\Grove.Security.Antivirus\Grove.Security.Antivirus.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Server.Abstractions\Grove.Infrastructure.Server.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Data.YesSql.Abstractions\Grove.Data.YesSql.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Settings.Abstractions\Grove.Settings.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Settings.Abstractions\Grove.Infrastructure.Settings.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

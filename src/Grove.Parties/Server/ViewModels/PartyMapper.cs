@@ -1,6 +1,6 @@
 using Grove.Parties.Constants;
 using Grove.Parties.Services;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 
 namespace Grove.Parties.ViewModels;
 

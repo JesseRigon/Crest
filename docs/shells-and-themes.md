@@ -26,12 +26,12 @@ filter, and is present only when the Members feature is enabled.
 
 ### What the member shell owns
 
-`Grove.MemberTheme` (theme) + `Grove.MemberTheme.Client` (a razor class
+`Grove.Themes.Members` (theme) + `Grove.Themes.Members.Client` (a razor class
 library compiled into the one WASM app, exactly as Admin.Client and Site.Client are):
 
 - the layout, header and navigation region;
 - the frame of the member login and registration pages at the member base (the pages are
-  Grove.Members' `member-wasm`), so the staff and member login surfaces are separate **by
+  Grove.Access.Members' `member-wasm`), so the staff and member login surfaces are separate **by
   construction** rather than by a runtime check (`MemberLoginSurfaceGate` becomes a backstop,
   not the gate);
 - the active-organization switcher;
@@ -42,7 +42,7 @@ library compiled into the one WASM app, exactly as Admin.Client and Site.Client 
 Modules contribute member pages the way they contribute admin pages, through a client
 library whose `[Route]`-attributed components are scanned into a bucket - but a
 **separate library per bucket**: admin pages in the module's `blazor-wasm/` library,
-member pages in its `member-wasm/` library. `Grove.Members` keeps the portal's server
+member pages in its `member-wasm/` library. `Grove.Access.Members` keeps the portal's server
 machinery (sessions, class stamping, org bindings, provisioning); its member-facing
 client half (the shell seams below) is its `member-wasm` library, and its staff-facing
 screens (membership tiers, perks, default groups) stay in `blazor-wasm`, in the admin
@@ -66,7 +66,7 @@ insufficient:
    on client-side navigation, past the server gate.
 
 An assembly declares its bucket with `[assembly: GroveShell(...)]`
-(`Grove.Components.Modules`). A module ships one client library per shell it contributes
+(`Grove.Display.Components.Modules`). A module ships one client library per shell it contributes
 to: `blazor-wasm/` for admin pages, `member-wasm/` (`GroveShells.Member`) for member pages,
 `site-wasm/` (`GroveShells.Site`) for public pages. A module client library without the
 attribute is admin, which is where module pages have always gone. All three shells are
@@ -82,7 +82,7 @@ generator and each shell's router - so they cannot disagree.
 The WASM payload has one entry and one `Program.cs`, but what a browser *loads* is per
 shell:
 
-- **`Grove.Shell`** - eager, small: the shell runtime every shell needs
+- **`Grove.Infrastructure.Shell`** - eager, small: the shell runtime every shell needs
   (the lazy-module loader, per-bucket module manifests). Theme clients reference it; it
   references no theme.
 - **Module client libraries** load per shell and per route: a member's browser loads
@@ -94,18 +94,18 @@ shell:
   it renders, activates the implementations against the container
   (`ActivatorUtilities`), and cascades them to its layout and pages.
 - **Theme UIs load per shell.** Each theme client is lazy and loads when its shell's
-  document boots: the document mounts one eager root, `Grove.Shell.GroveShellRoot`, naming
+  document boots: the document mounts one eager root, `Grove.Infrastructure.Shell.GroveShellRoot`, naming
   the shell; it loads that shell's theme UI (`LazyModules.EnsureThemeAsync`) and renders
   the `Routes` component the theme declares (`[assembly: GroveShell(..., Routes = typeof(...))]`).
   The boot path and what every shell registers before the container is sealed - the HTTP
   pipeline, the API client, the admin shell state, the routing options - are the admin theme's
-  **services**, `Grove.AdminTheme.Client.Services` (`[assembly: GroveEager]`, with
-  `Grove.Shell`); `Program.cs` calls `ClientWebAssemblyHost` there and names no theme UI. The
+  **services**, `Grove.Themes.Admin.Client.Services` (`[assembly: GroveEager]`, with
+  `Grove.Infrastructure.Shell`); `Program.cs` calls `ClientWebAssemblyHost` there and names no theme UI. The
   site and member theme clients have no services anything eager needs, so they load whole.
   The lazy-module generator makes every theme client a lazy root, names the eager roots by
   `[GroveEager]`, and emits each shell's theme (`themes:`); `LazyModules` keeps loaded theme
   UIs apart from modules (`LoadedThemes`, which the shell's component registry reads). Hosts
-  reference `Grove.AdminTheme.Client.Services` directly. Between the first interactive render
+  reference `Grove.Themes.Admin.Client.Services` directly. Between the first interactive render
   and the theme UI's arrival the root renders nothing.
 
 ### One theme, per-member authorization
@@ -212,7 +212,7 @@ the rest of that response, since the site shell needs it too) and `LazyModules.R
 only those.
 
 **The page registry.** Each page declares its routes, shell, permissions and menu placement
-once in Grove.Server's page registry; the route table (`IRouteComponentTableManager`, a view over
+once in Grove.Infrastructure.Server's page registry; the route table (`IRouteComponentTableManager`, a view over
 `IPageRegistry`), the route gate and the admin menu all derive from that entry
 ([admin-menu.md › The page registry](admin-menu.md#the-page-registry)). The registry's scan reads
 each client assembly's bucket with `ShellAssemblies`, so the table and the endpoint stamping
@@ -226,7 +226,7 @@ first-visit server circuit a credential POST goes out on the server-side loopbac
 browser. The member login, registration and any other page that establishes a session hits
 the identical trap, so the rule is general: **a page that sets an authentication cookie
 renders `InteractiveWebAssembly`**, and the page declares it with
-`[SetsAuthenticationCookie]` (`Grove.Components.Modules`). `App.razor` reads the attribute off
+`[SetsAuthenticationCookie]` (`Grove.Display.Components.Modules`). `App.razor` reads the attribute off
 the routed page; no shell or path is special-cased. The admin login, the member login and
 registration, and the site's registration, account, two-factor and second-step pages carry it.
 
@@ -243,7 +243,7 @@ what a member may do (the class, the ceiling, the caller) is
 only, never at the tenant login; staff reach a member portal only through impersonation,
 which starts from an authenticated staff session and never passes through a login. The
 portal's login flow takes local tenant accounts and the external identity providers the
-tenant configures (the stock `Grove.Users` external authentication features, Google, GitHub,
+tenant configures (the stock `Grove.Access.Users` external authentication features, Google, GitHub,
 Microsoft, …, per tenant through site settings), with auto-provisioning creating the
 member on first sign-in; the class and the binding are assigned by the portal's
 registration flow, never by the raw external callback.
@@ -307,10 +307,10 @@ organization stamped on the external properties; the platform's own callback fin
 `forgot-password` and `reset-password` (the tenant's `ResetPasswordSettings` apply; the email
 links to the member shell's reset page, never the tenant's; the answer never says whether
 the account exists; only a member-bound account is sent a portal link). The portal login,
-registration, password reset, external-login and account pages are `Grove.Members`'
+registration, password reset, external-login and account pages are `Grove.Access.Members`'
 `member-wasm` library, which also supplies the shell's seams (`MemberAuthenticationService`,
 `MemberShellContext`, which sets the shell context's organization); the organization picker,
-member home and not-found pages are `Grove.MemberTheme`'s; the routes of both are
+member home and not-found pages are `Grove.Themes.Members`'s; the routes of both are
 `MemberRoutePaths`. The portal login has the second sign-in step and the sign-in form's sections
 (a captcha) of the staff login: an account with two-factor authentication gets 202 from the
 portal's `login` and finishes with `TwoFactorChallenge` over `api/grove/auth/two-factor`; its
@@ -337,7 +337,7 @@ are derived from the name, so renaming an organization changes its slug (the id 
 resolves). The document base of an organization page is `{member base}/{slug}/`; the client reads the slug
 off it (`GroveShellContext.OrganizationSlug`) and sends the matching organization as `X-Org`.
 
-**One switcher, device-local tenants.** `GroveShellSwitcher` (`Grove.Components`) is the same
+**One switcher, device-local tenants.** `GroveShellSwitcher` (`Grove.Display.Components`) is the same
 in the admin title bar and the member header: the accounts this device signed in to on top
 (kept in the browser, `groveComponents.deviceAccounts`, one entry per tenant base and user,
 added by signing in, kept after sign-out until removed), a separator, then the active
@@ -389,8 +389,8 @@ tenants has two member accounts.
 
 The account and protocol pages a signed-in or signing-in user meets are shell pages of the Access
 modules, laid out by each shell's theme ([MVC/views.md](MVC/views.md) › Access screens). Their
-parts are Grove.Users' shared components (`Grove.Users.Components`), which the admin theme, the
-member portal (`Grove.Members`' `member-wasm`) and the site pages (Grove.Users' `site-wasm`) use:
+parts are Grove.Access.Users' shared components (`Grove.Access.Users.Components`), which the admin theme, the
+member portal (`Grove.Access.Members`' `member-wasm`) and the site pages (Grove.Access.Users' `site-wasm`) use:
 
 - **Staff sign-in**: the admin theme's login page frames `SignInForm`: credentials, remember me,
   and what features contribute (`ILoginExtensionProvider`, `api/grove/auth/form/login`): the
@@ -413,7 +413,7 @@ member portal (`Grove.Members`' `member-wasm`) and the site pages (Grove.Users' 
   codes; `/LoginWithTwoFactorAuthentication` and `/LoginWithRecoveryCode` hold the second step for
   a sign-in that did not start on the login page.
 - **Account security** is one shared component, `GroveAccountSecurity`, over `api/grove/account`
-  (Grove.Users' `AccountApiController`): change the password, change the email (where the tenant
+  (Grove.Access.Users' `AccountApi`): change the password, change the email (where the tenant
   allows) and resend its confirmation, list, remove and link external logins (linking is a fetch
   for a five-minute data-protected ticket, then a navigation to the provider, so another site
   cannot start it). The admin profile settings page, the member account page and the site pages
@@ -427,8 +427,8 @@ member portal (`Grove.Members`' `member-wasm`) and the site pages (Grove.Users' 
   external registration settings still ask) or `/ExternalLogin/Link` (the existing account with
   the provider's email, by its password), which complete through
   `api/grove/account/external-login{,/register,/link}`, the rate limits on the same route names.
-  The challenge and the callback stay protocol endpoints of `ExternalAuthenticationsController`.
-- **OpenID consent, logout confirmation and errors** (Grove.OpenId's `site-wasm`): the
+  The challenge and the callback are protocol endpoints of `ExternalAuthenticationApi`.
+- **OpenID consent, logout confirmation and errors** (Grove.Access.OpenId's `site-wasm`): the
   authorization and logout endpoints redirect to the site pages `/connect/consent` and
   `/connect/logout-confirm` with the request's parameters; the decision stays a plain form post
   back to the endpoint (OpenIddict answers in that request), with an antiforgery token from
@@ -441,10 +441,10 @@ member portal (`Grove.Members`' `member-wasm`) and the site pages (Grove.Users' 
 - Pages that make the browser receive a cookie (the account pages, registration, the two-factor
   pages, the external sign-in completion, the consent page for its antiforgery cookie) declare
   `[SetsAuthenticationCookie]`, honoured in every shell, the site included.
-- **Setup** is hardcoded static-SSR Blazor pages in Grove.Setup: an uninitialized tenant runs
-  the minimum shell (the host's setup features, Grove.Setup and Recipes, no database), while the
+- **Setup** is hardcoded static-SSR Blazor pages in Grove.Infrastructure.Setup: an uninitialized tenant runs
+  the minimum shell (the host's setup features, Grove.Infrastructure.Setup and Recipes, no database), while the
   Blazor host - `MapRazorComponents`, the shell selection, the theme clients - is the `Grove`
-  feature, which depends on database-backed modules and cannot run before setup, so Grove.Setup
+  feature, which depends on database-backed modules and cannot run before setup, so Grove.Infrastructure.Setup
   registers its own static-SSR components ([MVC/views.md](MVC/views.md) › Setup). The native
   Tenants page sets a tenant up from the Default tenant without it.
 
@@ -495,7 +495,7 @@ Manifest tags are the mechanism (`admin` and `hidden` are read by Orchard itself
 
 **Descendants count.** Orchard's `BaseTheme` chain is exactly "a direct child fork with
 simple mods": a child theme inherits its parent's shapes and assets, so
-`BaseTheme = Grove.AdminTheme` is a compatible admin theme. Every compatibility
+`BaseTheme = Grove.Themes.Admin` is a compatible admin theme. Every compatibility
 check walks the `BaseTheme` chain, never a single id.
 
 **Theme structure and branding.** A theme is page structures (templates, composites, zone
@@ -510,19 +510,19 @@ the two guards, the route gate) holds for the compiled part of a theme.
 A module's contract follows from what it ships: a module with a `blazor-wasm/` library
 needs a `grove-blazor` admin theme, one with `member-wasm/` a `grove-blazor` member theme,
 one with `site-wasm/` a `grove-blazor` site theme. The libraries are named for their module
-(`Grove.Members.Member.BlazorWasm` belongs to `Grove.Members`), so every feature of that
+(`Grove.Access.Members.Member.BlazorWasm` belongs to `Grove.Access.Members`), so every feature of that
 module carries the contract with no declaration to keep in sync. A module whose needs go
 beyond what it ships adds an `IShellContractProvider`. The check resolves each contract
 against the active theme of that bucket and its `BaseTheme` ancestors. A client library
 belongs to the module with the longest id its assembly name starts with
-(`ShellCompatibilityService.OwningExtensionId`; `Grove.Members.Member.BlazorWasm` is
-`Grove.Members`, not `Grove`), and `ShippedContracts` credits it only to that module. Contracts are per
+(`ShellCompatibilityService.OwningExtensionId`; `Grove.Access.Members.Member.BlazorWasm` is
+`Grove.Access.Members`, not `Grove`), and `ShippedContracts` credits it only to that module. Contracts are per
 module, not per contributed page set: a module's pages are written against one shell
 contract in practice, and per-page granularity would multiply the declarations without
 changing any answer.
 
 Orchard has a site theme and an admin theme but no member theme, so the member theme is a
-Grove site setting (`IMemberThemeService`), defaulting to `Grove.MemberTheme`.
+Grove site setting (`IMemberThemeService`), defaulting to `Grove.Themes.Members`.
 Selecting a member theme sets that setting; it never touches the site theme.
 
 ### The two guards

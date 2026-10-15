@@ -1,0 +1,26 @@
+@page "/ChangePassword"
+@page "/ChangeEmail"
+@page "/ExternalLogins"
+@attribute [Grove.Display.Components.Modules.SetsAuthenticationCookie]
+@inject NavigationManager Navigation
+
+@* The site's account pages (step 7: the MVC ChangePassword, ChangeEmail and ExternalLogins
+   screens are retired), at the paths those screens had so existing links keep working
+   (Grove.Access.Users' AccountPages composes the server's links to them). The signed-in user's own
+   account, one part per path; the same component the admin profile and the member account page
+   show. *@
+
+<PageTitle>Account</PageTitle>
+
+<div style="max-width: 32rem; margin: 2rem auto; padding: 0 1rem;" data-testid="site-account-page">
+    <GroveAccountSecurity Section="@Section" />
+</div>
+
+@code {
+    private string Section => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0].Trim('/').ToLowerInvariant() switch
+    {
+        "changeemail" => "email",
+        "externallogins" => "logins",
+        _ => "password",
+    };
+}

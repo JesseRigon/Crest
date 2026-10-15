@@ -8,10 +8,10 @@ public static class TestRecipes
     /// <summary>
     /// The test project's own setup recipe (<c>Apis/Recipes/blog.recipe.json</c>, harvested by
     /// <see cref="TestRecipeHarvester"/>): the Blog content model, the Search Lucene index and the
-    /// RecentBlogPosts query, with SafeMode as the site theme and no sample theme.
+    /// RecentBlogPosts query, with Grove.Themes.Site as the site theme and no sample content.
     /// </summary>
     public const string Blog = "Blog";
 
-    /// <summary>The blank site recipe from the admin theme: content management only, no sample content.</summary>
+    /// <summary>The blank site recipe (Grove.Themes.Site): content management only, no sample content.</summary>
     public const string Blank = "Blank";
 }

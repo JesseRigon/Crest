@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using Grove.ContentManagement.Metadata.Models;
+using Grove.Contents.Management.Metadata.Models;
 using Grove.Workflows.Contents;
 using Grove.Workflows.Models;
 using Grove.Workflows.Security;

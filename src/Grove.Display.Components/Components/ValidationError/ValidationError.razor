@@ -1,0 +1,10 @@
+@using Grove.Display.Components.Primitives.Spreadsheet
+@using Grove.Display.Components.Primitives.Documents.Spreadsheet
+
+@namespace Grove.Display.Components.Primitives.Spreadsheet
+@if (visible && !string.IsNullOrEmpty(message))
+{
+    <div class=@className style=@style>
+        <div class="rz-spreadsheet-validation-error-message">@message</div>
+    </div>
+}

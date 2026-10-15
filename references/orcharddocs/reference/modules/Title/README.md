@@ -1,4 +1,4 @@
-# Title (`Grove.Title`)
+# Title (`Grove.Contents.Title`)
 
 The `Title` module provides a **Title Part** that lets you customize the DisplayText property of a content item. The DisplayText property is used throughout the Admin interface to help you recognize your content items.
 

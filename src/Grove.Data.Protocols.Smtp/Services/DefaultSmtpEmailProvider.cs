@@ -1,0 +1,22 @@
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Grove.Communications.Email;
+
+namespace Grove.Data.Protocols.Smtp.Services;
+
+public class DefaultSmtpEmailProvider : SmtpEmailProviderBase<DefaultSmtpOptions>
+{
+    public const string TechnicalName = "DefaultSMTP";
+
+    public DefaultSmtpEmailProvider(
+        IOptionsMonitor<DefaultSmtpOptions> options,
+        IEmailAddressValidator emailAddressValidator,
+        ILogger<DefaultSmtpEmailProvider> logger,
+        IStringLocalizer<DefaultSmtpEmailProvider> stringLocalizer)
+        : base(options, emailAddressValidator, logger, stringLocalizer)
+    {
+    }
+
+    public override LocalizedString DisplayName => S["Simple Mail Transfer Protocol (Default SMTP)"];
+}

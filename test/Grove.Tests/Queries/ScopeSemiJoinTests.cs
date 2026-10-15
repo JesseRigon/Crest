@@ -1,12 +1,12 @@
 #nullable enable
 using System.Text.Json.Nodes;
 using Grove.Access;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management.Records;
 using Grove.Data.Scoping;
-using Grove.Queries;
-using Grove.Queries.Sql;
-using Grove.Queries.Structured;
-using Grove.Sharing.Indexes;
+using Grove.Data.Queries;
+using Grove.Data.Queries.Sql;
+using Grove.Data.Queries.Structured;
+using Grove.Access.Sharing.Indexes;
 using YesSql.Provider.Sqlite;
 using YesSql.Provider.SqlServer;
 

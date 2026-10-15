@@ -1,4 +1,4 @@
-# Queries (`Grove.Queries`)
+# Queries (`Grove.Data.Queries`)
 
 The queries module provides a management UI and APIs for querying data.
 
@@ -140,7 +140,7 @@ For SQL and Lucene queries you can then define a custom field type name in their
 }
 ```
 
-## SQL Queries (`Grove.Queries.Sql`)
+## SQL Queries (`Grove.Data.Queries.Sql`)
 
 This feature provides a new type of query targeting the SQL database.
 
@@ -189,9 +189,9 @@ The `query` filter allows you to pass in parameters to your parameterized querie
 
 ## Razor Helpers
 
-The `QueryAsync` and `ContentQueryAsync` Grove Helper extension methods (in the `Grove.Queries` and `Grove.ContentManagement` namespaces respectively) allow you to run queries directly from razor pages.
+The `QueryAsync` and `ContentQueryAsync` Grove Helper extension methods (in the `Grove.Data.Queries` and `Grove.Contents.Management` namespaces respectively) allow you to run queries directly from razor pages.
 
-You can use the `DisplayAsync` extension method (also in `Grove.ContentManagement`) to display the content items returned from `ContentQueryAsync`.
+You can use the `DisplayAsync` extension method (also in `Grove.Contents.Management`) to display the content items returned from `ContentQueryAsync`.
 
 For example, to run a query called `RecentBlogPosts`, and display the results:
 

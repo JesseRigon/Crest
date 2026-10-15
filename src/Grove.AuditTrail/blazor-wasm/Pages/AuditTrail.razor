@@ -1,7 +1,7 @@
 @page "/Audit"
 @attribute [PageEntry("ViewAuditTrail", Id = "audittrail-events", Parent = "audittrail", Caption = "Events", Position = "0")]
 @inject HttpClient Http
-@inject Grove.Components.Theme.GroveApiLocalizer T
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
 
 @* The audit page (docs/audit.md › step 4): the tenant's trail, filtered by actor, impersonated
    member, organization, category, record and date. Gated by the audit permission, as is the API

@@ -1,4 +1,4 @@
-# Templates (`Grove.Templates`)
+# Templates (`Grove.Display.Templates`)
 
 The templates module allows editors to create custom Liquid templates.
 
@@ -834,8 +834,8 @@ To access the full user object with custom properties and content parts:
 
     ```cshtml
     @using Microsoft.AspNetCore.Identity
-    @using Grove.Users
-    @using Grove.Users.Models
+    @using Grove.Access.Users
+    @using Grove.Access.Users.Models
 
     @inject UserManager<IUser> UserManager
 
@@ -886,8 +886,8 @@ Create `UserDisplayNameText.cshtml` or `UserDisplayNameText.liquid` to display a
 
     ```cshtml
     @using Microsoft.AspNetCore.Identity
-    @using Grove.Users
-    @using Grove.Users.Models
+    @using Grove.Access.Users
+    @using Grove.Access.Users.Models
 
     @inject UserManager<IUser> UserManager
 
@@ -1013,13 +1013,13 @@ You can override these defaults or add additional cache configuration via tag he
 
 #### Implementation Details
 
-- **Tag Helper**: `src/Grove/Grove.DisplayManagement/TagHelpers/UserDisplayNameTagHelper.cs`
-- **Shape Table Provider**: `src/Grove/Grove.Users.Core/Services/UserDisplayNameShapeTableProvider.cs`
-- **Default Templates**: `src/Grove.Modules/Grove.Users/Views/UserDisplayName*.cshtml`
+- **Tag Helper**: `src/Grove/Grove.Display.Management/TagHelpers/UserDisplayNameTagHelper.cs`
+- **Shape Table Provider**: `src/Grove/Grove.Access.Users.Core/Services/UserDisplayNameShapeTableProvider.cs`
+- **Default Templates**: `src/Grove.Modules/Grove.Access.Users/Views/UserDisplayName*.cshtml`
 
 ## Overriding Views
 
-Some modules (namely the Grove.Users module) allow you to override some of its views in your Theme. Since these views are not shapes, the way to override them is a little different than mentioned above.
+Some modules (namely the Grove.Access.Users module) allow you to override some of its views in your Theme. Since these views are not shapes, the way to override them is a little different than mentioned above.
 
 ### View Resolution paths
 
@@ -1037,7 +1037,7 @@ Views/Shared/{0}.cshtml
 
 ### Overriding Login view
 
-For example, if you want to override the `Grove.Users\Views\Account\Login.cshtml` view you would need to create a file in your theme and place it under `YourTheme\Views\Grove.Users\Account\Login.cshtml`.  
+For example, if you want to override the `Grove.Access.Users\Views\Account\Login.cshtml` view you would need to create a file in your theme and place it under `YourTheme\Views\Grove.Access.Users\Account\Login.cshtml`.  
 For this particular file, you would also need to select the `Use site theme for login page`
 option under the `Settings -> Security -> User Login` page in the admin.
 

@@ -1,7 +1,7 @@
 #nullable enable
 using Grove.Access;
-using Grove.Queries.Sql;
-using Grove.Queries.Structured;
+using Grove.Data.Queries.Sql;
+using Grove.Data.Queries.Structured;
 using YesSql.Provider.Sqlite;
 using YesSql.Provider.SqlServer;
 

@@ -1,0 +1,17 @@
+@inherits GroveHtmlEditorButtonBase
+
+@namespace Grove.Display.Components.Primitives
+<GroveHtmlEditorTable />
+<GroveHtmlEditorTableCommandButton TableCommand="addRowBefore" Icon="north" Title="@Strings.InsertRowAbove" />
+<GroveHtmlEditorTableCommandButton TableCommand="addRowAfter" Icon="south" Title="@Strings.InsertRowBelow" />
+<GroveHtmlEditorTableCommandButton TableCommand="addColumnBefore" Icon="west" Title="@Strings.InsertColumnLeft" />
+<GroveHtmlEditorTableCommandButton TableCommand="addColumnAfter" Icon="east" Title="@Strings.InsertColumnRight" />
+<GroveHtmlEditorTableCommandButton TableCommand="deleteRow" Icon="horizontal_rule" Title="@Strings.DeleteRow" />
+<GroveHtmlEditorTableCommandButton TableCommand="deleteColumn" Icon="vertical_align_center" Title="@Strings.DeleteColumn" />
+<GroveHtmlEditorTableCommandButton TableCommand="mergeCellRight" Icon="merge_type" Title="@Strings.MergeRight" />
+<GroveHtmlEditorTableCommandButton TableCommand="mergeCellDown" Icon="merge" Title="@Strings.MergeDown" />
+<GroveHtmlEditorTableCommandButton TableCommand="splitCell" Icon="call_split" Title="@Strings.SplitCell" />
+
+@code {
+    HtmlEditorTableStrings Strings => TableStrings ?? Editor?.TableStrings ?? new HtmlEditorTableStrings();
+}

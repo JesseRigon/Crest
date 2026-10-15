@@ -1,7 +1,7 @@
 using System.Globalization;
 using NodaTime;
 
-namespace Grove.Localization;
+namespace Grove.Data.Localization;
 
 internal static class BclCalendars
 {

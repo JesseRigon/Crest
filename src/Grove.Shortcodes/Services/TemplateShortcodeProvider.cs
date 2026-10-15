@@ -1,6 +1,6 @@
 using System.Text.Encodings.Web;
 using Fluid.Values;
-using Grove.Liquid;
+using Grove.Display.Liquid;
 using Grove.Shortcodes.Models;
 using Grove.Shortcodes.ViewModels;
 using Shortcodes;

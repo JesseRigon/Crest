@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement.Display.ContentDisplay;
+using Grove.Contents.Management.Display.ContentDisplay;
 using Grove.Deployment;
-using Grove.DisplayManagement.Handlers;
+using Grove.Display.Management.Handlers;
 using Grove.Modules;
 
 namespace Grove.Contents.Deployment.AddToDeploymentPlan;

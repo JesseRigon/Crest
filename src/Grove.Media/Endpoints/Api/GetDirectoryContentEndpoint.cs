@@ -1,3 +1,4 @@
+using Grove.Api;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -16,9 +17,8 @@ public static class GetDirectoryContentEndpoint
 {
     public static IEndpointRouteBuilder AddGetDirectoryContentEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapGet("api/media/GetDirectoryContent", HandleAsync)
+        builder.MapGet("GetDirectoryContent", HandleAsync)
             .WithName("ApiGetDirectoryContent")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
             .Produces<DirectoryContentDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -31,13 +31,13 @@ public static class GetDirectoryContentEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        IContentTypeProvider contentTypeProvider,
-        IFileVersionProvider fileVersionProvider,
-        IOptions<MediaOptions> options,
-        string path,
-        string extensions)
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromServices] IContentTypeProvider contentTypeProvider,
+        [FromServices] IFileVersionProvider fileVersionProvider,
+        [FromServices] IOptions<MediaOptions> options,
+        [FromQuery] string path,
+        [FromQuery] string extensions)
     {
         if (string.IsNullOrEmpty(path))
         {

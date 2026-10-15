@@ -1,4 +1,4 @@
-using Grove.FileStorage.AzureBlob;
+using Grove.Data.Storage.AzureBlob;
 
 namespace Grove.Tests.Modules.Grove.Media.Azure;
 

@@ -1,3 +1,4 @@
+using Grove.Api;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,9 +18,8 @@ public static class GetMediaFieldItemsEndpoint
 {
     public static IEndpointRouteBuilder AddGetMediaFieldItemsEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapGet("api/media/GetMediaFieldItems", HandleAsync)
+        builder.MapGet("GetMediaFieldItems", HandleAsync)
             .WithName("ApiGetMediaFieldItems")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
             .Produces<IEnumerable<FileStoreEntryDto>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -31,10 +31,10 @@ public static class GetMediaFieldItemsEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        IContentTypeProvider contentTypeProvider,
-        IFileVersionProvider fileVersionProvider,
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromServices] IContentTypeProvider contentTypeProvider,
+        [FromServices] IFileVersionProvider fileVersionProvider,
         [FromQuery] string[] paths)
     {
         if (!await authorizationService.AuthorizeAsync(httpContext.User, MediaPermissions.ManageMedia))

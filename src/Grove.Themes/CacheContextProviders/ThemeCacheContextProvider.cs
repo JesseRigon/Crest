@@ -1,4 +1,4 @@
-using Grove.DisplayManagement.Theming;
+using Grove.Display.Management.Theming;
 
 namespace Grove.Environment.Cache.CacheContextProviders;
 

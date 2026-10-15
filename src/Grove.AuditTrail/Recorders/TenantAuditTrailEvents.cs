@@ -13,8 +13,8 @@ namespace Grove.AuditTrail.Recorders;
 
 /// <summary>
 /// The tenant-machinery writes that never go through the content manager (docs/audit.md ›
-/// step 3): roles, settings, features and themes. Users are recorded by Grove.Users' audit
-/// feature, members and bindings by Grove.Members, workflow runs by Grove.Workflows.
+/// step 3): roles, settings, features and themes. Users are recorded by Grove.Access.Users' audit
+/// feature, members and bindings by Grove.Access.Members, workflow runs by Grove.Workflows.
 /// </summary>
 public sealed class TenantAuditTrailEventConfiguration : IConfigureOptions<AuditTrailOptions>
 {

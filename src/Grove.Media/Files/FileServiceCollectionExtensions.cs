@@ -39,7 +39,7 @@ public static class FileServiceCollectionExtensions
                     options.Exemptions.Add(exemption);
                 }
             });
-        services.AddScoped<Grove.Users.Handlers.IUserEventHandler, PersonalDriveUserEventHandler>();
+        services.AddScoped<Grove.Access.Users.Handlers.IUserEventHandler, PersonalDriveUserEventHandler>();
 
         services.AddSingleton(serviceProvider => new LocalMediaStorageProvider(FilesRoot(serviceProvider)));
         services.AddSingleton<IMediaStorageProvider>(serviceProvider => serviceProvider.GetRequiredService<LocalMediaStorageProvider>());

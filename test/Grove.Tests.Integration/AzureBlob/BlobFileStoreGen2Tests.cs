@@ -1,6 +1,6 @@
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Files.DataLake;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Xunit;
 
 namespace Grove.Tests.Integration.AzureBlob;

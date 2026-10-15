@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Xml.Linq;
-using Grove.ContentManagement;
-using Grove.Sitemaps.Aspects;
-using Grove.Sitemaps.Builders;
-using Grove.Sitemaps.Models;
-using Grove.Sitemaps.Services;
+using Grove.Contents.Management;
+using Grove.Seo.Sitemaps.Aspects;
+using Grove.Seo.Sitemaps.Builders;
+using Grove.Seo.Sitemaps.Models;
+using Grove.Seo.Sitemaps.Services;
 
 namespace Grove.Contents.Sitemaps;
 

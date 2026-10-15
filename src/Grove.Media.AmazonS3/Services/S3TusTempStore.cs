@@ -7,7 +7,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Grove.Environment.Shell;
-using Grove.FileStorage.AmazonS3;
+using Grove.Data.Storage.AmazonS3;
 using Grove.Media.Services;
 
 namespace Grove.Media.AmazonS3.Services;

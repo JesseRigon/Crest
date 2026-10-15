@@ -1,4 +1,4 @@
-# Lucene (`Grove.Lucene`)
+# Lucene (`Grove.Search.Lucene`)
 
 The Lucene module allows you to manage Lucene indexes.
 

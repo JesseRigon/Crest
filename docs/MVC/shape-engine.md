@@ -1,301 +1,204 @@
 # The shape engine after MVC
 
-Workstream (b) of the MVC retirement, done together with moving the APIs out of Grove.Server
+Workstream (b) of the MVC retirement, done together with moving the APIs out of Grove.Infrastructure.Server
 ([server.md](../server.md)). Siblings: [views.md](views.md) (views → Blazor components, workstream
 a) and [api.md](api.md) (the API layer, workstream c). The display system's own design is
 [blazor-display.md](../blazor-display.md); its step 7 is where this plan picks up.
 
-Status: plan. Nothing here is built yet; every tracked item has a checkbox, an owner
-module, its dependencies, a size (S/M/L/XL) and a wave.
+## The answer: what the Blazor display relies on
 
-## The answer first: what the Blazor display still relies on
-
-**Yes on the shape *model*, no on the shape *templates*, and Liquid only as a language.** The
-three things people call "the shape engine" are separate, and only one of them is MVC:
+**The shape *model*, not the shape *templates*, and Liquid only as a language.** The three
+things people call "the shape engine" are separate:
 
 1. **The shape model: shapes, display drivers, placement, alternates, the shape table.** Kept,
    and used by the Blazor display. Every content page, every `/display` and every editor tree
-   starts as shapes: drivers return `ShapeResult`s (`Grove.DisplayManagement/Views/ShapeResult.cs`),
+   starts as shapes: drivers return `ShapeResult`s (`Grove.Display.Management/Views/ShapeResult.cs`),
    placement puts them in zones, the shape table adds alternates and the displaying/processing
-   events, and `DisplayTreeBuilder` (`Grove.DisplayManagement/Components/DisplayTreeBuilder.cs`)
+   events, and `DisplayTreeBuilder` (`Grove.Display.Management/Components/DisplayTreeBuilder.cs`)
    maps the resulting `IShape` tree once to `DisplayNode`s bound to registered components
-   (`Grove.DisplayManagement.Abstractions/Components/ComponentRegistry.cs`). This is the "build
-   side" blazor-display.md keeps on purpose. It is **lightly** MVC-coupled, through four seams
-   only (below): the model-binding interface on the build context, `IHtmlContent` on the shape
-   metadata, a `TagBuilder` helper, and the project references.
-2. **The shape template renderers: Razor and Liquid-through-Razor.** Not needed by the Blazor
-   display except as a **fallback**: `DisplayTreeBuilder.FallbackAsync`
-   (`DisplayTreeBuilder.cs:549`, called at `:201`) renders a shape that has no component through
-   `IHtmlDisplay` (`Implementation/DefaultHtmlDisplay.cs`) into a sanitized markup leaf with a
-   `markup-fallback` diagnostic. That path runs `RazorShapeTemplateViewEngine`
-   (`Razor/RazorShapeTemplateViewEngine.cs`), the `.liquid` view engine (`LiquidPage`,
-   `Grove.DisplayManagement.Liquid/LiquidPage.cs:3`, a `RazorPage<dynamic>`), the C# `[Shape]`
-   bindings (`Shapes/CoreShapes.cs`, `Zones/ZoneShapes.cs`, …) and the shape tag helpers
-   (`TagHelpers/*`). **All of this is MVC** (Razor views, `ViewContext`, `IHtmlHelper`,
-   `ActionContext`), and all of it goes once every rendered shape has a component.
-3. **Liquid as a language.** Kept, not MVC by nature: tree templates (`TemplateTreeEvaluator`,
-   `Grove.Templates/Services/TemplateTreeEvaluator.cs:220`, with its own `TemplateTreeParser`
-   at `TemplateTreeTags.cs:30`), designed pages, workflow expressions (through
-   the platform's manager, `Grove.Workflows/Server/Expressions/PlatformLiquidTemplateManager.cs`),
-   Autoroute patterns (`Grove.Autoroute/Handlers/AutoroutePartHandler.cs:44`), title patterns,
-   HTML and Markdown bodies with Liquid on. None of these renders a view. Two places still drag
-   MVC in: `LiquidTemplateContext.ViewContext` (`Grove.Liquid.Abstractions/LiquidTemplateContext.cs:17`)
-   and the `Request`/`HttpContext` scope values plus the shape/`IHtmlContent` converters in
-   `Grove.DisplayManagement.Liquid/TemplateOptionsConfigurations.cs:57-59`.
+   (`Grove.Display.Management.Abstractions/Components/ComponentRegistry.cs`). No MVC type is in
+   the engine: no `ViewContext`, `IHtmlHelper`, `ActionContext`, `IUrlHelper`, `TagBuilder`,
+   `ModelStateDictionary`, `IRazorPage`, and no reference to an MVC library.
+2. **There are no shape template renderers.** A shape the registry cannot resolve becomes an
+   error node naming its shape type (§ Component coverage). The Razor and Liquid-through-Razor
+   view engines, the C# `[Shape]` bindings, the shape tag helpers, `IHtmlDisplay` and the MVC
+   model updaters are gone.
+3. **Liquid as a language.** Tree templates (`TemplateTreeEvaluator`,
+   `Grove.Display.Templates/Services/TemplateTreeEvaluator.cs`, with its own `TemplateTreeParser`),
+   designed pages, workflow expressions (`PlatformLiquidTemplateManager`), Autoroute and title
+   patterns, HTML and Markdown bodies. None of these renders a view; § Liquid.
 
-| Part | Used by the Blazor display | MVC-coupled | Fate |
-| --- | --- | --- | --- |
-| Shape model, drivers' display halves, placement, alternates, shape table, zones, layout accessor | Yes (the tree builder's input) | Lightly: `IUpdateModel` on `BuildShapeContext` (`Handlers/BuildShapeContext.cs:27`), `IHtmlContent ChildContent` (`Shapes/ShapeMetadata.cs:87`), `TagBuilder` (`IShape.cs:180`), csproj refs to `Grove.Mvc` and `Grove.Mvc.Abstractions` (`Grove.DisplayManagement.csproj:22,28`) | Stays, made MVC-free |
-| Component registry, tree builder, filter, renderer, versions | Yes (the display system) | No | Stays |
-| Drivers' editor halves (`Edit`, `UpdateAsync`) | No: the Blazor editors are trees built from type metadata (`Grove.Server/Display/ContentEditorTreeBuilder.cs`) | Yes: `TryUpdateModelAsync` on MVC model binding | Die with the MVC editors (§ Editor halves) |
-| Razor and Liquid shape template renderers, `[Shape]` C# bindings, tag helpers, `IHtmlDisplay` | Only as the markup fallback | Yes | Deleted when coverage is complete |
-| Liquid as a language | Yes (templates, designed pages, workflows, patterns) | Two seams (`ViewContext`, request values) | Stays, its view half deleted |
+| Part | Where | Notes |
+| --- | --- | --- |
+| Shape model, drivers' display halves, placement, alternates, shape table, zones, layout accessor | Grove.Display.Management | The tree builder's input |
+| Component registry, tree builder, filter, HTML renderer, versions, cache, coverage | Grove.Display.Management(.Abstractions) | The display system |
+| Validation sink | Grove.Display.Management.Abstractions (`Grove.Validation`) | § The validation sink |
+| Head contribution seam | Grove.Display.Management (`Document/`) | views.md › Themes, layouts and layout filters |
+| Liquid language | Grove.Display.Liquid(.Abstractions) | § Liquid |
 
 ## How the MVC retirement bears on the shape engine
 
-- **The shape engine is platform, not server**: it stays in
-  `Grove.DisplayManagement(.Abstractions)`. Grove.Server only hosts: the display APIs
-  (`api/grove/site/page`, `…/display`, `…/editor`, templates, pages, components) are declared by
-  the modules that own them and registered in Grove.Server's API registry
-  ([architecture.md › Modules declare, Grove.Server registers and serves](../architecture.md#modules-declare-groveserver-registers-and-serves);
-  [api.md](api.md) § Placement). This workstream only guarantees the engine they call has no MVC
-  types in its signatures. `BlazorComponentShapeBindingResolver`
-  (`Grove.Server/Services/BlazorComponentShapeBindingResolver.cs:19`) goes with the renderers it
-  plugs into.
-- **Validation is the data engine's** (`Grove.Data*` is the validation engine): what lands in
-  `ModelState` through `IUpdateModel` today moves to the data engine's validation results
-  (§ Editor halves); the shape engine stops carrying it.
-- **Shared screens are required pages ([views.md](views.md) § Shared screens).** Every
-  tenant's route table declares a standard set of required pages; their layouts come from each
-  shell's active theme, and the error pages are one set per tenant (`GroveErrorPage`). The
-  behaviour is one component per screen; the registry resolves it as it resolves any component,
-  so the shape engine needs nothing of its own for them.
-- **Setup ([views.md](views.md) § Setup)** is hardcoded static-SSR Blazor pages in Grove.Setup.
-  It renders no shapes through drivers and does not need the shape template renderers. Tracked
-  as E7.
-
-## Target
-
-`Grove.DisplayManagement.Abstractions` (browser-safe, no server framework) and
-`Grove.DisplayManagement` (server) hold the engine, with **no MVC type** in either: no
-`ViewContext`, `IHtmlHelper`, `ActionContext`, `IUrlHelper`, `TagBuilder`, `ModelStateDictionary`,
-`IRazorPage`, no reference to `Grove.Mvc` or `Grove.Mvc.Abstractions`. The template renderers,
-the Liquid view engine and the tag helpers are deleted once every rendered shape has a component;
-until then they are isolated in one project that nothing else references, so the delete is a
-project removal.
+- **The shape engine is platform, not server**: it is `Grove.Display.Management(.Abstractions)`.
+  Grove.Infrastructure.Server only hosts: the display APIs (`api/grove/site/page`, `…/display`,
+  `…/editor`, templates, pages, components) are declared by the modules that own them and
+  registered in Grove.Infrastructure.Server's API registry
+  ([architecture.md › Modules declare, Grove.Infrastructure.Server registers and serves](../architecture.md#modules-declare-groveserver-registers-and-serves);
+  [api.md](api.md) § Placement).
+- **Validation is raised into the request's sink**, and the API answers it as the error
+  contract's `errors` map (§ The validation sink).
+- **Shared screens are required pages ([views.md](views.md) § Shared screens).** The behaviour
+  is one component per screen; the registry resolves it as it resolves any component.
+- **Setup ([views.md](views.md) § Setup)** is static-SSR Blazor pages in Grove.Infrastructure.Setup;
+  it renders no shapes and uses no MVC type.
 
 ### Type map
 
-Destination legend: **DM.A** = `Grove.DisplayManagement.Abstractions`; **DM** =
-`Grove.DisplayManagement`; **Renderers** = a temporary `Grove.DisplayManagement.Razor` project
-holding what dies, deleted in wave 4; **Liquid** = `Grove.Liquid.Abstractions` / `Grove.Liquid`
-(§ Liquid).
+DM.A = `Grove.Display.Management.Abstractions`; DM = `Grove.Display.Management`.
 
-| Type (folder) | Today | Decision | Destination | MVC seam to cut |
-| --- | --- | --- | --- | --- |
-| `IShape`, `Shape`, `Composite`, `AlternatesCollection`, `ShapeMetadata`, `ShapeSerializer` (`IShape.cs`, `Shapes/`) | DM | Keep | DM.A for `IShape`, `ShapeMetadata`, `AlternatesCollection` (the contract the builder and drivers share); DM for the rest | `IShape.GetTagBuilder` (`IShape.cs:180`) → Renderers; `ShapeMetadata.ChildContent` (`IHtmlContent`, `:87`) removed once the fallback is gone (blazor-display.md: "`ShapeMetadata` (minus `ChildContent`)") |
-| `IShapeFactory`, `DefaultShapeFactory`, `IShapeFactoryEvents`, `Arguments`, `ShapeFactoryExtensions` | DM | Keep | DM | none |
-| `IDisplayDriver`, `DisplayDriver`, `DisplayDriverBase`, `IDisplayResult`, `ShapeResult`, `CombinedResult`, `ShapeViewModel` (`Handlers/`, `Views/`) | DM | Keep (display halves) | DM | `BuildShapeContext.Updater` becomes the new validation sink (§ Editor halves) |
-| `BuildDisplayContext`, `BuildEditorContext`, `UpdateEditorContext`, `FindPlacementDelegate` | DM | Keep display; editor contexts shrink with the editor halves | DM | `IUpdateModel` |
-| `IDisplayManager`, `DisplayManager`, `BaseDisplayManager` | DM | Keep | DM | `UpdateEditorAsync` path goes with the editor halves |
-| Placement (`Descriptors/PlacementInfo*`, `ShapePlacementStrategy/*`, `IPlacementInfoResolver`, `ShapeTablePlacementProvider`) | DM | Keep | DM | `PathPlacementNodeFilterProvider` reads `HttpContext` (`using Microsoft.AspNetCore.Http`): acceptable (not MVC), keep |
-| Shape table (`ShapeTable`, `ShapeTableBuilder`, `ShapeAlteration(Builder)`, `DefaultShapeTableManager`, `IShapeTableProvider`, `ShapeTableProvider`, `FeatureShapeDescriptor`) | DM | Keep (descriptors, alternates, displaying/processing events) | DM | `ShapeBinding.BindingAsync` (`Func<DisplayContext, Task<IHtmlContent>>`) → only `ShapeBinding.ComponentName` stays; HTML bindings → Renderers |
-| `ShapeAttributeStrategy/*` (C# `[Shape]` methods), `ShapeTemplateStrategy/*` (file harvesting of `.cshtml`/`.liquid`) | DM | Delete | Renderers | the whole strategy |
-| `Implementation/IHtmlDisplay`, `DefaultHtmlDisplay`, `DisplayHelper`, `IDisplayHelper`, `PlatformDisplayHelper`, `IShapeDisplayEvents` | DM | Delete (keep `GetShapeDescriptor` as a shape-table helper) | Renderers; the descriptor lookup → `ShapeTable` | the renderer |
-| `DisplayContext`, `ShapeDisplayContext` | DM | Keep `ShapeDisplayContext` (the displaying/processing events take it); `DisplayContext` loses `DisplayHelper`/`HtmlFieldPrefix` | DM | `IDisplayHelper` |
-| Zones (`IZoneHolding`, `ZoneHolding`, `ZoneOnDemand`, `Zones`, `FlatPositionComparer`, `ZoneAlternatesFactory`) | DM | Keep | DM | none |
-| `Zones/ZoneShapes.cs`, `Shapes/CoreShapes.cs`, `DateTimeShapes.cs`, `GroupShapes.cs`, `PageTitleShapes.cs`, `ShapeDebugView.cs` | DM | Delete (HTML bindings); a component where the shape is still rendered (`Zone` is the tree's own) | Renderers | `IHtmlContent`, `TagBuilder` |
-| Layout (`ILayoutAccessor`, `LayoutAccessor`, `ILayoutTreeContributor`) | DM | Keep | DM | none |
-| Theming (`IThemeManager`, `ThemeManager`, `IThemeSelector`, `ThemeSelectorResult`) | DM | Keep (theme scope of the registry and templates) | DM | none |
-| Theming (`ThemeLayout`, `ThemeViewStart`, `ThemingViewsFeatureProvider`), `LocationExpander/*` | DM | Delete | Renderers | Razor view engine |
-| `Razor/*`, `RazorPages/Page.cs`, `IAsyncViewActionFilter`, `ViewContextAccessor` | DM | Delete | Renderers | Razor |
-| `TagHelpers/*` (19) | DM | Delete | Renderers | tag helpers |
-| `Html/*` (`HtmlContentString`, builder extensions, debug info) | DM | Delete | Renderers | `IHtmlContent` |
-| `ModelBinding/*` (`ControllerModelUpdater`, `ModelStateWrapperUpdater`, `PageModelUpdater`, `PrefixedModelUpdater`, `NullModelUpdater`, `LocalModelBinderAccessor`, `ModelBinderAccessorFilter`) | DM | Replace by the validation sink; delete the MVC updaters | DM (sink), Renderers (MVC updaters) | `ModelStateDictionary` |
-| `Notify/*` (`INotifier`, `Notifier`, `NotifyFilter`) | DM | Move: notifications are a UI concern of the MVC frame (TempData-backed `NotifyFilter`); the Blazor admin shows API results | api.md decides the API-side replacement; `INotifier` callers in drivers go with the editor halves | `NotifyFilter` (MVC result filter) |
-| `Entities/SectionDisplayDriver*` | DM | Keep while section drivers exist (`SiteDisplayDriver` is gone with the site settings drivers; settings editors are the settings group API) | DM | editor halves |
-| `Title/IPageTitleBuilder` | DM | Keep the builder; title rendering is the site page's `PageTitle` | DM | none |
-| `Components/*` (registry manager, tree builder, filter, versions, cache, HTML renderer, template binding seam) | DM | Keep | DM | `ComponentShapeRenderer` (renders a component *inside* a Razor fallback) → Renderers |
-| `Components/*` in DM.A (descriptors, registry, `DisplayNode`, renderer, state, predicates, validator, zone keys) | DM.A | Keep | DM.A | none |
-| `Grove.Mvc.Abstractions/ModelBinding/IUpdateModel`, `IUpdateModelAccessor` | Mvc.A | Replaced by the sink (§ Editor halves); the interface dies with MVC | — | — |
-| `Grove.Server/Services/BlazorComponentShapeBindingResolver.cs` | Server | Delete with the renderers (it renders components to HTML for Razor) | — | — |
-
-Today's MVC-coupled files in `Grove.DisplayManagement` (grep for `Microsoft.AspNetCore.Mvc`,
-`ViewContext`, `IHtmlHelper`, `ActionContext`, `IUrlHelper`, `RazorPage`, `TagHelper`): 50,
-all in the rows marked Delete or Renderers above, plus `IShape.cs` (the `TagBuilder` helper),
-`Extensions/HttpContextExtensions.cs`, `Extensions/ServiceCollectionExtensions.cs` and
-`PlatformBuilderExtensions.cs` (the registrations of the renderers).
+| Type (folder) | Where |
+| --- | --- |
+| `IShape`, `Shape`, `Composite`, `AlternatesCollection`, `ShapeMetadata`, `ShapeSerializer` (`IShape.cs`, `Shapes/`) | DM. Server-only: the browser's contract is the display tree (`DisplayNode`, DM.A). `ShapeMetadata` has no rendered content; its displaying/processing callbacks take a `ShapeDisplayContext` (the shape and the services) |
+| `IShapeFactory`, `DefaultShapeFactory`, `IShapeFactoryEvents`, `Arguments`, `ShapeFactoryExtensions` | DM |
+| `IDisplayDriver<TModel>`, `DisplayDriver<TModel>`, `DisplayDriverBase`, `IDisplayResult`, `ShapeResult`, `CombinedResult`, `ShapeViewModel` | DM; display only (`BuildDisplayAsync`) |
+| `BuildShapeContext`, `BuildDisplayContext`, `FindPlacementDelegate` | DM; no model binding, no updater |
+| `IDisplayManager<TModel>` (`BuildDisplayAsync(model, displayType, groupId)`), `DisplayManager`, `BaseDisplayManager` | DM |
+| Placement (`Descriptors/PlacementInfo*`, `ShapePlacementStrategy/*`, `IPlacementInfoResolver`, `ShapeTablePlacementProvider`) | DM |
+| Shape table (`ShapeTable` with `GetShapeDescriptor`, `ShapeTableBuilder`, `ShapeAlteration(Builder)`, `DefaultShapeTableManager`, `IShapeTableProvider`, `FeatureShapeDescriptor`) | DM. `ShapeBinding` is a binding name, a source and a `ComponentName`; `ShapeAlterationBuilder.Bind(ShapeBinding)` |
+| Zones (`IZoneHolding`, `ZoneHolding`, `ZoneOnDemand`, `Zones`, `FlatPositionComparer`, `ZoneAlternatesFactory`, `ZoneShapeAlternates`) | DM |
+| Layout (`ILayoutAccessor`, `LayoutAccessor`, `ILayoutTreeContributor`) | DM |
+| Theming (`IThemeManager`, `ThemeManager`, `IThemeSelector`, `ThemeSelectorResult`) | DM (theme scope of the registry and templates) |
+| `Title/IPageTitleBuilder` | DM |
+| `Components/*` (registry manager, tree builder, filter, versions, cache, HTML renderer, template binding seam, coverage) | DM |
+| `Components/*` (descriptors, registry, `DisplayNode`, renderer, state, predicates, validator, zone keys) | DM.A |
+| `Validation/*` (`IValidationSink`, `ValidationSink`, `ValidationErrors`, the rules) | DM.A, namespace `Grove.Validation` |
+| `Document/*` (`IDocumentContributor`, `DocumentContext`, `DocumentSlot`) | DM |
 
 ### Tracker: the extraction
 
-- [ ] **E1. Isolate the renderers.** Move every Delete/Renderers row into a new
-  `Grove.DisplayManagement.Razor` project referenced only by `Grove.Mvc`-hosting code and by the
-  fallback (through `IShapeHtmlFallback`, a one-method interface in DM the builder calls). DM
-  drops its `Grove.Mvc` and `Grove.Mvc.Abstractions` references except `IUpdateModel` (E3).
-  Owner: Grove.DisplayManagement. Depends on: nothing. Size: L. Wave 1.
-- [ ] **E2. `IShape` and `ShapeMetadata` MVC-free.** `GetTagBuilder` to Renderers; `ChildContent`
-  kept behind the fallback until E6, then removed. Owner: Grove.DisplayManagement. Depends on
-  E1. Size: S. Wave 1.
-- [ ] **E3. The validation sink.** § Editor halves. Owner: Grove.DisplayManagement with
-  Grove.Data (the validation engine). Depends on api.md's editor-API cut-over. Size: M. Wave 3.
-- [ ] **E4. Move the shared contract to DM.A.** `IShape`, `ShapeMetadata`, `AlternatesCollection`
-  (by hand, per file: the memory rule on Abstractions moves). Owner: Grove.DisplayManagement.
-  Depends on E2. Size: S. Wave 3.
-- [ ] **E5. Shape table without HTML bindings.** `ShapeBinding` keeps `ComponentName` only;
-  the attribute and template strategies move to Renderers. Owner: Grove.DisplayManagement.
-  Depends on E1. Size: M. Wave 1.
-- [ ] **E6. Delete the renderers.** Remove `Grove.DisplayManagement.Razor`,
-  `Grove.DisplayManagement.Liquid`'s view half (§ Liquid), `BlazorComponentShapeBindingResolver`,
-  the fallback seam and `ShapeMetadata.ChildContent`. Owner: Grove.DisplayManagement. Depends on
-  the coverage tracker reaching zero on every live path, views.md's MVC screens gone, setup's
-  static-SSR pages (views.md § Setup). Size: L. Wave 4.
-- [ ] **E7. Setup check.** Setup's static-SSR pages render without the shape renderers and
-  without MVC (views.md § Setup). Owner: Grove.Setup. Size: S. Wave 4.
+- [x] **E1. Renderers out of the engine.** The engine holds no renderer; the Razor and Liquid view
+  engines, the C# bindings, the tag helpers, `IHtmlDisplay`/`DisplayHelper`, the MVC model
+  updaters and `INotifier` are deleted (E6).
+- [x] **E2. `IShape` and `ShapeMetadata` MVC-free.** No `TagBuilder` helper; no `ChildContent`.
+- [x] **E3. The validation sink** (§ The validation sink).
+- [ ] **E4. The shape contract in DM.A.** The shape types stay in DM: `ShapeMetadata` carries
+  the displaying callbacks and the cache context (server types), and nothing in the browser
+  takes a shape (it takes `DisplayNode`). Open: whether the item is dropped.
+- [x] **E5. Shape table without HTML bindings.** `ShapeBinding` names a component; the
+  attribute and template strategies are deleted.
+- [x] **E6. Renderers deleted**, with `BlazorComponentShapeBindingResolver`, the fallback seam
+  and `ShapeMetadata.ChildContent`.
+- [x] **E7. Setup** renders without shapes and without MVC.
 
 ## Component coverage
 
-Every shape a live path renders must resolve to a component; a shape without one falls back to
-the renderers today. "Live paths" are the site (`api/grove/site/page`), the admin `/display`
-and headless display (`api/grove/content-items/{id}/display`), the editor trees
-(`…/editor`, built from metadata, so they never fall back), designed pages and the audit
-version view (`api/grove/audit/content/{id}`). Starting list: blazor-display.md step 7's
-fallback list, re-checked by scanning every content part, field and content display
-driver's `Display` shapes against the registered component names (94 registered; the registry's
-display-variant rule counted). The runtime list comes from the `markup-fallback` diagnostics
-(`DisplayTreeBuilder.cs:573`), which the flag below makes measurable.
+Every shape a live path renders resolves to a component; one that does not becomes an error node
+(`DisplayNode.Error`, diagnostic `no-component`, naming the shape type), and is counted in
+`DisplayFallbackLog` with the request path. "Live paths" are the site (`api/grove/site/page`),
+the admin `/display` and headless display (`api/grove/content-items/{id}/display`), the editor
+trees (`…/editor`, built from metadata), designed pages and the audit version view
+(`api/grove/audit/content/{id}`).
 
-| Shape | Owner module | Live path | Size | Wave | Status |
-| --- | --- | --- | --- | --- | --- |
-| `TermPart` (a term's page: the items tagged) | Grove.Taxonomies | site | M (items + pager, like `ListPart`) | 1 | - [ ] |
-| `ListPartFeed` (RSS link in the head) | Grove.Lists | site | S | 1 | - [x] `HeadLink`, bound as `ListPartFeed`: the feed driver puts the link's values on the shape |
-| `LiquidPart`, `LiquidPart_Summary` | Grove.Liquid | site | M | 3 | - [x] retired: one body format. Grove.Templates' migration (`Migrations.UpdateFrom3Async`, `LiquidBodies`) gives every type with the part `DisplayTreePart` in its place, converts every version's body (a body rendering one shape by name becomes that component's node; a body without Liquid a `RichText` node; a body with Liquid a published composite template of its own, `LiquidBody_{id}`, placed by name with the item's id as its `ContentItemId` input, `Model.ContentItem` read through the `Content` accessor) and deletes the part's definition; the part, its driver, handler, index handler, shapes, templates and script are deleted |
-| `SearchFormPart` | Grove.Search | none (unused, widgets.md) | S (delete the part and driver) | 1 | - [ ] |
-| `PublishLaterPart`, `ArchiveLaterPart` (scheduled-date notes) | Grove.PublishLater, Grove.ArchiveLater | `/display` (Detail shows them to editors) | S each | 2 | - [ ] |
-| `DashboardPart`, `Dashboard_*Button`, `Dashboard_DragHandle`, `DashboardWidget_DetailAdmin__ContentsTags` | Grove.AdminDashboard | MVC dashboard only | — | 3 (deleted with the module, views.md › Module deletions and keeps) | - [ ] |
-| `*_SummaryAdmin` (`AuditTrailContentsAction`), `*_Thumbnail`, `*_Admin` (menu item parts) | Grove.Contents, Grove.Menu | MVC admin lists only | — | 4 (go with TheAdmin, views.md) | - [ ] (the `LocalizationPart`, `ListPart` and Contents list shapes, `ListPartHeaderAdmin`, `ListPartNavigationAdmin` and `ListPartDetailAdminSearchPanel` are deleted with the Contents MVC screens) |
-| `AddToDeploymentPlan_Modal__ActionDeploymentPlan`, `ExportContentToDeploymentTarget_Modal__ActionDeploymentTarget` | Grove.Contents | MVC admin lists only | — | 4 | - [ ] |
-| `ListPart_RemotePublishing` | Grove.Lists | MetaWeblog discovery (head) | — | — | ☑ deleted with Grove.XmlRpc |
-| `TestContentPartA`, `LowerDoll` | Grove.Demo | Demo module | — | — | ☑ deleted with Grove.Demo |
-| Non-driver shapes rendered into the site layout (menus, pager, layout zones) | Grove.Menu, Grove.Navigation, theme clients | site | — | — | ☑ covered (`Menu`, `MenuItem`, `Pager`, `PagerSlim`, `Layout`, `Content`, `NotFound`, `Forbidden`) |
-| Field, part and content displays (text, HTML, Markdown, numbers, dates, links, pickers, users, media, taxonomy fields, YouTube, geo point, title, bag, list, HTML and Markdown bodies, taxonomy pages, `DisplayTreePart`) | ContentFields, Media, Markdown, Taxonomies, Spatial, Title, Flows, Lists, Html, Templates | site, `/display` | — | — | ☑ covered (blazor-display.md step 7) |
+**The coverage report**, `GET api/grove/components/coverage?shell=&theme=` (admin;
+`ComponentCoverage` in DM, served by Grove.Display.Templates' `ComponentsApi`): every shape type
+of the shape table (descriptors and bindings without a component) and every type a display tree
+met without a component, against the shell's registry; uncovered types first, with their
+bindings, their count and the last path. The table below is the hand-kept record of what was
+resolved; the report is the live answer.
 
-### Tracker: the fallback as an error
+| Shape | Owner module | Live path | Status |
+| --- | --- | --- | --- |
+| `TermPart` (a term's page: the items tagged) | Grove.Contents.Taxonomies | site | - [x] `TermPart` (`ListPart`'s display, bound as `TermPart`) |
+| `ListPartFeed` (RSS link in the head) | Grove.Display.Lists | site | - [x] `HeadLink`, bound as `ListPartFeed`: the feed driver puts the link's values on the shape |
+| `LiquidPart`, `LiquidPart_Summary` | Grove.Display.Liquid | site | - [x] retired: one body format. Grove.Display.Templates' migration (`Migrations.UpdateFrom3Async`, `LiquidBodies`) gives every type with the part `DisplayTreePart` in its place, converts every version's body (a body rendering one shape by name becomes that component's node; a body without Liquid a `RichText` node; a body with Liquid a published composite template of its own, `LiquidBody_{id}`, placed by name with the item's id as its `ContentItemId` input, `Model.ContentItem` read through the `Content` accessor) and deletes the part's definition |
+| `SearchFormPart` | Grove.Search | none | - [x] deleted with its driver (views.md › Search) |
+| `PublishLaterPart`, `ArchiveLaterPart` (scheduled-date notes) | Grove.Contents.PublishLater, Grove.Contents.ArchiveLater | `/display` | - [x] `PublishLaterPart`, `ArchiveLaterPart` (the scheduled date as a badge); their `_SummaryAdmin` shapes resolve through the registry's display-variant rule |
+| `DashboardPart` and its shapes | Grove.AdminDashboard | — | - [x] deleted with the module |
+| `*_SummaryAdmin`, `*_Thumbnail`, `*_Admin` of the MVC admin lists; the deployment modals | Grove.Contents, Grove.Contents.SiteMenu | — | - [x] deleted with the Contents MVC screens and Grove.Themes.TheAdmin |
+| `ListPart_RemotePublishing` | Grove.Display.Lists | — | ☑ deleted with Grove.XmlRpc |
+| `TestContentPartA`, `LowerDoll` | Grove.Demo | — | ☑ deleted with Grove.Demo |
+| Non-driver shapes rendered into the site layout (menus, pager, layout zones) | Grove.Contents.SiteMenu, Grove.Display.Navigation, theme clients | site | ☑ covered (`Menu`, `MenuItem`, `Pager`, `PagerSlim`, `Layout`, `Content`, `NotFound`, `Forbidden`) |
+| `ContentPart`, `ContentPart_Summary` (a part with fields and no driver) | Grove.Contents | site, `/display` | - [x] `ContentPart` (`Grove.Display.Components/Components/Content/ContentPartDisplay.cs`, its `Content` zone) |
+| Field, part and content displays (text, HTML, Markdown, numbers, dates, links, pickers, users, media, taxonomy fields, YouTube, geo point, title, bag, list, HTML and Markdown bodies, taxonomy pages, `DisplayTreePart`) | ContentFields, Media, Markdown, Taxonomies, Spatial, Title, Flows, Lists, Html, Templates | site, `/display` | ☑ covered (blazor-display.md step 7) |
 
-- [ ] **C1. `DisplayTreeOptions.Fallback`** = `Render` (today), `Diagnose` (render, and log
-  each `markup-fallback` with the shape type and the path, counted per type), `Refuse` (the
-  node becomes a `DisplayError` node with the shape type; no `IHtmlDisplay` call). Default
-  `Render` in production, `Diagnose` in Development, `Refuse` in the functional test host so a
-  new driver without a component fails a test. Owner: Grove.DisplayManagement. Depends on
-  nothing. Size: S. Wave 1.
-- [ ] **C2. Coverage report.** `GET api/grove/components/coverage` (admin): every shape type the
-  enabled drivers can produce (from the drivers' declared shape names and the shape table)
-  against the registry, so the table above is generated, not hand-kept. Owner: the display
-  system (declared with DM, registered in Grove.Server's API registry). Depends on C1. Size: M. Wave 2.
-- [ ] **C3. Flip the default to `Refuse`** once C2 shows zero uncovered shapes on the live
-  paths. Owner: Grove.DisplayManagement. Depends on the coverage rows of waves 1-2. Size: S.
-  Wave 3.
-- [ ] **C4. Component parity audit.** Every shape template (the 597 driver-shape templates and
-  the 261 `Views/Items/*`, [views.md](views.md) › The inventory) has a Blazor component
-  equivalent, not only the shapes on live paths; the audit's rules are in
+### Tracker: no fallback
+
+- [x] **C1. A shape without a component is an error node** naming the shape type, logged in
+  `DisplayFallbackLog`; nothing renders it to markup.
+- [x] **C2. Coverage report** (`GET api/grove/components/coverage`).
+- [x] **C3. No fallback by default**: there is no renderer to fall back to.
+- [ ] **C4. Component parity audit.** Every shape template the platform shipped has a Blazor
+  component equivalent, not only the shapes on live paths; the audit's rules are in
   [blazor-display.md](../blazor-display.md) › Rework plan, step 7; the tracker is
-  [parity.md](parity.md). Owner: the module of each
-  shape. Depends on C2. Size: L. Wave 3.
+  [parity.md](parity.md).
 
-## Editor halves vs the JSON APIs
+## Display drivers and the JSON APIs
 
-255 display drivers; 162 override `Display`, 206 `Edit`, 168 `UpdateAsync` (scan of `src/`).
-The Blazor editors do not call them: `ContentEditorTreeBuilder` builds the editor tree from the
-type definition and the registry's editor components, and the content API saves the JSON. The
-callers of `UpdateEditorAsync` are all MVC controllers: Contents, ContentPreview, Sitemaps,
-Taxonomies, UrlRewriting, Users (account, registration, reset password). There are no deployment
-step drivers (a step registers with `AddDeployment<TSource, TStep>()` and is edited as the JSON the
-plan stores), no site settings drivers (settings groups are `SettingsForm` pages over the settings
-group API) and no `User` editor drivers (`Pages/UserEditor.razor`).
+A display driver has a display half only: `DisplayDriver<TModel>.Display`/`DisplayAsync`,
+`ContentPartDisplayDriver<TPart>.Display`, `ContentFieldDisplayDriver<TField>.Display`. Editors
+are trees built from type metadata (`ContentEditorTreeBuilder`) and the registry's editor
+components, saved as JSON by the content API. Content definitions are edited through the
+definitions API (`ContentDefinitionsApi`); there are no definition editor drivers. A display
+driver that reads the request (a pager's page) reads the query string
+(`PagerParameters.FromQuery`, `PagerSlimParameters.FromQuery`).
 
-What dies with the MVC editors (each with the MVC screen views.md retires, in the same change):
+Validation is where every save runs it: the part and field handlers' `ValidatingAsync`
+(`ContentPartHandler`, `ContentFieldHandler`), which the content manager runs on every save and
+the Blazor editor's server round-trip reports: Text, Numeric, Date, Time, DateTime, Link,
+MultiText, Html, YouTube, the user, localization-set and option pickers, Media, GeoPoint,
+Markdown (Liquid syntax), Title (required), Taxonomy field (required) and part (term type),
+Seo (canonical characters, JSON schema), Alias, Autoroute, HTML body, menu items, contained
+items and `DisplayTreePart`.
 
-- every driver's `Edit` and `UpdateAsync` whose only caller is an MVC editor, with its edit
-  views (`*.Edit.cshtml`), its edit view models and its `INotifier` messages;
-- `BuildEditorContext`/`UpdateEditorContext`'s HTML prefix plumbing and the MVC model updaters;
-- the classic pickers' search controllers (the user picker's is already replaced by
-  `api/grove/content-fields/users`).
+### The validation sink
 
-What survives in a driver's editor half: **validation**. Today some rules live only in
-`UpdateAsync` (required checks, length, regex, picker cardinality) and land in `ModelState`.
-They move to where the JSON API already validates: the part and field handlers'
-`ValidatingAsync` (`ContentPartHandler`), which the content manager runs on every save, and which
-the Blazor editor's server round-trip reports. Coordinate the field list with [api.md](api.md)
-(the content and settings APIs own the request/response shape).
+`IValidationSink` (`Grove.Display.Management.Abstractions/Validation/IValidationSink.cs`,
+namespace `Grove.Validation`): `AddError(string key, string message)`, `ValidationErrors Errors`,
+`bool IsValid`. One per request (scoped; `ValidationSink` is the implementation, registered by
+the display engine and by Grove.Contents.Management). Keys are field paths (`Part.Field`),
+setting names or `""` for the object, kept as the error contract's wire keys (`ValidationErrors`).
 
-**What `IUpdateModel` becomes.** A ModelState-only sink, then nothing:
+- `DefaultContentManager` reports a cancelled publish, unpublish, create or delete into the
+  sink.
+- The API answers a non-empty sink with `ApiProblems.Validation(sink)` or through the
+  `.AnswersValidationSink()` convention (`ApiValidationSinkEndpointFilter`), the error contract's
+  400 with `errors` ([api.md](api.md) › The error contract).
 
-1. `IValidationSink` in `Grove.Data.Abstractions` (Grove.Data is the validation engine): `AddError(string key, string message)`, `Errors`, `IsValid`. No model binding.
-2. `DefaultContentManager` (`Grove.ContentManagement/DefaultContentManager.cs:408, 412, 480, 484,
-   640, 644, 955, 959`) reports cancelled publish/unpublish/create/delete into the sink instead of
-   `ModelUpdater.ModelState`; the content API returns the sink's errors as its problem details.
-3. `BuildShapeContext.Updater` (`Handlers/BuildShapeContext.cs:27`) is removed from display
-   contexts (a display never binds); editor contexts keep the sink until their halves are gone.
-4. `IUpdateModel`/`IUpdateModelAccessor` (`Grove.Mvc.Abstractions/ModelBinding/IUpdateModel.cs`)
-   are deleted with `Grove.Mvc.Abstractions`.
+- [x] **U1. `IValidationSink`** and its request-scoped implementation.
+- [x] **U2. Content manager on the sink.**
+- [x] **U3. Editor-only validation in the handlers** (the list above).
+- [x] **U4. Display contexts without an updater**: `BuildDisplayAsync(model, displayType, groupId)`
+  on `IDisplayManager<T>`, `IContentItemDisplayManager` and `IDisplayTreeBuilder.BuildDisplayAsync<T>`.
+- [x] **U5. Editor halves deleted**: `BuildEditorAsync`/`UpdateEditorAsync`, the editor
+  contexts, `IUpdateModel`/`IUpdateModelAccessor`, the content definition display manager and
+  its drivers.
 
-- [ ] **U1. `IValidationSink`** and its request-scoped implementation; the MVC
-  `IUpdateModelAccessor` adapts to it while both exist. Owner: Grove.Data.Abstractions. Depends
-  on api.md's error contract. Size: S. Wave 2.
-- [ ] **U2. Content manager on the sink.** Owner: Grove.ContentManagement. Depends on U1.
-  Size: S. Wave 2.
-- [ ] **U3. Port editor-only validation to handlers.** Per field and part, the rules in
-  `UpdateAsync` that `ValidatingAsync` lacks. Owner: each module (ContentFields first: Text,
-  Numeric, Link, pickers). Depends on U1. Size: L. Wave 3.
-- [ ] **U4. Display contexts without an updater.** Owner: Grove.DisplayManagement. Depends on
-  U2. Size: M (every `BuildDisplayAsync` caller passes one today). Wave 3.
-- [ ] **U5. Delete editor halves** module by module, in the change that deletes the module's MVC
-  editor (views.md). Owner: each module. Depends on views.md. Size: XL overall. Waves 3-4.
+## Liquid
 
-## Liquid without `LiquidPage`
+Liquid is a language, not a view engine.
 
-`Grove.DisplayManagement.Liquid` is two things in one project: the **view engine** (dies) and the
-**language configuration** the templates, workflows and patterns use (lives).
-
-| Part | Files | Fate |
-| --- | --- | --- |
-| View engine: `.liquid` views as Razor pages | `LiquidPage.cs`, `LiquidViewTemplate.cs`, `LiquidViewParser.cs`, `LiquidViewOptions*.cs`, `LiquidViewsFeatureProvider.cs`, `LiquidViewExtensionProvider.cs`, `LiquidShapeTemplateOptionsSetup.cs`, `ModuleProjectLiquidFileProvider.cs`, `TemplateOptionsFileProviderSetup.cs`, `ViewBufferTextWriterContent.cs` | Delete (wave 4, with E6) |
-| View tags | `Tags/*` (`shape`, `zone`, `layout`, `render_body`, `render_section`, alternates/classes/wrappers/attributes, `antiforgerytoken`, `a`, `cache*`, `page_title`, `httpcontext_*`) | Delete; the tree templates have their own tags (`TemplateTreeParser`) |
-| Tag-helper bridge | `TagHelpers/*`, `Tags/FluidTagHelper.cs` | Delete |
-| View filters | `shape_new`, `shape_render`, `shape_stringify` (`Filters/NewShapeFilter.cs`, `ShapeRenderFilter.cs`, `ShapeStringifyFilter.cs`), `LiquidViewFilters.cs`, `append_version`, `resource_url` | Delete (security audit item 3 already lists `shape_render`/`shape_stringify` as not for tenant templates) |
-| Language configuration | `TemplateOptionsConfigurations.cs` (steps and recursion bounds, member access, value converters), `Filters/SanitizeHtmlFilter.cs`, `Filters/SupportedCulturesFilter.cs`, `Values/CultureValue.cs` | Keep, move to `Grove.Liquid` (it registers the rest of the filters already, `Grove.Liquid/Startup.cs:72-82`) |
-| Request values | `Values/HttpRequestValue.cs`, `HttpContextValue.cs`, `HeaderDictionaryWrapper.cs`, `CookieCollectionWrapper.cs`, `RouteValueDictionaryWrapper.cs`, `HttpContextItemsWrapper.cs`, `StringValuesValue.cs`, `TrackingConsentValue.cs`, `HostingEnvironmentValue.cs` | Dropped: tenant Liquid gets no `Request` and no `HttpContext` (attack surface); a template reads the route through the `Route` context of decision 4 |
-| Shape converters | the `Shape`/`IHtmlContent` value converters and `ShapeAccessor` | Delete with the renderers; tree templates see shapes as `Model` through the member access they register |
-
-And in the other Liquid projects:
-
-- `Grove.Liquid.Abstractions`: keep `ILiquidTemplateManager`, `ILiquidFilter`,
+- **Grove.Display.Liquid.Abstractions**: `ILiquidTemplateManager`, `ILiquidFilter`,
   `LiquidFilterDelegateResolver`, `LiquidContentAccessor`, `LiquidPropertyAccessor`,
-  `FluidOptionsParser`; `LiquidTemplateContext.ViewContext` (`:17`) is removed (only the view
-  engine reads it).
-- `Grove.Liquid`: keeps `LiquidTemplateManager` (the one Liquid every caller uses: Autoroute,
-  titles, bodies, workflows through `PlatformLiquidTemplateManager`, search queries) and the
-  content filters (`slugify`, `json`, `local`/`utc`, `href`, `absolute_url`, `liquid`,
-  `encrypt`/`decrypt` pending the audit); `Razor/LiquidRazorHelperExtensions.cs` goes with Razor;
-  `LiquidPart` is retired, its bodies migrated to `DisplayTreePart` (§ Component coverage).
-- `Grove.Templates`: keeps its own parser and evaluator over the shared `TemplateOptions`; no
-  change beyond the scope values above.
+  `FluidOptionsParser`, `LiquidTemplateContext` (the services and whether it is initialized; no
+  view context) and `LiquidTemplateContextExtensions.InitializeAsync` (the tenant's time zone,
+  local now and the current UI culture).
+- **Grove.Display.Liquid**: `LiquidParser` (Fluid's tags with the tenant's `Grove_Liquid` parser
+  options, no view tags), `LiquidTemplateManager` (the one Liquid every caller uses: Autoroute,
+  titles, bodies, workflows through `PlatformLiquidTemplateManager`, search queries),
+  `LiquidTemplateOptionsSetup` (the sandbox's step and recursion bounds, the `Culture` value) and
+  the filters: `t` (the platform's string localizer), `html_class`, `json`, `jsonparse`, `local`,
+  `utc`, `slugify`, `liquid`, `href` and `absolute_url` (over `IShellLinkGenerator`),
+  `sanitize_html`, `supported_cultures`, `encrypt`/`decrypt`, `shortcode`.
+- **Grove.Display.Templates** has its own parser over the shared `TemplateOptions`, and
+  registers the member access a tree template reads shapes with (`Shape`, `ZoneHolding`,
+  `ShapeMetadata`, `ShapeAccessor`).
+- **No request values**: tenant Liquid has no `Request`, `HttpContext`, `Environment` or
+  `TrackingConsent` value (an attack surface); a template reads the route through the
+  `Route` context. Filters that need the request (`switch_culture_url`, `display_url`,
+  `absolute_url`) read it themselves and expose only their result.
 
-- [ ] **L1. Split `Grove.DisplayManagement.Liquid`**: language configuration to `Grove.Liquid`,
-  the rest into the Renderers project. Owner: Grove.Liquid. Depends on E1. Size: M. Wave 2.
-- [ ] **L2. `LiquidTemplateContext` without `ViewContext`.** Owner: Grove.Liquid.Abstractions.
-  Depends on L1 and E6 (the view engine is its only reader). Size: S. Wave 4.
-- [ ] **L3. Request values out of the shared scope**: `Request`, `HttpContext` and their value
-  wrappers are removed from tenant templates. Owner: Grove.Liquid. Size: S. Wave 3.
-
-## Waves
-
-| Wave | Contents | Gate |
-| --- | --- | --- |
-| 1 | E1, E2, E5, C1; coverage rows `TermPart`, `ListPartFeed`, `SearchFormPart` | compiles; fallback measurable |
-| 2 | U1, U2, L1, C2; rows `PublishLaterPart`, `ArchiveLaterPart`, `ListPart_RemotePublishing` | coverage report shows only MVC-admin shapes uncovered |
-| 3 | E3, E4, U3, U4, L3, C3, C4 | `Refuse` is the default; no display context carries an updater |
-| 4 | E6, E7, L2, U5 (rest); admin-only rows go with views.md's screens | `Grove.Mvc*` references gone from DM and Liquid; renderers deleted |
-
-Cross-workstream dependencies: wave 4 needs [views.md](views.md)'s MVC screens retired (the
-admin lists, the Contents MVC create/edit actions) and
-[api.md](api.md)'s error contract (U1) and content/settings editor APIs (U3).
+- [x] **L1. One Liquid language project**: the view half (`LiquidPage`, the view parser and its
+  tags, the tag-helper bridge, the view filters `shape_new`/`shape_render`/`shape_stringify`/
+  `shape_properties`/`append_version`/`resource_url`, the resource and `contentitem` and `a`
+  tags) is deleted with `Grove.Display.Management.Liquid`.
+- [x] **L2. `LiquidTemplateContext` without `ViewContext`.**
+- [x] **L3. Request values out of the shared scope.**

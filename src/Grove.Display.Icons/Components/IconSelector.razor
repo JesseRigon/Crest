@@ -1,0 +1,424 @@
+@namespace Grove.Display.Icons.Components
+@using Grove.Display.Icons
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Primitives
+@implements IAsyncDisposable
+@inject IIconSearchClient Icons
+@inject IJSRuntime Js
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+<div class="icon-selector">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+        <GroveTextBox Value="@Value" ValueChanged="SetValueAsync" Placeholder="@("@api-provider:icon-prefix:icon-name")" Style="width: 100%;" />
+        <GroveButton Icon="apps" ButtonStyle="ButtonStyle.Light" Click="ToggleOpenAsync" ButtonType="ButtonType.Button" title="@T["Choose icon"]" />
+        @if (!string.IsNullOrWhiteSpace(Value))
+        {
+            <GroveButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="ClearAsync" ButtonType="ButtonType.Button" title="@T["Clear icon"]" />
+        }
+    </GroveStack>
+
+    @if (IsOpen)
+    {
+        <div class="icon-selector__modal-backdrop" role="presentation" @onclick="Close">
+            <div class="icon-selector__dialog" role="dialog" aria-modal="true" aria-label="@T["Choose icon"]" @onclick:stopPropagation="true" @ref="DialogElement">
+                <div class="icon-selector__dialog-header">
+                    <GroveStack Gap="0.2rem">
+                        <GroveText TextStyle="TextStyle.H5" Text="@T["Choose icon"]" />
+                        <GroveText TextStyle="TextStyle.Caption" Text="@T["Search Iconify, tenant icons, and enabled icon providers. Results are stored as @api-provider:icon-prefix:icon-name references."]" />
+                    </GroveStack>
+                    <GroveButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Text" Click="Close" ButtonType="ButtonType.Button" title="@T["Close"]" />
+                </div>
+
+                <div class="icon-selector__dialog-body">
+                    <aside class="icon-selector__filters" aria-label="@T["Icon filters"]">
+                        @foreach (var facet in Facets)
+                        {
+                            <div class="icon-selector__filter-section">
+                                <div class="icon-selector__filter-heading">@facet.Label</div>
+                                <div class="icon-selector__chip-list">
+                                    @foreach (var option in facet.Options)
+                                    {
+                                        var facetId = facet.Id;
+                                        var optionValue = option.Value;
+                                        <button type="button" class="@GetFilterButtonClass(facetId, optionValue)" @onclick="EventCallback.Factory.Create(this, () => ToggleFilterAsync(facetId, optionValue))">
+                                            <span>@option.Label</span>
+                                            @if (option.Count is > 0)
+                                            {
+                                                <span class="icon-selector__filter-count">@option.Count</span>
+                                            }
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </aside>
+
+                    <section class="icon-selector__results">
+                        <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="icon-selector__search-row">
+                            <GroveTextBox Value="@SearchText" @oninput="SearchInputAsync" Placeholder="@T["Search all icons..."]" Style="width: 100%;" />
+                            @if (ActiveFilterValues.Count > 0 || SelectedLibrary is not null || !string.IsNullOrWhiteSpace(SearchText))
+                            {
+                                <GroveButton Text="@T["Clear"]" Icon="filter_alt_off" ButtonStyle="ButtonStyle.Light" Click="ClearFiltersAsync" ButtonType="ButtonType.Button" />
+                            }
+                        </GroveStack>
+
+                        <div class="icon-selector__style-strip" @ref="StylePacksElement" aria-label="@T["Style packs"]">
+                            <button type="button" class="icon-selector__style-chip @(SelectedLibrary is null ? "icon-selector__style-chip--active" : null)" @onclick="@(() => SelectLibraryAsync(null))">
+                                <span>💙</span>
+                                <span>@T["All style packs"]</span>
+                            </button>
+                            @foreach (var library in Libraries)
+                            {
+                                <button type="button" class="icon-selector__style-chip @(SelectedLibrary == library.Id ? "icon-selector__style-chip--active" : null)" @onclick="@(() => SelectLibraryAsync(library.Id))">@LibraryLabel(library)</button>
+                            }
+                        </div>
+
+                        <div class="icon-selector__result-meta">
+                            <span>@ResultSummary</span>
+                            @if (ActiveFilterValues.Count > 0)
+                            {
+                                <span>@T["Filters: {0}", string.Join(", ", ActiveFilterValues.Select(FilterLabel))]</span>
+                            }
+                        </div>
+
+                        <div class="icon-selector__grid" @ref="GridElement" @onscroll="OnScrollAsync">
+                            @if (IsLoading && Items.Count == 0)
+                            {
+                                <div class="icon-selector__status">@T["Loading icons..."]</div>
+                            }
+                            else if (Items.Count == 0)
+                            {
+                                <div class="icon-selector__status">@T["No icons found."]</div>
+                            }
+                            else
+                            {
+                                @foreach (var icon in Items)
+                                {
+                                    <button type="button" class="icon-selector__item @(PendingValue == ToProviderReference(icon) ? "icon-selector__item--selected" : null)" title="@ToProviderReference(icon)" @onclick="@(() => SelectAsync(icon))">
+                                        <span class="icon-selector__preview">@((MarkupString)(icon.SvgMarkup ?? string.Empty))</span>
+                                        <span class="icon-selector__name">@icon.Name</span>
+                                    </button>
+                                }
+                                @if (IsLoading)
+                                {
+                                    <div class="icon-selector__status icon-selector__status--wide">@T["Loading more..."]</div>
+                                }
+                            }
+                        </div>
+                    </section>
+                </div>
+
+                <div class="icon-selector__dialog-footer">
+                    <GroveTextBox Value="@PendingValue" ValueChanged="SetPendingValueAsync" Placeholder="@("@api-provider:icon-prefix:icon-name")" Style="width: 100%;" />
+                    <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" ButtonType="ButtonType.Button" Disabled="@string.IsNullOrWhiteSpace(PendingValue)" data-icon-selector-save="true" />
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private const int DefaultColumnCount = 10;
+    private const int RowsPerBatch = 20;
+    private readonly List<IconSearchItem> Items = [];
+    private readonly HashSet<string> ActiveFilterValues = new(StringComparer.OrdinalIgnoreCase);
+    private IconLibraryDescriptor[] Libraries = [];
+    private IconSearchFacet[] Facets = [];
+    private ElementReference DialogElement;
+    private ElementReference GridElement;
+    private ElementReference StylePacksElement;
+    private DotNetObjectReference<IconSelector>? DotNetRef;
+    private bool IsOpen;
+    private bool KeyboardRegistered;
+    private bool IsLoading;
+    private bool LoadWhenRendered;
+    private bool ReloadAfterLoad;
+    private int Total;
+    private int Loaded;
+    private int CurrentColumnCount = DefaultColumnCount;
+    private string? SearchText;
+    private string? SelectedLibrary;
+    private string? PendingValue;
+
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    private string ResultSummary => Total == 0 ? T["Browse icons or enter a search term."] : T["{0} matching icons", Total.ToString("n0")];
+
+    private async Task ToggleOpenAsync()
+    {
+        IsOpen = !IsOpen;
+        if (IsOpen)
+        {
+            PendingValue = Value;
+            LoadWhenRendered = Items.Count == 0;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!IsOpen)
+        {
+            return;
+        }
+
+        DotNetRef ??= DotNetObjectReference.Create(this);
+        await Js.InvokeVoidAsync("groveIconSelector.registerDialogKeyboard", DialogElement, DotNetRef);
+        KeyboardRegistered = true;
+
+        if (LoadWhenRendered)
+        {
+            LoadWhenRendered = false;
+            await Js.InvokeVoidAsync("groveIconSelector.enableHorizontalWheel", StylePacksElement);
+            await UpdateGridMetricsAsync();
+            await LoadNextPageAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task Close()
+    {
+        await UnregisterDialogKeyboardAsync();
+        IsOpen = false;
+    }
+
+    private async Task SetValueAsync(string? value) => await ValueChanged.InvokeAsync(value);
+
+    private Task SetPendingValueAsync(string? value)
+    {
+        PendingValue = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task ClearAsync() => await ValueChanged.InvokeAsync(null);
+
+    private async Task SearchInputAsync(ChangeEventArgs args)
+    {
+        SearchText = args.Value?.ToString();
+        await LoadFirstPageAsync();
+    }
+
+    private async Task SelectLibraryAsync(string? library)
+    {
+        SelectedLibrary = library;
+        await LoadFirstPageAsync();
+    }
+
+    private async Task ToggleFilterAsync(string facet, string value)
+    {
+        var key = FilterKey(facet, value);
+        if (!ActiveFilterValues.Add(key))
+        {
+            ActiveFilterValues.Remove(key);
+        }
+
+        await LoadFirstPageAsync();
+    }
+
+    private async Task ClearFiltersAsync()
+    {
+        SearchText = null;
+        SelectedLibrary = null;
+        ActiveFilterValues.Clear();
+        await LoadFirstPageAsync();
+    }
+
+    private Task SelectAsync(IconSearchItem icon)
+    {
+        PendingValue = ToProviderReference(icon);
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(PendingValue))
+        {
+            return;
+        }
+
+        await ValueChanged.InvokeAsync(PendingValue);
+        await Close();
+    }
+
+    [JSInvokable]
+    public async Task CloseFromKeyboardAsync()
+    {
+        await Close();
+        StateHasChanged();
+    }
+
+    private async Task LoadFirstPageAsync()
+    {
+        Items.Clear();
+        Total = 0;
+        Loaded = 0;
+        if (IsLoading)
+        {
+            ReloadAfterLoad = true;
+            return;
+        }
+
+        await UpdateGridMetricsAsync();
+        await LoadNextPageAsync();
+    }
+
+    private async Task LoadNextPageAsync()
+    {
+        if (IsLoading || (Total > 0 && Loaded >= Total))
+        {
+            return;
+        }
+
+        IsLoading = true;
+        try
+        {
+            await UpdateGridMetricsAsync();
+            var batchSize = GetBatchSize();
+            var result = await Icons.SearchAsync(SelectedLibrary, SearchText, Loaded, batchSize, BuildFilters());
+            Libraries = result.Libraries;
+            Facets = result.Facets;
+            Total = result.Total;
+            Loaded += result.Items.Length;
+            Items.AddRange(FilterDuplicateIcons(result.Items));
+        }
+        finally
+        {
+            IsLoading = false;
+            if (ReloadAfterLoad)
+            {
+                ReloadAfterLoad = false;
+                await LoadFirstPageAsync();
+            }
+        }
+    }
+
+    private async Task OnScrollAsync()
+    {
+        if (IsLoading || Loaded >= Total)
+        {
+            return;
+        }
+
+        var metrics = await GetGridMetricsAsync();
+        CurrentColumnCount = metrics.Columns;
+        var batchSize = GetBatchSize();
+        if (metrics.RemainingItems <= Math.Max(1, batchSize / 2))
+        {
+            await LoadNextPageAsync();
+        }
+    }
+
+    private int GetBatchSize() => Math.Max(RowsPerBatch, CurrentColumnCount * RowsPerBatch);
+
+    private async Task UpdateGridMetricsAsync()
+    {
+        var metrics = await GetGridMetricsAsync();
+        CurrentColumnCount = metrics.Columns;
+    }
+
+    private async Task<IconSelectorGridMetrics> GetGridMetricsAsync()
+    {
+        try
+        {
+            var metrics = await Js.InvokeAsync<IconSelectorGridMetrics>("groveIconSelector.getMetrics", GridElement);
+            return metrics.Columns <= 0 ? new IconSelectorGridMetrics(DefaultColumnCount, 0) : metrics;
+        }
+        catch (JSException)
+        {
+            return new IconSelectorGridMetrics(DefaultColumnCount, 0);
+        }
+    }
+
+    private IEnumerable<IconSearchItem> FilterDuplicateIcons(IEnumerable<IconSearchItem> icons)
+    {
+        if (!string.IsNullOrWhiteSpace(SelectedLibrary))
+        {
+            return icons;
+        }
+
+        var existingKeys = Items.Select(GetDuplicateKey).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return icons.Where(icon => existingKeys.Add(GetDuplicateKey(icon))).ToArray();
+    }
+
+    private static string GetDuplicateKey(IconSearchItem icon)
+    {
+        return $"{icon.Library}|{icon.Style}|{icon.Name}";
+    }
+
+    private static string LibraryLabel(IconLibraryDescriptor library) => library.Version is null ? library.Name : library.Name;
+
+    private static string ToProviderReference(IconSearchItem icon)
+    {
+        if (string.Equals(icon.ProviderId, "iconify", StringComparison.OrdinalIgnoreCase) && icon.Library.StartsWith("iconify.", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"@iconify:{icon.Library["iconify.".Length..]}:{icon.Name}";
+        }
+
+        return $"@{icon.ProviderId ?? icon.Library}:{icon.Library}:{icon.Name}";
+    }
+
+    private IconSearchFilter[] BuildFilters() =>
+        ActiveFilterValues
+            .Select(value => value.Split(':', 2, StringSplitOptions.TrimEntries))
+            .Where(parts => parts.Length == 2)
+            .Select(parts => new IconSearchFilter(parts[0], parts[1]))
+            .ToArray();
+
+    private string GetFilterButtonClass(string facet, string value) =>
+        $"icon-selector__filter-chip {(ActiveFilterValues.Contains(FilterKey(facet, value)) ? "icon-selector__filter-chip--active" : null)}";
+
+    private string FilterLabel(string key)
+    {
+        var parts = key.Split(':', 2, StringSplitOptions.TrimEntries);
+        if (parts.Length != 2)
+        {
+            return key;
+        }
+
+        return Facets
+            .FirstOrDefault(facet => string.Equals(facet.Id, parts[0], StringComparison.OrdinalIgnoreCase))
+            ?.Options.FirstOrDefault(option => string.Equals(option.Value, parts[1], StringComparison.OrdinalIgnoreCase))
+            ?.Label ?? parts[1];
+    }
+
+    private static string FilterKey(string facet, string value) => $"{facet}:{value}";
+
+    private async ValueTask UnregisterDialogKeyboardAsync()
+    {
+        // Only unregister when OnAfterRenderAsync actually registered the handler - during
+        // static-SSR/prerender the dialog never renders interactively, so there is nothing
+        // to tear down and no browser to talk to.
+        if (!KeyboardRegistered)
+        {
+            return;
+        }
+
+        try
+        {
+            await Js.InvokeVoidAsync("groveIconSelector.unregisterDialogKeyboard", DialogElement);
+        }
+        catch (JSException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+            // Static-SSR/prerender scope teardown: no browser is attached, so interop throws.
+            // See Grove.Display.Components.Primitives.PrerenderSafeJs - the handler was never
+            // registered in this phase, so there is nothing to unregister.
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit already disconnected; the browser discarded the handler with the page.
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await UnregisterDialogKeyboardAsync();
+        DotNetRef?.Dispose();
+    }
+
+    private sealed record IconSelectorGridMetrics(int Columns, int RemainingItems);
+}

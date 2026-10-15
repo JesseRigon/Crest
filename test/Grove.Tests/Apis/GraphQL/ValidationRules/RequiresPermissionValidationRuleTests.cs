@@ -4,8 +4,8 @@ using GraphQL.Conversion;
 using GraphQL.SystemTextJson;
 using GraphQL.Types;
 using GraphQL.Validation;
-using Grove.Apis.GraphQL;
-using Grove.Apis.GraphQL.ValidationRules;
+using Grove.Data.Protocols.GraphQL;
+using Grove.Data.Protocols.GraphQL.ValidationRules;
 using Grove.Security.Permissions;
 using Grove.Tests.Apis.Context;
 

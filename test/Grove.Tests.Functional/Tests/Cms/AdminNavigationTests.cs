@@ -16,7 +16,7 @@ public sealed class AdminNavigationTests : CmsTestBase<BlogFixture>, IClassFixtu
         await page.LoginAsync();
         await page.GotoAndAssertOkAsync("/Admin");
 
-        // Admin links persisted by TheAdmin include data-admin-hash and local admin hrefs.
+        // Admin links persisted by Grove.Themes.TheAdmin include data-admin-hash and local admin hrefs.
         var adminLink = page.Locator("#adminMenu a[data-admin-hash][href^=\"/\"]").First;
         await adminLink.ClickAsync();
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);

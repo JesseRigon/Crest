@@ -2,13 +2,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Grove.DisplayManagement.Handlers;
+using Grove.Display.Management.Handlers;
 using Grove.Modules;
-using Grove.Navigation;
+using Grove.Display.Navigation;
 using Grove.Security.Permissions;
 using Grove.Security.Services;
 using Grove.Security.Settings;
-using Grove.Settings.Deployment;
+using Grove.Infrastructure.Settings.Deployment;
 
 namespace Grove.Security;
 

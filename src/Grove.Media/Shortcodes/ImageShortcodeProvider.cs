@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using Grove.Media.Library;
 using Grove.Infrastructure.Html;
 using Grove.Media.Models;
-using Grove.ResourceManagement;
+using Grove.Display.Resources.Management;
 using Shortcodes;
 
 namespace Grove.Media.Shortcodes;

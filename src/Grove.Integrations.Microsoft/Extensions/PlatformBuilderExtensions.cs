@@ -1,0 +1,32 @@
+using Microsoft.Extensions.Configuration;
+using Grove.Environment.Shell.Configuration;
+using Grove.Integrations.Microsoft.Settings;
+
+namespace Microsoft.Extensions.DependencyInjection;
+
+public static class PlatformBuilderExtensions
+{
+    public static PlatformBuilder ConfigureMicrosoftAccountSettings(this PlatformBuilder builder)
+    {
+        builder.ConfigureServices((tenantServices, serviceProvider) =>
+        {
+            var configurationSection = serviceProvider.GetRequiredService<IShellConfiguration>().GetSection("Grove_Microsoft_Authentication_MicrosoftAccount");
+
+            tenantServices.PostConfigure<MicrosoftAccountSettings>(settings => configurationSection.Bind(settings));
+        });
+
+        return builder;
+    }
+
+    public static PlatformBuilder ConfigureAzureADSettings(this PlatformBuilder builder)
+    {
+        builder.ConfigureServices((tenantServices, serviceProvider) =>
+        {
+            var configurationSection = serviceProvider.GetRequiredService<IShellConfiguration>().GetSection("Grove_Microsoft_Authentication_AzureAD");
+
+            tenantServices.PostConfigure<AzureADSettings>(settings => configurationSection.Bind(settings));
+        });
+
+        return builder;
+    }
+}

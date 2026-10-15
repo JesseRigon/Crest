@@ -1,4 +1,4 @@
-# Google (`Grove.Google`)
+# Google (`Grove.Integrations.Google`)
 
 This module adds Google features to Grove.
 
@@ -54,13 +54,13 @@ If no value is provided, setup Callback URL in Google API to use the default pat
 
 ## Users Registration
 
-- Enable the `Grove.Users.Registration` feature when you also want local site registration.
+- Enable the `Grove.Access.Users.Registration` feature when you also want local site registration.
 - New external-user creation and profile generation are controlled from the Users module's [`ExternalRegistrationSettings`](../Users/README.md#external-authentication-settings).
 - An existing user can link the account through the External Logins link from the user menu.
 
 ## Google Settings Configuration
 
-The `Grove.Google` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureGoogleSettings()` extension method on `PlatformBuilder` when initializing the app.
+The `Grove.Integrations.Google` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureGoogleSettings()` extension method on `PlatformBuilder` when initializing the app.
 
 The following configuration values can be customized:
 

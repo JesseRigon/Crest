@@ -1,10 +1,10 @@
 using Grove.Access;
-using Grove.ContentFields.Fields;
-using Grove.ContentManagement;
+using Grove.Contents.Fields.Fields;
+using Grove.Contents.Management;
 using Grove.Parties.Constants;
 using Grove.Parties.Indexes;
 using Grove.Parties.ViewModels;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using YesSql;
 

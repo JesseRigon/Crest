@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
 using Grove.Environment.Shell;
 
-namespace Grove.FileStorage;
+namespace Grove.Data.Storage;
 
 /// <summary>
 /// Default filesystem based <see cref="ITempDirectoryProvider"/> implementation. Temporary files are placed under a

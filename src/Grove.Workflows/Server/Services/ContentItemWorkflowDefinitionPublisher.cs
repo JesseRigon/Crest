@@ -10,7 +10,7 @@ using Grove.Workflows.Management.Models;
 using Grove.Workflows.Management.Notifications;
 using Grove.Workflows.Management.Stores;
 using Grove.Workflows.Models;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Workflows.Parts;
 using Grove.Workflows.Registry;
 

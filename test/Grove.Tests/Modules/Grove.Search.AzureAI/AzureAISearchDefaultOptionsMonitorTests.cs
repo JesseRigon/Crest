@@ -3,12 +3,12 @@ using Azure.Search.Documents.Indexes;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Grove.AzureAI.Models;
-using Grove.AzureAI.Services;
+using Grove.Integrations.AI.Azure.Models;
+using Grove.Integrations.AI.Azure.Services;
 using Grove.Entities;
 using Grove.Environment.Options;
 using Grove.Environment.Shell;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Grove.Tests.Apis.Context;
 
 namespace Grove.Tests.Modules.Grove.AzureAI;
@@ -27,7 +27,7 @@ public class AzureAISearchDefaultOptionsMonitorTests
         {
             var shellFeaturesManager = scope.ServiceProvider.GetRequiredService<IShellFeaturesManager>();
             var availableFeatures = await shellFeaturesManager.GetAvailableFeaturesAsync();
-            var featuresToEnable = availableFeatures.Where(feature => feature.Id == "Grove.AzureAI");
+            var featuresToEnable = availableFeatures.Where(feature => feature.Id == "Grove.Integrations.AI.Azure");
 
             await shellFeaturesManager.EnableFeaturesAsync(featuresToEnable, force: true);
         });

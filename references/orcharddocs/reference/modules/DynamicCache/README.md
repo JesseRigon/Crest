@@ -1,4 +1,4 @@
-# Dynamic Cache (`Grove.DynamicCache`)
+# Dynamic Cache (`Grove.Data.Cache.Dynamic`)
 
 ## Purpose
 

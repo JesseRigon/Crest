@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using Grove.Indexing;
-using Grove.Settings;
+using Grove.Data.Indexing;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Search.Models;
 

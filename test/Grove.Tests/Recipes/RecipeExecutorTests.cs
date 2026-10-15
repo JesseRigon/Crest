@@ -4,13 +4,13 @@ using Grove.Environment.Shell.Builders;
 using Grove.Environment.Shell.Scope;
 using Grove.Locking;
 using Grove.Locking.Distributed;
-using Grove.Recipes.Events;
-using Grove.Recipes.Models;
-using Grove.Recipes.Services;
+using Grove.Infrastructure.Recipes.Events;
+using Grove.Infrastructure.Recipes.Models;
+using Grove.Infrastructure.Recipes.Services;
 using Grove.Scripting;
 using Grove.Tests.Apis.Context;
 
-namespace Grove.Recipes;
+namespace Grove.Infrastructure.Recipes;
 
 public class RecipeExecutorTests
 {

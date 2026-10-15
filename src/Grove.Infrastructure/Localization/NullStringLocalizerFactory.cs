@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Localization;
 
-namespace Grove.Localization;
+namespace Grove.Data.Localization;
 
 /// Represents a null <see cref="IStringLocalizerFactory"/> which is used by default when the localization module is disabled.
 /// <remarks>

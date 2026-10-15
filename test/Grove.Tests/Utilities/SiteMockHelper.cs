@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Tests.Utilities;
 

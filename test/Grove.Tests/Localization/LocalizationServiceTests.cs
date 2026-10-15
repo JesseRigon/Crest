@@ -1,5 +1,5 @@
-using Grove.Localization.Services;
-using Grove.Settings;
+using Grove.Data.Localization.Services;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Tests.Localization;
 

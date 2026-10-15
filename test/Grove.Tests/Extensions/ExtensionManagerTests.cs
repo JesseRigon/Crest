@@ -1,7 +1,7 @@
 using BaseThemeSample;
 using ModuleSample;
-using Grove.DisplayManagement.Events;
-using Grove.DisplayManagement.Extensions;
+using Grove.Display.Management.Events;
+using Grove.Display.Management.Extensions;
 using Grove.Environment.Extensions;
 using Grove.Environment.Extensions.Features;
 using Grove.Modules;

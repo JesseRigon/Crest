@@ -1,0 +1,100 @@
+@namespace Grove.Themes.Admin.Components.Shared
+@using Grove.Themes.Admin.Api
+@using Microsoft.AspNetCore.Components.Forms
+@using Grove.Display.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The branding group of the tenant's settings (docs/branding.md › Editing branding): one row
+   per registered rendition, generated from the registry; the display name is the Site name
+   field above. Files go into Media; every surface reads them through the `site` query. *@
+
+<GroveCard data-testid="branding-settings">
+    <GroveStack Gap="1rem">
+        <GroveStack Gap="0.25rem">
+            <GroveText TextStyle="TextStyle.H5" Text="@T["Branding"]" />
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["The tenant's logos. An unset logo falls back to the site name or the default mark."]" />
+        </GroveStack>
+
+        @if (Error is not null)
+        {
+            <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</GroveAlert>
+        }
+
+        @if (Settings is null)
+        {
+            <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else
+        {
+            @foreach (var rendition in Settings.Renditions)
+            {
+                <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" data-testid="@($"branding-{rendition.Name}")">
+                    <div style="width: 96px; height: 64px; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--rz-base-300, #ccc); border-radius: 4px;">
+                        @if (string.IsNullOrEmpty(rendition.Url))
+                        {
+                            <GroveText TextStyle="TextStyle.Caption" Text="@T["Not set"]" />
+                        }
+                        else
+                        {
+                            <img src="@rendition.Url" alt="@rendition.Label" style="max-width: 92px; max-height: 60px;" />
+                        }
+                    </div>
+                    <GroveStack Gap="0.125rem" Style="flex: 1;">
+                        <GroveText TextStyle="TextStyle.Subtitle2" Text="@(rendition.Reserved ? T["{0} (reserved)", rendition.Label] : rendition.Label)" />
+                        <GroveText TextStyle="TextStyle.Caption" Text="@Hint(rendition)" />
+                    </GroveStack>
+                    <label class="rz-button rz-button-sm rz-button-light"><span class="rzi rzi-upload"></span> @T["Upload"]<InputFile hidden accept="@(rendition.Accept ?? "image/*")" OnChange="@(args => UploadAsync(rendition, args))" disabled="@IsBusy" /></label>
+                    <GroveButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => ClearAsync(rendition))" Disabled="@(IsBusy || string.IsNullOrEmpty(rendition.Path))" title="@T["Clear"]" />
+                </GroveStack>
+            }
+        }
+    </GroveStack>
+</GroveCard>
+
+@code {
+    private GroveBrandingSettings? Settings { get; set; }
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Settings = await Api.Grove.Rest.Branding.GetAsync();
+        if (Settings is null) Error = T["The branding settings could not be loaded."];
+    }
+
+    private string Hint(GroveBrandingRendition rendition) =>
+        rendition.Width is { } width && rendition.Height is { } height
+            ? T["{0}. About {1}×{2} px.", rendition.UsedBy, width, height]
+            : rendition.UsedBy;
+
+    private async Task UploadAsync(GroveBrandingRendition rendition, InputFileChangeEventArgs args)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            await using var stream = args.File.OpenReadStream(10 * 1024 * 1024);
+            var (settings, error) = await Api.Grove.Rest.Branding.UploadAsync(rendition.Name, args.File.Name, stream);
+            if (settings is null) { Error = error ?? T["The file could not be uploaded."]; return; }
+            Settings = settings;
+            Notifications.Notify(NotificationSeverity.Success, T["Branding"], T["{0} updated.", rendition.Label]);
+        }
+        catch (Exception exception) { Error = exception.Message; }
+        finally { IsBusy = false; }
+    }
+
+    private async Task ClearAsync(GroveBrandingRendition rendition)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var settings = await Api.Grove.Rest.Branding.ClearAsync(rendition.Name);
+            if (settings is null) { Error = T["{0} could not be cleared.", rendition.Label]; return; }
+            Settings = settings;
+        }
+        finally { IsBusy = false; }
+    }
+}

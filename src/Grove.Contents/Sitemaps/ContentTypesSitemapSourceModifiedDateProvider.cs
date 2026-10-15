@@ -1,8 +1,8 @@
-using Grove.ContentManagement;
-using Grove.ContentManagement.Records;
-using Grove.Sitemaps.Builders;
-using Grove.Sitemaps.Models;
-using Grove.Sitemaps.Services;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Records;
+using Grove.Seo.Sitemaps.Builders;
+using Grove.Seo.Sitemaps.Models;
+using Grove.Seo.Sitemaps.Services;
 using YesSql;
 using YesSql.Services;
 

@@ -21,7 +21,7 @@ public sealed class GraphQLTests : CmsTestBase, IClassFixture<CmsSetupFixture>
         var prefix = $"/{Tenant.Prefix}";
         var page = await Fixture.CreatePageAsync();
         await page.LoginAsync(prefix);
-        await FeatureHelper.EnableFeatureAsync(page, prefix, "Grove.Apis.GraphQL");
+        await FeatureHelper.EnableFeatureAsync(page, prefix, "Grove.Data.Protocols.GraphQL");
         await CreateQueryAsync(page, prefix);
 
         await CreateRoleWithPermissionAsync(page, prefix, RoleName, "ExecuteGraphQL");

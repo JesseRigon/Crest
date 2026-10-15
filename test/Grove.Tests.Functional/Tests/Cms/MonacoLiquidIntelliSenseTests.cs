@@ -3,9 +3,9 @@ using Grove.Tests.Functional.Helpers;
 
 namespace Grove.Tests.Functional.Tests.Cms;
 
-// Covers Monaco's liquid IntelliSense (src/Grove.Modules/Grove.Liquid/Assets/monaco/
+// Covers Monaco's liquid IntelliSense (src/Grove.Modules/Grove.Display.Liquid/Assets/monaco/
 // liquid-intellisense.ts's registerCompletionItemProvider("liquid", ...)) on the Template editor
-// (src/Grove.Modules/Grove.Templates/Assets/ts/template-create.ts /
+// (src/Grove.Modules/Grove.Display.Templates/Assets/ts/template-create.ts /
 // template-edit.ts, both `monaco.editor.create(..., { language: "liquid" })`), the one shipped
 // admin view that actually wires Monaco up with the "liquid" language id and depends-on=
 // "liquid-intellisense monaco". No existing test exercises Monaco at all (EsModuleEditorTests

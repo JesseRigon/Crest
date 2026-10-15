@@ -1,4 +1,4 @@
-using Grove.DisplayManagement;
+using Grove.Display.Management;
 
 namespace Grove.Tests.DisplayManagement;
 
@@ -11,7 +11,7 @@ public partial class ArgumentsTests
         var obj = new { Name = "Test", Value = 42 };
 
         // Act
-        var result = global::Grove.DisplayManagement.Arguments.From(obj);
+        var result = global::Grove.Display.Management.Arguments.From(obj);
 
         // Assert
         Assert.NotNull(result);
@@ -27,7 +27,7 @@ public partial class ArgumentsTests
         var obj = new TestNamedEnumerableProvider { Name = "Test", Value = 42 };
 
         // Act
-        var result = global::Grove.DisplayManagement.Arguments.From(obj);
+        var result = global::Grove.Display.Management.Arguments.From(obj);
 
         // Assert
         Assert.NotNull(result);
@@ -48,7 +48,7 @@ public partial class ArgumentsTests
         };
 
         // Act
-        var result = global::Grove.DisplayManagement.Arguments.From(dict);
+        var result = global::Grove.Display.Management.Arguments.From(dict);
 
         // Assert
         Assert.NotNull(result);
@@ -65,7 +65,7 @@ public partial class ArgumentsTests
         var names = new[] { "Name", "Value" };
 
         // Act
-        var result = global::Grove.DisplayManagement.Arguments.From(values, names);
+        var result = global::Grove.Display.Management.Arguments.From(values, names);
 
         // Assert
         Assert.NotNull(result);
@@ -86,7 +86,7 @@ public partial class ArgumentsTests
         };
 
         // Act
-        var result = global::Grove.DisplayManagement.Arguments.From(model);
+        var result = global::Grove.Display.Management.Arguments.From(model);
 
         // Assert
         Assert.NotNull(result);
@@ -114,7 +114,7 @@ public partial class ArgumentsTests
         };
 
         // Act
-        var result = global::Grove.DisplayManagement.Arguments.From(model);
+        var result = global::Grove.Display.Management.Arguments.From(model);
 
         // Assert
         Assert.NotNull(result);

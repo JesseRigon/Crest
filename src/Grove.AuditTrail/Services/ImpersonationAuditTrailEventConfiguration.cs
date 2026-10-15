@@ -6,7 +6,7 @@ namespace Grove.AuditTrail.Services;
 
 /// <summary>
 /// Impersonation start and stop (docs/audit.md › step 2): recorded by whichever module issues
-/// impersonated sessions (Grove.Members), always, since Orchard has no impersonation of its own.
+/// impersonated sessions (Grove.Access.Members), always, since Orchard has no impersonation of its own.
 /// </summary>
 public sealed class ImpersonationAuditTrailEventConfiguration : IConfigureOptions<AuditTrailOptions>
 {

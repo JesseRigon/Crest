@@ -19,6 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Grove.Components\Grove.Components.csproj" />
+    <ProjectReference Include="..\..\Grove.Display.Components\Grove.Display.Components.csproj" />
   </ItemGroup>
 </Project>

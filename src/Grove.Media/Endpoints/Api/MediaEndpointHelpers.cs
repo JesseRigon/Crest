@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Media.Services;
 using Grove.Media.ViewModels;
 

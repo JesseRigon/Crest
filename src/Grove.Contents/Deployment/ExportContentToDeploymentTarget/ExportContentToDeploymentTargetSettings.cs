@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Contents.Deployment.ExportContentToDeploymentTarget;
 

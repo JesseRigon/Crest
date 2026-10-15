@@ -1,5 +1,5 @@
 using System.Net.Mime;
-using Grove.ResourceManagement;
+using Grove.Display.Resources.Management;
 
 namespace Grove.Tests.ResourceManagement;
 

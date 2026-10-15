@@ -3,8 +3,8 @@ using System.Text.Json.Nodes;
 using Grove.Access;
 using Grove.Data;
 using Grove.Entities;
-using Grove.Queries;
-using Grove.Queries.Structured;
+using Grove.Data.Queries;
+using Grove.Data.Queries.Structured;
 using YesSql.Provider.Sqlite;
 
 namespace Grove.Tests.Queries;

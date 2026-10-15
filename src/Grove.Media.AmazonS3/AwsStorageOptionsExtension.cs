@@ -4,7 +4,7 @@ using Amazon.Runtime;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Grove.Environment.Shell.Configuration;
-using Grove.FileStorage.AmazonS3;
+using Grove.Data.Storage.AmazonS3;
 
 namespace Grove.Media.AmazonS3;
 

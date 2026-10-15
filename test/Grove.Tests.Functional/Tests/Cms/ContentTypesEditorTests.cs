@@ -5,7 +5,7 @@ namespace Grove.Tests.Functional.Tests.Cms;
 
 // Task 10: covers two independent, unrelated pieces of interactive UI in the
 // ContentTypes/Contents area of the Vue2-to-Vue3/jQuery-removal migration:
-//   1. content-type-sortable.ts (Grove.ContentTypes) - drag-reorder of a content
+//   1. content-type-sortable.ts (Grove.Contents.Types) - drag-reorder of a content
 //      type's fields/parts on the type editor.
 //   2. content-types-sitemap-source.ts (Grove.Contents) - cascading show/hide/
 //      enable-disable toggle logic on the ContentTypesSitemapSource editor.

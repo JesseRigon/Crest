@@ -1,6 +1,6 @@
 # Regions and locations — Regional Profiles, the geo tree, addresses
 
-`Grove.Regions` owns everything about **where** a party or a thing is: the Regional Profile
+`Grove.Data.Regions` owns everything about **where** a party or a thing is: the Regional Profile
 a party is assigned, the geographic tree every place resolves into, and how addresses are
 entered per country. The `Address` part and the tenant's own Locations, which consume them,
 are `Grove.Parties`' content types. What is not built yet is in
@@ -144,7 +144,7 @@ The map is **global-store reference data keyed by country** ([globals.md](global
 loaded from data files and edited only by the Default tenant; a tenant may overlay labels.
 `addressing-maps.json` ships maps for US, GB, FR and CA plus a generic map, and postal
 patterns for 107 countries; `AddressingMap`/`AddressInput`/`AddressRules` live in
-`Grove.Regions.Domain`, shared by client and server. `global.country-codes` and
+`Grove.Data.Regions.Domain`, shared by client and server. `global.country-codes` and
 `global.subdivisions` are levels 1 and 2 of the tree (`geo-nodes.json`: 249 countries, 69
 subdivisions) and `global.postal-formats` one column of the map. Per the validation decision
 below, both the WASM client and the server resolve the map at runtime from the same source.
@@ -195,7 +195,7 @@ it ships 63 US states but **2 counties and 1 postal code**.
 `CensusGazetteerParser` streams a Census gazetteer file into level-3 nodes; the 2024 county
 file ships embedded (3,222 counties, `US-{state}-{county FIPS}`), plus `geo-nodes-us.json`
 for places and groupings (Chicago under Cook and DuPage; the RTA grouping over its six
-counties). `POST api/grove/geo/import/gazetteer?level=` takes further files on the Default
+counties). `POST api/grove/regions/geo/import/gazetteer?level=` takes further files on the Default
 tenant.
 
 ## Addresses
@@ -229,7 +229,7 @@ The `GeoPostalCode` row for the address's code fills in any level the form left 
 the code maps to exactly one node at that level (a straddling code fills nothing). A stored
 point: supplied on the write model, else geocoded through `IGeoLocator`, else the postal
 centroid; boundary memberships follow from the point. The US/UK/FR entry-and-validate test is
-`Grove.Regions.Tests`; tree resolution is exercised by Playwright's US path.
+`Grove.Data.Regions.Tests`; tree resolution is exercised by Playwright's US path.
 
 **What consumes the machine half** — and why the split matters:
 
@@ -303,12 +303,12 @@ edits them at runtime. `global.country-codes`, `global.subdivisions` and
 `global.postal-formats` are levels 1 and 2 of the tree plus one column of the map, and are
 replaced by them.
 
-- `api/grove/regions/addressing-maps` (`AddressingMapsController`): `GET {country}` answers the
+- `api/grove/regions/addressing-maps` (`AddressingMapsApi`, a route group): `GET {country}` answers the
   applicable map (the generic one when the country has none) to any signed-in caller of any
   tenant, so the client resolves the same rule the server's `IGeoService` does; `GET`,
   `PUT {country}` and `DELETE {country}` (revert) are Default-tenant only behind
   `ManageGlobalReferenceData`.
-- A write is checked by `AddressingMapValidator` (`Grove.Regions.Domain`, shared with the
+- A write is checked by `AddressingMapValidator` (`Grove.Data.Regions.Domain`, shared with the
   client: level 1 present, levels and fields unique, fields known or naming a declared level, the
   locality level declared, the postal pattern a valid regex) and marks the map `Edited`; the
   data-file loader skips an edited map, and a revert restores the shipped one
@@ -342,6 +342,10 @@ storing them dangling. Parsers: `GeoDataParsers.cs`; tests: `GeoDataLoadingTests
 
 ## Open questions
 
+- [ ] **Regions and Spatial.** `Grove.Data.Types.Spatial` (a latitude/longitude field on content items with a
+  map display) and Grove.Data.Regions (the geo tree, boundaries and `Point` locations through
+  NetTopologySuite) both describe where something is. Whether Spatial becomes a field type
+  of Regions, Regions takes over its map display, or one of them retires is undecided.
 - [ ] **Data sourcing and licence** for the tree below level 2 and for the addressing maps.
   Nothing is verified. A candidate for the maps is Google's libaddressinput address metadata
   (field order, required fields, postal pattern, subdivision lists, per country); its licence is

@@ -44,7 +44,6 @@ This list is generated from the current resolved Orchard admin navigation for th
 | Audit Trail > Settings | `/Admin/Settings/AuditTrail` (`/Admin/Audit/Settings`) | native: events recorded, client IP, retention |
 | Settings > Background Tasks | `/Admin/BackgroundTasks` | native: enable/disable, schedule and lock settings, run now |
 | Notifications | `/Admin/notifications` | native full list: read/unread, delete, mark all read |
-| Settings > Deployments > Debugging | `/Admin/Settings/debugging` | native settings editor |
 | Settings > Deployments > JSON Import | `/Admin/DeploymentPlan/Import/Json` | native |
 | Settings > Deployments > Package Import | `/Admin/DeploymentPlan/Import/Index` | native upload (through the upload pipeline) |
 | Settings > Deployments > Remote Clients | `/Admin/Deployment/RemoteClient/Index` | native list/editor (API key write-only) |
@@ -64,9 +63,9 @@ This list is generated from the current resolved Orchard admin navigation for th
 | Settings > Multi-Tenancy > Feature Profiles | `/Admin/TenantFeatureProfiles` | native list/editor (Default tenant) |
 
 The Deployments pages and the SQL runner read and write through `api/grove/deployment`,
-`api/grove/settings/debugging` and `api/grove/queries/sql` (Grove.Settings' `DebugSettingsApi` and Grove.Queries' `QueriesApi`); package building
+and `api/grove/queries/sql` (Grove.Data.Queries' `QueriesApi`); package building
 and import (`DeploymentPackages`) and the SQL run (`SqlQueryRunner`) are Grove.Deployment's and
-Grove.Queries' services; the MVC plan, import, step, remote client and remote instance screens
+Grove.Data.Queries' services; the MVC plan, import, step, remote client and remote instance screens
 are deleted, and so are the MVC deployment-target executors: the content list adds items to a
 plan, downloads them or exports them to a target through `ContentDeploymentApi`. A deployment step's settings are
 edited as the JSON the plan stores, so a step type a module adds needs no component. Remote instance and
@@ -74,15 +73,15 @@ client API keys are write-only in the native pages: an edit keeps the stored key
 new one is typed.
 
 Tenant create, edit and setup go through `api/grove/tenants` (`editor`, `POST`, `PUT {name}`,
-`POST {name}/setup`, `GET {name}/setup-url`), whose rules are `Grove.Tenants`'
+`POST {name}/setup`, `GET {name}/setup-url`), whose rules are `Grove.Infrastructure.Tenants`'
 `TenantAdministration`, shared with the stock `api/tenants` setup, so validation, the host's
 database presets and patterns, and "an initialized tenant's database is never shown or
 changed" hold on both. There are no MVC Tenants screens; the feature profiles page reads and
 writes through `api/grove/tenants/feature-profiles`. The OpenID Connect administration goes through
-`api/grove/openid/{applications,scopes,server,validation}` (Grove.OpenId, each controller in its
+`api/grove/openid/{applications,scopes,server,validation}` (Grove.Access.OpenId, each controller in its
 own feature), and the menus link the native routes under the admin prefix; there are no MVC
 OpenId admin screens. Both OpenId settings forms are structured, not JSON: the server's settings
-are a fixed, small set. The protocol endpoints (`AccessController`, `UserInfoController`) stay;
+are a fixed, small set. The protocol endpoints (`OpenIdProtocolApi`) stay;
 their consent and logout confirmation are site pages
 ([shells-and-themes.md](shells-and-themes.md#account-and-protocol-pages)).
 

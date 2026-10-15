@@ -25,13 +25,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
-    <ProjectReference Include="..\Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Recipes.Abstractions\Grove.Recipes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Recipes.Abstractions\Grove.Infrastructure.Recipes.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Data.Abstractions\Grove.Data.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Autoroute.Abstractions\Grove.Autoroute.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Alias\Grove.Alias.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Server.Abstractions\Grove.Infrastructure.Server.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Routes.Auto.Abstractions\Grove.Routes.Auto.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Alias\Grove.Contents.Alias.csproj" />
     <ProjectReference Include="..\Grove.Routes.Abstractions\Grove.Routes.Abstractions.csproj" />
   </ItemGroup>
 

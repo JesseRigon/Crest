@@ -1,0 +1,24 @@
+using Grove.Contents.Management;
+using Grove.Contents.Management.Metadata.Models;
+
+namespace Grove.Data.Indexing;
+
+public class BuildFieldIndexContext : BuildPartIndexContext
+{
+    public BuildFieldIndexContext(
+        ContentItemDocumentIndex documentIndex,
+        ContentItem contentItem,
+        IList<string> keys,
+        ContentPart contentPart,
+        ContentTypePartDefinition typePartDefinition,
+        ContentPartFieldDefinition partFieldDefinition,
+        IContentIndexSettings settings)
+        : base(documentIndex, contentItem, keys, typePartDefinition, settings)
+    {
+        ContentPartFieldDefinition = partFieldDefinition;
+        ContentPart = contentPart;
+    }
+
+    public ContentPart ContentPart { get; }
+    public ContentPartFieldDefinition ContentPartFieldDefinition { get; }
+}

@@ -67,7 +67,7 @@ public sealed class StandaloneHost : IAsyncLifetime
 
         builder.Services
             .AddPlatformCms()
-            .AddSetupFeatures("Grove.AutoSetup");
+            .AddSetupFeatures("Grove.Infrastructure.Setup.Auto");
         builder.Services.AddHostDefaults();
 
         _app = builder.Build();

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- The *.BlazorWasm suffix is the routing convention the server and the admin client load
+         module pages by: the GraphiQL page of Grove.Data.Protocols.GraphQL. -->
+    <AssemblyName>Grove.Data.Protocols.GraphQL.BlazorWasm</AssemblyName>
+    <RootNamespace>Grove.Data.Protocols.GraphQL.BlazorWasm</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Grove.Display.Components\Grove.Display.Components.csproj" />
+  </ItemGroup>
+
+</Project>

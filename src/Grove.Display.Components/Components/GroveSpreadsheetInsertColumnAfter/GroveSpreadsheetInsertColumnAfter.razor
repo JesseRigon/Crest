@@ -1,0 +1,18 @@
+@using Grove.Display.Components.Primitives.Spreadsheet
+@using Grove.Display.Components.Primitives.Documents.Spreadsheet
+@inherits GroveSpreadsheetToolBase
+@namespace Grove.Display.Components.Primitives.Spreadsheet.Tools
+<GroveButton aria-label=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_InsertColumnAfter))) Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small" Click=@OnInsertColumnAfterClick Icon="add_column_right" ButtonType="ButtonType.Button" Disabled=@IsDisabled
+    title=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_InsertColumnAfter)) ?? "Insert Column After") />
+@code {
+    protected override SpreadsheetFeature? Feature => SpreadsheetFeature.Editing;
+
+    private async Task OnInsertColumnAfterClick()
+    {
+        if (Worksheet is null || Spreadsheet is null)
+        {
+            return;
+        }
+        await Spreadsheet.ExecuteAsync(new InsertColumnCommand(Worksheet, Worksheet.Selection.Range.End.Column + 1));
+    }
+}

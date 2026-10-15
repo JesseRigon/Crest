@@ -1,4 +1,4 @@
-# Liquid (`Grove.Liquid`)
+# Liquid (`Grove.Display.Liquid`)
 
 This module provides a way to create templates securely from the admin site.  
 For more information about the Liquid syntax, please refer to this site: <https://shopify.github.io/liquid/>.
@@ -577,8 +577,8 @@ The following properties are available on the `Request` object.
 | `Query`          | Usage: `Request.Query.sort`                        | The query value collection parsed from `QueryString`. Each property value is an array of values. |
 | `Form`           | Usage: `Request.Form.value`                        | The collection of form values.                                                                   |
 | `Protocol`       | `https`                                            | The protocol of this request.                                                                    |
-| `Path`           | `/Grove.ContentPreview/Preview/Render`       | The unescaped path of the request.                                                               |
-| `UriPath`        | `/Grove.ContentPreview/Preview/Render`       | The path escaped in a way which is correct for combining into the URI representation.            |
+| `Path`           | `/Grove.Contents.Preview/Preview/Render`       | The unescaped path of the request.                                                               |
+| `UriPath`        | `/Grove.Contents.Preview/Preview/Render`       | The path escaped in a way which is correct for combining into the URI representation.            |
 | `PathBase`       | `/mytenant`                                        | The unescaped base path of the request.                                                          |
 | `UriPathBase`    | `/mytenant`                                        | The base path escaped in a way which is correct for combining into the URI representation.       |
 | `Host`           | `localhost:44300`                                  | The unescaped `Host` header. May contain the port.                                               |

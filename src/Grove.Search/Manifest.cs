@@ -14,6 +14,6 @@ using Grove.Modules.Manifest;
     Category = "Search",
     Dependencies =
     [
-        "Grove.Indexing",
+        "Grove.Data.Indexing",
     ]
 )]

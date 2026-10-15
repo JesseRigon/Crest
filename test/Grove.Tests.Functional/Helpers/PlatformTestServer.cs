@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
 using Grove.Environment.Shell;
 using Grove.Logging;
-using Grove.Recipes.Services;
+using Grove.Infrastructure.Recipes.Services;
 
 namespace Grove.Tests.Functional.Helpers;
 
@@ -66,7 +66,7 @@ public sealed class PlatformTestServer : IAsyncDisposable
 
         builder.Services
             .AddPlatformCms()
-            .AddSetupFeatures("Grove.AutoSetup");
+            .AddSetupFeatures("Grove.Infrastructure.Setup.Auto");
 
         // Serve test recipes from embedded resources instead of copying files.
         builder.Services.AddScoped<IRecipeHarvester, EmbeddedRecipeHarvester>();
@@ -110,11 +110,11 @@ public sealed class PlatformTestServer : IAsyncDisposable
         || (record.Category == "Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware"
             && record.Exception?.ToString().Contains("Cannot create directory '_Users") == true)
         // Fires exactly once, on the first request after a test enables
-        // Grove.OpenId.Client, before that test's setup code gets a chance to save
+        // Grove.Access.OpenId.Client, before that test's setup code gets a chance to save
         // valid settings - inherent to exercising this feature at all in a test, not a
         // product regression (OpenIdClientConfiguration's background settings-validity
         // check runs independently of page navigation timing).
-        || (record.Category == "Grove.OpenId.Configuration.OpenIdClientConfiguration"
+        || (record.Category == "Grove.Access.OpenId.Configuration.OpenIdClientConfiguration"
             && record.Message.Contains("The OpenID client settings are invalid"));
 
     public async ValueTask DisposeAsync()

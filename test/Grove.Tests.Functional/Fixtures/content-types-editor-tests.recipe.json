@@ -1,7 +1,7 @@
 {
   "name": "ContentTypesEditorTests",
   "displayName": "ContentTypesEditorTests",
-  "description": "Testing Grove.ContentTypes' field/part drag-reorder (content-type-sortable.ts) and Grove.Contents' ContentTypesSitemapSource cascading show/hide toggle (content-types-sitemap-source.ts).",
+  "description": "Testing Grove.Contents.Types' field/part drag-reorder (content-type-sortable.ts) and Grove.Contents' ContentTypesSitemapSource cascading show/hide toggle (content-types-sitemap-source.ts).",
   "author": "The Grove Team",
   "website": "https://orchardcore.net",
   "version": "1.0.0",
@@ -14,31 +14,29 @@
       "name": "feature",
       "enable": [
         "Grove.HomeRoute",
-        "Grove.Admin",
-        "Grove.Navigation",
-        "Grove.Recipes",
-        "Grove.Resources",
-        "Grove.Roles",
+        "Grove.Infrastructure.Shells.Admin",
+        "Grove.Display.Navigation",
+        "Grove.Infrastructure.Recipes",
+        "Grove.Display.Resources",
+        "Grove.Access.Roles",
         "Grove.Security",
-        "Grove.Settings",
+        "Grove.Infrastructure.Settings",
         "Grove.Themes",
-        "Grove.Users",
+        "Grove.Access.Users",
 
         "Grove.Contents",
-        "Grove.ContentTypes",
-        "Grove.Autoroute",
-        "Grove.Html",
-        "Grove.Sitemaps",
-        "Grove.Title",
+        "Grove.Contents.Types",
+        "Grove.Routes.Auto",
+        "Grove.Data.Protocols.Html",
+        "Grove.Seo.Sitemaps",
+        "Grove.Contents.Title"
 
-        "TheAdmin",
-        "SafeMode"
       ]
     },
     {
       "name": "themes",
-      "admin": "TheAdmin",
-      "site": "TheAdmin"
+      "admin": "Grove.Themes.Admin",
+      "site": "Grove.Themes.Site"
     },
     {
       "name": "ContentDefinition",
@@ -91,7 +89,7 @@
       "name": "Sitemaps",
       "Data": [
         {
-          "$type": "Grove.Sitemaps.Models.Sitemap, Grove.Sitemaps.Abstractions",
+          "$type": "Grove.Seo.Sitemaps.Models.Sitemap, Grove.Seo.Sitemaps.Abstractions",
           "SitemapId": "contenttypeseditortestsitemap",
           "Name": "ContentTypesEditor Test Sitemap",
           "Enabled": true,

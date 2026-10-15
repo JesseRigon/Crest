@@ -22,10 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Grove.Abstractions\Grove.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Data.YesSql\Grove.Data.YesSql.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.Localization.Abstractions\Grove.Localization.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.YesSql\Grove.Data.YesSql.csproj" />
+    <ProjectReference Include="..\Grove.Data.Localization.Abstractions\Grove.Data.Localization.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
   </ItemGroup>
 

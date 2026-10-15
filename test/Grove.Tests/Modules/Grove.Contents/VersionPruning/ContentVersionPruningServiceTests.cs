@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Records;
 using Grove.Contents.VersionPruning.Models;
 using Grove.Contents.VersionPruning.Services;
 using Grove.Extensions;

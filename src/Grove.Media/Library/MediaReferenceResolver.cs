@@ -6,7 +6,7 @@ using Grove.Environment.Shell;
 using Grove.Media.Files;
 using Grove.Media.Sharing;
 using Grove.Modules;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;

@@ -26,7 +26,7 @@ public sealed class ModuleListGuardTests
 
         // The scan sees the modules the host lists (it is not vacuously empty).
         Assert.Contains("Grove.Contents", modules);
-        Assert.Contains("Grove.OptionPicker", modules);
+        Assert.Contains("Grove.Contents.OptionPicker", modules);
 
         var unlisted = modules.Where(name => !listed.Contains(name)).ToList();
 

@@ -1,6 +1,6 @@
 using Fluid;
 using Fluid.Values;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 
 namespace Grove.Contents.Liquid;
 

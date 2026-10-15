@@ -1,8 +1,8 @@
-using Grove.ContentManagement;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Records;
 using Grove.Contents.Security;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 using YesSql;
 
 namespace Grove.Contents.Sharing;

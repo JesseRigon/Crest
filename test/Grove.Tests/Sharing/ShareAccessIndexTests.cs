@@ -1,6 +1,6 @@
 using Grove.Access;
-using Grove.Sharing;
-using Grove.Sharing.Services;
+using Grove.Access.Sharing;
+using Grove.Access.Sharing.Services;
 using Grove.Tests.Access.Conformance;
 using static Grove.Tests.Sharing.SharingWorld;
 

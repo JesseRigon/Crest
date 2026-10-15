@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 #nullable enable
 
-namespace Grove.DisplayManagement.SourceGenerators;
+namespace Grove.Display.Management.SourceGenerators;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class FeatureAttributeTargetAnalyzer : DiagnosticAnalyzer

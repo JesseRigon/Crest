@@ -48,7 +48,7 @@ declare class QRCode {
 }
 
 // EasyMDE (markdown Wysiwyg editor) and its toolbar/shortcode-wrapper helper, both loaded as
-// classic global resources (easymde.min.js, Grove.Markdown's mde.mediatoolbar.js).
+// classic global resources (easymde.min.js, Grove.Contents.Markdown's mde.mediatoolbar.js).
 interface EasyMdeInstance {
     codemirror: CodeMirrorEditor;
 }
@@ -61,16 +61,16 @@ declare class EasyMDE implements EasyMdeInstance {
 declare const mdeToolbar: Array<string | Record<string, unknown>>;
 declare function initializeMdeShortcodeWrapper(mde: EasyMdeInstance): void;
 
-// Defined by Grove.Liquid (wwwroot/monaco/liquid-intellisense.js), consumed here.
+// Defined by Grove.Display.Liquid (wwwroot/monaco/liquid-intellisense.js), consumed here.
 declare function ConfigureLiquidIntellisense(monacoInstance: typeof import("monaco-editor"), registerHtml?: boolean): void;
 
-// Defined by Grove.Resources (Assets/js/credential-helpers.js), consumed here.
+// Defined by Grove.Display.Resources (Assets/js/credential-helpers.js), consumed here.
 declare function randomUUID(options?: { includeHyphens?: boolean }): string;
 declare function togglePasswordVisibility(passwordCtl: HTMLElement, togglePasswordCtl: HTMLElement): void;
 declare function copyToClipboard(str: string): Promise<void>;
 declare function generateStrongPassword(options?: { generateBase64?: boolean }): string;
 
-// Defined by Grove.Users (Assets/js/password-generator.js), consumed here.
+// Defined by Grove.Access.Users (Assets/js/password-generator.js), consumed here.
 declare const passwordManager: {
     generatePassword(
         requiredPasswordLength: number,
@@ -83,15 +83,15 @@ declare const passwordManager: {
     copyPassword(password: string): void;
 };
 
-// Defined by Grove.AdminMenu (Assets/js/admin-menu-icon-picker.js), consumed here.
+// Defined by Grove.Contents.AdminMenu (Assets/js/admin-menu-icon-picker.js), consumed here.
 declare const iconPickerVue: {
     show(relatedNodeId: string, sampleIconId: string): void;
 };
 
-// Defined by Grove.AdminMenu (Assets/js/admin-menu-permission-picker.js), consumed here.
+// Defined by Grove.Contents.AdminMenu (Assets/js/admin-menu-permission-picker.js), consumed here.
 declare function initAdminMenuPermissionsPicker(element: Element | null): void;
 
-// Defined by Grove.Menu (Assets/js/menu-permission-picker.js) - a separate, near-identical
+// Defined by Grove.Contents.SiteMenu (Assets/js/menu-permission-picker.js) - a separate, near-identical
 // copy of the picker above for MenuItemPermissionPart, unrelated to the AdminMenu tree editors.
 declare function initMenuPermissionsPicker(element: Element | null): void;
 
@@ -110,7 +110,7 @@ declare const noUiSlider: {
     create(element: HTMLElement, options: Record<string, unknown>): void;
 };
 
-// Defined by Grove.OpenId (Scripts/parametersEditor.js), consumed here.
+// Defined by Grove.Access.OpenId (Scripts/parametersEditor.js), consumed here.
 declare function initializeParametersEditor(
     element: Element | null,
     parameters: unknown,

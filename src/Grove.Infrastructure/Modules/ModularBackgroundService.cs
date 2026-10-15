@@ -10,7 +10,7 @@ using Grove.BackgroundTasks;
 using Grove.Environment.Shell;
 using Grove.Locking;
 using Grove.Locking.Distributed;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Modules;
 

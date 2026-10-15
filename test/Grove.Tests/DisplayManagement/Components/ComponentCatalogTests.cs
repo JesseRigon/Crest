@@ -1,6 +1,6 @@
 using System.Runtime.Loader;
-using Grove.DisplayManagement.Components;
-using Grove.DisplayManagement.SourceGenerators;
+using Grove.Display.Management.Components;
+using Grove.Display.Management.SourceGenerators;
 using Microsoft.AspNetCore.Components;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -109,12 +109,12 @@ public class ComponentCatalogTests
     public void AssemblyWithoutGeneratedCatalogUsesReflection()
     {
         var assembly = Compile("""
-            using Grove.DisplayManagement.Components;
+            using Grove.Display.Management.Components;
             using Microsoft.AspNetCore.Components;
 
-            [assembly: Grove.Components.Modules.GroveShell("site")]
+            [assembly: Grove.Display.Components.Modules.GroveShell("site")]
 
-            namespace Grove.Components.Modules
+            namespace Grove.Display.Components.Modules
             {
                 [System.AttributeUsage(System.AttributeTargets.Assembly)]
                 public sealed class GroveShellAttribute(string shell) : System.Attribute
@@ -146,12 +146,12 @@ public class ComponentCatalogTests
     public void GeneratorEmitsTheCatalogAndTheAssemblyAttribute()
     {
         const string Source = """
-            using Grove.DisplayManagement.Components;
+            using Grove.Display.Management.Components;
             using Microsoft.AspNetCore.Components;
 
-            [assembly: Grove.Components.Modules.GroveShell("member")]
+            [assembly: Grove.Display.Components.Modules.GroveShell("member")]
 
-            namespace Grove.Components.Modules
+            namespace Grove.Display.Components.Modules
             {
                 [System.AttributeUsage(System.AttributeTargets.Assembly)]
                 public sealed class GroveShellAttribute(string shell) : System.Attribute
@@ -204,7 +204,7 @@ public class ComponentCatalogTests
 
         Assert.Empty(compilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error));
         Assert.Contains(diagnostics, diagnostic => diagnostic.Id == ComponentCatalogGenerator.SkippedComponentDiagnosticId && diagnostic.GetMessage().Contains("Generic", StringComparison.Ordinal));
-        Assert.Contains("[assembly: global::Grove.DisplayManagement.Components.ComponentCatalogAttribute(", generated, StringComparison.Ordinal);
+        Assert.Contains("[assembly: global::Grove.Display.Management.Components.ComponentCatalogAttribute(", generated, StringComparison.Ordinal);
         Assert.Contains("ComponentCatalog_Sample_Member_BlazorWasm", generated, StringComparison.Ordinal);
 
         var assembly = Load(compilation);
@@ -237,7 +237,7 @@ public class ComponentCatalogTests
     public void GeneratorReportsParametersLeftInRazorMarkup()
     {
         const string Source = """
-            using Grove.DisplayManagement.Components;
+            using Grove.Display.Management.Components;
             using Microsoft.AspNetCore.Components;
 
             namespace Sample

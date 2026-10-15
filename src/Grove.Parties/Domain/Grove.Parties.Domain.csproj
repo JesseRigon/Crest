@@ -9,6 +9,6 @@
        by Server and blazor-wasm - it must never reference Grove or ASP.NET server
        packages, or the blazor-wasm side stops being able to link it. -->
   <ItemGroup>
-    <ProjectReference Include="../../Grove.Kinds/Grove.Kinds.csproj" />
+    <ProjectReference Include="../../Grove.Data.Kinds/Grove.Data.Kinds.csproj" />
   </ItemGroup>
 </Project>

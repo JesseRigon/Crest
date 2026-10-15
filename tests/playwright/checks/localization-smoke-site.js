@@ -10,11 +10,11 @@ const { createInstance } = require('../harness/instance');
 // by keeping Liquid alive. See the "Site root" section of docs/blazor-web.md.
 //
 // Verifies translated content actually renders on the front-end site
-// (Grove.SiteTheme) for a non-English resolved culture - the "simple component
+// (Grove.Themes.Site) for a non-English resolved culture - the "simple component
 // just to test the translations actually work" from docs/localization.md.
 // The smoke block lives in Content-Page.liquid (data-testid="localization-smoke"),
 // rendering {{ "Welcome" | t }} - a hand-written test string backed by
-// Grove.SiteTheme/Localization/{es,fr,de}.po (mirrored under
+// Grove.Themes.Site/Localization/{es,fr,de}.po (mirrored under
 // tests/playwright/fixtures/localization-smoke/ - see that directory's README).
 //
 // Requires at least one published Page content item to exist at ctx.baseUrl so

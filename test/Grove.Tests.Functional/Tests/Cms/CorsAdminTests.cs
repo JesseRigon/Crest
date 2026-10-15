@@ -3,7 +3,7 @@ using Grove.Tests.Functional.Helpers;
 
 namespace Grove.Tests.Functional.Tests.Cms;
 
-// Covers Grove.Cors' policy list/editor (cors-admin-index.ts), rewritten from a
+// Covers Grove.Security.Cors' policy list/editor (cors-admin-index.ts), rewritten from a
 // jQuery Vue 2 app to native DOM + Vue 3 across #19489/#19774. Unlike the AJAX-injected
 // widgets covered elsewhere in this session, this is a single full-page Vue app (no
 // AJAX-injection double-init risk) whose "save" action is a real form submit+reload

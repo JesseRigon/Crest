@@ -1,6 +1,6 @@
 const { severeConsoleErrors, drainConsoleErrors } = require('../harness/instance');
 
-// Converted from Grove.Icons/tests/playwright/admin-icon-selector-remote-fallback.js.
+// Converted from Grove.Display.Icons/tests/playwright/admin-icon-selector-remote-fallback.js.
 // Verifies the admin menu node icon picker renders icon previews via the remote Iconify
 // fallback (i.e. without relying on a local App_Data mirror) and that searching narrows
 // the grid down to matching results.

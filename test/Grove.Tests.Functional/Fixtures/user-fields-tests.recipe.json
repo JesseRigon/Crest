@@ -1,7 +1,7 @@
 {
   "name": "UserFieldsTests",
   "displayName": "UserFieldsTests",
-  "description": "Testing Grove.Users' user-fields.ts (password generator/toggle wiring on the Create User admin form).",
+  "description": "Testing Grove.Access.Users' user-fields.ts (password generator/toggle wiring on the Create User admin form).",
   "author": "The Grove Team",
   "website": "https://orchardcore.net",
   "version": "1.0.0",
@@ -14,24 +14,22 @@
       "name": "feature",
       "enable": [
         "Grove.HomeRoute",
-        "Grove.Admin",
-        "Grove.Navigation",
-        "Grove.Recipes",
-        "Grove.Resources",
-        "Grove.Roles",
+        "Grove.Infrastructure.Shells.Admin",
+        "Grove.Display.Navigation",
+        "Grove.Infrastructure.Recipes",
+        "Grove.Display.Resources",
+        "Grove.Access.Roles",
         "Grove.Security",
-        "Grove.Settings",
+        "Grove.Infrastructure.Settings",
         "Grove.Themes",
-        "Grove.Users",
+        "Grove.Access.Users"
 
-        "TheAdmin",
-        "SafeMode"
       ]
     },
     {
       "name": "themes",
-      "admin": "TheAdmin",
-      "site": "TheAdmin"
+      "admin": "Grove.Themes.Admin",
+      "site": "Grove.Themes.Site"
     }
   ]
 }

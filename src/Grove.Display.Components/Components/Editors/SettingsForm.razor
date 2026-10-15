@@ -1,0 +1,184 @@
+@namespace Grove.Display.Components.Editors
+@using System.Net
+@using System.Net.Http.Json
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Grove.Display.Components.Models
+@using Grove.Display.Components.Primitives
+@inject HttpClient Http
+@inject NotificationService Notifications
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+<GroveStack Gap="1rem" data-testid="settings-form" data-group="@GroupId">
+    @if (_notFound)
+    {
+        @NotFoundContent
+    }
+    else
+    {
+        @if (_form is { } form)
+        {
+            <GroveText TextStyle="TextStyle.H4" Text="@T[form.Schema.Caption]" />
+            @if (!string.IsNullOrWhiteSpace(form.Schema.Description))
+            {
+                <GroveText TextStyle="TextStyle.Body2" Text="@T[form.Schema.Description]" />
+            }
+
+            @if (form.Schema.ReloadsTenant)
+            {
+                <GroveAlert AlertStyle="AlertStyle.Info" AllowClose="false" data-testid="settings-form-reload">@T["Saving these settings reloads the tenant."]</GroveAlert>
+            }
+        }
+
+        @if (_error is { } error)
+        {
+            <GroveAlert AlertStyle="AlertStyle.Danger" AllowClose="false" data-testid="settings-form-error">@error</GroveAlert>
+        }
+
+        @if (_form is null)
+        {
+            @if (_error is null)
+            {
+                <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+            }
+        }
+        else
+        {
+            <form novalidate @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+                <GroveStack Gap="1rem">
+                    @foreach (var section in _form.Schema.Fields.GroupBy(field => field.Section ?? string.Empty))
+                    {
+                        if (section.Key.Length == 0)
+                        {
+                            <GroveCard>@RenderFields([.. section], _values, string.Empty)</GroveCard>
+                        }
+                        else
+                        {
+                            <GroveFieldset Text="@T[section.Key]">@RenderFields([.. section], _values, string.Empty)</GroveFieldset>
+                        }
+                    }
+
+                    @if (Errors(string.Empty) is { Count: > 0 } formErrors)
+                    {
+                        <GroveAlert AlertStyle="AlertStyle.Danger" AllowClose="false">@string.Join(" ", formErrors)</GroveAlert>
+                    }
+
+                    <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                        <GroveButton ButtonType="ButtonType.Submit" Text="@T["Save"]" Icon="save" Disabled="_saving" data-testid="settings-form-save" />
+                    </GroveStack>
+                </GroveStack>
+            </form>
+        }
+    }
+</GroveStack>
+
+@code {
+    private RenderFragment RenderFields(IReadOnlyList<SettingsFieldModel> fields, JsonObject values, string prefix) => __builder =>
+    {
+        <GroveStack Gap="0.75rem">
+            @foreach (var field in fields.Where(field => field.Kind != "hidden" && IsVisible(field, values)))
+            {
+                var key = Join(prefix, field.Name);
+                var errors = Errors(key);
+                <div class="grove-settings-field@(errors.Count > 0 ? " grove-settings-field--invalid" : string.Empty)" data-testid="@("setting-" + key)">
+                    @if (field.Kind == "boolean")
+                    {
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                            <GroveSwitch Value="@Bool(values, field)" ValueChanged="@(value => Set(values, field, JsonValue.Create(value)))" Disabled="@(field.ReadOnly || _saving)" Name="@Id(key)" />
+                            <GroveLabel Text="@T[field.Label]" Component="@Id(key)" />
+                        </GroveStack>
+                    }
+                    else if (field.Kind == "object")
+                    {
+                        <GroveFieldset Text="@T[field.Label]">
+                            @RenderFields(field.Fields ?? [], Object(values, field), key)
+                        </GroveFieldset>
+                    }
+                    else if (field.Kind == "objects")
+                    {
+                        <GroveFieldset Text="@T[field.Label]">
+                            <GroveStack Gap="0.75rem">
+                                @{ var items = ItemsOf(values, field); }
+                                @for (var index = 0; index < items.Count; index++)
+                                {
+                                    var item = items[index] as JsonObject ?? [];
+                                    var position = index;
+                                    <GroveCard data-testid="@($"setting-{key}-{position}")">
+                                        <GroveStack Gap="0.5rem">
+                                            @RenderFields(field.Fields ?? [], item, $"{key}[{position}]")
+                                            @if (!field.ReadOnly)
+                                            {
+                                                <div>
+                                                    <GroveButton Text="@T["Remove"]" Icon="delete" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => RemoveItem(values, field, position))" />
+                                                </div>
+                                            }
+                                        </GroveStack>
+                                    </GroveCard>
+                                }
+                                @if (!field.ReadOnly)
+                                {
+                                    <div>
+                                        <GroveButton Text="@T["Add"]" Icon="add" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => AddItem(values, field))" data-testid="@($"setting-{key}-add")" />
+                                    </div>
+                                }
+                            </GroveStack>
+                        </GroveFieldset>
+                    }
+                    else
+                    {
+                        <GroveLabel Text="@(T[field.Label] + (field.Required ? " *" : string.Empty))" Component="@Id(key)" />
+                        @switch (field.Kind)
+                        {
+                            case "password":
+                                <GrovePassword Value="@Text(values, field)" ValueChanged="@(value => Set(values, field, Json(value)))" Name="@Id(key)" Disabled="@(field.ReadOnly || _saving)" Style="max-width: 32rem; width: 100%;"
+                                               Placeholder="@(IsSecretSet(key) ? T["Stored; type a new value to replace it"] : field.Placeholder)" />
+                                break;
+                            case "textarea":
+                                <GroveTextArea Value="@Text(values, field)" Change="@(value => Set(values, field, Json(value)))" Name="@Id(key)" Rows="5" Disabled="@(field.ReadOnly || _saving)" Placeholder="@field.Placeholder" Style="width: 100%;" />
+                                break;
+                            case "list":
+                                <GroveTextArea Value="@Lines(values, field)" Change="@(value => Set(values, field, LinesToArray(value)))" Name="@Id(key)" Rows="4" Disabled="@(field.ReadOnly || _saving)" Placeholder="@(field.Placeholder ?? T["One per line"])" Style="width: 100%;" />
+                                break;
+                            case "integer":
+                            case "number":
+                                <GroveNumeric TValue="decimal?" Value="@Number(values, field)" ValueChanged="@(value => Set(values, field, value is null ? null : JsonValue.Create(value)))" Name="@Id(key)" Disabled="@(field.ReadOnly || _saving)"
+                                              Min="@((decimal?)field.Min)" Max="@((decimal?)field.Max)" Step="@(field.Kind == "integer" ? "1" : "any")" Style="max-width: 16rem;" />
+                                break;
+                            case "select":
+                                <GroveDropDown TValue="string" Value="@Text(values, field)" ValueChanged="@(value => Set(values, field, Json(value)))" Data="@(field.Options ?? [])" TextProperty="Text" ValueProperty="Value"
+                                               AllowClear="@(!field.Required)" Placeholder="@(field.Placeholder ?? T["Choose…"])" Name="@Id(key)" Disabled="@(field.ReadOnly || _saving)" Style="max-width: 32rem; width: 100%;" />
+                                break;
+                            case "multiselect":
+                                <GroveDropDown TValue="IEnumerable<string>" Value="@Strings(values, field)" ValueChanged="@(value => Set(values, field, new JsonArray([.. (value ?? []).Select(item => (JsonNode?)JsonValue.Create(item))])))"
+                                               Data="@(field.Options ?? [])" TextProperty="Text" ValueProperty="Value" Multiple="true" AllowClear="true" Chips="true" Placeholder="@field.Placeholder" Name="@Id(key)" Disabled="@(field.ReadOnly || _saving)" Style="max-width: 32rem; width: 100%;" />
+                                break;
+                            case "color":
+                                <ColorEditor Value="@Text(values, field)" Changed="@(value => Set(values, field, Json(value)))" Disabled="@(field.ReadOnly || _saving)" />
+                                break;
+                            case "code":
+                                <CodeEditor Value="@Text(values, field)" Changed="@(value => Set(values, field, Json(value)))" Language="@field.Language" Disabled="@(field.ReadOnly || _saving)" Id="@Id(key)" />
+                                break;
+                            case "json":
+                                <CodeEditor Value="@JsonText(values, field)" Changed="@(value => Set(values, field, Json(value)))" Language="json" Disabled="@(field.ReadOnly || _saving)" Height="10rem" Id="@Id(key)" />
+                                break;
+                            default:
+                                <GroveTextBox Value="@Text(values, field)" Change="@(value => Set(values, field, Json(value)))" Name="@Id(key)" Disabled="@(field.ReadOnly || _saving)" Placeholder="@field.Placeholder"
+                                              MaxLength="@(field.MaxLength is { } max ? max : null)" Style="max-width: 32rem; width: 100%;" />
+                                break;
+                        }
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(field.Description))
+                    {
+                        <GroveText TextStyle="TextStyle.Caption" Text="@T[field.Description]" />
+                    }
+
+                    @foreach (var message in errors)
+                    {
+                        <div class="grove-editor__error rz-color-danger" role="alert">@message</div>
+                    }
+                </div>
+            }
+        </GroveStack>
+    };
+}

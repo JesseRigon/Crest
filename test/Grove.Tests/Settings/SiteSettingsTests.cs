@@ -1,5 +1,5 @@
 using Grove.Entities;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Tests.Settings;
 

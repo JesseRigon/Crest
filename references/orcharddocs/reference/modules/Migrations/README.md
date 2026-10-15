@@ -14,10 +14,10 @@ The following example showcases three different data migrations (recipe migratio
 ```csharp
 using System.Threading.Tasks;
 using Members.Indexes;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Settings;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Settings;
 using Grove.Data.Migration;
-using Grove.Recipes.Services;
+using Grove.Infrastructure.Recipes.Services;
 using YesSql.Sql;
 
 namespace Members;

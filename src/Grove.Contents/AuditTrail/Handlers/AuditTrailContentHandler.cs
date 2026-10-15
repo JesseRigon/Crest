@@ -2,13 +2,13 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Grove.AuditTrail.Services;
 using Grove.AuditTrail.Services.Models;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
+using Grove.Contents.Management.Records;
 using Grove.Contents.AuditTrail.Models;
 using Grove.Contents.AuditTrail.Services;
 using Grove.Contents.AuditTrail.Settings;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using YesSql;
 
 namespace Grove.Contents.AuditTrail.Handlers;

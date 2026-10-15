@@ -1,4 +1,4 @@
-using Grove.Localization;
+using Grove.Data.Localization;
 
 namespace Grove.Tests.Localization;
 
@@ -14,7 +14,6 @@ public class PortableObjectStringLocalizerFactoryTests
         public void ConfigureServices(IServiceCollection services)
 #pragma warning restore CA1822 // Mark members as static
         {
-            services.AddMvc();
             services.AddLocalization();
             services.AddPortableObjectLocalization(options => options.ResourcesPath = "Localization/PoFiles");
             services.Replace(ServiceDescriptor.Singleton<ILocalizationFileLocationProvider, StubPoFileLocationProvider>());

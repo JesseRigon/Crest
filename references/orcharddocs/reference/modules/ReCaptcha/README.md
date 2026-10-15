@@ -1,6 +1,6 @@
-# ReCaptcha (`Grove.ReCaptcha`)
+# ReCaptcha (`Grove.Security.ReCaptcha`)
 
-The Grove.ReCaptcha module can be used to prevent robots from abusing your Grove website.
+The Grove.Security.ReCaptcha module can be used to prevent robots from abusing your Grove website.
 
 There are four features in the module:
 
@@ -86,7 +86,7 @@ reCAPTCHA settings can be configured using the `Settings` recipe step:
 
 ## ReCaptcha Settings Configuration
 
-The `Grove.ReCaptcha` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureReCaptchaSettings()` extension method on `PlatformBuilder` when initializing the app.
+The `Grove.Security.ReCaptcha` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureReCaptchaSettings()` extension method on `PlatformBuilder` when initializing the app.
 
 The following configuration values can be customized:
 

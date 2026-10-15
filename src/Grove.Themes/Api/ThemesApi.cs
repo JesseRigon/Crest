@@ -6,13 +6,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Grove.Api;
-using Grove.Admin;
-using Grove.DisplayManagement.Extensions;
+using Grove.Infrastructure.Shells.Admin;
+using Grove.Display.Management.Extensions;
 using Grove.Environment.Extensions;
 using Grove.Environment.Extensions.Features;
 using Grove.Environment.Shell;
 using Grove.Themes.Services;
-using Grove.Components.Modules;
+using Grove.Display.Components.Modules;
 using Grove.Routing;
 using Grove.Themes;
 

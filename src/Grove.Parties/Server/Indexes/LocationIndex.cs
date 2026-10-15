@@ -1,6 +1,6 @@
 using Grove.Parties.Constants;
-using Grove.ContentFields.Fields;
-using Grove.ContentManagement;
+using Grove.Contents.Fields.Fields;
+using Grove.Contents.Management;
 using YesSql.Indexes;
 
 namespace Grove.Parties.Indexes;

@@ -12,5 +12,5 @@ using Grove.Modules.Manifest;
     Name = "Content Activities",
     Description = "Content triggers (created, published, ...) carrying the acting user, and content tasks.",
     Category = "Grove.Workflows",
-    Dependencies = ["Grove.Access", "Grove.Workflows", "Grove.Contents", "Grove.Title"]
+    Dependencies = ["Grove.Access", "Grove.Workflows", "Grove.Contents", "Grove.Contents.Title"]
 )]

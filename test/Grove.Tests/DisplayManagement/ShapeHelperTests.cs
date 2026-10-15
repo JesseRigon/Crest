@@ -1,7 +1,7 @@
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.Descriptors;
-using Grove.DisplayManagement.Implementation;
-using Grove.DisplayManagement.Theming;
+using Grove.Display.Management;
+using Grove.Display.Management.Descriptors;
+using Grove.Display.Management.Implementation;
+using Grove.Display.Management.Theming;
 using Grove.Environment.Extensions;
 using Grove.Tests.Stubs;
 
@@ -16,7 +16,6 @@ public class ShapeHelperTests
         IServiceCollection serviceCollection = new ServiceCollection();
 
         serviceCollection.AddLogging();
-        serviceCollection.AddScoped<IHtmlDisplay, DefaultHtmlDisplay>();
         serviceCollection.AddScoped<IExtensionManager, StubExtensionManager>();
         serviceCollection.AddScoped<IThemeManager, ThemeManager>();
         serviceCollection.AddScoped<IShapeFactory, DefaultShapeFactory>();

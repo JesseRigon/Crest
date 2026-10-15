@@ -1,10 +1,10 @@
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.Descriptors;
-using Grove.DisplayManagement.Handlers;
-using Grove.DisplayManagement.Implementation;
-using Grove.DisplayManagement.Shapes;
-using Grove.DisplayManagement.Theming;
-using Grove.DisplayManagement.Views;
+using Grove.Display.Management;
+using Grove.Display.Management.Descriptors;
+using Grove.Display.Management.Handlers;
+using Grove.Display.Management.Implementation;
+using Grove.Display.Management.Shapes;
+using Grove.Display.Management.Theming;
+using Grove.Display.Management.Views;
 using Grove.Environment.Extensions;
 using Grove.Tests.Stubs;
 
@@ -184,7 +184,7 @@ public class ShapeFactoryTests
     public async Task CreateStronglyTypedShapeFallsBackToCastleProxy_Default_Succeeds()
     {
         var factory = _serviceProvider.GetRequiredService<IShapeFactory>();
-        var shapeFactoryExtensionsType = typeof(IShapeFactory).Assembly.GetType("Grove.DisplayManagement.ShapeFactoryExtensions", throwOnError: true);
+        var shapeFactoryExtensionsType = typeof(IShapeFactory).Assembly.GetType("Grove.Display.Management.ShapeFactoryExtensions", throwOnError: true);
         var createAsyncMethod = GetCreateAsyncActionOverload(shapeFactoryExtensionsType);
         var genericCreateAsyncMethod = createAsyncMethod.MakeGenericMethod(typeof(FallbackOnlyShapeViewModel));
 
@@ -316,7 +316,7 @@ public class ShapeFactoryTests
         Assert.NotNull(buildShapeAsyncMethod);
         Assert.NotNull(initializeShapeAsyncMethod);
 
-        var context = new BuildDisplayContext(new Shape(), "Detail", string.Empty, factory, null, null);
+        var context = new BuildDisplayContext(new Shape(), "Detail", string.Empty, factory, null);
         var shape = await (ValueTask<IShape>)buildShapeAsyncMethod.Invoke(shapeResult, [context]);
         await (ValueTask)initializeShapeAsyncMethod.Invoke(shapeResult, [shape]);
 

@@ -5,7 +5,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
@@ -15,18 +14,18 @@
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" />
-    <ProjectReference Include="$(PlatformSrcDir)Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Infrastructure.Server.Abstractions\Grove.Infrastructure.Server.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Grove.Contents\Grove.Contents.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Grove.Infrastructure\Grove.Infrastructure.csproj" />
     <ProjectReference Include="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Grove.ContentManagement\Grove.ContentManagement.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Grove.ContentTypes.Abstractions\Grove.ContentTypes.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Grove.Navigation\Grove.Navigation.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Grove.Roles.Abstractions\Grove.Roles.Abstractions.csproj" />
-    <ProjectReference Include="$(PlatformSrcDir)Grove.Liquid.Abstractions\Grove.Liquid.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents.Management\Grove.Contents.Management.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents.Types.Abstractions\Grove.Contents.Types.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Display.Management\Grove.Display.Management.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Display.Navigation\Grove.Display.Navigation.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Display.Resources.Management\Grove.Display.Resources.Management.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Access.Roles.Abstractions\Grove.Access.Roles.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Display.Liquid.Abstractions\Grove.Display.Liquid.Abstractions.csproj" />
     <PackageReference Include="System.Linq.Dynamic.Core" />
   </ItemGroup>
 
@@ -45,8 +44,8 @@
     <ProjectReference Include="..\Abstractions\Grove.Workflows.Abstractions.csproj" />
     <ProjectReference Include="..\..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
     <ProjectReference Include="..\..\Grove.AuditTrail.Abstractions\Grove.AuditTrail.Abstractions.csproj" />
-    <ProjectReference Include="..\..\Grove.Queries.Abstractions\Grove.Queries.Abstractions.csproj" />
-    <ProjectReference Include="..\..\Grove.Server\Grove.Server.csproj" />
-    <ProjectReference Include="..\..\Grove.OptionPicker\Grove.OptionPicker.csproj" />
+    <ProjectReference Include="..\..\Grove.Data.Queries.Abstractions\Grove.Data.Queries.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Grove.Infrastructure.Server\Grove.Infrastructure.Server.csproj" />
+    <ProjectReference Include="..\..\Grove.Contents.OptionPicker\Grove.Contents.OptionPicker.csproj" />
   </ItemGroup>
 </Project>

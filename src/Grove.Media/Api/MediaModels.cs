@@ -3,7 +3,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Media;
 using Grove.Security.Permissions;
 

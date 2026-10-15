@@ -30,7 +30,7 @@ unusable), and a second, Blazor-only display system beside the platform's.
 | Term | Meaning here |
 | --- | --- |
 | **Shape** | The platform's `IShape`: a node in the display tree. Keeps its name. |
-| **Display tree** | The serializable form of a shape tree: `{ type, displayType, alternates, properties, zones: { name: [nodes] }, items: [nodes], metadata }`. What the renderer consumes and what the headless API returns. Its node is `DisplayNode` in `Grove.DisplayManagement.Abstractions`; `GroveModel` is only the content-item wrapper. |
+| **Display tree** | The serializable form of a shape tree: `{ type, displayType, alternates, properties, zones: { name: [nodes] }, items: [nodes], metadata }`. What the renderer consumes and what the headless API returns. Its node is `DisplayNode` in `Grove.Display.Management.Abstractions`; `GroveModel` is only the content-item wrapper. |
 | **Component** | Anything in the component registry: a name, a parameter schema, zones, the shells it may appear in. One concept with facets, not kinds: a component may be a **primitive** (text, container, input, button, link), a **composite** (a header built from primitives, as code or as a saved template), an **editor** (the input component for a value type), and/or a **host** (it exposes open zones others fill). A **page is not a component**: pages are their own kind, § 6a. |
 | **Binding** | The rule that maps a shape (type + alternates + display type, per theme) to a component, or to a template. Replaces `ShapeBinding.BindingAsync`. |
 | **Template** | A tenant-editable component tree bound to a shape name, stored as content, authored in Liquid (§ 5). A template *is* a binding whose target is a tree instead of a compiled component. |
@@ -47,12 +47,11 @@ unusable), and a second, Blazor-only display system beside the platform's.
 **Stays, unchanged** (the build side; all type-neutral):
 
 - `IDisplayDriver<T>`, `DisplayDriver<T, TDisplayModel>`, `IDisplayManager<T>`, `ShapeResult`
-  (`Location`, `Differentiator`, `OnGroup`, `RenderWhen`), `BuildDisplayContext` / `BuildEditorContext`
-  / `UpdateEditorContext`, display types (`Detail`, `Summary`, `SummaryAdmin`, `DetailAdmin`), editor
+  (`Location`, `Differentiator`, `OnGroup`, `RenderWhen`), `BuildDisplayContext`, display types (`Detail`, `Summary`, `SummaryAdmin`, `DetailAdmin`), editor
   groups.
 - `IContentItemDisplayManager`, `ContentItemDisplayCoordinator`, the content, part and field
   display drivers, the alternates factories, `IContentDisplayHandler`.
-- `IShape`, `ShapeMetadata` (minus `ChildContent`), `IShapeFactory`, alternates, wrappers, positions.
+- `IShape`, `ShapeMetadata`, `IShapeFactory`, alternates, wrappers, positions.
 - `PlacementInfo`, `placement.json`, `IPlacementInfoResolver`, the Placements module's data, and the
   feature order that lets a theme's placement override a module's.
 - `IZoneHolding`, `ILayoutAccessor`, zones as named, positioned lists.
@@ -74,7 +73,7 @@ unusable), and a second, Blazor-only display system beside the platform's.
 | `LayerFilter` (an MVC `IAsyncResultFilter`) | A layout build step that runs the same rule evaluation and adds layer placements to the layout's zones. |
 | `IResourceManager.Render*(TextWriter)`, the resource tag helpers | A head/foot renderer from the resource registry data, emitted as `HeadContent` / markup nodes in the tree. |
 | The site theme's `Layout.liquid`, `Content-Page.liquid`, `Widget-*.liquid`, `Menu*.liquid` | Layout, content and menu components (and templates for the tenant-editable ones). |
-| The admin client's `DisplayManager`/`Shape`/`ShapeView` and `Grove.Components/Shapes/Shape.cs` | Retired as a display system; the shell state left in `DisplayManager` is `AdminShellState`. |
+| The admin client's `DisplayManager`/`Shape`/`ShapeView` and `Grove.Display.Components/Shapes/Shape.cs` | Retired as a display system; the shell state left in `DisplayManager` is `AdminShellState`. |
 | `[BlazorComponent(name)]`, the global component registry, the workbench registry, the route table's component scan | **One component registry**, § 1. |
 | `BlazorComponentShapeBindingResolver` rendering a component to static HTML so Liquid can embed it | Gone with the HTML views; `HtmlRenderer` stays for headless HTML (email, static pages). |
 
@@ -121,7 +120,7 @@ ComponentDescriptor
 
 Implementation:
 
-- **Contracts** (`Grove.DisplayManagement.Abstractions/Components`, browser-safe):
+- **Contracts** (`Grove.Display.Management.Abstractions/Components`, browser-safe):
   `[BlazorComponent]` with palette and rule metadata, `[ComponentParameter]` (with `Choices`,
   static options that make a string parameter a `Choice`), `[ComponentZone]`,
   `[assembly: ComponentCatalog]`, `ComponentDescriptor`, `IComponentCatalog`,
@@ -142,22 +141,22 @@ Implementation:
   invisible to other generators, so a component is marked and its parameters declared in the
   code-behind. OCSG003/OCSG004 warn about a marker or `[Parameter]`s left in `.razor` markup;
   OCSG005 about a marked component it cannot catalog (generic, abstract, inaccessible).
-- **Generator wiring:** `buildTransitive/Grove.DisplayManagement.Abstractions.targets`, shipped in
+- **Generator wiring:** `buildTransitive/Grove.Display.Management.Abstractions.targets`, shipped in
   the abstractions package with the generator in `buildTransitive/analyzers/`, so every package
-  consumer gets it, directly or through `Grove.Components`. It applies to Razor projects named
+  consumer gets it, directly or through `Grove.Display.Components`. It applies to Razor projects named
   `*.BlazorWasm` or `*.Client`, or any project setting `<ComponentCatalog>true</ComponentCatalog>`
-  (`Grove.Components`, `Grove.Icons`), and enables the interceptor namespace the same assembly's
+  (`Grove.Display.Components`, `Grove.Display.Icons`), and enables the interceptor namespace the same assembly's
   shape generators need. In this repo `Directory.Build.targets` imports the same file for the
   non-platform projects with the generator as a project reference.
-- **Server registry** (`Grove.DisplayManagement/Components`): `IComponentRegistryManager` builds
+- **Server registry** (`Grove.Display.Management/Components`): `IComponentRegistryManager` builds
   one registry per shell and theme from the enabled features' assemblies plus
-  `ComponentRegistryOptions` (Grove.Server adds `Grove.Components`, `Grove.Icons`, the theme
+  `ComponentRegistryOptions` (Grove.Infrastructure.Server adds `Grove.Display.Components`, `Grove.Display.Icons`, the theme
   clients and the module client libraries, each library limited to its shell bucket). A
   component's feature is its type's (`ShellBlueprint.Dependencies`), else the module its library
   is named after (`X.BlazorWasm` → `X`); catalogs apply in feature order, a theme's only for that
   theme and its base themes. Cached in a tenant singleton like the shape table. The scoped
   `IComponentRegistry` is the request's shell (`IShellKindAccessor`).
-- **Browser registry** (`Grove.Shell/ShellComponentRegistry.cs`): the document's shell over the
+- **Browser registry** (`Grove.Infrastructure.Shell/ShellComponentRegistry.cs`): the document's shell over the
   shared libraries, its theme client, and the shell's eager and lazily loaded module libraries
   (`LazyModules`), rebuilt when a lazy module loads; registered at WASM boot
   (`ClientWebAssemblyHost`).
@@ -207,7 +206,7 @@ A recursive walker over the display tree, in a library referenced by server and 
 - **The same renderer** runs under static SSR, inside the interactive root, and under
   `HtmlRenderer` for headless HTML. Nothing in it touches `HttpContext`, JS or `IHtmlContent`.
 
-The server side is `IDisplayTreeBuilder` / `DisplayTreeBuilder` (`Grove.DisplayManagement/
+The server side is `IDisplayTreeBuilder` / `DisplayTreeBuilder` (`Grove.Display.Management/
 Components`), the shape-to-tree mapper. It runs the shape descriptor's and the shape's own
 displaying and processing phases, then binds through `IComponentRegistry.TryResolve` in
 `DefaultHtmlDisplay`'s order; checks properties against the schema (unknown or wrong-typed ones
@@ -215,14 +214,12 @@ dropped and diagnosed); maps named zones and a shape's items (`ChildContent`) wi
 allowed list and min/max; maps wrappers to wrapper components; gives deterministic instance ids
 (item, part, field, shape type, position); drops a component whose permission the caller lacks
 (`IAccessDecision`); and runs under `DisplayTreeOptions` (time, nodes, depth, size, template
-steps and depth). An overrun becomes a `DisplayError` node and is never retried. The global
-`IShapeDisplayEvents` and the `Displayed` phase belong to the HTML render only (its output cache
-and profiler).
+steps and depth). An overrun becomes a `DisplayError` node and is never retried.
 
-A shape with no component falls back to `IHtmlDisplay` and enters the tree as a sanitized
-`Markup` leaf with a `markup-fallback` diagnostic. This is the transition path, removed in
-step 7 of the rework plan. `ShapeBinding.ComponentName` / `ShapeBinding.ForComponent` let the HTML
-path render a component-bound shape's node and zones in one pass (`ComponentShapeRenderer`).
+A shape with no component becomes a `DisplayError` node naming its shape type (diagnostic
+`no-component`), counted for the coverage report (`GET api/grove/components/coverage`,
+[MVC/shape-engine.md](MVC/shape-engine.md) › Component coverage). `ShapeBinding.ComponentName`
+(`ShapeBinding.ForComponent`) binds a shape to a component in the shape table.
 
 ### 4. One render mode
 
@@ -283,7 +280,7 @@ browser.
 - **Validation:** a binding to an unknown node or output, or of the wrong type, is a save error;
   a cycle of bindings (A's parameter from B's output from A's) is refused.
 
-Implementation: contracts in `Grove.DisplayManagement.Abstractions/Components` (`[ComponentOutput]`,
+Implementation: contracts in `Grove.Display.Management.Abstractions/Components` (`[ComponentOutput]`,
 `IsOverlay`, `ParameterKind.Output`, `DisplayNode.Bindings`/`Slots`/`Events`, `DisplayBinding`
 with `Operator`, `Operand`, `Combinator` and `Terms`, `DisplayPredicates` (the fixed lists and
 evaluation), `DisplaySlot`, `DisplayAction`, `DisplayState`, `DisplayActionRunner`,
@@ -455,7 +452,7 @@ drafts, the setting for instances on inaccessible pages, and the designer UI.
 - **Routing a content page:** one content route component in the site shell (`ContentPage`,
   `@page "/"` only; the shell middleware rewrites every site path no page claims to it and hands
   it the real path, [shells-and-themes.md › Shell dispatch](shells-and-themes.md#shell-dispatch))
-  asks `api/grove/site/page?path=`, which `SitePageBuilder` (`Grove.Server/Display`) answers: a
+  asks `api/grove/site/page?path=`, which `SitePageBuilder` (`Grove.Infrastructure.Server/Display`) answers: a
   designed page matching the path first, else the path through Autoroute (the home route for
   `/`, `Contents/ContentItems/{id}` for an item without a route), `ViewContent` for the caller,
   decision 10, then the `Layout` shape filled (the item into `Content`, the `alias:main-menu`
@@ -463,7 +460,7 @@ drafts, the setting for instances on inaccessible pages, and the designer UI.
   miss is the layout with `NotFound` (404), a refusal with `Forbidden` (403). The page's query is
   forwarded (and part of the ETag), so list pages page. Module `@page` components work beside it
   and may build a tree in code (`IDisplayManager<T>`) or render directly.
-- **The site shell** (`Grove.SiteTheme/wasm`): `ContentPage` (the real path from
+- **The site shell** (`Grove.Themes.Site/wasm`): `ContentPage` (the real path from
   `IShellRequestPath` while prerendering and from the navigation manager once interactive; the
   page as `[PersistentState]`; the status set while prerendering through
   `IShellResponseStatus`), and the components `Layout` (zones `Navigation`, `Header`, `Messages`,
@@ -477,7 +474,7 @@ drafts, the setting for instances on inaccessible pages, and the designer UI.
   a *model* puts an item into data a component renders (an admin menu item through the page
   registry, a site menu item through `INavigationProvider`, which the `Menu` component then
   renders). The admin menu and the site navigation are both: a model built by sources, rendered by a `Menu` component, placed in an
-  open zone of the layout. `Menu`/`MenuItem` (`Grove.Components/Interaction/LinkMenu.cs`) render
+  open zone of the layout. `Menu`/`MenuItem` (`Grove.Display.Components/Interaction/LinkMenu.cs`) render
   the menu module's items, resolved in the processing phase.
 - **Layer rules.** A layer rule (all blog posts, signed-in users) places a component instance
   into a zone key as a conditional fill applied while the tree is built: `LayerPlacement` (a
@@ -564,7 +561,7 @@ tree inline, but the route, the bucket and the authorization are the page's.
   editor tree as shapes (`ContentEditorTreeBuilder`, `GET api/grove/content-items/{id}/editor`,
   `new-{type}` for a new item), so a `ContentEditor__{Type}` template lays a type's editor out.
   Editor components: text, number, yes/no, date, option picker, HTML, Markdown, link, title,
-  permalink; the option picker field's editor (Grove.OptionPicker's client library; for content
+  permalink; the option picker field's editor (Grove.Contents.OptionPicker's client library; for content
   items the selection in order with edit links, a search by title, a create link per allowed
   creatable type); `BagPartEditor` (each contained item through its type's editor tree;
   add from the allowed types, remove, reorder), `UserPickerFieldEditor` (searching
@@ -573,7 +570,7 @@ tree inline, but the route, the bucket and the authorization are the page's.
   (the list's children, their order, a child created on the native create page with the list as
   its container, the feed values); `SeoMetaPartEditor`; `GeoPointFieldEditor` (a Leaflet/OpenStreetMap
   map, Google Maps when the field names a key);
-  `LocalizationPartEditor` (the item's translations, opened or created); `IconPicker` (Grove.Icons).
+  `LocalizationPartEditor` (the item's translations, opened or created); `IconPicker` (Grove.Display.Icons).
   An editor may declare a field's editor setting (`Edits = ["TextField-IconPicker"]`), which the
   editor tree prefers to the field type's own. The editors that act on the stored item (a list's
   children, translations) read its id from the context (`ContentEditorContext.ContentItemId`,
@@ -592,11 +589,11 @@ tree inline, but the route, the bucket and the authorization are the page's.
   holds (`DisplayTreeText`, a migrated Liquid body's composite source included), and the part
   answers the body aspect with it.
 - **The editor's preview** is `ContentPreviewPane` beside the editor tree: the unsaved item
-  rendered by Grove.ContentPreview's `POST api/grove/content-preview` the way its display renders
+  rendered by Grove.Contents.Preview's `POST api/grove/content-preview` the way its display renders
   (drivers, placement, templates, the node filter), as HTML in a sandboxed frame; the latest
   version of a stored item, a draft included, is the display endpoint with `version=latest`.
 - **An item's admin pages** are the native pages of the page registry: `ContentAdminPaths`
-  (Grove.ContentManagement.Abstractions) names them for code outside the admin shell (the Liquid
+  (Grove.Contents.Management.Abstractions) names them for code outside the admin shell (the Liquid
   `{% a edit_for/admin_for/create_for %}` tags, admin menu nodes); `ContentItemMetadata` carries
   only the display route values.
 - **Content editing is a stripped-down designer.** The marketing team's WYSIWYG is the designer
@@ -767,7 +764,7 @@ editor, display primitive, query column type and workflow type. A module that ow
 the query system, so it sits with data, not with the UI. Built: `ValueTypeDescriptor` (name,
 query column type, workflow type, field types, editor and display components, CLR type, owning
 module), the base types over the content fields, `IValueTypeRegistry` and `AddValueType`
-(a platform library referenced by `Grove.Data`, registered by Grove.Server; `Grove.Money`
+(a platform library referenced by `Grove.Data`, registered by Grove.Infrastructure.Server; `Grove.Data.Types.Money`
 registers `Money`). Not wired: the query system and the display schema reading it.
 
 ### Decision 2: primitives
@@ -918,7 +915,7 @@ downstream knows `IShape`.
 
 **A content type without an assigned template does not get a page.** The alternates chain
 (decision 7) ends at the error pages, not at a driver-built page. The shipped
-`DefaultContentTemplate` (`Grove.Server/Display`) is the default `Content` template for the
+`DefaultContentTemplate` (`Grove.Infrastructure.Server/Display`) is the default `Content` template for the
 Detail display type (the title, then the item's `Header`, `Meta`, `Content`, `Tags` and `Footer`
 zones as the drivers filled them and the node filter cut them); it exists only while the
 per-tenant setting `SiteDisplaySettings.RenderUnassignedContent` is on, because a tenant may not
@@ -972,11 +969,11 @@ server cache (it scales by users × pages × cultures).
   shared cache or CDN applies.
 - Drafts and previews are never cached.
 
-Built: the composite version is `DisplayTreeVersions` (`Grove.DisplayManagement/Components`): a
+Built: the composite version is `DisplayTreeVersions` (`Grove.Display.Management/Components`): a
 stamp taken when the tenant starts, a content counter bumped on every publish, unpublish, update,
 import and removal (`DisplayTreeContentHandler`), the culture, the `IDisplayTreeVersionPart`s
 modules register (Templates: the published set and the overrides document; Layers: the layers
-document; Grove.Server: the site settings) and the caller's scope (the path,
+document; Grove.Infrastructure.Server: the site settings) and the caller's scope (the path,
 `CallerContext.ScopeSignature`: user, roles, permission version). `api/grove/site/page` and the
 published-item path of `api/grove/content-items/{id}/display` send it as the ETag and answer 304
 on a match before building anything. The site shell's `ContentPage` keeps pages in session
@@ -1010,20 +1007,18 @@ publish. The design system is the visual language and branding; the theme is str
 
 ## Module homes
 
-- **`Grove.DisplayManagement.Abstractions`** holds the display tree node, the component registry
+- **`Grove.Display.Management.Abstractions`** holds the display tree node, the component registry
   contract, the descriptors and the tree renderer: a small neutral library below
-  `Grove.Components`, referenced by the server and every theme client, with no server or UI
+  `Grove.Display.Components`, referenced by the server and every theme client, with no server or UI
   framework in it, so it loads in the browser. The server-only pieces (the shape-to-tree mapper,
-  the component and template bindings, the Blazor `IDisplay`) are in `Grove.DisplayManagement`.
+  the component and template bindings, the Blazor `IDisplay`) are in `Grove.Display.Management`.
   The component source generator is in `Grove.SourceGenerators`. Work stays within the
   platform's display management, reworked in place; no parallel modules.
-- **`Grove.Mvc.Abstractions`** holds the MVC contracts the display abstractions used to carry
-  (`IUpdateModel` and model binding, tag helper discovery, filter extensions), same namespaces.
 - **`Grove.Data.Types`**: the value type registry (decision 1).
 - **`Grove.Data.Global`**: the standardized global data set imports and loading
   ([globals.md](globals.md)) plus the global data registry, so no module reimplements either.
-- **`Grove.Components.Primitives`** (the primitive components; modules register theirs there) and
-  **`Grove.Components.Templates`** (the higher-level template trees modules ship: composites,
+- **`Grove.Display.Components.Primitives`** (the primitive components; modules register theirs there) and
+  **`Grove.Display.Components.Templates`** (the higher-level template trees modules ship: composites,
   default templates; the Templates module's tenant data layers over them). Not created; see Open
   questions.
 - **The Templates module** is reworked in place, keeping its feature id.
@@ -1064,8 +1059,8 @@ removed per page as its Blazor replacement exists, not all at once.
    components, menus. The MVC site routes are out of the request path: Autoroute's and the home
    route's dynamic routes are gone (their address schemes still generate URLs), and
    `Contents/ContentItems/{id}` only generates (`GenerationOnlyRouteConstraint`). The site shell
-   middleware resolves site paths through the route table and forwards a legacy-owned path to
-   MVC (`ILegacyRouteOwnership`). BagPart stays in Flows (with the content card views and the
+   middleware resolves site paths through the route table and forwards a path a non-Blazor
+   endpoint owns to it (`ILegacyRouteOwnership`). BagPart stays in Flows (with the content card views and the
    shapes the BagPart editor uses).
 4. ☑ **Templates module rework** (§ 5), with composites, the UI action contract (decision 5) and
    overrides (§ 5a).
@@ -1073,38 +1068,32 @@ removed per page as its Blazor replacement exists, not all at once.
 6. ☑ **Headless HTML, layers as a build step, Placements editor** (§ 6, § 8). The layer result
    filter, `LayerMetadata` and the widget admin are gone; the Placements page replaces the MVC
    editor and its content-type shortcuts.
-7. ◐ **Retire** the HTML path. `IHtmlDisplay`, the Razor and Liquid shape engines and the tag
-   helpers remain only for the stock MVC pages and the markup fallback leaf;
-   `BlazorComponentShapeBindingResolver` still renders a component inside such a fallback. They go
-   page by page as each MVC page gets a component page ([backlog.md](backlog.md) tracks the
-   waves). What remains:
-   - ☐ The stock MVC screens (the legacy admin frame among them; [MVC/views.md](MVC/views.md)
-     tracks them). The sign-in, registration, password and two-factor screens are the Access
-     modules' pages ([shells-and-themes.md](shells-and-themes.md) › Account and protocol pages).
-   - ☑ Views rendered by MVC screens: the content part and field edit views, the Flows
-     BagPart, content-card and blocks-editor views and the editor drivers are deleted with the
-     MVC Contents screens; every part and field is edited on the editor tree.
-   - ☐ Shapes still falling back to `IHtmlDisplay` on the content path: `SearchFormPart` (unused)
-     and the admin-only shapes (`*_SummaryAdmin`, `*_Thumbnail`, `PublishLaterPart`,
-     `ArchiveLaterPart`, the menu item parts' admin shapes), which go with TheAdmin. `ListPartFeed`
-     is `HeadLink`; `LiquidPart` is retired, its bodies migrated to `DisplayTreePart`
-     ([MVC/shape-engine.md](MVC/shape-engine.md) › Component coverage).
+7. ◐ **Retire** the HTML path. ☑ `IHtmlDisplay`, the Razor and Liquid shape engines, the tag
+   helpers, `BlazorComponentShapeBindingResolver` and the markup fallback leaf are deleted with
+   MVC; the admin and site shells are the Blazor themes. Every shape on the content path binds a
+   registered component (`ContentPart` for a part with fields and no driver, `TermPart`,
+   `PublishLaterPart`, `ArchiveLaterPart`; `ListPartFeed` is `HeadLink`; `LiquidPart` is retired,
+   its bodies migrated to `DisplayTreePart`; [MVC/shape-engine.md](MVC/shape-engine.md) ›
+   Component coverage). What remains:
    - ☐ Browser checks for the native pages that replaced the MVC settings and definition screens.
-   - ☐ **Razor → Blazor component parity audit.** Every Razor view and shape template and every
+   - ◐ **Razor → Blazor component parity audit.** Every Razor view and shape template and every
      widget ([widgets.md](widgets.md)) has a Blazor component equivalent. Component boundaries
-     need not match the Razor ones, and the existing components in `Grove.Components` are reused
+     need not match the Razor ones, and the existing components in `Grove.Display.Components` are reused
      wherever possible rather than duplicated. The inventories are
      [MVC/views.md](MVC/views.md) › The inventory (views) and
      [MVC/shape-engine.md](MVC/shape-engine.md) › Component coverage (shape templates). Liquid
-     templates are not part of the audit. Tracker: [MVC/parity.md](MVC/parity.md).
-   - ☐ **The Liquid templates updated to display trees and optionalities.** Liquid templates
-     remain; each one emits a display tree through the template tags (§ 5) and reads its data
-     through bindings and slots (§ 4a, decision 4) instead of rendering HTML from shapes.
+     templates are not part of the audit. Tracker: [MVC/parity.md](MVC/parity.md). No `.cshtml`
+     file remains.
+   - ☑ **Liquid templates on display trees.** A template emits a display tree through the
+     template tags (§ 5) and reads its data through bindings and slots (§ 4a, decision 4); the
+     shipped templates (the site recipe's content templates) are tree templates. The shared
+     Liquid has no view tags and no request values ([MVC/shape-engine.md](MVC/shape-engine.md) ›
+     Liquid).
 
 ## Open questions
 
-- **`Grove.Components.Primitives` / `.Templates`.** The registered primitives derive from the
-  Radzen-derived base classes in `Grove.Components`, so a separate primitives project means
+- **`Grove.Display.Components.Primitives` / `.Templates`.** The registered primitives derive from the
+  Radzen-derived base classes in `Grove.Display.Components`, so a separate primitives project means
   moving that whole library or leaving those primitives behind.
 - **Template security hardening** (to settle once the display system's shape is final):
   1. The member allow-list is the sandbox. A template is evaluated as the viewer, so an editor's

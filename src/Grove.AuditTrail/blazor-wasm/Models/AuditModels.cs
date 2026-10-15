@@ -110,6 +110,6 @@ public sealed class AuditFilter
 /// <summary>A content event's version and the one before it, as content JSON.</summary>
 public sealed record AuditContentDiff(System.Text.Json.Nodes.JsonNode? Before, System.Text.Json.Nodes.JsonNode? After);
 
-public sealed record AuditContentVersion(string ContentItemId, string ContentType, string? DisplayText, int VersionNumber, Grove.DisplayManagement.Components.DisplayTree Tree);
+public sealed record AuditContentVersion(string ContentItemId, string ContentType, string? DisplayText, int VersionNumber, Grove.Display.Management.Components.DisplayTree Tree);
 
 public sealed record AuditContentRestoreResult(bool Restored, string ContentItemId, IReadOnlyList<string> Errors);

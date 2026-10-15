@@ -1,5 +1,5 @@
-using Grove.ContentManagement;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Records;
 using Grove.Tests.Apis.Context;
 using ISession = YesSql.ISession;
 

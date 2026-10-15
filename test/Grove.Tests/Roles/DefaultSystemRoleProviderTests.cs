@@ -1,6 +1,6 @@
 using Grove.Environment.Shell;
 
-namespace Grove.Roles.Tests;
+namespace Grove.Access.Roles.Tests;
 
 public class DefaultSystemRoleProviderTests
 {

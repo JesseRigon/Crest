@@ -14,7 +14,7 @@ The gallery works out of the box: requests use the ambient same-origin admin coo
 
 The API accepts only Bearer tokens via the `"Api"` scheme, and the gallery acquires one **silently**: an OAuth2 authorization-code + PKCE flow runs in a hidden iframe (`prompt=none`) against the tenant's OpenID Connect server, using the existing admin cookie session — no interactive login. The token auto-renews and is attached to every API call, Uppy/TUS upload request, and the SignalR connection. A request rejected with `401` is retried once after a silent renewal.
 
-If you use this mode, you **must** enable the **OpenID Token Validation** feature (`Grove.OpenId.Validation`) so Grove can validate the `access_token` sent by the SPA and the SignalR client.
+If you use this mode, you **must** enable the **OpenID Token Validation** feature (`Grove.Access.OpenId.Validation`) so Grove can validate the `access_token` sent by the SPA and the SignalR client.
 
 To provision this mode, run the **Media API — Bearer/PKCE** recipe (Configuration → Recipes). It switches the authentication scheme to `Bearer`, enables the OpenID Server, Token Validation, and Management features, turns on the authorization-code flow with PKCE required, and registers a public (secret-less) `media_gallery` OpenID application whose redirect URI points at the gallery's silent-renew page. Adjust the recipe's `https://localhost:5001` origins to your tenant's real origin before running it, and make sure gallery users have roles granting the media permissions — the `roles` scope carries them into the token.
 
@@ -149,16 +149,16 @@ Alternatively, configure sticky sessions on your load balancer instead of a shar
 
 The SignalR feature enables real-time media updates. When enabled, changes to media files and folders (uploads, renames, moves, deletes) are broadcast to all connected clients. This keeps the Media Gallery in sync across multiple browser tabs and users.
 
-To enable, activate the **Media SignalR** feature in the admin panel. This feature depends on the reusable **`Grove.SignalR`** feature, which provides the SignalR services, client resources, and the `SignalR` authorization policy shared by any module that hosts a hub. The media hub accepts both the standard application cookie used by signed-in site users and API access tokens used by headless clients. If headless clients connect with `access_token`, you **must** enable the **OpenID Token Validation** feature (`Grove.OpenId.Validation`).
+To enable, activate the **Media SignalR** feature in the admin panel. This feature depends on the reusable **`Grove.Data.Protocols.SignalR`** feature, which provides the SignalR services, client resources, and the `SignalR` authorization policy shared by any module that hosts a hub. The media hub accepts both the standard application cookie used by signed-in site users and API access tokens used by headless clients. If headless clients connect with `access_token`, you **must** enable the **OpenID Token Validation** feature (`Grove.Access.OpenId.Validation`).
 
 For multi-instance deployments, a backplane is required. The backplane is provided by the reusable SignalR module and applies to every hub in the tenant, so the same two features cover the Media Gallery and any other SignalR-based feature:
 
-- **`Grove.SignalR.Azure`** — Uses Azure SignalR Service as the backplane.
-- **`Grove.SignalR.Redis`** — Uses Redis as the backplane.
+- **`Grove.Data.Protocols.SignalR.Azure`** — Uses Azure SignalR Service as the backplane.
+- **`Grove.Data.Protocols.SignalR.Redis`** — Uses Redis as the backplane.
 
 ### Backplane Configuration
 
-The Redis backplane reuses the same connection string as the `Grove.Redis` module (`Grove_Redis:Configuration`), so a single Redis instance can serve the backplane and the other Redis-backed features (cache, lock, Data Protection):
+The Redis backplane reuses the same connection string as the `Grove.Integrations.Redis` module (`Grove_Redis:Configuration`), so a single Redis instance can serve the backplane and the other Redis-backed features (cache, lock, Data Protection):
 
 ```json
 {
@@ -191,10 +191,10 @@ To fully scale the Media Library across multiple application instances, the foll
 
 | Component | Purpose | Configuration |
 |---|---|---|
-| **SignalR backplane** | Broadcast real-time updates across instances | Enable `Grove.SignalR.Azure` or `Grove.SignalR.Redis` |
+| **SignalR backplane** | Broadcast real-time updates across instances | Enable `Grove.Data.Protocols.SignalR.Azure` or `Grove.Data.Protocols.SignalR.Redis` |
 | **Sticky sessions** or **shared TUS path** | Ensure TUS upload chunks are accessible across instances | Configure session affinity on your load balancer, or set `Grove:TempDirectory:Path` to a shared filesystem |
 | **Shared media storage** | Store media files accessible from all instances | Configure Azure Blob Storage, Amazon S3, or a shared filesystem |
-| **Shared Data Protection keys** | Let cookies, antiforgery tokens, and bearer tokens issued by one instance be validated by another | Enable `Grove.Redis.DataProtection`, or configure Azure Blob key storage via `Grove.DataProtection.Azure` |
+| **Shared Data Protection keys** | Let cookies, antiforgery tokens, and bearer tokens issued by one instance be validated by another | Enable `Grove.Integrations.Redis.DataProtection`, or configure Azure Blob key storage via `Grove.Data.Protection.Azure` |
 
 !!! note
     Without a SignalR backplane, real-time updates only work within a single instance. Without sticky sessions (or a shared temp filesystem), TUS resumable uploads may fail when chunks are routed to different instances. Standard (non-TUS) uploads are not affected since each file is uploaded in a single request.
@@ -204,7 +204,7 @@ To fully scale the Media Library across multiple application instances, the foll
 
 ### Reference Configuration (Redis)
 
-A single Redis instance can carry the whole cross-instance coordination load. Enable the **`Grove.Redis`**, **`Grove.Redis.DataProtection`**, and **`Grove.SignalR.Redis`** features, and configure:
+A single Redis instance can carry the whole cross-instance coordination load. Enable the **`Grove.Integrations.Redis`**, **`Grove.Integrations.Redis.DataProtection`**, and **`Grove.Data.Protocols.SignalR.Redis`** features, and configure:
 
 ```json
 {

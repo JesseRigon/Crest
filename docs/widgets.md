@@ -6,7 +6,7 @@ This is the list of what the deleted widgets did and what replaces each one: a r
 component (`[BlazorComponent]`) that templates place with `{% component %}`, a composite template
 built from components, an item's own tree (`DisplayTreePart`), or a layer placement. Keep it
 current: when a replacement exists, set its status and name the component. The content and form
-components live in `Grove.Components` (`Components/Content`, `Components/Forms`), styled in
+components live in `Grove.Display.Components` (`Components/Content`, `Components/Forms`), styled in
 `GroveComponents.css`.
 
 Status: **done** (a replacement exists and is registered), **partial** (it exists but misses
@@ -53,14 +53,14 @@ template is saved and when the form is submitted.
 | Validation | Field error message | Inputs show the errors the run returns for their name: the run endpoint answers a refused contract check with `errors` by input (`UiActionContract.CheckByInput`), the dispatcher raises `DisplayActionException`, and the runner keeps them in `DisplayState` under the form's node (`InstanceId`, filled by the renderer) | done |
 | ValidationSummary | All errors of the form | `ValidationSummary`, reading the same errors | done |
 | Visibility rules (`FormInputElementVisibilityPart`) | Show or hide an input by another input's value (is, is not, empty, contains, starts with, greater than…) | Every input's `Visible`, bound to a comparison (`visible: nodes.country.value == "US"`, blazor-display.md § 4a); a hidden input is neither required nor submitted | done |
-| ReCaptcha (`Grove.ReCaptcha` Forms feature) | A captcha in a form | `Captcha` (a form input, required, named `captcha` by default) renders the widget with the site key from `api/grove/recaptcha` and submits its token; the workflow checks it with the `Verify captcha` activity, through the same `ReCaptchaService` login and registration use | done |
+| ReCaptcha (`Grove.Security.ReCaptcha` Forms feature) | A captcha in a form | `Captcha` (a form input, required, named `captcha` by default) renders the widget with the site key from `api/grove/recaptcha` and submits its token; the workflow checks it with the `Verify captcha` activity, through the same `ReCaptchaService` login and registration use | done |
 
 ## Other modules
 
 | Widget | What it did | Replacement | Status |
 | --- | --- | --- | --- |
 | SearchForm (`Grove.Search`) | A search box posting to the search page | `SearchBox`: a GET form to `search/{index}?Terms=`, so it works before the page is interactive. `SearchFormPart` still exists in `Grove.Search.Abstractions`, unused | done |
-| Facebook Chat, Comments, Continue With, Like, Quote, Save, Share | Facebook SDK embeds, each rendered from a Liquid snippet in the part settings | `FacebookPlugin` (`Kind`, `Href`, `PageId`, `Layout`, `Size`, `Width`, `NumberOfPosts`) in the module's site library `Grove.Facebook.BlazorWasm`; its script loads the SDK through the module's own `sdk/init.js` and `sdk/sdk.{culture}.js` endpoints and parses the element | done |
+| Facebook Chat, Comments, Continue With, Like, Quote, Save, Share | Facebook SDK embeds, each rendered from a Liquid snippet in the part settings | `FacebookPlugin` (`Kind`, `Href`, `PageId`, `Layout`, `Size`, `Width`, `NumberOfPosts`) in the module's site library `Grove.Integrations.Facebook.BlazorWasm`; its script loads the SDK through the module's own `sdk/init.js` and `sdk/sdk.{culture}.js` endpoints and parses the element | done |
 
 ## Not recreated
 
@@ -71,7 +71,7 @@ their tests. The es-module and SEO fixtures keep their non-widget types.
 ## Left
 
 - ☐ The Razor → Blazor component parity audit covers every widget: each has a Blazor component
-  equivalent, reusing `Grove.Components` ([blazor-display.md](blazor-display.md) › Rework plan,
+  equivalent, reusing `Grove.Display.Components` ([blazor-display.md](blazor-display.md) › Rework plan,
   step 7).
 - ☐ The SiteTheme blog recipe's Contact page has a body (rich text and a contact form) but no
   UI-action workflow to send to, so its submit only checks the required inputs.

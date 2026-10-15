@@ -1,5 +1,5 @@
-using Grove.ContentManagement.Handlers;
-using Grove.Sitemaps.Handlers;
+using Grove.Contents.Management.Handlers;
+using Grove.Seo.Sitemaps.Handlers;
 
 namespace Grove.Contents.Sitemaps;
 

@@ -1,7 +1,7 @@
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Entities;
 
-namespace Grove.Settings;
+namespace Grove.Infrastructure.Settings;
 
 public static class SiteServiceExtensions
 {

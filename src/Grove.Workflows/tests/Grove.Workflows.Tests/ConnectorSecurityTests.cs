@@ -1,6 +1,7 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using Grove.Workflows.Api;
 using Grove.Workflows.Connectors;
 using Xunit;
 
@@ -61,11 +62,11 @@ public class ConnectorSecurityTests
         var body = Encoding.UTF8.GetBytes("{\"paid\":true}");
         var signature = Convert.ToHexString(HMACSHA256.HashData(Encoding.UTF8.GetBytes("secret"), body)).ToLowerInvariant();
 
-        Assert.True(WorkflowWebhooksController.IsValidSignature(signature, body, "secret"));
-        Assert.True(WorkflowWebhooksController.IsValidSignature($"sha256={signature}", body, "secret"));
-        Assert.False(WorkflowWebhooksController.IsValidSignature(signature, body, "other"));
-        Assert.False(WorkflowWebhooksController.IsValidSignature(signature, Encoding.UTF8.GetBytes("{\"paid\":false}"), "secret"));
-        Assert.False(WorkflowWebhooksController.IsValidSignature("", body, "secret"));
-        Assert.False(WorkflowWebhooksController.IsValidSignature("not-hex", body, "secret"));
+        Assert.True(WorkflowWebhooksHandlers.IsValidSignature(signature, body, "secret"));
+        Assert.True(WorkflowWebhooksHandlers.IsValidSignature($"sha256={signature}", body, "secret"));
+        Assert.False(WorkflowWebhooksHandlers.IsValidSignature(signature, body, "other"));
+        Assert.False(WorkflowWebhooksHandlers.IsValidSignature(signature, Encoding.UTF8.GetBytes("{\"paid\":false}"), "secret"));
+        Assert.False(WorkflowWebhooksHandlers.IsValidSignature("", body, "secret"));
+        Assert.False(WorkflowWebhooksHandlers.IsValidSignature("not-hex", body, "secret"));
     }
 }

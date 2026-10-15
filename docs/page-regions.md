@@ -15,17 +15,17 @@ region keys with an order, the shell resolves at render. Nothing registered rend
 which is the correct disabled behaviour. Region keys belong to the module owning the page,
 in its `Domain`.
 
-- `IPageRegionContributor` lives in `Grove.DisplayManagement.Abstractions`; the
-  `<GrovePageRegion>` component in Grove.Components.
+- `IPageRegionContributor` lives in `Grove.Display.Management.Abstractions`; the
+  `<GrovePageRegion>` component in Grove.Display.Components.
 - The component registry collects the contributors with the components. A region key is an
   open zone key, declared by the owning library with `[assembly: ZoneKey(...)]`: a page region
   is a *slot with a contribution key* in the display model
   ([blazor-display.md](blazor-display.md) decision 6).
 - Grove.Parties declares regions on its party-type panes (`PartiesPageRegions.Pane(...)`,
   `PartiesPageRegions.Detail(...)`) for other modules to contribute to; the general settings
-  page opens `SettingsPageRegions.General` (Grove.Components) for modules' own tenant-setting
+  page opens `SettingsPageRegions.General` (Grove.Display.Components) for modules' own tenant-setting
   sections (Parties' is the first).
 
 It is a platform concern, since every module contributing UI to another's screen needs it.
 Whole pages are not regions: a module declares those in the page registry
-([architecture.md › Modules declare, Grove.Server registers and serves](architecture.md#modules-declare-groveserver-registers-and-serves)).
+([architecture.md › Modules declare, Grove.Infrastructure.Server registers and serves](architecture.md#modules-declare-groveserver-registers-and-serves)).

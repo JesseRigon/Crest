@@ -2,14 +2,13 @@ using Fluid;
 using Fluid.Values;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Deployment;
-using Grove.DisplayManagement.Handlers;
-using Grove.Localization;
+using Grove.Display.Management.Handlers;
+using Grove.Data.Localization;
 using Grove.Modules;
-using Grove.Navigation;
-using Grove.Recipes;
+using Grove.Display.Navigation;
+using Grove.Infrastructure.Recipes;
 using Grove.Security.Permissions;
 using Grove.Shortcodes.Deployment;
-using Grove.Shortcodes.Drivers;
 using Grove.Shortcodes.Providers;
 using Grove.Shortcodes.Recipes;
 using Grove.Shortcodes.Services;
@@ -50,7 +49,6 @@ public sealed class Startup : StartupBase
 
         services.AddOptions<ShortcodeOptions>();
         services.AddScoped<Sc.IShortcodeProvider, OptionsShortcodeProvider>();
-        services.AddDisplayDriver<ShortcodeDescriptor, ShortcodeDescriptorDisplayDriver>();
         services.AddApiContributor<Api.ShortcodesApi>();
     }
 }
@@ -76,7 +74,7 @@ public sealed class ShortcodeTemplatesStartup : StartupBase
     }
 }
 
-[RequireFeatures("Grove.Localization")]
+[RequireFeatures("Grove.Data.Localization")]
 public sealed class LocaleShortcodeProviderStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)

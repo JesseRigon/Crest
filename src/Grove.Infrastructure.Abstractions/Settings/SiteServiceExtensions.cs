@@ -1,6 +1,6 @@
 using Grove.Entities;
 
-namespace Grove.Settings;
+namespace Grove.Infrastructure.Settings;
 
 public static class SiteServiceExtensions
 {

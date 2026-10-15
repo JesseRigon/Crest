@@ -1,4 +1,4 @@
-using Grove.Queries;
+using Grove.Data.Queries;
 using Grove.Workflows.Attributes;
 using Grove.Workflows.Extensions;
 using Grove.Workflows.Models;
@@ -116,7 +116,7 @@ public class RunQuery : Activity
 /// </summary>
 public sealed class QueryActivityProvider(IQueryCatalog catalog, IActivityDescriber describer) : IActivityProvider
 {
-    public const string TypeNamePrefix = "Grove.Queries.";
+    public const string TypeNamePrefix = "Grove.Data.Queries.";
     public const string SourceProperty = "grove:querySource";
     private const string SyntheticPrefix = "Query_";
 
@@ -166,7 +166,7 @@ public sealed class QueryActivityProvider(IQueryCatalog catalog, IActivityDescri
         {
             TypeName = typeName,
             ClrType = typeof(RunQuery),
-            Namespace = "Grove.Queries",
+            Namespace = "Grove.Data.Queries",
             Name = SafeName(query.Name),
             Version = 1,
             DisplayName = query.DisplayName,

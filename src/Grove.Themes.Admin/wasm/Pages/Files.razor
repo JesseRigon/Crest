@@ -1,0 +1,113 @@
+@page "/Files"
+@attribute [PageEntry("AccessAdminPanel", Id = "files", Parent = "media", Caption = "Files", Position = "0", Icon = "@iconify:mdi:folder-multiple")]
+@using Grove.Themes.Admin.Api
+@using Grove.Display.Components.Files
+@using Grove.Display.Components.Primitives
+@inject IApi Api
+@inject HttpClient Http
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The drive browser (docs/media.md § 8): the caller's drives, folders and files with the viewer
+   pane. Other users' personal drives never appear here (requirement 24); a tenant
+   administrator reaches one only through "Open a user's drive", which opens it in its own
+   window, marked as administrator access (§ 7). *@
+<GroveStack Gap="1rem" data-testid="files-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <GroveText TextStyle="TextStyle.H4" Text="@T["Files"]" />
+        <GroveButton Text="@T["Open a user's drive"]" Icon="folder_shared" ButtonStyle="ButtonStyle.Light" Click="@(() => Opening = !Opening)" data-testid="open-user-drive" />
+    </GroveStack>
+
+    @if (Opening)
+    {
+        <GroveCard data-testid="open-user-drive-form">
+            <GroveStack Gap="0.75rem">
+                <GroveText TextStyle="TextStyle.Body2" Text="@T["Administrator access to another user's personal drive is a separate step: the owner may be notified, a delay may apply, and every step is recorded."]" />
+                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                    <GroveTextBox @bind-Value="UserSearch" Placeholder="@T["User name or email"]" />
+                    <GroveButton Text="@T["Find"]" Click="FindUsersAsync" />
+                </GroveStack>
+                @foreach (var user in Users)
+                {
+                    <GroveButton Variant="Variant.Text" Text="@($"{user.UserName} ({user.Email})")" Click="@(() => FindDriveAsync(user))" />
+                }
+                @if (Drive is { } drive)
+                {
+                    <GroveStack Gap="0.5rem" data-testid="user-drive-request">
+                        <GroveText Text="@($"{T["Drive"]}: {drive.Name}{(drive.IsInactive ? " (" + T["inactive"] + ")" : string.Empty)}")" />
+                        <label>@T["How long"]
+                            <select @bind="DurationIndex">
+                                @for (var i = 0; i < drive.Durations.Count; i++)
+                                {
+                                    <option value="@i">@DurationText(drive.Durations[i])</option>
+                                }
+                            </select>
+                        </label>
+                        <GroveCheckBox @bind-Value="OverrideDelay" Name="override-delay" /><label for="override-delay"> @T["Override the notice delay (needs a reason)"]</label>
+                        <GroveTextBox @bind-Value="Reason" Placeholder="@T["Reason"]" Style="width: 100%;" />
+                        <GroveButton Text="@T["Request access"]" Click="RequestAsync" data-testid="request-user-drive-access" />
+                    </GroveStack>
+                }
+                @if (Access is { } access && Drive is { } opened)
+                {
+                    @if (access.OpensUtc > DateTimeOffset.UtcNow)
+                    {
+                        <GroveText Text="@($"{T["The drive opens at"]} {access.OpensUtc.ToLocalTime():g}.")" />
+                    }
+                    <a href="@($"Files/user-drive/{Uri.EscapeDataString(opened.DriveId)}")" target="_blank" rel="noopener" data-testid="user-drive-window">@T["Open in its own window"]</a>
+                }
+                @if (Error is { } error) { <GroveText TextStyle="TextStyle.Body2" Style="color: var(--rz-danger)">@error</GroveText> }
+            </GroveStack>
+        </GroveCard>
+    }
+
+    <GroveDriveBrowser AllowCreateSharedDrive="true" />
+</GroveStack>
+
+@code {
+    private bool Opening;
+    private string? UserSearch;
+    private GroveUser[] Users = [];
+    private GrovePersonalDrive? Drive;
+    private GrovePersonalDriveAccess? Access;
+    private int DurationIndex;
+    private bool OverrideDelay;
+    private string? Reason;
+    private string? Error;
+
+    private GroveFilesClient FilesClient => _files ??= new GroveFilesClient(Http);
+    private GroveFilesClient? _files;
+
+    private async Task FindUsersAsync()
+    {
+        Error = null;
+        Users = (await Api.Grove.Rest.Users.ListAsync(UserSearch)).Items.Take(10).ToArray();
+    }
+
+    private async Task FindDriveAsync(GroveUser user)
+    {
+        Error = null;
+        Access = null;
+        var found = await FilesClient.FindPersonalDriveAsync(user.Id);
+        Drive = found.Value;
+        Access = Drive?.CurrentAccess;
+        Error = found.Status == 404 ? T["That user has no personal drive."] : found.Error;
+        DurationIndex = 0;
+    }
+
+    private async Task RequestAsync()
+    {
+        if (Drive is not { } drive)
+        {
+            return;
+        }
+
+        var duration = drive.Durations.Count > DurationIndex ? drive.Durations[DurationIndex] : null;
+        var requested = await FilesClient.RequestAccessAsync(drive.DriveId, duration, OverrideDelay, Reason);
+        Access = requested.Value;
+        Error = requested.Error;
+    }
+
+    private string DurationText(TimeSpan? duration) => duration is { } span
+        ? span.TotalHours >= 1 ? $"{span.TotalHours:0.#} {T["hours"]}" : $"{span.TotalMinutes:0} {T["minutes"]}"
+        : T["Until closed"];
+}

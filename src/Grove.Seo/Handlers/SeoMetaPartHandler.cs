@@ -1,15 +1,13 @@
+using Grove.Routing;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
-using Grove.DisplayManagement.Extensions;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
+using Grove.Display.Management.Extensions;
 using Grove.Media;
 using Grove.Media.Fields;
 using Grove.Media.Library;
-using Grove.Mvc.Utilities;
 using Grove.Seo.Models;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Seo.Drivers;
 
@@ -18,21 +16,21 @@ public class SeoMetaPartHandler : ContentPartHandler<SeoMetaPart>
     private readonly IMediaReferenceResolver _references;
     private readonly ISiteService _siteService;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IUrlHelperFactory _urlHelperFactory;
+    private readonly IShellLinkGenerator _links;
     private readonly IContentManager _contentManager;
 
     public SeoMetaPartHandler(
         IMediaReferenceResolver references,
         ISiteService siteService,
         IHttpContextAccessor httpContextAccessor,
-        IUrlHelperFactory urlHelperFactory,
+        IShellLinkGenerator links,
         IContentManager contentManager
         )
     {
         _references = references;
         _siteService = siteService;
         _httpContextAccessor = httpContextAccessor;
-        _urlHelperFactory = urlHelperFactory;
+        _links = links;
         _contentManager = contentManager;
     }
 
@@ -66,11 +64,7 @@ public class SeoMetaPartHandler : ContentPartHandler<SeoMetaPart>
 
             var siteSettings = await _siteService.GetSiteSettingsAsync();
 
-            // In .NET 10, create ActionContext directly instead of using obsolete IActionContextAccessor
-            var httpContext = _httpContextAccessor.HttpContext;
-            var actionContext = await httpContext.GetActionContextAsync();
-
-            var urlHelper = _urlHelperFactory.GetUrlHelper(actionContext);
+            var urlHelper = _links;
 
             if (!string.IsNullOrEmpty(part.Canonical))
             {
@@ -79,7 +73,7 @@ public class SeoMetaPartHandler : ContentPartHandler<SeoMetaPart>
             else
             {
                 var contentItemMetadata = await _contentManager.PopulateAspectAsync<ContentItemMetadata>(part.ContentItem);
-                var relativeUrl = urlHelper.RouteUrl(contentItemMetadata.DisplayRouteValues);
+                var relativeUrl = urlHelper.GetPathByRouteValues(contentItemMetadata.DisplayRouteValues);
                 aspect.Canonical = urlHelper.ToAbsoluteUrl(relativeUrl);
             }
 
@@ -166,7 +160,7 @@ public class SeoMetaPartHandler : ContentPartHandler<SeoMetaPart>
     }
 
     /// <summary>The absolute URL of a media field's first item the caller may view, or null.</summary>
-    private Task<string> SocialImageUrlAsync(IUrlHelper urlHelper, MediaField field) =>
+    private Task<string> SocialImageUrlAsync(IShellLinkGenerator urlHelper, MediaField field) =>
         SeoMediaUrls.UrlAsync(_references, urlHelper, field?.FirstReference());
 
     // Every save path: the canonical address holds no characters an address may not hold, and
@@ -200,7 +194,7 @@ internal static class SeoMediaUrls
     /// The absolute, unsigned URL of a reference the caller may view; a path that resolves to no
     /// placement (the library not yet imported) keeps its <c>/media</c> URL; otherwise null.
     /// </summary>
-    public static async Task<string> UrlAsync(IMediaReferenceResolver references, IUrlHelper urlHelper, MediaReference? reference)
+    public static async Task<string> UrlAsync(IMediaReferenceResolver references, IShellLinkGenerator urlHelper, MediaReference? reference)
     {
         if (reference is not { IsEmpty: false } item)
         {
@@ -217,7 +211,7 @@ internal static class SeoMediaUrls
     }
 
     /// <summary>A URL made absolute on the site's host, unless it already is (a CDN's).</summary>
-    public static string Absolute(IUrlHelper urlHelper, string url) =>
+    public static string Absolute(IShellLinkGenerator urlHelper, string url) =>
         Uri.TryCreate(url, UriKind.Absolute, out _) && !url.StartsWith('/') ? url : urlHelper.ToAbsoluteUrl(url);
 
 }

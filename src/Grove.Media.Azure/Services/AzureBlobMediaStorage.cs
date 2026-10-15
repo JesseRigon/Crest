@@ -1,7 +1,7 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
-using Grove.FileStorage;
-using Grove.FileStorage.AzureBlob;
+using Grove.Data.Storage;
+using Grove.Data.Storage.AzureBlob;
 using Grove.Media.Files;
 using Grove.Modules;
 using Microsoft.AspNetCore.StaticFiles;

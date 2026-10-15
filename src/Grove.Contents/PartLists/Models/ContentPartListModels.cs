@@ -22,7 +22,7 @@ public sealed record GroveContentPartListModel(
 /// lives on the option type (the write path needs it), <paramref name="Type"/> is the
 /// field type name (TextField, NumericField, ...), and
 /// <paramref name="DataLocked"/> carries the admin's per-field lock designation
-/// (see <see cref="Grove.Settings.GroveOptionFieldSettings"/>).</summary>
+/// (see <see cref="Grove.Infrastructure.Settings.GroveOptionFieldSettings"/>).</summary>
 public sealed record GroveOptionFieldModel(
     string Name,
     string DisplayName,

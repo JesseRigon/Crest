@@ -1,5 +1,5 @@
 using Grove.Parties.ViewModels;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 
 namespace Grove.Parties.Services;
 

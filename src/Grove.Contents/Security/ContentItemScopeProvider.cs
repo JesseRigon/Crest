@@ -1,7 +1,7 @@
 using Grove.Access;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Records;
-using Grove.Sharing;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Records;
+using Grove.Access.Sharing;
 
 namespace Grove.Contents.Security;
 

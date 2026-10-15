@@ -41,7 +41,7 @@ You can attach the `AuditTrailPart` content part to your content type. This will
 
 ## Recording Custom Events
 
-Grove is built to be extended, and the Audit Trail module is no different. So, when creating your own module, you can log your events with Audit Trail too. Check out the source of the `Grove.Users` or `Grove.Contents` modules for examples.
+Grove is built to be extended, and the Audit Trail module is no different. So, when creating your own module, you can log your events with Audit Trail too. Check out the source of the `Grove.Access.Users` or `Grove.Contents` modules for examples.
 
 ## Videos
 

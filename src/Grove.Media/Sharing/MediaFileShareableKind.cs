@@ -1,6 +1,6 @@
 #nullable enable
 using Grove.Media.Files;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 
 namespace Grove.Media.Sharing;
 

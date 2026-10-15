@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using Grove.Environment.Shell;
-using Grove.Roles;
+using Grove.Access.Roles;
 using Grove.Security;
 using Grove.Security.Permissions;
-using Grove.Settings;
-using Grove.Users;
+using Grove.Infrastructure.Settings;
+using Grove.Access.Users;
 using Microsoft.AspNetCore.Identity;
 
 namespace Grove.Access.Services;
@@ -193,7 +193,7 @@ public sealed class CallerContextFactory(
             roleNames.Add(PlatformConstants.Roles.Authenticated);
             var user = await userManager.FindByIdAsync(userId);
             var exists = user is not null;
-            if (user is Grove.Users.Models.User { IsEnabled: false })
+            if (user is Grove.Access.Users.Models.User { IsEnabled: false })
             {
                 // A disabled account keeps its session until the stamp check, and a workflow
                 // run keeps its actor: neither keeps the account's rights.

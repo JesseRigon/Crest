@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Grove.Deployment;
 using Grove.Search.Models;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Search.Deployment;
 

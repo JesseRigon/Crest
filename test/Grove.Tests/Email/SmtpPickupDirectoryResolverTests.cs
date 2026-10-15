@@ -1,6 +1,6 @@
 using Fluid;
-using Grove.Email;
-using Grove.Email.Smtp.Services;
+using Grove.Communications.Email;
+using Grove.Data.Protocols.Smtp.Services;
 using Grove.Environment.Shell;
 
 namespace Grove.Tests.Email;

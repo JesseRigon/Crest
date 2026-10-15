@@ -1,0 +1,145 @@
+@page "/Regions/AddressingMaps"
+@attribute [PageEntry("ManageGlobalReferenceData", Id = "addressing-maps", Parent = "settings", Caption = "Addressing maps", DefaultTenantOnly = true)]
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Grove.Themes.Admin.Api
+@using Grove.Display.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* Addressing maps as runtime rules (docs/regions.md): global reference data the Default
+   tenant edits here; every tenant's address forms and validation read the stored map at
+   runtime. An edited map survives data-file reloads until it is reverted. *@
+
+<GroveStack Gap="1rem" data-testid="addressing-maps-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <GroveStack Gap="0.25rem">
+            <GroveText TextStyle="TextStyle.H4" Text="@T["Addressing maps"]" />
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["Per country: the levels an address uses, the form's fields and the postal-code rule. Shared by every tenant."]" />
+        </GroveStack>
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
+            <GroveTextBox @bind-Value="NewCountry" Placeholder="@T["Country code"]" Style="width: 8rem;" />
+            <GroveButton Text="@T["Add or open"]" Icon="add" Click="OpenNewAsync" Disabled="@(IsBusy || string.IsNullOrWhiteSpace(NewCountry))" />
+        </GroveStack>
+    </GroveStack>
+
+    @foreach (var error in Errors)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@error</GroveAlert>
+    }
+
+    @if (EditingCountry is not null)
+    {
+        <GroveCard data-testid="addressing-map-editor">
+            <GroveStack Gap="1rem">
+                <GroveText TextStyle="TextStyle.H5" Text="@T["Map for {0}", EditingCountry]" />
+                <GroveFormField Text="@T["Map (JSON)"]" Style="width: 100%;">
+                    <GroveTextArea @bind-Value="Draft" Rows="24" Style="width: 100%; font-family: var(--rz-code-font-family, monospace);" />
+                </GroveFormField>
+                <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => EditingCountry = null)" Disabled="@IsBusy" />
+                    <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" />
+                </GroveStack>
+            </GroveStack>
+        </GroveCard>
+    }
+
+    <GroveCard>
+        @if (Maps is null)
+        {
+            @if (LoadFailed)
+            {
+                <GroveAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T["Addressing maps are edited on the Default tenant by an administrator of global reference data."]</GroveAlert>
+            }
+            else
+            {
+                <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+            }
+        }
+        else
+        {
+            <GroveDataGrid Data="@Maps" TItem="GroveAddressingMapSummary" AllowPaging="true" PageSize="25" AllowFiltering="true">
+                <Columns>
+                    <GroveDataGridColumn TItem="GroveAddressingMapSummary" Property="Country" Title="@T["Country"]" Width="8rem" />
+                    <GroveDataGridColumn TItem="GroveAddressingMapSummary" Property="LevelCount" Title="@T["Levels"]" Width="6rem" Filterable="false" />
+                    <GroveDataGridColumn TItem="GroveAddressingMapSummary" Property="PostalCodeLabel" Title="@T["Postal label"]" />
+                    <GroveDataGridColumn TItem="GroveAddressingMapSummary" Property="PostalCodePattern" Title="@T["Postal pattern"]" />
+                    <GroveDataGridColumn TItem="GroveAddressingMapSummary" Title="@T["Source"]" Width="8rem" Filterable="false"><Template Context="map">@(map.Edited ? T["Edited"] : T["Shipped"])</Template></GroveDataGridColumn>
+                    <GroveDataGridColumn TItem="GroveAddressingMapSummary" Title="@T["Actions"]" Width="10rem" Filterable="false"><Template Context="map"><GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem"><GroveButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => EditAsync(map.Country))" title="@T["Edit"]" /><GroveButton Icon="undo" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Outlined" Click="@(() => RevertAsync(map.Country))" Disabled="@(!map.Edited || IsBusy)" title="@T["Revert to shipped"]" /></GroveStack></Template></GroveDataGridColumn>
+                </Columns>
+            </GroveDataGrid>
+        }
+    </GroveCard>
+</GroveStack>
+
+@code {
+    private GroveAddressingMapSummary[]? Maps { get; set; }
+    private bool LoadFailed { get; set; }
+    private bool IsBusy { get; set; }
+    private string[] Errors { get; set; } = [];
+    private string? EditingCountry { get; set; }
+    private string Draft { get; set; } = string.Empty;
+    private string? NewCountry { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        Maps = await Api.Grove.Rest.Regions.ListAddressingMapsAsync();
+        LoadFailed = Maps is null;
+    }
+
+    private Task OpenNewAsync() => EditAsync(NewCountry!.Trim().ToUpperInvariant());
+
+    private async Task EditAsync(string country)
+    {
+        IsBusy = true;
+        Errors = [];
+        try
+        {
+            // The applicable map: the country's own, else the generic one as a starting point.
+            var map = await Api.Grove.Rest.Regions.GetAddressingMapAsync(country) ?? new JsonObject();
+            map.Remove("id");
+            map.Remove("edited");
+            map["country"] = country;
+            EditingCountry = country;
+            Draft = map.ToJsonString(new() { WriteIndented = true });
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (EditingCountry is null) return;
+        JsonObject? map;
+        try { map = JsonNode.Parse(Draft) as JsonObject; }
+        catch (JsonException exception) { Errors = [exception.Message]; return; }
+        if (map is null) { Errors = [T["The map must be a JSON object."]]; return; }
+
+        IsBusy = true;
+        try
+        {
+            var result = await Api.Grove.Rest.Regions.SaveAddressingMapAsync(EditingCountry, map);
+            Errors = result.Errors;
+            if (!result.Succeeded) return;
+            Notifications.Notify(NotificationSeverity.Success, T["Addressing maps"], T["The map for {0} was saved.", EditingCountry]);
+            EditingCountry = null;
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task RevertAsync(string country)
+    {
+        IsBusy = true;
+        try
+        {
+            var result = await Api.Grove.Rest.Regions.RevertAddressingMapAsync(country);
+            Errors = result.Errors;
+            if (result.Succeeded) Notifications.Notify(NotificationSeverity.Success, T["Addressing maps"], T["The map for {0} was reverted.", country]);
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+}

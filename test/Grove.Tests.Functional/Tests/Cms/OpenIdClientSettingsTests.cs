@@ -3,7 +3,7 @@ using Grove.Tests.Functional.Helpers;
 
 namespace Grove.Tests.Functional.Tests.Cms;
 
-// Covers Grove.OpenId's openid-client-settings.ts, a hand-rewritten conditional-
+// Covers Grove.Access.OpenId's openid-client-settings.ts, a hand-rewritten conditional-
 // visibility state machine: exactly one of the mutually-exclusive flow checkboxes/response-
 // mode select may be active at a time (checking one unchecks all siblings), and the Client
 // Secret field's containing Bootstrap collapse is shown only when a flow that needs a
@@ -14,7 +14,7 @@ namespace Grove.Tests.Functional.Tests.Cms;
 // Writing this test caught a real, previously-unshipped regression from the Vue2->Vue3
 // migration (PR #19774): OpenIdClientSettings.Edit.cshtml's script tag declared
 // depends-on="parametersEditor" - but "parametersEditor" is only a CSS (Sass) resource
-// (see Grove.OpenId/Assets.json), never registered as a script resource. Because
+// (see Grove.Access.OpenId/Assets.json), never registered as a script resource. Because
 // ResourceManager.ExpandDependenciesImplementation's FindResource() silently no-ops on an
 // unresolved dependency name (see ResourceManager.cs), the real "vuejs"/"vue-draggable"
 // script dependencies this component actually needs (the same ones every other
@@ -32,7 +32,7 @@ public sealed class OpenIdClientSettingsTests : CmsTestBase<BlogFixture>, IClass
 {
     public OpenIdClientSettingsTests(BlogFixture fixture) : base(fixture) { }
 
-    private const string SettingsUrl = "/Admin/Settings/Grove.OpenId.Client";
+    private const string SettingsUrl = "/Admin/Settings/Grove.Access.OpenId.Client";
 
     private static async Task EnsureFeatureEnabledAsync(IPage page)
     {

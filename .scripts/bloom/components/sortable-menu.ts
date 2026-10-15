@@ -1,6 +1,6 @@
 /**
- * Nested drag-and-drop hierarchy editor shared by Grove.Menu (menu items)
- * and Grove.Taxonomies (taxonomy terms), built on SortableJS (no jQuery UI).
+ * Nested drag-and-drop hierarchy editor shared by Grove.Contents.SiteMenu (menu items)
+ * and Grove.Contents.Taxonomies (taxonomy terms), built on SortableJS (no jQuery UI).
  *
  * The whole tree is rendered as ONE FLAT list of <li data-depth="N"> siblings
  * (see MenuItem.Admin.cshtml / Content.TermAdmin.cshtml) rather than as actual

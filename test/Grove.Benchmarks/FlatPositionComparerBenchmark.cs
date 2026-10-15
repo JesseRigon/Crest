@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.Zones;
+using Grove.Display.Management;
+using Grove.Display.Management.Zones;
 
 namespace Grove.Benchmarks;
 

@@ -1,4 +1,4 @@
-using Grove.Admin;
+using Grove.Infrastructure.Shells.Admin;
 using Grove.Environment.Extensions.Features;
 using Grove.Environment.Shell;
 using Grove.Security;

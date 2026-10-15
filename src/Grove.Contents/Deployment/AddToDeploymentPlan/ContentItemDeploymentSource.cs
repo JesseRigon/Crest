@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Deployment;
 
 namespace Grove.Contents.Deployment.AddToDeploymentPlan;

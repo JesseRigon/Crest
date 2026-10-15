@@ -2,11 +2,11 @@ import { getTranslations, setTranslations } from "../helpers/localizations";
 
 // Shared by 4 near-identical Vue 2 "draggable key/value(s) table + JSON-edit-modal" widgets that
 // existed as separate copy-pasted files before this migration:
-//   - Grove.ContentFields' TextFieldPredefinedListEditorSettings.Edit.cshtml (2 columns,
+//   - Grove.Contents.Fields' TextFieldPredefinedListEditorSettings.Edit.cshtml (2 columns,
 //     name/value, "default" column in radio mode)
-//   - Grove.ContentFields' MultiTextFieldSettings.Edit.cshtml (2 columns, name/value,
+//   - Grove.Contents.Fields' MultiTextFieldSettings.Edit.cshtml (2 columns, name/value,
 //     "default" column in checkbox mode)
-//   - Grove.OpenId's OpenIdClientSettings.Edit.cshtml (2 columns, name/value, no "default"
+//   - Grove.Access.OpenId's OpenIdClientSettings.Edit.cshtml (2 columns, name/value, no "default"
 //     column)
 //   - Grove.Seo's SeoMetaPart.Edit.cshtml (5 columns: content/name/property/httpEquiv/
 //     charset, no "default" column)

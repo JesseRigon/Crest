@@ -1,5 +1,5 @@
 using Grove.Environment.Commands;
-using Grove.Localization;
+using Grove.Data.Localization;
 
 namespace Grove.Tests.Commands;
 

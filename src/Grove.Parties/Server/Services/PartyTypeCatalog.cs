@@ -1,5 +1,5 @@
 using Grove.Parties.Constants;
-using Grove.Kinds;
+using Grove.Data.Kinds;
 using Grove.Parties.PartyTypes;
 
 namespace Grove.Parties.Services;
@@ -16,7 +16,7 @@ public sealed class PartyTypeCatalog(IEnumerable<IPartyTypeProvider> providers)
     /// <summary>Base-relative admin route: the descriptor's own, else Parties' page for the type.</summary>
     public static string RouteOf(PartyTypeDescriptor type) => RouteOf(type, PartiesConstants.Routes.PartyTypeAdmin);
 
-    /// <summary>Admin menu item id for the type; the served item's key differs (see PartyTypesController).</summary>
+    /// <summary>Admin menu item id for the type; the served item's key differs (see PartyTypesHandlers).</summary>
     public static string MenuItemIdOf(PartyTypeDescriptor type) => $"parties-{type.Key}";
 }
 

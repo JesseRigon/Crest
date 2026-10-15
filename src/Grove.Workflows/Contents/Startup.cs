@@ -1,8 +1,8 @@
 using Grove.Workflows.Extensions;
 using Grove.Workflows;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
 using Grove.Workflows.Contents.Handlers;
 using Grove.Workflows.Contents.UIHints;
 using Grove.Modules;

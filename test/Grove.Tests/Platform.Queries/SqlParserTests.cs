@@ -1,4 +1,4 @@
-using Grove.Queries.Sql;
+using Grove.Data.Queries.Sql;
 using Grove.Tests.Queries;
 using YesSql.Provider.MySql;
 using YesSql.Provider.PostgreSql;

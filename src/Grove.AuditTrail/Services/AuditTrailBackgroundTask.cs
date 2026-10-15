@@ -4,7 +4,7 @@ using Grove.AuditTrail.Settings;
 using Grove.BackgroundTasks;
 using Grove.Entities;
 using Grove.Modules;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.AuditTrail.Services;
 

@@ -1,7 +1,7 @@
 using System.Reflection;
 using Grove.Workflows.UIHints.Dropdown;
 using Open.Linq.AsyncExtensions;
-using Grove.ContentManagement.Metadata;
+using Grove.Contents.Management.Metadata;
 
 namespace Grove.Workflows.Contents.UIHints;
 

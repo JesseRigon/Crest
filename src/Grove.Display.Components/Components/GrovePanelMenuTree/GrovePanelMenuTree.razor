@@ -1,0 +1,98 @@
+@namespace Grove.Display.Components.Navigation
+@using Microsoft.AspNetCore.Components.Web
+
+<ul class="grove-panel-menu__list"
+    role="menu"
+    aria-orientation="vertical"
+    tabindex="0"
+    aria-activedescendant="@(FocusedItemKey is null ? null : $"grove-panel-menu-item-{FocusedItemKey}")"
+    @onkeydown="OnItemKeyDown"
+    @onkeydown:preventDefault="@PreventKeyDown"
+    @onfocus="OnFocusIn">
+    <GrovePanelMenuItems Items="Items"
+                         ExpandedItemKeys="ExpandedItemKeys"
+                         ExpansionVersion="ExpansionVersion"
+                         ExpandedChanged="ExpandedChanged"
+                         FlyoutOpened="FlyoutOpened"
+                         FlyoutCloseRequested="FlyoutCloseRequested"
+                         FlyoutDepth="FlyoutDepth"
+                         IndentItems="IndentItems"
+                         IndentWhenCollapsed="IndentWhenCollapsed"
+                         LevelIndents="LevelIndents"
+                         LevelBackgrounds="LevelBackgrounds"
+                         LevelBaseSizes="LevelBaseSizes"
+                         TierSeparators="TierSeparators"
+                         ActionIcon="ActionIcon"
+                         FocusedItemKey="FocusedItemKey" />
+</ul>
+
+@code {
+    private object? _renderedItems;
+    private object? _renderedExpandedKeys;
+    private object? _renderedLevelIndents;
+    private object? _renderedLevelBackgrounds;
+    private object? _renderedLevelBaseSizes;
+    private object? _renderedTierSeparators;
+    private int _renderedExpansionVersion = int.MinValue;
+    private int _renderedFlyoutDepth;
+    private bool _renderedIndentItems;
+    private bool _renderedIndentWhenCollapsed;
+    private RenderFragment<GrovePanelMenuActionIconContext>? _renderedActionIcon;
+    private string? _renderedFocusedItemKey;
+    private bool _renderedPreventKeyDown;
+
+    [Parameter] public IReadOnlyList<GrovePanelMenuItem> Items { get; set; } = [];
+    [Parameter] public ISet<string> ExpandedItemKeys { get; set; } = new HashSet<string>();
+    [Parameter] public int ExpansionVersion { get; set; }
+    [Parameter] public EventCallback<GrovePanelMenuExpansionChangedEventArgs> ExpandedChanged { get; set; }
+    [Parameter] public EventCallback<GrovePanelMenuFlyoutEventArgs> FlyoutOpened { get; set; }
+    [Parameter] public EventCallback FlyoutCloseRequested { get; set; }
+    [Parameter] public int FlyoutDepth { get; set; } = 2;
+    [Parameter] public bool IndentItems { get; set; } = true;
+    [Parameter] public bool IndentWhenCollapsed { get; set; }
+    [Parameter] public IReadOnlyList<string> LevelIndents { get; set; } = [];
+    [Parameter] public IReadOnlyList<string> LevelBackgrounds { get; set; } = [];
+    [Parameter] public IReadOnlyList<string> LevelBaseSizes { get; set; } = [];
+    [Parameter] public IReadOnlyList<bool> TierSeparators { get; set; } = [];
+    [Parameter] public RenderFragment<GrovePanelMenuActionIconContext>? ActionIcon { get; set; }
+    [Parameter] public string? FocusedItemKey { get; set; }
+    [Parameter] public bool PreventKeyDown { get; set; }
+    [Parameter] public EventCallback<KeyboardEventArgs> OnItemKeyDown { get; set; }
+    [Parameter] public EventCallback OnFocusIn { get; set; }
+
+    protected override bool ShouldRender()
+    {
+        var shouldRender = !ReferenceEquals(_renderedItems, Items)
+            || !ReferenceEquals(_renderedExpandedKeys, ExpandedItemKeys)
+            || _renderedExpansionVersion != ExpansionVersion
+            || _renderedFlyoutDepth != FlyoutDepth
+            || _renderedIndentItems != IndentItems
+            || _renderedIndentWhenCollapsed != IndentWhenCollapsed
+            || !ReferenceEquals(_renderedLevelIndents, LevelIndents)
+            || !ReferenceEquals(_renderedLevelBackgrounds, LevelBackgrounds)
+            || !ReferenceEquals(_renderedLevelBaseSizes, LevelBaseSizes)
+            || !ReferenceEquals(_renderedTierSeparators, TierSeparators)
+            || _renderedActionIcon != ActionIcon
+            || _renderedFocusedItemKey != FocusedItemKey
+            || _renderedPreventKeyDown != PreventKeyDown;
+
+        if (shouldRender)
+        {
+            _renderedItems = Items;
+            _renderedExpandedKeys = ExpandedItemKeys;
+            _renderedExpansionVersion = ExpansionVersion;
+            _renderedFlyoutDepth = FlyoutDepth;
+            _renderedIndentItems = IndentItems;
+            _renderedIndentWhenCollapsed = IndentWhenCollapsed;
+            _renderedLevelIndents = LevelIndents;
+            _renderedLevelBackgrounds = LevelBackgrounds;
+            _renderedLevelBaseSizes = LevelBaseSizes;
+            _renderedTierSeparators = TierSeparators;
+            _renderedActionIcon = ActionIcon;
+            _renderedFocusedItemKey = FocusedItemKey;
+            _renderedPreventKeyDown = PreventKeyDown;
+        }
+
+        return shouldRender;
+    }
+}

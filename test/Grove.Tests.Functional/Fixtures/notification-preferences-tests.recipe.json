@@ -1,7 +1,7 @@
 {
   "name": "NotificationPreferencesTests",
   "displayName": "NotificationPreferencesTests",
-  "description": "Testing Grove.Notifications' user-notification-preferences-part.ts (native HTML5 drag-and-drop reorder of notification methods).",
+  "description": "Testing Grove.Communications' user-notification-preferences-part.ts (native HTML5 drag-and-drop reorder of notification methods).",
   "author": "The Grove Team",
   "website": "https://orchardcore.net",
   "version": "1.0.0",
@@ -14,28 +14,26 @@
       "name": "feature",
       "enable": [
         "Grove.HomeRoute",
-        "Grove.Admin",
-        "Grove.Navigation",
-        "Grove.Recipes",
-        "Grove.Resources",
-        "Grove.Roles",
+        "Grove.Infrastructure.Shells.Admin",
+        "Grove.Display.Navigation",
+        "Grove.Infrastructure.Recipes",
+        "Grove.Display.Resources",
+        "Grove.Access.Roles",
         "Grove.Security",
-        "Grove.Settings",
+        "Grove.Infrastructure.Settings",
         "Grove.Themes",
-        "Grove.Users",
+        "Grove.Access.Users",
 
-        "Grove.Notifications",
-        "Grove.Notifications.Email",
-        "Grove.Notifications.Sms",
+        "Grove.Communications",
+        "Grove.Communications.Notifications.Email",
+        "Grove.Communications.Notifications.Sms"
 
-        "TheAdmin",
-        "SafeMode"
       ]
     },
     {
       "name": "themes",
-      "admin": "TheAdmin",
-      "site": "TheAdmin"
+      "admin": "Grove.Themes.Admin",
+      "site": "Grove.Themes.Site"
     }
   ]
 }

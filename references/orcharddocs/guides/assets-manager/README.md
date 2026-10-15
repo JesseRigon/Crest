@@ -112,7 +112,7 @@ It is possible to bundle apps together when using Parcel by using the "bundleEnt
 Parcel bundle output folder:
 
 ```javascript
-export const parcelBundleOutput = "src/Grove.Modules/Grove.Resources/wwwroot/Scripts/bundle"
+export const parcelBundleOutput = "src/Grove.Modules/Grove.Display.Resources/wwwroot/Scripts/bundle"
 ```
 
 Parcel bundleEntrypoint parameter:
@@ -137,7 +137,7 @@ For javascript files Parcel will create a .min.js file for you along with a .map
     _manifest
         .DefineScript("admin")
         .SetDependencies("bootstrap", "admin-main", "theme-manager", "jQuery", "Sortable")
-        .SetUrl("~/TheAdmin/js/theadmin/TheAdmin.min.js", "~/TheAdmin/js/theadmin/TheAdmin.js")
+        .SetUrl("~/Grove.Themes.TheAdmin/js/theadmin/TheAdmin.min.js", "~/Grove.Themes.TheAdmin/js/theadmin/TheAdmin.js")
         .SetVersion("1.0.0");
 ```
 
@@ -552,7 +552,7 @@ Since `concat` **always** resolves from the root `node_modules/`, it will:
 **Example Problem:**
 ```
 Grove.Media/Assets/package.json:     "bootstrap": "5.3.8"
-Grove.Resources/Assets/package.json:  "bootstrap": "5.3.8"  
+Grove.Display.Resources/Assets/package.json:  "bootstrap": "5.3.8"  
 SomeTheme/Assets/package.json:              "bootstrap": "4.6.1"  ← Different!
 ```
 

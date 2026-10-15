@@ -1,0 +1,37 @@
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components;
+
+namespace Grove.Display.Components.Primitives
+{
+    /// <summary>
+    /// A GroveHtmlEditor tool which sets the background color of the selection.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// &lt;GroveHtmlEditor @bind-Value=@html&gt;
+    ///  &lt;GroveHtmlEditorBackground /&gt;
+    /// &lt;/GroveHtmlEdito&gt;
+    /// @code {
+    ///   string html = "@lt;strong&gt;Hello&lt;/strong&gt; world!"; 
+    /// }
+    /// </code>
+    /// </example>
+    public partial class GroveHtmlEditorBackground : GroveHtmlEditorColorBase
+    {
+        /// <inheritdoc />
+        protected override string CommandName => "backColor";
+
+        /// <summary>
+        /// Specifies the default background color. Set to <c>"rgb(0, 0, 255)"</c> by default;
+        /// </summary>
+        [Parameter]
+        public override string Value { get; set; } = "rgb(0, 0, 255)";
+        private string? title;
+
+        /// <summary>
+        /// Specifies the title (tooltip) displayed when the user hovers the tool. Set to <c>"Background color"</c> by default.
+        /// </summary>
+        [Parameter]
+        public string Title { get => title ?? Localize(nameof(GroveStrings.HtmlEditorBackground_Title)); set => title = value; }
+    }
+}

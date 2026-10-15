@@ -1,0 +1,16 @@
+@namespace Grove.Display.Components.Interaction
+
+@if (Record is { } record)
+{
+    <dl class="grove-property-list">
+        @foreach (var (name, value) in record)
+        {
+            <dt>@name</dt>
+            <dd>@Text(value)</dd>
+        }
+    </dl>
+}
+else if (!string.IsNullOrEmpty(EmptyText))
+{
+    <p class="grove-property-list__empty">@EmptyText</p>
+}

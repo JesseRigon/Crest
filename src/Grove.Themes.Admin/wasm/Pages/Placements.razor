@@ -1,0 +1,94 @@
+@page "/Placements"
+@attribute [PageEntry("ManagePlacements", Id = "placements", Parent = "design", Caption = "Placements", Icon = "@iconify:mdi:view-dashboard-edit")]
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Grove.Themes.Admin.Api
+@inject IApi Api
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* Placements (docs/blazor-display.md rework step 6): the tenant's placement rules per shape type,
+   in the placement.json format, over the modules' and the theme's. They decide where a driver's
+   shape lands in the tree (a zone and a position), what alternates and wrappers it gets. *@
+<GroveStack Gap="1rem" data-testid="placements-page">
+    <GroveText TextStyle="TextStyle.H4" Text="@T["Placements"]" />
+
+    @if (_error is not null)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@_error</GroveAlert>
+    }
+
+    <GroveCard>
+        <GroveStack Gap="0.5rem">
+            <GroveTextBox @bind-Value="_shapeType" Placeholder="@T["Shape type (TitlePart, HtmlBodyPart, ...)"]" data-testid="placements-shape" />
+            <GroveTextArea @bind-Value="_rules" Rows="8" Placeholder='[ { "place": "Header:5", "displayType": "Detail" } ]' Style="font-family: var(--grove-font-mono, monospace);" data-testid="placements-rules" />
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" data-testid="placements-save" />
+                <GroveButton Text="@T["New"]" Icon="add" ButtonStyle="ButtonStyle.Light" Click="New" />
+            </GroveStack>
+        </GroveStack>
+    </GroveCard>
+
+    @foreach (var (shapeType, rules) in _placements)
+    {
+        <GroveCard>
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap">
+                <strong>@shapeType</strong>
+                <code>@rules.ToJsonString()</code>
+                <GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                    <GroveButton Icon="edit" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(shapeType, rules))" />
+                    <GroveButton Icon="delete" ButtonStyle="ButtonStyle.Light" Click="@(() => DeleteAsync(shapeType))" />
+                </GroveStack>
+            </GroveStack>
+        </GroveCard>
+    }
+</GroveStack>
+
+@code {
+    private Dictionary<string, JsonArray> _placements = [];
+    private string? _shapeType;
+    private string? _rules = "[]";
+    private string? _error;
+
+    protected override async Task OnInitializedAsync() => _placements = await Api.Grove.Rest.Placements.ListAsync();
+
+    private void New()
+    {
+        _shapeType = null;
+        _rules = "[]";
+    }
+
+    private void Edit(string shapeType, JsonArray rules)
+    {
+        _shapeType = shapeType;
+        _rules = rules.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    private async Task SaveAsync()
+    {
+        JsonArray? rules;
+        try
+        {
+            rules = JsonNode.Parse(_rules ?? "[]") as JsonArray;
+        }
+        catch (JsonException exception)
+        {
+            _error = exception.Message;
+            return;
+        }
+
+        if (rules is null || string.IsNullOrWhiteSpace(_shapeType))
+        {
+            _error = T["A shape type and a JSON array of rules are required."];
+            return;
+        }
+
+        _error = await Api.Grove.Rest.Placements.SaveAsync(_shapeType.Trim(), rules);
+        _placements = await Api.Grove.Rest.Placements.ListAsync();
+    }
+
+    private async Task DeleteAsync(string shapeType)
+    {
+        await Api.Grove.Rest.Placements.DeleteAsync(shapeType);
+        _placements = await Api.Grove.Rest.Placements.ListAsync();
+    }
+}

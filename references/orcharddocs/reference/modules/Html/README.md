@@ -1,4 +1,4 @@
-# Body (`Grove.Html`)
+# Body (`Grove.Data.Protocols.Html`)
 
 ## Theming
 
@@ -84,7 +84,7 @@ To define what HTML to render when the editor is selected from the settings, a s
 Sample content:
 
 ```csharp
-@using Grove.Html.ViewModels
+@using Grove.Data.Protocols.Html.ViewModels
 @model HtmlBodyPartViewModel
 
 <fieldset class="mb-3">

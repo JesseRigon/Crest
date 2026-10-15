@@ -1,0 +1,16 @@
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Primitives.Rendering
+
+@inherits SchedulerViewBase
+
+@namespace Grove.Display.Components.Primitives
+@code {
+    public override RenderFragment Render()
+    {
+        var appointments = Scheduler?.GetAppointmentsInRange(StartDate, EndDate) ?? Enumerable.Empty<AppointmentData>();
+
+        return @<CascadingValue Value=@Scheduler>
+            <MonthView StartDate=@StartDate EndDate=@EndDate MaxAppointmentsInSlot=@MaxAppointmentsInSlot MoreText=@MoreText Appointments=@appointments AppointmentMove=OnAppointmentMove />
+        </CascadingValue>;
+    }
+}

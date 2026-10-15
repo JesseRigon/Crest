@@ -1,0 +1,50 @@
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Primitives.Spreadsheet
+@using Grove.Display.Components.Primitives.Documents.Spreadsheet
+@inherits GroveSpreadsheetToolBase
+
+@namespace Grove.Display.Components.Primitives.Spreadsheet.Tools
+<GroveSplitButton ButtonAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_CellBorders))) OpenAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_CellBorders))) title=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_CellBorders))) Click=@OnClick Icon="border_all" Disabled=@IsDisabled Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small">
+    <ChildContent>
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_AllBorders)) ?? "All Borders") Value="all" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_OutsideBorders)) ?? "Outside Borders") Value="outside" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_TopBorder)) ?? "Top Border") Value="top" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_BottomBorder)) ?? "Bottom Border") Value="bottom" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_LeftBorder)) ?? "Left Border") Value="left" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_RightBorder)) ?? "Right Border") Value="right" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_NoBorder)) ?? "No Border") Value="none" />
+    </ChildContent>
+</GroveSplitButton>
+
+@code {
+    protected override SpreadsheetFeature? Feature => SpreadsheetFeature.CellFormatting;
+
+    private async Task OnClick(GroveSplitButtonItem? item)
+    {
+        if (Worksheet is null || Worksheet.Selection.Cell == CellRef.Invalid || Spreadsheet is null)
+        {
+            return;
+        }
+
+        var value = item?.Value;
+        var range = Worksheet.Selection.Range;
+        var border = new BorderStyle();
+
+        ICommand? command = value switch
+        {
+            "all" or null => new AllBordersCommand(Worksheet, range, border),
+            "outside" => new BorderCommand(Worksheet, range, border, border, border, border),
+            "top" => new BorderCommand(Worksheet, range, top: border, right: null, bottom: null, left: null),
+            "bottom" => new BorderCommand(Worksheet, range, top: null, right: null, bottom: border, left: null),
+            "left" => new BorderCommand(Worksheet, range, top: null, right: null, bottom: null, left: border),
+            "right" => new BorderCommand(Worksheet, range, top: null, right: border, bottom: null, left: null),
+            "none" => new NoBordersCommand(Worksheet, range),
+            _ => null,
+        };
+
+        if (command is not null)
+        {
+            await Spreadsheet.ExecuteAsync(command);
+        }
+    }
+}

@@ -1,0 +1,441 @@
+@namespace Grove.Display.Components.Files
+@using System.Globalization
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Sharing
+@using Microsoft.AspNetCore.Components.Forms
+@inject HttpClient Http
+@inject IServiceProvider Services
+
+@* The drive browser (docs/media.md § 8): the caller's drives grouped by drive type ("My drive",
+   "Shared drives", "Organization drives"), a folder's children with its path, and the viewer
+   pane for the selected file. Everything listed is what the server returned for this caller:
+   the browser decides nothing about access. In pick mode it is the drive-aware picker: choosing
+   a file hands its placement back instead of opening it. *@
+
+<div class="grove-drive-browser @(ShowViewer ? "grove-drive-browser--with-viewer" : null)" data-testid="drive-browser">
+    @if (RootDriveId is null)
+    {
+        <nav class="grove-drive-browser__drives" aria-label="@L("Drives")" data-testid="drive-list">
+            @foreach (var group in DriveGroups)
+            {
+                <div class="grove-drive-browser__group">
+                    <div class="grove-drive-browser__group-title">@group.Title</div>
+                    @foreach (var drive in group.Drives)
+                    {
+                        <button type="button" class="grove-drive-browser__drive @(Path.FirstOrDefault()?.Id == drive.Id ? "is-active" : null)" @onclick="@(() => OpenDriveAsync(drive))" data-testid="drive-entry">
+                            @drive.Name
+                            @if (drive.IsInactive) { <small> (@L("inactive"))</small> }
+                        </button>
+                    }
+                </div>
+            }
+            @if (Drives.Count == 0 && !Loading)
+            {
+                <div class="grove-drive-browser__empty">@L("No drives yet.")</div>
+            }
+            @if (!PickMode && AllowCreateSharedDrive)
+            {
+                <GroveButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Icon="add" Text="@L("New shared drive")" Click="@(() => Prompt = new PromptState(PromptKind.NewDrive, string.Empty))" />
+            }
+        </nav>
+    }
+
+    <section class="grove-drive-browser__main">
+        <div class="grove-drive-browser__toolbar">
+            <ol class="grove-drive-browser__path" data-testid="drive-path">
+                @for (var i = 0; i < Path.Count; i++)
+                {
+                    var index = i;
+                    <li><button type="button" @onclick="@(() => OpenPathAsync(index))">@Path[index].Name</button></li>
+                }
+            </ol>
+            @if (!PickMode && Current is { } folder)
+            {
+                <div class="grove-drive-browser__actions">
+                    <label class="grove-drive-browser__upload">
+                        @L("Upload")
+                        <InputFile multiple OnChange="UploadAsync" disabled="@Busy" />
+                    </label>
+                    <GroveButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Icon="create_new_folder" Text="@L("New folder")" Click="@(() => Prompt = new PromptState(PromptKind.NewFolder, string.Empty))" Disabled="@Busy" />
+                    <GroveButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="@(() => LoadChildrenAsync())" title="@L("Refresh")" Disabled="@Busy" />
+                    @* Sharing (docs/sharing.md § 8): the access filter runs in the query (98), the
+                       Share panel and Rules screen are the server's to allow. *@
+                    <select class="grove-drive-browser__access" value="@(AccessFilter?.ToString() ?? string.Empty)" @onchange="OnAccessFilterAsync" aria-label="@L("Access")" data-testid="drive-access-filter">
+                        <option value="">@L("Any access")</option>
+                        <option value="@((int)GroveShareIndicator.Private)">@L("Private")</option>
+                        <option value="@((int)GroveShareIndicator.Shared)">@L("Shared")</option>
+                        <option value="@((int)GroveShareIndicator.Public)">@L("Public")</option>
+                    </select>
+                    <GroveButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Icon="share" Text="@L("Share")" Click="@(() => OpenSharing(folder))" Disabled="@Busy" data-testid="drive-share-folder" />
+                </div>
+            }
+        </div>
+
+        @if (Error is { } error)
+        {
+            <div class="grove-drive-browser__error" role="alert" data-testid="drive-error">@error</div>
+        }
+
+        @if (Loading)
+        {
+            <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (Current is null)
+        {
+            <div class="grove-drive-browser__empty">@L("Choose a drive.")</div>
+        }
+        else if (Children.Count == 0)
+        {
+            <div class="grove-drive-browser__empty">@L("This folder is empty.")</div>
+        }
+        else
+        {
+            <table class="grove-drive-browser__list" data-testid="drive-children">
+                <thead><tr><th>@L("Name")</th><th>@L("Size")</th><th>@L("Modified")</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var item in Children)
+                    {
+                        <tr class="@(Selected?.Id == item.Id ? "is-selected" : null)" data-testid="drive-child">
+                            <td>
+                                <button type="button" class="grove-drive-browser__name" @onclick="@(() => ActivateAsync(item))">
+                                    <span class="grove-drive-browser__kind">@(item.IsContainer ? "📁" : item.ShortcutTargetId is not null ? "↪" : "📄")</span>
+                                    @item.Name
+                                    <GroveAccessIndicator Indicator="@(Indicators.TryGetValue(item.Id, out var indicator) ? indicator : null)" />
+                                    @if (item.Kind == GroveFileKind.File && item.PublishedVersion is null) { <small> (@L("being checked"))</small> }
+                                </button>
+                            </td>
+                            <td>@(item.Size is { } size ? GroveFileViewerPane.FormatBytes(size) : string.Empty)</td>
+                            <td>@item.ModifiedUtc.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)</td>
+                            <td class="grove-drive-browser__row-actions">
+                                @if (PickMode)
+                                {
+                                    @if (!item.IsContainer && item.PublishedVersion is not null)
+                                    {
+                                        <GroveButton Size="ButtonSize.ExtraSmall" Text="@L("Choose")" Click="@(() => OnPick.InvokeAsync(item))" data-testid="drive-pick" />
+                                    }
+                                }
+                                else
+                                {
+                                    @if (item.ShortcutTargetId is null)
+                                    {
+                                        <GroveButton Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Icon="share" title="@L("Share")" Click="@(() => OpenSharing(item))" Disabled="@Busy" data-testid="drive-share" />
+                                    }
+                                }
+                                @if (!PickMode && item.CanEdit)
+                                {
+                                    <GroveButton Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Icon="edit" title="@L("Rename")" Click="@(() => Prompt = new PromptState(PromptKind.Rename, item.Name, item))" Disabled="@Busy" />
+                                    <GroveButton Size="ButtonSize.ExtraSmall" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Icon="delete" title="@L("Delete")" Click="@(() => Prompt = new PromptState(PromptKind.Delete, item.Name, item))" Disabled="@Busy" />
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            @if (Total > Children.Count)
+            {
+                <GroveButton Size="ButtonSize.Small" Variant="Variant.Text" Text="@L("Show more")" Click="@(() => LoadChildrenAsync(append: true))" />
+            }
+        }
+    </section>
+
+    @if (ShowViewer)
+    {
+        <GroveFileViewerPane Files="Client" File="Selected" ApiBase="Http.BaseAddress" Changed="OnFileChangedAsync" />
+    }
+</div>
+
+@if (Prompt is { } prompt)
+{
+    <div class="grove-drive-browser__backdrop" data-testid="drive-prompt">
+        <div class="grove-drive-browser__dialog" role="dialog">
+            @if (prompt.Kind == PromptKind.Delete)
+            {
+                <p>@(string.Format(CultureInfo.CurrentCulture, L("Delete {0}? Everything in it goes too."), prompt.Value))</p>
+            }
+            else
+            {
+                <label>
+                    @(prompt.Kind switch { PromptKind.NewFolder => L("Folder name"), PromptKind.NewDrive => L("Drive name"), _ => L("New name") })
+                    <GroveTextBox @bind-Value="prompt.Value" Style="width: 100%;" />
+                </label>
+            }
+            <div class="grove-drive-browser__dialog-actions">
+                <GroveButton ButtonStyle="ButtonStyle.Light" Text="@L("Cancel")" Click="@(() => Prompt = null)" />
+                <GroveButton ButtonStyle="@(prompt.Kind == PromptKind.Delete ? ButtonStyle.Danger : ButtonStyle.Primary)" Text="@(prompt.Kind == PromptKind.Delete ? L("Delete") : L("Save"))" Click="ConfirmAsync" Disabled="@(Busy || (prompt.Kind != PromptKind.Delete && string.IsNullOrWhiteSpace(prompt.Value)))" />
+            </div>
+        </div>
+    </div>
+}
+
+@if (SharingItem is { } shared)
+{
+    <div class="grove-drive-browser__backdrop" data-testid="drive-sharing">
+        <div class="grove-drive-browser__dialog grove-drive-browser__dialog--wide" role="dialog" aria-label="@L("Share")">
+            @if (shared.IsContainer)
+            {
+                <div class="grove-drive-browser__tabs" role="tablist">
+                    <button type="button" role="tab" aria-selected="@(!SharingRules)" class="@(!SharingRules ? "is-active" : null)" @onclick="@(() => SharingRules = false)">@L("Share")</button>
+                    <button type="button" role="tab" aria-selected="@SharingRules" class="@(SharingRules ? "is-active" : null)" @onclick="@(() => SharingRules = true)" data-testid="drive-rules-tab">@L("Rules")</button>
+                </div>
+            }
+            @if (SharingRules && shared.IsContainer)
+            {
+                <GroveShareRules Kind="@FileKind" Id="@shared.Id" />
+            }
+            else
+            {
+                <GroveSharePanel Kind="@FileKind" Id="@shared.Id" Changed="@(() => LoadIndicatorsAsync())" />
+            }
+            <div class="grove-drive-browser__dialog-actions">
+                <GroveButton ButtonStyle="ButtonStyle.Light" Text="@L("Close")" Click="@(() => SharingItem = null)" />
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>The shareable kind of file objects (docs/media.md § 3).</summary>
+    private const string FileKind = "file";
+
+    private Dictionary<string, GroveShareIndicator> Indicators = [];
+    private int? AccessFilter;
+    private GroveFileItem? SharingItem;
+    private bool SharingRules;
+
+    private void OpenSharing(GroveFileItem item)
+    {
+        SharingItem = item;
+        SharingRules = false;
+    }
+
+    private async Task OnAccessFilterAsync(ChangeEventArgs args)
+    {
+        AccessFilter = int.TryParse(args.Value as string, out var value) ? value : null;
+        await LoadChildrenAsync();
+    }
+
+    /// <summary>The access indicators of the listed items; none while sharing is off.</summary>
+    private async Task LoadIndicatorsAsync()
+    {
+        var targets = Children.Where(child => child.ShortcutTargetId is null).Select(child => (FileKind, child.Id)).ToList();
+        if (targets.Count == 0)
+        {
+            Indicators = [];
+            return;
+        }
+
+        var found = await new GroveSharingClient(Http).GetIndicatorsAsync(targets);
+        Indicators = (found.Value ?? []).ToDictionary(item => item.Id, item => item.Indicator, StringComparer.Ordinal);
+    }
+
+    /// <summary>Opens this drive and nothing else (an administrator's access to a user's drive).</summary>
+    [Parameter] public string? RootDriveId { get; set; }
+
+    /// <summary>The drive-aware picker: files are chosen, not opened.</summary>
+    [Parameter] public bool PickMode { get; set; }
+
+    [Parameter] public EventCallback<GroveFileItem> OnPick { get; set; }
+
+    [Parameter] public bool ShowViewer { get; set; } = true;
+
+    /// <summary>Offers creating a shared drive; the server still decides (requirement 31).</summary>
+    [Parameter] public bool AllowCreateSharedDrive { get; set; }
+
+    private GroveFilesClient Client => _client ??= new GroveFilesClient(Http);
+    private GroveFilesClient? _client;
+    private List<GroveFileItem> Drives = [];
+    private readonly List<GroveFileItem> Path = [];
+    private List<GroveFileItem> Children = [];
+    private int Total;
+    private GroveFileItem? Selected;
+    private bool Loading;
+    private bool Saving;
+    private string? Error;
+    private PromptState? Prompt;
+
+    private bool Busy => Loading || Saving;
+    private GroveFileItem? Current => Path.LastOrDefault();
+
+    private enum PromptKind { NewFolder, NewDrive, Rename, Delete }
+
+    private sealed class PromptState(PromptKind kind, string value, GroveFileItem? item = null)
+    {
+        public PromptKind Kind { get; } = kind;
+        public string Value { get; set; } = value;
+        public GroveFileItem? Item { get; } = item;
+    }
+
+    private sealed record DriveGroup(string Title, IReadOnlyList<GroveFileItem> Drives);
+
+    private IEnumerable<DriveGroup> DriveGroups =>
+        new[]
+        {
+            new DriveGroup(L("My drive"), [.. Drives.Where(drive => drive.DriveType == GroveDriveType.Personal)]),
+            new DriveGroup(L("Shared drives"), [.. Drives.Where(drive => drive.DriveType == GroveDriveType.Shared)]),
+            new DriveGroup(L("Organization drives"), [.. Drives.Where(drive => drive.DriveType == GroveDriveType.Organization)]),
+        }.Where(group => group.Drives.Count > 0);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loading = true;
+        if (RootDriveId is { } root)
+        {
+            var drive = await Client.GetAsync(root);
+            Loading = false;
+            if (drive.Value is { } found)
+            {
+                await OpenDriveAsync(found);
+            }
+            else
+            {
+                Error = drive.Error;
+            }
+
+            return;
+        }
+
+        var drives = await Client.ListDrivesAsync();
+        Drives = drives.Value ?? [];
+        Error = drives.Error;
+        Loading = false;
+        if ((Drives.FirstOrDefault(drive => drive.DriveType == GroveDriveType.Personal) ?? Drives.FirstOrDefault()) is { } first)
+        {
+            await OpenDriveAsync(first);
+        }
+    }
+
+    private async Task OpenDriveAsync(GroveFileItem drive)
+    {
+        Path.Clear();
+        Path.Add(drive);
+        Selected = null;
+        await LoadChildrenAsync();
+    }
+
+    private async Task OpenPathAsync(int index)
+    {
+        Path.RemoveRange(index + 1, Path.Count - index - 1);
+        Selected = null;
+        await LoadChildrenAsync();
+    }
+
+    private async Task ActivateAsync(GroveFileItem item)
+    {
+        if (item.IsContainer)
+        {
+            Path.Add(item);
+            Selected = null;
+            await LoadChildrenAsync();
+            return;
+        }
+
+        // A shortcut opens its target, with the target's access.
+        if (item.ShortcutTargetId is { } target)
+        {
+            var found = await Client.GetAsync(target);
+            Selected = found.Value;
+            Error = found.Error;
+            return;
+        }
+
+        Selected = item;
+    }
+
+    private async Task LoadChildrenAsync(bool append = false)
+    {
+        if (Current is not { } folder)
+        {
+            return;
+        }
+
+        Loading = true;
+        Error = null;
+        var page = await Client.ListChildrenAsync(folder.Id, append ? Children.Count : 0, access: AccessFilter);
+        if (page.Value is { } value)
+        {
+            Children = append ? [.. Children, .. value.Items] : [.. value.Items];
+            Total = value.Total;
+            if (!PickMode)
+            {
+                await LoadIndicatorsAsync();
+            }
+        }
+        else
+        {
+            Error = page.Error;
+        }
+
+        Loading = false;
+    }
+
+    private async Task UploadAsync(InputFileChangeEventArgs args)
+    {
+        if (Current is not { } folder)
+        {
+            return;
+        }
+
+        Saving = true;
+        Error = null;
+        foreach (var file in args.GetMultipleFiles(50))
+        {
+            await using var stream = file.OpenReadStream(100 * 1024 * 1024);
+            var uploaded = await Client.UploadAsync(folder.Id, file.Name, file.ContentType, stream);
+            if (!uploaded.Succeeded)
+            {
+                Error = $"{file.Name}: {uploaded.Error}";
+            }
+        }
+
+        Saving = false;
+        await LoadChildrenAsync();
+    }
+
+    private async Task ConfirmAsync()
+    {
+        if (Prompt is not { } prompt)
+        {
+            return;
+        }
+
+        Saving = true;
+        Error = null;
+        var name = prompt.Value.Trim();
+        string? error = prompt.Kind switch
+        {
+            PromptKind.NewFolder when Current is { } folder => (await Client.CreateFolderAsync(folder.Id, name)).Error,
+            PromptKind.NewDrive => (await Client.CreateDriveAsync(name, GroveDriveType.Shared)).Error,
+            PromptKind.Rename when prompt.Item is { } item => (await Client.RenameAsync(item.Id, name)).Error,
+            PromptKind.Delete when prompt.Item is { } item => (await Client.DeleteAsync(item.Id)).Error,
+            _ => null,
+        };
+
+        Saving = false;
+        Error = error;
+        if (error is null)
+        {
+            if (prompt.Kind == PromptKind.Delete && Selected?.Id == prompt.Item?.Id)
+            {
+                Selected = null;
+            }
+
+            Prompt = null;
+            if (prompt.Kind == PromptKind.NewDrive)
+            {
+                Drives = (await Client.ListDrivesAsync()).Value ?? Drives;
+            }
+            else
+            {
+                await LoadChildrenAsync();
+            }
+        }
+    }
+
+    private async Task OnFileChangedAsync(GroveFileItem item)
+    {
+        Selected = item;
+        await LoadChildrenAsync();
+    }
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

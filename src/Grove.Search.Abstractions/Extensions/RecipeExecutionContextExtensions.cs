@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Grove.Search.Models;
 
-namespace Grove.Recipes.Models;
+namespace Grove.Infrastructure.Recipes.Models;
 
 public static class RecipeExecutionContextExtensions
 {

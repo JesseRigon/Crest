@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.props" />
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Grove.Contents.OptionPicker</AssemblyName>
+    <!-- The picker's types keep the namespaces they had in Grove.Infrastructure.Server (Grove.Fields,
+         Grove.Infrastructure.Settings, Grove.Services, Grove.Data.Indexing): stored field settings, the index
+         migration's record and downstream modules name them. -->
+    <RootNamespace>Grove</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs;blazor-wasm/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Access\Grove.Access.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents.Fields\Grove.Contents.Fields.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents.Management\Grove.Contents.Management.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents\Grove.Contents.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents.Types\Grove.Contents.Types.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Data.YesSql\Grove.Data.YesSql.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Infrastructure.Server.Abstractions\Grove.Infrastructure.Server.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Access.Users\Grove.Access.Users.csproj" />
+    <ProjectReference Include="..\Grove.Contents.OptionPicker.Abstractions\Grove.Contents.OptionPicker.Abstractions.csproj" />
+    <PackageReference Include="YesSql.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Grove.Contents.OptionPicker.Tests" />
+  </ItemGroup>
+</Project>

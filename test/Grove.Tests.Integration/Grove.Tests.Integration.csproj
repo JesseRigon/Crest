@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Grove.FileStorage.AmazonS3\Grove.FileStorage.AmazonS3.csproj" />
-    <ProjectReference Include="..\..\src\Grove.FileStorage.AzureBlob\Grove.FileStorage.AzureBlob.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Data.Storage.AmazonS3\Grove.Data.Storage.AmazonS3.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Data.Storage.AzureBlob\Grove.Data.Storage.AzureBlob.csproj" />
     <ProjectReference Include="..\..\src\Grove.Media.AmazonS3\Grove.Media.AmazonS3.csproj" />
     <ProjectReference Include="..\..\src\Grove.Media.Azure\Grove.Media.Azure.csproj" />
   </ItemGroup>
@@ -22,6 +22,6 @@
     <PackageReference Include="xunit.v3.mtp-v2" />
   </ItemGroup>
 
-  <Import Project="..\..\src\Grove.Build\Grove.Commons.targets" />
+  <Import Project="..\..\src\Grove.Infrastructure.Build\Grove.Commons.targets" />
 
 </Project>

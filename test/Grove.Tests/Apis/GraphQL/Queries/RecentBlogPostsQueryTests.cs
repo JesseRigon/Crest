@@ -1,5 +1,5 @@
-using Grove.ContentManagement;
-using Grove.Lists.Models;
+using Grove.Contents.Management;
+using Grove.Display.Lists.Models;
 using Grove.Tests.Apis.Context;
 
 namespace Grove.Tests.Apis.GraphQL;

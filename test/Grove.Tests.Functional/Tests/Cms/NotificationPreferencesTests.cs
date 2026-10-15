@@ -3,7 +3,7 @@ using Grove.Tests.Functional.Helpers;
 
 namespace Grove.Tests.Functional.Tests.Cms;
 
-// Covers Grove.Notifications' user-notification-preferences-part.ts: a native
+// Covers Grove.Communications' user-notification-preferences-part.ts: a native
 // HTML5 draggable/dragstart/dragover/dragend reorder of the notification-method list on
 // a user's edit page (Content:11 zone of UserNotificationPreferencesPart_Edit), NOT the
 // shared bloom sortable component (SortableJS-based) other modules use - hence its own

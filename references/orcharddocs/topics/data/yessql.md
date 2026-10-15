@@ -8,7 +8,7 @@ When an object is saved, YesSql serializes it to JSON and stores it as a row in 
 
 | Id | Type | Content | Version |
 | --- | --- | --- | --- |
-| 42 | `Grove.ContentManagement.ContentItem, Grove.ContentManagement.Abstractions` | `{ "ContentItemId": "4tavbc...", "DisplayText": "My blog post", ... }` | 3 |
+| 42 | `Grove.Contents.Management.ContentItem, Grove.Contents.Management.Abstractions` | `{ "ContentItemId": "4tavbc...", "DisplayText": "My blog post", ... }` | 3 |
 
 This is why adding a field or a part to a content type in Grove never requires a database migration: the shape of the JSON just changes.
 

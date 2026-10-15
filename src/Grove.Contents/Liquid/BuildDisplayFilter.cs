@@ -1,11 +1,10 @@
 using System.Text.Json.Nodes;
 using Fluid;
 using Fluid.Values;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Display;
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.ModelBinding;
-using Grove.Liquid;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Display;
+using Grove.Display.Management;
+using Grove.Display.Liquid;
 
 namespace Grove.Contents.Liquid;
 
@@ -15,16 +14,13 @@ public class BuildDisplayFilter : ILiquidFilter
 
     private readonly IContentItemRecursionHelper<BuildDisplayFilter> _buildDisplayRecursionHelper;
     private readonly IContentItemDisplayManager _contentItemDisplayManager;
-    private readonly IUpdateModelAccessor _updateModelAccessor;
 
     public BuildDisplayFilter(
         IContentItemRecursionHelper<BuildDisplayFilter> buildDisplayRecursionHelper,
-        IContentItemDisplayManager contentItemDisplayManager,
-        IUpdateModelAccessor updateModelAccessor)
+        IContentItemDisplayManager contentItemDisplayManager)
     {
         _buildDisplayRecursionHelper = buildDisplayRecursionHelper;
         _contentItemDisplayManager = contentItemDisplayManager;
-        _updateModelAccessor = updateModelAccessor;
     }
 
     public ValueTask<FluidValue> ProcessAsync(FluidValue input, FilterArguments arguments, LiquidTemplateContext ctx)
@@ -64,7 +60,7 @@ public class BuildDisplayFilter : ILiquidFilter
 
         var displayType = arguments["type"].Or(arguments.At(0)).ToStringValue();
 
-        var task = _contentItemDisplayManager.BuildDisplayAsync(contentItem, _updateModelAccessor.ModelUpdater, displayType);
+        var task = _contentItemDisplayManager.BuildDisplayAsync(contentItem, displayType);
         if (task.IsCompletedSuccessfully)
         {
             return ValueTask.FromResult(FluidValue.Create(task.Result, ctx.Options));

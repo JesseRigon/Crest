@@ -2773,7 +2773,7 @@ export class GetIntellisenseEndpointClient implements IGetIntellisenseEndpointCl
      * @return OK
      */
     liquidIntellisense_js( cancelToken?: CancelToken): Promise<void> {
-        let url_ = this.baseUrl + "/Grove.Liquid/Scripts/liquid-intellisense.js";
+        let url_ = this.baseUrl + "/Grove.Display.Liquid/Scripts/liquid-intellisense.js";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {

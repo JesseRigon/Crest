@@ -1,5 +1,5 @@
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.Descriptors;
+using Grove.Display.Management;
+using Grove.Display.Management.Descriptors;
 using Grove.Environment.Extensions;
 using Grove.Environment.Extensions.Features;
 using Grove.Environment.Extensions.Manifests;
@@ -84,11 +84,11 @@ public class DefaultShapeTableManagerBindingsTests : IDisposable
         public ValueTask DiscoverAsync(ShapeTableBuilder builder)
         {
             // Two bindings with the same binding source from the same extension (ModuleA) via two different features.
-            builder.Describe("TestShape").From(FeatureA1).BoundAs("CommonSource", null);
-            builder.Describe("TestShape").From(FeatureA2).BoundAs("CommonSource", null);
+            builder.Describe("TestShape").From(FeatureA1).Bind(new ShapeBinding { BindingSource = "CommonSource" });
+            builder.Describe("TestShape").From(FeatureA2).Bind(new ShapeBinding { BindingSource = "CommonSource" });
 
             // Another module depends on A1 and overrides the shape with its own binding source.
-            builder.Describe("TestShape").From(FeatureB1).BoundAs("OverrideSource", null);
+            builder.Describe("TestShape").From(FeatureB1).Bind(new ShapeBinding { BindingSource = "OverrideSource" });
 
             return ValueTask.CompletedTask;
         }

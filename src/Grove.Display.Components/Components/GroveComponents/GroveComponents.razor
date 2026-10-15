@@ -1,0 +1,15 @@
+@namespace Grove.Display.Components.Primitives
+<GroveDialog @attributes="Attributes" />
+<GroveNotification @attributes="Attributes" />
+<GroveContextMenu @attributes="Attributes" />
+<GroveTooltip @attributes="Attributes" />
+<GroveChartTooltip @attributes="Attributes" />
+
+@code {
+    /// <summary>
+    /// Specifies additional custom attributes that will be rendered by the component.
+    /// </summary>
+    /// <value>The attributes.</value>
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IReadOnlyDictionary<string, object>? Attributes { get; set; }
+}

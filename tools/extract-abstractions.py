@@ -3,7 +3,7 @@
 
     tools/extract-abstractions.py MODULE [--from-core] [--dry-run] [FILE ...]
 
-MODULE is a module project name under src/ (for example Grove.Flows). FILE paths are
+MODULE is a module project name under src/ (for example Grove.Contents.Flows). FILE paths are
 relative to the module folder. `--from-core` adds every file that an uncommitted fold of
 MODULE.Core moved into the module (read from `git status`) and that is a contract by kind:
 it declares an interface, is named *Permissions.cs, *Constants.cs, *Options.cs or
@@ -260,7 +260,7 @@ def main():
         if anchor in sx and abs_name not in sx:
             sx = sx.replace(anchor, f'    <Project Path="src/{abs_name}/{abs_name}.csproj" />\n{anchor}', 1)
             sln.write_text(sx, encoding="utf-8")
-        props = src / "Grove.Build" / "Platform.Projects.props"
+        props = src / "Grove.Infrastructure.Build" / "Platform.Projects.props"
         px = props.read_text(encoding="utf-8")
         if f";{abs_name};" not in px:
             px = px.replace("</PlatformLibraryProjects>", f"{abs_name};</PlatformLibraryProjects>", 1)

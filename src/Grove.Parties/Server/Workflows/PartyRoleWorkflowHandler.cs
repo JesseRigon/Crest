@@ -2,9 +2,9 @@ using Grove.Parties.Constants;
 using Grove.Parties.PartyTypes;
 using Grove.Parties.Services;
 using Grove.Workflows;
-using Grove.ContentFields.Fields;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
+using Grove.Contents.Fields.Fields;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
 using Grove.Fields;
 
 namespace Grove.Parties.Workflows;

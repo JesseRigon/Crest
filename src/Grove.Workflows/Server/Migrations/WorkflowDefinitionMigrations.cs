@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Settings;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Settings;
 using Grove.Data.Migration;
 using Grove.Workflows.Indexes;
 using YesSql.Sql;

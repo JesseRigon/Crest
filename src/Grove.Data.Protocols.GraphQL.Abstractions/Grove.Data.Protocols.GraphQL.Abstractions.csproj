@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Data.Protocols.GraphQL</RootNamespace>
+
+    <!-- NuGet properties-->
+    <Title>Grove GraphQL Apis Abstractions</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Abstractions for GraphQL Apis</Description>
+    <PackageTags>$(PackageTags) PlatformFramework GraphQL Apis Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GraphQL" />
+    <PackageReference Include="GraphQL.DataLoader" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Display.Management.Abstractions\Grove.Display.Management.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

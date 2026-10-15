@@ -1,4 +1,4 @@
-namespace Grove.Settings;
+namespace Grove.Infrastructure.Settings;
 
 /// <summary>
 /// Provides services to manage the sites settings.

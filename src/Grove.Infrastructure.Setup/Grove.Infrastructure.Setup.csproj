@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <!-- The setup components use nullable annotations; existing code keeps its context. -->
+    <Nullable>annotations</Nullable>
+    <!-- NuGet properties-->
+    <Title>Grove Setup</Title>
+    <Description>$(OCCMSDescription)
+
+    The setup module is creating the application's setup experience..</Description>
+    <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- The installation pages are static-SSR Razor components in Components/; the module targets
+       only add *.cshtml to Razor generation, so the components are declared here. -->
+  <ItemGroup>
+    <RazorComponent Include="Components\**\*.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Grove.Data.Localization\ModularPoFileLocationProvider.cs" Link="ModularPoFileLocationProvider.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Data\Grove.Data.csproj" />
+    <ProjectReference Include="..\Grove.Display.Management\Grove.Display.Management.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Localization\Grove.Data.Localization.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Recipes.Abstractions\Grove.Infrastructure.Recipes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Setup.Abstractions\Grove.Infrastructure.Setup.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YesSql" />
+  </ItemGroup>
+
+</Project>

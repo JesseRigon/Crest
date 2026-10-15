@@ -1,8 +1,8 @@
 #nullable enable
 using Grove.Modules;
-using Grove.Notifications;
-using Grove.Notifications.Models;
-using Grove.Users;
+using Grove.Communications;
+using Grove.Communications.Models;
+using Grove.Access.Users;
 using Microsoft.AspNetCore.Identity;
 
 namespace Grove.Media.Files;
@@ -16,7 +16,7 @@ public interface IPersonalDriveNotifier
 }
 
 /// <summary>
-/// Notices through the platform's notifications (<c>Grove.Notifications</c>), each chosen
+/// Notices through the platform's notifications (<c>Grove.Communications</c>), each chosen
 /// channel exactly once: a portal notice is the stored per-user notification only (stored as
 /// the notification service stores one, with its events, but not sent through the user's
 /// methods), an email notice is one send through the Email method. With the notifications

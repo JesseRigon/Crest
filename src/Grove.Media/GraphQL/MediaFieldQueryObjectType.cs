@@ -3,7 +3,7 @@ using GraphQL;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
-using Grove.Apis.GraphQL;
+using Grove.Data.Protocols.GraphQL;
 using Grove.Media.Processing;
 using Grove.Media.Fields;
 

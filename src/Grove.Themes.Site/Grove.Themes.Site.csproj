@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <Import Project="$(PlatformSrcDir)Grove.Themes.Targets\Grove.Themes.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformCompatibilityVersion>4.0.0</PlatformCompatibilityVersion>
+    <GroveSecurityPatch>0</GroveSecurityPatch>
+    <GroveBugPatch>0</GroveBugPatch>
+    <GroveVersion>$(PlatformCompatibilityVersion).$(GroveSecurityPatch).$(GroveBugPatch)</GroveVersion>
+    <VersionPrefix>$(PlatformCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(PlatformCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(GroveVersion)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="wwwroot\node_modules\**" />
+    <EmbeddedResource Remove="wwwroot\node_modules\**" />
+    <None Remove="wwwroot\node_modules\**" />
+    <Compile Remove="tests\**\*.cs" />
+    <!-- wasm\ is a sibling project (Grove.Themes.Site.Client), not part of this
+         one - without this, the SDK's default **/*.cs glob also sweeps in its
+         generated obj\ output (duplicate AssemblyInfo/TargetFramework attributes,
+         CS0579) and its own .razor/.cs sources. -->
+    <Compile Remove="wasm\**\*.cs" />
+    <Content Remove="wasm\**" />
+    <EmbeddedResource Remove="wasm\**" />
+    <None Remove="wasm\**" />
+    <RazorGenerate Remove="wasm\**" />
+    <RazorComponent Remove="wasm\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Theme.Targets, not Module.Targets: sets ModuleType=Theme so IsTheme() is true at
+         runtime (the theme scope of the component registry and the templates). -->
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Themes.Targets\Grove.Themes.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents.Management\Grove.Contents.Management.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Display.Resources.Management\Grove.Display.Resources.Management.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Display.Management\Grove.Display.Management.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Access.Users.Abstractions\Grove.Access.Users.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Access.Users\Grove.Access.Users.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents.SiteMenu\Grove.Contents.SiteMenu.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Communications.Email.Abstractions\Grove.Communications.Email.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Infrastructure.Setup.Abstractions\Grove.Infrastructure.Setup.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Infrastructure.Setup\Grove.Infrastructure.Setup.csproj" />
+  </ItemGroup>
+
+  <!-- Grove.Infrastructure.Server is the single Blazor Web App host (API + SSR) for every Grove theme -
+       it, not this project, calls AddRazorComponents()/AddInteractiveWebAssemblyComponents()
+       and owns the App.razor/Routes.razor roots (see plans/blazor hybrid conversion.md).
+       This project keeps its own page/layout components (Phase 5) and references
+       Components/Icons to build them, plus its WASM half
+       (wasm/Grove.Themes.Site.Client.csproj) for @rendermode
+       InteractiveWebAssembly/InteractiveAuto components - it just doesn't self-host. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Display.Components\Grove.Display.Components.csproj" />
+    <ProjectReference Include="..\Grove.Display.Icons\Grove.Display.Icons.csproj" />
+    <ProjectReference Include="wasm\Grove.Themes.Site.Client.csproj" />
+  </ItemGroup>
+
+</Project>

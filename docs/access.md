@@ -14,11 +14,11 @@ tests and audits): [user-stories.md](user-stories.md).
 ## Principles
 
 - **Access declares the access APIs; others register with Access** (the tenet in
-  [architecture.md › Modules declare, Grove.Server registers and serves](architecture.md#modules-declare-groveserver-registers-and-serves)).
+  [architecture.md › Modules declare, Grove.Infrastructure.Server registers and serves](architecture.md#modules-declare-groveserver-registers-and-serves)).
   The sign-in, account, two-factor, login-settings and antiforgery APIs are declared by the
-  access modules (Grove.Users for account, sign-in, two-factor and login settings; Grove.Access
-  for the antiforgery token) and registered in Grove.Server's API endpoint registry
-  ([MVC/api.md](MVC/api.md) P6). Grove.Server hands each request to Access and applies the antiforgery filter, which asks
+  access modules (Grove.Access.Users for account, sign-in, two-factor and login settings; Grove.Access
+  for the antiforgery token) and registered in Grove.Infrastructure.Server's API endpoint registry
+  ([MVC/api.md](MVC/api.md) P6). Grove.Infrastructure.Server hands each request to Access and applies the antiforgery filter, which asks
   Access to validate. Other modules register their access systems (page permissions, scope
   providers, resource mappers) with Access rather than checking for themselves. The access
   model's own API (permission sets, groups, overrides) is Access's too.
@@ -66,8 +66,8 @@ tests and audits): [user-stories.md](user-stories.md).
 
   The access gate owns the pipeline, pages and data alike. Every domain (sharing, Members,
   Parties, and each module after them) plugs into it through these contracts and decides
-  nothing on its own. Sharing is its own module, `Grove.Sharing` and
-  `Grove.Sharing.Abstractions` ([sharing.md](sharing.md)), which any module uses to make its
+  nothing on its own. Sharing is its own module, `Grove.Access.Sharing` and
+  `Grove.Access.Sharing.Abstractions` ([sharing.md](sharing.md)), which any module uses to make its
   items shareable and which registers one authoritative mapper and its scope providers with
   Access.
 - **A page's permission comes from the page registry.** Each page declares its permission once
@@ -108,20 +108,20 @@ nothing ([sharing.md](sharing.md)). Tests: `test/Grove.Tests/Access/Conformance/
 
 | Scheme | Where | What it does |
 | --- | --- | --- |
-| Identity cookie (`orchauth_{tenant}`) | `Grove.Users` | the default sign-in; `AddIdentity`, cookie paths from `UserOptions`; `UseAuthorization` at order 0 |
+| Identity cookie (`orchauth_{tenant}`) | `Grove.Access.Users` | the default sign-in; `AddIdentity`, cookie paths from `UserOptions`; `UseAuthorization` at order 0 |
 | The access gate | `Grove.Access` `IAccessGate` (`AccessGateService`), called by the shell selector; `AccessGateMiddleware` at order −150 for what the selector did not classify | the one authentication (cookie, or `Api` when an `Authorization` header is present), the side stamp, the caller; runs the request-handler schemes (OpenIddict's endpoints) |
 | `Api` forwarder | `Grove.Infrastructure/Security/ApiAuthenticationHandler.cs` | forwards to the scheme in `ApiAuthorizationOptions` (default "Bearer"), then to each `AdditionalSchemes` entry (the remote deployment key); challenge writes 401 with `WWW-Authenticate: Bearer` |
-| OpenId Validation | `Grove.OpenId` | the only bearer-to-principal path: OpenIddict validation, local (data protection, optionally another tenant's server) or remote (discovery); re-points `Api` to itself |
-| OpenId Server | `Grove.OpenId` | issues tokens: code, password, refresh and client credentials; user flows carry the user's name identifier, the client-credentials flow carries the application's id as the name identifier and the application's roles, never Permission claims |
-| OpenId Client, Management | `Grove.OpenId` | external OIDC login; admin UI for applications and scopes |
-| External providers | `Grove.Microsoft.Authentication`, `Grove.Google`, `Grove.Facebook`, `Grove.GitHub`, `Grove.Twitter` | land in `Identity.External`, finished by the Users external-authentication feature |
-| Member portal login | `Grove.Members` `MemberPortalController`, `MemberLoginSurfaceGate` | the portal's login, register and external-login; the `ILoginFormEvent` veto that keeps members off the tenant surface and staff off the portal |
-| Grove JSON login | `LoginService`, `api/grove/auth` (Grove.Users, `AuthApi`) | replays the stock login event sequence and signs the one cookie; an account with two-factor authentication passes the password step into the two-factor cookie and finishes with a code or a recovery code (`auth/two-factor`); `auth/external-login` starts an external sign-in |
-| Sign-in form extensions | `ILoginExtensionProvider` (Grove.Access.Abstractions), served by `api/grove/auth/form/{form}` | what features add to the sign-in, registration and password recovery forms: links, a button per external authentication scheme (Grove.Users), sections whose value the form sends as a header (ReCaptcha's `CaptchaChallenge`) |
-| Self-service account APIs | Grove.Users: `api/grove/account`, `api/grove/registration`, `api/grove/password`, `api/grove/two-factor` | the user's own account, registration, password recovery and two-factor authentication, behind the site's account pages ([shells-and-themes.md](shells-and-themes.md#account-and-protocol-pages)) |
+| OpenId Validation | `Grove.Access.OpenId` | the only bearer-to-principal path: OpenIddict validation, local (data protection, optionally another tenant's server) or remote (discovery); re-points `Api` to itself |
+| OpenId Server | `Grove.Access.OpenId` | issues tokens: code, password, refresh and client credentials; user flows carry the user's name identifier, the client-credentials flow carries the application's id as the name identifier and the application's roles, never Permission claims |
+| OpenId Client, Management | `Grove.Access.OpenId` | external OIDC login; admin UI for applications and scopes |
+| External providers | `Grove.Integrations.Microsoft`, `Grove.Integrations.Google`, `Grove.Integrations.Facebook`, `Grove.Integrations.GitHub`, `Grove.Integrations.Twitter` | land in `Identity.External`, finished by the Users external-authentication feature |
+| Member portal login | `Grove.Access.Members` `MemberPortalController`, `MemberLoginSurfaceGate` | the portal's login, register and external-login; the `ILoginFormEvent` veto that keeps members off the tenant surface and staff off the portal |
+| Grove JSON login | `LoginService`, `api/grove/auth` (Grove.Access.Users, `AuthApi`) | replays the stock login event sequence and signs the one cookie; an account with two-factor authentication passes the password step into the two-factor cookie and finishes with a code or a recovery code (`auth/two-factor`); `auth/external-login` starts an external sign-in |
+| Sign-in form extensions | `ILoginExtensionProvider` (Grove.Access.Abstractions), served by `api/grove/auth/form/{form}` | what features add to the sign-in, registration and password recovery forms: links, a button per external authentication scheme (Grove.Access.Users), sections whose value the form sends as a header (ReCaptcha's `CaptchaChallenge`) |
+| Self-service account APIs | Grove.Access.Users: `api/grove/account`, `api/grove/registration`, `api/grove/password`, `api/grove/two-factor` | the user's own account, registration, password recovery and two-factor authentication, behind the site's account pages ([shells-and-themes.md](shells-and-themes.md#account-and-protocol-pages)) |
 | Workflows engine API | `Grove.Workflows` `ApiSecurityMiddleware`, order −151 | under `/grove-workflows/api`: the gated caller (none → 403), the decision, antiforgery, a transient claims identity with engine permission names, the Run list and the endpoint's policy; no authentication of its own |
-| Secure media, GraphQL, media tus, OpenApi | `Grove.Media`, `Grove.Apis.GraphQL`, `Grove.OpenApi` | authorize the gate's principal; none authenticates again |
-| Remote deployment key | `Grove.Deployment.Remote` `RemoteDeploymentKeyAuthenticationHandler` | `Authorization: RemoteDeployment {client}:{key}`, an additional `Api` scheme; the import controller is `[Authorize]` and asks `ImportRemoteInstances`, which the remote client's contributor grants its application caller; the exporting instance sends the header |
+| Secure media, GraphQL, media tus, OpenApi | `Grove.Media`, `Grove.Data.Protocols.GraphQL`, `Grove.Data.Protocols.OpenApi` | authorize the gate's principal; none authenticates again |
+| Remote deployment key | `Grove.Deployment.Remote` `RemoteDeploymentKeyAuthenticationHandler` | `Authorization: RemoteDeployment {client}:{key}`, an additional `Api` scheme; the import endpoint (`RemoteImportApi`) requires authorization and asks `ImportRemoteInstances`, which the remote client's contributor grants its application caller; the exporting instance sends the header |
 
 **The request path.** The shell selector (`ShellSelectionMiddleware`, a startup filter before
 routing) classifies the request and calls the gate for it (`AdmitAsync` for pages with the side
@@ -141,7 +141,7 @@ per-request grant) survives the authorization middleware. Pinned by
 
 **A pending sign-in step.** A signed-in cookie session can owe a step before anything else: a
 user whose roles require two-factor authentication and who has not set it up
-(`TwoFactorSetupStep`, Grove.Users, an `IPendingSignInStepProvider` of Grove.Access.Abstractions).
+(`TwoFactorSetupStep`, Grove.Access.Users, an `IPendingSignInStepProvider` of Grove.Access.Abstractions).
 The gate asks the providers once per request and, while one answers, admits only the step's own
 pages and APIs (the two-factor page and API, the email confirmation) and what every session keeps
 (`PendingSignInSteps.AlwaysAllowed`: the shell runtime, the routing options and client strings,
@@ -212,7 +212,7 @@ sharing's, one per shareable kind with an index table), `ScopeSet`, `IScopeSetPr
 (`RouteAccess`, `IRouteAuthorization`: the authorized routes, a path's check, and
 `AllowsAnyAsync`, the per-item question the admin menu asks). The pages and their permissions
 are the page registry's (`IPageRegistry`, `PageEntry`, `RouteTemplates` in
-`Grove.Server.Abstractions`).
+`Grove.Infrastructure.Server.Abstractions`).
 
 Implementation (module "Access", always enabled, depends on Roles, Users, Settings):
 `CallerContextFactory` (identity from the name identifier; roles from the user manager;
@@ -251,7 +251,7 @@ The impersonator and the session's active organization are request-level facts s
   principal (it answers as anonymous). The workflow caller resolver's per-burst build is an
   entry point by design; nothing else calls the factory.
 - **The caller is immutable for the request**, and so is its scope set.
-- **Hand-down into child scopes.** `IInheritedShellScopeFeature` (Grove.Abstractions) marks a
+- **Hand-down into child scopes.** `IInheritedShellScopeFeature` (Grove.Infrastructure.Abstractions) marks a
   scope feature that every scope created from the current one receives
   (`CreateChildScopeAsync`, the deferred tasks); the caller accessor keeps the caller as such a
   feature (`CallerFeature`), so child scopes, deferred tasks and after-commit work carry the
@@ -321,7 +321,7 @@ client learns of a change on its next request. The conformance suite checks revo
 
 ### Members
 
-`Grove.Members` registers `MemberCallerContributor` (class, acting organization, binding roles,
+`Grove.Access.Members` registers `MemberCallerContributor` (class, acting organization, binding roles,
 impersonator), `MemberCallerRequestResolver`, `MemberClassCeiling` (the member ceiling list,
 [user-stories.md](user-stories.md) § 4), `UserConnectionScopeProvider` and
 `MemberResourcePermissionMapper`.
@@ -339,7 +339,7 @@ The permission model):
   ceiling is a hard line and is never conditional.
 - Staff are never members of an organization's groups, and staff reach is the tenant: a new
   customer needs no grant.
-- `MembersController` asks `ManageOrgMembers` through the decision against a
+- `MembersApi` asks `ManageOrgMembers` through the decision against a
   `MemberOrganizationResource` (list, create), a `MemberBindingResource` (add, remove binding)
   or an `OrganizationMemberResource`. `MemberResourcePermissionMapper`: a caller acting in no
   organization holds it for every one, a caller acting in one only there; the root guard (the
@@ -350,7 +350,7 @@ The permission model):
   through it and shows a member only its organization's bindings. The organization system
   actor's lookup of member admins (`MemberCallerContributor`) builds a caller and stays
   unscoped.
-- Grove.Members holds organization-to-member logic only (bindings, the acting organization,
+- Grove.Access.Members holds organization-to-member logic only (bindings, the acting organization,
   the member caller). Row ownership by organization concerns staff as well as members and is
   Parties' ([Parties](#parties)).
 
@@ -388,7 +388,7 @@ authorized routes) use the Access types.
 - [x] **Route gate reads the page registry.** The route gate takes each page's permission from
   its page registry entry; the per-module route permission providers are gone
   ([architecture.md › One page registry](architecture.md#one-page-registry)).
-- [ ] **MVC admin leftovers.** `AdminFilter` (`Grove.Admin`) and the admin controllers'
+- [ ] **MVC admin leftovers.** `AdminFilter` (`Grove.Infrastructure.Shells.Admin`) and the admin controllers'
   per-type content authorization (the MVC list in `Grove.Contents` `AdminController`) go with
   the MVC admin; the scope is the filter ([server.md](server.md)).
 - [ ] **One shell stamp.** The selector stamps the route bucket and the side as two items;

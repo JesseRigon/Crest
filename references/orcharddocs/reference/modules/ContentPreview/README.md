@@ -1,4 +1,4 @@
-# Content Preview (`Grove.ContentPreview`)
+# Content Preview (`Grove.Contents.Preview`)
 
 The Content Preview module adds a live preview to the content editor. It renders the current
 form values in a separate window without saving or publishing the content item.
@@ -114,8 +114,8 @@ because the module submits the serialized editor form.
 provide the same aspect when the path must be calculated in code:
 
 ```csharp
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
 
 public sealed class ProductPreviewHandler : ContentHandlerBase
 {

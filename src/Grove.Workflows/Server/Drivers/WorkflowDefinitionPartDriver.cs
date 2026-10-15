@@ -1,4 +1,4 @@
-using Grove.ContentManagement.Display.ContentDisplay;
+using Grove.Contents.Management.Display.ContentDisplay;
 using Grove.Workflows.Parts;
 
 namespace Grove.Workflows.Drivers;

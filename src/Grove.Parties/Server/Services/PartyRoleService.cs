@@ -1,14 +1,14 @@
 using Grove.Access;
-using Grove.ContentFields.Fields;
-using Grove.ContentFields.Indexing.SQL;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Metadata;
+using Grove.Contents.Fields.Fields;
+using Grove.Contents.Fields.Indexing.SQL;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Metadata;
 using Grove.Parties.Constants;
 using Grove.Parties.Definitions;
 using Grove.Parties.ViewModels;
 using YesSql;
 using Grove.Fields;
-using Grove.Indexing;
+using Grove.Data.Indexing;
 
 namespace Grove.Parties.Services;
 

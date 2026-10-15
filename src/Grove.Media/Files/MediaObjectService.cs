@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 using Grove.Access;
 using Grove.Locking.Distributed;
 using Grove.Modules;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 using Microsoft.Extensions.Logging;
 
 namespace Grove.Media.Files;

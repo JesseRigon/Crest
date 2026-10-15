@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Records;
 using Grove.Contents.VersionPruning.Models;
 using Grove.Modules;
 using YesSql;

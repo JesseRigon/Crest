@@ -9,9 +9,9 @@ using Grove.Modules.Manifest;
     Category = "Security",
     Dependencies =
     [
-        "Grove.Roles",
-        "Grove.Users",
-        "Grove.Settings",
+        "Grove.Access.Roles",
+        "Grove.Access.Users",
+        "Grove.Infrastructure.Settings",
     ],
     IsAlwaysEnabled = true
 )]

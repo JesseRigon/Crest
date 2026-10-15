@@ -18,7 +18,7 @@ public sealed record PendingSignInStep(string Reason, string Detail, string Page
 /// <summary>
 /// Says whether a signed-in user has a <see cref="PendingSignInStep"/>. Asked by the access gate
 /// once per request for an authenticated cookie session; registered by the feature that owns the
-/// step (Grove.Users' two-factor authentication).
+/// step (Grove.Access.Users' two-factor authentication).
 /// </summary>
 public interface IPendingSignInStepProvider
 {

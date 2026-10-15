@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Grove.ContentManagement;
-using Grove.Html.Models;
-using Grove.Lucene;
+using Grove.Contents.Management;
+using Grove.Data.Protocols.Html.Models;
+using Grove.Search.Lucene;
 using Grove.Tests.Apis.Context;
 
 namespace Grove.Tests.Apis.Lucene;
@@ -35,8 +35,7 @@ public class LuceneQueryTests
 
         var query = JConvert.SerializeObject(dynamicQuery);
 
-        var content = await context.Client.GetAsync($"api/lucene/content?indexName={index}&query={query}", TestContext.Current.CancellationToken);
-        var queryResults = await content.Content.ReadAsAsync<LuceneQueryResults>();
+        var queryResults = await context.QueryContentAsync(index, query);
 
         // Test
         Assert.Equal(2, queryResults.Items.Count());
@@ -70,8 +69,7 @@ public class LuceneQueryTests
         };
 
         var query = JConvert.SerializeObject(dynamicQuery);
-        var content = await context.Client.GetAsync($"api/lucene/content?indexName={index}&query={query}", TestContext.Current.CancellationToken);
-        var queryResults = await content.Content.ReadAsAsync<LuceneQueryResults>();
+        var queryResults = await context.QueryContentAsync(index, query);
 
         // Test
         Assert.Equal(2, queryResults.Items.Count());
@@ -109,8 +107,7 @@ public class LuceneQueryTests
 
         var query = JConvert.SerializeObject(dynamicQuery);
 
-        var content = await context.Client.GetAsync($"api/lucene/content?indexName={index}&query={query}", TestContext.Current.CancellationToken);
-        var queryResults = await content.Content.ReadAsAsync<LuceneQueryResults>();
+        var queryResults = await context.QueryContentAsync(index, query);
 
         // Test
         Assert.NotEmpty(queryResults.Items);
@@ -158,8 +155,7 @@ public class LuceneQueryTests
                     }
                 }
             """;
-            var content = await context.Client.GetAsync($"api/lucene/content?indexName={index}&query={query}", TestContext.Current.CancellationToken);
-            var queryResults = await content.Content.ReadAsAsync<LuceneQueryResults>();
+            var queryResults = await context.QueryContentAsync(index, query);
             var contentItems = queryResults.Items.Select(x => JObject.FromObject(x).Deserialize<ContentItem>());
 
             // Test
@@ -184,8 +180,7 @@ public class LuceneQueryTests
         var index = "ArticleIndex";
         var queryTemplate = "\r\r\n{% assign testVariable = \"48yvsghn194eft8axztaves25h\" %}\n\n{\n  \"query\": {\n    \"bool\": {\n      \"must\": [\n        { \"term\" : { \"Content.ContentItem.ContentType\" : \"Article\" } },\n        { \"term\": { \"Content.ContentItem.Published\" : \"true\" } },\n      ]\n    }\n  }\n}";
 
-        var content = await context.Client.GetAsync($"api/lucene/content?indexName={index}&query={queryTemplate}", TestContext.Current.CancellationToken);
-        var queryResults = await content.Content.ReadAsAsync<LuceneQueryResults>();
+        var queryResults = await context.QueryContentAsync(index, queryTemplate);
 
         // Assert
         Assert.NotNull(queryResults);

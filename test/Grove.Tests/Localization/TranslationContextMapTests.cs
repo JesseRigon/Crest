@@ -1,17 +1,17 @@
-using Grove.Localization.PortableObject;
+using Grove.Data.Localization.PortableObject;
 
 namespace Grove.Tests.Localization;
 
 public class TranslationContextMapTests
 {
     [Theory]
-    [InlineData("OrchardCore.Users.Controllers.AccountController", "Grove.Users.Controllers.AccountController")]
+    [InlineData("OrchardCore.Users.Controllers.AccountController", "Grove.Access.Users.Controllers.AccountController")]
     [InlineData("OrchardCore.Workflows.Activities.NotifyTask", "Grove.Workflows.Activities.NotifyTask")]
-    [InlineData("OrchardCore.ReCaptcha.Workflows.ValidateReCaptchaTask", "Grove.ReCaptcha.Workflows.ValidateReCaptchaTask")]
-    [InlineData("OrchardCore.DisplayManagement.IOrchardHelper", "Grove.DisplayManagement.IPlatformHelper")]
+    [InlineData("OrchardCore.ReCaptcha.Workflows.ValidateReCaptchaTask", "Grove.Security.ReCaptcha.Workflows.ValidateReCaptchaTask")]
+    [InlineData("OrchardCore.DisplayManagement.IOrchardHelper", "Grove.Display.Management.IPlatformHelper")]
     [InlineData("OrchardCore", "Grove")]
-    [InlineData("TheAdmin.Views.Layout", "TheAdmin.Views.Layout")]
-    [InlineData("Grove.Users.Controllers.AccountController", "Grove.Users.Controllers.AccountController")]
+    [InlineData("Grove.Themes.TheAdmin.Views.Layout", "Grove.Themes.TheAdmin.Views.Layout")]
+    [InlineData("Grove.Access.Users.Controllers.AccountController", "Grove.Access.Users.Controllers.AccountController")]
     [InlineData(null, null)]
     public void MapsOriginalContextsToRenamedOnes(string context, string expected)
         => Assert.Equal(expected, TranslationContextMap.Map(context));
@@ -27,6 +27,6 @@ public class TranslationContextMapTests
 
         var record = PoParser.Parse(new StringReader(po)).Single();
 
-        Assert.Equal("Grove.Users.Controllers.AccountController", record.Key.Context);
+        Assert.Equal("Grove.Access.Users.Controllers.AccountController", record.Key.Context);
     }
 }

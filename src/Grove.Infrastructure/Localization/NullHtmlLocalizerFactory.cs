@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc.Localization;
 
-namespace Grove.Localization;
+namespace Grove.Data.Localization;
 
 /// Represents a null <see cref="IHtmlLocalizerFactory"/> which is used by default when the localization module is disabled.
 /// <remarks>

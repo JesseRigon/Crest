@@ -19,42 +19,40 @@
       "name": "feature",
       "enable": [
         "Grove.HomeRoute",
-        "Grove.Admin",
-        "Grove.Navigation",
-        "Grove.Recipes",
-        "Grove.Resources",
-        "Grove.Roles",
+        "Grove.Infrastructure.Shells.Admin",
+        "Grove.Display.Navigation",
+        "Grove.Infrastructure.Recipes",
+        "Grove.Display.Resources",
+        "Grove.Access.Roles",
         "Grove.Security",
-        "Grove.Settings",
+        "Grove.Infrastructure.Settings",
         "Grove.Themes",
-        "Grove.Users",
+        "Grove.Access.Users",
 
-        "Grove.AdminMenu",
-        "Grove.Autoroute",
-        "Grove.ContentTypes",
+        "Grove.Contents.AdminMenu",
+        "Grove.Routes.Auto",
+        "Grove.Contents.Types",
         "Grove.Contents",
         "Grove.Deployment",
         "Grove.Deployment.Remote",
         "Grove.Media",
-        "Grove.Placements",
-        "Grove.Queries",
-        "Grove.Queries.Sql",
+        "Grove.Display.Placements",
+        "Grove.Data.Queries",
+        "Grove.Data.Queries.Sql",
         "Grove.Shortcodes.Templates",
-        "Grove.Sitemaps",
-        "Grove.Templates",
-        "Grove.Tenants",
-        "Grove.Tenants.FeatureProfiles",
-        "Grove.Title",
-        "Grove.Routes",
+        "Grove.Seo.Sitemaps",
+        "Grove.Display.Templates",
+        "Grove.Infrastructure.Tenants",
+        "Grove.Infrastructure.Tenants.FeatureProfiles",
+        "Grove.Contents.Title",
+        "Grove.Routes"
 
-        "TheAdmin",
-        "SafeMode"
       ]
     },
     {
       "name": "themes",
-      "admin": "TheAdmin",
-      "site": "TheAdmin"
+      "admin": "Grove.Themes.Admin",
+      "site": "Grove.Themes.Site"
     },
     {
       "name": "ContentDefinition",
@@ -245,7 +243,7 @@
       "name": "Sitemaps",
       "Data": [
         {
-          "$type": "Grove.Sitemaps.Models.Sitemap, Grove.Sitemaps.Abstractions",
+          "$type": "Grove.Seo.Sitemaps.Models.Sitemap, Grove.Seo.Sitemaps.Abstractions",
           "SitemapId": "bulkselecttestsitemapone",
           "Name": "Bulk Select Test Sitemap One",
           "Enabled": true,
@@ -253,7 +251,7 @@
           "SitemapSources": []
         },
         {
-          "$type": "Grove.Sitemaps.Models.Sitemap, Grove.Sitemaps.Abstractions",
+          "$type": "Grove.Seo.Sitemaps.Models.Sitemap, Grove.Seo.Sitemaps.Abstractions",
           "SitemapId": "bulkselecttestsitemaptwo",
           "Name": "Bulk Select Test Sitemap Two",
           "Enabled": true,
@@ -261,7 +259,7 @@
           "SitemapSources": []
         },
         {
-          "$type": "Grove.Sitemaps.Models.SitemapIndex, Grove.Sitemaps",
+          "$type": "Grove.Seo.Sitemaps.Models.SitemapIndex, Grove.Seo.Sitemaps",
           "SitemapId": "bulkselecttestsitemapindexone",
           "Name": "Bulk Select Test Sitemap Index One",
           "Enabled": true,
@@ -269,7 +267,7 @@
           "SitemapSources": []
         },
         {
-          "$type": "Grove.Sitemaps.Models.SitemapIndex, Grove.Sitemaps",
+          "$type": "Grove.Seo.Sitemaps.Models.SitemapIndex, Grove.Seo.Sitemaps",
           "SitemapId": "bulkselecttestsitemapindextwo",
           "Name": "Bulk Select Test Sitemap Index Two",
           "Enabled": true,

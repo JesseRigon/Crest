@@ -1,3 +1,4 @@
+using Grove.Api;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -12,11 +13,9 @@ public static class DeleteMediaListEndpoint
 {
     public static IEndpointRouteBuilder AddDeleteMediaListEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapPost("api/media/DeleteMediaList", HandleAsync)
+        builder.MapPost("DeleteMediaList", HandleAsync)
             .WithName("ApiDeleteMediaList")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
-            .AddEndpointFilter<MediaApiAntiforgeryEndpointFilter>()
             .Produces(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
@@ -28,9 +27,9 @@ public static class DeleteMediaListEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        List<string> paths)
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromBody] List<string> paths)
     {
         if (paths == null)
         {

@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Grove.Infrastructure.Html;
-using Grove.Recipes.Models;
-using Grove.Recipes.Services;
+using Grove.Infrastructure.Recipes.Models;
+using Grove.Infrastructure.Recipes.Services;
 using Grove.Shortcodes.Models;
 using Grove.Shortcodes.Services;
 

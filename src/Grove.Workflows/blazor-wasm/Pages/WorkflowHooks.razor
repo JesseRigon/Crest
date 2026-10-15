@@ -2,7 +2,7 @@
 @attribute [PageEntry(WorkflowsConstants.Permissions.View, Id = "workflows-hooks", Parent = "workflows", Caption = "Hooks", Position = "25")]
 @using Grove.Workflows
 @inject HttpClient Http
-@inject Grove.Components.Theme.GroveApiLocalizer T
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
 
 @* Hook attachment (docs/workflows.md › Still to build, ruling 2026-10-05): every hook slot the
    modules declare, the flows attached to it - the module's own, then the tenant's - and, for

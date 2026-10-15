@@ -1,4 +1,4 @@
-# Indexing (`Grove.Indexing`)
+# Indexing (`Grove.Data.Indexing`)
 
 The `Indexing` module provides a flexible and extensible infrastructure for indexing any kind of data in Grove. It supports multiple index providers—including Lucene, Elasticsearch, and Azure AI Search—and is designed to be fully agnostic of specific data types.
 

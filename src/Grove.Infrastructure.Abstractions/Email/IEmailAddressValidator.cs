@@ -1,4 +1,4 @@
-namespace Grove.Email;
+namespace Grove.Communications.Email;
 
 /// <summary>
 /// Contract for e-mail address validation service.

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Modules;
-using Grove.Recipes;
+using Grove.Infrastructure.Recipes;
 using Grove.Security.Permissions;
 using Grove.Routes.Api;
 using Grove.Routes.ContentRoutes;
@@ -40,21 +40,21 @@ public sealed class Startup : StartupBase
     }
 }
 
-[RequireFeatures("Grove.Autoroute")]
+[RequireFeatures("Grove.Routes.Auto")]
 public sealed class AutorouteStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services) =>
         services.AddScoped<IContentRouteSource, AutorouteContentRouteSource>();
 }
 
-[RequireFeatures("Grove.Alias")]
+[RequireFeatures("Grove.Contents.Alias")]
 public sealed class AliasStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services) =>
         services.AddScoped<IContentRouteSource, AliasContentRouteSource>();
 }
 
-[RequireFeatures("Grove.Recipes.Core")]
+[RequireFeatures("Grove.Infrastructure.Recipes.Core")]
 public sealed class RecipesStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)

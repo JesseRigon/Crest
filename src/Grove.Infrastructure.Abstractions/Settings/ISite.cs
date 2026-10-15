@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Routing;
 using Grove.Entities;
 
-namespace Grove.Settings;
+namespace Grove.Infrastructure.Settings;
 
 public interface ISite : IEntity
 {

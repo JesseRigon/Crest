@@ -1,7 +1,7 @@
 {
   "name": "OpenApiGenerationSetup",
   "displayName": "OpenApi Client Generation",
-  "description": "First-boot setup recipe used by tools/OpenApiClientGenerator to provision a Default tenant with the full Grove.OpenApi API surface, matching the OpenApiGeneration recipe's feature list (src/Grove.Modules/Grove.OpenApi/Recipes/openapi-generation.recipe.json). Not intended for production sites. The settings step must stay after the feature step: during tenant setup the settings handler is only registered once features are enabled, and a step with no handler is silently skipped.",
+  "description": "First-boot setup recipe used by tools/OpenApiClientGenerator to provision a Default tenant with the full Grove.Data.Protocols.OpenApi API surface, matching the OpenApiGeneration recipe's feature list (src/Grove.Modules/Grove.Data.Protocols.OpenApi/Recipes/openapi-generation.recipe.json). Not intended for production sites. The settings step must stay after the feature step: during tenant setup the settings handler is only registered once features are enabled, and a step with no handler is silently skipped.",
   "author": "The Grove Team",
   "website": "https://orchardcore.net",
   "version": "1.0.0",
@@ -15,11 +15,11 @@
         "Grove.Contents",
         "Grove.Media",
         "Grove.Media.Tus",
-        "Grove.Queries",
-        "Grove.Tenants",
+        "Grove.Data.Queries",
+        "Grove.Infrastructure.Tenants",
         "Grove.Search.Lucene",
         "Grove.Search.Elasticsearch",
-        "Grove.OpenApi"
+        "Grove.Data.Protocols.OpenApi"
       ]
     },
     {

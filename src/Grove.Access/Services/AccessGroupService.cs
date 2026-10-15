@@ -1,5 +1,5 @@
 using Grove.Access.Store;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Grove.Entities;
 using YesSql;
 
@@ -302,7 +302,7 @@ public sealed class UserAccessOverrideService(ISession session, IPermissionVersi
 }
 
 /// <summary>The organization defaults, as site settings; a change is a rights write.</summary>
-public sealed class OrganizationAccessDefaultsService(Grove.Settings.ISiteService siteService, IPermissionVersion permissionVersion) : IOrganizationAccessDefaultsService
+public sealed class OrganizationAccessDefaultsService(Grove.Infrastructure.Settings.ISiteService siteService, IPermissionVersion permissionVersion) : IOrganizationAccessDefaultsService
 {
     public async Task<OrganizationAccessDefaults> GetAsync(CancellationToken cancellationToken = default) =>
         await siteService.GetSettingsAsync<OrganizationAccessDefaults>();

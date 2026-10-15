@@ -1,4 +1,4 @@
-# Markdown (`Grove.Markdown`)
+# Markdown (`Grove.Contents.Markdown`)
 
 ## Theming
 
@@ -109,7 +109,7 @@ To define what HTML to render when the editor is selected from the settings, a s
 Sample content:
 
 ```csharp
-@using Grove.Markdown.ViewModels
+@using Grove.Contents.Markdown.ViewModels
 @model MarkdownBodyPartViewModel
 
 <fieldset class="mb-3">

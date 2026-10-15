@@ -1,4 +1,4 @@
-using Grove.Email;
+using Grove.Communications.Email;
 
 namespace Grove.Tests.Email;
 

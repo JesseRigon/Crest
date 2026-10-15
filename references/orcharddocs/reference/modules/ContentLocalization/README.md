@@ -1,4 +1,4 @@
-# ContentLocalization (`Grove.ContentLocalization`)
+# ContentLocalization (`Grove.Contents.Localization`)
 
 This module allows you to localize your content items.
 
@@ -6,7 +6,7 @@ This module allows you to localize your content items.
 
 Attach this part to a content type to manage multiple localized versions of a content item.
 
-## ContentCulturePicker (`Grove.ContentLocalization.ContentCulturePicker`)
+## ContentCulturePicker (`Grove.Contents.Localization.ContentCulturePicker`)
 
 ## ContentCulturePicker Feature
 

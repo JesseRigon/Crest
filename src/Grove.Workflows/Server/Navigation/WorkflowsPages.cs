@@ -1,4 +1,4 @@
-using Grove.Admin;
+using Grove.Infrastructure.Shells.Admin;
 using Grove.Routing;
 
 namespace Grove.Workflows.Navigation;

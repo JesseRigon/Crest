@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.WebUtilities;
 using Grove.Media;
 using Grove.Media.Processing;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Grove.Tests.Utilities;
 
 namespace Grove.Tests.Modules.Grove.Media;

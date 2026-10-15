@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Contents.Taxonomies</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Grove Taxonomies Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for the Taxonomies module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YesSql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Contents.Management.Abstractions\Grove.Contents.Management.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Display.Navigation.Abstractions\Grove.Display.Navigation.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Communications.Abstractions\Grove.Communications.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

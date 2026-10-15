@@ -1,4 +1,4 @@
-// Converted from Grove.AdminTheme/tests/playwright/admin-menu-layout-export.js.
+// Converted from Grove.Themes.Admin/tests/playwright/admin-menu-layout-export.js.
 // Exercises the "Export layout JSON" button on the built-in admin menu and verifies the
 // server wrote a well-formed recipe file to disk.
 const fs = require('fs');

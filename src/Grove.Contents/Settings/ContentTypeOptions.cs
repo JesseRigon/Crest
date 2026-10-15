@@ -1,6 +1,6 @@
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Models;
-using Grove.Settings;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Models;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Contents.Settings;
 

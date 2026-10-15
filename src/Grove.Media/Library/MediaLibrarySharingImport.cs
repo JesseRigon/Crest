@@ -4,7 +4,7 @@ using Grove.Media.Services;
 using Grove.Media.Sharing;
 using Grove.Security;
 using Grove.Security.Permissions;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 using YesSql;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -135,7 +135,7 @@ public sealed class MediaLibrarySharingImport(IServiceProvider services, IOption
     {
         if (usersFolder.Length == 0 ||
             services.GetService<IUserAssetFolderNameProvider>() is not { } folderNames ||
-            services.GetService<Microsoft.AspNetCore.Identity.UserManager<Grove.Users.IUser>>() is not { } users ||
+            services.GetService<Microsoft.AspNetCore.Identity.UserManager<Grove.Access.Users.IUser>>() is not { } users ||
             services.GetService<YesSql.ISession>() is not { } session)
         {
             return [];
@@ -150,7 +150,7 @@ public sealed class MediaLibrarySharingImport(IServiceProvider services, IOption
         }
 
         var grants = new List<(string, ShareEntry)>();
-        foreach (var index in await session.QueryIndex<Grove.Users.Indexes.UserIndex>().ListAsync())
+        foreach (var index in await session.QueryIndex<Grove.Access.Users.Indexes.UserIndex>().ListAsync())
         {
             if (folderNames.GetUserAssetFolderName(index.UserId) is not { } name ||
                 !userFolders.TryGetValue(name, out var placementId) ||

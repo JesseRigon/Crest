@@ -5,7 +5,7 @@ namespace Grove.Diagnostics;
 
 /// <summary>
 /// The status code pages and the exception handler re-execute "/Error/{status}" (and "/Error"),
-/// which each shell answers with its own error page (Grove.Components' GroveErrorPage; step 7:
+/// which each shell answers with its own error page (Grove.Display.Components' GroveErrorPage; step 7:
 /// the MVC Diagnostics controller and views are retired). The re-execution runs inside the shell
 /// that answered the original request, so its shell stamp and base path still hold.
 /// </summary>

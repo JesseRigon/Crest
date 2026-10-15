@@ -1,4 +1,4 @@
-namespace Grove.FileStorage;
+namespace Grove.Data.Storage;
 
 /// <summary>
 /// Provides tenant-scoped locations (files and directories) for storing files temporarily, such as

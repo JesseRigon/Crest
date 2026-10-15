@@ -1,4 +1,4 @@
-# Admin Menu (`Grove.AdminMenu`)
+# Admin Menu (`Grove.Contents.AdminMenu`)
 
 The Admin Menu module provides a way for users to create custom admin menus through the Admin UI.
 
@@ -8,9 +8,9 @@ There are two basic concepts:
 
 1. **Admin Menu**: A tree of Admin Nodes whose root is at the first level of the Admin Menu. There can be one or several of them.  
 
-2. **Admin Node**: Each one of the nodes that form an Admin Menu. An AdminNode can contain other Admin Nodes. Each admin node results in one or more menu items rendered on TheAdmin menu.
+2. **Admin Node**: Each one of the nodes that form an Admin Menu. An AdminNode can contain other Admin Nodes. Each admin node results in one or more menu items rendered on Grove.Themes.TheAdmin menu.
 
-These trees of menu items are merged with the standard admin menu that Grove provides out of the box. In this document when we refer to that menu that is provided by Grove out of the box we use the term **TheAdmin Menu**.
+These trees of menu items are merged with the standard admin menu that Grove provides out of the box. In this document when we refer to that menu that is provided by Grove out of the box we use the term **Grove.Themes.TheAdmin Menu**.
 
 You can disable an Admin Menu and it won't be shown.
 
@@ -24,21 +24,21 @@ You can disable an Admin Node and neither it nor their descendants will be shown
 
 3. Create a new Admin Menu, and start adding Admin Nodes to it. The Link Admin Node is the simplest type and it's perfect to test the feature.
 
-4. As you keep adding Admin Nodes you will see them rendered automatically on TheAdmin Menu.
+4. As you keep adding Admin Nodes you will see them rendered automatically on Grove.Themes.TheAdmin Menu.
 
 ## Provided Admin Node Types
 
 At the time of writing this document there are 3 Admin Node Types provided out of the box by Grove:
 
-1. **Link Admin Node**: It provides a simple menu item. The user can add a text, a URL, and a Font Awesome icon class so that the current admin theme can use them when rendering the menu item. At the moment TheAdmin theme is using that icon class only for first level menu items.
-This link is the only one provided by the Grove.AdminMenu module itself.
+1. **Link Admin Node**: It provides a simple menu item. The user can add a text, a URL, and a Font Awesome icon class so that the current admin theme can use them when rendering the menu item. At the moment Grove.Themes.TheAdmin theme is using that icon class only for first level menu items.
+This link is the only one provided by the Grove.Contents.AdminMenu module itself.
 
 2. **Content Types Admin Node**: It provides a list of menu items containing a menu item for each content type. The links point to the Index action in the Contents Controller.
 This node type is provided by the Grove.Contents module.
 
 3. **Lists Admin Node**: It provides menu items pointing to the Edit Page of those Content Items that include a part list on them.
 For example, if you have a Blog Content Type, and several Blog Content Items, it will provide a link for each existing Blog.
-This node type is provided by the Grove.Lists module.
+This node type is provided by the Grove.Display.Lists module.
 
 Note that each one of these nodes can have other nodes nested on it. The nesting is done through drag and drop on the UI.
 

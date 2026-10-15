@@ -1,9 +1,9 @@
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Settings;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Settings;
 using Grove.Data.Migration;
 using Grove.Media.Settings;
-using Grove.Recipes;
-using Grove.Recipes.Services;
+using Grove.Infrastructure.Recipes;
+using Grove.Infrastructure.Recipes.Services;
 
 namespace Grove.Seo;
 

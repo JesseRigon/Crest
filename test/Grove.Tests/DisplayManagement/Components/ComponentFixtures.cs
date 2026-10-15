@@ -1,4 +1,4 @@
-using Grove.DisplayManagement.Components;
+using Grove.Display.Management.Components;
 using Microsoft.AspNetCore.Components;
 
 #nullable enable

@@ -1,11 +1,11 @@
 @page "/Parties/{TypeKey}"
 @attribute [PageEntry(DeclaredBySource = true)]
 @namespace Grove.Parties.BlazorWasm.Pages
-@using Grove.Components.Model
+@using Grove.Display.Components.Model
 @using Grove.Parties.BlazorWasm.Components
 @using Grove.Parties.Constants
 @using Grove.Parties.PartyTypes
-@inject Grove.Components.Theme.GroveApiLocalizer T
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
 
 @* The dedicated page for one tenant-kind party type (Customers, Vendors, Contacts...): the
    same pane All Parties shows, on its own route. A global kind's dedicated page belongs to its

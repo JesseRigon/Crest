@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Grove;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Records;
 using YesSql;
 
 #pragma warning disable CA1050 // Declare types in namespaces

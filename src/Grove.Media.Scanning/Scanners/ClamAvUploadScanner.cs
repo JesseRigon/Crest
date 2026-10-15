@@ -1,4 +1,4 @@
-using Grove.Antivirus.ClamAV;
+using Grove.Security.Antivirus.ClamAV;
 using Grove.Media.Files;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

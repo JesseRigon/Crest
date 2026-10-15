@@ -1,5 +1,5 @@
 using System.Globalization;
-using Grove.ResourceManagement;
+using Grove.Display.Resources.Management;
 
 namespace Grove.Seo.Models;
 

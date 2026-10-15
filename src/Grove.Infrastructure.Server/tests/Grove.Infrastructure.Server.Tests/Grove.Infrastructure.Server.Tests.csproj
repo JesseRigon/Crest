@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AssemblyName>Grove.Infrastructure.Server.Tests</AssemblyName>
+    <RootNamespace>Grove.Infrastructure.Server.Tests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Verify.XunitV3" />
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Grove.Infrastructure.Server.csproj" />
+    <!-- The API conformance test checks every contributor; the modules Grove.Infrastructure.Server does not reference itself. -->
+    <ProjectReference Include="..\..\..\Grove.Access.Roles\Grove.Access.Roles.csproj" />
+    <ProjectReference Include="..\..\..\Grove.Workflows\Server\Grove.Workflows.csproj" />
+    <ProjectReference Include="..\..\..\Grove.Contents.OptionPicker\Grove.Contents.OptionPicker.csproj" />
+    <ProjectReference Include="..\..\..\Grove.Routes\Grove.Routes.csproj" />
+    <ProjectReference Include="..\..\..\Grove.Search\Grove.Search.csproj" />
+    <ProjectReference Include="..\..\..\Grove.Seo.Sitemaps\Grove.Seo.Sitemaps.csproj" />
+    <ProjectReference Include="..\..\..\Grove.Shortcodes\Grove.Shortcodes.csproj" />
+    <ProjectReference Include="..\..\..\Grove.Communications.Sms\Grove.Communications.Sms.csproj" />
+  </ItemGroup>
+
+</Project>

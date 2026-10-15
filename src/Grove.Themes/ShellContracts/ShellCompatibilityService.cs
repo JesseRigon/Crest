@@ -1,6 +1,6 @@
 #nullable enable
 
-using Grove.Admin;
+using Grove.Infrastructure.Shells.Admin;
 using Grove.Environment.Extensions;
 using Grove.Environment.Shell;
 using Grove.Themes.Services;
@@ -128,10 +128,10 @@ public sealed class ShellCompatibilityService(
     // A module that ships a client library for a shell needs a Grove Blazor theme for that
     // shell: its pages are Blazor components rendered by the shell's document, and under
     // any other theme they render nothing. Module client libraries are named for their
-    // module ("Grove.Members.Member.BlazorWasm" belongs to "Grove.Members"), the same
+    // module ("Grove.Access.Members.Member.BlazorWasm" belongs to "Grove.Access.Members"), the same
     // convention the client project globs and the lazy-module generator already rely on.
     // An assembly belongs to the module with the LONGEST matching id, so a library of
-    // "Grove.Members" is never credited to "Grove" as well.
+    // "Grove.Access.Members" is never credited to "Grove" as well.
     // Theme clients are excluded: a theme does not need itself.
     private IEnumerable<ShellContract> ShippedContracts(string extensionId)
     {

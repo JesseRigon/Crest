@@ -1,18 +1,15 @@
-using Grove.Antivirus.ClamAV;
+using Grove.Security.Antivirus.ClamAV;
 using Grove.BackgroundTasks;
 using Grove.Data;
 using Grove.Data.Migration;
 using Grove.Environment.Shell.Configuration;
 using Grove.Media.Files;
 using Grove.Media.Scanning.Detection;
-using Grove.Media.Scanning.Endpoints;
 using Grove.Media.Scanning.Indexes;
 using Grove.Media.Scanning.Migrations;
 using Grove.Media.Scanning.Scanners;
 using Grove.Media.Scanning.Services;
 using Grove.Modules;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -48,10 +45,8 @@ public sealed class Startup(IShellConfiguration configuration) : StartupBase
         services.AddSingleton<IBackgroundTask, ScanJobBackgroundTask>();
         services.AddIndexProvider<ScanJobIndexProvider>();
         services.AddDataMigration<ScanJobMigrations>();
-    }
 
-    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        routes.AddVerdictCallbackEndpoint();
+        services.AddApiContributor<Api.ScanningSettingsApi>();
+        services.AddApiContributor<Api.ScanVerdictApi>();
     }
 }

@@ -1,6 +1,6 @@
 #nullable enable
 
-using Grove.ContentManagement.Handlers;
+using Grove.Contents.Management.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
@@ -10,12 +10,11 @@ using Grove.Api;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json.Nodes;
 using Grove;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Display;
-using Grove.DisplayManagement.Components;
-using Grove.DisplayManagement.ModelBinding;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Display;
+using Grove.Display.Management.Components;
 using System.Text.Json.Settings;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management.Records;
 using Grove.Contents;
 using Grove.Security.Permissions;
 using Grove.Access;
@@ -41,7 +40,7 @@ public sealed class ContentItemsApi : ApiContributor
         routes.MapPost("{contentItemId}/unpublish", (HttpContext __http, [FromRoute] string contentItemId) => ApiHandlers.For<ContentItemsHandlers>(__http).UnpublishAsync(contentItemId));
         routes.MapGet("{contentItemId}", (HttpContext __http, [FromRoute] string contentItemId) => ApiHandlers.For<ContentItemsHandlers>(__http).GetAsync(contentItemId));
         routes.MapGet("{contentItemId}/view", (HttpContext __http, [FromRoute] string contentItemId, [FromQuery] string? parts = null) => ApiHandlers.For<ContentItemsHandlers>(__http).ViewAsync(contentItemId, parts));
-        routes.MapGet("{contentItemId}/display", (HttpContext __http, [FromRoute] string contentItemId, [FromServices] IAccessDecision decision, [FromServices] IContentItemDisplayManager displayManager, [FromServices] IDisplayTreeBuilder trees, [FromServices] IDisplayTreeFilter filter, [FromServices] IDisplayHtmlRenderer htmlRenderer, [FromServices] IUpdateModelAccessor updaters, [FromQuery] string? displayType = null, [FromQuery] string? format = null, [FromQuery] string? version = null) => ApiHandlers.For<ContentItemsHandlers>(__http).DisplayAsync(contentItemId, decision, displayManager, trees, filter, htmlRenderer, updaters, displayType, format, version));
+        routes.MapGet("{contentItemId}/display", (HttpContext __http, [FromRoute] string contentItemId, [FromServices] IAccessDecision decision, [FromServices] IContentItemDisplayManager displayManager, [FromServices] IDisplayTreeBuilder trees, [FromServices] IDisplayTreeFilter filter, [FromServices] IDisplayHtmlRenderer htmlRenderer, [FromQuery] string? displayType = null, [FromQuery] string? format = null, [FromQuery] string? version = null) => ApiHandlers.For<ContentItemsHandlers>(__http).DisplayAsync(contentItemId, decision, displayManager, trees, filter, htmlRenderer, displayType, format, version));
         routes.MapPost("", (HttpContext __http, [FromBody] ContentItemWriteRequest request) => ApiHandlers.For<ContentItemsHandlers>(__http).CreateAsync(request));
         routes.MapPut("{contentItemId}", (HttpContext __http, [FromRoute] string contentItemId, [FromBody] ContentItemWriteRequest request) => ApiHandlers.For<ContentItemsHandlers>(__http).UpdateAsync(contentItemId, request));
         routes.MapDelete("{contentItemId}", (HttpContext __http, [FromRoute] string contentItemId) => ApiHandlers.For<ContentItemsHandlers>(__http).DeleteAsync(contentItemId));
@@ -59,7 +58,7 @@ public sealed class ContentItemsHandlers(
     IPlatformHelper platformHelper,
     ISession session,
     IContentManager contentManager,
-    Grove.ContentTypes.IFieldVisibilityEnforcer visibilityEnforcer,
+    Grove.Contents.Types.IFieldVisibilityEnforcer visibilityEnforcer,
     Grove.ContentGroups.ContentGroupService contentGroups,
     IAuthorizationService authorizationService,
     ICallerContextAccessor callerAccessor,
@@ -67,8 +66,8 @@ public sealed class ContentItemsHandlers(
 {
     private static readonly string[] DefaultViewFields =
     [
-        nameof(Grove.ContentManagement.ContentItem.DisplayText),
-        nameof(Grove.ContentManagement.ContentItem.ContentType),
+        nameof(Grove.Contents.Management.ContentItem.DisplayText),
+        nameof(Grove.Contents.Management.ContentItem.ContentType),
     ];
 
     public async Task<IResult> ListAsync(
@@ -88,7 +87,7 @@ public sealed class ContentItemsHandlers(
         // caller may not see, whatever else it is filtered by.
         var caller = callerAccessor.Current ?? throw new InvalidOperationException("No caller is set for this request.");
         var scope = (await scopes.GetAsync(caller, HttpContext.RequestAborted)).Require(nameof(ContentItemIndex));
-        var query = session.Query<Grove.ContentManagement.ContentItem, ContentItemIndex>()
+        var query = session.Query<Grove.Contents.Management.ContentItem, ContentItemIndex>()
             .With<ContentItemIndex>(index => index.Latest)
             .Where(ScopeExpressions.ToPredicate<ContentItemIndex>(scope));
 
@@ -219,8 +218,8 @@ public sealed class ContentItemsHandlers(
 
             result[field] = field switch
             {
-                nameof(Grove.ContentManagement.ContentItem.DisplayText) => item.DisplayText,
-                nameof(Grove.ContentManagement.ContentItem.ContentType) => item.ContentType,
+                nameof(Grove.Contents.Management.ContentItem.DisplayText) => item.DisplayText,
+                nameof(Grove.Contents.Management.ContentItem.ContentType) => item.ContentType,
                 _ => item.Content[field],
             };
         }
@@ -229,7 +228,7 @@ public sealed class ContentItemsHandlers(
     }
 
     /// <summary>The item's content index columns, for a part's scope rule.</summary>
-    private static object? IndexColumn(Grove.ContentManagement.ContentItem item, string column) => column switch
+    private static object? IndexColumn(Grove.Contents.Management.ContentItem item, string column) => column switch
     {
         nameof(ContentItemIndex.ContentItemId) => item.ContentItemId,
         nameof(ContentItemIndex.ContentItemVersionId) => item.ContentItemVersionId,
@@ -256,7 +255,6 @@ public sealed class ContentItemsHandlers(
         [FromServices] IDisplayTreeBuilder trees,
         [FromServices] IDisplayTreeFilter filter,
         [FromServices] IDisplayHtmlRenderer htmlRenderer,
-        [FromServices] IUpdateModelAccessor updaters,
         [FromQuery] string? displayType = null,
         [FromQuery] string? format = null,
         [FromQuery] string? version = null)
@@ -284,7 +282,7 @@ public sealed class ContentItemsHandlers(
                 return NotFound();
             }
 
-            return await RenderDisplayAsync(draft, caller, displayManager, trees, filter, htmlRenderer, updaters, displayType, format, cancellationToken);
+            return await RenderDisplayAsync(draft, caller, displayManager, trees, filter, htmlRenderer, displayType, format, cancellationToken);
         }
 
         var item = await contentManager.GetAsync(contentItemId, VersionOptions.Published);
@@ -326,22 +324,21 @@ public sealed class ContentItemsHandlers(
             }
         }
 
-        return await RenderDisplayAsync(item, caller, displayManager, trees, filter, htmlRenderer, updaters, displayType, format, cancellationToken);
+        return await RenderDisplayAsync(item, caller, displayManager, trees, filter, htmlRenderer, displayType, format, cancellationToken);
     }
 
     private async Task<IResult> RenderDisplayAsync(
-        Grove.ContentManagement.ContentItem item,
+        Grove.Contents.Management.ContentItem item,
         CallerContext caller,
         IContentItemDisplayManager displayManager,
         IDisplayTreeBuilder trees,
         IDisplayTreeFilter filter,
         IDisplayHtmlRenderer htmlRenderer,
-        IUpdateModelAccessor updaters,
         string displayType,
         string? format,
         CancellationToken cancellationToken)
     {
-        var shape = await displayManager.BuildDisplayAsync(item, updaters.ModelUpdater, displayType);
+        var shape = await displayManager.BuildDisplayAsync(item, displayType);
         var tree = await trees.BuildAsync(shape, cancellationToken: cancellationToken);
 
         // The node filter of § 10 over the whole tree: components the viewer may not see and
@@ -565,7 +562,7 @@ public sealed class ContentItemsHandlers(
     /// changes only for a caller who may change owners.
     /// </summary>
     /// <returns>The owner's error when the owner named is no user; null otherwise.</returns>
-    private async Task<string?> ApplyCommonPartAsync(Grove.ContentManagement.ContentItem item)
+    private async Task<string?> ApplyCommonPartAsync(Grove.Contents.Management.ContentItem item)
     {
         if (((JsonObject)item.Content)["CommonPart"] is not JsonObject common)
         {
@@ -583,7 +580,7 @@ public sealed class ContentItemsHandlers(
             && await authorizationService.AuthorizeAsync(User, CommonPermissions.EditContentOwner, item))
         {
             // The owner named must be a user (by id, or by name as the stored owner may be).
-            var users = HttpContext.RequestServices.GetService<Microsoft.AspNetCore.Identity.UserManager<Grove.Users.IUser>>();
+            var users = HttpContext.RequestServices.GetService<Microsoft.AspNetCore.Identity.UserManager<Grove.Access.Users.IUser>>();
             if (users is not null && await users.FindByIdAsync(ownerId) is null && await users.FindByNameAsync(ownerId) is null)
             {
                 error = "Invalid user provided for Owner.";
@@ -606,7 +603,7 @@ public sealed class ContentItemsHandlers(
     /// (<c>Part.Field</c> for a field, <c>Part</c> for a part's own values; an error that names no
     /// member under the empty key).
     /// </summary>
-    private async Task<IResult?> ValidateItemAsync(Grove.ContentManagement.ContentItem item, string? ownerError)
+    private async Task<IResult?> ValidateItemAsync(Grove.Contents.Management.ContentItem item, string? ownerError)
     {
         var result = await contentManager.ValidateAsync(item);
         if (result.Succeeded && ownerError is null)
@@ -614,7 +611,7 @@ public sealed class ContentItemsHandlers(
             return null;
         }
 
-        var definition = await HttpContext.RequestServices.GetRequiredService<Grove.ContentManagement.Metadata.IContentDefinitionManager>().GetTypeDefinitionAsync(item.ContentType);
+        var definition = await HttpContext.RequestServices.GetRequiredService<Grove.Contents.Management.Metadata.IContentDefinitionManager>().GetTypeDefinitionAsync(item.ContentType);
         var errors = ContentValidationErrors.ToMap(result.Errors, definition);
         if (ownerError is not null)
         {
@@ -625,7 +622,7 @@ public sealed class ContentItemsHandlers(
         return ApiProblems.Validation(errors);
     }
 
-    private static void ReplaceContent(Grove.ContentManagement.ContentItem item, JsonObject? content)
+    private static void ReplaceContent(Grove.Contents.Management.ContentItem item, JsonObject? content)
     {
         item.Content.Clear();
         item.Merge(content?.DeepClone() ?? new JsonObject(), new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
@@ -642,7 +639,7 @@ public static class ContentValidationErrors
 {
     public static Dictionary<string, string[]> ToMap(
         IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult> results,
-        Grove.ContentManagement.Metadata.Models.ContentTypeDefinition? definition)
+        Grove.Contents.Management.Metadata.Models.ContentTypeDefinition? definition)
     {
         var map = new Dictionary<string, List<string>>(StringComparer.Ordinal);
         foreach (var result in results)
@@ -663,7 +660,7 @@ public static class ContentValidationErrors
         return map.ToDictionary(pair => pair.Key, pair => pair.Value.ToArray(), StringComparer.Ordinal);
     }
 
-    public static string Key(string member, Grove.ContentManagement.Metadata.Models.ContentTypeDefinition? definition)
+    public static string Key(string member, Grove.Contents.Management.Metadata.Models.ContentTypeDefinition? definition)
     {
         var segments = member.Split('.', StringSplitOptions.RemoveEmptyEntries);
         var part = segments.Length == 0 ? null : definition?.Parts.FirstOrDefault(candidate => string.Equals(candidate.Name, segments[0], StringComparison.OrdinalIgnoreCase));

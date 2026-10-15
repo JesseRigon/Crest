@@ -1,7 +1,7 @@
 {
   "name": "AzureAiSearchSettingsTests",
   "displayName": "AzureAiSearchSettingsTests",
-  "description": "Testing Grove.AzureAI's azure-ai-search-default-settings.ts auth-type-dropdown-toggle logic.",
+  "description": "Testing Grove.Integrations.AI.Azure's azure-ai-search-default-settings.ts auth-type-dropdown-toggle logic.",
   "author": "The Grove Team",
   "website": "https://orchardcore.net",
   "version": "1.0.0",
@@ -14,26 +14,24 @@
       "name": "feature",
       "enable": [
         "Grove.HomeRoute",
-        "Grove.Admin",
-        "Grove.Navigation",
-        "Grove.Recipes",
-        "Grove.Resources",
-        "Grove.Roles",
+        "Grove.Infrastructure.Shells.Admin",
+        "Grove.Display.Navigation",
+        "Grove.Infrastructure.Recipes",
+        "Grove.Display.Resources",
+        "Grove.Access.Roles",
         "Grove.Security",
-        "Grove.Settings",
+        "Grove.Infrastructure.Settings",
         "Grove.Themes",
-        "Grove.Users",
+        "Grove.Access.Users",
 
-        "Grove.AzureAI",
+        "Grove.Integrations.AI.Azure"
 
-        "TheAdmin",
-        "SafeMode"
       ]
     },
     {
       "name": "themes",
-      "admin": "TheAdmin",
-      "site": "TheAdmin"
+      "admin": "Grove.Themes.Admin",
+      "site": "Grove.Themes.Site"
     }
   ]
 }

@@ -1,7 +1,7 @@
 @page "/Audit/Sessions"
 @attribute [PageEntry("ViewAuditTrail", Id = "audittrail-sessions", Parent = "audittrail", Caption = "Impersonation sessions", Position = "10")]
 @inject HttpClient Http
-@inject Grove.Components.Theme.GroveApiLocalizer T
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
 
 @* Impersonation sessions (docs/audit.md › step 4): each session as one unit - the staff user,
    the member, the organization, when it started and stopped - with its events grouped under it

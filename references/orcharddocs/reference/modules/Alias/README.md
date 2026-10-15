@@ -1,4 +1,4 @@
-# Alias (`Grove.Alias`)
+# Alias (`Grove.Contents.Alias`)
 
 The Alias module adds `AliasPart`, which gives a content item a stable logical identifier such as `main-menu` or `footer-widget`.
 Aliases are useful when code, templates, recipes, and deployment plans need to find content without relying on environment-specific content item IDs.
@@ -7,8 +7,8 @@ An alias is not a URL. Use [`AutoroutePart`](../Autoroute/README.md) when a cont
 
 ## Enable the feature
 
-Enable the **Alias** feature (`Grove.Alias`) under **Configuration** > **Features**.
-The feature depends on `Grove.ContentTypes`.
+Enable the **Alias** feature (`Grove.Contents.Alias`) under **Configuration** > **Features**.
+The feature depends on `Grove.Contents.Types`.
 
 To enable it from a recipe:
 
@@ -18,7 +18,7 @@ To enable it from a recipe:
     {
       "name": "Feature",
       "enable": [
-        "Grove.Alias"
+        "Grove.Contents.Alias"
       ]
     }
   ]
@@ -209,7 +209,7 @@ Alias-specific helper methods accept an alias with or without the `alias:` prefi
 The generic content-handle helpers are useful when an application accepts more than one handle type:
 
 ```csharp
-@using Grove.ContentManagement
+@using Grove.Contents.Management
 
 @{
     var item = await Platform.GetContentItemByHandleAsync(
@@ -223,7 +223,7 @@ The generic content-handle helpers are useful when an application accepts more t
 Inject `IContentHandleManager` to resolve any registered handle, including an alias, then use `IContentManager` to load the required version:
 
 ```csharp
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 
 public sealed class MenuProvider
 {
@@ -269,7 +269,7 @@ The content-handle API is preferred for normal lookups because it composes with 
 Code that queries `AliasPartIndex` directly must normalize the supplied alias with `ToLowerInvariant()` and explicitly filter `Published` or `Latest` when version status matters.
 
 ```csharp
-using Grove.Alias.Indexes;
+using Grove.Contents.Alias.Indexes;
 using YesSql;
 
 var normalizedAlias = alias.ToLowerInvariant();
@@ -331,7 +331,7 @@ Alias lookup is integrated through `IContentHandleProvider`. Applications can re
 ```csharp
 using System;
 using System.Threading.Tasks;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 
 public interface IExternalContentIdLookup
 {

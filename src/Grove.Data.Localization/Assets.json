@@ -1,0 +1,23 @@
+[
+  {
+    "action": "parcel",
+    "name": "admin-culture-selector",
+    "source": "Assets/ts/admin-culture-selector.ts",
+    "dest": "wwwroot/Scripts/admin-culture-selector/",
+    "tags": ["admin", "dashboard", "js"]
+  },
+  {
+    "action": "parcel",
+    "name": "localization-settings",
+    "source": "Assets/ts/localization-settings.ts",
+    "dest": "wwwroot/Scripts/localization-settings/",
+    "tags": ["admin", "dashboard", "js"]
+  },
+  {
+    "action": "parcel",
+    "name": "translations-deployment-step",
+    "source": "Assets/ts/translations-deployment-step.ts",
+    "dest": "wwwroot/Scripts/translations-deployment-step/",
+    "tags": ["admin", "dashboard", "js"]
+  }
+]

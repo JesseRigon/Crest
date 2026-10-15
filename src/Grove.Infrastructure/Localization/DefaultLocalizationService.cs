@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Grove.Localization;
+namespace Grove.Data.Localization;
 
 /// <summary>
 /// Represents a default implementation for <see cref="ILocalizationService"/>.

@@ -5,7 +5,7 @@ using Grove.Workflows.Security;
 using Microsoft.AspNetCore.Authorization;
 using NSubstitute;
 using Grove.Security;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Xunit;
 
 namespace Grove.Workflows.Tests;

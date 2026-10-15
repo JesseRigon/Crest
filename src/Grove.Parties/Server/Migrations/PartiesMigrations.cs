@@ -1,25 +1,25 @@
 using System.Text.Json.Nodes;
 using Grove.Data.Global.Lists;
 using Grove.Models;
-using Grove.Regions;
-using Grove.Regions.Fields;
+using Grove.Data.Regions;
+using Grove.Data.Regions.Fields;
 using Grove.Services;
 using Grove.Parties.Constants;
 using Grove.Parties.Indexes;
 using Grove.Parties.Services;
-using Grove.ContentFields.Settings;
+using Grove.Contents.Fields.Settings;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Settings;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Settings;
+using Grove.Contents.Management.Records;
 using Grove.Data.Migration;
 using Grove.Environment.Shell.Scope;
-using Grove.Flows.Models;
+using Grove.Contents.Flows.Models;
 using YesSql;
 using YesSql.Sql;
 using Grove.Fields;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Parties.Migrations;
 
@@ -72,7 +72,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
                 .WithDisplayName("Last name")
                 .WithPosition("1"))
             // The user <-> Person link, person side. A real user picker (indexed by
-            // Grove.ContentFields.Indexing.SQL.UserPicker) so "which person is
+            // Grove.Contents.Fields.Indexing.SQL.UserPicker) so "which person is
             // this account" is a query, not a scan.
             .WithField(PartyUserLinkService.PortalUserField, field => field
                 .OfType("UserPickerField")
@@ -166,7 +166,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
                 .WithDescription("The free-text city, post town or commune. What it is called comes from the country's addressing map.")
                 .WithPosition("3"))
             // The machine half: the resolved geo stack, boundary memberships and point
-            // (Grove.Regions). Level 1 of the stack is the country; the address's own
+            // (Grove.Data.Regions). Level 1 of the stack is the country; the address's own
             // country selects its addressing map.
             .WithField("Geo", field => field
                 .OfType(nameof(GeoStackField))
@@ -277,7 +277,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .WithPart("TitlePart", part => part.WithPosition("0"))
             .WithPart(PartiesConstants.ContentTypes.Association, part => part.WithPosition("1")));
 
-        static Grove.ContentManagement.Metadata.Builders.ContentPartFieldDefinitionBuilder PersonPicker(Grove.ContentManagement.Metadata.Builders.ContentPartFieldDefinitionBuilder field, string name, string position) => field
+        static Grove.Contents.Management.Metadata.Builders.ContentPartFieldDefinitionBuilder PersonPicker(Grove.Contents.Management.Metadata.Builders.ContentPartFieldDefinitionBuilder field, string name, string position) => field
             .OfType("OptionPickerField")
             .WithDisplayName(name)
             .WithPosition(position)
@@ -287,7 +287,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
                 settings.SourceKey = OptionSourceKeys.ForContentItems([PartiesConstants.ContentTypes.Person]);
             });
 
-        static Grove.ContentManagement.Metadata.Builders.ContentPartFieldDefinitionBuilder OrganizationPicker(Grove.ContentManagement.Metadata.Builders.ContentPartFieldDefinitionBuilder field, string name, string position) => field
+        static Grove.Contents.Management.Metadata.Builders.ContentPartFieldDefinitionBuilder OrganizationPicker(Grove.Contents.Management.Metadata.Builders.ContentPartFieldDefinitionBuilder field, string name, string position) => field
             .OfType("OptionPickerField")
             .WithDisplayName(name)
             .WithPosition(position)

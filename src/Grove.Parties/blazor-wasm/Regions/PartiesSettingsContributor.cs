@@ -1,4 +1,4 @@
-using Grove.Components.Regions;
+using Grove.Display.Components.Regions;
 using Grove.Parties.BlazorWasm.Components;
 
 namespace Grove.Parties.BlazorWasm.Regions;

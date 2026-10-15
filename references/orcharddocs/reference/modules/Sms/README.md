@@ -1,4 +1,4 @@
-# SMS (`Grove.Sms`)
+# SMS (`Grove.Communications.Sms`)
 
 This module provides SMS settings configuration.
 
@@ -24,7 +24,7 @@ To enable the [Twilio](https://www.twilio.com) provider, navigate to `Settings` 
 
 ## Adding Custom Providers
 
-The `Grove.Sms` module provides you with the capability to integrate additional providers for dispatching SMS messages. To achieve this, you can easily create an implementation of the `ISmsProvider` interface and then proceed to register it using one of the following approaches:
+The `Grove.Communications.Sms` module provides you with the capability to integrate additional providers for dispatching SMS messages. To achieve this, you can easily create an implementation of the `ISmsProvider` interface and then proceed to register it using one of the following approaches:
 
 If your provider does not require any settings like the `LogProvider`, you may register it like this.
 
@@ -142,7 +142,7 @@ public class TestController
 
 When both the `SMS` and `Workflows` features are enabled at the same time, a new "Send SMS" workflow task will become available to allow you to send SMS message using workflow.
 
-## SMS Notification (`Grove.Notifications.Sms`)
+## SMS Notification (`Grove.Communications.Notifications.Sms`)
 
 This feature provides you a way to send user notifications using SMS based on user preferences. [Click here](../Notifications/README.md) to read more about notifications.
 

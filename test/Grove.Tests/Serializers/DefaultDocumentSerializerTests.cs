@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Grove.Documents;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Tests.Serializers;
 

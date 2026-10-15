@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
 using System.Text.Json.Settings;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Scripting;
 
 namespace Grove.Contents.Scripting;

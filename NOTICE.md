@@ -7,7 +7,7 @@ licence file beside the code; this is the inventory.
 
 | Code | Upstream | Licence | Licence file |
 | --- | --- | --- | --- |
-| The platform projects (listed in `Grove.Build/Platform.Projects.props`), `test/`, `.scripts/` and the root build files (`Grove.Platform.slnx`, `Directory.Packages.props`, `global.json`, `package.json`, …) — the platform, a hard fork of OrchardCore | [OrchardCMS/OrchardCore](https://github.com/OrchardCMS/OrchardCore) via [jesse-forked/OrchardCore](https://github.com/jesse-forked/OrchardCore), branch `Grove` at `b0f9fdf50` | BSD-3-Clause, Copyright (c) .NET Foundation | `LICENSE.platform` |
+| The platform projects (listed in `Grove.Infrastructure.Build/Platform.Projects.props`), `test/`, `.scripts/` and the root build files (`Grove.Platform.slnx`, `Directory.Packages.props`, `global.json`, `package.json`, …) — the platform, a hard fork of OrchardCore | [OrchardCMS/OrchardCore](https://github.com/OrchardCMS/OrchardCore) via [jesse-forked/OrchardCore](https://github.com/jesse-forked/OrchardCore), branch `Grove` at `b0f9fdf50` | BSD-3-Clause, Copyright (c) .NET Foundation | `LICENSE.platform` |
 | `Grove.Workflows/engine/` — the workflow engine (22 projects) | [elsa-workflows/elsa-core](https://github.com/elsa-workflows/elsa-core), tag 3.6.0 (`d4b69be`) | MIT, Copyright (c) 2021 Elsa Workflows | `Grove.Workflows/engine/LICENSE` |
 | `Grove.Workflows/designer/` — the workflow designer | [elsa-workflows/elsa-studio](https://github.com/elsa-workflows/elsa-studio), tag 3.6.0 (`1e293c5`) | MIT, Copyright (c) 2023 Elsa Workflows | `Grove.Workflows/designer/LICENSE` |
 | `Grove.Workflows/Server/`, `Grove.Workflows/Contents/` — the Orchard integration | [elsa-workflows/elsa-orchard-core](https://github.com/elsa-workflows/elsa-orchard-core) | BSD-3-Clause, Copyright (c) 2019 Elsa Workflows | `Grove.Workflows/LICENSE` |
@@ -30,7 +30,7 @@ rename costs an upstream merge.
 
 | Code | Upstream | Licence | Notice |
 | --- | --- | --- | --- |
-| `Grove.Money/` — money value types, `MoneyService`, `PriceField` | [OrchardCore.Commerce](https://github.com/OrchardCMS/OrchardCore.Commerce) | MIT, Copyright (c) 2018 OrchardCMS | `Grove.Money/NOTICE.md` |
+| `Grove.Data.Types.Money/` — money value types, `MoneyService`, `PriceField` | [OrchardCore.Commerce](https://github.com/OrchardCMS/OrchardCore.Commerce) | MIT, Copyright (c) 2018 OrchardCMS | `Grove.Data.Types.Money/NOTICE.md` |
 
 Each adapted file carries its attribution in its own header.
 
@@ -38,13 +38,13 @@ Each adapted file carries its attribution in its own header.
 
 | Code | Upstream | Licence | Notice |
 | --- | --- | --- | --- |
-| `Grove.Components/` — the Blazor component library | [Radzen Blazor](https://github.com/radzenhq/radzen-blazor) | MIT, Copyright (c) 2018-2026 Radzen Ltd | `Grove.Components/NOTICE.md` |
+| `Grove.Display.Components/` — the Blazor component library | [Radzen Blazor](https://github.com/radzenhq/radzen-blazor) | MIT, Copyright (c) 2018-2026 Radzen Ltd | `Grove.Display.Components/NOTICE.md` |
 
 The component library was forked from Radzen's source and renamed `Radzen*` → `Grove*`;
 the chart, data grid, scheduler, Gantt, HTML editor, spreadsheet, tree, upload, form and
 dropdown families all originate there, as do the models, services and JavaScript that
 support them. Behaviour has since diverged and components with no Radzen counterpart were
-added, but the library as a whole is a derivative work. `Grove.AdminTheme` and
+added, but the library as a whole is a derivative work. `Grove.Themes.Admin` and
 anything else built on it inherit that status.
 
 ## Libraries used as packages
@@ -56,11 +56,11 @@ project's `PackageReference` set and `Directory.Packages.props`.
 ## Bundled front-end assets
 
 The default site theme ships third-party static assets in
-`Grove.SiteTheme/wwwroot/`:
+`Grove.Themes.Site/wwwroot/`:
 
 | Asset | Licence |
 | --- | --- |
-| The theme's HTML/CSS, from a Start Bootstrap template | MIT, Copyright (c) 2013-2020 Start Bootstrap LLC — `Grove.SiteTheme/wwwroot/LICENSE` |
+| The theme's HTML/CSS, from a Start Bootstrap template | MIT, Copyright (c) 2013-2020 Start Bootstrap LLC — `Grove.Themes.Site/wwwroot/LICENSE` |
 | `vendor/bootstrap` — Bootstrap v4.5.0 | MIT, Copyright 2011-2020 The Bootstrap Authors and Twitter, Inc. |
 | `vendor/jquery` — jQuery v3.5.1 | MIT, Copyright OpenJS Foundation and other contributors |
 | `vendor/fontawesome-free` — Font Awesome Free 5.13.0 | Icons CC BY 4.0, fonts SIL OFL 1.1, code MIT — Copyright Fonticons, Inc.; see https://fontawesome.com/license/free |
@@ -69,6 +69,6 @@ Each file retains the licence header its publisher ships it with.
 
 ## Reference data
 
-`Grove.Money/Data/currencies.json` is ISO 4217 reference data (codes, names, symbols and
-minor units). `Grove.Regions` and `Grove.Global` ship geographic and list reference data on
+`Grove.Data.Types.Money/Data/currencies.json` is ISO 4217 reference data (codes, names, symbols and
+minor units). `Grove.Data.Regions` and `Grove.Global` ship geographic and list reference data on
 the same footing: facts, not third-party works.

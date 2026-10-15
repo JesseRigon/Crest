@@ -1,4 +1,4 @@
-# Sitemaps (`Grove.Sitemaps`)
+# Sitemaps (`Grove.Seo.Sitemaps`)
 
 The sitemaps module provides automatic generation of sitemaps.
 
@@ -104,7 +104,7 @@ builder.Services.Configure<SitemapsRazorPagesOptions>(options =>
     options.ConfigureContentType("DecoupledBlogPost", o =>
     {
         o.PageName = "DecoupledBlogPost";
-        o.RouteValues = (contentItem) => new { area = "Grove.Sitemaps", slug = contentItem.ContentItemId };
+        o.RouteValues = (contentItem) => new { area = "Grove.Seo.Sitemaps", slug = contentItem.ContentItemId };
     });
 });    
 ```

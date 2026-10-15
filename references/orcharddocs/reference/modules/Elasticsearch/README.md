@@ -1,4 +1,4 @@
-# Elasticsearch (`Grove.Elasticsearch`)
+# Elasticsearch (`Grove.Search.Elasticsearch`)
 
 The Elasticsearch module allows you to manage Elasticsearch indices.
 

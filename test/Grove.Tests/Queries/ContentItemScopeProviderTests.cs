@@ -1,7 +1,7 @@
 #nullable enable
 using Grove.Access;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Models;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Models;
 using Grove.Contents.Security;
 
 namespace Grove.Tests.Queries;

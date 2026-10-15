@@ -1,6 +1,6 @@
-# Archive Later (`Grove.ArchiveLater`)
+# Archive Later (`Grove.Contents.ArchiveLater`)
 
-The `Grove.ArchiveLater` module adds the ability to schedule a published content item to be unpublished (archived) automatically at a future date and time.
+The `Grove.Contents.ArchiveLater` module adds the ability to schedule a published content item to be unpublished (archived) automatically at a future date and time.
 
 ## Usage
 

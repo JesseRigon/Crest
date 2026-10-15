@@ -1,4 +1,4 @@
-# Notifications (`Grove.Notifications`)
+# Notifications (`Grove.Communications`)
 
 The `Notifications` module offers a comprehensive infrastructure for managing notifications effectively. It includes a centralized notification center and streamlined mechanisms for dispatching notifications to users within the application.
 
@@ -54,7 +54,7 @@ When using `SMS Notifications` feature, you must also configure the [SMS Service
 To add a new notification method like `Web Push`, `Mobile Push`, or `SMS`, you can simply implement the `INotificationMethodProvider` interface. Then, register your new implementation. For example, in the `Email Notifications` feature, we register the email notification provider like this:
 
 ```csharp
-[Feature("Grove.Notifications.Email")]
+[Feature("Grove.Communications.Notifications.Email")]
 public class EmailNotificationsStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -69,7 +69,7 @@ public class EmailNotificationsStartup : StartupBase
 You can send a notification to a user via code by injecting `INotificationService`, then calling the `SendAsync(...)` method. Alternatively, you can use workflows to notify a user about an event that took place.
 
 ```csharp
-using Grove.Notifications;
+using Grove.Communications;
 
 public sealed class PublishNotificationService
 {
@@ -95,12 +95,12 @@ public sealed class PublishNotificationService
 
 `INotifier` is used for transient UI notifications that are rendered in the `Messages` zone of the current theme. These entries survive redirects for the next request and are intended for immediate feedback in the UI.
 
-The default `TheAdmin` and `TheTheme` themes currently render these entries as Bootstrap toasts through the `NotifyMessages` and `Message` shapes.
+The default `Grove.Themes.TheAdmin` and `TheTheme` themes currently render these entries as Bootstrap toasts through the `NotifyMessages` and `Message` shapes.
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
-using Grove.DisplayManagement.Notify;
+using Grove.Display.Management.Notify;
 
 public sealed class SampleController : Controller
 {
@@ -224,7 +224,7 @@ This shape renders the collection of notification entries. The default implement
     Create `Views/NotifyMessages.cshtml` in your theme or admin theme:
 
     ```cshtml
-    @using Grove.DisplayManagement.Notify
+    @using Grove.Display.Management.Notify
 
     @foreach (var entry in (IEnumerable<NotifyEntry>)Model.Entries)
     {

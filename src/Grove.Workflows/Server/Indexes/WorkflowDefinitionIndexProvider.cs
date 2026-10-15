@@ -1,5 +1,5 @@
 using JetBrains.Annotations;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Workflows.Parts;
 using YesSql.Indexes;
 

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Routing.Patterns;
 using Grove.Routing;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.HomeRoute.Routing;
 

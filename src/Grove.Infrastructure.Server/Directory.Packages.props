@@ -1,0 +1,53 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.13" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.13" />
+    <PackageVersion Include="Grove.Infrastructure.Shells.Admin.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Contents.AdminMenu" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Contents.AdminMenu.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Contents.Management" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Contents.Fields" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Contents" Version="4.0.0-local" />
+    <PackageVersion Include="YesSql.Abstractions" Version="6.0.0" />
+    <PackageVersion Include="Grove.Display.Management" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Communications.Email.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Infrastructure.Features" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Data.Storage.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Contents.SiteMenu" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Media.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Media" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Module.Targets" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Themes.Targets" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Infrastructure.Recipes.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Infrastructure.Recipes" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Data.Queries" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Data.Localization" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Data.Indexing.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Data.Indexing" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Search.Lucene" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Display.Resources.Management" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Access.Roles.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Infrastructure.Setup" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Infrastructure.Setup.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Themes" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Display.Templates" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Infrastructure.Tenants" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Security" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Access.Users" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Workflows.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="Grove.Access.Users.Abstractions" Version="4.0.0-local" />
+    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.50.3" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageVersion Include="Verify.XunitV3" Version="31.27.0" />
+    <PackageVersion Include="NSubstitute" Version="6.0.0" />
+  </ItemGroup>
+</Project>

@@ -1,18 +1,16 @@
+using Grove.Routing;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
-using Grove.DisplayManagement.Extensions;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
+using Grove.Display.Management.Extensions;
 using Grove.Entities;
 using System.Text.Json.Nodes;
 using Grove.Media;
 using Grove.Media.Fields;
 using Grove.Media.Library;
-using Grove.Mvc.Utilities;
 using Grove.Seo.Models;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Seo.Drivers;
 
@@ -21,20 +19,20 @@ public class SeoMetaSettingsHandler : ContentHandlerBase
     private readonly IMediaReferenceResolver _references;
     private readonly ISiteService _siteService;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IUrlHelperFactory _urlHelperFactory;
+    private readonly IShellLinkGenerator _links;
     private IContentManager _contentManager;
 
     public SeoMetaSettingsHandler(
         IMediaReferenceResolver references,
         ISiteService siteService,
         IHttpContextAccessor httpContextAccessor,
-        IUrlHelperFactory urlHelperFactory
+        IShellLinkGenerator links
         )
     {
         _references = references;
         _siteService = siteService;
         _httpContextAccessor = httpContextAccessor;
-        _urlHelperFactory = urlHelperFactory;
+        _links = links;
     }
 
     public override Task GetContentItemAspectAsync(ContentItemAspectContext context)
@@ -45,14 +43,10 @@ public class SeoMetaSettingsHandler : ContentHandlerBase
             _contentManager ??= _httpContextAccessor.HttpContext.RequestServices.GetRequiredService<IContentManager>();
             var siteSettings = await _siteService.GetSiteSettingsAsync();
 
-            // In .NET 10, create ActionContext directly instead of using obsolete IActionContextAccessor
-            var httpContext = _httpContextAccessor.HttpContext;
-            var actionContext = await httpContext.GetActionContextAsync();
-
-            var urlHelper = _urlHelperFactory.GetUrlHelper(actionContext);
+            var urlHelper = _links;
             var contentItemMetadata = await _contentManager.PopulateAspectAsync<ContentItemMetadata>(context.ContentItem);
 
-            var relativeUrl = urlHelper.RouteUrl(contentItemMetadata.DisplayRouteValues);
+            var relativeUrl = urlHelper.GetPathByRouteValues(contentItemMetadata.DisplayRouteValues);
             var absoluteUrl = urlHelper.ToAbsoluteUrl(relativeUrl);
 
             // Logic is this happens last after the part settings.
@@ -296,6 +290,6 @@ public class SeoMetaSettingsHandler : ContentHandlerBase
         return MediaFieldReferences.FromJson(json)?.FirstReference();
     }
 
-    private Task<string> SocialImageUrlAsync(IUrlHelper urlHelper, MediaReference? reference) =>
+    private Task<string> SocialImageUrlAsync(IShellLinkGenerator urlHelper, MediaReference? reference) =>
         SeoMediaUrls.UrlAsync(_references, urlHelper, reference);
 }

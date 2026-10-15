@@ -1,16 +1,15 @@
 using System.Text.Json;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
-using Grove.ContentManagement.Display.ContentDisplay;
-using Grove.ContentManagement.Display.Models;
-using Grove.ContentManagement.Metadata.Models;
-using Grove.DisplayManagement.Views;
+using Grove.Contents.Management.Display.ContentDisplay;
+using Grove.Contents.Management.Display.Models;
+using Grove.Contents.Management.Metadata.Models;
+using Grove.Display.Management.Views;
 using Grove.Media.Fields;
 using Grove.Media.Library;
 using Grove.Media.Services;
 using Grove.Media.Settings;
 using Grove.Media.ViewModels;
-using Grove.Mvc.ModelBinding;
 
 namespace Grove.Media.Drivers;
 

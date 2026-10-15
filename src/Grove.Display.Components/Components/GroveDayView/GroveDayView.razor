@@ -1,0 +1,20 @@
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Primitives.Rendering
+
+@inherits SchedulerViewBase
+
+@namespace Grove.Display.Components.Primitives
+@code {
+    public override RenderFragment Render()
+    {
+        var appointments = Scheduler?.GetAppointmentsInRange(StartDate, EndDate).ToList() ?? new List<AppointmentData>();
+
+        return
+    @<CascadingValue Value=@Scheduler>
+        <DayView StartDate=@StartDate EndDate=@EndDate StartTime=@StartTime EndTime=@EndTime Appointments=@appointments
+            TimeFormat=@TimeFormat MinutesPerSlot=@MinutesPerSlot
+            AppointmentMove=OnAppointmentMove />
+    </CascadingValue>
+    ;
+    }
+}

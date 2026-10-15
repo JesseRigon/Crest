@@ -1,8 +1,8 @@
 //using Microsoft.Extensions.DependencyInjection;
 //using Microsoft.Extensions.Logging;
-//using Grove.ContentManagement.Metadata;
-//using Grove.ContentManagement.Metadata;
-//using Grove.ContentManagement.Metadata.Builders;
+//using Grove.Contents.Management.Metadata;
+//using Grove.Contents.Management.Metadata;
+//using Grove.Contents.Management.Metadata.Builders;
 //using System;
 //using System.Collections.Generic;
 //using System.Linq;

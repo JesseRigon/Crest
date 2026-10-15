@@ -1,0 +1,7 @@
+@using Grove.Display.Components.Primitives.Documents.Spreadsheet
+@using Grove.Display.Components.Primitives.Rendering
+@namespace Grove.Display.Components.Primitives.Spreadsheet
+@foreach (var range in GetRanges())
+{
+    <CellSelectionItem Context=@Context Range=@range.Range Worksheet=@Worksheet FrozenRow=@range.FrozenRow FrozenColumn=@range.FrozenColumn Top=@range.Top Left=@range.Left Bottom=@range.Bottom Right=@range.Right />
+}

@@ -3,7 +3,7 @@ using System.IO.Pipelines;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Grove.Environment.Shell;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Media.Services;
 
 namespace Grove.Tests.Modules.Grove.Media;

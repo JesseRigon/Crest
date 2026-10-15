@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Grove.DisplayManagement.SourceGenerators;
+using Grove.Display.Management.SourceGenerators;
 
 namespace Grove.Tests.SourceGenerators;
 

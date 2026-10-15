@@ -1,4 +1,4 @@
-# Health Checks (`Grove.HealthChecks`)
+# Health Checks (`Grove.Infrastructure.HealthChecks`)
 
 The Health Checks module exposes the health checks registered with ASP.NET Core through a tenant endpoint.
 It registers the health check infrastructure and a response writer, but it does not add a health check by itself.
@@ -9,13 +9,13 @@ Enable and configure it independently for every tenant that needs to be monitore
 
 ## Enable the feature
 
-Enable **Health Checks** from **Tools** > **Features** in the tenant's administration area, or enable `Grove.HealthChecks` from a recipe:
+Enable **Health Checks** from **Tools** > **Features** in the tenant's administration area, or enable `Grove.Infrastructure.HealthChecks` from a recipe:
 
 ```json
 {
   "name": "feature",
   "enable": [
-    "Grove.HealthChecks"
+    "Grove.Infrastructure.HealthChecks"
   ],
   "disable": []
 }
@@ -135,10 +135,10 @@ Other enabled Grove features can contribute checks:
 
 | Feature | Registration | Behavior |
 |---------|--------------|----------|
-| `Grove.Redis` | `Redis Health Check` | Connects to Redis and verifies that it responds to a ping. |
-| `Grove.Sms` | `SMS Health Check` | Validates the configured Twilio credentials against the Twilio service. |
+| `Grove.Integrations.Redis` | `Redis Health Check` | Connects to Redis and verifies that it responds to a ping. |
+| `Grove.Communications.Sms` | `SMS Health Check` | Validates the configured Twilio credentials against the Twilio service. |
 
-These checks are registered only when both their owning feature and `Grove.HealthChecks` are enabled for the tenant.
+These checks are registered only when both their owning feature and `Grove.Infrastructure.HealthChecks` are enabled for the tenant.
 Because a probe executes every registered check, account for external calls and timeouts when choosing the polling interval.
 
 ## Add a custom health check
@@ -153,7 +153,7 @@ using Grove.Modules;
 
 namespace MyModule;
 
-[RequireFeatures("Grove.HealthChecks")]
+[RequireFeatures("Grove.Infrastructure.HealthChecks")]
 public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -178,7 +178,7 @@ public sealed class DependencyHealthCheck : IHealthCheck
 ```
 
 `RequireFeatures` prevents the startup registration from loading when the Health Checks feature is disabled.
-Alternatively, declare `Grove.HealthChecks` as a dependency of the custom feature, so enabling the custom feature also enables the endpoint.
+Alternatively, declare `Grove.Infrastructure.HealthChecks` as a dependency of the custom feature, so enabling the custom feature also enables the endpoint.
 
 The Grove endpoint runs every registration.
 Tags supplied to `AddCheck` remain available to ASP.NET Core, but this module does not use them to create separate liveness and readiness endpoints.
@@ -188,12 +188,12 @@ For check registration options and `IHealthCheck` implementation patterns, see [
 ## Replace the detailed response writer
 
 When `ShowDetails` is enabled, the module resolves `IHealthChecksResponseWriter` from the tenant service container.
-A feature that depends on `Grove.HealthChecks` can replace the default scoped implementation:
+A feature that depends on `Grove.Infrastructure.HealthChecks` can replace the default scoped implementation:
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Grove.HealthChecks.Services;
+using Grove.Infrastructure.HealthChecks.Services;
 
 services.Replace(
     ServiceDescriptor.Scoped<IHealthChecksResponseWriter, CustomHealthChecksResponseWriter>());
@@ -217,8 +217,8 @@ If an application needs separate liveness and readiness semantics, add appropria
 
 | Symptom | What to check |
 |---------|---------------|
-| `404 Not Found` | Confirm that `Grove.HealthChecks` is enabled for the requested tenant, use that tenant's host and URL prefix, and verify the configured `Url`. |
+| `404 Not Found` | Confirm that `Grove.Infrastructure.HealthChecks` is enabled for the requested tenant, use that tenant's host and URL prefix, and verify the configured `Url`. |
 | An unhealthy detailed response returns `200 OK` | This is the expected behavior when `ShowDetails` is enabled. Parse the JSON `Status`, or disable detailed mode to receive `503 Service Unavailable`. |
 | The response is `Healthy` but lists no checks | The feature provides the endpoint but no check implementation. Enable a feature that contributes a check or register a custom `IHealthCheck`. |
-| A custom check is missing | Confirm that its feature is enabled in the same tenant and that its startup registration loads only after or together with `Grove.HealthChecks`. |
+| A custom check is missing | Confirm that its feature is enabled in the same tenant and that its startup registration loads only after or together with `Grove.Infrastructure.HealthChecks`. |
 | Configuration changes have no effect | Reload the tenant or restart the application so the tenant pipeline and endpoint are rebuilt. |

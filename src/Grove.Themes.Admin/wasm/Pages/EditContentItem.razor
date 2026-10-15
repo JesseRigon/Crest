@@ -1,0 +1,9 @@
+@page "/Contents/ContentItems/{ContentItemId}/Edit"
+@attribute [PageEntry("EditContent")]
+@using Grove.Themes.Admin.Components.Admin
+
+<Grove.Themes.Admin.Components.Admin.GroveContentItemEditor ContentItemId="@ContentItemId" />
+
+@code {
+    [Parameter] public string? ContentItemId { get; set; }
+}

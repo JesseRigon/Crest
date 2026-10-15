@@ -1,4 +1,4 @@
-# Custom Settings (`Grove.CustomSettings`)
+# Custom Settings (`Grove.Infrastructure.CustomSettings`)
 
 Custom Settings allow a site administrator to create a customized set of properties that are global to the web sites.  
 These settings are edited in the standard Settings section and can be protected with specific permissions.
@@ -18,7 +18,7 @@ Once created, open the Setting menu item and each of these sections should appea
 
 Each Custom Settings section gets a dedicated permission to allow specific users to edit it.
 
-To edit this permission open the Roles editor and go to the `Grove.CustomSettings` Feature group.
+To edit this permission open the Roles editor and go to the `Grove.Infrastructure.CustomSettings` Feature group.
 
 ## Usage
 

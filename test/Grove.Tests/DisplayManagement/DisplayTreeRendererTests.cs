@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using Grove.DisplayManagement.Components;
+using Grove.Display.Management.Components;
 
 namespace Grove.Tests.DisplayManagement;
 
@@ -91,31 +91,6 @@ public sealed class DisplayTreeRendererTests
         Assert.Equal("<section><header></header><div><h4>Text</h4></div></section>", html);
     }
 
-    [Fact]
-    public async Task AComponentBindingRendersTheShapeAndItsZonesInOnePass()
-    {
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddSingleton<IComponentRegistry>(DisplayTreeTestHost.Registry());
-        services.AddScoped<IDisplayTreeBuilder, DisplayTreeBuilder>();
-        services.AddScoped<ComponentShapeRenderer>();
-        services.AddOptions<DisplayTreeOptions>();
-        await using var provider = services.BuildServiceProvider();
-
-        var section = DisplayTreeTestHost.NewShape("Section");
-        section.Properties["Header"] = await DisplayTreeTestHost.ZoneAsync(DisplayTreeTestHost.NewShape("Heading", ("Text", "Bound"), ("Level", 1)));
-        var binding = global::Grove.DisplayManagement.Descriptors.ShapeBinding.ForComponent("Section", "Section");
-
-        var html = (await binding.BindingAsync(new global::Grove.DisplayManagement.Implementation.DisplayContext
-        {
-            Value = section,
-            ServiceProvider = provider,
-        })).ToString();
-
-        Assert.Equal("Section", binding.ComponentName);
-        Assert.Equal("<section><header><h1>Bound</h1></header><div></div></section>", html);
-    }
-
     private static DisplayNode Heading(string id, string text, int level) => new()
     {
         Id = id,
@@ -133,6 +108,6 @@ public sealed class DisplayTreeRendererTests
         services.AddLogging();
         services.AddSingleton<IComponentRegistry>(DisplayTreeTestHost.Registry());
 
-        return ComponentShapeRenderer.RenderAsync(node, services.BuildServiceProvider(), NullLoggerFactory.Instance);
+        return new DisplayHtmlRenderer(services.BuildServiceProvider(), NullLoggerFactory.Instance).RenderAsync(node);
     }
 }

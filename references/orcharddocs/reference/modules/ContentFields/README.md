@@ -1,4 +1,4 @@
-# Content Fields (`Grove.ContentFields`)
+# Content Fields (`Grove.Contents.Fields`)
 
 This module provides common content fields for capturing data in Grove. Fields are typically added to a content part, which is then added to a content type. 
 
@@ -230,10 +230,10 @@ per set based on the request culture, if no culture is specified.
 === "Razor"
 
     ``` html
-    @model Grove.ContentFields.ViewModels.DisplayLocalizationSetContentPickerFieldViewModel
+    @model Grove.Contents.Fields.ViewModels.DisplayLocalizationSetContentPickerFieldViewModel
     @using Microsoft.AspNetCore.Localization
 
-    @inject Grove.ContentLocalization.IContentLocalizationManager ContentLocalizationManager;
+    @inject Grove.Contents.Localization.IContentLocalizationManager ContentLocalizationManager;
 
     @{
         var currentCulture = Context.Features.Get<IRequestCultureFeature>().RequestCulture.Culture.Name;
@@ -272,7 +272,7 @@ When adding the field to a content type, use the settings to specify whether to
 === "Razor"
 
     ``` html
-    @model Grove.ContentFields.ViewModels.DisplayUserPickerFieldViewModel
+    @model Grove.Contents.Fields.ViewModels.DisplayUserPickerFieldViewModel
     @using Grove.Mvc.Utilities
 
     @{

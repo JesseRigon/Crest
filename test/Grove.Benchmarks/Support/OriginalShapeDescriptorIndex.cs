@@ -3,8 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
-using Grove.DisplayManagement.Descriptors;
-using Grove.DisplayManagement.Implementation;
+using Grove.Display.Management.Descriptors;
+using Grove.Display.Management.Implementation;
 
 namespace Grove.Benchmarks.Support;
 
@@ -61,8 +61,6 @@ public class OriginalShapeDescriptorIndex : OriginalShapeDescriptor
     public override string BindingSource =>
         Bindings.TryGetValue(ShapeType, out var binding) ? binding.BindingSource : null;
 
-    public override Func<DisplayContext, Task<IHtmlContent>> Binding =>
-        Bindings.TryGetValue(ShapeType, out var binding) ? binding.BindingAsync : null;
 
     public override IDictionary<string, ShapeBinding> Bindings => _bindings;
 

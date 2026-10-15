@@ -1,5 +1,5 @@
-using Grove.ContentManagement;
-using Grove.Indexing;
+using Grove.Contents.Management;
+using Grove.Data.Indexing;
 
 namespace Grove.Contents.Indexing;
 

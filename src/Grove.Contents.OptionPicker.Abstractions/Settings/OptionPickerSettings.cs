@@ -1,0 +1,102 @@
+namespace Grove.Infrastructure.Settings;
+
+/// <summary>One displayed column of the referenced record.</summary>
+public class OptionColumn
+{
+    /// <summary>How to pull the value from the source record. PROVIDER-INTERPRETED:
+    /// each provider documents and advertises its own paths rather than sharing a
+    /// universal path language.</summary>
+    public string Path { get; set; } = string.Empty;
+
+    /// <summary>Column header in the picker.</summary>
+    public string Label { get; set; } = string.Empty;
+
+    /// <summary>Display width hint (CSS length), optional.</summary>
+    public string? Width { get; set; }
+
+    /// <summary>Shown in the dropdown rows.</summary>
+    public bool Visible { get; set; } = true;
+
+    /// <summary>Shown in the collapsed/selected display.</summary>
+    public bool InChip { get; set; }
+}
+
+/// <summary>A restriction on what a picker offers.</summary>
+public class OptionFilter
+{
+    /// <summary>Provider-interpreted path, same vocabulary as
+    /// <see cref="OptionColumn.Path"/>.</summary>
+    public string Path { get; set; } = string.Empty;
+
+    /// <summary>See <see cref="OptionFilterOperators"/>.</summary>
+    public string Operator { get; set; } = OptionFilterOperators.Equals;
+
+    /// <summary>A literal value to compare against. Ignored when
+    /// <see cref="ValueFrom"/> is set.</summary>
+    public string? Value { get; set; }
+
+    /// <summary>
+    /// Reads the comparison value from the item being edited (e.g. "Customer.Party"),
+    /// which is what makes dependent/cascading dropdowns work - "show only contacts
+    /// belonging to the party chosen above". Requires the editor to supply the current
+    /// item state when querying.
+    /// </summary>
+    public string? ValueFrom { get; set; }
+
+    /// <summary>
+    /// Which column of the PARENT's selected rows supplies the comparison value, when
+    /// <see cref="ValueFrom"/> names an OptionPickerField. A picker field stores ids,
+    /// but logic compares machine data - so the parent's selection is resolved through
+    /// its own source and this column is read from the rows. Null or "Key" means the
+    /// option's technical Key (falling back to the row id for entity sources, whose id
+    /// IS their identity); any other value is a provider column path ("Value",
+    /// "Category", "Field:X"). Ignored for scalar parents - their stored value is
+    /// already the comparison value.
+    /// </summary>
+    public string? ValueFromColumn { get; set; }
+
+    /// <summary>
+    /// What an EMPTY parent means. True: the child offers nothing until the parent is
+    /// chosen. False: the filter is skipped and the child offers everything.
+    /// <para>
+    /// A tenant choice rather than a framework ruling - requiring the parent is the
+    /// safer default (it cannot produce a child that contradicts a parent picked
+    /// afterwards), but plenty of screens legitimately want an unfiltered child until
+    /// someone narrows it.
+    /// </para>
+    /// </summary>
+    public bool RequireParentValue { get; set; } = true;
+
+    /// <summary>What happens to an already-selected child value that the new parent
+    /// invalidates. See <see cref="OptionParentChangeBehaviors"/>.</summary>
+    public string OnParentChange { get; set; } = OptionParentChangeBehaviors.WarnThenClear;
+
+    /// <summary>True when this filter draws its value from another field, and so has
+    /// to be re-resolved whenever that field commits.</summary>
+    public bool IsDependent => !string.IsNullOrWhiteSpace(ValueFrom);
+}
+
+/// <summary>
+/// How a dependent picker treats a selection that its parent has just invalidated.
+/// Clearing is not optional - keeping a contradictory pair would let the document
+/// save a child that does not belong to its parent - so the choice is only whether
+/// the user is told first.
+/// </summary>
+public static class OptionParentChangeBehaviors
+{
+    /// <summary>Tell the user the selection no longer applies, then clear it.</summary>
+    public const string WarnThenClear = "WarnThenClear";
+
+    /// <summary>Clear it without comment.</summary>
+    public const string SilentClear = "SilentClear";
+}
+
+public static class OptionFilterOperators
+{
+    public const string Equals = "Equals";
+    public const string NotEquals = "NotEquals";
+    public const string In = "In";
+    public const string Contains = "Contains";
+    public const string GreaterThan = "GreaterThan";
+    public const string LessThan = "LessThan";
+}

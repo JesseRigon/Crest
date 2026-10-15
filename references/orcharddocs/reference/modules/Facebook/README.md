@@ -1,8 +1,8 @@
-# Facebook/Meta (`Grove.Facebook`)
+# Facebook/Meta (`Grove.Integrations.Facebook`)
 
 ## Facebook/Meta Module
 
-`Grove.Facebook` provides the following features:
+`Grove.Integrations.Facebook` provides the following features:
 
 - Meta Core Components
 - Meta Login
@@ -44,7 +44,7 @@ If no value is provided, setup Meta app to use the default path /signin-facebook
 
 ## Users Registration
 
-- Enable the `Grove.Users.Registration` feature when you also want local site registration.
+- Enable the `Grove.Access.Users.Registration` feature when you also want local site registration.
 - New external-user creation and profile generation are controlled from the Users module's [`ExternalRegistrationSettings`](../Users/README.md#external-authentication-settings).
 - An existing user can link the account through the External Logins link from the user menu.
 
@@ -146,7 +146,7 @@ Facebook settings can be configured using the `Settings` recipe step:
 
 ## Meta Settings Configuration
 
-The `Grove.Facebook` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureFacebookSettings()` extension method on `PlatformBuilder` when initializing the app.
+The `Grove.Integrations.Facebook` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureFacebookSettings()` extension method on `PlatformBuilder` when initializing the app.
 
 The following configuration values can be customized:
 

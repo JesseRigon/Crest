@@ -1,0 +1,15 @@
+@page "/Error"
+@page "/Error/{Status:int}"
+
+@* The site's error page (step 7: the MVC Diagnostics error view is retired): the status code
+   pages re-execute "/Error/{status}" for a site URL, and the access-denied path is
+   "/Error/403" (GroveErrorPage). *@
+
+<PageTitle>Error</PageTitle>
+
+<Grove.Display.Components.Errors.GroveErrorPage Status="@Status" />
+
+@code {
+    [Parameter]
+    public int? Status { get; set; }
+}

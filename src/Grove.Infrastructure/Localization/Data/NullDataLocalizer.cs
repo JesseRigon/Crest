@@ -1,8 +1,8 @@
-namespace Grove.Localization.Data;
+namespace Grove.Data.Localization.Data;
 
 /// <summary>
 /// A no-op implementation of <see cref="IDataLocalizer"/> that returns the original values without translation.
-/// This is used when the Grove.DataLocalization feature is not enabled.
+/// This is used when the Grove.Data.Localization.Translations feature is not enabled.
 /// </summary>
 public sealed class NullDataLocalizer : IDataLocalizer
 {

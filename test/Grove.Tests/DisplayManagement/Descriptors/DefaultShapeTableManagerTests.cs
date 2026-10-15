@@ -1,8 +1,8 @@
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.Descriptors;
-using Grove.DisplayManagement.Extensions;
-using Grove.DisplayManagement.Implementation;
-using Grove.DisplayManagement.Manifest;
+using Grove.Display.Management;
+using Grove.Display.Management.Descriptors;
+using Grove.Display.Management.Extensions;
+using Grove.Display.Management.Implementation;
+using Grove.Display.Management.Manifest;
 using Grove.Environment.Extensions;
 using Grove.Environment.Extensions.Features;
 using Grove.Environment.Extensions.Manifests;
@@ -304,7 +304,7 @@ public class DefaultShapeTableManagerTests : IDisposable
             {
                 foreach (var shape in pair.Value)
                 {
-                    builder.Describe(shape).From(pair.Key).BoundAs(pair.Key.Id, null);
+                    builder.Describe(shape).From(pair.Key).Bind(new ShapeBinding { BindingSource = pair.Key.Id });
                 }
             }
 
@@ -593,7 +593,7 @@ public class DefaultShapeTableManagerTests : IDisposable
                 // Register a shape specific to this feature
                 builder.Describe($"{feature.Id}Shape")
                     .From(feature)
-                    .BoundAs(feature.Id, null);
+                    .Bind(new ShapeBinding { BindingSource = feature.Id });
             }
 
             return ValueTask.CompletedTask;

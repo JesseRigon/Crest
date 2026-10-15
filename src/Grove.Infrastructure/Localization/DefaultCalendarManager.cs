@@ -1,4 +1,4 @@
-namespace Grove.Localization;
+namespace Grove.Data.Localization;
 
 /// <summary>
 /// Represents a default implementation to manage the calendars.

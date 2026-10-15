@@ -1,8 +1,8 @@
-# Antivirus (`Grove.Antivirus`)
+# Antivirus (`Grove.Security.Antivirus`)
 
 The Antivirus module provides features that inspect uploaded files before Grove stores or imports them permanently.
 
-## ClamAV feature (`Grove.Antivirus.ClamAV`)
+## ClamAV feature (`Grove.Security.Antivirus.ClamAV`)
 
 The ClamAV feature scans files with a `clamd` service before Grove stores or imports them.
 
@@ -43,7 +43,7 @@ Grove__Antivirus_ClamAV__TransferTimeoutSeconds=30
 ### Usage
 
 1. Configure the ClamAV settings.
-2. Enable the `ClamAV Antivirus Scanner` feature (`Grove.Antivirus.ClamAV`).
+2. Enable the `ClamAV Antivirus Scanner` feature (`Grove.Security.Antivirus.ClamAV`).
 3. Ensure a reachable `clamd` instance is running.
 
 If the feature is enabled without a valid ClamAV connection, uploads are rejected until the scanner can verify them.

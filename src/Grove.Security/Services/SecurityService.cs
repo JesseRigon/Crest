@@ -1,5 +1,5 @@
 using Grove.Security.Settings;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Security.Services;
 

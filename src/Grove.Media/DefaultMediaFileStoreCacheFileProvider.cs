@@ -3,7 +3,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders.Physical;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 
 namespace Grove.Media;
 

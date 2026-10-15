@@ -1,0 +1,16 @@
+using Grove.Data.Documents;
+
+namespace Grove.Contents.Management.Metadata.Records;
+
+[FileDocumentStore(FileName = "ContentDefinition")]
+public class ContentDefinitionRecord : Document
+{
+    public ContentDefinitionRecord()
+    {
+        ContentTypeDefinitionRecords = [];
+        ContentPartDefinitionRecords = [];
+    }
+
+    public IList<ContentTypeDefinitionRecord> ContentTypeDefinitionRecords { get; set; }
+    public IList<ContentPartDefinitionRecord> ContentPartDefinitionRecords { get; set; }
+}

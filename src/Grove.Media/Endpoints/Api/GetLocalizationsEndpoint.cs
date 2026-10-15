@@ -5,10 +5,11 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Net.Http.Headers;
-using Grove.Localization;
+using Grove.Data.Localization;
 
 namespace Grove.Media.Endpoints.Api;
 
@@ -16,9 +17,8 @@ public static class GetLocalizationsEndpoint
 {
     public static IEndpointRouteBuilder AddGetLocalizationsEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapGet("api/media/localizations", HandleAsync)
+        builder.MapGet("localizations", HandleAsync)
             .WithName("ApiGetMediaLocalizations")
-            .WithTags("MediaApi")
             .AllowAnonymous()
             .DisableAntiforgery()
             .Produces<Dictionary<string, string>>(StatusCodes.Status200OK)
@@ -34,7 +34,7 @@ public static class GetLocalizationsEndpoint
     // per culture in the tenant-scoped IMemoryCache — a shell reload replaces the container and the
     // cache with it — and served with an ETag so repeat loads revalidate to 304 instead of paying
     // the localizer lookups and serialization again.
-    private static IResult HandleAsync(HttpContext httpContext, IEnumerable<IJSLocalizer> jsLocalizers, IMemoryCache cache)
+    private static IResult HandleAsync(HttpContext httpContext, [FromServices] IEnumerable<IJSLocalizer> jsLocalizers, [FromServices] IMemoryCache cache)
     {
         var culture = CultureInfo.CurrentUICulture.Name;
         var (payload, etag) = cache.GetOrCreate($"MediaGalleryLocalizations_{culture}", _ =>

@@ -3,10 +3,10 @@ using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using BenchmarkDotNet.Attributes;
 using Castle.DynamicProxy;
-using Grove.ContentManagement.Display.ViewModels;
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.Views;
-using Grove.Navigation;
+using Grove.Contents.Management.Display.ViewModels;
+using Grove.Display.Management;
+using Grove.Display.Management.Views;
+using Grove.Display.Navigation;
 
 namespace Grove.Benchmarks;
 

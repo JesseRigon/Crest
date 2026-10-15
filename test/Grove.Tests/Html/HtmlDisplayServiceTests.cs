@@ -1,10 +1,10 @@
 using Fluid.Values;
 using Microsoft.Extensions.WebEncoders.Testing;
-using Grove.ContentManagement;
-using Grove.Html.Services;
-using Grove.Html.ViewModels;
+using Grove.Contents.Management;
+using Grove.Data.Protocols.Html.Services;
+using Grove.Data.Protocols.Html.ViewModels;
 using Grove.Infrastructure.Html;
-using Grove.Liquid;
+using Grove.Display.Liquid;
 using Grove.Shortcodes.Services;
 using System.Text.RegularExpressions;
 

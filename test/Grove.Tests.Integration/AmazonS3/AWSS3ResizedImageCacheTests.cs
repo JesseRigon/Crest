@@ -4,7 +4,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Grove.FileStorage.AmazonS3;
+using Grove.Data.Storage.AmazonS3;
 using Grove.Media.AmazonS3.Services;
 using Grove.Tests.Integration.Infrastructure;
 using Xunit;

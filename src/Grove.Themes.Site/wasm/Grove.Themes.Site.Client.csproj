@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!-- Phase 8: converted from Microsoft.NET.Sdk.BlazorWebAssembly to a Razor class
+       library - a Blazor Web App has exactly ONE WASM entry project
+       (the host app's, see ClientWebAssemblyHost), which references this library. Routable @page
+       components (Routes.razor, Pages/*) stay here, per docs/blazor-web.md. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Grove.Themes.Site.Client</AssemblyName>
+    <RootNamespace>Grove.Themes.Site.Client</RootNamespace>
+    <PlatformCompatibilityVersion>4.0.0</PlatformCompatibilityVersion>
+    <GroveSecurityPatch>0</GroveSecurityPatch>
+    <GroveBugPatch>0</GroveBugPatch>
+    <GroveVersion>$(PlatformCompatibilityVersion).$(GroveSecurityPatch).$(GroveBugPatch)</GroveVersion>
+    <VersionPrefix>$(PlatformCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(PlatformCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(GroveVersion)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Grove.Display.Components\Grove.Display.Components.csproj" />
+    <ProjectReference Include="..\..\Grove.Display.Icons\Grove.Display.Icons.csproj" />
+    <ProjectReference Include="..\..\Grove.Infrastructure.Shell\Grove.Infrastructure.Shell.csproj" />
+    <!-- The site-shell libraries of modules (GroveShell(Site)): the site router and the
+         component registry read them, as the admin client reads the admin ones. -->
+    <ProjectReference Include="..\..\Grove.Integrations.Facebook\site-wasm\Grove.Integrations.Facebook.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Access.OpenId\site-wasm\Grove.Access.OpenId.Site.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Access.Users\site-wasm\Grove.Access.Users.Site.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Search\site-wasm\Grove.Search.BlazorWasm.csproj" />
+  </ItemGroup>
+
+</Project>

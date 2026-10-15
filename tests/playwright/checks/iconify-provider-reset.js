@@ -1,4 +1,4 @@
-// Converted from Grove.Icons/tests/playwright/iconify-provider-reset-defaults.js.
+// Converted from Grove.Display.Icons/tests/playwright/iconify-provider-reset-defaults.js.
 // Verifies PUT /api/grove/icons/providers resets the Iconify provider to its default baseUrl
 // and an empty prefix allow-list.
 //

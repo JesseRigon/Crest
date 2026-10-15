@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Grove.Api;
 using Grove.AuditTrail.Indexes;
 using Grove.AuditTrail.Models;
 using Grove.AuditTrail.Navigation;
@@ -11,11 +12,11 @@ using Grove.AuditTrail.Settings;
 using Grove.BackgroundTasks;
 using Grove.Data;
 using Grove.Data.Migration;
-using Grove.DisplayManagement.Handlers;
+using Grove.Display.Management.Handlers;
 using Grove.Modules;
-using Grove.Navigation;
+using Grove.Display.Navigation;
 using Grove.Security.Permissions;
-using Grove.Settings.Deployment;
+using Grove.Infrastructure.Settings.Deployment;
 
 namespace Grove.AuditTrail;
 
@@ -54,24 +55,25 @@ public sealed class Startup : StartupBase
 
         // The Grove audit pages and their API (docs/audit.md › step 4).
         services.AddScoped<Api.AuditTrailFeedService>();
+        services.AddApiContributor<Api.AuditTrailApi>();
         services.AddPageSource<Navigation.AuditTrailPages>();
     }
 
     private static void DecorateSiteService(IServiceCollection services)
     {
-        var descriptor = services.LastOrDefault(d => d.ServiceType == typeof(Grove.Settings.ISiteService));
+        var descriptor = services.LastOrDefault(d => d.ServiceType == typeof(Grove.Infrastructure.Settings.ISiteService));
         if (descriptor is null)
         {
             return;
         }
 
         services.Remove(descriptor);
-        services.Add(new ServiceDescriptor(typeof(Grove.Settings.ISiteService), sp =>
+        services.Add(new ServiceDescriptor(typeof(Grove.Infrastructure.Settings.ISiteService), sp =>
         {
-            var inner = descriptor.ImplementationInstance as Grove.Settings.ISiteService
+            var inner = descriptor.ImplementationInstance as Grove.Infrastructure.Settings.ISiteService
                 ?? (descriptor.ImplementationFactory is not null
-                    ? (Grove.Settings.ISiteService)descriptor.ImplementationFactory(sp)
-                    : (Grove.Settings.ISiteService)ActivatorUtilities.CreateInstance(sp, descriptor.ImplementationType!));
+                    ? (Grove.Infrastructure.Settings.ISiteService)descriptor.ImplementationFactory(sp)
+                    : (Grove.Infrastructure.Settings.ISiteService)ActivatorUtilities.CreateInstance(sp, descriptor.ImplementationType!));
             return new Recorders.AuditingSiteService(inner);
         }, descriptor.Lifetime));
     }

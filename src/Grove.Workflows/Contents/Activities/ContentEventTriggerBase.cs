@@ -5,7 +5,7 @@ using Grove.Workflows.Attributes;
 using Grove.Workflows.Models;
 using Grove.Workflows.UIHints;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Workflows.Contents.Stimuli;
 using Grove.Workflows.Contents.UIHints;
 using Grove.Workflows.Contexts;

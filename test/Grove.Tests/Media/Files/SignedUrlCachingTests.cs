@@ -3,7 +3,7 @@ using Grove.Environment.Cache;
 using Grove.Media;
 using Grove.Media.Files;
 using Grove.Media.Library;
-using Grove.Sharing;
+using Grove.Access.Sharing;
 using Grove.Tests.Media.Migration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;

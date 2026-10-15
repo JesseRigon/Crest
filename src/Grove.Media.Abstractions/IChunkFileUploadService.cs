@@ -1,6 +1,5 @@
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Grove.Media;
 
@@ -14,14 +13,14 @@ public interface IChunkFileUploadService
     /// <see cref="MediaOptions"/> and <paramref name="request"/> content.
     /// </summary>
     /// <param name="request">The request to process.</param>
-    /// <param name="chunkAsync">Callback to report the consumer and create the <see cref="IActionResult"/> in case of
+    /// <param name="chunkAsync">Callback to report the consumer and create the <see cref="IResult"/> in case of
     /// a chunk was uploaded.</param>
-    /// <param name="completedAsync">Callback to report the consumer and create the <see cref="IActionResult"/> in case
+    /// <param name="completedAsync">Callback to report the consumer and create the <see cref="IResult"/> in case
     /// of all chunks were uploaded or a regular file upload happened.</param>
-    Task<IActionResult> ProcessRequestAsync(
+    Task<IResult> ProcessRequestAsync(
         HttpRequest request,
-        Func<Guid, IFormFile, ContentRangeHeaderValue, Task<IActionResult>> chunkAsync,
-        Func<IEnumerable<IFormFile>, Task<IActionResult>> completedAsync);
+        Func<Guid, IFormFile, ContentRangeHeaderValue, Task<IResult>> chunkAsync,
+        Func<IEnumerable<IFormFile>, Task<IResult>> completedAsync);
 
     /// <summary>
     /// Purges temporary files left by abandoned uploads from the temporary directory.

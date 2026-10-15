@@ -1,9 +1,9 @@
 using Grove.Data.Migration;
 using Grove.Deployment;
 using Grove.Entities;
-using Grove.Recipes;
-using Grove.Recipes.Services;
-using Grove.Settings;
+using Grove.Infrastructure.Recipes;
+using Grove.Infrastructure.Recipes.Services;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Contents.Deployment.ExportContentToDeploymentTarget;
 

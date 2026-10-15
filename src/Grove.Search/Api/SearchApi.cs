@@ -1,8 +1,8 @@
 using Grove.Api;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Search.Abstractions;
 using Grove.Search.Models;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

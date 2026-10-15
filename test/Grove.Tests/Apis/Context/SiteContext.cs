@@ -1,10 +1,10 @@
-using Grove.Apis.GraphQL.Client;
+using Grove.Data.Protocols.GraphQL.Client;
 using Grove.BackgroundJobs;
 using Grove.BackgroundTasks;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Environment.Shell;
 using Grove.Environment.Shell.Scope;
-using Grove.Recipes.Services;
+using Grove.Infrastructure.Recipes.Services;
 
 namespace Grove.Tests.Apis.Context;
 
@@ -44,7 +44,7 @@ public class SiteContext : IDisposable
         var tenantName = Guid.NewGuid().ToString("n");
         var tablePrefix = await s_tablePrefixGenerator.GeneratePrefixAsync();
 
-        var createModel = new Tenants.Models.TenantApiModel
+        var createModel = new global::Grove.Infrastructure.Tenants.Models.TenantApiModel
         {
             DatabaseProvider = DatabaseProvider,
             TablePrefix = tablePrefix,
@@ -66,7 +66,7 @@ public class SiteContext : IDisposable
         var url = new Uri(content.Trim('"'));
         url = new Uri(url.Scheme + "://" + url.Authority + url.LocalPath + "/");
 
-        var setupModel = new Tenants.ViewModels.SetupApiViewModel
+        var setupModel = new global::Grove.Infrastructure.Tenants.ViewModels.SetupApiViewModel
         {
             SiteName = "Test Site",
             DatabaseProvider = DatabaseProvider,
@@ -182,8 +182,8 @@ public class SiteContext : IDisposable
     public async Task<string> CreateContentItem(string contentType, Action<ContentItem> func, bool draft = false)
     {
         // Never generate a fake ContentItemId here as it should be created by the ContentManager.NewAsync() method.
-        // Controllers should use the proper sequence so that they call their event handlers.
-        // In that case it would skip calling ActivatingAsync, ActivatedAsync, InitializingAsync, InitializedAsync events
+        // The content manager's sequence calls the event handlers (ActivatingAsync, ActivatedAsync,
+        // InitializingAsync, InitializedAsync, ...).
         var contentItem = new ContentItem
         {
             ContentType = contentType,
@@ -191,15 +191,70 @@ public class SiteContext : IDisposable
 
         func(contentItem);
 
-        var content = await Client.PostAsJsonAsync("api/content" + (draft ? "?draft=true" : ""), contentItem);
-        var response = await content.Content.ReadAsAsync<ContentItem>();
+        return (await SaveContentItemAsync(contentItem, draft)).ContentItemId;
+    }
 
-        return response.ContentItemId;
+    /// <summary>The published version of a content item, read through the tenant's content manager.</summary>
+    public async Task<ContentItem> GetContentItemAsync(string contentItemId)
+    {
+        ContentItem contentItem = null;
+        await UsingTenantScopeAsync(async scope =>
+        {
+            contentItem = await scope.ServiceProvider.GetRequiredService<IContentManager>().GetAsync(contentItemId);
+        });
+
+        return contentItem;
+    }
+
+    /// <summary>
+    /// Creates a content item from a model, or merges the model into the item's draft when it
+    /// exists, then publishes it or saves it as a draft (what the retired <c>api/content</c> upsert
+    /// did, in-process). Returns the saved item.
+    /// </summary>
+    public async Task<ContentItem> SaveContentItemAsync(ContentItem model, bool draft = false)
+    {
+        ContentItem contentItem = null;
+        await UsingTenantScopeAsync(async scope =>
+        {
+            var contentManager = scope.ServiceProvider.GetRequiredService<IContentManager>();
+            contentItem = model.ContentItemId is null ? null : await contentManager.GetAsync(model.ContentItemId, VersionOptions.DraftRequired);
+
+            if (contentItem is null)
+            {
+                contentItem = await contentManager.NewAsync(model.ContentType);
+                contentItem.Merge(model);
+                await contentManager.CreateAsync(contentItem, VersionOptions.Draft);
+            }
+            else
+            {
+                contentItem.Merge(model, new System.Text.Json.Settings.JsonMergeSettings { MergeArrayHandling = System.Text.Json.Settings.MergeArrayHandling.Replace });
+                await contentManager.UpdateAsync(contentItem);
+            }
+
+            if (draft)
+            {
+                await contentManager.SaveDraftAsync(contentItem);
+            }
+            else
+            {
+                await contentManager.PublishAsync(contentItem);
+            }
+        });
+
+        return contentItem;
     }
 
     public Task DeleteContentItem(string contentItemId)
     {
-        return Client.DeleteAsync("api/content/" + contentItemId);
+        return UsingTenantScopeAsync(async scope =>
+        {
+            var contentManager = scope.ServiceProvider.GetRequiredService<IContentManager>();
+            var contentItem = await contentManager.GetAsync(contentItemId);
+            if (contentItem is not null)
+            {
+                await contentManager.RemoveAsync(contentItem);
+            }
+        });
     }
 
 #pragma warning disable CA1816 // Change SiteContext.Dispose() to call GC.SuppressFinalize(object). This will prevent derived types that introduce a finalizer from needing to re-implement 'IDisposable' to call it.

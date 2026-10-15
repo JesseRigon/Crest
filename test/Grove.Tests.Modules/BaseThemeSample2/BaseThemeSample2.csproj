@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\..\src\Grove.Build\Grove.Commons.props" />
-  <Import Project="..\..\..\src\Grove.Theme.Targets\Grove.Theme.Targets.props" />
+  <Import Project="..\..\..\src\Grove.Infrastructure.Build\Grove.Commons.props" />
+  <Import Project="..\..\..\src\Grove.Themes.Targets\Grove.Themes.Targets.props" />
   <Import Project="..\..\..\src\Grove.Module.Targets\Grove.Module.Targets.props" />
 
   <PropertyGroup>
@@ -9,11 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Grove.Theme.Targets\Grove.Theme.Targets.csproj" />
-    <ProjectReference Include="..\..\..\src\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+    <ProjectReference Include="..\..\..\src\Grove.Themes.Targets\Grove.Themes.Targets.csproj" />
+    <ProjectReference Include="..\..\..\src\Grove.Display.Management\Grove.Display.Management.csproj" />
   </ItemGroup>
 
   <Import Project="..\..\..\src\Grove.Module.Targets\Grove.Module.Targets.targets" />
-  <Import Project="..\..\..\src\Grove.Build\Grove.Commons.targets" />
+  <Import Project="..\..\..\src\Grove.Infrastructure.Build\Grove.Commons.targets" />
 
 </Project>

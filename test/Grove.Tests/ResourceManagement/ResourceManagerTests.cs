@@ -2,8 +2,8 @@ using System.Net.Mime;
 using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using Grove.ResourceManagement;
-using ResourceLocation = Grove.ResourceManagement.ResourceLocation;
+using Grove.Display.Resources.Management;
+using ResourceLocation = Grove.Display.Resources.Management.ResourceLocation;
 
 namespace Grove.Tests.ResourceManagement;
 

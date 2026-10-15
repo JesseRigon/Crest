@@ -5,6 +5,6 @@
 
 #| msgctxt previous-context
 #| msgid previous-untranslated-string
-msgctxt "Grove.Localization"
+msgctxt "Grove.Data.Localization"
 msgid "Unknown system error"
 msgstr "Error desconegut del sistema"

@@ -1,6 +1,6 @@
 # Queries — the query system, and the connections it consumes
 
-`Grove.Queries` is **the query system**: querying data simply and safely, enough for Grove's own
+`Grove.Data.Queries` is **the query system**: querying data simply and safely, enough for Grove's own
 consumers (audit activity streams first) and for downstream modules to extend. It owns typed,
 paged rows, saved queries, local storage of results and its API. A query is any request through
 a connection, reads and writes alike; a SQL query is a CRUD action on a database. The query
@@ -17,10 +17,10 @@ own ([Connections](#connections-the-protocol-modules-and-the-data-layer)).
 Queries are one of the two kinds of **operation** in the operation registry, behind the one
 access machinery ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery));
 `Grove.Access` supplies the caller and the `ScopeSet` that run-time permission injection is
-implemented with. Grove.Queries declares its own API surface (the management API
+implemented with. Grove.Data.Queries declares its own API surface (the management API
 `api/grove/queries` and, as generated surfaces, the run endpoints of saved queries) and
-registers it in Grove.Server's API endpoint registry
-([architecture.md › Modules declare, Grove.Server registers and serves](architecture.md#modules-declare-groveserver-registers-and-serves)).
+registers it in Grove.Infrastructure.Server's API endpoint registry
+([architecture.md › Modules declare, Grove.Infrastructure.Server registers and serves](architecture.md#modules-declare-groveserver-registers-and-serves)).
 
 **Workflows consumes the same connections.** Its connector activities and webhook triggers use
 connections from the protocol modules; Workflows only does the wiring inside
@@ -60,7 +60,7 @@ for whoever requests it: API, GraphQL, Liquid, feeds).
   activity streams on it ([audit.md](audit.md) › Activity feeds), and for downstream reporting
   to extend it. The stock query feature ids and the `api/queries` and Liquid surfaces keep
   working for existing callers.
-- **The contract** is `IQuerySource` in `Grove.Queries.Abstractions` (the platform's pattern
+- **The contract** is `IQuerySource` in `Grove.Data.Queries.Abstractions` (the platform's pattern
   for extension points other modules implement): typed, paged, cancellable, caller-scoped. The
   SQL, Lucene and Elasticsearch sources implement it. **Paging and cancellation** are in the
   contract: page tokens, a `CancellationToken`, a total where the source can give one. **Typed
@@ -187,12 +187,12 @@ connection system; Queries and Workflows consume it and keep no parallel set.
   `Grove.GraphQL`, later others. Each owns, for its protocol: the connection model (endpoint,
   auth, credentials sealed per tenant), executing a request, the SSRF-guarded client, the token
   cache, rate limiting and the OAuth authorize/callback flow. The existing
-  `Grove.Apis.GraphQL.Client` (a client for Grove's own GraphQL API) becomes or folds into the
+  `Grove.Data.Protocols.GraphQL.Client` (a client for Grove's own GraphQL API) becomes or folds into the
   GraphQL connector (☐).
 - **Database connections are the data layer's.** The host database and external databases are
   SQL connections in `Grove.Data` / `Grove.Data.YesSql`; the host connection carries the
   tenant's table prefix, the store's isolation level and the caller's scope.
-- **Queries consumes connections.** Its sources (the `Grove.Queries.Sql` feature for SQL, one per
+- **Queries consumes connections.** Its sources (the `Grove.Data.Queries.Sql` feature for SQL, one per
   protocol for the others) take a connection from the data layer or a protocol module, run the
   request through it, map the results into the query system's typed, paged rows, and store
   results locally when asked, so external data is queryable like any other and publishable
@@ -298,7 +298,7 @@ of work.
 - [ ] `ReturnContentItems` through the gate.
 - [ ] The read job.
 - [ ] The connection system: the protocol modules (`Grove.Http`, `Grove.Rest`, `Grove.Soap`,
-  `Grove.GraphQL`, with `Grove.Apis.GraphQL.Client` becoming or folding into the GraphQL one),
+  `Grove.GraphQL`, with `Grove.Data.Protocols.GraphQL.Client` becoming or folding into the GraphQL one),
   the move of Workflows' connection model, secrets, OAuth, HTTP client, connector descriptors
   and `IWorkflowConnectorProvider` into them, retries in the connection system (deleting
   `ConnectionResilienceStrategy`), search engines as connections, the connector plugin registry.

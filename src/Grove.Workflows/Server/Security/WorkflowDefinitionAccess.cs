@@ -8,9 +8,8 @@ using Grove.Workflows.Management.Stores;
 using Grove.Workflows.Parts;
 using Grove.Workflows.Registry;
 using Grove.Workflows.Services;
-using Microsoft.AspNetCore.Mvc;
 using Grove;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Security.Permissions;
 using YesSql;
 
@@ -217,50 +216,5 @@ public sealed class WorkflowDefinitionAccessService(
         await definitionCacheManager.EvictWorkflowDefinitionAsync(definitionId, cancellationToken);
         await cacheManager.TriggerTokenAsync(typeof(CachingWorkflowDefinitionStore).FullName!, cancellationToken);
         return new(definitionId, clean.Edit, clean.Run, clean.View);
-    }
-}
-
-/// <summary>Who may edit and run one definition, and read its instances. Reading the lists takes View; writing them takes the right to edit the definition itself.</summary>
-[ApiController, AutoValidateAntiforgeryToken, Route(WorkflowsConstants.Routes.DefinitionsApi)]
-public sealed class WorkflowDefinitionAccessController(WorkflowDefinitionAccessService access, WorkflowOwnershipGuard ownership, IAuthorizationService authorizationService) : ControllerBase
-{
-    [HttpGet(WorkflowsConstants.Routes.DefinitionAccessApi)]
-    public async Task<IActionResult> GetAsync(string definitionId)
-    {
-        if (!await authorizationService.AuthorizeAsync(User, Permissions.ViewWorkflows))
-        {
-            return Forbid();
-        }
-
-        var resource = await access.GetAsync(definitionId);
-        return resource is null ? NotFound() : Ok(resource.ToModel());
-    }
-
-    [HttpPut(WorkflowsConstants.Routes.DefinitionAccessApi)]
-    public async Task<IActionResult> PutAsync(string definitionId, [FromBody] WorkflowDefinitionAccessModel model, CancellationToken cancellationToken)
-    {
-        var resource = await access.GetAsync(definitionId);
-        if (resource is null)
-        {
-            return NotFound();
-        }
-
-        // The ownership tier first (a system flow's guards are code's too), then the user
-        // against the definition as it stands: Manage shipped for a shipped flow, Edit for
-        // the tenant's own, narrowed by the current Edit list.
-        var tier = await ownership.GetStoredAsync(definitionId);
-        if (tier.IsSystem)
-        {
-            return Forbid();
-        }
-
-        var permission = tier.IsShipped ? Permissions.ManageShippedWorkflows : Permissions.EditWorkflows;
-        if (!await access.AuthorizeAsync(permission, resource))
-        {
-            return Forbid();
-        }
-
-        var saved = await access.SetAsync(definitionId, model, cancellationToken);
-        return saved is null ? NotFound() : Ok(saved.ToModel());
     }
 }

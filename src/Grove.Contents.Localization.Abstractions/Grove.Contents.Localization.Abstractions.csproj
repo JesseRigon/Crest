@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Contents.Localization</RootNamespace>
+
+    <!-- NuGet properties-->
+    <Title>Grove ContentLocalization Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for ContentLocalization</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Localization Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Contents.Management.Abstractions\Grove.Contents.Management.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

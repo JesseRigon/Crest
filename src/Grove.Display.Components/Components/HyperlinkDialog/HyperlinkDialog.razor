@@ -1,0 +1,54 @@
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Primitives.Spreadsheet
+@using Grove.Display.Components.Primitives.Documents.Spreadsheet
+
+@namespace Grove.Display.Components.Primitives.Spreadsheet.Tools
+<GroveStack Gap="1rem">
+    <GroveStack Orientation="Orientation.Vertical" Gap="0.25rem">
+        <GroveLabel Text=@L(nameof(GroveStrings.Spreadsheet_URL)) Component="url" class="rz-text-subtitle2" Style="align-self: start" />
+        <GroveTextBox @bind-Value=@Url Name="url" Style="width: 100%" />
+    </GroveStack>
+    <GroveStack Orientation="Orientation.Vertical" Gap="0.25rem">
+        <GroveLabel Text=@L(nameof(GroveStrings.Spreadsheet_DisplayText)) Component="displayText" class="rz-text-subtitle2" Style="align-self: start" />
+        <GroveTextBox @bind-Value=@Text Name="displayText" Style="width: 100%" />
+    </GroveStack>
+    <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-spreadsheet-dialog-actions">
+        <GroveButton Text=@L(nameof(GroveStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" />
+        <GroveButton Text=@L(nameof(GroveStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat" />
+    </GroveStack>
+</GroveStack>
+
+@code {
+#nullable enable
+
+    [Parameter]
+    public string Url { get; set; } = "";
+
+    [Parameter]
+    public string Text { get; set; } = "";
+
+    [Inject]
+    public DialogService DialogService { get; set; } = default!;
+
+    [Inject]
+    Localizer Localizer { get; set; } = default!;
+
+    string L(string key) => Localizer.Get(key, System.Globalization.CultureInfo.CurrentUICulture);
+
+    private void OnOk()
+    {
+        if (!string.IsNullOrWhiteSpace(Url))
+        {
+            DialogService.Close(new Hyperlink
+            {
+                Url = Url,
+                Text = string.IsNullOrWhiteSpace(Text) ? null : Text
+            });
+        }
+    }
+
+    private void OnCancel()
+    {
+        DialogService.Close(null);
+    }
+}

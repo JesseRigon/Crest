@@ -1,5 +1,5 @@
-using Grove.ContentFields.Fields;
-using Grove.ContentManagement;
+using Grove.Contents.Fields.Fields;
+using Grove.Contents.Management;
 using Grove.Fields;
 using Grove.Parties.Constants;
 using YesSql.Indexes;

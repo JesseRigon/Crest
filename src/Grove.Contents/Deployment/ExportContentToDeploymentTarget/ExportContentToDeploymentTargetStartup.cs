@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement.Display.ContentDisplay;
+using Grove.Contents.Management.Display.ContentDisplay;
 using Grove.Data.Migration;
 using Grove.Deployment;
-using Grove.DisplayManagement.Handlers;
+using Grove.Display.Management.Handlers;
 using Grove.Modules;
-using Grove.Navigation;
-using Grove.Settings.Deployment;
+using Grove.Display.Navigation;
+using Grove.Infrastructure.Settings.Deployment;
 
 namespace Grove.Contents.Deployment.ExportContentToDeploymentTarget;
 

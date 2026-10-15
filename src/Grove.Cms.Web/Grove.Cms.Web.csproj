@@ -42,13 +42,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Grove.Application.Cms.Targets\Grove.Application.Cms.Targets.csproj" />
-    <ProjectReference Include="..\Grove.Logging.NLog\Grove.Logging.NLog.csproj" />
+    <ProjectReference Include="..\Grove.Diagnostics.Logging.NLog\Grove.Diagnostics.Logging.NLog.csproj" />
   </ItemGroup>
 
   <!-- Necessary as we reference the Project and not the Package -->
   <Import Project="..\Grove.Application.Cms.Core.Targets\Grove.Application.Cms.Core.Targets.targets" />
   <Import Project="..\Grove.Application.Targets\Grove.Application.Targets.targets" />
 
-  <Import Project="..\Grove.Build\Grove.Commons.targets" />
+  <Import Project="..\Grove.Infrastructure.Build\Grove.Commons.targets" />
 
 </Project>

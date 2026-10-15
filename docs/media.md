@@ -221,16 +221,16 @@ Built in `src/Grove.Media/Files/` on the contracts in `src/Grove.Media.Abstracti
 - `LocalMediaStorageProvider` (`App_Data/Sites/<tenant>/Files`, `Quarantine` and `Committed`).
 - The byte endpoint `GET /files/{placementId}[/v/{n}]` and `HmacMediaUrlSigner`, plus the CDN
   signers (› Serving and CDNs).
-- The REST API `api/files` (`Controllers/FilesController.cs`).
+- The REST API `api/files` (`Api/FilesApi.cs`).
 - **Settings screen**: `Settings › Files` (`/Settings/files`, Blazor) over `api/files/settings`:
   the drive types, the organization admin role, reset-on-reactivation, and administrator
   access to personal drives (notice by email and/or portal, delay, override, durations).
 - **Drives created automatically**: `IMediaDriveProvisioning` (`MediaDriveProvisioner`, as the
   system actor). A personal drive with each new staff user (`PersonalDriveUserEventHandler`,
   after the request), an organization drive with each published organization
-  (`OrganizationDriveHandler` in Grove.Members), and for everyone without one when a type is
+  (`OrganizationDriveHandler` in Grove.Access.Members), and for everyone without one when a type is
   turned on (`PUT api/files/settings` runs `ProvisionAllAsync`). Who is staff and which
-  organizations exist come from `IMediaDriveOwnerSource`, which Grove.Members implements
+  organizations exist come from `IMediaDriveOwnerSource`, which Grove.Access.Members implements
   (`MemberDriveOwnerSource`); a user no source knows counts as staff. An existing drive, active
   or not, is never doubled.
 - **Azure Blob and S3 storage providers**: `FileStoreMediaStorageProvider` puts file objects'
@@ -315,7 +315,7 @@ Built in `src/Grove.Media/Files/` on the contracts in `src/Grove.Media.Abstracti
       (object and version), keeps quarantined uploads apart from committed files, and keeps each
       tenant's bytes in that tenant's own root.
   11. Local disk is the first provider; Azure Blob and Amazon S3 providers are built on the
-      platform's storage libraries (`Grove.FileStorage.AzureBlob`, `Grove.FileStorage.AmazonS3`)
+      platform's storage libraries (`Grove.Data.Storage.AzureBlob`, `Grove.Data.Storage.AmazonS3`)
       rather than its Media storage modules.
 
 - [x] **The drive class and drive types.**
@@ -381,7 +381,7 @@ Built in `src/Grove.Media/Files/` on the contracts in `src/Grove.Media.Abstracti
 
 ## 4. Access
 
-Moved to [sharing.md](sharing.md) § 4: sharing is its own module (`Grove.Sharing`), and file objects are one shareable kind.
+Moved to [sharing.md](sharing.md) § 4: sharing is its own module (`Grove.Access.Sharing`), and file objects are one shareable kind.
 
 ## 5. Business roles
 
@@ -412,7 +412,7 @@ Built (tests: `test/Grove.Tests/Media/Files/PersonalDriveAccessTests.cs`,
 - Settings: `PersonalDriveAccessSettings` is a site settings section (`GET`/`PUT
   api/files/settings`).
 - Notice: email, portal, both or none, through `IPersonalDriveNotifier`. Its default sends
-  through `Grove.Notifications`: portal is the stored notification (written as the notification
+  through `Grove.Communications`: portal is the stored notification (written as the notification
   service writes one, with its events, but not sent through the user's own methods), email is
   the Email method. Each chosen channel gets the notice exactly once. A failed send is recorded
   on the access and in the audit trail, and the access proceeds.
@@ -443,7 +443,7 @@ Built (tests: `test/Grove.Tests/Media/Files/PersonalDriveAccessTests.cs`,
 - [x] **The owner is notified.**
   25. **Notice.** When a tenant administrator opens another user's personal drive, the owner can
       be notified by email, by a portal notification, by both, or not at all. Default: not at all.
-      Notices go through the platform's notification service (`Grove.Notifications`), which sends
+      Notices go through the platform's notification service (`Grove.Communications`), which sends
       through each enabled method: email through its Email Notifications feature, and portal
       notifications through the stored, per-user notifications that Grove's portal notifications
       feature displays (requirement 30). Grove adds no delivery of its own. If a notice cannot be
@@ -473,9 +473,9 @@ Built (tests: `test/Grove.Tests/Media/Files/PersonalDriveAccessTests.cs`,
       how it was sent, any override and its reason, the opening itself and its chosen duration,
       and when and how the access ended.
 
-- [x] **Portal notifications.** The `Grove.Notifications.Portal` feature (enabled by the Grove setup recipes, can be turned off) with
+- [x] **Portal notifications.** The `Grove.Communications.Notifications.Portal` feature (enabled by the Grove setup recipes, can be turned off) with
   `GET api/grove/notifications`, `POST .../{id}/read` and `POST .../read-all`, the caller's own
-  notifications only. `GrovePortalNotifications` (Grove.Components) shows the indicator, the list
+  notifications only. `GrovePortalNotifications` (Grove.Display.Components) shows the indicator, the list
   and marking as read in the admin title bar and the member shell header, and renders nothing
   while the feature is off. A portal notice of § 7 counts as not sent while it is off.
   30. **Portal notifications** are a Grove feature, enabled by default when a tenant is created and
@@ -516,7 +516,7 @@ The Share panel, Rules screens, access indicators and pickers are sharing's
   right in the pane, without opening a separate app — or opened full in the add-on's own
   editor. With no add-on for a type, the pane previews. Add-ons can come from any module
   or third party; the pane and the seam are Grove's.
-  Built in `Grove.Components/Components/Files`: `GroveDriveBrowser` (drives
+  Built in `Grove.Display.Components/Components/Files`: `GroveDriveBrowser` (drives
   grouped as "My drive", "Shared drives", "Organization drives"; path, children, upload, new
   folder, rename, delete, new shared drive; pick mode for the picker), `GroveFileViewerPane`
   (image, video, audio, PDF and text previews, open and download, versions with publish) and
@@ -550,7 +550,7 @@ What each area of the platform gives the file system, and what Grove builds.
   reject or replace an upload stream, but runs synchronously inside the request, and the stock
   resumable (Tus) upload path skips it. Grove's quarantine flow is its own: uploads land in
   quarantine storage, providers return verdicts asynchronously, and only then is the file
-  committed. The platform's ClamAV connector (`Grove.Antivirus`) is wrapped as the first
+  committed. The platform's ClamAV connector (`Grove.Security.Antivirus`) is wrapped as the first
   malware provider.
 - **Text extraction: reuse later.** `IMediaFileTextProvider` (PDF, Word, PowerPoint, text)
   can feed search for file objects.
@@ -869,7 +869,7 @@ page rendered while acting for another, for at most half the URL's lifetime.
 Research for the scanner and type-detection providers (requirements 90 and 91). Licences checked October 2026; nothing here
 is legal advice.
 
-- **Grove.Antivirus** (BSD-3): the platform's own module. It scans through a file-storage hook before a file is stored, using a ClamAV daemon
+- **Grove.Security.Antivirus** (BSD-3): the platform's own module. It scans through a file-storage hook before a file is stored, using a ClamAV daemon
   over its socket, and rejects the upload synchronously. It is the obvious first provider, but
   it rejects rather than quarantines, so Grove adapts it to the asynchronous verdict (92).
 - **ClamAV** (GPLv2): the only mature open-source engine with a maintained signature database.

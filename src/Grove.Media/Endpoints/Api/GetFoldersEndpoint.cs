@@ -1,3 +1,4 @@
+using Grove.Api;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,9 +15,8 @@ public static class GetFoldersEndpoint
 {
     public static IEndpointRouteBuilder AddGetFoldersEndpoint(this IEndpointRouteBuilder builder)
     {
-        builder.MapGet("api/media/GetFolders", HandleAsync)
+        builder.MapGet("GetFolders", HandleAsync)
             .WithName("ApiGetFolders")
-            .WithTags("MediaApi")
             .DisableAntiforgery()
             .Produces<PaginatedFoldersDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -29,11 +29,11 @@ public static class GetFoldersEndpoint
     [Authorize(Policy = MediaApiConstants.AuthorizationPolicyName)]
     private static async Task<IResult> HandleAsync(
         HttpContext httpContext,
-        IAuthorizationService authorizationService,
-        IMediaFileStore mediaFileStore,
-        string path,
-        int skip = 0,
-        int take = 0)
+        [FromServices] IAuthorizationService authorizationService,
+        [FromServices] IMediaFileStore mediaFileStore,
+        [FromQuery] string path,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 0)
     {
         if (string.IsNullOrEmpty(path))
         {

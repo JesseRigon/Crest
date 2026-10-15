@@ -1,0 +1,131 @@
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Primitives.Spreadsheet
+@using Grove.Display.Components.Primitives.Documents.Spreadsheet
+@implements IDisposable
+
+@namespace Grove.Display.Components.Primitives.Spreadsheet.Tools
+<GroveSplitButton ButtonAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_FreezePanes))) OpenAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_FreezePanes))) title=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_FreezePanes))) Icon="mode_cool" Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_FreezePanes)) ?? "Freeze panes") Click=@OnFreezeClick Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small" Disabled=@IsDisabled>
+    <ChildContent>
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_FreezeTopRow)) ?? "Freeze Top Row") Value="row" Icon="splitscreen_top" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_FreezeSelectedRows)) ?? "Freeze Selected Rows") Value="rows" Icon="split_scene_up" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_FreezeFirstColumn)) ?? "Freeze First Column") Value="column" Icon="splitscreen_left" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_FreezeSelectedColumns)) ?? "Freeze Selected Columns") Value="columns" Icon="split_scene_left" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_Unfreeze)) ?? "Unfreeze") Value="unfreeze" Icon="mode_cool_off" />
+    </ChildContent>
+</GroveSplitButton>
+
+@code {
+#nullable enable
+
+    [CascadingParameter]
+    public Worksheet? Worksheet { get; set; }
+
+    [CascadingParameter]
+    public ISpreadsheet? Spreadsheet { get; set; }
+
+    private bool IsDisabled
+        => Worksheet?.Selection.Cell == CellRef.Invalid
+        || Spreadsheet?.ReadOnly == true;
+
+    private void OnFreezeClick(GroveSplitButtonItem? item)
+    {
+        switch (item?.Value)
+        {
+            case null:
+                FreezePanes();
+                break;
+            case "row":
+                FreezeTopRow();
+                break;
+            case "rows":
+                FreezeRows();
+                break;
+            case "column":
+                FreezeFirstColumn();
+                break;
+            case "columns":
+                FreezeColumns();
+                break;
+            case "unfreeze":
+                Unfreeze();
+                break;
+        }
+    }
+
+    private void FreezeFirstColumn()
+    {
+        if (Worksheet is not null && Worksheet.Selection.Cell != CellRef.Invalid)
+        {
+            Worksheet.Rows.Frozen = 0;
+            Worksheet.Columns.Frozen = 1;
+        }
+    }
+
+    private void FreezeTopRow()
+    {
+        if (Worksheet is not null && Worksheet.Selection.Cell != CellRef.Invalid)
+        {
+            Worksheet.Rows.Frozen = 1;
+            Worksheet.Columns.Frozen = 0;
+        }
+    }
+
+    private void FreezeRows()
+    {
+        if (Worksheet is not null && Worksheet.Selection.Cell != CellRef.Invalid)
+        {
+            var frozenRows = Worksheet.Selection.Cell.Row;
+            Worksheet.Rows.Frozen = frozenRows;
+        }
+    }
+
+    private void FreezeColumns()
+    {
+        if (Worksheet is not null && Worksheet.Selection.Cell != CellRef.Invalid)
+        {
+            Worksheet.Columns.Frozen = Worksheet.Selection.Cell.Column;
+        }
+    }
+
+    private void FreezePanes()
+    {
+        if (Worksheet is not null && Worksheet.Selection.Cell != CellRef.Invalid)
+        {
+            Worksheet.Rows.Frozen = Worksheet.Selection.Cell.Row;
+            Worksheet.Columns.Frozen = Worksheet.Selection.Cell.Column;
+        }
+    }
+
+    private void Unfreeze()
+    {
+        if (Worksheet is not null)
+        {
+            Worksheet.Rows.Frozen = 0;
+            Worksheet.Columns.Frozen = 0;
+        }
+    }
+
+    private readonly EventBinding<Selection> selectionBinding;
+
+    public GroveSpreadsheetFreeze()
+    {
+        selectionBinding = new EventBinding<Selection>(
+            s => s.Changed += OnSelectionChanged,
+            s => s.Changed -= OnSelectionChanged);
+    }
+
+    protected override void OnParametersSet()
+    {
+        selectionBinding.Bind(Worksheet?.Selection);
+    }
+
+    private void OnSelectionChanged()
+    {
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        selectionBinding.Dispose();
+    }
+}

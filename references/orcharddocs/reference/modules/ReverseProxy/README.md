@@ -1,4 +1,4 @@
-# Reverse Proxy (`Grove.ReverseProxy`)
+# Reverse Proxy (`Grove.Infrastructure.Server.ReverseProxy`)
 
 Enables configuration of hosting scenarios with a reverse proxy, like which HTTP headers to forward.
 
@@ -43,7 +43,7 @@ These settings are stored in the site configuration and can be managed per tenan
 
 ### File Settings Configuration
 
-The `Grove.ReverseProxy` module allows you to use configuration values from `appsettings.json` to configure reverse proxy settings by calling the `ConfigureReverseProxySettings()` extension method on `PlatformBuilder` when initializing the app.
+The `Grove.Infrastructure.Server.ReverseProxy` module allows you to use configuration values from `appsettings.json` to configure reverse proxy settings by calling the `ConfigureReverseProxySettings()` extension method on `PlatformBuilder` when initializing the app.
 
 In your `Program.cs` or startup code, call the extension method:
 

@@ -1,4 +1,4 @@
-# Grove.DisplayManagement
+# Grove.Display.Management
 
 This article is about Display management and placement files.
 

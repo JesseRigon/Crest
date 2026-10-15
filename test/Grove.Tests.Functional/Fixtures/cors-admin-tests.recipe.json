@@ -1,7 +1,7 @@
 {
   "name": "CorsAdminTests",
   "displayName": "CorsAdminTests",
-  "description": "Testing Grove.Cors' policy list/editor (cors-admin-index.ts, rewritten from a jQuery Vue 2 app to native DOM + Vue 3 across PR #19489/#19774).",
+  "description": "Testing Grove.Security.Cors' policy list/editor (cors-admin-index.ts, rewritten from a jQuery Vue 2 app to native DOM + Vue 3 across PR #19489/#19774).",
   "author": "The Grove Team",
   "website": "https://orchardcore.net",
   "version": "1.0.0",
@@ -14,26 +14,24 @@
       "name": "feature",
       "enable": [
         "Grove.HomeRoute",
-        "Grove.Admin",
-        "Grove.Navigation",
-        "Grove.Recipes",
-        "Grove.Resources",
-        "Grove.Roles",
+        "Grove.Infrastructure.Shells.Admin",
+        "Grove.Display.Navigation",
+        "Grove.Infrastructure.Recipes",
+        "Grove.Display.Resources",
+        "Grove.Access.Roles",
         "Grove.Security",
-        "Grove.Settings",
+        "Grove.Infrastructure.Settings",
         "Grove.Themes",
-        "Grove.Users",
+        "Grove.Access.Users",
 
-        "Grove.Cors",
+        "Grove.Security.Cors"
 
-        "TheAdmin",
-        "SafeMode"
       ]
     },
     {
       "name": "themes",
-      "admin": "TheAdmin",
-      "site": "TheAdmin"
+      "admin": "Grove.Themes.Admin",
+      "site": "Grove.Themes.Site"
     }
   ]
 }

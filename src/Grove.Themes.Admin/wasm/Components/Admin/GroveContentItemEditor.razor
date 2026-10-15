@@ -1,0 +1,299 @@
+@using System.Text.Json.Nodes
+@using Grove.Themes.Admin.Api
+@using Grove.Themes.Admin.Display
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Management.Components
+@inject HttpClient Http
+@inject IApi Api
+@inject NavigationManager Navigation
+@inject NotificationService Notifications
+@inject HttpDisplayActionDispatcher Dispatcher
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+@implements IDisposable
+
+@* The generic content item editor on the editor tree (docs/blazor-display.md rework step 5): the
+   server lays out the editors (from the type's definition and the registry's editor components,
+   or a ContentEditor__{Type} template), the one renderer draws them, and this page saves the
+   content the tree's ContentEditor publishes. A {% submit %} action in a template saves too. *@
+<GroveStack Gap="1rem" data-testid="content-item-editor">
+    @if (IsLoading)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage) && Tree is null)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</GroveAlert>
+    }
+    else if (Tree is not null)
+    {
+        <GroveCard>
+            <GroveStack Gap="0.75rem">
+                <GroveText TextStyle="TextStyle.H4" Text="@(IsCreate ? T["New {0}", ContentType] : T["Edit {0}", EditedType])" />
+                <GroveTextBox Name="displayText" @bind-Value="DisplayText" Placeholder="@T["Title"]" Style="width: 100%;" data-testid="content-item-display-text" />
+                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                    <GroveCheckBox @bind-Value="Publish" Name="publish" /> <label for="publish">@T["Publish after saving"]</label>
+                </GroveStack>
+            </GroveStack>
+        </GroveCard>
+
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</GroveAlert>
+        }
+
+        @if (ShowPreview)
+        {
+            @* The live preview beside the editor tree (Grove.Contents.Preview's API renders the unsaved item). *@
+            <div class="grove-content-item-editor__split" style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem;">
+                <DisplayTreeRenderer @key="State" Node="Tree.Root" State="State" />
+                <Grove.Display.Components.Editors.ContentPreviewPane ContentType="@EditedType" ContentItemId="@(IsCreate ? null : ContentItemId)" DisplayText="@DisplayText" Content="@PreviewContent" />
+            </div>
+        }
+        else
+        {
+            <DisplayTreeRenderer @key="State" Node="Tree.Root" State="State" />
+        }
+
+        <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <GroveButton Text="@(ShowPreview ? T["Hide preview"] : T["Preview"])" Icon="preview" ButtonStyle="ButtonStyle.Light" Click="TogglePreview" data-testid="content-item-preview" />
+            <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="Cancel" Disabled="@IsSaving" />
+            @if (!IsCreate)
+            {
+                <GroveButton Text="@T["Save draft"]" Icon="edit_note" ButtonStyle="ButtonStyle.Light" Click="SaveDraftAsync" Disabled="@IsSaving" data-testid="content-item-save-draft" />
+            }
+            <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsSaving" data-testid="content-item-save" />
+        </GroveStack>
+
+        @if (!IsCreate && ContentItemId is not null)
+        {
+            <ContentItemVersionActions ContentItemId="@ContentItemId" />
+        }
+    }
+</GroveStack>
+
+@code {
+    [Parameter] public string? ContentType { get; set; }
+    [Parameter] public string? ContentItemId { get; set; }
+
+    /// <summary>A new item created into a list: the list's id (ListPartEditor's "New" links).</summary>
+    [SupplyParameterFromQuery(Name = "containerId")] public string? ContainerId { get; set; }
+
+    private bool IsCreate => !string.IsNullOrWhiteSpace(ContentType);
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private string? ErrorMessage { get; set; }
+    private DisplayTree? Tree { get; set; }
+    private DisplayState State { get; set; } = new();
+    private string? EditedType { get; set; }
+    private string? DisplayText { get; set; }
+    private bool Publish { get; set; }
+    private bool ShowPreview { get; set; }
+    private JsonObject? PreviewContent { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        ErrorMessage = null;
+        Tree = null;
+        State = new DisplayState();
+        Dispatcher.SubmitHandler = (_, _, _) => SaveAsync();
+        IsLoading = true;
+        State.Changed += OnStateChanged;
+        try
+        {
+            if (IsCreate)
+            {
+                EditedType = ContentType;
+                Tree = await Api.Grove.Rest.Content.Items.EditorAsync("new-" + ContentType);
+            }
+            else if (string.IsNullOrWhiteSpace(ContentItemId))
+            {
+                ErrorMessage = T["A content item identifier is required."];
+                return;
+            }
+            else
+            {
+                var item = await Api.Grove.Rest.Content.Items.GetAsync(ContentItemId);
+                if (item is null)
+                {
+                    ErrorMessage = T["The requested content item was not found."];
+                    return;
+                }
+
+                EditedType = item.ContentType;
+                DisplayText = item.DisplayText;
+                Publish = item.Published;
+                Tree = await Api.Grove.Rest.Content.Items.EditorAsync(ContentItemId);
+            }
+
+            if (Tree is null)
+            {
+                ErrorMessage = T["The editor could not be built for this item."];
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    // The content as edited: what the tree's ContentEditor last published, else what it opened with.
+    private JsonObject? EditedContent()
+    {
+        var editor = Tree is null ? null : DisplayTreeValidator.Walk(Tree.Root).FirstOrDefault(node => node.Component == "ContentEditor");
+        if (editor is null)
+        {
+            return null;
+        }
+
+        return (State.GetOutput(editor.Id, "ContentChanged") ?? (editor.Properties.TryGetValue("Content", out var content) ? content?.DeepClone() : null)) as JsonObject;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (EditedContent() is not { } content || EditedType is null)
+        {
+            ErrorMessage = T["There is nothing to save."];
+            return;
+        }
+
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            // An item created into a list names its list; the server completes the rest (its type, its order).
+            if (IsCreate && !string.IsNullOrWhiteSpace(ContainerId))
+            {
+                content["ContainedPart"] = new JsonObject { ["ListContentItemId"] = ContainerId };
+            }
+
+            var request = new ContentItemWriteRequest(EditedType, DisplayText, content, Publish);
+            using var response = IsCreate
+                ? await Http.PostAsJsonAsync("api/grove/content-items", request)
+                : await Http.PutAsJsonAsync($"api/grove/content-items/{Uri.EscapeDataString(ContentItemId!)}", request);
+            if (!response.IsSuccessStatusCode)
+            {
+                await ShowErrorsAsync(response);
+                return;
+            }
+
+            ShowErrors(null);
+            var saved = await response.Content.ReadFromJsonAsync<ContentItem>()
+                ?? throw new InvalidOperationException(T["The content item could not be saved."]);
+
+            Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["{0} saved.", saved.DisplayText]);
+            // A child of a list returns to its list.
+            Navigation.NavigateTo(IsCreate && !string.IsNullOrWhiteSpace(ContainerId)
+                ? $"Contents/ContentItems/{Uri.EscapeDataString(ContainerId)}/Edit"
+                : "Contents/ContentItems");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    // Saves the edits as a draft beside the published version (api .../draft): the published
+    // version stays live until the draft is published or discarded.
+    private async Task SaveDraftAsync()
+    {
+        if (EditedContent() is not { } content || EditedType is null || ContentItemId is null)
+        {
+            ErrorMessage = T["There is nothing to save."];
+            return;
+        }
+
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            using var response = await Http.PutAsJsonAsync($"api/grove/content-items/{Uri.EscapeDataString(ContentItemId)}/draft", new ContentItemWriteRequest(EditedType, DisplayText, content, false));
+            if (!response.IsSuccessStatusCode)
+            {
+                await ShowErrorsAsync(response);
+                return;
+            }
+
+            ShowErrors(null);
+
+            Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["Draft saved."]);
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private void Cancel() => Navigation.NavigateTo(IsCreate && !string.IsNullOrWhiteSpace(ContainerId)
+        ? $"Contents/ContentItems/{Uri.EscapeDataString(ContainerId)}/Edit"
+        : "Contents/ContentItems");
+
+    // A refused save: the error contract's map goes under the tree's ContentEditor node, which
+    // shows each error under its editor (keys Part.Field, Part); what names no editor is shown here.
+    private async Task ShowErrorsAsync(HttpResponseMessage response)
+    {
+        var text = await response.Content.ReadAsStringAsync();
+        JsonNode? problem = null;
+        try
+        {
+            problem = string.IsNullOrWhiteSpace(text) ? null : JsonNode.Parse(text);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+        }
+
+        if (problem?["errors"] is JsonObject map)
+        {
+            var errors = map.ToDictionary(
+                pair => pair.Key,
+                pair => (IReadOnlyList<string>)(pair.Value as JsonArray ?? []).Select(message => message?.ToString() ?? string.Empty).ToList(),
+                StringComparer.Ordinal);
+            ShowErrors(errors);
+            ErrorMessage = errors.TryGetValue(string.Empty, out var general)
+                ? string.Join(" ", general)
+                : T["The item was not saved: see the errors under the fields."];
+            return;
+        }
+
+        ErrorMessage = problem?["errors"] is JsonArray list
+            ? string.Join(" ", list.Select(message => message?.ToString()))
+            : problem?["detail"]?.ToString() ?? (string.IsNullOrWhiteSpace(text) ? T["The content item could not be saved."] : text);
+    }
+
+    private void ShowErrors(IReadOnlyDictionary<string, IReadOnlyList<string>>? errors)
+    {
+        if (Tree is not null && DisplayTreeValidator.Walk(Tree.Root).FirstOrDefault(node => node.Component == "ContentEditor") is { } editor)
+        {
+            State.SetErrors(editor.Id, errors);
+        }
+    }
+
+    private void TogglePreview()
+    {
+        ShowPreview = !ShowPreview;
+        PreviewContent = ShowPreview ? EditedContent()?.DeepClone() as JsonObject : null;
+    }
+
+    // The preview follows the edits: the content the tree publishes, handed to the pane.
+    private void OnStateChanged()
+    {
+        if (ShowPreview)
+        {
+            PreviewContent = EditedContent()?.DeepClone() as JsonObject;
+            _ = InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispatcher.SubmitHandler = null;
+        State.Changed -= OnStateChanged;
+    }
+}

@@ -1,0 +1,49 @@
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Primitives.Documents.Spreadsheet
+@inherits SpreadsheetDialogBase
+
+@namespace Grove.Display.Components.Primitives.Spreadsheet
+<GroveStack Gap="1rem" Style="min-width:320px">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+        <GroveLabel Text=@L(nameof(GroveStrings.Spreadsheet_Top10Show)) class="rz-text-subtitle2" />
+        <GroveDropDown TValue="bool" Data=@DirectionOptions
+            TextProperty="Text" ValueProperty="Value"
+            @bind-Value=@bottom InputSize="InputSize.Small" />
+        <GroveNumeric TValue="int" @bind-Value=@count Min="1" Max="100" InputSize="InputSize.Small" />
+        <GroveDropDown TValue="bool" Data=@UnitOptions
+            TextProperty="Text" ValueProperty="Value"
+            @bind-Value=@percent InputSize="InputSize.Small" />
+    </GroveStack>
+
+    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End" class="rz-spreadsheet-dialog-actions">
+        <GroveButton Text=@L(nameof(GroveStrings.Spreadsheet_Cancel)) ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined"
+            Click=@OnCancel />
+        <GroveButton Text=@L(nameof(GroveStrings.Spreadsheet_OK)) ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat"
+            Click=@OnOk />
+    </GroveStack>
+</GroveStack>
+
+@code {
+#nullable enable
+
+    /// <summary>Result returned by the dialog.</summary>
+    public sealed record Result(int Count, bool Percent, bool Bottom);
+
+    private bool bottom;          // false = top, true = bottom
+    private bool percent;         // false = items, true = percent
+    private int count = 10;
+
+    private object[] DirectionOptions =>
+    [
+        new { Text = L(nameof(GroveStrings.Spreadsheet_Top10DirectionTop)), Value = false },
+        new { Text = L(nameof(GroveStrings.Spreadsheet_Top10DirectionBottom)), Value = true },
+    ];
+
+    private object[] UnitOptions =>
+    [
+        new { Text = L(nameof(GroveStrings.Spreadsheet_Top10UnitItems)), Value = false },
+        new { Text = L(nameof(GroveStrings.Spreadsheet_Top10UnitPercent)), Value = true },
+    ];
+
+    private void OnOk() => DialogService.Close(new Result(count, percent, bottom));
+}

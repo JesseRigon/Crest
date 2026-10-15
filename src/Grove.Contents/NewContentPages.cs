@@ -1,9 +1,9 @@
-using Grove.Admin.Models;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Models;
+using Grove.Infrastructure.Shells.Admin.Models;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Models;
 using Grove.Contents.Security;
 using Grove.Routing;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Contents;
 

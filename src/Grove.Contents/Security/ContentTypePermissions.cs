@@ -1,5 +1,5 @@
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Models;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Models;
 using Grove.Security.Permissions;
 
 namespace Grove.Contents.Security;

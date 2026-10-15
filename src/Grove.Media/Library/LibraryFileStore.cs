@@ -1,6 +1,6 @@
 #nullable enable
 using Grove.Environment.Shell.Scope;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Media.Files;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;

@@ -12,7 +12,7 @@ using Grove.Environment.Shell;
 using Grove.Security;
 using Grove.Security.Options;
 using Grove.Security.Settings;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Security.Api;
 

@@ -1,9 +1,9 @@
 using Grove.Access;
-using Grove.Roles;
+using Grove.Access.Roles;
 using Grove.Security;
 using Grove.Security.Services;
-using Grove.Sharing;
-using Grove.Sharing.Services;
+using Grove.Access.Sharing;
+using Grove.Access.Sharing.Services;
 using Grove.Tests.Access.Conformance;
 using System.Security.Claims;
 using static Grove.Tests.Sharing.SharingWorld;

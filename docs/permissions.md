@@ -192,7 +192,7 @@ what reaches across organizations. The owner is never managed.
 
 ### Implementation
 
-- *Sets and roles* (`Grove.Roles`): `PermissionSet` and `IPermissionSetService` (one cached
+- *Sets and roles* (`Grove.Access.Roles`): `PermissionSet` and `IPermissionSetService` (one cached
   document; modules ship defaults through `IPermissionSetProvider`, created once when missing).
   `Role.PermissionSets` beside the loose `RoleClaims`; `RoleStore.GetClaimsAsync` returns the
   loose permissions plus every set's, so every existing reader of a role keeps working. A set
@@ -253,8 +253,8 @@ what reaches across organizations. The owner is never managed.
   provenance), `access/organization-defaults`, `access/assignable-roles`
   (`AccessModelController`). Admin pages: Roles (sets and permissions), Permission sets, Groups
   (with overrides and the organization defaults); member side: Organization access
-  (`Grove.Members.Member.BlazorWasm`) with `GroveOrganizationOwnerPanel` (Grove.Components);
-  the group and override editors are `Grove.Components.Access` components both use.
+  (`Grove.Access.Members.Member.BlazorWasm`) with `GroveOrganizationOwnerPanel` (Grove.Display.Components);
+  the group and override editors are `Grove.Display.Components.Access` components both use.
 
 ### Backlog
 

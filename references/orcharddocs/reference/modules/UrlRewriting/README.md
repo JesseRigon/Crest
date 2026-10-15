@@ -32,7 +32,7 @@ In this example, `CustomRuleSource` represents your implementation of `IUrlRewri
 
 ## Recipes
 
-The recipe will be accessible only if the Grove.Recipes.Core feature is enabled.
+The recipe will be accessible only if the Grove.Infrastructure.Recipes.Core feature is enabled.
 
 ### Recipe for Creating and Updating Rules
 

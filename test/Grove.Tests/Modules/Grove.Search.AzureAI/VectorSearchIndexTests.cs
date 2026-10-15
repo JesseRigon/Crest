@@ -1,10 +1,10 @@
 using Azure.Search.Documents.Indexes.Models;
-using Grove.AzureAI;
-using Grove.AzureAI.Models;
-using Grove.AzureAI.Services;
+using Grove.Integrations.AI.Azure;
+using Grove.Integrations.AI.Azure.Models;
+using Grove.Integrations.AI.Azure.Services;
 using Grove.Entities;
-using Grove.Indexing;
-using Grove.Indexing.Models;
+using Grove.Data.Indexing;
+using Grove.Data.Indexing.Models;
 
 namespace Grove.Tests.Modules.Grove.AzureAI;
 
@@ -100,7 +100,7 @@ public class VectorSearchIndexTests
             },
         });
 
-        metadata.VectorSearchMappings.Profiles.Add(new global::Grove.AzureAI.Models.VectorSearchProfileMap
+        metadata.VectorSearchMappings.Profiles.Add(new global::Grove.Integrations.AI.Azure.Models.VectorSearchProfileMap
         {
             Name = "semantic-profile",
         });

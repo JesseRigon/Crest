@@ -1,0 +1,42 @@
+<Project>
+  <!--
+    The component catalog generator (docs/blazor-display.md § 1) for Razor component libraries.
+    A library that marks components with [BlazorComponent] gets a generated
+    IComponentCatalog and [assembly: ComponentCatalog], which the server and browser registries
+    read; without it they fall back to reflection, which trimming defeats in WebAssembly.
+
+    Where it applies: a Razor SDK project named *.BlazorWasm (a module client library) or
+    *.Client (a theme client), or any project setting <ComponentCatalog>true</ComponentCatalog>
+    (Grove.Display.Components, Grove.Display.Icons). <ComponentCatalog>false</ComponentCatalog> opts out.
+
+    How it arrives, the same file both ways:
+    - from the package: this file is in Grove.Display.Management.Abstractions' buildTransitive/,
+      so it reaches every project that references the package directly or through another
+      (a host module's blazor-wasm library referencing Grove.Display.Components), and the generator ships
+      beside it in buildTransitive/analyzers/;
+    - from source: Directory.Build.targets imports it with ComponentCatalogGeneratorProject set,
+      and the generator is a project reference instead.
+    The generator assembly also carries the platform's shape generators and interceptors, so
+    the interceptor namespace is enabled with it (as Grove.Commons.props does for the platform).
+  -->
+  <PropertyGroup>
+    <ComponentCatalog Condition="'$(ComponentCatalog)' == '' And '$(UsingMicrosoftNETSdkRazor)' == 'true' And ($(MSBuildProjectName.EndsWith('.BlazorWasm')) Or $(MSBuildProjectName.EndsWith('.Client')))">true</ComponentCatalog>
+    <InterceptorsNamespaces Condition="'$(ComponentCatalog)' == 'true'">$(InterceptorsNamespaces);Grove.Display.Management.Generated</InterceptorsNamespaces>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(ComponentCatalog)' == 'true' And '$(ComponentCatalogGeneratorProject)' != ''">
+    <ProjectReference Include="$(ComponentCatalogGeneratorProject)" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- From the package: added once package analyzers are resolved, and only when the project
+       does not already have the generator (a direct reference to Grove.SourceGenerators). -->
+  <Target Name="AddComponentCatalogGenerator"
+          Condition="'$(ComponentCatalog)' == 'true' And '$(ComponentCatalogGeneratorProject)' == ''"
+          AfterTargets="ResolveLockFileAnalyzers"
+          BeforeTargets="CoreCompile;CollectAnalyzersDesignTime">
+    <ItemGroup>
+      <_ComponentCatalogExistingGenerator Include="@(Analyzer)" Condition="'%(Filename)' == 'Grove.SourceGenerators'" />
+      <Analyzer Include="$(MSBuildThisFileDirectory)analyzers/Grove.SourceGenerators.dll" Condition="'@(_ComponentCatalogExistingGenerator)' == ''" />
+    </ItemGroup>
+  </Target>
+</Project>

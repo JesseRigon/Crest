@@ -1,0 +1,55 @@
+@using Grove.Display.Components.Primitives
+@using Grove.Display.Components.Primitives.Documents.Spreadsheet
+@inherits SpreadsheetDialogBase
+
+@namespace Grove.Display.Components.Primitives.Spreadsheet
+<GroveStack Gap="1rem">
+    <GroveStack Orientation="Orientation.Vertical" Gap="0.25rem">
+        <GroveLabel Text=@L(nameof(GroveStrings.Spreadsheet_TableRange)) class="rz-text-subtitle2" />
+        <RangePicker Value=@Draft.RangeFormula ValueChanged=@OnRangeFormulaChanged
+            OnPickRequested=@OnRangePickRequested
+            ShouldFocusOnLoad=@(FocusFieldId == RangeFieldId) />
+    </GroveStack>
+
+    <GroveStack Orientation="Orientation.Vertical" Gap="0.25rem">
+        <GroveLabel Text=@L(nameof(GroveStrings.Spreadsheet_TableName)) Component="nameInput" class="rz-text-subtitle2" />
+        <GroveTextBox Value=@Draft.Name Change=@OnNameChanged Name="nameInput" Style="width: 100%" />
+    </GroveStack>
+
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+        <GroveCheckBox Value=@Draft.HasHeaders Change=@OnHasHeadersChanged Name="hasHeadersCheck" TValue="bool" />
+        <GroveLabel Text=@L(nameof(GroveStrings.Spreadsheet_TableHasHeaders)) Component="hasHeadersCheck" class="rz-text-subtitle2" />
+    </GroveStack>
+
+    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End" class="rz-spreadsheet-dialog-actions">
+        <GroveButton Text=@L(nameof(GroveStrings.Spreadsheet_Cancel)) ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined"
+            Click=@OnCancel />
+        <GroveButton Text=@L(nameof(GroveStrings.Spreadsheet_OK)) ButtonStyle="ButtonStyle.Primary" Variant="Variant.Flat"
+            Disabled=@string.IsNullOrWhiteSpace(Draft.Name)
+            Click=@OnOk />
+    </GroveStack>
+</GroveStack>
+
+@code {
+#nullable enable
+
+    internal const string RangeFieldId = "Range";
+
+    [Parameter] public InsertTableDraft Draft { get; set; } = default!;
+    [Parameter] public string? FocusFieldId { get; set; }
+
+    private void OnNameChanged(string value) => Draft.Name = value ?? string.Empty;
+    private void OnHasHeadersChanged(bool value) => Draft.HasHeaders = value;
+    private void OnRangeFormulaChanged(string? value) => Draft.RangeFormula = value ?? string.Empty;
+
+    private void OnRangePickRequested()
+    {
+        DialogService.Close(new RangePickRequest(RangeFieldId, Draft.RangeFormula));
+    }
+
+    private void OnOk()
+    {
+        Draft.Name = Draft.Name.Trim();
+        DialogService.Close(Draft);
+    }
+}

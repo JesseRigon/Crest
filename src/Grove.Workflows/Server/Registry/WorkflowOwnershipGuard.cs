@@ -4,7 +4,7 @@ using Grove.Workflows.Parts;
 using Grove.Workflows.Security;
 using Grove.Workflows.Services;
 using Grove.Access;
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Security.Permissions;
 
 namespace Grove.Workflows.Registry;

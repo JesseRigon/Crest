@@ -1,20 +1,20 @@
 using Grove.Access;
-using Grove.ContentFields.Indexing.SQL;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Handlers;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Fields.Indexing.SQL;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Handlers;
+using Grove.Contents.Management.Records;
 using Grove.Modules;
 using Grove.Parties.Constants;
 using Grove.Parties.Definitions;
-using Grove.ContentManagement.Metadata;
+using Grove.Contents.Management.Metadata;
 using Grove.Parties.Indexes;
 using Grove.Parties.PartyTypes;
 using Grove.Parties.Services;
-using Grove.Roles;
+using Grove.Access.Roles;
 using Microsoft.Extensions.DependencyInjection;
 using YesSql;
 using YesSql.Services;
-using Grove.Indexing;
+using Grove.Data.Indexing;
 
 namespace Grove.Parties.BusinessRoles;
 
@@ -179,42 +179,42 @@ public sealed class PartyBusinessRolesStartup : StartupBase
 /// parties, by name. Sharing knows the organization principal only by id; Parties knows what an
 /// organization is.
 /// </summary>
-public sealed class PartyOrganizationDirectory(ISession session) : Grove.Sharing.ISharePrincipalDirectory
+public sealed class PartyOrganizationDirectory(ISession session) : Grove.Access.Sharing.ISharePrincipalDirectory
 {
-    public async Task<IReadOnlyList<Grove.Sharing.SharePrincipalOption>> SearchAsync(string? text, int max, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Grove.Access.Sharing.SharePrincipalOption>> SearchAsync(string? text, int max, CancellationToken cancellationToken = default)
     {
         var search = (text ?? string.Empty).Trim();
         var query = search.Length == 0
             ? session.QueryIndex<ContentItemIndex>(index => index.ContentType == PartiesConstants.ContentTypes.Organization && index.Published)
             : session.QueryIndex<ContentItemIndex>(index => index.ContentType == PartiesConstants.ContentTypes.Organization && index.Published && index.DisplayText.Contains(search));
         var rows = await query.OrderBy(index => index.DisplayText).Take(max).ListAsync(cancellationToken);
-        return [.. rows.Select(row => new Grove.Sharing.SharePrincipalOption(Grove.Sharing.SharePrincipal.Organization(row.ContentItemId), row.DisplayText ?? row.ContentItemId, "Organization: the members acting for it"))];
+        return [.. rows.Select(row => new Grove.Access.Sharing.SharePrincipalOption(Grove.Access.Sharing.SharePrincipal.Organization(row.ContentItemId), row.DisplayText ?? row.ContentItemId, "Organization: the members acting for it"))];
     }
 
-    public async Task<IReadOnlyDictionary<Grove.Sharing.SharePrincipal, string>> NamesAsync(IReadOnlyCollection<Grove.Sharing.SharePrincipal> principals, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyDictionary<Grove.Access.Sharing.SharePrincipal, string>> NamesAsync(IReadOnlyCollection<Grove.Access.Sharing.SharePrincipal> principals, CancellationToken cancellationToken = default)
     {
         var ids = principals
-            .Where(principal => principal.Kind == Grove.Sharing.SharePrincipalKind.Organization && principal.Id is not null)
+            .Where(principal => principal.Kind == Grove.Access.Sharing.SharePrincipalKind.Organization && principal.Id is not null)
             .Select(principal => principal.Id!)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
         if (ids.Length == 0)
         {
-            return new Dictionary<Grove.Sharing.SharePrincipal, string>();
+            return new Dictionary<Grove.Access.Sharing.SharePrincipal, string>();
         }
 
         var rows = await session.QueryIndex<ContentItemIndex>(index => index.ContentItemId.IsIn(ids) && index.Published).ListAsync(cancellationToken);
         return rows
             .Where(row => !string.IsNullOrEmpty(row.DisplayText))
             .GroupBy(row => row.ContentItemId, StringComparer.Ordinal)
-            .ToDictionary(group => Grove.Sharing.SharePrincipal.Organization(group.Key), group => group.First().DisplayText);
+            .ToDictionary(group => Grove.Access.Sharing.SharePrincipal.Organization(group.Key), group => group.First().DisplayText);
     }
 }
 
 [Feature("Grove.Parties")]
-[RequireFeatures("Grove.Sharing")]
+[RequireFeatures("Grove.Access.Sharing")]
 public sealed class PartySharingStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services) =>
-        services.AddScoped<Grove.Sharing.ISharePrincipalDirectory, PartyOrganizationDirectory>();
+        services.AddScoped<Grove.Access.Sharing.ISharePrincipalDirectory, PartyOrganizationDirectory>();
 }

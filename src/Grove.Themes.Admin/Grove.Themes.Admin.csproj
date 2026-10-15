@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <Import Project="$(PlatformSrcDir)Grove.Themes.Targets\Grove.Themes.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.props" />
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Grove.Themes.Admin</AssemblyName>
+    <RootNamespace>Grove.Themes.Admin</RootNamespace>
+    <PlatformCompatibilityVersion>4.0.0</PlatformCompatibilityVersion>
+    <GroveSecurityPatch>0</GroveSecurityPatch>
+    <GroveBugPatch>0</GroveBugPatch>
+    <GroveVersion>$(PlatformCompatibilityVersion).$(GroveSecurityPatch).$(GroveBugPatch)</GroveVersion>
+    <VersionPrefix>$(PlatformCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(PlatformCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(GroveVersion)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="wasm\**" />
+    <Content Remove="wasm\**" />
+    <EmbeddedResource Remove="wasm\**" />
+    <None Remove="wasm\**" />
+    <RazorGenerate Remove="wasm\**" />
+    <RazorComponent Remove="wasm\**" />
+    <Compile Remove="client-services\**" />
+    <Content Remove="client-services\**" />
+    <EmbeddedResource Remove="client-services\**" />
+    <None Remove="client-services\**" />
+    <RazorGenerate Remove="client-services\**" />
+    <RazorComponent Remove="client-services\**" />
+    <Compile Remove="tests\**" />
+    <Content Remove="tests\**" />
+    <EmbeddedResource Remove="tests\**" />
+    <None Remove="tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Theme.Targets, not Module.Targets: sets ModuleType=Theme so IsTheme() is true at
+         runtime (the theme scope of the component registry and the templates). -->
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Themes.Targets\Grove.Themes.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Display.Management\Grove.Display.Management.csproj" />
+  </ItemGroup>
+
+  <!-- Phase 8: the old BuildGroveAdminWasm Exec target (side-building the standalone
+       WASM app for BlazorAdminThemeMiddleware's hand-served webroot) is gone - the
+       admin client (wasm/Grove.Themes.Admin.Client.csproj, now a Razor class
+       library) builds as an ordinary member of the dependency graph via
+       Grove.Infrastructure.Server and the host app's WASM entry project. -->
+</Project>

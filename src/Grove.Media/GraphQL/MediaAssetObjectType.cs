@@ -2,7 +2,7 @@ using Grove.Media.Library;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 
 namespace Grove.Media.GraphQL;
 

@@ -1,0 +1,194 @@
+@page "/DataLocalization"
+@page "/DataLocalization/Index"
+@attribute [PageEntry("ViewDynamicTranslations", Id = "dynamic-translations", Parent = "settings-localization", Caption = "Dynamic Translations")]
+@using Grove.Themes.Admin.Api
+@using Grove.Display.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The Grove translations editor. Replaces the stock DataLocalization page (which these
+   routes previously reached through the legacy frame): same functionality - per-culture,
+   grouped, permission-aware editing of the tenant translation store - but reads include
+   orphaned entries and the save merges instead of replacing the culture wholesale, so
+   nothing this page never displayed can be destroyed by saving. See docs/admin-menu.md. *@
+
+<GroveStack Gap="1rem" class="translations-page" data-testid="translations-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <div>
+            <GroveText TextStyle="TextStyle.H4" Text="@T["Translations"]" />
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["Tenant-level translations of dynamic data: admin menu captions, content type names, permissions. These override module-shipped translations at render time."]" />
+        </div>
+        <GroveButton Text="@T["Save"]" Icon="save" Disabled="@(IsSaving || Model is null || !Model.CanEdit)" Click="SaveAsync" />
+    </GroveStack>
+
+    @if (IsLoading)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (Model is null)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T["Translations are unavailable - no culture you may view is configured for this tenant."]</GroveAlert>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</GroveAlert>
+        }
+
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.75rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
+            <div class="translations-page__culture-picker">
+                <GroveLabel Text="@T["Culture"]" />
+                <GroveDropDown TValue="string"
+                               Data="Model.Cultures"
+                               Value="@Model.Culture"
+                               ValueChanged="ChangeCultureAsync"
+                               TextProperty="@nameof(TranslationCulture.Label)"
+                               ValueProperty="@nameof(TranslationCulture.Value)"
+                               class="translations-page__culture-dropdown" />
+            </div>
+            <div class="translations-page__filter">
+                <GroveLabel Text="@T["Filter"]" />
+                <GroveTextBox @bind-Value="Filter" @bind-Value:event="oninput" Placeholder="@T["Filter by text or translation"]" Style="width: 100%;" />
+            </div>
+        </GroveStack>
+
+        @if (!Model.CanEdit)
+        {
+            <GroveAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["You can view this culture's translations but not edit them."]</GroveAlert>
+        }
+
+        @foreach (var group in Groups)
+        {
+            var visible = VisibleRows(group);
+            if (visible.Count == 0) { continue; }
+            <GroveCard @key="group.Name">
+                <GroveStack Gap="0.5rem">
+                    <GroveText TextStyle="TextStyle.Subtitle1" Text="@group.Name" />
+                    @foreach (var row in visible)
+                    {
+                        <div class="translations-page__row" @key="@($"{row.Context}|{row.Key}")">
+                            <div class="translations-page__source">
+                                <span class="translations-page__key">@row.Key</span>
+                                @if (row.Orphan)
+                                {
+                                    <GroveBadge BadgeStyle="BadgeStyle.Warning" Text="@T["stored only"]" title="@T["Nothing currently lists this string (its feature may be disabled or its source text changed). The stored translation still applies where the string renders; clear it to delete it."]" />
+                                }
+                            </div>
+                            <GroveTextBox Value="@row.Value" ValueChanged="@((string? value) => row.Value = value ?? string.Empty)" Placeholder="@(row.Fallback ?? row.Key)" Disabled="@(!Model.CanEdit || IsSaving)" Style="width: 100%;" aria-label="@row.Key" />
+                        </div>
+                    }
+                </GroveStack>
+            </GroveCard>
+        }
+    }
+</GroveStack>
+
+@code {
+    private TranslationsModel? Model;
+    private List<EditableGroup> Groups = [];
+    private bool IsLoading = true;
+    private bool IsSaving;
+    private string? ErrorMessage;
+    private string? Filter;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync(null);
+        IsLoading = false;
+    }
+
+    private async Task LoadAsync(string? culture)
+    {
+        try
+        {
+            ErrorMessage = null;
+            Model = await Api.Grove.Rest.Translations.GetAsync(culture);
+            Groups = Model?.Groups
+                .Select(group => new EditableGroup(
+                    group.Name,
+                    group.Strings.Select(s => new EditableRow(s.Context, s.Key, s.Orphan, s.Fallback) { Value = s.Value }).ToList()))
+                .ToList() ?? [];
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+    }
+
+    private async Task ChangeCultureAsync(string culture)
+    {
+        IsLoading = true;
+        await LoadAsync(culture);
+        IsLoading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (Model is null || !Model.CanEdit) return;
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            // EVERY loaded row is posted, filtered or not - the filter only affects what is
+            // shown. The server treats the posted set as "displayed": blank values delete,
+            // and anything outside the set (which this page never loaded) is preserved.
+            var entries = Groups
+                .SelectMany(group => group.Rows)
+                .Select(row => new TranslationSaveEntry(row.Context, row.Key, row.Value))
+                .ToArray();
+
+            var saved = await Api.Grove.Rest.Translations.SaveAsync(new TranslationsSaveModel(Model.Culture, entries));
+            if (saved is null)
+            {
+                throw new InvalidOperationException(T["The translations could not be saved. Verify your permission to manage this culture."]);
+            }
+
+            Model = saved;
+            Groups = saved.Groups
+                .Select(group => new EditableGroup(
+                    group.Name,
+                    group.Strings.Select(s => new EditableRow(s.Context, s.Key, s.Orphan, s.Fallback) { Value = s.Value }).ToList()))
+                .ToList();
+            Notifications.Notify(NotificationSeverity.Success, T["Translations"], T["The translations were saved for this culture."]);
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private List<EditableRow> VisibleRows(EditableGroup group)
+    {
+        if (string.IsNullOrWhiteSpace(Filter))
+        {
+            return group.Rows;
+        }
+
+        return group.Rows
+            .Where(row =>
+                row.Key.Contains(Filter, StringComparison.OrdinalIgnoreCase) ||
+                row.Value.Contains(Filter, StringComparison.OrdinalIgnoreCase) ||
+                group.Name.Contains(Filter, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    private sealed record EditableGroup(string Name, List<EditableRow> Rows);
+
+    private sealed class EditableRow(string context, string key, bool orphan, string? fallback)
+    {
+        public string Context { get; } = context;
+        public string Key { get; } = key;
+        public bool Orphan { get; } = orphan;
+        // The shipped PO translation that renders when no value is stored (resolution
+        // is store edit -> PO -> invariant literal) - surfaced as the placeholder so
+        // the editor shows what the menu actually displays.
+        public string? Fallback { get; } = fallback;
+        public string Value { get; set; } = string.Empty;
+    }
+}

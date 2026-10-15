@@ -1,6 +1,6 @@
 #nullable enable
 
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using YesSql;
 
 namespace Grove.Contents.Services;

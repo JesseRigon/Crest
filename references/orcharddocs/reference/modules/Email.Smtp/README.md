@@ -1,4 +1,4 @@
-# Email (`Grove.Email.Smtp`)
+# Email (`Grove.Data.Protocols.Smtp`)
 
 This module provides an Email provider for sending emails through the Simple Mail Transfer Protocol (SMTP).
 

@@ -1,6 +1,6 @@
 using System.Text.Json;
-using Grove.ContentManagement;
-using Grove.Title.Models;
+using Grove.Contents.Management;
+using Grove.Contents.Title.Models;
 
 namespace Grove.Tests.ContentManagement;
 

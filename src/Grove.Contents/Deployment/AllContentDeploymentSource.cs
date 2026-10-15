@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Records;
+using Grove.Contents.Management;
+using Grove.Contents.Management.Records;
 using Grove.Deployment;
 using YesSql;
 

@@ -1,0 +1,12 @@
+@inject ThemeService ThemeService
+@inject IServiceProvider ServiceProvider
+@namespace Grove.Display.Components.Primitives
+@if (PreloadIconFont)
+{
+    <link rel="preload" href="@IconFontHref" as="font" type="font/woff2" crossorigin="anonymous" />
+}
+<link id="Grove-theme-link" rel="stylesheet" href="@Href" />
+@if (wcag)
+{
+    <link id="Grove-wcag-theme-link" rel="stylesheet" href="@WcagHref" />
+}

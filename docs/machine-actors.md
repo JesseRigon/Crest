@@ -6,12 +6,12 @@ application-layer concern and belong with Workflows and Access in Grove
 ([architecture.md](architecture.md), [workflows.md](workflows.md)): workflows have a permission
 set and per-flow access lists a machine identity can hold.
 
-The platform's per-tenant system for machine identities is `Grove.OpenId`. It has no opaque
+The platform's per-tenant system for machine identities is `Grove.Access.OpenId`. It has no opaque
 API keys and no machine registry. Grove's APIs accept bearer tokens through the access gate.
 Points below not marked as built are from knowledge of the module and are confirmed at
 design time.
 
-## What the platform provides: `Grove.OpenId`
+## What the platform provides: `Grove.Access.OpenId`
 
 - **Applications are machine identities, per tenant.** Each tenant can run its own OpenID
   Connect server. An "application" registered there has a client id and secret and is

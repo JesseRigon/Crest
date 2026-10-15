@@ -1,0 +1,17 @@
+@page "/Settings/{GroupId}"
+@attribute [PageEntry(DeclaredBySource = true)]
+@using Grove.Themes.Admin.Components.Admin
+@using Grove.Display.Components.Editors
+
+@* Settings › any registered settings group (Grove.Infrastructure.Settings' SettingsGroupPages declares one
+   entry per group, gated at its concrete route): the generic settings form. A group the server
+   does not serve is not found. *@
+<SettingsForm GroupId="@GroupId">
+    <NotFoundContent>
+        <Grove.Display.Components.Errors.GroveErrorPage Status="404" />
+    </NotFoundContent>
+</SettingsForm>
+
+@code {
+    [Parameter] public string GroupId { get; set; } = string.Empty;
+}

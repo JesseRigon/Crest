@@ -10,7 +10,7 @@
   <!-- Provides the Razor component model ([Parameter], ComponentBase, etc.) without any
        WASM-only APIs - this plain package pair works identically under every host: WASM
        standalone, Blazor Server, and Blazor Web App SSR (mirrors
-       Grove.Components/Grove.Components.csproj). -->
+       Grove.Display.Components/Grove.Display.Components.csproj). -->
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
@@ -18,6 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Grove.Parties.Domain.csproj" />
-    <ProjectReference Include="..\..\Grove.Components\Grove.Components.csproj" />
+    <ProjectReference Include="..\..\Grove.Display.Components\Grove.Display.Components.csproj" />
   </ItemGroup>
 </Project>

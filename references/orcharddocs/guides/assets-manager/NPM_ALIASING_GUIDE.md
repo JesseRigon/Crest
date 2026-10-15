@@ -284,7 +284,7 @@ Add comments in package.json to explain why legacy versions are needed:
 
 ### 3. Keep Aliases in Resources Module
 
-For shared libraries used across multiple modules, define the alias in `Grove.Resources/Assets/package.json` so all modules can reference the same version.
+For shared libraries used across multiple modules, define the alias in `Grove.Display.Resources/Assets/package.json` so all modules can reference the same version.
 
 ### 4. Clean Builds
 

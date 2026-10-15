@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
-using Grove.Admin;
-using Grove.Recipes.Models;
-using Grove.Recipes.Services;
+using Grove.Infrastructure.Shells.Admin;
+using Grove.Infrastructure.Recipes.Models;
+using Grove.Infrastructure.Recipes.Services;
 using Grove.Themes.Services;
 
 namespace Grove.Themes.Recipes;

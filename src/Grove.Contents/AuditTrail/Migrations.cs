@@ -1,5 +1,5 @@
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Settings;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Settings;
 using Grove.AuditTrail.Models;
 using Grove.Contents.AuditTrail.Indexes;
 using Grove.Data.Migration;

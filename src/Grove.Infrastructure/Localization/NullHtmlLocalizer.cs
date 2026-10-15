@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Localization;
 using Microsoft.Extensions.Localization;
 
-namespace Grove.Localization;
+namespace Grove.Data.Localization;
 
 /// <summary>
 /// Minimalistic HTML-aware localizer that does nothing.

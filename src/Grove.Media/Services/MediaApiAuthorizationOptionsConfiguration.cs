@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Grove.Security;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 
 namespace Grove.Media.Services;
 

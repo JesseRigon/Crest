@@ -1,5 +1,5 @@
 using NodaTime;
-using Grove.Localization;
+using Grove.Data.Localization;
 
 namespace Grove.Modules;
 

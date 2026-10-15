@@ -21,7 +21,7 @@ public static class PartyTypeKinds
 /// the types it lists: each module that composes a party type registers a descriptor for
 /// it (dependencies run upward - the roles are declared downstream of Parties).
 /// </summary>
-public sealed record PartyTypeDescriptor : Grove.Kinds.IKindDescriptor
+public sealed record PartyTypeDescriptor : Grove.Data.Kinds.IKindDescriptor
 {
     /// <summary>Stable slug, lower-case, used in routes and as the pane key: "customers".</summary>
     public required string Key { get; init; }

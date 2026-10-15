@@ -1,6 +1,6 @@
 using Grove.Modules.Services;
 
-namespace Grove.Localization;
+namespace Grove.Data.Localization;
 
 public static class TransliterationSlugServiceExtensions
 {

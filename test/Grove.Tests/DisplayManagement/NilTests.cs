@@ -1,4 +1,4 @@
-using Grove.DisplayManagement.Shapes;
+using Grove.Display.Management.Shapes;
 
 namespace Grove.Tests.DisplayManagement;
 

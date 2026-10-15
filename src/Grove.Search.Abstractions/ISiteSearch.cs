@@ -33,7 +33,7 @@ public sealed class SiteSearchResult
     public bool HasMore { get; init; }
 }
 
-public sealed record SiteSearchHit(Grove.ContentManagement.ContentItem ContentItem, IReadOnlyList<string> Highlights);
+public sealed record SiteSearchHit(Grove.Contents.Management.ContentItem ContentItem, IReadOnlyList<string> Highlights);
 
 public enum SiteSearchStatus
 {

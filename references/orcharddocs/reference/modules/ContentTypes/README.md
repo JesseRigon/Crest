@@ -1,4 +1,4 @@
-# Content Types (`Grove.ContentTypes`)
+# Content Types (`Grove.Contents.Types`)
 
 ## View Components
 
@@ -142,7 +142,7 @@ public class Product : ContentPart
 Then, register your ContentPart with Dependency Injection:
 
 ```csharp
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 
 ...
 
@@ -244,7 +244,7 @@ Each context exposes a mutable `Record` property that you can modify. Setting `c
 Register your implementation with the dependency injection container from a `Startup` class:
 
 ```csharp
-using Grove.ContentTypes.Events;
+using Grove.Contents.Types.Events;
 
 public sealed class Startup : StartupBase
 {
@@ -266,7 +266,7 @@ Content definition handlers make it possible to designate a content type, part, 
 An element is marked as system-defined by storing a `ContentSettings` with `IsSystemDefined` set to `true` in the `Settings` of its record, from within a content definition handler:
 
 ```csharp
-using Grove.ContentManagement.Metadata.Settings;
+using Grove.Contents.Management.Metadata.Settings;
 
 context.Record.Settings[nameof(ContentSettings)] = JObject.FromObject(new ContentSettings
 {

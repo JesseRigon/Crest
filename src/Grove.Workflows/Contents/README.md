@@ -32,7 +32,7 @@ These activities trigger workflows in response to content lifecycle events:
 
 - `Grove.Workflows`
 - `Grove.Contents`
-- `Grove.Title`
+- `Grove.Contents.Title`
 
 ## Installation
 

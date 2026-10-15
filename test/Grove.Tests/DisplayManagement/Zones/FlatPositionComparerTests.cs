@@ -1,5 +1,5 @@
-using Grove.DisplayManagement;
-using Grove.DisplayManagement.Zones;
+using Grove.Display.Management;
+using Grove.Display.Management.Zones;
 
 namespace Grove.Tests.DisplayManagement.Zones;
 

@@ -1,4 +1,4 @@
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 
 namespace Grove.Models;
 
@@ -11,7 +11,7 @@ namespace Grove.Models;
 /// AutoroutePart, term pages, Liquid shapes) and everything carrying TaxonomyPart
 /// shows up under Configuration > Taxonomies. Configuration data wants none of that,
 /// and "taxonomy" is jargon to tenants - so this part carries its own option storage
-/// and Grove takes no dependency on Grove.Taxonomies.
+/// and Grove takes no dependency on Grove.Contents.Taxonomies.
 /// </remarks>
 public class GroveContentPartListPart : ContentPart
 {

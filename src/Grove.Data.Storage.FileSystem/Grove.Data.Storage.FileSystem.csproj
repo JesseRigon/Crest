@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+
+    <!-- NuGet properties-->
+    <Title>Grove FileStorage FileSystem</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Implementation for Physical FileStorage.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework</PackageTags>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Data.Storage.Abstractions\Grove.Data.Storage.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,4 +1,4 @@
-# Data Protection (Azure Storage) (`Grove.DataProtection.Azure`)
+# Data Protection (Azure Storage) (`Grove.Data.Protection.Azure`)
 
 ## Purpose
 

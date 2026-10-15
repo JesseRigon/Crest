@@ -1,4 +1,4 @@
-namespace Grove.Localization.Data.Tests;
+namespace Grove.Data.Localization.Data.Tests;
 
 public class DataLocalizerTests : IDisposable
 {

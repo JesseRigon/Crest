@@ -9,7 +9,7 @@ the remaining gaps are under [Backlog](#backlog).
 
 ## Design
 
-- **Sharing is its own module**: `Grove.Sharing` and `Grove.Sharing.Abstractions`, a tenant
+- **Sharing is its own module**: `Grove.Access.Sharing` and `Grove.Access.Sharing.Abstractions`, a tenant
   feature that can be turned off. Not `Grove.Access.Sharing`: it is a domain with its own data
   (entries, rules, the access index, the time registry, the Share panel), and it registers
   with the access gate like every other domain ([access.md](access.md) › Principles › Access is
@@ -54,7 +54,7 @@ the remaining gaps are under [Backlog](#backlog).
 
 ## Module
 
-`Grove.Sharing.Abstractions`:
+`Grove.Access.Sharing.Abstractions`:
 - the model: `SharePrincipal` (Anyone, Tenant, Organization, Role, User), `AccessLevel`
   (Viewer, Commenter, Editor, Manager, Admin: the generic name for Drive Admin, granted only
   on a root object), `ShareEntry` (a grant or a block, optionally time-bound), `ShareRule`
@@ -74,7 +74,7 @@ the remaining gaps are under [Backlog](#backlog).
   (71-72), `IShareableChildSource` (what another module files in a folder, 74),
   `IShareIndicators` (98), `ISharePrincipalDirectory`.
 
-`Grove.Sharing`:
+`Grove.Access.Sharing`:
 - the share documents (`ShareDocument`, one per object with entries or rules) and their index;
 - the resolver (`SharingResolver`, requirements 58-65), reading time bounds exactly at every
   decision;
@@ -412,7 +412,7 @@ children (Media lists a folder's children through every placement).
   Role tier; a caller matches it when they hold the role and act for that organization
   (requirement 38). The index stores it as `role@org:id`.
 - **Media's kind**: `Grove.Media/Sharing/MediaShareableKind.cs`, through `MediaSharingStartup`
-  (`[RequireFeatures("Grove.Sharing")]`), with its placements' scope target, tree, roots and
+  (`[RequireFeatures("Grove.Access.Sharing")]`), with its placements' scope target, tree, roots and
   admin assignment. Sharing is off by default, so media keeps its folder permissions until it is
   turned on; then sharing is the authority for media (default deny, so public media needs an
   Anyone grant) ([media.md](media.md)).
@@ -453,8 +453,8 @@ party-role index and provider.
 
 Implementation:
 
-- **Role registry** (`Grove.Roles.Abstractions/DerivedRoles.cs`,
-  `Grove.Roles/Services/RoleRegistry.cs`): `RoleKind` (Assigned, Derived),
+- **Role registry** (`Grove.Access.Roles.Abstractions/DerivedRoles.cs`,
+  `Grove.Access.Roles/Services/RoleRegistry.cs`): `RoleKind` (Assigned, Derived),
   `IDerivedRoleProvider` (its `Roles`, and `GetRolesAsync(DerivedRoleContext)`: the user and the
   organization they act for, or every organization for the user editor), `IRoleRegistry` (every
   role with its kind; the derived roles a user holds; `EnsureDerivedRolesAsync`). A role is
@@ -496,7 +496,7 @@ checks.
     that folder's chain instead, with its content type as its type for rules.
 
 Implementation (`Grove.Contents/Sharing`, through `ContentSharingStartup`,
-`[RequireFeatures("Grove.Sharing")]`):
+`[RequireFeatures("Grove.Access.Sharing")]`):
 
 - Two kinds: `contenttype` (a type is a root; its entries flow to its items; a content
   permission asked against a type name or a `ContentTypeProbe` is about the type, so creating an
@@ -541,7 +541,7 @@ Implementation (`Grove.Contents/Sharing`, through `ContentSharingStartup`,
 
 Implementation:
 
-- API `api/sharing` (`Grove.Sharing/Controllers/SharingController.cs`), objects by `kind` and
+- API `api/sharing` (`Grove.Access.Sharing/Api/SharingApi.cs`), objects by `kind` and
   `id` in the query (the tenant: `kind=tenant`): `panel` (entries, every decision on the chain
   with the winner per principal, the public link through the kind's optional `IShareableLinks`,
   whether lists are still catching up: `ShareAccessIndexer.VerifyAsync` finds a difference,
@@ -551,7 +551,7 @@ Implementation:
   labelled, users for staff callers, organizations from Parties; never system accounts),
   `roles`, `roles/users/{id}` (a user's derived roles with their relationships, for those who
   may list users or the user themselves), and `comments`.
-- Components (`Grove.Components/Components/Sharing`): `GroveSharePanel` (96),
+- Components (`Grove.Display.Components/Components/Sharing`): `GroveSharePanel` (96),
   `GroveShareRules` (97), `GroveAccessIndicator` (98), `GrovePrincipalPicker` (46),
   `GroveDerivedRoles` (47).
 - Where they show: the drive browser has a Share action per item and for the open folder

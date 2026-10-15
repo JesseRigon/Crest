@@ -1,8 +1,8 @@
 using System.IO.Hashing;
 using Microsoft.AspNetCore.Http;
-using Grove.ContentManagement;
-using Grove.ContentPreview;
-using Grove.FileStorage;
+using Grove.Contents.Management;
+using Grove.Contents.Preview;
+using Grove.Data.Storage;
 using Grove.Media.ViewModels;
 
 namespace Grove.Media.Services;

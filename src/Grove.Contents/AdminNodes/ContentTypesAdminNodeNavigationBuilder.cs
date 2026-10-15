@@ -3,17 +3,17 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
-using Grove.AdminMenu.Services;
-using Grove.ContentManagement.Metadata;
-using Grove.ContentManagement.Metadata.Models;
+using Grove.Contents.AdminMenu.Services;
+using Grove.Contents.Management.Metadata;
+using Grove.Contents.Management.Metadata.Models;
 using Grove.Contents.Security;
-using Grove.Navigation;
+using Grove.Display.Navigation;
 
 namespace Grove.Contents.AdminNodes;
 
 public class ContentTypesAdminNodeNavigationBuilder : IAdminNodeNavigationBuilder
 {
-    private readonly Grove.Admin.AdminOptions _adminOptions;
+    private readonly Grove.Infrastructure.Shells.Admin.AdminOptions _adminOptions;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IAuthorizationService _authorizationService;
     private readonly IContentDefinitionManager _contentDefinitionManager;
@@ -21,7 +21,7 @@ public class ContentTypesAdminNodeNavigationBuilder : IAdminNodeNavigationBuilde
 
     public ContentTypesAdminNodeNavigationBuilder(
         IContentDefinitionManager contentDefinitionManager,
-        Microsoft.Extensions.Options.IOptions<Grove.Admin.AdminOptions> adminOptions,
+        Microsoft.Extensions.Options.IOptions<Grove.Infrastructure.Shells.Admin.AdminOptions> adminOptions,
         IHttpContextAccessor httpContextAccessor,
         IAuthorizationService authorizationService,
         ILogger<ContentTypesAdminNodeNavigationBuilder> logger)
@@ -51,7 +51,7 @@ public class ContentTypesAdminNodeNavigationBuilder : IAdminNodeNavigationBuilde
             builder.Add(new LocalizedString(ctd.DisplayName, ctd.DisplayName), itemBuilder =>
             {
                 // The native content list, filtered to the type.
-                itemBuilder.Url(Grove.ContentManagement.ContentAdminPaths.InAdmin(_adminOptions.AdminUrlPrefix, Grove.ContentManagement.ContentAdminPaths.List(ctd.Name)));
+                itemBuilder.Url(Grove.Contents.Management.ContentAdminPaths.InAdmin(_adminOptions.AdminUrlPrefix, Grove.Contents.Management.ContentAdminPaths.List(ctd.Name)));
 
                 // This node expands into one menu item per content type, so the node's own
                 // identifier is qualified with the type name to stay unique per built item while

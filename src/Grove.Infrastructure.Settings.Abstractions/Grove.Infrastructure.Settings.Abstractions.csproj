@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Infrastructure.Settings</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Grove Settings Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for the Settings module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Display.Management.Abstractions\Grove.Display.Management.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,4 +1,4 @@
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Contents.VersionPruning.Services;
 
 namespace Grove.Tests.Modules.Contents.VersionPruning;

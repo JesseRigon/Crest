@@ -1,6 +1,6 @@
 using Grove.Data.Global.Services;
 using Grove.Environment.Shell;
-using Grove.Money.Abstractions;
+using Grove.Data.Types.Money.Abstractions;
 using Grove.Parties.Services;
 using Grove.Security;
 using Grove.Services;
@@ -17,8 +17,8 @@ public sealed class StandaloneHostTests(StandaloneHost host) : IClassFixture<Sta
 {
     private static readonly string[] ApplicationFeatures =
     [
-        "Grove", "Grove.Contents.PartLists", "Grove.Data.Global", "Grove.Regions", "Grove.Money",
-        "Grove.Parties", "Grove.Members", "Grove.Workflows", "Grove.Workflows.Contents",
+        "Grove", "Grove.Contents.PartLists", "Grove.Data.Global", "Grove.Data.Regions", "Grove.Data.Types.Money",
+        "Grove.Parties", "Grove.Access.Members", "Grove.Workflows", "Grove.Workflows.Contents",
     ];
 
     [Fact]
@@ -45,7 +45,7 @@ public sealed class StandaloneHostTests(StandaloneHost host) : IClassFixture<Sta
 
             var application = typeof(StandaloneHost).Assembly.GetName().Name;
             Assert.All(enabled, id => Assert.True(
-                id.StartsWith("Grove", StringComparison.Ordinal) || id is "TheAdmin" or "SafeMode" or "Application.Default" || id == application,
+                id.StartsWith("Grove", StringComparison.Ordinal) || id is "Application.Default" || id == application,
                 $"'{id}' is not one of Grove's features"));
         });
     }

@@ -32,7 +32,7 @@ public sealed class ApiAuthenticationTests : CmsTestBase, IClassFixture<CmsSetup
 
         var anonPage = await Fixture.CreatePageAsync();
         var response = await anonPage.APIRequest.GetAsync(
-            $"{Fixture.BaseUrl}/{Tenant.Prefix}/api/content/does-not-exist",
+            $"{Fixture.BaseUrl}/{Tenant.Prefix}/api/grove/queries",
             new APIRequestContextOptions { MaxRedirects = 0 });
 
         Assert.Equal(401, response.Status);
@@ -62,7 +62,7 @@ public sealed class ApiAuthenticationTests : CmsTestBase, IClassFixture<CmsSetup
 
         var anonPage = await Fixture.CreatePageAsync();
         var response = await anonPage.APIRequest.GetAsync(
-            $"{Fixture.BaseUrl}/{Tenant.Prefix}/api/content/does-not-exist",
+            $"{Fixture.BaseUrl}/{Tenant.Prefix}/api/grove/queries",
             new APIRequestContextOptions
             {
                 MaxRedirects = 0,
@@ -84,8 +84,8 @@ public sealed class ApiAuthenticationTests : CmsTestBase, IClassFixture<CmsSetup
 
     private static async Task ConfigureOpenIdServerAsync(IPage page, string prefix)
     {
-        await FeatureHelper.EnableFeatureAsync(page, prefix, "Grove.OpenId.Server");
-        await FeatureHelper.EnableFeatureAsync(page, prefix, "Grove.OpenId.Validation");
+        await FeatureHelper.EnableFeatureAsync(page, prefix, "Grove.Access.OpenId.Server");
+        await FeatureHelper.EnableFeatureAsync(page, prefix, "Grove.Access.OpenId.Validation");
 
         await page.GotoAsync($"{prefix}/Admin/OpenId/ServerConfiguration");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- The OpenID module's site-shell library: the pages a user meets during an OpenID Connect
+       request (docs/shells-and-themes.md › Account and protocol pages) - the consent, the logout
+       confirmation and the protocol error. Declares [assembly: GroveShell(GroveShells.Site)] in
+       GroveShell.cs. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Grove.Access.OpenId.Site.BlazorWasm</AssemblyName>
+    <RootNamespace>Grove.Access.OpenId.Site</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Grove.Display.Components\Grove.Display.Components.csproj" />
+  </ItemGroup>
+</Project>

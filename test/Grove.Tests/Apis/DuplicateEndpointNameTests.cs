@@ -11,7 +11,7 @@ public class DuplicateEndpointNameTests
     // Mapping a dynamic controller route makes the shared controller endpoint data source also emit,
     // for every controller action, a second non-routable placeholder endpoint that carries a copy of
     // the action metadata, including its '[EndpointName]'. Attribute-routed API controllers (e.g.
-    // Grove.Queries) are decorated with '[EndpointName]', so their routable endpoint and their
+    // Grove.Data.Queries) are decorated with '[EndpointName]', so their routable endpoint and their
     // placeholder endpoint ended up sharing the same endpoint name. Any link generation by name
     // (LinkGenerator.GetPathByName / GetUriByName) then threw an 'InvalidOperationException' reporting
     // duplicate endpoint names.
@@ -30,7 +30,7 @@ public class DuplicateEndpointNameTests
             var featuresManager = scope.ServiceProvider.GetRequiredService<IShellFeaturesManager>();
 
             var queriesFeatures = (await featuresManager.GetAvailableFeaturesAsync())
-                .Where(feature => feature.Id == "Grove.Queries")
+                .Where(feature => feature.Id == "Grove.Data.Queries")
                 .ToList();
 
             await featuresManager.UpdateFeaturesAsync([], queriesFeatures, force: true);
@@ -49,6 +49,6 @@ public class DuplicateEndpointNameTests
 
         var path = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
-        Assert.Contains("api/queries/test", path);
+        Assert.Contains("api/grove/queries/test/run", path);
     }
 }

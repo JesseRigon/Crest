@@ -1,4 +1,4 @@
-using Grove.ContentManagement;
+using Grove.Contents.Management;
 using Grove.Tests.Apis.Context;
 
 namespace Grove.Tests.Apis.ContentManagement;

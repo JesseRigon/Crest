@@ -66,7 +66,7 @@ public sealed class ContentPartListsGlobalSchema : GlobalDataMigration
     }
 
     // Grove.Module.Targets embeds files with ">" as the folder separator
-    // ("Grove.Regions.Data>geo-nodes.json"); a plain SDK embed uses "."; match either.
+    // ("Grove.Data.Regions.Data>geo-nodes.json"); a plain SDK embed uses "."; match either.
     private static bool IsDataFile(string resourceName, string fileName) =>
         resourceName.EndsWith(">" + fileName, StringComparison.Ordinal)
         || resourceName.EndsWith("." + fileName, StringComparison.Ordinal)

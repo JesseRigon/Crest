@@ -1,6 +1,0 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
-  <Import Project="..\..\..\src\Grove.Build\Grove.Commons.targets" />
-  <Import Project="..\..\..\src\Grove.Module.Targets\Grove.Module.Targets.targets" />
-
-</Project>

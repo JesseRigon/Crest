@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Grove.ContentManagement.Handlers;
+using Grove.Contents.Management.Handlers;
 using Grove.Workflows.Approvals;
 using Grove.Workflows.Connectors;
 using Grove.Workflows.Contexts;
@@ -36,7 +36,7 @@ using Grove.Data.Migration;
 using Grove.Environment.Shell;
 using Grove.Environment.Shell.Configuration;
 using Grove.Modules;
-using Grove.Navigation;
+using Grove.Display.Navigation;
 using Grove.Security.Permissions;
 
 namespace Grove.Workflows.Features;
@@ -141,6 +141,19 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
         // The engine's management API, declared in the server's API registry (docs/MVC/api.md P7).
         services.AddApiContributor<Api.WorkflowsManagementApi>();
 
+        // The module's own APIs under api/grove/workflows (the registry, connections and webhooks,
+        // hooks, approvals, definitions, triggers, display actions, pending state).
+        services
+            .AddApiContributor<Api.WorkflowRegistryApi>()
+            .AddApiContributor<Api.WorkflowConnectionsApi>()
+            .AddApiContributor<Api.WorkflowWebhooksApi>()
+            .AddApiContributor<Api.WorkflowHooksApi>()
+            .AddApiContributor<Api.WorkflowApprovalsApi>()
+            .AddApiContributor<Api.WorkflowDefinitionsApi>()
+            .AddApiContributor<Api.WorkflowTriggersApi>()
+            .AddApiContributor<Api.WorkflowActionsApi>()
+            .AddApiContributor<Api.WorkflowPendingApi>();
+
         // The two action pipelines (Units/ActionPipelines.cs names which class forms which).
         // Units of work (docs/workflows.md › Posting on workflows): a burst is one transaction
         // (the stores no longer commit mid-run), stimuli fire after commit, a failed unit is
@@ -179,8 +192,8 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             // HTTP endpoint workflow, when the tree is built and when the action runs.
             .AddScoped<Display.WorkflowDisplayActionAuthorizer>()
             .AddScoped<Display.IUiActionContracts, Display.UiActionContracts>()
-            .AddScoped<Grove.DisplayManagement.Components.IDisplayActionFilter, Display.WorkflowDisplayActionFilter>()
-            .AddScoped<Grove.DisplayManagement.Components.IDisplayActionValidator, Display.WorkflowDisplayActionValidator>()
+            .AddScoped<Grove.Display.Management.Components.IDisplayActionFilter, Display.WorkflowDisplayActionFilter>()
+            .AddScoped<Grove.Display.Management.Components.IDisplayActionValidator, Display.WorkflowDisplayActionValidator>()
             // The registry's query kind: one run-query descriptor per query the catalog lists.
             .AddScoped<IActivityProvider, Queries.QueryActivityProvider>()
             // The registry's content operations: one descriptor per content type and operation.

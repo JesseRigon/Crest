@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using Grove.Entities;
-using Grove.Settings;
+using Grove.Infrastructure.Settings;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
 

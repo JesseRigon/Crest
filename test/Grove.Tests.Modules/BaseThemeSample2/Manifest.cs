@@ -1,4 +1,4 @@
-using Grove.DisplayManagement.Manifest;
+using Grove.Display.Management.Manifest;
 using Grove.Modules.Manifest;
 
 [assembly: Theme(

@@ -1,4 +1,4 @@
-# GitHub (`Grove.GitHub`)
+# GitHub (`Grove.Integrations.GitHub`)
 
 This module adds GitHub Authentication to Grove.
 
@@ -20,7 +20,7 @@ If no value is provided, setup Authorization callback URL in GitHub app to use t
 
 ## Users Registration
 
-- Enable the `Grove.Users.Registration` feature when you also want local site registration.
+- Enable the `Grove.Access.Users.Registration` feature when you also want local site registration.
 - New external-user creation and profile generation are controlled from the Users module's [`ExternalRegistrationSettings`](../Users/README.md#external-authentication-settings).
 - An existing user can link the account through the External Logins link from the user menu.
 
@@ -53,7 +53,7 @@ GitHub authentication settings can be configured using the `Settings` recipe ste
 
 ## GitHub Settings Configuration
 
-The `Grove.GitHub` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureGitHubSettings()` extension method on `PlatformBuilder` when initializing the app.
+The `Grove.Integrations.GitHub` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureGitHubSettings()` extension method on `PlatformBuilder` when initializing the app.
 
 The following configuration values can be customized:
 

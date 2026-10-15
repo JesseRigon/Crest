@@ -1,6 +1,6 @@
 using MimeKit;
 
-namespace Grove.Email;
+namespace Grove.Communications.Email;
 
 /// <summary>
 /// Represents a service for e-mail address validation.

@@ -10,2819 +10,2819 @@ msgstr ""
 # English catalog: identity entries - the invariant literal IS the en rendering.
 # Kept explicit so every literal has en+es coverage on record.
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "(Local)"
 msgstr "(Local)"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "(User Profile)"
 msgstr "(User Profile)"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "/"
 msgstr "/"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "1 query deleted."
 msgstr "1 query deleted."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "A content item identifier is required."
 msgstr "A content item identifier is required."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "A query name and source are required."
 msgstr "A query name and source are required."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "API base URL"
 msgstr "API base URL"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "API key"
 msgstr "API key"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "API key header"
 msgstr "API key header"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Accelerometer"
 msgstr "Accelerometer"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Accent 1"
 msgstr "Accent 1"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Accent 2"
 msgstr "Accent 2"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Access denied"
 msgstr "Access denied"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Account"
 msgstr "Account"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Actions"
 msgstr "Actions"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Add"
 msgstr "Add"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Add Menu Item"
 msgstr "Add Menu Item"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Add Tenant"
 msgstr "Add Tenant"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Add User"
 msgstr "Add User"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Add a standard culture"
 msgstr "Add a standard culture"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Add a valid custom culture code"
 msgstr "Add a valid custom culture code"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Add admin menu node"
 msgstr "Add admin menu node"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Add culture"
 msgstr "Add culture"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Add custom culture"
 msgstr "Add custom culture"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Add menu"
 msgstr "Add menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Add separator after this item"
 msgstr "Add separator after this item"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Additional origins"
 msgstr "Additional origins"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin"
 msgstr "Admin"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin Menu"
 msgstr "Admin Menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin Menus"
 msgstr "Admin Menus"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin default culture"
 msgstr "Admin default culture"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin menu created"
 msgstr "Admin menu created"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin menu deleted"
 msgstr "Admin menu deleted"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin menu depth limit"
 msgstr "Admin menu depth limit"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin menu duplicated"
 msgstr "Admin menu duplicated"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin menu hidden"
 msgstr "Admin menu hidden"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin menu item fixed"
 msgstr "Admin menu item fixed"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin menu rename failed"
 msgstr "Admin menu rename failed"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin menu renamed"
 msgstr "Admin menu renamed"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin menu saved"
 msgstr "Admin menu saved"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin menu shown"
 msgstr "Admin menu shown"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin menu update failed"
 msgstr "Admin menu update failed"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin menus support a maximum of {0} tiers. Move the item to a higher level before saving."
 msgstr "Admin menus support a maximum of {0} tiers. Move the item to a higher level before saving."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin navigation"
 msgstr "Admin navigation"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin settings"
 msgstr "Admin settings"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin settings sections"
 msgstr "Admin settings sections"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin settings were updated."
 msgstr "Admin settings were updated."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Admin theme"
 msgstr "Admin theme"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Administrator"
 msgstr "Administrator"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "All Users"
 msgstr "All Users"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "All content types"
 msgstr "All content types"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "All style packs"
 msgstr "All style packs"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Allow collapse/hover expand"
 msgstr "Allow collapse/hover expand"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Allow user to be remembered during login"
 msgstr "Allow user to be remembered during login"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Allow user to change their email address"
 msgstr "Allow user to change their email address"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Allow user to change their phone number"
 msgstr "Allow user to change their phone number"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Allow user to change their username"
 msgstr "Allow user to change their username"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Allow users to remember client"
 msgstr "Allow users to remember client"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Allowed by"
 msgstr "Allowed by"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Allowed extensions"
 msgstr "Allowed extensions"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Allowed prefixes"
 msgstr "Allowed prefixes"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Allowed sources"
 msgstr "Allowed sources"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Always enabled"
 msgstr "Always enabled"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Ambient Light Sensor"
 msgstr "Ambient Light Sensor"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Any"
 msgstr "Any"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Any status"
 msgstr "Any status"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "App"
 msgstr "App"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Append"
 msgstr "Append"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Applied {0} to {1} selected features."
 msgstr "Applied {0} to {1} selected features."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Apply"
 msgstr "Apply"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Assets path"
 msgstr "Assets path"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "At least one culture is required."
 msgstr "At least one culture is required."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Attached to {0} content type."
 msgstr "Attached to {0} content type."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Attached to {0} content types."
 msgstr "Attached to {0} content types."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Auto Orient"
 msgstr "Auto Orient"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Autoplay"
 msgstr "Autoplay"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Available"
 msgstr "Available"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Available alternatives"
 msgstr "Available alternatives"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Background Color"
 msgstr "Background Color"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Base URI"
 msgstr "Base URI"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Base url"
 msgstr "Base url"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Battery"
 msgstr "Battery"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Border radius"
 msgstr "Border radius"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Browse roles and their system and administrator status."
 msgstr "Browse roles and their system and administrator status."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Browse icons or enter a search term."
 msgstr "Browse icons or enter a search term."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Browse reusable content parts, their fields, and the content types that attach them."
 msgstr "Browse reusable content parts, their fields, and the content types that attach them."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Browse the current content definitions, their parts, and their fields."
 msgstr "Browse the current content definitions, their parts, and their fields."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Browse, filter, publish, unpublish, and remove content items."
 msgstr "Browse, filter, publish, unpublish, and remove content items."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Browser cache"
 msgstr "Browser cache"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Bulk Actions"
 msgstr "Bulk Actions"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "CSS/SVG clip-path, for example polygon(...) or url(#clip)"
 msgstr "CSS/SVG clip-path, for example polygon(...) or url(#clip)"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Cache"
 msgstr "Cache"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Cache Mode"
 msgstr "Cache Mode"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Calendar"
 msgstr "Calendar"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Camera"
 msgstr "Camera"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Cancel"
 msgstr "Cancel"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Cancel rename"
 msgstr "Cancel rename"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Category"
 msgstr "Category"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Child Source"
 msgstr "Child Source"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Choose a culture"
 msgstr "Choose a culture"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Choose icon"
 msgstr "Choose icon"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Choose the default culture"
 msgstr "Choose the default culture"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Choose the cultures this site serves and the default culture used when no request culture is selected."
 msgstr "Choose the cultures this site serves and the default culture used when no request culture is selected."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Classes: {0}"
 msgstr "Classes: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Cleanup failed"
 msgstr "Cleanup failed"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Clear"
 msgstr "Clear"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Clear icon"
 msgstr "Clear icon"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Close"
 msgstr "Close"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Close navigation menu"
 msgstr "Close navigation menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Close settings"
 msgstr "Close settings"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Close {0}"
 msgstr "Close {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Collapse All"
 msgstr "Collapse All"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Collapse navigation"
 msgstr "Collapse navigation"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Collapse/expand toggle position"
 msgstr "Collapse/expand toggle position"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Comma-separated permission names"
 msgstr "Comma-separated permission names"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Confirm"
 msgstr "Confirm"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Connect Source"
 msgstr "Connect Source"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Content"
 msgstr "Content"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Content Items"
 msgstr "Content Items"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Content JSON is invalid: {0}"
 msgstr "Content JSON is invalid: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Content Parts"
 msgstr "Content Parts"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Content Security Policy"
 msgstr "Content Security Policy"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Content Types"
 msgstr "Content Types"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Content document"
 msgstr "Content document"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Continue"
 msgstr "Continue"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Controls how much referrer information the browser includes when navigating away from a page."
 msgstr "Controls how much referrer information the browser includes when navigating away from a page."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Controls the resources the browser is allowed to load for a page."
 msgstr "Controls the resources the browser is allowed to load for a page."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Controls which browser features and APIs are available to this site."
 msgstr "Controls which browser features and APIs are available to this site."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Convert to Admin Menu"
 msgstr "Convert to Admin Menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Convert to Local Menu"
 msgstr "Convert to Local Menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Could not save the translation"
 msgstr "Could not save the translation"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Create"
 msgstr "Create"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Create Content"
 msgstr "Create Content"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Create content item"
 msgstr "Create content item"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Create menu"
 msgstr "Create menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Created"
 msgstr "Created"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Grove Admin"
 msgstr "Grove Admin"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Base theme"
 msgstr "Base theme"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Culture"
 msgstr "Culture"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Cultures"
 msgstr "Cultures"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Current admin"
 msgstr "Current admin"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Current admin theme"
 msgstr "Current admin theme"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Current site"
 msgstr "Current site"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Current site theme"
 msgstr "Current site theme"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Current themes"
 msgstr "Current themes"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Current values are supplied by configuration. Saving updates the tenant Admin Settings, not that configuration source."
 msgstr "Current values are supplied by configuration. Saving updates the tenant Admin Settings, not that configuration source."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Custom Iconify servers are remote-only and are not cached."
 msgstr "Custom Iconify servers are remote-only and are not cached."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Custom entries must be culture names recognized by .NET/BCP 47. They are validated again on save."
 msgstr "Custom entries must be culture names recognized by .NET/BCP 47. They are validated again on save."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Custom role"
 msgstr "Custom role"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Default Source"
 msgstr "Default Source"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Default Time Zone"
 msgstr "Default Time Zone"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Default culture"
 msgstr "Default culture"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Default example provider. Uses the Iconify API contract and can point at the public API or a self-hosted compatible server."
 msgstr "Default example provider. Uses the Iconify API contract and can point at the public API or a self-hosted compatible server."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Default language"
 msgstr "Default language"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Default tenant"
 msgstr "Default tenant"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Define reusable image transformations."
 msgstr "Define reusable image transformations."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Delete"
 msgstr "Delete"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Delete content item?"
 msgstr "Delete content item?"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Delete file"
 msgstr "Delete file"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Delete media file?"
 msgstr "Delete media file?"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Delete menu"
 msgstr "Delete menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Delete query {0}? This cannot be undone."
 msgstr "Delete query {0}? This cannot be undone."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Delete route override coming soon"
 msgstr "Delete route override coming soon"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Delete selected ({0})"
 msgstr "Delete selected ({0})"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Delete {0} selected queries? This cannot be undone."
 msgstr "Delete {0} selected queries? This cannot be undone."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Dependency only"
 msgstr "Dependency only"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Depends on:"
 msgstr "Depends on:"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Description"
 msgstr "Description"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Design System"
 msgstr "Design System"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Design system save failed"
 msgstr "Design system save failed"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Design system saved"
 msgstr "Design system saved"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Determines whether caches are enabled or disabled."
 msgstr "Determines whether caches are enabled or disabled."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Determines whether scripts and stylesheets load in their debuggable or minified form."
 msgstr "Determines whether scripts and stylesheets load in their debuggable or minified form."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Directive"
 msgstr "Directive"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Disable"
 msgstr "Disable"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Disable local password login."
 msgstr "Disable local password login."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Disable selected ({0})"
 msgstr "Disable selected ({0})"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Disable {0}?"
 msgstr "Disable {0}?"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Disabled"
 msgstr "Disabled"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Disabled Users"
 msgstr "Disabled Users"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Disabled only"
 msgstr "Disabled only"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Disabled — use minified version of resources"
 msgstr "Disabled — use minified version of resources"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Disabling a feature can also disable features that depend on it."
 msgstr "Disabling a feature can also disable features that depend on it."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Display Capture"
 msgstr "Display Capture"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Display culture label"
 msgstr "Display culture label"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Display manager is unavailable."
 msgstr "Display manager is unavailable."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Display titles in top bar"
 msgstr "Display titles in top bar"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Document Domain"
 msgstr "Document Domain"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Documents"
 msgstr "Documents"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Draft"
 msgstr "Draft"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Drag by the handle. Drop on the top/bottom edge to reorder, or center to make the item a child. Admin menus support up to 4 tiers."
 msgstr "Drag by the handle. Drop on the top/bottom edge to reorder, or center to make the item a child. Admin menus support up to 4 tiers."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Drag to move"
 msgstr "Drag to move"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Duplicate menu"
 msgstr "Duplicate menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Edit"
 msgstr "Edit"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Edit the design tokens for this site."
 msgstr "Edit the design tokens for this site."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Edit User"
 msgstr "Edit User"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Edit admin menu node: {0}"
 msgstr "Edit admin menu node: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Edit route permissions coming soon"
 msgstr "Edit route permissions coming soon"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Edit the content document directly."
 msgstr "Edit the content document directly."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Edit translations"
 msgstr "Edit translations"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Edit {0}"
 msgstr "Edit {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Email"
 msgstr "Email"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Email confirmed"
 msgstr "Email confirmed"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enable"
 msgstr "Enable"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enable Admin Menu filter"
 msgstr "Enable Admin Menu filter"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enable Iconify provider"
 msgstr "Enable Iconify provider"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enable Sandbox"
 msgstr "Enable Sandbox"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enable and disable features for this tenant."
 msgstr "Enable and disable features for this tenant."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enable selected ({0})"
 msgstr "Enable selected ({0})"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enable theme toggler"
 msgstr "Enable theme toggler"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enabled"
 msgstr "Enabled"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enabled Users"
 msgstr "Enabled Users"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enabled features: {0}"
 msgstr "Enabled features: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enabled only"
 msgstr "Enabled only"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enabled with cache debug mode"
 msgstr "Enabled with cache debug mode"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enabled — use debuggable version of resources"
 msgstr "Enabled — use debuggable version of resources"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Enables a sandbox for the requested resource similar to the iframe sandbox attribute."
 msgstr "Enables a sandbox for the requested resource similar to the iframe sandbox attribute."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Encrypted Media"
 msgstr "Encrypted Media"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Example: en-GB"
 msgstr "Example: en-GB"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Expand All"
 msgstr "Expand All"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Expand/collapse"
 msgstr "Expand/collapse"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Expand/collapse coming soon"
 msgstr "Expand/collapse coming soon"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Expansion speed (ms)"
 msgstr "Expansion speed (ms)"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Export JSON"
 msgstr "Export JSON"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "External Login"
 msgstr "External Login"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "External login synchronization script"
 msgstr "External login synchronization script"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Fall back to parent culture(s)"
 msgstr "Fall back to parent culture(s)"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Feature"
 msgstr "Feature"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Feature changes can recycle the tenant and affect dependent features."
 msgstr "Feature changes can recycle the tenant and affect dependent features."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Feature hash: {0}"
 msgstr "Feature hash: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Features"
 msgstr "Features"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Fields"
 msgstr "Fields"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "File"
 msgstr "File"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Filter"
 msgstr "Filter"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Filter by text or translation"
 msgstr "Filter by text or translation"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Filter cultures"
 msgstr "Filter cultures"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Filter supported cultures"
 msgstr "Filter supported cultures"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Filters: {0}"
 msgstr "Filters: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Fixed"
 msgstr "Fixed"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Folder"
 msgstr "Folder"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Folder created."
 msgstr "Folder created."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Folder name"
 msgstr "Folder name"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Font Source"
 msgstr "Font Source"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Form Action"
 msgstr "Form Action"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Frame Ancestors"
 msgstr "Frame Ancestors"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Frame Source"
 msgstr "Frame Source"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "From environment — disabled in Production, enabled otherwise"
 msgstr "From environment — disabled in Production, enabled otherwise"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "From environment — enabled in Production, disabled otherwise"
 msgstr "From environment — enabled in Production, disabled otherwise"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Full Screen"
 msgstr "Full Screen"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Game Pad"
 msgstr "Game Pad"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "General"
 msgstr "General"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "General Settings"
 msgstr "General Settings"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "General settings sections"
 msgstr "General settings sections"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "General settings were updated."
 msgstr "General settings were updated."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Generated separators"
 msgstr "Generated separators"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Geolocation"
 msgstr "Geolocation"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Gyroscope"
 msgstr "Gyroscope"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Height"
 msgstr "Height"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Hide always enabled"
 msgstr "Hide always enabled"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Hide menu"
 msgstr "Hide menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Hint"
 msgstr "Hint"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Host / prefix"
 msgstr "Host / prefix"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Html"
 msgstr "Html"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Html Menu Item"
 msgstr "Html Menu Item"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Icon"
 msgstr "Icon"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Icon filters"
 msgstr "Icon filters"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Icon providers not saved"
 msgstr "Icon providers not saved"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Icon providers saved"
 msgstr "Icon providers saved"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Icon: {0}"
 msgstr "Icon: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Iconify"
 msgstr "Iconify"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Icons"
 msgstr "Icons"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Image Source"
 msgstr "Image Source"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Indexes"
 msgstr "Indexes"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Inside, bottom-left"
 msgstr "Inside, bottom-left"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Invariant culture"
 msgstr "Invariant culture"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Keep navigation expanded"
 msgstr "Keep navigation expanded"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Last cache error: {0}"
 msgstr "Last cache error: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Latest"
 msgstr "Latest"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Layout Animations"
 msgstr "Layout Animations"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Layout overrides cleaned up"
 msgstr "Layout overrides cleaned up"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Leave prefixes empty to search every collection exposed by the configured Iconify-compatible API."
 msgstr "Leave prefixes empty to search every collection exposed by the configured Iconify-compatible API."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Leave unset to follow the tenant's default culture."
 msgstr "Leave unset to follow the tenant's default culture."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Legacy ImageFormat"
 msgstr "Legacy ImageFormat"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Light Action"
 msgstr "Light Action"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Link"
 msgstr "Link"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Link Menu Item"
 msgstr "Link Menu Item"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Load by handle"
 msgstr "Load by handle"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading admin menu..."
 msgstr "Loading admin menu..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading admin menus..."
 msgstr "Loading admin menus..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading app manifest..."
 msgstr "Loading app manifest..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading features..."
 msgstr "Loading features..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading icon provider settings..."
 msgstr "Loading icon provider settings..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading icons..."
 msgstr "Loading icons..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading menus..."
 msgstr "Loading menus..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading more..."
 msgstr "Loading more..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading settings..."
 msgstr "Loading settings..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading site settings..."
 msgstr "Loading site settings..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading themes..."
 msgstr "Loading themes..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Loading..."
 msgstr "Loading..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Local Menu"
 msgstr "Local Menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Localization"
 msgstr "Localization"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Localization settings are unavailable for this tenant."
 msgstr "Localization settings are unavailable for this tenant."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Log in"
 msgstr "Log in"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Log out"
 msgstr "Log out"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Magnetometer"
 msgstr "Magnetometer"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Manage admin UI options and route access planning."
 msgstr "Manage admin UI options and route access planning."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Manage admin menu nodes with drag-and-drop ordering and a parent-node fallback selector."
 msgstr "Manage admin menu nodes with drag-and-drop ordering and a parent-node fallback selector."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Manage queries through the query sources enabled for this tenant."
 msgstr "Manage queries through the query sources enabled for this tenant."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Manage server-side icon providers used by the icon selector, admin menus, and icon packs."
 msgstr "Manage server-side icon providers used by the icon selector, admin menus, and icon packs."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Manage site menus and nested menu items."
 msgstr "Manage site menus and nested menu items."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Manage site, resource, and cache settings."
 msgstr "Manage site, resource, and cache settings."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Manage the tenants of this installation."
 msgstr "Manage the tenants of this installation."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Manage this tenant's media files and folders."
 msgstr "Manage this tenant's media files and folders."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Manifest Source"
 msgstr "Manifest Source"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Max file size"
 msgstr "Max file size"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Max page size"
 msgstr "Max page size"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Max paged count"
 msgstr "Max paged count"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Media"
 msgstr "Media"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Media Library"
 msgstr "Media Library"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Media Options"
 msgstr "Media Options"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Media Profiles"
 msgstr "Media Profiles"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Media Source"
 msgstr "Media Source"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Media URL path"
 msgstr "Media URL path"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Menu converted"
 msgstr "Menu converted"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Menu deleted"
 msgstr "Menu deleted"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Menu name"
 msgstr "Menu name"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Menus"
 msgstr "Menus"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Microphone"
 msgstr "Microphone"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Midi"
 msgstr "Midi"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Modified"
 msgstr "Modified"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Name"
 msgstr "Name"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "New content"
 msgstr "New content"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "New folder"
 msgstr "New folder"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "New media profile"
 msgstr "New media profile"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "New menu"
 msgstr "New menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "New password (leave blank to retain)"
 msgstr "New password (leave blank to retain)"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "New profile"
 msgstr "New profile"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "New query"
 msgstr "New query"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "New template"
 msgstr "New template"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "New {0}"
 msgstr "New {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Next"
 msgstr "Next"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No admin menu items returned."
 msgstr "No admin menu items returned."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No admin menus found."
 msgstr "No admin menus found."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No admin theme selected"
 msgstr "No admin theme selected"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No admin-specific override"
 msgstr "No admin-specific override"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No content items match the current filters."
 msgstr "No content items match the current filters."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No content parts are attached to the available types."
 msgstr "No content parts are attached to the available types."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No content types are available."
 msgstr "No content types are available."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No content types returned."
 msgstr "No content types returned."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No fields are defined on this part."
 msgstr "No fields are defined on this part."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No icon assigned"
 msgstr "No icon assigned"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No icons found."
 msgstr "No icons found."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No link metadata"
 msgstr "No link metadata"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No menu items returned."
 msgstr "No menu items returned."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No queries match this filter."
 msgstr "No queries match this filter."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No referrer"
 msgstr "No referrer"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No referrer when downgrade"
 msgstr "No referrer when downgrade"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No role description has been set."
 msgstr "No role description has been set."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No roles are available."
 msgstr "No roles are available."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No routes were discovered for the admin site map."
 msgstr "No routes were discovered for the admin site map."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No site theme selected"
 msgstr "No site theme selected"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No standard menus found."
 msgstr "No standard menus found."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "No tenants match this filter."
 msgstr "No tenants match this filter."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Node"
 msgstr "Node"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Node type"
 msgstr "Node type"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "None"
 msgstr "None"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Not Configured"
 msgstr "Not Configured"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Not initialized"
 msgstr "Not initialized"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Nothing currently lists this string (its feature may be disabled or its source text changed). The stored translation still applies where the string renders; clear it to delete it."
 msgstr "Nothing currently lists this string (its feature may be disabled or its source text changed). The stored translation still applies where the string renders; clear it to delete it."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Nothing here. The current search or filters returned no features."
 msgstr "Nothing here. The current search or filters returned no features."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Number of recovery codes to generate"
 msgstr "Number of recovery codes to generate"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Object Source"
 msgstr "Object Source"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Only captions from an admin menu can be saved as tenant translations, and doing so needs permission to manage translations."
 msgstr "Only captions from an admin menu can be saved as tenant translations, and doing so needs permission to manage translations."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Open full page"
 msgstr "Open full page"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Open submenu"
 msgstr "Open submenu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Open user menu"
 msgstr "Open user menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Open {0}"
 msgstr "Open {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Optional"
 msgstr "Optional"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Optional border radius"
 msgstr "Optional border radius"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Optional comma-separated list, for example mdi, lucide, material-symbols"
 msgstr "Optional comma-separated list, for example mdi, lucide, material-symbols"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Optional. Only applies to the admin area — a signed-in user's own language preference or an explicit session choice still takes priority here. Leave unset to use the default culture above everywhere, including the admin area."
 msgstr "Optional. Only applies to the admin area — a signed-in user's own language preference or an explicit session choice still takes priority here. Leave unset to use the default culture above everywhere, including the admin area."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Grove could not {0} {1}."
 msgstr "Grove could not {0} {1}."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Culture settings were saved. New requests use the updated cultures."
 msgstr "Culture settings were saved. New requests use the updated cultures."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The content item could not be saved."
 msgstr "The content item could not be saved."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The publish state could not be changed."
 msgstr "The publish state could not be changed."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The content item could not be deleted."
 msgstr "The content item could not be deleted."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The media file could not be uploaded."
 msgstr "The media file could not be uploaded."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The requested tenant action could not be completed."
 msgstr "The requested tenant action could not be completed."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The media folder could not be created."
 msgstr "The media folder could not be created."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The media file could not be deleted."
 msgstr "The media file could not be deleted."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The culture settings could not be saved. Verify custom culture codes and your permission to manage cultures."
 msgstr "The culture settings could not be saved. Verify custom culture codes and your permission to manage cultures."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The profile could not be saved."
 msgstr "The profile could not be saved."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The translations could not be saved. Verify your permission to manage this culture."
 msgstr "The translations could not be saved. Verify your permission to manage this culture."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Origin"
 msgstr "Origin"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Origin when cross origin"
 msgstr "Origin when cross origin"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Outside, bottom-right"
 msgstr "Outside, bottom-right"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Oversized Images"
 msgstr "Oversized Images"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Page Size"
 msgstr "Page Size"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Page title format"
 msgstr "Page title format"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Page {0} of {1}"
 msgstr "Page {0} of {1}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Parent"
 msgstr "Parent"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Parent Node"
 msgstr "Parent Node"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Parent: {0}"
 msgstr "Parent: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Parts"
 msgstr "Parts"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Password"
 msgstr "Password"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Payment"
 msgstr "Payment"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Permission names"
 msgstr "Permission names"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Permission names, comma-separated"
 msgstr "Permission names, comma-separated"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Permissions"
 msgstr "Permissions"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Permissions Policy"
 msgstr "Permissions Policy"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Permissions: {0}"
 msgstr "Permissions: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Phone Number"
 msgstr "Phone Number"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Picture In Picture"
 msgstr "Picture In Picture"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Placeholder"
 msgstr "Placeholder"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Position"
 msgstr "Position"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Preferences for your own account. These never affect other users or tenant-wide settings."
 msgstr "Preferences for your own account. These never affect other users or tenant-wide settings."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Prefixes"
 msgstr "Prefixes"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Preview"
 msgstr "Preview"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Previous"
 msgstr "Previous"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Primary Action"
 msgstr "Primary Action"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Primary navigation export failed"
 msgstr "Primary navigation export failed"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Primary navigation exported"
 msgstr "Primary navigation exported"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Primary navigation item renamed"
 msgstr "Primary navigation item renamed"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Primary navigation settings"
 msgstr "Primary navigation settings"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Primary navigation settings saved"
 msgstr "Primary navigation settings saved"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Priority"
 msgstr "Priority"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Profile deleted."
 msgstr "Profile deleted."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Profile name"
 msgstr "Profile name"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Profile saved."
 msgstr "Profile saved."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Provider"
 msgstr "Provider"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Provider metadata (JSON object)"
 msgstr "Provider metadata (JSON object)"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Provider metadata must be a JSON object."
 msgstr "Provider metadata must be a JSON object."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Provider metadata must contain valid JSON."
 msgstr "Provider metadata must contain valid JSON."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Provider search preview"
 msgstr "Provider search preview"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Prune JSON"
 msgstr "Prune JSON"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Public Iconify data is synced into App_Data, shared across tenants, and searched locally by default. Custom Iconify servers bypass this cache."
 msgstr "Public Iconify data is synced into App_Data, shared across tenants, and searched locally by default. Custom Iconify servers bypass this cache."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Public Iconify local cache"
 msgstr "Public Iconify local cache"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Public Key Retrieval"
 msgstr "Public Key Retrieval"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Publish"
 msgstr "Publish"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Publish after saving"
 msgstr "Publish after saving"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Publish/unpublish menu"
 msgstr "Publish/unpublish menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Published"
 msgstr "Published"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Quality"
 msgstr "Quality"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Queries"
 msgstr "Queries"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Queries deleted"
 msgstr "Queries deleted"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Query saved"
 msgstr "Query saved"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Quick Add"
 msgstr "Quick Add"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Read-only media configuration provided by the host."
 msgstr "Read-only media configuration provided by the host."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Rebuild"
 msgstr "Rebuild"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Recipe"
 msgstr "Recipe"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Recipes"
 msgstr "Recipes"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Referrer Policy"
 msgstr "Referrer Policy"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Refresh"
 msgstr "Refresh"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Reload"
 msgstr "Reload"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Remote fallback"
 msgstr "Remote fallback"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Remove"
 msgstr "Remove"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Remove culture"
 msgstr "Remove culture"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Remove separator"
 msgstr "Remove separator"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Remove tenant {0}? This cannot be undone."
 msgstr "Remove tenant {0}? This cannot be undone."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Remove {0}"
 msgstr "Remove {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Removed any saved overrides that no longer match a current menu item."
 msgstr "Removed any saved overrides that no longer match a current menu item."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Rename menu"
 msgstr "Rename menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Rename menu: {0}"
 msgstr "Rename menu: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Require two-factor authentication"
 msgstr "Require two-factor authentication"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Reset Admin Theme"
 msgstr "Reset Admin Theme"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Reset Iconify defaults"
 msgstr "Reset Iconify defaults"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Reset Site Theme"
 msgstr "Reset Site Theme"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Reset defaults"
 msgstr "Reset defaults"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Resource Debug Mode"
 msgstr "Resource Debug Mode"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Resources"
 msgstr "Resources"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Result"
 msgstr "Result"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Result schema (optional)"
 msgstr "Result schema (optional)"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Return Content Items"
 msgstr "Return Content Items"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Role permissions will be added with the dedicated permission editor."
 msgstr "Role permissions will be added with the dedicated permission editor."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Roles"
 msgstr "Roles"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Roles (comma-separated)"
 msgstr "Roles (comma-separated)"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Roles: {0}"
 msgstr "Roles: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Root"
 msgstr "Root"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Root level"
 msgstr "Root level"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Root: {0}"
 msgstr "Root: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Route access management placeholder. This uses the admin menu tree editor presentation for now; route permissions and access-control editors will be added here as requirements firm up."
 msgstr "Route access management placeholder. This uses the admin menu tree editor presentation for now; route permissions and access-control editors will be added here as requirements firm up."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Route group • depth {0} • order {1}"
 msgstr "Route group • depth {0} • order {1}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Run"
 msgstr "Run"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Same origin"
 msgstr "Same origin"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Save"
 msgstr "Save"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Save as default"
 msgstr "Save as default"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Save as this tenant's translation"
 msgstr "Save as this tenant's translation"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Save menu name"
 msgstr "Save menu name"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Save provider settings"
 msgstr "Save provider settings"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Save settings"
 msgstr "Save settings"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Save site settings"
 msgstr "Save site settings"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Saved as a tenant translation"
 msgstr "Saved as a tenant translation"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Saved as your default language."
 msgstr "Saved as your default language."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Schema"
 msgstr "Schema"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Screen Wake Lock"
 msgstr "Screen Wake Lock"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Script Source"
 msgstr "Script Source"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Search"
 msgstr "Search"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Search Iconify, tenant icons, and enabled icon providers. Results are stored as @api-provider:icon-prefix:icon-name references."
 msgstr "Search Iconify, tenant icons, and enabled icon providers. Results are stored as @api-provider:icon-prefix:icon-name references."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Search Menu"
 msgstr "Search Menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Search all icons..."
 msgstr "Search all icons..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Search content titles..."
 msgstr "Search content titles..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Search menus..."
 msgstr "Search menus..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Search name, ID, category, description, or dependency..."
 msgstr "Search name, ID, category, description, or dependency..."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Search name, host, or prefix"
 msgstr "Search name, host, or prefix"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Search query names"
 msgstr "Search query names"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Search users"
 msgstr "Search users"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Secondary Action"
 msgstr "Secondary Action"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Security Headers"
 msgstr "Security Headers"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Security headers not saved"
 msgstr "Security headers not saved"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Security headers saved"
 msgstr "Security headers saved"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Select a content part to inspect its field and type usage."
 msgstr "Select a content part to inspect its field and type usage."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Select a content type to inspect its definition."
 msgstr "Select a content type to inspect its definition."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Select a role to inspect its status."
 msgstr "Select a role to inspect its status."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Select a standard menu to edit its items."
 msgstr "Select a standard menu to edit its items."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Select all features in {0}"
 msgstr "Select all features in {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Select an admin menu to edit its nodes."
 msgstr "Select an admin menu to edit its nodes."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Select the current site and admin themes, and enable or disable available themes."
 msgstr "Select the current site and admin themes, and enable or disable available themes."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Select {0}"
 msgstr "Select {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Selected icon: {0}"
 msgstr "Selected icon: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Self"
 msgstr "Self"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Separator"
 msgstr "Separator"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Settings"
 msgstr "Settings"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Settings saved"
 msgstr "Settings saved"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Show menu"
 msgstr "Show menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Show the culture name beside its flag. The default is the flag icon only."
 msgstr "Show the culture name beside its flag. The default is the flag icon only."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Showing {0} of {1} features"
 msgstr "Showing {0} of {1} features"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Sidebar (Built In) is the generated admin menu plus this tenant's layout overrides. Drag items anywhere; hide/show only affects this tenant's sidebar. Add node creates lightweight placeholder groups only."
 msgstr "Sidebar (Built In) is the generated admin menu plus this tenant's layout overrides. Drag items anywhere; hide/show only affects this tenant's sidebar. Add node creates lightweight placeholder groups only."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Sidebar (Built In) placeholders do not link"
 msgstr "Sidebar (Built In) placeholders do not link"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Sign in as another user"
 msgstr "Sign in as another user"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Sign in is required."
 msgstr "Sign in is required."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Signed in as {0}"
 msgstr "Signed in as {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Site"
 msgstr "Site"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Site CDN (Content Delivery Network) base url"
 msgstr "Site CDN (Content Delivery Network) base url"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Site name"
 msgstr "Site name"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Site theme"
 msgstr "Site theme"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Sitemap"
 msgstr "Sitemap"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Size"
 msgstr "Size"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Some text"
 msgstr "Some text"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Sort"
 msgstr "Sort"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Source"
 msgstr "Source"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Source commit: {0:u}"
 msgstr "Source commit: {0:u}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Speaker Selection"
 msgstr "Speaker Selection"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Link and HTML menu items are editable here; content-picker menu items cannot be edited here yet."
 msgstr "Link and HTML menu items are editable here; content-picker menu items cannot be edited here yet."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "State"
 msgstr "State"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Status"
 msgstr "Status"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Strict origin"
 msgstr "Strict origin"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Strict origin when cross origin"
 msgstr "Strict origin when cross origin"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Style Source"
 msgstr "Style Source"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Style packs"
 msgstr "Style packs"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Supported cultures"
 msgstr "Supported cultures"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Supported sizes"
 msgstr "Supported sizes"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Surface 1"
 msgstr "Surface 1"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Surface 2"
 msgstr "Surface 2"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Synchronous XML Http Request"
 msgstr "Synchronous XML Http Request"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "System role"
 msgstr "System role"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "System roles are built in and cannot be deleted."
 msgstr "System roles are built in and cannot be deleted."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Target"
 msgstr "Target"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Templates"
 msgstr "Templates"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tenant"
 msgstr "Tenant"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tenant action failed"
 msgstr "Tenant action failed"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tenant avatar image URL (optional)"
 msgstr "Tenant avatar image URL (optional)"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tenant avatar shape"
 msgstr "Tenant avatar shape"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tenant reload failed"
 msgstr "Tenant reload failed"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tenant reloaded"
 msgstr "Tenant reloaded"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tenant-level translations of dynamic data: admin menu captions, content type names, permissions. These override module-shipped translations at render time."
 msgstr "Tenant-level translations of dynamic data: admin menu captions, content type names, permissions. These override module-shipped translations at render time."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tenant: {0} · State: {1} · Admin: {2}"
 msgstr "Tenant: {0} · State: {1} · Admin: {2}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tenants"
 msgstr "Tenants"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tenant{0} {1}d"
 msgstr "Tenant{0} {1}d"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Text"
 msgstr "Text"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The Admin theme was reset."
 msgstr "The Admin theme was reset."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The Iconify provider settings were updated."
 msgstr "The Iconify provider settings were updated."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The New menu branch has a fixed position"
 msgstr "The New menu branch has a fixed position"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The New menu branch has a fixed structure. Text and icon overrides are allowed, but layout changes are not."
 msgstr "The New menu branch has a fixed structure. Text and icon overrides are allowed, but layout changes are not."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The Site theme was reset."
 msgstr "The Site theme was reset."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The admin menu node was saved."
 msgstr "The admin menu node was saved."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The content document must be a JSON object."
 msgstr "The content document must be a JSON object."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The development export endpoint was not available or rejected the request."
 msgstr "The development export endpoint was not available or rejected the request."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The install/first-run cache is cloned from the Iconify icon-sets GitHub repository and refreshed automatically once per day by the server."
 msgstr "The install/first-run cache is cloned from the Iconify icon-sets GitHub repository and refreshed automatically once per day by the server."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The login settings could not be saved."
 msgstr "The login settings could not be saved."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The primary navigation display text was updated."
 msgstr "The primary navigation display text was updated."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The primary navigation settings were updated."
 msgstr "The primary navigation settings were updated."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The query could not be saved. Check the provider metadata and try again."
 msgstr "The query could not be saved. Check the provider metadata and try again."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The requested content item was not found."
 msgstr "The requested content item was not found."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The security header settings could not be updated."
 msgstr "The security header settings could not be updated."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The security header settings were updated."
 msgstr "The security header settings were updated."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The server could not save the design tokens."
 msgstr "The server could not save the design tokens."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The server could not update the admin menu."
 msgstr "The server could not update the admin menu."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The server could not update the menu name."
 msgstr "The server could not update the menu name."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The server rejected the provider settings."
 msgstr "The server rejected the provider settings."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The source and metadata are provider-neutral. Provider modules may store any metadata shape in the JSON object below."
 msgstr "The source and metadata are provider-neutral. Provider modules may store any metadata shape in the JSON object below."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The tenant design tokens were updated."
 msgstr "The tenant design tokens were updated."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The tenant state was updated."
 msgstr "The tenant state was updated."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The theme action did not complete successfully."
 msgstr "The theme action did not complete successfully."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The translations were saved for this culture."
 msgstr "The translations were saved for this culture."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "The user could not be saved. Check the supplied values."
 msgstr "The user could not be saved. Check the supplied values."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Themes"
 msgstr "Themes"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "There are no alternate themes installed."
 msgstr "There are no alternate themes installed."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "There are no themes installed."
 msgstr "There are no themes installed."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "These are the valid .NET/BCP 47 cultures the site can serve."
 msgstr "These are the valid .NET/BCP 47 cultures the site can serve."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "This admin menu does not have any nodes yet."
 msgstr "This admin menu does not have any nodes yet."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "This caption now applies everywhere in the current culture, not only in this sidebar."
 msgstr "This caption now applies everywhere in the current culture, not only in this sidebar."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "This folder is empty. Upload a file or create a folder to get started."
 msgstr "This folder is empty. Upload a file or create a folder to get started."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "This is the raw content JSON. Preserve fields you do not intend to change."
 msgstr "This is the raw content JSON. Preserve fields you do not intend to change."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "This is used when a request does not select one of the supported cultures."
 msgstr "This is used when a request does not select one of the supported cultures."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "This menu does not have any items yet."
 msgstr "This menu does not have any items yet."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "This permanently removes {0}."
 msgstr "This permanently removes {0}."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "This type has no attached parts."
 msgstr "This type has no attached parts."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "This uses the same icon selector component as menu editors. Selecting an icon stores the normalized icon key."
 msgstr "This uses the same icon selector component as menu editors. Selecting an icon stores the normalized icon key."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tier 3-4"
 msgstr "Tier 3-4"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tier backgrounds"
 msgstr "Tier backgrounds"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tier base size"
 msgstr "Tier base size"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tier indentation"
 msgstr "Tier indentation"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tier {0}"
 msgstr "Tier {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Time zone ID"
 msgstr "Time zone ID"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Title"
 msgstr "Title"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Title bar"
 msgstr "Title bar"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Toggle"
 msgstr "Toggle"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Toggle dark/light mode"
 msgstr "Toggle dark/light mode"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Toggle route access coming soon"
 msgstr "Toggle route access coming soon"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Tokenized query strings"
 msgstr "Tokenized query strings"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Translations"
 msgstr "Translations"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Translations are unavailable - no culture you may view is configured for this tenant."
 msgstr "Translations are unavailable - no culture you may view is configured for this tenant."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Two-Factor Authentication"
 msgstr "Two-Factor Authentication"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Type"
 msgstr "Type"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "USB"
 msgstr "USB"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Unable to load themes: {0}"
 msgstr "Unable to load themes: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Unable to save your default culture."
 msgstr "Unable to save your default culture."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Unable to save your default language."
 msgstr "Unable to save your default language."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Uncategorized"
 msgstr "Uncategorized"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Unoptimized Images"
 msgstr "Unoptimized Images"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Unpublish"
 msgstr "Unpublish"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Unpublished"
 msgstr "Unpublished"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Unsafe URL"
 msgstr "Unsafe URL"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Unsized Media"
 msgstr "Unsized Media"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Upgrade Insecure Requests"
 msgstr "Upgrade Insecure Requests"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Upload"
 msgstr "Upload"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Url"
 msgstr "Url"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Use a script to sync user properties from external provider claims"
 msgstr "Use a script to sync user properties from external provider claims"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Use as admin"
 msgstr "Use as admin"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Use as site"
 msgstr "Use as site"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Use external provider for login."
 msgstr "Use external provider for login."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Use framework CDN (Content Delivery Network)"
 msgstr "Use framework CDN (Content Delivery Network)"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Use resources cache busting"
 msgstr "Use resources cache busting"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Use site theme for login page"
 msgstr "Use site theme for login page"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Use site theme for two-factor authentication pages"
 msgstr "Use site theme for two-factor authentication pages"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Use the tenant default"
 msgstr "Use the tenant default"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Used by content types"
 msgstr "Used by content types"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "User"
 msgstr "User"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "User Login Settings"
 msgstr "User Login Settings"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "User Name"
 msgstr "User Name"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "User Profile Menu"
 msgstr "User Profile Menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Username or email"
 msgstr "Username or email"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Users"
 msgstr "Users"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Version"
 msgstr "Version"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Web Share"
 msgstr "Web Share"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Web XR"
 msgstr "Web XR"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "When enabled, Iconify appears in icon search and can resolve selected Iconify icon keys for response icon packs."
 msgstr "When enabled, Iconify appears in icon search and can resolve selected Iconify icon keys for response icon packs."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Whether a framework CDN is used for registered scripts and stylesheets, such as jQuery, or their local version"
 msgstr "Whether a framework CDN is used for registered scripts and stylesheets, such as jQuery, or their local version"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Whether a quick search to filter the admin menu is displayed."
 msgstr "Whether a quick search to filter the admin menu is displayed."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Whether cache busting (append a version) is used for scripts and stylesheets"
 msgstr "Whether cache busting (append a version) is used for scripts and stylesheets"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Whether or not to display a theme toggler."
 msgstr "Whether or not to display a theme toggler."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Whether the titles are displayed in the top bar."
 msgstr "Whether the titles are displayed in the top bar."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Width"
 msgstr "Width"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "You can view this culture's translations but not edit them."
 msgstr "You can view this culture's translations but not edit them."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "You do not have permission to access this admin page."
 msgstr "You do not have permission to access this admin page."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Your account."
 msgstr "Your account."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Your default language was saved."
 msgstr "Your default language was saved."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "Your default language. This is used whenever you sign in, unless you switch languages temporarily from the culture picker in the title bar."
 msgstr "Your default language. This is used whenever you sign in, unless you switch languages temporarily from the culture picker in the title bar."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "admin"
 msgstr "admin"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "alias:main-menu"
 msgstr "alias:main-menu"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "id: {0}"
 msgstr "id: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "position: {0}"
 msgstr "position: {0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "site"
 msgstr "site"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "stored only"
 msgstr "stored only"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "v{0}"
 msgstr "v{0}"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0:n0} items"
 msgstr "{0:n0} items"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} (Built In)"
 msgstr "{0} (Built In)"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} bytes"
 msgstr "{0} bytes"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} could not be reloaded."
 msgstr "{0} could not be reloaded."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} days"
 msgstr "{0} days"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} deleted."
 msgstr "{0} deleted."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} fields"
 msgstr "{0} fields"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} fields · {1} types"
 msgstr "{0} fields · {1} types"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} is now the current {1} theme."
 msgstr "{0} is now the current {1} theme."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} matching icons"
 msgstr "{0} matching icons"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} parts"
 msgstr "{0} parts"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} preview"
 msgstr "{0} preview"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} queries deleted."
 msgstr "{0} queries deleted."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} saved with {1} layout items, {2} custom items, and {3} separators."
 msgstr "{0} saved with {1} layout items, {2} custom items, and {3} separators."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} saved."
 msgstr "{0} saved."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} tenant"
 msgstr "{0} tenant"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} uploaded."
 msgstr "{0} uploaded."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} users"
 msgstr "{0} users"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} was deleted."
 msgstr "{0} was deleted."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} was disabled."
 msgstr "{0} was disabled."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} was enabled."
 msgstr "{0} was enabled."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} was reloaded."
 msgstr "{0} was reloaded."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} was saved."
 msgstr "{0} was saved."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} was {1}."
 msgstr "{0} was {1}."
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} was {1}. "
 msgstr "{0} was {1}. "
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} {1} features?"
 msgstr "{0} {1} features?"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} {1} tenant{2}?"
 msgstr "{0} {1} tenant{2}?"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "{0} · {1} parts"
 msgstr "{0} · {1} parts"
 
-msgctxt "Grove.Admin.Client"
+msgctxt "Grove.Infrastructure.Shells.Admin.Client"
 msgid "—"
 msgstr "—"
 

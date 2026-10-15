@@ -27,10 +27,10 @@ using Grove.Environment.Shell.Configuration;
 using Grove.Environment.Shell.Descriptor.Models;
 using Grove.Environment.Options;
 using Grove.Extensions;
-using Grove.FileStorage;
+using Grove.Data.Storage;
 using Grove.Json;
-using Grove.Localization;
-using Grove.Localization.Data;
+using Grove.Data.Localization;
+using Grove.Data.Localization.Data;
 using Grove.Locking;
 using Grove.Locking.Distributed;
 using Grove.Modules;
@@ -143,7 +143,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IHtmlLocalizerFactory, NullHtmlLocalizerFactory>();
 
         // Register no-op data localization services as defaults.
-        // These can be replaced when the Grove.DataLocalization module is enabled.
+        // These can be replaced when the Grove.Data.Localization.Translations module is enabled.
         services.TryAddSingleton<IDataLocalizerFactory, NullDataLocalizerFactory>();
         services.TryAddTransient<IDataLocalizer>(sp =>
         {
@@ -164,7 +164,6 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IPoweredByMiddlewareOptions, PoweredByMiddlewareOptions>();
         services.AddTransient<IConfigureOptions<DocumentJsonSerializerOptions>, DocumentJsonSerializerOptionsConfiguration>();
-        services.AddTransient<IConfigureOptions<MvcOptions>, MvcOptionsConfiguration>();
 
         services.AddScoped<IPlatformHelper, DefaultPlatformHelper>();
         services.AddSingleton<IClientIPAddressAccessor, DefaultClientIPAddressAccessor>();
@@ -361,8 +360,31 @@ public static class ServiceCollectionExtensions
             }
 
             collection.AddRouting();
+
+            // Link generation without MVC (docs/MVC/api.md › Plumbing): the tenant's LinkGenerator
+            // over the current request.
+            collection.AddScoped<Grove.Routing.IShellLinkGenerator, Grove.Routing.ShellLinkGenerator>();
+
+            collection.Configure<RouteOptions>(options =>
+            {
+                // Cors is handled by the Cors module, so the check for unhandled security metadata
+                // is skipped (also a minor performance benefit).
+                options.SuppressCheckForUnhandledSecurityMetadata = true;
+            });
         },
         order: PlatformConstants.ConfigureOrder.InfrastructureService);
+
+        builder.ConfigureServices(collection =>
+        {
+            // Lets a tenant add its own route values address schemes for link generation (content
+            // item routes, the home route). Registered last so it is the scheme LinkGenerator
+            // resolves; it falls back to the default scheme.
+            collection.AddSingleton<IEndpointAddressScheme<RouteValuesAddress>, Grove.Routing.ShellRouteValuesAddressScheme>();
+
+            // File versions ('?v=') that also look up every tenant level 'IStaticFileProvider'.
+            collection.Replace(ServiceDescriptor.Singleton<Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider, Grove.Modules.ShellFileVersionProvider>());
+        },
+        order: int.MaxValue - 100);
     }
 
     /// <summary>

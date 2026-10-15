@@ -2,9 +2,9 @@ using System.Text.Json;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Http;
 using Fluid;
-using Grove.ContentFields.Fields;
-using Grove.ContentManagement;
-using Grove.Liquid;
+using Grove.Contents.Fields.Fields;
+using Grove.Contents.Management;
+using Grove.Display.Liquid;
 using Grove.Tests.Apis.Context;
 
 namespace Grove.Tests.DisplayManagement;

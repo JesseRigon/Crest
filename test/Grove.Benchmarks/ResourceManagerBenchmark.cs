@@ -3,8 +3,8 @@ using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Grove.Benchmarks.Support;
-using Grove.Mvc;
-using Grove.ResourceManagement;
+using Grove.Modules;
+using Grove.Display.Resources.Management;
 
 namespace Grove.Benchmarks;
 
