@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Grove.BackgroundTasks;
-using Grove.Contents.VersionPruning.Drivers;
 using Grove.Contents.VersionPruning.Services;
 using Grove.Contents.VersionPruning.Tasks;
 using Grove.DisplayManagement.Handlers;
@@ -17,8 +16,11 @@ public sealed class Startup : StartupBase
     {
         services.AddScoped<IContentVersionPruningService, ContentVersionPruningService>();
         services.AddSingleton<IBackgroundTask, ContentVersionPruningBackgroundTask>();
-        services.AddSiteDisplayDriver<ContentVersionPruningSettingsDisplayDriver>();
-        services.AddPageSource<AdminPages>();
+        services.AddSettingsGroup<Models.ContentVersionPruningSettings>(
+            Models.ContentVersionPruningSettings.GroupId,
+            "Content Version Pruning",
+            ContentVersionPruningPermissions.ManageContentVersionPruningSettings,
+            group => group.InMenu("settings", entryId: "content-version-pruning"));
         services.AddPermissionProvider<ContentVersionPruningPermissionProvider>();
     }
 }

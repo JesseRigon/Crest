@@ -188,6 +188,16 @@ public class MenuShapes : ShapeTableProvider
             return;
         }
 
+        if (menuContentItem.TryGet<HtmlMenuItemPart>(out var html))
+        {
+            // The link's text is markup; it reaches the tree sanitized, whatever the part's
+            // settings, since the tree's markup is rendered as is.
+            menuItem.Properties["Html"] = services.GetRequiredService<Grove.Infrastructure.Html.IHtmlSanitizerService>().Sanitize(html.Html ?? string.Empty);
+            menuItem.Properties["Url"] = html.Url is { } htmlUrl && htmlUrl.StartsWith("~/", StringComparison.Ordinal) ? htmlUrl[2..] : html.Url;
+            menuItem.Properties["Target"] = html.Target;
+            return;
+        }
+
         if (menuContentItem.Content["ContentMenuItemPart"]?["SelectedContentItem"]?["ContentItemIds"] is System.Text.Json.Nodes.JsonArray { Count: > 0 } ids
             && ids[0]?.GetValue<string>() is { Length: > 0 } targetId
             && services.GetService<IHttpContextAccessor>()?.HttpContext is { } httpContext)

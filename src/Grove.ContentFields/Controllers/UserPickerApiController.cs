@@ -27,7 +27,30 @@ public sealed class UserPickerApiController(
     [HttpGet]
     public async Task<ActionResult<UserPickerSearchResult[]>> SearchAsync(string part, string field, string contentType, string query)
     {
-        if (string.IsNullOrWhiteSpace(part) || string.IsNullOrWhiteSpace(field) || string.IsNullOrWhiteSpace(contentType))
+        if (string.IsNullOrWhiteSpace(part) || string.IsNullOrWhiteSpace(contentType))
+        {
+            return BadRequest("Part and contentType are required parameters");
+        }
+
+        // The common part's owner editor: any user, for a caller who may change owners.
+        if (string.IsNullOrWhiteSpace(field) && part == "CommonPart")
+        {
+            if (!await authorizationService.AuthorizeContentTypeAsync(User, CommonPermissions.EditContentOwner, contentType, User.FindFirstValue(ClaimTypes.NameIdentifier)))
+            {
+                return Forbid();
+            }
+
+            var ownerProvider = resultProviders.FirstOrDefault(candidate => candidate.Name == "Default");
+            if (ownerProvider is null)
+            {
+                return Ok(Array.Empty<UserPickerSearchResult>());
+            }
+
+            var owners = await ownerProvider.Search(new UserPickerSearchContext { Query = query, DisplayAllUsers = true, Roles = [] });
+            return Ok(owners.Select(result => new UserPickerSearchResult(result.UserId, result.DisplayText, result.IsEnabled)).ToArray());
+        }
+
+        if (string.IsNullOrWhiteSpace(field))
         {
             return BadRequest("Part, field and contentType are required parameters");
         }

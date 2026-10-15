@@ -43,6 +43,6 @@ public class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<PlacementsDeploymentSource, PlacementsDeploymentStep, PlacementsDeploymentStepDriver>();
+        services.AddDeployment<PlacementsDeploymentSource, PlacementsDeploymentStep>();
     }
 }

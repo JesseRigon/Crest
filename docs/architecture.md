@@ -149,7 +149,7 @@ Parties defines **no field types of its own**: the party picker on a role is a s
 `ContentPickerField` constrained to Person/Organization, the portal-user link a stock
 `UserPickerField`, an address's country and the levels below it a `GeoStackField` from
 `Grove.Regions`, and honorific, address kind, phone country, organization type and
-industry are `OptionPickerField`s from `Grove.ContentPartLists`. The only Parties-specific
+industry are `OptionPickerField`s (Grove.OptionPicker) over `Grove.ContentPartLists` lists. The only Parties-specific
 helper is `PartyRoleDefinitions` ("define a role type: party picker + number field +
 profile"), which downstream modules and products call. The role content types are defined
 and registered by the modules that own them.
@@ -160,7 +160,7 @@ Field types are platform vocabulary: a tenant composes content from them in the 
 editor, and an application on Grove alone must be able to model prices, places and option
 sets without a line-of-business module. So **every custom `ContentField` belongs to Grove**
 unless it is proprietary or depends on proprietary code. Three exist: `OptionPickerField`
-(Grove.Server), `GeoStackField` (Grove.Regions) and `PriceField` (Grove.Money,
+(Grove.OptionPicker, [server.md](server.md) S2), `GeoStackField` (Grove.Regions) and `PriceField` (Grove.Money,
 [types.md](types.md)).
 
 ## Naming
@@ -318,6 +318,28 @@ model, and the menu and the gate read the same permission. Legacy MVC pages are 
 entries pointing at their legacy route until they are ported; dynamic items (New › *content
 type*) are a registry source. The mechanism is in [admin-menu.md](admin-menu.md) › The page
 registry.
+
+### Modules, features and how a module reaches the host
+
+A **module** is an assembly with a manifest; a **feature** is the unit a tenant enables. The
+host discovers modules at build time: each module package carries a `build/` props file that
+names it, and the host assembly lists every module so named (`ModuleName` attributes). NuGet
+does not pass a dependency's `build/` assets on, so a module that reaches the host only as
+another module's dependency is copied as a library and never loaded: its startups, permissions
+and registrations do not exist.
+
+- **Standard: separate modules, pulled in by their parent.** Each concern is its own module
+  (own features, startups, migrations, client library), replaceable and removable downstream.
+  A parent that always brings children references them with `PrivateAssets="none"` so their
+  module props flow to the host (as `Grove.Application.Cms.Core.Targets` does for the
+  platform); the host references only the parent.
+- **Exception: one module, several features**, when the pieces truly ship together and the
+  rest of Grove relies on them. The children become `[Feature]`s of the parent assembly, each
+  with feature-gated startups; enabling, disabling and registry registration are unchanged,
+  only removal from the shipped code is lost.
+- Either way, registration into a seam's registry is done by the startups of *enabled
+  features*, so how an assembly arrived never changes what a tenant gets.
+- ☐ A test fails when a module assembly in the host's output is not in its module list.
 
 ## The rules that keep it composable
 

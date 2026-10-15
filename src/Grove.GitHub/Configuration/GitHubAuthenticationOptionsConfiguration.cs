@@ -67,7 +67,7 @@ internal sealed class GitHubAuthenticationOptionsConfiguration : IConfigureNamed
             _logger.LogError(ex, "The GitHub Consumer Secret could not be decrypted. It may have been encrypted using a different key.");
         }
 
-        if (settings.CallbackPath.HasValue)
+        if (!string.IsNullOrEmpty(settings.CallbackPath))
         {
             options.CallbackPath = settings.CallbackPath;
         }

@@ -4,8 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Grove.DisplayManagement.Handlers;
 using Grove.GitHub.Configuration;
-using Grove.GitHub.Drivers;
 using Grove.GitHub.Recipes;
+using Grove.GitHub.Settings;
 using Grove.Modules;
 using Grove.Navigation;
 using Grove.Recipes;
@@ -26,8 +26,11 @@ public sealed class GitHubLoginStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteDisplayDriver<GitHubAuthenticationSettingsDisplayDriver>();
-        services.AddPageSource<GitHubLoginPages>();
+        services.AddSettingsGroup<GitHubAuthenticationSettings>(
+            GitHubConstants.Features.GitHubAuthentication,
+            "GitHub",
+            Permissions.ManageGitHubAuthentication,
+            group => group.InMenu("settings-authentication", entryId: "github").ReloadsTenant());
 
         // Register the options initializers required by the GitHub Handler.
         services.AddTransient<IConfigureOptions<AuthenticationOptions>, AuthenticationOptionsConfiguration>();

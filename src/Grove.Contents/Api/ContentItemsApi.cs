@@ -41,7 +41,7 @@ public sealed class ContentItemsApi : ApiContributor
         routes.MapPost("{contentItemId}/unpublish", (HttpContext __http, [FromRoute] string contentItemId) => ApiHandlers.For<ContentItemsHandlers>(__http).UnpublishAsync(contentItemId));
         routes.MapGet("{contentItemId}", (HttpContext __http, [FromRoute] string contentItemId) => ApiHandlers.For<ContentItemsHandlers>(__http).GetAsync(contentItemId));
         routes.MapGet("{contentItemId}/view", (HttpContext __http, [FromRoute] string contentItemId, [FromQuery] string? parts = null) => ApiHandlers.For<ContentItemsHandlers>(__http).ViewAsync(contentItemId, parts));
-        routes.MapGet("{contentItemId}/display", (HttpContext __http, [FromRoute] string contentItemId, [FromServices] IAccessDecision decision, [FromServices] IContentItemDisplayManager displayManager, [FromServices] IDisplayTreeBuilder trees, [FromServices] IDisplayTreeFilter filter, [FromServices] IDisplayHtmlRenderer htmlRenderer, [FromServices] IUpdateModelAccessor updaters, [FromQuery] string? displayType = null, [FromQuery] string? format = null) => ApiHandlers.For<ContentItemsHandlers>(__http).DisplayAsync(contentItemId, decision, displayManager, trees, filter, htmlRenderer, updaters, displayType, format));
+        routes.MapGet("{contentItemId}/display", (HttpContext __http, [FromRoute] string contentItemId, [FromServices] IAccessDecision decision, [FromServices] IContentItemDisplayManager displayManager, [FromServices] IDisplayTreeBuilder trees, [FromServices] IDisplayTreeFilter filter, [FromServices] IDisplayHtmlRenderer htmlRenderer, [FromServices] IUpdateModelAccessor updaters, [FromQuery] string? displayType = null, [FromQuery] string? format = null, [FromQuery] string? version = null) => ApiHandlers.For<ContentItemsHandlers>(__http).DisplayAsync(contentItemId, decision, displayManager, trees, filter, htmlRenderer, updaters, displayType, format, version));
         routes.MapPost("", (HttpContext __http, [FromBody] ContentItemWriteRequest request) => ApiHandlers.For<ContentItemsHandlers>(__http).CreateAsync(request));
         routes.MapPut("{contentItemId}", (HttpContext __http, [FromRoute] string contentItemId, [FromBody] ContentItemWriteRequest request) => ApiHandlers.For<ContentItemsHandlers>(__http).UpdateAsync(contentItemId, request));
         routes.MapDelete("{contentItemId}", (HttpContext __http, [FromRoute] string contentItemId) => ApiHandlers.For<ContentItemsHandlers>(__http).DeleteAsync(contentItemId));
@@ -50,6 +50,8 @@ public sealed class ContentItemsApi : ApiContributor
         routes.MapPost("{contentItemId}/discard-draft", (HttpContext __http, [FromRoute] string contentItemId) => ApiHandlers.For<ContentItemsHandlers>(__http).DiscardDraftAsync(contentItemId));
         routes.MapGet("{contentItemId}/versions", (HttpContext __http, [FromRoute] string contentItemId) => ApiHandlers.For<ContentItemsHandlers>(__http).VersionsAsync(contentItemId));
         routes.MapGet("by-handle/{handle}", (HttpContext __http, [FromRoute] string handle) => ApiHandlers.For<ContentItemsHandlers>(__http).GetByHandle(handle));
+        ContentDeploymentApi.Map(routes);
+        routes.MapGet("filters", (HttpContext __http, [FromQuery] string? contentType = null) => ContentItemListFilters.DescribeAsync(__http, contentType));
     }
 }
 
@@ -135,6 +137,19 @@ public sealed class ContentItemsHandlers(
         else if (string.Equals(status, "draft", StringComparison.OrdinalIgnoreCase))
         {
             query = query.With<ContentItemIndex>(index => !index.Published);
+        }
+
+        // The filters modules add (a culture, a taxonomy term), each reading its own parameter.
+        var filters = HttpContext.RequestServices.GetServices<Grove.Contents.Services.IContentItemListFilter>().ToArray();
+        if (filters.Length > 0)
+        {
+            var parameters = Request.Query
+                .Where(parameter => !string.IsNullOrWhiteSpace(parameter.Value))
+                .ToDictionary(parameter => parameter.Key, parameter => parameter.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+            foreach (var filter in filters)
+            {
+                await filter.FilterAsync(query, parameters, HttpContext.RequestAborted);
+            }
         }
 
         var total = await query.CountAsync();
@@ -243,7 +258,8 @@ public sealed class ContentItemsHandlers(
         [FromServices] IDisplayHtmlRenderer htmlRenderer,
         [FromServices] IUpdateModelAccessor updaters,
         [FromQuery] string? displayType = null,
-        [FromQuery] string? format = null)
+        [FromQuery] string? format = null,
+        [FromQuery] string? version = null)
     {
         displayType = string.IsNullOrWhiteSpace(displayType) ? PlatformConstants.DisplayType.Detail : displayType.Trim();
         if (displayType.Length > 64 || !displayType.All(char.IsAsciiLetterOrDigit))
@@ -256,6 +272,19 @@ public sealed class ContentItemsHandlers(
         if (caller is null)
         {
             return Forbid();
+        }
+
+        // version=latest: the latest version, a draft included, for whoever may preview it (the
+        // "preview draft" of the content list).
+        if (string.Equals(version, "latest", StringComparison.OrdinalIgnoreCase))
+        {
+            var draft = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
+            if (draft is null || !await decision.AllowsAsync(caller, CommonPermissions.PreviewContent.Name, draft, cancellationToken))
+            {
+                return NotFound();
+            }
+
+            return await RenderDisplayAsync(draft, caller, displayManager, trees, filter, htmlRenderer, updaters, displayType, format, cancellationToken);
         }
 
         var item = await contentManager.GetAsync(contentItemId, VersionOptions.Published);
@@ -285,18 +314,33 @@ public sealed class ContentItemsHandlers(
         if (item.Published && HttpContext is { } http)
         {
             var versions = http.RequestServices.GetRequiredService<DisplayTreeVersions>();
-            var version = await versions.ComputeAsync(
+            var treeVersion = await versions.ComputeAsync(
                 http.RequestServices.GetServices<IDisplayTreeVersionPart>(),
                 ["content-display", item.ContentItemVersionId, displayType, format?.ToLowerInvariant(), caller.ScopeSignature],
                 cancellationToken);
-            http.Response.Headers.ETag = DisplayTreeVersions.ETag(version);
+            http.Response.Headers.ETag = DisplayTreeVersions.ETag(treeVersion);
             http.Response.Headers.CacheControl = "private, no-cache";
-            if (DisplayTreeVersions.Matches(http.Request.Headers.IfNoneMatch, version))
+            if (DisplayTreeVersions.Matches(http.Request.Headers.IfNoneMatch, treeVersion))
             {
                 return StatusCode(Microsoft.AspNetCore.Http.StatusCodes.Status304NotModified);
             }
         }
 
+        return await RenderDisplayAsync(item, caller, displayManager, trees, filter, htmlRenderer, updaters, displayType, format, cancellationToken);
+    }
+
+    private async Task<IResult> RenderDisplayAsync(
+        Grove.ContentManagement.ContentItem item,
+        CallerContext caller,
+        IContentItemDisplayManager displayManager,
+        IDisplayTreeBuilder trees,
+        IDisplayTreeFilter filter,
+        IDisplayHtmlRenderer htmlRenderer,
+        IUpdateModelAccessor updaters,
+        string displayType,
+        string? format,
+        CancellationToken cancellationToken)
+    {
         var shape = await displayManager.BuildDisplayAsync(item, updaters.ModelUpdater, displayType);
         var tree = await trees.BuildAsync(shape, cancellationToken: cancellationToken);
 
@@ -340,9 +384,15 @@ public sealed class ContentItemsHandlers(
 
         item.DisplayText = request.DisplayText?.Trim() ?? string.Empty;
         ReplaceContent(item, request.Content);
+        var ownerError = await ApplyCommonPartAsync(item);
         // Clear-on-save: a field whose visibility condition is false must not keep a
         // stale value the editor was hiding.
         await visibilityEnforcer.ClearHiddenFieldsAsync(item, HttpContext.RequestAborted);
+        if (await ValidateItemAsync(item, ownerError) is { } invalid)
+        {
+            return invalid;
+        }
+
         bool created;
         try
         {
@@ -368,7 +418,13 @@ public sealed class ContentItemsHandlers(
 
         item.DisplayText = request.DisplayText?.Trim() ?? string.Empty;
         ReplaceContent(item, request.Content);
+        var ownerError = await ApplyCommonPartAsync(item);
         await visibilityEnforcer.ClearHiddenFieldsAsync(item, HttpContext.RequestAborted);
+        if (await ValidateItemAsync(item, ownerError) is { } invalid)
+        {
+            return invalid;
+        }
+
         try
         {
             await contentManager.UpdateAsync(item);
@@ -423,7 +479,13 @@ public sealed class ContentItemsHandlers(
 
         item.DisplayText = request.DisplayText?.Trim() ?? string.Empty;
         ReplaceContent(item, request.Content);
+        var ownerError = await ApplyCommonPartAsync(item);
         await visibilityEnforcer.ClearHiddenFieldsAsync(item, HttpContext.RequestAborted);
+        if (await ValidateItemAsync(item, ownerError) is { } invalid)
+        {
+            return invalid;
+        }
+
         try
         {
             await contentManager.SaveDraftAsync(item);
@@ -497,9 +559,124 @@ public sealed class ContentItemsHandlers(
     // and GetAsync weld part objects into the item's element cache, and a cache that
     // is not reset keeps serving those stale parts to everything that runs on save
     // (index providers, handlers) instead of the content the request wrote.
+    /// <summary>
+    /// The common part's editors (the creation date and the owner, when the type shows them) write
+    /// into <c>CommonPart</c>; those are the item's own values, taken out of its content. The owner
+    /// changes only for a caller who may change owners.
+    /// </summary>
+    /// <returns>The owner's error when the owner named is no user; null otherwise.</returns>
+    private async Task<string?> ApplyCommonPartAsync(Grove.ContentManagement.ContentItem item)
+    {
+        if (((JsonObject)item.Content)["CommonPart"] is not JsonObject common)
+        {
+            return null;
+        }
+
+        string? error = null;
+
+        if (common["CreatedUtc"] is JsonValue created && DateTime.TryParse(created.ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal, out var createdUtc))
+        {
+            item.CreatedUtc = createdUtc;
+        }
+
+        if (common["Owner"] is JsonValue owner && owner.ToString() is { Length: > 0 } ownerId && ownerId != item.Owner
+            && await authorizationService.AuthorizeAsync(User, CommonPermissions.EditContentOwner, item))
+        {
+            // The owner named must be a user (by id, or by name as the stored owner may be).
+            var users = HttpContext.RequestServices.GetService<Microsoft.AspNetCore.Identity.UserManager<Grove.Users.IUser>>();
+            if (users is not null && await users.FindByIdAsync(ownerId) is null && await users.FindByNameAsync(ownerId) is null)
+            {
+                error = "Invalid user provided for Owner.";
+            }
+            else
+            {
+                item.Owner = ownerId;
+            }
+        }
+
+        common.Remove("CreatedUtc");
+        common.Remove("Owner");
+        common.Remove("OwnerName");
+        return error;
+    }
+
+    /// <summary>
+    /// The item's handlers' rules (every part's and field's <c>ValidatingAsync</c>) before it is
+    /// saved: refused as the error contract's map, keyed as the editor tree keys its editors
+    /// (<c>Part.Field</c> for a field, <c>Part</c> for a part's own values; an error that names no
+    /// member under the empty key).
+    /// </summary>
+    private async Task<IResult?> ValidateItemAsync(Grove.ContentManagement.ContentItem item, string? ownerError)
+    {
+        var result = await contentManager.ValidateAsync(item);
+        if (result.Succeeded && ownerError is null)
+        {
+            return null;
+        }
+
+        var definition = await HttpContext.RequestServices.GetRequiredService<Grove.ContentManagement.Metadata.IContentDefinitionManager>().GetTypeDefinitionAsync(item.ContentType);
+        var errors = ContentValidationErrors.ToMap(result.Errors, definition);
+        if (ownerError is not null)
+        {
+            errors["CommonPart"] = [.. errors.GetValueOrDefault("CommonPart") ?? [], ownerError];
+        }
+
+        await session.CancelAsync();
+        return ApiProblems.Validation(errors);
+    }
+
     private static void ReplaceContent(Grove.ContentManagement.ContentItem item, JsonObject? content)
     {
         item.Content.Clear();
         item.Merge(content?.DeepClone() ?? new JsonObject(), new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace });
+    }
+}
+
+/// <summary>
+/// The content handlers' validation results as the error contract's map, keyed by the editor
+/// tree's paths: a field's member (<c>Part.Field.Property</c>) under <c>Part.Field</c>, a part's
+/// member (<c>Part.Property</c>) under <c>Part</c>, anything else under its own name, and an error
+/// naming no member under the empty key.
+/// </summary>
+public static class ContentValidationErrors
+{
+    public static Dictionary<string, string[]> ToMap(
+        IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult> results,
+        Grove.ContentManagement.Metadata.Models.ContentTypeDefinition? definition)
+    {
+        var map = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        foreach (var result in results)
+        {
+            var message = result.ErrorMessage ?? string.Empty;
+            var members = result.MemberNames.Any() ? result.MemberNames : [string.Empty];
+            foreach (var key in members.Select(member => Key(member, definition)).Distinct(StringComparer.Ordinal))
+            {
+                if (!map.TryGetValue(key, out var messages))
+                {
+                    map[key] = messages = [];
+                }
+
+                messages.Add(message);
+            }
+        }
+
+        return map.ToDictionary(pair => pair.Key, pair => pair.Value.ToArray(), StringComparer.Ordinal);
+    }
+
+    public static string Key(string member, Grove.ContentManagement.Metadata.Models.ContentTypeDefinition? definition)
+    {
+        var segments = member.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        var part = segments.Length == 0 ? null : definition?.Parts.FirstOrDefault(candidate => string.Equals(candidate.Name, segments[0], StringComparison.OrdinalIgnoreCase));
+        if (part is null)
+        {
+            return member;
+        }
+
+        if (segments.Length >= 2 && part.PartDefinition.Fields.FirstOrDefault(field => string.Equals(field.Name, segments[1], StringComparison.OrdinalIgnoreCase)) is { } field)
+        {
+            return $"{part.Name}.{field.Name}";
+        }
+
+        return part.Name;
     }
 }

@@ -17,7 +17,6 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddResourceConfiguration<ResourceManagementOptionsConfiguration>();
 
         // Coordinate Field
         services.AddContentField<GeoPointField>()

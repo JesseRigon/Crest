@@ -9,18 +9,6 @@ namespace Grove.AdminMenu;
 
 public static class AdminMenuExtensions
 {
-    public static IServiceCollection AddAdminNode<TNode, TNodeBuilder, TNodeDriver>(this IServiceCollection services)
-        where TNode : AdminNode, new()
-        where TNodeBuilder : class, IAdminNodeNavigationBuilder
-        where TNodeDriver : class, IDisplayDriver<MenuItem>
-    {
-        services.AddAdminNode<TNode, TNodeBuilder>();
-
-        services.AddDisplayDriver<MenuItem, TNodeDriver>();
-
-        return services;
-    }
-
     public static IServiceCollection AddAdminNode<TNode, TNodeBuilder>(this IServiceCollection services)
         where TNode : AdminNode, new()
         where TNodeBuilder : class, IAdminNodeNavigationBuilder

@@ -30,7 +30,6 @@
     {
       "name": "feature",
       "disable": [
-        "Grove.AdminDashboard",
         "Grove.Alias",
         "Grove.Apis.GraphQL",
         "Grove.ArchiveLater",
@@ -125,7 +124,6 @@
         "Grove.Redis.Cache",
         "Grove.Redis.DataProtection",
         "Grove.Redis.Lock",
-        "Grove.RemotePublishing",
         "Grove.ResponseCompression",
         "Grove.ReverseProxy",
         "Grove.Rules",
@@ -157,7 +155,7 @@
         "Grove.Title",
         "Grove.Twitter",
         "Grove.Twitter.Signin",
-        "Grove.UrlRewriting",
+        "Grove.Routes",
         "Grove.Users.2FA",
         "Grove.Users.2FA.AuthenticatorApp",
         "Grove.Users.2FA.Email",
@@ -170,8 +168,7 @@
         "Grove.Users.Registration",
         "Grove.Users.ResetPassword",
         "Grove.Users.TimeZone",
-        "Grove.Workflows",
-        "Grove.XmlRpc"
+        "Grove.Workflows"
       ],
       "enable": [
         "Application.Default",

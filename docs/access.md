@@ -116,7 +116,9 @@ nothing ([sharing.md](sharing.md)). Tests: `test/Grove.Tests/Access/Conformance/
 | OpenId Client, Management | `Grove.OpenId` | external OIDC login; admin UI for applications and scopes |
 | External providers | `Grove.Microsoft.Authentication`, `Grove.Google`, `Grove.Facebook`, `Grove.GitHub`, `Grove.Twitter` | land in `Identity.External`, finished by the Users external-authentication feature |
 | Member portal login | `Grove.Members` `MemberPortalController`, `MemberLoginSurfaceGate` | the portal's login, register and external-login; the `ILoginFormEvent` veto that keeps members off the tenant surface and staff off the portal |
-| Grove JSON login | `LoginService`, `api/grove/auth` (Grove.Users, `AuthApi`) | replays the stock login event sequence and signs the one cookie |
+| Grove JSON login | `LoginService`, `api/grove/auth` (Grove.Users, `AuthApi`) | replays the stock login event sequence and signs the one cookie; an account with two-factor authentication passes the password step into the two-factor cookie and finishes with a code or a recovery code (`auth/two-factor`); `auth/external-login` starts an external sign-in |
+| Sign-in form extensions | `ILoginExtensionProvider` (Grove.Access.Abstractions), served by `api/grove/auth/form/{form}` | what features add to the sign-in, registration and password recovery forms: links, a button per external authentication scheme (Grove.Users), sections whose value the form sends as a header (ReCaptcha's `CaptchaChallenge`) |
+| Self-service account APIs | Grove.Users: `api/grove/account`, `api/grove/registration`, `api/grove/password`, `api/grove/two-factor` | the user's own account, registration, password recovery and two-factor authentication, behind the site's account pages ([shells-and-themes.md](shells-and-themes.md#account-and-protocol-pages)) |
 | Workflows engine API | `Grove.Workflows` `ApiSecurityMiddleware`, order −151 | under `/grove-workflows/api`: the gated caller (none → 403), the decision, antiforgery, a transient claims identity with engine permission names, the Run list and the endpoint's policy; no authentication of its own |
 | Secure media, GraphQL, media tus, OpenApi | `Grove.Media`, `Grove.Apis.GraphQL`, `Grove.OpenApi` | authorize the gate's principal; none authenticates again |
 | Remote deployment key | `Grove.Deployment.Remote` `RemoteDeploymentKeyAuthenticationHandler` | `Authorization: RemoteDeployment {client}:{key}`, an additional `Api` scheme; the import controller is `[Authorize]` and asks `ImportRemoteInstances`, which the remote client's contributor grants its application caller; the exporting instance sends the header |
@@ -136,6 +138,16 @@ after it authenticates; controllers use plain `[Authorize]`.
 `AuthenticationFeatures` does), so a principal set after the gate (the workflow API gate's
 per-request grant) survives the authorization middleware. Pinned by
 `Grove.Workflows.Tests/ApiGateResponseTests`.
+
+**A pending sign-in step.** A signed-in cookie session can owe a step before anything else: a
+user whose roles require two-factor authentication and who has not set it up
+(`TwoFactorSetupStep`, Grove.Users, an `IPendingSignInStepProvider` of Grove.Access.Abstractions).
+The gate asks the providers once per request and, while one answers, admits only the step's own
+pages and APIs (the two-factor page and API, the email confirmation) and what every session keeps
+(`PendingSignInSteps.AlwaysAllowed`: the shell runtime, the routing options and client strings,
+the antiforgery token, signing in and out, the error pages): any other page is redirected to the
+step's page, any other API call answered 403 with a problem body whose `reason` names the step
+(`two-factor-setup-required`). A bearer caller has no such step.
 
 **An API path never redirects.** `AccessGate.IsApiPath` is the one rule (`/api`,
 `/grove-workflows`), read by the shell selector, `AccessGateMiddleware` and `ApiCookieResponses`,

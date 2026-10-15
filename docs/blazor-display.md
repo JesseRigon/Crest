@@ -539,7 +539,8 @@ tree inline, but the route, the bucket and the authorization are the page's.
   `HtmlBodyPart`, `MarkdownBodyPart` (a sanitized markup parameter), `BagPart` and `ListPart`
   (their drivers add the contained items' displays while the shape is processed, so the tree maps
   them as children; the list adds its `Pager`/`PagerSlim` after its items), `TaxonomyPart` (the
-  term tree, linked). The drivers' view models expose what the components read (`Label`,
+  term tree, linked), `ListPartFeed` (a `HeadLink`: the list's RSS link in the page head). The
+  site's culture switcher is `CulturePicker`, placed by a template or a layer. The drivers' view models expose what the components read (`Label`,
   `FieldClass`, resolved `Items` for pickers and taxonomies, the link text, the YouTube size, the
   title's link). Field labels are data-localized: `FieldDisplayLabels` sets each field shape's
   `Label` from `IDataLocalizer` under the field's data localization context.
@@ -562,11 +563,41 @@ tree inline, but the route, the bucket and the authorization are the page's.
   `ContentEditor` root, which publishes the edited content as an output. The server builds the
   editor tree as shapes (`ContentEditorTreeBuilder`, `GET api/grove/content-items/{id}/editor`,
   `new-{type}` for a new item), so a `ContentEditor__{Type}` template lays a type's editor out.
-  Editor components: text, number, yes/no, date, content picker, option picker, HTML, Markdown,
-  link, title, permalink, `BagPartEditor` (each contained item through its type's editor tree;
+  Editor components: text, number, yes/no, date, option picker, HTML, Markdown, link, title,
+  permalink; the content picker (the held items, a search over the field's candidates, a create
+  link per creatable type); `BagPartEditor` (each contained item through its type's editor tree;
   add from the allowed types, remove, reorder), `UserPickerFieldEditor` (searching
-  `api/grove/content-fields/users`); `GroveFormManager` renders the same editors from the type's
+  `api/grove/content-fields/users`); `TaxonomyPartEditor` (the term tree, each term through its
+  type's editor tree) and `TaxonomyFieldEditor` (check boxes, radios or tags); `ListPartEditor`
+  (the list's children, their order, a child created on the native create page with the list as
+  its container, the feed values); `SeoMetaPartEditor`; `GeoPointFieldEditor` (a Leaflet/OpenStreetMap
+  map, Google Maps when the field names a key);
+  `LocalizationPartEditor` (the item's translations, opened or created); `IconPicker` (Grove.Icons).
+  An editor may declare a field's editor setting (`Edits = ["TextField-IconPicker"]`), which the
+  editor tree prefers to the field type's own. The editors that act on the stored item (a list's
+  children, translations) read its id from the context (`ContentEditorContext.ContentItemId`,
+  none until the item is saved). `GroveFormManager` renders the same editors from the type's
   metadata.
+- **Saving validates on the server.** The content items API runs the content manager's
+  `ValidateAsync` (every part's and field's handler `ValidatingAsync`: required values, lengths,
+  ranges, URLs, Liquid that must parse, permalink and alias uniqueness, the right to set the home
+  page, the canonical address, the SEO schema, media extensions, a taxonomy's term type) before
+  create, update and draft, and refuses with the error contract's map keyed as the editor tree
+  keys its editors (`Part.Field`, `Part`; the empty key for the item). The editor page puts the
+  map under the tree's `ContentEditor` node (`DisplayState.SetErrors`), which shows each error
+  under its editor. Markup a type's settings ask to sanitize (HTML field and body, HTML menu item)
+  is sanitized by the handlers on create, update, draft and import.
+- **An item's page body is searchable**: `DisplayTreePartIndexHandler` indexes the text its tree
+  holds (`DisplayTreeText`, a migrated Liquid body's composite source included), and the part
+  answers the body aspect with it.
+- **The editor's preview** is `ContentPreviewPane` beside the editor tree: the unsaved item
+  rendered by Grove.ContentPreview's `POST api/grove/content-preview` the way its display renders
+  (drivers, placement, templates, the node filter), as HTML in a sandboxed frame; the latest
+  version of a stored item, a draft included, is the display endpoint with `version=latest`.
+- **An item's admin pages** are the native pages of the page registry: `ContentAdminPaths`
+  (Grove.ContentManagement.Abstractions) names them for code outside the admin shell (the Liquid
+  `{% a edit_for/admin_for/create_for %}` tags, admin menu nodes); `ContentItemMetadata` carries
+  only the display route values.
 - **Content editing is a stripped-down designer.** The marketing team's WYSIWYG is the designer
   in a reduced mode: the same component trees, a palette limited by role. There is one system for
   content and UI structure; "content" is a tree an editor fills, not a separate body format.
@@ -1046,19 +1077,17 @@ removed per page as its Blazor replacement exists, not all at once.
    `BlazorComponentShapeBindingResolver` still renders a component inside such a fallback. They go
    page by page as each MVC page gets a component page ([backlog.md](backlog.md) tracks the
    waves). What remains:
-   - ☐ The stock MVC screens (about 1,250 Razor views across the modules, the legacy admin frame
-     among them). Setup stays MVC (it runs before the Blazor host exists), so SiteTheme's minimal
-     `Layout.cshtml` and the staff login, registration, password reset and two-factor screens
-     stay with it ([shells-and-themes.md](shells-and-themes.md) › Account and protocol pages).
-   - ☐ Views still rendered by MVC screens: the ContentFields edit views and the Flows BagPart,
-     content-card and blocks-editor views (the MVC Contents `Create`/`Edit` actions, shadowed for
-     GET by the Blazor admin but still compiled, and the Demo module's `Demo/Content/Edit`).
+   - ☐ The stock MVC screens (the legacy admin frame among them; [MVC/views.md](MVC/views.md)
+     tracks them). The sign-in, registration, password and two-factor screens are the Access
+     modules' pages ([shells-and-themes.md](shells-and-themes.md) › Account and protocol pages).
+   - ☑ Views rendered by MVC screens: the content part and field edit views, the Flows
+     BagPart, content-card and blocks-editor views and the editor drivers are deleted with the
+     MVC Contents screens; every part and field is edited on the editor tree.
    - ☐ Shapes still falling back to `IHtmlDisplay` on the content path: `SearchFormPart` (unused)
-     and the admin-only shapes (`*_SummaryAdmin`, `*_Thumbnail`, `ListPartHeaderAdmin`,
-     `ListPartNavigationAdmin`, `ListPartFeed`, `PublishLaterPart`, `ArchiveLaterPart`,
-     `DashboardPart`, the menu item parts' admin shapes), which serve the MVC admin lists and go
-     with TheAdmin. `LiquidPart` keeps the HTML fallback by design: it renders tenant Liquid as
-     HTML.
+     and the admin-only shapes (`*_SummaryAdmin`, `*_Thumbnail`, `PublishLaterPart`,
+     `ArchiveLaterPart`, the menu item parts' admin shapes), which go with TheAdmin. `ListPartFeed`
+     is `HeadLink`; `LiquidPart` is retired, its bodies migrated to `DisplayTreePart`
+     ([MVC/shape-engine.md](MVC/shape-engine.md) › Component coverage).
    - ☐ Browser checks for the native pages that replaced the MVC settings and definition screens.
    - ☐ **Razor → Blazor component parity audit.** Every Razor view and shape template and every
      widget ([widgets.md](widgets.md)) has a Blazor component equivalent. Component boundaries
@@ -1079,8 +1108,9 @@ removed per page as its Blazor replacement exists, not all at once.
 - **Template security hardening** (to settle once the display system's shape is final):
   1. The member allow-list is the sandbox. A template is evaluated as the viewer, so an editor's
      template opened by an admin reads with admin rights (confused deputy) and can exfiltrate
-     through markup. Proposed: remove from tenant templates `Request` (cookies, headers, form,
-     query), `encrypt`/`decrypt`, the `liquid` filter, `users_by_id`/`users_by_name`/`user_email`,
+     through markup. Tenant templates get no `Request` (cookies, headers, form, query) and no
+     `HttpContext` ([MVC/shape-engine.md](MVC/shape-engine.md) L3). Proposed: remove as well
+     `encrypt`/`decrypt`, the `liquid` filter, `users_by_id`/`users_by_name`/`user_email`,
      `Site.SuperUser`, `shape_render`/`shape_stringify`, `console_log`, with data reads through the
      query pipeline only. The counter-position is that no sandbox is needed beyond the installer
      boundary.

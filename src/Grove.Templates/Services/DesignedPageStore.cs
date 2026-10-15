@@ -4,6 +4,7 @@ using Grove.Environment.Cache;
 using Grove.Security.Permissions;
 using Grove.Templates.Models;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using YesSql;
 
 namespace Grove.Templates.Services;
@@ -32,8 +33,14 @@ public sealed record DesignedPageRecord(
 /// a draft is reached through preview only. Writes go through the content manager: a save makes
 /// a draft, publish is its own act.
 /// </summary>
-public sealed class DesignedPageStore(IContentManager contentManager, ISession session, IMemoryCache memoryCache, ISignal signal)
+public sealed class DesignedPageStore(IServiceProvider services, ISession session, IMemoryCache memoryCache, ISignal signal)
 {
+    // Resolved on use, not injected: the page permissions read this store, the permission
+    // service enumerates every permission provider, and the content manager takes every content
+    // handler - some of which reach the access decision, which needs the permission service (a
+    // DI cycle). Reads go through the session; only writes and single gets need the manager.
+    private IContentManager ContentManager => services.GetRequiredService<IContentManager>();
+
     private const string CacheKey = "Grove.Templates.DesignedPages.PublishedSet";
 
     public async Task<IReadOnlyList<DesignedPageRecord>> ListPublishedAsync()
@@ -57,7 +64,7 @@ public sealed class DesignedPageStore(IContentManager contentManager, ISession s
     }
 
     public async Task<DesignedPageRecord?> GetAsync(string contentItemId, VersionOptions? version = null) =>
-        ToRecord(await contentManager.GetAsync(contentItemId, version ?? VersionOptions.Latest));
+        ToRecord(await ContentManager.GetAsync(contentItemId, version ?? VersionOptions.Latest));
 
     /// <summary>The published page of <paramref name="bucket"/> whose route matches <paramref name="path"/>, with the route's values.</summary>
     public async Task<(DesignedPageRecord Page, IReadOnlyDictionary<string, string> Values)?> MatchAsync(string bucket, string path)
@@ -75,17 +82,17 @@ public sealed class DesignedPageStore(IContentManager contentManager, ISession s
 
     public async Task<DesignedPageRecord> SaveDraftAsync(string? contentItemId, DesignedPagePart values)
     {
-        var item = contentItemId is null ? null : await contentManager.GetAsync(contentItemId, VersionOptions.DraftRequired);
+        var item = contentItemId is null ? null : await ContentManager.GetAsync(contentItemId, VersionOptions.DraftRequired);
         if (item is null)
         {
-            item = await contentManager.NewAsync(DesignedPagesConstants.ContentType);
+            item = await ContentManager.NewAsync(DesignedPagesConstants.ContentType);
             Apply(item, values);
-            await contentManager.CreateAsync(item, VersionOptions.Draft);
+            await ContentManager.CreateAsync(item, VersionOptions.Draft);
         }
         else
         {
             Apply(item, values);
-            await contentManager.UpdateAsync(item);
+            await ContentManager.UpdateAsync(item);
         }
 
         return ToRecord(item)!;
@@ -93,25 +100,25 @@ public sealed class DesignedPageStore(IContentManager contentManager, ISession s
 
     public async Task<bool> PublishAsync(string contentItemId)
     {
-        var item = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
+        var item = await ContentManager.GetAsync(contentItemId, VersionOptions.Latest);
         if (item is null)
         {
             return false;
         }
 
-        await contentManager.PublishAsync(item);
+        await ContentManager.PublishAsync(item);
         return true;
     }
 
     public async Task<bool> RemoveAsync(string contentItemId)
     {
-        var item = await contentManager.GetAsync(contentItemId, VersionOptions.Latest);
+        var item = await ContentManager.GetAsync(contentItemId, VersionOptions.Latest);
         if (item is null)
         {
             return false;
         }
 
-        await contentManager.RemoveAsync(item);
+        await ContentManager.RemoveAsync(item);
         return true;
     }
 

@@ -25,7 +25,6 @@
             <GroveStack Gap="0.5rem">
                 <div><GroveCheckBox @bind-Value="Registration.UsersMustValidateEmail" Name="reg-validate" /><label for="reg-validate"> @T["Users must confirm their email address"]</label></div>
                 <div><GroveCheckBox @bind-Value="Registration.UsersAreModerated" Name="reg-moderated" /><label for="reg-moderated"> @T["New users are disabled until an administrator enables them"]</label></div>
-                <div><GroveCheckBox @bind-Value="Registration.UseSiteTheme" Name="reg-theme" /><label for="reg-theme"> @T["Show the registration page in the site theme"]</label></div>
                 <GroveText TextStyle="TextStyle.Subtitle2" Text="@T["External sign-up"]" />
                 <div><GroveCheckBox @bind-Value="Registration.External.DisableNewRegistrations" Name="ext-disable" /><label for="ext-disable"> @T["No new registrations through external sign-in"]</label></div>
                 <div><GroveCheckBox @bind-Value="Registration.External.NoUsername" Name="ext-nouser" /><label for="ext-nouser"> @T["Don't ask for a user name"]</label></div>
@@ -41,7 +40,6 @@
         else if (Section == "reset-password" && ResetPassword is not null)
         {
             <div><GroveCheckBox @bind-Value="ResetPassword.AllowResetPassword" Name="reset-allow" /><label for="reset-allow"> @T["Users can reset a forgotten password"]</label></div>
-            <div><GroveCheckBox @bind-Value="ResetPassword.UseSiteTheme" Name="reset-theme" /><label for="reset-theme"> @T["Show the reset pages in the site theme"]</label></div>
         }
         else if (ChangeEmail is not null)
         {
@@ -121,14 +119,12 @@
     {
         public bool UsersMustValidateEmail { get; set; }
         public bool UsersAreModerated { get; set; }
-        public bool UseSiteTheme { get; set; }
         public ExternalModel External { get; set; } = new();
     }
 
     private sealed class ResetPasswordModel
     {
         public bool AllowResetPassword { get; set; }
-        public bool UseSiteTheme { get; set; }
     }
 
     private sealed class ChangeEmailModel

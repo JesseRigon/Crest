@@ -5,15 +5,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Grove.DisplayManagement.Handlers;
 using Grove.Google.Analytics;
-using Grove.Google.Analytics.Drivers;
 using Grove.Google.Analytics.Services;
 using Grove.Google.Analytics.Settings;
 using Grove.Google.Authentication.Configuration;
-using Grove.Google.Authentication.Drivers;
 using Grove.Google.Authentication.Services;
 using Grove.Google.Authentication.Settings;
 using Grove.Google.TagManager;
-using Grove.Google.TagManager.Drivers;
 using Grove.Google.TagManager.Services;
 using Grove.Google.TagManager.Settings;
 using Grove.Modules;
@@ -30,8 +27,11 @@ public sealed class GoogleAuthenticationStartup : StartupBase
     {
         services.AddPermissionProvider<GoogleAuthenticationPermissionProvider>();
         services.AddSingleton<GoogleAuthenticationService, GoogleAuthenticationService>();
-        services.AddSiteDisplayDriver<GoogleAuthenticationSettingsDisplayDriver>();
-        services.AddPageSource<GoogleAuthenticationPages>();
+        services.AddSettingsGroup<GoogleAuthenticationSettings>(
+            GoogleConstants.Features.GoogleAuthentication,
+            "Google",
+            Permissions.ManageGoogleAuthentication,
+            group => group.InMenu("settings-authentication", entryId: "google").ReloadsTenant());
 
         // Register the options initializers required by the Google Handler.
         // Grove-specific initializers:
@@ -53,8 +53,11 @@ public sealed class GoogleAnalyticsStartup : StartupBase
         services.AddPermissionProvider<GoogleAnalyticsPermissionsProvider>();
         services.AddSingleton<IGoogleAnalyticsService, GoogleAnalyticsService>();
 
-        services.AddSiteDisplayDriver<GoogleAnalyticsSettingsDisplayDriver>();
-        services.AddPageSource<GoogleAnalyticsPages>();
+        services.AddSettingsGroup<GoogleAnalyticsSettings>(
+            GoogleConstants.Features.GoogleAnalytics,
+            "Google Analytics",
+            Permissions.ManageGoogleAnalytics,
+            group => group.InMenu("settings-integrations", entryId: "googleAnalytics"));
 
         services.Configure<MvcOptions>((options) =>
         {
@@ -70,8 +73,11 @@ public sealed class GoogleTagManagerStartup : StartupBase
     {
         services.AddPermissionProvider<GoogleTagManagerPermissionProvider>();
         services.AddSingleton<IGoogleTagManagerService, GoogleTagManagerService>();
-        services.AddSiteDisplayDriver<GoogleTagManagerSettingsDisplayDriver>();
-        services.AddPageSource<GoogleTagManagerPages>();
+        services.AddSettingsGroup<GoogleTagManagerSettings>(
+            GoogleConstants.Features.GoogleTagManager,
+            "Google Tag Manager",
+            Permissions.ManageGoogleTagManager,
+            group => group.InMenu("settings-integrations", entryId: "googleTagManager"));
 
         services.Configure<MvcOptions>((options) =>
         {
@@ -86,7 +92,7 @@ public sealed class GoogleAuthenticationDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<GoogleAuthenticationSettings, GoogleAuthenticationDeploymentStartup>(S => S["Google Authentication Settings"], S => S["Exports the Google Authentication settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<GoogleAuthenticationSettings>();
     }
 }
 
@@ -96,7 +102,7 @@ public sealed class GoogleAnalyticsDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<GoogleAnalyticsSettings, GoogleAnalyticsDeploymentStartup>(S => S["Google Analytics Settings"], S => S["Exports the Google Analytics settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<GoogleAnalyticsSettings>();
     }
 }
 
@@ -106,6 +112,6 @@ public sealed class GoogleTagManagerDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<GoogleTagManagerSettings, GoogleTagManagerDeploymentStartup>(S => S["Google Tag Manager Settings"], S => S["Exports the Google Tag Manager settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<GoogleTagManagerSettings>();
     }
 }

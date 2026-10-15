@@ -11,14 +11,9 @@ using Grove.Data.Migration;
 using Grove.DisplayManagement;
 using Grove.DisplayManagement.Liquid.Filters;
 using Grove.Indexing;
-using Grove.Liquid.Drivers;
 using Grove.Liquid.Endpoints.Scripts;
 using Grove.Liquid.Filters;
-using Grove.Liquid.Handlers;
-using Grove.Liquid.Indexing;
-using Grove.Liquid.Models;
 using Grove.Liquid.Services;
-using Grove.Liquid.ViewModels;
 using Grove.Modules;
 
 namespace Grove.Liquid;
@@ -40,7 +35,6 @@ public sealed class Startup : StartupBase
             options.Filters.AddFilter("html_class", LiquidViewFilters.HtmlClass);
             options.Filters.AddFilter("shape_properties", LiquidViewFilters.ShapeProperties);
 
-            options.MemberAccessStrategy.Register<LiquidPartViewModel>();
 
             // Used to provide a factory to return a value based on a property name that is unknown at registration time.
             options.MemberAccessStrategy.Register<LiquidPropertyAccessor, FluidValue>((obj, name) => obj.GetValueAsync(name));
@@ -91,22 +85,6 @@ public sealed class LiquidStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddLiquidCoreServices();
-    }
-}
-
-[RequireFeatures("Grove.Contents")]
-public sealed class LiquidPartStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        // Liquid Part
-        services.AddShapeTableProvider<LiquidShapes>();
-        services.AddContentPart<LiquidPart>()
-            .UseDisplayDriver<LiquidPartDisplayDriver>()
-            .AddHandler<LiquidPartHandler>();
-
-        services.AddDataMigration<Migrations>();
-        services.AddScoped<IContentPartIndexHandler, LiquidPartIndexHandler>();
     }
 }
 

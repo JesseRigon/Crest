@@ -4,13 +4,9 @@
     "generateRTL": true,
     "name": "setup-css",
     "source": "Assets/scss/setup.scss",
-    "tags": ["setup", "css"]
-  },
-  {
-    "action": "parcel",
-    "name": "setup-js",
-    "source": "Assets/ts/setup.ts",
-    "dest": "wwwroot/Scripts/setup/",
-    "tags": ["setup", "js"]
+    "tags": [
+      "setup",
+      "css"
+    ]
   }
 ]

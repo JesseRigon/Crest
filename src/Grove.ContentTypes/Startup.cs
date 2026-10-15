@@ -62,6 +62,9 @@ public sealed class Startup : StartupBase
         services.AddApiContributor<Api.ContentTypesEditorApi>();
         services.AddApiContributor<Api.ContentGroupsApi>();
         services.AddApiContributor<Api.FieldVisibilityApi>();
+        // Visibility conditions are enforced on save; the option picker resolves its fields'
+        // ids to keys through IFieldComparisonValueResolver.
+        services.AddScoped<IFieldVisibilityEnforcer, FieldVisibilityEnforcer>();
     }
 }
 
@@ -86,8 +89,8 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<ContentDefinitionDeploymentSource, ContentDefinitionDeploymentStep, ContentDefinitionDeploymentStepDriver>();
-        services.AddDeployment<ReplaceContentDefinitionDeploymentSource, ReplaceContentDefinitionDeploymentStep, ReplaceContentDefinitionDeploymentStepDriver>();
-        services.AddDeployment<DeleteContentDefinitionDeploymentSource, DeleteContentDefinitionDeploymentStep, DeleteContentDefinitionDeploymentStepDriver>();
+        services.AddDeployment<ContentDefinitionDeploymentSource, ContentDefinitionDeploymentStep>();
+        services.AddDeployment<ReplaceContentDefinitionDeploymentSource, ReplaceContentDefinitionDeploymentStep>();
+        services.AddDeployment<DeleteContentDefinitionDeploymentSource, DeleteContentDefinitionDeploymentStep>();
     }
 }

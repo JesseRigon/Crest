@@ -25,7 +25,6 @@
     <ProjectReference Include="..\Grove.Indexing.Abstractions\Grove.Indexing.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Liquid.Abstractions\Grove.Liquid.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
-    <ProjectReference Include="..\Grove.MetaWeblog.Abstractions\Grove.MetaWeblog.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
   </ItemGroup>
 

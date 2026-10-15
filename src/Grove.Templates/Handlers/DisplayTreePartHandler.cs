@@ -60,4 +60,20 @@ public sealed class DisplayTreePartHandler(
             }
         }
     }
+
+    // The body aspect (the full-text aspect, feeds) is the body's text.
+    public override Task GetContentItemAspectAsync(ContentItemAspectContext context, DisplayTreePart part) =>
+        context.ForAsync<Grove.ContentManagement.Models.BodyAspect>(async aspect =>
+        {
+            if (part.Tree is null)
+            {
+                return;
+            }
+
+            var composites = (await templates.ListPublishedAsync())
+                .Where(template => template.IsComposite)
+                .GroupBy(template => template.Name, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(group => group.Key, group => group.First().Source, StringComparer.OrdinalIgnoreCase);
+            aspect.Body = new Microsoft.AspNetCore.Html.HtmlString(System.Net.WebUtility.HtmlEncode(Services.DisplayTreeText.Extract(part.Tree, composites)));
+        });
 }

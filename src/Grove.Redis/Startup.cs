@@ -34,11 +34,20 @@ public sealed class Startup : StartupBase
 
     public override void ConfigureServices(IServiceCollection services)
     {
+        var section = _configuration.GetSection("Grove_Redis");
+        var configuration = section["Configuration"];
+
+        // Enabled without a connection is an expected state (a tenant enables every feature in
+        // dev): one clear warning, and the Redis features stay inert - the cache, bus, lock and
+        // data-protection startups below register nothing without IRedisService.
+        if (string.IsNullOrWhiteSpace(configuration))
+        {
+            _logger.LogWarning("'Redis' features are enabled but not active on tenant '{TenantName}' because 'Grove_Redis:Configuration' is not configured.", _tenant);
+            return;
+        }
+
         try
         {
-            var section = _configuration.GetSection("Grove_Redis");
-
-            var configuration = section["Configuration"];
             var configurationOptions = ConfigurationOptions.Parse(configuration);
             var instancePrefix = section["InstancePrefix"];
 
@@ -62,7 +71,7 @@ public sealed class Startup : StartupBase
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "'Redis' features are not active on tenant '{TenantName}' as the 'Configuration' string is missing or invalid.", _tenant);
+            _logger.LogError(e, "'Redis' features are not active on tenant '{TenantName}' as the 'Configuration' string is invalid.", _tenant);
             return;
         }
 

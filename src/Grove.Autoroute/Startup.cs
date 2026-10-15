@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Grove.Autoroute.Indexes;
 using Grove.Autoroute.Services;
-using Grove.Autoroute.Drivers;
 using Grove.Autoroute.Handlers;
 using Grove.Autoroute.Indexing;
 using Grove.Autoroute.Models;
@@ -71,7 +70,6 @@ public sealed class Startup : StartupBase
 
         // Autoroute Part
         services.AddContentPart<AutoroutePart>()
-            .UseDisplayDriver<AutoroutePartDisplayDriver>()
             .AddHandler<AutoroutePartHandler>();
 
         services.AddScoped<IContentHandler, DefaultRouteContentHandler>();

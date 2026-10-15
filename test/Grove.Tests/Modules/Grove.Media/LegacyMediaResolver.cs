@@ -12,9 +12,8 @@ namespace Grove.Tests.Modules.Grove.Media;
 internal static class LegacyMediaResolver
 {
     public static IMediaReferenceResolver For(IMediaFileStore fileStore, IHttpContextAccessor httpContextAccessor) => new MediaReferenceResolver(
-        Mock.Of<IMediaObjectService>(),
         Mock.Of<IMediaLibrary>(),
-        new ServiceCollection().AddSingleton(fileStore).BuildServiceProvider(),
+        new ServiceCollection().AddSingleton(fileStore).AddSingleton(Mock.Of<IMediaObjectService>()).BuildServiceProvider(),
         httpContextAccessor,
         new ShellSettings { Name = "Default" },
         Mock.Of<IClock>(),

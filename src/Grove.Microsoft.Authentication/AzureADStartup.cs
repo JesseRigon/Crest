@@ -7,7 +7,6 @@ using Grove.Deployment;
 using Grove.DisplayManagement.Handlers;
 using Grove.Microsoft.Authentication.Configuration;
 using Grove.Microsoft.Authentication.Deployment;
-using Grove.Microsoft.Authentication.Drivers;
 using Grove.Microsoft.Authentication.Recipes;
 using Grove.Microsoft.Authentication.Services;
 using Grove.Microsoft.Authentication.Settings;
@@ -28,8 +27,11 @@ public sealed class AzureADStartup : StartupBase
         services.AddSingleton<IAzureADService, AzureADService>();
         services.AddRecipeExecutionStep<AzureADSettingsStep>();
 
-        services.AddSiteDisplayDriver<AzureADSettingsDisplayDriver>();
-        services.AddPageSource<EntraIdPages>();
+        services.AddSettingsGroup<AzureADSettings>(
+            MicrosoftAuthenticationConstants.Features.AAD,
+            "Microsoft Entra ID",
+            Permissions.ManageMicrosoftAuthentication,
+            group => group.InMenu("settings-authentication", entryId: "microsoftentraid").ReloadsTenant());
 
         services.AddTransient<IConfigureOptions<AzureADSettings>, AzureADSettingsConfiguration>();
 
@@ -48,6 +50,6 @@ public sealed class AzureADDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<AzureADDeploymentSource, AzureADDeploymentStep, AzureADDeploymentStepDriver>();
+        services.AddDeployment<AzureADDeploymentSource, AzureADDeploymentStep>();
     }
 }

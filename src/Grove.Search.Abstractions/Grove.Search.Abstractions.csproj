@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Grove.Settings.Abstractions\Grove.Settings.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.ContentManagement\Grove.ContentManagement.csproj" />
     <ProjectReference Include="..\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
     <ProjectReference Include="..\Grove.Indexing.Abstractions\Grove.Indexing.Abstractions.csproj" />

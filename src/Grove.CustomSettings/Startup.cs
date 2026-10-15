@@ -46,6 +46,6 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<CustomSettingsDeploymentSource, CustomSettingsDeploymentStep, CustomSettingsDeploymentStepDriver>();
+        services.AddDeployment<CustomSettingsDeploymentSource, CustomSettingsDeploymentStep>();
     }
 }

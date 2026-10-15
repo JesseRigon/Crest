@@ -81,7 +81,9 @@ source. It lists the routes of every `HttpEndpoint` trigger and waiting bookmark
 engine's `HttpWorkflowRequestHandler` with the route template that matched. When the engine
 indexes an added or removed `HttpEndpoint` trigger or bookmark, `NotifyHttpEndpointRoutesChanged`
 tells `WorkflowHttpEndpointsInvalidator`, which invalidates the source; a reload that yields the
-same routes leaves the tenant's endpoints alone. The engine's management API
+same routes leaves the tenant's endpoints alone. `GroveWorkflows:Http:BaseUrl` (the public
+address, for absolute URLs) is optional: without it the designer's endpoint adornment shows the
+server-relative base path. The engine's management API
 (`grove-workflows/api`, § The engine API) is the declared contributor `WorkflowsManagementApi`,
 behind the engine's `ApiSecurityMiddleware`.
 
@@ -385,7 +387,9 @@ Grove and content triggers, `Require permission` and `Validate user` ask the one
   resume. So an actor supplied through the API's dispatch, an author's `DispatchWorkflow`
   input, an instance import or a resume's input is refused, and a sealed actor copied from one
   run opens for no other.
-- **Per burst.** A run's **first** burst inherits a caller already set for the scope (a
+- **Per burst.** The runner records a run's first burst on the execution context
+  (`IsFirstBurst`), since it moves a new run to Executing before the pipeline the gate sits in.
+  A run's **first** burst inherits a caller already set for the scope (a
   request, a hook child's parent), **except the system caller**, which only a definition
   published as system may run as (a flow triggered by a background task or by a system flow
   does not become the tenant super user); every **later** burst runs as the run's bound actor,
@@ -1292,7 +1296,9 @@ uncorrelated stimulus is its own) is drained: each delivery is one child scope t
 object's lock, takes the partition's oldest pending stimulus, sends it and marks it delivered;
 the mark commits with the flows the send ran and the lock is held until that commit, so one
 object's events are consumed one at a time, in order, and once. A send that throws is retried
-(three attempts, then set aside as failed); one whose flows failed their unit counts as
+(three attempts, then set aside as failed); one the access gate refuses (a flow not published
+as system, triggered while the system acted) is set aside at once with a warning naming the
+reason, since a retry would be refused again; one whose flows failed their unit counts as
 delivered (the failure is on the instances); stimuli a dead process left pending are delivered
 again at activation. Values keep their types (a content item in the input stays one).
 

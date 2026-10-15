@@ -1,20 +1,24 @@
 namespace Grove.Users;
 
+// The route names the rate limits are keyed by (RateLimitsOptions.AddRouteRateLimit): the
+// endpoints carry them as their names.
 internal static class RateLimitRouteNames
 {
-    internal const string LinkExternalLogin = nameof(Controllers.ExternalAuthenticationsController.LinkExternalLogin);
+    internal const string LinkExternalLogin = "LinkExternalLogin";
 
     internal const string Login = "Login";
 
-    internal const string LoginWithRecoveryCode = nameof(Controllers.TwoFactorAuthenticationController.LoginWithRecoveryCode);
+    internal const string LoginWithRecoveryCode = "LoginWithRecoveryCode";
 
-    internal const string LoginWithTwoFactorAuthentication = nameof(Controllers.TwoFactorAuthenticationController.LoginWithTwoFactorAuthentication);
+    internal const string LoginWithTwoFactorAuthentication = "LoginWithTwoFactorAuthentication";
 
-    internal const string Register = nameof(Controllers.RegistrationController.Register);
+    internal const string TwoFactorSendCode = "TwoFactorSendCode";
 
-    internal const string RegisterExternalLogin = nameof(Controllers.ExternalAuthenticationsController.RegisterExternalLogin);
+    internal const string Register = "Register";
 
-    internal const string ResetPassword = nameof(Controllers.ResetPasswordController.ResetPassword);
+    internal const string RegisterExternalLogin = "RegisterExternalLogin";
 
-    internal const string ForgotPassword = nameof(Controllers.ResetPasswordController.ForgotPassword);
+    internal const string ResetPassword = "ResetPassword";
+
+    internal const string ForgotPassword = "ForgotPassword";
 }

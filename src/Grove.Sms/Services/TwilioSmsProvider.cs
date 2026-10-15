@@ -14,7 +14,7 @@ public class TwilioSmsProvider : ISmsProvider
 {
     public const string TechnicalName = "Twilio";
 
-    public const string ProtectorName = "Twilio";
+    public const string ProtectorName = TwilioSettings.AuthTokenProtectorName;
 
     private static readonly JsonSerializerOptions s_jsonSerializerOptions = new()
     {

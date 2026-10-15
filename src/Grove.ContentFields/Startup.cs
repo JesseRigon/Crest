@@ -31,8 +31,8 @@ public sealed class Startup : StartupBase
 
         services.AddHtmlServices();
         
-        services.AddResourceConfiguration<ResourceManagementOptionsConfiguration>();
-        services.AddScoped<IJSLocalizer, ContentFieldsJSLocalizer>();
+        // The content picker's candidates for the native editor.
+        services.AddApiContributor<Api.ContentPickerApi>();
 
         services.Configure<TemplateOptions>(o =>
         {
@@ -73,7 +73,8 @@ public sealed class Startup : StartupBase
 
         // Html Field
         services.AddContentField<HtmlField>()
-            .UseDisplayDriver<HtmlFieldDisplayDriver>();
+            .UseDisplayDriver<HtmlFieldDisplayDriver>()
+            .AddHandler<HtmlFieldHandler>();
         services.AddScoped<IContentFieldIndexHandler, HtmlFieldIndexHandler>();
 
         // Link Field

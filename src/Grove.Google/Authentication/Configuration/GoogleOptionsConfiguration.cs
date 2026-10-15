@@ -70,7 +70,7 @@ public class GoogleOptionsConfiguration :
             _logger.LogError("The Consumer Secret could not be decrypted. It may have been encrypted using a different key.");
         }
 
-        if (_googleAuthenticationSettings.CallbackPath.HasValue)
+        if (!string.IsNullOrEmpty(_googleAuthenticationSettings.CallbackPath))
         {
             options.CallbackPath = _googleAuthenticationSettings.CallbackPath;
         }

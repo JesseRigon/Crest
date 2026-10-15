@@ -28,9 +28,31 @@
   <Folder Name="/Grove.Money/tests/">
     <Project Path="src/Grove.Money/tests/Grove.Money.Tests/Grove.Money.Tests.csproj" />
   </Folder>
+  <Folder Name="/Grove.OptionPicker/">
+    <Project Path="src/Grove.OptionPicker/Grove.OptionPicker.csproj" />
+    <Project Path="src/Grove.OptionPicker.Abstractions/Grove.OptionPicker.Abstractions.csproj" />
+  </Folder>
+  <Folder Name="/Grove.OptionPicker/tests/">
+    <Project Path="src/Grove.OptionPicker/tests/Grove.OptionPicker.Tests/Grove.OptionPicker.Tests.csproj" />
+  </Folder>
   <Folder Name="/Grove.Parties/" />
   <Folder Name="/Grove.AuditTrail/blazor-wasm/">
     <Project Path="src/Grove.AuditTrail/blazor-wasm/Grove.AuditTrail.BlazorWasm.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Apis.GraphQL/blazor-wasm/">
+    <Project Path="src/Grove.Apis.GraphQL/blazor-wasm/Grove.Apis.GraphQL.BlazorWasm.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Routes/blazor-wasm/">
+    <Project Path="src/Grove.Routes/blazor-wasm/Grove.Routes.BlazorWasm.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Shortcodes/blazor-wasm/">
+    <Project Path="src/Grove.Shortcodes/blazor-wasm/Grove.Shortcodes.BlazorWasm.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Sitemaps/blazor-wasm/">
+    <Project Path="src/Grove.Sitemaps/blazor-wasm/Grove.Sitemaps.BlazorWasm.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Sms/blazor-wasm/">
+    <Project Path="src/Grove.Sms/blazor-wasm/Grove.Sms.BlazorWasm.csproj" />
   </Folder>
   <Folder Name="/Grove.Parties/blazor-wasm/">
     <Project Path="src/Grove.Parties/blazor-wasm/Grove.Parties.BlazorWasm.csproj" />

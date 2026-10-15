@@ -71,7 +71,7 @@ public class AzureADOptionsConfiguration :
         options.TenantId = loginSettings.TenantId;
         options.Instance = "https://login.microsoftonline.com/";
 
-        if (loginSettings.CallbackPath.HasValue)
+        if (!string.IsNullOrEmpty(loginSettings.CallbackPath))
         {
             options.CallbackPath = loginSettings.CallbackPath;
         }

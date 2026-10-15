@@ -31,34 +31,6 @@ public sealed class ArchiveLaterPartDisplayDriver : ContentPartDisplayDriver<Arc
             $"{nameof(ArchiveLaterPart)}_SummaryAdmin",
             static (model, driver, part) => driver.PopulateViewModel(part, model), this, part).Location(PlatformConstants.DisplayType.SummaryAdmin, "Meta:25");
 
-    public override IDisplayResult Edit(ArchiveLaterPart part, BuildPartEditorContext context)
-        => Initialize<ArchiveLaterPartViewModel, ArchiveLaterPartDisplayDriver, ArchiveLaterPart>(
-            GetEditorShapeType(context),
-            static (model, driver, part) => driver.PopulateViewModel(part, model), this, part).Location("Actions:10.5");
-
-    public override async Task<IDisplayResult> UpdateAsync(ArchiveLaterPart part, UpdatePartEditorContext context)
-    {
-        var httpContext = _httpContextAccessor.HttpContext;
-
-        if (await _authorizationService.AuthorizeAsync(httpContext?.User, CommonPermissions.PublishContent, part.ContentItem))
-        {
-            var viewModel = new ArchiveLaterPartViewModel();
-
-            await context.Updater.TryUpdateModelAsync(viewModel, Prefix);
-
-            if (viewModel.ScheduledArchiveLocalDateTime == null || httpContext.Request.Form["submit.Publish"] == "submit.CancelArchiveLater")
-            {
-                part.ScheduledArchiveUtc = null;
-            }
-            else
-            {
-                part.ScheduledArchiveUtc = await _localClock.ConvertToUtcAsync(viewModel.ScheduledArchiveLocalDateTime.Value);
-            }
-        }
-
-        return Edit(part, context);
-    }
-
     private async ValueTask PopulateViewModel(ArchiveLaterPart part, ArchiveLaterPartViewModel viewModel)
     {
         viewModel.ContentItem = part.ContentItem;

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using Grove.Mvc.Utilities;
@@ -56,21 +57,19 @@ internal sealed class DisabledUserLoginFormEvent : LoginFormEventBase
         // authentication state that other handlers could pick up.
         await httpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
-        // Surface the error on the next request through the same TempData "error_*" channel that
-        // AccountBaseController.CopyTempDataErrorsToModelState reads on the login GET.
+        // Back to the login page with the error (a JSON sign-in also reads it from TempData's
+        // "error_*" channel, LoginService's veto translation).
+        var message = S["The specified user is not allowed to sign in."].Value;
         var tempData = _tempDataDictionaryFactory.GetTempData(httpContext);
-        tempData["error_disabled_user"] = S["The specified user is not allowed to sign in."].Value;
+        tempData["error_disabled_user"] = message;
 
-        var routeValues = new RouteValueDictionary();
-
-        if (httpContext.Request.Query.TryGetValue("returnUrl", out var returnUrlValue))
+        var loginPath = httpContext.RequestServices.GetRequiredService<IOptions<UserOptions>>().Value.LoginPath;
+        var query = "?error=" + Uri.EscapeDataString(message);
+        if (httpContext.Request.Query.TryGetValue("returnUrl", out var returnUrlValue) && !string.IsNullOrEmpty(returnUrlValue))
         {
-            routeValues.Add("returnUrl", returnUrlValue);
+            query += "&returnUrl=" + Uri.EscapeDataString(returnUrlValue.ToString());
         }
 
-        return new RedirectToActionResult(
-            actionName: nameof(AccountController.Login),
-            controllerName: typeof(AccountController).ControllerName(),
-            routeValues: routeValues);
+        return new LocalRedirectResult("~/" + loginPath + query);
     }
 }

@@ -47,6 +47,11 @@ public sealed class LinkMenuItem : ComponentBase
     [ComponentParameter(Choices = ["_self", "_blank"])]
     public string? Target { get; set; }
 
+    /// <summary>The link's text as markup (an HTML menu item), sanitized by the server; shown instead of <see cref="Text"/>.</summary>
+    [Parameter]
+    [ComponentParameter(Editor = ComponentSchema.Editors.Markup)]
+    public string? Html { get; set; }
+
     [Parameter]
     [ComponentParameter(Hidden = true)]
     public int Level { get; set; }
@@ -77,7 +82,14 @@ public sealed class LinkMenuItem : ComponentBase
                 builder.AddAttribute(9, "rel", "noopener noreferrer");
             }
 
-            builder.AddContent(10, Text);
+            if (!string.IsNullOrEmpty(Html))
+            {
+                builder.AddMarkupContent(11, Html);
+            }
+            else
+            {
+                builder.AddContent(10, Text);
+            }
             builder.CloseElement();
         }
 

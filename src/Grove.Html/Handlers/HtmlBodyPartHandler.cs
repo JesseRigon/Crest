@@ -19,12 +19,18 @@ public class HtmlBodyPartHandler : ContentPartHandler<HtmlBodyPart>
     private readonly IShortcodeService _shortcodeService;
     private readonly ILiquidTemplateManager _liquidTemplateManager;
     private readonly HtmlEncoder _htmlEncoder;
+    private readonly Grove.Infrastructure.Html.IHtmlSanitizerService _htmlSanitizerService;
+    private readonly Microsoft.Extensions.Localization.IStringLocalizer S;
 
     public HtmlBodyPartHandler(IContentDefinitionManager contentDefinitionManager,
         IShortcodeService shortcodeService,
         ILiquidTemplateManager liquidTemplateManager,
-        HtmlEncoder htmlEncoder)
+        HtmlEncoder htmlEncoder,
+        Grove.Infrastructure.Html.IHtmlSanitizerService htmlSanitizerService,
+        Microsoft.Extensions.Localization.IStringLocalizer<HtmlBodyPartHandler> stringLocalizer)
     {
+        _htmlSanitizerService = htmlSanitizerService;
+        S = stringLocalizer;
         _contentDefinitionManager = contentDefinitionManager;
         _shortcodeService = shortcodeService;
         _liquidTemplateManager = liquidTemplateManager;
@@ -70,5 +76,40 @@ public class HtmlBodyPartHandler : ContentPartHandler<HtmlBodyPart>
                 bodyAspect.Body = HtmlString.Empty;
             }
         });
+    }
+
+    // Every save path: a body that renders Liquid must parse; the markup is sanitized when the
+    // type's part settings say so.
+    protected override Task ValidatingAsync(ValidateContentPartContext context, HtmlBodyPart part)
+    {
+        var settings = context.ContentTypePartDefinition?.GetSettings<HtmlBodyPartSettings>();
+        if (settings is { RenderLiquid: true } && !string.IsNullOrEmpty(part.Html) && !_liquidTemplateManager.Validate(part.Html, out var errors))
+        {
+            context.Fail(S["The Body doesn't contain a valid Liquid expression. Details: {0}", string.Join(" ", errors)], nameof(part.Html));
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public override Task CreatingAsync(CreateContentContext context, HtmlBodyPart part) => SanitizeAsync(part);
+
+    public override Task UpdatingAsync(UpdateContentContext context, HtmlBodyPart part) => SanitizeAsync(part);
+
+    public override Task DraftSavingAsync(SaveDraftContentContext context, HtmlBodyPart part) => SanitizeAsync(part);
+
+    private async Task SanitizeAsync(HtmlBodyPart part)
+    {
+        if (string.IsNullOrEmpty(part.Html))
+        {
+            return;
+        }
+
+        var definition = await _contentDefinitionManager.GetTypeDefinitionAsync(part.ContentItem.ContentType);
+        var typePart = definition?.Parts.FirstOrDefault(x => string.Equals(x.PartDefinition.Name, nameof(HtmlBodyPart), StringComparison.Ordinal));
+        if (typePart?.GetSettings<HtmlBodyPartSettings>() is { SanitizeHtml: true }
+            && ((System.Text.Json.Nodes.JsonObject)part.ContentItem.Content)[typePart.Name] is System.Text.Json.Nodes.JsonObject stored)
+        {
+            stored["Html"] = _htmlSanitizerService.Sanitize(part.Html);
+        }
     }
 }

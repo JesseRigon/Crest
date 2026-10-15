@@ -12,7 +12,6 @@ public sealed class PlatformTestFixture : IAsyncDisposable
     private static readonly string s_traceDir =
         Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "traces");
 
-    private readonly bool _isMvc;
     private readonly string _instanceId;
 
     private PlatformTestServer _server;
@@ -23,9 +22,8 @@ public sealed class PlatformTestFixture : IAsyncDisposable
     public string BaseUrl { get; private set; }
     public IBrowser Browser => _browser;
 
-    public PlatformTestFixture(bool isMvc = false, string instanceId = null)
+    public PlatformTestFixture(string instanceId = null)
     {
-        _isMvc = isMvc;
         _instanceId = instanceId;
     }
 
@@ -33,9 +31,7 @@ public sealed class PlatformTestFixture : IAsyncDisposable
         Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
 
     private string AppDir =>
-        _isMvc
-            ? Path.Combine(ProjectRoot, "src", "Grove.Mvc.Web")
-            : Path.Combine(ProjectRoot, "src", "Grove.Cms.Web");
+        Path.Combine(ProjectRoot, "src", "Grove.Cms.Web");
 
     private string AppDataPath =>
         string.IsNullOrEmpty(_instanceId)
@@ -52,9 +48,7 @@ public sealed class PlatformTestFixture : IAsyncDisposable
 
         if (string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("ORCHARD_EXTERNAL")))
         {
-            _server = _isMvc
-                ? await PlatformTestServer.StartMvcAsync(AppDir, AppDataPath)
-                : await PlatformTestServer.StartCmsAsync(AppDir, AppDataPath, _instanceId);
+            _server = await PlatformTestServer.StartCmsAsync(AppDir, AppDataPath, _instanceId);
 
             BaseUrl = _server.ServerAddress;
         }

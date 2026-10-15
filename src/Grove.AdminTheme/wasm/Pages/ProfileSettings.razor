@@ -7,6 +7,7 @@
 @inject IApi Api
 @inject NotificationService Notifications
 @inject Grove.Components.Theme.GroveApiLocalizer T
+@inject HttpClient Http
 
 <GroveStack Gap="1rem" class="profile-settings-page" data-testid="profile-settings-page">
     <div>
@@ -45,9 +46,32 @@
         </GroveStack>
     </GroveCard>
 
+    @if (TimeZone is not null)
+    {
+        @* Grove.Users.TimeZone: the user's own time zone (api/grove/time-zone/me). *@
+        <GroveCard data-testid="profile-settings-time-zone">
+            <GroveStack Gap="0.75rem">
+                <GroveText TextStyle="TextStyle.Subtitle1" Text="@T["Default Time Zone"]" />
+                <GroveDropDown TValue="string"
+                                Data="TimeZone.TimeZones"
+                                Value="@TimeZone.TimeZoneId"
+                                ValueChanged="SelectTimeZoneAsync"
+                                TextProperty="Name"
+                                ValueProperty="Id"
+                                Placeholder="@T["Use the site's time zone"]"
+                                AllowClear="true"
+                                AllowFiltering="true"
+                                FilterPlaceholder="@T["Filter time zones"]"
+                                Style="max-width: 32rem; width: 100%;" />
+            </GroveStack>
+        </GroveCard>
+    }
+
+    <NotificationPreferences />
+
     @* Password, email and external logins (step 7: the MVC account screens are retired). *@
     <GroveCard data-testid="profile-settings-account">
-        <Grove.Components.Account.GroveAccountSecurity />
+        <Grove.Users.Components.GroveAccountSecurity />
     </GroveCard>
 </GroveStack>
 
@@ -59,6 +83,8 @@
     private string? ErrorMessage { get; set; }
     private string? SelectedCulture { get; set; }
 
+    private TimeZoneModel? TimeZone { get; set; }
+
     private CultureOption[] CultureOptions => AdminShellState?.Manifest?.CultureSelector.Cultures ?? [];
 
     protected override async Task OnInitializedAsync()
@@ -67,6 +93,10 @@
         {
             var current = await Api.Grove.Rest.Localization.GetMyCultureAsync();
             SelectedCulture = current?.Culture;
+
+            // Absent (404) while the user time zone feature is disabled.
+            using var response = await Http.GetAsync("api/grove/time-zone/me");
+            TimeZone = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<TimeZoneModel>() : null;
         }
         catch (Exception exception)
         {
@@ -107,4 +137,37 @@
             IsSaving = false;
         }
     }
+
+    private async Task SelectTimeZoneAsync(string? value)
+    {
+        if (IsSaving || TimeZone is null)
+        {
+            return;
+        }
+
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            using var response = await Http.PutAsJsonAsync("api/grove/time-zone/me", new { TimeZoneId = value });
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException(T["Unable to save your time zone."]);
+            }
+
+            TimeZone = await response.Content.ReadFromJsonAsync<TimeZoneModel>();
+            Notifications.Notify(NotificationSeverity.Success, T["Settings"], T["Your time zone was saved."]);
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private sealed record TimeZoneModel(string? TimeZoneId, TimeZoneOption[] TimeZones);
+    private sealed record TimeZoneOption(string Id, string Name);
 }

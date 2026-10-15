@@ -64,7 +64,9 @@ public sealed class Startup : StartupBase
         }
         else
         {
-            _logger.LogCritical("No connection string was supplied for Grove.DataProtection.Azure. Ensure that an application setting containing a valid Azure Storage connection string is available at `Grove:Grove_DataProtection_Azure:ConnectionString`.");
+            // Enabled without a connection string is an expected state (a tenant enables every
+            // feature in dev): nothing is registered, so the tenant keeps its default key ring.
+            _logger.LogWarning("Grove.DataProtection.Azure is enabled but not active because 'Grove_DataProtection_Azure:ConnectionString' is not configured; the tenant keeps its default key storage.");
         }
     }
 }

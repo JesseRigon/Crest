@@ -22,6 +22,10 @@ public sealed class ContentEditor : ComponentBase, IDisposable
     [Parameter]
     public string? ContentType { get; set; }
 
+    /// <summary>The item's id; none for an item not saved yet.</summary>
+    [Parameter]
+    public string? ContentItemId { get; set; }
+
     /// <summary>The item's content JSON, read once when the editor opens.</summary>
     [Parameter]
     public JsonNode? Content { get; set; }
@@ -32,6 +36,17 @@ public sealed class ContentEditor : ComponentBase, IDisposable
 
     [Parameter]
     public bool Disabled { get; set; }
+
+    /// <summary>Filled by the renderer: the save's errors (by editor path) are kept under it in the display state.</summary>
+    [Parameter]
+    [ComponentParameter(Hidden = true, ReadOnly = true)]
+    public string? InstanceId { get; set; }
+
+    /// <summary>The tree's state: the page that saves puts the server's errors under this node.</summary>
+    [CascadingParameter]
+    public DisplayState? State { get; set; }
+
+    private DisplayState? _subscribed;
 
     /// <summary>The content as edited, on every change.</summary>
     [Parameter]
@@ -54,12 +69,68 @@ public sealed class ContentEditor : ComponentBase, IDisposable
         // in the context, not in the tree.
         if (Context is null)
         {
-            Context = new ContentEditorContext(Content?.DeepClone(), GroveContentTypeMetadata.FromTypeDefinition(Definition), Services.GetService<HttpClient>());
+            Context = new ContentEditorContext(Content?.DeepClone(), GroveContentTypeMetadata.FromTypeDefinition(Definition), Services.GetService<HttpClient>())
+            {
+                ContentItemId = string.IsNullOrEmpty(ContentItemId) ? null : ContentItemId,
+            };
             Context.Changed += OnChanged;
         }
 
         Context.Disabled = Disabled;
+
+        if (!ReferenceEquals(_subscribed, State))
+        {
+            if (_subscribed is not null)
+            {
+                _subscribed.Changed -= OnStateChanged;
+            }
+
+            _subscribed = State;
+            if (_subscribed is not null)
+            {
+                _subscribed.Changed += OnStateChanged;
+            }
+        }
     }
+
+    // The server's errors of the last save, keyed as the editors are (Part.Field, Part), shown
+    // under each editor.
+    private void OnStateChanged()
+    {
+        if (Context is null || State is null || InstanceId is null)
+        {
+            return;
+        }
+
+        // Only a new set of errors changes the editors (the content's own changes also raise the state's event).
+        var errors = State.GetErrors(InstanceId);
+        if (ReferenceEquals(errors, _lastErrors) || (errors.Count == 0 && _shown.Count == 0))
+        {
+            return;
+        }
+
+        _lastErrors = errors;
+
+        foreach (var key in _shown)
+        {
+            Context.Errors.Remove(key);
+        }
+
+        _shown.Clear();
+        foreach (var (key, messages) in errors)
+        {
+            if (key.Length > 0)
+            {
+                Context.Errors[key] = string.Join(" ", messages);
+                _shown.Add(key);
+            }
+        }
+
+        Context.Refresh();
+    }
+
+    private readonly List<string> _shown = [];
+    private IReadOnlyDictionary<string, IReadOnlyList<string>>? _lastErrors;
 
     private void OnChanged() => _ = InvokeAsync(() => ContentChanged.InvokeAsync(Context!.Content.DeepClone()));
 
@@ -81,6 +152,11 @@ public sealed class ContentEditor : ComponentBase, IDisposable
 
     public void Dispose()
     {
+        if (_subscribed is not null)
+        {
+            _subscribed.Changed -= OnStateChanged;
+        }
+
         if (Context is not null)
         {
             Context.Changed -= OnChanged;

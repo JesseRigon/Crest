@@ -14,7 +14,7 @@
    state, so hydration does not fetch it again (§ 4). *@
 <GroveStack Gap="1rem" data-testid="content-item-display-page">
     <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
-        <GroveText TextStyle="TextStyle.H4" Text="@T["Display"]" />
+        <GroveText TextStyle="TextStyle.H4" Text="@(Version == "latest" ? T["Preview of the latest version"] : T["Display"])" />
         <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
             <GroveButton Text="@T["Edit"]" Icon="edit" ButtonStyle="ButtonStyle.Light" Click="Edit" />
             <GroveButton Text="@T["Back"]" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="Back" />
@@ -48,6 +48,9 @@
 
     [SupplyParameterFromQuery] public string? DisplayType { get; set; }
 
+    /// <summary><c>latest</c>: the latest version, a draft included (the preview of a draft).</summary>
+    [SupplyParameterFromQuery] public string? Version { get; set; }
+
     /// <summary>The tree the prerender fetched, handed to the interactive render.</summary>
     [PersistentState] public DisplayPageState? State { get; set; }
 
@@ -57,22 +60,22 @@
     {
         if (string.IsNullOrWhiteSpace(ContentItemId))
         {
-            State = new(string.Empty, DisplayType, null);
+            State = new(string.Empty, DisplayType, Version, null);
             return;
         }
 
-        if (State is { } state && state.ContentItemId == ContentItemId && state.DisplayType == DisplayType)
+        if (State is { } state && state.ContentItemId == ContentItemId && state.DisplayType == DisplayType && state.Version == Version)
         {
             return;
         }
 
         State = null;
-        State = new(ContentItemId, DisplayType, await Api.Grove.Rest.Content.Items.DisplayAsync(ContentItemId, DisplayType));
+        State = new(ContentItemId, DisplayType, Version, await Api.Grove.Rest.Content.Items.DisplayAsync(ContentItemId, DisplayType, Version));
     }
 
     private void Edit() => Navigation.NavigateTo($"Contents/ContentItems/{Uri.EscapeDataString(ContentItemId ?? string.Empty)}/Edit");
 
     private void Back() => Navigation.NavigateTo("Contents/ContentItems");
 
-    public sealed record DisplayPageState(string ContentItemId, string? DisplayType, DisplayTree? Tree);
+    public sealed record DisplayPageState(string ContentItemId, string? DisplayType, string? Version, DisplayTree? Tree);
 }

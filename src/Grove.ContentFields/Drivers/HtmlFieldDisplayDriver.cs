@@ -54,41 +54,4 @@ public sealed class HtmlFieldDisplayDriver : ContentFieldDisplayDriver<HtmlField
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");
     }
-
-    public override IDisplayResult Edit(HtmlField field, BuildFieldEditorContext context)
-    {
-        return Initialize<EditHtmlFieldViewModel>(GetEditorShapeType(context), model =>
-        {
-            model.Html = field.Html;
-            model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
-        });
-    }
-
-    public override async Task<IDisplayResult> UpdateAsync(HtmlField field, UpdateFieldEditorContext context)
-    {
-        var viewModel = new EditHtmlFieldViewModel();
-        var settings = context.PartFieldDefinition.GetSettings<HtmlFieldSettings>();
-
-        await context.Updater.TryUpdateModelAsync(viewModel, Prefix, f => f.Html);
-
-        field.Html = settings.SanitizeHtml
-            ? _htmlSanitizerService.Sanitize(viewModel.Html)
-            : viewModel.Html;
-
-        if (settings.RenderLiquid
-            && !string.IsNullOrEmpty(field.Html)
-            && !_liquidTemplateManager.Validate(field.Html, out var errors))
-        {
-            context.Updater.ModelState.AddModelError(Prefix, nameof(field.Html),
-                S[settings.SanitizeHtml
-                    ? "{0} contains invalid Liquid expression. Note that HTML sanitization affects the value being saved and thus can break Liquid code: {1}"
-                    : "{0} contains invalid Liquid expression: {1}",
-                    context.PartFieldDefinition.DisplayName(),
-                    string.Join(" ", errors)]);
-        }
-
-        return Edit(field, context);
-    }
 }

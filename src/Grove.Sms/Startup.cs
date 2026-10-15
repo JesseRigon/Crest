@@ -1,11 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Grove.DisplayManagement.Handlers;
+using Grove.Environment.Options;
 using Grove.Modules;
 using Grove.Navigation;
 using Grove.Notifications;
 using Grove.Security.Permissions;
-using Grove.Sms.Drivers;
+using Grove.Sms.Models;
 using Grove.Sms.Services;
 using Grove.Sms.Workflows;
 using Grove.Workflows;
@@ -31,12 +32,43 @@ public sealed class Startup : StartupBase
             services.AddLogSmsProvider();
         }
 
-        services.AddTwilioSmsProvider()
-            .AddSiteDisplayDriver<TwilioSettingsDisplayDriver>();
+        services.AddTwilioSmsProvider();
 
         services.AddPermissionProvider<SmsPermissionProvider>();
-        services.AddSiteDisplayDriver<SmsSettingsDisplayDriver>();
-        services.AddPageSource<AdminPages>();
+        // The SMS test page (Grove.Sms.BlazorWasm) and its API.
+        services.AddApiContributor<Api.SmsTestApi>();
+        services.AddSettingsGroup<SmsSettings>(
+            SmsSettings.GroupId,
+            "SMS",
+            SmsPermissions.ManageSmsSettings,
+            group => group.InMenu("settings-communication", entryId: "sms"));
+        services.AddSettingsModel<TwilioSettings>(SmsSettings.GroupId, "Twilio", model => model
+            .ValidatedBy((services, settings, errors, _) =>
+            {
+                if (settings.IsEnabled)
+                {
+                    SmsProviderSettings.ValidatePhoneNumber(services, settings.PhoneNumber, nameof(TwilioSettings.PhoneNumber), errors);
+
+                    if (string.IsNullOrWhiteSpace(settings.AccountSID))
+                    {
+                        errors.Add(nameof(TwilioSettings.AccountSID), "Account SID requires a value.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(settings.AuthToken))
+                    {
+                        errors.Add(nameof(TwilioSettings.AuthToken), "Auth Token requires a value.");
+                    }
+                }
+
+                return Task.CompletedTask;
+            })
+            .OnSaved(async (services, settings, _) =>
+            {
+                await SmsProviderSettings.UpdateDefaultProviderAsync(services, TwilioSmsProvider.TechnicalName, settings.IsEnabled);
+                services.GetRequiredService<IOptionsUpdateNotifier>()
+                    .RequestUpdate<TwilioOptions>()
+                    .RequestUpdate<SmsProviderOptions>();
+            }));
     }
 }
 

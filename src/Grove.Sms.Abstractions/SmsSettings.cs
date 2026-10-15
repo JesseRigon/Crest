@@ -1,3 +1,6 @@
+using System.ComponentModel.DataAnnotations;
+using Grove.Settings;
+
 namespace Grove.Sms;
 
 public class SmsSettings
@@ -10,5 +13,7 @@ public class SmsSettings
     /// <summary>
     /// The name of the SMS provider to use.
     /// </summary>
+    [Display(Name = "Default SMS provider", Prompt = "Select a provider", GroupName = "Providers")]
+    [Setting(Options = typeof(SmsProviderSettingOptions))]
     public string DefaultProviderName { get; set; }
 }

@@ -24,7 +24,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Grove.Cms.Web\Grove.Cms.Web.csproj" />
-    <ProjectReference Include="..\..\src\Grove.Mvc.Web\Grove.Mvc.Web.csproj" />
   </ItemGroup>
 
   <Import Project="..\..\src\Grove.Build\Grove.Commons.targets" />

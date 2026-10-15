@@ -19,7 +19,6 @@ using Grove.ResourceManagement;
 using Grove.Roles;
 using Grove.Security.Permissions;
 using Grove.Settings.Deployment;
-using Grove.Settings.Drivers;
 using Grove.Settings.Recipes;
 using Grove.Settings.Services;
 using Grove.Setup.Events;
@@ -46,6 +45,11 @@ public sealed class Startup : StartupBase
         services.AddApiContributor<Api.BrandingSettingsApi>();
         services.AddApiContributor<Api.DebugSettingsApi>();
 
+        // The settings groups the generic settings form serves (docs/MVC/parity.md › SettingsForm).
+        services.AddScoped<Groups.SettingsGroupService>();
+        services.AddApiContributor<Api.SettingsGroupsApi>();
+        services.AddPageSource<Groups.SettingsGroupPages>();
+
         // The branding renditions the shipped surfaces consume (docs/branding.md); a module
         // that adds a surface registers its own the same way.
         services.AddBrandingRendition(new BrandingRendition("login", "Login logo", "The login page's header, beside or instead of the site name", Width: 320, Height: 96));
@@ -54,15 +58,12 @@ public sealed class Startup : StartupBase
         services.AddBrandingRendition(new BrandingRendition("email", "Email logo", "Mail templates", Width: 240, Height: 64, Reserved: true));
 
         // Site Settings editor
-        services.AddSiteDisplayDriver<DefaultSiteSettingsDisplayDriver>();
-        services.AddSiteDisplayDriver<DebugSettingsDisplayDriver>();
-        services.AddSiteDisplayDriver<ButtonsSettingsDisplayDriver>();
-        services.AddSiteSettingsPermission(DefaultSiteSettingsDisplayDriver.GroupId, SettingsPermissions.ManageGeneralSettings);
-        services.AddSiteSettingsPermission(DebugSettingsDisplayDriver.GroupId, SettingsPermissions.ManageDebuggingSettings);
+        services.AddSiteSettingsPermission(SiteSettings.GroupId, SettingsPermissions.ManageGeneralSettings);
+        services.AddSiteSettingsPermission(DebugSettings.GroupId, SettingsPermissions.ManageDebuggingSettings);
 
         services.AddScoped<ITimeZoneSelector, DefaultTimeZoneSelector>();
 
-        services.AddDeployment<SiteSettingsDeploymentSource, SiteSettingsDeploymentStep, SiteSettingsDeploymentStepDriver>();
+        services.AddDeployment<SiteSettingsDeploymentSource, SiteSettingsDeploymentStep>();
 
         services.AddScoped<IRecipeEnvironmentProvider, RecipeEnvironmentSiteNameProvider>();
         services.AddSignalOptionsChangeTokenSource<ShapeRenderingOptions>();
@@ -134,8 +135,6 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<DebugSettings, DeploymentStartup>(
-            S => S["Debugging settings"],
-            S => S["Exports the debugging settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<DebugSettings>();
     }
 }

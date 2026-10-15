@@ -82,38 +82,6 @@ public sealed class PlatformTestServer : IAsyncDisposable
         return new PlatformTestServer(app, GetListeningAddress(app), loggerProvider.Collector);
     }
 
-    public static async Task<PlatformTestServer> StartMvcAsync(string contentRoot, string appDataPath)
-    {
-        var loggerProvider = new FakeLoggerProvider();
-
-        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
-        {
-            ApplicationName = "Grove.Mvc.Web",
-            ContentRootPath = contentRoot,
-        });
-
-        builder.Services
-            .AddPlatform()
-            .AddTenantFeatures("Grove.HealthChecks")
-            .AddMvc();
-
-        ConfigureServices(builder, appDataPath, instanceId: null, loggerProvider);
-
-        var app = builder.Build();
-        app.UseStaticFiles();
-        app.UsePlatform();
-
-        await app.StartAsync();
-
-        var address = GetListeningAddress(app);
-
-        // The Grove tenant pipeline initializes lazily on the first request.
-        // Warm up the app now so tests don't race against pipeline initialization.
-        await WarmUpAsync(address, loggerProvider.Collector, timeoutSeconds: 90);
-
-        return new PlatformTestServer(app, address, loggerProvider.Collector);
-    }
-
     public void AssertNoLoggedIssues()
     {
         var issues = _logCollector.GetSnapshot()

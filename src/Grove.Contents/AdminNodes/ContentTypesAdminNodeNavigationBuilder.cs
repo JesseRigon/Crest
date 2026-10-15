@@ -13,7 +13,7 @@ namespace Grove.Contents.AdminNodes;
 
 public class ContentTypesAdminNodeNavigationBuilder : IAdminNodeNavigationBuilder
 {
-    private readonly LinkGenerator _linkGenerator;
+    private readonly Grove.Admin.AdminOptions _adminOptions;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IAuthorizationService _authorizationService;
     private readonly IContentDefinitionManager _contentDefinitionManager;
@@ -21,13 +21,13 @@ public class ContentTypesAdminNodeNavigationBuilder : IAdminNodeNavigationBuilde
 
     public ContentTypesAdminNodeNavigationBuilder(
         IContentDefinitionManager contentDefinitionManager,
-        LinkGenerator linkGenerator,
+        Microsoft.Extensions.Options.IOptions<Grove.Admin.AdminOptions> adminOptions,
         IHttpContextAccessor httpContextAccessor,
         IAuthorizationService authorizationService,
         ILogger<ContentTypesAdminNodeNavigationBuilder> logger)
     {
         _contentDefinitionManager = contentDefinitionManager;
-        _linkGenerator = linkGenerator;
+        _adminOptions = adminOptions.Value;
         _httpContextAccessor = httpContextAccessor;
         _authorizationService = authorizationService;
         _logger = logger;
@@ -50,13 +50,8 @@ public class ContentTypesAdminNodeNavigationBuilder : IAdminNodeNavigationBuilde
         {
             builder.Add(new LocalizedString(ctd.DisplayName, ctd.DisplayName), itemBuilder =>
             {
-                itemBuilder.Url(_linkGenerator.GetPathByRouteValues(_httpContextAccessor.HttpContext, string.Empty, new
-                {
-                    area = "Grove.Contents",
-                    controller = "Admin",
-                    action = "List",
-                    contentTypeId = ctd.Name,
-                }));
+                // The native content list, filtered to the type.
+                itemBuilder.Url(Grove.ContentManagement.ContentAdminPaths.InAdmin(_adminOptions.AdminUrlPrefix, Grove.ContentManagement.ContentAdminPaths.List(ctd.Name)));
 
                 // This node expands into one menu item per content type, so the node's own
                 // identifier is qualified with the type name to stay unique per built item while

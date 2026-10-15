@@ -60,9 +60,17 @@
          here: the host app's WASM entry project references the module client libraries it
          ships (source or packages), see ClientWebAssemblyHost, and ModuleAssemblyRegistry
          finds them at runtime. -->
+    <!-- The Users module's shared components (the sign-in form, the account security part):
+         not a module client library, it loads with this theme UI. -->
+    <ProjectReference Include="..\..\Grove.Users\components\Grove.Users.Components.csproj" />
+    <ProjectReference Include="..\..\Grove.Apis.GraphQL\blazor-wasm\Grove.Apis.GraphQL.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.AuditTrail\blazor-wasm\Grove.AuditTrail.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.ContentPartLists\blazor-wasm\Grove.ContentPartLists.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.Parties\blazor-wasm\Grove.Parties.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Routes\blazor-wasm\Grove.Routes.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Shortcodes\blazor-wasm\Grove.Shortcodes.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Sitemaps\blazor-wasm\Grove.Sitemaps.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Sms\blazor-wasm\Grove.Sms.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.Workflows\blazor-wasm\Grove.Workflows.BlazorWasm.csproj" />
   </ItemGroup>
 

@@ -26,10 +26,23 @@ public sealed class Startup : StartupBase
 
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddPageSource<AdminPages>();
         services.AddPermissionProvider<Permissions>();
         services.AddSingleton<CorsService>();
-        services.AddScoped<IJSLocalizer, CorsJSLocalizer>();
+        services.AddSettingsGroup<CorsSettings>(
+            CorsSettings.GroupId,
+            "Cross-Origin Resource Sharing",
+            Permissions.ManageCorsSettings,
+            group => group
+                .InMenu("settings-security", entryId: "cors")
+                .ReloadsTenant()
+                .StoredBy(
+                    (services, _) => services.GetRequiredService<CorsService>().GetSettingsAsync(),
+                    (services, settings, _) => services.GetRequiredService<CorsService>().UpdateSettingsAsync(settings))
+                .ValidatedBy((_, settings, errors, _) =>
+                {
+                    CorsSettingsRules.Validate(settings, errors);
+                    return Task.CompletedTask;
+                }));
 
         services.AddTransient<IConfigureOptions<CorsOptions>, CorsOptionsConfiguration>();
     }
@@ -40,6 +53,6 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<CorsSettings, DeploymentStartup>(S => S["Cors settings"], S => S["Exports the Cors settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<CorsSettings>();
     }
 }

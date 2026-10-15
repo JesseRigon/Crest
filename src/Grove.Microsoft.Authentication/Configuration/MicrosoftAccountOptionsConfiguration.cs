@@ -73,7 +73,7 @@ public class MicrosoftAccountOptionsConfiguration :
             _logger.LogError("The Microsoft Account secret key could not be decrypted. It may have been encrypted using a different key.");
         }
 
-        if (_microsoftAccountSettings.CallbackPath.HasValue)
+        if (!string.IsNullOrEmpty(_microsoftAccountSettings.CallbackPath))
         {
             options.CallbackPath = _microsoftAccountSettings.CallbackPath;
         }

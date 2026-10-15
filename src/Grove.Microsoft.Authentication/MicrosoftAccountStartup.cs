@@ -6,7 +6,6 @@ using Grove.Deployment;
 using Grove.DisplayManagement.Handlers;
 using Grove.Microsoft.Authentication.Configuration;
 using Grove.Microsoft.Authentication.Deployment;
-using Grove.Microsoft.Authentication.Drivers;
 using Grove.Microsoft.Authentication.Recipes;
 using Grove.Microsoft.Authentication.Services;
 using Grove.Microsoft.Authentication.Settings;
@@ -25,8 +24,11 @@ public sealed class MicrosoftAccountStartup : StartupBase
         services.AddPermissionProvider<Permissions>();
 
         services.AddSingleton<IMicrosoftAccountService, MicrosoftAccountService>();
-        services.AddSiteDisplayDriver<MicrosoftAccountSettingsDisplayDriver>();
-        services.AddPageSource<MicrosoftAccountPages>();
+        services.AddSettingsGroup<MicrosoftAccountSettings>(
+            MicrosoftAuthenticationConstants.Features.MicrosoftAccount,
+            "Microsoft",
+            Permissions.ManageMicrosoftAuthentication,
+            group => group.InMenu("settings-authentication", entryId: "microsoft").ReloadsTenant());
 
         services.AddRecipeExecutionStep<MicrosoftAccountSettingsStep>();
 
@@ -43,6 +45,6 @@ public sealed class MicrosoftAccountDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<MicrosoftAccountDeploymentSource, MicrosoftAccountDeploymentStep, MicrosoftAccountDeploymentStepDriver>();
+        services.AddDeployment<MicrosoftAccountDeploymentSource, MicrosoftAccountDeploymentStep>();
     }
 }

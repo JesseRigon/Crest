@@ -1,0 +1,198 @@
+@page "/Shortcodes"
+@attribute [PageEntry("ManageShortcodeTemplates", Id = "shortcodes", Parent = "design", Caption = "Shortcodes", Icon = "@iconify:mdi:code-braces")]
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* The tenant's shortcode templates (Grove.Shortcodes.Templates): [name] renders the template's
+   Liquid; the hint, usage, default value and categories are what the editors' shortcode list
+   shows. *@
+
+<PageTitle>@T["Shortcodes"]</PageTitle>
+
+<GroveStack Gap="1rem" data-testid="shortcodes-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <GroveStack Gap="0.25rem">
+            <GroveText TextStyle="TextStyle.H4" class="rz-m-0">@T["Shortcodes"]</GroveText>
+            <GroveText TextStyle="TextStyle.Body2">@T["Templates an editor inserts as [name]; each renders its Liquid."]</GroveText>
+        </GroveStack>
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <GroveTextBox @bind-Value="Search" Placeholder="@T["Search"]" Style="width: 14rem" />
+            <GroveButton Icon="add" Text="@T["Add shortcode"]" Click="New" Disabled="IsBusy" data-testid="shortcodes-add" />
+        </GroveStack>
+    </GroveStack>
+
+    @if (Error is not null)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="true">@Error</GroveAlert>
+    }
+
+    @if (Draft is not null)
+    {
+        <GroveCard data-testid="shortcode-editor">
+            <GroveStack Gap="0.75rem">
+                <GroveText TextStyle="TextStyle.H5" class="rz-m-0">@(DraftName is null ? T["New shortcode"] : T["Edit [{0}]", DraftName])</GroveText>
+                <GroveRow Gap="1rem">
+                    <GroveColumn Size="12" SizeMD="6">
+                        <GroveFormField Text="@T["Name"]" Style="width: 100%;"><GroveTextBox @bind-Value="Draft.Name" Style="width: 100%;" Name="name" /></GroveFormField>
+                        @FieldError("name")
+                    </GroveColumn>
+                    <GroveColumn Size="12" SizeMD="6">
+                        <GroveFormField Text="@T["Categories"]" Style="width: 100%;">
+                            <GroveDropDown TValue="IEnumerable<string>" @bind-Value="DraftCategories" Data="@AllCategories" Multiple="true" Chips="true" AllowClear="true" AllowFiltering="true" Style="width: 100%;" />
+                        </GroveFormField>
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
+                            <GroveTextBox @bind-Value="NewCategory" Placeholder="@T["New category"]" Style="width: 12rem" />
+                            <GroveButton Icon="add" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="AddCategory" title="@T["Add category"]" />
+                        </GroveStack>
+                    </GroveColumn>
+                </GroveRow>
+                <GroveFormField Text="@T["Hint"]" Style="width: 100%;"><GroveTextBox @bind-Value="Draft.Hint" Style="width: 100%;" /></GroveFormField>
+                <GroveFormField Text="@T["Default value (inserted by the editors)"]" Style="width: 100%;"><GroveTextBox @bind-Value="Draft.DefaultValue" Style="width: 100%;" /></GroveFormField>
+                <GroveFormField Text="@T["Usage (HTML)"]" Style="width: 100%;"><GroveTextArea @bind-Value="Draft.Usage" Rows="3" Style="width: 100%;" /></GroveFormField>
+                <GroveText TextStyle="TextStyle.Subtitle2" class="rz-m-0">@T["Template (Liquid)"]</GroveText>
+                <CodeEditor Value="@Draft.Content" Changed="@(value => Draft.Content = value ?? string.Empty)" Language="liquid" Height="18rem" Id="shortcode-content" />
+                @FieldError("content")
+                <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Draft = null)" Disabled="IsBusy" />
+                    <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="IsBusy" data-testid="shortcode-save" />
+                </GroveStack>
+            </GroveStack>
+        </GroveCard>
+    }
+
+    <GroveCard>
+        @if (Model is null)
+        {
+            <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (!Shown.Any())
+        {
+            <GroveText TextStyle="TextStyle.Body2">@T["No shortcode templates yet."]</GroveText>
+        }
+        else
+        {
+            <GroveDataGrid Data="@Shown" TItem="ShortcodeTemplateModel" AllowPaging="true" PageSize="20" Density="Density.Compact">
+                <Columns>
+                    <GroveDataGridColumn TItem="ShortcodeTemplateModel" Title="@T["Shortcode"]" Width="14rem">
+                        <Template Context="item">[@item.Name]</Template>
+                    </GroveDataGridColumn>
+                    <GroveDataGridColumn TItem="ShortcodeTemplateModel" Property="Hint" Title="@T["Hint"]" />
+                    <GroveDataGridColumn TItem="ShortcodeTemplateModel" Title="@T["Categories"]" Width="14rem">
+                        <Template Context="item">@string.Join(", ", item.Categories)</Template>
+                    </GroveDataGridColumn>
+                    <GroveDataGridColumn TItem="ShortcodeTemplateModel" Title="@T["Actions"]" Width="8rem">
+                        <Template Context="item">
+                            <GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                <GroveButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(item))" title="@T["Edit"]" />
+                                <GroveButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteAsync(item))" Disabled="IsBusy" title="@T["Delete"]" />
+                            </GroveStack>
+                        </Template>
+                    </GroveDataGridColumn>
+                </Columns>
+            </GroveDataGrid>
+        }
+    </GroveCard>
+</GroveStack>
+
+@code {
+    private ShortcodeTemplatesModel? Model;
+    private string? Search;
+    private ShortcodeTemplateModel? Draft;
+    private string? DraftName;
+    private IEnumerable<string> DraftCategories = [];
+    private string? NewCategory;
+    private List<string> AllCategories = [];
+    private Dictionary<string, string[]> Errors = new(StringComparer.OrdinalIgnoreCase);
+    private bool IsBusy;
+    private string? Error;
+
+    private IEnumerable<ShortcodeTemplateModel> Shown => (Model?.Templates ?? [])
+        .Where(item => string.IsNullOrWhiteSpace(Search) || item.Name.Contains(Search, StringComparison.OrdinalIgnoreCase) || (item.Hint?.Contains(Search, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            Model = await Http.GetFromJsonAsync<ShortcodeTemplatesModel>(ShortcodeTemplatesApiPaths.Templates);
+            AllCategories = [.. Model?.Categories ?? []];
+        }
+        catch (Exception exception) { Error = exception.Message; }
+    }
+
+    private void New()
+    {
+        Draft = new ShortcodeTemplateModel();
+        DraftName = null;
+        DraftCategories = [];
+        Errors.Clear();
+    }
+
+    private void Edit(ShortcodeTemplateModel item)
+    {
+        Draft = new ShortcodeTemplateModel { Name = item.Name, Content = item.Content, Hint = item.Hint, Usage = item.Usage, DefaultValue = item.DefaultValue, Categories = item.Categories };
+        DraftName = item.Name;
+        DraftCategories = item.Categories;
+        Errors.Clear();
+    }
+
+    private void AddCategory()
+    {
+        var category = NewCategory?.Trim();
+        if (string.IsNullOrEmpty(category)) return;
+        if (!AllCategories.Contains(category, StringComparer.OrdinalIgnoreCase)) AllCategories = [.. AllCategories, category];
+        DraftCategories = [.. DraftCategories.Append(category).Distinct(StringComparer.OrdinalIgnoreCase)];
+        NewCategory = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (Draft is null) return;
+        Draft.Categories = [.. DraftCategories];
+        IsBusy = true;
+        Error = null;
+        Errors.Clear();
+        try
+        {
+            using var response = DraftName is null
+                ? await Http.PostAsJsonAsync(ShortcodeTemplatesApiPaths.Templates, Draft)
+                : await Http.PutAsJsonAsync(ShortcodeTemplatesApiPaths.Template(DraftName), Draft);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ReadProblemAsync(response);
+                if (problem?.Errors is { Count: > 0 } errors) Errors = new(errors, StringComparer.OrdinalIgnoreCase);
+                else Error = problem?.Detail ?? T["The shortcode could not be saved."];
+                return;
+            }
+
+            Draft = null;
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task DeleteAsync(ShortcodeTemplateModel item)
+    {
+        IsBusy = true;
+        try
+        {
+            using var response = await Http.DeleteAsync(ShortcodeTemplatesApiPaths.Template(item.Name));
+            if (!response.IsSuccessStatusCode) Error = T["[{0}] could not be deleted.", item.Name];
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private RenderFragment? FieldError(string key) => Errors.TryGetValue(key, out var messages)
+        ? @<GroveText TextStyle="TextStyle.Caption" class="rz-color-danger">@string.Join(" ", messages)</GroveText>
+        : null;
+
+    private static async Task<Problem?> ReadProblemAsync(HttpResponseMessage response)
+    {
+        try { return await response.Content.ReadFromJsonAsync<Problem>(); }
+        catch { return null; }
+    }
+
+    private sealed record Problem(string? Title, string? Detail, Dictionary<string, string[]>? Errors);
+}

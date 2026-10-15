@@ -9,7 +9,6 @@ using Grove.Navigation;
 using Grove.Queries;
 using Grove.Queries.Services;
 using Grove.Queries.Deployment;
-using Grove.Queries.Drivers;
 using Grove.Queries.Liquid;
 using Grove.Queries.Recipes;
 using Grove.Queries.Structured;
@@ -28,7 +27,6 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddApiContributor<Api.QueriesApi>();
-        services.AddDisplayDriver<Query, QueryDisplayDriver>();
         services.AddPermissionProvider<Permissions>();
     }
 }
@@ -39,7 +37,7 @@ public sealed class CoreStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddRecipeExecutionStep<Recipes.QueryStep>();
-        services.AddDeployment<AllQueriesDeploymentSource, AllQueriesDeploymentStep, AllQueriesDeploymentStepDriver>();
+        services.AddDeployment<AllQueriesDeploymentSource, AllQueriesDeploymentStep>();
         services.AddSingleton<IGlobalMethodProvider, QueryGlobalMethodProvider>();
 
         services.Configure<TemplateOptions>(o =>
@@ -75,6 +73,6 @@ public class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<QueryBasedContentDeploymentSource, QueryBasedContentDeploymentStep, QueryBasedContentDeploymentStepDriver>();
+        services.AddDeployment<QueryBasedContentDeploymentSource, QueryBasedContentDeploymentStep>();
     }
 }

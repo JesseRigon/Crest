@@ -107,7 +107,7 @@ public interface IContentTypesApi
 
 public interface IContentItemsApi
 {
-    Task<ContentItemListResult> ListAsync(string? contentType = null, string? status = null, string? search = null, int page = 1, int pageSize = 20, string? group = null);
+    Task<ContentItemListResult> ListAsync(string? contentType = null, string? status = null, string? search = null, int page = 1, int pageSize = 20, string? group = null, IReadOnlyDictionary<string, string>? filters = null);
     Task<ContentItem?> GetAsync(string contentItemId);
     Task<ContentItem?> GetByHandleAsync(string handle);
     Task<ContentItem?> CreateAsync(ContentItemWriteRequest request);
@@ -117,7 +117,7 @@ public interface IContentItemsApi
     Task<bool> DeleteAsync(string contentItemId);
 
     /// <summary>The item's display tree (docs/blazor-display.md § 8); null when it is missing or not the caller's to see.</summary>
-    Task<Grove.DisplayManagement.Components.DisplayTree?> DisplayAsync(string contentItemId, string? displayType = null);
+    Task<Grove.DisplayManagement.Components.DisplayTree?> DisplayAsync(string contentItemId, string? displayType = null, string? version = null);
 
     /// <summary>The item's editor tree (docs/blazor-display.md rework step 5); <c>new-{type}</c> for a new item.</summary>
     Task<Grove.DisplayManagement.Components.DisplayTree?> EditorAsync(string contentItemId);
@@ -548,13 +548,19 @@ public sealed class ContentTypesApi(HttpClient http) : IContentTypesApi
 
 public sealed class ContentItemsApi(HttpClient http) : IContentItemsApi
 {
-    public async Task<ContentItemListResult> ListAsync(string? contentType = null, string? status = null, string? search = null, int page = 1, int pageSize = 20, string? group = null)
+    public async Task<ContentItemListResult> ListAsync(string? contentType = null, string? status = null, string? search = null, int page = 1, int pageSize = 20, string? group = null, IReadOnlyDictionary<string, string>? filters = null)
     {
         var query = new List<string> { $"page={page}", $"pageSize={pageSize}" };
         if (!string.IsNullOrWhiteSpace(contentType)) query.Add($"contentType={Uri.EscapeDataString(contentType)}");
         if (!string.IsNullOrWhiteSpace(group)) query.Add($"group={Uri.EscapeDataString(group)}");
         if (!string.IsNullOrWhiteSpace(status)) query.Add($"status={Uri.EscapeDataString(status)}");
         if (!string.IsNullOrWhiteSpace(search)) query.Add($"search={Uri.EscapeDataString(search)}");
+        // The filters modules add (content-items/filters): a culture, a taxonomy term.
+        foreach (var (name, value) in filters ?? new Dictionary<string, string>())
+        {
+            if (!string.IsNullOrWhiteSpace(value)) query.Add($"{Uri.EscapeDataString(name)}={Uri.EscapeDataString(value)}");
+        }
+
         using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, $"api/grove/content-items?{string.Join('&', query)}")));
         return response.IsSuccessStatusCode
             ? await response.Content.ReadFromJsonAsync<ContentItemListResult>() ?? ContentItemListResult.Empty
@@ -588,10 +594,13 @@ public sealed class ContentItemsApi(HttpClient http) : IContentItemsApi
         return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<Grove.DisplayManagement.Components.DisplayTree>() : null;
     }
 
-    public async Task<Grove.DisplayManagement.Components.DisplayTree?> DisplayAsync(string contentItemId, string? displayType = null)
+    public async Task<Grove.DisplayManagement.Components.DisplayTree?> DisplayAsync(string contentItemId, string? displayType = null, string? version = null)
     {
         var uri = $"api/grove/content-items/{Uri.EscapeDataString(contentItemId)}/display";
-        if (!string.IsNullOrWhiteSpace(displayType)) uri += $"?displayType={Uri.EscapeDataString(displayType)}";
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(displayType)) query.Add($"displayType={Uri.EscapeDataString(displayType)}");
+        if (!string.IsNullOrWhiteSpace(version)) query.Add($"version={Uri.EscapeDataString(version)}");
+        if (query.Count > 0) uri += "?" + string.Join("&", query);
         using var response = await http.SendAsync(WithCredentials(new(HttpMethod.Get, uri)));
         return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<Grove.DisplayManagement.Components.DisplayTree>() : null;
     }
@@ -1715,12 +1724,10 @@ public sealed class GroveLoginSettings
     public bool AllowChangingUsername { get; set; }
     public bool AllowChangingEmail { get; set; }
     public bool AllowChangingPhoneNumber { get; set; }
-    public bool UseSiteTheme { get; set; }
     public bool DisableLocalLogin { get; set; }
     public bool RequireTwoFactorAuthentication { get; set; }
     public bool AllowRememberClientTwoFactorAuthentication { get; set; }
     public int NumberOfRecoveryCodesToGenerate { get; set; } = 5;
-    public bool UseSiteThemeForTwoFactorAuthentication { get; set; }
     public bool UseExternalProviderIfOnlyOneDefined { get; set; }
     public bool UseScriptToSyncProperties { get; set; }
     public string? SyncPropertiesScript { get; set; }

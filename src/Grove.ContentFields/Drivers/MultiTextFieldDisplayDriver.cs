@@ -32,39 +32,4 @@ public sealed class MultiTextFieldDisplayDriver : ContentFieldDisplayDriver<Mult
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");
     }
-
-    public override IDisplayResult Edit(MultiTextField field, BuildFieldEditorContext context)
-    {
-        return Initialize<EditMultiTextFieldViewModel>(GetEditorShapeType(context), model =>
-        {
-            if (context.IsNew)
-            {
-                var settings = context.PartFieldDefinition.GetSettings<MultiTextFieldSettings>();
-                model.Values = settings.Options.Where(o => o.Default).Select(o => o.Value).ToArray();
-            }
-            else
-            {
-                model.Values = field.Values;
-            }
-            model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
-        });
-    }
-
-    public override async Task<IDisplayResult> UpdateAsync(MultiTextField field, UpdateFieldEditorContext context)
-    {
-        var viewModel = new EditMultiTextFieldViewModel();
-        await context.Updater.TryUpdateModelAsync(viewModel, Prefix);
-
-        field.Values = viewModel.Values;
-
-        var settings = context.PartFieldDefinition.GetSettings<MultiTextFieldSettings>();
-        if (settings.Required && viewModel.Values.Length == 0)
-        {
-            context.Updater.ModelState.AddModelError(Prefix, nameof(field.Values), S["A value is required for {0}.", context.PartFieldDefinition.DisplayName()]);
-        }
-
-        return Edit(field, context);
-    }
 }

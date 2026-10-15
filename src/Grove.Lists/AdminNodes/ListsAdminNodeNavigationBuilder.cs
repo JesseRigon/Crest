@@ -18,6 +18,7 @@ public class ListsAdminNodeNavigationBuilder : IAdminNodeNavigationBuilder
     private readonly IContentManager _contentManager;
     private readonly ISession _session;
     private readonly ILogger _logger;
+    private readonly Grove.Admin.AdminOptions _adminOptions;
     private ListsAdminNode _node;
     private ContentTypeDefinition _contentType;
 
@@ -28,8 +29,10 @@ public class ListsAdminNodeNavigationBuilder : IAdminNodeNavigationBuilder
         IContentDefinitionManager contentDefinitionManager,
         IContentManager contentManager,
         ISession session,
+        Microsoft.Extensions.Options.IOptions<Grove.Admin.AdminOptions> adminOptions,
         ILogger<ListsAdminNodeNavigationBuilder> logger)
     {
+        _adminOptions = adminOptions.Value;
         _contentDefinitionManager = contentDefinitionManager;
         _contentManager = contentManager;
         _session = session;
@@ -91,9 +94,7 @@ public class ListsAdminNodeNavigationBuilder : IAdminNodeNavigationBuilder
     {
         foreach (var ci in await GetContentItemsAsync())
         {
-            var cim = await _contentManager.PopulateAspectAsync<ContentItemMetadata>(ci);
-
-            if (cim.AdminRouteValues.Count > 0 && ci.DisplayText != null)
+            if (ci.DisplayText != null)
             {
                 listTypeMenu.Add(new LocalizedString(ci.DisplayText, ci.DisplayText), itemBuilder =>
                 {
@@ -102,7 +103,8 @@ public class ListsAdminNodeNavigationBuilder : IAdminNodeNavigationBuilder
                     // item while remaining stable when the item's display text changes.
                     itemBuilder.Id($"{_node.UniqueId}-{ci.ContentItemId}");
                     itemBuilder.MenuName(_node.MenuName);
-                    itemBuilder.Action(cim.AdminRouteValues["Action"] as string, cim.AdminRouteValues["Controller"] as string, cim.AdminRouteValues);
+                    // The list's admin page is its native editor, where its contained items are listed.
+                    itemBuilder.Url(ContentAdminPaths.InAdmin(_adminOptions.AdminUrlPrefix, ContentAdminPaths.Edit(ci.ContentItemId)));
                     itemBuilder.Resource(ci);
                     itemBuilder.Priority(_node.Priority);
                     itemBuilder.Position(_node.Position);

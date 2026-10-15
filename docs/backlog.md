@@ -9,9 +9,10 @@ Left out on purpose, because a question is still open against them: the connecti
 Queries API (queries.md Q6, Q7; workflows.md "what the platform offers for connections"),
 audit feeds at volume (A4), the designer UI and its move (blazordesigner.md, workflows.md W6),
 design systems as content (part vs fields), cross-tenant translation suggestions, the global
-editing UI (which UI first), the geocoder, approvals, the option picker's home (server.md S2),
-shared screens' defaults and setup (MVC/views.md), shells on their own hostnames, user
-settings, and the parked security audit and sandboxed custom elements (blazor-display.md).
+editing UI (which UI first), the geocoder, approvals, the option picker's UI component home
+(server.md § 3), Grove.Rules, Grove.ReverseProxy and Grove.Https (MVC/views.md › Module deletions
+and keeps), theme storage and switching
+(shells-and-themes.md), shells on their own hostnames, user settings, and the parked security audit and sandboxed custom elements (blazor-display.md).
 
 Status: ☐ open, ◐ partial, ☑ done.
 
@@ -58,7 +59,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ◐ **APIs out of Grove.Server** into their declaring modules as route groups, registered
   through `Grove.Server.Abstractions`; Grove.Server keeps the hosting plumbing, the bootstrap,
   routing and display endpoints (server.md § 1, MVC/api.md P1-P9). Left: the admin menu and
-  navigation (page registry), the option picker (S2), the icons (a server-side icons module).
+  navigation (page registry), the icons (a server-side icons module); the option picker is Grove.OptionPicker's ☑ (S2).
 - ☑ **Minimal APIs, explicit binding, native validation** (MVC/api.md › Hosting, › Validation):
   every route group's handler names its binding source, request DTOs carry Grove's validation
   ruleset (`Grove.Validation`), the mapper leaves a contributor that cannot build out and reports
@@ -86,7 +87,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ◐ Step 2 leftovers: tree cache (versioned and validated, see decision 12; the unfiltered cache is left); display events for bound nodes ☑
 - ☐ Razor → Blazor component parity audit: every Razor view, shape template and widget has a Blazor component equivalent, reusing `Grove.Components` (blazor-display.md step 7; MVC/views.md, MVC/shape-engine.md, widgets.md; tracker: [MVC/parity.md](MVC/parity.md))
 - ☐ The Liquid templates updated to display trees and optionalities (blazor-display.md step 7)
-- ◐ Step 7 remainder: content displays (fields with localized labels, title, bag, list with its pager, taxonomy, geo point) and editors (BagPart, user picker) on the tree; MVC Menu admin, audit content screen and Flows BuildEditor deleted; left: the ContentFields/Flows edit views (still rendered by the MVC Contents Create/Edit and the Demo module), LiquidPart (HTML by design), admin-only shapes (go with TheAdmin), the MVC screens (~1,250 Razor views)
+- ◐ Step 7 remainder: content displays (fields with localized labels, title, bag, list with its pager and feed link, taxonomy, geo point) and every part and field editor on the tree (MVC/parity.md › New components); MVC Menu admin, audit content screen, Flows BuildEditor, the content edit views and drivers and `LiquidPart` (bodies migrated to `DisplayTreePart`) deleted; left: admin-only shapes (go with TheAdmin), the remaining MVC screens
 - ◐ Decision 6: zone keys as registry entries with a schema; single or multiple instances per page: keys, contributions, validation and the single-instance check built; left: priority reordering through overrides and a `Zone` component node (designer zone settings)
 - ◐ Decision 9 / § 6a: designed pages (page record and route-table provider): record, store, API, recipe step, data route provider and site rendering built; admin and member pages are not routed (no shell component renders a data-defined page)
 - ☑ Decision 10: the default permitted-fields `Content` template
@@ -132,7 +133,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ☑ Organization slugs in paths and an organization picker; one device-local tenant switcher; impersonation under one account
 - ☑ Shell registry (replaces `RouteBucket` and `BlazorAdminThemeMiddleware`); render mode declared by the page
 - ☑ One routing system on the Blazor side: the site resolved through the route table, `ContentPage` is "/" only, legacy-owned paths forwarded to MVC
-- ☑ Step 7 waves 4–5 (shells): native tenant create/edit/setup; OpenId applications, scopes, server and validation; account security, email confirmation, external sign-in completion, OpenId consent/logout and per-shell error pages as Blazor pages; email bodies as templates. Setup is open (MVC/views.md § Setup); SiteTheme's `Layout.cshtml` and the staff login, registration, password reset and two-factor screens stay until MVC/views.md wave 2
+- ☑ Step 7 waves 4–5 (shells): native tenant create/edit/setup; OpenId applications, scopes, server and validation; account security, email confirmation, external sign-in completion, OpenId consent/logout and error pages as Blazor pages; email bodies as templates
 - ☑ Step 7 waves 1 and 3 (architecture): native Email/SMTP with test send, audit trail settings, background tasks (run now), notifications list, role clone, user unlock/confirm/verification/external sign-ins, content clone/save draft/discard draft/versions, user registration/reset/change-email settings, custom settings on the editor tree, the content definition editor (types, parts, fields; settings as JSON) and index profiles; the MVC controllers, drivers and views they replace deleted (blazor-display.md › step 7). Left: Email.Azure settings page, the Users list shapes/filters (unused), the index providers' profile drivers, structured settings forms, browser checks for these pages
 
 ## Parties (parties.md)
@@ -145,9 +146,31 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ☑ Assignments retired; organization ownership part, index and scope moved into Grove.Parties (access.md › Members, server.md S3)
 - ☑ Parties UI: add role, Individual badge and conversion, owner panel, invite to portal, settings section
 
+- ☐ Required pages (shells-and-themes.md › Required pages): each tenant's route table declares the standard required pages; the admin theme lays out the error pages, the admin home and the admin sign-in and registration pages, the member theme the member registration pages and home, the site theme the site home
+- ☐ Error pages as one shared set per tenant, editable per tenant, instead of one per shell (shells-and-themes.md › Account and protocol pages)
+- ☑ Setup as hardcoded static-SSR Blazor pages in Grove.Setup; the MVC setup controller and views deleted (MVC/views.md › Setup, MVC/api.md P10)
+
+## MVC retirement (MVC/views.md, MVC/parity.md)
+
+- ☐ Open issues of the ports: behaviour the native screens do not yet match, and follow-ups ([MVC/open-issues.md](MVC/open-issues.md))
+- ◐ Wave 1, the MVC admin screens with a native page deleted (MVC/views.md › Already native): Admin dashboard, AdminMenu, AuditTrail list, DataLocalization, Deployment plans/import/steps (and the per-step drivers and deployment-target executors), remote clients and instances, Features, Media library/options/profiles/cache and the storage options, Queries and the SQL runner, Lucene and Elasticsearch query and index screens, Recipes, Tenants list, Themes, Settings (with every site settings driver), Cors, RateLimits, the content download/add-to-plan/export modals, the `User` editor drivers ☑; the Contents MVC editor, list and preview (wave 3: the editors on the tree, the preview pane, `ContentAdminPaths` instead of `ContentItemMetadata`'s admin route values) ☑; left: the user audit settings are the settings group `user-audit-trail`
+- ☑ Module deletions: Grove.Demo, Grove.Mvc.HelloWorld, Grove.Mvc.Web, Grove.XmlRpc with Grove.XmlRpc.Abstractions, Grove.MetaWeblog.Abstractions and the modules' `RemotePublishing/` features, Grove.AdminDashboard (MVC/views.md › Module deletions and keeps)
+- ☑ Settings groups: `SettingsForm` at `/Settings/{groupId}` over `api/grove/settings/groups`, every MVC settings group declared as its settings type (`AddSettingsGroup<T>`, `AddSettingsModel<T>`), Cors and RateLimits included; `CodeEditor` (MVC/api.md › Settings groups, MVC/parity.md)
+- ☑ Wave 2, the Access screens with the Access modules (MVC/views.md › Access screens): the staff sign-in over `SignInForm` with the login-extension seam (`ILoginExtensionProvider`: links, external providers, the captcha section) and the second step in place (`TwoFactorChallenge`); registration, password recovery and `TwoFactorSetup` as Grove.Users site pages over their APIs; the account components moved to `Grove.Users.Components`, the site account pages to Grove.Users' `site-wasm`, the member access pages to Grove.Members' `member-wasm`, the OpenId pages and the protocol error page to Grove.OpenId's `site-wasm`; the MVC account, registration, password, two-factor and email confirmation controllers and views, the `LoginForm`/`RegisterUserForm`/`ForgotPasswordForm`/`ResetPasswordForm`/`TwoFactorMethod` drivers and shapes, the user menu shapes, `Layout-Login`, `Layout-TwoFactor` and SiteTheme's `Layout.cshtml` deleted
+- ☑ Native tests of the Access APIs (`Grove.Tests/Modules/Grove.Users/AccessApiTests.cs`: sign-in with and without two factors, the challenge and a recovery code, registration, forgot and reset password, the gate's setup-required rule); the test host maps the declared API route groups as Grove.Server does. Left: the user audit settings group's filter
+- ☑ The member portal's second sign-in step and captcha section: `TwoFactorChallenge` and `AccessFormExtensions` on the portal login (shells-and-themes.md › The member portal)
+- ☑ A user who must set up two-factor authentication reaches only the setup, enforced by the access gate (`IPendingSignInStepProvider`, access.md › Authentication); one source for the sign-in paths (`UserOptions.LoginPath`; the other path options and the "use the site theme" settings removed)
+- ◐ Kept modules ported to Blazor: Taxonomies, Lists, Seo, the content-part modules (their editors on the tree over the modules' APIs, `ContentPreviewPane`, `CulturePicker`, `HeadLink`, `IconPicker`, `ContentDiff`) ☑; Sitemaps, Shortcodes templates, the SMS test page, feature profiles and GraphiQL as a static page ☑; left: `SitemapPart`'s editor (MVC/views.md, MVC/parity.md)
+- ☑ Grove.Search as the search seam (`ISiteSearch`, `api/grove/search`, the site search page) with Lucene, Elasticsearch and Azure AI Search as providers (MVC/views.md › Search, queries.md)
+- ☐ The site search through the engines' query sources with the caller's scope injected (queries.md › Search engines are connections)
+- ☑ Grove.Routes: the tenant's route management page (page registry routes, Autoroute, alias and home routes, rewrite rules); Grove.UrlRewriting folded into Grove.Routes and its MVC admin deleted (MVC/views.md › Routes)
+- ☑ `LiquidPart` bodies migrated to `DisplayTreePart`, the part retired (MVC/shape-engine.md › Component coverage)
+- ☐ Tenant Liquid without `Request` and `HttpContext` (MVC/shape-engine.md L3)
+
 ## Content items (content-items.md)
 
 - ☑ Picker relationship handlers; hierarchical Category; Fluid sandboxing with data scope
+- ☑ The option picker field family to Grove.OptionPicker, contracts and DTOs in Grove.OptionPicker.Abstractions; field visibility in Grove.ContentTypes over `IFieldComparisonValueResolver` (server.md § 3, S2)
 
 ## Architecture (architecture.md)
 

@@ -19,7 +19,7 @@ public sealed class DefaultRouteComponentTableManager(IPageRegistry registry) : 
         var pages = await registry.GetAsync();
         return _table = new RouteComponentTable([.. pages.Entries
             .Where(entry => entry.Component is not null)
-            .SelectMany(entry => entry.Routes.Select(route => new RouteComponentEntry(
+            .SelectMany(entry => RoutesOf(entry, pages).Select(route => new RouteComponentEntry(
                 route,
                 entry.Component!,
                 entry.Shell,
@@ -28,4 +28,17 @@ public sealed class DefaultRouteComponentTableManager(IPageRegistry registry) : 
                 IsOrganizationFree: entry.IsOrganizationFree,
                 ClientOnly: entry.ClientOnly)))]);
     }
+
+    // A page whose routes a source declares ([PageEntry(DeclaredBySource = true)]: a kind
+    // registry's generic page, the settings form) serves only those concrete routes, so a path
+    // its template would also match (a settings group still served by a legacy page) is not
+    // taken for it.
+    private static IEnumerable<string> RoutesOf(PageEntry entry, PageSet pages) =>
+        !entry.DeclaredBySource
+            ? entry.Routes
+            : pages.Entries
+                .Where(declared => declared.Component is null && declared.Shell == entry.Shell)
+                .SelectMany(declared => declared.Routes)
+                .Where(route => !route.Contains('{') && entry.Routes.Any(template => RouteTemplates.Matches(template, route)))
+                .Distinct(StringComparer.OrdinalIgnoreCase);
 }

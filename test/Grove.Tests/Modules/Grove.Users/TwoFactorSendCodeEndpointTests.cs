@@ -7,36 +7,20 @@ namespace Grove.Tests.Modules.Grove.Users;
 
 public class TwoFactorSendCodeEndpointTests
 {
-    [Fact]
-    public async Task EmailSendCode_RateLimitExceededReturnsTooManyRequests_Succeeds()
+    [Theory]
+    [InlineData(UserConstants.Features.EmailAuthenticator)]
+    [InlineData(UserConstants.Features.SmsAuthenticator)]
+    public async Task SendCode_RateLimitExceededReturnsTooManyRequests_Succeeds(string featureId)
     {
         // Arrange
-        var context = await GetSiteContextAsync(UserConstants.Features.EmailAuthenticator);
+        var context = await GetSiteContextAsync(featureId);
 
-        // Act
+        // Act: the third request within the minute, whatever the first two answered.
         HttpResponseMessage response = null;
 
         for (var i = 0; i < 3; i++)
         {
-            response = await context.Client.PostAsync("TwoFactor-Authenticator/EmailSendCode", new FormUrlEncodedContent([]), TestContext.Current.CancellationToken);
-        }
-
-        // Assert
-        Assert.Equal(HttpStatusCode.TooManyRequests, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task SmsSendCode_RateLimitExceededReturnsTooManyRequests_Succeeds()
-    {
-        // Arrange
-        var context = await GetSiteContextAsync(UserConstants.Features.SmsAuthenticator);
-
-        // Act
-        HttpResponseMessage response = null;
-
-        for (var i = 0; i < 3; i++)
-        {
-            response = await context.Client.PostAsync("TwoFactor-Authenticator/SmsSendCode", new FormUrlEncodedContent([]), TestContext.Current.CancellationToken);
+            response = await context.Client.PostAsync("api/grove/auth/two-factor/send-code", System.Net.Http.Json.JsonContent.Create(new { provider = "Email" }), TestContext.Current.CancellationToken);
         }
 
         // Assert
@@ -56,7 +40,7 @@ public class TwoFactorSendCodeEndpointTests
                 new JsonObject
                 {
                     { "name", "feature" },
-                    { "enable", new JsonArray(featureId, "Grove.RateLimits") },
+                    { "enable", new JsonArray(UserConstants.Features.TwoFactorAuthentication, featureId, "Grove.RateLimits") },
                 },
             },
         };

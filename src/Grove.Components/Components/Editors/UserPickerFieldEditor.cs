@@ -30,8 +30,19 @@ public sealed class UserPickerFieldEditor : FieldEditorBase
 
     private bool Multiple => Field?.Settings?["UserPickerFieldSettings"]?["Multiple"] is JsonValue multiple && multiple.TryGetValue<bool>(out var value) && value;
 
-    private List<string> Strings(string property) =>
-        Value?[property] is JsonArray values ? [.. values.Select(value => value?.ToString() ?? string.Empty)] : [];
+    /// <summary>The common part's owner: one user, kept as the item's <c>Owner</c> (and <c>OwnerName</c>).</summary>
+    private bool IsOwner => FieldName is null && PartName == "CommonPart";
+
+    private List<string> Strings(string property)
+    {
+        if (IsOwner)
+        {
+            var single = Value?[property == "UserIds" ? "Owner" : "OwnerName"]?.ToString();
+            return string.IsNullOrEmpty(single) ? [] : [single];
+        }
+
+        return Value?[property] is JsonArray values ? [.. values.Select(value => value?.ToString() ?? string.Empty)] : [];
+    }
 
     protected override void RenderInput(RenderTreeBuilder builder)
     {
@@ -98,14 +109,14 @@ public sealed class UserPickerFieldEditor : FieldEditorBase
     {
         _query = query;
         _error = null;
-        if (Services.GetService<HttpClient>() is not { } http || Context?.Metadata?.ContentType is not { } contentType || FieldName is null)
+        if (Services.GetService<HttpClient>() is not { } http || Context?.Metadata?.ContentType is not { } contentType || (FieldName is null && !IsOwner))
         {
             return;
         }
 
         try
         {
-            var url = $"api/grove/content-fields/users?part={Uri.EscapeDataString(PartName)}&field={Uri.EscapeDataString(FieldName)}&contentType={Uri.EscapeDataString(contentType)}&query={Uri.EscapeDataString(query)}";
+            var url = $"api/grove/content-fields/users?part={Uri.EscapeDataString(PartName)}&field={Uri.EscapeDataString(FieldName ?? string.Empty)}&contentType={Uri.EscapeDataString(contentType)}&query={Uri.EscapeDataString(query)}";
             _results = await http.GetFromJsonAsync<List<UserPickerResult>>(url) ?? [];
         }
         catch (HttpRequestException exception)
@@ -143,6 +154,13 @@ public sealed class UserPickerFieldEditor : FieldEditorBase
 
     private void Write(List<string> ids, List<string> names)
     {
+        if (IsOwner)
+        {
+            Set("Owner", ids.Count == 0 ? null : JsonValue.Create(ids[^1]));
+            Set("OwnerName", names.Count == 0 ? null : JsonValue.Create(names[^1]));
+            return;
+        }
+
         Set("UserIds", new JsonArray([.. ids.Select(id => (JsonNode)JsonValue.Create(id))]));
         Set("UserNames", new JsonArray([.. names.Select(name => (JsonNode)JsonValue.Create(name))]));
     }

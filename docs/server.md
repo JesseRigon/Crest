@@ -56,6 +56,7 @@ Handlers name their binding sources and request DTOs carry the validation rulese
 | Features | **Grove.Features** | `FeaturesApi` |
 | Localization settings, the admin client's strings, `PoTranslationLookup` | **Grove.Localization** | `LocalizationApi` (stored edits through `IClientStringOverrides`) |
 | Translations | **Grove.DataLocalization** | `TranslationsApi` |
+| The option picker: option sources, a field's picker binding | **Grove.OptionPicker** | `OptionSourcesApi`, `OptionPickerAttachmentsApi` |
 
 Still in Grove.Server, each for a stated reason:
 
@@ -63,14 +64,9 @@ Still in Grove.Server, each for a stated reason:
   `IconifyServerController`, their stores, the `Grove.Icons` features): an exception to fix
   later with a small server-side icons module. `Grove.Icons` and `Grove.Iconify` are libraries in
   the WebAssembly client's closure, so neither can host a server module.
-- **The option picker's API** (`OptionSourcesController`, `OptionPickerAttachmentsController`)
-  waits for its home (§ 3, S2), and `FieldVisibilityEnforcer` with it: it reads the option
-  picker's parent values. Grove.ContentTypes declares `IFieldVisibilityEnforcer`; the host
-  implements it.
 - **The admin menu and navigation** (`AdminMenusController`, `AdminMenuLayoutExportController`,
   `NavigationController`, the menu services): the page registry's work
   ([admin-menu.md](admin-menu.md) › The page registry).
-- `ContentPartListPermissions` belongs in **Grove.ContentPartLists**.
 
 ### 2. Access → Grove.Access
 
@@ -80,20 +76,38 @@ invalidation (`IPermissionInvalidator` in Grove.Access.Abstractions, the hub in 
 This is the "one gate" step in [access.md](access.md) › The system; the move and that step are
 the same work. `IRequestAccess`, the helper every API uses, is in Grove.Server.Abstractions.
 
-### 3. The option picker field family (23): home open
+### 3. The option picker → Grove.OptionPicker
 
-Fields/OptionPickerField, Settings/OptionPickerFieldSettings, Indexing/OptionPickerFieldIndex
-and its migrations, Models/OptionSourceKeys, IOptionSourceProvider, the four option
-source providers (content item, culture, time zone, user), Option{DependentFilterTranslator,
-FilterMatcher, FilterResolver, ParentValueResolver, PickerFieldKeyResolver, RowSorter,
-SourceReferenceGuard}, OptionSourcesController, OptionPickerAttachmentsController, four test
-files. Used by ContentPartLists, Parties and Workflows. Its API
-(`api/grove/option-sources`, `option-picker/attachment`) goes with it and registers through the
-seam. Candidates:
+The option picker field family is **its own module, Grove.OptionPicker** (feature
+`Grove.OptionPicker`), since it carries its own index, settings, source providers and API, and
+other modules bind to it. The features that bind fields to option sources declare it
+(Grove.ContentPartLists, Grove.Parties, Grove.Money; Fruitful's modules through
+Grove.ContentPartLists).
 
-- **Grove.ContentFields**, beside the platform's other fields: one fields module.
-- **A new Grove.OptionPicker module**, since it carries its own index, settings, source
-  providers and API, and other modules bind to it.
+- **Grove.OptionPicker.Abstractions** (WebAssembly-safe, no framework reference): the source
+  contract (`IOptionSourceProvider`, `OptionRow`, `OptionSourceQuery`,
+  `OptionSourceColumnDescriptor`, `ResolvedOptionFilter`), the picker's column and filter settings
+  (`OptionColumn`, `OptionFilter`, `OptionFilterOperators`, `OptionParentChangeBehaviors`),
+  `OptionSourceKeys`, the pure helpers (`OptionFilterResolver`, `OptionFilterMatcher`,
+  `OptionDependentFilterTranslator`, `OptionRowSorter`, `OptionSourceReferenceGuard`) and the
+  option sources API's request and response types (`Grove.OptionPicker.Api`).
+- **Grove.OptionPicker**: `OptionPickerField`, `OptionPickerFieldSettings`, `OptionPickerFieldIndex`
+  and its migration, the user, content item, time zone and culture sources,
+  `OptionPickerFieldKeyResolver`, `OptionParentValueResolver`, `ContentPartListPermissions` (the
+  option sources API is read with `ViewContentPartLists`) and the API: `api/grove/option-sources`
+  (`OptionSourcesApi`) and `api/grove/option-picker/attachment` (`OptionPickerAttachmentsApi`).
+  Tests: `Grove.OptionPicker/tests/Grove.OptionPicker.Tests`.
+- The types keep the namespaces they had in Grove.Server (`Grove.Fields`, `Grove.Settings`,
+  `Grove.Services`, `Grove.Models`, `Grove.Indexing`): stored settings, the index migration's
+  record and the downstream modules name them.
+- **Field visibility** is Grove.ContentTypes': `IFieldVisibilityEnforcer` and its implementation
+  `FieldVisibilityEnforcer` clear the fields a condition hides on save. The values a condition
+  compares come through `IFieldComparisonValueResolver`; Grove.OptionPicker registers one that
+  resolves a picker parent's stored ids to its source's keys (`OptionParentValueResolver`).
+  Without it the stored values are compared as they are.
+
+☐ Open: whether the picker's UI component (`GroveOptionPicker`, `OptionPickerModels`) lives in
+Grove.Components, as now, or in the module's own client library over Grove.OptionPicker.Abstractions.
 
 ### 4. Assignment and organization parts
 
@@ -121,25 +135,27 @@ DesignSystemStartup, Manifest and Startup, plus the API hosting plumbing in `Api
 - ContentPartLists, Workflows, Global, Money and Regions declare a dependency on the feature
   `Grove`; each declares the modules it actually uses as well (ContentPartLists:
   `Grove.ContentTypes` for the definition lock guard).
-- The modules that register APIs reference Grove.Server.Abstractions. Members, Parties,
-  ContentPartLists, Workflows, Money and Regions still reference Grove.Server for the option
-  picker and the routing types; that reference becomes Grove.Server.Abstractions and the
-  modules holding the types once the option picker has its home.
+- The modules that register APIs reference Grove.Server.Abstractions. ContentPartLists, Parties,
+  Money and Workflows reference Grove.OptionPicker for the option picker; Members, Parties,
+  ContentPartLists, Workflows, Money and Regions still reference Grove.Server for the routing
+  types, a reference that becomes Grove.Server.Abstractions.
 - Every moved API kept its route.
 - Each step: move, repoint references, compile all three solutions, regenerate the graph.
 
 ## Order
 
 What is left in Grove.Server's API, in order: the admin menu and navigation (with the page
-registry), the option picker once its home is chosen (S2), the icons (a server-side icons
-module), then Access's gate (the one-gate step). [MVC/api.md](MVC/api.md) § Waves schedules the
+registry), the icons (a server-side icons module), then Access's gate (the one-gate step). [MVC/api.md](MVC/api.md) § Waves schedules the
 rest of the API work.
 
 ## Decisions
 
 - **S1.** Each API goes to the module that declares the surface and registers in Grove.Server's
   API registry (§ 1).
-- **S2.** Option picker home: open (§ 3).
+- **S2.** The option picker is its own module, Grove.OptionPicker, with a WebAssembly-safe
+  Grove.OptionPicker.Abstractions for its contracts and DTOs; field visibility is
+  Grove.ContentTypes', with the picker plugged in through `IFieldComparisonValueResolver`; where
+  the picker's UI component lives is open (§ 3).
 - **S3.** `GroveAssignmentPart` is retired; `GroveOrganizationPart` and the organization scope
   are Grove.Parties' (§ 4).
 - **S4.** Whether the host keeps the feature id `Grove` as its base feature: open.

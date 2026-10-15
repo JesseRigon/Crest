@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Apis.GraphQL.Abstractions\Grove.Apis.GraphQL.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.ContentFields\Grove.ContentFields.csproj" />

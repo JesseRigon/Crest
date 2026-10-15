@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Grove.DisplayManagement.Handlers;
-using Grove.Facebook.Drivers;
 using Grove.Facebook.Filters;
 using Grove.Facebook.Services;
+using Grove.Facebook.Settings;
 using Grove.Modules;
 using Grove.Navigation;
 using Grove.Security.Permissions;
@@ -20,9 +20,12 @@ public sealed class StartupPixel : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteDisplayDriver<FacebookPixelSettingsDisplayDriver>();
+        services.AddSettingsGroup<FacebookPixelSettings>(
+            FacebookConstants.PixelSettingsGroupId,
+            "Meta Pixel",
+            FacebookConstants.ManageFacebookPixelPermission,
+            group => group.InMenu("settings-integrations", entryId: "facebookPixel").AlsoAdmits(Permissions.ManageFacebookApp));
         services.AddPermissionProvider<PixelPermissionProvider>();
-        services.AddPageSource<FacebookPixelPages>();
 
         services.Configure<MvcOptions>((options) =>
         {

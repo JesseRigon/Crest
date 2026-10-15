@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Grove.OptionPicker.Abstractions</AssemblyName>
+    <RootNamespace>Grove</RootNamespace>
+  </PropertyGroup>
+  <!-- WebAssembly-safe: the option source contract (IOptionSourceProvider, rows, queries, the
+       picker's column and filter settings), the source keys, the pure filter/sort helpers and the
+       option sources API's request and response types. Client libraries and the modules that
+       register option sources reference this, not the Grove.OptionPicker module. No framework
+       reference. -->
+</Project>

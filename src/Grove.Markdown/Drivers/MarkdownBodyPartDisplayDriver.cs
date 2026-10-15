@@ -49,41 +49,6 @@ public sealed class MarkdownBodyPartDisplayDriver : ContentPartDisplayDriver<Mar
             .Location(PlatformConstants.DisplayType.Summary, "Content");
     }
 
-    public override IDisplayResult Edit(MarkdownBodyPart markdownBodyPart, BuildPartEditorContext context)
-    {
-        return Initialize<MarkdownBodyPartViewModel>(GetEditorShapeType(context), model =>
-        {
-            model.Markdown = markdownBodyPart.Markdown;
-            model.ContentItem = markdownBodyPart.ContentItem;
-            model.MarkdownBodyPart = markdownBodyPart;
-            model.TypePartDefinition = context.TypePartDefinition;
-        });
-    }
-
-    public override async Task<IDisplayResult> UpdateAsync(MarkdownBodyPart model, UpdatePartEditorContext context)
-    {
-        var viewModel = new MarkdownBodyPartViewModel();
-        var settings = context.TypePartDefinition.GetSettings<MarkdownBodyPartSettings>();
-
-        await context.Updater.TryUpdateModelAsync(viewModel, Prefix, vm => vm.Markdown);
-
-        if (settings.RenderLiquid
-            && !string.IsNullOrEmpty(viewModel.Markdown)
-            && !_liquidTemplateManager.Validate(viewModel.Markdown, out var errors))
-        {
-            context.Updater.ModelState.AddModelError(Prefix, nameof(viewModel.Markdown),
-                S["{0} contains invalid Liquid expression: {1}",
-                    context.TypePartDefinition.DisplayName(),
-                    string.Join(" ", errors)]);
-        }
-        else
-        {
-            model.Markdown = viewModel.Markdown;
-        }
-
-        return Edit(model, context);
-    }
-
     private async ValueTask BuildViewModel(MarkdownBodyPartViewModel model, MarkdownBodyPart markdownBodyPart, BuildPartDisplayContext context)
     {
         model.Markdown = markdownBodyPart.Markdown;

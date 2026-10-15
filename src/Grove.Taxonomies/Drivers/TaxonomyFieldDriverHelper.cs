@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Grove.ContentManagement;
 using Grove.Taxonomies.Fields;
@@ -7,35 +8,30 @@ namespace Grove.Taxonomies.Drivers;
 
 public static class TaxonomyFieldDriverHelper
 {
-    /// <summary>
-    /// Populates a list of <see cref="TermEntry"/> with the hierarchy of terms.
-    /// The list is ordered so that roots appear right before their child terms.
-    /// </summary>
-    public static void PopulateTermEntries(List<TermEntry> termEntries, TaxonomyField field, IEnumerable<ContentItem> contentItems, int level)
+    /// <summary>The terms the field holds, in the field's order, from the taxonomy that owns them, each linked to its page.</summary>
+    public static async Task<IReadOnlyList<TaxonomyTermLink>> TermLinksAsync(IContentManager contentManager, TaxonomyField field)
     {
-        foreach (var contentItem in contentItems)
+        var taxonomy = string.IsNullOrEmpty(field.TaxonomyContentItemId) ? null : await contentManager.GetAsync(field.TaxonomyContentItemId);
+        var terms = new Dictionary<string, ContentItem>(StringComparer.Ordinal);
+        if (taxonomy?.As<Grove.Taxonomies.Models.TaxonomyPart>() is { } part)
         {
-            var children = Array.Empty<ContentItem>();
+            Collect(part.Terms, terms);
+        }
 
-            if (((JsonObject)contentItem.Content)["Terms"] is JsonArray termsArray)
+        return [.. (field.TermContentItemIds ?? [])
+            .Where(terms.ContainsKey)
+            .Select(id => new TaxonomyTermLink(terms[id].DisplayText ?? id, TaxonomyLinks.TermPath(terms[id])))];
+    }
+
+    private static void Collect(IEnumerable<ContentItem> terms, Dictionary<string, ContentItem> into)
+    {
+        foreach (var term in terms ?? [])
+        {
+            into[term.ContentItemId] = term;
+            System.Text.Json.Nodes.JsonObject content = term.Content;
+            if (content["Terms"] is System.Text.Json.Nodes.JsonArray children)
             {
-                children = termsArray.ToObject<ContentItem[]>();
-            }
-
-            var termEntry = new TermEntry
-            {
-                Term = contentItem,
-                ContentItemId = contentItem.ContentItemId,
-                Selected = field.TermContentItemIds.Contains(contentItem.ContentItemId),
-                Level = level,
-                IsLeaf = children.Length == 0,
-            };
-
-            termEntries.Add(termEntry);
-
-            if (children.Length > 0)
-            {
-                PopulateTermEntries(termEntries, field, children, level + 1);
+                Collect(children.Deserialize<List<ContentItem>>() ?? [], into);
             }
         }
     }

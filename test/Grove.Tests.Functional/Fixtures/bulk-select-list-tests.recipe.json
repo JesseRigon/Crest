@@ -45,7 +45,7 @@
         "Grove.Tenants",
         "Grove.Tenants.FeatureProfiles",
         "Grove.Title",
-        "Grove.UrlRewriting",
+        "Grove.Routes",
 
         "TheAdmin",
         "SafeMode"

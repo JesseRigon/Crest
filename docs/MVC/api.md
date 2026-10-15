@@ -43,7 +43,8 @@ dependencies, a size and a wave.
   workflow endpoint. Its management API is declared like any module's; workflow-defined HTTP
   endpoints are defined entries in the registry (§ The seam).
 - **The API never renders an error page.** It answers problem details; the shell renders the
-  page. Where shared screens' defaults live is [views.md](views.md)'s open question.
+  page: the tenant's one shared set of error pages, laid out by the admin theme
+  ([views.md](views.md) › Shared screens).
 - **Hosting: minimal APIs, staged** (§ Hosting).
 
 ## The inventory
@@ -53,13 +54,13 @@ noted).
 
 | Kind | Count | Where |
 | --- | --- | --- |
-| Attribute-routed `ControllerBase` APIs | 56 classes | Grove.Server 11 (admin menu and navigation, icons, option picker, the host's app and routing); 25 other modules 45 |
+| Attribute-routed `ControllerBase` APIs | 56 classes | Grove.Server 9 (admin menu and navigation, icons, the host's app and routing); 25 other modules 45 |
 | Route groups (`IApiContributor`) | 43 contributors | every API moved out of Grove.Server, the hubs, the engine's management API (§ The seam) |
-| Minimal-API endpoint files | 30 (28 routes + 2 file-serving) | Media 18, Contents 3, Users 2, Facebook 1, Liquid 1, Notifications 1, UrlRewriting 1, Media.Scanning 1, Media file serving 1, Grove.Server 1 |
+| Minimal-API endpoint files | 28 (26 routes + 2 file-serving) | Media 18, Contents 3, Facebook 1, Liquid 1, Notifications 1, Media.Scanning 1, Media file serving 1, Grove.Server 1 |
 | Workflow engine management API (vendored engine) | 72 endpoints | minimal APIs under `grove-workflows/api`, declared by `WorkflowsManagementApi` ([workflows.md](../workflows.md)) |
 | SignalR hubs | 4 | Grove.Server 2 (permissions, admin-menu layout), Media 1, engine 1 (workflow instances) |
 | Middleware / protocol endpoints | 9 | GraphQL `/api/graphql`, OpenIddict `/connect/*`, health checks, robots.txt, media files and image processing, secure media, workflow engine security |
-| MVC `Controller` classes with machine (non-view) actions | 19 | feeds, sitemaps, remote deployment, XmlRpc, OpenId user info, pickers' search, culture picker, list ordering, export files |
+| MVC `Controller` classes with machine (non-view) actions | 13 | feeds, sitemaps, remote deployment import, OpenId user info, pickers' search, culture picker, list ordering |
 | MVC `Controller` classes returning views | 53 | [views.md](views.md) |
 
 ### Attribute-routed APIs
@@ -79,7 +80,6 @@ managers), `access` (`IRequestAccess`, `IAccessDecision`, scope sets), `shells`,
 | Grove.ContentPartLists | `ContentPartListsController` | `api/grove/content-part-lists` | 16 | services |
 | Grove.ContentPartLists | `GlobalListsController` | `api/grove/global/lists` | 4 | yessql |
 | Grove.Contents | `AuditTrailContentApiController` | `api/grove/audit/content/{eventId}` | 2 | content-manager, yessql |
-| Grove.Demo | `ContentApiController` | `api/demo` | 1 | content-manager |
 | Grove.Elasticsearch | `ElasticsearchApiController` | `api/elasticsearch` | 4 | queries |
 | Grove.Email.Smtp | `SmtpSettingsApiController` | `api/grove/settings/email/smtp` | 2 | site-settings |
 | Grove.Email | `EmailSettingsApiController` | `api/grove/settings/email` | 3 | site-settings |
@@ -110,8 +110,6 @@ managers), `access` (`IRequestAccess`, `IAccessDecision`, scope sets), `shells`,
 | Grove.Server | `IconifyServerController` | `api/grove/iconify` | 4 | services |
 | Grove.Server | `IconsController` | `api/grove/icons` | 1 | services |
 | Grove.Server | `NavigationController` | `api/grove/navigation` | 5 | access |
-| Grove.Server | `OptionPickerAttachmentsController` | `api/grove/option-picker/attachment` | 3 | definitions |
-| Grove.Server | `OptionSourcesController` | `api/grove/option-sources` | 6 | definitions |
 | Grove.Server | `RoutingController` | `api/grove/routing` | 1 | services |
 | Grove.Server | `TenantIconsController` | `api/grove/icons/tenant` | 3 | services |
 | Grove.Sharing | `SharingController` | `api/sharing` | 12 | access |
@@ -139,14 +137,21 @@ designer.
 | Grove.Media (`Endpoints/Api/*`, 17 files) | `api/media/*` (GetMediaItems, Upload, Move, Delete, folders, Tus info, localizations, ...) | the stock media library API the MVC media picker uses; the native file system is `api/files` (`FilesController`) |
 | Grove.Media (`Files/FileServingEndpoint.cs`) | `{prefix}/{placementId}[/v/{version}]` | file serving with access checks (docs/media.md); protocol |
 | Grove.Contents (`Endpoints/Api/*`) | `api/content`, `api/content/{id}` (GET, POST, DELETE) | the platform content API; retired by workflows.md step 8 |
-| Grove.Users (`Endpoints/*Authenticator/SendCode.cs`) | `TwoFactor-Authenticator/EmailSendCode`, `SmsSendCode` | sign-in machinery (Access) |
 | Grove.Notifications (`Endpoints/Management/MarkAsReadEndpoints.cs`) | `Notifications/MarkAsRead` | the legacy navbar's; replaced by `api/grove/notifications` |
-| Grove.UrlRewriting | `url-rewriting/resort` | the MVC rules screen's reorder |
 | Grove.Media.Scanning | verdict callback | machine (external scanner); protocol |
 | Grove.Liquid | `Grove.Liquid/Scripts/liquid-intellisense.js` | a generated script for the editors |
 | Grove.Facebook | `/Grove.Facebook/sdk/*.js` | generated scripts |
 | Grove.Server (`Endpoints/BlazorFrameworkScriptEndpoints.cs`) | `/_framework/{fileName}` | the host's Blazor framework scripts |
 | Grove.Server (`Api/DisplayApi.cs`) | `api/grove/site/page`, `pages/{id}/preview`, `content-items/{id}/editor`, `custom-settings/{type}/editor` | the host's display endpoints, a route group |
+| Grove.Settings (`Api/SettingsGroupsApi.cs`) | `api/grove/settings/groups`, `settings/groups/{groupId}` (GET, PUT) | every registered settings group's form and save (§ Settings groups) |
+| Grove.Shortcodes (`Api/ShortcodesApi.cs`) | `api/grove/shortcodes` | the shortcodes the HTML and Markdown editors insert |
+| Grove.Shortcodes (`Api/ShortcodeTemplatesApi.cs`) | `api/grove/shortcodes/templates` (GET, POST, PUT, DELETE) | the shortcode templates page |
+| Grove.OptionPicker (`Api/OptionSourcesApi.cs`, `Api/OptionPickerAttachmentsApi.cs`) | `api/grove/option-sources` (6), `api/grove/option-picker/attachment` (3) | the option picker's rows, columns, dependencies and a field's binding ([server.md](../server.md) § 3) |
+| Grove.Routes (`Api/RoutesApi.cs`) | `api/grove/routes/{pages,home,content-sources,content,rules,rules/reorder}` | the route management page (views.md › Routes) |
+| Grove.Search (`Api/SearchApi.cs`) | `api/grove/search` | the site search, anonymous; the index's query permission decides |
+| Grove.Sitemaps (`Api/SitemapsApi.cs`) | `api/grove/sitemaps`, `{id}`, `{id}/sources[/{sourceId}]`, `source-types`, `content-types`, `cache[/{fileName}]` | the sitemaps pages |
+| Grove.Sms (`Api/SmsTestApi.cs`) | `api/grove/sms/providers`, `api/grove/sms/test` | the SMS test page |
+| Grove.Tenants (`Api/FeatureProfilesApi.cs`) | `api/grove/tenants/feature-profiles` (GET, POST, PUT, DELETE) | the feature profiles page (Default tenant) |
 
 ### Workflow engine
 
@@ -186,15 +191,13 @@ Hubs need no MVC. The caller lifetime on hubs is already Grove.Access's
 | RSS feeds | Grove.Feeds | MVC `FeedController` |
 | sitemaps (`sitemap.xml`, index) | Grove.Sitemaps | MVC `SitemapController` |
 | remote deployment import | Grove.Deployment.Remote | MVC `ImportRemoteInstanceController` (API key) |
-| MetaWeblog / RSD | Grove.XmlRpc, Grove.Lists | MVC `MetaWeblogController`, `HomeController`, `RemotePublishingController` |
 
 ### MVC controllers with JSON or redirect actions (no views)
 
 `ContentPickerAdminController`, `LocalizationSetContentPickerAdminController` (picker search),
-`ContentCulturePickerController` (culture switch redirect), `ExportRemoteInstanceController`,
-`ExportFileController`, `OrderController` (list ordering), `TagController` (taxonomy tags),
-`AddToDeploymentPlanController`, `EmailConfirmationController`,
-`AdminTwoFactorAuthenticationController`, Demo's. Each either becomes an API in its group below or
+`ContentCulturePickerController` (culture switch redirect), `OrderController` (list ordering),
+`TagController` (taxonomy tags), `EmailConfirmationController`,
+`AdminTwoFactorAuthenticationController`. Each either becomes an API in its group below or
 dies with the MVC screen that calls it ([views.md](views.md)).
 
 ## Grove.Data: verified clean
@@ -265,18 +268,18 @@ Owner is where the code ends up. Wave numbers are § Waves.
 | ☐ | Item | Today | Target | Owner | Deps | Size | Wave |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | ☑ | P1. Grove.Server.Abstractions project | — | `Api/`: `IApiContributor` / `ApiContributor`, `ApiRoutes`, `IRequestAccess`, `IApiExceptionMapper`, `ApiProblems` / `ApiResults`, `ApiHandlers`, `IDefinedApiSource`, `IDefinedApiInvalidator`, `IApiEndpointRegistry` | Grove.Server.Abstractions | — | M | 1 |
-| ◐ | P2. The 47 Grove.Server controllers | Grove.Server, MVC-hosted | moved to their declaring modules as route groups ([server.md](../server.md) § 1); the display actions are the host's display endpoints (`Api/DisplayApi.cs`); `AppController` and `RoutingController` stay as host endpoints. Left: the admin menu and navigation (page registry), the option picker (server.md S2), the icons (a server-side icons module) | each declaring module | P1, P5 | L | 2-3 |
+| ◐ | P2. The 47 Grove.Server controllers | Grove.Server, MVC-hosted | moved to their declaring modules as route groups ([server.md](../server.md) § 1); the display actions are the host's display endpoints (`Api/DisplayApi.cs`); `AppController` and `RoutingController` stay as host endpoints. Left: the admin menu and navigation (page registry), the option picker (to Grove.OptionPicker, server.md S2), the icons (a server-side icons module) | each declaring module | P1, P5 | L | 2-3 |
 | ◐ | P3. Platform-module APIs already in their modules | Email, Email.Smtp, AuditTrail (2), BackgroundTasks, Layers, Placements, Notifications portal, Media.Scanning settings, Users settings, ContentFields user picker, Contents audit, Tenants `api/tenants`, ReCaptcha, Sharing, OpenId admin + consent | listed in the registry from their MVC action endpoints (`IApiEndpointRegistry.Controllers`) ☑; converted to route groups registered through the seam ☐ (P16); `api/tenants` merges with `TenantsApi` then | each module | P1, P5 | M | 2 |
 | ◐ | P4. App-layer module APIs | Parties (6), Members (2), Regions (2), ContentPartLists (2), Workflows (10), Fruitful's three | listed in the registry from their MVC endpoints ☑; converted ☐ (P16); the modules reference Grove.Server.Abstractions, and Grove.Server only for the option picker and routing types until those leave | each module | P1, P5 | M | 3 |
 | ☑ | P5. The seam | — | § The seam: `ApiEndpointMapper` maps the tenant's contributors into route groups; `ApiEndpointRegistry` lists them, the controllers and the defined entries | Grove.Server, Grove.Server.Abstractions | P1 | M | 1 |
-| ◐ | P6. Access APIs | `api/grove/account` (Users), two-factor SendCode endpoints (Users), `EmailConfirmationController`, `AdminTwoFactorAuthenticationController` | `AuthApi`, `LoginSettingsApi`, `UsersApi` (with `LoginService`) in Grove.Users, `AntiforgeryApi` and `AccessModelApi` in Grove.Access ☑; the in-module account and two-factor surfaces with P12 and P16 ☐ | Grove.Users, Grove.Access | P5 | M | 3 |
+| ◐ | P6. Access APIs | `api/grove/account` (Users) | `AuthApi` (the sign-in form and its extensions, the password and two-factor sign-in, the external sign-in start, the code sending), `RegistrationApi`, `PasswordResetApi`, `TwoFactorApi`, `LoginSettingsApi`, `UsersApi` (with `LoginService`; a user's two-factor authentication turned off) in Grove.Users, `AntiforgeryApi` and `AccessModelApi` in Grove.Access ☑; `AccountApiController` and the JSON completion of `ExternalAuthenticationsController` to route groups with P16 ☐ | Grove.Users, Grove.Access | P5 | M | 3 |
 | ☑ | P7. The workflow engine's management API | engine-hosted under `grove-workflows/api` | `WorkflowsManagementApi`, a declared contributor keeping the engine's path; minimal APIs like every contributor ([workflows.md](../workflows.md)) | Grove.Workflows | P5 | S | 3 |
 | ◐ | P8. Hubs | Server 2, Media 1, engine 1 | `PermissionHubApi` (Grove.Access) and `MediaHubApi` (Grove.Media) ☑; `AdminMenuLayoutHub` goes with the admin menu (page registry) ☐; the engine's stays | each module | P5 | S | 3 |
 | ◐ | P9. Media APIs | `api/files` (`FilesController`, 26 actions), `api/media/*` (17 minimal endpoints) | `api/grove/media*` is Grove.Media's (`MediaFilesApi`, `MediaOptionsApi`, `MediaProfilesApi`) ☑; `api/files` converted with P16 ☐; `api/media/*` dies with the MVC media library ([views.md](views.md)) once the native library and pickers use `api/files` ☐ | Grove.Media | P5, views.md | L | 3 |
-| ☐ | P10. Setup API (only if views.md § Setup chooses a pre-database page) | MVC `SetupController` | `POST api/grove/setup`, anonymous, runs in the setup shell before any store | Grove.Setup | views.md § Setup | M | 4 |
-| ☐ | P11. Protocol endpoints | GraphQL, OpenIddict, health, robots, media serving, feeds, sitemaps, remote deployment import, scanner callback, XmlRpc/RSD | stay in their modules; the MVC-hosted ones (feeds, sitemaps, remote import, OpenId user info, XmlRpc/RSD) become minimal endpoints in their module's startup | each module | H3 | M | 4 |
-| ☐ | P12. MVC JSON/redirect actions | the 11 listed above | each to an API in its P2/P3/P6 group, or deleted with its MVC screen | per group | views.md | M | 3-4 |
-| ☐ | P13. Retirements (workflows.md step 8) | `api/content` (Contents), `api/queries` (Queries), `api/lucene`, `api/elasticsearch`, `Notifications/MarkAsRead`, `url-rewriting/resort`, `api/demo` | deleted when their replacements land: content API (Grove.Contents, P2), query operations (workflows.md steps 5-7), search as a connection, the native notifications and rewriting pages | each declaring module | step 5-7, views.md | M | 4 |
+| ☑ | P10. Setup off MVC | — | the static-SSR installation page of Grove.Setup (views.md § Setup) posts its own form (`EditForm`, antiforgery-validated) in the setup shell, anonymous, before any store, to `SetupInstallation` → `ISetupService`; no setup API | Grove.Setup | views.md § Setup | M | 4 |
+| ☐ | P11. Protocol endpoints | GraphQL, OpenIddict, health, robots, media serving, feeds, sitemaps, remote deployment import, scanner callback | stay in their modules; the MVC-hosted ones (feeds, sitemaps, remote import, OpenId user info) become minimal endpoints in their module's startup | each module | H3 | M | 4 |
+| ☐ | P12. MVC JSON/redirect actions | the 7 listed above (the deployment-target executors and add-to-plan are deleted; `ContentDeploymentApi` replaces them) | each to an API in its P2/P3/P6 group, or deleted with its MVC screen | per group | views.md | M | 3-4 |
+| ☐ | P13. Retirements (workflows.md step 8) | `api/content` (Contents), `api/queries` (Queries), `api/lucene`, `api/elasticsearch`, `Notifications/MarkAsRead`, `url-rewriting/resort` ☑ | deleted when their replacements land: content API (Grove.Contents, P2), query operations (workflows.md steps 5-7), search as a connection, the native notifications page; `url-rewriting/resort` is gone (Grove.Routes' `rules/reorder`) | each declaring module | step 5-7, views.md | M | 4 |
 | ☐ | P14. Generated surfaces (workflows.md step 7) | — | REST + OpenAPI over the operation registry under `api/grove/ops/*` (route fixed in P14), entered as defined entries in the Server's API registry beside the declared ones; a module's declared API may be implemented by a generated route, never replaced by a workflow endpoint; GraphQL and RPC later | Grove.Server (registry), Grove.Workflows | P15, workflows.md step 3 | XL | 5 |
 | ☑ | P15. The defined layer | — | `DefinedApiEndpointDataSource`, one per tenant, reloaded after the scope that invalidated it; the workflow `HttpEndpoint` routes are `WorkflowHttpEndpointSource`'s entries served by the engine's `HttpWorkflowRequestHandler`; the engine's `IRouteTable`, `IRouteMatcher`, route table updater and `HttpWorkflowsMiddleware` are gone | Grove.Server, Grove.Workflows | P5 | M | 4 |
 | ☐ | P16. Convert the in-module controllers | P3, P4 and Fruitful's, listed from their MVC endpoints | each a route group registered through the seam, in the change that next touches its area | each module | H3 | L | 3-5 |
@@ -413,12 +416,52 @@ ASP.NET's validation filter and in Blazor's `DataAnnotationsValidator` unchanged
   shape, the localizer) and `ApiConformanceTests.cs` (a request that breaks its rules is answered
   with the map through a mapped endpoint).
 
+## Settings groups
+
+A module's settings without a page of their own are a **settings group**: the module declares
+the settings type once, Grove.Settings serves the group's form and API, the admin shell renders
+it with `SettingsForm` at `/Settings/{groupId}` ([parity.md](parity.md) › New components).
+
+- **Declaring.** `services.AddSettingsGroup<T>(groupId, caption, permission, group => ...)`
+  (Grove.Settings.Abstractions) from the startup of the feature that owns the settings: the
+  group's menu place (`InMenu(parent, position, icon, entryId)`), further permissions
+  (`AlsoAdmits`), the tenant reload a change needs (`ReloadsTenant`), a store other than the
+  site settings (`StoredBy(load, save)`: a document, a service's own store), rules that need
+  services (`ValidatedBy`) and reactions to a change (`OnSaved`: an options refresh). A module
+  that adds a section to another's group (a provider of the SMS settings) declares
+  `services.AddSettingsModel<T>(groupId, caption, ...)`; each model of a group of several is a
+  section, its values and errors under the model's key.
+- **The schema is the type.** The form's fields are `T`'s public read/write properties: label,
+  help text, section, order and placeholder from `[Display]`, the input from the property type
+  and `[DataType]`, the rules from DataAnnotations and `Grove.Validation` (§ Validation), hidden
+  with `[ScaffoldColumn(false)]`. `[Setting]` adds what those do not say: a write-only secret
+  (`Secret`, stored protected under `ProtectedBy`'s data protection purpose; an empty submission
+  keeps the stored value), allowed values (`Options`, an `ISettingOptions` resolved from the
+  request's services), a list stored as one string (`Separator`), a field shown by another's
+  value (`VisibleWhen`), an explicit editor (`Editor`: `code` with a `Language`, `json`,
+  `hidden` for an id carried through the form). Enums are selects; lists of objects and nested
+  objects are edited as such.
+- **The API.** `api/grove/settings/groups` lists the groups the caller may manage;
+  `settings/groups/{groupId}` answers the schema, the values (secrets left out, with whether each
+  is set) and saves a submission: applied field by field onto the stored model, checked by the
+  model's rules and then the group's, answered with the error contract's map keyed by wire name
+  (`policies[2].name`, `twilioSettings.phoneNumber` in a group of several), saved only when it
+  changed. A caller is admitted by any permission the group registered (`ManageGroupSettings`
+  asked against the group id, `SiteSettingsPermissionMapper`).
+- **The page.** Grove.Settings' `SettingsGroupPages` declares one page registry entry per group,
+  gated at `/Settings/{groupId}` by the group's permissions; the generic page
+  (`Pages/SettingsGroup.razor`, `[PageEntry(DeclaredBySource = true)]`) serves those concrete
+  routes only.
+- **Tests:** `Grove.Server.Tests/SettingsGroupTests.cs` (schema derivation, values and secrets,
+  save and protection, rule errors by field, groups of several models, the page entries and the
+  route table).
+
 ## Relation to other plans
 
 - **[server.md](../server.md)** is the per-area inventory: each wrapper goes to the module that
   declares the surface (P2); the APIs already in modules stay there (P3). The option picker's
-  API (`api/grove/option-sources`, `option-picker/attachment`) goes with the option picker to
-  whichever module server.md S2 picks. The access gate pieces (the shell selector, the route
+  API (`api/grove/option-sources`, `option-picker/attachment`) is Grove.OptionPicker's
+  (server.md S2). The access gate pieces (the shell selector, the route
   gate) go to Grove.Access, where permission invalidation already is; `IRequestAccess`, the
   helper every API uses, is in Grove.Server.Abstractions (P1). The Blazor host (route table,
   `App.razor`, display endpoints) stays in Grove.Server.
@@ -514,11 +557,11 @@ Where each piece of MVC non-UI plumbing lives after the refactor:
 
 | Wave | Content | Depends on | Exit |
 | --- | --- | --- | --- |
-| 0 | views.md's open questions (shared screens, setup) answered | user | answers recorded in views.md |
+| 0 | views.md's remaining open module rows (Grove.Rules, Grove.ReverseProxy, Grove.Https) | user | decisions recorded in views.md |
 | 1 | P1, P5, E1, H1, H2 | — | Grove.Server.Abstractions exists; a contributor can register a gated route group |
 | 2 | P2 (first areas to their declaring modules), P3 (registered in place), E2, E3; plumbing: exception filters, problem details, the content manager's sink; H3 for these areas | shape-engine.md U1 | the platform modules' APIs registered through the seam; one error contract |
 | 3 | P2 (remaining areas), P4, P6, P7, P8, P9, P12; plumbing: `LoginService`, `IUrlHelper`, address scheme, file versions, `ApiAuthenticationHandler`; H3 for the remaining areas | views.md waves 1-3 (the MVC callers of the JSON actions and of `api/media/*`) | every declared API in the Server's API registry |
-| 4 | P10 (if views.md § Setup chooses it), P11, P13, P15 | views.md wave 4, workflows.md steps 5-7 | no machine endpoint on MVC; retired surfaces gone; workflow endpoints are defined entries |
+| 4 | P10, P11, P13, P15 | views.md wave 4, workflows.md steps 5-7 | no machine endpoint on MVC; retired surfaces gone; workflow endpoints are defined entries |
 | 5 | H4 (delete `AddControllers()`, `Grove.Mvc*`), the remaining plumbing deletions; P14 starts | views.md wave 4, shape-engine.md wave 4 | see exit criterion |
 
 Cross-workstream: views.md's ports each need their API in the matching wave here (wave 2 for
@@ -534,5 +577,4 @@ E1/E3 for the validation sink; shape-engine.md wave 4 and views.md wave 4 are wh
 - One error contract (problem details with `errors`), one antiforgery path, one JSON
   configuration.
 - No `Controller` or `ControllerBase` class in `src/`, `AddMvc`/`AddControllers` gone,
-  `Grove.Mvc` and `Grove.Mvc.Abstractions` deleted; the setup shell is the only exception if
-  views.md § Setup keeps setup on MVC.
+  `Grove.Mvc` and `Grove.Mvc.Abstractions` deleted, the setup shell included.

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Grove.Media;
 
 /// <summary>
@@ -9,9 +11,11 @@ namespace Grove.Media;
 public enum MediaApiAuthenticationScheme
 {
     /// <summary>Same-origin admin cookie, with antiforgery validation on mutations. The default.</summary>
+    [Display(Name = "Cookie (default)")]
     Cookie,
 
     /// <summary>OAuth2 bearer tokens via the "Api" scheme (requires OpenID Token Validation).</summary>
+    [Display(Name = "Bearer — OAuth2 + PKCE (requires OpenID Connect)")]
     Bearer,
 }
 
@@ -19,6 +23,7 @@ public class MediaApiSettings
 {
     public const string GroupId = "mediaApi";
 
+    [Display(Name = "Media API authentication", Description = "How the Media Gallery, uploads and realtime updates authenticate to the Media API (api/media). Exactly one scheme is active at a time — never both. Cookie works out of the box with the admin session (with antiforgery protection on writes). Bearer uses OAuth2 bearer tokens and requires the OpenID Connect Token Validation feature and a registered PKCE client.")]
     public MediaApiAuthenticationScheme AuthenticationScheme { get; set; }
 }
 

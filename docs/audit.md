@@ -90,6 +90,12 @@ the staff user and keeps the member as the functional attribution. The manager t
 the functional attribution to the actor and re-normalizes the user name. The event's
 `UserId` is always the audit attribution.
 
+**The trail starts after setup.** `AuditTrailManager` records nothing while the shell is
+initializing, whatever the recorder (content, users, roles, settings, features). Setup migrates
+every enabled feature in one pass, in dependency order, so a write audited during a migration
+that runs before AuditTrail's own would flush an event into audit tables that do not exist yet
+and roll back the setup's whole schema transaction.
+
 **Index.** `AuditTrailAttributionIndex` (one row per event: actor, functional user, impersonated
 member, session, organization, side, record, record type, owner) and `AuditTrailPartyIndex` (one
 row per party) on the stock `Audit` collection. The stock `CorrelationId` column is 255 wide
@@ -110,7 +116,7 @@ creation). Roles: created, updated, removed. Features: enabled, disabled. Settin
 write naming the changed sections, never their values; site and admin theme changes are their
 own `Themes` events. Settings and themes are recorded by one decorator of `ISiteService`
 (`AuditingSiteService`), since every settings screen, the theme services and recipes write
-through it. Nothing is recorded while the shell is being set up. Workflow definitions are
+through it. Workflow definitions are
 content items and are audited as content.
 
 **Content history.** `ContentHistory` replaces the stock snapshot per event: each content event

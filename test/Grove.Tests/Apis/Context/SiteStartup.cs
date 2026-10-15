@@ -41,6 +41,39 @@ public class SiteStartup
                     return new PermissionContextAuthorizationHandler(sp.GetRequiredService<IHttpContextAccessor>(), PermissionsContexts);
                 });
             })
+            // The declared API route groups (Grove.Users' sign-in, registration, password and
+            // two-factor APIs, Grove.Access' antiforgery token, ...): Grove.Server maps them in a
+            // real host and is not part of this one, so the harness maps them the same way, one
+            // group per contributor, last registration of a name winning. The antiforgery filter
+            // is left out: the tests call the APIs without a browser.
+            .Configure((appBuilder, routes, serviceProvider) =>
+            {
+                var contributors = serviceProvider.GetServices<global::Grove.Api.IApiContributor>()
+                    .GroupBy(contributor => contributor.Name, StringComparer.OrdinalIgnoreCase)
+                    .Select(group => group.Last());
+
+                foreach (var contributor in contributors)
+                {
+                    var existing = routes.DataSources.ToList();
+                    try
+                    {
+                        contributor.Map(routes.MapGroup(contributor.RoutePrefix));
+                        foreach (var source in routes.DataSources.Except(existing))
+                        {
+                            _ = source.Endpoints;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // A contributor this harness cannot build (a service only the real host
+                        // has) is left out, as the real mapper leaves it out and reports it.
+                        foreach (var source in routes.DataSources.Except(existing).ToList())
+                        {
+                            routes.DataSources.Remove(source);
+                        }
+                    }
+                }
+            })
             .Configure(appBuilder =>
             {
                 appBuilder.UseAuthorization();

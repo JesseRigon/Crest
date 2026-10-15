@@ -1,5 +1,5 @@
+using Grove.ContentManagement.Metadata;
 using Grove.ContentManagement.Metadata.Models;
-using Grove.CustomSettings.Services;
 using Grove.Security.Permissions;
 
 namespace Grove.CustomSettings;
@@ -8,18 +8,21 @@ public sealed class Permissions : IPermissionProvider
 {
     private static readonly Permission s_manageCustomSettings = new("ManageCustomSettings_{0}", "Manage Custom Settings - {0}", new[] { new Permission("ManageResourceSettings") });
 
-    private readonly CustomSettingsService _customSettingsService;
+    // Reads the definitions directly, not through CustomSettingsService: that service needs
+    // IAuthorizationService, whose handler needs IPermissionService, which enumerates every
+    // IPermissionProvider - including this one (a DI cycle).
+    private readonly IContentDefinitionManager _contentDefinitionManager;
 
-    public Permissions(CustomSettingsService customSettingsService)
+    public Permissions(IContentDefinitionManager contentDefinitionManager)
     {
-        _customSettingsService = customSettingsService;
+        _contentDefinitionManager = contentDefinitionManager;
     }
 
     public async Task<IEnumerable<Permission>> GetPermissionsAsync()
     {
         var list = new List<Permission>();
 
-        foreach (var type in await _customSettingsService.GetAllSettingsTypesAsync())
+        foreach (var type in (await _contentDefinitionManager.ListTypeDefinitionsAsync()).Where(type => type.StereotypeEquals(CustomSettingsConstants.Stereotype)))
         {
             list.Add(CreatePermissionForType(type));
         }

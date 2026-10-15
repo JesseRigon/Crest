@@ -8,7 +8,6 @@ using Grove.DisplayManagement.Extensions;
 using Grove.DisplayManagement.Views;
 using Grove.Infrastructure.Html;
 using Grove.Menu.Models;
-using Grove.Menu.ViewModels;
 
 namespace Grove.Menu.Drivers;
 
@@ -50,61 +49,5 @@ public sealed class LinkMenuItemPartDisplayDriver : ContentPartDisplayDriver<Lin
             }, part)
             .Location("Thumbnail", "Content:10")
         );
-    }
-
-    public override IDisplayResult Edit(LinkMenuItemPart part, BuildPartEditorContext context)
-    {
-        return Initialize<LinkMenuItemPartEditViewModel>("LinkMenuItemPart_Edit", model =>
-        {
-            model.Name = part.ContentItem.DisplayText;
-            model.Url = part.Url;
-            model.Target = part.Target;
-            model.MenuItemPart = part;
-        });
-    }
-
-    public override async Task<IDisplayResult> UpdateAsync(LinkMenuItemPart part, UpdatePartEditorContext context)
-    {
-        var model = new LinkMenuItemPartEditViewModel();
-
-        await context.Updater.TryUpdateModelAsync(model, Prefix);
-
-        part.Url = model.Url;
-        part.Target = model.Target;
-        part.ContentItem.DisplayText = model.Name;
-
-        var urlToValidate = part.Url;
-
-        if (!string.IsNullOrEmpty(urlToValidate))
-        {
-            urlToValidate = urlToValidate.Split('#', 2)[0];
-
-            if (urlToValidate.StartsWith("~/", StringComparison.Ordinal))
-            {
-                // In .NET 10, create ActionContext directly instead of using obsolete IActionContextAccessor
-                var httpContext = _httpContextAccessor.HttpContext;
-                var actionContext = await httpContext.GetActionContextAsync();
-                var urlHelper = _urlHelperFactory.GetUrlHelper(actionContext);
-                urlToValidate = urlHelper.Content(urlToValidate);
-            }
-
-            urlToValidate = urlToValidate.ToUriComponents();
-
-            if (!Uri.IsWellFormedUriString(urlToValidate, UriKind.RelativeOrAbsolute))
-            {
-                context.Updater.ModelState.AddModelError(nameof(part.Url), S["{0} is an invalid url.", part.Url]);
-            }
-            else
-            {
-                var link = $"<a href=\"{_htmlEncoder.Encode(urlToValidate)}\"></a>";
-
-                if (!string.Equals(link, _htmlSanitizerService.Sanitize(link), StringComparison.OrdinalIgnoreCase))
-                {
-                    context.Updater.ModelState.AddModelError(nameof(part.Url), S["{0} is an invalid url.", part.Url]);
-                }
-            }
-        }
-
-        return Edit(part, context);
     }
 }

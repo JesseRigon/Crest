@@ -1,0 +1,28 @@
+@page "/connect/error"
+
+@* An OpenID Connect request the server refused (the authorization, logout or token endpoint's
+   error): the protocol's error code and its description, as the endpoint sent them. *@
+
+<PageTitle>Authorization error</PageTitle>
+
+<div style="max-width: 32rem; margin: 2rem auto; padding: 0 1rem;" data-testid="openid-error-page">
+    <GroveStack Gap="0.75rem">
+        <GroveText TextStyle="TextStyle.H5" Text="The request could not be completed" />
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <GroveText TextStyle="TextStyle.Body1" Text="@Error" data-testid="openid-error" />
+        }
+        @if (!string.IsNullOrEmpty(Description))
+        {
+            <GroveText TextStyle="TextStyle.Body2" Text="@Description" data-testid="openid-error-description" />
+        }
+    </GroveStack>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    [SupplyParameterFromQuery(Name = "error_description")]
+    public string? Description { get; set; }
+}

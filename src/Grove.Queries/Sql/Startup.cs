@@ -4,7 +4,6 @@ using Grove.DisplayManagement.Handlers;
 using Grove.Modules;
 using Grove.Navigation;
 using Grove.Queries;
-using Grove.Queries.Sql.Drivers;
 using Grove.Queries.Sql.Migrations;
 using Grove.Security.Permissions;
 
@@ -19,7 +18,6 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddPermissionProvider<Permissions>();
-        services.AddDisplayDriver<Query, SqlQueryDisplayDriver>();
         services.AddQuerySource<SqlQuerySource>(SqlQuerySource.SourceName);
 
         services.AddDataMigration<SqlQueryMigrations>();

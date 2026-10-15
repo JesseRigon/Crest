@@ -14,10 +14,8 @@ using Grove.ContentManagement.Metadata.Models;
 using Grove.ContentManagement.Routing;
 using Grove.Contents.AdminNodes;
 using Grove.Contents.AuditTrail.Settings;
-using Grove.Contents.Controllers;
 using Grove.Contents;
 using Grove.Contents.Deployment;
-using Grove.Contents.Drivers;
 using Grove.Contents.Endpoints.Api;
 using Grove.Contents.Feeds.Builders;
 using Grove.Contents.Handlers;
@@ -29,7 +27,6 @@ using Grove.Contents.Security;
 using Grove.Contents.Services;
 using Grove.Contents.Sitemaps;
 using Grove.Contents.TagHelpers;
-using Grove.Contents.ViewModels;
 using Grove.ContentTypes.Editors;
 using Grove.Data.Migration;
 using Grove.Deployment;
@@ -52,7 +49,6 @@ using Grove.Sitemaps.Builders;
 using Grove.Sitemaps.Handlers;
 using Grove.Sitemaps.Models;
 using Grove.Sitemaps.Services;
-using YesSql.Filters.Query;
 
 namespace Grove.Contents;
 
@@ -153,9 +149,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<IResourcePermissionMapper, ContentResourcePermissionMapper>();
         services.AddScoped<IScopeProvider, ContentItemScopeProvider>();
         services.AddShapeTableProvider<Shapes>();
-        services.AddShapeTableProvider<AdminDashboardShapeTableProvider>();
         services.AddDynamicPageSource<NewContentPages>();
-        services.AddScoped<IContentDisplayDriver, ContentsDriver>();
         services.AddScoped<IContentHandler, ContentsHandler>();
         services.AddRecipeExecutionStep<ContentStep>();
 
@@ -167,11 +161,8 @@ public sealed class Startup : StartupBase
 
         services.AddDataMigration<Migrations>();
 
-        // Common Part
-        services.AddContentPart<CommonPart>()
-            .UseDisplayDriver<DateEditorDriver>()
-            .UseDisplayDriver<OwnerEditorDriver>();
-
+        // Common Part: its editors are the editor tree's (the creation date and the owner).
+        services.AddContentPart<CommonPart>();
 
         // FullTextAspect
         services.AddScoped<IContentHandler, FullTextAspectContentHandler>();
@@ -195,27 +186,7 @@ public sealed class Startup : StartupBase
             }
         });
 
-        services.AddScoped<IContentsAdminListQueryService, DefaultContentsAdminListQueryService>();
-
-        services.AddDisplayDriver<ContentOptionsViewModel, ContentOptionsDisplayDriver>();
-
         services.AddScoped(typeof(IContentItemRecursionHelper<>), typeof(ContentItemRecursionHelper<>));
-
-        services.AddSingleton<IContentsAdminListFilterParser>(sp =>
-        {
-            var filterProviders = sp.GetServices<IContentsAdminListFilterProvider>();
-            var builder = new QueryEngineBuilder<ContentItem>();
-            foreach (var provider in filterProviders)
-            {
-                provider.Build(builder);
-            }
-
-            var parser = builder.Build();
-
-            return new DefaultContentsAdminListFilterParser(parser);
-        });
-
-        services.AddTransient<IContentsAdminListFilterProvider, DefaultContentsAdminListFilterProvider>();
     }
 
     public override void Configure(IApplicationBuilder builder, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
@@ -224,8 +195,6 @@ public sealed class Startup : StartupBase
             .AddCreateContentEndpoint()
             .AddDeleteContentEndpoint();
 
-        var itemControllerName = typeof(ItemController).ControllerName();
-
         // Generation only: the site shell's content route serves "Contents/ContentItems/{id}" on the
         // display tree (docs/blazor-display.md rework step 3); links to items without an autoroute
         // are still generated from this route's values.
@@ -233,22 +202,8 @@ public sealed class Startup : StartupBase
             name: "DisplayContentItem",
             areaName: "Grove.Contents",
             pattern: "Contents/ContentItems/{contentItemId}",
-            defaults: new { controller = itemControllerName, action = "Display" },
+            defaults: new { controller = "Item", action = "Display" },
             constraints: new { contentItemId = new Grove.Routing.GenerationOnlyRouteConstraint() }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: "PreviewContentItem",
-            areaName: "Grove.Contents",
-            pattern: "Contents/ContentItems/{contentItemId}/Preview",
-            defaults: new { controller = itemControllerName, action = nameof(ItemController.Preview) }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: "PreviewContentItemVersion",
-            areaName: "Grove.Contents",
-            pattern: "Contents/ContentItems/{contentItemId}/Version/{version}/Preview",
-            defaults: new { controller = itemControllerName, action = nameof(ItemController.Preview) }
         );
     }
 }
@@ -258,9 +213,9 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<AllContentDeploymentSource, AllContentDeploymentStep, AllContentDeploymentStepDriver>();
-        services.AddDeployment<ContentDeploymentSource, ContentDeploymentStep, ContentDeploymentStepDriver>();
-        services.AddSiteSettingsPropertyDeploymentStep<ContentAuditTrailSettings, DeploymentStartup>(S => S["Content Audit Trail settings"], S => S["Exports the content audit trail settings."]);
+        services.AddDeployment<AllContentDeploymentSource, AllContentDeploymentStep>();
+        services.AddDeployment<ContentDeploymentSource, ContentDeploymentStep>();
+        services.AddSiteSettingsPropertyDeploymentStep<ContentAuditTrailSettings>();
     }
 }
 
@@ -269,7 +224,7 @@ public sealed class AdminMenuStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddAdminNode<ContentTypesAdminNode, ContentTypesAdminNodeNavigationBuilder, ContentTypesAdminNodeDriver>();
+        services.AddAdminNode<ContentTypesAdminNode, ContentTypesAdminNodeNavigationBuilder>();
     }
 }
 
@@ -290,7 +245,6 @@ public sealed class SitemapsStartup : StartupBase
         services.AddScoped<ISitemapSourceBuilder, ContentTypesSitemapSourceBuilder>();
         services.AddScoped<ISitemapSourceUpdateHandler, ContentTypesSitemapSourceUpdateHandler>();
         services.AddScoped<ISitemapSourceModifiedDateProvider, ContentTypesSitemapSourceModifiedDateProvider>();
-        services.AddDisplayDriver<SitemapSource, ContentTypesSitemapSourceDriver>();
         services.AddScoped<ISitemapSourceFactory, SitemapSourceFactory<ContentTypesSitemapSource>>();
         services.AddScoped<IContentItemsQueryProvider, DefaultContentItemsQueryProvider>();
         services.AddScoped<IContentHandler, ContentTypesSitemapUpdateHandler>();

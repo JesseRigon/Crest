@@ -521,9 +521,36 @@ public sealed class TaxonomyFieldDisplay : FieldDisplayBase
     protected override void RenderValue(RenderTreeBuilder builder) => Links(builder, Items!, string.Empty);
 }
 
+/// <summary>The taxonomy field's <c>Tags</c> display mode: its terms as linked badges.</summary>
+[BlazorComponent("TaxonomyField_Display__Tags", DisplayName = "Taxonomy field as tags", Category = "Fields", Icon = "sell")]
+public sealed class TaxonomyFieldTagsDisplay : FieldDisplayBase
+{
+    [Parameter]
+    public IReadOnlyList<DisplayLinkItem>? Items { get; set; }
+
+    protected override string FieldType => "taxonomyfield";
+
+    protected override bool HasValue => Items is { Count: > 0 };
+
+    protected override void RenderValue(RenderTreeBuilder builder)
+    {
+        foreach (var item in Items!)
+        {
+            builder.OpenElement(0, "a");
+            builder.AddAttribute(1, "class", "grove-tag");
+            builder.AddAttribute(2, "href", SafeUrl.IsSafe(item.Url) ? item.Url : "#");
+            builder.OpenComponent<Primitives.GroveBadge>(3);
+            builder.AddComponentParameter(4, nameof(Primitives.GroveBadge.Text), item.Text);
+            builder.AddComponentParameter(5, nameof(Primitives.GroveBadge.BadgeStyle), Primitives.BadgeStyle.Light);
+            builder.CloseComponent();
+            builder.CloseElement();
+        }
+    }
+}
+
 /// <summary>A list's contained items (the <c>ListPart</c> shape): their summaries, as their drivers built them.</summary>
 [BlazorComponent("ListPart", DisplayName = "List items", Category = "Content", Icon = "list")]
-public sealed class ListPartDisplay : ComponentBase
+public class ListPartDisplay : ComponentBase
 {
     [Parameter]
     [ComponentZone]
@@ -536,6 +563,58 @@ public sealed class ListPartDisplay : ComponentBase
         builder.AddContent(2, ChildContent);
         builder.CloseElement();
     }
+}
+
+/// <summary>A term's page (the <c>TermPart</c> shape): the items tagged with the term, as the list displays them.</summary>
+[BlazorComponent("TermPart", DisplayName = "Term items", Category = "Content", Icon = "sell")]
+public sealed class TermPartDisplay : ListPartDisplay;
+
+/// <summary>
+/// A scheduled date as a badge ("Scheduled to publish …"): the note the content list and the
+/// item's display show for a part that schedules its item.
+/// </summary>
+public abstract class ScheduledDateBadge : ComponentBase
+{
+    protected abstract string Caption { get; }
+
+    protected abstract DateTime? Scheduled { get; }
+
+    protected override void BuildRenderTree(RenderTreeBuilder builder)
+    {
+        if (Scheduled is not { } scheduled)
+        {
+            return;
+        }
+
+        builder.OpenComponent<Primitives.GroveBadge>(0);
+        builder.AddComponentParameter(1, nameof(Primitives.GroveBadge.Text), Caption + " " + DateTime.SpecifyKind(scheduled, DateTimeKind.Utc).ToLocalTime().ToString("g", System.Globalization.CultureInfo.CurrentCulture));
+        builder.AddComponentParameter(2, nameof(Primitives.GroveBadge.BadgeStyle), Primitives.BadgeStyle.Info);
+        builder.CloseComponent();
+    }
+}
+
+/// <summary>The publish-later part: when the item is scheduled to be published.</summary>
+[BlazorComponent("PublishLaterPart", DisplayName = "Scheduled publication", Category = "Content", Icon = "schedule_send")]
+public sealed class PublishLaterPartDisplay : ScheduledDateBadge
+{
+    [Parameter]
+    public DateTime? ScheduledPublishUtc { get; set; }
+
+    protected override string Caption => "Scheduled to publish";
+
+    protected override DateTime? Scheduled => ScheduledPublishUtc;
+}
+
+/// <summary>The archive-later part: when the item is scheduled to be archived.</summary>
+[BlazorComponent("ArchiveLaterPart", DisplayName = "Scheduled archiving", Category = "Content", Icon = "auto_delete")]
+public sealed class ArchiveLaterPartDisplay : ScheduledDateBadge
+{
+    [Parameter]
+    public DateTime? ScheduledArchiveUtc { get; set; }
+
+    protected override string Caption => "Scheduled to archive";
+
+    protected override DateTime? Scheduled => ScheduledArchiveUtc;
 }
 
 /// <summary>A geographic point field: its coordinates, linked to a map.</summary>

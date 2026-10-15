@@ -245,8 +245,8 @@
               }
             },
             {
-              "PartName": "LiquidPart",
-              "Name": "LiquidPart",
+              "PartName": "DisplayTreePart",
+              "Name": "DisplayTreePart",
               "Settings": {
                 "ContentTypePartSettings": {
                   "Position": "3"
@@ -1281,29 +1281,6 @@
           "TitlePart": {
             "Title": "Contact"
           }
-        },
-        {
-          "ContentItemId": "[js: uuid()]",
-          "ContentType": "LiquidPage",
-          "DisplayText": "Counter",
-          "Latest": true,
-          "Published": true,
-          "Owner": "[js: parameters('AdminUsername')]",
-          "Author": "[js: parameters('AdminUsername')]",
-          "LiquidPage": {},
-          "AutoroutePart": {
-            "Path": "counter",
-            "SetHomepage": false,
-            "Disabled": false,
-            "RouteContainedItems": false,
-            "Absolute": false
-          },
-          "LiquidPart": {
-            "Liquid": "{{ \"CounterButton\" | shape_new | shape_render }}"
-          },
-          "TitlePart": {
-            "Title": "Counter"
-          }
         }
       ],
       "data": []
@@ -1519,7 +1496,6 @@
         "AllowChangeEmail": true
       },
       "LoginSettings": {
-        "UseSiteTheme": true,
         "UseExternalProviderIfOnlyOneDefined": false,
         "DisableLocalLogin": false,
         "UseScriptToSyncRoles": false,
@@ -1528,7 +1504,6 @@
       "RegistrationSettings": {
         "UsersCanRegister": 1,
         "UsersMustValidateEmail": true,
-        "UseSiteTheme": true,
         "NoPasswordForExternalUsers": false,
         "NoUsernameForExternalUsers": false,
         "NoEmailForExternalUsers": false,
@@ -1536,8 +1511,7 @@
         "GenerateUsernameScript": null
       },
       "ResetPasswordSettings": {
-        "AllowResetPassword": true,
-        "UseSiteTheme": true
+        "AllowResetPassword": true
       }
     },
     {

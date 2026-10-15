@@ -30,28 +30,4 @@ public sealed class DateFieldDisplayDriver : ContentFieldDisplayDriver<DateField
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");
     }
-
-    public override IDisplayResult Edit(DateField field, BuildFieldEditorContext context)
-    {
-        return Initialize<EditDateFieldViewModel>(GetEditorShapeType(context), model =>
-        {
-            model.Value = field.Value;
-            model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
-        });
-    }
-
-    public override async Task<IDisplayResult> UpdateAsync(DateField field, UpdateFieldEditorContext context)
-    {
-        await context.Updater.TryUpdateModelAsync(field, Prefix, f => f.Value);
-        var settings = context.PartFieldDefinition.GetSettings<DateFieldSettings>();
-
-        if (settings.Required && field.Value == null)
-        {
-            context.Updater.ModelState.AddModelError(Prefix, nameof(field.Value), S["A value is required for {0}.", context.PartFieldDefinition.DisplayName()]);
-        }
-
-        return Edit(field, context);
-    }
 }

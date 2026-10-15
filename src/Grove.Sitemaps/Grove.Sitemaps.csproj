@@ -10,6 +10,13 @@
     <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
   </PropertyGroup>
 
+  <!-- The sitemaps admin pages are their own WASM library (blazor-wasm/, Grove.Sitemaps.BlazorWasm). -->
+  <ItemGroup>
+    <Compile Remove="blazor-wasm/**/*.cs" />
+    <Content Remove="blazor-wasm/**" />
+    <None Remove="blazor-wasm/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -25,7 +32,9 @@
     <ProjectReference Include="..\Grove.Navigation\Grove.Navigation.csproj" />
     <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
     <ProjectReference Include="..\Grove.Seo.Abstractions\Grove.Seo.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Settings.Abstractions\Grove.Settings.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Sitemaps.Abstractions\Grove.Sitemaps.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

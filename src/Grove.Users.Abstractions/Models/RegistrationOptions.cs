@@ -6,5 +6,4 @@ public class RegistrationOptions
 
     public bool UsersAreModerated { get; set; }
 
-    public bool UseSiteTheme { get; set; }
 }

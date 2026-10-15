@@ -41,9 +41,21 @@
             <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</GroveAlert>
         }
 
-        <DisplayTreeRenderer @key="State" Node="Tree.Root" State="State" />
+        @if (ShowPreview)
+        {
+            @* The live preview beside the editor tree (Grove.ContentPreview's API renders the unsaved item). *@
+            <div class="grove-content-item-editor__split" style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem;">
+                <DisplayTreeRenderer @key="State" Node="Tree.Root" State="State" />
+                <Grove.Components.Editors.ContentPreviewPane ContentType="@EditedType" ContentItemId="@(IsCreate ? null : ContentItemId)" DisplayText="@DisplayText" Content="@PreviewContent" />
+            </div>
+        }
+        else
+        {
+            <DisplayTreeRenderer @key="State" Node="Tree.Root" State="State" />
+        }
 
         <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <GroveButton Text="@(ShowPreview ? T["Hide preview"] : T["Preview"])" Icon="preview" ButtonStyle="ButtonStyle.Light" Click="TogglePreview" data-testid="content-item-preview" />
             <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="Cancel" Disabled="@IsSaving" />
             @if (!IsCreate)
             {
@@ -63,6 +75,9 @@
     [Parameter] public string? ContentType { get; set; }
     [Parameter] public string? ContentItemId { get; set; }
 
+    /// <summary>A new item created into a list: the list's id (ListPartEditor's "New" links).</summary>
+    [SupplyParameterFromQuery(Name = "containerId")] public string? ContainerId { get; set; }
+
     private bool IsCreate => !string.IsNullOrWhiteSpace(ContentType);
     private bool IsLoading { get; set; }
     private bool IsSaving { get; set; }
@@ -72,6 +87,8 @@
     private string? EditedType { get; set; }
     private string? DisplayText { get; set; }
     private bool Publish { get; set; }
+    private bool ShowPreview { get; set; }
+    private JsonObject? PreviewContent { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -80,6 +97,7 @@
         State = new DisplayState();
         Dispatcher.SubmitHandler = (_, _, _) => SaveAsync();
         IsLoading = true;
+        State.Changed += OnStateChanged;
         try
         {
             if (IsCreate)
@@ -146,17 +164,31 @@
         ErrorMessage = null;
         try
         {
-            var request = new ContentItemWriteRequest(EditedType, DisplayText, content, Publish);
-            var saved = IsCreate
-                ? await Api.Grove.Rest.Content.Items.CreateAsync(request)
-                : await Api.Grove.Rest.Content.Items.UpdateAsync(ContentItemId!, request);
-            if (saved is null)
+            // An item created into a list names its list; the server completes the rest (its type, its order).
+            if (IsCreate && !string.IsNullOrWhiteSpace(ContainerId))
             {
-                throw new InvalidOperationException(T["The content item could not be saved."]);
+                content["ContainedPart"] = new JsonObject { ["ListContentItemId"] = ContainerId };
             }
 
+            var request = new ContentItemWriteRequest(EditedType, DisplayText, content, Publish);
+            using var response = IsCreate
+                ? await Http.PostAsJsonAsync("api/grove/content-items", request)
+                : await Http.PutAsJsonAsync($"api/grove/content-items/{Uri.EscapeDataString(ContentItemId!)}", request);
+            if (!response.IsSuccessStatusCode)
+            {
+                await ShowErrorsAsync(response);
+                return;
+            }
+
+            ShowErrors(null);
+            var saved = await response.Content.ReadFromJsonAsync<ContentItem>()
+                ?? throw new InvalidOperationException(T["The content item could not be saved."]);
+
             Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["{0} saved.", saved.DisplayText]);
-            Navigation.NavigateTo("Contents/ContentItems");
+            // A child of a list returns to its list.
+            Navigation.NavigateTo(IsCreate && !string.IsNullOrWhiteSpace(ContainerId)
+                ? $"Contents/ContentItems/{Uri.EscapeDataString(ContainerId)}/Edit"
+                : "Contents/ContentItems");
         }
         catch (Exception ex)
         {
@@ -185,9 +217,11 @@
             using var response = await Http.PutAsJsonAsync($"api/grove/content-items/{Uri.EscapeDataString(ContentItemId)}/draft", new ContentItemWriteRequest(EditedType, DisplayText, content, false));
             if (!response.IsSuccessStatusCode)
             {
-                ErrorMessage = await response.Content.ReadAsStringAsync();
+                await ShowErrorsAsync(response);
                 return;
             }
+
+            ShowErrors(null);
 
             Notifications.Notify(NotificationSeverity.Success, T["Content Items"], T["Draft saved."]);
         }
@@ -197,7 +231,69 @@
         }
     }
 
-    private void Cancel() => Navigation.NavigateTo("Contents/ContentItems");
+    private void Cancel() => Navigation.NavigateTo(IsCreate && !string.IsNullOrWhiteSpace(ContainerId)
+        ? $"Contents/ContentItems/{Uri.EscapeDataString(ContainerId)}/Edit"
+        : "Contents/ContentItems");
 
-    public void Dispose() => Dispatcher.SubmitHandler = null;
+    // A refused save: the error contract's map goes under the tree's ContentEditor node, which
+    // shows each error under its editor (keys Part.Field, Part); what names no editor is shown here.
+    private async Task ShowErrorsAsync(HttpResponseMessage response)
+    {
+        var text = await response.Content.ReadAsStringAsync();
+        JsonNode? problem = null;
+        try
+        {
+            problem = string.IsNullOrWhiteSpace(text) ? null : JsonNode.Parse(text);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+        }
+
+        if (problem?["errors"] is JsonObject map)
+        {
+            var errors = map.ToDictionary(
+                pair => pair.Key,
+                pair => (IReadOnlyList<string>)(pair.Value as JsonArray ?? []).Select(message => message?.ToString() ?? string.Empty).ToList(),
+                StringComparer.Ordinal);
+            ShowErrors(errors);
+            ErrorMessage = errors.TryGetValue(string.Empty, out var general)
+                ? string.Join(" ", general)
+                : T["The item was not saved: see the errors under the fields."];
+            return;
+        }
+
+        ErrorMessage = problem?["errors"] is JsonArray list
+            ? string.Join(" ", list.Select(message => message?.ToString()))
+            : problem?["detail"]?.ToString() ?? (string.IsNullOrWhiteSpace(text) ? T["The content item could not be saved."] : text);
+    }
+
+    private void ShowErrors(IReadOnlyDictionary<string, IReadOnlyList<string>>? errors)
+    {
+        if (Tree is not null && DisplayTreeValidator.Walk(Tree.Root).FirstOrDefault(node => node.Component == "ContentEditor") is { } editor)
+        {
+            State.SetErrors(editor.Id, errors);
+        }
+    }
+
+    private void TogglePreview()
+    {
+        ShowPreview = !ShowPreview;
+        PreviewContent = ShowPreview ? EditedContent()?.DeepClone() as JsonObject : null;
+    }
+
+    // The preview follows the edits: the content the tree publishes, handed to the pane.
+    private void OnStateChanged()
+    {
+        if (ShowPreview)
+        {
+            PreviewContent = EditedContent()?.DeepClone() as JsonObject;
+            _ = InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispatcher.SubmitHandler = null;
+        State.Changed -= OnStateChanged;
+    }
 }

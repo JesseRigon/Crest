@@ -62,14 +62,8 @@ public sealed class BulkSelectListTests : CmsTestBase<BulkSelectListTestsFixture
     }
 
     [Theory]
-    [InlineData("/Admin/Contents/ContentItems/BulkSelectTestPage", "itemIds")]
     [InlineData("/Admin/Placements", "itemIds")]
-    [InlineData("/Admin/Shortcodes", "itemIds")]
-    [InlineData("/Admin/Sitemaps/List", "itemIds")]
-    [InlineData("/Admin/SitemapIndexes/List", "itemIds")]
     [InlineData("/Admin/Templates", "itemIds")]
-    [InlineData("/Admin/TenantFeatureProfiles", "itemIds")]
-    [InlineData("/Admin/UrlRewriting/Index", "ruleIds")]
     [InlineData("/Admin/DeploymentPlan/Index", "itemIds")]
     [InlineData("/Admin/MediaProfiles", "itemIds")]
     [InlineData("/Admin/AdminMenu/List", "itemIds")]

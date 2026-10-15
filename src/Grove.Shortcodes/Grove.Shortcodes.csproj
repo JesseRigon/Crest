@@ -10,6 +10,13 @@
     <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
   </PropertyGroup>
 
+  <!-- The shortcode templates page is its own WASM library (blazor-wasm/, Grove.Shortcodes.BlazorWasm). -->
+  <ItemGroup>
+    <Compile Remove="blazor-wasm/**/*.cs" />
+    <Content Remove="blazor-wasm/**" />
+    <None Remove="blazor-wasm/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -23,6 +30,7 @@
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
     <ProjectReference Include="..\Grove.Navigation\Grove.Navigation.csproj" />
     <ProjectReference Include="..\Grove.Shortcodes.Abstractions\Grove.Shortcodes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
   </ItemGroup>
 

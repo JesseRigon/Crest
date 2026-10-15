@@ -1,0 +1,16 @@
+@page "/Register"
+@attribute [Grove.Components.Modules.SetsAuthenticationCookie]
+
+@* Self-registration on the tenant, at the path it has always had. Registration signs the new
+   account in, so the page renders InteractiveWebAssembly ([SetsAuthenticationCookie]). *@
+
+<PageTitle>Register</PageTitle>
+
+<div style="max-width: 32rem; margin: 2rem auto; padding: 0 1rem;" data-testid="site-register-page">
+    <RegistrationForm ReturnUrl="@ReturnUrl" />
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+}

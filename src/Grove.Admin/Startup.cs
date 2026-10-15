@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Grove.Admin.Controllers;
 using Grove.Admin.Drivers;
 using Grove.Admin.Models;
 using Grove.DisplayManagement;
@@ -28,12 +27,10 @@ namespace Grove.Admin;
 
 public sealed class Startup : StartupBase
 {
-    private readonly AdminOptions _adminOptions;
     private readonly IShellConfiguration _configuration;
 
-    public Startup(IOptions<AdminOptions> adminOptions, IShellConfiguration configuration)
+    public Startup(IShellConfiguration configuration)
     {
-        _adminOptions = adminOptions.Value;
         _configuration = configuration;
     }
 
@@ -57,24 +54,13 @@ public sealed class Startup : StartupBase
         services.AddPermissionProvider<Permissions>();
         services.AddScoped<IThemeSelector, AdminThemeSelector>();
         services.AddScoped<IAdminThemeService, AdminThemeService>();
-        services.AddSiteDisplayDriver<AdminSiteSettingsDisplayDriver>();
         services.AddPermissionProvider<PermissionsAdminSettings>();
         services.AddSingleton<IPageRouteModelProvider, AdminPageRouteModelProvider>();
         services.AddDisplayDriver<Navbar, VisitSiteNavbarDisplayDriver>();
-        services.AddShapeTableProvider<AdminDashboardShapeTableProvider>();
 
         services.Configure<AdminOptions>(_configuration.GetSection("Grove_Admin"));
     }
 
-    public override void Configure(IApplicationBuilder builder, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        routes.MapAreaControllerRoute(
-            name: "Admin",
-            areaName: "Grove.Admin",
-            pattern: _adminOptions.AdminUrlPrefix,
-            defaults: new { controller = typeof(AdminController).ControllerName(), action = nameof(AdminController.Index) }
-        );
-    }
 }
 
 public sealed class AdminPagesStartup : StartupBase
@@ -97,7 +83,7 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<AdminSettings, DeploymentStartup>(S => S["Admin settings"], S => S["Exports the admin settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<AdminSettings>();
     }
 }
 

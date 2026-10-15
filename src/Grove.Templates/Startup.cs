@@ -33,6 +33,8 @@ public sealed class Startup : StartupBase
         services.AddContentPart<DisplayTreePart>()
             .UseDisplayDriver<Drivers.DisplayTreePartDisplayDriver>()
             .AddHandler<DisplayTreePartHandler>();
+        // The body's text is searchable (a migrated Liquid body's included).
+        services.AddScoped<Grove.Indexing.IContentPartIndexHandler, Indexing.DisplayTreePartIndexHandler>();
         services.AddScoped<IDisplayTemplateBinding, DisplayTreePartBinding>();
         services.AddDataMigration<Migrations>();
         services.AddScoped<Grove.ContentManagement.Handlers.IContentHandler, TemplatePublishHandler>();
@@ -64,6 +66,6 @@ public sealed class Startup : StartupBase
         services.AddPermissionProvider<AdminTemplatesPermissions>();
         services.AddRecipeExecutionStep<TemplateStep>();
         services.AddRecipeExecutionStep<DesignedPageStep>();
-        services.AddDeployment<AllTemplatesDeploymentSource, AllTemplatesDeploymentStep, AllTemplatesDeploymentStepDriver>();
+        services.AddDeployment<AllTemplatesDeploymentSource, AllTemplatesDeploymentStep>();
     }
 }

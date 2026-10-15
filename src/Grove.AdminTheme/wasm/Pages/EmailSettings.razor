@@ -83,6 +83,25 @@
         </GroveCard>
     }
 
+    @if (Azure is not null)
+    {
+        @* Grove.Email.Azure: the connection string is write-only, like the SMTP password. *@
+        <GroveCard data-testid="azure-email-settings">
+            <GroveStack Gap="0.5rem">
+                <GroveText TextStyle="TextStyle.Subtitle1" Text="@T["Azure Communication Services"]" />
+                <div><GroveCheckBox @bind-Value="Azure.IsEnabled" Name="azure-email-enabled" /><label for="azure-email-enabled"> @T["Enable the Azure Communication Services provider"]</label></div>
+                @if (Azure.IsEnabled)
+                {
+                    <GroveLabel Text="@T["Default sender"]" Component="azure-email-sender" />
+                    <GroveTextBox @bind-Value="Azure.DefaultSender" Name="azure-email-sender" Style="max-width: 24rem" />
+                    <GroveLabel Text="@(Azure.HasConnectionString ? T["Connection string (stored; type a new one to change it)"] : T["Connection string"])" Component="azure-email-connection" />
+                    <GrovePassword @bind-Value="AzureConnectionString" Name="azure-email-connection" Style="width: 100%" />
+                }
+                <div><GroveButton Text="@T["Save Azure settings"]" Icon="save" Click="SaveAzureAsync" Disabled="IsSaving" data-testid="azure-email-save" /></div>
+            </GroveStack>
+        </GroveCard>
+    }
+
     <GroveCard data-testid="email-test">
         <GroveStack Gap="0.5rem">
             <GroveText TextStyle="TextStyle.Subtitle1" Text="@T["Send a test message"]" />
@@ -121,6 +140,8 @@
     private EmailSettingsModel? Settings;
     private string? DefaultProvider;
     private SmtpModel? Smtp;
+    private AzureModel? Azure;
+    private string? AzureConnectionString;
     private string? Password;
     private TestModel Test = new();
     private TestResultModel? TestResult;
@@ -143,6 +164,28 @@
         // The SMTP section exists only when Grove.Email.Smtp is enabled.
         try { Smtp = await Http.GetFromJsonAsync<SmtpModel>($"{Api}/smtp"); }
         catch (HttpRequestException) { Smtp = null; }
+
+        // The Azure section exists only when Grove.Email.Azure is enabled.
+        try { Azure = await Http.GetFromJsonAsync<AzureModel>($"{Api}/azure"); }
+        catch (HttpRequestException) { Azure = null; }
+    }
+
+    private async Task SaveAzureAsync()
+    {
+        if (Azure is null) return;
+        IsSaving = true;
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"{Api}/azure", new { Azure.IsEnabled, Azure.DefaultSender, ConnectionString = AzureConnectionString });
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            Azure = await response.Content.ReadFromJsonAsync<AzureModel>();
+            AzureConnectionString = null;
+            Error = null;
+            Settings = await Http.GetFromJsonAsync<EmailSettingsModel>(Api);
+            DefaultProvider = Settings?.DefaultProvider;
+            Notifications.Notify(NotificationSeverity.Success, T["Settings saved"], T["The Azure Communication Services settings were saved."]);
+        }
+        finally { IsSaving = false; }
     }
 
     private async Task SaveProviderAsync()
@@ -210,6 +253,13 @@
         public string? ReplyTo { get; set; }
         public string? Subject { get; set; } = "Test message";
         public string? Body { get; set; } = "This is a test message.";
+    }
+
+    private sealed class AzureModel
+    {
+        public bool IsEnabled { get; set; }
+        public string? DefaultSender { get; set; }
+        public bool HasConnectionString { get; set; }
     }
 
     private sealed class SmtpModel

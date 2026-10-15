@@ -5,7 +5,6 @@ using Grove.ContentManagement;
 using Grove.ContentManagement.Display.ContentDisplay;
 using Grove.ContentManagement.Handlers;
 using Grove.Contents.Services;
-using Grove.Contents.ViewModels;
 using Grove.ContentTypes.Editors;
 using Grove.Data;
 using Grove.Data.Migration;
@@ -50,7 +49,7 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<Migrations>();
         services.AddShapeTableProvider<TermShapes>();
         services.AddPermissionProvider<Permissions>();
-        services.AddScoped<IJSLocalizer, TaxonomiesJSLocalizer>();
+        services.AddApiContributor<Api.TaxonomiesApi>();
 
         // Taxonomy Part
         services.AddContentPart<TaxonomyPart>()
@@ -85,10 +84,12 @@ public sealed class ContentsAdminListStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddScoped<IContentsAdminListFilter, TaxonomyContentsAdminListFilter>();
-        services.AddDisplayDriver<ContentOptionsViewModel, TaxonomyContentsAdminListDisplayDriver>();
-        services.AddPageSource<AdminPages>();
-        services.AddSiteDisplayDriver<TaxonomyContentsAdminListSettingsDisplayDriver>();
+        services.AddScoped<IContentItemListFilter, TaxonomyContentItemListFilter>();
+        services.AddSettingsGroup<TaxonomyContentsAdminListSettings>(
+            TaxonomyContentsAdminListSettings.GroupId,
+            "Taxonomy Filters",
+            Permissions.ManageTaxonomies,
+            group => group.InMenu("settings", entryId: "taxonomyfilters"));
     }
 }
 
@@ -98,7 +99,7 @@ public sealed class ContentsAdminListDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<TaxonomyContentsAdminListSettings, ContentsAdminListDeploymentStartup>(S => S["Taxonomy Filters settings"], S => S["Exports the Taxonomy filters settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<TaxonomyContentsAdminListSettings>();
     }
 }
 

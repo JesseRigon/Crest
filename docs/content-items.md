@@ -33,6 +33,25 @@ things like transaction lines. The trade-off is deliberate: contained data is
 document-only (no free SQL columns), so anything that must be queried across
 documents needs an explicit YesSql map index.
 
+## Item editing: the editor tree
+
+Items are created, edited and displayed on the native admin pages (`Contents/ContentItems`,
+`…/{id}/Edit`, `…/{id}/Display`, `Contents/ContentTypes/{type}/Create`); there is no MVC content
+editor. The editor is the server's editor tree ([blazor-display.md](blazor-display.md) § 7): a
+section per part, the editor component each part and field declares, saved whole through
+`api/grove/content-items`. Contained data is edited where it lives: a bag's items and a
+taxonomy's terms through their types' editor trees inside the parent's editor, a list's
+children as items of their own (`ListPartEditor` lists them over `api/grove/lists/{id}/items`; a
+child is created on the create page with `?containerId=`, and the server completes its
+`ContainedPart`). The module that owns a part answers what its editor needs:
+`api/grove/taxonomies/{id}/terms` and `/tags`, `api/grove/lists/{id}/items` and `/order`,
+`api/grove/content-localization/{id}` and `/localize`, `api/grove/content-fields/content-items`
+and `/localization-sets` (the pickers' candidates). The editor's preview renders the unsaved
+item through `api/grove/content-preview` (Grove.ContentPreview). Every save is validated by the
+content handlers first and refused with the errors keyed by editor path
+([blazor-display.md](blazor-display.md) § 7); a content event's changes are shown in the audit
+trail with `ContentDiff`.
+
 ## Definition editing: two screens, split by ownership
 
 - The **Content Parts** page owns field DEFINITIONS — field type (conversion
@@ -117,7 +136,8 @@ gate cover the filtered view with no new route template.
 `GroveFieldVisibilitySettings { Path, Operator: Any|Equals|In, Keys }` on the
 field definition. The editor shows/hides live and exempts hidden fields from
 required-validation; the server CLEARS a hidden field's value on save
-(`FieldVisibilityEnforcer`, a fixpoint over chained conditions) — hidden
+(Grove.ContentTypes' `FieldVisibilityEnforcer`, a fixpoint over chained conditions; a picker
+parent's ids resolve to keys through Grove.OptionPicker's `IFieldComparisonValueResolver`) — hidden
 values are never kept dormant. Configured per field via `GET/PUT
 api/grove/field-visibility` (wholesale replace; blank Path clears) and the
 Visibility editor on the Content Parts screen. Keys follow the identity rule
@@ -278,6 +298,11 @@ options only hide, for history.
 > provider seam makes it a per-attachment swap.
 
 ## Option pickers: projection, providers, filtering
+
+The option picker field family is its own module, **Grove.OptionPicker** (feature
+`Grove.OptionPicker`, declared by the features that bind fields to option sources), with its
+contracts and DTOs in a WebAssembly-safe Grove.OptionPicker.Abstractions; its API is
+`api/grove/option-sources` and `api/grove/option-picker/attachment` ([server.md](server.md) § 3, S2).
 
 A dropdown stores ONE id but displays N columns of the referenced record. The
 columns are per-ATTACHMENT settings (the same target renders differently in

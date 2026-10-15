@@ -10,7 +10,6 @@
     "action": "parcel",
     "name": "tenants-admin-lists",
     "source": [
-      "Assets/ts/tenants-admin-list.ts",
       "Assets/ts/feature-profiles-admin-list.ts"
     ],
     "dest": "wwwroot/Scripts/tenants-admin-lists/",

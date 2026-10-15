@@ -2,8 +2,155 @@
 @attribute [PageEntry("ViewMediaOptions", Id = "media-options", Parent = "settings-media", Caption = "Options")]
 @using Grove.AdminTheme.Api
 @using Grove.Components.Primitives
-@using Grove.Components.Primitives
 @inject IApi Api
+@inject HttpClient Http
+@inject NotificationService Notifications
 @inject Grove.Components.Theme.GroveApiLocalizer T
-<GroveStack Gap="1rem" data-testid="media-options-page"><GroveStack Gap=".25rem"><GroveText TextStyle="TextStyle.H4" Text="@T["Media Options"]"/><GroveText TextStyle="TextStyle.Body2" Text="@T["Read-only media configuration provided by the host."]"/></GroveStack>@if(Model is null){<GroveProgressBar Mode="ProgressBarMode.Indeterminate"/>}else{<GroveCard><dl class="media-options"><dt>@T["Supported sizes"]</dt><dd>@string.Join(", ",Model.SupportedSizes)</dd><dt>@T["Allowed extensions"]</dt><dd>@string.Join(", ",Model.AllowedFileExtensions)</dd><dt>@T["Max file size"]</dt><dd>@T["{0} bytes", Model.MaxFileSize.ToString("n0")]</dd><dt>@T["Browser cache"]</dt><dd>@T["{0} days", Model.MaxBrowserCacheDays]</dd><dt>@T["Media URL path"]</dt><dd>@Model.AssetsRequestPath</dd><dt>@T["Assets path"]</dt><dd>@Model.AssetsPath</dd><dt>@T["Tokenized query strings"]</dt><dd>@(Model.UseTokenizedQueryString?T["Enabled"]:T["Disabled"])</dd></dl></GroveCard>}</GroveStack>
-@code { GroveMediaOptions? Model; protected override async Task OnInitializedAsync()=>Model=await Api.Grove.Rest.MediaOptions.GetAsync(); }
+
+@* Media options (Grove.Media), read-only from the host configuration, with the sections the media
+   features add: the asset cache (Grove.Media.Cache: whether a remote store feeds it, and purging
+   it) and the remote stores' options (Grove.Media.Azure, Grove.Media.AmazonS3). A section shows
+   when its feature is enabled and the caller holds its permission. *@
+<GroveStack Gap="1rem" data-testid="media-options-page">
+    <GroveStack Gap=".25rem">
+        <GroveText TextStyle="TextStyle.H4" Text="@T["Media Options"]" />
+        <GroveText TextStyle="TextStyle.Body2" Text="@T["Read-only media configuration provided by the host."]" />
+    </GroveStack>
+
+    @if (Model is null)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        <GroveCard>
+            <dl class="media-options">
+                <dt>@T["Supported sizes"]</dt><dd>@string.Join(", ", Model.SupportedSizes)</dd>
+                <dt>@T["Allowed extensions"]</dt><dd>@string.Join(", ", Model.AllowedFileExtensions)</dd>
+                <dt>@T["Max file size"]</dt><dd>@T["{0} bytes", Model.MaxFileSize.ToString("n0")]</dd>
+                <dt>@T["Browser cache"]</dt><dd>@T["{0} days", Model.MaxBrowserCacheDays]</dd>
+                <dt>@T["Media URL path"]</dt><dd>@Model.AssetsRequestPath</dd>
+                <dt>@T["Assets path"]</dt><dd>@Model.AssetsPath</dd>
+                <dt>@T["Tokenized query strings"]</dt><dd>@(Model.UseTokenizedQueryString ? T["Enabled"] : T["Disabled"])</dd>
+            </dl>
+        </GroveCard>
+    }
+
+    @if (Cache is not null)
+    {
+        <GroveCard data-testid="media-cache">
+            <GroveStack Gap="0.5rem">
+                <GroveText TextStyle="TextStyle.Subtitle1" Text="@T["Asset Cache"]" />
+                @if (Cache.IsConfigured)
+                {
+                    <GroveText TextStyle="TextStyle.Body2" Text="@T["Purge all the assets from the cache"]" />
+                    @if (ConfirmPurge)
+                    {
+                        <GroveAlert AlertStyle="AlertStyle.Warning" AllowClose="false">@T["Are you sure you want to purge the entire asset cache?"]</GroveAlert>
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmPurge = false)" />
+                            <GroveButton Text="@T["Purge All"]" ButtonStyle="ButtonStyle.Danger" Click="PurgeAsync" Disabled="IsPurging" data-testid="media-cache-purge-confirm" />
+                        </GroveStack>
+                    }
+                    else
+                    {
+                        <div><GroveButton Text="@T["Purge All"]" Icon="delete_sweep" ButtonStyle="ButtonStyle.Danger" Click="@(() => ConfirmPurge = true)" data-testid="media-cache-purge" /></div>
+                    }
+                }
+                else
+                {
+                    <GroveAlert AlertStyle="AlertStyle.Warning" AllowClose="false">@T["The asset cache feature is enabled, but a remote media store feature is not enabled, or not configured with appsettings.json."]</GroveAlert>
+                }
+            </GroveStack>
+        </GroveCard>
+    }
+
+    @if (Azure is not null)
+    {
+        <GroveCard data-testid="media-azure-options">
+            <GroveStack Gap="0.5rem">
+                <GroveText TextStyle="TextStyle.Subtitle1" Text="@T["Azure Blob storage options"]" />
+                <GroveText TextStyle="TextStyle.Body2" Text="@T["Azure Blob storage is configured with appsettings.json."]" />
+                <dl class="media-options">
+                    <dt>@T["Connection String"]</dt><dd>@(Azure.HasConnectionString ? T["Configured"] : T["Not Configured"])</dd>
+                    <dt>@T["Container Name"]</dt><dd>@Azure.ContainerName</dd>
+                    <dt>@T["Base Path"]</dt><dd>@Azure.BasePath</dd>
+                    <dt>@T["Create Container"]</dt><dd>@YesNo(Azure.CreateContainer) <GroveText TextStyle="TextStyle.Caption" Text="@T["Whether a blob container is created on startup if it does not exist."]" /></dd>
+                    <dt>@T["Remove Container"]</dt><dd>@YesNo(Azure.RemoveContainer) <GroveText TextStyle="TextStyle.Caption" Text="@T["Whether a blob container is removed on tenant deletion if it exists."]" /></dd>
+                    <dt>@T["Remove Files From Base Path"]</dt><dd>@YesNo(Azure.RemoveFilesFromBasePath) <GroveText TextStyle="TextStyle.Caption" Text="@T["Whether only the media files under the base path are removed on tenant deletion."]" /></dd>
+                </dl>
+            </GroveStack>
+        </GroveCard>
+    }
+
+    @if (AmazonS3 is not null)
+    {
+        <GroveCard data-testid="media-amazon-s3-options">
+            <GroveStack Gap="0.5rem">
+                <GroveText TextStyle="TextStyle.Subtitle1" Text="@T["Amazon S3 storage options"]" />
+                <GroveText TextStyle="TextStyle.Body2" Text="@T["Amazon S3 storage is configured with appsettings.json."]" />
+                @if (AmazonS3.Errors.Length > 0)
+                {
+                    <GroveAlert AlertStyle="AlertStyle.Danger" AllowClose="false">@T["The Amazon S3 Media feature is enabled, but it was not configured with appsettings.json."] @string.Join(" ", AmazonS3.Errors)</GroveAlert>
+                }
+                <dl class="media-options">
+                    <dt>@T["Bucket Name"]</dt><dd>@AmazonS3.BucketName</dd>
+                    <dt>@T["Base Path"]</dt><dd>@AmazonS3.BasePath</dd>
+                    <dt>@T["Create Bucket"]</dt><dd>@YesNo(AmazonS3.CreateBucket) <GroveText TextStyle="TextStyle.Caption" Text="@T["Whether a bucket is created on startup if it does not exist."]" /></dd>
+                </dl>
+            </GroveStack>
+        </GroveCard>
+    }
+</GroveStack>
+
+@code {
+    private GroveMediaOptions? Model;
+    private MediaCacheStatus? Cache;
+    private AzureOptions? Azure;
+    private AmazonS3Options? AmazonS3;
+    private bool ConfirmPurge;
+    private bool IsPurging;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Api.Grove.Rest.MediaOptions.GetAsync();
+
+        // Each section's endpoint answers 404 while its feature is disabled, 403 without its permission.
+        Cache = await TryGetAsync<MediaCacheStatus>("api/grove/media/options/cache");
+        Azure = await TryGetAsync<AzureOptions>("api/grove/media/options/azure");
+        AmazonS3 = await TryGetAsync<AmazonS3Options>("api/grove/media/options/amazon-s3");
+    }
+
+    private async Task<TValue?> TryGetAsync<TValue>(string uri)
+        where TValue : class
+    {
+        try
+        {
+            using var response = await Http.GetAsync(uri);
+            return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<TValue>() : null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    private async Task PurgeAsync()
+    {
+        IsPurging = true;
+        try
+        {
+            using var response = await Http.PostAsync("api/grove/media/options/cache/purge", null);
+            var status = await response.Content.ReadFromJsonAsync<MediaCacheStatus>();
+            Notifications.Notify(response.IsSuccessStatusCode ? NotificationSeverity.Info : NotificationSeverity.Error, T["Asset Cache"], status?.Message ?? T["The asset cache could not be purged."]);
+            ConfirmPurge = false;
+        }
+        finally { IsPurging = false; }
+    }
+
+    private string YesNo(bool value) => value ? T["Yes"] : T["No"];
+
+    private sealed record MediaCacheStatus(bool IsConfigured, string? Message);
+    private sealed record AzureOptions(bool HasConnectionString, string? ContainerName, string? BasePath, bool CreateContainer, bool RemoveContainer, bool RemoveFilesFromBasePath);
+    private sealed record AmazonS3Options(string? BucketName, string? BasePath, bool CreateBucket, string[] Errors);
+}

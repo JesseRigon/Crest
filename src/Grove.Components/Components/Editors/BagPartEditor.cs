@@ -141,10 +141,10 @@ public sealed class BagPartEditor : FieldEditorBase
         _error = null;
         try
         {
-            // The new item's editor tree carries the new item itself (its id and defaults).
-            if (await TreeAsync(type) is { } tree && tree.Properties.TryGetValue("Content", out var content) && content is JsonObject created)
+            // The new item: a fresh id, its type, and the parts its type's editor tree starts with.
+            if (await TreeAsync(type) is { } tree)
             {
-                await AddEntryAsync((JsonObject)created.DeepClone(), type);
+                await AddEntryAsync(ContainedItems.New(type, tree), type);
                 WriteBack();
             }
             else
@@ -163,7 +163,7 @@ public sealed class BagPartEditor : FieldEditorBase
         var entry = new Entry(item["ContentItemId"]?.ToString() is { Length: > 0 } id ? id : Guid.NewGuid().ToString("n"), type, item, new DisplayState());
         if (await TreeAsync(type) is { } template)
         {
-            entry.Tree = WithContent(template, item);
+            entry.Tree = WithContent(template, ContainedItems.Parts(item));
         }
 
         entry.State.Changed += () => OnNestedChanged(entry);
@@ -178,7 +178,8 @@ public sealed class BagPartEditor : FieldEditorBase
             return;
         }
 
-        entry.Item = edited;
+        // The editor edits the parts; the item keeps its own values (id, type).
+        ContainedItems.ApplyParts(entry.Item, edited);
         WriteBack();
     }
 

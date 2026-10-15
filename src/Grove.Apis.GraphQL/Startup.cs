@@ -46,7 +46,6 @@ public sealed class Startup : StartupBase
         });
 
         services.AddPermissionProvider<Permissions>();
-        services.AddPageSource<AdminPages>();
         services.AddSingleton<GraphQLMiddleware>();
 
         services.AddGraphQL(builder => builder.AddSystemTextJson((options, sp) =>

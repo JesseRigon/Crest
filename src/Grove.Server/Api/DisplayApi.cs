@@ -84,7 +84,7 @@ internal sealed class DisplayApi : ApiContributor
     // ContentEditor__{Type}). "new-{type}" is the editor of a new item of that type.
     private static async Task<IResult> ContentItemEditorAsync(
         [FromRoute] string contentItemId,
-        [FromServices] ContentEditorTreeBuilder editors,
+        [FromServices] IContentEditorTreeBuilder editors,
         [FromServices] Grove.ContentManagement.IContentManager contentManager,
         [FromServices] Grove.Access.ICallerContextAccessor callers,
         [FromServices] Grove.Access.IAccessDecision decision,
@@ -122,7 +122,7 @@ internal sealed class DisplayApi : ApiContributor
     private static async Task<IResult> CustomSettingsEditorAsync(
         [FromRoute] string type,
         HttpContext context,
-        [FromServices] ContentEditorTreeBuilder editors,
+        [FromServices] IContentEditorTreeBuilder editors,
         [FromServices] Grove.Settings.ISiteService siteService,
         CancellationToken cancellationToken)
     {

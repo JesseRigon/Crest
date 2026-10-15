@@ -234,9 +234,16 @@ connection system; Queries and Workflows consume it and keep no parallel set.
 - **Search engines are connections; search is a consumer of Queries.** Lucene, Elasticsearch,
   Azure AI Search and later engines are modules that connect through the connection system (a
   remote engine through its protocol module) and register their query source with Queries, like
-  any SQL or REST source. A separate Search module holds the in-app search UI components, the C# search interface and the search APIs, and runs
-  through Queries the standard way, so it works with any registered search provider; run-time
-  permission injection applies to search as to every query. A search engine indexing Grove data
+  any SQL or REST source. **Grove.Search is the search seam**: one search interface
+  (`ISiteSearch`), its API (`api/grove/search`) and its UI (`SearchBox`, the site search page).
+  The engines are providers that register with Grove.Search (`AddSearchService<T>(provider)`,
+  an `ISearchService` per engine; an index profile names its provider) and feed that interface;
+  all of them are kept ([MVC/views.md](MVC/views.md) › Search). Grove.Search runs through Queries
+  the standard way, so it works with any registered search provider; run-time permission
+  injection applies to search as to every query. ☐ `ISiteSearch` calls the engine's
+  `ISearchService` directly and checks the index's query permission (`QuerySearchIndex`); running
+  it through the engines' query sources, with the caller's scope injected, comes with the engines
+  becoming connections. A search engine indexing Grove data
   is set up with the permission system (permissions written into what it indexes, and filters
   applied in every search) so Grove data never leaks through it ([sharing.md](sharing.md) ›
   Open questions, F5). Until its engine becomes a connection, a search source that does not

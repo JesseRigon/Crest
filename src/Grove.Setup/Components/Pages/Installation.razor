@@ -1,0 +1,275 @@
+@page "/"
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using Microsoft.AspNetCore.Builder
+@inject SetupInstallation Setup
+@inject NavigationManager Navigation
+@inject IStringLocalizer<Installation> T
+@inject IOptions<RequestLocalizationOptions> Localization
+
+@* The Grove instance installation (static SSR, pre-database): the site, the recipe, the time
+   zone, the database and the super user, posted to ISetupService through SetupInstallation.
+   The element ids are the ones the functional tests' setup helper fills. *@
+
+<PageTitle>@T["Setup"]</PageTitle>
+
+@if (Refused)
+{
+    <h1>@T["Not found"]</h1>
+}
+else if (Choices is not null)
+{
+    <EditForm Model="Form" FormName="setup" OnValidSubmit="InstallAsync" method="post">
+        <DataAnnotationsValidator />
+
+        <div class="bg-light p-2">
+            @if (Localization.Value.SupportedUICultures?.Count > 1)
+            {
+                <nav class="float-end small" aria-label="@T["Change language"]">
+                    @foreach (var culture in Localization.Value.SupportedUICultures.OrderBy(culture => culture.NativeName))
+                    {
+                        <a class="me-2" href="@CultureUrl(culture.Name)" hreflang="@culture.Name">@culture.NativeName</a>
+                    }
+                </nav>
+            }
+            <h1>@T["Setup"]</h1>
+            <p class="lead">@T["Please answer a few questions to configure your site."]</p>
+        </div>
+
+        @if (Errors.TryGetValue(string.Empty, out var formError))
+        {
+            <div class="alert alert-danger" role="alert">@formError</div>
+        }
+        @foreach (var error in Errors.Where(error => error.Key.Length > 0 && !KnownFields.Contains(error.Key)))
+        {
+            <div class="alert alert-danger" role="alert">@error.Value</div>
+        }
+
+        @if (Choices.Recipes.Count == 0)
+        {
+            <div class="alert alert-danger" role="alert">
+                <strong>@T["No recipes available."]</strong> @T["It is not possible to set up a site without a recipe."]
+            </div>
+        }
+
+        <div class="row mt-2">
+            <div class="mb-3 col-md-4">
+                <label for="SiteName" class="form-label">@T["What is the name of your site?"]</label>
+                <InputText id="SiteName" class="form-control" @bind-Value="Form.SiteName" autofocus required />
+                <ValidationMessage For="() => Form.SiteName" class="text-danger" />
+                <span class="text-muted form-text small">@T["This is used as the default title of your pages."]</span>
+            </div>
+            @if (!Choices.RecipeNamePreset)
+            {
+                <div class="mb-3 col-md-4">
+                    <label for="RecipeName" class="form-label">@T["Recipe"]</label>
+                    <InputSelect id="RecipeName" class="form-select" @bind-Value="Form.RecipeName">
+                        @foreach (var recipe in Choices.Recipes)
+                        {
+                            <option value="@recipe.Name" title="@recipe.Description">@(recipe.DisplayName ?? recipe.Name)</option>
+                        }
+                    </InputSelect>
+                    @FieldError(nameof(SetupForm.RecipeName))
+                    <span class="text-muted form-text small">@T["Recipes allow you to setup your site with additional pre-configured options, features and settings out of the box."]</span>
+                </div>
+            }
+            <div class="mb-3 col-md-4">
+                <label for="SiteTimeZone" class="form-label">@T["Default Time Zone"]</label>
+                <InputSelect id="SiteTimeZone" class="form-select" @bind-Value="Form.SiteTimeZone">
+                    @foreach (var zone in Choices.TimeZones)
+                    {
+                        <option value="@zone.Key">@zone.Value</option>
+                    }
+                </InputSelect>
+                <span class="text-muted form-text small">@T["Determines the default time zone used when displaying and editing dates and times."]</span>
+            </div>
+        </div>
+
+        @if (!Choices.DatabaseConfigurationPreset)
+        {
+            var preset = Choices.PresetDatabaseProvider;
+            <div class="row">
+                @if (preset is null)
+                {
+                    <div class="mb-3 col-md-6">
+                        <label for="DatabaseProvider" class="form-label">@T["What type of database to use?"]</label>
+                        <InputSelect id="DatabaseProvider" class="form-select" @bind-Value="Form.DatabaseProvider" required>
+                            @foreach (var provider in Choices.DatabaseProviders)
+                            {
+                                <option value="@provider.Value" data-connection-string="@provider.HasConnectionString" data-table-prefix="@provider.HasTablePrefix">@provider.Name</option>
+                            }
+                        </InputSelect>
+                        <span class="text-muted form-text small">@T["The database is used to store the site's configuration and its contents."]</span>
+                    </div>
+                }
+                @if (preset is null || preset.HasTablePrefix)
+                {
+                    <div class="mb-3 col-md-6 tablePrefix">
+                        <label for="TablePrefix" class="form-label">@T["Table Prefix"]</label>
+                        <InputText id="TablePrefix" class="form-control" @bind-Value="Form.TablePrefix" />
+                        <span class="text-muted form-text small">@T["You can specify a table prefix if you intend to reuse the same database for multiple sites."]</span>
+                    </div>
+                }
+            </div>
+
+            @if (preset is null || preset.HasConnectionString)
+            {
+                <div class="row connectionString">
+                    <div class="mb-3 col-md-12">
+                        <label for="ConnectionString" class="form-label">@T["Connection String"]</label>
+                        <InputText id="ConnectionString" type="password" class="form-control" @bind-Value="Form.ConnectionString" />
+                        @FieldError(nameof(SetupForm.ConnectionString))
+                        <span class="text-muted form-text small">
+                            @foreach (var provider in Choices.DatabaseProviders.Where(provider => provider.HasConnectionString && (preset is null || provider == preset)))
+                            {
+                                <span class="d-block">@T["{0}: the connection string to your database instance, e.g. {1}.", provider.Name, provider.SampleConnectionString]</span>
+                            }
+                        </span>
+                    </div>
+                </div>
+            }
+
+            @if (preset is null || preset.HasTablePrefix)
+            {
+                <div class="row row-cols-1 row-cols-md-2">
+                    <div class="mb-3 col tablePrefix">
+                        <label for="Schema" class="form-label">@T["Table Schema"]</label>
+                        <InputText id="Schema" class="form-control" @bind-Value="Form.Schema" />
+                        <div class="text-muted form-text small">@T["When left blank, the default value on the server will be used."] @T["For example, '{0}' for SQL Server.", "dbo"]</div>
+                    </div>
+                </div>
+            }
+        }
+
+        <fieldset>
+            <legend>@T["Super User"]</legend>
+            <span class="text-muted form-text small">@T["The super user has all the rights. It should be used only during Setup and for disaster recovery."]</span>
+            <div class="row">
+                <div class="mb-3 col-md-6">
+                    <label for="UserName" class="form-label">@T["User Name"]</label>
+                    <InputText id="UserName" class="form-control" @bind-Value="Form.UserName" required />
+                    <ValidationMessage For="() => Form.UserName" class="text-danger" />
+                    @FieldError(nameof(SetupForm.UserName))
+                </div>
+                <div class="mb-3 col-md-6">
+                    <label for="Email" class="form-label">@T["Email"]</label>
+                    <InputText id="Email" type="email" class="form-control" @bind-Value="Form.Email" required />
+                    <ValidationMessage For="() => Form.Email" class="text-danger" />
+                    @FieldError(nameof(SetupForm.Email))
+                </div>
+            </div>
+            <div class="row">
+                <div class="mb-3 col-md-6">
+                    <label for="Password" class="form-label">@T["Password"]</label>
+                    <InputText id="Password" type="password" class="form-control" @bind-Value="Form.Password" autocomplete="new-password" required title="@PasswordRules" />
+                    <span class="text-muted form-text small">@PasswordRules</span>
+                    @FieldError(nameof(SetupForm.Password))
+                </div>
+                <div class="mb-3 col-md-6">
+                    <label for="PasswordConfirmation" class="form-label">@T["Password Confirmation"]</label>
+                    <InputText id="PasswordConfirmation" type="password" class="form-control" @bind-Value="Form.PasswordConfirmation" autocomplete="new-password" required />
+                    @FieldError(nameof(SetupForm.PasswordConfirmation))
+                </div>
+            </div>
+        </fieldset>
+
+        <InputText type="hidden" @bind-Value="Form.Secret" />
+        <div class="row">
+            <div class="mb-3 col-md-4">
+                <button class="btn btn-primary" type="submit" id="SubmitButton">@T["Finish Setup"]</button>
+            </div>
+        </div>
+    </EditForm>
+
+    @* Shows the connection string and table prefix fields only for the providers that use them. *@
+    <script>
+        (function () {
+            var select = document.getElementById('DatabaseProvider');
+            if (!select) return;
+            function sync() {
+                var option = select.options[select.selectedIndex];
+                if (!option) return;
+                var show = function (selector, visible) { document.querySelectorAll(selector).forEach(function (el) { el.style.display = visible ? '' : 'none'; }); };
+                show('.connectionString', option.dataset.connectionString === 'True');
+                show('.tablePrefix', option.dataset.tablePrefix === 'True');
+            }
+            select.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
+}
+
+@code {
+    private static readonly HashSet<string> KnownFields = [nameof(SetupForm.RecipeName), nameof(SetupForm.ConnectionString), nameof(SetupForm.UserName), nameof(SetupForm.Email), nameof(SetupForm.Password), nameof(SetupForm.PasswordConfirmation)];
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromQuery(Name = "token")]
+    public string? Token { get; set; }
+
+    [SupplyParameterFromForm(FormName = "setup")]
+    public SetupForm? Posted { get; set; }
+
+    private SetupForm Form = new();
+    private SetupChoices? Choices;
+    private IReadOnlyDictionary<string, string> Errors = new Dictionary<string, string>();
+    private bool Refused;
+
+    private string PasswordRules
+    {
+        get
+        {
+            var options = Setup.IdentityOptions.Password;
+            var rules = new List<string>();
+            if (options.RequireNonAlphanumeric) rules.Add(T["one non-alphanumeric"]);
+            if (options.RequireUppercase) rules.Add(T["one uppercase"]);
+            if (options.RequireLowercase) rules.Add(T["one lowercase"]);
+            if (options.RequireDigit) rules.Add(T["one digit"]);
+            rules.Add(T["{0} characters in total", options.RequiredLength]);
+            return T["Password must have at least {0}.", string.Join(", ", rules)];
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Form = Posted ?? await Setup.NewFormAsync(Token);
+        if (!await Setup.MayProceedAsync(Form.Secret))
+        {
+            Refused = true;
+            if (HttpContext is not null)
+            {
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            }
+
+            return;
+        }
+
+        Choices = await Setup.GetChoicesAsync();
+    }
+
+    private async Task InstallAsync()
+    {
+        if (Refused)
+        {
+            return;
+        }
+
+        Errors = await Setup.InstallAsync(Form);
+        if (Errors.Count == 0)
+        {
+            Navigation.NavigateTo(Navigation.BaseUri, forceLoad: true);
+        }
+    }
+
+    private RenderFragment? FieldError(string field) => Errors.TryGetValue(field, out var message)
+        ? @<span class="text-danger d-block">@message</span>
+        : null;
+
+    private string CultureUrl(string culture)
+    {
+        var query = new Dictionary<string, object?> { ["ui-culture"] = culture };
+        if (!string.IsNullOrEmpty(Token)) query["token"] = Token;
+        return Navigation.GetUriWithQueryParameters(query);
+    }
+}

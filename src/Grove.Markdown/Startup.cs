@@ -52,7 +52,8 @@ public sealed class Startup : StartupBase
 
         // Markdown Field
         services.AddContentField<MarkdownField>()
-            .UseDisplayDriver<MarkdownFieldDisplayDriver>();
+            .UseDisplayDriver<MarkdownFieldDisplayDriver>()
+            .AddHandler<MarkdownFieldHandler>();
 
         services.AddScoped<IContentFieldIndexHandler, MarkdownFieldIndexHandler>();
 
@@ -64,6 +65,5 @@ public sealed class Startup : StartupBase
         });
 
         services.AddScoped<IMarkdownService, DefaultMarkdownService>();
-        services.AddResourceConfiguration<ResourceManagementOptionsConfiguration>();
     }
 }

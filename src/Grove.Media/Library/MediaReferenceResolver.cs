@@ -39,7 +39,6 @@ public sealed class MediaLibraryOptions
 /// the byte endpoint decides on every request.
 /// </summary>
 public sealed class MediaReferenceResolver(
-    IMediaObjectService files,
     IMediaLibrary library,
     IServiceProvider services,
     IHttpContextAccessor httpContextAccessor,
@@ -49,6 +48,12 @@ public sealed class MediaReferenceResolver(
     IOptions<MediaLibraryOptions> libraryOptions) : IMediaReferenceResolver
 {
     private const string VersionSegment = "/v/";
+
+    // Resolved on use, not injected: content handlers, shortcodes and Liquid filters take this
+    // resolver, the content manager takes every content handler, and the object service takes
+    // the access decision, whose permission providers and mappers reach the content manager (a
+    // DI cycle the container cannot detect through factory registrations).
+    private IMediaObjectService Files => services.GetRequiredService<IMediaObjectService>();
 
     public Task<ResolvedMedia?> ResolveAsync(MediaReference reference, MediaUrlOptions? options = null, CancellationToken cancellationToken = default) =>
         MediaCallers.AsCallerOrAnonymousAsync(services, () => ResolveCoreAsync(reference, options ?? MediaUrlOptions.Default, cancellationToken));
@@ -111,7 +116,7 @@ public sealed class MediaReferenceResolver(
         }
 
         var placement = resolved.Item.Placement;
-        return await MediaCallers.AsCallerOrAnonymousAsync(services, () => files.OpenReadAsync(placement.LinkTargetPlacementId ?? placement.Id, null, cancellationToken));
+        return await MediaCallers.AsCallerOrAnonymousAsync(services, () => Files.OpenReadAsync(placement.LinkTargetPlacementId ?? placement.Id, null, cancellationToken));
     }
 
     private async Task<ResolvedMedia?> ResolveCoreAsync(MediaReference reference, MediaUrlOptions options, CancellationToken cancellationToken)
@@ -120,12 +125,12 @@ public sealed class MediaReferenceResolver(
         string? path = null;
         if (reference.HasPlacement)
         {
-            item = await files.GetAsync(reference.PlacementId!, cancellationToken);
+            item = await Files.GetAsync(reference.PlacementId!, cancellationToken);
         }
 
         if (item is null && !string.IsNullOrEmpty(reference.Path) && await library.ResolvePathAsync(reference.Path, cancellationToken) is { } placementId)
         {
-            item = await files.GetAsync(placementId, cancellationToken);
+            item = await Files.GetAsync(placementId, cancellationToken);
             path = item is null ? null : MediaLibraryPaths.Normalize(reference.Path);
         }
 

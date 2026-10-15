@@ -5,11 +5,13 @@
        GroveShellAttribute. Declares [assembly: GroveShell(GroveShells.Member)] in
        GroveShell.cs.
 
-       Today that is the shell's seams: IMemberShellContext (who this member is, which
-       organizations they are bound to, which one is active) and IMemberAuthenticationService
-       (what signing in means). Grove owns the shell and the interfaces; this module owns what
-       a member IS and supplies them. Lazily loaded: the member shell loads its modules
-       before it renders and activates these against the container. -->
+       The shell's seams: IMemberShellContext (who this member is, which organizations they are
+       bound to, which one is active) and IMemberAuthenticationService (what signing in means).
+       Grove owns the shell and the interfaces; this module owns what a member IS and supplies
+       them. Lazily loaded: the member shell loads its modules before it renders and activates
+       these against the container. And the member's access pages: sign-in, registration,
+       password recovery, external sign-in and the account page (members are an Access concern),
+       the account part from the Users module's shared components. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -27,6 +29,7 @@
     <ProjectReference Include="..\Domain\Grove.Members.Domain.csproj" />
     <ProjectReference Include="..\..\Grove.Components\Grove.Components.csproj" />
     <ProjectReference Include="..\..\Grove.MemberTheme\wasm\Grove.MemberTheme.Client.csproj" />
+    <ProjectReference Include="..\..\Grove.Users\components\Grove.Users.Components.csproj" />
   </ItemGroup>
 
   <ItemGroup>

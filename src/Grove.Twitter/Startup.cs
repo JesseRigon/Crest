@@ -8,13 +8,12 @@ using Grove.Modules;
 using Grove.Navigation;
 using Grove.Recipes;
 using Grove.Security.Permissions;
-using Grove.Twitter.Drivers;
 using Grove.Twitter.Recipes;
 using Grove.Twitter.Services;
 using Grove.Twitter.Settings;
 using Grove.Twitter.Signin.Configuration;
-using Grove.Twitter.Signin.Drivers;
 using Grove.Twitter.Signin.Services;
+using Grove.Twitter.Signin.Settings;
 using Polly;
 
 namespace Grove.Twitter;
@@ -32,8 +31,11 @@ public sealed class TwitterStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteDisplayDriver<TwitterSettingsDisplayDriver>();
-        services.AddPageSource<TwitterPages>();
+        services.AddSettingsGroup<TwitterSettings>(
+            TwitterConstants.Features.Twitter,
+            "X (Twitter)",
+            Permissions.ManageTwitter,
+            group => group.InMenu("settings-integrations", entryId: "twitter").ReloadsTenant());
         services.AddSingleton<ITwitterSettingsService, TwitterSettingsService>();
 
         services.AddRecipeExecutionStep<TwitterSettingsStep>();
@@ -64,9 +66,12 @@ public sealed class TwitterSigninStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddPageSource<TwitterSigninPages>();
         services.AddSingleton<ITwitterSigninService, TwitterSigninService>();
-        services.AddSiteDisplayDriver<TwitterSigninSettingsDisplayDriver>();
+        services.AddSettingsGroup<TwitterSigninSettings>(
+            TwitterConstants.Features.Signin,
+            "Sign In with X (Twitter)",
+            Permissions.ManageTwitterSignin,
+            group => group.InMenu("settings-authentication", entryId: "twitter-signin").ReloadsTenant());
 
         // Register the options initializers required by the Twitter Handler.
         // Grove-specific initializers:

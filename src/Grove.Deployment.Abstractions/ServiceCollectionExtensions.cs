@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Grove.DisplayManagement.Handlers;
 
 namespace Grove.Deployment;
 
@@ -15,6 +14,10 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers a deployment step and the source that processes it. A plan's steps are edited as
+    /// the JSON the plan stores, so a step needs no editor.
+    /// </summary>
     public static IServiceCollection AddDeployment<TSource, TStep>(this IServiceCollection services)
         where TSource : IDeploymentSource
         where TStep : DeploymentStep
@@ -25,26 +28,10 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddDeployment<TSource, TStep, TDisplayDriver>(this IServiceCollection services)
-        where TSource : IDeploymentSource
+    /// <summary>Registers a deployment step that another registered source processes.</summary>
+    public static IServiceCollection AddDeploymentWithoutSource<TStep>(this IServiceCollection services)
         where TStep : DeploymentStep
-        where TDisplayDriver : DisplayDriver<DeploymentStep, TStep>
-    {
-        services.AddDeployment<TSource, TStep>()
-            .AddDeploymentStepDisplayDriver<TDisplayDriver, TStep>();
-
-        return services;
-    }
-
-    public static IServiceCollection AddDeploymentWithoutSource<TStep, TDisplayDriver>(this IServiceCollection services)
-        where TStep : DeploymentStep
-        where TDisplayDriver : DisplayDriver<DeploymentStep, TStep>
-    {
-        services.AddDeploymentStep<TStep>()
-            .AddDeploymentStepDisplayDriver<TDisplayDriver, TStep>();
-
-        return services;
-    }
+        => services.AddDeploymentStep<TStep>();
 
     private static IServiceCollection AddDeploymentSource<TSource>(this IServiceCollection services)
         where TSource : IDeploymentSource
@@ -61,15 +48,6 @@ public static class ServiceCollectionExtensions
 
         // TStep instances are part for DeploymentPlan objects that are serialized to JSON
         services.AddJsonDerivedTypeInfo<TStep, DeploymentStep>();
-
-        return services;
-    }
-
-    private static IServiceCollection AddDeploymentStepDisplayDriver<TDisplayDriver, TStep>(this IServiceCollection services)
-        where TDisplayDriver : DisplayDriver<DeploymentStep, TStep>
-        where TStep : DeploymentStep
-    {
-        services.AddDisplayDriver<DeploymentStep, TDisplayDriver>();
 
         return services;
     }

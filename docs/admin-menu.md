@@ -75,12 +75,16 @@ grammar the table and the gate match with. Registration: `services.AddPageSource
 - A kind registry's pages come from a `KindPageSource<TKind>` (Parties; Fruitful's Assets and
   Accounting): the section, its "All" page and one page per kind, each kind gated at its
   concrete route. The generic page component declares `[PageEntry(DeclaredBySource = true)]`,
-  so its template admits nobody on its own.
+  so its template admits nobody on its own and serves only the concrete routes sources declare.
+- The settings groups (Grove.Settings' `SettingsGroupPages`): one entry per registered group
+  ([MVC/api.md › Settings groups](MVC/api.md#settings-groups)), gated at `/Settings/{groupId}`
+  by the group's permissions and placed where the group says; the generic settings form page
+  serves them.
 - Menu groups (Content, Design, Tools, Settings and their shared sub-sections) are entries with
   no page, declared by `AdminMenuGroups` in Grove.Server; a module's own section (Workflows,
   Audit Trail, Taxes) by that module. A group no visible child is under is not shown.
-- Legacy MVC pages are entries pointing at their legacy route (`PageEntries.Legacy`,
-  `PageEntries.LegacySettings`: route values the tenant's link generator resolves), a small
+- Legacy MVC pages are entries pointing at their legacy route (`PageEntries.Legacy`: route
+  values the tenant's link generator resolves), a small
   `AdminPages` source per module until the page is ported. MVC authorizes those pages itself;
   the registry puts them in the menu with the same permission.
 - Dynamic sources are entries generated from tenant data, read per request: New › *content
@@ -96,6 +100,10 @@ while the Blazor admin theme is), cached for the shell's lifetime and never stor
 **defined** layer is tenant data: the dynamic entries (each source caches itself and is
 invalidated when its data changes, designed pages on publish) and the tenant's menu edits
 below.
+
+**The registry is inspectable.** The route management page of Grove.Routes (`/Routes`, Tools)
+lists every entry with its shell, routes, permissions and the library or source that declares it
+(`api/grove/routes/pages`, [MVC/views.md › Routes](MVC/views.md#routes)).
 
 **The route gate and the menu read the same permission.** `IRouteAuthorization` (Access)
 admits an admin path when the caller holds any one of the permissions of the page whose

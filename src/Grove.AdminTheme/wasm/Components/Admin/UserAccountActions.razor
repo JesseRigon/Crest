@@ -3,9 +3,9 @@
 @inject HttpClient Http
 @inject Grove.Components.Theme.GroveApiLocalizer T
 
-@* The account actions of the user editor (the retired MVC user pages' Unlock, Confirm email and
-   external logins): lockout state with Unlock, confirm the email address or send a new
-   verification message, and the external sign-ins linked to the account. *@
+@* The account actions of the user editor: lockout state with Unlock, confirm the email address
+   or send a new verification message, turn the user's two-factor authentication off, and the
+   external sign-ins linked to the account. *@
 <GroveCard data-testid="user-account-actions">
     <GroveStack Gap="0.5rem">
         <GroveText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@T["Account"]</GroveText>
@@ -18,6 +18,13 @@
                     @(Status.IsLockedOut ? T["Locked out until {0:g}.", Status.LockoutEnd?.ToLocalTime()] : T["Not locked out."]) @T["Failed sign-ins: {0}.", Status.AccessFailedCount]
                 </GroveText>
                 <GroveButton Text="@T["Unlock"]" Icon="lock_open" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="UnlockAsync" Disabled="@(Busy || (!Status.IsLockedOut && Status.AccessFailedCount == 0))" data-testid="user-unlock" />
+            </GroveStack>
+        }
+        @if (Status?.TwoFactorEnabled == true)
+        {
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                <GroveText TextStyle="TextStyle.Body2">@T["Two-factor authentication is enabled."]</GroveText>
+                <GroveButton Text="@T["Disable two-factor authentication"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="DisableTwoFactorAsync" Disabled="Busy" data-testid="user-disable-two-factor" />
             </GroveStack>
         }
         @if (!EmailConfirmed)
@@ -82,6 +89,8 @@
         if (Error is null) await EmailConfirmedChanged.InvokeAsync();
     }
 
+    private Task DisableTwoFactorAsync() => RunAsync(() => Http.PostAsync($"{Base}/two-factor/disable", null), T["Two-factor authentication was disabled."]);
+
     private Task SendVerificationAsync() => RunAsync(() => Http.PostAsync($"{Base}/send-verification", null), T["A verification email was sent."]);
 
     private Task UnlinkAsync(LoginModel login) => RunAsync(() => Http.DeleteAsync($"{Base}/external-logins/{Uri.EscapeDataString(login.LoginProvider)}/{Uri.EscapeDataString(login.ProviderKey)}"), T["The external sign-in was unlinked."]);
@@ -101,6 +110,6 @@
         finally { Busy = false; }
     }
 
-    private sealed record StatusModel(bool IsLockedOut, DateTimeOffset? LockoutEnd, int AccessFailedCount);
+    private sealed record StatusModel(bool IsLockedOut, DateTimeOffset? LockoutEnd, int AccessFailedCount, bool TwoFactorEnabled);
     private sealed record LoginModel(string LoginProvider, string ProviderKey, string? ProviderDisplayName);
 }

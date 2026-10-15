@@ -62,6 +62,14 @@ public sealed class MemberPortalController(
             }
         });
 
+        // The password step passed and the account has two-factor authentication: 202, and the
+        // portal's login page finishes with the second step (api/grove/auth/two-factor); the
+        // member's organization is chosen on the picker afterwards.
+        if (result.RequiresTwoFactor)
+        {
+            return Accepted();
+        }
+
         if (!result.Succeeded)
         {
             return Unauthorized(new PortalRefusal(result.Refusal!.Errors, result.Refusal.Redirect));

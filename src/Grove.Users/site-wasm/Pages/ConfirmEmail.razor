@@ -1,0 +1,18 @@
+@page "/ConfirmEmail"
+
+@* Email confirmation from the emailed link (step 7: the MVC EmailConfirmation screen is
+   retired), at the path that link has always had. *@
+
+<PageTitle>Confirm your email</PageTitle>
+
+<div style="max-width: 32rem; margin: 2rem auto; padding: 0 1rem;" data-testid="site-confirm-email-page">
+    <GroveConfirmEmail UserId="@UserId" Code="@Code" />
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "userId")]
+    public string? UserId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "code")]
+    public string? Code { get; set; }
+}

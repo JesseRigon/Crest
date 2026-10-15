@@ -3,6 +3,7 @@ using Amazon;
 using Amazon.S3;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -40,14 +41,20 @@ public sealed class Startup : Modules.StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddPermissionProvider<Permissions>();
-        services.AddPageSource<AdminPages>();
+        services.AddApiContributor<Api.AmazonS3MediaOptionsApi>();
         services.AddTransient<IConfigureOptions<AwsStorageOptions>, AwsStorageOptionsConfiguration>();
 
         var storeOptions = new AwsStorageOptions().BindConfiguration(AmazonS3Constants.ConfigSections.AmazonS3, _configuration, _logger);
         var validationErrors = storeOptions.Validate().ToList();
         var stringBuilder = new StringBuilder();
 
-        if (validationErrors.Count > 0)
+        if (!_configuration.GetSection(AmazonS3Constants.ConfigSections.AmazonS3).Exists())
+        {
+            // Enabled without configuration is an expected state (a tenant enables every
+            // feature in dev): one warning, and the local media store stays in place.
+            _logger.LogWarning("Amazon S3 Media Storage is enabled but not active because '{Section}' is not configured; using local file storage.", AmazonS3Constants.ConfigSections.AmazonS3);
+        }
+        else if (validationErrors.Count > 0)
         {
             foreach (var error in validationErrors)
             {
@@ -142,7 +149,11 @@ public sealed class MediaAmazonS3ImageCacheStartup : Modules.StartupBase
         var validationErrors = storeOptions.Validate().ToList();
         var stringBuilder = new StringBuilder();
 
-        if (validationErrors.Count > 0)
+        if (!_configuration.GetSection(AmazonS3Constants.ConfigSections.AmazonS3ImageCache).Exists())
+        {
+            _logger.LogWarning("Amazon S3 Media Image Cache is enabled but not active because '{Section}' is not configured; using the local cache.", AmazonS3Constants.ConfigSections.AmazonS3ImageCache);
+        }
+        else if (validationErrors.Count > 0)
         {
             foreach (var error in validationErrors)
             {
@@ -167,11 +178,17 @@ public sealed class MediaAmazonS3ImageCacheStartup : Modules.StartupBase
 }
 
 [RequireFeatures("Grove.Media.Tus")]
-public sealed class MediaAmazonS3TusStartup : Modules.StartupBase
+public sealed class MediaAmazonS3TusStartup(IShellConfiguration configuration, ILogger<MediaAmazonS3TusStartup> logger) : Modules.StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.Replace(ServiceDescriptor.Singleton<ITusTempStore, S3TusTempStore>());
+        // Upload chunks go to the bucket only when the media storage is configured; otherwise
+        // the local temp store stays (the storage startup has already warned).
+        var storeOptions = new AwsStorageOptions().BindConfiguration(AmazonS3Constants.ConfigSections.AmazonS3, configuration, logger);
+        if (configuration.GetSection(AmazonS3Constants.ConfigSections.AmazonS3).Exists() && !storeOptions.Validate().Any())
+        {
+            services.Replace(ServiceDescriptor.Singleton<ITusTempStore, S3TusTempStore>());
+        }
     }
 }
 

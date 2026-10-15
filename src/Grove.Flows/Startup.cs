@@ -32,12 +32,6 @@ public sealed class Startup : StartupBase
             .AddHandler<BagPartHandler>();
         services.AddScoped<IContentPartIndexHandler, BagPartIndexHandler>();
 
-        // The content cards the BagPart editor is built from (moved here from the retired
-        // Widgets module, docs/blazor-display.md rulings 2026-10-12).
-        services.AddShapeTableProvider<ContentCardShapes>();
-
         services.AddDataMigration<Migrations>();
-
-        services.AddResourceConfiguration<ResourceManagementOptionsConfiguration>();
     }
 }

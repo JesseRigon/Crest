@@ -22,6 +22,6 @@ public sealed class Startup : StartupBase
         services.AddScoped<IModuleService, ModuleService>();
         services.AddApiContributor<Api.FeaturesApi>();
 
-        services.AddDeployment<AllFeaturesDeploymentSource, AllFeaturesDeploymentStep, AllFeaturesDeploymentStepDriver>();
+        services.AddDeployment<AllFeaturesDeploymentSource, AllFeaturesDeploymentStep>();
     }
 }

@@ -17,5 +17,5 @@ using Grove.Modules.Manifest;
     Name = "Grove Content Part Lists",
     Description = "Named, tenant-editable sets of options that content types can reference. Ships shared global sets (country codes, units of measure) every enabling tenant receives.",
     Category = "Grove",
-    Dependencies = ["Grove", "Grove.Contents", "Grove.ContentTypes", "Grove.ContentFields", "Grove.Data.Global"]
+    Dependencies = ["Grove", "Grove.Contents", "Grove.ContentTypes", "Grove.ContentFields", "Grove.Data.Global", "Grove.OptionPicker"]
 )]

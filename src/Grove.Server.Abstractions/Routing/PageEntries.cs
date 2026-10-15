@@ -45,10 +45,6 @@ namespace Grove.Routing
             };
         }
 
-        /// <summary>A legacy site settings group (<c>Grove.Settings</c>' admin editor for <paramref name="groupId"/>).</summary>
-        public static PageEntry LegacySettings(string id, string caption, string? parent, string groupId, string[] permissions, string? position = null, string? icon = null) =>
-            Legacy(id, caption, parent, "Grove.Settings", "Admin", "Index", permissions, position, icon, new Dictionary<string, object?> { ["groupId"] = groupId });
-
         /// <summary>A menu item for a native page whose route is not its own component's (a page shared by several items, a query-string view).</summary>
         public static PageEntry Link(string id, string caption, string? parent, string url, string[] permissions, string? position = null, string? icon = null) =>
             new()

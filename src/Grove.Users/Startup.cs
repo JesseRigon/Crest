@@ -41,7 +41,6 @@ using Grove.Users.Controllers;
 using Grove.Users.Services;
 using Grove.Users.DataMigrations;
 using Grove.Users.Deployment;
-using Grove.Users.Drivers;
 using Grove.Users.Events;
 using Grove.Users.Handlers;
 using Grove.Users.Indexes;
@@ -56,7 +55,6 @@ namespace Grove.Users;
 
 public sealed class Startup : StartupBase
 {
-    private static readonly string s_accountControllerName = typeof(AccountController).ControllerName();
     private readonly string _tenantName;
 
     private UserOptions _userOptions;
@@ -76,6 +74,7 @@ public sealed class Startup : StartupBase
         services.AddApiContributor<Api.AuthApi>();
         services.AddApiContributor<Api.LoginSettingsApi>();
         services.AddApiContributor<Api.UserCultureApi>();
+
 
         services.AddDataMigration<ExternalAuthenticationMigrations>();
 
@@ -115,7 +114,8 @@ public sealed class Startup : StartupBase
             // tenant prefix but may also start by a path related e.g to a virtual folder.
 
             options.LoginPath = "/" + userOptions.Value.LoginPath;
-            options.LogoutPath = "/" + userOptions.Value.LogoffPath;
+            // Signing out is the sign-in API's (AuthApi); the cookie handler treats a sign-out there as its own.
+            options.LogoutPath = Api.AuthApi.LogoutPath;
             options.AccessDeniedPath = "/Error/403";
         });
 
@@ -132,16 +132,11 @@ public sealed class Startup : StartupBase
 
         services.AddPermissionProvider<Permissions>();
 
-        services.AddSiteDisplayDriver<LoginSettingsDisplayDriver>();
 
-        services.AddDisplayDriver<User, UserDisplayDriver>();
-        services.AddDisplayDriver<User, UserInformationDisplayDriver>();
-        services.AddDisplayDriver<User, UserButtonsDisplayDriver>();
         services.AddScoped<IRecipeEnvironmentProvider, RecipeEnvironmentSuperUserProvider>();
 
         services.AddScoped<IUsersAdminListQueryService, DefaultUsersAdminListQueryService>();
 
-        services.AddDisplayDriver<UserIndexOptions, UserOptionsDisplayDriver>();
 
         services.AddSingleton<IUsersAdminListFilterParser>(sp =>
         {
@@ -159,16 +154,11 @@ public sealed class Startup : StartupBase
 
         services.AddTransient<IUsersAdminListFilterProvider, DefaultUsersAdminListFilterProvider>();
         services.AddResourceConfiguration<UserOptionsConfiguration>();
-        services.AddDisplayDriver<Navbar, UserMenuNavbarDisplayDriver>();
-        services.AddDisplayDriver<UserMenu, UserMenuDisplayDriver>();
-        services.AddShapeTableProvider<UserMenuShapeTableProvider>();
-        services.AddShapeTableProvider<AdminDashboardShapeTableProvider>();
 
         services.AddRecipeExecutionStep<UsersStep>();
 
         services.AddScoped<CustomUserSettingsService>();
         services.AddRecipeExecutionStep<CustomUserSettingsStep>();
-        services.AddDisplayDriver<LoginForm, LoginFormDisplayDriver>();
         services.AddScoped<ILoginFormEvent, EmailConfirmationLoginFormEvent>();
         services.AddScoped<ILoginFormEvent, DisabledUserLoginFormEvent>();
     }
@@ -176,28 +166,6 @@ public sealed class Startup : StartupBase
     public override void Configure(IApplicationBuilder builder, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
     {
         _userOptions ??= serviceProvider.GetRequiredService<IOptions<UserOptions>>().Value;
-
-        routes.MapAreaControllerRoute(
-            name: "Login",
-            areaName: UserConstants.Features.Users,
-            pattern: _userOptions.LoginPath,
-            defaults: new
-            {
-                controller = s_accountControllerName,
-                action = nameof(AccountController.Login),
-            }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: "UsersLogOff",
-            areaName: UserConstants.Features.Users,
-            pattern: _userOptions.LogoffPath,
-            defaults: new
-            {
-                controller = s_accountControllerName,
-                action = nameof(AccountController.LogOff),
-            }
-        );
 
         builder.UseAuthorization();
     }
@@ -220,8 +188,9 @@ public sealed class ExternalAuthenticationStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddScoped<ILoginFormEvent, ExternalLoginFormEvents>();
-        services.AddDisplayDriver<UserMenu, ExternalAuthenticationUserMenuDisplayDriver>();
-        services.AddSiteDisplayDriver<ExternalLoginSettingsDisplayDriver>();
+
+        // The sign-in form's contributions: a button per external identity provider.
+        services.AddScoped<Grove.Access.ILoginExtensionProvider, ExternalProviderLoginExtensions>();
         services.AddSignalOptionsChangeTokenSource<ExternalLoginOptions>();
         services.AddTransient<IConfigureOptions<ExternalLoginOptions>, ExternalLoginOptionsConfigurations>();
     }
@@ -233,8 +202,8 @@ public sealed class ExternalAuthenticationDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<ExternalRegistrationSettings, ExternalAuthenticationDeploymentStartup>(S => S["External registration settings"], S => S["Exports the external registration settings."]);
-        services.AddSiteSettingsPropertyDeploymentStep<ExternalLoginSettings, ExternalAuthenticationDeploymentStartup>(S => S["External login settings"], S => S["Exports the external login settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<ExternalRegistrationSettings>();
+        services.AddSiteSettingsPropertyDeploymentStep<ExternalLoginSettings>();
     }
 }
 
@@ -262,15 +231,6 @@ public sealed class EmailStartup : StartupBase
     }
 }
 
-[RequireFeatures("Grove.Admin")]
-public sealed class AdminStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddScoped<IThemeSelector, UsersThemeSelector>();
-    }
-}
-
 [RequireFeatures("Grove.Roles")]
 public sealed class RolesStartup : StartupBase
 {
@@ -279,7 +239,6 @@ public sealed class RolesStartup : StartupBase
         services.AddScoped<IRoleRemovedEventHandler, UserRoleRemovedEventHandler>();
         services.AddScoped<IRoleUpdatedEventHandler, UserRoleUpdatedEventHandler>();
         services.AddIndexProvider<UserByRoleNameIndexProvider>();
-        services.AddDisplayDriver<User, UserRoleDisplayDriver>();
         services.AddScoped<Grove.Access.IResourcePermissionMapper, RolePermissionMapper>();
         services.AddPermissionProvider<UserRolePermissions>();
         services.AddSingleton<IUsersAdminListFilterProvider, RolesAdminListFilterProvider>();
@@ -345,7 +304,7 @@ public sealed class LoginDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<LoginSettings, LoginDeploymentStartup>(S => S["Login settings"], S => S["Exports the Login settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<LoginSettings>();
     }
 }
 
@@ -364,8 +323,6 @@ public sealed class ChangeEmailStartup : StartupBase
         {
             o.MemberAccessStrategy.Register<ChangeEmailViewModel>();
         });
-
-        services.AddDisplayDriver<UserMenu, ChangeEmailUserMenuDisplayDriver>();
     }
 }
 
@@ -375,17 +332,15 @@ public sealed class ChangeEmailDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<ChangeEmailDeploymentStartup, ChangeEmailDeploymentStartup>(S => S["Change Email settings"], S => S["Exports the Change Email settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<ChangeEmailDeploymentStartup>();
     }
 }
 
 [Feature(UserConstants.Features.UserRegistration)]
 public sealed class RegistrationStartup : StartupBase
 {
-    private const string RegisterPath = nameof(RegistrationController.Register);
-    private const string RegistrationPending = nameof(RegistrationController.RegistrationPending);
-    private const string RegistrationControllerName = "Registration";
-
+    // The registration pages are the site shell's (Grove.Users' site library): the API and the
+    // sign-in form's "register" link are declared here.
     public override void ConfigureServices(IServiceCollection services)
     {
         services.Configure<TemplateOptions>(o =>
@@ -393,39 +348,13 @@ public sealed class RegistrationStartup : StartupBase
             o.MemberAccessStrategy.Register<ConfirmEmailViewModel>();
         });
 
-        services.AddDisplayDriver<User, UserRegistrationAdminDisplayDriver>();
         services.AddSignalOptionsChangeTokenSource<RegistrationOptions>();
 
-        services.AddDisplayDriver<LoginForm, RegisterUserLoginFormDisplayDriver>();
-        services.AddDisplayDriver<RegisterUserForm, RegisterUserFormDisplayDriver>();
+        services.AddApiContributor<Api.RegistrationApi>();
+        services.AddScoped<Grove.Access.ILoginExtensionProvider, RegistrationLoginExtensions>();
         services.AddTransient<IConfigureOptions<RegistrationOptions>, RegistrationOptionsConfigurations>();
         services.AddScoped<ILoginFormEvent, UserModerationLoginFormEvent>();
         services.AddScoped<IRegistrationFormEvents, UserModerationRegistrationFormEvents>();
-    }
-
-    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        routes.MapAreaControllerRoute(
-            name: RegisterPath,
-            areaName: UserConstants.Features.Users,
-            pattern: RegisterPath,
-            defaults: new
-            {
-                controller = RegistrationControllerName,
-                action = RegisterPath,
-            }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: RegistrationPending,
-            areaName: UserConstants.Features.Users,
-            pattern: RegistrationPending,
-            defaults: new
-            {
-                controller = RegistrationControllerName,
-                action = RegistrationPending,
-            }
-        );
     }
 }
 
@@ -446,19 +375,15 @@ public sealed class RegistrationDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<RegistrationSettings, RegistrationDeploymentStartup>(S => S["Registration settings"], S => S["Exports the Registration settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<RegistrationSettings>();
     }
 }
 
 [Feature(UserConstants.Features.ResetPassword)]
 public sealed class ResetPasswordStartup : StartupBase
 {
-    private const string ForgotPasswordPath = "ForgotPassword";
-    private const string ForgotPasswordConfirmationPath = "ForgotPasswordConfirmation";
-    private const string ResetPasswordPath = "ResetPassword";
-    private const string ResetPasswordConfirmationPath = "ResetPasswordConfirmation";
-    private const string ResetPasswordControllerName = "ResetPassword";
-
+    // The forgot and reset password pages are the site shell's (Grove.Users' site library): the
+    // API and the sign-in form's "forgot your password" link are declared here.
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddTransient<IConfigureOptions<IdentityOptions>, PasswordResetIdentityOptionsConfigurations>()
@@ -470,54 +395,8 @@ public sealed class ResetPasswordStartup : StartupBase
             o.MemberAccessStrategy.Register<LostPasswordViewModel>();
         });
 
-
-        services.AddDisplayDriver<ResetPasswordForm, ResetPasswordFormDisplayDriver>();
-        services.AddDisplayDriver<LoginForm, ForgotPasswordLoginFormDisplayDriver>();
-        services.AddDisplayDriver<ForgotPasswordForm, ForgotPasswordFormDisplayDriver>();
-    }
-
-    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        routes.MapAreaControllerRoute(
-            name: "ForgotPassword",
-            areaName: UserConstants.Features.Users,
-            pattern: ForgotPasswordPath,
-            defaults: new
-            {
-                controller = ResetPasswordControllerName,
-                action = nameof(ResetPasswordController.ForgotPassword),
-            }
-        );
-        routes.MapAreaControllerRoute(
-            name: "ForgotPasswordConfirmation",
-            areaName: UserConstants.Features.Users,
-            pattern: ForgotPasswordConfirmationPath,
-            defaults: new
-            {
-                controller = ResetPasswordControllerName,
-                action = nameof(ResetPasswordController.ForgotPasswordConfirmation),
-            }
-        );
-        routes.MapAreaControllerRoute(
-            name: "ResetPassword",
-            areaName: UserConstants.Features.Users,
-            pattern: ResetPasswordPath,
-            defaults: new
-            {
-                controller = ResetPasswordControllerName,
-                action = nameof(ResetPasswordController.ResetPassword),
-            }
-        );
-        routes.MapAreaControllerRoute(
-            name: "ResetPasswordConfirmation",
-            areaName: UserConstants.Features.Users,
-            pattern: ResetPasswordConfirmationPath,
-            defaults: new
-            {
-                controller = ResetPasswordControllerName,
-                action = nameof(ResetPasswordController.ResetPasswordConfirmation),
-            }
-        );
+        services.AddApiContributor<Api.PasswordResetApi>();
+        services.AddScoped<Grove.Access.ILoginExtensionProvider, ResetPasswordLoginExtensions>();
     }
 }
 
@@ -541,7 +420,7 @@ public sealed class ResetPasswordDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<ResetPasswordSettings, ResetPasswordDeploymentStartup>(S => S["Reset Password settings"], S => S["Exports the Reset Password settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<ResetPasswordSettings>();
     }
 }
 
@@ -550,9 +429,8 @@ public sealed class CustomUserSettingsStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDisplayDriver<User, CustomUserSettingsDisplayDriver>();
         services.AddPermissionProvider<CustomUserSettingsPermissions>();
-        services.AddDeployment<CustomUserSettingsDeploymentSource, CustomUserSettingsDeploymentStep, CustomUserSettingsDeploymentStepDriver>();
+        services.AddDeployment<CustomUserSettingsDeploymentSource, CustomUserSettingsDeploymentStep>();
         services.AddScoped<IStereotypesProvider, CustomUserSettingsStereotypesProvider>();
 
         services.Configure<ContentTypeDefinitionOptions>(options =>
@@ -573,6 +451,6 @@ public sealed class UserDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<AllUsersDeploymentSource, AllUsersDeploymentStep, AllUsersDeploymentStepDriver>();
+        services.AddDeployment<AllUsersDeploymentSource, AllUsersDeploymentStep>();
     }
 }

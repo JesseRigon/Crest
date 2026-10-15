@@ -10,6 +10,13 @@
     <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
   </PropertyGroup>
 
+  <!-- The site search page is its own WASM library (site-wasm/, Grove.Search.BlazorWasm). -->
+  <ItemGroup>
+    <Compile Remove="site-wasm/**/*.cs" />
+    <Content Remove="site-wasm/**" />
+    <None Remove="site-wasm/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -23,6 +30,7 @@
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
     <ProjectReference Include="..\Grove.Navigation\Grove.Navigation.csproj" />
     <ProjectReference Include="..\Grove.Search.Abstractions\Grove.Search.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Deployment.Abstractions\Grove.Deployment.Abstractions.csproj" />
   </ItemGroup>
 

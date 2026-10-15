@@ -1,0 +1,82 @@
+@attribute [Route(MemberRoutePaths.ExternalLogin)]
+@attribute [AllowAnonymous]
+@attribute [Grove.Components.Modules.OrganizationFreePage]
+@namespace Grove.Members.Member.Pages
+@inject NavigationManager Navigation
+@inject IServiceProvider Services
+
+@* Member sign-in with an external identity provider, at the member shell's own base: the
+   staff and member login surfaces stay separate by construction for external sign-in too.
+   Choosing a provider navigates to the portal's challenge (the platform's own callback
+   finishes it and returns to the member base); a refused external sign-in comes back here
+   with the refusal. An "organization" query parameter (an invitation link) names the
+   organization the sign-in is for; without one an existing member signs in with any of
+   their organizations, and no account is created. *@
+
+<PageTitle>Sign in</PageTitle>
+
+<div class="grove-member-centred" data-testid="member-external-login">
+    <GroveStack Gap="1rem" Style="width: 22rem; max-width: 100%;">
+        <GroveText TextStyle="TextStyle.H5" Text="Sign in with" />
+
+        @if (Error is { Length: > 0 })
+        {
+            <GroveText TextStyle="TextStyle.Caption" Text="@Error" data-testid="member-external-login-error" />
+        }
+
+        @if (_providers.Count == 0)
+        {
+            <GroveText TextStyle="TextStyle.Body2"
+                       Text="No external sign-in is available on this site."
+                       data-testid="member-external-login-none" />
+        }
+
+        @foreach (var provider in _providers)
+        {
+            <GroveButton ButtonStyle="ButtonStyle.Light"
+                         Text="@provider.DisplayName"
+                         Click="@(() => Start(provider))"
+                         data-testid="member-external-login-provider" />
+        }
+
+        <GroveLink Path="@MemberShellLinks.Relative(MemberRoutePaths.Login)" Text="Sign in with a password" />
+    </GroveStack>
+</div>
+
+@code {
+    [CascadingParameter]
+    private IMemberAuthenticationService Auth { get; set; } = default!;
+
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    [SupplyParameterFromQuery(Name = "organization")]
+    public string? Organization { get; set; }
+
+    private IReadOnlyList<MemberExternalProvider> _providers = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _providers = await Auth.GetExternalProvidersAsync();
+        }
+        catch (HttpRequestException)
+        {
+            _providers = [];
+        }
+    }
+
+    // A navigation, not a fetch: the challenge redirects to the provider. It returns to the
+    // member base, which opens the organization picker.
+    private void Start(MemberExternalProvider provider)
+    {
+        var shell = Services.GetService(typeof(Grove.Components.Modules.GroveShellContext)) as Grove.Components.Modules.GroveShellContext;
+        var memberBase = new Uri(MemberShellLinks.MemberBase(Navigation, shell)).AbsolutePath;
+        var url = Auth.ExternalLoginUrl(provider.Name, Organization, memberBase);
+        if (url.Length > 0)
+        {
+            Navigation.NavigateTo(url, forceLoad: true);
+        }
+    }
+}

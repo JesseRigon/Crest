@@ -30,6 +30,8 @@ namespace Grove.Users.Services;
 /// </summary>
 public sealed class LoginService(
     IUserService users,
+    SignInManager<IUser> signInManager,
+    UserManager<IUser> userManager,
     IEnumerable<ILoginFormEvent> loginEvents,
     ITempDataDictionaryFactory tempDataFactory,
     IUrlHelperFactory urlHelperFactory,
@@ -38,7 +40,10 @@ public sealed class LoginService(
     /// <summary>Runs the credential + event sequence and, on success, issues the
     /// Identity application cookie. <paramref name="configureSession"/> lets the
     /// caller add AuthenticationProperties items (a surface's own session state)
-    /// before the cookie is written.</summary>
+    /// before the cookie is written. A user with two-factor authentication enabled (and
+    /// this browser not remembered) is not signed in: the result says a second step is
+    /// required and the two-factor cookie holds who passed the first
+    /// (<see cref="CompleteTwoFactorAsync"/> finishes it).</summary>
     public async Task<LoginResult> LoginAsync(
         ActionContext actionContext,
         string userName,
@@ -84,26 +89,94 @@ public sealed class LoginService(
             }
         }
 
+        // 4. The second step, when the account has one: the stock password sign-in writes the
+        // two-factor cookie (who passed the first step) and the sign-in completes with a code.
+        if (await RequiresTwoFactorAsync(user))
+        {
+            var twoFactor = await signInManager.PasswordSignInAsync(user, password, rememberMe, lockoutOnFailure: true);
+            if (twoFactor.RequiresTwoFactor)
+            {
+                return LoginResult.TwoFactor(user);
+            }
+
+            if (!twoFactor.Succeeded)
+            {
+                errors.Add(twoFactor.IsLockedOut ? "The user is locked out." : "The specified username/password couple is invalid.");
+                await NotifyLoginFailedAsync(user);
+                return LoginResult.Refused(new LoginRefusal(errors, null));
+            }
+        }
+
         var principal = await users.CreatePrincipalAsync(user);
         var properties = new AuthenticationProperties { IsPersistent = rememberMe };
         configureSession?.Invoke(properties);
         await httpContext.SignInAsync(IdentityConstants.ApplicationScheme, principal, properties);
 
-        // 4. Post-sign-in notifications (audit trail records LoggedIn here).
+        await NotifyLoggedInAsync(httpContext, user, string.Empty);
+
+        return LoginResult.SignedIn(user, principal);
+    }
+
+    /// <summary>
+    /// The second step of a sign-in <see cref="LoginAsync"/> left pending: the code of
+    /// <paramref name="provider"/> (or, with <paramref name="recoveryCode"/>, one of the account's
+    /// recovery codes) signs the user in.
+    /// </summary>
+    public async Task<LoginResult> CompleteTwoFactorAsync(HttpContext httpContext, string? provider, string? code, bool rememberMe, bool rememberDevice, bool recoveryCode)
+    {
+        var user = await signInManager.GetTwoFactorAuthenticationUserAsync();
+        if (user is null)
+        {
+            return LoginResult.Refused(new LoginRefusal(["Sign in again: the sign-in has expired."], null));
+        }
+
+        var token = (code ?? string.Empty).Replace(" ", string.Empty).Replace("-", string.Empty);
+        var result = recoveryCode
+            ? await signInManager.TwoFactorRecoveryCodeSignInAsync(token)
+            : await signInManager.TwoFactorSignInAsync(provider ?? string.Empty, token, rememberMe, rememberDevice);
+
+        if (result.Succeeded)
+        {
+            await NotifyLoggedInAsync(httpContext, user, string.Empty);
+            return LoginResult.SignedIn(user, httpContext.User);
+        }
+
+        if (result.IsLockedOut)
+        {
+            foreach (var loginEvent in loginEvents)
+            {
+                await loginEvent.IsLockedOutAsync(user);
+            }
+
+            return LoginResult.Refused(new LoginRefusal(["The account is locked out."], null));
+        }
+
+        await NotifyLoginFailedAsync(user);
+        return LoginResult.Refused(new LoginRefusal([recoveryCode ? "Invalid recovery code entered." : "Invalid verification code."], null));
+    }
+
+    /// <summary>Whether signing <paramref name="user"/> in takes a second step on this browser.</summary>
+    public async Task<bool> RequiresTwoFactorAsync(IUser user) =>
+        userManager.SupportsUserTwoFactor
+        && await userManager.GetTwoFactorEnabledAsync(user)
+        && (await userManager.GetValidTwoFactorProvidersAsync(user)).Count > 0
+        && !await signInManager.IsTwoFactorClientRememberedAsync(user);
+
+    // Post-sign-in notifications (the audit trail records LoggedIn here), then the
+    // user.logged-in trigger (same payload and correlation as every sign-in path), when the
+    // tenant runs workflows.
+    private async Task NotifyLoggedInAsync(HttpContext httpContext, IUser user, string provider)
+    {
         foreach (var loginEvent in loginEvents)
         {
             await loginEvent.LoggedInAsync(user);
         }
 
-        // 5. The user.logged-in trigger (same payload and correlation as the Users module's
-        // own login path), when the tenant runs workflows.
         var triggers = httpContext.RequestServices.GetService<IWorkflowTriggerPublisher>();
         if (triggers is not null && user is User platformUser)
         {
-            await triggers.PublishForUserAsync(UserWorkflowTriggers.LoggedIn, platformUser.UserId, platformUser.UserId, platformUser.UserName, UserWorkflowTriggers.Payload(platformUser, provider: string.Empty));
+            await triggers.PublishForUserAsync(UserWorkflowTriggers.LoggedIn, platformUser.UserId, platformUser.UserId, platformUser.UserName, UserWorkflowTriggers.Payload(platformUser, provider));
         }
-
-        return LoginResult.SignedIn(user, principal);
     }
 
     private async Task NotifyLoginFailedAsync(string userName)
@@ -147,10 +220,10 @@ public sealed class LoginService(
         };
 
         // MVC's "~/path" app-base notation means nothing to the SPA client - resolve
-        // it to the plain base-relative form.
+        // it to an absolute path on the tenant.
         if (redirect is not null && redirect.StartsWith("~/", StringComparison.Ordinal))
         {
-            redirect = redirect[1..];
+            redirect = actionContext.HttpContext.Request.PathBase + redirect[1..];
         }
 
         if (redirect is null && veto is not RedirectResult and not LocalRedirectResult and not RedirectToActionResult and not RedirectToRouteResult)
@@ -167,13 +240,15 @@ public sealed class LoginService(
     }
 }
 
-/// <summary>Outcome of <see cref="LoginService.LoginAsync"/>: either a signed-in
-/// user + principal, or the refusal payload to return as 401.</summary>
-public sealed record LoginResult(IUser? User, ClaimsPrincipal? Principal, LoginRefusal? Refusal)
+/// <summary>Outcome of <see cref="LoginService.LoginAsync"/>: a signed-in user + principal, a
+/// sign-in waiting for its second step, or the refusal payload to return as 401.</summary>
+public sealed record LoginResult(IUser? User, ClaimsPrincipal? Principal, LoginRefusal? Refusal, bool RequiresTwoFactor = false)
 {
     public bool Succeeded => User is not null && Principal is not null;
 
     public static LoginResult SignedIn(IUser user, ClaimsPrincipal principal) => new(user, principal, null);
+
+    public static LoginResult TwoFactor(IUser user) => new(user, null, null, RequiresTwoFactor: true);
 
     public static LoginResult Refused(LoginRefusal refusal) => new(null, null, refusal);
 }

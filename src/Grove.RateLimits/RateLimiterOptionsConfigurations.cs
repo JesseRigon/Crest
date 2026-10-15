@@ -47,7 +47,7 @@ public sealed class RateLimiterOptionsConfigurations : IConfigureOptions<RateLim
             PartitionedRateLimiter.Create<HttpContext, string>(context =>
             {
                 var routeRateLimit = FindRouteRateLimit(context);
-                if (routeRateLimit is null)
+                if (routeRateLimit is null || LoopbackRequests.IsLoopback(context))
                 {
                     return RateLimitPartition.GetNoLimiter(GetEndpointRouteName(context) ?? "default");
                 }
@@ -60,7 +60,7 @@ public sealed class RateLimiterOptionsConfigurations : IConfigureOptions<RateLim
         {
             limiters.Add(PartitionedRateLimiter.Create<HttpContext, string>(context =>
             {
-                if (!EndpointBelongsToGroup(context, groupRateLimit.GroupName))
+                if (!EndpointBelongsToGroup(context, groupRateLimit.GroupName) || LoopbackRequests.IsLoopback(context))
                 {
                     return RateLimitPartition.GetNoLimiter(groupRateLimit.GroupName);
                 }
@@ -83,7 +83,9 @@ public sealed class RateLimiterOptionsConfigurations : IConfigureOptions<RateLim
 
                 limiters.Add(PartitionedRateLimiter.Create<HttpContext, string>(context =>
                 {
-                    if (!Matches(policy, context))
+                    // The server's own calls (admin pages rendering through the APIs) are part of
+                    // the request that caused them, which was counted already.
+                    if (!Matches(policy, context) || LoopbackRequests.IsLoopback(context))
                     {
                         return RateLimitPartition.GetNoLimiter(policy.Name);
                     }

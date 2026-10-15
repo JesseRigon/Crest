@@ -79,9 +79,8 @@ public sealed class LibraryWorld
     }
 
     public MediaReferenceResolver Resolver(CallerContext? caller, IMediaFileStore? mediaFileStore = null) => new(
-        Files.Service(caller),
         Library(),
-        Services(caller, mediaFileStore),
+        new ProviderWith(Services(caller, mediaFileStore), typeof(IMediaObjectService), Files.Service(caller)),
         new HttpContextAccessor(),
         new ShellSettings { Name = "Default" },
         Files.Sharing.Clock,
@@ -110,4 +109,10 @@ public sealed class LibraryWorld
 
         public Task<CallerContext> CreateSystemAsync(string? organizationId = null, CancellationToken cancellationToken = default) => Task.FromResult(SystemCaller);
     }
+}
+
+/// <summary>A service provider that answers one extra service (the resolver resolves the object service on use).</summary>
+internal sealed class ProviderWith(IServiceProvider inner, Type serviceType, object instance) : IServiceProvider
+{
+    public object? GetService(Type type) => type == serviceType ? instance : inner.GetService(type);
 }

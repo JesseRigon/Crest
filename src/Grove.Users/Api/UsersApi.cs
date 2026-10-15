@@ -27,6 +27,7 @@ public sealed class UsersApi : ApiContributor
     public override void Map(IEndpointRouteBuilder group)
     {
         var routes = group.MapGroup("users");
+        CustomUserSettingsApi.Map(routes);
         routes.MapGet("", (HttpContext __http, [FromQuery] string? search, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 50) => ApiHandlers.For<UsersHandlers>(__http).ListAsync(search, status, page, pageSize));
         routes.MapGet("{id}", (HttpContext __http, [FromRoute] string id) => ApiHandlers.For<UsersHandlers>(__http).GetAsync(id));
         routes.MapPost("", (HttpContext __http, [FromBody] UserWrite request) => ApiHandlers.For<UsersHandlers>(__http).CreateAsync(request));
@@ -34,6 +35,7 @@ public sealed class UsersApi : ApiContributor
         routes.MapPost("{id}/enabled", (HttpContext __http, [FromRoute] string id, [FromBody] UserEnabled request) => ApiHandlers.For<UsersHandlers>(__http).SetEnabledAsync(id, request));
         routes.MapDelete("{id}", (HttpContext __http, [FromRoute] string id) => ApiHandlers.For<UsersHandlers>(__http).DeleteAsync(id));
         routes.MapGet("{id}/status", (HttpContext __http, [FromRoute] string id) => ApiHandlers.For<UsersHandlers>(__http).StatusAsync(id));
+        routes.MapPost("{id}/two-factor/disable", (HttpContext __http, [FromRoute] string id) => ApiHandlers.For<UsersHandlers>(__http).DisableTwoFactorAsync(id));
         routes.MapPost("{id}/unlock", (HttpContext __http, [FromRoute] string id) => ApiHandlers.For<UsersHandlers>(__http).UnlockAsync(id));
         routes.MapPost("{id}/confirm-email", (HttpContext __http, [FromRoute] string id) => ApiHandlers.For<UsersHandlers>(__http).ConfirmEmailAsync(id));
         routes.MapPost("{id}/send-verification", (HttpContext __http, [FromRoute] string id) => ApiHandlers.For<UsersHandlers>(__http).SendVerificationAsync(id));
@@ -154,7 +156,25 @@ public sealed class UsersHandlers(UserManager<IUser> userManager, IUserService u
         var user = await FindAsync(id); if (user is null) return NotFound();
         if (!await authorization.AuthorizeAsync(User, UsersPermissions.ViewUsers, user)) return Forbid();
         var lockoutEnd = await userManager.GetLockoutEndDateAsync(user);
-        return Ok(new UserStatus(lockoutEnd is { } end && end > DateTimeOffset.UtcNow, lockoutEnd, await userManager.GetAccessFailedCountAsync(user)));
+        return Ok(new UserStatus(lockoutEnd is { } end && end > DateTimeOffset.UtcNow, lockoutEnd, await userManager.GetAccessFailedCountAsync(user), await userManager.GetTwoFactorEnabledAsync(user)));
+    }
+
+    /// <summary>Turns another user's two-factor authentication off (a user who lost every method).</summary>
+    public async Task<IResult> DisableTwoFactorAsync(string id)
+    {
+        if (!await authorization.AuthorizeAsync(User, UsersPermissions.DisableTwoFactorAuthenticationForUsers)) return Forbid();
+        var user = await FindAsync(id); if (user is null) return NotFound();
+        if (await userManager.GetTwoFactorEnabledAsync(user))
+        {
+            var result = await userManager.SetTwoFactorEnabledAsync(user, false);
+            if (!result.Succeeded)
+            {
+                await session.CancelAsync();
+                return BadRequest(result.Errors.Select(error => error.Description));
+            }
+        }
+
+        return NoContent();
     }
 
     /// <summary>Clears a lockout and the failed sign-in count.</summary>
@@ -170,7 +190,7 @@ public sealed class UsersHandlers(UserManager<IUser> userManager, IUserService u
             return BadRequest(result.Errors.Select(error => error.Description));
         }
 
-        return Ok(new UserStatus(false, null, 0));
+        return Ok(new UserStatus(false, null, 0, await userManager.GetTwoFactorEnabledAsync(user)));
     }
 
     /// <summary>Confirms the user's email address on the administrator's word.</summary>

@@ -5,41 +5,34 @@ using Grove.Lists.Models;
 
 namespace Grove.Lists.Feeds;
 
+/// <summary>
+/// The list's RSS link in the page head: the <c>ListPartFeed</c> shape carries the link's values
+/// (the feed address, or the proxy address the list names), and the <c>HeadLink</c> component
+/// bound to it contributes the <c>&lt;link&gt;</c>. Nothing when the list disables its feed. The
+/// feed settings (<c>DisableRssFeed</c>, <c>FeedProxyUrl</c>, <c>FeedItemsCount</c>) are the
+/// part's own values, edited in the native editor's list section.
+/// </summary>
 public sealed class ListPartFeedDisplayDriver : ContentPartDisplayDriver<ListPart>
 {
     public override IDisplayResult Display(ListPart listPart, BuildPartDisplayContext context)
     {
-        return Dynamic("ListPartFeed", static (shape, listPart) =>
+        bool disabled = listPart.Content.DisableRssFeed ?? false;
+        if (disabled)
+        {
+            return null;
+        }
+
+        string proxy = listPart.Content.FeedProxyUrl;
+        return Dynamic("ListPartFeed", shape =>
         {
             shape.ContentItem = listPart.ContentItem;
-        }, listPart)
+            shape.Rel = "alternate";
+            shape.Type = "application/rss+xml";
+            shape.Title = listPart.ContentItem.DisplayText;
+            shape.Href = string.IsNullOrWhiteSpace(proxy)
+                ? $"Contents/Lists/{Uri.EscapeDataString(listPart.ContentItem.ContentItemId)}/rss"
+                : proxy;
+        })
         .Location(PlatformConstants.DisplayType.Detail, "Content");
-    }
-
-    public override IDisplayResult Edit(ListPart part, BuildPartEditorContext context)
-    {
-        return Initialize<ListFeedEditViewModel>("ListPartFeed_Edit", m =>
-        {
-            m.DisableRssFeed = part.ContentItem.Content.ListPart.DisableRssFeed ?? false;
-            m.FeedProxyUrl = part.ContentItem.Content.ListPart.FeedProxyUrl;
-            m.FeedItemsCount = part.ContentItem.Content.ListPart.FeedItemsCount ?? 20;
-            m.ContentItem = part.ContentItem;
-        });
-    }
-
-    public override async Task<IDisplayResult> UpdateAsync(ListPart part, UpdatePartEditorContext context)
-    {
-        var model = new ListFeedEditViewModel
-        {
-            ContentItem = part.ContentItem,
-        };
-
-        await context.Updater.TryUpdateModelAsync(model, Prefix, t => t.DisableRssFeed, t => t.FeedProxyUrl, t => t.FeedItemsCount);
-
-        part.ContentItem.Content.ListPart.DisableRssFeed = model.DisableRssFeed;
-        part.ContentItem.Content.ListPart.FeedProxyUrl = model.FeedProxyUrl;
-        part.ContentItem.Content.ListPart.FeedItemsCount = model.FeedItemsCount;
-
-        return Edit(part, context);
     }
 }

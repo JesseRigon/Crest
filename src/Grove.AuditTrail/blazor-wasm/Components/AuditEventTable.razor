@@ -85,11 +85,16 @@
                        restore (rework step 7: replaces the MVC AuditTrail/Content screen). *@
                     <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
                         <GroveButton Icon="visibility" Text="@T["Show this version"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="ShowVersionAsync" Disabled="@VersionBusy" />
+                        <GroveButton Icon="difference" Text="@T["Show the changes"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="ShowDiffAsync" Disabled="@VersionBusy" data-testid="audit-content-diff" />
                         <GroveButton Icon="restore" Text="@T["Restore this version"]" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" Click="RestoreAsync" Disabled="@VersionBusy" />
                     </GroveStack>
                     @if (!string.IsNullOrEmpty(VersionMessage))
                     {
                         <GroveAlert AlertStyle="@(VersionFailed ? AlertStyle.Danger : AlertStyle.Success)" Detail="@VersionMessage" />
+                    }
+                    @if (Diff is not null)
+                    {
+                        <Grove.Components.Content.ContentDiff Before="Diff.Before" After="Diff.After" BeforeLabel="@T["Previous version"]" AfterLabel="@T["This version"]" />
                     }
                     @if (Version is not null)
                     {
@@ -124,6 +129,26 @@
     private bool VersionBusy { get; set; }
     private string? VersionMessage { get; set; }
     private bool VersionFailed { get; set; }
+
+    private AuditContentDiff? Diff { get; set; }
+
+    private async Task ShowDiffAsync()
+    {
+        VersionBusy = true;
+        VersionMessage = null;
+        try
+        {
+            Diff = await Http.GetFromJsonAsync<AuditContentDiff>(VersionApi + "/diff");
+        }
+        catch (Exception exception) when (exception is HttpRequestException or System.Text.Json.JsonException)
+        {
+            (VersionFailed, VersionMessage) = (true, exception.Message);
+        }
+        finally
+        {
+            VersionBusy = false;
+        }
+    }
 
     private string VersionApi => $"api/grove/audit/content/{Uri.EscapeDataString(Selected!.EventId)}";
 
@@ -169,6 +194,7 @@
     private async Task OpenAsync(AuditEvent item)
     {
         Version = null;
+        Diff = null;
         VersionMessage = null;
         Selected = await Http.GetFromJsonAsync<AuditEvent>($"{AuditTrailRoutes.Api}/events/{Uri.EscapeDataString(item.EventId)}") ?? item;
     }

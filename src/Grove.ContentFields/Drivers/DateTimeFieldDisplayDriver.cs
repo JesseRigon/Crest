@@ -9,7 +9,6 @@ using Grove.DisplayManagement.Views;
 using Grove.Modules;
 using Grove.Mvc.ModelBinding;
 
-
 namespace Grove.ContentFields.Drivers;
 
 public sealed class DateTimeFieldDisplayDriver : ContentFieldDisplayDriver<DateTimeField>
@@ -37,42 +36,5 @@ public sealed class DateTimeFieldDisplayDriver : ContentFieldDisplayDriver<DateT
         }, field, context, _localClock)
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");
-    }
-
-    public override IDisplayResult Edit(DateTimeField field, BuildFieldEditorContext context)
-    {
-        return Initialize<EditDateTimeFieldViewModel>(GetEditorShapeType(context), async model =>
-        {
-            model.LocalDateTime = field.Value == null ? null : (await _localClock.ConvertToLocalAsync(field.Value.Value)).DateTime;
-            model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
-        });
-    }
-
-    public override async Task<IDisplayResult> UpdateAsync(DateTimeField field, UpdateFieldEditorContext context)
-    {
-        var model = new EditDateTimeFieldViewModel();
-
-        await context.Updater.TryUpdateModelAsync(model, Prefix, f => f.LocalDateTime);
-        var settings = context.PartFieldDefinition.GetSettings<DateTimeFieldSettings>();
-
-        if (settings.Required && model.LocalDateTime == null)
-        {
-            context.Updater.ModelState.AddModelError(Prefix, nameof(model.LocalDateTime), S["A value is required for {0}.", context.PartFieldDefinition.DisplayName()]);
-        }
-        else
-        {
-            if (model.LocalDateTime == null)
-            {
-                field.Value = null;
-            }
-            else
-            {
-                field.Value = await _localClock.ConvertToUtcAsync(model.LocalDateTime.Value);
-            }
-        }
-
-        return Edit(field, context);
     }
 }

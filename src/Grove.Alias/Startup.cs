@@ -1,7 +1,6 @@
 using Fluid;
 using Fluid.Values;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.Alias.Drivers;
 using Grove.Alias.Handlers;
 using Grove.Alias.Indexes;
 using Grove.Alias.Indexing;
@@ -66,7 +65,6 @@ public sealed class Startup : StartupBase
 
         // Identity Part
         services.AddContentPart<AliasPart>()
-            .UseDisplayDriver<AliasPartDisplayDriver>()
             .AddHandler<AliasPartHandler>();
 
         services.AddScoped<IContentPartIndexHandler, AliasPartIndexHandler>();

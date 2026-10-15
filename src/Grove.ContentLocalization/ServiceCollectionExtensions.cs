@@ -1,12 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Grove.ContentLocalization.Drivers;
 using Grove.ContentLocalization.Handlers;
 using Grove.ContentLocalization.Indexes;
 using Grove.ContentLocalization.Models;
 using Grove.ContentLocalization.Records;
 using Grove.ContentManagement;
-using Grove.ContentManagement.Display.ContentDisplay;
 using Grove.ContentManagement.Handlers;
 using Grove.Data;
 using Grove.Data.Migration;
@@ -18,7 +16,6 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddContentLocalization(this IServiceCollection services)
     {
         services.AddContentPart<LocalizationPart>()
-            .UseDisplayDriver<LocalizationPartDisplayDriver>()
             .AddHandler<LocalizationPartHandler>();
 
         services.TryAddScoped<IContentLocalizationManager, DefaultContentLocalizationManager>();

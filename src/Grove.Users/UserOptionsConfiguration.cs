@@ -15,11 +15,6 @@ public sealed class UserOptionsConfiguration : IConfigureOptions<ResourceManagem
             .DefineScript("password-generator")
             .SetUrl("~/Grove.Users/Scripts/password-generator.min.js", "~/Grove.Users/Scripts/password-generator.js")
             .SetVersion("1.0.0");
-
-        s_manifest
-            .DefineScript("qrcode")
-            .SetUrl("~/Grove.Users/Scripts/qrcode.min.js", "~/Grove.Users/Scripts/qrcode.js")
-            .SetVersion("1.0.0");
     }
 
     public void Configure(ResourceManagementOptions options)

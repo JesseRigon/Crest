@@ -5,7 +5,6 @@ using Grove.Data;
 using Grove.Data.Migration;
 using Grove.Deployment;
 using Grove.Deployment.Deployment;
-using Grove.Deployment.Drivers;
 using Grove.Deployment.Indexes;
 using Grove.Deployment.Recipes;
 using Grove.Deployment.Steps;
@@ -28,17 +27,15 @@ public sealed class Startup : StartupBase
 
         services.AddPermissionProvider<Permissions>();
 
-        services.AddSingleton<IDeploymentTargetProvider, FileDownloadDeploymentTargetProvider>();
 
         // Register the fallback type for unknown deployment steps (e.g., when a feature is disabled).
         services.AddJsonDerivedTypeFallback<DeploymentStep, UnknownDeploymentStep>();
-        services.AddDisplayDriver<DeploymentStep, UnknownDeploymentStepDriver>();
 
         // Custom File deployment step
-        services.AddDeployment<CustomFileDeploymentSource, CustomFileDeploymentStep, CustomFileDeploymentStepDriver>();
+        services.AddDeployment<CustomFileDeploymentSource, CustomFileDeploymentStep>();
 
         // Recipe File deployment step
-        services.AddDeploymentWithoutSource<RecipeFileDeploymentStep, RecipeFileDeploymentStepDriver>();
+        services.AddDeploymentWithoutSource<RecipeFileDeploymentStep>();
 
         services.AddIndexProvider<DeploymentPlanIndexProvider>();
         services.AddDataMigration<Migrations>();
@@ -47,8 +44,8 @@ public sealed class Startup : StartupBase
 
         services.AddRecipeExecutionStep<DeploymentPlansRecipeStep>();
 
-        services.AddDeployment<DeploymentPlanDeploymentSource, DeploymentPlanDeploymentStep, DeploymentPlanDeploymentStepDriver>();
+        services.AddDeployment<DeploymentPlanDeploymentSource, DeploymentPlanDeploymentStep>();
 
-        services.AddDeployment<JsonRecipeDeploymentSource, JsonRecipeDeploymentStep, JsonRecipeDeploymentStepDriver>();
+        services.AddDeployment<JsonRecipeDeploymentSource, JsonRecipeDeploymentStep>();
     }
 }

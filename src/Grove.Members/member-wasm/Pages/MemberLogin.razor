@@ -1,0 +1,157 @@
+@attribute [Route(MemberRoutePaths.Login)]
+@attribute [AllowAnonymous]
+@attribute [Grove.Components.Modules.SetsAuthenticationCookie]
+@attribute [Grove.Components.Modules.OrganizationFreePage]
+@namespace Grove.Members.Member.Pages
+@using Grove.Users.Components
+@inject NavigationManager Navigation
+@inject HttpClient Http
+
+@* Member sign-in, at the member shell's own base.
+
+   The staff and member login surfaces are separate BY CONSTRUCTION - each is a page in
+   its own shell at its own base - rather than one shared page deciding at runtime which
+   kind of account it is talking to. A runtime check is a gate someone can get wrong; two
+   bases cannot be confused.
+
+   Renders InteractiveWebAssembly, declared above with [SetsAuthenticationCookie] (App.razor
+   reads it off the routed page): under InteractiveAuto's first-visit server circuit the credential POST
+   goes out on the server-side loopback HttpClient, so the auth Set-Cookie lands in that
+   handler and never reaches the browser - a "successful" sign-in that leaves the browser
+   anonymous. *@
+
+<PageTitle>Sign in</PageTitle>
+
+<div class="grove-member-centred" data-testid="member-login">
+    @if (_twoFactorPending)
+    {
+        @* The second step, as on every login page: the account's code, or a recovery code. *@
+        <TwoFactorChallenge RememberMe="@_rememberMe" SignedIn="@SignedInAsync" Restart="@(() => _twoFactorPending = false)" />
+    }
+    else
+    {
+    <GroveStack Gap="1rem" Style="width: 22rem; max-width: 100%;">
+        <GroveText TextStyle="TextStyle.H5" Text="Sign in" />
+
+        <GroveTextBox @bind-Value="_userName"
+                      Placeholder="User name"
+                      Disabled="@_busy"
+                      data-testid="member-login-username" />
+
+        <GrovePassword @bind-Value="_password"
+                       Placeholder="Password"
+                       Disabled="@_busy"
+                       data-testid="member-login-password" />
+
+        <GroveCheckBox @bind-Value="_rememberMe" Disabled="@_busy" />
+
+        @* What features add inside the form (a captcha), sent with the sign-in as headers. *@
+        <AccessFormExtensions Extensions="@_extensions" Part="sections" Headers="@_headers" />
+
+        <GroveButton Text="Sign in"
+                     Click="@SignInAsync"
+                     Disabled="@(_busy || !RendererInfo.IsInteractive)"
+                     data-testid="member-login-submit" />
+
+        @if (_error is { Length: > 0 })
+        {
+            <GroveText TextStyle="TextStyle.Caption" Text="@_error" data-testid="member-login-error" />
+        }
+
+        <GroveLink Path="@MemberShellLinks.Relative(MemberRoutePaths.ForgotPassword)" Text="Forgot your password?" data-testid="member-login-forgot" />
+
+        @if (_hasExternalProviders)
+        {
+            <GroveLink Path="@MemberShellLinks.Relative(MemberRoutePaths.ExternalLogin)" Text="Sign in with another account" data-testid="member-login-external" />
+        }
+
+        <GroveLink Path="@MemberShellLinks.Relative(MemberRoutePaths.Register)" Text="Create an account" />
+    </GroveStack>
+    }
+</div>
+
+@code {
+    // Supplied by MemberRoutes, which activates the implementation a member module provides
+    // (its library is lazy, so it cannot be registered in the sealed WASM container).
+    [CascadingParameter]
+    private IMemberAuthenticationService Auth { get; set; } = default!;
+
+    private string _userName = string.Empty;
+    private string _password = string.Empty;
+    private bool _rememberMe;
+    private bool _busy;
+    private string? _error;
+    private bool _hasExternalProviders;
+    private bool _twoFactorPending;
+    private AccessFormExtension[] _extensions = [];
+    private readonly Dictionary<string, string?> _headers = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _hasExternalProviders = (await Auth.GetExternalProvidersAsync()).Count > 0;
+        }
+        catch (HttpRequestException)
+        {
+            _hasExternalProviders = false;
+        }
+
+        // The sign-in form's sections (the portal's own links and providers are its own).
+        if (RendererInfo.IsInteractive)
+        {
+            try
+            {
+                _extensions = (await Http.GetFromJsonAsync<AccessForm>("api/grove/auth/form/login"))?.Extensions ?? [];
+            }
+            catch (Exception exception) when (exception is HttpRequestException or System.Text.Json.JsonException)
+            {
+                _extensions = [];
+            }
+        }
+    }
+
+    // forceLoad: the session cookie was just set, and the member shell's authenticated
+    // document has to be fetched with it.
+    private Task SignedInAsync(SignInAnswer answer)
+    {
+        Navigation.NavigateTo(Navigation.BaseUri, forceLoad: true);
+        return Task.CompletedTask;
+    }
+
+    private async Task SignInAsync()
+    {
+        _busy = true;
+        _error = null;
+        try
+        {
+            var result = await Auth.SignInAsync(_userName, _password, _rememberMe, _headers);
+            if (result.RequiresTwoFactor)
+            {
+                _twoFactorPending = true;
+                return;
+            }
+
+            if (!result.Succeeded)
+            {
+                // Deliberately the service's message and nothing more: whether the user
+                // name exists is not something an unauthenticated caller gets to learn.
+                _error = result.Error ?? "Could not sign in.";
+                return;
+            }
+
+            // forceLoad: the session cookie was just set, and the member shell's
+            // authenticated document has to be fetched with it. The member base opens the
+            // organization picker (straight into the only organization when there is one).
+            Navigation.NavigateTo(Navigation.BaseUri, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

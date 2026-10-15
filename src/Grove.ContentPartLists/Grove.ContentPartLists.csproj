@@ -22,10 +22,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The picker abstraction (IOptionSourceProvider, OptionRow,
-         OptionSourceKeys) and OptionPickerField live in Grove.Server; this module
-         plugs Content Part Lists in as one provider among several. -->
+    <!-- The option picker (IOptionSourceProvider, OptionRow, OptionSourceKeys,
+         OptionPickerField) is Grove.OptionPicker; this module plugs Content Part Lists in
+         as one source among several. -->
     <ProjectReference Include="../Grove.Server/Grove.Server.csproj" />
+    <ProjectReference Include="../Grove.OptionPicker/Grove.OptionPicker.csproj" />
     <ProjectReference Include="../Grove.Data.Global/Grove.Data.Global.csproj" />
   </ItemGroup>
 </Project>

@@ -47,5 +47,6 @@
     <ProjectReference Include="..\..\Grove.AuditTrail.Abstractions\Grove.AuditTrail.Abstractions.csproj" />
     <ProjectReference Include="..\..\Grove.Queries.Abstractions\Grove.Queries.Abstractions.csproj" />
     <ProjectReference Include="..\..\Grove.Server\Grove.Server.csproj" />
+    <ProjectReference Include="..\..\Grove.OptionPicker\Grove.OptionPicker.csproj" />
   </ItemGroup>
 </Project>

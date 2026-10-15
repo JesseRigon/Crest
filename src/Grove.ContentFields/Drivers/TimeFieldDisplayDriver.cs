@@ -30,28 +30,4 @@ public sealed class TimeFieldDisplayDriver : ContentFieldDisplayDriver<TimeField
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");
     }
-
-    public override IDisplayResult Edit(TimeField field, BuildFieldEditorContext context)
-    {
-        return Initialize<EditTimeFieldViewModel>(GetEditorShapeType(context), model =>
-        {
-            model.Value = field.Value;
-            model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
-        });
-    }
-
-    public override async Task<IDisplayResult> UpdateAsync(TimeField field, UpdateFieldEditorContext context)
-    {
-        await context.Updater.TryUpdateModelAsync(field, Prefix, f => f.Value);
-        var settings = context.PartFieldDefinition.GetSettings<TimeFieldSettings>();
-
-        if (settings.Required && field.Value == null)
-        {
-            context.Updater.ModelState.AddModelError(Prefix, nameof(field.Value), S["A value is required for {0}.", context.PartFieldDefinition.DisplayName()]);
-        }
-
-        return Edit(field, context);
-    }
 }

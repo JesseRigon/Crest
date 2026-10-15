@@ -16,7 +16,6 @@ using Grove.Environment.Shell;
 using Grove.Modules;
 using Grove.OpenId.Abstractions.Managers;
 using Grove.OpenId.Services;
-using Grove.OpenId.ViewModels;
 using Grove.RateLimits;
 using Grove.Routing;
 using Grove.Security.Services;
@@ -57,11 +56,7 @@ public sealed class AccessController : Controller
         var response = HttpContext.GetOpenIddictServerResponse();
         if (response is not null)
         {
-            return View("Error", new ErrorViewModel
-            {
-                Error = response.Error,
-                ErrorDescription = response.ErrorDescription,
-            });
+            return ProtocolError(response.Error, response.ErrorDescription);
         }
 
         var request = HttpContext.GetOpenIddictServerRequest();
@@ -211,11 +206,7 @@ public sealed class AccessController : Controller
         var response = HttpContext.GetOpenIddictServerResponse();
         if (response is not null)
         {
-            return View("Error", new ErrorViewModel
-            {
-                Error = response.Error,
-                ErrorDescription = response.ErrorDescription,
-            });
+            return ProtocolError(response.Error, response.ErrorDescription);
         }
 
         var request = HttpContext.GetOpenIddictServerRequest();
@@ -282,11 +273,7 @@ public sealed class AccessController : Controller
         var response = HttpContext.GetOpenIddictServerResponse();
         if (response is not null)
         {
-            return View("Error", new ErrorViewModel
-            {
-                Error = response.Error,
-                ErrorDescription = response.ErrorDescription,
-            });
+            return ProtocolError(response.Error, response.ErrorDescription);
         }
 
         var request = HttpContext.GetOpenIddictServerRequest();
@@ -308,11 +295,7 @@ public sealed class AccessController : Controller
         var response = HttpContext.GetOpenIddictServerResponse();
         if (response is not null)
         {
-            return View("Error", new ErrorViewModel
-            {
-                Error = response.Error,
-                ErrorDescription = response.ErrorDescription,
-            });
+            return ProtocolError(response.Error, response.ErrorDescription);
         }
 
         var request = HttpContext.GetOpenIddictServerRequest();
@@ -361,10 +344,10 @@ public sealed class AccessController : Controller
         return LocalRedirect("~" + LogoutConfirmationPage + RequestParameters());
     }
 
-    /// <summary>The consent page (Grove.SiteTheme.Client's OpenIdConsent).</summary>
+    /// <summary>The consent page (Grove.OpenId's site library, OpenIdConsent).</summary>
     public const string ConsentPage = "/connect/consent";
 
-    /// <summary>The logout confirmation page (Grove.SiteTheme.Client's OpenIdLogoutConfirmation).</summary>
+    /// <summary>The logout confirmation page (Grove.OpenId's site library, OpenIdConsent).</summary>
     public const string LogoutConfirmationPage = "/connect/logout-confirm";
 
     // The request's OpenID parameters (query, or form for a POST request), as a query string the
@@ -391,11 +374,7 @@ public sealed class AccessController : Controller
         var response = HttpContext.GetOpenIddictServerResponse();
         if (response is not null)
         {
-            return View("Error", new ErrorViewModel
-            {
-                Error = response.Error,
-                ErrorDescription = response.ErrorDescription,
-            });
+            return ProtocolError(response.Error, response.ErrorDescription);
         }
 
         var request = HttpContext.GetOpenIddictServerRequest();
@@ -430,11 +409,7 @@ public sealed class AccessController : Controller
         var response = HttpContext.GetOpenIddictServerResponse();
         if (response is not null)
         {
-            return View("Error", new ErrorViewModel
-            {
-                Error = response.Error,
-                ErrorDescription = response.ErrorDescription,
-            });
+            return ProtocolError(response.Error, response.ErrorDescription);
         }
 
         var request = HttpContext.GetOpenIddictServerRequest();
@@ -704,5 +679,22 @@ public sealed class AccessController : Controller
         }
 
         return resources;
+    }
+
+    /// <summary>The protocol error page (the site's <c>/connect/error</c>, Grove.OpenId's site library) with the error and its description.</summary>
+    private LocalRedirectResult ProtocolError(string error, string description)
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrEmpty(error))
+        {
+            query.Add("error=" + Uri.EscapeDataString(error));
+        }
+
+        if (!string.IsNullOrEmpty(description))
+        {
+            query.Add("error_description=" + Uri.EscapeDataString(description));
+        }
+
+        return LocalRedirect("~/connect/error" + (query.Count > 0 ? "?" + string.Join('&', query) : string.Empty));
     }
 }

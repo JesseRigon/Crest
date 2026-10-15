@@ -3,7 +3,6 @@ using Grove.DisplayManagement.Handlers;
 using Grove.Modules;
 using Grove.Users.Handlers;
 using Grove.Users.Models;
-using Grove.Users.TimeZone.Drivers;
 using Grove.Users.TimeZone.Handlers;
 using Grove.Users.TimeZone.Services;
 
@@ -17,6 +16,6 @@ public sealed class Startup : StartupBase
         services.AddScoped<IUserTimeZoneService, UserTimeZoneService>();
         services.AddScoped<IUserEventHandler, UserEventHandler>();
         services.AddScoped<ITimeZoneSelector, UserTimeZoneSelector>();
-        services.AddDisplayDriver<User, UserTimeZoneDisplayDriver>();
+        services.AddApiContributor<Api.UserTimeZoneApi>();
     }
 }

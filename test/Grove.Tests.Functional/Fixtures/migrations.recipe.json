@@ -34,7 +34,6 @@
         "Grove.Users",
 
         // Content Management including features having database migrations.
-        "Grove.AdminDashboard",
         "Grove.AdminMenu",
         "Grove.Alias",
         "Grove.ArchiveLater",

@@ -24,6 +24,7 @@
     <ProjectReference Include="..\Grove.Contents.Abstractions\Grove.Contents.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Indexing.Abstractions\Grove.Indexing.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Settings.Abstractions\Grove.Settings.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

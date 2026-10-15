@@ -4,17 +4,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Grove.Admin.Models;
-using Grove.ContentLocalization.Drivers;
 using Grove.ContentLocalization.Indexing;
 using Grove.ContentLocalization.Liquid;
 using Grove.ContentLocalization.Security;
 using Grove.ContentLocalization.Services;
 using Grove.ContentLocalization.Sitemaps;
-using Grove.ContentLocalization.ViewModels;
 using Grove.Contents.Services;
-using Grove.Contents.ViewModels;
-using Grove.DisplayManagement.Handlers;
 using Grove.Environment.Shell.Configuration;
 using Grove.Indexing;
 using Grove.Liquid;
@@ -29,11 +24,8 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.Configure<TemplateOptions>(o =>
-        {
-            o.MemberAccessStrategy.Register<LocalizationPartViewModel>();
-        })
-        .AddLiquidFilter<ContentLocalizationFilter>("localization_set");
+        services.AddLiquidFilter<ContentLocalizationFilter>("localization_set");
+        services.AddApiContributor<Api.ContentLocalizationApi>();
 
         services.AddScoped<IContentPartIndexHandler, LocalizationPartIndexHandler>();
         services.AddSingleton<ILocalizationEntries, LocalizationEntries>();
@@ -42,9 +34,7 @@ public sealed class Startup : StartupBase
         services.AddPermissionProvider<Permissions>();
         services.AddScoped<Grove.Access.IResourcePermissionMapper, LocalizeContentPermissionMapper>();
 
-        services.AddScoped<IContentsAdminListFilter, LocalizationPartContentsAdminListFilter>();
-        services.AddTransient<IContentsAdminListFilterProvider, LocalizationPartContentsAdminListFilterProvider>();
-        services.AddDisplayDriver<ContentOptionsViewModel, LocalizationContentsAdminListDisplayDriver>();
+        services.AddScoped<IContentItemListFilter, LocalizationPartContentItemListFilter>();
     }
 }
 
@@ -60,13 +50,14 @@ public sealed class ContentPickerStartup : StartupBase
 
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDisplayDriver<Navbar, ContentCulturePickerNavbarDisplayDriver>();
+        services.AddApiContributor<Api.CulturePickerApi>();
         services.AddLiquidFilter<SwitchCultureUrlFilter>("switch_culture_url");
 
-        services.AddPageSource<AdminPages>();
+        services.AddSettingsGroup<Models.ContentRequestCultureProviderSettings>(Models.ContentRequestCultureProviderSettings.GroupId, "Content Culture", ContentLocalizationPermissions.ManageContentCulturePicker,
+            group => group.InMenu("settings-localization", entryId: "contentrequestcultureprovider"));
+        services.AddSettingsGroup<Models.ContentCulturePickerSettings>(Models.ContentCulturePickerSettings.GroupId, "Content Culture Picker", ContentLocalizationPermissions.ManageContentCulturePicker,
+            group => group.InMenu("settings-localization", entryId: "contentculturepicker"));
         services.AddScoped<IContentCulturePickerService, ContentCulturePickerService>();
-        services.AddSiteDisplayDriver<ContentCulturePickerSettingsDriver>();
-        services.AddSiteDisplayDriver<ContentRequestCultureProviderSettingsDriver>();
 
         services.Configure<RequestLocalizationOptions>(options => options.AddInitialRequestCultureProvider(new ContentRequestCultureProvider()));
         services.Configure<CulturePickerOptions>(_shellConfiguration.GetSection("Grove_ContentLocalization_CulturePickerOptions"));

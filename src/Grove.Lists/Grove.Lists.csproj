@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.AdminMenu.Abstractions\Grove.AdminMenu.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Apis.GraphQL.Abstractions\Grove.Apis.GraphQL.Abstractions.csproj" />
@@ -30,7 +31,6 @@
     <ProjectReference Include="..\Grove.Indexing.Abstractions\Grove.Indexing.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Media.Abstractions\Grove.Media.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Media\Grove.Media.csproj" />
-    <ProjectReference Include="..\Grove.MetaWeblog.Abstractions\Grove.MetaWeblog.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
     <ProjectReference Include="..\Grove.Users.Abstractions\Grove.Users.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />

@@ -20,24 +20,4 @@ public sealed class BooleanFieldDisplayDriver : ContentFieldDisplayDriver<Boolea
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");
     }
-
-    public override IDisplayResult Edit(BooleanField field, BuildFieldEditorContext context)
-    {
-        return Initialize<EditBooleanFieldViewModel>(GetEditorShapeType(context), model =>
-        {
-            model.Value = (context.IsNew == false) ?
-                field.Value : context.PartFieldDefinition.GetSettings<BooleanFieldSettings>().DefaultValue;
-
-            model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
-        });
-    }
-
-    public override async Task<IDisplayResult> UpdateAsync(BooleanField field, UpdateFieldEditorContext context)
-    {
-        await context.Updater.TryUpdateModelAsync(field, Prefix, f => f.Value);
-
-        return Edit(field, context);
-    }
 }

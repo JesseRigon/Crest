@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using Grove.DisplayManagement.Handlers;
 using Grove.Modules;
 using Grove.Navigation;
-using Grove.Security.Drivers;
 using Grove.Security.Permissions;
 using Grove.Security.Services;
 using Grove.Security.Settings;
@@ -21,7 +20,6 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddPermissionProvider<SecurityPermissions>();
-        services.AddSiteDisplayDriver<SecuritySettingsDisplayDriver>();
         services.AddApiContributor<Api.SecurityHeadersApi>();
         services.AddSingleton<ISecurityService, SecurityService>();
 
@@ -48,8 +46,6 @@ public sealed class SecurityDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<SecuritySettings, SecurityDeploymentStartup>(
-            S => S["Security settings"],
-            S => S["Exports the Security settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<SecuritySettings>();
     }
 }

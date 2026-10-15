@@ -4,7 +4,6 @@ namespace Grove.Users.Models;
 
 public class LoginSettings
 {
-    public bool UseSiteTheme { get; set; }
 
     public bool DisableLocalLogin { get; set; }
 

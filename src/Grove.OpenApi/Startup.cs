@@ -11,7 +11,6 @@ using Grove.DisplayManagement.Handlers;
 using Grove.Environment.Shell;
 using Grove.Modules;
 using Grove.Navigation;
-using Grove.OpenApi.Drivers;
 using Grove.OpenApi.Settings;
 using Grove.Security.Permissions;
 using Grove.Settings;
@@ -73,8 +72,14 @@ public sealed class Startup : StartupBase
         });
 
         services.AddPermissionProvider<Permissions>();
-        services.AddPageSource<AdminPages>();
-        services.AddSiteDisplayDriver<OpenApiSettingsDisplayDriver>();
+        services.AddSettingsGroup<OpenApiSettings>(
+            OpenApiSettings.GroupId,
+            "OpenApi",
+            OpenApiPermissions.ManageOpenApi,
+            group => group
+                .InMenu("settings", entryId: "openapi")
+                .Describe("The API documentation UIs (Swagger UI at ~/swagger, ReDoc at ~/redoc, Scalar at ~/scalar/v1) are enabled or disabled on the Features page.")
+                .ReloadsTenant());
     }
 
     public override void Configure(

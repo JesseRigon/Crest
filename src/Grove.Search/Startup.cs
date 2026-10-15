@@ -1,19 +1,12 @@
-using Fluid;
 using Microsoft.Extensions.DependencyInjection;
-using Grove.ContentManagement;
-using Grove.ContentManagement.Display.ContentDisplay;
-using Grove.Data.Migration;
 using Grove.Deployment;
-using Grove.DisplayManagement.Handlers;
 using Grove.Localization.Data;
 using Grove.Modules;
-using Grove.Navigation;
+using Grove.Search.Abstractions;
+using Grove.Search.Api;
 using Grove.Search.Deployment;
-using Grove.Search.Drivers;
-using Grove.Search.Migrations;
 using Grove.Search.Models;
 using Grove.Search.Services;
-using Grove.Search.ViewModels;
 using Grove.Security.Permissions;
 
 namespace Grove.Search;
@@ -23,21 +16,13 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddPermissionProvider<Permissions>();
-        services.AddPageSource<AdminPages>();
-        services.AddSiteDisplayDriver<SearchSettingsDisplayDriver>();
-    }
-}
+        services.AddSettingsGroup<SearchSettings>(SearchConstants.SearchSettingsGroupId, "Site Search", SearchPermissions.ManageSearchSettings,
+            group => group.InMenu("settings-search", entryId: "searchsettings"));
 
-[RequireFeatures("Grove.Contents")]
-public sealed class ContentsStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddDataMigration<SearchMigrations>();
-
-        services
-            .AddContentPart<SearchFormPart>()
-            .UseDisplayDriver<SearchFormPartDisplayDriver>();
+        // The search seam: the engines register their ISearchService (AddSearchService); the
+        // search API and the site search page (Grove.Search.BlazorWasm) go through ISiteSearch.
+        services.AddScoped<ISiteSearch, SiteSearch>();
+        services.AddApiContributor<SearchApi>();
     }
 }
 
@@ -46,21 +31,7 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<SearchSettingsDeploymentSource, SearchSettingsDeploymentStep, SearchSettingsDeploymentStepDriver>();
-    }
-}
-
-[RequireFeatures("Grove.Liquid")]
-public sealed class LiquidStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.Configure<TemplateOptions>(o =>
-        {
-            o.MemberAccessStrategy.Register<SearchIndexViewModel>();
-            o.MemberAccessStrategy.Register<SearchFormViewModel>();
-            o.MemberAccessStrategy.Register<SearchResultsViewModel>();
-        });
+        services.AddDeployment<SearchSettingsDeploymentSource, SearchSettingsDeploymentStep>();
     }
 }
 

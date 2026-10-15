@@ -12,6 +12,14 @@
     <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
   </PropertyGroup>
 
+  <!-- The client libraries are their own projects: the shared components (components/,
+       Grove.Users.Components) and the site-shell pages (site-wasm/, Grove.Users.Site.BlazorWasm). -->
+  <ItemGroup>
+    <Compile Remove="components/**/*.cs;site-wasm/**/*.cs" />
+    <Content Remove="components/**;site-wasm/**" />
+    <None Remove="components/**;site-wasm/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>

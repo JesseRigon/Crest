@@ -1,117 +1,31 @@
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Grove.DisplayManagement.Handlers;
 using Grove.Modules;
-using Grove.Mvc.Utilities;
 using Grove.RateLimits;
 using Grove.Security.Permissions;
-using Grove.Users.Controllers;
-using Grove.Users.Drivers;
-using Grove.Users.Endpoints.EmailAuthenticator;
-using Grove.Users.Endpoints.SmsAuthenticator;
 using Grove.Users.Events;
-using Grove.Users.Filters;
 using Grove.Users.Models;
 using Grove.Users.Services;
 
 namespace Grove.Users;
 
+// The two-factor pages are the site shell's (Grove.Users' site library: the two-factor page and
+// the second sign-in step), and the login page asks for the code itself; these startups declare
+// the methods, the two-factor API and the code sender.
 [Feature(UserConstants.Features.TwoFactorAuthentication)]
 public sealed class TwoFactorAuthenticationStartup : StartupBase
 {
-    private static readonly string s_twoFactorControllerName = typeof(TwoFactorAuthenticationController).ControllerName();
-
-    private UserOptions _userOptions;
-
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.Configure<MvcOptions>(options =>
-        {
-            options.Filters.Add<TwoFactorAuthenticationAuthorizationFilter>();
-        });
-
-        services.AddDisplayDriver<User, UserTwoFactorDisplayDriver>();
         services.AddScoped<IUserClaimsProvider, TwoFactorAuthenticationClaimsProvider>();
-        services.AddDisplayDriver<UserMenu, TwoFactorUserMenuDisplayDriver>();
-        services.AddSiteDisplayDriver<TwoFactorLoginSettingsDisplayDriver>();
-        services.AddDisplayDriver<TwoFactorMethod, TwoFactorMethodDisplayDriver>();
         services.AddPermissionProvider<TwoFactorPermissionProvider>();
-    }
+        services.AddScoped<TwoFactorCodeSender>();
+        services.AddApiContributor<Api.TwoFactorApi>();
 
-    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        _userOptions ??= serviceProvider.GetRequiredService<IOptions<UserOptions>>().Value;
-
-        routes.MapAreaControllerRoute(
-                name: "LoginWithTwoFactorAuthentication",
-                areaName: UserConstants.Features.Users,
-                pattern: "LoginWithTwoFactorAuthentication",
-                defaults: new
-                {
-                    controller = s_twoFactorControllerName,
-                    action = nameof(TwoFactorAuthenticationController.LoginWithTwoFactorAuthentication),
-                }
-            );
-
-        routes.MapAreaControllerRoute(
-            name: "TwoFactorAuthentication",
-            areaName: UserConstants.Features.Users,
-            pattern: _userOptions.TwoFactorAuthenticationPath,
-            defaults: new
-            {
-                controller = s_twoFactorControllerName,
-                action = nameof(TwoFactorAuthenticationController.Index),
-            }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: "LoginWithRecoveryCode",
-            areaName: UserConstants.Features.Users,
-            pattern: "LoginWithRecoveryCode",
-            defaults: new
-            {
-                controller = s_twoFactorControllerName,
-                action = nameof(TwoFactorAuthenticationController.LoginWithRecoveryCode),
-            }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: "GenerateRecoveryCodes",
-            areaName: UserConstants.Features.Users,
-            pattern: "GenerateRecoveryCodes",
-            defaults: new
-            {
-                controller = s_twoFactorControllerName,
-                action = nameof(TwoFactorAuthenticationController.GenerateRecoveryCodes),
-            }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: "ShowRecoveryCodes",
-            areaName: UserConstants.Features.Users,
-            pattern: "ShowRecoveryCodes",
-            defaults: new
-            {
-                controller = s_twoFactorControllerName,
-                action = nameof(TwoFactorAuthenticationController.ShowRecoveryCodes),
-            }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: "DisableTwoFactorAuthentication",
-            areaName: UserConstants.Features.Users,
-            pattern: "DisableTwoFactorAuthentication",
-            defaults: new
-            {
-                controller = s_twoFactorControllerName,
-                action = nameof(TwoFactorAuthenticationController.DisableTwoFactorAuthentication),
-            }
-        );
+        // A user who must set it up reaches the two-factor page and nothing else (the access gate).
+        services.AddScoped<Grove.Access.IPendingSignInStepProvider, TwoFactorSetupStep>();
     }
 }
 
@@ -125,32 +39,7 @@ public sealed class TwoFactorAuthenticationRateLimitsStartup : StartupBase
         {
             options.AddRouteRateLimit(RateLimitRouteNames.LoginWithTwoFactorAuthentication, HttpMethods.Post, RateLimitPartitionHelpers.CreateSlidingWindowPerIpPolicy(UserRateLimiterPolicyNames.TwoFactorAuthentication, 5));
             options.AddRouteRateLimit(RateLimitRouteNames.LoginWithRecoveryCode, HttpMethods.Post, RateLimitPartitionHelpers.CreateSlidingWindowPerIpPolicy(UserRateLimiterPolicyNames.TwoFactorRecovery, 3));
-        });
-    }
-}
-
-[Feature(UserConstants.Features.EmailAuthenticator)]
-[RequireFeatures("Grove.RateLimits", UserConstants.Features.TwoFactorAuthentication)]
-public sealed class EmailAuthenticatorRateLimitsStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.Configure<RateLimitsOptions>(options =>
-        {
-            options.AddRouteRateLimit(Endpoints.EmailAuthenticator.SendCode.RouteName, HttpMethods.Post, RateLimitPartitionHelpers.CreateFixedWindowPerIpPolicy(UserRateLimiterPolicyNames.TwoFactorCodeSend, 2, TimeSpan.FromMinutes(1)));
-        });
-    }
-}
-
-[Feature(UserConstants.Features.SmsAuthenticator)]
-[RequireFeatures("Grove.RateLimits", UserConstants.Features.TwoFactorAuthentication)]
-public sealed class SmsAuthenticatorRateLimitsStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.Configure<RateLimitsOptions>(options =>
-        {
-            options.AddRouteRateLimit(Endpoints.SmsAuthenticator.SendCode.RouteName, HttpMethods.Post, RateLimitPartitionHelpers.CreateFixedWindowPerIpPolicy(UserRateLimiterPolicyNames.TwoFactorCodeSend, 2, TimeSpan.FromMinutes(1)));
+            options.AddRouteRateLimit(RateLimitRouteNames.TwoFactorSendCode, HttpMethods.Post, RateLimitPartitionHelpers.CreateFixedWindowPerIpPolicy(UserRateLimiterPolicyNames.TwoFactorCodeSend, 2, TimeSpan.FromMinutes(1)));
         });
     }
 }
@@ -160,7 +49,6 @@ public sealed class RoleTwoFactorAuthenticationStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteDisplayDriver<RoleLoginSettingsDisplayDriver>();
         services.AddScoped<ITwoFactorAuthenticationHandler, RoleTwoFactorAuthenticationHandler>();
     }
 }
@@ -181,35 +69,6 @@ public sealed class AuthenticatorAppStartup : StartupBase
         });
 
         services.AddTransient<IConfigureOptions<TwoFactorOptions>, AuthenticatorAppProviderTwoFactorOptionsConfiguration>();
-        services.AddSiteDisplayDriver<AuthenticatorAppLoginSettingsDisplayDriver>();
-        services.AddDisplayDriver<TwoFactorMethod, TwoFactorMethodLoginAuthenticationAppDisplayDriver>();
-    }
-
-    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        var controllerName = typeof(AuthenticatorAppController).ControllerName();
-
-        routes.MapAreaControllerRoute(
-            name: "ConfigureAuthenticatorApp",
-            areaName: UserConstants.Features.Users,
-            pattern: "Authenticator/Configure/App",
-            defaults: new
-            {
-                controller = controllerName,
-                action = nameof(AuthenticatorAppController.Index),
-            }
-        );
-
-        routes.MapAreaControllerRoute(
-            name: "RemoveAuthenticatorApp",
-            areaName: UserConstants.Features.Users,
-            pattern: "Authenticator/Reset/App",
-            defaults: new
-            {
-                controller = controllerName,
-                action = nameof(AuthenticatorAppController.Reset),
-            }
-        );
     }
 }
 
@@ -225,14 +84,6 @@ public sealed class EmailAuthenticatorStartup : StartupBase
             {
                 options.Tokens.ProviderMap[TokenOptions.DefaultEmailProvider] = new TokenProviderDescriptor(emailProviderType);
             });
-
-        services.AddDisplayDriver<TwoFactorMethod, TwoFactorMethodLoginEmailDisplayDriver>();
-        services.AddSiteDisplayDriver<EmailAuthenticatorLoginSettingsDisplayDriver>();
-    }
-
-    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        routes.AddEmailSendCodeEndpoint<EmailAuthenticatorStartup>();
     }
 }
 
@@ -250,12 +101,5 @@ public sealed class SmsAuthenticatorStartup : StartupBase
         });
 
         services.AddTransient<IConfigureOptions<TwoFactorOptions>, PhoneProviderTwoFactorOptionsConfiguration>();
-        services.AddDisplayDriver<TwoFactorMethod, TwoFactorMethodLoginSmsDisplayDriver>();
-        services.AddSiteDisplayDriver<SmsAuthenticatorLoginSettingsDisplayDriver>();
-    }
-
-    public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
-    {
-        routes.AddSmsSendCodeEndpoint<SmsAuthenticatorStartup>();
     }
 }

@@ -27,6 +27,7 @@
     <ProjectReference Include="..\Grove.Navigation\Grove.Navigation.csproj" />
     <ProjectReference Include="..\Grove.Recipes.Abstractions\Grove.Recipes.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
+    <ProjectReference Include="..\Grove.Settings.Abstractions\Grove.Settings.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

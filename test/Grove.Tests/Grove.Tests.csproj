@@ -67,6 +67,8 @@
     <ProjectReference Include="..\..\src\Grove.ContentManagement\Grove.ContentManagement.csproj" />
     <ProjectReference Include="..\..\src\Grove.Access\Grove.Access.csproj" />
     <ProjectReference Include="..\..\src\Grove.Sharing\Grove.Sharing.csproj" />
+    <ProjectReference Include="..\..\src\Grove.AuditTrail\Grove.AuditTrail.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Deployment.Remote\Grove.Deployment.Remote.csproj" />
     <ProjectReference Include="..\..\src\Grove.Media.Scanning\Grove.Media.Scanning.csproj" />
     <ProjectReference Include="..\..\src\Grove.Data.YesSql\Grove.Data.YesSql.csproj" />
   </ItemGroup>

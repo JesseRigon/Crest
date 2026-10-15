@@ -19,20 +19,19 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddPermissionProvider<Permissions>();
-        services.AddScoped<IJSLocalizer, AdminMenuJSLocalizer>();
 
         services.AddScoped<IAdminMenuService, AdminMenuService>();
         services.AddScoped<IAdminMenuAccessor, AdminMenuAccessor>();
 
         services.AddRecipeExecutionStep<AdminMenuStep>();
 
-        services.AddDeployment<AdminMenuDeploymentSource, AdminMenuDeploymentStep, AdminMenuDeploymentStepDriver>();
+        services.AddDeployment<AdminMenuDeploymentSource, AdminMenuDeploymentStep>();
 
         // placeholder treeNode
-        services.AddAdminNode<PlaceholderAdminNode, PlaceholderAdminNodeNavigationBuilder, PlaceholderAdminNodeDriver>();
+        services.AddAdminNode<PlaceholderAdminNode, PlaceholderAdminNodeNavigationBuilder>();
 
         // link treeNode
-        services.AddAdminNode<LinkAdminNode, LinkAdminNodeNavigationBuilder, LinkAdminNodeDriver>();
+        services.AddAdminNode<LinkAdminNode, LinkAdminNodeNavigationBuilder>();
 
         // Migrate admin menu to the 3.0 format.
         services.AddDataMigration<Migrations>();

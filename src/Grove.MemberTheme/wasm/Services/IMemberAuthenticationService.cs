@@ -7,9 +7,14 @@ namespace Grove.MemberTheme.Services;
 /// not get to learn whether a user name exists, so the implementation must not hand back
 /// anything that distinguishes "no such user" from "wrong password".
 /// </remarks>
-public sealed record MemberAuthenticationResult(bool Succeeded, string? Error = null)
+/// <para><paramref name="RequiresTwoFactor"/>: the password was right and the account has two-factor
+/// authentication; the sign-in finishes with its second step (the sign-in API's two-factor
+/// challenge), not yet signed in.</para>
+public sealed record MemberAuthenticationResult(bool Succeeded, string? Error = null, bool RequiresTwoFactor = false)
 {
     public static MemberAuthenticationResult Success { get; } = new(true);
+
+    public static MemberAuthenticationResult TwoFactor { get; } = new(false, null, RequiresTwoFactor: true);
 
     public static MemberAuthenticationResult Failed(string error) => new(false, error);
 }
@@ -32,6 +37,13 @@ public sealed record MemberAuthenticationResult(bool Succeeded, string? Error = 
 public interface IMemberAuthenticationService
 {
     Task<MemberAuthenticationResult> SignInAsync(string userName, string password, bool rememberMe);
+
+    /// <summary>
+    /// Signs in with the headers the login form's sections contributed (a captcha's token, sent as
+    /// the header the login events verify). An implementation without sections ignores them.
+    /// </summary>
+    Task<MemberAuthenticationResult> SignInAsync(string userName, string password, bool rememberMe, IReadOnlyDictionary<string, string?>? headers) =>
+        SignInAsync(userName, password, rememberMe);
 
     Task<MemberAuthenticationResult> RegisterAsync(string userName, string email, string password, string firstName, string lastName, string? organizationId);
 

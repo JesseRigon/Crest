@@ -35,7 +35,9 @@ public sealed class WorkflowAccessGateMiddleware(WorkflowMiddlewareDelegate next
         var accessor = context.GetRequiredService<ICallerContextAccessor>();
         var seal = context.GetRequiredService<WorkflowActorSeal>();
         var inherited = accessor.Current;
-        var firstBurst = context.SubStatus == WorkflowSubStatus.Pending;
+        // The runner has already moved a new run to Executing when the pipeline starts; it
+        // records the first burst for us (Pending still holds when the pipeline runs directly).
+        var firstBurst = context.IsFirstBurst || context.SubStatus == WorkflowSubStatus.Pending;
         var runsAsSystem = WorkflowCallerResolver.RunsAsSystem(context.Workflow);
 
         var caller = firstBurst && inherited is not null && (!inherited.IsSystem || runsAsSystem)

@@ -2,13 +2,17 @@
 @attribute [Grove.Components.Modules.SetsAuthenticationCookie]
 @using Grove.AdminTheme.State
 @using Grove.AdminTheme.Options
+@using Grove.Users.Components
 @using Microsoft.AspNetCore.Components
-@using Grove.Components.Primitives
 @using Grove.Components.Primitives
 @inject AdminShellState AdminShellState
 @inject RoutingOptions Routing
 @inject NavigationManager Navigation
 @inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* The admin shell's sign-in page (docs/shells-and-themes.md › Required pages): the theme lays it
+   out - the tenant's branding, the signed-in state - and the sign-in itself is the Users module's
+   (SignInForm: credentials, the form's extensions, the second step). *@
 
 @* The login shell has no admin chrome, so the page owns the viewport: full-height
    flex centering, both axes. *@
@@ -33,65 +37,37 @@
     }
     else
     {
-        <GroveTemplateForm TItem="LoginForm" Data="@_login" Submit="@((LoginForm form) => LoginAsync(form))">
-            <GroveStack Gap="0.75rem" Style="width: 22rem; max-width: 100%;">
-                <GroveTextBox Name="UserName" @bind-Value="_login.UserName" Placeholder="@T["Username or email"]" />
-                <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                    <GroveButton ButtonType="ButtonType.Button"
-                                 ButtonStyle="ButtonStyle.Light"
-                                 Icon="@(_showPassword ? "visibility_off" : "visibility")"
-                                 title="@(_showPassword ? T["Hide password"] : T["Show password"])"
-                                 aria-label="@(_showPassword ? T["Hide password"] : T["Show password"])"
-                                 Click="@(() => _showPassword = !_showPassword)"
-                                 data-testid="toggle-password" />
-                    <GrovePassword Name="Password" @bind-Value="_login.Password" Placeholder="@T["Password"]"
-                                   Reveal="@_showPassword" Style="flex: 1 1 auto;" />
-                </GroveStack>
-                <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                    <GroveCheckBox @bind-Value="_login.RememberMe" Name="RememberMe" />
-                    @* Unchecked = a session auth cookie: signing in lasts only until the
-                       browser session ends. Checked = a persistent cookie. *@
-                    <label class="rz-label" for="RememberMe" style="margin: 0; cursor: pointer;">@T["Remember me"]</label>
-                </GroveStack>
-                @* Disabled until interactive: the statically prerendered form carries the
-                   middleware's INTERNAL composed URL (PathBase "/Login" + Path "/login") as
-                   its action and no method, so a submit before the runtime attaches is a
-                   native GET to "/Login/login?UserName=...&Password=..." - a 404 that leaks
-                   the password into the URL, history and server logs. A disabled sole submit
-                   button also blocks the Enter-key implicit submission for that window. *@
-                <GroveButton ButtonType="ButtonType.Submit" Text="@T["Log in"]" Disabled="@(AdminShellState.IsBusy || !RendererInfo.IsInteractive)" />
-                @if (AdminShellState.ErrorMessage is not null)
-                {
-                    <GroveText TextStyle="TextStyle.Caption" Text="@AdminShellState.ErrorMessage" />
-                }
-            </GroveStack>
-        </GroveTemplateForm>
+        <SignInForm UserName="@UserName" ReturnUrl="@ReturnUrl" Error="@Error" ExternalLoginError="@ExternalLoginError" SignedIn="@SignedInAsync" />
     }
 </GroveStack>
 </div>
 
 @code {
-    private LoginForm _login = new();
-    private bool _showPassword;
-
     // A string, not a bool: Blazor's query binding throws on anything but true/false, so a
     // "switchUser=1" link (the title bar sent that once) was a 500 instead of a login page.
     [SupplyParameterFromQuery(Name = "switchUser")]
     public string? SwitchUserQuery { get; set; }
 
-    private bool SwitchUser => SwitchUserQuery is { } value
-        && (value == "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase));
+    private bool SwitchUser => IsTrue(SwitchUserQuery);
 
     [SupplyParameterFromQuery(Name = "userName")]
     public string? UserName { get; set; }
 
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    /// <summary>A refusal met before this page (a failed external sign-in, a disabled account).</summary>
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    [SupplyParameterFromQuery(Name = "externalLoginError")]
+    public string? ExternalLoginErrorQuery { get; set; }
+
+    private bool ExternalLoginError => IsTrue(ExternalLoginErrorQuery);
+
     protected override async Task OnInitializedAsync()
     {
         await AdminShellState.EnsureInitializedAsync();
-        if (!string.IsNullOrWhiteSpace(UserName))
-        {
-            _login.UserName = UserName;
-        }
 
         // Static SSR prerender: paint the form (or signed-in state) and stop - the
         // redirect/logout policy below belongs to the interactive phase, which re-runs
@@ -121,12 +97,12 @@
         }
     }
 
-    private async Task LoginAsync(LoginForm form)
+    // Signed in: where the sign-in says to go first (the two-factor page for a user who must set
+    // it up), else the admin. A full reload: the session was just issued.
+    private Task SignedInAsync(SignInAnswer answer)
     {
-        if (await AdminShellState.LoginAsync(form.UserName, form.Password, form.RememberMe))
-        {
-            Navigation.NavigateTo(Routing.AdminPath, forceLoad: true);
-        }
+        Navigation.NavigateTo(answer.Redirect is { Length: > 0 } redirect ? redirect : Routing.AdminPath, forceLoad: true);
+        return Task.CompletedTask;
     }
 
     private async Task LogoutAsync()
@@ -135,10 +111,6 @@
         Navigation.NavigateTo(Routing.LoginPath);
     }
 
-    private sealed class LoginForm
-    {
-        public string UserName { get; set; } = "";
-        public string Password { get; set; } = "";
-        public bool RememberMe { get; set; }
-    }
+    private static bool IsTrue(string? value) =>
+        value is { } text && (text == "1" || string.Equals(text, "true", StringComparison.OrdinalIgnoreCase));
 }

@@ -35,6 +35,7 @@ public sealed class ForwardedAuthHandler(IHttpContextAccessor httpContextAccesso
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         ForwardCookies(request);
+        LoopbackRequests.Mark(request);
 
         if (RequiresAntiforgeryToken(request))
         {
@@ -107,6 +108,7 @@ public sealed class ForwardedAuthHandler(IHttpContextAccessor httpContextAccesso
                 : new Uri(BaseAddress, "api/grove/antiforgery/token");
             using var request = new HttpRequestMessage(HttpMethod.Get, tokenUri);
             ForwardCookies(request);
+            LoopbackRequests.Mark(request);
             using var response = await base.SendAsync(request, cancellationToken);
             response.EnsureSuccessStatusCode();
             _token = await response.Content.ReadFromJsonAsync<GroveAntiforgeryToken>(cancellationToken)

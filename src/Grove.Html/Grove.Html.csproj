@@ -29,7 +29,6 @@
     <ProjectReference Include="..\Grove.Data.Abstractions\Grove.Data.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
     <ProjectReference Include="..\Grove.Indexing.Abstractions\Grove.Indexing.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.MetaWeblog.Abstractions\Grove.MetaWeblog.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Media.Abstractions\Grove.Media.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
     <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />

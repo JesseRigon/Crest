@@ -38,7 +38,6 @@ public sealed class Startup : StartupBase
         services.AddScoped<ITenantValidator, TenantValidator>();
         // Create, edit and setup for the native Tenants page and the tenants API alike.
         services.AddScoped<TenantAdministration>();
-        services.AddShapeTableProvider<TenantShapeTableProvider>();
         services.AddSetup();
 
         services.Configure<TenantsOptions>(_shellConfiguration.GetSection("Grove_Tenants"));
@@ -111,11 +110,11 @@ public sealed class FeatureProfilesStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddPageSource<FeatureProfilesPages>();
         services.AddScoped<FeatureProfilesManager>();
         services.AddScoped<IFeatureProfilesService, FeatureProfilesService>();
-        services.AddScoped<IFeatureProfilesSchemaService, FeatureProfilesSchemaService>();
-        services.AddShapeTableProvider<TenantFeatureProfileShapeTableProvider>();
+
+        // The feature profiles page (Grove.AdminTheme.Client, /TenantFeatureProfiles) and its API.
+        services.AddApiContributor<Api.FeatureProfilesApi>();
 
         services.AddRecipeExecutionStep<FeatureProfilesStep>();
     }
@@ -126,15 +125,6 @@ public sealed class FeatureProfilesDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<AllFeatureProfilesDeploymentSource, AllFeatureProfilesDeploymentStep, AllFeatureProfilesDeploymentStepDriver>();
-    }
-}
-
-[RequireFeatures("Grove.Features")]
-public sealed class TenantFeatureProfilesStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddShapeTableProvider<TenantFeatureShapeTableProvider>();
+        services.AddDeployment<AllFeatureProfilesDeploymentSource, AllFeatureProfilesDeploymentStep>();
     }
 }

@@ -1,8 +1,11 @@
+using Grove.Security.Permissions;
+using Grove.AzureAI.Models;
+using Grove.Environment.Options;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Grove.AzureAI;
 using Grove.AzureAI.Deployment;
-using Grove.AzureAI.Drivers;
 using Grove.AzureAI.Flows;
 using Grove.AzureAI.Handlers;
 using Grove.AzureAI.Recipes;
@@ -36,9 +39,50 @@ public sealed class Startup : StartupBase
     {
         services.AddIndexProfileHandler<AzureAISearchIndexProfileHandler>();
         services.AddIndexProfileHandler<AzureAISearchIndexHandler>();
-        services.AddPageSource<AdminPages>();
+        services.AddSettingsGroup<AzureAISearchDefaultSettings>(AzureAISearchDefaultSettings.GroupId, "Azure AI Search", IndexingPermissions.ManageIndexes, group => group
+            .InMenu("settings-search", entryId: "azureaisearch")
+            .AlsoAdmits(AzureAISearchPermissions.ManageAzureAISearchISettings)
+            .ValidatedBy((provider, settings, errors, cancellationToken) =>
+            {
+                var options = provider.GetRequiredService<IOptionsMonitor<AzureAISearchDefaultOptions>>().CurrentValue;
+                if (options.DisableUIConfiguration)
+                {
+                    errors.Add(string.Empty, "The host configures Azure AI Search; these settings cannot be changed here.");
+                    return Task.CompletedTask;
+                }
+
+                if (!options.FileConfigurationExists())
+                {
+                    settings.UseCustomConfiguration = true;
+                }
+
+                if (settings.UseCustomConfiguration)
+                {
+                    if (string.IsNullOrWhiteSpace(settings.Endpoint))
+                    {
+                        errors.Add(nameof(settings.Endpoint), "Endpoint is required.");
+                    }
+                    else if (!Uri.TryCreate(settings.Endpoint, UriKind.Absolute, out _))
+                    {
+                        errors.Add(nameof(settings.Endpoint), "Endpoint must be a valid url.");
+                    }
+
+                    if (settings.AuthenticationType == AzureAIAuthenticationType.ApiKey && string.IsNullOrEmpty(settings.ApiKey))
+                    {
+                        errors.Add(nameof(settings.ApiKey), "API Key is required when using API Key authentication type.");
+                    }
+
+                    settings.IdentityClientId = settings.IdentityClientId?.Trim();
+                }
+
+                return Task.CompletedTask;
+            })
+            .OnSaved((provider, _, _) =>
+            {
+                provider.GetRequiredService<IOptionsUpdateNotifier>().RequestUpdate<AzureAISearchDefaultOptions>();
+                return Task.CompletedTask;
+            }));
         services.AddAzureAISearchServices();
-        services.AddSiteDisplayDriver<AzureAISearchDefaultSettingsDisplayDriver>();
         services.AddDataMigration<AzureAISearchIndexSettingsMigrations>();
         services.AddDataMigration<PermissionMigrations>();
     }
@@ -73,7 +117,6 @@ public sealed class ContentsStartup : StartupBase
 
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDisplayDriver<IndexProfile, AzureAISearchIndexProfileDisplayDriver>();
 
         services
             .AddIndexProfileHandler<AzureAISearchContentIndexProfileHandler>()
@@ -101,9 +144,9 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<AzureAISearchIndexDeploymentSource, AzureAISearchIndexDeploymentStep, AzureAISearchIndexDeploymentStepDriver>();
-        services.AddDeployment<AzureAISearchIndexRebuildDeploymentSource, AzureAISearchIndexRebuildDeploymentStep, AzureAISearchIndexRebuildDeploymentStepDriver>();
-        services.AddDeployment<AzureAISearchIndexResetDeploymentSource, AzureAISearchIndexResetDeploymentStep, AzureAISearchIndexResetDeploymentStepDriver>();
+        services.AddDeployment<AzureAISearchIndexDeploymentSource, AzureAISearchIndexDeploymentStep>();
+        services.AddDeployment<AzureAISearchIndexRebuildDeploymentSource, AzureAISearchIndexRebuildDeploymentStep>();
+        services.AddDeployment<AzureAISearchIndexResetDeploymentSource, AzureAISearchIndexResetDeploymentStep>();
     }
 }
 

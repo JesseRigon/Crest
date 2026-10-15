@@ -6,9 +6,9 @@ using Grove.Deployment;
 using Grove.DisplayManagement.Handlers;
 using Grove.Facebook.Deployment;
 using Grove.Facebook.Login.Configuration;
-using Grove.Facebook.Login.Drivers;
 using Grove.Facebook.Login.Recipes;
 using Grove.Facebook.Login.Services;
+using Grove.Facebook.Login.Settings;
 using Grove.Modules;
 using Grove.Navigation;
 using Grove.Recipes;
@@ -20,10 +20,12 @@ public sealed class StartupLogin : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddPageSource<FacebookLoginPages>();
-
         services.AddSingleton<IFacebookLoginService, FacebookLoginService>();
-        services.AddSiteDisplayDriver<FacebookLoginSettingsDisplayDriver>();
+        services.AddSettingsGroup<FacebookLoginSettings>(
+            FacebookConstants.Features.Login,
+            "Meta",
+            Permissions.ManageFacebookApp,
+            group => group.InMenu("settings-authentication", entryId: "facebook").ReloadsTenant());
         services.AddRecipeExecutionStep<FacebookLoginSettingsStep>();
 
         // Register the options initializers required by the Facebook handler.
@@ -41,6 +43,6 @@ public class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<FacebookLoginDeploymentSource, FacebookLoginDeploymentStep, FacebookLoginDeploymentStepDriver>();
+        services.AddDeployment<FacebookLoginDeploymentSource, FacebookLoginDeploymentStep>();
     }
 }

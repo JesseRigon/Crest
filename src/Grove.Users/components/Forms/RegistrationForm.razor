@@ -1,0 +1,35 @@
+@namespace Grove.Users.Components
+@inherits AccountFormBase
+
+@* Self-registration on the tenant (api/grove/registration): the tenant's registration settings,
+   moderation and email confirmation apply; a section a feature adds (a captcha) is part of the
+   form. A registered user is signed in and sent on, or to the page a pending moderation or
+   confirmation names. *@
+
+<GroveStack Gap="0.75rem" Style="width: 24rem; max-width: 100%;" data-testid="registration-form">
+    <GroveText TextStyle="TextStyle.H5" Text="@L("Register")" />
+    <GroveText TextStyle="TextStyle.Body2" Text="@L("Create a new account.")" />
+    <GroveFormField Text="@L("User name")" Style="width: 100%;"><GroveTextBox @bind-Value="UserName" autocomplete="username" Style="width: 100%;" data-testid="registration-username" /></GroveFormField>
+    <GroveFormField Text="@L("Email")" Style="width: 100%;"><GroveTextBox @bind-Value="Email" autocomplete="email" Style="width: 100%;" data-testid="registration-email" /></GroveFormField>
+    <GroveFormField Text="@L("Password")" Style="width: 100%;"><GrovePassword @bind-Value="Password" autocomplete="new-password" Style="width: 100%;" data-testid="registration-password" /></GroveFormField>
+    <GroveFormField Text="@L("Confirm the password")" Style="width: 100%;"><GrovePassword @bind-Value="ConfirmPassword" autocomplete="new-password" Style="width: 100%;" data-testid="registration-confirm-password" /></GroveFormField>
+    <AccessFormExtensions Extensions="@Form.Extensions" Part="sections" Headers="@Headers" />
+    <GroveButton Text="@L("Register")" Click="RegisterAsync" Disabled="@(Busy || !RendererInfo.IsInteractive)" data-testid="registration-submit" />
+    <Messages Errors="@Errors" />
+</GroveStack>
+
+@code {
+    /// <summary>Where a signed-in new user goes; the site's home when absent.</summary>
+    [Parameter]
+    public string? ReturnUrl { get; set; }
+
+    protected override string FormName => AccessForms.Register;
+
+    private string? UserName { get; set; }
+    private string? Email { get; set; }
+    private string? Password { get; set; }
+    private string? ConfirmPassword { get; set; }
+
+    private Task RegisterAsync() =>
+        SubmitAsync("api/grove/registration", new { UserName, Email, Password, ConfirmPassword, ReturnUrl });
+}

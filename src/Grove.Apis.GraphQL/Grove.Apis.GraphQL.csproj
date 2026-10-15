@@ -10,6 +10,13 @@
     <PackageTags>$(PackageTags) PlatformFramework</PackageTags>
   </PropertyGroup>
 
+  <!-- The admin's GraphiQL page is its own WASM library (blazor-wasm/, Grove.Apis.GraphQL.BlazorWasm). -->
+  <ItemGroup>
+    <Compile Remove="blazor-wasm/**/*.cs" />
+    <Content Remove="blazor-wasm/**" />
+    <None Remove="blazor-wasm/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>

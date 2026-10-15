@@ -23,14 +23,17 @@ public class MarkdownBodyPartHandler : ContentPartHandler<MarkdownBodyPart>
     private readonly IHtmlSanitizerService _htmlSanitizerService;
     private readonly ILiquidTemplateManager _liquidTemplateManager;
     private readonly HtmlEncoder _htmlEncoder;
+    private readonly Microsoft.Extensions.Localization.IStringLocalizer S;
 
     public MarkdownBodyPartHandler(IContentDefinitionManager contentDefinitionManager,
         IShortcodeService shortcodeService,
         IMarkdownService markdownService,
         IHtmlSanitizerService htmlSanitizerService,
         ILiquidTemplateManager liquidTemplateManager,
-        HtmlEncoder htmlEncoder)
+        HtmlEncoder htmlEncoder,
+        Microsoft.Extensions.Localization.IStringLocalizer<MarkdownBodyPartHandler> stringLocalizer)
     {
+        S = stringLocalizer;
         _contentDefinitionManager = contentDefinitionManager;
         _shortcodeService = shortcodeService;
         _markdownService = markdownService;
@@ -87,5 +90,17 @@ public class MarkdownBodyPartHandler : ContentPartHandler<MarkdownBodyPart>
                 bodyAspect.Body = HtmlString.Empty;
             }
         });
+    }
+
+    // Every save path: a body that renders Liquid must parse.
+    protected override Task ValidatingAsync(ValidateContentPartContext context, MarkdownBodyPart part)
+    {
+        var settings = context.ContentTypePartDefinition?.GetSettings<MarkdownBodyPartSettings>();
+        if (settings is { RenderLiquid: true } && !string.IsNullOrEmpty(part.Markdown) && !_liquidTemplateManager.Validate(part.Markdown, out var errors))
+        {
+            context.Fail(S["The Markdown doesn't contain a valid Liquid expression. Details: {0}", string.Join(" ", errors)], nameof(part.Markdown));
+        }
+
+        return Task.CompletedTask;
     }
 }

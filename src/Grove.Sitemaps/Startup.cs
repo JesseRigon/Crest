@@ -32,6 +32,9 @@ public sealed class Startup : StartupBase
     {
         services.AddDataMigration<Migrations>();
         services.AddPageSource<AdminPages>();
+
+        // The sitemaps pages (Grove.Sitemaps.BlazorWasm) and their API.
+        services.AddApiContributor<Api.SitemapsApi>();
         services.AddPermissionProvider<Permissions>();
 
         services.Configure<SitemapsOptions>(options =>
@@ -75,7 +78,6 @@ public sealed class Startup : StartupBase
         services.AddScoped<ISitemapSourceBuilder, CustomPathSitemapSourceBuilder>();
         services.AddScoped<ISitemapSourceUpdateHandler, CustomPathSitemapSourceUpdateHandler>();
         services.AddScoped<ISitemapSourceModifiedDateProvider, CustomPathSitemapSourceModifiedDateProvider>();
-        services.AddDisplayDriver<SitemapSource, CustomPathSitemapSourceDriver>();
         services.AddScoped<ISitemapSourceFactory, SitemapSourceFactory<CustomPathSitemapSource>>();
 
         services.AddRecipeExecutionStep<SitemapsStep>();
@@ -120,7 +122,7 @@ public sealed class SitemapsDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<AllSitemapsDeploymentSource, AllSitemapsDeploymentStep, AllSitemapsDeploymentStepDriver>();
+        services.AddDeployment<AllSitemapsDeploymentSource, AllSitemapsDeploymentStep>();
     }
 }
 
@@ -130,6 +132,6 @@ public sealed class SeoStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddTransient<IRobotsProvider, SitemapsRobotsProvider>();
-        services.AddSiteDisplayDriver<SitemapsRobotsSettingsDisplayDriver>();
+        services.AddSettingsModel<Models.SitemapsRobotsSettings>(SeoConstants.RobotsSettingsGroupId, "Sitemaps");
     }
 }

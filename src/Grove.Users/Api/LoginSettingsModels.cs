@@ -15,28 +15,26 @@ public sealed record LoginSettingsModel(
     bool AllowChangingUsername,
     bool AllowChangingEmail,
     bool AllowChangingPhoneNumber,
-    bool UseSiteTheme,
     bool DisableLocalLogin,
     bool RequireTwoFactorAuthentication,
     bool AllowRememberClientTwoFactorAuthentication,
     int NumberOfRecoveryCodesToGenerate,
-    bool UseSiteThemeForTwoFactorAuthentication,
     bool UseExternalProviderIfOnlyOneDefined,
     bool UseScriptToSyncProperties,
     string? SyncPropertiesScript)
 {
     public static LoginSettingsModel From(LoginSettings login, TwoFactorLoginSettings twoFactor, ExternalLoginSettings external) => new(
         login.AllowRememberMe, login.AllowChangingUsername, login.AllowChangingEmail, login.AllowChangingPhoneNumber,
-        login.UseSiteTheme, login.DisableLocalLogin,
+        login.DisableLocalLogin,
         twoFactor.RequireTwoFactorAuthentication, twoFactor.AllowRememberClientTwoFactorAuthentication,
-        twoFactor.NumberOfRecoveryCodesToGenerate, twoFactor.UseSiteTheme,
+        twoFactor.NumberOfRecoveryCodesToGenerate,
         external.UseExternalProviderIfOnlyOneDefined, external.UseScriptToSyncProperties, external.SyncPropertiesScript);
 
     public LoginSettings ToLoginSettings() => new()
     {
         AllowRememberMe = AllowRememberMe, AllowChangingUsername = AllowChangingUsername,
         AllowChangingEmail = AllowChangingEmail, AllowChangingPhoneNumber = AllowChangingPhoneNumber,
-        UseSiteTheme = UseSiteTheme, DisableLocalLogin = DisableLocalLogin,
+        DisableLocalLogin = DisableLocalLogin,
     };
 
     public TwoFactorLoginSettings ToTwoFactorLoginSettings() => new()
@@ -44,7 +42,6 @@ public sealed record LoginSettingsModel(
         RequireTwoFactorAuthentication = RequireTwoFactorAuthentication,
         AllowRememberClientTwoFactorAuthentication = AllowRememberClientTwoFactorAuthentication,
         NumberOfRecoveryCodesToGenerate = NumberOfRecoveryCodesToGenerate,
-        UseSiteTheme = UseSiteThemeForTwoFactorAuthentication,
     };
 
     public ExternalLoginSettings ToExternalLoginSettings() => new()

@@ -94,7 +94,7 @@ public class TwitterOptionsConfiguration :
             _logger.LogError("The X (Twitter) Consumer Secret could not be decrypted. It may have been encrypted using a different key.");
         }
 
-        if (settings.Item2.CallbackPath.HasValue)
+        if (!string.IsNullOrEmpty(settings.Item2.CallbackPath))
         {
             options.CallbackPath = settings.Item2.CallbackPath;
         }

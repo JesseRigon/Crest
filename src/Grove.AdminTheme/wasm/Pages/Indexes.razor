@@ -44,10 +44,68 @@
                             <GroveButton Text="@T["Reset"]" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => PostAsync(profile, "reset", T["Reset; synchronizing in the background."]))" Disabled="Busy" />
                             <GroveButton Text="@T["Synchronize"]" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => PostAsync(profile, "synchronize", T["Synchronizing in the background."]))" Disabled="Busy" />
                             <GroveButton Text="@T["Edit"]" Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => EditAsync(profile))" Disabled="Busy" />
+                            @if (QueryApi(profile) is not null)
+                            {
+                                <GroveButton Text="@T["Query"]" Icon="search" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => ToggleQuery(profile))" Disabled="Busy" data-testid="index-query-toggle" />
+                            }
                             <GroveButton Text="@T["Delete"]" Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@(() => DeleteAsync(profile, false))" Disabled="Busy" />
                             <GroveButton Text="@T["Force delete"]" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteAsync(profile, true))" Disabled="Busy" />
                         </GroveStack>
                     </GroveStack>
+                    @if (QueryingId == profile.Id)
+                    {
+                        @* The provider's query runner, on the SqlQuery page's pattern: a query (a Liquid
+                           template of the provider's query JSON), its JSON parameters, and the hits. *@
+                        <GroveStack Gap="0.5rem" data-testid="index-query">
+                            @if (profile.Provider == ElasticsearchProvider && ElasticConfigured == false)
+                            {
+                                <GroveAlert AlertStyle="AlertStyle.Warning" AllowClose="false">@T["Elasticsearch is not configured: set its connection in the tenant's configuration."]</GroveAlert>
+                            }
+                            else
+                            {
+                                <GroveFormField Text="@T["Query"]" Style="width: 100%;">
+                                    <GroveTextArea @bind-Value="QueryText" Rows="8" Style="width: 100%; font-family: monospace" data-testid="index-query-text" />
+                                </GroveFormField>
+                                <GroveFormField Text="@T["Parameters (JSON object)"]" Style="width: 100%;">
+                                    <GroveTextArea @bind-Value="QueryParameters" Rows="3" Style="width: 100%; font-family: monospace" />
+                                </GroveFormField>
+                                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                                    <GroveButton Text="@T["Run query"]" Icon="play_arrow" Click="@(() => RunQueryAsync(profile))" Disabled="Busy" data-testid="index-query-run" />
+                                    @if (profile.Provider == ElasticsearchProvider)
+                                    {
+                                        <GroveButton Text="@T["Index information"]" Icon="info" ButtonStyle="ButtonStyle.Light" Click="@(() => IndexInfoAsync(profile))" Disabled="Busy" />
+                                    }
+                                </GroveStack>
+                                @if (QueryResult is { } result)
+                                {
+                                    <GroveText TextStyle="TextStyle.Caption" Text="@T["{0} results in {1} ms", result.Count, result.ElapsedMilliseconds]" />
+                                    @if (profile.Provider == LuceneProvider)
+                                    {
+                                        <GroveText TextStyle="TextStyle.Caption" Text="@T["The results displayed are coming from the stored fields in Lucene."]" />
+                                    }
+                                    @if (result.Documents.Length > 0)
+                                    {
+                                        var columns = result.Documents.SelectMany(document => document.Select(field => field.Key)).Distinct().ToArray();
+                                        <div style="overflow: auto; max-height: 50vh;">
+                                            <table class="rz-grid-table" data-testid="index-query-results">
+                                                <thead><tr>@foreach (var column in columns) { <th>@column</th> }</tr></thead>
+                                                <tbody>
+                                                    @foreach (var document in result.Documents)
+                                                    {
+                                                        <tr>@foreach (var column in columns) { <td>@(document[column] is { } value ? (value is JsonValue ? value.ToString() : value.ToJsonString()) : string.Empty)</td> }</tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                }
+                                @if (IndexInfo is not null)
+                                {
+                                    <pre style="max-height: 50vh; overflow: auto; margin: 0;" data-testid="index-info">@IndexInfo</pre>
+                                }
+                            }
+                        </GroveStack>
+                    }
                     @if (EditingId == profile.Id)
                     {
                         <GroveTextArea @bind-Value="EditJson" Rows="12" Style="width: 100%; font-family: monospace" />
@@ -146,6 +204,69 @@
     }
 
     private sealed record Summary(string Id, string? Name, string? Provider, string? IndexName, string? Type, string? CreatedUtc);
+
+    // The query runners of the Lucene and Elasticsearch providers (their modules' query APIs).
+    private const string LuceneProvider = "Lucene";
+    private const string ElasticsearchProvider = "Elasticsearch";
+    private const string MatchAllQuery = "{\n  \"query\": {\n    \"match_all\": { }\n  },\n  \"size\": 10\n}";
+
+    private string? QueryingId;
+    private string? QueryText = MatchAllQuery;
+    private string? QueryParameters = "{ }";
+    private QueryResultModel? QueryResult;
+    private string? IndexInfo;
+    private bool? ElasticConfigured;
+
+    private static string? QueryApi(Summary profile) => profile.Provider switch
+    {
+        LuceneProvider => $"api/grove/lucene/indexes/{Uri.EscapeDataString(profile.Id)}/query",
+        ElasticsearchProvider => $"api/grove/elasticsearch/indexes/{Uri.EscapeDataString(profile.Id)}/query",
+        _ => null,
+    };
+
+    private async Task ToggleQuery(Summary profile)
+    {
+        QueryResult = null;
+        IndexInfo = null;
+        if (QueryingId == profile.Id) { QueryingId = null; return; }
+        QueryingId = profile.Id;
+        if (profile.Provider == ElasticsearchProvider && ElasticConfigured is null)
+        {
+            try { ElasticConfigured = (await Http.GetFromJsonAsync<ElasticStatus>("api/grove/elasticsearch/status"))?.IsConfigured; }
+            catch (HttpRequestException) { ElasticConfigured = false; }
+        }
+    }
+
+    private async Task RunQueryAsync(Summary profile)
+    {
+        Busy = true;
+        Error = null;
+        QueryResult = null;
+        IndexInfo = null;
+        try
+        {
+            using var response = await Http.PostAsJsonAsync(QueryApi(profile)!, new { Query = QueryText, Parameters = QueryParameters });
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            QueryResult = await response.Content.ReadFromJsonAsync<QueryResultModel>();
+        }
+        finally { Busy = false; }
+    }
+
+    private async Task IndexInfoAsync(Summary profile)
+    {
+        Busy = true;
+        Error = null;
+        try
+        {
+            using var response = await Http.GetAsync($"api/grove/elasticsearch/indexes/{Uri.EscapeDataString(profile.Id)}/info");
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            IndexInfo = await response.Content.ReadAsStringAsync();
+        }
+        finally { Busy = false; }
+    }
+
+    private sealed record QueryResultModel(long Count, long ElapsedMilliseconds, JsonObject[] Documents);
+    private sealed record ElasticStatus(bool IsConfigured);
     private sealed record Source(string ProviderName, string Type, string DisplayName, string? Description);
     private sealed record Choice(string Value, string Label);
 }

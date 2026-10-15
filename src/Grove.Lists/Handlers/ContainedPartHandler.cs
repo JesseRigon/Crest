@@ -104,6 +104,43 @@ public class ContainedPartHandler : ContentHandlerBase
         return _containedContentTypes;
     }
 
+    /// <summary>
+    /// A new item created into a list (the native create page with the list as its container
+    /// writes <c>ContainedPart.ListContentItemId</c>): the list's type is taken from the list,
+    /// and an ordered list puts the item last.
+    /// </summary>
+    public override async Task CreatingAsync(CreateContentContext context)
+    {
+        if (!context.ContentItem.TryGet<ContainedPart>(out var containedPart) || string.IsNullOrEmpty(containedPart.ListContentItemId))
+        {
+            return;
+        }
+
+        // Resolve from DI to avoid circular references.
+        var contentManager = _serviceProvider.GetRequiredService<IContentManager>();
+        var list = await contentManager.GetAsync(containedPart.ListContentItemId, VersionOptions.Latest);
+        if (list is null)
+        {
+            return;
+        }
+
+        var contentDefinitionManager = _serviceProvider.GetRequiredService<IContentDefinitionManager>();
+        var settings = (await contentDefinitionManager.GetTypeDefinitionAsync(list.ContentType))?.Parts
+            .FirstOrDefault(part => string.Equals(part.PartDefinition.Name, nameof(ListPart), StringComparison.Ordinal))
+            ?.GetSettings<ListPartSettings>();
+        var order = containedPart.Order;
+        if (settings?.EnableOrdering == true && order == 0)
+        {
+            order = await _serviceProvider.GetRequiredService<IContainerService>().GetNextOrderNumberAsync(list.ContentItemId);
+        }
+
+        context.ContentItem.Alter<ContainedPart>(part =>
+        {
+            part.ListContentType = list.ContentType;
+            part.Order = order;
+        });
+    }
+
     public override async Task CloningAsync(CloneContentContext context)
     {
         if (context.CloneContentItem.TryGet<ContainedPart>(out var containedPart))

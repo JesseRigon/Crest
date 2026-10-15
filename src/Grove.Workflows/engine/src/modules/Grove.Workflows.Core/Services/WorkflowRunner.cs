@@ -204,6 +204,7 @@ public class WorkflowRunner(
         // If the status is Pending, it means the workflow is started for the first time.
         if (workflowExecutionContext.SubStatus == WorkflowSubStatus.Pending)
         {
+            workflowExecutionContext.IsFirstBurst = true;
             workflowExecutionContext.TransitionTo(WorkflowSubStatus.Executing);
             await notificationSender.SendAsync(new WorkflowStarted(workflow, workflowExecutionContext), cancellationToken);
         }

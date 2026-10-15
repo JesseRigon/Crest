@@ -33,8 +33,8 @@ public class Startup : StartupBase
         services.AddScoped<Grove.ContentTypes.Events.IContentDefinitionEventHandler, ContentTypeTranslationCleanup>();
         services.AddRecipeExecutionStep<TranslationsStep>();
 
-        services.AddDeployment<TranslationsDeploymentSource, TranslationsDeploymentStep, TranslationsDeploymentStepDriver>();
-        services.AddDeployment<AllDataTranslationsDeploymentSource, AllDataTranslationsDeploymentStep, AllDataTranslationsDeploymentStepDriver>();
+        services.AddDeployment<TranslationsDeploymentSource, TranslationsDeploymentStep>();
+        services.AddDeployment<AllDataTranslationsDeploymentSource, AllDataTranslationsDeploymentStep>();
 
         services.AddScoped<IPermissionProvider, Permissions>();
 

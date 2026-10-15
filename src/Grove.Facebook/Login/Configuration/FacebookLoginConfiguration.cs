@@ -90,7 +90,7 @@ public class FacebookLoginConfiguration :
             _logger.LogError("The Facebook secret key could not be decrypted. It may have been encrypted using a different key.");
         }
 
-        if (loginSettings.CallbackPath.HasValue)
+        if (!string.IsNullOrEmpty(loginSettings.CallbackPath))
         {
             options.CallbackPath = loginSettings.CallbackPath;
         }

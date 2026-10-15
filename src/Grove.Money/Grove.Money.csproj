@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Grove.Server/Grove.Server.csproj" />
+    <ProjectReference Include="../Grove.OptionPicker/Grove.OptionPicker.csproj" />
     <ProjectReference Include="../Grove.Data.Global/Grove.Data.Global.csproj" />
     <ProjectReference Include="Domain/Grove.Money.Domain.csproj" />
   </ItemGroup>

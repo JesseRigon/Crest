@@ -274,6 +274,14 @@ public partial class WorkflowExecutionContext : IExecutionContext
     /// </remarks>
     public bool IsExecuting { get; set; }
 
+    /// <summary>
+    /// Whether this burst starts the run: the context was <see cref="WorkflowSubStatus.Pending"/>
+    /// when the runner took it. The runner moves a new run to <see cref="WorkflowSubStatus.Executing"/>
+    /// before the execution pipeline, so pipeline middleware cannot read the first burst from
+    /// <see cref="SubStatus"/>.
+    /// </summary>
+    public bool IsFirstBurst { get; set; }
+
     /// The root <see cref="MemoryRegister"/> associated with the execution context.
     public MemoryRegister MemoryRegister { get; private set; } = null!;
 

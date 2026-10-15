@@ -1,0 +1,341 @@
+@page "/Routes"
+@attribute [PageEntry("ViewRoutes", "ManageUrlRewritingRules", Id = "routes", Parent = "tools", Caption = "Routes", Icon = "@iconify:mdi:routes")]
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* The tenant's route management (Grove.Routes): the page registry's routes with the shell,
+   permissions and the library that declares each; the home route and the content routes
+   (Autoroute paths, aliases); and the rewrite and redirect rules, applied to every request in
+   their order. Rules need ManageUrlRewritingRules; the lists need ViewRoutes. *@
+
+<PageTitle>@T["Routes"]</PageTitle>
+
+<GroveStack Gap="1rem" data-testid="routes-page">
+    <GroveStack Gap="0.25rem">
+        <GroveText TextStyle="TextStyle.H4" class="rz-m-0">@T["Routes"]</GroveText>
+        <GroveText TextStyle="TextStyle.Body2">@T["Every route the tenant answers: its pages, the routes of its content, and the rules that rewrite or redirect incoming URLs."]</GroveText>
+    </GroveStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="true">@Error</GroveAlert>
+    }
+
+    <GroveTabs RenderMode="TabRenderMode.Client">
+        <Tabs>
+            <GroveTabsItem Text="@T["Pages"]" Icon="web">
+                <GroveStack Gap="0.75rem" data-testid="routes-pages">
+                    <GroveStack Orientation="Orientation.Horizontal" Gap="0.75rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                        <GroveFormField Text="@T["Shell"]"><GroveDropDown TValue="string" @bind-Value="ShellFilter" Data="Shells" AllowClear="true" Placeholder="@T["All"]" Style="width: 10rem" /></GroveFormField>
+                        <GroveFormField Text="@T["Route or permission"]"><GroveTextBox @bind-Value="PageSearch" Style="width: 16rem" data-testid="routes-pages-search" /></GroveFormField>
+                    </GroveStack>
+                    @if (Pages is null)
+                    {
+                        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+                    }
+                    else
+                    {
+                        <GroveDataGrid Data="@FilteredPages" TItem="PageRouteModel" AllowPaging="true" PageSize="25" AllowSorting="true" Density="Density.Compact">
+                            <Columns>
+                                <GroveDataGridColumn TItem="PageRouteModel" Property="Shell" Title="@T["Shell"]" Width="7rem" />
+                                <GroveDataGridColumn TItem="PageRouteModel" Title="@T["Routes"]">
+                                    <Template Context="page">@string.Join(", ", page.Routes)</Template>
+                                </GroveDataGridColumn>
+                                <GroveDataGridColumn TItem="PageRouteModel" Property="Caption" Title="@T["Menu caption"]" Width="12rem" />
+                                <GroveDataGridColumn TItem="PageRouteModel" Title="@T["Permissions"]">
+                                    <Template Context="page">@(page.AllowsAnonymous ? T["Anyone"] : page.Permissions.Length == 0 ? T["Nobody (undeclared)"] : string.Join(", ", page.Permissions))</Template>
+                                </GroveDataGridColumn>
+                                <GroveDataGridColumn TItem="PageRouteModel" Property="Source" Title="@T["Declared by"]" Width="16rem" />
+                            </Columns>
+                        </GroveDataGrid>
+                    }
+                </GroveStack>
+            </GroveTabsItem>
+
+            <GroveTabsItem Text="@T["Content routes"]" Icon="link">
+                <GroveStack Gap="0.75rem" data-testid="routes-content">
+                    <GroveCard>
+                        <GroveStack Gap="0.25rem">
+                            <GroveText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@T["Home route"]</GroveText>
+                            @if (Home is null || Home.RouteValues.Count == 0)
+                            {
+                                <GroveText TextStyle="TextStyle.Body2">@T["The site root has no home route: no published item is set as the home page."]</GroveText>
+                            }
+                            else
+                            {
+                                <GroveText TextStyle="TextStyle.Body2">@string.Join(", ", Home.RouteValues.Select(value => $"{value.Key}: {value.Value}"))</GroveText>
+                            }
+                        </GroveStack>
+                    </GroveCard>
+                    @if (ContentSources.Length == 0)
+                    {
+                        <GroveText TextStyle="TextStyle.Body2">@T["No content route module (Autoroute, Alias) is enabled."]</GroveText>
+                    }
+                    else
+                    {
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.75rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                            <GroveFormField Text="@T["Kind"]"><GroveDropDown TValue="string" Value="@ContentSource" ValueChanged="@(async (string value) => { ContentSource = value; await LoadContentAsync(0); })" Data="ContentSources" TextProperty="Caption" ValueProperty="Name" Style="width: 12rem" /></GroveFormField>
+                            <GroveFormField Text="@T["Path contains"]"><GroveTextBox @bind-Value="ContentSearch" Style="width: 16rem" /></GroveFormField>
+                            <GroveButton Icon="search" Text="@T["Search"]" ButtonStyle="ButtonStyle.Light" Click="@(() => LoadContentAsync(0))" />
+                        </GroveStack>
+                        @if (ContentRoutes is not null)
+                        {
+                            <GroveDataGrid Data="@ContentRoutes.Items" TItem="ContentRouteModel" Count="@ContentRoutes.Total" LoadData="@(args => LoadContentAsync(args.Skip ?? 0))" AllowPaging="true" PageSize="@ContentPageSize" Density="Density.Compact">
+                                <Columns>
+                                    <GroveDataGridColumn TItem="ContentRouteModel" Property="Path" Title="@T["Path"]" />
+                                    <GroveDataGridColumn TItem="ContentRouteModel" Title="@T["Content item"]" Width="16rem">
+                                        <Template Context="route"><GroveLink Path="@($"Contents/ContentItems/{route.ContentItemId}/Edit")" Text="@route.ContentItemId" /></Template>
+                                    </GroveDataGridColumn>
+                                </Columns>
+                            </GroveDataGrid>
+                        }
+                    }
+                </GroveStack>
+            </GroveTabsItem>
+
+            @if (Rules is not null)
+            {
+                <GroveTabsItem Text="@T["Rewrite rules"]" Icon="alt_route">
+                    <GroveStack Gap="0.75rem" data-testid="routes-rules">
+                        <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="0.5rem">
+                            <GroveText TextStyle="TextStyle.Body2">@T["Rules apply to every request in their order; a change applies once the tenant reloads."]</GroveText>
+                            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                                @foreach (var source in Rules.Sources)
+                                {
+                                    <GroveButton Icon="add" Text="@T["Add {0}", source.DisplayName]" Click="@(() => New(source))" Disabled="IsBusy" title="@source.Description" data-testid="@($"routes-add-{source.Name}")" />
+                                }
+                            </GroveStack>
+                        </GroveStack>
+
+                        @if (Draft is not null)
+                        {
+                            <GroveCard data-testid="routes-rule-editor">
+                                <GroveStack Gap="0.75rem">
+                                    <GroveText TextStyle="TextStyle.H5" class="rz-m-0">@(DraftId is null ? T["New {0}", DraftSourceName] : T["Edit {0}", Draft.Name])</GroveText>
+                                    <GroveFormField Text="@T["Name"]" Style="width: 100%;"><GroveTextBox @bind-Value="Draft.Name" Style="width: 100%;" Name="name" /></GroveFormField>
+                                    @FieldError("name")
+                                    <GroveFormField Text="@T["Match URL pattern (regular expression)"]" Style="width: 100%;"><GroveTextBox @bind-Value="Draft.Pattern" Style="width: 100%;" Name="pattern" /></GroveFormField>
+                                    @FieldError("pattern")
+                                    <GroveFormField Text="@T["Substitution URL pattern"]" Style="width: 100%;"><GroveTextBox @bind-Value="Draft.SubstitutionPattern" Style="width: 100%;" Name="substitutionPattern" /></GroveFormField>
+                                    @FieldError("substitutionPattern")
+                                    <GroveStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.Center">
+                                        <div><GroveCheckBox TValue="bool" @bind-Value="Draft.IsCaseInsensitive" Name="rule-ignore-case" /> <GroveLabel Text="@T["Ignore case"]" Component="rule-ignore-case" /></div>
+                                        <GroveFormField Text="@T["Query string"]"><GroveDropDown TValue="string" @bind-Value="Draft.QueryStringPolicy" Data="QueryStringPolicies" TextProperty="Text" ValueProperty="Value" Style="width: 18rem" /></GroveFormField>
+                                        @if (IsRedirect)
+                                        {
+                                            <GroveFormField Text="@T["Redirect type"]"><GroveDropDown TValue="string" @bind-Value="Draft.RedirectType" Data="RedirectTypes" TextProperty="Text" ValueProperty="Value" Style="width: 16rem" /></GroveFormField>
+                                        }
+                                        else
+                                        {
+                                            <div><GroveCheckBox TValue="bool" @bind-Value="Draft.SkipFurtherRules" Name="rule-skip-further" /> <GroveLabel Text="@T["Skip the rules after this one"]" Component="rule-skip-further" /></div>
+                                        }
+                                    </GroveStack>
+                                    <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                                        <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Draft = null)" Disabled="IsBusy" />
+                                        <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="IsBusy" data-testid="routes-rule-save" />
+                                    </GroveStack>
+                                </GroveStack>
+                            </GroveCard>
+                        }
+
+                        @if (Rules.Rules.Length == 0)
+                        {
+                            <GroveText TextStyle="TextStyle.Body2">@T["No rules yet."]</GroveText>
+                        }
+                        else
+                        {
+                            <GroveDataGrid Data="@Rules.Rules" TItem="RewriteRuleModel" Density="Density.Compact">
+                                <Columns>
+                                    <GroveDataGridColumn TItem="RewriteRuleModel" Property="Order" Title="#" Width="4rem" />
+                                    <GroveDataGridColumn TItem="RewriteRuleModel" Property="Name" Title="@T["Name"]" />
+                                    <GroveDataGridColumn TItem="RewriteRuleModel" Title="@T["Kind"]" Width="10rem">
+                                        <Template Context="rule">@(Rules.Sources.FirstOrDefault(source => source.Name == rule.Source)?.DisplayName ?? rule.Source)</Template>
+                                    </GroveDataGridColumn>
+                                    <GroveDataGridColumn TItem="RewriteRuleModel" Title="@T["Rule"]">
+                                        <Template Context="rule">@rule.Pattern → @rule.SubstitutionPattern @(rule.RedirectType is null ? null : $"({rule.RedirectType})")</Template>
+                                    </GroveDataGridColumn>
+                                    <GroveDataGridColumn TItem="RewriteRuleModel" Title="@T["Actions"]" Width="12rem">
+                                        <Template Context="rule">
+                                            <GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                                <GroveButton Icon="arrow_upward" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Disabled="@(IsBusy || rule.Order <= 1)" Click="@(() => MoveAsync(rule, -1))" title="@T["Move up"]" />
+                                                <GroveButton Icon="arrow_downward" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Disabled="@(IsBusy || rule.Order >= Rules.Rules.Length)" Click="@(() => MoveAsync(rule, 1))" title="@T["Move down"]" />
+                                                <GroveButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(rule))" title="@T["Edit"]" />
+                                                <GroveButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Disabled="IsBusy" Click="@(() => DeleteAsync(rule))" title="@T["Delete"]" />
+                                            </GroveStack>
+                                        </Template>
+                                    </GroveDataGridColumn>
+                                </Columns>
+                            </GroveDataGrid>
+                        }
+                    </GroveStack>
+                </GroveTabsItem>
+            }
+        </Tabs>
+    </GroveTabs>
+</GroveStack>
+
+@code {
+    private const int ContentPageSize = 25;
+
+    private PageRouteModel[]? Pages;
+    private string[] Shells = [];
+    private string? ShellFilter;
+    private string? PageSearch;
+    private HomeRouteModel? Home;
+    private ContentRouteSourceModel[] ContentSources = [];
+    private string? ContentSource;
+    private string? ContentSearch;
+    private ContentRoutesPage? ContentRoutes;
+    private RewriteRulesModel? Rules;
+    private RewriteRuleWrite? Draft;
+    private string? DraftId;
+    private string? DraftSourceName;
+    private Dictionary<string, string[]> Errors = new(StringComparer.OrdinalIgnoreCase);
+    private bool IsBusy;
+    private string? Error;
+
+    private bool IsRedirect => Draft?.Source == "Redirect";
+
+    private IEnumerable<PageRouteModel> FilteredPages => (Pages ?? [])
+        .Where(page => string.IsNullOrEmpty(ShellFilter) || page.Shell == ShellFilter)
+        .Where(page => string.IsNullOrWhiteSpace(PageSearch)
+            || page.Routes.Any(route => route.Contains(PageSearch, StringComparison.OrdinalIgnoreCase))
+            || page.Permissions.Any(permission => permission.Contains(PageSearch, StringComparison.OrdinalIgnoreCase))
+            || page.Id.Contains(PageSearch, StringComparison.OrdinalIgnoreCase));
+
+    private IEnumerable<Option> QueryStringPolicies => [new("Append", T["Append the original query string"]), new("Drop", T["Drop the original query string"])];
+
+    private IEnumerable<Option> RedirectTypes =>
+    [
+        new("Found", T["Found (302)"]),
+        new("MovedPermanently", T["Moved permanently (301)"]),
+        new("TemporaryRedirect", T["Temporary redirect (307)"]),
+        new("PermanentRedirect", T["Permanent redirect (308)"]),
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Pages = await Http.GetFromJsonAsync<PageRouteModel[]>(RoutesApiPaths.Pages) ?? [];
+            Shells = [.. Pages.Select(page => page.Shell).Distinct().Order()];
+            Home = await Http.GetFromJsonAsync<HomeRouteModel>(RoutesApiPaths.Home);
+            ContentSources = await Http.GetFromJsonAsync<ContentRouteSourceModel[]>(RoutesApiPaths.ContentSources) ?? [];
+            ContentSource = ContentSources.FirstOrDefault()?.Name;
+            if (ContentSource is not null)
+            {
+                await LoadContentAsync(0);
+            }
+        }
+        catch (Exception exception)
+        {
+            Error = exception.Message;
+        }
+
+        await LoadRulesAsync();
+    }
+
+    private async Task LoadContentAsync(int skip)
+    {
+        if (ContentSource is null) return;
+        var url = $"{RoutesApiPaths.Content}?source={Uri.EscapeDataString(ContentSource)}&skip={skip}&take={ContentPageSize}";
+        if (!string.IsNullOrWhiteSpace(ContentSearch)) url += $"&search={Uri.EscapeDataString(ContentSearch)}";
+        ContentRoutes = await Http.GetFromJsonAsync<ContentRoutesPage>(url);
+    }
+
+    // The rules tab is shown to callers who may manage the rules (the API answers 403 otherwise).
+    private async Task LoadRulesAsync()
+    {
+        using var response = await Http.GetAsync(RoutesApiPaths.Rules);
+        Rules = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<RewriteRulesModel>() : null;
+    }
+
+    private void New(RewriteRuleSourceModel source)
+    {
+        Draft = new RewriteRuleWrite { Source = source.Name, RedirectType = source.Name == "Redirect" ? "Found" : null };
+        DraftId = null;
+        DraftSourceName = source.DisplayName;
+        Errors.Clear();
+    }
+
+    private void Edit(RewriteRuleModel rule)
+    {
+        Draft = new RewriteRuleWrite
+        {
+            Source = rule.Source,
+            Name = rule.Name,
+            Pattern = rule.Pattern ?? string.Empty,
+            SubstitutionPattern = rule.SubstitutionPattern ?? string.Empty,
+            IsCaseInsensitive = rule.IsCaseInsensitive,
+            QueryStringPolicy = rule.QueryStringPolicy,
+            RedirectType = rule.RedirectType,
+            SkipFurtherRules = rule.SkipFurtherRules,
+        };
+        DraftId = rule.Id;
+        Errors.Clear();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (Draft is null) return;
+        IsBusy = true;
+        Error = null;
+        Errors.Clear();
+        try
+        {
+            using var response = DraftId is null
+                ? await Http.PostAsJsonAsync(RoutesApiPaths.Rules, Draft)
+                : await Http.PutAsJsonAsync($"{RoutesApiPaths.Rules}/{Uri.EscapeDataString(DraftId)}", Draft);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ReadProblemAsync(response);
+                if (problem?.Errors is { Count: > 0 } errors) Errors = new(errors, StringComparer.OrdinalIgnoreCase);
+                else Error = problem?.Detail ?? T["The rule could not be saved."];
+                return;
+            }
+
+            Draft = null;
+            await LoadRulesAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task DeleteAsync(RewriteRuleModel rule)
+    {
+        IsBusy = true;
+        try
+        {
+            using var response = await Http.DeleteAsync($"{RoutesApiPaths.Rules}/{Uri.EscapeDataString(rule.Id)}");
+            if (!response.IsSuccessStatusCode) Error = T["{0} could not be deleted.", rule.Name];
+            await LoadRulesAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task MoveAsync(RewriteRuleModel rule, int by)
+    {
+        IsBusy = true;
+        try
+        {
+            using var response = await Http.PostAsJsonAsync(RoutesApiPaths.ReorderRules, new ReorderRulesRequest(rule.Order, rule.Order + by));
+            if (!response.IsSuccessStatusCode) Error = T["{0} could not be moved.", rule.Name];
+            await LoadRulesAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private static async Task<Problem?> ReadProblemAsync(HttpResponseMessage response)
+    {
+        try { return await response.Content.ReadFromJsonAsync<Problem>(); }
+        catch { return null; }
+    }
+
+    private RenderFragment? FieldError(string key) => Errors.TryGetValue(key, out var messages)
+        ? @<GroveText TextStyle="TextStyle.Caption" class="rz-color-danger">@string.Join(" ", messages)</GroveText>
+        : null;
+
+    private sealed record Option(string Value, string Text);
+
+    private sealed record Problem(string? Title, string? Detail, Dictionary<string, string[]>? Errors);
+}

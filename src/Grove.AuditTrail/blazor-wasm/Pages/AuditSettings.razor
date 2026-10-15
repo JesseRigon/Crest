@@ -56,6 +56,21 @@
             </GroveCard>
         }
 
+        @if (Content is not null)
+        {
+            @* Grove.Contents' section (api/grove/audit/settings/content): the content types not audited. *@
+            <GroveCard data-category="Content.Settings" data-testid="audit-settings-content">
+                <GroveStack Gap="0.25rem">
+                    <GroveText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@T["Content"]</GroveText>
+                    <GroveFormField Text="@T["Excluded content types"]">
+                        <GroveDropDown TValue="IEnumerable<string>" @bind-Value="ExcludedContentTypes" Data="@Content.ContentTypes" TextProperty="DisplayName" ValueProperty="Name"
+                                       Multiple="true" AllowClear="true" Chips="true" AllowFiltering="true" Style="max-width: 32rem; width: 100%;" Name="audit-excluded-content-types" />
+                    </GroveFormField>
+                    <GroveText TextStyle="TextStyle.Caption">@T["The types of content whose events are not recorded. Every other type is."]</GroveText>
+                </GroveStack>
+            </GroveCard>
+        }
+
         <div><GroveButton Icon="save" Text="@T["Save"]" Click="SaveAsync" Disabled="IsSaving" data-testid="audit-settings-save" /></div>
         @if (Saved) { <GroveText TextStyle="TextStyle.Body2">@T["Saved."]</GroveText> }
     }
@@ -77,6 +92,20 @@
     {
         try { Load(await Http.GetFromJsonAsync<SettingsModel>(Url)); }
         catch (Exception exception) { Error = exception.Message; }
+
+        // Absent (404) while Grove.Contents' audit trail section is not there.
+        using var response = await Http.GetAsync(ContentUrl);
+        LoadContent(response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ContentSettingsModel>() : null);
+    }
+
+    private const string ContentUrl = AuditTrailRoutes.Api + "/settings/content";
+    private ContentSettingsModel? Content;
+    private IEnumerable<string> ExcludedContentTypes = [];
+
+    private void LoadContent(ContentSettingsModel? model)
+    {
+        Content = model;
+        ExcludedContentTypes = model?.ExcludedContentTypes ?? [];
     }
 
     private void Load(SettingsModel? model)
@@ -109,6 +138,13 @@
             var response = await Http.PutAsJsonAsync(Url, new { EnabledEvents = Enabled.ToArray(), ClientIpAddressAllowed, RetentionDays, TrimmingDisabled });
             if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
             Load(await response.Content.ReadFromJsonAsync<SettingsModel>());
+            if (Content is not null)
+            {
+                var contentResponse = await Http.PutAsJsonAsync(ContentUrl, new { ExcludedContentTypes = ExcludedContentTypes.ToArray() });
+                if (!contentResponse.IsSuccessStatusCode) { Error = await contentResponse.Content.ReadAsStringAsync(); return; }
+                LoadContent(await contentResponse.Content.ReadFromJsonAsync<ContentSettingsModel>());
+            }
+
             Saved = true;
         }
         finally { IsSaving = false; }
@@ -116,5 +152,7 @@
 
     private sealed record EventModel(string Name, string Category, string DisplayName, string? Description, bool IsEnabled, bool IsMandatory);
     private sealed record CategoryModel(string Name, string DisplayName, EventModel[] Events);
+    private sealed record ContentTypeModel(string Name, string DisplayName);
+    private sealed record ContentSettingsModel(string[] ExcludedContentTypes, ContentTypeModel[] ContentTypes);
     private sealed record SettingsModel(CategoryModel[] Categories, bool ClientIpAddressAllowed, int RetentionDays, bool TrimmingDisabled, DateTime? LastTrimmedUtc);
 }

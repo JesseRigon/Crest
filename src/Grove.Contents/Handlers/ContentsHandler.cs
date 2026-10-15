@@ -38,43 +38,11 @@ public class ContentsHandler : ContentHandlerBase
     {
         return context.ForAsync<ContentItemMetadata>(metadata =>
         {
-            metadata.CreateRouteValues ??= new RouteValueDictionary
-            {
-                { "Area", "Grove.Contents" },
-                { "Controller", "Admin" },
-                { "Action", "Create" },
-                { "Id", context.ContentItem.ContentType },
-            };
-
-            metadata.EditorRouteValues ??= new RouteValueDictionary
-            {
-                { "Area", "Grove.Contents" },
-                { "Controller", "Admin" },
-                { "Action", "Edit" },
-                { "ContentItemId", context.ContentItem.ContentItemId },
-            };
-
-            metadata.AdminRouteValues ??= new RouteValueDictionary
-            {
-                { "Area", "Grove.Contents" },
-                { "Controller", "Admin" },
-                { "Action", "Edit" },
-                { "ContentItemId", context.ContentItem.ContentItemId },
-            };
-
             metadata.DisplayRouteValues ??= new RouteValueDictionary
             {
                 { "Area", "Grove.Contents" },
                 { "Controller", "Item" },
                 { "Action", "Display" },
-                { "ContentItemId", context.ContentItem.ContentItemId },
-            };
-
-            metadata.RemoveRouteValues ??= new RouteValueDictionary
-            {
-                { "Area", "Grove.Contents" },
-                { "Controller", "Admin" },
-                { "Action", "Remove" },
                 { "ContentItemId", context.ContentItem.ContentItemId },
             };
 

@@ -1,0 +1,25 @@
+@page "/ExternalLogin/Register"
+@page "/ExternalLogin/Link"
+@attribute [Grove.Components.Modules.SetsAuthenticationCookie]
+@inject NavigationManager Navigation
+
+@* Completing an external sign-in (step 7: the MVC RegisterExternalLogin and LinkExternalLogin
+   views are retired): the platform's external-login callback sends the browser here when it
+   cannot finish on its own (Grove.Users' ExternalAuthenticationsController.RegisterPage /
+   LinkPage). *@
+
+<PageTitle>Sign in</PageTitle>
+
+<div style="max-width: 32rem; margin: 2rem auto; padding: 0 1rem;" data-testid="site-external-login-page">
+    <GroveExternalLoginCompletion Mode="@Mode" ReturnUrl="@ReturnUrl" Error="@Error" />
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    private string Mode => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0].EndsWith("Link", StringComparison.OrdinalIgnoreCase) ? "link" : "register";
+}

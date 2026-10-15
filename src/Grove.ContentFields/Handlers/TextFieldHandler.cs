@@ -36,6 +36,17 @@ public class TextFieldHandler : ContentFieldHandler<TextField>
             context.Fail(S["A value is required for {0}.", context.ContentPartFieldDefinition.DisplayName()], nameof(field.Text));
         }
 
+        var length = field.Text?.Length ?? 0;
+        if (settings.MinLength is { } minimum && length > 0 && length < minimum)
+        {
+            context.Fail(S["{0} must be at least {1} characters long.", context.ContentPartFieldDefinition.DisplayName(), minimum], nameof(field.Text));
+        }
+
+        if (settings.MaxLength is { } maximum && length > maximum)
+        {
+            context.Fail(S["{0} can't be longer than {1} characters.", context.ContentPartFieldDefinition.DisplayName(), maximum], nameof(field.Text));
+        }
+
         return Task.CompletedTask;
     }
 

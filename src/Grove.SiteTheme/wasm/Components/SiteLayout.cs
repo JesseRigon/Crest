@@ -101,7 +101,7 @@ public sealed class SiteLayout : ComponentBase
 /// <c>Content__{Type}</c> replaces it per type.
 /// </summary>
 [BlazorComponent("Content", DisplayName = "Content item", Category = "Content", Icon = "article")]
-public sealed class SiteContent : ComponentBase
+public class SiteContent : ComponentBase
 {
     [Parameter, ComponentZone]
     public RenderFragment? Header { get; set; }
@@ -147,6 +147,13 @@ public sealed class SiteContent : ComponentBase
         builder.CloseElement();
     }
 }
+
+/// <summary>
+/// An item displayed through its stereotype's shape (<c>Stereotype</c>, the shape a stereotyped
+/// item takes when no template of its stereotype exists): shown as any content item.
+/// </summary>
+[BlazorComponent("Stereotype", DisplayName = "Stereotyped content item", Category = "Content", Icon = "article")]
+public sealed class SiteStereotype : SiteContent;
 
 /// <summary>The site's not-found page (<c>NotFound</c>): the last fallback of the template chain (decision 7).</summary>
 [BlazorComponent("NotFound", DisplayName = "Not found", Category = "Pages", Icon = "search_off")]

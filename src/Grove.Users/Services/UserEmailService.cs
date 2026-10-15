@@ -87,15 +87,7 @@ public sealed class UserEmailService
     {
         user.ResetToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(user.ResetToken));
 
-        var lostPasswordUrl = _linkGenerator.GetUriByAction(
-            httpContext: _httpContextAccessor.HttpContext,
-            action: nameof(ResetPasswordController.ResetPassword),
-            controller: typeof(ResetPasswordController).ControllerName(),
-            values: new
-            {
-                userId = await _userManager.GetUserIdAsync(user),
-                code = user.ResetToken,
-            });
+        var lostPasswordUrl = AccountPages.Url(_httpContextAccessor.HttpContext.Request, AccountPages.ResetPassword, ("code", user.ResetToken));
 
         return await SendPasswordResetEmailAsync(user, lostPasswordUrl);
     }

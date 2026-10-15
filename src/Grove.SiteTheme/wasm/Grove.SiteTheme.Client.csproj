@@ -37,6 +37,9 @@
     <!-- The site-shell libraries of modules (GroveShell(Site)): the site router and the
          component registry read them, as the admin client reads the admin ones. -->
     <ProjectReference Include="..\..\Grove.Facebook\site-wasm\Grove.Facebook.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.OpenId\site-wasm\Grove.OpenId.Site.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Users\site-wasm\Grove.Users.Site.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Search\site-wasm\Grove.Search.BlazorWasm.csproj" />
   </ItemGroup>
 
 </Project>

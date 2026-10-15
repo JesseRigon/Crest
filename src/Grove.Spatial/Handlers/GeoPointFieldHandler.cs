@@ -32,6 +32,16 @@ public class GeoPointFieldHandler : ContentFieldHandler<GeoPointField>
             }
         }
 
+        if (field.Latitude is < -90 or > 90)
+        {
+            context.Fail(S["The latitude of {0} must be between -90 and 90.", context.ContentPartFieldDefinition.DisplayName()], nameof(field.Latitude));
+        }
+
+        if (field.Longitude is < -180 or > 180)
+        {
+            context.Fail(S["The longitude of {0} must be between -180 and 180.", context.ContentPartFieldDefinition.DisplayName()], nameof(field.Longitude));
+        }
+
         return Task.CompletedTask;
     }
 }

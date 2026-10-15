@@ -47,12 +47,6 @@ declare class QRCode {
     constructor(element: HTMLElement, options: Record<string, unknown>);
 }
 
-// Grove.UrlRewriting/Assets/js/sortable-rules.js - a classic global shared by any
-// admin list needing drag-to-reorder + a single AJAX call to persist the new position.
-declare const sortingListManager: {
-    create(selector: string, sortUrl: string, errorMessage?: string): void;
-};
-
 // EasyMDE (markdown Wysiwyg editor) and its toolbar/shortcode-wrapper helper, both loaded as
 // classic global resources (easymde.min.js, Grove.Markdown's mde.mediatoolbar.js).
 interface EasyMdeInstance {

@@ -62,9 +62,8 @@ public class SignedUrlCachingTests
         var scopes = new RecordingCacheScopes();
         var http = new DefaultHttpContext();
         var resolver = new MediaReferenceResolver(
-            world.Files.Service(caller),
             world.Library(),
-            new WithCacheScopes(world.Services(caller), scopes),
+            new ProviderWith(new WithCacheScopes(world.Services(caller), scopes), typeof(IMediaObjectService), world.Files.Service(caller)),
             new HttpContextAccessor { HttpContext = http },
             new global::Grove.Environment.Shell.ShellSettings { Name = "Default" },
             world.Files.Sharing.Clock,

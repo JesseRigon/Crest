@@ -38,7 +38,6 @@
       When adding a reference to this list, please keep it ordered alphabetically, and set PrivateAssets="none"
     -->
     <ProjectReference Include="..\Grove.Admin\Grove.Admin.csproj" PrivateAssets="none" />
-    <ProjectReference Include="..\Grove.AdminDashboard\Grove.AdminDashboard.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.AdminMenu\Grove.AdminMenu.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Alias\Grove.Alias.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Antivirus\Grove.Antivirus.csproj" PrivateAssets="none" />
@@ -104,7 +103,7 @@
     <ProjectReference Include="..\Grove.Redis\Grove.Redis.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Resources\Grove.Resources.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.ResponseCompression\Grove.ResponseCompression.csproj" PrivateAssets="none" />
-    <ProjectReference Include="..\Grove.UrlRewriting\Grove.UrlRewriting.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Routes\Grove.Routes.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.ReverseProxy\Grove.ReverseProxy.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Rules\Grove.Rules.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Roles\Grove.Roles.csproj" PrivateAssets="none" />
@@ -134,7 +133,6 @@
     <ProjectReference Include="..\Grove.Title\Grove.Title.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Twitter\Grove.Twitter.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Users\Grove.Users.csproj" PrivateAssets="none" />
-    <ProjectReference Include="..\Grove.XmlRpc\Grove.XmlRpc.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\TheAdmin\TheAdmin.csproj" PrivateAssets="none" />
   </ItemGroup>
 

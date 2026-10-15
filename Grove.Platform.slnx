@@ -123,7 +123,6 @@
     <Project Path="src/Grove.Logging.Serilog/Grove.Logging.Serilog.csproj" />
     <Project Path="src/Grove.Markdown.Abstractions/Grove.Markdown.Abstractions.csproj" />
     <Project Path="src/Grove.Media.Abstractions/Grove.Media.Abstractions.csproj" />
-    <Project Path="src/Grove.MetaWeblog.Abstractions/Grove.MetaWeblog.Abstractions.csproj" />
     <Project Path="src/Grove.Module.Targets/Grove.Module.Targets.csproj" />
     <Project Path="src/Grove.Mvc.Abstractions/Grove.Mvc.Abstractions.csproj" />
     <Project Path="src/Grove.Mvc/Grove.Mvc.csproj" />
@@ -146,16 +145,14 @@
     <Project Path="src/Grove.Sms.Abstractions/Grove.Sms.Abstractions.csproj" />
     <Project Path="src/Grove.SourceGenerators/Grove.SourceGenerators.csproj" />
     <Project Path="src/Grove.Theme.Targets/Grove.Theme.Targets.csproj" />
-    <Project Path="src/Grove.UrlRewriting.Abstractions/Grove.UrlRewriting.Abstractions.csproj" />
+    <Project Path="src/Grove.Routes.Abstractions/Grove.Routes.Abstractions.csproj" />
     <Project Path="src/Grove.Users.Abstractions/Grove.Users.Abstractions.csproj" />
     <Project Path="src/Grove.Workflows/Abstractions/Grove.Workflows.Abstractions.csproj" />
-    <Project Path="src/Grove.XmlRpc.Abstractions/Grove.XmlRpc.Abstractions.csproj" />
   </Folder>
   <Folder Name="/platform/modules/">
     <Project Path="src/Grove.Access/Grove.Access.csproj" />
     <Project Path="src/Grove.Sharing/Grove.Sharing.csproj" />
     <Project Path="src/Grove.Admin/Grove.Admin.csproj" />
-    <Project Path="src/Grove.AdminDashboard/Grove.AdminDashboard.csproj" />
     <Project Path="src/Grove.AdminMenu/Grove.AdminMenu.csproj" />
     <Project Path="src/Grove.Alias/Grove.Alias.csproj" />
     <Project Path="src/Grove.Antivirus/Grove.Antivirus.csproj" />
@@ -179,7 +176,6 @@
     <Project Path="src/Grove.CustomSettings/Grove.CustomSettings.csproj" />
     <Project Path="src/Grove.DataLocalization/Grove.DataLocalization.csproj" />
     <Project Path="src/Grove.DataProtection.Azure/Grove.DataProtection.Azure.csproj" />
-    <Project Path="src/Grove.Demo/Grove.Demo.csproj" />
     <Project Path="src/Grove.Deployment.Remote/Grove.Deployment.Remote.csproj" />
     <Project Path="src/Grove.Deployment/Grove.Deployment.csproj" />
     <Project Path="src/Grove.Diagnostics/Grove.Diagnostics.csproj" />
@@ -220,7 +216,6 @@
     <Project Path="src/Grove.Menu/Grove.Menu.csproj" />
     <Project Path="src/Grove.Microsoft.Authentication/Grove.Microsoft.Authentication.csproj" />
     <Project Path="src/Grove.MiniProfiler/Grove.MiniProfiler.csproj" />
-    <Project Path="src/Grove.Mvc.HelloWorld/Grove.Mvc.HelloWorld.csproj" />
     <Project Path="src/Grove.Navigation.Abstractions/Grove.Navigation.Abstractions.csproj" />
     <Project Path="src/Grove.Navigation/Grove.Navigation.csproj" />
     <Project Path="src/Grove.Notifications/Grove.Notifications.csproj" />
@@ -264,9 +259,8 @@
     <Project Path="src/Grove.Themes/Grove.Themes.csproj" />
     <Project Path="src/Grove.Title/Grove.Title.csproj" />
     <Project Path="src/Grove.Twitter/Grove.Twitter.csproj" />
-    <Project Path="src/Grove.UrlRewriting/Grove.UrlRewriting.csproj" />
+    <Project Path="src/Grove.Routes/Grove.Routes.csproj" />
     <Project Path="src/Grove.Users/Grove.Users.csproj" />
-    <Project Path="src/Grove.XmlRpc/Grove.XmlRpc.csproj" />
   </Folder>
   <Folder Name="/platform/themes/">
     <Project Path="src/SafeMode/SafeMode.csproj" />
@@ -275,7 +269,6 @@
   <Folder Name="/platform/hosts/">
     <Project Path="src/Grove.AspireHost/Grove.AspireHost.csproj" />
     <Project Path="src/Grove.Cms.Web/Grove.Cms.Web.csproj" />
-    <Project Path="src/Grove.Mvc.Web/Grove.Mvc.Web.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Grove.Abstractions.Tests/Grove.Abstractions.Tests.csproj" />

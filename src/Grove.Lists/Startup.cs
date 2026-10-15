@@ -9,7 +9,6 @@ using Grove.ContentManagement;
 using Grove.ContentManagement.Display.ContentDisplay;
 using Grove.ContentManagement.Handlers;
 using Grove.Contents.Services;
-using Grove.Contents.ViewModels;
 using Grove.ContentTypes.Editors;
 using Grove.Data;
 using Grove.Data.Migration;
@@ -44,16 +43,13 @@ public sealed class Startup : StartupBase
         .AddLiquidFilter<ContainerFilter>("container");
 
         services.AddIndexProvider<ContainedPartIndexProvider>();
-        services.AddScoped<IContentDisplayDriver, ContainedPartDisplayDriver>();
+        services.AddApiContributor<Api.ListsApi>();
         services.AddScoped<IContentHandler, ContainedPartHandler>();
         services.AddContentPart<ContainedPart>();
-        services.AddScoped<IContentsAdminListFilter, ListPartContentsAdminListFilter>();
-        services.AddDisplayDriver<ContentOptionsViewModel, ListPartContentsAdminListDisplayDriver>();
 
         // List Part
         services.AddContentPart<ListPart>()
-            .UseDisplayDriver<ListPartDisplayDriver>()
-            .AddHandler<ListPartHandler>();
+            .UseDisplayDriver<ListPartDisplayDriver>();
 
         services.AddDataMigration<Migrations>();
         services.AddScoped<IDocumentIndexHandler, ContainedPartContentIndexHandler>();
@@ -66,7 +62,7 @@ public sealed class AdminMenuStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddAdminNode<ListsAdminNode, ListsAdminNodeNavigationBuilder, ListsAdminNodeDriver>();
+        services.AddAdminNode<ListsAdminNode, ListsAdminNodeNavigationBuilder>();
     }
 }
 

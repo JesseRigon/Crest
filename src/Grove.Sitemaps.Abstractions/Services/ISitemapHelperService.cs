@@ -1,4 +1,3 @@
-using Grove.DisplayManagement.ModelBinding;
 
 namespace Grove.Sitemaps.Services;
 
@@ -7,7 +6,9 @@ namespace Grove.Sitemaps.Services;
 /// </summary>
 public interface ISitemapHelperService
 {
-    Task ValidatePathAsync(string path, IUpdateModel updater, string sitemapId = null);
+    /// <summary>The problems with <paramref name="path"/> as the path of a sitemap (other than
+    /// <paramref name="sitemapId"/>); empty when it is valid.</summary>
+    Task<IReadOnlyList<string>> ValidatePathAsync(string path, string sitemapId = null);
 
     string GetSitemapSlug(string name);
 }

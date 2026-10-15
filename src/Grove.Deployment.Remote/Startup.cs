@@ -3,14 +3,13 @@ using Grove.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Grove.Deployment.Remote;
 using Grove.Deployment.Remote.Services;
 using Grove.FileStorage;
 using Grove.Modules;
 using Grove.Navigation;
 using Grove.Security.Permissions;
 
-namespace Grove.Deployment;
+namespace Grove.Deployment.Remote;
 
 public sealed class Startup : StartupBase
 {
@@ -21,7 +20,6 @@ public sealed class Startup : StartupBase
 
         services.AddScoped<RemoteInstanceService>();
         services.AddScoped<RemoteClientService>();
-        services.AddScoped<IDeploymentTargetProvider, RemoteInstanceDeploymentTargetProvider>();
         services.AddPermissionProvider<Permissions>();
         services.AddScoped<IRemoteDeploymentTargets, Remote.Api.RemoteInstanceTargets>();
         services.AddApiContributor<Remote.Api.RemoteDeploymentApi>();

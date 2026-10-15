@@ -28,7 +28,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<IDisplayTreeVersionPart, LayersTreeVersion>();
         services.AddPermissionProvider<Permissions>();
         services.AddRecipeExecutionStep<LayerStep>();
-        services.AddDeployment<AllLayersDeploymentSource, AllLayersDeploymentStep, AllLayersDeploymentStepDriver>();
+        services.AddDeployment<AllLayersDeploymentSource, AllLayersDeploymentStep>();
         services.AddSingleton<IGlobalMethodProvider, DefaultLayersMethodProvider>();
     }
 }

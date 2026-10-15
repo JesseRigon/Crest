@@ -78,39 +78,4 @@ public sealed class MarkdownFieldDisplayDriver : ContentFieldDisplayDriver<Markd
         .Location(PlatformConstants.DisplayType.Detail, "Content")
         .Location(PlatformConstants.DisplayType.Summary, "Content");
     }
-
-    public override IDisplayResult Edit(MarkdownField field, BuildFieldEditorContext context)
-    {
-        return Initialize<EditMarkdownFieldViewModel>(GetEditorShapeType(context), model =>
-        {
-            model.Markdown = field.Markdown;
-            model.Field = field;
-            model.Part = context.ContentPart;
-            model.PartFieldDefinition = context.PartFieldDefinition;
-        });
-    }
-
-    public override async Task<IDisplayResult> UpdateAsync(MarkdownField field, UpdateFieldEditorContext context)
-    {
-        var viewModel = new EditMarkdownFieldViewModel();
-        var settings = context.PartFieldDefinition.GetSettings<MarkdownFieldSettings>();
-
-        await context.Updater.TryUpdateModelAsync(viewModel, Prefix, vm => vm.Markdown);
-
-        if (settings.RenderLiquid
-            && !string.IsNullOrEmpty(viewModel.Markdown)
-            && !_liquidTemplateManager.Validate(viewModel.Markdown, out var errors))
-        {
-            context.Updater.ModelState.AddModelError(Prefix, nameof(viewModel.Markdown),
-                S["{0} contains invalid Liquid expression: {1}",
-                    context.PartFieldDefinition.DisplayName(),
-                    string.Join(" ", errors)]);
-        }
-        else
-        {
-            field.Markdown = viewModel.Markdown;
-        }
-
-        return Edit(field, context);
-    }
 }

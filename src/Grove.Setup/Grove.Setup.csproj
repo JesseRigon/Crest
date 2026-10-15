@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <!-- The setup components use nullable annotations; existing code keeps its context. -->
+    <Nullable>annotations</Nullable>
     <!-- NuGet properties-->
     <Title>Grove Setup</Title>
     <Description>$(OCCMSDescription)
@@ -12,6 +13,12 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- The installation pages are static-SSR Razor components in Components/; the module targets
+       only add *.cshtml to Razor generation, so the components are declared here. -->
+  <ItemGroup>
+    <RazorComponent Include="Components\**\*.razor" />
   </ItemGroup>
 
   <ItemGroup>

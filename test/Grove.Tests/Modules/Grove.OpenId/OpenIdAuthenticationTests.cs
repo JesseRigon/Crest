@@ -7,9 +7,6 @@ using Grove.OpenId.YesSql.Indexes;
 using Grove.OpenId.YesSql.Models;
 using Grove.Tests.Apis.Context;
 using Grove.Tests.Modules.Grove.Users;
-using Grove.Tests.Grove.Users;
-using Grove.Users.Models;
-using Grove.Users.ViewModels;
 
 namespace Grove.Tests.Modules.Grove.OpenId;
 
@@ -88,29 +85,12 @@ public class OpenIdAuthenticationTests
 
             Assert.Contains(OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange, application.Requirements);
 
-            // Visit the login page to get the AntiForgery token.
-            var loginGetRequest = await httpClient.GetAsync("Login", CancellationToken.None);
-
-            var loginFormData = new Dictionary<string, string>
-            {
-                {"__RequestVerificationToken", await AntiForgeryHelper.ExtractAntiForgeryToken(loginGetRequest) },
-                {$"{nameof(LoginForm)}.{nameof(LoginViewModel.UserName)}", "admin"},
-                {$"{nameof(LoginForm)}.{nameof(LoginViewModel.Password)}", "Password01_"},
-            };
-
             var shellSettings = scope.ServiceProvider.GetService<ShellSettings>();
 
-            var loginPostRequest = HttpRequestHelper.CreatePostMessageWithCookies($"Login?ReturnUrl=/{shellSettings.RequestUrlPrefix}?loggedIn=true", loginFormData, loginGetRequest);
-
             // Login
-            var loginPostResponse = await httpClient.SendAsync(loginPostRequest, CancellationToken.None);
+            var loginPostResponse = await ApiSignInHelper.SignInAsync(httpClient, "admin", "Password01_", CancellationToken.None);
 
-            Assert.Equal(HttpStatusCode.Redirect, loginPostResponse.StatusCode);
-
-            var loginRequestRedirectToLocation = loginPostResponse.Headers.Location?.ToString();
-
-            Assert.NotEmpty(loginRequestRedirectToLocation);
-            Assert.Contains("loggedIn=true", loginRequestRedirectToLocation);
+            Assert.Equal(HttpStatusCode.OK, loginPostResponse.StatusCode);
 
             var cookies = CookiesHelper.ExtractCookies(loginPostResponse);
 
@@ -248,29 +228,12 @@ public class OpenIdAuthenticationTests
             Assert.Contains(OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange, application.Requirements);
             Assert.Contains(OpenIddictConstants.Requirements.Features.PushedAuthorizationRequests, application.Requirements);
 
-            // Visit the login page to get the AntiForgery token.
-            var loginGetRequest = await httpClient.GetAsync("Login", CancellationToken.None);
-
-            var loginFormData = new Dictionary<string, string>
-            {
-                {"__RequestVerificationToken", await AntiForgeryHelper.ExtractAntiForgeryToken(loginGetRequest) },
-                {$"{nameof(LoginForm)}.{nameof(LoginViewModel.UserName)}", "admin"},
-                {$"{nameof(LoginForm)}.{nameof(LoginViewModel.Password)}", "Password01_"},
-            };
-
             var shellSettings = scope.ServiceProvider.GetService<ShellSettings>();
 
-            var loginPostRequest = HttpRequestHelper.CreatePostMessageWithCookies($"Login?ReturnUrl=/{shellSettings.RequestUrlPrefix}?loggedIn=true", loginFormData, loginGetRequest);
-
             // Login
-            var loginPostResponse = await httpClient.SendAsync(loginPostRequest, CancellationToken.None);
+            var loginPostResponse = await ApiSignInHelper.SignInAsync(httpClient, "admin", "Password01_", CancellationToken.None);
 
-            Assert.Equal(HttpStatusCode.Redirect, loginPostResponse.StatusCode);
-
-            var loginRequestRedirectToLocation = loginPostResponse.Headers.Location?.ToString();
-
-            Assert.NotEmpty(loginRequestRedirectToLocation);
-            Assert.Contains("loggedIn=true", loginRequestRedirectToLocation);
+            Assert.Equal(HttpStatusCode.OK, loginPostResponse.StatusCode);
 
             var cookies = CookiesHelper.ExtractCookies(loginPostResponse);
 

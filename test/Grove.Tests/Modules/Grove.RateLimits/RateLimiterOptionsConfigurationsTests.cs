@@ -6,12 +6,14 @@ using Grove.RateLimits;
 using Grove.RateLimits;
 using Grove.RateLimits.Models;
 using Grove.RateLimits.Services;
-using Grove.Users.Endpoints.EmailAuthenticator;
 
 namespace Grove.Tests.Modules.Grove.RateLimits;
 
 public class RateLimiterOptionsConfigurationsTests
 {
+    // The two-factor code sending endpoint's name (api/grove/auth/two-factor/send-code).
+    private const string SendCodeRouteName = "TwoFactorSendCode";
+
     [Fact]
     public async Task Apply_CustomRouteLimitForMatchingRouteNameAndMethod_Succeeds()
     {
@@ -54,12 +56,12 @@ public class RateLimiterOptionsConfigurationsTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var rateLimitsOptions = new RateLimitsOptions();
-        rateLimitsOptions.AddRouteRateLimit(SendCode.RouteName, HttpMethods.Post, RateLimitPartitionHelpers.CreateFixedWindowPerIpPolicy("send-code", 1, TimeSpan.FromMinutes(1)));
+        rateLimitsOptions.AddRouteRateLimit(SendCodeRouteName, HttpMethods.Post, RateLimitPartitionHelpers.CreateFixedWindowPerIpPolicy("send-code", 1, TimeSpan.FromMinutes(1)));
 
         var options = Configure(rateLimitsOptions);
 
-        using var firstLease = await options.GlobalLimiter.AcquireAsync(CreateHttpContextFromEndpointName(SendCode.RouteName, HttpMethods.Post), 1, cancellationToken);
-        using var secondLease = await options.GlobalLimiter.AcquireAsync(CreateHttpContextFromEndpointName(SendCode.RouteName, HttpMethods.Post), 1, cancellationToken);
+        using var firstLease = await options.GlobalLimiter.AcquireAsync(CreateHttpContextFromEndpointName(SendCodeRouteName, HttpMethods.Post), 1, cancellationToken);
+        using var secondLease = await options.GlobalLimiter.AcquireAsync(CreateHttpContextFromEndpointName(SendCodeRouteName, HttpMethods.Post), 1, cancellationToken);
 
         Assert.True(firstLease.IsAcquired);
         Assert.False(secondLease.IsAcquired);

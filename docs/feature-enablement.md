@@ -45,6 +45,25 @@ These are host choices, which is why the ones a host wants (its business modules
 step. Everything else Grove needs arrives through the dependency
 graph.
 
+## Every feature enabled: the dev recipe
+
+The host's dev recipe enables every tenant feature, so a fresh provision is also the test that
+all features coexist. That holds three rules for every feature:
+
+- **Unconfigured infrastructure is inert, not broken.** A feature that needs external
+  configuration (Redis, Azure or S3 media storage and image caches, Azure data protection,
+  SignalR backplanes, ClamAV, external login providers, search back ends) logs one warning
+  naming the missing setting and registers nothing that depends on it; setup, sign-in, uploads
+  and the tenant's data-protection key ring keep their defaults. A setting that is present but
+  invalid stays an error.
+- **Migrations write schema and definitions only.** Content (list seeds, pickers attached to
+  seeded lists, default records) is written in a deferred shell-scope task, which runs after
+  every feature's migration ([content-items.md](content-items.md)): during setup the features
+  migrated later have no index tables yet.
+- **Feature events do not assume tables.** `Installed`/`Enabled` events of a setup or an enable
+  run before the activation that runs the migrations; a handler that needs its tables leaves the
+  first run to its migration (as Sharing's index rebuild does).
+
 ## Verifying a change
 
 A fresh provision is the only proof, because an existing tenant keeps whatever features

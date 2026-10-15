@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Grove.Abstractions.Setup;
 using Grove.AuditTrail.Indexes;
 using Grove.AuditTrail.Models;
 using Grove.AuditTrail.Services.Models;
@@ -10,7 +8,6 @@ using Grove.AuditTrail.Settings;
 using Grove.Entities;
 using Grove.Environment.Shell;
 using Grove.Modules;
-using Grove.Recipes.Models;
 using Grove.Settings;
 using YesSql;
 
@@ -22,7 +19,6 @@ public class AuditTrailManager : IAuditTrailManager
     private readonly YesSql.ISession _session;
     private readonly ISiteService _siteService;
     private readonly AuditTrailOptions _auditTrailOptions;
-    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILookupNormalizer _keyNormalizer;
     private readonly IAuditTrailIdGenerator _auditTrailIdGenerator;
     private readonly IEnumerable<IAuditTrailEventHandler> _auditTrailEventHandlers;
@@ -35,7 +31,6 @@ public class AuditTrailManager : IAuditTrailManager
         YesSql.ISession session,
         ISiteService siteService,
         IOptions<AuditTrailOptions> auditTrailOptions,
-        IHttpContextAccessor httpContextAccessor,
         ILookupNormalizer keyNormalizer,
         IEnumerable<IAuditTrailEventHandler> auditTrailEventHandlers,
         IClientIPAddressAccessor clientIPAddressAccessor,
@@ -47,7 +42,6 @@ public class AuditTrailManager : IAuditTrailManager
         _session = session;
         _siteService = siteService;
         _auditTrailOptions = auditTrailOptions.Value;
-        _httpContextAccessor = httpContextAccessor;
         _keyNormalizer = keyNormalizer;
         _auditTrailEventHandlers = auditTrailEventHandlers;
         _clientIPAddressAccessor = clientIPAddressAccessor;
@@ -58,13 +52,14 @@ public class AuditTrailManager : IAuditTrailManager
 
     public async Task RecordEventAsync<TEvent>(AuditTrailContext<TEvent> context) where TEvent : class, new()
     {
-        if (_shellSettings.IsInitializing() && string.IsNullOrEmpty(context.UserName))
+        // The trail starts once the tenant is set up: nothing is recorded while the shell is
+        // initializing. Setup runs every feature's migration in one pass, in dependency order, so
+        // a write audited by a feature migrated before AuditTrail (roles, users, settings, content)
+        // would queue an event for an audit store whose tables do not exist yet; the session's
+        // flush then fails and rolls back the whole setup's schema transaction.
+        if (_shellSettings.IsInitializing())
         {
-            var feature = _httpContextAccessor.HttpContext.Features.Get<RecipeEnvironmentFeature>();
-            if (feature != null && feature.Properties.TryGetValue(SetupConstants.AdminUsername, out var adminUsername))
-            {
-                context.UserName = (string)adminUsername;
-            }
+            return;
         }
 
         var descriptor = DescribeEvent(context.Name, context.Category);

@@ -24,7 +24,6 @@ using Grove.Elasticsearch.Models;
 using Grove.Elasticsearch.Providers;
 using Grove.Elasticsearch.Recipes;
 using Grove.Elasticsearch.Services;
-using Grove.Elasticsearch.Drivers;
 using Grove.Elasticsearch.Services;
 using Grove.Environment.Shell.Scope;
 using Grove.Security.Permissions;
@@ -64,12 +63,10 @@ public sealed class Startup : StartupBase
 
         services.AddElasticsearchServices();
         services.AddPermissionProvider<PermissionProvider>();
-        services.AddPageSource<AdminPages>();
-        services.AddDisplayDriver<Query, ElasticsearchQueryDisplayDriver>();
+        services.AddApiContributor<Api.ElasticsearchQueryApi>();
         services.AddDataMigration<ElasticsearchQueryMigrations>();
         services.AddScoped<IQueryHandler, ElasticsearchQueryHandler>();
 
-        services.AddDisplayDriver<IndexProfile, ElasticsearchIndexProfileDisplayDriver>();
 
         services.AddIndexProfileHandler<ElasticsearchIndexProfileHandler>();
     }
@@ -128,9 +125,9 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<ElasticsearchIndexDeploymentSource, ElasticsearchIndexDeploymentStep, ElasticIndexDeploymentStepDriver>();
-        services.AddDeployment<ElasticsearchIndexRebuildDeploymentSource, ElasticsearchIndexRebuildDeploymentStep, ElasticIndexRebuildDeploymentStepDriver>();
-        services.AddDeployment<ElasticsearchIndexResetDeploymentSource, ElasticsearchIndexResetDeploymentStep, ElasticIndexResetDeploymentStepDriver>();
+        services.AddDeployment<ElasticsearchIndexDeploymentSource, ElasticsearchIndexDeploymentStep>();
+        services.AddDeployment<ElasticsearchIndexRebuildDeploymentSource, ElasticsearchIndexRebuildDeploymentStep>();
+        services.AddDeployment<ElasticsearchIndexResetDeploymentSource, ElasticsearchIndexResetDeploymentStep>();
     }
 }
 

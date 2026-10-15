@@ -19,6 +19,5 @@ public sealed class RegistrationOptionsConfigurations : IConfigureOptions<Regist
 
         options.UsersMustValidateEmail = settings.UsersMustValidateEmail;
         options.UsersAreModerated = settings.UsersAreModerated;
-        options.UseSiteTheme = settings.UseSiteTheme;
     }
 }

@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Settings.Abstractions\Grove.Settings.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Apis.GraphQL.Abstractions\Grove.Apis.GraphQL.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.ContentFields\Grove.ContentFields.csproj" />
@@ -32,14 +33,12 @@
     <ProjectReference Include="..\Grove.FileStorage.FileSystem\Grove.FileStorage.FileSystem.csproj" />
     <ProjectReference Include="..\Grove.Indexing.Abstractions\Grove.Indexing.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Liquid.Abstractions\Grove.Liquid.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.MetaWeblog.Abstractions\Grove.MetaWeblog.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
     <ProjectReference Include="..\Grove.Navigation\Grove.Navigation.csproj" />
     <ProjectReference Include="..\Grove.Recipes.Abstractions\Grove.Recipes.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
     <ProjectReference Include="..\Grove.SignalR\Grove.SignalR.csproj" />
     <ProjectReference Include="..\Grove.Shortcodes.Abstractions\Grove.Shortcodes.Abstractions.csproj" />
-    <ProjectReference Include="..\Grove.XmlRpc.Abstractions\Grove.XmlRpc.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Abstractions\Grove.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.FileStorage.Abstractions\Grove.FileStorage.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />

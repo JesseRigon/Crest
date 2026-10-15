@@ -12,6 +12,13 @@
     <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
   </PropertyGroup>
 
+  <!-- The SMS test page is its own WASM library (blazor-wasm/, Grove.Sms.BlazorWasm). -->
+  <ItemGroup>
+    <Compile Remove="blazor-wasm/**/*.cs" />
+    <Content Remove="blazor-wasm/**" />
+    <None Remove="blazor-wasm/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -28,6 +35,7 @@
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Notifications.Abstractions\Grove.Notifications.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Sms.Abstractions\Grove.Sms.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Users\Grove.Users.csproj" />
   </ItemGroup>
   <ItemGroup>

@@ -8,8 +8,6 @@ using Grove.Navigation;
 using Grove.Recipes;
 using Grove.Security.Permissions;
 using Grove.Themes.Deployment;
-using Grove.Themes.Drivers;
-using Grove.Themes.Models;
 using Grove.Themes.Recipes;
 using Grove.Themes.Services;
 
@@ -33,8 +31,6 @@ public sealed class Startup : StartupBase
         services.AddScoped<IMemberThemeService, MemberThemeService>();
         services.AddScoped<IShellCompatibilityService, ShellCompatibilityService>();
         services.AddApiContributor<Api.ThemesApi>();
-        services.AddDeployment<ThemesDeploymentSource, ThemesDeploymentStep, ThemesDeploymentStepDriver>();
-        services.AddDisplayDriver<ThemeEntry, ThemeEntryDisplayDriver>();
-        services.AddShapeTableProvider<AdminDashboardShapeTableProvider>();
+        services.AddDeployment<ThemesDeploymentSource, ThemesDeploymentStep>();
     }
 }

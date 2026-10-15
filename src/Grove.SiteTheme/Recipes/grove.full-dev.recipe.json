@@ -38,7 +38,6 @@
       "enable": [
         "Application.Default",
         "Grove.Admin",
-        "Grove.AdminDashboard",
         "Grove.AdminMenu",
         "Grove.Alias",
         "Grove.Apis.GraphQL",
@@ -134,7 +133,6 @@
         "Grove.ReCaptcha.Users",
         "Grove.Recipes",
         "Grove.Recipes.Core",
-        "Grove.RemotePublishing",
         "Grove.Resources",
         "Grove.ResponseCompression",
         "Grove.ReverseProxy",
@@ -172,7 +170,7 @@
         "Grove.Title",
         "Grove.Twitter",
         "Grove.Twitter.Signin",
-        "Grove.UrlRewriting",
+        "Grove.Routes",
         "Grove.Users",
         "Grove.Users.2FA",
         "Grove.Users.2FA.AuthenticatorApp",
@@ -187,7 +185,6 @@
         "Grove.Users.ResetPassword",
         "Grove.Users.TimeZone",
         "Grove.Workflows",
-        "Grove.XmlRpc",
         "SafeMode",
         "TheAdmin"
       ]

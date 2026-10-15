@@ -13,6 +13,13 @@
     <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.Http.Validation.Generated</InterceptorsNamespaces>
   </PropertyGroup>
 
+  <!-- The site-shell pages are their own project (site-wasm/, Grove.OpenId.Site.BlazorWasm). -->
+  <ItemGroup>
+    <Compile Remove="site-wasm/**/*.cs" />
+    <Content Remove="site-wasm/**" />
+    <None Remove="site-wasm/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -33,6 +40,7 @@
     <ProjectReference Include="..\Grove.Data.YesSql\Grove.Data.YesSql.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.OpenId.Abstractions\Grove.OpenId.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Settings.Abstractions\Grove.Settings.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

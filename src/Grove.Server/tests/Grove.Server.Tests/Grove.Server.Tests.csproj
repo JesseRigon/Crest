@@ -27,6 +27,12 @@
     <!-- The API conformance test checks every contributor; the modules Grove.Server does not reference itself. -->
     <ProjectReference Include="..\..\..\Grove.Roles\Grove.Roles.csproj" />
     <ProjectReference Include="..\..\..\Grove.Workflows\Server\Grove.Workflows.csproj" />
+    <ProjectReference Include="..\..\..\Grove.OptionPicker\Grove.OptionPicker.csproj" />
+    <ProjectReference Include="..\..\..\Grove.Routes\Grove.Routes.csproj" />
+    <ProjectReference Include="..\..\..\Grove.Search\Grove.Search.csproj" />
+    <ProjectReference Include="..\..\..\Grove.Sitemaps\Grove.Sitemaps.csproj" />
+    <ProjectReference Include="..\..\..\Grove.Shortcodes\Grove.Shortcodes.csproj" />
+    <ProjectReference Include="..\..\..\Grove.Sms\Grove.Sms.csproj" />
   </ItemGroup>
 
 </Project>

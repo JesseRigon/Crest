@@ -15,7 +15,6 @@ using Grove.Indexing.Models;
 using Grove.Lucene;
 using Grove.Lucene.Handlers;
 using Grove.Lucene.Deployment;
-using Grove.Lucene.Drivers;
 using Grove.Lucene.Recipes;
 using Grove.Lucene.Services;
 using Grove.Lucene.Settings;
@@ -40,14 +39,13 @@ public sealed class Startup : StartupBase
         services.TryAddSingleton<ILuceneIndexingState, LuceneIndexingState>();
         services.TryAddSingleton<LuceneAnalyzerManager>();
         services.TryAddScoped<ILuceneSearchQueryService, LuceneSearchQueryService>();
-        services.AddPageSource<AdminPages>();
+        services.AddApiContributor<Api.LuceneQueryApi>();
         services.AddPermissionProvider<Permissions>();
 
         services.Configure<LuceneOptions>(o =>
             o.Analyzers.Add(new LuceneAnalyzer(LuceneConstants.DefaultAnalyzer,
                 new StandardAnalyzer(LuceneConstants.DefaultVersion))));
 
-        services.AddDisplayDriver<Query, LuceneQueryDisplayDriver>();
 
         services
             .AddLuceneQueries()
@@ -56,7 +54,6 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<LuceneQueryMigrations>();
         services.AddScoped<IQueryHandler, LuceneQueryHandler>();
 
-        services.AddDisplayDriver<IndexProfile, LuceneIndexProfileDisplayDriver>();
 
         services.AddIndexProfileHandler<LuceneIndexProfileHandler>();
     }
@@ -115,9 +112,9 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<LuceneIndexDeploymentSource, LuceneIndexDeploymentStep, LuceneIndexDeploymentStepDriver>();
-        services.AddDeployment<LuceneIndexRebuildDeploymentSource, LuceneIndexRebuildDeploymentStep, LuceneIndexRebuildDeploymentStepDriver>();
-        services.AddDeployment<LuceneIndexResetDeploymentSource, LuceneIndexResetDeploymentStep, LuceneIndexResetDeploymentStepDriver>();
+        services.AddDeployment<LuceneIndexDeploymentSource, LuceneIndexDeploymentStep>();
+        services.AddDeployment<LuceneIndexRebuildDeploymentSource, LuceneIndexRebuildDeploymentStep>();
+        services.AddDeployment<LuceneIndexResetDeploymentSource, LuceneIndexResetDeploymentStep>();
     }
 }
 

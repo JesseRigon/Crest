@@ -65,6 +65,28 @@ public sealed class AuditTrailContentApiController(
         return Ok(new AuditContentVersion(contentItem.ContentItemId, contentItem.ContentType, contentItem.DisplayText, contentEvent.VersionNumber, new DisplayTree { Root = root, DisplayType = PlatformConstants.DisplayType.Detail, ScopeSignature = tree.ScopeSignature }));
     }
 
+    /// <summary>The changes this event made: the version it recorded and the one before it, as content JSON (<c>ContentDiff</c>).</summary>
+    [HttpGet("diff")]
+    public async Task<ActionResult<AuditContentDiff>> DiffAsync(string eventId)
+    {
+        var (auditEvent, contentItem) = await RebuildAsync(eventId);
+        if (auditEvent is null || contentItem is null)
+        {
+            return NotFound();
+        }
+
+        if (!await authorizationService.AuthorizeAsync(User, CommonPermissions.EditContent, await contentManager.LoadAsync(contentItem)))
+        {
+            return Forbid();
+        }
+
+        var previous = await history.RebuildPreviousAsync(auditEvent);
+        Response.Headers.CacheControl = "no-store";
+        return Ok(new AuditContentDiff(
+            previous is null ? null : System.Text.Json.JsonSerializer.SerializeToNode(previous, System.Text.Json.JOptions.Default),
+            System.Text.Json.JsonSerializer.SerializeToNode(contentItem, System.Text.Json.JOptions.Default)));
+    }
+
     [HttpPost("restore")]
     public async Task<ActionResult<AuditContentRestoreResult>> RestoreAsync(string eventId)
     {
@@ -99,5 +121,8 @@ public sealed class AuditTrailContentApiController(
 
 /// <summary>A content event's version as the audit pages show it.</summary>
 public sealed record AuditContentVersion(string ContentItemId, string ContentType, string? DisplayText, int VersionNumber, DisplayTree Tree);
+
+/// <summary>A content event's version and the one before it (none for the first), as content JSON.</summary>
+public sealed record AuditContentDiff(System.Text.Json.Nodes.JsonNode? Before, System.Text.Json.Nodes.JsonNode? After);
 
 public sealed record AuditContentRestoreResult(bool Restored, string ContentItemId, IReadOnlyList<string> Errors);

@@ -145,6 +145,23 @@ public class AccessGateTests
     }
 
     [Fact]
+    public async Task The_first_burst_through_the_runner_accepts_the_fresh_actor()
+    {
+        // The runner moves a new run from Pending to Executing before the pipeline (and so before
+        // the gate) runs; it records the first burst so a fresh sealed actor is still accepted.
+        var input = new Dictionary<string, object> { [WorkflowsConstants.InputKeys.Actor] = Seal.Seal(new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme", Side = CallerSide.Admin }) };
+        var (context, accessor) = await BurstAsync(runsAsSystem: false, input);
+        context.IsFirstBurst = true;
+        typeof(WorkflowExecutionContext).GetProperty(nameof(WorkflowExecutionContext.SubStatus))!.SetValue(context, WorkflowSubStatus.Executing);
+        CallerContext? seen = null;
+        var gate = new WorkflowAccessGateMiddleware(_ => { seen = accessor.Current; return ValueTask.CompletedTask; }, NullLogger<WorkflowAccessGateMiddleware>.Instance);
+
+        await gate.InvokeAsync(context);
+
+        Assert.Equal("u-1", seen!.UserId);
+    }
+
+    [Fact]
     public async Task The_first_burst_binds_the_actor_to_its_instance()
     {
         var input = new Dictionary<string, object> { [WorkflowsConstants.InputKeys.Actor] = Seal.Seal(new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme", Side = CallerSide.Admin }) };

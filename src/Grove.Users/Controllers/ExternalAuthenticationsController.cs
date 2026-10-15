@@ -20,6 +20,9 @@ using Grove.Users.Handlers;
 using Grove.Users.Models;
 using Grove.Users.Services;
 using Grove.Users.ViewModels;
+using Grove.Users.Workflows;
+using Grove.Workflows;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Grove.Users.Controllers;
 
@@ -39,7 +42,12 @@ public sealed record PendingExternalLoginModel(
 public sealed record ExternalLoginResult(bool Succeeded, string[] Errors, string Redirect);
 
 [Feature(UserConstants.Features.ExternalAuthentication)]
-public sealed class ExternalAuthenticationsController : AccountBaseController
+/// <summary>
+/// The external sign-in's protocol endpoints: the challenge (a form post), the provider's callback,
+/// and the JSON completion the site's external login pages call. No views: a sign-in that cannot
+/// finish here goes to those pages, a refused one back to the login page with the message.
+/// </summary>
+public sealed class ExternalAuthenticationsController : Controller
 {
     private readonly SignInManager<IUser> _signInManager;
     private readonly UserManager<IUser> _userManager;
@@ -290,7 +298,7 @@ public sealed class ExternalAuthenticationsController : AccountBaseController
         return RedirectToExternalLoginPage(RegisterPage, returnUrl, ModelState.Values.SelectMany(state => state.Errors).FirstOrDefault()?.ErrorMessage);
     }
 
-    /// <summary>Where a pending external sign-in completes, on the site shell (Grove.SiteTheme.Client).</summary>
+    /// <summary>Where a pending external sign-in completes, on the site shell (Grove.Users' site library).</summary>
     public const string RegisterPage = "/ExternalLogin/Register";
 
     /// <summary>Where a pending external sign-in links to the existing account with the same email.</summary>
@@ -642,31 +650,44 @@ public sealed class ExternalAuthenticationsController : AccountBaseController
         }
     }
 
-    private RedirectToActionResult RedirectToLogin(string returnUrl)
+    // Back to the staff login page with the first error (the page shows it, and does not start
+    // the only provider again).
+    private LocalRedirectResult RedirectToLogin(string returnUrl)
     {
-        CopyModelStateErrorsToTempData();
+        var loginPath = HttpContext.RequestServices.GetRequiredService<IOptions<UserOptions>>().Value.LoginPath;
+        var query = new List<string> { "externalLoginError=true" };
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            query.Add("returnUrl=" + Uri.EscapeDataString(returnUrl));
+        }
 
-        return RedirectToAction(nameof(AccountController.Login), typeof(AccountController).ControllerName(), new { returnUrl, externalLoginError = true });
+        var error = ModelState.Values.SelectMany(state => state.Errors).Select(item => item.ErrorMessage).FirstOrDefault(message => !string.IsNullOrEmpty(message))
+            ?? TempData.Where(pair => pair.Key.StartsWith("error", StringComparison.Ordinal)).Select(pair => pair.Value?.ToString()).FirstOrDefault();
+        if (!string.IsNullOrEmpty(error))
+        {
+            query.Add("error=" + Uri.EscapeDataString(error));
+        }
+
+        return LocalRedirect("~/" + loginPath + "?" + string.Join('&', query));
     }
 
-    private RedirectToActionResult RedirectToLogin()
-        => RedirectToAction(nameof(AccountController.Login), typeof(AccountController).ControllerName());
-
-    private void CopyModelStateErrorsToTempData(string key = "")
+    private async Task<IActionResult> LoggedInActionResultAsync(IUser user, string returnUrl = null, ExternalLoginInfo info = null)
     {
-        var iix = 0;
-
-        foreach (var state in ModelState)
+        var triggers = HttpContext.RequestServices.GetService<IWorkflowTriggerPublisher>();
+        if (triggers is not null && user is User platformUser)
         {
-            if (key != null && state.Key != key)
-            {
-                continue;
-            }
+            // The flows act as the user who just signed in, not the anonymous request (docs/access.md, Anonymous actors).
+            await triggers.PublishForUserAsync(UserWorkflowTriggers.LoggedIn, platformUser.UserId, platformUser.UserId, platformUser.UserName, UserWorkflowTriggers.Payload(platformUser, info?.LoginProvider ?? string.Empty));
+        }
 
-            foreach (var item in state.Value.Errors)
-            {
-                TempData[$"error_{iix++}"] = item.ErrorMessage;
-            }
+        return Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl.ToUriComponents()) : Redirect("~/");
+    }
+
+    private void CopyTempDataErrorsToModelState()
+    {
+        foreach (var errorMessage in TempData.Where(x => x.Key.StartsWith("error", StringComparison.Ordinal)).Select(x => x.Value.ToString()))
+        {
+            ModelState.AddModelError(string.Empty, errorMessage);
         }
     }
 

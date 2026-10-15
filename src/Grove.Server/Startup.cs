@@ -1,5 +1,4 @@
 using Grove.Indexing;
-using Grove.Models;
 using YesSql.Indexes;
 using Grove.ViewModels;
 using Grove.Components.Primitives;
@@ -314,7 +313,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<Grove.Templates.Services.IShippedTemplateProvider, Grove.Display.AccountEmailTemplates>();
         services.AddScoped<IDisplayTreeVersionPart, Grove.Display.SiteTreeVersion>();
         services.AddScoped<Grove.ContentManagement.Handlers.IContentHandler, Grove.Display.DisplayTreeContentHandler>();
-        services.AddScoped<Grove.Display.ContentEditorTreeBuilder>();
+        services.AddScoped<Grove.Display.IContentEditorTreeBuilder, Grove.Display.ContentEditorTreeBuilder>();
         // The value type registry (docs/blazor-display.md, module homes): the base types; modules add theirs.
         Grove.Data.Types.ValueTypeServiceCollectionExtensions.AddValueType(services);
         services.AddScoped<Grove.Shell.IShellResponseStatus, Grove.Display.ShellResponseStatus>();
@@ -323,29 +322,8 @@ public sealed class Startup : StartupBase
         // through the route table and forwards a legacy-owned path to MVC; this answers which.
         services.AddSingleton<Grove.Routing.ILegacyRouteOwnership, Grove.Routing.LegacyRouteOwnership>();
 
-        // Content Part Lists themselves (parts, service, management API, screen) live in the
-        // Grove.ContentPartLists module - an opt-in feature. Only the provider-agnostic
-        // picker infrastructure stays here.
-
-        // OptionPickerField: the reference mechanism for option sources. Providers keep
-        // the field ignorant of what it is picking (content part lists today; users, content
-        // items and other entity sources later).
-        services.AddContentField<Fields.OptionPickerField>();
-        services.AddScoped<IOptionSourceProvider, UserOptionSourceProvider>();
-        services.AddScoped<IOptionSourceProvider, ContentItemOptionSourceProvider>();
-        services.AddScoped<IOptionSourceProvider, TimeZoneOptionSourceProvider>();
-        services.AddScoped<IOptionSourceProvider, CultureOptionSourceProvider>();
-        services.AddScoped<OptionPickerFieldKeyResolver>();
-        // Parent id->key resolution behind cascading filters and field-visibility
-        // conditions, and the clear-on-save enforcement for hidden fields.
-        services.AddScoped<OptionParentValueResolver>();
-        services.AddScoped<Grove.ContentTypes.IFieldVisibilityEnforcer, FieldVisibilityEnforcer>();
-
-        // Per-content-type index partitioning: modules register the high-volume types
-        // that get their own table, and the catch-all partition skips them.
-        services.AddSingleton<Indexing.OptionIndexPartitions>();
-        services.AddDataMigration<Indexing.OptionPickerFieldIndexMigrations>();
-        services.AddScopedIndexProvider<Indexing.OptionPickerFieldIndexProvider>();
+        // The option picker (field, sources, API) is the Grove.OptionPicker module; Content Part
+        // Lists are the Grove.ContentPartLists module.
 
         // HtmlRenderer (used by component bindings, ComponentShapeRenderer, for Static SSR)
         // instantiates components via this same service provider, and component base
@@ -458,7 +436,6 @@ public sealed class TenantMediaIconsStartup : StartupBase
     {
         services.AddScoped<IIconProvider, TenantMediaIconProvider>();
         services.AddScoped<IPermissionProvider, Permissions.IconPermissions>();
-        services.AddScoped<IPermissionProvider, Permissions.ContentPartListPermissions>();
     }
 }
 

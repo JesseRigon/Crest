@@ -168,6 +168,30 @@ public class SeoMetaPartHandler : ContentPartHandler<SeoMetaPart>
     /// <summary>The absolute URL of a media field's first item the caller may view, or null.</summary>
     private Task<string> SocialImageUrlAsync(IUrlHelper urlHelper, MediaField field) =>
         SeoMediaUrls.UrlAsync(_references, urlHelper, field?.FirstReference());
+
+    // Every save path: the canonical address holds no characters an address may not hold, and
+    // the Google schema is JSON.
+    protected override Task ValidatingAsync(ValidateContentPartContext context, SeoMetaPart part)
+    {
+        if (part.Canonical?.IndexOfAny(SeoMetaPart.InvalidCharactersForCanoncial) > -1 || part.Canonical?.IndexOf(' ') > -1)
+        {
+            context.Fail("The canonical entry contains invalid characters.", nameof(part.Canonical));
+        }
+
+        if (!string.IsNullOrWhiteSpace(part.GoogleSchema))
+        {
+            try
+            {
+                System.Text.Json.Nodes.JsonNode.Parse(part.GoogleSchema);
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                context.Fail("The google schema is written in an incorrect format.", nameof(part.GoogleSchema));
+            }
+        }
+
+        return Task.CompletedTask;
+    }
 }
 
 internal static class SeoMediaUrls
@@ -195,4 +219,5 @@ internal static class SeoMediaUrls
     /// <summary>A URL made absolute on the site's host, unless it already is (a CDN's).</summary>
     public static string Absolute(IUrlHelper urlHelper, string url) =>
         Uri.TryCreate(url, UriKind.Absolute, out _) && !url.StartsWith('/') ? url : urlHelper.ToAbsoluteUrl(url);
+
 }

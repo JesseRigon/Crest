@@ -73,9 +73,9 @@ public sealed class DeploymentsStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<IndexProfileDeploymentSource, IndexProfileDeploymentStep, IndexProfileDeploymentStepDisplayDriver>();
-        services.AddDeployment<RebuildIndexDeploymentSource, RebuildIndexDeploymentStep, RebuildIndexDeploymentStepDriver>();
-        services.AddDeployment<ResetIndexDeploymentSource, ResetIndexDeploymentStep, ResetIndexDeploymentStepDriver>();
+        services.AddDeployment<IndexProfileDeploymentSource, IndexProfileDeploymentStep>();
+        services.AddDeployment<RebuildIndexDeploymentSource, RebuildIndexDeploymentStep>();
+        services.AddDeployment<ResetIndexDeploymentSource, ResetIndexDeploymentStep>();
     }
 }
 

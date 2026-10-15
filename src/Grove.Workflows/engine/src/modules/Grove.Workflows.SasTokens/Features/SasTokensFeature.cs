@@ -14,9 +14,13 @@ public class SasTokensFeature(IModule module) : FeatureBase(module)
 {
     /// <summary>
     /// Configures the <see cref="IDataProtectionBuilder"/> used for setting up data protection.
-    /// Defaults to setting the application name to "Grove Workflows".
+    /// Defaults to leaving the host's data protection as it is: the engine runs inside a tenant
+    /// whose key ring and application name the platform sets per tenant. Setting an application
+    /// name here would change the discriminator of every protector in the tenant (auth cookies,
+    /// sealed workflow actors, protected settings) depending on the order the options setups
+    /// happen to run in, so payloads protected by one shell build would not open in the next.
     /// </summary>
-    public Action<IDataProtectionBuilder> ConfigureDataProtectionBuilder { get; set; } = b => { b.SetApplicationName("Grove Workflows"); };
+    public Action<IDataProtectionBuilder> ConfigureDataProtectionBuilder { get; set; } = _ => { };
 
     /// <summary>
     /// Factory method to create an instance of <see cref="ITokenService"/>.

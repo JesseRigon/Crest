@@ -11,7 +11,6 @@ using Grove.Modules;
 using Grove.Navigation;
 using Grove.Security.Permissions;
 using Grove.Settings.Deployment;
-using Grove.Users.AuditTrail.Drivers;
 using Grove.Users.AuditTrail.Handlers;
 using Grove.Users.AuditTrail.Indexes;
 using Grove.Users.AuditTrail.Models;
@@ -34,10 +33,17 @@ public sealed class Startup : StartupBase
             .AddScoped<ILoginFormEvent>(sp => sp.GetRequiredService<UserEventHandler>())
             .AddScoped<ILogoutFormEvent>(sp => sp.GetRequiredService<UserEventHandler>());
 
-        services.AddDisplayDriver<AuditTrailEvent, AuditTrailUserEventDisplayDriver>();
         services.AddIndexProvider<AuditTrailUserEventIndexProvider>();
         services.AddDataMigration<Migrations>();
-        services.AddPageSource<AdminPages>();
+        services.AddSettingsGroup<UserSnapshotSettings>(
+            UserSnapshotSettings.GroupId,
+            "User Audit Trail",
+            Permissions.ManageUserAuditTrailSettings,
+            group => group
+                .InMenu("settings-security", entryId: UserSnapshotSettings.GroupId)
+                .StoredBy(
+                    (services, _) => UserSnapshotSettings.LoadAsync(services),
+                    (services, settings, _) => UserSnapshotSettings.SaveAsync(services, settings)));
         services.AddScoped<Grove.Access.IResourcePermissionMapper, UserAuditTrailPermissionMapper>();
 
         services.AddSingleton<Redactor>(_ => NullRedactor.Instance);
@@ -58,7 +64,5 @@ public sealed class Startup : StartupBase
 public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services) =>
-        services.AddSiteSettingsPropertyDeploymentStep<AuditTrailUserEventSettings, DeploymentStartup>(
-            S => S["User Audit Trail settings"],
-            S => S["Exports the user audit trail settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<AuditTrailUserEventSettings>();
 }

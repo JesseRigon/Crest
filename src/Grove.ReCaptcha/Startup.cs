@@ -1,10 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
-using Grove.DisplayManagement.Handlers;
+using Grove.Environment.Options;
 using Grove.Modules;
 using Grove.Navigation;
 using Grove.ReCaptcha.Configuration;
 using Grove.ReCaptcha;
-using Grove.ReCaptcha.Drivers;
+using Grove.ReCaptcha.Users;
 using Grove.ReCaptcha.Users.Handlers;
 using Grove.Security.Permissions;
 using Grove.Settings.Deployment;
@@ -22,8 +22,17 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddReCaptcha();
-        services.AddSiteDisplayDriver<ReCaptchaSettingsDisplayDriver>();
-        services.AddPageSource<AdminPages>();
+        services.AddSettingsGroup<ReCaptchaSettings>(
+            ReCaptchaSettings.GroupId,
+            "reCaptcha",
+            ReCaptchaPermissions.ManageReCaptchaSettings,
+            group => group
+                .InMenu("settings-security", entryId: "recaptcha")
+                .OnSaved((services, _, _) =>
+                {
+                    services.GetRequiredService<IOptionsUpdateNotifier>().RequestUpdate<ReCaptchaSettings>();
+                    return Task.CompletedTask;
+                }));
         services.AddPermissionProvider<Permissions>();
     }
 }
@@ -34,7 +43,7 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<ReCaptchaSettings, DeploymentStartup>(S => S["ReCaptcha settings"], S => S["Exports the ReCaptcha settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<ReCaptchaSettings>();
     }
 }
 
@@ -46,28 +55,9 @@ public sealed class UsersStartup : StartupBase
         services.AddScoped<IRegistrationFormEvents, RegistrationFormEventHandler>();
         services.AddScoped<ILoginFormEvent, LoginFormEventEventHandler>();
         services.AddScoped<IPasswordRecoveryFormEvents, PasswordRecoveryFormEventEventHandler>();
-        services.AddDisplayDriver<LoginForm, ReCaptchaLoginFormDisplayDriver>();
-    }
-}
 
-[Feature("Grove.ReCaptcha.Users")]
-[RequireFeatures(UserConstants.Features.ResetPassword)]
-public sealed class UsersResetPasswordStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddDisplayDriver<ForgotPasswordForm, ReCaptchaForgotPasswordFormDisplayDriver>();
-        services.AddDisplayDriver<ResetPasswordForm, ReCaptchaResetPasswordFormDisplayDriver>();
-    }
-}
-
-[Feature("Grove.ReCaptcha.Users")]
-[RequireFeatures(UserConstants.Features.UserRegistration)]
-public sealed class UsersRegistrationStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddDisplayDriver<RegisterUserForm, RegisterUserFormDisplayDriver>();
+        // The captcha the sign-in, registration and password recovery forms render.
+        services.AddScoped<Grove.Access.ILoginExtensionProvider, ReCaptchaLoginExtensions>();
     }
 }
 

@@ -32,14 +32,14 @@ public sealed class Startup : StartupBase
 
         // MenuPart
         services.AddScoped<IContentHandler, MenuContentHandler>();
-        services.AddContentPart<MenuPart>()
-            .UseDisplayDriver<MenuPartDisplayDriver>();
+        services.AddContentPart<MenuPart>();
 
         services.AddContentPart<MenuItemsListPart>();
 
         // LinkMenuItemPart
         services.AddContentPart<LinkMenuItemPart>()
-            .UseDisplayDriver<LinkMenuItemPartDisplayDriver>();
+            .UseDisplayDriver<LinkMenuItemPartDisplayDriver>()
+            .AddHandler<LinkMenuItemPartHandler>();
 
         // ContentMenuItemPart
         services.AddContentPart<ContentMenuItemPart>()
@@ -47,10 +47,10 @@ public sealed class Startup : StartupBase
 
         // HtmlMenuItemPart
         services.AddContentPart<HtmlMenuItemPart>()
-            .UseDisplayDriver<HtmlMenuItemPartDisplayDriver>();
+            .UseDisplayDriver<HtmlMenuItemPartDisplayDriver>()
+            .AddHandler<HtmlMenuItemPartHandler>();
 
-        services.AddContentPart<MenuItemPermissionPart>()
-            .UseDisplayDriver<MenuItemPermissionPartDisplayDriver>();
+        services.AddContentPart<MenuItemPermissionPart>();
 
         services.AddTagHelpers<MenuTagHelper>();
     }

@@ -23,6 +23,7 @@
     <ProjectReference Include="..\Grove.Abstractions\Grove.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.DisplayManagement.Abstractions\Grove.DisplayManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.ContentManagement.Abstractions\Grove.ContentManagement.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Kinds\Grove.Kinds.csproj" />
   </ItemGroup>
 

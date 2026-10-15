@@ -33,19 +33,11 @@ internal sealed class UserModerationLoginFormEvent : LoginFormEventBase
             return Task.FromResult<IActionResult>(null);
         }
 
-        var model = new RouteValueDictionary()
-        {
-            { "Area", UserConstants.Features.Users },
-        };
+        // The "registration pending" page is the site shell's.
+        var query = _httpContextAccessor.HttpContext.Request.Query.TryGetValue("returnUrl", out var back) && !string.IsNullOrEmpty(back)
+            ? "?returnUrl=" + Uri.EscapeDataString(back.ToString())
+            : string.Empty;
 
-        if (_httpContextAccessor.HttpContext.Request.Query.TryGetValue("returnUrl", out var returnUrlValue))
-        {
-            model.Add("returnUrl", returnUrlValue);
-        }
-
-        return Task.FromResult<IActionResult>(new RedirectToActionResult(
-            actionName: nameof(RegistrationController.RegistrationPending),
-            controllerName: typeof(RegistrationController).ControllerName(),
-            routeValues: model));
+        return Task.FromResult<IActionResult>(new LocalRedirectResult("~" + Services.AccountPages.RegistrationPending + query));
     }
 }

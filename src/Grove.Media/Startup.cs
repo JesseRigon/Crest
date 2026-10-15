@@ -96,7 +96,6 @@ public sealed class Startup : StartupBase
 
         // Builds the "MediaApi" authorization policy from MediaApiSettings (cookie default / bearer).
         services.AddTransient<IConfigureOptions<AuthorizationOptions>, MediaApiAuthorizationOptionsConfiguration>();
-        services.AddSiteDisplayDriver<MediaApiSettingsDisplayDriver>();
         services.TryAddTransient<FileCreationService>();
         services.AddTransient<FileSizeHelper>();
 
@@ -184,7 +183,10 @@ public sealed class Startup : StartupBase
 
         // The media library drive behind /media paths and media fields (ruling F1).
         services.AddMediaLibrary();
-        services.AddPageSource<AdminPages>();
+        // Settings › Media › API: the generic settings form; changing the scheme rebuilds the
+        // shell so the "MediaApi" authorization policy is reconfigured.
+        services.AddSettingsGroup<MediaApiSettings>(MediaApiSettings.GroupId, "API", MediaPermissions.ManageMediaApiSettings,
+            group => group.InMenu("settings-media", entryId: "media-api").ReloadsTenant());
         services.AddApiContributor<Api.MediaFilesApi>();
         services.AddApiContributor<Api.MediaOptionsApi>();
         services.AddApiContributor<Api.MediaProfilesApi>();
@@ -215,7 +217,8 @@ public sealed class Startup : StartupBase
         // Media Field
         services.AddContentField<MediaField>()
             .UseDisplayDriver<MediaFieldDisplayDriver>()
-            .AddHandler<AttachedMediaFieldHandler>();
+            .AddHandler<AttachedMediaFieldHandler>()
+            .AddHandler<MediaFieldHandler>();
         services.AddScoped<AttachedMediaFieldFileService, AttachedMediaFieldFileService>();
         services.AddScoped<IContentHandler, AttachedMediaFieldContentHandler>();
         services.AddScoped<IModularTenantEvents, TempDirCleanerService>();
@@ -323,7 +326,6 @@ public sealed class MediaCacheStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddPermissionProvider<MediaCachePermissions>();
-        services.AddPageSource<MediaCachePages>();
     }
 }
 
@@ -346,14 +348,10 @@ public sealed class DeploymentStartup : StartupBase
     {
         services.AddDeployment<
             MediaDeploymentSource,
-            MediaDeploymentStep,
-            MediaDeploymentStepDriver
-        >();
+            MediaDeploymentStep>();
         services.AddDeployment<
             AllMediaProfilesDeploymentSource,
-            AllMediaProfilesDeploymentStep,
-            AllMediaProfilesDeploymentStepDriver
-        >();
+            AllMediaProfilesDeploymentStep>();
     }
 }
 

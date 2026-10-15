@@ -63,9 +63,9 @@ public sealed class Startup : StartupBase
         services.Configure<NotificationOptions>(_shellConfiguration.GetSection("Grove_Notifications"));
 
         services.AddResourceConfiguration<NotificationOptionsConfiguration>();
-        services.AddDisplayDriver<User, UserNotificationPreferencesPartDisplayDriver>();
         services.AddDisplayDriver<Navbar, NotificationNavbarDisplayDriver>();
         services.AddScoped<INotificationEvents, CacheNotificationEventsHandler>();
+        services.AddApiContributor<Api.NotificationPreferencesApi>();
     }
 
     public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)

@@ -14,6 +14,9 @@ public sealed class AccessGateService(ILogger<AccessGateService> logger) : IAcce
     /// <summary>Items key, set once the gate ran for the request (the caller may still be anonymous).</summary>
     public const string GatedItem = "Grove.Access.Gated";
 
+    /// <summary>Items key: the signed-in user's pending sign-in step, once asked for the request (a boxed null when none).</summary>
+    private const string PendingStepItem = "Grove.Access.PendingSignInStep";
+
     public async Task<bool> AdmitAsync(HttpContext context, CallerSide side, bool allowAnonymous, string? organizationId = null)
     {
         if (!context.Items.ContainsKey(GatedItem))
@@ -40,8 +43,65 @@ public sealed class AccessGateService(ILogger<AccessGateService> logger) : IAcce
             return false;
         }
 
+        // A session with a step to take first (the two-factor setup its roles require) reaches
+        // that step and nothing else (docs/access.md › Authentication).
+        if (await PendingStepAsync(context) is { } step
+            && !PendingSignInSteps.Allows(context.Request.Path, PendingSignInSteps.AlwaysAllowed.Concat(step.AllowedPaths)))
+        {
+            logger.LogInformation("Request on {Path} refused: the session must first take the step {Reason}.", context.Request.Path, step.Reason);
+            await RefuseAsync(context, step);
+            return false;
+        }
+
         return allowAnonymous || context.User.Identity?.IsAuthenticated == true;
     }
+
+    // Asked once per request, for a cookie session only: a bearer caller (an application, a
+    // token) has no interactive step to take.
+    private static async Task<PendingSignInStep?> PendingStepAsync(HttpContext context)
+    {
+        if (context.User.Identity?.IsAuthenticated != true || context.Request.Headers.ContainsKey("Authorization"))
+        {
+            return null;
+        }
+
+        if (context.Items.TryGetValue(PendingStepItem, out var cached))
+        {
+            return cached as PendingSignInStep;
+        }
+
+        PendingSignInStep? step = null;
+        foreach (var provider in context.RequestServices.GetServices<IPendingSignInStepProvider>())
+        {
+            if (await provider.GetAsync(context, context.User) is { } pending)
+            {
+                step = pending;
+                break;
+            }
+        }
+
+        context.Items[PendingStepItem] = step;
+        return step;
+    }
+
+    // A page goes to the step's page; an API call is refused with the reason, never redirected.
+    private static async Task RefuseAsync(HttpContext context, PendingSignInStep step)
+    {
+        if (AccessGate.IsApiPath(context.Request.Path))
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsJsonAsync(
+                new PendingStepProblem("about:blank", "Sign-in step required", StatusCodes.Status403Forbidden, step.Detail, step.Reason, context.Request.PathBase + step.Page),
+                options: (System.Text.Json.JsonSerializerOptions?)null,
+                contentType: "application/problem+json",
+                cancellationToken: context.RequestAborted);
+            return;
+        }
+
+        context.Response.Redirect(context.Request.PathBase + step.Page);
+    }
+
+    private sealed record PendingStepProblem(string Type, string Title, int Status, string Detail, string Reason, string Page);
 
     public async Task<bool> AdmitApiAsync(HttpContext context, CallerSide? prefixSide)
     {

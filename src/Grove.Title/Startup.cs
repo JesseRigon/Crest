@@ -21,7 +21,6 @@ public sealed class Startup : StartupBase
         services.Configure<TemplateOptions>(o =>
         {
             o.MemberAccessStrategy.Register<TitlePartViewModel>();
-            o.MemberAccessStrategy.Register<TitlePartSettingsViewModel>();
         });
 
         // Title Part

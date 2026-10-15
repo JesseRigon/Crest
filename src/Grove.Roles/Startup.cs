@@ -66,7 +66,7 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<AllRolesDeploymentSource, AllRolesDeploymentStep, AllRolesDeploymentStepDriver>();
+        services.AddDeployment<AllRolesDeploymentSource, AllRolesDeploymentStep>();
     }
 }
 

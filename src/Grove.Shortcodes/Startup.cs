@@ -51,6 +51,7 @@ public sealed class Startup : StartupBase
         services.AddOptions<ShortcodeOptions>();
         services.AddScoped<Sc.IShortcodeProvider, OptionsShortcodeProvider>();
         services.AddDisplayDriver<ShortcodeDescriptor, ShortcodeDescriptorDisplayDriver>();
+        services.AddApiContributor<Api.ShortcodesApi>();
     }
 }
 
@@ -64,10 +65,11 @@ public sealed class ShortcodeTemplatesStartup : StartupBase
     {
         services.AddScoped<ShortcodeTemplatesManager>();
         services.AddPermissionProvider<Permissions>();
-        services.AddPageSource<AdminPages>();
-        services.AddScoped<IJSLocalizer, ShortcodesJSLocalizer>();
 
         services.AddRecipeExecutionStep<ShortcodeTemplateStep>();
+
+        // The shortcode templates page (Grove.Shortcodes.BlazorWasm) and its API.
+        services.AddApiContributor<Api.ShortcodeTemplatesApi>();
 
         services.AddScoped<Sc.IShortcodeProvider, TemplateShortcodeProvider>();
         services.AddScoped<IShortcodeDescriptorProvider, ShortcodeTemplatesDescriptorProvider>();
@@ -101,6 +103,6 @@ public sealed class ShortcodeTemplatesDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<AllShortcodeTemplatesDeploymentSource, AllShortcodeTemplatesDeploymentStep, AllShortcodeTemplatesDeploymentStepDriver>();
+        services.AddDeployment<AllShortcodeTemplatesDeploymentSource, AllShortcodeTemplatesDeploymentStep>();
     }
 }

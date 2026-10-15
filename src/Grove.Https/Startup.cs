@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Grove.Data.Migration;
 using Grove.DisplayManagement.Handlers;
-using Grove.Https.Drivers;
 using Grove.Https.Migrations;
 using Grove.Https.Services;
 using Grove.Https.Settings;
@@ -38,8 +37,23 @@ public sealed class Startup : StartupBase
 
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteDisplayDriver<HttpsSettingsDisplayDriver>();
-        services.AddPageSource<AdminPages>();
+        services.AddSettingsGroup<HttpsSettings>(
+            HttpsSettings.GroupId,
+            "HTTPS",
+            Permissions.ManageHttps,
+            group => group
+                .InMenu("settings-security", entryId: "https")
+                .ReloadsTenant()
+                .ValidatedBy((services, _, errors, _) =>
+                {
+                    // For safety, HTTPS-only settings are not changed over HTTP.
+                    if (services.GetService<IHttpContextAccessor>()?.HttpContext?.Request.IsHttps != true)
+                    {
+                        errors.Add(nameof(HttpsSettings.RequireHttps), "For safety, changing HTTPS-only settings over HTTP has been prevented.");
+                    }
+
+                    return Task.CompletedTask;
+                }));
         services.AddSingleton<IHttpsService, HttpsService>();
         services.AddDataMigration<HttpsSettingsMigrations>();
 
@@ -71,6 +85,6 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<HttpsSettings, DeploymentStartup>(S => S["Https settings"], S => S["Exports the Https settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<HttpsSettings>();
     }
 }

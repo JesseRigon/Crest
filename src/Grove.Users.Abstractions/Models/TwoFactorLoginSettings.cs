@@ -8,5 +8,4 @@ public class TwoFactorLoginSettings
 
     public int NumberOfRecoveryCodesToGenerate { get; set; } = 5;
 
-    public bool UseSiteTheme { get; set; }
 }

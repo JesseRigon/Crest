@@ -39,7 +39,7 @@ public sealed class CorsOptionsConfiguration : IConfigureOptions<CorsOptions>
                 }
                 else
                 {
-                    configurePolicy.WithHeaders(corsPolicy.AllowedHeaders);
+                    configurePolicy.WithHeaders(corsPolicy.AllowedHeaders ?? []);
                 }
 
                 if (corsPolicy.AllowAnyMethod)
@@ -48,7 +48,7 @@ public sealed class CorsOptionsConfiguration : IConfigureOptions<CorsOptions>
                 }
                 else
                 {
-                    configurePolicy.WithMethods(corsPolicy.AllowedMethods);
+                    configurePolicy.WithMethods(corsPolicy.AllowedMethods ?? []);
                 }
 
                 if (corsPolicy.AllowAnyOrigin)
@@ -57,7 +57,7 @@ public sealed class CorsOptionsConfiguration : IConfigureOptions<CorsOptions>
                 }
                 else
                 {
-                    configurePolicy.WithOrigins(corsPolicy.AllowedOrigins);
+                    configurePolicy.WithOrigins(corsPolicy.AllowedOrigins ?? []);
                 }
 
                 if (corsPolicy.AllowCredentials)

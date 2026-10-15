@@ -1,0 +1,261 @@
+@namespace Grove.Users.Components
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IServiceProvider Services
+
+@* The signed-in user's two-factor authentication (docs/MVC/parity.md › TwoFactorSetup): whether it
+   is on, the methods (authenticator app enrollment with a QR code, the email address, the phone
+   number for SMS codes), the preferred method, this browser, recovery codes (shown once when
+   made) and turning it off. Over api/grove/two-factor; the same component on every shell's
+   account page. Section opens one part, for the pages that link to it. *@
+
+@if (State is null)
+{
+    @if (LoadFailed)
+    {
+        <GroveText TextStyle="TextStyle.Body2" Text="@L("Sign in to manage two-factor authentication.")" data-testid="two-factor-signed-out" />
+    }
+    else
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+}
+else
+{
+    <GroveStack Gap="1.25rem" data-testid="two-factor-setup">
+        <GroveText TextStyle="TextStyle.H5" Text="@L("Two-factor authentication")" />
+
+        @if (State.IsRequired && !State.IsEnabled)
+        {
+            <GroveAlert AlertStyle="AlertStyle.Danger" AllowClose="false">@L("Two-factor authentication must be enabled before proceeding.")</GroveAlert>
+            @* Until it is, the session reaches only this page (the access gate): signing out is the other way out. *@
+            <GroveButton Text="@L("Sign out")" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="SignOutAsync" Disabled="Busy" data-testid="two-factor-sign-out" />
+        }
+
+        @if (Message is { Length: > 0 })
+        {
+            <GroveAlert AlertStyle="@(Failed ? AlertStyle.Danger : AlertStyle.Success)" AllowClose="false" data-testid="two-factor-message">@Message</GroveAlert>
+        }
+
+        @if (RecoveryCodes is { Length: > 0 } codes)
+        {
+            <GroveCard data-testid="two-factor-recovery-codes">
+                <GroveStack Gap="0.5rem">
+                    <GroveText TextStyle="TextStyle.Subtitle1" Text="@L("Your recovery codes")" />
+                    <GroveText TextStyle="TextStyle.Body2" Text="@L("Put these codes in a safe place. If you lose your device and have no recovery code, you lose access to your account. They are shown only now.")" />
+                    <pre style="margin: 0;">@string.Join("\n", codes)</pre>
+                    <GroveButton Text="@L("I have saved them")" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => RecoveryCodes = null)" />
+                </GroveStack>
+            </GroveCard>
+        }
+
+        @* The state, and turning it on or off. *@
+        <GroveStack Gap="0.5rem" data-testid="two-factor-status">
+            @if (State.IsEnabled)
+            {
+                <GroveText TextStyle="TextStyle.Body1" Text="@L("Two-factor authentication is enabled.")" />
+                @if (!State.CanDisable)
+                {
+                    <GroveText TextStyle="TextStyle.Caption" Text="@L("Two-factor authentication can't be disabled for your user.")" />
+                }
+                else if (Open == "disable")
+                {
+                    <GroveText TextStyle="TextStyle.Body2" Text="@L("Disabling two-factor authentication does not change the methods you set up. Your recovery codes stay valid.")" />
+                    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                        <GroveButton Text="@L("Disable two-factor authentication")" ButtonStyle="ButtonStyle.Danger" Click="@(() => RunAsync("disable", null))" Disabled="Busy" data-testid="two-factor-disable-confirm" />
+                        <GroveButton Text="@L("Cancel")" ButtonStyle="ButtonStyle.Light" Click="@(() => Open = null)" />
+                    </GroveStack>
+                }
+                else
+                {
+                    <GroveButton Text="@L("Disable two-factor authentication")" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Open = "disable")" data-testid="two-factor-disable" />
+                }
+            }
+            else if (State.Methods.Any(method => method.IsEnabled))
+            {
+                <GroveText TextStyle="TextStyle.Body1" Text="@L("Two-factor authentication is disabled.")" />
+                <GroveButton Text="@L("Enable")" Click="@(() => RunAsync("enable", null))" Disabled="Busy" data-testid="two-factor-enable" />
+            }
+            else
+            {
+                <GroveText TextStyle="TextStyle.Body1" Text="@L("Two-factor authentication is not enabled yet. To enable it, set up one of the methods below.")" />
+            }
+
+            @if (State.IsBrowserRemembered)
+            {
+                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                    <GroveText TextStyle="TextStyle.Body2" Text="@L("This browser is remembered: it is not asked for a code.")" />
+                    <GroveButton Text="@L("Forget this browser")" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => RunAsync("forget-browser", null))" Disabled="Busy" data-testid="two-factor-forget-browser" />
+                </GroveStack>
+            }
+        </GroveStack>
+
+        @if (EnabledMethods.Length > 1)
+        {
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" data-testid="two-factor-preferred">
+                <GroveFormField Text="@L("Preferred method")">
+                    <GroveDropDown TValue="string" Data="@EnabledMethods" TextProperty="Text" ValueProperty="Value" @bind-Value="Preferred" />
+                </GroveFormField>
+                <GroveButton Text="@L("Update")" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => RunAsync("preferred", new { Provider = Preferred }))" Disabled="Busy" />
+            </GroveStack>
+        }
+
+        @* The methods. *@
+        <GroveText TextStyle="TextStyle.Subtitle1" Text="@L("Two-factor methods")" />
+        @foreach (var method in State.Methods)
+        {
+            <GroveCard data-testid="@($"two-factor-method-{method.Provider.ToLowerInvariant()}")">
+                <GroveStack Gap="0.5rem">
+                    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                        <GroveText TextStyle="TextStyle.Subtitle2" Text="@L(TwoFactorMethods.DisplayName(method.Provider))" />
+                        @if (method.IsEnabled)
+                        {
+                            <GroveBadge BadgeStyle="BadgeStyle.Success" Text="@L("Set up")" />
+                        }
+                    </GroveStack>
+                    @switch (method.Provider)
+                    {
+                        case TwoFactorMethods.Authenticator:
+                            <AuthenticatorPart IsEnabled="@method.IsEnabled" Open="@(Open is "authenticator" or "authenticator-reset" ? Open : null)" Changed="@OnChangedAsync" />
+                            break;
+
+                        case TwoFactorMethods.Email:
+                            if (method.IsEnabled)
+                            {
+                                <GroveText TextStyle="TextStyle.Body2" Text="@L("Codes are sent to your confirmed email address.")" />
+                            }
+                            else
+                            {
+                                <GroveText TextStyle="TextStyle.Body2" Text="@L("Your email is not yet verified. To use email for two-factor authentication, you must first verify it.")" />
+                                <GroveButton Text="@L("Verify email")" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="SendEmailConfirmationAsync" Disabled="Busy" data-testid="two-factor-verify-email" />
+                            }
+                            break;
+
+                        case TwoFactorMethods.Phone:
+                            <PhonePart IsEnabled="@method.IsEnabled" PhoneNumber="@State.PhoneNumber" AllowChanging="@State.AllowChangingPhoneNumber" Changed="@OnChangedAsync" />
+                            break;
+                    }
+                </GroveStack>
+            </GroveCard>
+        }
+
+        @if (State.IsEnabled)
+        {
+            <GroveCard data-testid="two-factor-recovery">
+                <GroveStack Gap="0.5rem">
+                    <GroveText TextStyle="TextStyle.Subtitle2" Text="@L("Recovery codes")" />
+                    <GroveText TextStyle="TextStyle.Body2" Text="@L("Recovery codes can be used to access your account in the event you lose access to your device and cannot receive two-factor verification codes.")" />
+                    @if (State.RecoveryCodesLeft <= 3)
+                    {
+                        <GroveAlert AlertStyle="@(State.RecoveryCodesLeft <= 1 ? AlertStyle.Danger : AlertStyle.Warning)" AllowClose="false">
+                            @string.Format(CultureInfo.CurrentCulture, L("You have {0} recovery codes left."), State.RecoveryCodesLeft)
+                        </GroveAlert>
+                    }
+                    @if (Open == "recovery-codes")
+                    {
+                        <GroveText TextStyle="TextStyle.Body2" Text="@L("New codes replace the ones you have: the old codes stop working.")" />
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <GroveButton Text="@L("Generate new codes")" ButtonStyle="ButtonStyle.Warning" Click="@(() => RunAsync("recovery-codes", null))" Disabled="Busy" data-testid="two-factor-recovery-generate" />
+                            <GroveButton Text="@L("Cancel")" ButtonStyle="ButtonStyle.Light" Click="@(() => Open = null)" />
+                        </GroveStack>
+                    }
+                    else
+                    {
+                        <GroveButton Text="@L("Reset codes")" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Open = "recovery-codes")" data-testid="two-factor-recovery-reset" />
+                    }
+                </GroveStack>
+            </GroveCard>
+        }
+    </GroveStack>
+}
+
+@code {
+    /// <summary>The part to open: <c>authenticator</c>, <c>authenticator-reset</c>, <c>recovery-codes</c> or <c>disable</c>.</summary>
+    [Parameter]
+    public string? Section { get; set; }
+
+    private TwoFactorState? State { get; set; }
+    private bool LoadFailed { get; set; }
+    private bool Busy { get; set; }
+    private string? Open { get; set; }
+    private string? Message { get; set; }
+    private bool Failed { get; set; }
+    private string[]? RecoveryCodes { get; set; }
+    private string? Preferred { get; set; }
+
+    private MethodOption[] EnabledMethods => [.. (State?.Methods ?? []).Where(method => method.IsEnabled).Select(method => new MethodOption(method.Provider, L(TwoFactorMethods.DisplayName(method.Provider))))];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Open = Section;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        State = await SignInApi.GetAsync<TwoFactorState>(Http, TwoFactorApi.Root);
+        LoadFailed = State is null;
+        Preferred = State?.PreferredProvider ?? EnabledMethods.FirstOrDefault()?.Value;
+    }
+
+    // A part changed the methods: show its outcome (and any new recovery codes), then reload.
+    private async Task OnChangedAsync(TwoFactorActionResult result)
+    {
+        Show(result);
+        Open = null;
+        await LoadAsync();
+    }
+
+    private async Task RunAsync(string action, object? body)
+    {
+        Busy = true;
+        try
+        {
+            Show(await TwoFactorApi.PostAsync(Http, action, body));
+            Open = null;
+            await LoadAsync();
+        }
+        finally
+        {
+            Busy = false;
+        }
+    }
+
+    private async Task SignOutAsync()
+    {
+        Busy = true;
+        await SignInApi.PostAsync<object, object>(Http, "api/grove/auth/logout", null);
+        Navigation.NavigateTo(Navigation.BaseUri, forceLoad: true);
+    }
+
+    private async Task SendEmailConfirmationAsync()
+    {
+        Busy = true;
+        try
+        {
+            var (result, refusal) = await SignInApi.PostAsync<AccountResult, AccountResult>(Http, "api/grove/account/email/send-confirmation", null);
+            Failed = result is not { Succeeded: true };
+            Message = Failed
+                ? refusal?.Errors?.FirstOrDefault()?.Message ?? L("The confirmation email could not be sent.")
+                : L("A confirmation email was sent. Follow its link, then come back here.");
+        }
+        finally
+        {
+            Busy = false;
+        }
+    }
+
+    private void Show(TwoFactorActionResult result)
+    {
+        Failed = !result.Succeeded;
+        Message = result.Message;
+        if (result.RecoveryCodes is { Length: > 0 } codes)
+        {
+            RecoveryCodes = codes;
+        }
+    }
+
+    private sealed record MethodOption(string Value, string Text);
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

@@ -44,9 +44,11 @@ public class AliasPartHandler : ContentPartHandler<AliasPart>
             return;
         }
 
+        // Errors name the part's own member (AliasPart.Alias), so an editor shows them beside the alias.
+        var partName = (context as ValidateContentPartContext)?.ContentTypePartDefinition?.Name ?? nameof(AliasPart);
         await foreach (var item in part.ValidateAsync(S, _session))
         {
-            context.Fail(item);
+            context.Fail(new System.ComponentModel.DataAnnotations.ValidationResult(item.ErrorMessage, [.. item.MemberNames.Select(member => $"{partName}.{member}")]));
         }
     }
 

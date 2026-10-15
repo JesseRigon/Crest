@@ -6,7 +6,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Grove.Environment.Shell;
 using Grove.Environment.Shell.Configuration;
+using Grove.Setup.Components;
+using Grove.Setup.Services;
 using Grove.Localization;
 using Grove.Modules;
 
@@ -55,6 +58,10 @@ public sealed class Startup : StartupBase
 
         services.AddSetup();
 
+        // The installation pages: static SSR Razor components, no interactivity.
+        services.AddRazorComponents();
+        services.AddScoped<SetupInstallation>();
+
         services.Configure<IdentityOptions>(options =>
         {
             options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._+";
@@ -85,11 +92,12 @@ public sealed class Startup : StartupBase
 
         app.UseRequestLocalization(localizationOptions);
 
-        routes.MapAreaControllerRoute(
-            name: "Setup",
-            areaName: "Grove.Setup",
-            pattern: "",
-            defaults: new { controller = "Setup", action = "Index" }
-        );
+        // The installation pages run in the setup shell, before a database exists: only an
+        // uninitialized tenant serves them. Their form posts validate the antiforgery token.
+        if (serviceProvider.GetRequiredService<ShellSettings>().IsUninitialized())
+        {
+            app.UseAntiforgery();
+            routes.MapRazorComponents<SetupDocument>();
+        }
     }
 }

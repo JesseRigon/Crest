@@ -24,10 +24,8 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddDataMigration<Migrations>();
-        services.AddScoped<IJSLocalizer, SeoJSLocalizer>();
 
         services.AddContentPart<SeoMetaPart>()
-            .UseDisplayDriver<SeoMetaPartDisplayDriver>()
             .AddHandler<SeoMetaPartHandler>();
 
         services.AddScoped<IContentDisplayDriver, SeoContentDriver>();
@@ -37,8 +35,9 @@ public sealed class Startup : StartupBase
         services.AddScoped<IDocumentIndexHandler, SeoMetaPartContentIndexHandler>();
 
         services.AddPermissionProvider<SeoPermissionProvider>();
-        services.AddSiteDisplayDriver<RobotsSettingsDisplayDriver>();
         services.AddPageSource<AdminPages>();
+        services.AddSettingsGroup<RobotsSettings>(SeoConstants.RobotsSettingsGroupId, "Robots", SeoConstants.ManageSeoSettings,
+            group => group.InMenu("seo", entryId: "seo-robots"));
         services.AddTransient<IRobotsProvider, SiteSettingsRobotsProvider>();
     }
 

@@ -13,7 +13,6 @@ using Grove.Environment.Shell.Configuration;
 using Grove.Environment.Shell.Scope;
 using Grove.FileStorage;
 using Grove.FileStorage.AzureBlob;
-using Grove.Media.Azure.Filters;
 using Grove.Media.Azure.Services;
 using Grove.Media;
 using Grove.Media.Events;
@@ -41,7 +40,7 @@ public sealed class Startup : Modules.StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddPermissionProvider<Permissions>();
-        services.AddPageSource<AdminPages>();
+        services.AddApiContributor<Api.AzureMediaOptionsApi>();
         services.AddTransient<IConfigureOptions<MediaBlobStorageOptions>, MediaBlobStorageOptionsConfiguration>();
 
         // Only replace default implementation if options are valid.
@@ -109,31 +108,49 @@ public sealed class Startup : Modules.StartupBase
             services.AddSingleton<IMediaEventHandler, DefaultMediaFileStoreCacheEventHandler>();
 
             services.AddScoped<IModularTenantEvents, MediaBlobContainerTenantEvents>();
-
-            services.Configure<MvcOptions>(options => options.Filters.Add<MediaGalleryCapabilitiesFilter>());
         }
     }
 
     private static string GetMediaCachePath(IWebHostEnvironment hostingEnvironment, ShellSettings shellSettings, string assetsPath)
         => PathExtensions.Combine(hostingEnvironment.WebRootPath, shellSettings.Name, assetsPath);
 
+    // Enabled without configuration is an expected state (a tenant enables every feature in
+    // dev): one warning naming what is missing, and the local media store stays in place.
     private static bool CheckOptions(string connectionString, string containerName, ILogger logger)
+        => AzureMediaConfiguration.Check("Azure Media Storage", "Grove_Media_Azure", connectionString, containerName, logger);
+}
+
+internal static class AzureMediaConfiguration
+{
+    /// <summary>Whether the media container is configured (the Tus temp store needs it too).</summary>
+    public static bool IsConfigured(IShellConfiguration configuration)
     {
-        var optionsAreValid = true;
+        var section = configuration.GetSection("Grove_Media_Azure");
+        return !string.IsNullOrWhiteSpace(section.GetValue<string>(nameof(MediaBlobStorageOptions.ConnectionString)))
+            && !string.IsNullOrWhiteSpace(section.GetValue<string>(nameof(MediaBlobStorageOptions.ContainerName)));
+    }
+
+    public static bool Check(string name, string section, string connectionString, string containerName, ILogger logger)
+    {
+        var missing = new List<string>();
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            logger.LogError("Azure Media Storage is enabled but not active because the 'ConnectionString' is missing or empty in application configuration.");
-            optionsAreValid = false;
+            missing.Add(nameof(MediaBlobStorageOptions.ConnectionString));
         }
 
         if (string.IsNullOrWhiteSpace(containerName))
         {
-            logger.LogError("Azure Media Storage is enabled but not active because the 'ContainerName' is missing or empty in application configuration.");
-            optionsAreValid = false;
+            missing.Add(nameof(MediaBlobStorageOptions.ContainerName));
         }
 
-        return optionsAreValid;
+        if (missing.Count > 0)
+        {
+            logger.LogWarning("{Name} is enabled but not active because '{Section}' is missing {Missing} in application configuration.", name, section, string.Join(" and ", missing));
+            return false;
+        }
+
+        return true;
     }
 }
 
@@ -171,34 +188,21 @@ public sealed class MediaAzureImageCacheStartup : Modules.StartupBase
     }
 
     private bool CheckOptions(string connectionString, string containerName)
-    {
-        var optionsAreValid = true;
-
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            _logger.LogError(
-                "Azure Media ImageSharp Image Cache is enabled but not active because the 'ConnectionString' is missing or empty in application configuration.");
-            optionsAreValid = false;
-        }
-
-        if (string.IsNullOrWhiteSpace(containerName))
-        {
-            _logger.LogError(
-                "Azure Media ImageSharp Image Cache is enabled but not active because the 'ContainerName' is missing or empty in application configuration.");
-            optionsAreValid = false;
-        }
-
-        return optionsAreValid;
-    }
+        => AzureMediaConfiguration.Check("Azure Media ImageSharp Image Cache", "Grove_Media_Azure_Image_Cache", connectionString, containerName, _logger);
 }
 
 [Feature("Grove.Media.Azure.Storage")]
 [RequireFeatures("Grove.Media.Tus")]
-public sealed class MediaAzureTusStartup : Modules.StartupBase
+public sealed class MediaAzureTusStartup(IShellConfiguration configuration) : Modules.StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.Replace(ServiceDescriptor.Singleton<ITusTempStore, AzureBlobTusTempStore>());
+        // Upload chunks go to the media container only when it is configured; otherwise the
+        // local temp store stays (the storage startup has already warned).
+        if (AzureMediaConfiguration.IsConfigured(configuration))
+        {
+            services.Replace(ServiceDescriptor.Singleton<ITusTempStore, AzureBlobTusTempStore>());
+        }
     }
 }
 

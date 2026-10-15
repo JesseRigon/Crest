@@ -9,7 +9,6 @@ using Grove.DisplayManagement.Views;
 using Grove.Infrastructure.Html;
 using Grove.Menu.Models;
 using Grove.Menu.Settings;
-using Grove.Menu.ViewModels;
 
 namespace Grove.Menu.Drivers;
 
@@ -58,63 +57,5 @@ public sealed class HtmlMenuItemPartDisplayDriver : ContentPartDisplayDriver<Htm
             }, part)
             .Location("Thumbnail", "Content:10")
         );
-    }
-
-    public override IDisplayResult Edit(HtmlMenuItemPart part, BuildPartEditorContext context)
-    {
-        return Initialize<HtmlMenuItemPartEditViewModel>("HtmlMenuItemPart_Edit", model =>
-        {
-            model.Name = part.ContentItem.DisplayText;
-            model.Url = part.Url;
-            model.Target = part.Target;
-            model.Html = part.Html;
-            model.MenuItemPart = part;
-        });
-    }
-
-    public override async Task<IDisplayResult> UpdateAsync(HtmlMenuItemPart part, UpdatePartEditorContext context)
-    {
-        var settings = context.TypePartDefinition.GetSettings<HtmlMenuItemPartSettings>();
-        var model = new HtmlMenuItemPartEditViewModel();
-        await context.Updater.TryUpdateModelAsync(model, Prefix);
-
-        part.ContentItem.DisplayText = model.Name;
-        part.Html = settings.SanitizeHtml ? _htmlSanitizerService.Sanitize(model.Html) : model.Html;
-        part.Url = model.Url;
-        part.Target = model.Target;
-
-        var urlToValidate = part.Url;
-
-        if (!string.IsNullOrEmpty(urlToValidate))
-        {
-            urlToValidate = urlToValidate.Split('#', 2)[0];
-
-            if (urlToValidate.StartsWith("~/", StringComparison.Ordinal))
-            {
-                // In .NET 10, create ActionContext directly instead of using obsolete IActionContextAccessor
-                var httpContext = _httpContextAccessor.HttpContext;
-                var actionContext = await httpContext.GetActionContextAsync();
-                var urlHelper = _urlHelperFactory.GetUrlHelper(actionContext);
-                urlToValidate = urlHelper.Content(urlToValidate);
-            }
-
-            urlToValidate = urlToValidate.ToUriComponents();
-
-            if (!Uri.IsWellFormedUriString(urlToValidate, UriKind.RelativeOrAbsolute))
-            {
-                context.Updater.ModelState.AddModelError(nameof(part.Url), S["{0} is an invalid url.", part.Url]);
-            }
-            else
-            {
-                var link = $"<a href=\"{_htmlencoder.Encode(urlToValidate)}\"></a>";
-
-                if (!string.Equals(link, _htmlSanitizerService.Sanitize(link), StringComparison.OrdinalIgnoreCase))
-                {
-                    context.Updater.ModelState.AddModelError(nameof(part.Url), S["{0} is an invalid url.", part.Url]);
-                }
-            }
-        }
-
-        return Edit(part, context);
     }
 }

@@ -30,9 +30,10 @@ filter, and is present only when the Members feature is enabled.
 library compiled into the one WASM app, exactly as Admin.Client and Site.Client are):
 
 - the layout, header and navigation region;
-- the member login and registration pages at the member base, so the staff and member
-  login surfaces are separate **by construction** rather than by a runtime check
-  (`MemberLoginSurfaceGate` becomes a backstop, not the gate);
+- the frame of the member login and registration pages at the member base (the pages are
+  Grove.Members' `member-wasm`), so the staff and member login surfaces are separate **by
+  construction** rather than by a runtime check (`MemberLoginSurfaceGate` becomes a backstop,
+  not the gate);
 - the active-organization switcher;
 - "my account": profile, credentials, organization bindings, and the member's own view of
   their memberships;
@@ -226,8 +227,8 @@ browser. The member login, registration and any other page that establishes a se
 the identical trap, so the rule is general: **a page that sets an authentication cookie
 renders `InteractiveWebAssembly`**, and the page declares it with
 `[SetsAuthenticationCookie]` (`Grove.Components.Modules`). `App.razor` reads the attribute off
-the routed page; no shell or path is special-cased. The admin login, the member login and the
-member registration carry it.
+the routed page; no shell or path is special-cased. The admin login, the member login and
+registration, and the site's registration, account, two-factor and second-step pages carry it.
 
 ## The member portal: login, sessions, sides
 
@@ -306,10 +307,14 @@ organization stamped on the external properties; the platform's own callback fin
 `forgot-password` and `reset-password` (the tenant's `ResetPasswordSettings` apply; the email
 links to the member shell's reset page, never the tenant's; the answer never says whether
 the account exists; only a member-bound account is sent a portal link). The portal login,
-registration, password reset, external-login, organization picker, member home and account
-pages live in `Grove.MemberTheme` (routes in `MemberRoutePaths`); `Grove.Members`'
-`member-wasm` library supplies the shell's seams (`MemberAuthenticationService`,
-`MemberShellContext`, which sets the shell context's organization).
+registration, password reset, external-login and account pages are `Grove.Members`'
+`member-wasm` library, which also supplies the shell's seams (`MemberAuthenticationService`,
+`MemberShellContext`, which sets the shell context's organization); the organization picker,
+member home and not-found pages are `Grove.MemberTheme`'s; the routes of both are
+`MemberRoutePaths`. The portal login has the second sign-in step and the sign-in form's sections
+(a captcha) of the staff login: an account with two-factor authentication gets 202 from the
+portal's `login` and finishes with `TwoFactorChallenge` over `api/grove/auth/two-factor`; its
+organization is chosen on the picker afterwards.
 
 **The organization is in the path.** Member pages are addressed as
 `/{member prefix}/{organization slug}/…`, so a bookmark opens the right organization, two tabs
@@ -382,48 +387,91 @@ tenants has two member accounts.
 
 ## Account and protocol pages
 
-The account and protocol pages a signed-in or signing-in user meets are shell pages
-([blazor-display.md](blazor-display.md) › Rework plan, step 7):
+The account and protocol pages a signed-in or signing-in user meets are shell pages of the Access
+modules, laid out by each shell's theme ([MVC/views.md](MVC/views.md) › Access screens). Their
+parts are Grove.Users' shared components (`Grove.Users.Components`), which the admin theme, the
+member portal (`Grove.Members`' `member-wasm`) and the site pages (Grove.Users' `site-wasm`) use:
 
-- **Account security** is one shared component, `GroveAccountSecurity` (Grove.Components,
-  `Account/`), over `api/grove/account` (Grove.Users' `AccountApiController`): change the
-  password, change the email (where the tenant allows) and resend its confirmation, list,
-  remove and link external logins (linking is a fetch for a five-minute data-protected ticket,
-  then a navigation to the provider, so another site cannot start it). The admin profile
-  settings page, the member account page and the site pages `/ChangePassword`,
-  `/ChangeEmail`, `/ExternalLogins` show it - the paths the MVC screens had, so existing links
-  keep working (`AccountPages` composes the server's links).
+- **Staff sign-in**: the admin theme's login page frames `SignInForm`: credentials, remember me,
+  and what features contribute (`ILoginExtensionProvider`, `api/grove/auth/form/login`): the
+  forgot-password and register links, a button per external authentication scheme (a navigation
+  to `api/grove/auth/external-login`), sections such as the ReCaptcha challenge, whose value the
+  form sends as a header. An account with two-factor authentication gets the second step in place
+  (`TwoFactorChallenge` over `api/grove/auth/two-factor`). A user whose roles require two-factor
+  authentication and who has not set it up reaches only the two-factor page until they do: the
+  access gate enforces it ([access.md](access.md#authentication)). A refused sign-in that names a page (confirm your email,
+  registration pending) goes there; a failed external sign-in comes back to the login page with
+  its error.
+- **Registration and password recovery**: the site pages `/Register`, `/RegistrationPending`,
+  `/ForgotPassword`, `/ForgotPasswordConfirmation`, `/ResetPassword`,
+  `/ResetPasswordConfirmation` over `api/grove/registration` and `api/grove/password`; the
+  captcha section applies to them too. The reset email links to `/ResetPassword`; the forgot
+  password answer is the same whether or not the account exists.
+- **Two-factor**: `TwoFactorSetup` on the site page `/TwoFactor` (and the old two-factor paths)
+  over `api/grove/two-factor`: turn it on and off, the preferred method, forget the browser,
+  recovery codes shown once, the authenticator app with a QR code, the phone number for SMS
+  codes; `/LoginWithTwoFactorAuthentication` and `/LoginWithRecoveryCode` hold the second step for
+  a sign-in that did not start on the login page.
+- **Account security** is one shared component, `GroveAccountSecurity`, over `api/grove/account`
+  (Grove.Users' `AccountApiController`): change the password, change the email (where the tenant
+  allows) and resend its confirmation, list, remove and link external logins (linking is a fetch
+  for a five-minute data-protected ticket, then a navigation to the provider, so another site
+  cannot start it). The admin profile settings page, the member account page and the site pages
+  `/ChangePassword`, `/ChangeEmail`, `/ExternalLogins` show it - the paths the account screens
+  have always had, so existing links keep working (`AccountPages` composes the server's links).
 - **Email confirmation**: `/ConfirmEmail` (confirms once interactive, never in the prerender a
   mail scanner's GET would trigger) and `/ConfirmEmailSent`, site pages; the confirmation link
-  and the login veto point there. The MVC resend action stays for the remaining MVC screens
-  (two-factor, the legacy user list).
+  and the login veto point there.
 - **External sign-in completion**: when the platform's callback cannot finish on its own it
   redirects to the site pages `/ExternalLogin/Register` (a new account, with what the tenant's
   external registration settings still ask) or `/ExternalLogin/Link` (the existing account with
   the provider's email, by its password), which complete through
-  `api/grove/account/external-login{,/register,/link}`; the MVC views and the manage actions are
-  deleted, the rate limits kept on the same route names.
-- **OpenID consent and logout confirmation**: the authorization and logout endpoints redirect
-  to the site pages `/connect/consent` and `/connect/logout-confirm` with the request's
-  parameters; the decision stays a plain form post back to the endpoint (OpenIddict answers in
-  that request), with an antiforgery token from `api/grove/openid/consent`. Token and UserInfo
-  stay protocol endpoints.
-- **Error pages**: every shell has one (`GroveErrorPage`; admin, member - organization-free -
-  and site pages at `/Error/{status}`). The status code pages re-execute inside the shell that
-  answered (the shell stamp and base survive), so an admin URL's error shows in the admin
-  document; API paths keep their bare status. The MVC Diagnostics controller and views are
-  deleted. Not changed: an API refusal that redirects to `/Error/403` (Diagnostics
-  re-execution of a page).
-- Pages that make the browser receive a cookie (the account pages, the external sign-in
-  completion, the consent page for its antiforgery cookie) declare `[SetsAuthenticationCookie]`,
-  honoured in every shell, the site included.
-- **Setup stays MVC**, the last island: an uninitialized tenant runs the
-  minimum shell (the host's setup features, Grove.Setup and Recipes, no database), while the
+  `api/grove/account/external-login{,/register,/link}`, the rate limits on the same route names.
+  The challenge and the callback stay protocol endpoints of `ExternalAuthenticationsController`.
+- **OpenID consent, logout confirmation and errors** (Grove.OpenId's `site-wasm`): the
+  authorization and logout endpoints redirect to the site pages `/connect/consent` and
+  `/connect/logout-confirm` with the request's parameters; the decision stays a plain form post
+  back to the endpoint (OpenIddict answers in that request), with an antiforgery token from
+  `api/grove/openid/consent`. An endpoint's protocol error redirects to `/connect/error` with the
+  error and its description. Token and UserInfo stay protocol endpoints.
+- **Error pages**: one shared set per tenant (`GroveErrorPage` at `/Error/{status}`), editable
+  per tenant and laid out by the admin theme (§ Required pages); the shells' prefixes do not
+  multiply it. The status code pages re-execute to that set; API paths keep their bare status.
+  Not changed: an API refusal that redirects to `/Error/403` (Diagnostics re-execution of a page).
+- Pages that make the browser receive a cookie (the account pages, registration, the two-factor
+  pages, the external sign-in completion, the consent page for its antiforgery cookie) declare
+  `[SetsAuthenticationCookie]`, honoured in every shell, the site included.
+- **Setup** is hardcoded static-SSR Blazor pages in Grove.Setup: an uninitialized tenant runs
+  the minimum shell (the host's setup features, Grove.Setup and Recipes, no database), while the
   Blazor host - `MapRazorComponents`, the shell selection, the theme clients - is the `Grove`
-  feature, which depends on database-backed modules and cannot run before setup. The native
-  Tenants page sets a tenant up from the Default tenant without it. SiteTheme's
-  `Views/Layout.cshtml` therefore stays too, with the account screens still on MVC (login,
-  registration, password reset for staff, two-factor).
+  feature, which depends on database-backed modules and cannot run before setup, so Grove.Setup
+  registers its own static-SSR components ([MVC/views.md](MVC/views.md) › Setup). The native
+  Tenants page sets a tenant up from the Default tenant without it.
+
+### Required pages
+
+Every tenant ships a **standard set of required pages in its route table**: declared entries in
+the page registry ([admin-menu.md](admin-menu.md) › The page registry). The **layouts** those
+routes render in come from the **active theme of each shell**; these required layouts are what
+make a theme operational and a site load.
+
+| Shell's theme | Required pages it lays out |
+| --- | --- |
+| Admin theme | the error pages, the admin home (index), the admin shell's sign-in and registration pages |
+| Member theme | the member registration pages, the member home |
+| Site theme | the site home (index) |
+
+Which shell lays out an Access screen is fixed by this table, not a setting: the login,
+registration, password reset and two-factor settings have no "use the site theme" choice. The
+staff login is the admin shell's, the registration, password and two-factor pages the site's.
+The tenant's sign-in address is `UserOptions.LoginPath` (the `Grove_Users` configuration); the
+account pages' paths are the literals their pages declare, and signing out is
+`api/grove/auth/logout`, the identity cookie's logout path.
+
+The error pages are **one shared set per tenant, editable per tenant**, not one set per shell.
+Behaviour stays in one component per screen (errors: `GroveErrorPage`; sign-in and registration:
+the Access modules); the theme provides the frame. A theme's required layouts are part of its
+contract with its shell (§ Theme compatibility).
 
 ## Theme compatibility
 
@@ -563,6 +611,9 @@ mechanism.
   read-only first, audited. Nothing depends on it.
 
 ## Open questions
+
+- **Theme storage and switching.** How themes are stored in the database and switched at run
+  time (with the theme rework as structure plus design system, § Still to build).
 
 - **Shells on their own hostnames, and on their own servers.** Today a tenant's admin, site
   and member shells share one hostname and one server, told apart by path. Open:

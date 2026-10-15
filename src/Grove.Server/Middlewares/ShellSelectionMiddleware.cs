@@ -29,12 +29,11 @@ public sealed class BlazorAdminThemeOptions
     // property defaults only apply if that PostConfigure step is somehow skipped.
     public string AdminPath { get; set; } = "/admin";
     public string LoginPath { get; set; } = "/login";
-    public string LogoutPath { get; set; } = "/users/logoff";
 }
 
-// Keeps BlazorAdminThemeOptions.AdminPath/LoginPath/LogoutPath in sync with Grove's own,
-// real, tenant-configurable settings (AdminOptions.AdminUrlPrefix, UserOptions.LoginPath,
-// UserOptions.LogoffPath - all bound from shell config, e.g. a recipe's
+// Keeps BlazorAdminThemeOptions.AdminPath/LoginPath in sync with Grove's own,
+// real, tenant-configurable settings (AdminOptions.AdminUrlPrefix, UserOptions.LoginPath -
+// both bound from shell config, e.g. a recipe's
 // "Grove_Admin"/"Grove_Users" sections) instead of Grove hardcoding its
 // own copies that silently drift if a tenant customizes any of them. Runs as
 // IPostConfigureOptions so it applies after BlazorAdminThemeOptions' own
@@ -47,7 +46,6 @@ internal sealed class BlazorAdminThemeOptionsConfiguration(
     {
         options.AdminPath = "/" + adminOptions.Value.AdminUrlPrefix;
         options.LoginPath = "/" + userOptions.Value.LoginPath;
-        options.LogoutPath = "/" + userOptions.Value.LogoffPath;
     }
 }
 

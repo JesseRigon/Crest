@@ -8,6 +8,9 @@ namespace Grove.Settings;
 // When updating class also update SiteSettingsDeploymentSource and SettingsStep.
 public class SiteSettings : DocumentEntity, ISite
 {
+    /// <summary>The settings group of the general site settings (<c>/Settings/general</c>).</summary>
+    public const string GroupId = "general";
+
     private static readonly object s_missing = new();
     private readonly ConcurrentDictionary<string, object> _cache = new();
 

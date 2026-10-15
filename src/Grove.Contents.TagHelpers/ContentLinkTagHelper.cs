@@ -9,18 +9,14 @@ using Grove.ContentManagement.Metadata;
 
 namespace Grove.Contents.TagHelpers;
 
-[HtmlTargetElement("a", Attributes = ContentLinkAdmin)]
 [HtmlTargetElement("a", Attributes = ContentLinkDisplay)]
-[HtmlTargetElement("a", Attributes = ContentLinkEdit)]
-[HtmlTargetElement("a", Attributes = ContentLinkRemove)]
-[HtmlTargetElement("a", Attributes = ContentLinkCreate)]
+/// <summary>
+/// <c>display-for</c>: a link to an item's public display. The admin pages are native; their
+/// addresses are <see cref="ContentAdminPaths"/>.
+/// </summary>
 public class ContentLinkTagHelper : TagHelper
 {
-    private const string ContentLinkAdmin = "admin-for";
     private const string ContentLinkDisplay = "display-for";
-    private const string ContentLinkEdit = "edit-for";
-    private const string ContentLinkRemove = "remove-for";
-    private const string ContentLinkCreate = "create-for";
     private const string RoutePrefix = "asp-route-";
 
     private readonly IContentManager _contentManager;
@@ -42,34 +38,10 @@ public class ContentLinkTagHelper : TagHelper
     public ViewContext ViewContext { get; set; }
 
     /// <summary>
-    /// Links to the admin page of this content item.
-    /// </summary>
-    [HtmlAttributeName(ContentLinkAdmin)]
-    public ContentItem AdminFor { get; set; }
-
-    /// <summary>
     /// Links to the display page of this content item.
     /// </summary>
     [HtmlAttributeName(ContentLinkDisplay)]
     public ContentItem DisplayFor { get; set; }
-
-    /// <summary>
-    /// Links to the edition page of this content item.
-    /// </summary>
-    [HtmlAttributeName(ContentLinkEdit)]
-    public ContentItem EditFor { get; set; }
-
-    /// <summary>
-    /// Links to the removal page of this content item.
-    /// </summary>
-    [HtmlAttributeName(ContentLinkRemove)]
-    public ContentItem RemoveFor { get; set; }
-
-    /// <summary>
-    /// Links to the creation page of this content item.
-    /// </summary>
-    [HtmlAttributeName(ContentLinkCreate)]
-    public ContentItem CreateFor { get; set; }
 
     public override async Task ProcessAsync(TagHelperContext tagHelperContext, TagHelperOutput output)
     {
@@ -112,62 +84,6 @@ public class ContentLinkTagHelper : TagHelper
             ApplyRouteValues(tagHelperContext, metadata.DisplayRouteValues);
 
             output.Attributes.SetAttribute("href", urlHelper.Action(metadata.DisplayRouteValues["action"].ToString(), metadata.DisplayRouteValues));
-        }
-        else if (EditFor != null)
-        {
-            contentItem = EditFor;
-            metadata = await _contentManager.PopulateAspectAsync<ContentItemMetadata>(EditFor);
-
-            if (metadata.EditorRouteValues == null)
-            {
-                return;
-            }
-
-            ApplyRouteValues(tagHelperContext, metadata.EditorRouteValues);
-
-            output.Attributes.SetAttribute("href", urlHelper.Action(metadata.EditorRouteValues["action"].ToString(), metadata.EditorRouteValues));
-        }
-        else if (AdminFor != null)
-        {
-            contentItem = AdminFor;
-            metadata = await _contentManager.PopulateAspectAsync<ContentItemMetadata>(AdminFor);
-
-            if (metadata.AdminRouteValues == null)
-            {
-                return;
-            }
-
-            ApplyRouteValues(tagHelperContext, metadata.AdminRouteValues);
-
-            output.Attributes.SetAttribute("href", urlHelper.Action(metadata.AdminRouteValues["action"].ToString(), metadata.AdminRouteValues));
-        }
-        else if (RemoveFor != null)
-        {
-            contentItem = RemoveFor;
-            metadata = await _contentManager.PopulateAspectAsync<ContentItemMetadata>(RemoveFor);
-
-            if (metadata.RemoveRouteValues == null)
-            {
-                return;
-            }
-
-            ApplyRouteValues(tagHelperContext, metadata.RemoveRouteValues);
-
-            output.Attributes.SetAttribute("href", urlHelper.Action(metadata.RemoveRouteValues["action"].ToString(), metadata.RemoveRouteValues));
-        }
-        else if (CreateFor != null)
-        {
-            contentItem = CreateFor;
-            metadata = await _contentManager.PopulateAspectAsync<ContentItemMetadata>(CreateFor);
-
-            if (metadata.CreateRouteValues == null)
-            {
-                return;
-            }
-
-            ApplyRouteValues(tagHelperContext, metadata.CreateRouteValues);
-
-            output.Attributes.SetAttribute("href", urlHelper.Action(metadata.CreateRouteValues["action"].ToString(), metadata.CreateRouteValues));
         }
 
         // A self closing anchor tag will be rendered using the display text

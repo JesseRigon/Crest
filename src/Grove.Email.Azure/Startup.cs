@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Grove.Azure.Email.Drivers;
 using Grove.DisplayManagement.Handlers;
 using Grove.Email.Azure.Models;
 using Grove.Email.Azure.Services;
@@ -25,8 +24,9 @@ public sealed class Startup
 
         services.AddTransient<IConfigureOptions<AzureEmailOptions>, AzureEmailOptionsConfiguration>();
 
-        services.AddEmailProviderOptionsConfiguration<AzureEmailProviderOptionsConfigurations>()
-            .AddSiteDisplayDriver<AzureEmailSettingsDisplayDriver>();
+        services.AddEmailProviderOptionsConfiguration<AzureEmailProviderOptionsConfigurations>();
+
+        services.AddApiContributor<Api.AzureEmailSettingsApi>();
 
         services.Configure<DefaultAzureEmailOptions>(options =>
         {

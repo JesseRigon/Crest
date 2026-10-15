@@ -342,6 +342,15 @@ public sealed class WorkflowStimulusQueue(
                 record.DeliveredUtc = DateTime.UtcNow;
                 record.Error = "The delivered flows failed their unit.";
             }
+            else if (failure is WorkflowAccessRefusedException)
+            {
+                // The access gate's refusal is a decision, not a fault: a retry would be refused
+                // again (a flow not published as system, triggered while the system acted). It
+                // is recorded once, as a warning naming the reason, and not retried.
+                record.Error = failure.Message;
+                record.Status = WorkflowStimulusStatuses.Failed;
+                scope.ServiceProvider.GetRequiredService<ILogger<WorkflowStimulusQueue>>().LogWarning("Stimulus {Key} ({Activity}) for {Correlation} was refused: {Reason}", record.Key, record.ActivityTypeName, record.CorrelationId, failure.Message);
+            }
             else
             {
                 record.Error = failure.Message;

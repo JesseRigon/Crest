@@ -1,0 +1,123 @@
+@namespace Grove.Users.Components
+@inject HttpClient Http
+@inject IServiceProvider Services
+
+@* The authenticator app method: enrollment (scan the QR code or type the key, then confirm with
+   a code from the app) and reset (a new key; the app's old entry stops working). *@
+
+@if (Open == "authenticator-reset" || Mode == "reset")
+{
+    <GroveText TextStyle="TextStyle.Body2" Text="@L("Resetting the key stops your current authenticator app entry from working. If it is your only method, two-factor authentication is turned off.")" />
+    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+        <GroveButton Text="@L("Reset the authenticator key")" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="ResetAsync" Disabled="Busy" data-testid="two-factor-authenticator-reset-confirm" />
+        <GroveButton Text="@L("Cancel")" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => { Mode = null; Open = null; })" />
+    </GroveStack>
+}
+else if (Enrollment is not null)
+{
+    <GroveStack Gap="0.5rem" data-testid="two-factor-authenticator-enrollment">
+        <GroveText TextStyle="TextStyle.Body2" Text="@L("Scan the QR code with your authenticator app, or enter this key into it (spaces and casing do not matter):")" />
+        <code data-testid="two-factor-authenticator-key">@Enrollment.SharedKey</code>
+        <div style="width: 12rem; height: 12rem;"><GroveQRCode Value="@Enrollment.AuthenticatorUri" /></div>
+        <GroveText TextStyle="TextStyle.Body2" Text="@L("Then enter the code the app shows.")" />
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+            <GroveTextBox @bind-Value="Code" autocomplete="one-time-code" inputmode="numeric" Placeholder="@L("Verification code")" data-testid="two-factor-authenticator-code" />
+            <GroveButton Text="@L("Verify")" Size="ButtonSize.Small" Click="VerifyAsync" Disabled="Busy" data-testid="two-factor-authenticator-verify" />
+            <GroveButton Text="@L("Cancel")" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Enrollment = null)" />
+        </GroveStack>
+        @if (Error is { Length: > 0 })
+        {
+            <GroveText TextStyle="TextStyle.Caption" Text="@Error" Style="color: var(--grove-color-danger, #b3261e);" />
+        }
+    </GroveStack>
+}
+else
+{
+    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+        <GroveButton Text="@(IsEnabled ? L("Set up again") : L("Add"))" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="EnrollAsync" Disabled="Busy" data-testid="two-factor-authenticator-add" />
+        @if (IsEnabled)
+        {
+            <GroveButton Text="@L("Reset")" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Mode = "reset")" data-testid="two-factor-authenticator-reset" />
+        }
+    </GroveStack>
+}
+
+@code {
+    [Parameter]
+    public bool IsEnabled { get; set; }
+
+    /// <summary><c>authenticator</c> starts the enrollment, <c>authenticator-reset</c> asks to reset.</summary>
+    [Parameter]
+    public string? Open { get; set; }
+
+    [Parameter]
+    public EventCallback<TwoFactorActionResult> Changed { get; set; }
+
+    private AuthenticatorEnrollment? Enrollment { get; set; }
+    private string? Code { get; set; }
+    private string? Error { get; set; }
+    private string? Mode { get; set; }
+    private bool Busy { get; set; }
+    private bool _opened;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_opened && Open == "authenticator" && RendererInfo.IsInteractive)
+        {
+            _opened = true;
+            await EnrollAsync();
+        }
+    }
+
+    private async Task EnrollAsync()
+    {
+        Busy = true;
+        try
+        {
+            Enrollment = await SignInApi.GetAsync<AuthenticatorEnrollment>(Http, $"{TwoFactorApi.Root}/authenticator");
+            Error = Enrollment is null ? L("The authenticator app cannot be set up now.") : null;
+        }
+        finally
+        {
+            Busy = false;
+        }
+    }
+
+    private async Task VerifyAsync()
+    {
+        Busy = true;
+        try
+        {
+            var result = await TwoFactorApi.PostAsync(Http, "authenticator", new { Code });
+            if (!result.Succeeded)
+            {
+                Error = result.Message;
+                return;
+            }
+
+            Enrollment = null;
+            Code = null;
+            await Changed.InvokeAsync(result);
+        }
+        finally
+        {
+            Busy = false;
+        }
+    }
+
+    private async Task ResetAsync()
+    {
+        Busy = true;
+        try
+        {
+            Mode = null;
+            await Changed.InvokeAsync(await TwoFactorApi.PostAsync(Http, "authenticator/reset", null));
+        }
+        finally
+        {
+            Busy = false;
+        }
+    }
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

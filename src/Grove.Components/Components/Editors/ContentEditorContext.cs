@@ -26,6 +26,15 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
 
     public GroveContentItemMetadata? Metadata { get; } = metadata;
 
+    /// <summary>The edited item's id; null for an item not saved yet (its editors that act on the stored item wait for the save).</summary>
+    public string? ContentItemId { get; init; }
+
+    /// <summary>The edited item's type.</summary>
+    public string? ContentType => Metadata?.ContentType;
+
+    /// <summary>The HTTP client the editors call the APIs with (none in a test).</summary>
+    public HttpClient? Http => http;
+
     public bool Disabled { get; set; }
 
     public Dictionary<string, string> Errors { get; } = new(StringComparer.Ordinal);
@@ -85,6 +94,9 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
         _parentKeys.Clear();
         Changed?.Invoke();
     }
+
+    /// <summary>Tells everyone the errors changed (the server's, after a save).</summary>
+    public void Refresh() => Changed?.Invoke();
 
     public void Set<T>(string partName, string? fieldName, string property, T value) =>
         Set(partName, fieldName, property, value is null ? null : JsonSerializer.SerializeToNode(value));

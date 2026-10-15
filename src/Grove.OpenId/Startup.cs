@@ -24,7 +24,6 @@ using Grove.Modules;
 using Grove.Navigation;
 using Grove.OpenId.Configuration;
 using Grove.OpenId.Deployment;
-using Grove.OpenId.Drivers;
 using Grove.OpenId.Handlers;
 using Grove.OpenId.Migrations;
 using Grove.OpenId.Recipes;
@@ -64,13 +63,24 @@ public sealed class ClientStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddPageSource<ClientPages>();
+        services.AddSettingsGroup<OpenIdClientSettings>("Grove.OpenId.Client", "Authentication Client", OpenIdPermissions.ManageClientSettings, group => group
+            .InMenu("openid-settings", entryId: "openid-client")
+            .ReloadsTenant()
+            .ValidatedBy(async (provider, settings, errors, _) =>
+            {
+                foreach (var result in await provider.GetRequiredService<IOpenIdClientService>().ValidateSettingsAsync(settings))
+                {
+                    if (result != System.ComponentModel.DataAnnotations.ValidationResult.Success)
+                    {
+                        errors.Add(result.MemberNames.FirstOrDefault() ?? string.Empty, result.ErrorMessage ?? string.Empty);
+                    }
+                }
+            }));
         services.AddScoped<IJSLocalizer, OpenIdJSLocalizer>();
 
         services.TryAddSingleton<IOpenIdClientService, OpenIdClientService>();
 
         // Note: the following services are registered using TryAddEnumerable to prevent duplicate registrations.
-        services.AddSiteDisplayDriver<OpenIdClientSettingsDisplayDriver>();
 
         services.AddRecipeExecutionStep<OpenIdClientSettingsStep>();
         // Register the options initializers required by the OpenID Connect client handler.
@@ -214,7 +224,7 @@ public sealed class ServerDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<OpenIdServerDeploymentSource, OpenIdServerDeploymentStep, OpenIdServerDeploymentStepDriver>();
+        services.AddDeployment<OpenIdServerDeploymentSource, OpenIdServerDeploymentStep>();
     }
 }
 
@@ -264,7 +274,7 @@ public sealed class ValidationDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<OpenIdValidationDeploymentSource, OpenIdValidationDeploymentStep, OpenIdValidationDeploymentStepDriver>();
+        services.AddDeployment<OpenIdValidationDeploymentSource, OpenIdValidationDeploymentStep>();
     }
 }
 

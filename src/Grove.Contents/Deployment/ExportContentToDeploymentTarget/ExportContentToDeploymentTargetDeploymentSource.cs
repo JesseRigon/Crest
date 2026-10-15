@@ -1,10 +1,7 @@
 using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.Http;
 using Grove.ContentManagement;
-using Grove.ContentManagement.Records;
 using Grove.Deployment;
-using Grove.DisplayManagement.ModelBinding;
-using YesSql;
-using YesSql.Services;
 
 namespace Grove.Contents.Deployment.ExportContentToDeploymentTarget;
 
@@ -12,17 +9,14 @@ public sealed class ExportContentToDeploymentTargetDeploymentSource
     : DeploymentSourceBase<ExportContentToDeploymentTargetDeploymentStep>
 {
     private readonly IContentManager _contentManager;
-    private readonly ISession _session;
-    private readonly IUpdateModelAccessor _updateModelAccessor;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public ExportContentToDeploymentTargetDeploymentSource(
         IContentManager contentManager,
-        ISession session,
-        IUpdateModelAccessor updateModelAccessor)
+        IHttpContextAccessor httpContextAccessor)
     {
         _contentManager = contentManager;
-        _session = session;
-        _updateModelAccessor = updateModelAccessor;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     protected override async Task ProcessAsync(ExportContentToDeploymentTargetDeploymentStep step, DeploymentPlanResult result)
@@ -34,12 +28,18 @@ public sealed class ExportContentToDeploymentTargetDeploymentSource
             ["data"] = data,
         });
 
-        var model = new ExportContentToDeploymentTargetModel();
-        await _updateModelAccessor.ModelUpdater.TryUpdateModelAsync(model, "ExportContentToDeploymentTarget", m => m.ItemIds, m => m.Latest, m => m.ContentItemId);
-
-        if (!string.IsNullOrEmpty(model.ContentItemId))
+        // The content list's API calls (a plan's package or its export to a remote instance) name
+        // the items in the query string: ?contentItemId=a&contentItemId=b&latest=true.
+        var query = _httpContextAccessor.HttpContext?.Request.Query;
+        if (query is null)
         {
-            var contentItem = await _contentManager.GetAsync(model.ContentItemId, model.Latest ? VersionOptions.Latest : VersionOptions.Published);
+            return;
+        }
+
+        var latest = bool.TryParse(query["latest"], out var isLatest) && isLatest;
+        foreach (var contentItemId in query["contentItemId"].Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal))
+        {
+            var contentItem = await _contentManager.GetAsync(contentItemId, latest ? VersionOptions.Latest : VersionOptions.Published);
             if (contentItem != null)
             {
                 var objectData = JObject.FromObject(contentItem);
@@ -47,24 +47,5 @@ public sealed class ExportContentToDeploymentTargetDeploymentSource
                 data.Add(objectData);
             }
         }
-
-        if (model.ItemIds?.Any() == true)
-        {
-            var checkedContentItems = await _session.Query<ContentItem, ContentItemIndex>().Where(x => x.DocumentId.IsIn(model.ItemIds) && x.Published).ListAsync();
-
-            foreach (var contentItem in checkedContentItems)
-            {
-                var objectData = JObject.FromObject(contentItem);
-                objectData.Remove(nameof(ContentItem.Id));
-                data.Add(objectData);
-            }
-        }
-    }
-
-    public class ExportContentToDeploymentTargetModel
-    {
-        public IEnumerable<long> ItemIds { get; set; }
-        public string ContentItemId { get; set; }
-        public bool Latest { get; set; }
     }
 }

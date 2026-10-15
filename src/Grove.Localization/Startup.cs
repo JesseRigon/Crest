@@ -28,7 +28,6 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddApiContributor<Api.LocalizationApi>();
-        services.AddSiteDisplayDriver<LocalizationSettingsDisplayDriver>();
         services.AddPermissionProvider<Permissions>();
         services.AddScoped<ILocalizationService, LocalizationService>();
         services.AddScoped<IJSLocalizer, LocalizationJSLocalizer>();
@@ -68,7 +67,7 @@ public sealed class LocalizationDeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSiteSettingsPropertyDeploymentStep<LocalizationSettings, LocalizationDeploymentStartup>(S => S["Culture settings"], S => S["Exports the culture settings."]);
+        services.AddSiteSettingsPropertyDeploymentStep<LocalizationSettings>();
     }
 }
 

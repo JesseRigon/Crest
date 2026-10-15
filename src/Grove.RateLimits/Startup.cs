@@ -10,11 +10,11 @@ using Grove.Modules;
 using Grove.Navigation;
 using Grove.RateLimits;
 using Grove.RateLimits.Deployment;
-using Grove.RateLimits.Drivers;
 using Grove.RateLimits.Migrations;
 using Grove.RateLimits.Models;
 using Grove.RateLimits.Recipes;
 using Grove.RateLimits.Services;
+using Grove.RateLimits.Settings;
 using Grove.Recipes;
 using Grove.Security.Permissions;
 
@@ -28,23 +28,26 @@ public sealed class Startup : StartupBase
         services.AddDataMigration<GlobalRateLimitsMigrations>();
         services.AddTransient<IConfigureOptions<RateLimiterOptions>, RateLimiterOptionsConfigurations>();
         services.AddSingleton<IRateLimitPolicyStore, RateLimitPolicyStore>();
-        services.AddDisplayDriver<RateLimitLimiter, RateLimitLimiterDisplayDriver>();
-        services.AddDisplayDriver<RateLimitPolicy, RateLimitPolicyDisplayDriver>();
 
-        services.AddKeyedSingleton<IRateLimiterSource, FixedWindowRateLimiterSource>(FixedWindowRateLimiterSource.SourceName)
-            .AddDisplayDriver<RateLimitLimiter, FixedWindowRateLimiterDisplayDriver>();
+        services.AddKeyedSingleton<IRateLimiterSource, FixedWindowRateLimiterSource>(FixedWindowRateLimiterSource.SourceName);
 
-        services.AddKeyedSingleton<IRateLimiterSource, SlidingWindowRateLimiterSource>(SlidingWindowRateLimiterSource.SourceName)
-            .AddDisplayDriver<RateLimitLimiter, SlidingWindowRateLimiterDisplayDriver>();
+        services.AddKeyedSingleton<IRateLimiterSource, SlidingWindowRateLimiterSource>(SlidingWindowRateLimiterSource.SourceName);
 
-        services.AddKeyedSingleton<IRateLimiterSource, ConcurrencyRateLimiterSource>(ConcurrencyRateLimiterSource.SourceName)
-            .AddDisplayDriver<RateLimitLimiter, ConcurrencyRateLimiterDisplayDriver>();
+        services.AddKeyedSingleton<IRateLimiterSource, ConcurrencyRateLimiterSource>(ConcurrencyRateLimiterSource.SourceName);
 
-        services.AddKeyedSingleton<IRateLimiterSource, TokenBucketRateLimiterSource>(TokenBucketRateLimiterSource.SourceName)
-            .AddDisplayDriver<RateLimitLimiter, TokenBucketRateLimiterDisplayDriver>();
+        services.AddKeyedSingleton<IRateLimiterSource, TokenBucketRateLimiterSource>(TokenBucketRateLimiterSource.SourceName);
 
-        services.AddPageSource<AdminPages>();
         services.AddPermissionProvider<Permissions>();
+        services.AddSettingsGroup<RateLimitsSettingsModel>(
+            RateLimitsSettingsModel.GroupId,
+            "Rate Limits",
+            RateLimitsPermissions.ManageRateLimits,
+            group => group
+                .InMenu("tools", entryId: "rate-limits")
+                .StoredBy(
+                    (services, _) => RateLimitsSettingsStore.LoadAsync(services),
+                    (services, model, _) => RateLimitsSettingsStore.SaveAsync(services, model))
+                .ValidatedBy((services, model, errors, _) => RateLimitsSettingsStore.ValidateAsync(services, model, errors)));
     }
 
     public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
@@ -67,6 +70,6 @@ public sealed class DeploymentStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddDeployment<AllRateLimitPoliciesDeploymentSource, AllRateLimitPoliciesDeploymentStep, AllRateLimitPoliciesDeploymentStepDriver>();
+        services.AddDeployment<AllRateLimitPoliciesDeploymentSource, AllRateLimitPoliciesDeploymentStep>();
     }
 }

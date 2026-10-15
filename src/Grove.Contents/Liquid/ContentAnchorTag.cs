@@ -25,7 +25,6 @@ public class ContentAnchorTag : IAnchorTag
                 case "admin_for":
                 case "display_for":
                 case "edit_for":
-                case "remove_for":
                 case "create_for": return true;
             }
         }
@@ -43,7 +42,6 @@ public class ContentAnchorTag : IAnchorTag
         ContentItem adminFor = null;
         ContentItem displayFor = null;
         ContentItem editFor = null;
-        ContentItem removeFor = null;
         ContentItem createFor = null;
 
         Dictionary<string, string> routeValues = null;
@@ -56,7 +54,6 @@ public class ContentAnchorTag : IAnchorTag
                 case "admin_for": adminFor = (await argument.Expression.EvaluateAsync(context)).ToObjectValue() as ContentItem; break;
                 case "display_for": displayFor = (await argument.Expression.EvaluateAsync(context)).ToObjectValue() as ContentItem; break;
                 case "edit_for": editFor = (await argument.Expression.EvaluateAsync(context)).ToObjectValue() as ContentItem; break;
-                case "remove_for": removeFor = (await argument.Expression.EvaluateAsync(context)).ToObjectValue() as ContentItem; break;
                 case "create_for": createFor = (await argument.Expression.EvaluateAsync(context)).ToObjectValue() as ContentItem; break;
 
                 default:
@@ -119,73 +116,24 @@ public class ContentAnchorTag : IAnchorTag
                 }
             }
         }
-        else if (editFor != null)
+        else if (editFor != null || adminFor != null || createFor != null)
         {
-            var metadata = await PopulateAspectForContentItemMetadataAsync(editFor);
-
-            if (metadata.EditorRouteValues != null)
+            // The admin pages are the native ones of the page registry, under the admin prefix;
+            // route_* arguments travel as the query.
+            var adminPrefix = services.GetRequiredService<Microsoft.Extensions.Options.IOptions<Grove.Admin.AdminOptions>>().Value.AdminUrlPrefix;
+            contentItem = editFor ?? adminFor ?? createFor;
+            var path = editFor != null
+                ? ContentAdminPaths.Edit(editFor.ContentItemId)
+                : adminFor != null
+                    ? ContentAdminPaths.Edit(adminFor.ContentItemId)
+                    : ContentAdminPaths.Create(createFor.ContentType);
+            var url = urlHelper.Content("~" + ContentAdminPaths.InAdmin(adminPrefix, path));
+            if (routeValues != null)
             {
-                if (routeValues != null)
-                {
-                    foreach (var attribute in routeValues)
-                    {
-                        metadata.EditorRouteValues.Add(attribute.Key, attribute.Value);
-                    }
-                }
-
-                customAttributes["href"] = urlHelper.Action(metadata.EditorRouteValues["action"].ToString(), metadata.EditorRouteValues);
+                url = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(url, routeValues);
             }
-        }
-        else if (adminFor != null)
-        {
-            var metadata = await PopulateAspectForContentItemMetadataAsync(adminFor);
 
-            if (metadata.AdminRouteValues != null)
-            {
-                if (routeValues != null)
-                {
-                    foreach (var attribute in routeValues)
-                    {
-                        metadata.AdminRouteValues.Add(attribute.Key, attribute.Value);
-                    }
-                }
-
-                customAttributes["href"] = urlHelper.Action(metadata.AdminRouteValues["action"].ToString(), metadata.AdminRouteValues);
-            }
-        }
-        else if (removeFor != null)
-        {
-            var metadata = await PopulateAspectForContentItemMetadataAsync(removeFor);
-
-            if (metadata.RemoveRouteValues != null)
-            {
-                if (routeValues != null)
-                {
-                    foreach (var attribute in routeValues)
-                    {
-                        metadata.RemoveRouteValues.Add(attribute.Key, attribute.Value);
-                    }
-                }
-
-                customAttributes["href"] = urlHelper.Action(metadata.RemoveRouteValues["action"].ToString(), metadata.RemoveRouteValues);
-            }
-        }
-        else if (createFor != null)
-        {
-            var metadata = await PopulateAspectForContentItemMetadataAsync(createFor);
-
-            if (metadata.CreateRouteValues != null)
-            {
-                if (routeValues != null)
-                {
-                    foreach (var attribute in routeValues)
-                    {
-                        metadata.CreateRouteValues.Add(attribute.Key, attribute.Value);
-                    }
-                }
-
-                customAttributes["href"] = urlHelper.Action(metadata.CreateRouteValues["action"].ToString(), metadata.CreateRouteValues);
-            }
+            customAttributes["href"] = url;
         }
 
         if (customAttributes.Count == 0)
@@ -225,12 +173,5 @@ public class ContentAnchorTag : IAnchorTag
         tagBuilder.RenderEndTag().WriteTo(writer, (HtmlEncoder)encoder);
 
         return Completion.Normal;
-
-        async Task<ContentItemMetadata> PopulateAspectForContentItemMetadataAsync(ContentItem item)
-        {
-            contentItem = item;
-
-            return await contentManager.PopulateAspectAsync<ContentItemMetadata>(item);
-        }
     }
 }

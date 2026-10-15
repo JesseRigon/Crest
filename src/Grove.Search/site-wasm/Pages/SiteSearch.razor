@@ -1,0 +1,111 @@
+@page "/search"
+@page "/search/{Index}"
+@inject HttpClient Http
+
+@* The site search page (Grove.Search): the search box and a page of results from the search API
+   (api/grove/search), which runs the index's engine through ISiteSearch. The index is the
+   route's, or the site's default search index; the title and placeholder are the site's search
+   settings. *@
+
+<PageTitle>@(Response?.PageTitle ?? "Search")</PageTitle>
+
+<div class="grove-site-search" data-testid="site-search">
+    <h1>@(Response?.PageTitle ?? "Search")</h1>
+
+    <SearchBox Index="@Index" Placeholder="@Response?.Placeholder" />
+
+    @if (Message is not null)
+    {
+        <p class="grove-site-search-message" role="status">@Message</p>
+    }
+    else if (Response is { Hits.Length: 0 } && !string.IsNullOrWhiteSpace(Terms))
+    {
+        <p class="grove-site-search-message" role="status">Nothing was found for “@Terms”.</p>
+    }
+    else if (Response is { Hits.Length: > 0 })
+    {
+        <ol class="grove-site-search-results" start="@(Response.From + 1)">
+            @foreach (var hit in Response.Hits)
+            {
+                <li class="grove-site-search-result" data-content-item-id="@hit.ContentItemId">
+                    @if (string.IsNullOrEmpty(hit.Url))
+                    {
+                        <span class="grove-site-search-title">@(hit.DisplayText ?? hit.ContentItemId)</span>
+                    }
+                    else
+                    {
+                        <a class="grove-site-search-title" href="@hit.Url">@(hit.DisplayText ?? hit.ContentItemId)</a>
+                    }
+                    @foreach (var highlight in hit.Highlights)
+                    {
+                        <p class="grove-site-search-highlight">@Highlight(highlight)</p>
+                    }
+                </li>
+            }
+        </ol>
+
+        <nav class="grove-site-search-pager" aria-label="Search results pages">
+            @if (Response.From > 0)
+            {
+                <a href="@PageUrl(Math.Max(0, Response.From - Response.Size))" rel="prev">Previous</a>
+            }
+            @if (Response.HasMore)
+            {
+                <a href="@PageUrl(Response.From + Response.Size)" rel="next">Next</a>
+            }
+        </nav>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? Index { get; set; }
+
+    [SupplyParameterFromQuery(Name = "Terms")]
+    public string? Terms { get; set; }
+
+    [SupplyParameterFromQuery(Name = "from")]
+    public int? From { get; set; }
+
+    private SearchResponse? Response;
+    private string? Message;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Message = null;
+        var url = $"{SearchApiPaths.Search}?from={From ?? 0}";
+        if (!string.IsNullOrWhiteSpace(Index)) url += $"&index={Uri.EscapeDataString(Index)}";
+        if (!string.IsNullOrWhiteSpace(Terms)) url += $"&terms={Uri.EscapeDataString(Terms)}";
+
+        using var response = await Http.GetAsync(url);
+        if (!response.IsSuccessStatusCode)
+        {
+            Response = null;
+            Message = (int)response.StatusCode is 401 or 403
+                ? "You are not allowed to search this index."
+                : "The search is not available.";
+            return;
+        }
+
+        Response = await response.Content.ReadFromJsonAsync<SearchResponse>();
+        Message = Response?.Status switch
+        {
+            "NoDefaultIndex" => "No default search index has been configured.",
+            "IndexNotFound" => "This search index does not exist.",
+            "NoProvider" => "No search engine serves this index.",
+            _ => null,
+        };
+    }
+
+    // Engines mark the matched terms with <em>: the fragment is encoded and only those marks kept.
+    private static MarkupString Highlight(string fragment) =>
+        new(System.Net.WebUtility.HtmlEncode(fragment)
+            .Replace("&lt;em&gt;", "<em>", StringComparison.OrdinalIgnoreCase)
+            .Replace("&lt;/em&gt;", "</em>", StringComparison.OrdinalIgnoreCase));
+
+    private string PageUrl(int from)
+    {
+        var path = string.IsNullOrWhiteSpace(Index) ? "search" : "search/" + Uri.EscapeDataString(Index);
+        return $"{path}?Terms={Uri.EscapeDataString(Terms ?? string.Empty)}&from={from}";
+    }
+}

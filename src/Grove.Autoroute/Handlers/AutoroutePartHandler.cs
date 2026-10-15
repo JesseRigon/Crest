@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
 using System.Text.Json.Settings;
 using Fluid;
@@ -114,6 +116,20 @@ public class AutoroutePartHandler : ContentPartHandler<AutoroutePart>
 
     public override async Task ValidatingAsync(ValidateContentContext context, AutoroutePart part)
     {
+        // Errors name the part's own member (AutoroutePart.Path), so an editor shows them beside the permalink.
+        var partName = (context as ValidateContentPartContext)?.ContentTypePartDefinition?.Name ?? nameof(AutoroutePart);
+
+        // Setting the home page takes its own right, whoever saves the item.
+        if (part.SetHomepage)
+        {
+            var http = _serviceProvider.GetService<Microsoft.AspNetCore.Http.IHttpContextAccessor>()?.HttpContext;
+            var authorization = _serviceProvider.GetService<IAuthorizationService>();
+            if (http?.User is { } user && authorization is not null && !await authorization.AuthorizeAsync(user, AutoroutePermissions.SetHomepage))
+            {
+                context.Fail(new ValidationResult(S["You may not set the home page."], [$"{partName}.{nameof(part.SetHomepage)}"]));
+            }
+        }
+
         // Only validate the path if it's not empty.
         if (string.IsNullOrWhiteSpace(part.Path))
         {
@@ -122,12 +138,12 @@ public class AutoroutePartHandler : ContentPartHandler<AutoroutePart>
 
         foreach (var item in part.ValidatePathFieldValue(S))
         {
-            context.Fail(item);
+            context.Fail(new ValidationResult(item.ErrorMessage, [.. item.MemberNames.Select(member => $"{partName}.{member}")]));
         }
 
         if (!await IsAbsolutePathUniqueAsync(part.Path, part.ContentItem.ContentItemId))
         {
-            context.Fail(S["Your permalink is already in use."], nameof(part.Path));
+            context.Fail(new ValidationResult(S["Your permalink is already in use."], [$"{partName}.{nameof(part.Path)}"]));
         }
 
     }

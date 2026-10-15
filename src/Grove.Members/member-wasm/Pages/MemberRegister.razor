@@ -1,0 +1,98 @@
+@attribute [Route(MemberRoutePaths.Register)]
+@attribute [AllowAnonymous]
+@attribute [Grove.Components.Modules.SetsAuthenticationCookie]
+@attribute [Grove.Components.Modules.OrganizationFreePage]
+@namespace Grove.Members.Member.Pages
+@inject NavigationManager Navigation
+
+@* Member self-registration. An auth-cookie page like the login: registration signs the
+   new account in, so it declares [SetsAuthenticationCookie] and renders
+   InteractiveWebAssembly for the same reason. *@
+
+<PageTitle>Create an account</PageTitle>
+
+<div class="grove-member-centred" data-testid="member-register">
+    <GroveStack Gap="1rem" Style="width: 22rem; max-width: 100%;">
+        <GroveText TextStyle="TextStyle.H5" Text="Create an account" />
+
+        <GroveTextBox @bind-Value="_firstName"
+                      Placeholder="First name"
+                      Disabled="@_busy"
+                      data-testid="member-register-firstname" />
+
+        <GroveTextBox @bind-Value="_lastName"
+                      Placeholder="Last name"
+                      Disabled="@_busy"
+                      data-testid="member-register-lastname" />
+
+        <GroveTextBox @bind-Value="_userName"
+                      Placeholder="User name"
+                      Disabled="@_busy"
+                      data-testid="member-register-username" />
+
+        <GroveTextBox @bind-Value="_email"
+                      Placeholder="Email"
+                      Disabled="@_busy"
+                      data-testid="member-register-email" />
+
+        <GrovePassword @bind-Value="_password"
+                       Placeholder="Password"
+                       Disabled="@_busy"
+                       data-testid="member-register-password" />
+
+        <GroveButton Text="Create account"
+                     Click="@RegisterAsync"
+                     Disabled="@(_busy || !RendererInfo.IsInteractive)"
+                     data-testid="member-register-submit" />
+
+        @if (_error is { Length: > 0 })
+        {
+            <GroveText TextStyle="TextStyle.Caption" Text="@_error" data-testid="member-register-error" />
+        }
+
+        <GroveLink Path="@MemberShellLinks.Relative(MemberRoutePaths.Login)" Text="Already have an account? Sign in" />
+    </GroveStack>
+</div>
+
+@code {
+    // Supplied by MemberRoutes, which activates the implementation a member module provides
+    // (its library is lazy, so it cannot be registered in the sealed WASM container).
+    [CascadingParameter]
+    private IMemberAuthenticationService Auth { get; set; } = default!;
+
+    private string _firstName = string.Empty;
+    private string _lastName = string.Empty;
+    private string _userName = string.Empty;
+    private string _email = string.Empty;
+    private string _password = string.Empty;
+    private bool _busy;
+    private string? _error;
+
+    // Which organization a self-registered account joins is the module's decision (a
+    // default group, an invitation, a single-tenant household): the surface passes null
+    // and lets the implementation decide, rather than inventing a policy here.
+    private async Task RegisterAsync()
+    {
+        _busy = true;
+        _error = null;
+        try
+        {
+            var result = await Auth.RegisterAsync(_userName, _email, _password, _firstName, _lastName, organizationId: null);
+            if (!result.Succeeded)
+            {
+                _error = result.Error ?? "Could not create the account.";
+                return;
+            }
+
+            Navigation.NavigateTo(Navigation.BaseUri, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

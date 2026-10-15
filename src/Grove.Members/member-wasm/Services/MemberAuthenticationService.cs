@@ -26,11 +26,30 @@ public sealed class MemberAuthenticationService(HttpClient http) : IMemberAuthen
 {
     private const string PortalApi = "api/grove/members/portal";
 
-    public async Task<MemberAuthenticationResult> SignInAsync(string userName, string password, bool rememberMe)
+    public Task<MemberAuthenticationResult> SignInAsync(string userName, string password, bool rememberMe) =>
+        SignInAsync(userName, password, rememberMe, headers: null);
+
+    // 202: the password was right and the account has two-factor authentication - the second
+    // step finishes the sign-in (the sign-in API's two-factor challenge).
+    public async Task<MemberAuthenticationResult> SignInAsync(string userName, string password, bool rememberMe, IReadOnlyDictionary<string, string?>? headers)
     {
-        using var response = await http.PostAsJsonAsync(
-            $"{PortalApi}/login",
-            new PortalLoginRequest(userName, password, rememberMe, OrganizationId: null));
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{PortalApi}/login")
+        {
+            Content = JsonContent.Create(new PortalLoginRequest(userName, password, rememberMe, OrganizationId: null)),
+        };
+        foreach (var (name, value) in headers ?? new Dictionary<string, string?>())
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                request.Headers.TryAddWithoutValidation(name, value);
+            }
+        }
+
+        using var response = await http.SendAsync(request);
+        if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
+        {
+            return MemberAuthenticationResult.TwoFactor;
+        }
 
         return response.IsSuccessStatusCode
             ? MemberAuthenticationResult.Success

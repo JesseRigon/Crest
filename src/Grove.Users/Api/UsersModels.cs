@@ -22,6 +22,6 @@ public sealed record UserWrite(string? UserName, string? Email, string? PhoneNum
 
 public sealed record UserEnabled(bool Enabled);
 
-public sealed record UserStatus(bool IsLockedOut, DateTimeOffset? LockoutEnd, int AccessFailedCount);
+public sealed record UserStatus(bool IsLockedOut, DateTimeOffset? LockoutEnd, int AccessFailedCount, bool TwoFactorEnabled = false);
 
 public sealed record UserExternalLogin(string LoginProvider, string ProviderKey, string? ProviderDisplayName);

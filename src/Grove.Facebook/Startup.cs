@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Grove.DisplayManagement.Handlers;
-using Grove.Facebook.Drivers;
 using Grove.Facebook.Endpoints;
 using Grove.Facebook.Filters;
 using Grove.Facebook.Recipes;
@@ -27,10 +26,13 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddPermissionProvider<Permissions>();
-        services.AddPageSource<FacebookAppPages>();
 
         services.AddSingleton<IFacebookService, FacebookService>();
-        services.AddSiteDisplayDriver<FacebookSettingsDisplayDriver>();
+        services.AddSettingsGroup<FacebookSettings>(
+            FacebookConstants.Features.Core,
+            "Meta App",
+            Permissions.ManageFacebookApp,
+            group => group.InMenu("settings-integrations", entryId: "facebookApp").ReloadsTenant());
         services.AddRecipeExecutionStep<FacebookSettingsStep>();
 
         services.AddResourceConfiguration<ResourceManagementOptionsConfiguration>();

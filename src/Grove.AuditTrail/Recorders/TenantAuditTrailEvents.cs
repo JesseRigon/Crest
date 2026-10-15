@@ -69,16 +69,10 @@ public sealed class TenantAuditTrailEvent
 }
 
 /// <summary>Writes a tenant-machinery event as the request's user (the actor handlers complete it).</summary>
-public sealed class TenantAuditTrailRecorder(IAuditTrailManager manager, IHttpContextAccessor httpContextAccessor, ShellSettings shellSettings)
+public sealed class TenantAuditTrailRecorder(IAuditTrailManager manager, IHttpContextAccessor httpContextAccessor)
 {
     public Task RecordAsync(string category, string name, string correlationId, TenantAuditTrailEvent data, string recordType, string? displayText)
     {
-        // Setup writes settings and enables features before the audit tables exist.
-        if (shellSettings.IsInitializing())
-        {
-            return Task.CompletedTask;
-        }
-
         var user = httpContextAccessor.HttpContext?.User;
         return manager.RecordEventAsync(new AuditTrailContext<TenantAuditTrailEvent>(
             name,
