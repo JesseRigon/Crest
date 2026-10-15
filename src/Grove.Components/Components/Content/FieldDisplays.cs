@@ -93,10 +93,19 @@ public abstract class FieldDisplayBase : ComponentBase
         {
             builder.OpenElement(3, "span");
             builder.AddAttribute(4, "class", "value");
-            builder.OpenElement(5, "a");
-            builder.AddAttribute(6, "href", SafeUrl.IsSafe(items[index].Url) ? items[index].Url : "#");
-            builder.AddContent(7, items[index].Text);
-            builder.CloseElement();
+            if (string.IsNullOrEmpty(items[index].Url))
+            {
+                // A value with nowhere to go (an option of a list): its text.
+                builder.AddContent(9, items[index].Text);
+            }
+            else
+            {
+                builder.OpenElement(5, "a");
+                builder.AddAttribute(6, "href", SafeUrl.IsSafe(items[index].Url) ? items[index].Url : "#");
+                builder.AddContent(7, items[index].Text);
+                builder.CloseElement();
+            }
+
             builder.CloseElement();
             if (index < items.Count - 1)
             {
@@ -257,18 +266,22 @@ public sealed class LinkFieldDisplay : FieldDisplayBase
     }
 }
 
-[BlazorComponent("ContentPickerField", DisplayName = "Content items field", Category = "Fields", Icon = "link")]
-public sealed class ContentPickerFieldDisplay : FieldDisplayBase
+/// <summary>An option picker field (content items, list options, users, ...): its selection as the
+/// driver resolved it for the viewer, linked where the source has a page (content items).</summary>
+[BlazorComponent("OptionPickerField", DisplayName = "Options field", Category = "Fields", Icon = "checklist")]
+public sealed class OptionPickerFieldDisplay : FieldDisplayBase
 {
-    /// <summary>The picked items, resolved by the driver for the viewer.</summary>
+    /// <summary>The selection, resolved by the driver for the viewer.</summary>
     [Parameter]
     public IReadOnlyList<DisplayLinkItem>? Items { get; set; }
 
-    protected override string FieldType => "contentpickerfield";
+    protected override string FieldType => "optionpickerfield";
 
     protected override bool ShowLabel => true;
 
-    protected override void RenderValue(RenderTreeBuilder builder) => Links(builder, Items ?? [], "No content items.");
+    protected override bool HasValue => Items is { Count: > 0 };
+
+    protected override void RenderValue(RenderTreeBuilder builder) => Links(builder, Items ?? [], string.Empty);
 }
 
 [BlazorComponent("LocalizationSetContentPickerField", DisplayName = "Localized content items field", Category = "Fields", Icon = "translate")]

@@ -18,7 +18,8 @@
        - eager roots: assemblies declaring [assembly: GroveEager] (the shell runtime, a
          theme's services - the boot path Program.cs calls);
        - kept eager: a module assembly declaring [GroveJSComponent] (JS components register
-         at startup), and everything the app itself reaches;
+         at startup) or [assembly: GroveEager] (a module library every shell page needs, such
+         as an editor facet), and everything the app itself reaches;
        - framework and Microsoft.* assemblies always stay eager.
        Produces BlazorWebAssemblyLazyLoad items and LazyModules.g.cs (a
        LazyModulesManifest class in the app's own namespace - routes, per-module

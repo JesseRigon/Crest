@@ -133,7 +133,7 @@ not an automatic one.
 
 **In the global store** — identical for every tenant, owned by a standard:
 
-- The `global.*` lists, declared in `Grove.ContentPartLists/Data/global-lists.json`:
+- The `global.*` lists, declared in `Grove.Contents/PartLists/Data/global-lists.json` (the `Grove.Contents.PartLists` feature):
   `country-codes`, `subdivisions`, `postal-formats`, `phone-country-codes`, `us-area-codes`,
   `languages`, `uom`, `uom-rec20`, `honorifics`, `name-suffixes`, `naics` (all levels,
   arranged by each option's `Parent`), plus `items.base-classification`

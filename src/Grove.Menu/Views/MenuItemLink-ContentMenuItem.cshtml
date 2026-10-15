@@ -13,7 +13,7 @@
         return;
     }
 
-    string contentItemId = menuItemPart.ContentItem.Content.ContentMenuItemPart.SelectedContentItem.ContentItemIds[0];
+    string contentItemId = (menuItemPart.ContentItem.Content["ContentMenuItemPart"]?["SelectedContentItem"]?["SelectedIds"] as System.Text.Json.Nodes.JsonArray)?.FirstOrDefault()?.GetValue<string>();
 
     var routeValues = new RouteValueDictionary(AutorouteOptions.Value.GlobalRouteValues);
 

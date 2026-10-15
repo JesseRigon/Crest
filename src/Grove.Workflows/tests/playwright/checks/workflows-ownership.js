@@ -209,7 +209,7 @@ module.exports = async function run(page, ctx) {
     const person = await call('POST', content, { contentType: 'Person', displayText: `Playwright ownership person ${stamp}`, publish: true });
     const personId = person.json?.contentItemId;
     if (personId) created.items.push(personId);
-    const role = await call('POST', content, { contentType: 'SampleRole', displayText: `Playwright ownership role ${stamp}`, publish: true, content: { SampleRole: { Party: { ContentItemIds: [personId] } } } });
+    const role = await call('POST', content, { contentType: 'SampleRole', displayText: `Playwright ownership role ${stamp}`, publish: true, content: { SampleRole: { Party: { SelectedIds: [personId] } } } });
     const roleId = role.json?.contentItemId;
     if (roleId) created.items.push(roleId);
     results.push({ name: 'sample-items-publish', pass: person.ok && role.ok, message: `person=${person.status} role=${role.status}` });

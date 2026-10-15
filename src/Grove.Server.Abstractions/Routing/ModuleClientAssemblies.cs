@@ -6,8 +6,9 @@ namespace Grove.Routing;
 /// <remarks>
 /// A module client library is named for its module ("Grove.Members.Member.BlazorWasm"
 /// belongs to "Grove.Members"), the convention the lazy-module generator, the server's
-/// route table and the shell contracts all rely on. An assembly belongs to the module with
-/// the LONGEST matching id, so a library of "Grove.Members" is never credited to "Grove".
+/// route table and the shell contracts all rely on. A library named for one feature of a
+/// module ("Grove.Contents.PartLists.BlazorWasm") belongs to that feature. An assembly belongs
+/// to the LONGEST matching id, so a library of "Grove.Members" is never credited to "Grove".
 /// </remarks>
 public static class ModuleClientAssemblies
 {

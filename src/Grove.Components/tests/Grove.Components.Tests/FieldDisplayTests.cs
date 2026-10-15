@@ -31,7 +31,7 @@ public sealed class FieldDisplayTests
     [Fact]
     public async Task ReferenceFieldsShowTheirLabelAndTheirResolvedItems()
     {
-        var picker = await RenderAsync<ContentPickerFieldDisplay>(new() { ["Label"] = "Related", ["Items"] = new List<DisplayLinkItem> { new("About", "about") } });
+        var picker = await RenderAsync<OptionPickerFieldDisplay>(new() { ["Label"] = "Related", ["Items"] = new List<DisplayLinkItem> { new("About", "about") } });
         var users = await RenderAsync<UserPickerFieldDisplay>(new() { ["Label"] = "Owners", ["UserNames"] = new[] { "ada", "linus" } });
         var empty = await RenderAsync<DateFieldDisplay>(new() { ["Value"] = null });
 

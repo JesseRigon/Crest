@@ -478,7 +478,7 @@ Implementation:
   every party role a module composes (Customer, Vendor, Lead, ...) is a derived role named after
   its content type. An organization role counts only through the organization the caller acts
   for; a person role only through the person ([parties.md](parties.md) › Core party records).
-  The party-role index is the content picker field index over `Party`. Organizations are also
+  The party-role index is the option picker field index over `Party`. Organizations are also
   offered to sharing pickers (`PartyOrganizationDirectory`).
 - **Member** is the member role template every binding holds
   ([parties.md](parties.md) › Members), held only while acting for the organization, not a

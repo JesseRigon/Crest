@@ -21,7 +21,6 @@ using Grove.Search;
 using Grove.Elasticsearch.Deployment;
 using Grove.Elasticsearch.Handlers;
 using Grove.Elasticsearch.Models;
-using Grove.Elasticsearch.Providers;
 using Grove.Elasticsearch.Recipes;
 using Grove.Elasticsearch.Services;
 using Grove.Elasticsearch.Services;
@@ -128,16 +127,6 @@ public sealed class DeploymentStartup : StartupBase
         services.AddDeployment<ElasticsearchIndexDeploymentSource, ElasticsearchIndexDeploymentStep>();
         services.AddDeployment<ElasticsearchIndexRebuildDeploymentSource, ElasticsearchIndexRebuildDeploymentStep>();
         services.AddDeployment<ElasticsearchIndexResetDeploymentSource, ElasticsearchIndexResetDeploymentStep>();
-    }
-}
-
-[Feature("Grove.Search.Elasticsearch.ContentPicker")]
-public sealed class ElasticContentPickerStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddScoped<IContentPickerResultProvider, ElasticsearchContentPickerResultProvider>();
-        services.AddShapeAttributes<ElasticContentPickerShapeProvider>();
     }
 }
 

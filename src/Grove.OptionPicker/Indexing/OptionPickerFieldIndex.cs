@@ -1,3 +1,4 @@
+using Grove.Settings;
 using Grove.Fields;
 using Grove.Models;
 using Grove.Services;
@@ -120,6 +121,13 @@ public abstract class OptionPickerFieldIndexProviderBase<TIndex>(IServiceProvide
                     // storing them here is what lets a query filter by key without
                     // joining back through the source. Null where the source has no
                     // key distinct from the id (users and other entity sources).
+                    // A value written without its source (by code, or imported) reads it from
+                    // the attachment's settings.
+                    if (string.IsNullOrEmpty(pair.Field.SourceKey))
+                    {
+                        pair.Field.SourceKey = pair.Definition.GetSettings<OptionPickerFieldSettings>().SourceKey;
+                    }
+
                     _keyResolver ??= serviceProvider.GetRequiredService<OptionPickerFieldKeyResolver>();
                     var keys = await _keyResolver.ResolveKeysAsync(pair.Field);
 

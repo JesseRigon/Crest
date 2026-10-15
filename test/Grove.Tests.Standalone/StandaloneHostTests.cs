@@ -17,7 +17,7 @@ public sealed class StandaloneHostTests(StandaloneHost host) : IClassFixture<Sta
 {
     private static readonly string[] ApplicationFeatures =
     [
-        "Grove", "Grove.ContentPartLists", "Grove.Data.Global", "Grove.Regions", "Grove.Money",
+        "Grove", "Grove.Contents.PartLists", "Grove.Data.Global", "Grove.Regions", "Grove.Money",
         "Grove.Parties", "Grove.Members", "Grove.Workflows", "Grove.Workflows.Contents",
     ];
 

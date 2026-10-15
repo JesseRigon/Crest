@@ -65,7 +65,8 @@
     <ProjectReference Include="..\..\Grove.Users\components\Grove.Users.Components.csproj" />
     <ProjectReference Include="..\..\Grove.Apis.GraphQL\blazor-wasm\Grove.Apis.GraphQL.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.AuditTrail\blazor-wasm\Grove.AuditTrail.BlazorWasm.csproj" />
-    <ProjectReference Include="..\..\Grove.ContentPartLists\blazor-wasm\Grove.ContentPartLists.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Contents\blazor-wasm\Grove.Contents.PartLists.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.OptionPicker\blazor-wasm\Grove.OptionPicker.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.Parties\blazor-wasm\Grove.Parties.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.Routes\blazor-wasm\Grove.Routes.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.Shortcodes\blazor-wasm\Grove.Shortcodes.BlazorWasm.csproj" />

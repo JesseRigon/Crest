@@ -16,8 +16,8 @@ namespace Grove.OptionPicker.Api;
 /// <summary>
 /// The provider-generic half of the picker API (<c>api/grove/option-sources</c>): rows, columns,
 /// dependencies and selection validation for whatever source a field is bound to (content part
-/// lists, users, content items, ...). The content part list management lives in
-/// Grove.ContentPartLists.
+/// lists, users, content items, ...). The content part list management is the
+/// Grove.Contents.PartLists feature.
 /// </summary>
 public sealed class OptionSourcesApi : ApiContributor
 {
@@ -33,6 +33,7 @@ public sealed class OptionSourcesApi : ApiContributor
         routes.MapGet("dependencies", (HttpContext http, [FromQuery] string contentType, [FromQuery] string fieldName) => ApiHandlers.For<OptionSourcesHandlers>(http).GetDependenciesAsync(contentType, fieldName));
         routes.MapPost("validate-selection", (HttpContext http, [FromBody] OptionSelectionValidationRequest request) => ApiHandlers.For<OptionSourcesHandlers>(http).ValidateSelectionAsync(request));
         routes.MapPost("resolve", (HttpContext http, [FromBody] OptionSourceResolveRequest request) => ApiHandlers.For<OptionSourcesHandlers>(http).ResolveSourceAsync(request));
+        routes.MapGet("create-links", (HttpContext http, [FromQuery] string contentType, [FromQuery] string fieldName) => ApiHandlers.For<OptionSourcesHandlers>(http).GetCreateLinksAsync(contentType, fieldName));
         routes.MapGet("{sourceKey}/columns", (HttpContext http, [FromRoute] string sourceKey) => ApiHandlers.For<OptionSourcesHandlers>(http).DescribeColumnsAsync(sourceKey));
     }
 }
@@ -93,7 +94,8 @@ public sealed class OptionSourcesHandlers(
                 request.SearchColumns,
                 sortColumns,
                 request.Skip,
-                Math.Clamp(request.Take, 1, 200)),
+                Math.Clamp(request.Take, 1, 200),
+                settings?.TitlePattern),
             HttpContext.RequestAborted);
 
         return Ok(rows.ToArray());
@@ -180,8 +182,32 @@ public sealed class OptionSourcesHandlers(
             return Problem($"There is no option source provider named '{providerKey}'.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        var rows = await provider.GetByIdsAsync(qualifier, request.Ids ?? [], request.Columns ?? [], HttpContext.RequestAborted);
+        var settings = await GetFieldSettingsAsync(request.ContentType, request.FieldName);
+        var rows = await provider.GetByIdsAsync(
+            new OptionSourceLookup(qualifier, request.Ids ?? [], request.Columns ?? [], settings?.TitlePattern, IncludeEditUrls: settings is not null),
+            HttpContext.RequestAborted);
         return Ok(rows.ToArray());
+    }
+
+    /// <summary>The attachment's create links: for a source whose records can be created from the
+    /// picker (content items), one per allowed type the caller may create.</summary>
+    public async Task<IResult> GetCreateLinksAsync(string contentType, string fieldName)
+    {
+        if (!await CanViewAsync())
+        {
+            return Forbid();
+        }
+
+        var settings = await GetFieldSettingsAsync(contentType, fieldName);
+        if (settings is null)
+        {
+            return NotFound();
+        }
+
+        var (providerKey, qualifier) = OptionSourceKeys.Split(settings.SourceKey);
+        return FindProvider(providerKey) is IOptionSourceCreateLinks links
+            ? Ok((await links.GetCreateLinksAsync(qualifier, HttpContext.RequestAborted)).ToArray())
+            : Ok(Array.Empty<OptionCreateLink>());
     }
 
     /// <summary>The columns a source can offer - drives the column picker in the field's
@@ -277,5 +303,5 @@ public sealed class OptionSourcesHandlers(
         state?.ToDictionary(entry => entry.Key, entry => (IReadOnlyList<string>)entry.Value, StringComparer.OrdinalIgnoreCase);
 
     private async Task<bool> CanViewAsync() =>
-        await authorizationService.AuthorizeAsync(User, ContentPartListPermissions.ViewContentPartLists);
+        await authorizationService.AuthorizeAsync(User, OptionPickerPermissions.QueryOptionSources);
 }

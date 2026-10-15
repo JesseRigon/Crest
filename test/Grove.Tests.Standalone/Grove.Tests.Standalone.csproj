@@ -36,9 +36,6 @@
     <ProjectReference Include="..\..\src\Grove.SiteTheme\Grove.SiteTheme.csproj" />
     <ProjectReference Include="..\..\src\Grove.MemberTheme\Grove.MemberTheme.csproj" />
     <ProjectReference Include="..\..\src\Grove.Icons\Grove.Icons.csproj" />
-    <ProjectReference Include="..\..\src\Grove.ContentPartLists\Grove.ContentPartLists.csproj" />
-    <ProjectReference Include="..\..\src\Grove.OptionPicker\Grove.OptionPicker.csproj" />
-    <ProjectReference Include="..\..\src\Grove.Data.Global\Grove.Data.Global.csproj" />
     <ProjectReference Include="..\..\src\Grove.Regions\Grove.Regions.csproj" />
     <ProjectReference Include="..\..\src\Grove.Money\Grove.Money.csproj" />
     <ProjectReference Include="..\..\src\Grove.Parties\Server\Grove.Parties.csproj" />

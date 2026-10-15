@@ -118,7 +118,7 @@ party may have no customer account, one, or potentially several.
   address-kind seed gains a DataLock when posting starts snapshotting by kind). Organization
   carries OrganizationType and Industry pickers. Seed keys in
   `PartiesOptionSets`/`ContactPointKinds`/`AddressKinds`.
-- **Content Part List adoption.** `Grove.Parties` declares `Grove.ContentPartLists` in its
+- **Content Part List adoption.** `Grove.Parties` declares `Grove.Contents.PartLists` in its
   manifest and its migration attaches pickers DEFERRED (global lists seed in a deferred task;
   an inline attach at first-time setup runs before the seeds and aborts provisioning): Person
   gets Honorific, Suffix and PreferredLanguage from Grove's global lists; the `ContactPoint`
@@ -217,7 +217,7 @@ member is, and the bindings and hierarchy around the link, are under
 
 ## Org structure
 
-A `Positions` bag on Person (element type `OrgPosition`: Organization ContentPickerField
+A `Positions` bag on Person (element type `OrgPosition`: an Organization option picker over content items
 restricted to Organization, Title, Department, Primary; one primary per person). Bag-contained
 fields are outside stock field indexes, so `PartyPositionIndex` (Parties-owned map index, one
 row per position) makes the organization side a query: `api/grove/parties/{personId}/positions`

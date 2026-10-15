@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="tests/**/*.cs" />
+    <Compile Remove="tests/**/*.cs;blazor-wasm/**/*.cs" />
   </ItemGroup>
 
   <ItemGroup>

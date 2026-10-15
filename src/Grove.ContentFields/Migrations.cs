@@ -39,9 +39,6 @@ public sealed class Migrations : DataMigration
         // Boolean field
         await _contentDefinitionManager.MigrateFieldSettingsAsync<BooleanField, BooleanFieldSettings>();
 
-        // Content picker field
-        await _contentDefinitionManager.MigrateFieldSettingsAsync<ContentPickerField, ContentPickerFieldSettings>();
-
         // Date field
         await _contentDefinitionManager.MigrateFieldSettingsAsync<DateField, DateFieldSettings>();
 

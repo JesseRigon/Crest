@@ -21,13 +21,13 @@ module.exports = async function run(page, ctx) {
     const atStart = [...new Set(modules)];
     results.push({
       name: 'dashboard-loads-no-lazy-module-page-library',
-      pass: !atStart.includes('Grove.ContentPartLists.BlazorWasm'),
+      pass: !atStart.includes('Grove.Contents.PartLists.BlazorWasm'),
       message: `module libraries at start: ${atStart.join(', ') || 'none'}`,
     });
 
     await fresh.goto(`${ctx.baseUrl}/Admin/ContentTypes/ContentPartLists`, { waitUntil: 'networkidle' });
     const rendered = await fresh.locator('[data-testid="content-part-lists-page"]').waitFor({ timeout: 30000 }).then(() => true, () => false);
-    const loaded = modules.includes('Grove.ContentPartLists.BlazorWasm');
+    const loaded = modules.includes('Grove.Contents.PartLists.BlazorWasm');
     const onLegacyFrame = await fresh.locator('iframe.legacy-admin-frame').count();
     results.push({ name: 'opening-a-module-page-loads-its-module', pass: loaded && rendered && onLegacyFrame === 0, message: `loaded=${loaded} rendered=${rendered} legacyFrame=${onLegacyFrame}` });
   } finally {

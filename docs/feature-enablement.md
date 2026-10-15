@@ -28,6 +28,16 @@ remove the need for a dependency. It defers the failure from startup to request 
 instead of preventing it — the endpoint still throws "Unable to resolve service for type
 T" when the providing feature is off.
 
+## Features of one module
+
+A module may ship several features ([architecture.md](architecture.md) › Modules, features and
+how a module reaches the host): Content Part Lists is `Grove.Contents.PartLists`, a feature of
+Grove.Contents, opt-in per tenant. Its startups, controllers and permissions are gated on the
+feature (`[Feature]` on the startup and controller classes), and its client library is named for
+the feature (`Grove.Contents.PartLists.BlazorWasm`), so its page is served only while the feature
+is enabled. A consumer declares the feature id, not the module's (`Grove.Parties`,
+`Grove.Members` and the Fruitful modules declare `Grove.Contents.PartLists`).
+
 ## What is deliberately NOT a Grove dependency
 
 - **`Grove.Tenants`** — `DefaultTenantOnly = true`. A hard dependency from an

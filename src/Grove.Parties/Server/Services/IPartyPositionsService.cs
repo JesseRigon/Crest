@@ -7,6 +7,7 @@ using Grove.ContentFields.Fields;
 using Grove.ContentManagement;
 using Grove.Flows.Models;
 using YesSql;
+using Grove.Fields;
 
 namespace Grove.Parties.Services;
 
@@ -186,7 +187,7 @@ public sealed class PartyPositionsService(IContentManager contentManager, PartyB
         element.DisplayText = string.Join(" @ ", new[] { write.Title, organization.DisplayText }.Where(value => !string.IsNullOrWhiteSpace(value)));
         element.Alter<ContentPart>(Part, part =>
         {
-            part.Alter<ContentPickerField>("Organization", field => field.ContentItemIds = [organization.ContentItemId]);
+            part.Alter<OptionPickerField>("Organization", field => field.SelectedIds = [organization.ContentItemId]);
             part.Alter<TextField>("Title", field => field.Text = Clean(write.Title));
             part.Alter<TextField>("Department", field => field.Text = Clean(write.Department));
             part.Alter<BooleanField>("Primary", field => field.Value = write.Primary);
@@ -220,7 +221,7 @@ public sealed class PartyPositionsService(IContentManager contentManager, PartyB
         person.Get<BagPart>(PartiesConstants.Bags.Positions)?.ContentItems ?? [];
 
     private static string? OrganizationId(ContentItem element) =>
-        element.Get<ContentPart>(Part)?.Get<ContentPickerField>("Organization")?.ContentItemIds.FirstOrDefault();
+        element.Get<ContentPart>(Part)?.Get<OptionPickerField>("Organization")?.SelectedIds.FirstOrDefault();
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

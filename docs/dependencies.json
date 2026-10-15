@@ -70,7 +70,7 @@
    "color": "#adb5bd",
    "kind": "library",
    "value": 2,
-   "title": "Grove.AdminTheme.Client\\nreferenced by 1, references 14, packages 3"
+   "title": "Grove.AdminTheme.Client\\nreferenced by 1, references 15, packages 3"
   },
   {
    "id": "Grove.AdminTheme.Client.Services",
@@ -134,7 +134,7 @@
    "color": "#e9c46a",
    "kind": "targets",
    "value": 2,
-   "title": "Grove.Application.Cms.Core.Targets\\nreferenced by 1, references 98, packages 0"
+   "title": "Grove.Application.Cms.Core.Targets\\nreferenced by 1, references 100, packages 0"
   },
   {
    "id": "Grove.Application.Cms.Targets",
@@ -261,8 +261,8 @@
    "label": "Grove.Components",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 26,
-   "title": "Grove.Components\\nreferenced by 25, references 1, packages 3"
+   "value": 27,
+   "title": "Grove.Components\\nreferenced by 26, references 1, packages 3"
   },
   {
    "id": "Grove.Configuration.KeyVault",
@@ -277,8 +277,8 @@
    "label": "Grove.ContentFields",
    "color": "#ffb703",
    "kind": "module",
-   "value": 13,
-   "title": "Grove.ContentFields\\nreferenced by 12, references 19, packages 1"
+   "value": 12,
+   "title": "Grove.ContentFields\\nreferenced by 11, references 19, packages 1"
   },
   {
    "id": "Grove.ContentFields.Abstractions",
@@ -286,7 +286,7 @@
    "color": "#8ecae6",
    "kind": "abstractions",
    "value": 2,
-   "title": "Grove.ContentFields.Abstractions\\nreferenced by 1, references 2, packages 0"
+   "title": "Grove.ContentFields.Abstractions\\nreferenced by 1, references 3, packages 0"
   },
   {
    "id": "Grove.ContentLocalization",
@@ -309,8 +309,8 @@
    "label": "Grove.ContentManagement",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 37,
-   "title": "Grove.ContentManagement\\nreferenced by 36, references 5, packages 0"
+   "value": 36,
+   "title": "Grove.ContentManagement\\nreferenced by 35, references 5, packages 0"
   },
   {
    "id": "Grove.ContentManagement.Abstractions",
@@ -335,22 +335,6 @@
    "kind": "library",
    "value": 19,
    "title": "Grove.ContentManagement.GraphQL\\nreferenced by 18, references 8, packages 0"
-  },
-  {
-   "id": "Grove.ContentPartLists",
-   "label": "Grove.ContentPartLists",
-   "color": "#ffb703",
-   "kind": "module",
-   "value": 3,
-   "title": "Grove.ContentPartLists\\nreferenced by 2, references 8, packages 1"
-  },
-  {
-   "id": "Grove.ContentPartLists.BlazorWasm",
-   "label": "Grove.ContentPartLists.BlazorWasm",
-   "color": "#adb5bd",
-   "kind": "library",
-   "value": 2,
-   "title": "Grove.ContentPartLists.BlazorWasm\\nreferenced by 1, references 1, packages 2"
   },
   {
    "id": "Grove.ContentPreview",
@@ -389,8 +373,8 @@
    "label": "Grove.Contents",
    "color": "#ffb703",
    "kind": "module",
-   "value": 12,
-   "title": "Grove.Contents\\nreferenced by 11, references 29, packages 0"
+   "value": 11,
+   "title": "Grove.Contents\\nreferenced by 10, references 31, packages 0"
   },
   {
    "id": "Grove.Contents.Abstractions",
@@ -399,6 +383,14 @@
    "kind": "abstractions",
    "value": 20,
    "title": "Grove.Contents.Abstractions\\nreferenced by 19, references 4, packages 1"
+  },
+  {
+   "id": "Grove.Contents.PartLists.BlazorWasm",
+   "label": "Grove.Contents.PartLists.BlazorWasm",
+   "color": "#adb5bd",
+   "kind": "library",
+   "value": 2,
+   "title": "Grove.Contents.PartLists.BlazorWasm\\nreferenced by 1, references 1, packages 2"
   },
   {
    "id": "Grove.Contents.TagHelpers",
@@ -429,8 +421,8 @@
    "label": "Grove.Data",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 10,
-   "title": "Grove.Data\\nreferenced by 9, references 3, packages 0"
+   "value": 9,
+   "title": "Grove.Data\\nreferenced by 8, references 3, packages 0"
   },
   {
    "id": "Grove.Data.Abstractions",
@@ -445,8 +437,8 @@
    "label": "Grove.Data.Global",
    "color": "#ffb703",
    "kind": "module",
-   "value": 4,
-   "title": "Grove.Data.Global\\nreferenced by 3, references 4, packages 1"
+   "value": 5,
+   "title": "Grove.Data.Global\\nreferenced by 4, references 4, packages 1"
   },
   {
    "id": "Grove.Data.Types",
@@ -1061,8 +1053,8 @@
    "label": "Grove.Module.Targets",
    "color": "#e9c46a",
    "kind": "targets",
-   "value": 105,
-   "title": "Grove.Module.Targets\\nreferenced by 104, references 1, packages 0"
+   "value": 104,
+   "title": "Grove.Module.Targets\\nreferenced by 103, references 1, packages 0"
   },
   {
    "id": "Grove.Money",
@@ -1173,16 +1165,24 @@
    "label": "Grove.OptionPicker",
    "color": "#ffb703",
    "kind": "module",
-   "value": 5,
-   "title": "Grove.OptionPicker\\nreferenced by 4, references 10, packages 1"
+   "value": 6,
+   "title": "Grove.OptionPicker\\nreferenced by 5, references 10, packages 1"
   },
   {
    "id": "Grove.OptionPicker.Abstractions",
    "label": "Grove.OptionPicker.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
+   "value": 5,
+   "title": "Grove.OptionPicker.Abstractions\\nreferenced by 4, references 0, packages 0"
+  },
+  {
+   "id": "Grove.OptionPicker.BlazorWasm",
+   "label": "Grove.OptionPicker.BlazorWasm",
+   "color": "#adb5bd",
+   "kind": "library",
    "value": 2,
-   "title": "Grove.OptionPicker.Abstractions\\nreferenced by 1, references 0, packages 0"
+   "title": "Grove.OptionPicker.BlazorWasm\\nreferenced by 1, references 2, packages 2"
   },
   {
    "id": "Grove.Parties",
@@ -1190,7 +1190,7 @@
    "color": "#adb5bd",
    "kind": "library",
    "value": 2,
-   "title": "Grove.Parties\\nreferenced by 1, references 15, packages 1"
+   "title": "Grove.Parties\\nreferenced by 1, references 14, packages 1"
   },
   {
    "id": "Grove.Parties.BlazorWasm",
@@ -1501,8 +1501,8 @@
    "label": "Grove.Server",
    "color": "#ffb703",
    "kind": "module",
-   "value": 7,
-   "title": "Grove.Server\\nreferenced by 6, references 45, packages 3"
+   "value": 6,
+   "title": "Grove.Server\\nreferenced by 5, references 45, packages 3"
   },
   {
    "id": "Grove.Server.Abstractions",
@@ -2710,6 +2710,11 @@
   },
   {
    "from": "Grove.Application.Cms.Core.Targets",
+   "to": "Grove.Data.Global",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Application.Cms.Core.Targets",
    "to": "Grove.DataProtection.Azure",
    "arrows": "to"
   },
@@ -2906,6 +2911,11 @@
   {
    "from": "Grove.Application.Cms.Core.Targets",
    "to": "Grove.OpenId",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Application.Cms.Core.Targets",
+   "to": "Grove.OptionPicker",
    "arrows": "to"
   },
   {
@@ -5509,6 +5519,16 @@
    "arrows": "to"
   },
   {
+   "from": "Grove.Contents",
+   "to": "Grove.OptionPicker.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents",
+   "to": "Grove.Data.Global",
+   "arrows": "to"
+  },
+  {
    "from": "Grove.Cms.Web",
    "to": "Grove.Application.Cms.Targets",
    "arrows": "to"
@@ -6284,46 +6304,6 @@
    "arrows": "to"
   },
   {
-   "from": "Grove.ContentPartLists",
-   "to": "Grove.ContentFields",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.ContentPartLists",
-   "to": "Grove.ContentManagement",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.ContentPartLists",
-   "to": "Grove.Contents",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.ContentPartLists",
-   "to": "Grove.Data",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.ContentPartLists",
-   "to": "Grove.Module.Targets",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.ContentPartLists",
-   "to": "Grove.Server",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.ContentPartLists",
-   "to": "Grove.OptionPicker",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.ContentPartLists",
-   "to": "Grove.Data.Global",
-   "arrows": "to"
-  },
-  {
    "from": "Grove.Admin",
    "to": "Grove.Settings.Abstractions",
    "arrows": "to"
@@ -6621,6 +6601,11 @@
   {
    "from": "Grove.ContentFields.Abstractions",
    "to": "Grove.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.ContentFields.Abstractions",
+   "to": "Grove.OptionPicker.Abstractions",
    "arrows": "to"
   },
   {
@@ -9740,7 +9725,12 @@
   },
   {
    "from": "Grove.AdminTheme.Client",
-   "to": "Grove.ContentPartLists.BlazorWasm",
+   "to": "Grove.Contents.PartLists.BlazorWasm",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.AdminTheme.Client",
+   "to": "Grove.OptionPicker.BlazorWasm",
    "arrows": "to"
   },
   {
@@ -9771,6 +9761,11 @@
   {
    "from": "Grove.AdminTheme.Client",
    "to": "Grove.Workflows.BlazorWasm",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Contents.PartLists.BlazorWasm",
+   "to": "Grove.Components",
    "arrows": "to"
   },
   {
@@ -9845,7 +9840,7 @@
   },
   {
    "from": "Grove.Members",
-   "to": "Grove.ContentPartLists",
+   "to": "Grove.OptionPicker",
    "arrows": "to"
   },
   {
@@ -9886,11 +9881,6 @@
   {
    "from": "Grove.Users.Site.BlazorWasm",
    "to": "Grove.Users.Components",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.ContentPartLists.BlazorWasm",
-   "to": "Grove.Components",
    "arrows": "to"
   },
   {
@@ -10000,11 +9990,6 @@
   },
   {
    "from": "Grove.Parties",
-   "to": "Grove.ContentPartLists",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Parties",
    "to": "Grove.Regions",
    "arrows": "to"
   },
@@ -10016,6 +10001,16 @@
   {
    "from": "Grove.Routes.BlazorWasm",
    "to": "Grove.Components",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.OptionPicker.BlazorWasm",
+   "to": "Grove.Components",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.OptionPicker.BlazorWasm",
+   "to": "Grove.OptionPicker.Abstractions",
    "arrows": "to"
   }
  ],
@@ -10217,9 +10212,6 @@
   "Grove.Liquid": [
    "AnyAscii",
    "System.IO.Hashing"
-  ],
-  "Grove.ContentPartLists": [
-   "YesSql.Abstractions"
   ],
   "Grove.Media": [
    "NetVips",
@@ -10538,6 +10530,10 @@
    "Microsoft.AspNetCore.Components.WebAssembly",
    "Microsoft.AspNetCore.SignalR.Client"
   ],
+  "Grove.Contents.PartLists.BlazorWasm": [
+   "Microsoft.AspNetCore.Components",
+   "Microsoft.AspNetCore.Components.Web"
+  ],
   "Grove.Members": [
    "YesSql.Abstractions"
   ],
@@ -10550,10 +10546,6 @@
    "Microsoft.AspNetCore.Components.Web"
   ],
   "Grove.Users.Site.BlazorWasm": [
-   "Microsoft.AspNetCore.Components",
-   "Microsoft.AspNetCore.Components.Web"
-  ],
-  "Grove.ContentPartLists.BlazorWasm": [
    "Microsoft.AspNetCore.Components",
    "Microsoft.AspNetCore.Components.Web"
   ],
@@ -10573,6 +10565,10 @@
    "YesSql.Abstractions"
   ],
   "Grove.Routes.BlazorWasm": [
+   "Microsoft.AspNetCore.Components",
+   "Microsoft.AspNetCore.Components.Web"
+  ],
+  "Grove.OptionPicker.BlazorWasm": [
    "Microsoft.AspNetCore.Components",
    "Microsoft.AspNetCore.Components.Web"
   ]

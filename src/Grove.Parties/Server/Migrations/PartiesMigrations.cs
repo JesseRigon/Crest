@@ -18,6 +18,8 @@ using Grove.Environment.Shell.Scope;
 using Grove.Flows.Models;
 using YesSql;
 using YesSql.Sql;
+using Grove.Fields;
+using Grove.Settings;
 
 namespace Grove.Parties.Migrations;
 
@@ -106,14 +108,13 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
                 .WithDescription("The organization of one person; it reads as the person.")
                 .WithPosition("2"))
             .WithField(PartiesConstants.OrganizationFields.ParentOrganization, field => field
-                .OfType("ContentPickerField")
+                .OfType("OptionPickerField")
                 .WithDisplayName("Parent organization")
                 .WithPosition("1")
-                .MergeSettings<ContentPickerFieldSettings>(settings =>
+                .MergeSettings<OptionPickerFieldSettings>(settings =>
                 {
                     settings.Multiple = false;
-                    settings.DisplayAllContentTypes = false;
-                    settings.DisplayedContentTypes = [PartiesConstants.ContentTypes.Organization];
+                    settings.SourceKey = OptionSourceKeys.ForContentItems([PartiesConstants.ContentTypes.Organization]);
                 })));
     }
 
@@ -187,7 +188,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
     }
 
     // Org structure: a Person holds positions in Organizations (many, in many). The
-    // element references the organization with a stock ContentPickerField; because
+    // element references the organization with an option picker over content items; because
     // bag-contained fields are not reached by stock field indexes, PartyPositionIndex
     // makes the organization-side lookup a query.
     private async Task DefineOrgPositionAsync()
@@ -198,13 +199,13 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .WithDisplayName("Organization position")
             .WithDescription("A position a person holds in an organization.")
             .WithField("Organization", field => field
-                .OfType("ContentPickerField")
+                .OfType("OptionPickerField")
                 .WithDisplayName("Organization")
                 .WithPosition("0")
-                .MergeSettings<ContentPickerFieldSettings>(settings =>
+                .MergeSettings<OptionPickerFieldSettings>(settings =>
                 {
                     settings.Multiple = false;
-                    settings.DisplayedContentTypes = [PartiesConstants.ContentTypes.Organization];
+                    settings.SourceKey = OptionSourceKeys.ForContentItems([PartiesConstants.ContentTypes.Organization]);
                 }))
             .WithField("Title", field => field
                 .OfType("TextField")
@@ -277,23 +278,23 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
             .WithPart(PartiesConstants.ContentTypes.Association, part => part.WithPosition("1")));
 
         static Grove.ContentManagement.Metadata.Builders.ContentPartFieldDefinitionBuilder PersonPicker(Grove.ContentManagement.Metadata.Builders.ContentPartFieldDefinitionBuilder field, string name, string position) => field
-            .OfType("ContentPickerField")
+            .OfType("OptionPickerField")
             .WithDisplayName(name)
             .WithPosition(position)
-            .MergeSettings<ContentPickerFieldSettings>(settings =>
+            .MergeSettings<OptionPickerFieldSettings>(settings =>
             {
                 settings.Multiple = false;
-                settings.DisplayedContentTypes = [PartiesConstants.ContentTypes.Person];
+                settings.SourceKey = OptionSourceKeys.ForContentItems([PartiesConstants.ContentTypes.Person]);
             });
 
         static Grove.ContentManagement.Metadata.Builders.ContentPartFieldDefinitionBuilder OrganizationPicker(Grove.ContentManagement.Metadata.Builders.ContentPartFieldDefinitionBuilder field, string name, string position) => field
-            .OfType("ContentPickerField")
+            .OfType("OptionPickerField")
             .WithDisplayName(name)
             .WithPosition(position)
-            .MergeSettings<ContentPickerFieldSettings>(settings =>
+            .MergeSettings<OptionPickerFieldSettings>(settings =>
             {
                 settings.Multiple = false;
-                settings.DisplayedContentTypes = [PartiesConstants.ContentTypes.Organization];
+                settings.SourceKey = OptionSourceKeys.ForContentItems([PartiesConstants.ContentTypes.Organization]);
             });
     }
 
@@ -652,7 +653,7 @@ public sealed class PartiesMigrations(IContentDefinitionManager contentDefinitio
 
     // Tenants provisioned before the global reference lists were wired in.
     // Person's name furniture and language come from Grove's shared GLOBAL lists
-    // (seeded by the Grove.ContentPartLists feature itself) rather than lists this
+    // (seeded by the Grove.Contents.PartLists feature itself) rather than lists this
     // module owns - honorifics, name suffixes and languages cross every domain
     // boundary.
     //

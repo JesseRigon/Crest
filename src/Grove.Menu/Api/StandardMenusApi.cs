@@ -353,7 +353,8 @@ public sealed class StandardMenusHandlers(
                 ["CheckContentPermissions"] = model.CheckContentPermissions,
                 ["SelectedContentItem"] = new JsonObject
                 {
-                    ["ContentItemIds"] = string.IsNullOrWhiteSpace(model.ContentItemId) ? new JsonArray() : new JsonArray(JsonValue.Create(model.ContentItemId.Trim())),
+                    ["SourceKey"] = "contentitem:*",
+                    ["SelectedIds"] = string.IsNullOrWhiteSpace(model.ContentItemId) ? new JsonArray() : new JsonArray(JsonValue.Create(model.ContentItemId.Trim())),
                 },
             };
         }

@@ -216,46 +216,6 @@ public sealed class Migrations : DataMigration
                 "Latest")
         );
 
-        await SchemaBuilder.CreateMapIndexTableAsync<ContentPickerFieldIndex>(table => table
-            .Column<string>("ContentItemId", column => column.WithLength(26))
-            .Column<string>("ContentItemVersionId", column => column.WithLength(26))
-            .Column<string>("ContentType", column => column.WithLength(ContentItemIndex.MaxContentTypeSize))
-            .Column<string>("ContentPart", column => column.WithLength(ContentItemIndex.MaxContentPartSize))
-            .Column<string>("ContentField", column => column.WithLength(ContentItemIndex.MaxContentFieldSize))
-            .Column<bool>("Published", column => column.Nullable())
-            .Column<bool>("Latest", column => column.Nullable())
-            .Column<string>("SelectedContentItemId", column => column.WithLength(26))
-        );
-
-        await SchemaBuilder.AlterIndexTableAsync<ContentPickerFieldIndex>(table => table
-            .CreateIndex("IDX_ContentPickerFieldIndex_DocumentId",
-                "DocumentId",
-                "ContentItemId",
-                "ContentItemVersionId",
-                "Published",
-                "Latest")
-        );
-
-        // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
-        await SchemaBuilder.AlterIndexTableAsync<ContentPickerFieldIndex>(table => table
-            .CreateIndex("IDX_ContentPickerFieldIndex_DocumentId_ContentType",
-                "DocumentId",
-                "ContentType(254)",
-                "ContentPart(254)",
-                "ContentField(254)",
-                "Published",
-                "Latest")
-        );
-
-        await SchemaBuilder.AlterIndexTableAsync<ContentPickerFieldIndex>(table => table
-            .CreateIndex("IDX_ContentPickerField_DocumentId_SelectedItemId",
-                "DocumentId",
-                "SelectedContentItemId",
-                "Published",
-                "Latest")
-        );
-
         await SchemaBuilder.CreateMapIndexTableAsync<TimeFieldIndex>(table => table
             .Column<string>("ContentItemId", column => column.WithLength(26))
             .Column<string>("ContentItemVersionId", column => column.WithLength(26))
@@ -432,7 +392,7 @@ public sealed class Migrations : DataMigration
         );
 
         // Shortcut other migration steps on new content definition schemas.
-        return 5;
+        return 6;
     }
 
     // This code can be removed in a later version.
@@ -608,35 +568,6 @@ public sealed class Migrations : DataMigration
                 "Latest")
         );
 
-        await SchemaBuilder.AlterIndexTableAsync<ContentPickerFieldIndex>(table => table
-            .CreateIndex("IDX_ContentPickerFieldIndex_DocumentId",
-                "DocumentId",
-                "ContentItemId",
-                "ContentItemVersionId",
-                "Published",
-                "Latest")
-        );
-
-        // The index in MySQL can accommodate up to 768 characters or 3072 bytes.
-        // DocumentId (2) + ContentType (254) + ContentPart (254) + ContentField (254) + Published and Latest (1) = 765 (< 768).
-        await SchemaBuilder.AlterIndexTableAsync<ContentPickerFieldIndex>(table => table
-            .CreateIndex("IDX_ContentPickerFieldIndex_DocumentId_ContentType",
-                "DocumentId",
-                "ContentType(254)",
-                "ContentPart(254)",
-                "ContentField(254)",
-                "Published",
-                "Latest")
-        );
-
-        await SchemaBuilder.AlterIndexTableAsync<ContentPickerFieldIndex>(table => table
-            .CreateIndex("IDX_ContentPickerField_DocumentId_SelectedItemId",
-                "DocumentId",
-                "SelectedContentItemId",
-                "Published",
-                "Latest")
-        );
-
         await SchemaBuilder.AlterIndexTableAsync<TimeFieldIndex>(table => table
             .CreateIndex("IDX_TimeFieldIndex_DocumentId",
                 "DocumentId",
@@ -805,4 +736,15 @@ public sealed class Migrations : DataMigration
 
         return 5;
     }
+
+    // Content picker fields are option picker fields over the content items source, indexed in
+    // the option picker index: the retired field's table goes.
+    public async Task<int> UpdateFrom5Async()
+    {
+        await SchemaBuilder.DropMapIndexTableAsync<ContentPickerFieldIndex>();
+        return 6;
+    }
+
+    // Names the retired table for the drop above.
+    private sealed class ContentPickerFieldIndex : YesSql.Indexes.MapIndex;
 }

@@ -17,7 +17,7 @@ public sealed class FieldDisplayLabels : ShapeTableProvider
     public static readonly string[] FieldShapes =
     [
         "TextField", "HtmlField", "MarkdownField", "NumericField", "BooleanField", "DateField", "DateTimeField",
-        "TimeField", "LinkField", "ContentPickerField", "LocalizationSetContentPickerField", "UserPickerField",
+        "TimeField", "LinkField", "LocalizationSetContentPickerField", "UserPickerField",
         "MultiTextField", "YoutubeField", "MediaField", "TaxonomyField", "GeoPointField",
     ];
 

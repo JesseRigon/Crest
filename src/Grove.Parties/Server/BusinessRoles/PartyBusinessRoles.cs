@@ -14,6 +14,7 @@ using Grove.Roles;
 using Microsoft.Extensions.DependencyInjection;
 using YesSql;
 using YesSql.Services;
+using Grove.Indexing;
 
 namespace Grove.Parties.BusinessRoles;
 
@@ -87,11 +88,11 @@ public sealed class PartyDerivedRoleProvider(
         }
 
         var partyIds = parties.ToArray();
-        var rows = await session.QueryIndex<ContentPickerFieldIndex>(index =>
+        var rows = await session.QueryIndex<OptionPickerFieldIndex>(index =>
                 index.ContentField == PartyField &&
                 index.Published &&
                 index.ContentType.IsIn(roleTypes) &&
-                index.SelectedContentItemId.IsIn(partyIds))
+                index.SelectedId.IsIn(partyIds))
             .ListAsync(cancellationToken);
 
         var definitions = services.GetRequiredService<IContentDefinitionManager>();
@@ -108,7 +109,7 @@ public sealed class PartyDerivedRoleProvider(
             // A role counts only through its own base: a business role through the
             // organization acted for, a person role through the person.
             var roleBase = bases.GetValueOrDefault(row.ContentType);
-            var isPersonRow = row.SelectedContentItemId == personId;
+            var isPersonRow = row.SelectedId == personId;
             if ((roleBase == PartyRoleBase.Organization && isPersonRow) || (roleBase == PartyRoleBase.Person && !isPersonRow))
             {
                 continue;
@@ -120,7 +121,7 @@ public sealed class PartyDerivedRoleProvider(
             }
             else
             {
-                grants.Add(new DerivedRoleGrant(row.ContentType, $"{row.ContentType}, member of {titles.GetValueOrDefault(row.SelectedContentItemId) ?? row.SelectedContentItemId}", row.SelectedContentItemId, row.ContentItemId));
+                grants.Add(new DerivedRoleGrant(row.ContentType, $"{row.ContentType}, member of {titles.GetValueOrDefault(row.SelectedId) ?? row.SelectedId}", row.SelectedId, row.ContentItemId));
             }
         }
 

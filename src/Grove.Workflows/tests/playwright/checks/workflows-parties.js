@@ -77,7 +77,7 @@ module.exports = async function run(page, ctx) {
     const person = await call('POST', `${ctx.baseUrl}/api/grove/content-items`, { contentType: 'Person', displayText: `Playwright role party ${stamp}`, publish: true });
     const personId = person.json?.contentItemId;
     if (personId) created.items.push(personId);
-    const role = await call('POST', `${ctx.baseUrl}/api/grove/content-items`, { contentType: 'SampleRole', displayText: `Playwright sample role ${stamp}`, publish: true, content: { SampleRole: { Party: { ContentItemIds: [personId] } } } });
+    const role = await call('POST', `${ctx.baseUrl}/api/grove/content-items`, { contentType: 'SampleRole', displayText: `Playwright sample role ${stamp}`, publish: true, content: { SampleRole: { Party: { SelectedIds: [personId] } } } });
     const roleId = role.json?.contentItemId;
 
     const createdRun = roleId ? await instancesFor(onCreated.id, roleId) : null;

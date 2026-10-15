@@ -19,7 +19,6 @@ public sealed class Startup : StartupBase
 
         services.AddObjectGraphType<LinkField, LinkFieldQueryObjectType>();
         services.AddObjectGraphType<HtmlField, HtmlFieldQueryObjectType>();
-        services.AddObjectGraphType<ContentPickerField, ContentPickerFieldQueryObjectType>();
         services.AddObjectGraphType<UserPickerField, UserPickerFieldQueryObjectType>();
     }
 }

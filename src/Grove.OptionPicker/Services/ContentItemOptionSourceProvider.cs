@@ -1,10 +1,19 @@
 using System.Globalization;
+using System.Text.Encodings.Web;
 using System.Text.Json.Dynamic;
 using System.Text.Json.Nodes;
+using Fluid;
+using Fluid.Values;
+using Grove.Contents;
+using Grove.Liquid;
+using Grove.Models;
 using Grove.Settings;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 using Grove.ContentFields.Indexing.SQL;
 using Grove.ContentManagement;
 using Grove.ContentManagement.Metadata;
+using Grove.ContentManagement.Metadata.Models;
 using Grove.ContentManagement.Records;
 using Grove.Access;
 using Grove.Data.Scoping;
@@ -14,9 +23,13 @@ using YesSql.Services;
 namespace Grove.Services;
 
 /// <summary>
-/// Exposes content items of a given type as a picker source: "contentitem:Customer".
-/// This is the source behind entity dropdowns (customers, vendors, sites) as opposed
-/// to the fixed named choices an Content part list holds.
+/// Exposes content items as a picker source: of one type ("contentitem:Customer"), of several
+/// types and stereotypes ("contentitem:Article,@Widget") or of every type without a stereotype
+/// ("contentitem:*"); see <see cref="ContentItemSourceScope"/>. This is the source behind entity
+/// dropdowns (customers, vendors, sites) and every content item reference, as opposed to the
+/// fixed named choices a content part list holds. Labels can come from a Liquid title pattern,
+/// lookups carry edit links where the caller may edit, and the source offers a create link per
+/// allowed creatable type the caller may create.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -43,8 +56,62 @@ public sealed class ContentItemOptionSourceProvider(
     ISession session,
     ICallerContextAccessor callerAccessor,
     IScopeSetProvider scopes,
-    IContentDefinitionManager contentDefinitionManager) : IOptionSourceProvider
+    IContentDefinitionManager contentDefinitionManager,
+    IServiceProvider services) : IOptionSourceProvider, IOptionSourceCreateLinks
 {
+    /// <summary>The content types a qualifier names, in its order: the listed types, the types
+    /// with a listed stereotype, or every type without a stereotype.</summary>
+    private async Task<IReadOnlyList<string>> ResolveTypesAsync(string qualifier)
+    {
+        var scope = ContentItemSourceScope.Parse(qualifier);
+        if (scope.IsEmpty)
+        {
+            return [];
+        }
+
+        if (scope.Stereotypes.Count == 0 && !scope.AllTypes)
+        {
+            return scope.Types;
+        }
+
+        var definitions = await contentDefinitionManager.ListTypeDefinitionsAsync();
+        return [.. definitions
+            .Where(type => scope.AllTypes
+                ? !type.HasStereotype()
+                : scope.Types.Contains(type.Name, StringComparer.Ordinal)
+                    || (type.TryGetStereotype(out var stereotype) && scope.Stereotypes.Contains(stereotype, StringComparer.Ordinal)))
+            .Select(type => type.Name)];
+    }
+
+    public async Task<IReadOnlyList<OptionCreateLink>> GetCreateLinksAsync(string qualifier, CancellationToken cancellationToken = default)
+    {
+        var user = services.GetService<Microsoft.AspNetCore.Http.IHttpContextAccessor>()?.HttpContext?.User;
+        if (user is null)
+        {
+            return [];
+        }
+
+        var contentManager = services.GetRequiredService<IContentManager>();
+        var authorization = services.GetRequiredService<IAuthorizationService>();
+        var links = new List<OptionCreateLink>();
+        foreach (var name in await ResolveTypesAsync(qualifier))
+        {
+            var type = await contentDefinitionManager.GetTypeDefinitionAsync(name);
+            if (type is null || !type.IsCreatable())
+            {
+                continue;
+            }
+
+            var probe = await contentManager.NewAsync(type.Name);
+            if (await authorization.AuthorizeAsync(user, CommonPermissions.EditContent, probe))
+            {
+                links.Add(new OptionCreateLink("New " + type.DisplayName, $"Contents/ContentTypes/{Uri.EscapeDataString(type.Name)}/Create"));
+            }
+        }
+
+        return links;
+    }
+
     /// <summary>The caller's content scope, from the one scope set: what this USER may see,
     /// as opposed to what the dropdown is configured to offer.</summary>
     private async Task<ScopeRule> ScopeAsync(CancellationToken cancellationToken)
@@ -60,7 +127,7 @@ public sealed class ContentItemOptionSourceProvider(
         return (await scopes.GetAsync(caller, cancellationToken)).Require(nameof(ContentItemIndex));
     }
 
-    public const string ProviderKey = "contentitem";
+    public const string ProviderKey = OptionSourceKeys.ContentItemProvider;
 
     public string Key => ProviderKey;
 
@@ -96,10 +163,15 @@ public sealed class ContentItemOptionSourceProvider(
 
     public async Task<IReadOnlyList<OptionRow>> QueryAsync(OptionSourceQuery query, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(query.Qualifier))
+        var types = await ResolveTypesAsync(query.Qualifier);
+        if (types.Count == 0)
         {
             return [];
         }
+
+        // Field: paths resolve against one type's definition; over several types they are
+        // matched in memory.
+        var single = types.Count == 1 ? types[0] : null;
 
         // Authorization BEFORE configuration: what this user may see bounds what the
         // dropdown may offer, never the other way round.
@@ -119,7 +191,7 @@ public sealed class ContentItemOptionSourceProvider(
         // tables instead of being applied after paging.
         var sortColumns = query.SortColumns ?? [];
         var targets = await ResolveFieldTargetsAsync(
-            query.Qualifier,
+            single,
             plan.Residual.Select(filter => filter.Path).Concat(sortColumns));
 
         var sortPlan = PlanSqlSort(sortColumns, targets);
@@ -129,10 +201,10 @@ public sealed class ContentItemOptionSourceProvider(
         var promotion = PlanFieldFilterPromotion(plan.Residual, targets, reservedKinds);
         var residual = promotion.Remaining;
 
-        var contentQuery = BuildQuery(query.Qualifier, plan.Indexed, query.SearchText, scope);
+        var contentQuery = BuildQuery(types, plan.Indexed, query.SearchText, scope);
         var executable = ApplyPromotedFilters(
-            ApplySqlSort(contentQuery, query.Qualifier, sortPlan),
-            query.Qualifier,
+            ApplySqlSort(contentQuery, single ?? types[0], sortPlan),
+            single ?? types[0],
             promotion.Promoted);
 
         var items = await executable
@@ -142,7 +214,8 @@ public sealed class ContentItemOptionSourceProvider(
             .Take(residual.Count == 0 ? query.Take : query.Take * PageOversampleFactor)
             .ListAsync();
 
-        var rows = items.Select(item => ToRow(item, query.Columns));
+        var titles = await RenderTitlesAsync(items, query.TitlePattern);
+        var rows = items.Select(item => ToRow(item, query.Columns, titles));
 
         if (residual.Count > 0)
         {
@@ -163,9 +236,14 @@ public sealed class ContentItemOptionSourceProvider(
         return [.. rows];
     }
 
-    public async Task<IReadOnlyList<OptionRow>> GetByIdsAsync(string qualifier, IReadOnlyList<string> ids, IReadOnlyList<string> columns, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<OptionRow>> GetByIdsAsync(string qualifier, IReadOnlyList<string> ids, IReadOnlyList<string> columns, CancellationToken cancellationToken = default) =>
+        GetByIdsAsync(new OptionSourceLookup(qualifier, ids, columns), cancellationToken);
+
+    public async Task<IReadOnlyList<OptionRow>> GetByIdsAsync(OptionSourceLookup lookup, CancellationToken cancellationToken = default)
     {
-        if (ids.Count == 0 || string.IsNullOrWhiteSpace(qualifier))
+        var ids = lookup.Ids;
+        var types = ids.Count == 0 ? [] : await ResolveTypesAsync(lookup.Qualifier);
+        if (types.Count == 0)
         {
             return [];
         }
@@ -184,7 +262,7 @@ public sealed class ContentItemOptionSourceProvider(
         // store evaluates.
         var items = await session
             .Query<ContentItem, ContentItemIndex>(index =>
-                index.ContentItemId.IsIn(ids) && index.ContentType == qualifier && index.Latest)
+                index.ContentItemId.IsIn(ids) && index.ContentType.IsIn(types) && index.Latest)
             .Where(ScopeExpressions.ToPredicate<ContentItemIndex>(scope))
             .ListAsync();
 
@@ -199,7 +277,51 @@ public sealed class ContentItemOptionSourceProvider(
         // the record were merely unnamed. Missing data is honest; fabricated data is
         // not. The referencing document is then itself in violation and its own
         // scope check drops it - see OptionSourceReferenceGuard.
-        return [.. items.Select(item => ToRow(item, columns))];
+        var titles = await RenderTitlesAsync(items, lookup.TitlePattern);
+        var rows = new List<OptionRow>(items.Count());
+        var user = lookup.IncludeEditUrls
+            ? services.GetService<Microsoft.AspNetCore.Http.IHttpContextAccessor>()?.HttpContext?.User
+            : null;
+        var authorization = user is null ? null : services.GetRequiredService<IAuthorizationService>();
+
+        // In the order the ids were asked for: a multiple selection is ordered.
+        var byId = items.ToDictionary(item => item.ContentItemId, StringComparer.Ordinal);
+        foreach (var id in ids.Distinct(StringComparer.Ordinal))
+        {
+            if (!byId.TryGetValue(id, out var item))
+            {
+                continue;
+            }
+
+            var row = ToRow(item, lookup.Columns, titles);
+            if (authorization is not null && await authorization.AuthorizeAsync(user!, CommonPermissions.EditContent, item))
+            {
+                row = row with { EditUrl = $"Contents/ContentItems/{Uri.EscapeDataString(item.ContentItemId)}/Edit" };
+            }
+
+            rows.Add(row);
+        }
+
+        return rows;
+    }
+
+    /// <summary>Each item's label from the attachment's Liquid title pattern (in the item's
+    /// culture, with <c>Model.ContentItem</c> and <c>ContentItem</c> bound), or none.</summary>
+    internal async Task<IReadOnlyDictionary<string, string>?> RenderTitlesAsync(IEnumerable<ContentItem> items, string? pattern)
+    {
+        if (string.IsNullOrWhiteSpace(pattern) || services.GetService<ILiquidTemplateManager>() is not { } liquid)
+        {
+            return null;
+        }
+
+        var titles = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var item in items)
+        {
+            titles[item.ContentItemId] = (await liquid.RenderStringAsync(pattern, NullEncoder.Default, item,
+                new Dictionary<string, FluidValue> { [nameof(ContentItem)] = new ObjectValue(item) })).Trim();
+        }
+
+        return titles;
     }
 
     // Residual filters are matched after the query, so the page has to be drawn from a
@@ -209,13 +331,13 @@ public sealed class ContentItemOptionSourceProvider(
     private const int PageOversampleFactor = 4;
 
     private IQuery<ContentItem, ContentItemIndex> BuildQuery(
-        string contentType,
+        IReadOnlyList<string> contentTypes,
         IReadOnlyList<ResolvedOptionFilter> indexed,
         string? searchText,
         ScopeRule scope)
     {
         var query = session.Query<ContentItem, ContentItemIndex>(index =>
-            index.ContentType == contentType && index.Latest);
+            index.ContentType.IsIn(contentTypes) && index.Latest);
 
         // The scope predicate is AND-ed on and cannot be opted out of by any attachment:
         // ownership, assignment and organization, in one rule, pushed into SQL.
@@ -297,7 +419,7 @@ public sealed class ContentItemOptionSourceProvider(
     /// to null and stays in-memory.
     /// </summary>
     private async Task<IReadOnlyDictionary<string, FieldIndexTarget?>> ResolveFieldTargetsAsync(
-        string qualifier, IEnumerable<string> paths)
+        string? qualifier, IEnumerable<string> paths)
     {
         var results = new Dictionary<string, FieldIndexTarget?>(StringComparer.OrdinalIgnoreCase);
         Grove.ContentManagement.Metadata.Models.ContentTypeDefinition? type = null;
@@ -312,7 +434,7 @@ public sealed class ContentItemOptionSourceProvider(
 
             if (!typeLoaded)
             {
-                type = await contentDefinitionManager.GetTypeDefinitionAsync(qualifier);
+                type = qualifier is null ? null : await contentDefinitionManager.GetTypeDefinitionAsync(qualifier);
                 typeLoaded = true;
             }
 
@@ -555,7 +677,7 @@ public sealed class ContentItemOptionSourceProvider(
         DateTime.TryParse(value, out var parsed) ? parsed.ToUniversalTime() : DateTime.MinValue;
 
     // Internal for tests: the projection is what a picker actually displays.
-    internal static OptionRow ToRow(ContentItem item, IReadOnlyList<string> columns)
+    internal static OptionRow ToRow(ContentItem item, IReadOnlyList<string> columns, IReadOnlyDictionary<string, string>? titles = null)
     {
         var requested = columns is { Count: > 0 } ? columns : [OptionRowPaths.DisplayText];
         var values = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
@@ -571,7 +693,7 @@ public sealed class ContentItemOptionSourceProvider(
         {
             values[column] = column switch
             {
-                OptionRowPaths.DisplayText => item.DisplayText,
+                OptionRowPaths.DisplayText => titles?.GetValueOrDefault(item.ContentItemId) ?? item.DisplayText,
                 OptionRowPaths.ContentType => item.ContentType,
                 OptionRowPaths.Owner => item.Owner,
                 OptionRowPaths.Author => item.Author,

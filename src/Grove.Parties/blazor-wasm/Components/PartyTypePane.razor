@@ -213,7 +213,7 @@
             }
 
             var value = field["Text"]?.ToString() ?? field["Value"]?.ToString();
-            if (value is null && field["ContentItemIds"] is JsonArray ids)
+            if (value is null && field["SelectedIds"] is JsonArray ids)
             {
                 value = string.Join(", ", ids.Select(id => id?.ToString()));
             }

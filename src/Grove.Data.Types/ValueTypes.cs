@@ -46,7 +46,6 @@ public static class ValueTypes
         new("Html", ValueTypeKinds.String, ValueTypeKinds.String, ["HtmlField", "HtmlBodyPart"], "HtmlEditor", "RichText", typeof(string), "Rich text"),
         new("Markdown", ValueTypeKinds.String, ValueTypeKinds.String, ["MarkdownField", "MarkdownBodyPart"], "MarkdownEditor", "MarkdownBodyPart", typeof(string), "Markdown"),
         new("Link", ValueTypeKinds.Object, ValueTypeKinds.Object, ["LinkField"], "LinkFieldEditor", "Link", null, "Link"),
-        new("ContentItems", ValueTypeKinds.Array, ValueTypeKinds.Array, ["ContentPickerField"], "ContentPickerFieldEditor", null, typeof(string[]), "Content items"),
         new("Options", ValueTypeKinds.Array, ValueTypeKinds.Array, ["OptionPickerField"], "OptionPickerFieldEditor", null, typeof(string[]), "Options"),
         new("Permalink", ValueTypeKinds.String, ValueTypeKinds.String, ["AutoroutePart"], "AutoroutePartEditor", "Link", typeof(string), "Permalink"),
     ];

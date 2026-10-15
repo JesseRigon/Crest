@@ -2,6 +2,7 @@ using Grove.ContentFields.Fields;
 using Grove.ContentFields.Relationships;
 using Grove.ContentManagement;
 using Grove.Parties.Constants;
+using Grove.Fields;
 
 namespace Grove.Parties.Services;
 
@@ -50,8 +51,8 @@ public sealed class ParentOrganizationRelationshipHandler(IContentManager conten
                 }
 
                 var next = organization.Get<ContentPart>(PartiesConstants.ContentTypes.Organization)
-                    ?.Get<ContentPickerField>(PartiesConstants.OrganizationFields.ParentOrganization)
-                    ?.ContentItemIds.FirstOrDefault();
+                    ?.Get<OptionPickerField>(PartiesConstants.OrganizationFields.ParentOrganization)
+                    ?.SelectedIds.FirstOrDefault();
                 if (string.Equals(next, self, StringComparison.Ordinal))
                 {
                     context.Fail($"'{organization.DisplayText}' is already below this organization; it cannot be its parent.");

@@ -54,6 +54,8 @@
     <ProjectReference Include="..\Grove.ContentTypes\Grove.ContentTypes.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Cors\Grove.Cors.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.CustomSettings\Grove.CustomSettings.csproj" PrivateAssets="none" />
+    <!-- Content Part Lists (a Grove.Contents feature) ship their global sets through it. -->
+    <ProjectReference Include="..\Grove.Data.Global\Grove.Data.Global.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.DataProtection.Azure\Grove.DataProtection.Azure.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Deployment\Grove.Deployment.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Deployment.Remote\Grove.Deployment.Remote.csproj" PrivateAssets="none" />
@@ -94,6 +96,8 @@
     <ProjectReference Include="..\Grove.Notifications\Grove.Notifications.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.OpenApi\Grove.OpenApi.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.OpenId\Grove.OpenId.csproj" PrivateAssets="none" />
+    <!-- One field type for picking (content items, users, lists, ...): every host gets it. -->
+    <ProjectReference Include="..\Grove.OptionPicker\Grove.OptionPicker.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Placements\Grove.Placements.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.PublishLater\Grove.PublishLater.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Queries\Grove.Queries.csproj" PrivateAssets="none" />

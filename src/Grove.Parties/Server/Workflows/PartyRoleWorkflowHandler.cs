@@ -5,6 +5,7 @@ using Grove.Workflows;
 using Grove.ContentFields.Fields;
 using Grove.ContentManagement;
 using Grove.ContentManagement.Handlers;
+using Grove.Fields;
 
 namespace Grove.Parties.Workflows;
 
@@ -26,7 +27,7 @@ public sealed class PartyRoleWorkflowHandler(PartyTypeCatalog catalog, IWorkflow
             return;
         }
 
-        var partyId = item.Get<ContentPart>(item.ContentType)?.Get<ContentPickerField>("Party")?.ContentItemIds?.FirstOrDefault();
+        var partyId = item.Get<ContentPart>(item.ContentType)?.Get<OptionPickerField>("Party")?.SelectedIds?.FirstOrDefault();
 
         await triggers.PublishAsync(trigger, item.ContentItemId, new Dictionary<string, object>
         {

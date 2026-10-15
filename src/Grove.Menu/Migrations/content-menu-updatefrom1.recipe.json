@@ -46,17 +46,17 @@
           },
           "ContentPartFieldDefinitionRecords": [
             {
-              "FieldName": "ContentPickerField",
+              "FieldName": "OptionPickerField",
               "Name": "SelectedContentItem",
               "Settings": {
                 "ContentPartFieldSettings": {
                   "DisplayName": "Selected Content Item",
                   "Position": "0"
                 },
-                "ContentPickerFieldSettings": {
+                "OptionPickerFieldSettings": {
+                  "SourceKey": "contentitem:*",
                   "Required": true,
-                  "DisplayAllContentTypes": true,
-                  "DisplayedContentTypes": []
+                  "Multiple": false
                 }
               }
             }

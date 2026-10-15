@@ -17,7 +17,6 @@ using Grove.Lucene.Handlers;
 using Grove.Lucene.Deployment;
 using Grove.Lucene.Recipes;
 using Grove.Lucene.Services;
-using Grove.Lucene.Settings;
 using Grove.Modules;
 using Grove.Navigation;
 using Grove.Queries;
@@ -115,16 +114,6 @@ public sealed class DeploymentStartup : StartupBase
         services.AddDeployment<LuceneIndexDeploymentSource, LuceneIndexDeploymentStep>();
         services.AddDeployment<LuceneIndexRebuildDeploymentSource, LuceneIndexRebuildDeploymentStep>();
         services.AddDeployment<LuceneIndexResetDeploymentSource, LuceneIndexResetDeploymentStep>();
-    }
-}
-
-[Feature("Grove.Search.Lucene.ContentPicker")]
-public sealed class LuceneContentPickerStartup : StartupBase
-{
-    public override void ConfigureServices(IServiceCollection services)
-    {
-        services.AddScoped<IContentPickerResultProvider, LuceneContentPickerResultProvider>();
-        services.AddShapeAttributes<LuceneContentPickerShapeProvider>();
     }
 }
 

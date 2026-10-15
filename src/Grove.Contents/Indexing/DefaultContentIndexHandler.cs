@@ -42,7 +42,7 @@ public class DefaultContentIndexHandler : IDocumentIndexHandler
             contentItem.ModifiedUtc,
             DocumentIndexOptions.Keyword | DocumentIndexOptions.Store);
 
-        // We need to store because of ContentPickerResultProvider(s)
+        // Stored, so a query can return the value without loading the item
         context.DocumentIndex.Set(
             ContentIndexingConstants.PublishedKey,
             contentItem.Published,

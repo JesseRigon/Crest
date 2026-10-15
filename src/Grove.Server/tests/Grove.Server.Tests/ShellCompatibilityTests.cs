@@ -35,16 +35,18 @@ public class ShellCompatibilityTests
         Theme(GroveMember, ["member", ThemeBuckets.GroveBlazorTag]);
     }
 
-    // An assembly belongs to the module with the longest matching id, never to a shorter
-    // prefix (the always-enabled "Grove" must not inherit "Grove.Members"' client).
+    // An assembly belongs to the module or feature with the longest matching id, never to a
+    // shorter prefix (the always-enabled "Grove" must not inherit "Grove.Members"' client, and
+    // a library named for a feature belongs to that feature, not to its module).
     [Theory]
     [InlineData("Grove.Members.Member.BlazorWasm", "Grove.Members")]
-    [InlineData("Grove.ContentPartLists.BlazorWasm", "Grove.ContentPartLists")]
+    [InlineData("Grove.Contents.PartLists.BlazorWasm", "Grove.Contents.PartLists")]
+    [InlineData("Grove.Contents.BlazorWasm", "Grove.Contents")]
     [InlineData("Grove.Other.BlazorWasm", "Grove")]
     [InlineData("Acme.Ledger.BlazorWasm", null)]
     public void ClientAssemblyBelongsToTheLongestMatchingModule(string assemblyName, string? expected)
     {
-        string[] modules = ["Grove", "Grove.Members", "Grove.ContentPartLists", "Grove.Member"];
+        string[] modules = ["Grove", "Grove.Members", "Grove.Contents", "Grove.Contents.PartLists", "Grove.Member"];
 
         Assert.Equal(expected, Grove.Routing.ModuleClientAssemblies.OwningExtensionId(assemblyName, modules));
     }

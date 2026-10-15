@@ -31,9 +31,6 @@ public sealed class Startup : StartupBase
 
         services.AddHtmlServices();
         
-        // The content picker's candidates for the native editor.
-        services.AddApiContributor<Api.ContentPickerApi>();
-
         services.Configure<TemplateOptions>(o =>
         {
             o.MemberAccessStrategy.Register<BooleanField>();
@@ -56,8 +53,6 @@ public sealed class Startup : StartupBase
             o.MemberAccessStrategy.Register<DisplayMultiTextFieldViewModel>();
             o.MemberAccessStrategy.Register<UserPickerField>();
             o.MemberAccessStrategy.Register<DisplayUserPickerFieldViewModel>();
-            o.MemberAccessStrategy.Register<ContentPickerField>();
-            o.MemberAccessStrategy.Register<DisplayContentPickerFieldViewModel>();
         });
 
         // Boolean Field
@@ -126,17 +121,6 @@ public sealed class Startup : StartupBase
 
         services.AddScoped<IContentFieldIndexHandler, YoutubeFieldIndexHandler>();
 
-        // Content picker field
-        services.AddContentField<ContentPickerField>()
-            .UseDisplayDriver<ContentPickerFieldDisplayDriver>()
-            .AddHandler<ContentPickerFieldHandler>();
-
-        services.AddScoped<IContentFieldIndexHandler, ContentPickerFieldIndexHandler>();
-        services.AddScoped<IContentPickerResultProvider, DefaultContentPickerResultProvider>();
-        // The picker's server side on every save path: allowed target types and the
-        // relationship handlers field owners register (docs/content-items.md).
-        services.AddScoped<IContentSaveGuard, ContentPickerRelationshipGuard>();
-
         // Migration, can be removed in a future release.
         services.AddDataMigration<Migrations>();
     }
@@ -147,6 +131,7 @@ public sealed class LocalizationSetContentPickerStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
+        services.AddApiContributor<Api.ContentPickerApi>();
         services.AddContentField<LocalizationSetContentPickerField>()
             .UseDisplayDriver<LocalizationSetContentPickerFieldDisplayDriver>()
             .AddHandler<LocalizationSetContentPickerFieldHandler>();
@@ -166,7 +151,6 @@ public sealed class IndexingStartup : StartupBase
         services.AddScopedIndexProvider<NumericFieldIndexProvider>();
         services.AddScopedIndexProvider<DateTimeFieldIndexProvider>();
         services.AddScopedIndexProvider<DateFieldIndexProvider>();
-        services.AddScopedIndexProvider<ContentPickerFieldIndexProvider>();
         services.AddScopedIndexProvider<TimeFieldIndexProvider>();
         services.AddScopedIndexProvider<LinkFieldIndexProvider>();
         services.AddScopedIndexProvider<HtmlFieldIndexProvider>();

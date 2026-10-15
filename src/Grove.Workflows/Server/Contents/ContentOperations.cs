@@ -339,7 +339,6 @@ public static class ContentFieldValues
         ["BooleanField"] = (typeof(bool?), "Value"),
         ["DateField"] = (typeof(DateTime?), "Value"),
         ["DateTimeField"] = (typeof(DateTime?), "Value"),
-        ["ContentPickerField"] = (typeof(IList<string>), "ContentItemIds"),
         ["UserPickerField"] = (typeof(IList<string>), "UserIds"),
         ["OptionPickerField"] = (typeof(IList<string>), "SelectedIds"),
     };

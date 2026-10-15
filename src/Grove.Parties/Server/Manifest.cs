@@ -20,7 +20,7 @@ using Grove.Modules.Manifest;
         "Grove.ContentFields.Indexing.SQL.UserPicker",
         "Grove.Title",
         "Grove.Flows",
-        "Grove.ContentPartLists",
+        "Grove.Contents.PartLists",
         "Grove.OptionPicker",
         "Grove.Regions"
     ],

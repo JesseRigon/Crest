@@ -4,6 +4,9 @@ using Grove.ContentManagement.Metadata;
 using Grove.ContentManagement.Metadata.Builders;
 using Grove.ContentManagement.Metadata.Settings;
 using Grove.ContentManagement.Metadata.Models;
+using Grove.Fields;
+using Grove.Settings;
+using Grove.Models;
 
 namespace Grove.Parties.Definitions;
 
@@ -36,18 +39,17 @@ public static class PartyRoleDefinitions
                 .WithDisplayName(displayName)
                 .WithDescription(partDescription)
                 .WithField(PartyField, field => field
-                    .OfType("ContentPickerField")
+                    .OfType("OptionPickerField")
                     .WithDisplayName(roleBase == PartyRoleBase.Organization ? "Organization" : "Person")
                     .WithDescription(roleBase == PartyRoleBase.Organization
                         ? "The organization this role belongs to (an individual is an Individual organization)."
                         : "The person this role belongs to.")
                     .WithPosition("0")
-                    .MergeSettings<ContentPickerFieldSettings>(settings =>
+                    .MergeSettings<OptionPickerFieldSettings>(settings =>
                     {
                         settings.Multiple = false;
-                        settings.DisplayAllContentTypes = false;
                         settings.Required = true;
-                        settings.DisplayedContentTypes = [baseType];
+                        settings.SourceKey = OptionSourceKeys.ForContentItems([baseType]);
                     }))
                 .WithField("Number", field => field
                     .OfType("TextField")
@@ -96,7 +98,7 @@ public static class PartyRoleBases
         var part = (await definitions.GetTypeDefinitionAsync(roleContentType))?.Parts
             .FirstOrDefault(candidate => candidate.Name == roleContentType);
         var field = part?.PartDefinition.Fields.FirstOrDefault(candidate => candidate.Name == PartyRoleDefinitions.PartyField);
-        var types = field?.GetSettings<ContentPickerFieldSettings>().DisplayedContentTypes ?? [];
+        var types = field?.GetSettings<OptionPickerFieldSettings>().ContentTypes() ?? [];
         return types switch
         {
             [PartiesConstants.ContentTypes.Organization] => PartyRoleBase.Organization,

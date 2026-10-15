@@ -9,8 +9,7 @@ Left out on purpose, because a question is still open against them: the connecti
 Queries API (queries.md Q6, Q7; workflows.md "what the platform offers for connections"),
 audit feeds at volume (A4), the designer UI and its move (blazordesigner.md, workflows.md W6),
 design systems as content (part vs fields), cross-tenant translation suggestions, the global
-editing UI (which UI first), the geocoder, approvals, the option picker's UI component home
-(server.md § 3), Grove.Rules, Grove.ReverseProxy and Grove.Https (MVC/views.md › Module deletions
+editing UI (which UI first), the geocoder, approvals, Grove.Rules, Grove.ReverseProxy and Grove.Https (MVC/views.md › Module deletions
 and keeps), theme storage and switching
 (shells-and-themes.md), shells on their own hostnames, user settings, and the parked security audit and sandboxed custom elements (blazor-display.md).
 
@@ -171,6 +170,9 @@ Status: ☐ open, ◐ partial, ☑ done.
 
 - ☑ Picker relationship handlers; hierarchical Category; Fluid sandboxing with data scope
 - ☑ The option picker field family to Grove.OptionPicker, contracts and DTOs in Grove.OptionPicker.Abstractions; field visibility in Grove.ContentTypes over `IFieldComparisonValueResolver` (server.md § 3, S2)
+- ☑ Content Part Lists as the `Grove.Contents.PartLists` feature of Grove.Contents (its page the `Grove.Contents.PartLists.BlazorWasm` library, served while the feature is on); the option sources API gated by Grove.OptionPicker's `QueryOptionSources` (content-items.md, server.md § 3)
+- ☑ The option picker's UI in its module's client library, `Grove.OptionPicker.BlazorWasm`: the `OptionPicker` component and the `OptionPickerField` editor facet in the component registry (server.md § 3)
+- ☑ ContentPickerField merged into the option picker: the content items source gained types/stereotypes/all, the Liquid title pattern, edit and create links and ordered selection; definitions and stored values converted by migration and on recipe import; the display, GraphQL, Liquid, index, save guard, workflows, Menu, Parties and Fruitful moved over; the field, its settings, drivers, index, result providers (Default, Lucene, Elasticsearch, and their `*.ContentPicker` features) and the content-items endpoint of `ContentPickerApi` deleted (content-items.md › Option pickers, server.md § 3)
 
 ## Architecture (architecture.md)
 

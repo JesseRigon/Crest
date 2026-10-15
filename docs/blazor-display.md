@@ -533,7 +533,7 @@ tree inline, but the route, the bucket and the authorization are the page's.
   item's own tree (`DisplayTreePart`, below) or a layer rule.
 - **Field and part displays are components** bound by shape name: every content field (`TextField`
   and its `Header` display mode, `HtmlField`, `MarkdownField`, `NumericField`, `BooleanField`,
-  `DateField`, `DateTimeField`, `TimeField`, `LinkField`, `ContentPickerField`,
+  `DateField`, `DateTimeField`, `TimeField`, `LinkField`, `OptionPickerField`,
   `LocalizationSetContentPickerField`, `UserPickerField` in both display modes, `MultiTextField`,
   `YoutubeField`, `MediaField`, `TaxonomyField`, `GeoPointField`), `TitlePart` (with its summary),
   `HtmlBodyPart`, `MarkdownBodyPart` (a sanitized markup parameter), `BagPart` and `ListPart`
@@ -564,8 +564,9 @@ tree inline, but the route, the bucket and the authorization are the page's.
   editor tree as shapes (`ContentEditorTreeBuilder`, `GET api/grove/content-items/{id}/editor`,
   `new-{type}` for a new item), so a `ContentEditor__{Type}` template lays a type's editor out.
   Editor components: text, number, yes/no, date, option picker, HTML, Markdown, link, title,
-  permalink; the content picker (the held items, a search over the field's candidates, a create
-  link per creatable type); `BagPartEditor` (each contained item through its type's editor tree;
+  permalink; the option picker field's editor (Grove.OptionPicker's client library; for content
+  items the selection in order with edit links, a search by title, a create link per allowed
+  creatable type); `BagPartEditor` (each contained item through its type's editor tree;
   add from the allowed types, remove, reorder), `UserPickerFieldEditor` (searching
   `api/grove/content-fields/users`); `TaxonomyPartEditor` (the term tree, each term through its
   type's editor tree) and `TaxonomyFieldEditor` (check boxes, radios or tags); `ListPartEditor`

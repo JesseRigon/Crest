@@ -14,6 +14,15 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Grove.Tests" />
+    <InternalsVisibleTo Include="Grove.Contents.PartLists.Tests" />
+  </ItemGroup>
+
+  <!-- The Content Part Lists page is its own WASM library (blazor-wasm/,
+       Grove.Contents.PartLists.BlazorWasm); its tests are tests/. -->
+  <ItemGroup>
+    <Compile Remove="blazor-wasm/**/*.cs;tests/**/*.cs" />
+    <Content Remove="blazor-wasm/**;tests/**" />
+    <None Remove="blazor-wasm/**;tests/**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -50,6 +59,11 @@
     <ProjectReference Include="..\Grove.Settings\Grove.Settings.csproj" />
     <ProjectReference Include="..\Grove.Sitemaps.Abstractions\Grove.Sitemaps.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Users.Abstractions\Grove.Users.Abstractions.csproj" />
+    <!-- The Grove.Contents.PartLists feature: part lists plug into the option picker as a
+         source through its abstractions only (Grove.OptionPicker references this module),
+         and ship shared global sets through Grove.Data.Global. -->
+    <ProjectReference Include="..\Grove.OptionPicker.Abstractions\Grove.OptionPicker.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Global\Grove.Data.Global.csproj" />
   </ItemGroup>
 
 </Project>

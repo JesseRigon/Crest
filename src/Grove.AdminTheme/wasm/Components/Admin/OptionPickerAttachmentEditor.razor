@@ -49,8 +49,12 @@
                     }
                     else if (ProviderKey == "contentitem")
                     {
-                        <GroveFormField Text="@T["Content type"]">
-                            <GroveTextBox @bind-Value="Qualifier" Placeholder="@T["e.g. Customer"]" Change="@(_ => OnSourceChangedAsync())" Disabled="@IsBusy" />
+                        @* Types, @Stereotype entries, or * for every type without a stereotype. *@
+                        <GroveFormField Text="@T["Content types"]">
+                            <GroveTextBox @bind-Value="Qualifier" Placeholder="@T["e.g. Customer,Vendor or @Widget or *"]" Change="@(_ => OnSourceChangedAsync())" Disabled="@IsBusy" Style="width: 18rem;" data-testid="picker-content-types" />
+                        </GroveFormField>
+                        <GroveFormField Text="@T["Title pattern (Liquid, optional)"]">
+                            <GroveTextBox @bind-Value="Settings.TitlePattern" Placeholder="{{ Model.ContentItem | display_text }}" Disabled="@IsBusy" Style="width: 20rem;" data-testid="picker-title-pattern" />
                         </GroveFormField>
                     }
                 </GroveStack>

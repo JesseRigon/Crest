@@ -133,7 +133,9 @@ moduleNames.ExceptWith(extra);
 // on the public site never downloads the admin UI (docs/shells-and-themes.md › Theme UIs load
 // per shell). One marked [GroveEager] stays eager.
 var themeClients = shellOf.Keys.Where(n => !moduleNames.Contains(n) && !eagerMarked.Contains(n)).OrderBy(n => n).ToArray();
-var lazyRoots = new HashSet<string>(moduleNames.Where(n => !jsComponentAssemblies.Contains(n)).Concat(extra).Concat(themeClients), StringComparer.OrdinalIgnoreCase);
+// A module library marked [GroveEager] stays eager too (the option picker's field editor, which
+// every content editor needs before any of its routes loads).
+var lazyRoots = new HashSet<string>(moduleNames.Where(n => !jsComponentAssemblies.Contains(n) && !eagerMarked.Contains(n)).Concat(extra).Concat(themeClients), StringComparer.OrdinalIgnoreCase);
 // The eager roots: what boots. The app assembly itself cannot be one in practice: this runs
 // before the app is compiled, so it is not among the references read above and a walk from
 // it reaches nothing. So the boot path is named by [assembly: GroveEager] (the shell runtime,

@@ -171,7 +171,6 @@ public sealed class ContentFieldValueCopier(IContentDefinitionManager definition
         {
             TextFieldType => string.IsNullOrEmpty(field["Text"]?.GetValue<string>()),
             "OptionPickerField" => field["SelectedIds"] is not JsonArray { Count: > 0 },
-            "ContentPickerField" => field["ContentItemIds"] is not JsonArray { Count: > 0 },
             "UserPickerField" => field["UserIds"] is not JsonArray { Count: > 0 },
             "TaxonomyField" => field["TermContentItemIds"] is not JsonArray { Count: > 0 },
             _ => field.All(p => p.Value is null || (p.Value is JsonArray array && array.Count == 0)),

@@ -43,7 +43,7 @@ public class UserPickerFieldIndexProvider : ContentFieldIndexProvider
                 // Lazy initialization because of ISession cyclic dependency
                 _contentDefinitionManager ??= _serviceProvider.GetRequiredService<IContentDefinitionManager>();
 
-                // Search for ContentPickerField
+                // Search for UserPickerField
                 var contentTypeDefinition = await _contentDefinitionManager.GetTypeDefinitionAsync(contentItem.ContentType);
 
                 // This can occur when content items become orphaned, particularly layer widgets when a layer is removed, before its widgets have been unpublished.

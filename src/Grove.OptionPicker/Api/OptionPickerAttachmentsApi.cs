@@ -131,6 +131,7 @@ public sealed class OptionPickerAttachmentsHandlers(
                         target.Placeholder = settings.Placeholder ?? string.Empty;
                         target.Columns = settings.Columns ?? [];
                         target.DisplayTemplate = settings.DisplayTemplate;
+                        target.TitlePattern = settings.TitlePattern;
                         target.SearchColumns = settings.SearchColumns ?? [];
                         target.SortColumns = settings.SortColumns ?? [];
                         target.Filters = settings.Filters ?? [];

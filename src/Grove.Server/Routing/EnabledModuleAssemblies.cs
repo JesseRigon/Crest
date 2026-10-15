@@ -36,10 +36,18 @@ public sealed class EnabledModuleAssemblies(
 
     private async Task<IReadOnlySet<string>> BuildAsync()
     {
-        var enabledModules = (await shellFeaturesManager.GetEnabledFeaturesAsync())
+        // A library is owned by the longest module OR feature id its name starts with: a module's
+        // own library follows the module ("Grove.Members.Member.BlazorWasm"), a library named
+        // for one feature of a module follows that feature ("Grove.Contents.PartLists.BlazorWasm").
+        var enabledFeatures = (await shellFeaturesManager.GetEnabledFeaturesAsync()).ToArray();
+        var enabledModules = enabledFeatures
             .Select(feature => feature.Extension.Id)
+            .Concat(enabledFeatures.Select(feature => feature.Id))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var extensionIds = extensionManager.GetExtensions().Select(extension => extension.Id).ToArray();
+        var extensionIds = extensionManager.GetExtensions().Select(extension => extension.Id)
+            .Concat(extensionManager.GetFeatures().Select(feature => feature.Id))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
         // A library whose module is not installed at all belongs to no enabled module and is
         // absent too: fail closed, a page nobody can enable is not served.

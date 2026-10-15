@@ -24,7 +24,6 @@
     <ProjectReference Include="../../Grove.Workflows/engine/src/modules/Grove.Workflows.Engine/Grove.Workflows.Engine.csproj" />
     <ProjectReference Include="../../Grove.Server/Grove.Server.csproj" />
     <ProjectReference Include="../../Grove.OptionPicker/Grove.OptionPicker.csproj" />
-    <ProjectReference Include="../../Grove.ContentPartLists/Grove.ContentPartLists.csproj" />
     <ProjectReference Include="../../Grove.Regions/Grove.Regions.csproj" />
   </ItemGroup>
 </Project>

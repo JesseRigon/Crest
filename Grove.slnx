@@ -7,8 +7,7 @@
   <Project Path="src/Grove.AdminTheme/wasm/Grove.AdminTheme.Client.csproj" />
   <Project Path="src/Grove.AdminTheme/client-services/Grove.AdminTheme.Client.Services.csproj" />
   <Project Path="src/Grove.Components/Grove.Components.csproj" />
-  <Project Path="src/Grove.ContentPartLists/Grove.ContentPartLists.csproj" />
-  <Project Path="src/Grove.ContentPartLists/blazor-wasm/Grove.ContentPartLists.BlazorWasm.csproj" />
+  <Project Path="src/Grove.Contents/blazor-wasm/Grove.Contents.PartLists.BlazorWasm.csproj" />
   <Project Path="src/Grove.Data.Global/Grove.Data.Global.csproj" />
   <Project Path="src/Grove.Iconify/Grove.Iconify.csproj" />
   <Project Path="src/Grove.Icons/Grove.Icons.csproj" />
@@ -26,6 +25,7 @@
   <Project Path="src/Grove.Money/Domain/Grove.Money.Domain.csproj" />
   <Project Path="src/Grove.OptionPicker/Grove.OptionPicker.csproj" />
   <Project Path="src/Grove.OptionPicker.Abstractions/Grove.OptionPicker.Abstractions.csproj" />
+  <Project Path="src/Grove.OptionPicker/blazor-wasm/Grove.OptionPicker.BlazorWasm.csproj" />
   <Project Path="src/Grove.Parties/Domain/Grove.Parties.Domain.csproj" />
   <Project Path="src/Grove.Parties/Server/Grove.Parties.csproj" />
   <Project Path="src/Grove.AuditTrail/blazor-wasm/Grove.AuditTrail.BlazorWasm.csproj" />

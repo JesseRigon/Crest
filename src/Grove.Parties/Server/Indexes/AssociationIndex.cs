@@ -52,7 +52,7 @@ public sealed class AssociationIndexProvider : IndexProvider<ContentItem>
     }
 
     private static string? First(ContentPart? part, string field) =>
-        part?.Get<ContentPickerField>(field)?.ContentItemIds.FirstOrDefault();
+        part?.Get<OptionPickerField>(field)?.SelectedIds.FirstOrDefault();
 }
 
 /// <summary>Field names on the Association part.</summary>

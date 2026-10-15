@@ -12,6 +12,8 @@ using Grove.Modules.Manifest;
         "Grove.Title",
         "Grove.Alias",
         "Grove.Recipes.Core",
+        // A content menu item picks its target through the option picker's content items source.
+        "Grove.OptionPicker",
     ],
     Category = "Navigation"
 )]

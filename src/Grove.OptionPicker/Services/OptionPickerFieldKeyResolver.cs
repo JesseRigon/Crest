@@ -11,7 +11,7 @@ namespace Grove.Services;
 public sealed class OptionPickerFieldKeyResolver(IEnumerable<IOptionSourceProvider> providers)
 {
     // "Key" is part of the provider row contract (OptionRow.Key), not something owned
-    // by any single provider - the Content part list provider moved to Grove.ContentPartLists, so
+    // by any single provider - the content part list provider is a Grove.Contents feature, so
     // the column name is spelled here rather than referenced from it.
     private static readonly string[] KeyColumn = ["Key"];
 

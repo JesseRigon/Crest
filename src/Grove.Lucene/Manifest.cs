@@ -36,10 +36,3 @@ using Grove.Modules.Manifest;
     Category = "Search"
 )]
 
-[assembly: Feature(
-    Id = "Grove.Search.Lucene.ContentPicker",
-    Name = "Lucene Content Picker",
-    Description = "Provides a Lucene content picker field editor.",
-    Dependencies = ["Grove.Search.Lucene", "Grove.ContentFields"],
-    Category = "Search"
-)]

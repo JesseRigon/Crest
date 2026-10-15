@@ -29,8 +29,7 @@
         "Grove.Contents",
         "Grove.Contents.FileContentDefinition",
         "Grove.Html",
-        "Grove.Lucene",
-        "Grove.Search.Lucene.ContentPicker"
+        "Grove.Lucene"
       ]
     },
     {

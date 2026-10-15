@@ -32,7 +32,7 @@ public sealed record GroveModel(
 
     public string GetPickerIds(string partName, string fieldName)
     {
-        var ids = ContentItem?.Content?[partName]?[fieldName]?["ContentItemIds"]?.AsArray();
+        var ids = ContentItem?.Content?[partName]?[fieldName]?["SelectedIds"]?.AsArray();
         return ids is null
             ? string.Empty
             : string.Join(", ", ids.Select(id => id?.GetValue<string>()).Where(id => !string.IsNullOrWhiteSpace(id)));

@@ -3,6 +3,7 @@ using Grove.ContentFields.Fields;
 using Grove.ContentManagement;
 using Grove.Flows.Models;
 using YesSql.Indexes;
+using Grove.Fields;
 
 namespace Grove.Parties.Indexes;
 
@@ -51,7 +52,7 @@ public sealed class PartyPositionIndexProvider : IndexProvider<ContentItem>
                     .Select(position =>
                     {
                         var part = position.Get<ContentPart>(PartiesConstants.ContentTypes.OrgPosition);
-                        var organizationId = part?.Get<ContentPickerField>("Organization")?.ContentItemIds.FirstOrDefault();
+                        var organizationId = part?.Get<OptionPickerField>("Organization")?.SelectedIds.FirstOrDefault();
                         return organizationId is null
                             ? null
                             : new PartyPositionIndex

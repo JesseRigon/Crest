@@ -63,3 +63,13 @@ using Grove.Modules.Manifest;
     Dependencies = ["Grove.Contents", "Grove.Deployment"],
     Category = "Content Management"
 )]
+
+// Content Part Lists ship with Contents but stay opt-in: consumers (parties, money, members, the
+// ERP modules) declare this feature in their own dependencies, so enabling them enables it.
+[assembly: Feature(
+    Id = "Grove.Contents.PartLists",
+    Name = "Content Part Lists",
+    Description = "Named, tenant-editable sets of options that content types can reference. Ships shared global sets (country codes, units of measure) every enabling tenant receives.",
+    Category = "Content Management",
+    Dependencies = ["Grove", "Grove.Contents", "Grove.ContentTypes", "Grove.ContentFields", "Grove.Data.Global", "Grove.OptionPicker"]
+)]

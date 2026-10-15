@@ -36,10 +36,3 @@ using Grove.Modules.Manifest;
     Category = "Search"
 )]
 
-[assembly: Feature(
-    Id = "Grove.Search.Elasticsearch.ContentPicker",
-    Name = "Elasticsearch Content Picker",
-    Description = "Provides a Elasticsearch content picker field editor.",
-    Dependencies = ["Grove.Search.Elasticsearch", "Grove.ContentFields"],
-    Category = "Search"
-)]

@@ -23,7 +23,7 @@ holds and of what is still in Grove.Server.
 ## Inventory and homes
 
 Counts are source files. "Also used by" lists modules that reference the type today
-(ContentPartLists, Parties, Workflows, Money, Regions and Members reference Grove.Server).
+(Parties, Workflows, Money, Regions and Members reference Grove.Server).
 
 ### 1. APIs and services → the declaring module
 
@@ -78,25 +78,67 @@ the same work. `IRequestAccess`, the helper every API uses, is in Grove.Server.A
 
 ### 3. The option picker → Grove.OptionPicker
 
-The option picker field family is **its own module, Grove.OptionPicker** (feature
-`Grove.OptionPicker`), since it carries its own index, settings, source providers and API, and
-other modules bind to it. The features that bind fields to option sources declare it
-(Grove.ContentPartLists, Grove.Parties, Grove.Money; Fruitful's modules through
-Grove.ContentPartLists).
+The option picker is **its own module, Grove.OptionPicker** (feature `Grove.OptionPicker`), and
+the one field type for picking: list options, users, content items, cultures, time zones and
+currencies are all option sources of `OptionPickerField`. It carries its own index, source
+providers, API and UI, and other modules bind to it. Every host gets it:
+`Grove.Application.Cms.Core.Targets` references it with `PrivateAssets="none"`
+([architecture.md](architecture.md) › Modules, features and how a module reaches the host). The
+features that bind fields to sources declare it (Grove.Parties, Grove.Money, Grove.Menu, the
+`Grove.Contents.PartLists` feature; Fruitful's modules through them).
 
 - **Grove.OptionPicker.Abstractions** (WebAssembly-safe, no framework reference): the source
-  contract (`IOptionSourceProvider`, `OptionRow`, `OptionSourceQuery`,
+  contract (`IOptionSourceProvider`, `OptionRow` with its `EditUrl`, `OptionSourceQuery` with its
+  `TitlePattern`, `OptionSourceLookup`, `IOptionSourceCreateLinks`/`OptionCreateLink`,
   `OptionSourceColumnDescriptor`, `ResolvedOptionFilter`), the picker's column and filter settings
   (`OptionColumn`, `OptionFilter`, `OptionFilterOperators`, `OptionParentChangeBehaviors`),
-  `OptionSourceKeys`, the pure helpers (`OptionFilterResolver`, `OptionFilterMatcher`,
-  `OptionDependentFilterTranslator`, `OptionRowSorter`, `OptionSourceReferenceGuard`) and the
-  option sources API's request and response types (`Grove.OptionPicker.Api`).
-- **Grove.OptionPicker**: `OptionPickerField`, `OptionPickerFieldSettings`, `OptionPickerFieldIndex`
-  and its migration, the user, content item, time zone and culture sources,
-  `OptionPickerFieldKeyResolver`, `OptionParentValueResolver`, `ContentPartListPermissions` (the
-  option sources API is read with `ViewContentPartLists`) and the API: `api/grove/option-sources`
-  (`OptionSourcesApi`) and `api/grove/option-picker/attachment` (`OptionPickerAttachmentsApi`).
-  Tests: `Grove.OptionPicker/tests/Grove.OptionPicker.Tests`.
+  `OptionSourceKeys` and `ContentItemSourceScope`, the pure helpers (`OptionFilterResolver`,
+  `OptionFilterMatcher`, `OptionDependentFilterTranslator`, `OptionRowSorter`,
+  `OptionSourceReferenceGuard`) and the option sources API's request and response types
+  (`Grove.OptionPicker.Api`).
+- **The field's stored shape** is with the other field types in Grove.ContentFields.Abstractions:
+  `OptionPickerField` (`SourceKey`, `SelectedIds`), `OptionPickerFieldSettings` (source, Multiple,
+  Required, Hint, Placeholder, columns, display template, `TitlePattern`, search and sort columns,
+  filters) and `ContentItemPickerSettings` (`AsContentItemPicker(types, ...)` declares a content
+  item pick; `ContentTypes()` reads its types).
+- **Grove.OptionPicker**: the field's registration, display driver (`OptionPickerFieldDisplayDriver`,
+  the `OptionPickerField` shape) and save rules (`OptionPickerFieldHandler`: required, single);
+  `OptionPickerFieldIndex` and its migration (the source key falls back to the attachment's when a
+  value has none); the search index handler; the user, content item, time zone and culture
+  sources; `OptionPickerFieldKeyResolver`, `OptionParentValueResolver`; the GraphQL type
+  (`sourceKey`, `selectedIds`, `contentItems`); Liquid access to the field and its display model;
+  `OptionPickerPermissions` (`QueryOptionSources` gates the option sources API; each source decides
+  which rows the caller sees) and the API: `api/grove/option-sources` (`OptionSourcesApi`: list,
+  query, dependencies, validate-selection, resolve, create-links, columns) and
+  `api/grove/option-picker/attachment` (`OptionPickerAttachmentsApi`). Tests:
+  `Grove.OptionPicker/tests/Grove.OptionPicker.Tests`.
+- **The content items source** (`contentitem:…`, `ContentItemOptionSourceProvider`): the qualifier
+  names types (`contentitem:Customer,Vendor`), stereotypes (`contentitem:@Widget`) or every type
+  without a stereotype (`contentitem:*`). It searches by title, pushes index filters and sorts into
+  SQL (field-index joins when the qualifier names one type), labels rows with the attachment's
+  Liquid `TitlePattern`, gives selected rows an edit link where the caller may edit the item, keeps
+  the stored order of a multiple selection, and offers a create link per allowed creatable type the
+  caller may create. On save, `ContentPickerRelationshipGuard` refuses a target of a type the source
+  does not name and runs the relationship handlers the field's owner registered
+  (`IContentPickerRelationshipHandler`, [content-items.md](content-items.md) › Picker relationship
+  handlers).
+- **The UI** is the module's client library, `Grove.OptionPicker.BlazorWasm` (eager,
+  `[assembly: GroveEager]`, so the editor is in the shell's component registry before any route
+  loads): `GroveOptionPicker`, registered as the placeable component `OptionPicker` for templates
+  and the display manager, and `OptionPickerFieldEditor`, the editor facet for `OptionPickerField`
+  (for a content item source it lists the selection in order with edit links and up/down, and
+  shows the create links). The field's display component, `OptionPickerField`, is a field display
+  in Grove.Components like the other fields'; the editor-state helpers (`ContentEditorContext`
+  picker settings, columns, cascade state) and the wire models (`OptionPickerModels`) stay in
+  Grove.Components, which the content editor and the admin's attachment editor share.
+- **The retired content picker converts** (`Grove.OptionPicker/ContentItems`): the
+  `ContentPickerFieldMigrations` data migration turns every `ContentPickerField` definition into an
+  `OptionPickerField` over the content items source with equivalent settings (Multiple, Required,
+  Hint, Placeholder, displayed types/stereotypes/all, title pattern) and moves every version of every
+  item's values, contained items included, from `ContentItemIds` to `SelectedIds` with the source
+  key; `ContentPickerRecipeMapping` converts old recipes' definition and content steps on the way
+  in. Both use `ContentPickerConversion`. The SQL `ContentPickerFieldIndex` table is dropped by
+  Grove.ContentFields' index migration.
 - The types keep the namespaces they had in Grove.Server (`Grove.Fields`, `Grove.Settings`,
   `Grove.Services`, `Grove.Models`, `Grove.Indexing`): stored settings, the index migration's
   record and the downstream modules name them.
@@ -105,9 +147,6 @@ Grove.ContentPartLists).
   compares come through `IFieldComparisonValueResolver`; Grove.OptionPicker registers one that
   resolves a picker parent's stored ids to its source's keys (`OptionParentValueResolver`).
   Without it the stored values are compared as they are.
-
-☐ Open: whether the picker's UI component (`GroveOptionPicker`, `OptionPickerModels`) lives in
-Grove.Components, as now, or in the module's own client library over Grove.OptionPicker.Abstractions.
 
 ### 4. Assignment and organization parts
 
@@ -132,13 +171,15 @@ DesignSystemStartup, Manifest and Startup, plus the API hosting plumbing in `Api
 
 ## Consequences
 
-- ContentPartLists, Workflows, Global, Money and Regions declare a dependency on the feature
-  `Grove`; each declares the modules it actually uses as well (ContentPartLists:
-  `Grove.ContentTypes` for the definition lock guard).
-- The modules that register APIs reference Grove.Server.Abstractions. ContentPartLists, Parties,
-  Money and Workflows reference Grove.OptionPicker for the option picker; Members, Parties,
-  ContentPartLists, Workflows, Money and Regions still reference Grove.Server for the routing
-  types, a reference that becomes Grove.Server.Abstractions.
+- Workflows, Global, Money, Regions and the `Grove.Contents.PartLists` feature declare a
+  dependency on the feature `Grove`; each declares the modules it actually uses as well
+  (`Grove.Contents.PartLists`: `Grove.ContentTypes` for the definition lock guard,
+  `Grove.Data.Global`, `Grove.OptionPicker`).
+- The modules that register APIs reference Grove.Server.Abstractions. Parties, Members, Money
+  and Workflows reference Grove.OptionPicker for the option picker; Grove.Contents references
+  only Grove.OptionPicker.Abstractions (Grove.OptionPicker references Grove.Contents). Members,
+  Parties, Workflows, Money and Regions still reference Grove.Server for the routing types, a
+  reference that becomes Grove.Server.Abstractions.
 - Every moved API kept its route.
 - Each step: move, repoint references, compile all three solutions, regenerate the graph.
 

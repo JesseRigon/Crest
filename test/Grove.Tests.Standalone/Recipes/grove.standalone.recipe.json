@@ -42,7 +42,7 @@
         "Grove",
         "Grove.AdminTheme",
         "Grove.SiteTheme",
-        "Grove.ContentPartLists",
+        "Grove.Contents.PartLists",
         "TheAdmin",
         "SafeMode",
         "Grove.Localization",

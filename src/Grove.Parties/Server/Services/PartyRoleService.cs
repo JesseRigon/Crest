@@ -7,6 +7,8 @@ using Grove.Parties.Constants;
 using Grove.Parties.Definitions;
 using Grove.Parties.ViewModels;
 using YesSql;
+using Grove.Fields;
+using Grove.Indexing;
 
 namespace Grove.Parties.Services;
 
@@ -66,10 +68,10 @@ public sealed class PartyRoleService(
                 ?? throw new InvalidOperationException("The Individual organization's person no longer exists.");
         }
 
-        var existing = await session.QueryIndex<ContentPickerFieldIndex>(index =>
+        var existing = await session.QueryIndex<OptionPickerFieldIndex>(index =>
                 index.ContentType == roleContentType &&
                 index.ContentField == PartyRoleDefinitions.PartyField &&
-                index.SelectedContentItemId == target.ContentItemId &&
+                index.SelectedId == target.ContentItemId &&
                 index.Latest)
             .FirstOrDefaultAsync(cancellationToken);
         if (existing is not null)
@@ -81,7 +83,7 @@ public sealed class PartyRoleService(
         await decision.RequireAsync(caller, CommonPermissionNames.PublishContent, role, cancellationToken);
         role.DisplayText = target.DisplayText;
         ((System.Text.Json.Nodes.JsonObject)role.Content)["TitlePart"] = new System.Text.Json.Nodes.JsonObject { ["Title"] = target.DisplayText };
-        role.Alter<ContentPart>(roleContentType, part => part.Alter<ContentPickerField>(PartyRoleDefinitions.PartyField, field => field.ContentItemIds = [target.ContentItemId]));
+        role.Alter<ContentPart>(roleContentType, part => part.Alter<OptionPickerField>(PartyRoleDefinitions.PartyField, field => field.SelectedIds = [target.ContentItemId]));
         await contentManager.CreateAsync(role, VersionOptions.Published);
 
         return new PartyRoleResult(role.ContentItemId, roleContentType, target.ContentItemId, true, individual);

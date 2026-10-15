@@ -12,7 +12,15 @@ public sealed record OptionPickerRow(string Id, Dictionary<string, string?>? Val
     /// <summary>The text the picker shows for the row (its primary column's value): what the
     /// drop-down's text binding reads, since a value in <see cref="Values"/> is not a member.</summary>
     public string? Text { get; init; }
+
+    /// <summary>Where the record is edited, when the source has an editor and the caller may use
+    /// it (a content item the user may edit). Null otherwise.</summary>
+    public string? EditUrl { get; init; }
 }
+
+/// <summary>A link to create a record the picker could then hold (a content item source: one
+/// per allowed type the user may create).</summary>
+public sealed record OptionPickerCreateLink(string Label, string Url);
 
 /// <summary>A column the picker displays. Mirrors the server-side field setting.</summary>
 public sealed record OptionPickerColumn(
@@ -48,6 +56,7 @@ public sealed class OptionPickerSettingsModel
     public string Placeholder { get; set; } = string.Empty;
     public List<OptionPickerColumnModel> Columns { get; set; } = [];
     public string? DisplayTemplate { get; set; }
+    public string? TitlePattern { get; set; }
     public List<string> SearchColumns { get; set; } = [];
     public List<string> SortColumns { get; set; } = [];
     public List<OptionPickerFilterModel> Filters { get; set; } = [];

@@ -102,7 +102,7 @@ public sealed record StandardMenuNodeSummary(
         var contentPart = item["ContentMenuItemPart"] as JsonObject;
         return new(id, type, text, url, target, html, true, depth, order, parentId, permissions, children)
         {
-            ContentItemId = (contentPart?["SelectedContentItem"]?["ContentItemIds"] as JsonArray)?.FirstOrDefault()?.GetValue<string>(),
+            ContentItemId = (contentPart?["SelectedContentItem"]?["SelectedIds"] as JsonArray)?.FirstOrDefault()?.GetValue<string>(),
             CheckContentPermissions = contentPart?["CheckContentPermissions"] is JsonValue check && check.TryGetValue<bool>(out var value) && value,
         };
     }

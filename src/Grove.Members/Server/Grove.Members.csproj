@@ -25,7 +25,7 @@
     <ProjectReference Include="../Domain/Grove.Members.Domain.csproj" />
     <ProjectReference Include="../../Grove.Parties/Server/Grove.Parties.csproj" />
     <ProjectReference Include="../../Grove.Server/Grove.Server.csproj" />
-    <ProjectReference Include="../../Grove.ContentPartLists/Grove.ContentPartLists.csproj" />
+    <ProjectReference Include="../../Grove.OptionPicker/Grove.OptionPicker.csproj" />
   </ItemGroup>
 
   <ItemGroup>

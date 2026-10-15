@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Grove.Components.Models;
-using Grove.Components.Options;
 
 namespace Grove.Components.Editors;
 
@@ -137,7 +136,6 @@ public sealed class ContentEditorContext(JsonNode? content, GroveContentItemMeta
     {
         var propertyName = field.FieldType switch
         {
-            "ContentPickerField" => "ContentItemIds",
             "OptionPickerField" => "SelectedIds",
             "TextField" => "Text",
             "HtmlField" => "Html",

@@ -28,7 +28,38 @@ public interface IOptionSourceProvider
     /// line.
     /// </summary>
     Task<IReadOnlyList<OptionRow>> GetByIdsAsync(string qualifier, IReadOnlyList<string> ids, IReadOnlyList<string> columns, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rows for already-selected ids, with what the attachment asks of them (a label pattern,
+    /// edit links). Sources that support neither answer as <see cref="GetByIdsAsync(string, IReadOnlyList{string}, IReadOnlyList{string}, CancellationToken)"/>.
+    /// </summary>
+    Task<IReadOnlyList<OptionRow>> GetByIdsAsync(OptionSourceLookup lookup, CancellationToken cancellationToken = default) =>
+        GetByIdsAsync(lookup.Qualifier, lookup.Ids, lookup.Columns, cancellationToken);
 }
+
+/// <summary>
+/// A source whose records can be created from the picker: links to create one, limited to what
+/// the caller may create (a content item source: one per allowed creatable type).
+/// </summary>
+public interface IOptionSourceCreateLinks
+{
+    Task<IReadOnlyList<OptionCreateLink>> GetCreateLinksAsync(string qualifier, CancellationToken cancellationToken = default);
+}
+
+/// <summary>A link to create a record of a source.</summary>
+public sealed record OptionCreateLink(string Label, string Url);
+
+/// <summary>A batched lookup of selected ids.</summary>
+/// <param name="TitlePattern">The attachment's Liquid label pattern, for sources that render
+/// one (content items); null for the source's own label.</param>
+/// <param name="IncludeEditUrls">Whether rows carry <see cref="OptionRow.EditUrl"/> where the
+/// caller may edit the record.</param>
+public sealed record OptionSourceLookup(
+    string Qualifier,
+    IReadOnlyList<string> Ids,
+    IReadOnlyList<string> Columns,
+    string? TitlePattern = null,
+    bool IncludeEditUrls = false);
 
 /// <summary>What a provider can display for a source.</summary>
 public sealed record OptionSourceColumnDescriptor(string Path, string Label, bool IsDefaultDisplay = false);
@@ -43,6 +74,10 @@ public sealed record OptionRow(string Id, IReadOnlyDictionary<string, string?> V
     /// <summary>Set for options a tenant hid: still resolvable for history, but not
     /// offered in pickers.</summary>
     public bool Hidden { get; init; }
+
+    /// <summary>Where the record is edited, set on lookups that ask for it when the source has
+    /// an editor and the caller may use it (a content item the user may edit).</summary>
+    public string? EditUrl { get; init; }
 
     // NOTE: there is deliberately no "redacted" row shape. A record the caller may not
     // see is ABSENT from the result rather than returned hollow - a placeholder row
@@ -59,7 +94,8 @@ public sealed record OptionSourceQuery(
     IReadOnlyList<string>? SearchColumns = null,
     IReadOnlyList<string>? SortColumns = null,
     int Skip = 0,
-    int Take = 50);
+    int Take = 50,
+    string? TitlePattern = null);
 
 /// <summary>
 /// A filter with its comparison value already resolved - literal values pass straight

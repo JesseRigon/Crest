@@ -37,8 +37,11 @@ The Users list query service and filter providers left without a UI are tracked 
 
 | ☐ | Differs / missing | Target | Owner |
 | --- | --- | --- | --- |
-| ☐ | Drag and drop gone: up/down in lists (and only within one page), move/indent buttons in taxonomies, up/down in the content picker; same in notification preferences, URL rules | one drag-reorder primitive in `Grove.Components`, used by all of them | Grove.Components |
-| ☐ | Content picker: no "view" link per held item | a view link | Grove.ContentFields |
+| ☐ | Drag and drop gone: up/down in lists (and only within one page), move/indent buttons in taxonomies, up/down in a content item option picker; same in notification preferences, URL rules | one drag-reorder primitive in `Grove.Components`, used by all of them | Grove.Components |
+| ☐ | Content item option picker: an edit link per held item, no "view" link | a view link | Grove.OptionPicker |
+| ☑ | The content picker field is the option picker over the content items source (one field type for picking); definitions and values converted by migration and recipe import | — | Grove.OptionPicker |
+| ☐ | The content item source searches the SQL index only: the Lucene and Elasticsearch picker editors (and their `*.ContentPicker` features) are gone | a search-engine-backed content item source, through Queries with the caller's scope | Grove.OptionPicker, Grove.Search |
+| ☐ | The option picker's editor and placeable component are admin-shell only (the client library declares no shell); member and site templates cannot place the picker | a shell-neutral home or a per-shell library when a member or site form needs it | Grove.OptionPicker |
 | ☐ | A list child's editor has no list header or navigation back to the list | the parent list as a breadcrumb on the editor | Grove.Lists |
 | ☐ | Preview pane renders the Detail display as static HTML without the site theme's CSS and scripts; no preview at the PreviewPart URL in the full site theme; no separate live-preview window | preview in the site shell with its theme, at the item's URL, openable in its own window | Grove.ContentPreview |
 | ☐ | The culture picker is no longer injected into the site navbar | document: place `CulturePicker` through a template or a layer | Grove.ContentLocalization |
@@ -51,7 +54,7 @@ The Users list query service and filter providers left without a UI are tracked 
 | ☐ | The Google Maps key in GeoPoint field settings reaches editors through the definition API | document for admins: a browser key, restricted by referrer | Grove.Spatial |
 | ☐ | The generation-only `DisplayContentItem` route points at `Item/Display`, which has no action: display links for items without Autoroute may not generate | route it to the display endpoint | Grove.Contents |
 | ☐ | Dead MVC leftovers: Menu admin/thumbnail shapes and assets, Media `Shared/MediaStoreEntries` | delete | Grove.Menu, Grove.Media |
-| ☐ | `ContentPickerApi` builds one item per creatable type to check the create permission; cost unmeasured | measure; check against the type definition if costly | Grove.ContentFields |
+| ☐ | The content item source's create links build one item per allowed creatable type to check the create permission; cost unmeasured | measure; check against the type definition if costly | Grove.OptionPicker |
 | ☐ | Shortcodes `shortcodes.js`/`.scss`/`shortcodes-modal.ts` and `ShortcodeModal` remain for the MVC HTML editors | delete with the MVC HTML editors | Grove.Shortcodes |
 
 Tracked elsewhere: the `ShortcodeDescriptor*` shapes ([parity.md](parity.md), Grove.Shortcodes row);
@@ -92,13 +95,12 @@ Tracked elsewhere: `AccountApiController` and the external-login JSON completion
 | ☐ | Setup: language switcher is a list of links; no password-strength meter or show/hide toggles; recipe picker is a select with tooltips; provider-dependent fields toggled by an inline script | strength meter and toggles in the static-SSR form | Grove.Setup |
 | ☐ | GraphiQL: `?culture=` dropped; framed, not in the admin chrome | pass the culture through | Grove.Apis.GraphQL |
 | ☐ | AdminSettings' "Sitemap" tab is a placeholder overlapping the Routes page | remove, or fold into Routes | Grove.Admin |
-| ☐ | Upgrade path for existing tenants (dev resets App_Data; needed before any real upgrade): feature id `Grove.UrlRewriting` → `Grove.Routes`, the stored rules document's type name, menu id `urlRewriting` → `routes`, `Grove.OptionPicker` enabled for tenants with ContentPartLists | one migration per change | Grove.Routes, Grove.OptionPicker |
+| ☐ | Upgrade path for existing tenants (dev resets App_Data; needed before any real upgrade): feature id `Grove.UrlRewriting` → `Grove.Routes`, the stored rules document's type name, menu id `urlRewriting` → `routes`, feature id `Grove.ContentPartLists` → `Grove.Contents.PartLists` | one migration per change | Grove.Routes, Grove.Contents |
 
 Tracked elsewhere: search through Queries with the caller's scope (item-level filtering), required
 before user-owned content is indexed — security
 ([backlog.md › MVC retirement](../backlog.md#mvc-retirement-mvcviewsmd-mvcparitymd),
 [queries.md › Connections](../queries.md#connections-the-protocol-modules-and-the-data-layer));
-the option picker's UI component home ([server.md § 3](../server.md#3-the-option-picker--groveoptionpicker));
 shortcodes retiring into Liquid ([backlog.md › Small fixes](../backlog.md#small-fixes)).
 
 ## All-features run

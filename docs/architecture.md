@@ -23,6 +23,8 @@ store and the geographic tree. Three modules complete it:
 | `Grove.Queries` | The read side: the structured query model (a step list compiled through YesSql into parameterised SQL with the caller's scope conjoined for every table), the SQL source for external databases with its scope rewriter, the `System` source (`item`, `user`, `site`) that display slots bind, query descriptors and the catalog the workflow engine's registry reads. Every run is paged, cancellable, typed and caller-scoped. Queries owns no connections: it consumes SQL connections from the data layer and external connections from the protocol modules ([queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)). |
 | `Grove.Workflows` | The action side: a workflow service built on a vendored fork of Elsa 3 (MIT). Its registry (activities, triggers, hook slots, flows, and queries as `RunQuery` activities) is the operation registry; units of work (one burst, one session, one transaction, with inline hooks and durable background calls); the access gate as engine middleware with the actor rule (a run acts as the caller who started it, or as the system when published so); connectors with API-key, bearer, basic and OAuth2 authentication and OpenAPI import (☐ the connection model moves into the protocol modules, the activities stay as consumers); approvals; field dependencies; ownership tiers and per-flow access; the platform modules' activities and triggers (the stock OrchardCore workflow module is gone); the designer bridge. |
 | `Grove.Money` | The money type and the `PriceField` a tenant puts on any content type: `Amount` bound to an `ICurrency`, ISO 4217 metadata from the global store so minor units are never a per-tenant guess, and a default currency. Adapted from OrchardCore.Commerce (MIT). See [types.md](types.md). |
+| `Grove.OptionPicker` | The one field type for picking: `OptionPickerField` over option sources (content part lists, users, content items, currencies, cultures, time zones), with cascading filters, its index, its API and its UI (the picker component and the field editor, from the module's own client library). Content items are a source, not a separate picker field. Every host gets it through `Grove.Application.Cms.Core.Targets`. See [server.md](server.md) § 3. |
+| Content Part Lists | Tenant-editable option sets with shared global sets: the `Grove.Contents.PartLists` feature of `Grove.Contents`, opt-in per tenant. See [content-items.md](content-items.md). |
 | `Grove.Kinds` | The kind-registry contract, server-free: `IKindDescriptor` and `KindCatalog<TKind>` (merge what the enabled features register by key, order it, find by key or content type). Party types are one registry on it; a downstream module's own registries (asset kinds, transaction kinds) are others. `KindPageSource<TKind>` in Grove.Server.Abstractions builds a registry's pages (menu items and route gates) from it. |
 
 The thesis: **all an application needs is parties, workflows and content items.** A
@@ -137,7 +139,7 @@ for them.
 
 Grove has the party **model** — there is no engine to speak of: content types (Person,
 Organization, Address, ContactPoint, Position, Location, the `parties.*` vocabularies on
-`Grove.ContentPartLists`, the address's geo stack (`GeoStackField`) on `Grove.Regions`), the contacts /
+the `Grove.Contents.PartLists` feature, the address's geo stack (`GeoStackField`) on `Grove.Regions`), the contacts /
 positions / locations services and API, the Person ↔ portal-user link, three indexes, the
 `IPartyTypeProvider` registry with the menu and generic role pages generated from its
 catalog, and two workflow activities. It is Grove's for two reasons, neither of them
@@ -145,11 +147,11 @@ cleverness: Members depends on it (a member is a Person with a portal user; an o
 points at an Organization), and every product needs people and organizations before it needs
 anything else. It ships no party role of its own.
 
-Parties defines **no field types of its own**: the party picker on a role is a stock
-`ContentPickerField` constrained to Person/Organization, the portal-user link a stock
+Parties defines **no field types of its own**: the party picker on a role is an
+`OptionPickerField` over content items constrained to Person or Organization, the portal-user link a stock
 `UserPickerField`, an address's country and the levels below it a `GeoStackField` from
 `Grove.Regions`, and honorific, address kind, phone country, organization type and
-industry are `OptionPickerField`s (Grove.OptionPicker) over `Grove.ContentPartLists` lists. The only Parties-specific
+industry are `OptionPickerField`s (Grove.OptionPicker) over content part lists. The only Parties-specific
 helper is `PartyRoleDefinitions` ("define a role type: party picker + number field +
 profile"), which downstream modules and products call. The role content types are defined
 and registered by the modules that own them.
@@ -166,7 +168,7 @@ unless it is proprietary or depends on proprietary code. Three exist: `OptionPic
 ## Naming
 
 `Grove.Parties`, `Grove.Members`, `Grove.Workflows`, matching `Grove.Regions`,
-`Grove.Data.Global`, `Grove.ContentPartLists`. Namespaces, assembly names, feature ids,
+`Grove.Data.Global`, `Grove.OptionPicker`. Namespaces, assembly names, feature ids,
 manifests, permission names, option-set keys (`parties.*` — already unbranded), route
 constants and test names follow.
 
@@ -339,7 +341,13 @@ and registrations do not exist.
   only removal from the shipped code is lost.
 - Either way, registration into a seam's registry is done by the startups of *enabled
   features*, so how an assembly arrived never changes what a tenant gets.
-- ☐ A test fails when a module assembly in the host's output is not in its module list.
+- ☑ A test fails when a module assembly in the host's output is not in its module list:
+  `ModuleListGuardTests` in `Grove.Tests.Standalone` (a host that references Grove's modules as
+  projects) compares every output assembly carrying the module marker with the host's
+  `ModuleName` list.
+- A module client library (`*.BlazorWasm`) belongs to the longest module or feature id its name
+  starts with, and is served while that module or feature is enabled
+  (`Grove.Contents.PartLists.BlazorWasm` follows its feature, not all of Grove.Contents).
 
 ## The rules that keep it composable
 
@@ -433,7 +441,7 @@ the piece lives. The global store's host-call rough edge is in [globals.md](glob
     are not pages uses the catalog only;
   - gap-free record numbering, `IRecordNumbering` in Grove.Server (named sequences per tenant in
     one document, a number taken only when the record commits; `Format(prefix, n)`);
-  - the content-part-list import, `IContentPartListImporter` in Grove.ContentPartLists (upsert
+  - the content-part-list import, `IContentPartListImporter` in the `Grove.Contents.PartLists` feature (upsert
     by key, a tenant's label, position and hidden flag never overwritten, failing rows reported)
     and `POST api/grove/content-part-lists/{key}/import` (manage permission; refused under an
     edit lock);

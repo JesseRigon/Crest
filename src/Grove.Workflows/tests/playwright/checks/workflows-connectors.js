@@ -181,7 +181,7 @@ module.exports = async function run(page, ctx) {
     const person = await call('POST', `${ctx.baseUrl}/api/grove/content-items`, { contentType: 'Person', displayText: `Playwright connector person ${stamp}`, publish: true });
     if (person.json?.contentItemId) created.items.push(person.json.contentItemId);
     const roleName = `Playwright connector role ${stamp}`;
-    const role = await call('POST', `${ctx.baseUrl}/api/grove/content-items`, { contentType: 'SampleRole', displayText: roleName, publish: true, content: { SampleRole: { Party: { ContentItemIds: [person.json?.contentItemId] } } } });
+    const role = await call('POST', `${ctx.baseUrl}/api/grove/content-items`, { contentType: 'SampleRole', displayText: roleName, publish: true, content: { SampleRole: { Party: { SelectedIds: [person.json?.contentItemId] } } } });
     const roleId = role.json?.contentItemId;
     if (roleId) created.items.push(roleId);
     results.push({ name: 'sample-role-publishes', pass: person.ok && role.ok && Boolean(roleId), message: `person=${person.status} role=${role.status} ${role.text.slice(0, 160)}` });

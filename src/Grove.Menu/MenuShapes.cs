@@ -198,7 +198,7 @@ public class MenuShapes : ShapeTableProvider
             return;
         }
 
-        if (menuContentItem.Content["ContentMenuItemPart"]?["SelectedContentItem"]?["ContentItemIds"] is System.Text.Json.Nodes.JsonArray { Count: > 0 } ids
+        if (menuContentItem.Content["ContentMenuItemPart"]?["SelectedContentItem"]?["SelectedIds"] is System.Text.Json.Nodes.JsonArray { Count: > 0 } ids
             && ids[0]?.GetValue<string>() is { Length: > 0 } targetId
             && services.GetService<IHttpContextAccessor>()?.HttpContext is { } httpContext)
         {
@@ -238,7 +238,7 @@ public class MenuShapes : ShapeTableProvider
 
         if (contentItem.TryGet<ContentMenuItemPart>(out var menuItemPart))
         {
-            string contentItemId = menuItemPart.ContentItem.Content.ContentMenuItemPart.SelectedContentItem.ContentItemIds[0];
+            string contentItemId = (menuItemPart.ContentItem.Content["ContentMenuItemPart"]?["SelectedContentItem"]?["SelectedIds"] as System.Text.Json.Nodes.JsonArray)?.FirstOrDefault()?.GetValue<string>();
 
             if (string.IsNullOrEmpty(contentItemId))
             {

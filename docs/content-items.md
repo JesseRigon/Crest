@@ -18,8 +18,9 @@ Grove adds no parallel content framework. The content APIs are thin JSON surface
 `api/grove/option-sources`, …) over the platform's own services, each declared by the module
 that owns the surface and registered with Grove.Server's API registry
 ([server.md](server.md)): content items by `Grove.Contents`; content definitions (types, parts,
-field visibility, definition locks, content groups) by `Grove.ContentTypes`; lists and option
-pickers by `Grove.ContentPartLists`. Today the item and definition APIs are still hosted in
+field visibility, definition locks, content groups) by `Grove.ContentTypes`; content part lists
+by the `Grove.Contents.PartLists` feature of Grove.Contents; option pickers by Grove.OptionPicker.
+Today the item and definition APIs are still hosted in
 Grove.Server; server.md tracks the move. Every surface authorizes the real request principal
 with the native permission before touching a service (`IRequestAccess`).
 Tenant scope, feature gates, validation and lifecycle are Orchard's; Grove must
@@ -45,8 +46,9 @@ children as items of their own (`ListPartEditor` lists them over `api/grove/list
 child is created on the create page with `?containerId=`, and the server completes its
 `ContainedPart`). The module that owns a part answers what its editor needs:
 `api/grove/taxonomies/{id}/terms` and `/tags`, `api/grove/lists/{id}/items` and `/order`,
-`api/grove/content-localization/{id}` and `/localize`, `api/grove/content-fields/content-items`
-and `/localization-sets` (the pickers' candidates). The editor's preview renders the unsaved
+`api/grove/content-localization/{id}` and `/localize`, `api/grove/option-sources` (every picker's
+rows, including content items) and `api/grove/content-fields/localization-sets` (the localization
+set picker's candidates). The editor's preview renders the unsaved
 item through `api/grove/content-preview` (Grove.ContentPreview). Every save is validated by the
 content handlers first and refused with the errors keyed by editor path
 ([blazor-display.md](blazor-display.md) § 7); a content event's changes are shown in the audit
@@ -182,8 +184,8 @@ what an entry covers is resolved at read time.
   party vocabularies and the global name lists); Members declares `members`.
 - **Entry kinds are pluggable.** `IContentGroupEntryResolver` maps a kind to
   content types and/or content-item ids. `type` ships in Grove.Server; `list`
-  ships in `Grove.ContentPartLists` (Server cannot reference the lists feature -
-  the resolver seam is what lets a feature teach the group system a new kind). An
+  ships with the `Grove.Contents.PartLists` feature (the resolver seam is what lets a
+  feature teach the group system a new kind). An
   entry whose key does not exist on the tenant stays in the group as
   `resolved: false` rather than vanishing.
 - **The tenant reshapes, never redefines.** `GroveContentGroupsDocument`
@@ -211,9 +213,16 @@ Orchard has no central enum store. `TextFieldPredefinedListEditorSettings` store
 options inside ONE field's settings (copies drift, no provenance, no multi-column
 display); Taxonomies have the right data shape but are a CMS categorization
 feature whose routing apparatus (AliasPart/AutoroutePart, term pages) is noise
-for configuration data. So Grove defines its own system —
-`Grove.ContentPartLists`, its own feature, with no dependency on
-`Grove.Taxonomies`.
+for configuration data. So Grove defines its own system — the
+**`Grove.Contents.PartLists` feature of Grove.Contents** (it ships with the content module and
+the rest of Grove relies on it, [architecture.md](architecture.md) › Modules, features and how a
+module reaches the host), opt-in per tenant, with no dependency on `Grove.Taxonomies`. Its
+startups, controllers (`api/grove/content-part-lists`, `api/grove/global/lists`), migration,
+permissions (`ViewContentPartLists`, `ManageContentPartLists`, `LockContentPartLists`), option
+source, content group resolver and Liquid filters are gated on the feature; its page is the
+client library `Grove.Contents.PartLists.BlazorWasm` (a library named for a feature is served
+only while that feature is enabled). Stored names are unchanged (`GroveContentPartListMigrations`,
+the part names, the global schema's record). Consumers declare the feature in their manifests.
 
 - **`ContentPartList`**: `TitlePart` + `GroveContentPartListPart` (`Key` — the
   set's stable logical key like `pricing.modifier-kind`; `Source`;
@@ -221,9 +230,9 @@ for configuration data. So Grove defines its own system —
 - **`Option`**: `TitlePart` + `GroveOptionPart` (`Key` — what CODE switches on;
   `Source` = Module|Tenant; `Hidden`; `Position`; `Category`;
   `DisplayTextPlural`; `Value`; a back-reference to its list).
-- **`OptionPickerField`** is the reference mechanism, modelled file-for-file on
-  stock `UserPickerField` (field + settings + drivers + handler + index provider).
-  Stock `UserPickerField` stays in use for plain user references.
+- **`OptionPickerField`** (Grove.OptionPicker) is the reference mechanism, for list options and
+  every other source, content items included. Stock `UserPickerField` stays in use for plain
+  user references.
 
 **The identity rule (load-bearing — everything else depends on it):** content
 stores `ContentItemId`, code compares `Key`, humans read `DisplayText`, `Source`
@@ -268,7 +277,7 @@ lock) or display surface (default). The grid renders Boolean fields as switches
 and Numeric fields as numeric inputs; the wire format stays strings and the
 server owns typing.
 
-**Global lists** are seeded by `Grove.ContentPartLists` for any enabling tenant:
+**Global lists** are seeded by the `Grove.Contents.PartLists` feature for any enabling tenant:
 country codes, UoM (with a separate `global.uom-rec20` mapping list — key = unit
 key, Value = UN/CEFACT Rec 20 code; package units are deliberately absent, Rec 21
 territory), phone country codes, postal-format regexes, languages, US area codes,
@@ -299,24 +308,44 @@ options only hide, for history.
 
 ## Option pickers: projection, providers, filtering
 
-The option picker field family is its own module, **Grove.OptionPicker** (feature
-`Grove.OptionPicker`, declared by the features that bind fields to option sources), with its
-contracts and DTOs in a WebAssembly-safe Grove.OptionPicker.Abstractions; its API is
-`api/grove/option-sources` and `api/grove/option-picker/attachment` ([server.md](server.md) § 3, S2).
+The option picker is its own module, **Grove.OptionPicker** (feature `Grove.OptionPicker`,
+declared by the features that bind fields to option sources), with its contracts and DTOs in a
+WebAssembly-safe Grove.OptionPicker.Abstractions; its API is `api/grove/option-sources` and
+`api/grove/option-picker/attachment`, its UI the module's client library
+([server.md](server.md) § 3). It is the **one field type for picking**: content items are one
+option source among the others, so there is no separate content picker field.
 
 A dropdown stores ONE id but displays N columns of the referenced record. The
 columns are per-ATTACHMENT settings (the same target renders differently in
 different dropdowns), never part of the stored data:
-`OptionPickerFieldSettings { SourceKey, Multiple, Columns, DisplayTemplate,
-SearchColumns, SortColumns, Filters }`. Stored data stays tiny:
-`{ SourceKey, SelectedIds }`.
+`OptionPickerFieldSettings { SourceKey, Multiple, Required, Hint, Placeholder, Columns,
+DisplayTemplate, TitlePattern, SearchColumns, SortColumns, Filters }`. Stored data stays tiny:
+`{ SourceKey, SelectedIds }`; a value without its source key reads the attachment's.
+
+**Content items as a source.** `contentitem:` names the allowed types (`contentitem:Customer,Vendor`),
+stereotypes (`contentitem:@Widget`) or every type without a stereotype (`contentitem:*`). The
+picker searches by title; `TitlePattern` (Liquid, `Model.ContentItem` bound) labels the rows; the
+selected items are listed in their stored order with an edit link where the user may edit them
+and up/down for a multiple field; a create link is offered per allowed creatable type the user may
+create (new tab, so the item being edited stays open). On save the guard refuses a target of
+another type (Picker relationship guards below). Code declares such a field with
+`AsContentItemPicker([types], multiple, required)` and reads it with
+`Get<OptionPickerField>(name).SelectedIds`; GraphQL exposes `selectedIds` and `contentItems`;
+Liquid reads `SelectedIds` on the field and `Items` on its display model. Tenants that had the
+platform's content picker field were converted by Grove.OptionPicker's data migration (type
+definitions, then every item's stored ids, contained items included), and old recipes convert on
+import ([server.md](server.md) § 3).
 
 **The provider seam** (`IOptionSourceProvider`: `Key`, `DescribeColumnsAsync`,
-`QueryAsync`, batched `GetByIdsAsync`) keeps the field ignorant of what it lists.
+`QueryAsync`, batched `GetByIdsAsync` and its `OptionSourceLookup` overload for a title pattern
+and edit links; `IOptionSourceCreateLinks` for sources whose records can be created from the
+picker) keeps the field ignorant of what it lists.
 Registration is DI-only. Built-in providers: `contentpartlist` (tenant
 configuration — always fully in memory, one document), `users` (multi-column,
 incl. `Property:<dotted.path>` into user JSON), `contentitem` (entity records,
-real SQL pushdown), `currency`, `timezone`, `culture`. Column `Path` is
+real SQL pushdown, title pattern, edit and create links), `currency`, `timezone`, `culture`.
+The API is read with `QueryOptionSources` (Administrator, Editor, Author, Contributor); each
+source decides which rows the caller sees. Column `Path` is
 provider-interpreted (each provider advertises its own paths); custom-field
 columns follow the `Field:<Name>` convention. Contract for all providers:
 `GetByIdsAsync` returns rows that are ABSENT when unresolvable, never hollow.
@@ -405,15 +434,15 @@ ACCEPTED boundaries:
 
 ## Picker relationship guards
 
-Hierarchies built from content pickers (parent organization, parent location, parent account)
+Hierarchies built from content item pickers (parent organization, parent location, parent account)
 are built in many different ways, so the picker cannot know how to walk every graph. The owner
 of a picker field registers its own handler instead, and it runs on every save path, so generic
 editors cannot bypass it. `IContentSaveGuard` in the platform's content manager: guards run on
 every create and update after the handlers, and a refusal throws
 `ContentSaveRefusedException` (an `InvalidOperationException`; the content items API answers
 400) instead of being swallowed like a handler exception. `ContentPickerRelationshipGuard`
-(Grove.ContentFields) walks the item and its contained items, enforces each picker's allowed
-types and stereotypes on the server, and runs the handlers registered with
+(Grove.OptionPicker) walks the item and its contained items, enforces each content item picker's
+allowed types and stereotypes (its source's qualifier) on the server, and runs the handlers registered with
 `AddContentPickerRelationshipHandler<T>(part, field)` (`IContentPickerRelationshipHandler`),
 such as refusing cycles. First user: Parties' parent organization.
 
@@ -430,8 +459,8 @@ Templates are Liquid that emits component nodes ([blazor-display.md](blazor-disp
 admin and ERP screens are Blazor pages with no Liquid path in.
 
 - **Liquid filters over the services the API wraps.** Liquid renders server-side against
-  objects in scope; it never calls the `api/grove/*` endpoints. `Grove.ContentPartLists`
-  registers `option_list` and `option_label` when `Grove.Liquid` is on:
+  objects in scope; it never calls the `api/grove/*` endpoints. The `Grove.Contents.PartLists`
+  feature registers `option_list` and `option_label` when `Grove.Liquid` is on:
   `{{ "list-key" | option_list }}` gives the selectable options; `{{ value | option_label }}`
   gives the label for a stored ContentItemId, a list of them or a field with
   `TermContentItemIds`, and `option_label: "list-key"` also accepts an option key. Content

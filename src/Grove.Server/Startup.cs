@@ -323,7 +323,7 @@ public sealed class Startup : StartupBase
         services.AddSingleton<Grove.Routing.ILegacyRouteOwnership, Grove.Routing.LegacyRouteOwnership>();
 
         // The option picker (field, sources, API) is the Grove.OptionPicker module; Content Part
-        // Lists are the Grove.ContentPartLists module.
+        // Lists are the Grove.Contents.PartLists feature.
 
         // HtmlRenderer (used by component bindings, ComponentShapeRenderer, for Static SSR)
         // instantiates components via this same service provider, and component base

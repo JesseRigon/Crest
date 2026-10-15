@@ -1,10 +1,10 @@
 <Solution>
-  <Folder Name="/Grove.ContentPartLists/" />
-  <Folder Name="/Grove.ContentPartLists/blazor-wasm/">
-    <Project Path="src/Grove.ContentPartLists/blazor-wasm/Grove.ContentPartLists.BlazorWasm.csproj" />
+  <Folder Name="/Grove.Contents/" />
+  <Folder Name="/Grove.Contents/blazor-wasm/">
+    <Project Path="src/Grove.Contents/blazor-wasm/Grove.Contents.PartLists.BlazorWasm.csproj" />
   </Folder>
-  <Folder Name="/Grove.ContentPartLists/tests/">
-    <Project Path="src/Grove.ContentPartLists/tests/Grove.ContentPartLists.Tests/Grove.ContentPartLists.Tests.csproj" />
+  <Folder Name="/Grove.Contents/tests/">
+    <Project Path="src/Grove.Contents/tests/Grove.Contents.PartLists.Tests/Grove.Contents.PartLists.Tests.csproj" />
   </Folder>
   <Folder Name="/Grove.Members/" />
   <Folder Name="/Grove.Members/blazor-wasm/">
@@ -31,6 +31,7 @@
   <Folder Name="/Grove.OptionPicker/">
     <Project Path="src/Grove.OptionPicker/Grove.OptionPicker.csproj" />
     <Project Path="src/Grove.OptionPicker.Abstractions/Grove.OptionPicker.Abstractions.csproj" />
+    <Project Path="src/Grove.OptionPicker/blazor-wasm/Grove.OptionPicker.BlazorWasm.csproj" />
   </Folder>
   <Folder Name="/Grove.OptionPicker/tests/">
     <Project Path="src/Grove.OptionPicker/tests/Grove.OptionPicker.Tests/Grove.OptionPicker.Tests.csproj" />
@@ -174,7 +175,6 @@
   <Folder Name="/tools/">
     <Project Path="tools/Grove.LazyModules/Grove.LazyModules.csproj" />
   </Folder>
-  <Project Path="src/Grove.ContentPartLists/Grove.ContentPartLists.csproj" />
   <Project Path="src/Grove.Data.Global/Grove.Data.Global.csproj" />
   <Project Path="src/Grove.Regions/Grove.Regions.csproj" />
   <Project Path="src/Grove.Components/Grove.Components.csproj" />

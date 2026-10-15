@@ -2,7 +2,6 @@ using System.Net.Http.Json;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Grove.Components.Options;
 using Grove.Components.Primitives;
 using Grove.DisplayManagement.Components;
 using Microsoft.AspNetCore.Components;
@@ -616,32 +615,27 @@ public sealed class DateFieldEditor : FieldEditorBase
 }
 
 /// <summary>
-/// Content items (docs/MVC/parity.md, the content picker): the items the field holds as chips
-/// (opened in their editor when the caller may edit them, removed, moved), a search over the
-/// field's candidates (Grove.ContentFields' <c>api/grove/content-fields/content-items</c>, through
-/// the field's result provider), and a link to create an item of each creatable type the field
-/// may hold, in a new tab so the item being edited stays open. A localization set picker stores
-/// localization set ids (<c>.../localization-sets</c>).
+/// Localization sets (with Content Localization): the sets the field holds as chips (removed,
+/// moved) and a search over the field's candidates (Grove.ContentFields'
+/// <c>api/grove/content-fields/localization-sets</c>). Content items are picked with the option
+/// picker over the content items source (Grove.OptionPicker).
 /// </summary>
-[BlazorComponent("ContentPickerFieldEditor", DisplayName = "Content items", Category = "Editors", Icon = "link", Edits = ["ContentPickerField", "LocalizationSetContentPickerField"])]
-public sealed class ContentPickerFieldEditor : FieldEditorBase
+[BlazorComponent("LocalizationSetPickerFieldEditor", DisplayName = "Localized content items", Category = "Editors", Icon = "translate", Edits = ["LocalizationSetContentPickerField"])]
+public sealed class LocalizationSetPickerFieldEditor : FieldEditorBase
 {
     private static readonly JsonSerializerOptions s_web = new(JsonSerializerDefaults.Web);
 
     private readonly Dictionary<string, PickerItem> _known = new(StringComparer.Ordinal);
     private IReadOnlyList<PickerItem> _results = [];
-    private IReadOnlyList<PickerType> _creatable = [];
     private string? _query;
     private bool _loaded;
     private string? _error;
 
-    private bool IsLocalizationSet => ValueType == "LocalizationSetContentPickerField";
+    private const string Property = "LocalizationSets";
 
-    private string Property => IsLocalizationSet ? "LocalizationSets" : "ContentItemIds";
+    private const string Endpoint = "api/grove/content-fields/localization-sets";
 
-    private string Endpoint => IsLocalizationSet ? "api/grove/content-fields/localization-sets" : "api/grove/content-fields/content-items";
-
-    private bool Multiple => Setting(IsLocalizationSet ? "LocalizationSetContentPickerFieldSettings" : "ContentPickerFieldSettings", "Multiple") is JsonValue value && value.TryGetValue<bool>(out var multiple) && multiple;
+    private bool Multiple => Setting("LocalizationSetContentPickerFieldSettings", "Multiple") is JsonValue value && value.TryGetValue<bool>(out var multiple) && multiple;
 
     private IReadOnlyList<string> Selected => Value?[Property] is JsonArray array
         ? [.. array.Select(id => id?.ToString()).Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id!)]
@@ -675,7 +669,6 @@ public sealed class ContentPickerFieldEditor : FieldEditorBase
                 _known[item.Id] = item;
             }
 
-            _creatable = results?.CreatableTypes ?? _creatable;
             if (!remember)
             {
                 _results = results?.Items ?? [];
@@ -704,18 +697,7 @@ public sealed class ContentPickerFieldEditor : FieldEditorBase
             var known = _known.GetValueOrDefault(id);
             builder.OpenElement(4, "li");
             builder.SetKey(id);
-            if (known is { IsEditable: true } && !IsLocalizationSet)
-            {
-                builder.OpenElement(5, "a");
-                builder.AddAttribute(6, "href", $"Contents/ContentItems/{Uri.EscapeDataString(id)}/Edit");
-                builder.AddAttribute(7, "target", "_blank");
-                builder.AddContent(8, known.DisplayText ?? id);
-                builder.CloseElement();
-            }
-            else
-            {
-                builder.AddContent(9, known?.DisplayText ?? id);
-            }
+            builder.AddContent(9, known?.DisplayText ?? id);
 
             if (known is { HasPublished: false })
             {
@@ -736,27 +718,13 @@ public sealed class ContentPickerFieldEditor : FieldEditorBase
             builder.AddAttribute(21, "class", "grove-editor__pair");
             builder.OpenComponent<GroveTextBox>(22);
             builder.AddComponentParameter(23, nameof(GroveTextBox.Value), _query);
-            builder.AddComponentParameter(24, nameof(GroveTextBox.Placeholder), Setting("ContentPickerFieldSettings", "Placeholder")?.ToString() is { Length: > 0 } placeholder ? placeholder : "Search");
+            builder.AddComponentParameter(24, nameof(GroveTextBox.Placeholder), "Search");
             builder.AddComponentParameter(25, nameof(GroveTextBox.Change), EventCallback.Factory.Create<string>(this, async query =>
             {
                 _query = query;
                 await LoadAsync("&query=" + Uri.EscapeDataString(query ?? string.Empty), remember: false);
             }));
             builder.CloseComponent();
-            if (!IsLocalizationSet)
-            {
-                foreach (var type in _creatable)
-                {
-                    builder.OpenElement(26, "a");
-                    builder.SetKey(type.Name);
-                    builder.AddAttribute(27, "class", "rz-button rz-light rz-button-sm");
-                    builder.AddAttribute(28, "href", $"Contents/ContentTypes/{Uri.EscapeDataString(type.Name)}/Create");
-                    builder.AddAttribute(29, "target", "_blank");
-                    builder.AddContent(30, "New " + type.DisplayName);
-                    builder.CloseElement();
-                }
-            }
-
             builder.CloseElement();
 
             builder.OpenElement(40, "ul");
@@ -810,7 +778,7 @@ public sealed class ContentPickerFieldEditor : FieldEditorBase
         builder.CloseComponent();
     }
 
-    /// <summary>A candidate as the content picker API serves it.</summary>
+    /// <summary>A candidate as the localization set picker API serves it.</summary>
     public sealed record PickerItem(string Id, string? DisplayText, string? ContentType, bool HasPublished, bool IsEditable);
 
     public sealed record PickerType(string Name, string DisplayName);
@@ -819,48 +787,13 @@ public sealed class ContentPickerFieldEditor : FieldEditorBase
 }
 
 /// <summary>
-/// A choice among options: an option picker field (its source), or a multi-text field (the
-/// field's own options, as check boxes, or a picker with the <c>Picker</c> editor setting).
+/// A multi-text field: the field's own options, as check boxes, or a picker with the
+/// <c>Picker</c> editor setting. (An option picker field's editor is Grove.OptionPicker's.)
 /// </summary>
-[BlazorComponent("OptionPickerFieldEditor", DisplayName = "Options", Category = "Editors", Icon = "checklist", Edits = ["OptionPickerField", "MultiTextField"])]
-public sealed class OptionPickerFieldEditor : FieldEditorBase
+[BlazorComponent("MultiTextFieldEditor", DisplayName = "Choices", Category = "Editors", Icon = "checklist", Edits = ["MultiTextField"])]
+public sealed class MultiTextFieldEditor : FieldEditorBase
 {
-    protected override void RenderInput(RenderTreeBuilder builder)
-    {
-        if (Field is not { } field || Context is not { } context)
-        {
-            return;
-        }
-
-        if (field.FieldType == "MultiTextField")
-        {
-            RenderMultiText(builder);
-            return;
-        }
-
-        var settings = ContentEditorContext.PickerSettings(field);
-        IReadOnlyList<string> selected = Value?["SelectedIds"] is JsonArray ids
-            ? [.. ids.Select(id => id?.GetValue<string>()).Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id!)]
-            : [];
-
-        builder.OpenComponent<GroveOptionPicker>(0);
-        builder.AddComponentParameter(1, "SourceKey", settings?["SourceKey"]?.GetValue<string>() ?? string.Empty);
-        builder.AddComponentParameter(2, "Columns", ContentEditorContext.PickerColumns(settings));
-        builder.AddComponentParameter(3, "SelectedIds", selected);
-        builder.AddComponentParameter(4, "SelectedIdsChanged", EventCallback.Factory.Create<IReadOnlyList<string>>(this, changed =>
-            Set("SelectedIds", new JsonArray([.. changed.Select(id => (JsonNode?)JsonValue.Create(id))]))));
-        builder.AddComponentParameter(5, "Multiple", settings?["Multiple"]?.GetValue<bool>() ?? false);
-        builder.AddComponentParameter(6, "Required", field.Required);
-        builder.AddComponentParameter(7, "Placeholder", settings?["Placeholder"]?.GetValue<string>() ?? string.Empty);
-        builder.AddComponentParameter(8, "Disabled", Disabled);
-        // The attachment identifies itself; the server loads its filters and resolves any
-        // ValueFrom against the editor state.
-        builder.AddComponentParameter(9, "ContentType", context.Metadata?.ContentType);
-        builder.AddComponentParameter(10, "FieldName", field.Name);
-        builder.AddComponentParameter(11, "EditorState", context.EditorState(field));
-        builder.AddComponentParameter(12, "TestId", $"picker-{PartName}-{field.Name}");
-        builder.CloseComponent();
-    }
+    protected override void RenderInput(RenderTreeBuilder builder) => RenderMultiText(builder);
 
     private void RenderMultiText(RenderTreeBuilder builder)
     {
