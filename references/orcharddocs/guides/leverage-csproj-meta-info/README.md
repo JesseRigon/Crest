@@ -91,7 +91,7 @@ With all _properties_ described as follows.
 <br/><sup>[2] Depending on the `Attribute` context, `ModuleAttribute` yields `"Module"`, `ThemeAttribute` yields `"Theme"` by default.</sup>
 <br/><sup>[3] Defaults to _semi-colon_ delimited, since that is also the `CSPROJ` delimiter. Also supports _space_ or _comma_ delimiting.</sup>
 
-And for convenience, you may specify all of your assembly Crest attributes using one, top level item list.
+And for convenience, you may specify all of your assembly Grove attributes using one, top level item list.
 
 ```xml
 <PlatformAttributes Include="..."

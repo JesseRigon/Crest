@@ -1,0 +1,59 @@
+@page "/Audit/Records/{RecordId}"
+@attribute [PageEntry("ViewAuditTrail")]
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* A record's history (docs/audit.md › step 4): every event for one record - a content item, a
+   user, a workflow run - newest first, impersonated actions marked. *@
+
+<PageTitle>@T["History"]</PageTitle>
+
+<GroveStack Gap="1rem" data-testid="audit-record">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <div>
+            <GroveText TextStyle="TextStyle.H4" class="rz-m-0">@T["History"]</GroveText>
+            <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary">@(Title ?? RecordId)</GroveText>
+        </div>
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <GroveLink Path="@AuditTrailRoutes.TrailAdmin.TrimStart('/')" Text="@T["Audit trail"]" />
+            <GroveButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="@(() => LoadAsync(0))" Disabled="IsBusy" />
+        </GroveStack>
+    </GroveStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" Summary="@T["Could not load the history"]" Detail="@Error" />
+    }
+
+    <AuditEventTable Page="Page" PageChanged="LoadAsync" ShowRecordLinks="false" />
+</GroveStack>
+
+@code {
+    [Parameter] public string RecordId { get; set; } = string.Empty;
+
+    private AuditEventPage Page { get; set; } = new([], 0, 0, 50);
+    private string? Title { get; set; }
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    protected override Task OnParametersSetAsync() => LoadAsync(0);
+
+    private async Task LoadAsync(int skip)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            Page = await Http.GetFromJsonAsync<AuditEventPage>($"{AuditTrailRoutes.Api}/records/{Uri.EscapeDataString(RecordId)}?skip={skip}&take=50") ?? Page;
+            Title = Page.Items.FirstOrDefault()?.Summary;
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

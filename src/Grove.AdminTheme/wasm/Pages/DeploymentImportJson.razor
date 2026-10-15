@@ -1,0 +1,53 @@
+@page "/DeploymentPlan/Import/Json"
+@attribute [PageEntry("Import", Id = "deployment-json-import", Parent = "deployments", Caption = "JSON Import", Position = "3")]
+@using System.Text.Json
+@using Grove.AdminTheme.Api
+@using Grove.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+<GroveStack Gap="1rem" data-testid="deployment-import-json-page">
+    <GroveStack Gap="0.25rem">
+        <GroveText TextStyle="TextStyle.H4" Text="@T["JSON Import"]" />
+        <GroveText TextStyle="TextStyle.Body2" Text="@T["Paste a recipe and run it against this tenant."]" />
+    </GroveStack>
+
+    @if (Outcome is not null)
+    {
+        <GroveAlert AlertStyle="@(Outcome.Succeeded ? AlertStyle.Success : AlertStyle.Danger)" ShowIcon="true" AllowClose="false">@Outcome.Message</GroveAlert>
+    }
+
+    <GroveCard>
+        <GroveStack Gap="1rem">
+            <GroveFormField Text="@T["Recipe (JSON)"]" Style="width: 100%;">
+                <GroveTextArea @bind-Value="Json" Rows="20" Style="width: 100%; font-family: var(--rz-code-font-family, monospace);" data-testid="deployment-import-json-text" />
+            </GroveFormField>
+            <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                <GroveButton Text="@T["Import"]" Icon="upload" Click="ImportAsync" Disabled="@(IsImporting || string.IsNullOrWhiteSpace(Json))" />
+            </GroveStack>
+        </GroveStack>
+    </GroveCard>
+</GroveStack>
+
+@code {
+    private string Json { get; set; } = "{\n  \"steps\": []\n}";
+    private DeploymentResult? Outcome { get; set; }
+    private bool IsImporting { get; set; }
+
+    private async Task ImportAsync()
+    {
+        Outcome = null;
+        try { using var _ = JsonDocument.Parse(Json); }
+        catch (JsonException exception) { Outcome = new(false, T["The recipe is written in an incorrect JSON format: {0}", exception.Message]); return; }
+
+        IsImporting = true;
+        try
+        {
+            Outcome = await Api.Grove.Rest.Deployment.ImportJsonAsync(Json);
+            if (Outcome.Succeeded) Notifications.Notify(NotificationSeverity.Success, T["JSON Import"], T["Recipe imported."]);
+        }
+        catch (Exception exception) { Outcome = new(false, exception.Message); }
+        finally { IsImporting = false; }
+    }
+}

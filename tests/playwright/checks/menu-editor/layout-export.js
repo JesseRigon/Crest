@@ -1,14 +1,14 @@
-// Converted from Crest.AdminTheme/tests/playwright/admin-menu-layout-export.js.
+// Converted from Grove.AdminTheme/tests/playwright/admin-menu-layout-export.js.
 // Exercises the "Export layout JSON" button on the built-in admin menu and verifies the
 // server wrote a well-formed recipe file to disk.
 const fs = require('fs');
 const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..', '..', '..', '..', '..', '..');
-// Capital R: Crest's ApplicationRecipeHarvester scans ContentRoot/Recipes, and
-// that is case-sensitive on Linux. The export controller writes there (Crest 3699b1e);
+// Capital R: Grove's ApplicationRecipeHarvester scans ContentRoot/Recipes, and
+// that is case-sensitive on Linux. The export controller writes there (Grove 3699b1e);
 // a lowercase name here would assert against a directory nothing writes to on ext4.
-const exportFile = path.join(repoRoot, 'Recipes', 'crest-admin-menu-layout.json');
+const exportFile = path.join(repoRoot, 'Recipes', 'grove-admin-menu-layout.json');
 
 // The export file is a COMMITTED recipe input (the setup recipe imports it), and the
 // button writes it under the server's content root - the repo checkout, whichever

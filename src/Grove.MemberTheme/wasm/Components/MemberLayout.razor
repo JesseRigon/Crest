@@ -1,0 +1,138 @@
+@using Grove.Components.Primitives
+@using Grove.MemberTheme.Services
+@implements IDisposable
+
+@* The member shell's chrome: header, the active-organization region, and the content
+   area modules' pages render into.
+
+   This layout knows nothing about parties, organizations-as-content, memberships or
+   member classes - all of that belongs to whichever module implements
+   IMemberShellContext (Grove.Members does). The shell is Grove's; what a member IS is
+   the module's. That is the same direction every other Grove seam runs in: upstream
+   never references downstream.
+
+   One theme, shared by every organization-bound user in the tenant - exactly as the
+   admin theme is shared by every staff user. What differs per member is their DATA and
+   their PERMISSIONS, never the theme. So nothing here hides or shows anything as an
+   authorization decision: this chrome renders what the server already returned for this
+   member, and every scope decision is made server-side, keyed on the active organization
+   and member class, failing closed. A nav entry hidden in markup would be access control
+   in a WASM assembly every member downloads. *@
+
+<div class="grove-member-shell" data-testid="member-shell">
+    <header class="grove-member-shell__header">
+        <div class="grove-member-shell__brand">
+            <GroveText TextStyle="TextStyle.H6" Text="@ShellContext.SiteName" />
+        </div>
+
+        @* The one switcher, the same as the admin's (docs/shells-and-themes.md › Member
+           sessions and sides): the accounts this device signed in to, then this member's
+           organizations. Choosing an organization opens its own path - the organization is
+           in the URL, so a bookmark opens it and two tabs can act in two organizations. *@
+        <div class="grove-member-shell__org" data-testid="member-shell-org-switcher">
+            <GroveShellSwitcher TenantName="@ShellContext.SiteName"
+                                TenantBase="@(Shell?.TenantBase ?? string.Empty)"
+                                UserName="@ShellContext.UserName"
+                                HomeUrl="@MemberHome"
+                                AddAccountUrl="@MemberShellLinks.OrganizationFree(Navigation, Shell, MemberRoutePaths.Login)"
+                                Organizations="@SwitcherOrganizations"
+                                ActiveOrganizationId="@ShellContext.ActiveOrganizationId"
+                                ActiveOrganizationName="@ShellContext.ActiveOrganizationName"
+                                OrganizationChosen="@OnOrganizationChosenAsync" />
+        </div>
+
+        <nav class="grove-member-shell__nav" data-testid="member-shell-nav">
+            @* Modules contribute member nav entries the same way they contribute pages.
+               These are presentation, not permission: the server decides what a member
+               may read, and an entry leading somewhere empty is a far better failure
+               than a client-side gate pretending to be security. *@
+            @foreach (var entry in ShellContext.NavigationEntries)
+            {
+                <GroveLink Path="@entry.Path" Text="@entry.Text" />
+            }
+        </nav>
+
+        @* Portal notifications (docs/media.md requirement 30): renders nothing while the
+           tenant has the feature off. *@
+        <Grove.Components.Files.GrovePortalNotifications />
+
+        <div class="grove-member-shell__account">
+            <GroveLink Path="@MemberShellLinks.Relative(ShellContext.AccountPath)" Text="@ShellContext.UserName" data-testid="member-shell-account" />
+            <GroveButton ButtonStyle="ButtonStyle.Light"
+                         Text="@ShellContext.SignOutText"
+                         Click="@OnSignOutAsync"
+                         data-testid="member-shell-signout" />
+        </div>
+    </header>
+
+    @if (ShellContext.ImpersonatorName is { Length: > 0 } impersonator)
+    {
+        @* Staff support access: the session acts as this member, on the member side only; the
+           audit records both people. Stopping restores the staff session exactly. *@
+        <div class="grove-member-shell__impersonation" role="status" data-testid="member-shell-impersonation">
+            <GroveText TextStyle="TextStyle.Body2" Text="@($"{impersonator} is acting as {ShellContext.UserName}.")" />
+            <GroveButton ButtonStyle="ButtonStyle.Light"
+                         Text="Stop impersonating"
+                         Click="@OnStopImpersonationAsync"
+                         data-testid="member-shell-stop-impersonation" />
+        </div>
+    }
+
+    <main class="grove-member-shell__content">
+        @ChildContent
+    </main>
+</div>
+
+@code {
+    // Supplied by MemberRoutes, which activates the implementation a member module provides
+    // (its library is lazy, so it cannot be registered in the sealed WASM container).
+    [CascadingParameter]
+    private IMemberShellContext ShellContext { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    private IServiceProvider Services { get; set; } = default!;
+
+    private Grove.Components.Modules.GroveShellContext? Shell =>
+        Services.GetService(typeof(Grove.Components.Modules.GroveShellContext)) as Grove.Components.Modules.GroveShellContext;
+
+    // Where this tenant opens from the device switcher: the member base, which goes straight to
+    // the member's organization (or the picker when there are several).
+    private string MemberHome => new Uri(MemberShellLinks.MemberBase(Navigation, Shell)).AbsolutePath;
+
+    private IReadOnlyList<GroveShellSwitcherOrganization> SwitcherOrganizations =>
+        [.. ShellContext.Organizations.Select(organization => new GroveShellSwitcherOrganization(
+            organization.Id,
+            organization.Name,
+            MemberShellLinks.Organization(Navigation, Shell, organization.Slug)))];
+
+    // Remembered as the session's last choice before the switcher opens the organization's path.
+    private Task OnOrganizationChosenAsync(GroveShellSwitcherOrganization organization) =>
+        ShellContext.SetActiveOrganizationAsync(organization.Id);
+
+    private async Task OnSignOutAsync()
+    {
+        await ShellContext.SignOutAsync();
+        Navigation.NavigateTo(MemberShellLinks.OrganizationFree(Navigation, Shell, MemberRoutePaths.Login), forceLoad: true);
+    }
+
+    // Back to the staff session, in the admin: a full load, since the side changes.
+    private async Task OnStopImpersonationAsync()
+    {
+        var next = await ShellContext.StopImpersonationAsync();
+        Navigation.NavigateTo(next ?? (Shell?.TenantBase + "/"), forceLoad: true);
+    }
+
+    // MemberRoutes loads the context before any page renders; the layout only follows
+    // later changes (an organization switch, sign-out).
+    protected override void OnInitialized() => ShellContext.Changed += OnChanged;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ShellContext.Changed -= OnChanged;
+}

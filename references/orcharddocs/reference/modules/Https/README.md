@@ -1,4 +1,4 @@
-# HTTPS (`Crest.Https`)
+# HTTPS (`Grove.Https`)
 
 The module will ensure HTTPS is used when accessing the website. You can force HTTPS on all pages, choose how HSTS is applied, and configure the HTTPS port.
 

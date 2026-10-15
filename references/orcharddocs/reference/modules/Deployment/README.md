@@ -1,6 +1,6 @@
-# Deployment (`Crest.Deployment`)
+# Deployment (`Grove.Deployment`)
 
-The Deployment module provides a way to build, export, and import packages that move content and configuration between Crest sites. A deployment package contains a `Recipe.json` file and can contain additional files required by its recipe steps.
+The Deployment module provides a way to build, export, and import packages that move content and configuration between Grove sites. A deployment package contains a `Recipe.json` file and can contain additional files required by its recipe steps.
 
 Deployment packages use the same recipe infrastructure as setup recipes. See [Recipes](../Recipes/README.md) for information about recipe execution and the recipe steps contributed by other features.
 
@@ -94,7 +94,7 @@ services.AddDeployment<MyDeploymentSource, MyDeploymentStep, MyDeploymentStepDis
 
 The source processes the configured step and adds recipe steps or files to the `DeploymentPlanResult`. Register a custom execution destination by implementing `IDeploymentTargetProvider`.
 
-To send packages directly to another Crest site, see [Remote Deployment](../Deployment.Remote/README.md).
+To send packages directly to another Grove site, see [Remote Deployment](../Deployment.Remote/README.md).
 
 ## Videos
 

@@ -6,7 +6,7 @@ An unfortunate result is that most internal chars will be encoded by default, re
 
 ## Disabling Unicode ranges encoding
 
-ASP.NET MVC provides a way to configure these settings. Crest uses the encoders registered in DI in order to respect any custom options. To disable Unicode chars encoding for all ranges, you can use this code in the `Configure()` method of the `Startup` class of your web application:
+ASP.NET MVC provides a way to configure these settings. Grove uses the encoders registered in DI in order to respect any custom options. To disable Unicode chars encoding for all ranges, you can use this code in the `Configure()` method of the `Startup` class of your web application:
 
 ```csharp
 services.Configure<WebEncoderOptions>(options => 

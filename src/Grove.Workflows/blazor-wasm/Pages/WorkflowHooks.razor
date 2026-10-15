@@ -1,0 +1,198 @@
+@page "/workflows/hooks"
+@attribute [PageEntry(WorkflowsConstants.Permissions.View, Id = "workflows-hooks", Parent = "workflows", Caption = "Hooks", Position = "25")]
+@using Grove.Workflows
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* Hook attachment (docs/workflows.md › Still to build, ruling 2026-10-05): every hook slot the
+   modules declare, the flows attached to it - the module's own, then the tenant's - and, for
+   a user who may edit workflows, attaching a published flow or detaching one. The flow runs
+   inside the host's transaction, so the API refuses a flow that is not atomic. Grove
+   components throughout; this page is not part of the forked Studio. *@
+
+<PageTitle>@T["Hooks"]</PageTitle>
+
+<GroveStack Gap="1rem" data-testid="workflow-hooks">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <div>
+            <GroveText TextStyle="TextStyle.H4" class="rz-m-0">@T["Hooks"]</GroveText>
+            <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["Points inside a module's work where attached flows run in the same transaction: they succeed with it or not at all."]</GroveText>
+        </div>
+        <GroveButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="IsBusy" />
+    </GroveStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" Summary="@T["Hook action failed"]" Detail="@Error" />
+    }
+
+    @if (Slots.Length == 0 && !IsBusy)
+    {
+        <GroveCard><GroveText TextStyle="TextStyle.Body1">@T["No module declares a hook slot."]</GroveText></GroveCard>
+    }
+
+    @foreach (var slot in Slots)
+    {
+        var descriptor = slot.Slot;
+        <GroveCard data-testid="hook-slot" data-slot="@descriptor.Key">
+            <GroveStack Gap="0.75rem">
+                <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <GroveText TextStyle="TextStyle.H6" class="rz-m-0">@descriptor.DisplayName</GroveText>
+                    <GroveBadge Text="@descriptor.Key" BadgeStyle="BadgeStyle.Secondary" />
+                    @if (!descriptor.AllowTenantAttachments)
+                    {
+                        <GroveBadge Text="@T["System only"]" BadgeStyle="BadgeStyle.Warning" />
+                    }
+                    else if (descriptor.RequiredOnly)
+                    {
+                        <GroveBadge Text="@T["Required attachments only"]" BadgeStyle="BadgeStyle.Info" />
+                    }
+                </GroveStack>
+                @if (!string.IsNullOrWhiteSpace(descriptor.Description))
+                {
+                    <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary">@descriptor.Description</GroveText>
+                }
+
+                @if (slot.Attachments.Count == 0)
+                {
+                    <GroveText TextStyle="TextStyle.Body2">@T["Nothing attached."]</GroveText>
+                }
+                else
+                {
+                    <GroveTable>
+                        <GroveTableHeader>
+                            <GroveTableHeaderRow>
+                                <GroveTableHeaderCell>@T["Flow"]</GroveTableHeaderCell>
+                                <GroveTableHeaderCell>@T["Owner"]</GroveTableHeaderCell>
+                                <GroveTableHeaderCell>@T["Position"]</GroveTableHeaderCell>
+                                <GroveTableHeaderCell>@T["On failure"]</GroveTableHeaderCell>
+                                <GroveTableHeaderCell />
+                            </GroveTableHeaderRow>
+                        </GroveTableHeader>
+                        <GroveTableBody>
+                            @foreach (var attachment in slot.Attachments)
+                            {
+                                <GroveTableRow data-testid="hook-attachment" data-definition="@attachment.DefinitionId">
+                                    <GroveTableCell>@(attachment.DefinitionName ?? attachment.DefinitionId)</GroveTableCell>
+                                    <GroveTableCell>@(attachment.Ownership == WorkflowOwnership.System ? T["Module"] : T["Tenant"])</GroveTableCell>
+                                    <GroveTableCell>@attachment.Position</GroveTableCell>
+                                    <GroveTableCell>@(attachment.Required ? T["Fails the transaction"] : T["Noted, the transaction goes on"])</GroveTableCell>
+                                    <GroveTableCell>
+                                        @if (CanEdit && attachment.Id is not null)
+                                        {
+                                            <GroveButton Text="@T["Detach"]" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => DetachAsync(attachment.Id))" Disabled="IsBusy" data-testid="hook-detach" />
+                                        }
+                                    </GroveTableCell>
+                                </GroveTableRow>
+                            }
+                        </GroveTableBody>
+                    </GroveTable>
+                }
+
+                @if (CanEdit && descriptor.AllowTenantAttachments)
+                {
+                    var draft = DraftFor(descriptor.Key);
+                    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="1rem" Wrap="FlexWrap.Wrap">
+                        <GroveFormField Text="@T["Published flow"]">
+                            <GroveDropDown TValue="string" @bind-Value="draft.DefinitionId" Data="@Candidates" TextProperty="Name" ValueProperty="DefinitionId" AllowFiltering="true" Style="min-width: 16rem;" data-testid="hook-candidate" />
+                        </GroveFormField>
+                        <GroveFormField Text="@T["Position"]">
+                            <GroveNumeric TValue="int" @bind-Value="draft.Position" Style="width: 6rem;" />
+                        </GroveFormField>
+                        @if (!descriptor.RequiredOnly)
+                        {
+                            <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <GroveCheckBox TValue="bool" @bind-Value="draft.Required" Name="@($"required-{descriptor.Key}")" />
+                                <GroveText TextStyle="TextStyle.Body2">@T["Required: a failure fails the transaction"]</GroveText>
+                            </GroveStack>
+                        }
+                        <GroveButton Text="@T["Attach"]" Click="@(() => AttachAsync(descriptor.Key))" Disabled="@(IsBusy || string.IsNullOrEmpty(draft.DefinitionId))" data-testid="hook-attach" />
+                    </GroveStack>
+                }
+            </GroveStack>
+        </GroveCard>
+    }
+</GroveStack>
+
+@code {
+    private WorkflowHookSlotModel[] Slots { get; set; } = [];
+    private WorkflowHookCandidateModel[] Candidates { get; set; } = [];
+    private Dictionary<string, AttachDraft> Drafts { get; } = new(StringComparer.OrdinalIgnoreCase);
+    private bool CanEdit { get; set; }
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private AttachDraft DraftFor(string slot) => Drafts.TryGetValue(slot, out var draft) ? draft : Drafts[slot] = new AttachDraft();
+
+    private async Task LoadAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            Slots = await Http.GetFromJsonAsync<WorkflowHookSlotModel[]>(WorkflowsConstants.Routes.HooksApi) ?? [];
+
+            // Only a user who may edit workflows gets the picker; the API answers 403 otherwise.
+            var candidates = await Http.GetAsync($"{WorkflowsConstants.Routes.HooksApi}/candidates");
+            CanEdit = candidates.IsSuccessStatusCode;
+            Candidates = CanEdit ? await candidates.Content.ReadFromJsonAsync<WorkflowHookCandidateModel[]>() ?? [] : [];
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task AttachAsync(string slot)
+    {
+        var draft = DraftFor(slot);
+        await RunAsync(() => Http.PostAsJsonAsync(WorkflowsConstants.Routes.HooksApi, new WorkflowHookAttachRequest(slot, draft.DefinitionId!, draft.Position, draft.Required)));
+        if (Error is null)
+        {
+            Drafts.Remove(slot);
+        }
+    }
+
+    private Task DetachAsync(string attachmentId) =>
+        RunAsync(() => Http.DeleteAsync($"{WorkflowsConstants.Routes.HooksApi}/{Uri.EscapeDataString(attachmentId)}"));
+
+    private async Task RunAsync(Func<Task<HttpResponseMessage>> call)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var response = await call();
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
+        if (Error is null)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private sealed class AttachDraft
+    {
+        public string? DefinitionId { get; set; }
+        public int Position { get; set; }
+        public bool Required { get; set; } = true;
+    }
+}

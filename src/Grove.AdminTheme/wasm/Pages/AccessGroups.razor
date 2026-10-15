@@ -1,0 +1,106 @@
+@page "/Groups"
+@attribute [PageEntry("ReadGroups", Id = "access-groups", Parent = "accessControl", Caption = "Groups")]
+@using Grove.AdminTheme.Api
+@using Grove.Components.Access
+@inject IApi Api
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* The tenant's groups (docs/permissions.md › Layers, Editors): staff hold their roles at tenant
+   reach through these, with per-user overrides. Below them, the organization defaults: the
+   tenant groups a new organization is cloned with, the roles an organization's admins may
+   assign, and the permissions only an organization's owner account holds. *@
+
+<GroveStack Gap="1rem" data-testid="access-groups-page">
+    <GroveStack Gap="0.25rem">
+        <GroveText TextStyle="TextStyle.H4" Text="@T["Groups"]" />
+        <GroveText TextStyle="TextStyle.Body2" Text="@T["Groups give roles to users. Select a member to edit their overrides."]" />
+    </GroveStack>
+
+    <GroveAccessGroupsEditor Users="@Users" Roles="@RoleNames" />
+
+    <GroveCard data-testid="organization-defaults">
+        <GroveStack Gap="0.75rem">
+            <GroveText TextStyle="TextStyle.H5" Text="@T["Organization defaults"]" />
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</GroveAlert>
+            }
+
+            <GroveText TextStyle="TextStyle.Subtitle2" Text="@T["Groups a new organization starts with"]" />
+            <GroveStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
+                @foreach (var group in TenantGroups)
+                {
+                    var id = group.Id;
+                    <label style="display: inline-flex; gap: 0.25rem; align-items: center;">
+                        <GroveCheckBox TValue="bool" Value="@Defaults.DefaultGroupIds.Contains(id)" Change="@((bool on) => Toggle(Defaults.DefaultGroupIds, id, on))" />
+                        @group.Name
+                    </label>
+                }
+            </GroveStack>
+
+            <GroveText TextStyle="TextStyle.Subtitle2" Text="@T["Roles an organization may assign"]" />
+            <GroveStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
+                @foreach (var role in RoleNames)
+                {
+                    var name = role;
+                    <label style="display: inline-flex; gap: 0.25rem; align-items: center;">
+                        <GroveCheckBox TValue="bool" Value="@Defaults.AssignableRoles.Contains(name)" Change="@((bool on) => Toggle(Defaults.AssignableRoles, name, on))" />
+                        @name
+                    </label>
+                }
+            </GroveStack>
+
+            <GroveFormField Text="@T["Owner-locked permissions (one per line)"]">
+                <GroveTextArea @bind-Value="OwnerLocked" Rows="4" Style="width: 100%;" />
+            </GroveFormField>
+
+            <GroveButton Text="@T["Save organization defaults"]" Icon="save" Click="SaveDefaultsAsync" data-testid="organization-defaults-save" />
+        </GroveStack>
+    </GroveCard>
+</GroveStack>
+
+@code {
+    private IReadOnlyList<UserChoice> Users { get; set; } = [];
+    private IReadOnlyList<string> RoleNames { get; set; } = [];
+    private List<AccessGroupInfo> TenantGroups { get; set; } = [];
+    private OrganizationAccessDefaults Defaults { get; set; } = new();
+    private string? OwnerLocked { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            RoleNames = (await Api.Grove.Rest.Roles.ListAsync()).Select(role => role.Name).ToArray();
+            // Only the users the caller manages (the hierarchy bound, docs/permissions.md).
+            Users = (await Http.GetFromJsonAsync<List<ManagedUserInfo>>("api/grove/access/managed-users") ?? []).Select(user => new UserChoice(user.Id, user.Label)).ToArray();
+            await LoadDefaultsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task LoadDefaultsAsync()
+    {
+        TenantGroups = await Http.GetFromJsonAsync<List<AccessGroupInfo>>("api/grove/access/groups") ?? [];
+        Defaults = await Http.GetFromJsonAsync<OrganizationAccessDefaults>("api/grove/access/organization-defaults") ?? new();
+        OwnerLocked = string.Join('\n', Defaults.OwnerLockedPermissions);
+    }
+
+    private static void Toggle(List<string> list, string value, bool on)
+    {
+        list.Remove(value);
+        if (on) list.Add(value);
+    }
+
+    private async Task SaveDefaultsAsync()
+    {
+        Defaults.OwnerLockedPermissions = (OwnerLocked ?? string.Empty).Split(['\n', '\r', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        using var response = await Http.PutAsJsonAsync("api/grove/access/organization-defaults", Defaults);
+        ErrorMessage = response.IsSuccessStatusCode ? null : await AccessApi.ErrorAsync(response);
+        await LoadDefaultsAsync();
+    }
+}

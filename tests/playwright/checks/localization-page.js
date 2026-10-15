@@ -17,7 +17,7 @@ module.exports = async function run(page, ctx) {
   let defaultOptionCount = 0;
   if (dropdownCount >= 2) {
     // The dropdown root IS the clickable combobox since the Radzen source merge
-    // (ad8db47) — the old .crest-dropdown__trigger inner button no longer exists.
+    // (ad8db47) — the old .grove-dropdown__trigger inner button no longer exists.
     // Radzen renders the dropdown's <li role="option"> list into the DOM up front and
     // only toggles panel visibility on click, so the options can be counted without
     // opening anything. That matters here: clicking TOGGLES the panel, so a

@@ -1,6 +1,6 @@
-# Features (`Crest.Features`)
+# Features (`Grove.Features`)
 
-The `Crest.Features` module lets the administrator of a site manage the installed modules and enable or disable the features they provide.
+The `Grove.Features` module lets the administrator of a site manage the installed modules and enable or disable the features they provide.
 
 ## Managing features
 
@@ -30,11 +30,11 @@ Features can be enabled or disabled from a recipe using the `Feature` step. List
     {
       "name": "Feature",
       "enable": [
-        "Crest.Contents",
-        "Crest.Lists"
+        "Grove.Contents",
+        "Grove.Lists"
       ],
       "disable": [
-        "Crest.HomeRoute"
+        "Grove.HomeRoute"
       ]
     }
   ]

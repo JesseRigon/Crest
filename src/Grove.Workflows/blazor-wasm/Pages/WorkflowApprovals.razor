@@ -1,0 +1,107 @@
+@page "/workflows/approvals"
+@attribute [PageEntry("AccessAdminPanel", Id = "workflows-approvals", Parent = "workflows", Caption = "Approvals", Position = "30")]
+@using Grove.Workflows
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* The signed-in user's approval queue (docs/workflows.md, phase 4): the Request approval
+   tasks their roles or permissions let them decide. Deciding resumes the waiting workflow
+   on Approved or Rejected. *@
+
+<PageTitle>@T["Approvals"]</PageTitle>
+
+<GroveStack Gap="1rem" data-testid="workflow-approvals">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <div>
+            <GroveText TextStyle="TextStyle.H4" class="rz-m-0">@T["Approvals"]</GroveText>
+            <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["Decisions workflows are waiting for, from people in your roles."]</GroveText>
+        </div>
+        <GroveButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="IsBusy" />
+    </GroveStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" Summary="@T["Approval action failed"]" Detail="@Error" />
+    }
+
+    @if (Items.Length == 0 && !IsBusy)
+    {
+        <GroveCard><GroveText TextStyle="TextStyle.Body1">@T["Nothing is waiting for you."]</GroveText></GroveCard>
+    }
+
+    @foreach (var item in Items)
+    {
+        <GroveCard data-testid="approval-task" data-approval-id="@item.Id">
+            <GroveStack Gap="0.5rem">
+                <GroveText TextStyle="TextStyle.H6" class="rz-m-0">@item.Title</GroveText>
+                @if (!string.IsNullOrWhiteSpace(item.Description))
+                {
+                    <GroveText TextStyle="TextStyle.Body2">@item.Description</GroveText>
+                }
+                <GroveText TextStyle="TextStyle.Caption" class="rz-color-secondary">
+                    @T["Requested"] @item.CreatedUtc.ToLocalTime().ToString("g")@(item.RequestedBy is null ? "" : $" · {item.RequestedBy}") · @(item.Role ?? item.Permission)
+                </GroveText>
+                <GroveTextArea Value="@Comment(item.Id)" ValueChanged="@((string value) => Comments[item.Id] = value)" Placeholder="@T["Comment (optional)"]" Style="width: 100%;" Rows="2" />
+                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                    <GroveButton Text="@T["Approve"]" ButtonStyle="ButtonStyle.Success" Click="@(() => DecideAsync(item, "approve"))" Disabled="IsBusy" data-testid="approval-approve" />
+                    <GroveButton Text="@T["Reject"]" ButtonStyle="ButtonStyle.Danger" Click="@(() => DecideAsync(item, "reject"))" Disabled="IsBusy" data-testid="approval-reject" />
+                </GroveStack>
+            </GroveStack>
+        </GroveCard>
+    }
+</GroveStack>
+
+@code {
+    private ApprovalRow[] Items { get; set; } = [];
+    private Dictionary<string, string> Comments { get; } = [];
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    private string Comment(string id) => Comments.TryGetValue(id, out var value) ? value : string.Empty;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            Items = await Http.GetFromJsonAsync<ApprovalRow[]>(WorkflowsConstants.Routes.ApprovalsApi) ?? [];
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task DecideAsync(ApprovalRow item, string decision)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{WorkflowsConstants.Routes.ApprovalsApi}/{Uri.EscapeDataString(item.Id)}/decide", new { decision, comment = Comment(item.Id) });
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
+        await LoadAsync();
+    }
+
+    private sealed record ApprovalRow(string Id, string Title, string? Description, string? Role, string? Permission, string Status, string? RequestedBy, DateTime CreatedUtc, bool CanDecide);
+}

@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <Import Project="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.props" />
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(PlatformSrcDir)Grove.ContentFields\Grove.ContentFields.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.ContentManagement\Grove.ContentManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents\Grove.Contents.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Data\Grove.Data.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.AuditTrail.Abstractions\Grove.AuditTrail.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Media.Abstractions\Grove.Media.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Roles\Grove.Roles.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Users\Grove.Users.csproj" />
+    <PackageReference Include="YesSql.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Domain/Grove.Members.Domain.csproj" />
+    <ProjectReference Include="../../Grove.Parties/Server/Grove.Parties.csproj" />
+    <ProjectReference Include="../../Grove.Server/Grove.Server.csproj" />
+    <ProjectReference Include="../../Grove.ContentPartLists/Grove.ContentPartLists.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Grove.Members.Tests" />
+  </ItemGroup>
+</Project>

@@ -3,7 +3,7 @@
 // translated, and its caption being edited.
 //
 // Two different mechanisms provide that stability, and this check covers both:
-//   * Provider-contributed items (Crest's INavigationProvider implementations) carry
+//   * Provider-contributed items (Grove's INavigationProvider implementations) carry
 //     MenuItem.Text.Name, the untranslated S["..."] literal. Served as TextKey.
 //   * Admin Menu feature nodes (DB-backed, created in the admin UI) carry no such literal -
 //     their caption is a raw string the admin typed. They instead carry AdminNode.UniqueId,
@@ -16,12 +16,12 @@ const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
 const { createInstance } = require('../../harness/instance');
 const { loginAsAdmin } = require('../../harness/auth');
 
-const defaultMenuId = '__crest_default_admin_menu';
+const defaultMenuId = '__grove_default_admin_menu';
 const GUID_LIKE = /^[0-9a-f]{32}$/i;
 
 async function getRootNodes(page) {
   const data = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+    const response = await fetch('/api/grove/admin-menus', { credentials: 'include' });
     if (!response.ok) throw new Error(`admin menus failed: ${response.status}`);
     return response.json();
   });
@@ -30,7 +30,7 @@ async function getRootNodes(page) {
 
 async function getNavigationItems(page) {
   const nav = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/navigation/admin', { credentials: 'include' });
+    const response = await fetch('/api/grove/navigation/admin', { credentials: 'include' });
     if (!response.ok) throw new Error(`navigation failed: ${response.status}`);
     return response.json();
   });
@@ -91,19 +91,19 @@ module.exports = async function run(page, ctx) {
   // --- Admin Menu feature nodes: Id is the node's UniqueId ---------------------------------
   // Created through the API rather than assumed to exist, so the check is self-contained and
   // exercises the create -> read -> rename path a real admin takes.
-  const created = await postJson(page, ctx.baseUrl, '/api/crest/admin-menus', {
+  const created = await postJson(page, ctx.baseUrl, '/api/grove/admin-menus', {
     name: `Key stability ${Date.now()}`,
   });
   let createdMenuId = created.ok ? created.body?.id : null;
   let nodeKeyBefore;
   let nodeKeyAfterRename;
 
-  const localization = await getJson(page, ctx.baseUrl, '/api/crest/localization');
+  const localization = await getJson(page, ctx.baseUrl, '/api/grove/localization');
   let french;
 
   try {
     if (createdMenuId) {
-      const nodeCreated = await postJson(page, ctx.baseUrl, `/api/crest/admin-menus/${encodeURIComponent(createdMenuId)}/nodes`, {
+      const nodeCreated = await postJson(page, ctx.baseUrl, `/api/grove/admin-menus/${encodeURIComponent(createdMenuId)}/nodes`, {
         type: 'LinkAdminNode',
         text: 'Key Probe',
         url: '/Admin',
@@ -138,7 +138,7 @@ module.exports = async function run(page, ctx) {
         const renamed = await postJson(
           page,
           ctx.baseUrl,
-          `/api/crest/admin-menus/${encodeURIComponent(createdMenuId)}/nodes/${encodeURIComponent(nodeKeyBefore)}`,
+          `/api/grove/admin-menus/${encodeURIComponent(createdMenuId)}/nodes/${encodeURIComponent(nodeKeyBefore)}`,
           {
             type: 'LinkAdminNode',
             text: 'Key Probe Renamed',
@@ -154,7 +154,7 @@ module.exports = async function run(page, ctx) {
         // The update endpoint is a PUT; POST above is only used for create. Re-read instead of
         // trusting the response shape.
         const after = await page.evaluate(async (menuId) => {
-          const response = await fetch(`/api/crest/admin-menus/${encodeURIComponent(menuId)}`, { credentials: 'include' });
+          const response = await fetch(`/api/grove/admin-menus/${encodeURIComponent(menuId)}`, { credentials: 'include' });
           return response.ok ? await response.json() : null;
         }, createdMenuId);
         const probeAfter = (after?.nodes ?? []).find(node => node.id === nodeKeyBefore);
@@ -174,7 +174,7 @@ module.exports = async function run(page, ctx) {
     }
 
     // --- Keys are identical across cultures --------------------------------------------------
-    await putJson(page, ctx.baseUrl, '/api/crest/localization', {
+    await putJson(page, ctx.baseUrl, '/api/grove/localization', {
       ...localization,
       supportedCultures: Array.from(new Set([...(localization.supportedCultures || []), 'en-US', 'fr-FR'])),
       defaultCulture: 'en-US',
@@ -230,14 +230,14 @@ module.exports = async function run(page, ctx) {
     if (createdMenuId) {
       const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
       await page.evaluate(async ({ menuId, antiforgery }) => {
-        await fetch(`/api/crest/admin-menus/${encodeURIComponent(menuId)}`, {
+        await fetch(`/api/grove/admin-menus/${encodeURIComponent(menuId)}`, {
           method: 'DELETE',
           credentials: 'include',
           headers: { [antiforgery.headerName]: antiforgery.requestToken },
         });
       }, { menuId: createdMenuId, antiforgery }).catch(() => {});
     }
-    await putJson(page, ctx.baseUrl, '/api/crest/localization', localization).catch(() => {});
+    await putJson(page, ctx.baseUrl, '/api/grove/localization', localization).catch(() => {});
   }
 
   return results;

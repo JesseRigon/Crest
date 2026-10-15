@@ -1,4 +1,4 @@
-# Elasticsearch (`Crest.Elasticsearch`)
+# Elasticsearch (`Grove.Elasticsearch`)
 
 The Elasticsearch module allows you to manage Elasticsearch indices.
 
@@ -44,11 +44,11 @@ You should get this result in Docker Desktop app:
 !!! failure
     If you've done this previously with an older `elasticsearch` Docker image, you might get errors similar to "The index [.geoip_databases/Zgrk5UXCRhmCFz98BImAHg] created in version [7.17.5] with current compatibility version [7.17.5] must be marked as read-only using the setting [index.blocks.write] set to [true] before upgrading to 9.0.0." While you can do what the error message says, if you just use the Elasticsearch instance for local development, instead, we recommend you to just remove the volume where it stores its data and start over. `docker volume ls` will show you which volumes exist, and you can then run `docker volume rm elasticsearchdocker_data01` or similar to remove the volumes used by Elasticsearch.
 
-### Set up Elasticsearch in Crest
+### Set up Elasticsearch in Grove
 
-1. Add Elastic Connection in the shell configuration (Crest.Cms.Web `appsettings.json` file). [See Elasticsearch Configuration](#elasticsearch-configuration).
-2. Start an Crest instance with your IDE or the .NET CLI.
-3. Go to Crest features, Enable Elasticsearch.
+1. Add Elastic Connection in the shell configuration (Grove.Cms.Web `appsettings.json` file). [See Elasticsearch Configuration](#elasticsearch-configuration).
+2. Start an Grove instance with your IDE or the .NET CLI.
+3. Go to Grove features, Enable Elasticsearch.
 
 ## Recipe step
 
@@ -263,7 +263,7 @@ The Elasticsearch module connection configuration can be set globally in the `ap
 
 ```json
 {
-  "Crest_Elasticsearch": {
+  "Grove_Elasticsearch": {
     "ConnectionType": "SingleNodeConnectionPool",
     "Url": "http://localhost",
     "Ports": [
@@ -346,7 +346,7 @@ As of version 1.6, [built-in](https://www.elastic.co/guide/en/elasticsearch/refe
 
 ```json
 {
-  "Crest_Elasticsearch": {
+  "Grove_Elasticsearch": {
     "Analyzers": {
       "standard": {
         "type": "standard"
@@ -363,7 +363,7 @@ At the same time, you may define custom analyzers using the [appsettings.json](.
 
 ```json
 {
-  "Crest_Elasticsearch": {
+  "Grove_Elasticsearch": {
     "Analyzers": {
       "standard": {
         "type": "standard"
@@ -401,7 +401,7 @@ For instance, to create a token filter named `english_stop`, you can include the
 
 ```json
 {
-  "Crest_Elasticsearch": {
+  "Grove_Elasticsearch": {
     "TokenFilters": {
       "english_stop": {
         "type": "stop",

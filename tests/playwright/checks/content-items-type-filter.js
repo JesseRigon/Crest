@@ -1,5 +1,5 @@
-// /Admin/Contents/ContentItems is a NATIVE Crest Blazor page (Crest.AdminTheme wasm
-// Pages/ContentItems.razor), not the legacy Crest iframe an earlier version of this
+// /Admin/Contents/ContentItems is a NATIVE Grove Blazor page (Grove.AdminTheme wasm
+// Pages/ContentItems.razor), not the legacy Grove iframe an earlier version of this
 // check guarded (the duplicated-shell-inside-iframe bug can no longer occur on this
 // route). This verifies the native replacement: the page renders without any legacy
 // frame, and filtering by a content type reloads the list without errors and shows only
@@ -11,7 +11,7 @@ module.exports = async function run(page, ctx) {
   await page.locator('[data-testid="content-items-page"]').waitFor({ timeout: 20000 });
   const legacyFrames = await page.locator('iframe.legacy-admin-frame').count();
 
-  // First CrestDropDown in the filter card is the content-type filter.
+  // First GroveDropDown in the filter card is the content-type filter.
   const typeDropdown = page.locator('[data-testid="content-items-type-filter"]');
   await typeDropdown.waitFor({ timeout: 15000 });
   await typeDropdown.click();

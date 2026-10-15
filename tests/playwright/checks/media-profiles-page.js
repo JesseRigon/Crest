@@ -16,11 +16,11 @@ module.exports = async function run(page, ctx) {
 
   const iframeCount = await page.locator('iframe').count();
 
-  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  // Mutating Grove APIs are antiforgery-protected - see harness/antiforgery.js.
   const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
 
-  const name = `crest-probe-${Date.now()}`;
-  const saved = await page.request.put(`${ctx.baseUrl}/api/crest/media/profiles/${name}`, {
+  const name = `grove-probe-${Date.now()}`;
+  const saved = await page.request.put(`${ctx.baseUrl}/api/grove/media/profiles/${name}`, {
     headers: { [antiforgery.headerName]: antiforgery.requestToken },
     data: {
       hint: 'probe',
@@ -38,7 +38,7 @@ module.exports = async function run(page, ctx) {
   let removedOk = false;
   let removedStatus = 'skipped (create failed)';
   if (savedOk) {
-    const removed = await page.request.delete(`${ctx.baseUrl}/api/crest/media/profiles/${name}`, {
+    const removed = await page.request.delete(`${ctx.baseUrl}/api/grove/media/profiles/${name}`, {
       headers: { [antiforgery.headerName]: antiforgery.requestToken },
     });
     removedOk = removed.ok();

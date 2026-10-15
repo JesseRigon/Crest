@@ -1,6 +1,6 @@
-# Google (`Crest.Google`)
+# Google (`Grove.Google`)
 
-This module adds Google features to Crest.
+This module adds Google features to Grove.
 
 ## Google Analytics
 
@@ -10,7 +10,7 @@ Navigate to [Google Analytics](https://analytics.google.com/analytics/web) porta
 
 Copy the Tracking ID from the Admin->Tracking Info->Tracking Code link.
 
-Το configure Crest, go to _Google -> Google Analytics_ settings menu in the admin dashboard and enter the Tracking ID.
+Το configure Grove, go to _Google -> Google Analytics_ settings menu in the admin dashboard and enter the Tracking ID.
 
 ## Google Tag Manager
 
@@ -20,7 +20,7 @@ Navigate to [Google Tag Manager](https://tagmanager.google.com/) portal and crea
 
 Copy the _Container ID_ generated for you to use on your website.
 
-Το configure Crest, go to _Google -> Google Tag Manager_ settings menu in the admin dashboard and enter the Container ID.
+Το configure Grove, go to _Google -> Google Tag Manager_ settings menu in the admin dashboard and enter the Container ID.
 
 ## Google Authentication
 
@@ -37,7 +37,7 @@ In the 'Where will you be calling the API from' question select the Web server (
 In the 'What data will you be accessing' question select 'User data'
 
 Now click the 'What credentials do I need?' button and set the ClientID.  
-You must also set the authorized redirect URI to point to your Crest instance. The default url in Crest is [tenant]/signin-google
+You must also set the authorized redirect URI to point to your Grove instance. The default url in Grove is [tenant]/signin-google
 
 The next step is to parameterize the consent screen that will appear to the user.
 
@@ -54,19 +54,19 @@ If no value is provided, setup Callback URL in Google API to use the default pat
 
 ## Users Registration
 
-- Enable the `Crest.Users.Registration` feature when you also want local site registration.
+- Enable the `Grove.Users.Registration` feature when you also want local site registration.
 - New external-user creation and profile generation are controlled from the Users module's [`ExternalRegistrationSettings`](../Users/README.md#external-authentication-settings).
 - An existing user can link the account through the External Logins link from the user menu.
 
 ## Google Settings Configuration
 
-The `Crest.Google` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureGoogleSettings()` extension method on `PlatformBuilder` when initializing the app.
+The `Grove.Google` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureGoogleSettings()` extension method on `PlatformBuilder` when initializing the app.
 
 The following configuration values can be customized:
 
 ```json
 {
-  "Crest_Google": {
+  "Grove_Google": {
     "ClientID": "",
     "ClientSecret": "",
     "CallbackPath": "/signin-google",

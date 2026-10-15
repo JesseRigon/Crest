@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Sharing</RootNamespace>
+    <Nullable>enable</Nullable>
+    <!-- NuGet properties-->
+    <Title>Grove Sharing Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    The sharing contracts: principals, access levels, entries and rules, and the shareable kinds a module registers to make its items shareable.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Sharing Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

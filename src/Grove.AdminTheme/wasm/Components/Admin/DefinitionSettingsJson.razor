@@ -1,0 +1,60 @@
+@namespace Grove.AdminTheme.Components.Admin
+@using System.Net.Http.Json
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* One definition's settings as their stored JSON (every section, keyed by settings type name),
+   saved with PUT to <see cref="Url"/> as { settings }. Structured editors come later. *@
+<div data-testid="definition-settings-json">
+    <GroveTextArea @bind-Value="Text" Rows="@Rows" Style="width: 100%; font-family: monospace; font-size: 0.85em" />
+    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+        <GroveButton Text="@T["Save settings"]" Icon="save" Size="ButtonSize.Small" Click="SaveAsync" Disabled="Busy" />
+        @if (Error is { } error) { <GroveText TextStyle="TextStyle.Caption" Style="color: var(--rz-danger)">@error</GroveText> }
+        else if (Saved) { <GroveText TextStyle="TextStyle.Caption">@T["Saved."]</GroveText> }
+    </GroveStack>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Url { get; set; } = string.Empty;
+
+    [Parameter] public JsonObject? Settings { get; set; }
+
+    [Parameter] public int Rows { get; set; } = 8;
+
+    [Parameter] public EventCallback OnSaved { get; set; }
+
+    private string? Text;
+    private string? Error;
+    private bool Saved;
+    private bool Busy;
+    private static readonly JsonSerializerOptions s_indented = new() { WriteIndented = true };
+
+    protected override void OnParametersSet()
+    {
+        Text = (Settings ?? []).ToJsonString(s_indented);
+        Error = null;
+        Saved = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        Error = null;
+        Saved = false;
+        JsonObject? parsed;
+        try { parsed = JsonNode.Parse(string.IsNullOrWhiteSpace(Text) ? "{}" : Text) as JsonObject; }
+        catch (JsonException exception) { Error = exception.Message; return; }
+        if (parsed is null) { Error = T["The settings must be a JSON object."]; return; }
+
+        Busy = true;
+        try
+        {
+            using var response = await Http.PutAsJsonAsync(Url, new { Settings = parsed });
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            Saved = true;
+            await OnSaved.InvokeAsync();
+        }
+        finally { Busy = false; }
+    }
+}

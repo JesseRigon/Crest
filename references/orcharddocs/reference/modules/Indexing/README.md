@@ -1,17 +1,17 @@
-# Indexing (`Crest.Indexing`)
+# Indexing (`Grove.Indexing`)
 
-The `Indexing` module provides a flexible and extensible infrastructure for indexing any kind of data in Crest. It supports multiple index providers—including Lucene, Elasticsearch, and Azure AI Search—and is designed to be fully agnostic of specific data types.
+The `Indexing` module provides a flexible and extensible infrastructure for indexing any kind of data in Grove. It supports multiple index providers—including Lucene, Elasticsearch, and Azure AI Search—and is designed to be fully agnostic of specific data types.
 
 At its core, the module maintains an **append-only log of indexing tasks**, where each task represents either an `Update` or a `Deletion`. This log forms a chronological record of changes that can be queried using a **cursor-based interface**. This design allows consumers to track changes independently and implement custom behavior, such as syncing to external systems, rebuilding search indexes, or reacting to specific data events.
 
 Although often used to index content items, the system is **not limited to content**—you can index any kind of document, such as user records, products, or data from external APIs.
 
 !!! note
-    Content item indexing is implemented as a consumer of the core `Indexing` infrastructure. It is optional and does not constrain the indexing module to Crest content items.
+    Content item indexing is implemented as a consumer of the core `Indexing` infrastructure. It is optional and does not constrain the indexing module to Grove content items.
 
 ## Indexing UI
 
-Starting with Crest version 3, the module provides a unified user interface under **Search** > **Indexes** in the admin dashboard. This UI supports the creation, configuration, and lifecycle management of indexes. You can:
+Starting with Grove version 3, the module provides a unified user interface under **Search** > **Indexes** in the admin dashboard. This UI supports the creation, configuration, and lifecycle management of indexes. You can:
 
 * Create and configure index profiles
 * Reset or rebuild existing indexes
@@ -20,7 +20,7 @@ Starting with Crest version 3, the module provides a unified user interface unde
 
 ## Indexing Content Items
 
-While the infrastructure is generic, the module includes built-in support for Crest content items via the `Content` category.
+While the infrastructure is generic, the module includes built-in support for Grove content items via the `Content` category.
 
 When enabled, content item indexing uses the append-only task log to track changes. Each entry in the log indicates an update or deletion of a content item. Other modules can consume this log using their own cursor positions, enabling them to:
 
@@ -97,7 +97,7 @@ Here is a sample step:
 ```
 
 !!! note
-    To index Crest content items, use the built-in `Content` category. This ensures full compatibility with the content indexing UI and configuration experience.
+    To index Grove content items, use the built-in `Content` category. This ensures full compatibility with the content indexing UI and configuration experience.
 
 ### Reset Index Profile Step
 

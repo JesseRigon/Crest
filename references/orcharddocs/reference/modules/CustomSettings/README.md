@@ -1,4 +1,4 @@
-# Custom Settings (`Crest.CustomSettings`)
+# Custom Settings (`Grove.CustomSettings`)
 
 Custom Settings allow a site administrator to create a customized set of properties that are global to the web sites.  
 These settings are edited in the standard Settings section and can be protected with specific permissions.
@@ -18,7 +18,7 @@ Once created, open the Setting menu item and each of these sections should appea
 
 Each Custom Settings section gets a dedicated permission to allow specific users to edit it.
 
-To edit this permission open the Roles editor and go to the `Crest.CustomSettings` Feature group.
+To edit this permission open the Roles editor and go to the `Grove.CustomSettings` Feature group.
 
 ## Usage
 
@@ -53,7 +53,7 @@ public sealed class MyController : Controller
     {
         /*
         For convenience, we have added an extension method named 'GetCustomSettingsAsync' to easily access the custom settings.
-        This method is available in the Crest.Contents.Core package.
+        This method is available in the Grove.Contents.Core package.
 
         Alternatively, you can access the custom settings without using the 'GetCustomSettingsAsync' extension method as follow:
         var siteSettings = await _siteService.GetSiteSettingsAsync();

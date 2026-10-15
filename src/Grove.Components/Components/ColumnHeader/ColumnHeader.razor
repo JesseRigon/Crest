@@ -1,0 +1,8 @@
+@using Grove.Components.Primitives.Documents.Spreadsheet
+@using Microsoft.AspNetCore.Components.Web
+@inherits HeaderBase
+@namespace Grove.Components.Primitives.Spreadsheet
+<div class=@Class style=@Style data-column=@Column>
+    @ColumnRef.ToString(Column)
+</div>
+<div data-column=@Column style=@ResizeHandleStyle class="rz-spreadsheet-column-resize-handle"></div>

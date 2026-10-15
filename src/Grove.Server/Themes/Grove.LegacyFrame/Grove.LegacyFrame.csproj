@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <Import Project="$(PlatformSrcDir)Grove.Theme.Targets\Grove.Theme.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.props" />
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformCompatibilityVersion>4.0.0</PlatformCompatibilityVersion>
+    <GroveSecurityPatch>0</GroveSecurityPatch>
+    <GroveBugPatch>0</GroveBugPatch>
+    <GroveVersion>$(PlatformCompatibilityVersion).$(GroveSecurityPatch).$(GroveBugPatch)</GroveVersion>
+    <VersionPrefix>$(PlatformCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(PlatformCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(GroveVersion)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Theme.Targets, not Module.Targets: it sets ModuleType=Theme, which becomes the
+         ModuleMarkerAttribute's type string in the built assembly. IsTheme() (see
+         Grove's ExtensionInfoExtensions) tests exactly that, and
+         ThemeViewLocationExpanderProvider only contributes a feature's Views/ paths when
+         IsTheme() is true - built as a module, this theme's Views/Layout.cshtml was
+         never in the view-location list, so every legacy-frame request silently fell
+         through to BaseTheme (TheAdmin) and rendered its full admin chrome
+         (navbar + sidebar) inside the Grove iframe. The [assembly: Theme] attribute in
+         Manifest.cs alone is not sufficient: the targets-generated marker attribute is
+         what ModuleInfo actually resolves to at runtime. -->
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Theme.Targets\Grove.Theme.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
+  </ItemGroup>
+</Project>

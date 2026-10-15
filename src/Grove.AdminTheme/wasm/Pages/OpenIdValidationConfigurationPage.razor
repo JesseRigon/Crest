@@ -1,0 +1,85 @@
+@page "/OpenId/ValidationConfiguration"
+@attribute [PageEntry("ManageValidationSettings", Id = "openid-validation", Parent = "openid-settings", Caption = "Token Validation")]
+@using Grove.AdminTheme.Api
+@using Grove.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* Token validation as a structured form (step 7: the MVC editor and its display driver are
+   retired): either a local tenant's server or a remote authority issues the tokens this tenant
+   accepts. Saving validates through the validation service and reloads the tenant. *@
+
+<GroveStack Gap="1rem" data-testid="openid-validation-page">
+    <GroveStack Gap="0.25rem">
+        <GroveText TextStyle="TextStyle.H4" Text="@T["Token validation"]" />
+        <GroveText TextStyle="TextStyle.Body2" Text="@T["Either a tenant or an authority issues the tokens; saving reloads the tenant."]" />
+    </GroveStack>
+
+    @foreach (var message in Errors.Where(error => !Fields.Contains(error.Key)).Select(error => error.Message))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@message</GroveAlert>
+    }
+
+    @if (Model is null)
+    {
+        <GroveCard><GroveProgressBar Mode="ProgressBarMode.Indeterminate" /></GroveCard>
+    }
+    else
+    {
+        <GroveCard>
+            <GroveRow Gap="1rem">
+                <GroveColumn Size="12" SizeMD="6"><GroveFormField Text="@T["Tenant (a local OpenID server)"]" Style="width: 100%;"><GroveTextBox @bind-Value="Model.Tenant" Style="width: 100%;" /></GroveFormField><FieldMessage Text="@ErrorFor(nameof(OpenIdValidationConfiguration.Tenant))" /></GroveColumn>
+                <GroveColumn Size="12" SizeMD="6"><GroveFormField Text="@T["Authority (a remote server)"]" Style="width: 100%;"><GroveTextBox @bind-Value="Model.Authority" Style="width: 100%;" /></GroveFormField><FieldMessage Text="@ErrorFor(nameof(OpenIdValidationConfiguration.Authority))" /></GroveColumn>
+                <GroveColumn Size="12" SizeMD="6"><GroveFormField Text="@T["Metadata address"]" Style="width: 100%;"><GroveTextBox @bind-Value="Model.MetadataAddress" Style="width: 100%;" /></GroveFormField><FieldMessage Text="@ErrorFor(nameof(OpenIdValidationConfiguration.MetadataAddress))" /></GroveColumn>
+                <GroveColumn Size="12" SizeMD="6"><GroveFormField Text="@T["Audience"]" Style="width: 100%;"><GroveTextBox @bind-Value="Model.Audience" Style="width: 100%;" /></GroveFormField><FieldMessage Text="@ErrorFor(nameof(OpenIdValidationConfiguration.Audience))" /></GroveColumn>
+            </GroveRow>
+            <SettingsSwitch @bind-Value="Model.DisableTokenTypeValidation" Label="@T["Disable token type validation"]" />
+        </GroveCard>
+
+        <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" data-testid="openid-validation-save" />
+        </GroveStack>
+    }
+</GroveStack>
+
+@code {
+    private OpenIdValidationConfiguration? Model { get; set; }
+    private OpenIdFieldError[] Errors { get; set; } = [];
+    private bool IsBusy { get; set; }
+
+    private static readonly HashSet<string> Fields = new(StringComparer.OrdinalIgnoreCase)
+    {
+        nameof(OpenIdValidationConfiguration.Tenant), nameof(OpenIdValidationConfiguration.Authority),
+        nameof(OpenIdValidationConfiguration.MetadataAddress), nameof(OpenIdValidationConfiguration.Audience),
+    };
+
+    private string? ErrorFor(string key) => Errors.FirstOrDefault(error => string.Equals(error.Key, key, StringComparison.OrdinalIgnoreCase))?.Message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Api.Grove.Rest.OpenId.GetValidationAsync();
+        if (Model is null)
+        {
+            Errors = [new OpenIdFieldError(string.Empty, T["The validation configuration could not be loaded."])];
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var result = await Api.Grove.Rest.OpenId.SaveValidationAsync(Model!);
+            Errors = result.Errors;
+            if (result.Succeeded)
+            {
+                Notifications.Notify(NotificationSeverity.Success, T["Token validation saved"], T["The tenant reloads with the new configuration."]);
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

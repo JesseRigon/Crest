@@ -1,4 +1,4 @@
-# Media Slugify (`Crest.Media.Slugify`)
+# Media Slugify (`Grove.Media.Slugify`)
 
 The Media Slugify feature enables _slugifying_ assets in the Media Library.
 
@@ -16,8 +16,8 @@ By default, transliteration happens when the feature is enabled. The following c
 
 ```json
 {
-  "Crest": {
-    "Crest_Media_Slugify": {
+  "Grove": {
+    "Grove_Media_Slugify": {
       // Enable/Disable Transliteration.
       "Transilterate": true
     }

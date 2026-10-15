@@ -1,6 +1,6 @@
 // Converted from the old admin-main-content-tabs.js
-// (modules/Crest/tests/playwright/admin-main-content-tabs.js). Verifies the
-// shared CrestMainContentTabs component across three different settings pages: the tab
+// (modules/Grove/tests/playwright/admin-main-content-tabs.js). Verifies the
+// shared GroveMainContentTabs component across three different settings pages: the tab
 // strip renders with the expected labels, and clicking the last tab actually selects it
 // (aria-selected="true").
 module.exports = async function run(page, ctx) {
@@ -14,11 +14,11 @@ module.exports = async function run(page, ctx) {
 
   for (const [route, labels] of pages) {
     await page.goto(`${ctx.baseUrl}${route}`, { waitUntil: 'networkidle' });
-    const tabs = page.locator('.crest-main-content-tabs');
+    const tabs = page.locator('.grove-main-content-tabs');
     const tabsOk = await tabs.waitFor({ timeout: 20000 }).then(() => true).catch(() => false);
 
     if (!tabsOk) {
-      results.push({ name: `tabs-render:${route}`, pass: false, message: 'crest-main-content-tabs not found' });
+      results.push({ name: `tabs-render:${route}`, pass: false, message: 'grove-main-content-tabs not found' });
       continue;
     }
 

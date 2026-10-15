@@ -1,0 +1,10 @@
+@model Grove.ContentFields.ViewModels.DisplayBooleanFieldViewModel
+@using Grove.Mvc.Utilities
+
+@{
+    var name = (Model.PartFieldDefinition.PartDefinition.Name + "-" + Model.PartFieldDefinition.Name).HtmlClassify();
+}
+
+<div class="field field-type-booleanfield field-name-@name">
+    @Model.Value
+</div>

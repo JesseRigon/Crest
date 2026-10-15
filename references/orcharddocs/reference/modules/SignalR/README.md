@@ -1,20 +1,20 @@
-# SignalR (`Crest.SignalR`)
+# SignalR (`Grove.SignalR`)
 
-The SignalR module provides the shared infrastructure required to host and consume [SignalR](https://learn.microsoft.com/aspnet/core/signalr/introduction) hubs in Crest. Any module that declares a hub can depend on this module instead of registering SignalR itself, which keeps hub hosting, client resources, authentication, and scale-out backplanes consistent across the application.
+The SignalR module provides the shared infrastructure required to host and consume [SignalR](https://learn.microsoft.com/aspnet/core/signalr/introduction) hubs in Grove. Any module that declares a hub can depend on this module instead of registering SignalR itself, which keeps hub hosting, client resources, authentication, and scale-out backplanes consistent across the application.
 
-The scale-out backplanes ship as separate modules so the base `Crest.SignalR` module stays free of Redis and Azure dependencies. Install only the backplane you need:
+The scale-out backplanes ship as separate modules so the base `Grove.SignalR` module stays free of Redis and Azure dependencies. Install only the backplane you need:
 
 | Module | Feature | Purpose |
 | --- | --- | --- |
-| `Crest.SignalR` | `Crest.SignalR` | Base SignalR hosting, client resources, and the authorization policy used by secured hubs. |
-| `Crest.SignalR.Redis` | `Crest.SignalR.Redis` | Redis scale-out backplane. Brings the Redis dependencies. |
-| `Crest.SignalR.Azure` | `Crest.SignalR.Azure` | Azure SignalR Service backplane. Brings the Azure dependencies. |
+| `Grove.SignalR` | `Grove.SignalR` | Base SignalR hosting, client resources, and the authorization policy used by secured hubs. |
+| `Grove.SignalR.Redis` | `Grove.SignalR.Redis` | Redis scale-out backplane. Brings the Redis dependencies. |
+| `Grove.SignalR.Azure` | `Grove.SignalR.Azure` | Azure SignalR Service backplane. Brings the Azure dependencies. |
 
 ## Features
 
-- **`Crest.SignalR`** — Registers SignalR with a camel-cased JSON protocol, the SignalR JavaScript client as a named resource (`signalr`), and the `SignalR` authorization policy used by secured hubs.
-- **`Crest.SignalR.Redis`** — Uses Redis as the SignalR backplane, enabling multi-instance deployments. Each tenant's traffic is isolated on a dedicated Redis channel prefix. Provided by the separate `Crest.SignalR.Redis` module and depends on `Crest.Redis`.
-- **`Crest.SignalR.Azure`** — Uses the Azure SignalR Service as the backplane, enabling multi-instance deployments. Provided by the separate `Crest.SignalR.Azure` module.
+- **`Grove.SignalR`** — Registers SignalR with a camel-cased JSON protocol, the SignalR JavaScript client as a named resource (`signalr`), and the `SignalR` authorization policy used by secured hubs.
+- **`Grove.SignalR.Redis`** — Uses Redis as the SignalR backplane, enabling multi-instance deployments. Each tenant's traffic is isolated on a dedicated Redis channel prefix. Provided by the separate `Grove.SignalR.Redis` module and depends on `Grove.Redis`.
+- **`Grove.SignalR.Azure`** — Uses the Azure SignalR Service as the backplane, enabling multi-instance deployments. Provided by the separate `Grove.SignalR.Azure` module.
 
 ## Declaring a hub in another module
 
@@ -31,7 +31,7 @@ public sealed class MyHub : Hub
 }
 ```
 
-The feature that hosts the hub depends on `Crest.SignalR` and maps the hub in its `Startup`:
+The feature that hosts the hub depends on `Grove.SignalR` and maps the hub in its `Startup`:
 
 ```csharp
 public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
@@ -63,30 +63,30 @@ services.Configure<HubOptions>(options =>
 
 ## Backplane configuration
 
-Each backplane is a separate module and only registers once its feature is enabled. The Redis backplane (`Crest.SignalR.Redis`) reuses the `Crest.Redis` connection string (`Crest_Redis:Configuration`):
+Each backplane is a separate module and only registers once its feature is enabled. The Redis backplane (`Grove.SignalR.Redis`) reuses the `Grove.Redis` connection string (`Grove_Redis:Configuration`):
 
 ```json
 {
-  "Crest_Redis": {
+  "Grove_Redis": {
     "Configuration": "your-redis-host:6379"
   }
 }
 ```
 
-The Azure SignalR Service backplane (`Crest.SignalR.Azure`) uses its own connection string:
+The Azure SignalR Service backplane (`Grove.SignalR.Azure`) uses its own connection string:
 
 ```json
 {
   "SignalR": {
     "Azure": {
       "ConnectionString": "Endpoint=https://<your-service>.service.signalr.net;AccessKey=...;Version=1.0;",
-      "ApplicationName": "Crest"
+      "ApplicationName": "Grove"
     }
   }
 }
 ```
 
-`ApplicationName` is optional and defaults to `Crest`. Set it to a unique value when multiple Crest deployments share the same Azure SignalR Service. It must start with a letter and contain only letters, numbers, and underscores. Crest appends a stable tenant identifier so hubs remain isolated between tenants.
+`ApplicationName` is optional and defaults to `Grove`. Set it to a unique value when multiple Grove deployments share the same Azure SignalR Service. It must start with a letter and contain only letters, numbers, and underscores. Grove appends a stable tenant identifier so hubs remain isolated between tenants.
 
 If a backplane feature is enabled but its connection string is missing, a warning is logged at startup and SignalR keeps working in single-instance (in-memory) mode — messages then only reach clients connected to the same instance.
 

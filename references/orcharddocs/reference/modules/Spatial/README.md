@@ -1,4 +1,4 @@
-# Spatial (Crest.Spatial)
+# Spatial (Grove.Spatial)
 
 This modules provides a **GeoPointField** which can be used to give a geographic position to content.
 

@@ -1,0 +1,35 @@
+@typeparam TItem
+
+@namespace Grove.Components.Primitives
+@if (DataList != null && !DataList.WrapItems)
+{
+    <li>
+        @if (DataList.Template != null)
+        {
+            @DataList.Template(Item!)
+        }
+        else
+        {
+            <span>Template</span>
+        }
+    </li>
+}
+else
+{
+    @if (DataList?.Template != null)
+    {
+        @DataList.Template(Item!)
+    }
+    else
+    {
+        <span>Template</span>
+    }
+}
+
+@code {
+    [Parameter]
+    public GroveDataList<TItem>? DataList { get; set; }
+
+    [Parameter]
+    public TItem? Item { get; set; }
+}

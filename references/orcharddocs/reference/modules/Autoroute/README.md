@@ -1,4 +1,4 @@
-# Autoroute (`Crest.Autoroute`)
+# Autoroute (`Grove.Autoroute`)
 
 This module allows you to specify custom URLs (permalinks) for your content items.
 

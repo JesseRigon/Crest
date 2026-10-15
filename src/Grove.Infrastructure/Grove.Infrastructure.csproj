@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Grove Infrastructure</Title>
+    <Description>The platform's implementation library: the modular multi-tenant shell host, module
+    loading, background tasks, caching, locking, documents, entities, security, settings, email and HTML.</Description>
+    <PackageTags>$(PackageTags) Infrastructure</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fluid.Core" />
+    <PackageReference Include="HtmlSanitizer" />
+    <PackageReference Include="libphonenumber-csharp" />
+    <PackageReference Include="MimeKit" />
+    <PackageReference Include="ncrontab" />
+    <PackageReference Include="NodaTime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Abstractions\Grove.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.YesSql\Grove.Data.YesSql.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Localization.Abstractions\Grove.Localization.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,10 +1,10 @@
-# Data Protection (Azure Storage) (`Crest.DataProtection.Azure`)
+# Data Protection (Azure Storage) (`Grove.DataProtection.Azure`)
 
 ## Purpose
 
 The Data Protection (Azure Storage) feature allows data protection key rings to be stored in an Azure Blob Storage container, with keys automatically isolated per tenant. This is particularly important in load-balanced deployments, where all active instances must access the same key ring to operate correctly.
 
-Data Protection is a core security mechanism in ASP.NET Core and is used by Crest to safeguard sensitive information, including authentication cookies, anti-forgery tokens, decryptable persisted secrets (such as SMTP credentials, excluding user passwords), and temporary data.
+Data Protection is a core security mechanism in ASP.NET Core and is used by Grove to safeguard sensitive information, including authentication cookies, anti-forgery tokens, decryptable persisted secrets (such as SMTP credentials, excluding user passwords), and temporary data.
 
 ## Configuration
 
@@ -14,8 +14,8 @@ These settings need to be available to the `IShellConfiguration` implementation.
 
 ```json
 {
-  "Crest": {
-    "Crest_DataProtection_Azure": {
+  "Grove": {
+    "Grove_DataProtection_Azure": {
       "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=<myaccountname>;AccountKey=<myaccountkey>;EndpointSuffix=core.windows.net",
       "ContainerName": "dataprotection",
       "BlobName": "",
@@ -56,8 +56,8 @@ For more granular isolation, you can configure a separate container for each ten
 
 ```json
 {
-  "Crest": {
-    "Crest_DataProtection_Azure": {
+  "Grove": {
+    "Grove_DataProtection_Azure": {
       "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=<myaccountname>;AccountKey=<myaccountkey>;EndpointSuffix=core.windows.net",
       "ContainerName": "{{ ShellSettings.Name }}-dataprotection",
       "BlobName": "{{ ShellSettings.Name }}DataProtectionKeys.xml",

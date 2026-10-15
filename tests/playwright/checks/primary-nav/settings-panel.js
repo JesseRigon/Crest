@@ -1,4 +1,4 @@
-// Converted from Crest/tests/playwright/admin-menu-primary-nav-menu-settings.js.
+// Converted from Grove/tests/playwright/admin-menu-primary-nav-menu-settings.js.
 // The primaryNavMenu settings flyout: tier-4 fields render correctly (no indentation
 // input, but background/base-size inputs still present), an unsaved checkbox edit
 // doesn't get reverted by a background reload, and saved settings actually apply to the
@@ -8,10 +8,10 @@ module.exports = async function run(page, ctx) {
   async function savePrimaryNavMenuSettings(menuId, settings, action) {
     await page.evaluate(
       async ({ menuId, settings, action }) => {
-        const tokenResponse = await fetch('/api/crest/antiforgery/token', { credentials: 'include' });
+        const tokenResponse = await fetch('/api/grove/antiforgery/token', { credentials: 'include' });
         if (!tokenResponse.ok) throw new Error(`Unable to load antiforgery token before ${action}: ${tokenResponse.status}`);
         const token = await tokenResponse.json();
-        const response = await fetch(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/primary-nav-menu-settings`, {
+        const response = await fetch(`/api/grove/admin-menus/${encodeURIComponent(menuId)}/primary-nav-menu-settings`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'content-type': 'application/json', [token.headerName || 'RequestVerificationToken']: token.requestToken },
@@ -31,7 +31,7 @@ module.exports = async function run(page, ctx) {
     await page.getByRole('heading', { name: 'Sidebar', exact: true }).waitFor({ timeout: 20000 });
 
     const state = await page.evaluate(async () => {
-      const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+      const response = await fetch('/api/grove/admin-menus', { credentials: 'include' });
       if (!response.ok) throw new Error(`Unable to load admin menu state: ${response.status}`);
       return response.json();
     });
@@ -123,7 +123,7 @@ module.exports = async function run(page, ctx) {
       return {
         hasToggle: Boolean(primaryNavMenu?.querySelector('.primary-nav-menu__mode-toggle')),
         expansionDuration: getComputedStyle(primaryNavMenu).getPropertyValue('--primary-nav-menu-expansion-duration').trim(),
-        tier2BaseSize: computed?.getPropertyValue('--crest-panel-menu-tier-2-base-size').trim(),
+        tier2BaseSize: computed?.getPropertyValue('--grove-panel-menu-tier-2-base-size').trim(),
       };
     });
 
@@ -135,7 +135,7 @@ module.exports = async function run(page, ctx) {
   } finally {
     if (originalSettings) {
       const state = await page.evaluate(async () => {
-        const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+        const response = await fetch('/api/grove/admin-menus', { credentials: 'include' });
         if (!response.ok) throw new Error(`Unable to reload admin menu state for restore: ${response.status}`);
         return response.json();
       });

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <Description>Adds workflow management to the studio.</Description>
+        <PackageTags>groveWorkflows studio module</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <SupportedPlatform Include="browser" />
+    </ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" />
+	</ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\framework\Grove.Workflows.Studio.DomInterop\Grove.Workflows.Studio.DomInterop.csproj" />
+      <ProjectReference Include="..\..\framework\Grove.Workflows.Studio.Shared\Grove.Workflows.Studio.Shared.csproj" />
+      <ProjectReference Include="..\Grove.Workflows.Studio.ActivityPortProviders\Grove.Workflows.Studio.ActivityPortProviders.csproj" />
+      <ProjectReference Include="..\Grove.Workflows.Studio.UIHints\Grove.Workflows.Studio.UIHints.csproj" />
+      <ProjectReference Include="..\Grove.Workflows.Studio.Workflows.Core\Grove.Workflows.Studio.Workflows.Core.csproj" />
+      <ProjectReference Include="..\Grove.Workflows.Studio.Workflows.Designer\Grove.Workflows.Studio.Workflows.Designer.csproj" />
+    </ItemGroup>
+	
+</Project>

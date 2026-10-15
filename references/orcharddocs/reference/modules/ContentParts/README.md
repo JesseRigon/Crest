@@ -1,6 +1,6 @@
 # Content Parts
 
-Crest allows you to add Parts to a content type.
+Grove allows you to add Parts to a content type.
 
 ## Available Parts
 

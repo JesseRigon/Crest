@@ -1,4 +1,4 @@
-# Layers (`Crest.Layers`)
+# Layers (`Grove.Layers`)
 
 The Layers can be managed from the `Design > Widgets` page in the admin.
 

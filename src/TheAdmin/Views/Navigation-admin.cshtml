@@ -1,7 +1,7 @@
-@inject Crest.Settings.ISiteService siteService
-@using Crest.Entities
-@using Crest.Admin.Models
-@using Crest.Navigation
+@inject Grove.Settings.ISiteService siteService
+@using Grove.Entities
+@using Grove.Admin.Models
+@using Grove.Navigation
 @{
     var adminSettings = (await siteService.GetSiteSettingsAsync()).GetOrCreate<AdminSettings>();
     TagBuilder tag = Tag(Model, "ul");

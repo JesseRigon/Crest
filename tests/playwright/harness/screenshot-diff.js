@@ -12,7 +12,7 @@ const pixelmatch = require('pixelmatch').default;
 // The baseline is per HOST, not per repository: a screenshot of the admin shell shows
 // whichever modules that host enables, so one checked-in image cannot match two hosts.
 // A consuming host points OUTPUT_ROOT (or runSuite's outputRoot) at its own directory and
-// promotes its own baselines there; the one checked in here is Crest's own.
+// promotes its own baselines there; the one checked in here is Grove's own.
 function resolveDirs(outputRoot) {
   const base = path.join(outputRoot, 'base');
   const fresh = path.join(outputRoot, 'new');

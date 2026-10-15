@@ -5,7 +5,7 @@ The Media Picker is the dialog that lets users browse the [Media Library](../../
 - In the editor of a **Media Field** attached to a content type.
 - In the toolbar of the **HTML editors** (`HtmlBodyPart`, `HtmlField`) and of the **Markdown editor** (`MarkdownBodyPart`), to insert an image into the body text.
 
-It requires the `Crest.Media` feature to be enabled, and the current user needs a permission to access the Media Library (for example `ManageMedia`, or `ManageOwnMedia` for the user's own folder).
+It requires the `Grove.Media` feature to be enabled, and the current user needs a permission to access the Media Library (for example `ManageMedia`, or `ManageOwnMedia` for the user's own folder).
 
 ## Using the Media Picker with a Media Field
 

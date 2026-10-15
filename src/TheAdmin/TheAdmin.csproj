@@ -7,7 +7,7 @@
     <Title>The Admin theme</Title>
     <Description>$(OCCMSDescription)
 
-    The default Admin theme of Crest CMS</Description>
+    The default Admin theme of Grove CMS</Description>
     <PackageTags>$(PackageTags) PlatformCMS Theme</PackageTags>
   </PropertyGroup>
 
@@ -16,16 +16,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Crest.AdminMenu\Crest.AdminMenu.csproj" />
-    <ProjectReference Include="..\Crest.Contents\Crest.Contents.csproj" />
-    <ProjectReference Include="..\Crest.Lists\Crest.Lists.csproj" />
-    <ProjectReference Include="..\Crest.AdminMenu.Abstractions\Crest.AdminMenu.Abstractions.csproj" />
-    <ProjectReference Include="..\Crest.Theme.Targets\Crest.Theme.Targets.csproj" />
-    <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
-    <ProjectReference Include="..\Crest.ResourceManagement\Crest.ResourceManagement.csproj" />
-    <ProjectReference Include="..\Crest.Admin\Crest.Admin.csproj" />
-    <ProjectReference Include="..\Crest.Themes\Crest.Themes.csproj" />
-    <ProjectReference Include="..\Crest.Users\Crest.Users.csproj" />
+    <ProjectReference Include="..\Grove.AdminMenu\Grove.AdminMenu.csproj" />
+    <ProjectReference Include="..\Grove.Contents\Grove.Contents.csproj" />
+    <ProjectReference Include="..\Grove.Lists\Grove.Lists.csproj" />
+    <ProjectReference Include="..\Grove.AdminMenu.Abstractions\Grove.AdminMenu.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Theme.Targets\Grove.Theme.Targets.csproj" />
+    <ProjectReference Include="..\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
+    <ProjectReference Include="..\Grove.Admin\Grove.Admin.csproj" />
+    <ProjectReference Include="..\Grove.Themes\Grove.Themes.csproj" />
+    <ProjectReference Include="..\Grove.Users\Grove.Users.csproj" />
   </ItemGroup>
 
 </Project>

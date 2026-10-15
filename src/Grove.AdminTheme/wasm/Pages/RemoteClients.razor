@@ -1,0 +1,116 @@
+@page "/Deployment/RemoteClient/Index"
+@attribute [PageEntry("ManageRemoteClients", Id = "remote-clients", Parent = "deployments", Caption = "Remote Clients")]
+@using Grove.AdminTheme.Api
+@using Grove.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* Clients allowed to send deployment packages to this tenant, each with its API key. The
+   key is stored protected and never read back; an edit keeps it unless a new one is typed. *@
+
+<GroveStack Gap="1rem" data-testid="remote-clients-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <GroveStack Gap="0.25rem">
+            <GroveText TextStyle="TextStyle.H4" Text="@T["Remote Clients"]" />
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["Other instances allowed to send deployment packages to this tenant."]" />
+        </GroveStack>
+        <GroveButton Text="@T["Add remote client"]" Icon="add" Click="New" Disabled="@IsBusy" />
+    </GroveStack>
+
+    @if (Error is not null)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</GroveAlert>
+    }
+
+    @if (Editing)
+    {
+        <GroveCard data-testid="remote-client-editor">
+            <GroveStack Gap="1rem">
+                <GroveText TextStyle="TextStyle.H5" Text="@(EditingId is null ? T["New remote client"] : T["Edit {0}", DraftClientName])" />
+                <GroveRow Gap="1rem">
+                    <GroveColumn Size="12" SizeMD="6"><GroveFormField Text="@T["Client name"]" Style="width: 100%;"><GroveTextBox @bind-Value="DraftClientName" Style="width: 100%;" /></GroveFormField></GroveColumn>
+                    <GroveColumn Size="12" SizeMD="6"><GroveFormField Text="@(EditingId is null ? T["API key"] : T["API key (leave empty to keep the stored key)"])" Style="width: 100%;"><GrovePassword @bind-Value="DraftApiKey" Style="width: 100%;" /></GroveFormField></GroveColumn>
+                </GroveRow>
+                <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <GroveButton Text="@T["Generate key"]" Icon="key" ButtonStyle="ButtonStyle.Light" Click="GenerateKey" Disabled="@IsBusy" />
+                    <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Editing = false)" Disabled="@IsBusy" />
+                    <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" />
+                </GroveStack>
+                @if (GeneratedKey is not null)
+                {
+                    <GroveAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["Copy this key now; it cannot be shown again after saving: {0}", GeneratedKey]</GroveAlert>
+                }
+            </GroveStack>
+        </GroveCard>
+    }
+
+    <GroveCard>
+        @if (Items is null)
+        {
+            <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (Items.Length == 0)
+        {
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["No remote clients yet."]" />
+        }
+        else
+        {
+            <GroveDataGrid Data="@Items" TItem="GroveRemoteClient" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <GroveDataGridColumn TItem="GroveRemoteClient" Property="ClientName" Title="@T["Client name"]" />
+                    <GroveDataGridColumn TItem="GroveRemoteClient" Title="@T["Actions"]" Width="10rem"><Template Context="item"><GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem"><GroveButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Edit(item))" title="@T["Edit"]" /><GroveButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteAsync(item))" title="@T["Delete"]" /></GroveStack></Template></GroveDataGridColumn>
+                </Columns>
+            </GroveDataGrid>
+        }
+    </GroveCard>
+</GroveStack>
+
+@code {
+    private GroveRemoteClient[]? Items { get; set; }
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+    private bool Editing { get; set; }
+    private string? EditingId { get; set; }
+    private string DraftClientName { get; set; } = string.Empty;
+    private string? DraftApiKey { get; set; }
+    private string? GeneratedKey { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync() => Items = await Api.Grove.Rest.Deployment.ListRemoteClientsAsync();
+
+    private void New() { Editing = true; EditingId = null; DraftClientName = string.Empty; DraftApiKey = null; GeneratedKey = null; Error = null; }
+
+    private void Edit(GroveRemoteClient item) { Editing = true; EditingId = item.Id; DraftClientName = item.ClientName; DraftApiKey = null; GeneratedKey = null; Error = null; }
+
+    private void GenerateKey() => DraftApiKey = GeneratedKey = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
+
+    private async Task SaveAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var result = await Api.Grove.Rest.Deployment.SaveRemoteClientAsync(EditingId, new RemoteClientWrite(DraftClientName, DraftApiKey));
+            if (!result.Succeeded) { Error = result.Message ?? T["The remote client could not be saved."]; return; }
+            Notifications.Notify(NotificationSeverity.Success, T["Remote Clients"], T["{0} was saved.", DraftClientName]);
+            Editing = false;
+            GeneratedKey = null;
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task DeleteAsync(GroveRemoteClient item)
+    {
+        IsBusy = true;
+        try
+        {
+            if (await Api.Grove.Rest.Deployment.DeleteRemoteClientAsync(item.Id)) Notifications.Notify(NotificationSeverity.Success, T["Remote Clients"], T["{0} was deleted.", item.ClientName]);
+            else Error = T["{0} could not be deleted.", item.ClientName];
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+}

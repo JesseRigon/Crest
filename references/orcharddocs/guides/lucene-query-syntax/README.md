@@ -1,5 +1,5 @@
 # Lucene Query Syntax
-The search form in Crest uses Lucene's query syntax, which allows you to search for specific terms, perform wildcard searches, approximate searches, proximity searches, range searches, and combine conditions using Boolean operators.
+The search form in Grove uses Lucene's query syntax, which allows you to search for specific terms, perform wildcard searches, approximate searches, proximity searches, range searches, and combine conditions using Boolean operators.
 
 ## Boolean Operators
 Boolean operators allow you to combine query terms using logical operators. These Boolean operators are compatible.

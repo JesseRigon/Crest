@@ -30,7 +30,7 @@ unusable), and a second, Blazor-only display system beside the platform's.
 | Term | Meaning here |
 | --- | --- |
 | **Shape** | The platform's `IShape`: a node in the display tree. Keeps its name. |
-| **Display tree** | The serializable form of a shape tree: `{ type, displayType, alternates, properties, zones: { name: [nodes] }, items: [nodes], metadata }`. What the renderer consumes and what the headless API returns. Its node is `DisplayNode` in `Crest.DisplayManagement.Abstractions`; `CrestModel` is only the content-item wrapper. |
+| **Display tree** | The serializable form of a shape tree: `{ type, displayType, alternates, properties, zones: { name: [nodes] }, items: [nodes], metadata }`. What the renderer consumes and what the headless API returns. Its node is `DisplayNode` in `Grove.DisplayManagement.Abstractions`; `GroveModel` is only the content-item wrapper. |
 | **Component** | Anything in the component registry: a name, a parameter schema, zones, the shells it may appear in. One concept with facets, not kinds: a component may be a **primitive** (text, container, input, button, link), a **composite** (a header built from primitives, as code or as a saved template), an **editor** (the input component for a value type), and/or a **host** (it exposes open zones others fill). A **page is not a component**: pages are their own kind, § 6a. |
 | **Binding** | The rule that maps a shape (type + alternates + display type, per theme) to a component, or to a template. Replaces `ShapeBinding.BindingAsync`. |
 | **Template** | A tenant-editable component tree bound to a shape name, stored as content, authored in Liquid (§ 5). A template *is* a binding whose target is a tree instead of a compiled component. |
@@ -74,7 +74,7 @@ unusable), and a second, Blazor-only display system beside the platform's.
 | `LayerFilter` (an MVC `IAsyncResultFilter`) | A layout build step that runs the same rule evaluation and adds layer placements to the layout's zones. |
 | `IResourceManager.Render*(TextWriter)`, the resource tag helpers | A head/foot renderer from the resource registry data, emitted as `HeadContent` / markup nodes in the tree. |
 | The site theme's `Layout.liquid`, `Content-Page.liquid`, `Widget-*.liquid`, `Menu*.liquid` | Layout, content and menu components (and templates for the tenant-editable ones). |
-| The admin client's `DisplayManager`/`Shape`/`ShapeView` and `Crest.Components/Shapes/Shape.cs` | Retired as a display system; the shell state left in `DisplayManager` is `AdminShellState`. |
+| The admin client's `DisplayManager`/`Shape`/`ShapeView` and `Grove.Components/Shapes/Shape.cs` | Retired as a display system; the shell state left in `DisplayManager` is `AdminShellState`. |
 | `[BlazorComponent(name)]`, the global component registry, the workbench registry, the route table's component scan | **One component registry**, § 1. |
 | `BlazorComponentShapeBindingResolver` rendering a component to static HTML so Liquid can embed it | Gone with the HTML views; `HtmlRenderer` stays for headless HTML (email, static pages). |
 
@@ -95,7 +95,7 @@ ComponentDescriptor
   Zones           the RenderFragment parameters: name, allowed component names, min/max
   Facets          Host (declares open zones), Editor (edits which value types); primitive
                   versus composite is only whether Type is code or a template
-  Shells          admin | site | member (from the assembly's [CrestShell])
+  Shells          admin | site | member (from the assembly's [GroveShell])
   Feature         the feature it belongs to; absent when the feature is disabled
   Permission      optional; the node is dropped from the tree for users without it
   InstancesPerPage single | multiple: several instances of some components break their logic
@@ -103,7 +103,7 @@ ComponentDescriptor
 ```
 
 - **Discovery:** `[BlazorComponent]` on the component and a **source generator** that emits the
-  descriptors and a `name → Type` map at build time (component prefixes stay `Crest`, service
+  descriptors and a `name → Type` map at build time (component prefixes stay `Grove`, service
   names are neutral). Reflection over `[Parameter]` properties is the dev-time fallback; in WASM
   the generated map is what keeps trimming from stripping parameters.
 - **Scope:** the registry is built per tenant, shell and theme like the shape table and the
@@ -117,11 +117,11 @@ ComponentDescriptor
   the context), `eventHandler` (an action: a workflow). Entries may declare `templates` (presets
   the palette offers), `defaultStyles`, `isAttachment` (a wrapper that takes one child),
   `isRepeatable`, and per-parameter `hidden`/`advanced`/`readOnly` rules computed from other
-  parameters. Value types from `Crest.Data.Types` plug in as parameter types beside the base ones.
+  parameters. Value types from `Grove.Data.Types` plug in as parameter types beside the base ones.
 
 Implementation:
 
-- **Contracts** (`Crest.DisplayManagement.Abstractions/Components`, browser-safe):
+- **Contracts** (`Grove.DisplayManagement.Abstractions/Components`, browser-safe):
   `[BlazorComponent]` with palette and rule metadata, `[ComponentParameter]` (with `Choices`,
   static options that make a string parameter a `Choice`), `[ComponentZone]`,
   `[assembly: ComponentCatalog]`, `ComponentDescriptor`, `IComponentCatalog`,
@@ -134,46 +134,46 @@ Implementation:
   reflection; read once per assembly) and `ComponentParameters` (schema validation and
   conversion, sharing its JSON options with `DisplayTreeRenderer`, so what validates renders;
   enums by name; a lenient converter binds stored `"true"` to `bool`).
-- **Source generator** (`Crest.SourceGenerators/ComponentCatalogGenerator.cs`): per assembly, an
+- **Source generator** (`Grove.SourceGenerators/ComponentCatalogGenerator.cs`): per assembly, an
   internal `IComponentCatalog` with full descriptors (inherited `[Parameter]`s base first,
   capture-unmatched and cascading ones left out, `[EditorRequired]` → required), the shells from
-  `[assembly: CrestShell]` (every shell without one), `Module` = the assembly name, and
+  `[assembly: GroveShell]` (every shell without one), `Module` = the assembly name, and
   `[assembly: ComponentCatalog(typeof(...))]`. It reads C# only: Razor's own generator output is
   invisible to other generators, so a component is marked and its parameters declared in the
   code-behind. OCSG003/OCSG004 warn about a marker or `[Parameter]`s left in `.razor` markup;
   OCSG005 about a marked component it cannot catalog (generic, abstract, inaccessible).
-- **Generator wiring:** `buildTransitive/Crest.DisplayManagement.Abstractions.targets`, shipped in
+- **Generator wiring:** `buildTransitive/Grove.DisplayManagement.Abstractions.targets`, shipped in
   the abstractions package with the generator in `buildTransitive/analyzers/`, so every package
-  consumer gets it, directly or through `Crest.Components`. It applies to Razor projects named
+  consumer gets it, directly or through `Grove.Components`. It applies to Razor projects named
   `*.BlazorWasm` or `*.Client`, or any project setting `<ComponentCatalog>true</ComponentCatalog>`
-  (`Crest.Components`, `Crest.Icons`), and enables the interceptor namespace the same assembly's
+  (`Grove.Components`, `Grove.Icons`), and enables the interceptor namespace the same assembly's
   shape generators need. In this repo `Directory.Build.targets` imports the same file for the
   non-platform projects with the generator as a project reference.
-- **Server registry** (`Crest.DisplayManagement/Components`): `IComponentRegistryManager` builds
+- **Server registry** (`Grove.DisplayManagement/Components`): `IComponentRegistryManager` builds
   one registry per shell and theme from the enabled features' assemblies plus
-  `ComponentRegistryOptions` (Crest.Server adds `Crest.Components`, `Crest.Icons`, the theme
+  `ComponentRegistryOptions` (Grove.Server adds `Grove.Components`, `Grove.Icons`, the theme
   clients and the module client libraries, each library limited to its shell bucket). A
   component's feature is its type's (`ShellBlueprint.Dependencies`), else the module its library
   is named after (`X.BlazorWasm` → `X`); catalogs apply in feature order, a theme's only for that
   theme and its base themes. Cached in a tenant singleton like the shape table. The scoped
   `IComponentRegistry` is the request's shell (`IShellKindAccessor`).
-- **Browser registry** (`Crest.Shell/ShellComponentRegistry.cs`): the document's shell over the
+- **Browser registry** (`Grove.Shell/ShellComponentRegistry.cs`): the document's shell over the
   shared libraries, its theme client, and the shell's eager and lazily loaded module libraries
   (`LazyModules`), rebuilt when a lazy module loads; registered at WASM boot
   (`ClientWebAssemblyHost`).
 - **Editor facet:** `[BlazorComponent(Edits = [...])]`, `IComponentRegistry.TryGetEditor`, `*` for
-  the JSON fallback; `GET api/crest/components?shell=` lists components, composites, variants and
+  the JSON fallback; `GET api/grove/components?shell=` lists components, composites, variants and
   editors.
-- **Registered library components:** `CrestHeading`, `CrestQuote`, `Label`, `Badge`, `Alert`,
+- **Registered library components:** `GroveHeading`, `GroveQuote`, `Label`, `Badge`, `Alert`,
   `Row`, `Column`, `Panel`, `Fieldset`, `Image`, `Button`, `Link`, `Card`, `Stack`, `Icon`,
-  `Markdown` (a wrapper rendering `CrestMarkdown` with HTML pass-through off; `CrestMarkdown`
+  `Markdown` (a wrapper rendering `GroveMarkdown` with HTML pass-through off; `GroveMarkdown`
   itself is not registered, since its tag and attribute allow-lists would be a template's to
   set), the layout hosts `AppLayout`, `AppHeader`, `AppBody`, `AppFooter`, `AppSidebar` (named
   apart from the themes' `Layout` and the zone keys), and the value editors `ColorEditor`
-  (`color`) and `MediaPicker` (`media`). The form editors (`CrestTextBox`, `CrestTextArea`,
-  `CrestNumeric`, `CrestCheckBox`, `CrestSwitch`, `CrestDatePicker`, `CrestDropDown`,
-  `CrestHtmlEditor`) are not registered: the form primitives ([widgets.md](widgets.md)) and the
-  field editors cover them. Generic components (`CrestDataGrid<TItem>`, charts) cannot be named
+  (`color`) and `MediaPicker` (`media`). The form editors (`GroveTextBox`, `GroveTextArea`,
+  `GroveNumeric`, `GroveCheckBox`, `GroveSwitch`, `GroveDatePicker`, `GroveDropDown`,
+  `GroveHtmlEditor`) are not registered: the form primitives ([widgets.md](widgets.md)) and the
+  field editors cover them. Generic components (`GroveDataGrid<TItem>`, charts) cannot be named
   in a tree; they need a closed wrapper.
 
 ### 2. Bindings: shape → component or template
@@ -207,7 +207,7 @@ A recursive walker over the display tree, in a library referenced by server and 
 - **The same renderer** runs under static SSR, inside the interactive root, and under
   `HtmlRenderer` for headless HTML. Nothing in it touches `HttpContext`, JS or `IHtmlContent`.
 
-The server side is `IDisplayTreeBuilder` / `DisplayTreeBuilder` (`Crest.DisplayManagement/
+The server side is `IDisplayTreeBuilder` / `DisplayTreeBuilder` (`Grove.DisplayManagement/
 Components`), the shape-to-tree mapper. It runs the shape descriptor's and the shape's own
 displaying and processing phases, then binds through `IComponentRegistry.TryResolve` in
 `DefaultHtmlDisplay`'s order; checks properties against the schema (unknown or wrong-typed ones
@@ -283,7 +283,7 @@ browser.
 - **Validation:** a binding to an unknown node or output, or of the wrong type, is a save error;
   a cycle of bindings (A's parameter from B's output from A's) is refused.
 
-Implementation: contracts in `Crest.DisplayManagement.Abstractions/Components` (`[ComponentOutput]`,
+Implementation: contracts in `Grove.DisplayManagement.Abstractions/Components` (`[ComponentOutput]`,
 `IsOverlay`, `ParameterKind.Output`, `DisplayNode.Bindings`/`Slots`/`Events`, `DisplayBinding`
 with `Operator`, `Operand`, `Combinator` and `Terms`, `DisplayPredicates` (the fixed lists and
 evaluation), `DisplaySlot`, `DisplayAction`, `DisplayState`, `DisplayActionRunner`,
@@ -292,7 +292,7 @@ renderer owns a tree's state (or the page's, passed as `State`), feeds bound par
 slots, records outputs, runs event actions and renders overlays only while open; `DisplayState.Read`
 evaluates a predicate whenever the tree re-renders on a change (text that reads as a number
 compares as one against a number). On the server: `DisplayTreeFilter` with `IDisplayActionFilter`
-(the workflows module answers for workflow actions), `POST api/crest/workflows/actions/{id}`, and
+(the workflows module answers for workflow actions), `POST api/grove/workflows/actions/{id}`, and
 the query module's `IDisplayDataSource`. The shells' `HttpDisplayActionDispatcher` runs actions
 and bound slots over the API (in a circuit too). Primitives: `ItemList` (selection output,
 positioned context-menu event), `ContextMenu` and `Dialog` (overlays), `MenuAction`,
@@ -364,7 +364,7 @@ Template
   this way.
 - Admin templates and site templates are separate sets: an admin template is one whose theme is
   the admin theme, under `ManageAdminTemplates`; site templates are under `ManageTemplates`.
-- `api/crest/templates` (list, get, save draft, publish, delete, validate, preview) and the admin
+- `api/grove/templates` (list, get, save draft, publish, delete, validate, preview) and the admin
   Templates page (edit, validate, publish, preview a draft for a content item). The published set
   is cached and re-read on publish.
 - HTML Liquid templates from the old Templates module are not migrated; dev tenants reset.
@@ -438,7 +438,7 @@ component, composite or variant, literal values; resolved down the chain base fi
 refused; placed by name, the tag's own arguments winning; listed as components) under
 `ManageSharedComponents`, and **instance overrides** applied by the tree builder to every tree
 (`IDisplayTreeOverrides`), never over a binding, a slot or an event.
-`api/crest/templates/overrides` and a section on the admin Templates page edit them. Not built:
+`api/grove/templates/overrides` and a section on the admin Templates page edit them. Not built:
 per-tenant node ids for declared components (variants are the node layer today), component
 drafts, the setting for instances on inaccessible pages, and the designer UI.
 
@@ -455,7 +455,7 @@ drafts, the setting for instances on inaccessible pages, and the designer UI.
 - **Routing a content page:** one content route component in the site shell (`ContentPage`,
   `@page "/"` only; the shell middleware rewrites every site path no page claims to it and hands
   it the real path, [shells-and-themes.md › Shell dispatch](shells-and-themes.md#shell-dispatch))
-  asks `api/crest/site/page?path=`, which `SitePageBuilder` (`Crest.Server/Display`) answers: a
+  asks `api/grove/site/page?path=`, which `SitePageBuilder` (`Grove.Server/Display`) answers: a
   designed page matching the path first, else the path through Autoroute (the home route for
   `/`, `Contents/ContentItems/{id}` for an item without a route), `ViewContent` for the caller,
   decision 10, then the `Layout` shape filled (the item into `Content`, the `alias:main-menu`
@@ -463,12 +463,12 @@ drafts, the setting for instances on inaccessible pages, and the designer UI.
   miss is the layout with `NotFound` (404), a refusal with `Forbidden` (403). The page's query is
   forwarded (and part of the ETag), so list pages page. Module `@page` components work beside it
   and may build a tree in code (`IDisplayManager<T>`) or render directly.
-- **The site shell** (`Crest.SiteTheme/wasm`): `ContentPage` (the real path from
+- **The site shell** (`Grove.SiteTheme/wasm`): `ContentPage` (the real path from
   `IShellRequestPath` while prerendering and from the navigation manager once interactive; the
   page as `[PersistentState]`; the status set while prerendering through
   `IShellResponseStatus`), and the components `Layout` (zones `Navigation`, `Header`, `Messages`,
   `Content`, `Sidebar`, `Footer`), `Content` (zones `Header`, `Meta`, `Content`, `Tags`,
-  `Actions`, `Footer`), `NotFound`, `Forbidden`; `CrestSite.css` on the tokens. `App.razor`'s
+  `Actions`, `Footer`), `NotFound`, `Forbidden`; `GroveSite.css` on the tokens. `App.razor`'s
   site branch loads the design system (tokens, component styles, icons, scripts). The page's
   status is applied as the response starts and the status code pages are off for it, since it
   renders its own error page.
@@ -477,12 +477,12 @@ drafts, the setting for instances on inaccessible pages, and the designer UI.
   a *model* puts an item into data a component renders (an admin menu item through the page
   registry, a site menu item through `INavigationProvider`, which the `Menu` component then
   renders). The admin menu and the site navigation are both: a model built by sources, rendered by a `Menu` component, placed in an
-  open zone of the layout. `Menu`/`MenuItem` (`Crest.Components/Interaction/LinkMenu.cs`) render
+  open zone of the layout. `Menu`/`MenuItem` (`Grove.Components/Interaction/LinkMenu.cs`) render
   the menu module's items, resolved in the processing phase.
 - **Layer rules.** A layer rule (all blog posts, signed-in users) places a component instance
   into a zone key as a conditional fill applied while the tree is built: `LayerPlacement` (a
   component, its parameter values, a zone key, a position), added by `LayerTreeContributor`;
-  `api/crest/layers` and the admin Layers page edit them. Widgets are not part of the system;
+  `api/grove/layers` and the admin Layers page edit them. Widgets are not part of the system;
   [widgets.md](widgets.md) maps what each one did to its replacement.
 
 ### 6a. Pages stay a distinct thing
@@ -560,12 +560,12 @@ tree inline, but the route, the bucket and the authorization are the page's.
   [content-items.md](content-items.md) need. Editors read and write through one
   `ContentEditorContext` (with its visibility conditions and picker cascades), cascaded by the
   `ContentEditor` root, which publishes the edited content as an output. The server builds the
-  editor tree as shapes (`ContentEditorTreeBuilder`, `GET api/crest/content-items/{id}/editor`,
+  editor tree as shapes (`ContentEditorTreeBuilder`, `GET api/grove/content-items/{id}/editor`,
   `new-{type}` for a new item), so a `ContentEditor__{Type}` template lays a type's editor out.
   Editor components: text, number, yes/no, date, content picker, option picker, HTML, Markdown,
   link, title, permalink, `BagPartEditor` (each contained item through its type's editor tree;
   add from the allowed types, remove, reorder), `UserPickerFieldEditor` (searching
-  `api/crest/content-fields/users`); `CrestFormManager` renders the same editors from the type's
+  `api/grove/content-fields/users`); `GroveFormManager` renders the same editors from the type's
   metadata.
 - **Content editing is a stripped-down designer.** The marketing team's WYSIWYG is the designer
   in a reduced mode: the same component trees, a palette limited by role. There is one system for
@@ -578,7 +578,7 @@ tree inline, but the route, the bucket and the authorization are the page's.
 
 ### 8. Headless
 
-- `GET api/crest/content-items/{id}/display?displayType=Detail` returns the display tree: the same
+- `GET api/grove/content-items/{id}/display?displayType=Detail` returns the display tree: the same
   JSON the client renderer consumes (ViewContent through the access decision; an editor may
   display the latest draft). A headless client gets structure, resolved values and component
   names; it renders them with its own components. That is the parity rule ("every capability a
@@ -591,7 +591,7 @@ tree inline, but the route, the bucket and the authorization are the page's.
 
 ### 9. Design systems
 
-- Tokens (`--crest-*`) are the styling contract. A component's style-typed parameters have the
+- Tokens (`--grove-*`) are the styling contract. A component's style-typed parameters have the
   `token` editor kind, so a template picks a token, not a color.
 - The design system ([design-systems.md](design-systems.md)) resolves per user, shared, tenant,
   default, and the result is loaded for the site shell as it is for admin.
@@ -643,7 +643,7 @@ tree inline, but the route, the bucket and the authorization are the page's.
 
   Workflows care about schema and data only. Per designed page, `DesignedPagePermissions`
   generates the sets as permissions a role is granted: `DesignPage_{name}` (edit the draft,
-  preview), `ViewPageSchema_{name}` (list the page and read `api/crest/components?page=`, implied
+  preview), `ViewPageSchema_{name}` (list the page and read `api/grove/components?page=`, implied
   by Design), `ViewPage_{name}` (Data: view it at run time, unless the page allows anonymous
   callers) and `PublishPage_{name}`; `ManageDesignedPages` creates pages and implies every page's
   sets (the shell-level assignment, administrators by default). Shared components are
@@ -701,14 +701,14 @@ is the component schema, the property pane and the binding model this design nee
    parameters; a node property and a slot are `Expression`s; the designer's property pane reuses
    the studio's UI-hint handlers and option providers.
 2. ☑ The platform's Liquid is the only Liquid. `PlatformLiquidTemplateManager`
-   (`Crest.Workflows/Server/Expressions`) replaces the engine's template manager, so a workflow's
+   (`Grove.Workflows/Server/Expressions`) replaces the engine's template manager, so a workflow's
    Liquid expression is parsed and rendered by the platform's (cached parser, tags, filters,
    member allow-list) with `Variables`, `Input` and the workflow ids as properties; the workflow's
    variable types are admitted to the allow-list. One Fluid version (2.40). The engine's own
    Liquid filters (`base64`, `keys`) are not in the platform's set.
 3. ☑ The platform-side workflow evaluators are gone: the stock activities use `Input<T>`
    expressions ([workflows.md](workflows.md)).
-4. ☐ **`Crest.Scripting` is removed** and replaced by workflows entirely. A workflow can be
+4. ☐ **`Grove.Scripting` is removed** and replaced by workflows entirely. A workflow can be
    written as a script or viewed and edited as a flow diagram; both are front ends for the same
    backend objects. Everything that calls `IScriptingManager` today (recipes' `[js: …]`, layer
    rules, the stock tasks) moves to the one engine; workflows.md sequences this in its Retire
@@ -729,13 +729,13 @@ The standards the pieces above rest on. Other docs refer to them by number.
 
 ### Decision 1: value types
 
-One registry in `Crest.Data.Types`: the one place a value type is declared with its field type,
+One registry in `Grove.Data.Types`: the one place a value type is declared with its field type,
 editor, display primitive, query column type and workflow type. A module that owns a type
 (Money) stays its own module and registers its types there. This is where the type system meets
 the query system, so it sits with data, not with the UI. Built: `ValueTypeDescriptor` (name,
 query column type, workflow type, field types, editor and display components, CLR type, owning
 module), the base types over the content fields, `IValueTypeRegistry` and `AddValueType`
-(a platform library referenced by `Crest.Data`, registered by Crest.Server; `Crest.Money`
+(a platform library referenced by `Grove.Data`, registered by Grove.Server; `Grove.Money`
 registers `Money`). Not wired: the query system and the display schema reading it.
 
 ### Decision 2: primitives
@@ -787,7 +787,7 @@ actions on such workflows; template validation checks each `run_workflow` throug
 
 ### Decision 6: zone keys
 
-Keys are registry entries with a schema. Crest ships the well-known keys (`Header`, `Navigation`,
+Keys are registry entries with a schema. Grove ships the well-known keys (`Header`, `Navigation`,
 `Content`, `Toolbar`, `Status`, `Sidebar`, `Footer`); a module adds keys it owns under its own
 prefix (`{module}:{page}:{region}`). A key declares what may fill it (allowed component names,
 single or multiple) and whether it is required on a layout. A module may fill a well-known key
@@ -807,11 +807,11 @@ declared with `[assembly: ZoneKey("prefix:*")]` (a trailing `*` declares a famil
 a module cannot redeclare a well-known key). The catalogs collect a library's
 `IPageRegionContributor`s as `ZoneContribution`s (key, component, default priority); the registry
 serves `ZoneKeys`, `TryGetZoneKey` and `Contributions(key)` on the server (feature filtered) and in
-the browser (rebuilt on a lazy load), and `CrestPageRegion` renders from it. A layer placement
+the browser (rebuilt on a lazy load), and `GrovePageRegion` renders from it. A layer placement
 into an unknown key, or of a component the key does not admit, is a save error; a layout without
 a required key and a contribution to an undeclared key are logged warnings;
-`GET api/crest/components/zone-keys?shell=` lists the keys; `DisplayTreeValidator` refuses a
-second instance of a component declared single. Crest.Parties declares `Parties.Pane:*` and
+`GET api/grove/components/zone-keys?shell=` lists the keys; `DisplayTreeValidator` refuses a
+second instance of a component declared single. Grove.Parties declares `Parties.Pane:*` and
 `Parties.Detail:*`. Not built: priority reordering through overrides and a `Zone` component node;
 both come with the designer's zone settings.
 
@@ -831,14 +831,14 @@ node ids.
 
 ### Decision 8: theme as data
 
-Both kinds exist. Most shipped themes are compiled modules (manifest, bucket, `crest-blazor`,
+Both kinds exist. Most shipped themes are compiled modules (manifest, bucket, `grove-blazor`,
 base-theme chain, code components) that ship their set as a recipe; a data theme is that set
 alone, created in a tenant or imported. A **public marketplace carries data themes only**,
 because a public marketplace for code is risky; plugins (code) have a separate marketplace, and
 a plugin that includes a theme registers it through the same mechanism a data theme uses, so
 every theme imports and exports between systems the same way.
 
-**A theme is page structures plus branding.** The theme system (`Crest.Themes`) separates the
+**A theme is page structures plus branding.** The theme system (`Grove.Themes`) separates the
 **structure** (page and layout templates, composites, zone settings) from the **design system**
 on top of it (branding: fonts, heading settings, corner radius, tokens;
 [design-systems.md](design-systems.md)). A theme can then be swapped while the branding stays, or
@@ -847,12 +847,12 @@ themes stop being swapped wholesale; only the selections inside them change, whi
 theme registry and selection system reworked without losing any shell injection mechanism
 (permissions, required types, contracts). That rework is its own plan, after the display system
 ([shells-and-themes.md](shells-and-themes.md) › Theme compatibility). The compatibility contract
-(`crest-blazor`, buckets, the two guards) holds for the compiled part of a theme.
+(`grove-blazor`, buckets, the two guards) holds for the compiled part of a theme.
 
 ### Decision 9: designed pages
 
 Data-defined route-table entries. A page record (route pattern with typed parameters from
-`Crest.Data.Types`, bucket, permissions, what it renders) is served by a route-table provider that
+`Grove.Data.Types`, bucket, permissions, what it renders) is served by a route-table provider that
 reads content, cached per tenant and invalidated on publish; the entry exists once the page is
 published and the draft is reachable only through preview. The same bucket gate, route
 authorization and cache apply as to a module `@page`. A page is its own kind (§ 6a): its fields are
@@ -870,12 +870,12 @@ template `DesignedPage__{Name}` (`DesignedPageTemplates`), evaluated with the ro
 `Model.Route`. `DesignedPageSource` (a dynamic page registry source) adds them to the route table
 per request after the declared pages, registering the site bucket's pages on the site's content
 route component, and `SitePageBuilder` answers a matching
-path ahead of Autoroute, inside the site layout. `api/crest/pages` (list, get, save draft,
+path ahead of Autoroute, inside the site layout. `api/grove/pages` (list, get, save draft,
 publish, delete, preview a draft at a path) validates the name, the bucket, the route (pattern and
 uniqueness in the bucket) and the tree; the `DesignedPages` recipe step creates and publishes
 them. Not built: admin and member pages are stored and validated but not routed (neither shell
 has a component that renders a data-defined page); route parameters are strings until
-`Crest.Data.Types` gives them types; the designer's page editor. Designed pages are the
+`Grove.Data.Types` gives them types; the designer's page editor. Designed pages are the
 **defined** layer of the page registry ([server.md](server.md), [admin-routes.md](admin-routes.md)).
 
 ### Decision 10: one format, and no generated pages
@@ -886,7 +886,7 @@ downstream knows `IShape`.
 
 **A content type without an assigned template does not get a page.** The alternates chain
 (decision 7) ends at the error pages, not at a driver-built page. The shipped
-`DefaultContentTemplate` (`Crest.Server/Display`) is the default `Content` template for the
+`DefaultContentTemplate` (`Grove.Server/Display`) is the default `Content` template for the
 Detail display type (the title, then the item's `Header`, `Meta`, `Content`, `Tags` and `Footer`
 zones as the drivers filled them and the node filter cut them); it exists only while the
 per-tenant setting `SiteDisplaySettings.RenderUnassignedContent` is on, because a tenant may not
@@ -911,7 +911,7 @@ and drop markers.
 
 - **Locating a node.** The renderer marks every node's root in the DOM with its instance id, as
   a `data-` attribute when the primitive forwards attributes to its root (the convention for
-  Crest-shipped primitives) and otherwise as a comment marker the renderer emits before the
+  Grove-shipped primitives) and otherwise as a comment marker the renderer emits before the
   node; the designer resolves markers to elements.
 - **Measuring.** Layout is the browser's, so rectangles come from JS (`getBoundingClientRect`,
   kept fresh by `ResizeObserver` and `MutationObserver`) and are batched to the designer; the
@@ -940,13 +940,13 @@ server cache (it scales by users × pages × cultures).
   shared cache or CDN applies.
 - Drafts and previews are never cached.
 
-Built: the composite version is `DisplayTreeVersions` (`Crest.DisplayManagement/Components`): a
+Built: the composite version is `DisplayTreeVersions` (`Grove.DisplayManagement/Components`): a
 stamp taken when the tenant starts, a content counter bumped on every publish, unpublish, update,
 import and removal (`DisplayTreeContentHandler`), the culture, the `IDisplayTreeVersionPart`s
 modules register (Templates: the published set and the overrides document; Layers: the layers
-document; Crest.Server: the site settings) and the caller's scope (the path,
-`CallerContext.ScopeSignature`: user, roles, permission version). `api/crest/site/page` and the
-published-item path of `api/crest/content-items/{id}/display` send it as the ETag and answer 304
+document; Grove.Server: the site settings) and the caller's scope (the path,
+`CallerContext.ScopeSignature`: user, roles, permission version). `api/grove/site/page` and the
+published-item path of `api/grove/content-items/{id}/display` send it as the ETag and answer 304
 on a match before building anything. The site shell's `ContentPage` keeps pages in session
 storage once interactive, revalidates with If-None-Match, and drops them when the scope changes.
 Anonymous site pages share a filtered tree through `DisplayTreeCache` (a tenant singleton bounded
@@ -978,20 +978,20 @@ publish. The design system is the visual language and branding; the theme is str
 
 ## Module homes
 
-- **`Crest.DisplayManagement.Abstractions`** holds the display tree node, the component registry
+- **`Grove.DisplayManagement.Abstractions`** holds the display tree node, the component registry
   contract, the descriptors and the tree renderer: a small neutral library below
-  `Crest.Components`, referenced by the server and every theme client, with no server or UI
+  `Grove.Components`, referenced by the server and every theme client, with no server or UI
   framework in it, so it loads in the browser. The server-only pieces (the shape-to-tree mapper,
-  the component and template bindings, the Blazor `IDisplay`) are in `Crest.DisplayManagement`.
-  The component source generator is in `Crest.SourceGenerators`. Work stays within the
+  the component and template bindings, the Blazor `IDisplay`) are in `Grove.DisplayManagement`.
+  The component source generator is in `Grove.SourceGenerators`. Work stays within the
   platform's display management, reworked in place; no parallel modules.
-- **`Crest.Mvc.Abstractions`** holds the MVC contracts the display abstractions used to carry
+- **`Grove.Mvc.Abstractions`** holds the MVC contracts the display abstractions used to carry
   (`IUpdateModel` and model binding, tag helper discovery, filter extensions), same namespaces.
-- **`Crest.Data.Types`**: the value type registry (decision 1).
-- **`Crest.Data.Global`**: the standardized global data set imports and loading
+- **`Grove.Data.Types`**: the value type registry (decision 1).
+- **`Grove.Data.Global`**: the standardized global data set imports and loading
   ([globals.md](globals.md)) plus the global data registry, so no module reimplements either.
-- **`Crest.Components.Primitives`** (the primitive components; modules register theirs there) and
-  **`Crest.Components.Templates`** (the higher-level template trees modules ship: composites,
+- **`Grove.Components.Primitives`** (the primitive components; modules register theirs there) and
+  **`Grove.Components.Templates`** (the higher-level template trees modules ship: composites,
   default templates; the Templates module's tenant data layers over them). Not created; see Open
   questions.
 - **The Templates module** is reworked in place, keeping its feature id.
@@ -1010,7 +1010,7 @@ publish. The design system is the visual language and branding; the theme is str
 | Binding (code) | Shape table, from attributes and `Describe(...)` | Per theme, per feature. |
 | Template (and Layout, composite) | Content item, versioned | The tenant's bindings. |
 | Overrides | `ComponentOverridesDocument` | Variants and instance overrides (§ 5a). |
-| Placement | `placement.json` per feature + the Placements module's document | `api/crest/placements` and the admin Placements page edit it. |
+| Placement | `placement.json` per feature + the Placements module's document | `api/grove/placements` and the admin Placements page edit it. |
 | Page | `@page` component, content item (Autoroute) or `DesignedPage` | § 6a. |
 | Item body | `DisplayTreePart` on the item | § 7. |
 | Layer rules | Layers module documents | A rule places a component instance into a zone key while the tree is built. |
@@ -1062,7 +1062,7 @@ removed per page as its Blazor replacement exists, not all at once.
    - ☐ Browser checks for the native pages that replaced the MVC settings and definition screens.
    - ☐ **Razor → Blazor component parity audit.** Every Razor view and shape template and every
      widget ([widgets.md](widgets.md)) has a Blazor component equivalent. Component boundaries
-     need not match the Razor ones, and the existing components in `Crest.Components` are reused
+     need not match the Razor ones, and the existing components in `Grove.Components` are reused
      wherever possible rather than duplicated. The inventories are
      [MVC/views.md](MVC/views.md) › The inventory (views) and
      [MVC/shape-engine.md](MVC/shape-engine.md) › Component coverage (shape templates). Liquid
@@ -1073,8 +1073,8 @@ removed per page as its Blazor replacement exists, not all at once.
 
 ## Open questions
 
-- **`Crest.Components.Primitives` / `.Templates`.** The registered primitives derive from the
-  Radzen-derived base classes in `Crest.Components`, so a separate primitives project means
+- **`Grove.Components.Primitives` / `.Templates`.** The registered primitives derive from the
+  Radzen-derived base classes in `Grove.Components`, so a separate primitives project means
   moving that whole library or leaving those primitives behind.
 - **Template security hardening** (to settle once the display system's shape is final):
   1. The member allow-list is the sandbox. A template is evaluated as the viewer, so an editor's

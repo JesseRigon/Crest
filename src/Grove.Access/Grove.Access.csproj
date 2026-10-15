@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <RootNamespace>Grove.Access</RootNamespace>
+    <Nullable>enable</Nullable>
+    <!-- NuGet properties-->
+    <Title>Grove Access</Title>
+    <Description>$(OCCMSDescription)
+
+    The one access machinery: the caller built per request, the decision, the scope and the audit.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Access</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Abstractions\Grove.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data\Grove.Data.csproj" />
+    <PackageReference Include="YesSql.Abstractions" />
+    <ProjectReference Include="..\Grove.Roles.Abstractions\Grove.Roles.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Users.Abstractions\Grove.Users.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.AuditTrail.Abstractions\Grove.AuditTrail.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

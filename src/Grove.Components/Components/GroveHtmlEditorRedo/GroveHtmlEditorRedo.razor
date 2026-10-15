@@ -1,0 +1,5 @@
+@using Grove.Components.Primitives.Rendering
+@inherits GroveHtmlEditorButtonBase
+
+@namespace Grove.Components.Primitives
+<EditorButton Title=@Title Click=@OnClick Icon="redo" Disabled=@(!(Editor?.State.Redo ?? false)) />

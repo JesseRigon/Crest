@@ -1,0 +1,127 @@
+@namespace Grove.AdminTheme.Components.Admin
+@using System.Net.Http.Json
+@using System.Text.Json.Nodes
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* The rest of a content type's definition (the retired MVC ContentTypes editor): display name,
+   the type's settings, each part's settings on the type and the parts' order - settings as their
+   stored JSON - and deleting the type. *@
+<GroveFieldset Text="@T["Definition"]" AllowCollapse="true" Collapsed="true" data-testid="content-type-definition">
+    @if (Error is { } error) { <GroveAlert AlertStyle="AlertStyle.Danger" AllowClose="false">@error</GroveAlert> }
+    @if (Model is null)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        <GroveStack Gap="0.75rem">
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
+                <GroveFormField Text="@T["Display name"]"><GroveTextBox @bind-Value="DisplayName" Style="width: 16rem" /></GroveFormField>
+                <GroveButton Text="@T["Rename"]" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="RenameAsync" Disabled="@(Busy || string.IsNullOrWhiteSpace(DisplayName))" />
+            </GroveStack>
+
+            <GroveText TextStyle="TextStyle.Subtitle2" Text="@T["Type settings"]" />
+            <DefinitionSettingsJson Url="@($"{Base}/settings")" Settings="Model.Settings" OnSaved="Changed" />
+
+            <GroveText TextStyle="TextStyle.Subtitle2" Text="@T["Parts on this type"]" />
+            @for (var index = 0; index < Order.Count; index++)
+            {
+                var name = Order[index];
+                var part = Model.Parts.First(candidate => candidate.Name == name);
+                var at = index;
+                <GroveFieldset Text="@($"{part.Name}{(part.Name == part.PartName ? string.Empty : $" ({part.PartName})")}")" AllowCollapse="true" Collapsed="true">
+                    <GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                        <GroveButton Icon="arrow_upward" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => MoveAsync(at, -1))" Disabled="@(Busy || at == 0)" />
+                        <GroveButton Icon="arrow_downward" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => MoveAsync(at, 1))" Disabled="@(Busy || at == Order.Count - 1)" />
+                    </GroveStack>
+                    <DefinitionSettingsJson Url="@($"{Base}/parts/{Uri.EscapeDataString(part.Name)}/settings")" Settings="part.Settings" Rows="6" OnSaved="Changed" />
+                </GroveFieldset>
+            }
+
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                <GroveCheckBox @bind-Value="ConfirmDelete" Name="confirm-delete-type" /><label for="confirm-delete-type">@T["Delete this content type (its items keep their data but lose their definition)"]</label>
+                <GroveButton Text="@T["Delete type"]" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="DeleteAsync" Disabled="@(Busy || !ConfirmDelete)" data-testid="content-type-delete" />
+            </GroveStack>
+        </GroveStack>
+    }
+</GroveFieldset>
+
+@code {
+    [Parameter, EditorRequired] public string TypeName { get; set; } = string.Empty;
+
+    /// <summary>Raised after a change, so the page reloads its types.</summary>
+    [Parameter] public EventCallback Changed { get; set; }
+
+    /// <summary>Raised after the type was deleted.</summary>
+    [Parameter] public EventCallback Deleted { get; set; }
+
+    private TypeSettings? Model;
+    private List<string> Order = [];
+    private string? DisplayName;
+    private string? Error;
+    private bool Busy;
+    private bool ConfirmDelete;
+    private string? _loaded;
+
+    private string Base => $"api/grove/content-types/{Uri.EscapeDataString(TypeName)}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loaded == TypeName) return;
+        _loaded = TypeName;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            Model = await Http.GetFromJsonAsync<TypeSettings>($"{Base}/settings");
+            DisplayName = Model?.DisplayName;
+            Order = Model?.Parts
+                .OrderBy(part => decimal.TryParse(part.Settings["ContentTypePartSettings"]?["Position"]?.ToString(), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var position) ? position : decimal.MaxValue)
+                .Select(part => part.Name)
+                .ToList() ?? [];
+            ConfirmDelete = false;
+            Error = null;
+        }
+        catch (Exception exception) { Error = exception.Message; }
+    }
+
+    private Task RenameAsync() => SendAsync(() => Http.PutAsJsonAsync($"{Base}/settings", new { DisplayName }));
+
+    private Task MoveAsync(int index, int by)
+    {
+        (Order[index], Order[index + by]) = (Order[index + by], Order[index]);
+        return SendAsync(() => Http.PutAsJsonAsync($"{Base}/parts/order", new { Names = Order }));
+    }
+
+    private async Task DeleteAsync()
+    {
+        Busy = true;
+        try
+        {
+            using var response = await Http.DeleteAsync(Base);
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            await Deleted.InvokeAsync();
+        }
+        finally { Busy = false; }
+    }
+
+    private async Task SendAsync(Func<Task<HttpResponseMessage>> call)
+    {
+        Busy = true;
+        try
+        {
+            using var response = await call();
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            await LoadAsync();
+            await Changed.InvokeAsync();
+        }
+        finally { Busy = false; }
+    }
+
+    private sealed record TypePart(string Name, string PartName, JsonObject Settings);
+    private sealed record TypeSettings(string Name, string DisplayName, JsonObject Settings, TypePart[] Parts);
+}

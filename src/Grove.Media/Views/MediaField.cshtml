@@ -1,0 +1,25 @@
+@model Grove.Media.ViewModels.DisplayMediaFieldViewModel
+@{
+    // Items are resolved by the driver through the access check (ids first, paths for content not
+    // yet migrated); each carries its /files URL.
+    var items = Model.Items ?? Array.Empty<Grove.Media.ViewModels.MediaFieldDisplayItem>();
+    var name = (Model.PartFieldDefinition.PartDefinition.Name + "-" + Model.PartFieldDefinition.Name).HtmlClassify();
+}
+@if (items.Count > 0)
+{
+    <div class="field field-type-mediafield field-name-@name">
+        <span class="name">@Model.PartFieldDefinition.DisplayName()</span>
+        @foreach (var item in items)
+        {
+            if (item.IsImage)
+            {
+                <img src="@item.Url" alt="@item.MediaText" />
+            }
+            else
+            {
+                var text = !string.IsNullOrEmpty(item.MediaText) ? item.MediaText : item.Name;
+                <a href="@item.Url">@text</a>
+            }
+        }
+    </div>
+}

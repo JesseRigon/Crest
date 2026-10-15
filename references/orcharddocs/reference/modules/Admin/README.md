@@ -1,4 +1,4 @@
-# Admin (`Crest.Admin`)
+# Admin (`Grove.Admin`)
 
 The Admin module provides an admin dashboard for your site.
 
@@ -7,9 +7,9 @@ The Admin module provides an admin dashboard for your site.
 The `AdminDashboard` shape renders an `AdminDashboardContent` child shape. Features can add their own positioned content to this shape by registering a shape table provider:
 
 ```csharp
-using Crest.DisplayManagement;
-using Crest.DisplayManagement.Descriptors;
-using Crest.DisplayManagement.Views;
+using Grove.DisplayManagement;
+using Grove.DisplayManagement.Descriptors;
+using Grove.DisplayManagement.Views;
 
 public sealed class AdminDashboardShapeTableProvider : ShapeTableProvider
 {
@@ -39,8 +39,8 @@ The `MyAdminDashboardContent` shape is rendered using its matching shape templat
 If you want to specify another prefix in the URLs to access the admin section, you can change it by using this option in the `appsettings.json`:
 
 ```json
-  "Crest": {
-    "Crest_Admin": {
+  "Grove": {
+    "Grove_Admin": {
       "AdminUrlPrefix": "YourCustomAdminUrl"
       }
     }
@@ -48,7 +48,7 @@ If you want to specify another prefix in the URLs to access the admin section, y
 
 ## Customize Admin branding
 
-By default, Crest.Core logo and site name are displayed in the top navbar.
+By default, Grove.Core logo and site name are displayed in the top navbar.
 
 You can change it by overriding 'AdminBranding' shape, either from a [custom admin theme](../../../guides/create-admin-theme/README.md) or using the Admin Templates feature.  
 You can also use this shape to define admin favicon.
@@ -62,7 +62,7 @@ Here are samples using logo and favicon from media module.
     {% zone "HeadMeta" %}
         {% link rel:'shortcut icon', type:'image/x-icon', src:favicon_url %}
     {% endzone %}
-    {% a area: 'Crest.Admin', controller: 'Admin' , action: 'Index', class: 'ta-navbar-brand' %}
+    {% a area: 'Grove.Admin', controller: 'Admin' , action: 'Index', class: 'ta-navbar-brand' %}
         <div class="d-flex align-items-center">
             <img src="{{ 'logo.png' | asset_url }}" alt="{{ Site.SiteName }}" class="pe-2" />
             <span>{{ Site.SiteName }}</span>
@@ -76,7 +76,7 @@ Here are samples using logo and favicon from media module.
     <zone name="HeadMeta">
         <link asp-src="~/media/favicon.ico" type="image/x-icon" rel="shortcut icon" />
     </zone>
-    <a class="ta-navbar-brand" asp-route-area="Crest.Admin" asp-controller="Admin" asp-action="Index">
+    <a class="ta-navbar-brand" asp-route-area="Grove.Admin" asp-controller="Admin" asp-action="Index">
         <div class="d-flex align-items-center">
             <img src=@Url.Content("~/media/logo.png") alt="@Site.SiteName" class="pe-2" />
             <span>@Site.SiteName</span>

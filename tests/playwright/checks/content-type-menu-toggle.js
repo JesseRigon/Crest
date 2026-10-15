@@ -16,7 +16,7 @@ module.exports = async function run(page, ctx) {
   // filtered page is then driven through the entry's own URL.
   async function findMenuEntry(typeName) {
     return page.evaluate(async typeName => {
-      const response = await fetch('/api/crest/navigation/admin', { credentials: 'include' });
+      const response = await fetch('/api/grove/navigation/admin', { credentials: 'include' });
       if (!response.ok) return null;
       const data = await response.json();
       let found = null;
@@ -45,9 +45,9 @@ module.exports = async function run(page, ctx) {
   await page.goto(`${ctx.baseUrl}/Admin/ContentTypes/List`, { waitUntil: 'networkidle' });
   await page.locator('[data-testid="content-types-page"]').waitFor({ timeout: 20000 });
 
-  const rows = page.locator('.crest-model-list__item');
+  const rows = page.locator('.grove-model-list__item');
   await rows.first().waitFor({ timeout: 20000 });
-  const typeName = await rows.first().locator('.crest-model-list__item-title').innerText();
+  const typeName = await rows.first().locator('.grove-model-list__item-title').innerText();
   await rows.first().click();
   await page.locator('[data-testid="content-type-detail"]').waitFor({ timeout: 10000 });
 

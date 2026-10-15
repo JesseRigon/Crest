@@ -1,4 +1,4 @@
-# Reverse Proxy (`Crest.ReverseProxy`)
+# Reverse Proxy (`Grove.ReverseProxy`)
 
 Enables configuration of hosting scenarios with a reverse proxy, like which HTTP headers to forward.
 
@@ -43,7 +43,7 @@ These settings are stored in the site configuration and can be managed per tenan
 
 ### File Settings Configuration
 
-The `Crest.ReverseProxy` module allows you to use configuration values from `appsettings.json` to configure reverse proxy settings by calling the `ConfigureReverseProxySettings()` extension method on `PlatformBuilder` when initializing the app.
+The `Grove.ReverseProxy` module allows you to use configuration values from `appsettings.json` to configure reverse proxy settings by calling the `ConfigureReverseProxySettings()` extension method on `PlatformBuilder` when initializing the app.
 
 In your `Program.cs` or startup code, call the extension method:
 
@@ -57,7 +57,7 @@ Add the following section to your `appsettings.json`:
 
 ```json
 {
-  "Crest_ReverseProxy": {
+  "Grove_ReverseProxy": {
     "ForwardedHeaders": "XForwardedFor, XForwardedHost, XForwardedProto",
     "KnownNetworks": ["192.168.1.0/24"],
     "KnownProxies": ["192.168.1.200", "192.168.1.201"]
@@ -93,7 +93,7 @@ When `ConfigureReverseProxySettings()` is called, settings from the configuratio
 
 **Scenario 2: Configuration File Override**
 - `ConfigureReverseProxySettings()` is called
-- `Crest_ReverseProxy` section exists in appsettings.json
+- `Grove_ReverseProxy` section exists in appsettings.json
 - Configuration file values override admin UI values
 - Admin UI shows a warning about the override
 

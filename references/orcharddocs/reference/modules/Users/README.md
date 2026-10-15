@@ -1,4 +1,4 @@
-# Users (`Crest.Users`)
+# Users (`Grove.Users`)
 
 The Users module enables authentication UI and user management.
 
@@ -26,11 +26,11 @@ If you override the affected shapes (see the changes in the [relevant pull reque
 
 To use this shape:
 
-1. Add the `Crest.DisplayManagement` package to your project if you haven't already.
+1. Add the `Grove.DisplayManagement` package to your project if you haven't already.
 2. In `_ViewImports.cshtml`, add:
 
 ```csharp
-@addTagHelper *, Crest.DisplayManagement
+@addTagHelper *, Grove.DisplayManagement
 ```
 
 You can then display a user's name like this:
@@ -42,14 +42,14 @@ You can then display a user's name like this:
     cache-id="user-display-name-author" />
 ```
 
-This ensures user names are rendered consistently while making use of Crest's caching system for performance.
+This ensures user names are rendered consistently while making use of Grove's caching system for performance.
 
 !!! note
     You may add additional HTML attributes, such as `title`, to show a tooltip for the username badge.
 
 ## Two-factor Authentication
 
-Crest includes the features needed to secure your app with two-factor authentication. To use two-factor authentication, enable "Two-Factor Email Method" and/or "Two-Factor Authenticator App Method". Configure the process from `Settings` → `Security` → `User Login` on the "Two-Factor Authentication" tab.
+Grove includes the features needed to secure your app with two-factor authentication. To use two-factor authentication, enable "Two-Factor Email Method" and/or "Two-Factor Authenticator App Method". Configure the process from `Settings` → `Security` → `User Login` on the "Two-Factor Authentication" tab.
 
 ## User Localization
 
@@ -59,15 +59,15 @@ This feature adds a `RequestCultureProvider` to retrieve the current user cultur
 
 ## Time zone select list customization
 
-The **User Time Zone** editor uses the shared `ITimeZoneSelectListProvider` service for its `<select>` items. Replace `DefaultTimeZoneSelectListProvider` if you need different labels, ordering, or filtering for time zone options across Crest.
+The **User Time Zone** editor uses the shared `ITimeZoneSelectListProvider` service for its `<select>` items. Replace `DefaultTimeZoneSelectListProvider` if you need different labels, ordering, or filtering for time zone options across Grove.
 
 ## Custom Paths
 
 If you want to specify custom paths to access the authentication related urls, you can change them by using this option in the `appsettings.json`:
 
 ``` json
-  "Crest": {
-    "Crest_Users": {
+  "Grove": {
+    "Grove_Users": {
       "LoginPath": "Login",
       "LogoffPath": "Users/LogOff",
       "ChangePasswordUrl": "ChangePassword",

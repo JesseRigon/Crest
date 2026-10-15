@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Shared dev tooling for hosts built on Crest. A host's dev script sources this file and
+# Shared dev tooling for hosts built on Grove. A host's dev script sources this file and
 # passes its own solution, project, ports, data root and credentials; nothing here knows
 # which host it serves.
 #
-#   source "${ROOT_DIR}/modules/Crest/tools/dev-lib.sh"
+#   source "${ROOT_DIR}/modules/Grove/tools/dev-lib.sh"
 #
 # What it provides:
 #   Package feeds   source_stamp, evict_from_cache, pack_into_output, ensure_feed,
@@ -27,7 +27,7 @@ require_dotnet() {
 }
 
 # --- Package feeds ---------------------------------------------------------------
-# Hosts consume Crest (and anything downstream) as packages packed into local output/
+# Hosts consume Grove (and anything downstream) as packages packed into local output/
 # folders, every pack the same LOCAL_VERSION. A repack therefore has to evict that version
 # from the NuGet global cache, or restore keeps using the old copy.
 
@@ -72,7 +72,7 @@ pack_into_output() {
 # Repacks when forced, when the repository changed since the last pack, or when the
 # upstream stamp (the feed this one builds against) changed. Sets FEED_STAMP to the stamp
 # recorded and FEED_PACKED to 1 when it packed, so a chain can pass both downstream:
-#   ensure_feed "$CREST" Crest.slnx "$CREST_OUT"; ensure_feed "$ERP" Erp.slnx "$ERP_OUT" "$FEED_PACKED" "$FEED_STAMP"
+#   ensure_feed "$GROVE" Grove.slnx "$GROVE_OUT"; ensure_feed "$ERP" Erp.slnx "$ERP_OUT" "$FEED_PACKED" "$FEED_STAMP"
 ensure_feed() {
   local dir="$1" solution="$2" out="$3" force="${4:-0}" upstream="${5:-}"
   local stamp
@@ -99,8 +99,12 @@ restore_host() {
 
 # --- Local server ------------------------------------------------------------------
 
+# Up means the server answers at all: any HTTP status counts (a fresh tenant's home page may be a
+# 404, or slow while its setup recipe runs), only "no answer" does not.
 url_is_up() {
-  curl -fsS --max-time 2 -o /dev/null "$1" >/dev/null 2>&1
+  local code
+  code=$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' "$1" 2>/dev/null) || return 1
+  [ "${code}" != "000" ]
 }
 
 # stop_server <host project file name, e.g. My.Host.csproj> <port> [root dir]
@@ -130,7 +134,7 @@ stop_server() {
 # A suite runs against its own server, never the dev server: a real `dotnet run --no-build`
 # (hot reload does not move embedded resources and static assets, so a suite against a
 # watch server cannot see data-file, recipe or migration changes) on its own port, with its
-# own data root (Crest:DataRoot: tenants, tenant databases, the global store), so every run
+# own data root (Grove:DataRoot: tenants, tenant databases, the global store), so every run
 # is a fresh install. The dev server keeps running beside it, untouched.
 
 # start_test_server <project> <port> <data root> <log file> [url]
@@ -141,7 +145,7 @@ start_test_server() {
   rm -rf "${data_root}"
   mkdir -p "${data_root}" "$(dirname "${log}")"
   setsid dotnet run --no-build --project "${project}" -- \
-    --urls "http://0.0.0.0:${port}" --Crest:DataRoot="${data_root}" > "${log}" 2>&1 &
+    --urls "http://0.0.0.0:${port}" --Grove:DataRoot="${data_root}" > "${log}" 2>&1 &
   TEST_SERVER_PGID=$!
   TEST_SERVER_DATA_ROOT="${data_root}"
   echo "Waiting for the test server on ${url} (log: ${log})..."

@@ -12,7 +12,7 @@ const { loginAsAdmin } = require('../../harness/auth');
 // ever saved, and verifies the same items keep the same non-null icon in both cultures.
 async function getAdminMenu(page) {
   return page.evaluate(async () => {
-    const response = await fetch('/api/crest/navigation/admin', { credentials: 'include' });
+    const response = await fetch('/api/grove/navigation/admin', { credentials: 'include' });
     if (!response.ok) throw new Error(`admin menu failed: ${response.status}`);
     return response.json();
   });

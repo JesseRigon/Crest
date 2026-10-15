@@ -1,0 +1,17 @@
+using Grove.ContentManagement;
+using YesSql.Filters.Query;
+
+namespace Grove.Contents.Services;
+
+public sealed class DefaultContentsAdminListFilterParser : IContentsAdminListFilterParser
+{
+    private readonly IQueryParser<ContentItem> _parser;
+
+    public DefaultContentsAdminListFilterParser(IQueryParser<ContentItem> parser)
+    {
+        _parser = parser;
+    }
+
+    public QueryFilterResult<ContentItem> Parse(string text)
+        => _parser.Parse(text);
+}

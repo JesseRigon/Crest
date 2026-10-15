@@ -1,5 +1,5 @@
 // Theme compatibility (docs/shells-and-themes.md › Theme compatibility): the themes API
-// reports one section per shell and each theme's shell, Crest Blazor capability and what it
+// reports one section per shell and each theme's shell, Grove Blazor capability and what it
 // would break; a breaking theme change is refused unless acknowledged; and the themes page
 // walks that refusal through the two-step confirmation. Nothing here applies a breaking
 // change - the tenant's themes are left exactly as found.
@@ -11,7 +11,7 @@ module.exports = async function run(page, ctx) {
 
   async function api(method, url) {
     const token = await page.evaluate(async () => {
-      const response = await fetch('/api/crest/antiforgery/token', { credentials: 'include' });
+      const response = await fetch('/api/grove/antiforgery/token', { credentials: 'include' });
       return response.json();
     });
     return page.evaluate(
@@ -34,40 +34,40 @@ module.exports = async function run(page, ctx) {
 
   await page.goto(`${ctx.baseUrl}/Admin/Themes`, { waitUntil: 'domcontentloaded' });
 
-  const listed = await api('GET', '/api/crest/themes');
+  const listed = await api('GET', '/api/grove/themes');
   const state = listed.json ?? { shells: [], themes: [] };
   const shells = state.shells.map((shell) => shell.shell);
   check('themes-api-lists-shell-sections', listed.ok && shells[0] === 'site' && shells[1] === 'admin', `HTTP ${listed.status} shells=${JSON.stringify(shells)}`);
 
   const currentAdmin = state.themes.find((theme) => theme.shell === 'admin' && theme.isCurrent);
-  check('current-admin-theme-is-crest-blazor', currentAdmin?.isCrestBlazor === true && currentAdmin.incompatibilities.length === 0, JSON.stringify(currentAdmin && { id: currentAdmin.id, isCrestBlazor: currentAdmin.isCrestBlazor, incompatibilities: currentAdmin.incompatibilities }));
+  check('current-admin-theme-is-grove-blazor', currentAdmin?.isGroveBlazor === true && currentAdmin.incompatibilities.length === 0, JSON.stringify(currentAdmin && { id: currentAdmin.id, isGroveBlazor: currentAdmin.isGroveBlazor, incompatibilities: currentAdmin.incompatibilities }));
 
   // A member theme belongs to the member shell, never the site: selecting it must not make
   // it the public site's theme.
-  const memberThemesOnSite = state.themes.filter((theme) => theme.shell === 'site' && theme.id === 'Crest.MemberTheme');
+  const memberThemesOnSite = state.themes.filter((theme) => theme.shell === 'site' && theme.id === 'Grove.MemberTheme');
   check('member-theme-is-not-a-site-theme', memberThemesOnSite.length === 0, JSON.stringify(memberThemesOnSite.map((theme) => theme.id)));
 
-  const features = await api('GET', '/api/crest/features');
+  const features = await api('GET', '/api/grove/features');
   const flagged = (features.json ?? []).filter((feature) => feature.incompatibility);
   check('no-enabled-feature-is-incompatible', features.ok && flagged.length === 0, JSON.stringify(flagged.map((feature) => `${feature.id}: ${feature.incompatibility}`)));
 
-  // A classic (non-Crest) admin theme would break every admin module.
-  const classicAdmin = state.themes.find((theme) => theme.shell === 'admin' && !theme.isCrestBlazor);
+  // A classic (non-Grove) admin theme would break every admin module.
+  const classicAdmin = state.themes.find((theme) => theme.shell === 'admin' && !theme.isGroveBlazor);
   if (!classicAdmin) {
-    check('classic-admin-theme-available', true, 'no non-Crest admin theme installed; breaking-change probes skipped');
+    check('classic-admin-theme-available', true, 'no non-Grove admin theme installed; breaking-change probes skipped');
     return results;
   }
 
   check('classic-admin-theme-predicts-breakage', classicAdmin.incompatibilities.length > 0, `${classicAdmin.id} breaks ${classicAdmin.incompatibilities.length}`);
 
-  const refused = await api('POST', `/api/crest/themes/${encodeURIComponent(classicAdmin.id)}/current`);
+  const refused = await api('POST', `/api/grove/themes/${encodeURIComponent(classicAdmin.id)}/current`);
   check(
     'breaking-theme-change-refused-without-acknowledgement',
     refused.status === 409 && refused.json?.incompatibilities?.length > 0,
     `HTTP ${refused.status} ${refused.text?.slice(0, 200)}`,
   );
 
-  const resetRefused = await api('POST', '/api/crest/themes/reset-admin');
+  const resetRefused = await api('POST', '/api/grove/themes/reset-admin');
   check('breaking-reset-refused-without-acknowledgement', resetRefused.status === 409, `HTTP ${resetRefused.status}`);
 
   // The page: Use on the classic theme opens step one with the server's report, Continue
@@ -96,7 +96,7 @@ module.exports = async function run(page, ctx) {
   }
   check('themes-page-two-step-confirmation', stepOne && stepTwoGated && stepTwoUnlocks, `stepOne=${stepOne} gated=${stepTwoGated} unlocks=${stepTwoUnlocks} ${failure}`);
 
-  const after = await api('GET', '/api/crest/themes');
+  const after = await api('GET', '/api/grove/themes');
   const adminAfter = after.json?.themes?.find((theme) => theme.shell === 'admin' && theme.isCurrent);
   check('admin-theme-unchanged', adminAfter?.id === currentAdmin?.id, `before=${currentAdmin?.id} after=${adminAfter?.id}`);
 

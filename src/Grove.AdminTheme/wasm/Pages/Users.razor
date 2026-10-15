@@ -1,0 +1,47 @@
+@page "/Users/Index"
+@attribute [PageEntry("ListUsers", Id = "users", Parent = "accessControl", Caption = "Users", Icon = "@iconify:mdi:account-group")]
+@using Grove.AdminTheme.Api
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives
+@inject IApi Api
+@inject NavigationManager Navigation
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+<GroveStack Gap="1rem" data-testid="users-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+        <GroveText TextStyle="TextStyle.H4" Text="@T["Users"]" />
+        <GroveButton Text="@T["Add User"]" Icon="person_add" Click="NavigateCreate" />
+    </GroveStack>
+    <GroveStack Orientation="Orientation.Horizontal" Gap=".5rem">
+        <GroveTextBox @bind-Value="Search" Placeholder="@T["Search users"]" Style="width: 20rem" />
+        <GroveDropDown @bind-Value="Status" Data="Statuses" TextProperty="Text" ValueProperty="Value" Style="width: 10rem" />
+        <GroveButton Text="@T["Filter"]" Click="LoadAsync" />
+    </GroveStack>
+    @if (List is null) { <GroveProgressBar Mode="ProgressBarMode.Indeterminate" /> }
+    else
+    {
+        <GroveText TextStyle="TextStyle.Body2" Text="@T["{0} users", List.Total]" />
+        <GroveDataGrid Data="List.Items" TItem="GroveUser" AllowPaging="true" PageSize="50">
+            <Columns>
+                <GroveDataGridColumn TItem="GroveUser" Property="UserName" Title="@T["User Name"]" />
+                <GroveDataGridColumn TItem="GroveUser" Property="Email" Title="@T["Email"]" />
+                <GroveDataGridColumn TItem="GroveUser" Title="@T["Roles"]"><Template Context="user">@string.Join(", ", user.Roles)</Template></GroveDataGridColumn>
+                <GroveDataGridColumn TItem="GroveUser" Title="@T["Status"]"><Template Context="user">@(user.IsEnabled ? T["Enabled"] : T["Disabled"])</Template></GroveDataGridColumn>
+                <GroveDataGridColumn TItem="GroveUser" Title="@T["Actions"]"><Template Context="user"><GroveButton ButtonStyle="ButtonStyle.Light" Icon="edit" Click="@(()=>Edit(user.Id))" /><GroveButton ButtonStyle="ButtonStyle.Light" Icon="@(user.IsEnabled ? "block" : "check_circle")" Click="@(()=>ToggleAsync(user))" /><GroveButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Click="@(()=>DeleteAsync(user))" /></Template></GroveDataGridColumn>
+            </Columns>
+        </GroveDataGrid>
+    }
+</GroveStack>
+
+@code {
+    private UserList? List;
+    private string? Search;
+    private string? Status;
+    private object[] Statuses => [new { Text = T["All Users"], Value = "" }, new { Text = T["Enabled Users"], Value = "enabled" }, new { Text = T["Disabled Users"], Value = "disabled" }];
+    protected override Task OnInitializedAsync() => LoadAsync();
+    private async Task LoadAsync() => List = await Api.Grove.Rest.Users.ListAsync(Search, Status);
+    private void NavigateCreate() => Navigation.NavigateTo("Users/Create");
+    private void Edit(string id) => Navigation.NavigateTo($"Users/Edit/{Uri.EscapeDataString(id)}");
+    private async Task ToggleAsync(GroveUser user) { await Api.Grove.Rest.Users.SetEnabledAsync(user.Id, !user.IsEnabled); await LoadAsync(); }
+    private async Task DeleteAsync(GroveUser user) { await Api.Grove.Rest.Users.DeleteAsync(user.Id); await LoadAsync(); }
+}

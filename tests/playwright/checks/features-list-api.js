@@ -1,15 +1,15 @@
 // Converted from the old admin-features-list.js
-// (modules/Crest/tests/playwright/admin-features-list.js).
+// (modules/Grove/tests/playwright/admin-features-list.js).
 //
 // The original didn't assert much beyond an implicit throw-on-non-ok-response — it logged
 // the sorted feature-id catalog for a human to eyeball. This keeps the same network
-// contract (navigate to /Admin/Features, capture the GET /api/crest/features response) but
+// contract (navigate to /Admin/Features, capture the GET /api/grove/features response) but
 // turns those implicit assumptions into real pass/fail assertions instead of a console.log.
 // Note this is a distinct concern from checks/features-page.js, which asserts the rendered
 // UI grid — this one asserts the underlying API response directly.
 module.exports = async function run(page, ctx) {
   const featuresResponsePromise = page.waitForResponse(
-    response => response.url().includes('/api/crest/features') && response.request().method() === 'GET',
+    response => response.url().includes('/api/grove/features') && response.request().method() === 'GET',
     { timeout: 30000 }
   );
 

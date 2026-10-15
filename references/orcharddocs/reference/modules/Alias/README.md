@@ -1,4 +1,4 @@
-# Alias (`Crest.Alias`)
+# Alias (`Grove.Alias`)
 
 The Alias module adds `AliasPart`, which gives a content item a stable logical identifier such as `main-menu` or `footer-widget`.
 Aliases are useful when code, templates, recipes, and deployment plans need to find content without relying on environment-specific content item IDs.
@@ -7,8 +7,8 @@ An alias is not a URL. Use [`AutoroutePart`](../Autoroute/README.md) when a cont
 
 ## Enable the feature
 
-Enable the **Alias** feature (`Crest.Alias`) under **Configuration** > **Features**.
-The feature depends on `Crest.ContentTypes`.
+Enable the **Alias** feature (`Grove.Alias`) under **Configuration** > **Features**.
+The feature depends on `Grove.ContentTypes`.
 
 To enable it from a recipe:
 
@@ -18,7 +18,7 @@ To enable it from a recipe:
     {
       "name": "Feature",
       "enable": [
-        "Crest.Alias"
+        "Grove.Alias"
       ]
     }
   ]
@@ -38,8 +38,8 @@ The available options are:
 
 | Option | Behavior |
 | --- | --- |
-| **Alias is editable** | Editors can enter an alias. If they leave it empty and a pattern is configured, Crest generates the alias. |
-| **Alias is generated and input is disabled** | The editor displays the alias as a disabled input. Crest generates it from the pattern when the alias is empty. |
+| **Alias is editable** | Editors can enter an alias. If they leave it empty and a pattern is configured, Grove generates the alias. |
+| **Alias is generated and input is disabled** | The editor displays the alias as a disabled input. Grove generates it from the pattern when the alias is empty. |
 
 The default Liquid pattern is:
 
@@ -130,10 +130,10 @@ Aliases are part of the content item data, so content recipes and deployment pla
 
 - An alias can remain empty when neither an editor value nor a generation pattern supplies one. An empty alias is not indexed and cannot be resolved.
 - An alias can contain up to 735 characters.
-- Crest does not automatically trim or slugify an alias entered by an editor or imported with content. Apply `slugify` in the generation pattern when a slug-like value is required.
+- Grove does not automatically trim or slugify an alias entered by an editor or imported with content. Apply `slugify` in the generation pattern when a slug-like value is required.
 - Generated aliases have line endings removed and are truncated to the maximum length.
 - Non-empty aliases are validated for uniqueness across all content types in the tenant. The current content item is excluded from its own uniqueness check.
-- When a generated alias already exists, Crest appends a numeric suffix such as `-1`, trimming the base when necessary to remain within the length limit.
+- When a generated alias already exists, Grove appends a numeric suffix such as `-1`, trimming the base when necessary to remain within the length limit.
 - Cloning a content item generates a suffixed alias for the clone.
 - Alias lookup is case-insensitive: the YesSql index stores aliases in lowercase and lookup values are normalized to lowercase. Treat aliases as case-insensitively unique and do not assign values that differ only by letter casing.
 
@@ -209,7 +209,7 @@ Alias-specific helper methods accept an alias with or without the `alias:` prefi
 The generic content-handle helpers are useful when an application accepts more than one handle type:
 
 ```csharp
-@using Crest.ContentManagement
+@using Grove.ContentManagement
 
 @{
     var item = await Platform.GetContentItemByHandleAsync(
@@ -223,7 +223,7 @@ The generic content-handle helpers are useful when an application accepts more t
 Inject `IContentHandleManager` to resolve any registered handle, including an alias, then use `IContentManager` to load the required version:
 
 ```csharp
-using Crest.ContentManagement;
+using Grove.ContentManagement;
 
 public sealed class MenuProvider
 {
@@ -269,7 +269,7 @@ The content-handle API is preferred for normal lookups because it composes with 
 Code that queries `AliasPartIndex` directly must normalize the supplied alias with `ToLowerInvariant()` and explicitly filter `Published` or `Latest` when version status matters.
 
 ```csharp
-using Crest.Alias.Indexes;
+using Grove.Alias.Indexes;
 using YesSql;
 
 var normalizedAlias = alias.ToLowerInvariant();
@@ -277,7 +277,7 @@ var index = await session.QueryIndex<AliasPartIndex>(x =>
     x.Published && x.Alias == normalizedAlias).FirstOrDefaultAsync();
 ```
 
-`AliasPart` also contributes its value to Crest's content indexing pipeline as a stored keyword. This allows index profiles that include the part to use the alias without tokenizing it as full text.
+`AliasPart` also contributes its value to Grove's content indexing pipeline as a stored keyword. This allows index profiles that include the part to use the alias without tokenizing it as full text.
 
 ### GraphQL
 
@@ -307,21 +307,21 @@ Use lowercase filter values because the underlying alias index stores the normal
 
 ## Shape alternates
 
-When `Crest.Contents` is enabled, content shapes receive alias-specific alternates:
+When `Grove.Contents` is enabled, content shapes receive alias-specific alternates:
 
 ```text
 Content__Alias__main__menu
 Content_Summary__Alias__main__menu
 ```
 
-When `Crest.Widgets` is enabled, widget shapes receive corresponding alternates:
+When `Grove.Widgets` is enabled, widget shapes receive corresponding alternates:
 
 ```text
 Widget__Alias__main__menu
 Widget_Summary__Alias__main__menu
 ```
 
-Alternate elements are encoded using Crest's shape-alternate rules. For example, the alias `main-menu` becomes `main__menu`.
+Alternate elements are encoded using Grove's shape-alternate rules. For example, the alias `main-menu` becomes `main__menu`.
 See [Templates](../Templates/README.md) for Razor and Liquid template filename examples.
 
 ## Extending handle lookup
@@ -331,7 +331,7 @@ Alias lookup is integrated through `IContentHandleProvider`. Applications can re
 ```csharp
 using System;
 using System.Threading.Tasks;
-using Crest.ContentManagement;
+using Grove.ContentManagement;
 
 public interface IExternalContentIdLookup
 {

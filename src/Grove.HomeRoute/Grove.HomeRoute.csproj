@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Grove HomeRoute</Title>
+    <Description>$(OCCMSDescription)
+
+    Provides a way to set the route corresponding to the homepage of the site.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.Mvc\Grove.Mvc.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,235 @@
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Http
+@using Microsoft.Extensions.Options
+@using global::Grove
+@using global::Grove.AdminTheme
+@using global::Grove.SiteTheme.Client
+@using global::Grove.MemberTheme
+@using global::Grove.Middlewares
+@using global::Grove.Extensions
+@using global::Grove.Shell
+
+@*
+    Phase 8: theme-dispatching document root, mounted via Startup.cs's
+    routes.MapRazorComponents<App>() - the single Blazor Web App host document for
+    every Grove theme. Which theme's document renders is a per-request decision:
+    the shell selection middleware authorizes admin/login page requests, rewrites their
+    path to the canonical (prefix-stripped) form MapRazorComponents' route table
+    understands, and stamps HttpContext.Items[BlazorHosting.ShellBasePathItem]
+    (see BlazorHosting.cs) - that marker selects the Admin branch below. Every
+    other request gets the Site branch, exactly what this file rendered before Phase 8.
+
+    Each shell mounts the one eager root, GroveShellRoot (Grove.Shell), naming the shell: theme
+    UIs are lazy and load when their shell's document boots, so the document never names a
+    Routes type a browser could not activate at boot (docs/shells-and-themes.md › Theme UIs
+    load per shell). Routes (and every routable @page component) live in the WASM client
+    assemblies (Site.Client / Admin.Client / Member.Client under the host app's WASM entry), never here -
+    the WASM runtime only has whatever assemblies it was compiled with; a Routes
+    defined server-side resolves over the circuit but throws the moment
+    InteractiveAuto switches to WASM. See docs/blazor-web.md.
+
+    Admin head assets are tenant-root-absolute _content/* static-web-asset URLs
+    (served by MapStaticAssets inside the tenant pipeline), deliberately independent
+    of the admin <base href> and composed via Asset() on Grove's tenant base so
+    URL-prefixed tenants resolve them correctly - the old wasm/index.html +
+    CopyGroveSharedAssets flattened copies are retired with the middleware's shell
+    serving.
+*@
+@* lang reflects the culture the request-localization pipeline resolved for this
+   request (tenant default / grove_culture cookie / user preference) - the SSR
+   document must carry it so first-paint markup is correctly language-tagged
+   before any interactive culture handling runs. *@
+<!DOCTYPE html>
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    @if (_isAdminShell)
+    {
+        <title>@_siteName</title>
+        @if (!string.IsNullOrEmpty(_favicon))
+        {
+            <link rel="icon" href="@_favicon" />
+        }
+        <base href="@_adminBaseHref" />
+        <meta name="grove-tenant-base" content="@_tenantBasePath" />
+        <link id="grove-radzen-theme" rel="stylesheet" href="@Asset("/_content/Grove.Components/css/material-base.css")" />
+        <link rel="stylesheet" href="@Asset("/Grove.Resources/Vendor/fontawesome-free/css/all.min.css")" />
+        <link rel="stylesheet" href="@Asset("/Grove.Resources/Vendor/fontawesome-free/css/v4-shims.min.css")" />
+        <link rel="stylesheet" href="@Asset("/Grove.Resources/Vendor/fontawesome-free/css/v5-font-face.min.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.AdminTheme.Client/GroveAdmin.DesignSystem.Default.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.Components/GroveComponents.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.Components/Grove.Components.bundle.scp.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.AdminTheme.Client/GroveAdmin.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.AdminTheme.Client/Grove.AdminTheme.Client.bundle.scp.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.Icons/GroveIcons.css")" />
+    }
+    else if (_isMemberShell)
+    {
+        <title>@_siteName</title>
+        @if (!string.IsNullOrEmpty(_favicon))
+        {
+            <link rel="icon" href="@_favicon" />
+        }
+        @* Same base-href mechanism as the admin shell: the middleware shifted the member
+           base into PathBase, so PathBase + "/" is the composed base href. *@
+        <base href="@_adminBaseHref" />
+        <meta name="grove-tenant-base" content="@_tenantBasePath" />
+        <link id="grove-radzen-theme" rel="stylesheet" href="@Asset("/_content/Grove.Components/css/material-base.css")" />
+        <link rel="stylesheet" href="@Asset("/Grove.Resources/Vendor/fontawesome-free/css/all.min.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.Components/GroveComponents.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.Components/Grove.Components.bundle.scp.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.MemberTheme.Client/GroveMember.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.Icons/GroveIcons.css")" />
+    }
+    else
+    {
+        <base href="@(_tenantBasePath + "/")" />
+        @if (!string.IsNullOrEmpty(_favicon))
+        {
+            <link rel="icon" href="@_favicon" />
+        }
+        <meta name="grove-tenant-base" content="@_tenantBasePath" />
+        @* The site shell on the display tree (docs/blazor-display.md rework step 3): the same
+           design system as the admin (tokens, component styles, icons) and the site frame. *@
+        <link id="grove-radzen-theme" rel="stylesheet" href="@Asset("/_content/Grove.Components/css/material-base.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.AdminTheme.Client/GroveAdmin.DesignSystem.Default.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.Components/GroveComponents.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.Components/Grove.Components.bundle.scp.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.Icons/GroveIcons.css")" />
+        <link rel="stylesheet" href="@Asset("/_content/Grove.SiteTheme.Client/GroveSite.css")" />
+    }
+    <HeadOutlet @rendermode="@_renderMode" />
+</head>
+<body>
+    @if (_isAdminShell)
+    {
+        <GroveShellRoot Shell="@(global::Grove.Components.Modules.GroveShells.Admin)" @rendermode="@_renderMode" />
+        <script src="@Asset("/_content/Grove.AdminTheme.Client/grove.theme.js")"></script>
+        <script src="@Asset("/_content/Grove.Components/grove.components.js")"></script>
+        <script src="@Asset("/_content/Grove.AdminTheme.Client/grove.adminMenus.js")"></script>
+        @* Grove.ContentPartLists is opt-in, but its client assembly is always compiled
+           into the WASM payload, so its page's drag script loads with the shell. *@
+        <script src="@Asset("/_content/Grove.ContentPartLists.BlazorWasm/grove.contentPartLists.js")"></script>
+        <script src="@Asset("/_content/Grove.Icons/icons.js")"></script>
+        <script src="@Asset("/_content/Grove.Components/Radzen.Blazor.js")"></script>
+    }
+    else if (_isMemberShell)
+    {
+        <GroveShellRoot Shell="@(global::Grove.Components.Modules.GroveShells.Member)" @rendermode="@_renderMode" />
+        <script src="@Asset("/_content/Grove.Components/grove.components.js")"></script>
+        <script src="@Asset("/_content/Grove.Icons/icons.js")"></script>
+        <script src="@Asset("/_content/Grove.Components/Radzen.Blazor.js")"></script>
+    }
+    else
+    {
+        @* Site shell. Admin's Home.razor also declares @page "/" (meaning "this admin
+           shell's own base", /Admin/ or /Login/) — both endpoints exist in the same
+           shared Blazor Web App route table, but Grove.Routing.RouteGateMatcherPolicy
+           (see docs/blazor-web.md's "Route reachability" section) vetoes whichever one
+           doesn't own this request before endpoint selection completes, so only one of
+           the two ever actually renders here. *@
+        <GroveShellRoot Shell="@(global::Grove.Components.Modules.GroveShells.Site)" @rendermode="@_renderMode" />
+        <script src="@Asset("/_content/Grove.Components/grove.components.js")"></script>
+        <script src="@Asset("/_content/Grove.Icons/icons.js")"></script>
+        <script src="@Asset("/_content/Grove.Components/Radzen.Blazor.js")"></script>
+    }
+    <script src="@Asset("/_framework/blazor.web.js")"></script>
+</body>
+</html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+
+    [Inject]
+    private global::Grove.Settings.SiteIdentity SiteIdentity { get; set; } = default!;
+
+    // The tenant's own name for the shell documents' <title> (docs/branding.md: the display
+    // name IS ISite.SiteName), not the platform's, and its favicon rendition: both read
+    // through the `site` query in process (site › name, site › branding.favicon). An unset
+    // favicon keeps the static icon.
+    private string _siteName = string.Empty;
+    private string _favicon = string.Empty;
+
+    private global::Grove.Routing.ShellId _shellBucket = global::Grove.Routing.ShellId.Site;
+    private bool _isAdminShell => _shellBucket == global::Grove.Routing.ShellId.Admin;
+    private bool _isMemberShell => _shellBucket == global::Grove.Routing.ShellId.Member;
+    private string _adminBaseHref = "/";
+    private string _tenantBasePath = "";
+    private IComponentRenderMode _renderMode = RenderMode.InteractiveAuto;
+
+    // Head/body asset URLs are tenant-root-absolute (deliberately independent of the
+    // admin <base href> - see the header comment), composed on Grove's tenant base
+    // so they survive URL-prefixed tenants: "/_content/x" becomes "/tenant2/_content/x".
+    private string Asset(string path) => _tenantBasePath + path;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var identity = await SiteIdentity.GetAsync(HttpContext?.RequestAborted ?? default);
+        _siteName = identity.Name;
+        _favicon = identity.Rendition("favicon");
+    }
+
+    protected override void OnInitialized()
+    {
+        // Grove's own layer of the request base: the tenant RequestUrlPrefix (plus
+        // any host-level PathBase), WITHOUT Grove's admin shell base. For admin-shell
+        // requests the middleware stashes the pre-shift value; for site requests
+        // PathBase was never shifted, so it IS the tenant base.
+        _tenantBasePath = HttpContext?.Items.TryGetValue(BlazorHosting.TenantBasePathItem, out var tenantBase) == true
+            && tenantBase is string tenantBasePath
+                ? tenantBasePath.TrimEnd('/')
+                : (HttpContext?.Request.PathBase.Value ?? "").TrimEnd('/');
+
+        // Only the middleware's explicit marker selects the admin document - a raw
+        // path check here would bypass its theme-selection and route-authorization
+        // gates (an admin-path request without the marker means the middleware
+        // deliberately declined: Blazor admin theme not selected for this tenant).
+        // Which shell, by the bucket the middleware stamped - not inferred from the base
+        // path, which cannot distinguish three shells. Absent means Site, the fallback
+        // bucket for every request the middleware did not claim.
+        _shellBucket = HttpContext?.Items.TryGetValue(BlazorHosting.ShellBucketItem, out var bucketItem) == true
+            && bucketItem is global::Grove.Routing.ShellId stampedBucket
+                ? stampedBucket
+                : global::Grove.Routing.ShellId.Site;
+
+        // A page that sets an authentication cookie renders InteractiveWebAssembly, and the
+        // page declares it ([SetsAuthenticationCookie]) - read here off the routed page,
+        // never off a list of shell paths. Under InteractiveAuto's first-visit server
+        // circuit the credential POST goes out on the server-side loopback HttpClient: the
+        // auth Set-Cookie lands in that handler, never in the browser, and the "successful"
+        // login leaves the browser anonymous. InteractiveWebAssembly keeps the prerendered
+        // form but runs the interactive phase in the browser, where the fetch's Set-Cookie
+        // is stored. In every shell, the site's included: its account, email-confirmation and
+        // consent pages need the browser to receive a cookie too.
+        var pageType = HttpContext?.GetEndpoint()?.Metadata
+            .GetMetadata<Microsoft.AspNetCore.Components.Endpoints.ComponentTypeMetadata>()?.Type;
+        if (pageType?.IsDefined(typeof(global::Grove.Components.Modules.SetsAuthenticationCookieAttribute), inherit: false) == true)
+        {
+            _renderMode = RenderMode.InteractiveWebAssembly;
+        }
+
+        // A page its page registry declaration marks client-only ([PageEntry(ClientOnly = true)]):
+        // its services and HTTP clients exist only in the WASM client, so it never runs in a
+        // server circuit.
+        if (pageType?.GetCustomAttributes(typeof(global::Grove.DisplayManagement.Components.PageEntryAttribute), inherit: false)
+            .OfType<global::Grove.DisplayManagement.Components.PageEntryAttribute>()
+            .Any(entry => entry.ClientOnly) == true)
+        {
+            _renderMode = RenderMode.InteractiveWebAssembly;
+        }
+
+        if (HttpContext?.Items.TryGetValue(BlazorHosting.ShellBasePathItem, out var value) == true
+            && value is string shellBasePath
+            && !string.IsNullOrWhiteSpace(shellBasePath))
+        {
+            // The middleware shifted the shell base into PathBase (tenant prefix +
+            // shell base), so PathBase + "/" is the complete, composed base href -
+            // the same value .NET 11's <BasePath /> component will derive from
+            // NavigationManager.BaseUri once available (dotnet/aspnetcore#66388).
+            _adminBaseHref = (HttpContext.Request.PathBase.Value ?? shellBasePath).TrimEnd('/') + "/";
+        }
+    }
+}

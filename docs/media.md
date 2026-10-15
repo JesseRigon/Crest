@@ -1,11 +1,11 @@
 # Media: files and drives
 
-Crest's file system: upload security, file objects and drives, storage providers, serving and
+Grove's file system: upload security, file objects and drives, storage providers, serving and
 CDNs, administrator access to personal drives, and the drive browser. The numbered
 requirements are the spec; each section then says how it is built. Most of it is built and
-compiled; the tests under `test/Crest.Tests/Media/` are written but not yet run, and the cloud
+compiled; the tests under `test/Grove.Tests/Media/` are written but not yet run, and the cloud
 storage providers and CDN signers are not verified against live accounts. Status is tracked in
-[backlog.md](backlog.md) › Media; the Crest APIs it replaces are under [Crest today](#crest-today).
+[backlog.md](backlog.md) › Media; the Grove APIs it replaces are under [Grove today](#grove-today).
 
 ## Example
 
@@ -13,7 +13,7 @@ The sharing example (a shared drive with grants, blocks and rules) is in [sharin
 
 ## Goal
 
-Crest gets a file system with sharing modelled on Google Drive's behaviour, in its own
+Grove gets a file system with sharing modelled on Google Drive's behaviour, in its own
 implementation and under its own names, and applied the way a Unix file system applies
 permissions: every file, folder and drive is a file object, and access is overlaid on it.
 
@@ -25,9 +25,9 @@ import copies those entries to placements ([The media library](#the-media-librar
 Publishing is separate. Published says which version readers get; access says who the readers
 are. Content items use the same model, with their content type in the chain.
 
-100. All of this is Crest: open source, with no dependency on any downstream module. Downstream
+100. All of this is Grove: open source, with no dependency on any downstream module. Downstream
     modules build their publishable links on it, and party relationships supply business roles
-    through a seam Crest defines.
+    through a seam Grove defines.
 
 ## Terms
 
@@ -40,7 +40,7 @@ are. Content items use the same model, with their content type in the chain.
   business roles (Customer, Vendor, Lead, Member).
 - **No-permission role (shim)**: a role that grants no permissions and exists
   only so people can be shared with as a set ("everyone on this drive"). It is a **shim**:
-  Crest has no group concept yet, and how grouping should work is open
+  Grove has no group concept yet, and how grouping should work is open
   ([parties.md](parties.md) › Open questions › Grouping). The code that introduces it is
   marked as a shim, so it is found and replaced when grouping is decided.
 - **Access level**, each including the ones before it:
@@ -70,7 +70,7 @@ Moved to [sharing.md](sharing.md) § 1 (the sharing feature, system accounts, th
 
 ## 2. Upload security
 
-The scanner and type-detection provider interfaces, the quarantine store and flow, the ClamAV and libmagic providers, every upload path (including resumable uploads and Crest's own) routed through it. Host-wide, independent of sharing.
+The scanner and type-detection provider interfaces, the quarantine store and flow, the ClamAV and libmagic providers, every upload path (including resumable uploads and Grove's own) routed through it. Host-wide, independent of sharing.
 
 - [ ] **Host-wide upload scanning.**
   86. Upload scanning is one host-level system shared by every tenant, independent of the sharing
@@ -83,7 +83,7 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
       or indexing).
   89. The scanner is shared; tenant data is not. Uploads, quarantine and results are visible only
       to their own tenant.
-  90. Scanners are providers behind one Crest interface, the way icon and tax providers are. The
+  90. Scanners are providers behind one Grove interface, the way icon and tax providers are. The
       host configures its own scanners. A tenant can add an external scanner of its own and
       choose whether the host's scanners still run alongside it or are bypassed. A tenant with no
       external scanner always uses the host's.
@@ -100,13 +100,13 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
       part of an app's load, scanning moves to its own servers without changing the application.
       An offsite provider is handed the quarantined file by a time-limited reference it can fetch
       directly, so large files are not relayed through the application server, and reports its
-      verdict back to Crest.
+      verdict back to Grove.
   95. The first deliverable is the interface and the quarantine flow. The first providers are
       ClamAV for malware and libmagic for type detection (91); pattern-rule scanning such as YARA is an
       optional later provider. See "Scanner candidates".
 
-  Built in `src/Crest.Media.Scanning` (always-enabled feature; tests in
-  `test/Crest.Tests/Media/Scanning`):
+  Built in `src/Grove.Media.Scanning` (always-enabled feature; tests in
+  `test/Grove.Tests/Media/Scanning`):
   - [x] **Quarantine flow** (88, 92, 93): `IUploadQuarantine` writes to the storage provider's
     quarantine area under `MediaBlobKeys.ForVersion`, records a scan job (YesSql, per tenant, 89),
     and runs detection and scanners server-side in a deferred task, with a background task for
@@ -114,7 +114,7 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
     rejects; any failure stays quarantined; all clean with a matching type commits, then
     `IMediaVerdictHandler` is told. Rejected bytes are deleted; the job keeps the reason.
   - [x] **Host and tenant scanners** (86, 90): host scanners and the type detector come from
-    configuration (`Crest_Media_Scanning`); a tenant's site settings add its own offsite scanner
+    configuration (`Grove_Media_Scanning`); a tenant's site settings add its own offsite scanner
     and choose to run it beside or instead of the host's. No scanner configured means nothing
     passes (a development-only switch allows it).
   - [x] **Offsite providers** (94): a signed job (HMAC-SHA256 with the provider's shared secret)
@@ -136,7 +136,7 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
     admin's upload, the `media` recipe step, attached fields), which the library drive backs (F1).
   - [x] An admin editor for the tenant's scanning settings, with the secret protected at rest:
     `Settings › Upload Scanning` (`/Settings/uploadScanning`,
-    `ManageSettings`) over `api/crest/media/scanning/settings`. The secret is write-only: the API
+    `ManageSettings`) over `api/grove/media/scanning/settings`. The secret is write-only: the API
     reports only whether one is set; a new one is stored through data protection
     (`SiteTenantScanningSettings.UpdateAsync`), and a secret written in clear before the editor
     still works until the next save protects it. An external scanner needs a secret and an
@@ -144,7 +144,7 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
 
 - [x] **Resumable uploads land in quarantine like every upload.** Every upload is quarantined
   while pending; resuming changes nothing. The Tus completion (`OnFileCompleteAsync` in
-  `src/Crest.Media/Startup.cs`) does not write into the store: a Tus upload whose metadata carries
+  `src/Grove.Media/Startup.cs`) does not write into the store: a Tus upload whose metadata carries
   `parentPlacementId` completes through `IMediaObjectService.UploadAsync` (quarantined like every
   upload) and its temp file is deleted; an upload by `destinationPath` resolves the destination
   to its folder in the media library drive and goes through `IMediaObjectService.UploadAsync`
@@ -158,7 +158,7 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
   module) writes with the caller's access, as an upload would. `MediaScanExemptionOptions` lists
   the exempt modules and their types (MIME types, `text/*` families, `.ext` extensions or `*`):
   modules add theirs with `services.Configure<MediaScanExemptionOptions>(o => o.Exempt(...))`,
-  the host under `Crest_Media:Generated:Exemptions`. Nothing is exempt by default. An exempt
+  the host under `Grove_Media:Generated:Exemptions`. Nothing is exempt by default. An exempt
   write is recorded clean with "exempt: generated by {module}" and never handed to the
   scanners.
 
@@ -166,8 +166,8 @@ The scanner and type-detection provider interfaces, the quarantine store and flo
 
 Documents, opaque blob keys, versions, metadata; the drive class, drive types and settings, organization drives with their admins, personal drives, inactive drives; the file-object API and the byte-serving endpoint.
 
-Built in `src/Crest.Media/Files/` on the contracts in `src/Crest.Media.Abstractions/Files/`
-(tests in `test/Crest.Tests/Media/Files/`):
+Built in `src/Grove.Media/Files/` on the contracts in `src/Grove.Media.Abstractions/Files/`
+(tests in `test/Grove.Tests/Media/Files/`):
 - Storage: `MediaContentDocument` and `MediaPlacementDocument` in the default collection,
   with content (kind, drive type, owner), placement (parent, drive, content, name, link target,
   access id, kind) and ancestor indexes, and `FileMigrations`. Not a separate collection:
@@ -228,18 +228,18 @@ Built in `src/Crest.Media/Files/` on the contracts in `src/Crest.Media.Abstracti
 - **Drives created automatically**: `IMediaDriveProvisioning` (`MediaDriveProvisioner`, as the
   system actor). A personal drive with each new staff user (`PersonalDriveUserEventHandler`,
   after the request), an organization drive with each published organization
-  (`OrganizationDriveHandler` in Crest.Members), and for everyone without one when a type is
+  (`OrganizationDriveHandler` in Grove.Members), and for everyone without one when a type is
   turned on (`PUT api/files/settings` runs `ProvisionAllAsync`). Who is staff and which
-  organizations exist come from `IMediaDriveOwnerSource`, which Crest.Members implements
+  organizations exist come from `IMediaDriveOwnerSource`, which Grove.Members implements
   (`MemberDriveOwnerSource`); a user no source knows counts as staff. An existing drive, active
   or not, is never doubled.
 - **Azure Blob and S3 storage providers**: `FileStoreMediaStorageProvider` puts file objects'
   bytes on any platform `IFileStore` (`Quarantine/`, `Committed/`, `Derived/` prefixes). The
-  `Crest.Media.Azure.Storage` feature registers it over a `BlobFileStore`
-  (`Crest_Media_Azure_Files`, or the media account and container under `{BasePath}-files`,
-  `crest-files` when the base path is empty), with read-only SAS URLs for offsite scanners;
-  `Crest.Media.AmazonS3` over an `AwsFileStore` in the media bucket
-  (`Crest_Media_AmazonS3:FilesBasePath`, same default), with presigned GET URLs. Neither module
+  `Grove.Media.Azure.Storage` feature registers it over a `BlobFileStore`
+  (`Grove_Media_Azure_Files`, or the media account and container under `{BasePath}-files`,
+  `grove-files` when the base path is empty), with read-only SAS URLs for offsite scanners;
+  `Grove.Media.AmazonS3` over an `AwsFileStore` in the media bucket
+  (`Grove_Media_AmazonS3:FilesBasePath`, same default), with presigned GET URLs. Neither module
   replaces `IMediaFileStore`: they replace the library's pre-import store, so the media library
   stays the drive and the import reads the container or bucket. Not verified against live cloud
   accounts.
@@ -298,24 +298,24 @@ Built in `src/Crest.Media/Files/` on the contracts in `src/Crest.Media.Abstracti
   6. Files and media are one system. Every file has one URL; there is no separate media library
      holding copies. A file is public because it is shared with Anyone, not because it was put in a
      particular place.
-  7. The platform's `Crest.Media` module is reworked in place into Crest's file
+  7. The platform's `Grove.Media` module is reworked in place into Grove's file
      module. Its feature ids and the services other modules resolve stay, so everything built
      on Media keeps working: SEO, image fields, images in rich text and Markdown, media
      indexing, image processing, and recipes that enable Media.
-  8. The Media libraries (`Crest.Media.Abstractions`, `Crest.Media`) stay:
+  8. The Media libraries (`Grove.Media.Abstractions`, `Grove.Media`) stay:
      stored content and other modules are built against their types. See "Reworking the
      Media module".
-  9. `/media/...` URLs keep their form and are served by Crest from the drive tree, after the
+  9. `/media/...` URLs keep their form and are served by Grove from the drive tree, after the
      access check: public files cached, private files only to those with access. Built as the
      media library drive ([The media library](#the-media-library-f1)).
 
 - [x] **Storage providers**, local disk, Azure Blob and S3 (above).
-  10. File bytes are stored through Crest storage providers behind one Crest interface, the same
+  10. File bytes are stored through Grove storage providers behind one Grove interface, the same
       pattern as icon and tax providers. A provider stores and serves bytes under opaque keys
       (object and version), keeps quarantined uploads apart from committed files, and keeps each
       tenant's bytes in that tenant's own root.
   11. Local disk is the first provider; Azure Blob and Amazon S3 providers are built on the
-      platform's storage libraries (`Crest.FileStorage.AzureBlob`, `Crest.FileStorage.AmazonS3`)
+      platform's storage libraries (`Grove.FileStorage.AzureBlob`, `Grove.FileStorage.AmazonS3`)
       rather than its Media storage modules.
 
 - [x] **The drive class and drive types.**
@@ -381,7 +381,7 @@ Built in `src/Crest.Media/Files/` on the contracts in `src/Crest.Media.Abstracti
 
 ## 4. Access
 
-Moved to [sharing.md](sharing.md) § 4: sharing is its own module (`Crest.Sharing`), and file objects are one shareable kind.
+Moved to [sharing.md](sharing.md) § 4: sharing is its own module (`Grove.Sharing`), and file objects are one shareable kind.
 
 ## 5. Business roles
 
@@ -400,7 +400,7 @@ legitimate reason, proportionate access, and telling people it can happen. The m
 products take the same approach: admin access to a personal drive exists, but as a deliberate,
 logged action rather than something in the admin's everyday view.
 
-Built (tests: `test/Crest.Tests/Media/Files/PersonalDriveAccessTests.cs`,
+Built (tests: `test/Grove.Tests/Media/Files/PersonalDriveAccessTests.cs`,
 `DriveAdministrationTests.cs`):
 - `PersonalDriveAccessService` implements `IPersonalDriveAccessService`. The file-object API
   refuses a tenant administrator in another user's personal drive, as "not found", unless an
@@ -412,7 +412,7 @@ Built (tests: `test/Crest.Tests/Media/Files/PersonalDriveAccessTests.cs`,
 - Settings: `PersonalDriveAccessSettings` is a site settings section (`GET`/`PUT
   api/files/settings`).
 - Notice: email, portal, both or none, through `IPersonalDriveNotifier`. Its default sends
-  through `Crest.Notifications`: portal is the stored notification (written as the notification
+  through `Grove.Notifications`: portal is the stored notification (written as the notification
   service writes one, with its events, but not sent through the user's own methods), email is
   the Email method. Each chosen channel gets the notice exactly once. A failed send is recorded
   on the access and in the audit trail, and the access proceeds.
@@ -443,10 +443,10 @@ Built (tests: `test/Crest.Tests/Media/Files/PersonalDriveAccessTests.cs`,
 - [x] **The owner is notified.**
   25. **Notice.** When a tenant administrator opens another user's personal drive, the owner can
       be notified by email, by a portal notification, by both, or not at all. Default: not at all.
-      Notices go through the platform's notification service (`Crest.Notifications`), which sends
+      Notices go through the platform's notification service (`Grove.Notifications`), which sends
       through each enabled method: email through its Email Notifications feature, and portal
-      notifications through the stored, per-user notifications that Crest's portal notifications
-      feature displays (requirement 30). Crest adds no delivery of its own. If a notice cannot be
+      notifications through the stored, per-user notifications that Grove's portal notifications
+      feature displays (requirement 30). Grove adds no delivery of its own. If a notice cannot be
       sent (email not configured, portal notifications turned off), the access proceeds and the
       failure is recorded with it. Requiring an approval instead waits for the approvals system
       ([permissions.md](permissions.md) › Approvals).
@@ -473,13 +473,13 @@ Built (tests: `test/Crest.Tests/Media/Files/PersonalDriveAccessTests.cs`,
       how it was sent, any override and its reason, the opening itself and its chosen duration,
       and when and how the access ended.
 
-- [x] **Portal notifications.** The `Crest.Notifications.Portal` feature (enabled by the Crest setup recipes, can be turned off) with
-  `GET api/crest/notifications`, `POST .../{id}/read` and `POST .../read-all`, the caller's own
-  notifications only. `CrestPortalNotifications` (Crest.Components) shows the indicator, the list
+- [x] **Portal notifications.** The `Grove.Notifications.Portal` feature (enabled by the Grove setup recipes, can be turned off) with
+  `GET api/grove/notifications`, `POST .../{id}/read` and `POST .../read-all`, the caller's own
+  notifications only. `GrovePortalNotifications` (Grove.Components) shows the indicator, the list
   and marking as read in the admin title bar and the member shell header, and renders nothing
   while the feature is off. A portal notice of § 7 counts as not sent while it is off.
-  30. **Portal notifications** are a Crest feature, enabled by default when a tenant is created and
-      able to be turned off. It shows each user's stored notifications in Crest's admin and
+  30. **Portal notifications** are a Grove feature, enabled by default when a tenant is created and
+      able to be turned off. It shows each user's stored notifications in Grove's admin and
       member shells: a notification indicator, the list, and marking as read. While an administrator
       is in another user's personal drive, every action they take there is recorded too, marked as
       administrator access.
@@ -496,7 +496,7 @@ Built (tests: `test/Crest.Tests/Media/Files/PersonalDriveAccessTests.cs`,
       person doing it whether to keep the drive's previous sharing and rules or start fresh with
       its drive type's defaults. Its contents are kept either way.
 
-**Scope.** Crest owns drives, sharing, the CDN, version control, and the viewer pane with its
+**Scope.** Grove owns drives, sharing, the CDN, version control, and the viewer pane with its
 add-on seam. Add-ons themselves (PDF, document, image and spreadsheet editors), bulk editing,
 version compare/merge, multi-provider redundancy and sync clients are downstream — provided by
 downstream modules or by anyone else. They work on files the way Google Drive add-ons do: through
@@ -515,42 +515,42 @@ The Share panel, Rules screens, access indicators and pickers are sharing's
   into it, so a file can be edited **in place** — simple edits to a document or an image
   right in the pane, without opening a separate app — or opened full in the add-on's own
   editor. With no add-on for a type, the pane previews. Add-ons can come from any module
-  or third party; the pane and the seam are Crest's.
-  Built in `Crest.Components/Components/Files`: `CrestDriveBrowser` (drives
+  or third party; the pane and the seam are Grove's.
+  Built in `Grove.Components/Components/Files`: `GroveDriveBrowser` (drives
   grouped as "My drive", "Shared drives", "Organization drives"; path, children, upload, new
-  folder, rename, delete, new shared drive; pick mode for the picker), `CrestFileViewerPane`
+  folder, rename, delete, new shared drive; pick mode for the picker), `GroveFileViewerPane`
   (image, video, audio, PDF and text previews, open and download, versions with publish) and
-  the seam: a component marked `[CrestFileViewerAddOn(name, types...)]` with a
-  `CrestFileViewerContext Context` parameter, in any loaded assembly, edits in place or opens
+  the seam: a component marked `[GroveFileViewerAddOn(name, types...)]` with a
+  `GroveFileViewerContext Context` parameter, in any loaded assembly, edits in place or opens
   full; it saves back through `Context.SaveVersionAsync` (a new version through the upload
   pipeline, published once clean: `PUT api/files/{id}/content?publish=true`). A built-in text
-  add-on (`CrestTextFileAddOn`) edits plain text, Markdown, CSV and JSON. Pages: `/Files` in the
+  add-on (`GroveTextFileAddOn`) edits plain text, Markdown, CSV and JSON. Pages: `/Files` in the
   admin shell (menu Media › Files) and `/files` in the member shell.
 
 ## Platform audit
 
-What each area of the platform gives the file system, and what Crest builds.
+What each area of the platform gives the file system, and what Grove builds.
 
 ### Files and storage
 
 - **Bytes: reuse.** `IFileStore` / `IMediaFileStore` store bytes on local disk (per tenant,
-  `App_Data/Sites/<tenant>/Media`), Azure Blob or S3. Crest keeps using it as a byte store, under
+  `App_Data/Sites/<tenant>/Media`), Azure Blob or S3. Grove keeps using it as a byte store, under
   opaque keys (object id and version), never user-visible paths.
 - **File objects: build.** Platform media has no database record, id, owner or metadata: a file
   is its path, so a move or rename breaks every reference (`MediaField` stores path strings) and
-  there are no versions. Crest stores file objects as YesSql documents with their own indexes;
+  there are no versions. Grove stores file objects as YesSql documents with their own indexes;
   names and folders live in the records, so renaming and moving never touch the bytes, and each
   version is an immutable blob.
 - **Serving: build.** Stock `/media` is static-file serving keyed by path, publicly cached, and a
   CDN bypasses the application entirely. Secure Media can only restrict per top-level folder, by role.
-  Crest serves file bytes from its own endpoint, by object id, after the index check; drive
+  Grove serves file bytes from its own endpoint, by object id, after the index check; drive
   files live in a storage root of their own, outside the media tree, so the stock media
   endpoints, GraphQL `MediaAssets` and `/media` never reach them.
 - **Upload hooks: partly reusable.** `IFileEventHandler` (through `FileCreationService`) can
   reject or replace an upload stream, but runs synchronously inside the request, and the stock
-  resumable (Tus) upload path skips it. Crest's quarantine flow is its own: uploads land in
+  resumable (Tus) upload path skips it. Grove's quarantine flow is its own: uploads land in
   quarantine storage, providers return verdicts asynchronously, and only then is the file
-  committed. The platform's ClamAV connector (`Crest.Antivirus`) is wrapped as the first
+  committed. The platform's ClamAV connector (`Grove.Antivirus`) is wrapped as the first
   malware provider.
 - **Text extraction: reuse later.** `IMediaFileTextProvider` (PDF, Word, PowerPoint, text)
   can feed search for file objects.
@@ -568,29 +568,29 @@ Moved to [sharing.md](sharing.md) › Platform audit.
   by email or SMS; one recipient per send.
 - **Audit: reuse, extend.** `IAuditTrailEventHandler` can set the recorded user, which is how
   impersonated and system actions are attributed. The platform records no file access or view events,
-  so Crest records its own (requirement 29).
+  so Grove records its own (requirement 29).
 - **Email: reuse.** `IEmailService` with SMTP or Azure providers, configured per tenant.
 
 ### Reworking the Media module
 
-Crest's file system is built **into the platform's `Crest.Media` module**
-(`Crest.Media`), so files and media are one system with one
+Grove's file system is built **into the platform's `Grove.Media` module**
+(`Grove.Media`), so files and media are one system with one
 URL per file while every module that depends on Media keeps working (requirements 6–11). It is
-an in-place rework of the module, not a Crest-owned copy beside it.
+an in-place rework of the module, not a Grove-owned copy beside it.
 
 **What the module is.** Media is two layers:
 
-- **Libraries** (`Crest.Media.Abstractions`, `Crest.Media`): `MediaField`,
+- **Libraries** (`Grove.Media.Abstractions`, `Grove.Media`): `MediaField`,
   `IMediaFileStore`, `MediaOptions`, `MediaPermissions`, `DefaultMediaFileStore`, the image
   processing contract. Other modules compile against these, and stored content refers to them.
-- **The module** (`Crest.Media`: 139 source files, 8 features, about 70 service
+- **The module** (`Grove.Media`: 139 source files, 8 features, about 70 service
   registrations): the feature ids, `/media` serving, API endpoints, admin UI, Secure Media, Tus
   uploads, SignalR, Liquid filters, shortcodes, display drivers, recipes, deployment.
 
 **Who depends on what** (what the rework must keep working, or change alongside):
 
-- *Feature-id dependents:* `Crest.Seo` depends on `Crest.Media`; the media startups
-  in Content Fields, HTML and Markdown are `[RequireFeatures("Crest.Media")]`;
+- *Feature-id dependents:* `Grove.Seo` depends on `Grove.Media`; the media startups
+  in Content Fields, HTML and Markdown are `[RequireFeatures("Grove.Media")]`;
   `Media.Azure`, `Media.AmazonS3` and `Media.ImageSharpV3` depend on it in their manifests.
 - *Library-only dependents:* Seo, Html, Markdown, ContentFields and the two indexing modules
   (PDF, OpenXML).
@@ -601,20 +601,20 @@ an in-place rework of the module, not a Crest-owned copy beside it.
 
 **Design.**
 
-- **Storage is Crest's own provider interface** (the icon and tax provider pattern): local
+- **Storage is Grove's own provider interface** (the icon and tax provider pattern): local
   disk, Azure and S3 on the platform's storage libraries; `Media.Azure` and `Media.AmazonS3`
   are reworked onto it.
-- **Versions.** The local feed is 4.0.0-local, and Crest's compatibility and assembly
+- **Versions.** The local feed is 4.0.0-local, and Grove's compatibility and assembly
   versions are 4.0.0.
 
 **Inventory.** Every service, route, shape, filter and handler
   that a dependent or existing content relies on, and where each stands after the media library
   (F1, below). "Library" means it now works on the library drive's placements; "path" means it
   still works on `IMediaFileStore` paths, which the library drive now backs.
-  - *Features:* `Crest.Media`, `.Indexing`, `.Indexing.Text`, `.Cache`, `.Slugify`, `.Security`
+  - *Features:* `Grove.Media`, `.Indexing`, `.Indexing.Text`, `.Cache`, `.Slugify`, `.Security`
     (Secure Media), `.Tus`, `.SignalR`. Ids unchanged.
   - *Services dependents resolve:* `IMediaFileStore` (Seo, Lists' MetaWeblog, Icons' tenant
-    media, Server's `api/crest/media`, OpenApi; now `DefaultMediaFileStore` over
+    media, Server's `api/grove/media`, OpenApi; now `DefaultMediaFileStore` over
     `LibraryFileStore`: path), `IMediaFileProvider` / `IStaticFileProvider` (file version
     hashing, Seo's robots), `IMediaTokenService`, `IMediaProfileService`, `IImageProcessingEngine`,
     `IResizedImageCache`, `IMediaNameNormalizerService`, `IUserAssetFolderNameProvider`,
@@ -679,8 +679,8 @@ an in-place rework of the module, not a Crest-owned copy beside it.
 
 #### The media library (F1)
 
-Built in `src/Crest.Media/Library/`, on contracts in `src/Crest.Media.Abstractions/Library/` and
-`Fields/` (tests in `test/Crest.Tests/Media/Migration/`: path resolution, field reading with ids
+Built in `src/Grove.Media/Library/`, on contracts in `src/Grove.Media.Abstractions/Library/` and
+`Fields/` (tests in `test/Grove.Tests/Media/Migration/`: path resolution, field reading with ids
 and paths, the import of a small tree (scanned and trusted, re-run, field rewrite, sharing
 grants), `asset_url`, Tus routing).
 
@@ -700,7 +700,7 @@ grants), `asset_url`, Tus routing).
   images included). Safe to run again: what is in the drive is kept. The media folder on disk
   is left as it was, for rollback, and nothing reads it once the library is active.
 - [x] **Existing files are scanned.** Every imported file goes through `IUploadQuarantine` like
-  an upload and is served once clean. The operator option `Crest_Media:Library:TrustExistingFiles`
+  an upload and is served once clean. The operator option `Grove_Media:Library:TrustExistingFiles`
   (or `"TrustExisting": true` on the recipe step) records them clean with the reason
   "imported, pre-existing" through `IMediaObjectWrites.ImportTrustedAsync` (system actor only),
   so a public site keeps serving them. They are never handed to the scanners: a file is scanned
@@ -719,7 +719,7 @@ grants), `asset_url`, Tus routing).
 - [x] **Media URLs are `/files/{placementId}`**, consistently: `asset_url`, the `a` tag,
   shortcodes, tag helpers, the field display, GraphQL and SEO all produce them, from a placement
   id, a `/files` or `/media` URL or a library path. A public file's URL carries the CDN base. A
-  private one is signed with `IMediaUrlSigner` for 15 minutes (`Crest_Media:Library:SignedUrlMinutes`),
+  private one is signed with `IMediaUrlSigner` for 15 minutes (`Grove_Media:Library:SignedUrlMinutes`),
   only after the decision and only while sharing is on (with sharing off nothing is known to be
   private, so the byte endpoint decides on every request). SEO's images are never signed:
   crawlers do not carry the caller. The synchronous path APIs (`IMediaFileStore.MapPathToPublicUrl`,
@@ -734,7 +734,7 @@ grants), `asset_url`, Tus routing).
   blocks) can keep a rendered fragment for everyone. When `MediaReferenceResolver` signs a URL
   it adds the `user` context to the enclosing cache scope and expires it while the URL still has
   half its life. It also marks the response `Cache-Control: private, no-store`, so no CDN or
-  proxy keeps the page. Tests: `test/Crest.Tests/Media/Files/SignedUrlCachingTests.cs`. Known
+  proxy keeps the page. Tests: `test/Grove.Tests/Media/Files/SignedUrlCachingTests.cs`. Known
   gap: the `user` context does not vary by acting organization, so a URL signed for a member
   acting for one organization can show again on their page while acting for another, for at most
   half its lifetime.
@@ -765,7 +765,7 @@ grants), `asset_url`, Tus routing).
   resolved in this tenant's library and foreign ids dropped (`MediaFieldImportHandler`); the
   media deployment step exports clean files only.
 - [x] **The drive-aware picker.** The Blazor admin chooses files from any drive through
-  `CrestDrivePicker`: `MediaFieldEditor` (the Blazor editor for `MediaField`) stores placement
+  `GroveDrivePicker`: `MediaFieldEditor` (the Blazor editor for `MediaField`) stores placement
   ids, position for position with the field's paths, texts and anchors; the HTML and Markdown
   editors insert a chosen file as its `files/{placementId}` URL (an image for an image, a link
   otherwise, appended to the text); the display system's `media` property kind is edited by
@@ -780,9 +780,9 @@ Limits and what is left:
   covers content items only. Older content versions keep their paths (they still resolve).
 - ☐ The large-tree import runs in one scope; very large libraries may want batching.
 
-### Crest today
+### Grove today
 
-- **Media API** (`api/crest/media`) is path-based with one global permission (`ManageMedia`);
+- **Media API** (`api/grove/media`) is path-based with one global permission (`ManageMedia`);
   replaced by the file-object API. Tenant icons sit in the same media tree.
 - **Content items API** lists without per-item filtering, creates on a global permission, and
   serves `/view` to anyone holding `ViewContent`; all change with requirements 73–74 and 77.
@@ -804,7 +804,7 @@ Limits and what is left:
 How a CDN keeps private files private while still caching them, and how that meets the access
 gate.
 
-**What the CDNs offer.** None of them knows Crest's users or permissions; all of them can
+**What the CDNs offer.** None of them knows Grove's users or permissions; all of them can
 check a **signed token** that the origin issued, and cache the bytes independently of it:
 
 - **Cloudflare**: *token authentication* - a WAF custom rule calls `is_timed_hmac_valid_v0()`
@@ -820,7 +820,7 @@ check a **signed token** that the origin issued, and cache the bytes independent
   expiry, optionally limited to a path prefix or to countries; requests without a valid token
   are refused.
 
-**How Crest uses them.** The CDN is a byte cache in front of the origin; the **access gate stays
+**How Grove uses them.** The CDN is a byte cache in front of the origin; the **access gate stays
 the only decision**:
 
 1. A page asks for a file. The access gate decides, through sharing, for the caller and the
@@ -828,24 +828,24 @@ the only decision**:
 2. **Public** (an Anyone grant on the placement): the URL is the plain public CDN URL; the public
    zone and the public resize cache serve it to anyone, cached as long as the file's version
    lives (the version is in the URL, so a new version is a new URL).
-3. **Private**: on an allow, Crest issues a **short-lived signed URL** (or a signed cookie scoped
+3. **Private**: on an allow, Grove issues a **short-lived signed URL** (or a signed cookie scoped
    to the caller's session for a page with many images) for the **private zone** - a separate
    hostname for admin and member assets - covering exactly that placement, version and size,
    valid for minutes. The CDN checks the token, serves from its cache (the cache key leaves the
-   token out, so each file is cached once), and fetches from Crest's private origin on a miss;
+   token out, so each file is cached once), and fetches from Grove's private origin on a miss;
    the private origin itself requires the same token, so the CDN is never an open door.
 4. **Revocation** takes effect for new tokens at once; a token already issued lives until it
    expires, so the token lifetime is the bound on how long a removed share can still be read
    from the cache. It is short (minutes) for staff and member assets.
-5. **No CDN configured**: the same flow against Crest's own origin, with its own public and
+5. **No CDN configured**: the same flow against Grove's own origin, with its own public and
    private resize caches.
 
-The signer is a provider behind one Crest interface (Cloudflare HMAC, CloudFront key pair, Bunny
+The signer is a provider behind one Grove interface (Cloudflare HMAC, CloudFront key pair, Bunny
 token), configured per tenant, like storage and scanner providers.
 
 **Implementation** (not verified against live CDNs):
 - `IMediaUrlSigner` gains the zone's `BaseUrl` and `Verify`. The tenant's shell configuration
-  `Crest_Media:Cdn` names the private zone (`PrivateBaseUrl`), the `Signer` (`cloudflare`,
+  `Grove_Media:Cdn` names the private zone (`PrivateBaseUrl`), the `Signer` (`cloudflare`,
   `cloudfront`, `bunny`) and its secret (`Cloudflare:Secret` and `TtlSeconds`,
   `CloudFront:KeyPairId` and `PrivateKey` PEM, RSA or ECDSA P-256, `Bunny:SecurityKey`).
   `CloudflareMediaUrlSigner` writes `verify={timestamp}-{HMAC}` as `is_timed_hmac_valid_v0`
@@ -869,11 +869,11 @@ page rendered while acting for another, for at most half the URL's lifetime.
 Research for the scanner and type-detection providers (requirements 90 and 91). Licences checked October 2026; nothing here
 is legal advice.
 
-- **Crest.Antivirus** (BSD-3): the platform's own module. It scans through a file-storage hook before a file is stored, using a ClamAV daemon
+- **Grove.Antivirus** (BSD-3): the platform's own module. It scans through a file-storage hook before a file is stored, using a ClamAV daemon
   over its socket, and rejects the upload synchronously. It is the obvious first provider, but
-  it rejects rather than quarantines, so Crest adapts it to the asynchronous verdict (92).
+  it rejects rather than quarantines, so Grove adapts it to the asynchronous verdict (92).
 - **ClamAV** (GPLv2): the only mature open-source engine with a maintained signature database.
-  It runs as a separate daemon reached over a socket rather than linked into Crest, on the same
+  It runs as a separate daemon reached over a socket rather than linked into Grove, on the same
   machine or a dedicated scanning server (requirement 94), which is
   how the platform's module and most products use it. No MIT, BSD or Apache engine matches its
   coverage. ClamAV identifies file types from content, but as its own type codes

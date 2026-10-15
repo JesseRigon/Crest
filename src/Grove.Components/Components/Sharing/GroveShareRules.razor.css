@@ -1,0 +1,6 @@
+.grove-share-rules { display: flex; flex-direction: column; gap: 1rem; }
+.grove-share-rules__error { color: var(--grove-danger, #b00020); }
+.grove-share-rules__inherited { opacity: .75; }
+.grove-share-rules__own li { display: flex; align-items: center; gap: .25rem; }
+.grove-share-rules__own li > span { flex: 1; }
+.grove-share-rules__condition, .grove-share-rules__effect, .grove-share-rules__actions { display: flex; gap: .5rem; align-items: center; margin-block: .25rem; }

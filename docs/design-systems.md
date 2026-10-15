@@ -1,6 +1,6 @@
 # Design systems
 
-Tenant and user design systems, stored as content so the platform is the system of record. A design system is the **visual language and the branding**: tokens, type scales, heading settings, presets; the theme is structure ([blazor-display.md](blazor-display.md) › decision 8). The canonical `--crest-*` primitive token contract, its packaged default CSS and the current Site-Settings-backed Design System page are built: see [Crest.Components/README.md](../Crest.Components/README.md) › Design tokens.
+Tenant and user design systems, stored as content so the platform is the system of record. A design system is the **visual language and the branding**: tokens, type scales, heading settings, presets; the theme is structure ([blazor-display.md](blazor-display.md) › decision 8). The canonical `--grove-*` primitive token contract, its packaged default CSS and the current Site-Settings-backed Design System page are built: see [Grove.Components/README.md](../Grove.Components/README.md) › Design tokens.
 
 Not built:
 
@@ -23,7 +23,7 @@ Design systems are content, not JSON files of their own. A first-party content t
 - audit/history where enabled;
 - search/indexing where enabled.
 
-Crest.AdminTheme provides the Blazor editor, preview, selector, and token application layer, with no parallel storage or permission model.
+Grove.AdminTheme provides the Blazor editor, preview, selector, and token application layer, with no parallel storage or permission model.
 
 - [ ] **Content part model.** The token taxonomy is fixed ([Token taxonomy](#token-taxonomy)); the part shape is open (see Open questions). Suggested `DesignSystemPart` fields/properties:
 
@@ -53,12 +53,12 @@ Crest.AdminTheme provides the Blazor editor, preview, selector, and token applic
     },
     "metadata": {
       "version": 1,
-      "createdByCrestVersion": "3.0.0.0.0"
+      "createdByGroveVersion": "3.0.0.0.0"
     }
   }
   ```
 
-  The exact JSON shape can evolve; the rule is that the stored document describes Crest-owned semantic tokens, not direct Radzen token names and not component implementation variables.
+  The exact JSON shape can evolve; the rule is that the stored document describes Grove-owned semantic tokens, not direct Radzen token names and not component implementation variables.
 
   Component-specific variables such as primary-navigation width, panel-menu rail width, indentation, or animation timing remain component mechanics. They are configured by component parameters/settings when needed, not by the primitive token contract.
 
@@ -90,7 +90,7 @@ Crest.AdminTheme provides the Blazor editor, preview, selector, and token applic
 - [ ] **Seed the packaged default into tenant content via recipe/setup.** A static CSS file stays:
 
   ```text
-  Crest.AdminTheme/wasm/wwwroot/CrestAdmin.DesignSystem.Default.css
+  Grove.AdminTheme/wasm/wwwroot/GroveAdmin.DesignSystem.Default.css
   ```
 
   Purpose:
@@ -108,7 +108,7 @@ Crest.AdminTheme provides the Blazor editor, preview, selector, and token applic
 
   On setup, a recipe creates the default `DesignSystem` content item from this default token map. After setup, tenant/user choices come from content.
 
-  - [x] The default file's token contract is built: see [Crest.Components/README.md](../Crest.Components/README.md) › Design tokens.
+  - [x] The default file's token contract is built: see [Grove.Components/README.md](../Grove.Components/README.md) › Design tokens.
 
 ## Resolution and runtime
 
@@ -116,7 +116,7 @@ Crest.AdminTheme provides the Blazor editor, preview, selector, and token applic
 
 #### System fallback
 
-Static packaged defaults loaded from Crest.AdminTheme.
+Static packaged defaults loaded from Grove.AdminTheme.
 
 Used only when no tenant/user design system can be resolved.
 
@@ -139,11 +139,11 @@ A tenant may have several design systems, for example:
   1. Authenticated user's selected personal design system, if valid and permissioned.
   2. Authenticated user's selected shared tenant design system, if valid and permissioned.
   3. Tenant default design system content item.
-  4. Crest packaged default design system.
+  4. Grove packaged default design system.
 
   Every resolution step checks the current user's content permissions.
 
-- [ ] **The design-system payload in the shell manifest.** Crest.AdminTheme converts the selected design system content item into a compact client payload:
+- [ ] **The design-system payload in the shell manifest.** Grove.AdminTheme converts the selected design system content item into a compact client payload:
 
   ```json
   {
@@ -155,22 +155,22 @@ A tenant may have several design systems, for example:
   }
   ```
 
-  The admin shell applies this payload by setting CSS custom properties on the admin root element. How components consume those `--crest-*` variables is built: see [Crest.Components/README.md](../Crest.Components/README.md) › Design tokens.
+  The admin shell applies this payload by setting CSS custom properties on the admin root element. How components consume those `--grove-*` variables is built: see [Grove.Components/README.md](../Grove.Components/README.md) › Design tokens.
 
-  **Token source mapping.** A provider pattern exists only at the source-to-Crest-token boundary.
+  **Token source mapping.** A provider pattern exists only at the source-to-Grove-token boundary.
 
   Examples:
 
-  - Radzen theme variables to Crest primitive tokens.
-  - MudBlazor theme variables to Crest primitive tokens.
-  - Bootstrap variables to Crest primitive tokens.
-  - A stored `DesignSystem` content item to Crest primitive tokens.
+  - Radzen theme variables to Grove primitive tokens.
+  - MudBlazor theme variables to Grove primitive tokens.
+  - Bootstrap variables to Grove primitive tokens.
+  - A stored `DesignSystem` content item to Grove primitive tokens.
 
   The provider does not style individual components and does not emit primary-navigation/panel-menu implementation variables. Its output is the canonical primitive token contract.
 
 ## Admin UI and user workflow
 
-- [ ] **Blazor Design System page over the content services**, extending the Design System page in Crest.AdminTheme.
+- [ ] **Blazor Design System page over the content services**, extending the Design System page in Grove.AdminTheme.
 
   Primary areas:
 
@@ -184,7 +184,7 @@ A tenant may have several design systems, for example:
   - publish/share controls;
   - permission-aware action buttons.
 
-  **API boundary.** The design-system API is declared by the module that owns design systems and registered with Crest.Server's API registry, like every module API ([server.md](server.md)). It uses the content API where that suffices and adds only admin-specific projections, validation, token compilation and current-user resolution. It:
+  **API boundary.** The design-system API is declared by the module that owns design systems and registered with Grove.Server's API registry, like every module API ([server.md](server.md)). It uses the content API where that suffices and adds only admin-specific projections, validation, token compilation and current-user resolution. It:
 
   - authorizes through the platform's permissions;
   - uses the real request principal;
@@ -208,7 +208,7 @@ A tenant may have several design systems, for example:
 
 Because design systems are content, defaults are seeded through recipes and design systems move through deployment plans; there is no hand-maintained JSON store.
 
-- [ ] **Deployment/recipe export path.** Host apps can provide their own design-system recipe steps without modifying Crest source.
+- [ ] **Deployment/recipe export path.** Host apps can provide their own design-system recipe steps without modifying Grove source.
 - [ ] **Cache invalidation/refresh on design system changes.** The client may cache the resolved token payload, but the server is authoritative. A changed user/tenant design system invalidates or refreshes the client design payload through the same manifest refresh mechanism used for admin permissions/navigation.
 
 **Localizable by default.** Tokens and the style schema expose only
@@ -234,9 +234,9 @@ Detail in [blazor-display.md](blazor-display.md) › Design systems.
   t-shirt sizes (`xs`–`xl`) for sizes.
 - **Extensible, keyed by name.** Modules register tokens through the registry, with a default
   expressed in existing tokens. Token keys are the same across tenants; values have per-tenant and
-  per-user overrides (the override model of blazor-display.md § 5a). Crest and registering modules
+  per-user overrides (the override model of blazor-display.md § 5a). Grove and registering modules
   provide common-sense defaults for the tokens and pages they register. **A module does not
-  change another module's defaults**, unless a Crest build-time setting lets the instance owner
+  change another module's defaults**, unless a Grove build-time setting lets the instance owner
   allow it, knowing it can break existing pages.
 - **Presets** are switchable token sets a user picks between. **Who may override which tokens is
   a tenant-level setting**, per audience: for example admin-shell users get presets that change

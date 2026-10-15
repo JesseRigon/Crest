@@ -1,0 +1,6 @@
+namespace Grove.Documents.Options;
+
+public interface IDocumentSharedOptions
+{
+    TimeSpan? FailoverRetryLatency { get; set; }
+}

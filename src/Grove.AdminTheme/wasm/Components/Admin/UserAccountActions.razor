@@ -1,0 +1,106 @@
+@namespace Grove.AdminTheme.Components.Admin
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* The account actions of the user editor (the retired MVC user pages' Unlock, Confirm email and
+   external logins): lockout state with Unlock, confirm the email address or send a new
+   verification message, and the external sign-ins linked to the account. *@
+<GroveCard data-testid="user-account-actions">
+    <GroveStack Gap="0.5rem">
+        <GroveText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@T["Account"]</GroveText>
+        @if (Error is { } error) { <GroveAlert AlertStyle="AlertStyle.Danger" AllowClose="false">@error</GroveAlert> }
+        @if (Message is { } message) { <GroveText TextStyle="TextStyle.Body2">@message</GroveText> }
+        @if (Status is not null)
+        {
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                <GroveText TextStyle="TextStyle.Body2">
+                    @(Status.IsLockedOut ? T["Locked out until {0:g}.", Status.LockoutEnd?.ToLocalTime()] : T["Not locked out."]) @T["Failed sign-ins: {0}.", Status.AccessFailedCount]
+                </GroveText>
+                <GroveButton Text="@T["Unlock"]" Icon="lock_open" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="UnlockAsync" Disabled="@(Busy || (!Status.IsLockedOut && Status.AccessFailedCount == 0))" data-testid="user-unlock" />
+            </GroveStack>
+        }
+        @if (!EmailConfirmed)
+        {
+            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                <GroveText TextStyle="TextStyle.Body2">@T["The email address is not confirmed."]</GroveText>
+                <GroveButton Text="@T["Confirm email"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="ConfirmAsync" Disabled="Busy" data-testid="user-confirm-email" />
+                <GroveButton Text="@T["Send verification email"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="SendVerificationAsync" Disabled="Busy" data-testid="user-send-verification" />
+            </GroveStack>
+        }
+        <GroveText TextStyle="TextStyle.Body2" class="rz-m-0"><strong>@T["External sign-ins"]</strong></GroveText>
+        @if (Logins is { Length: > 0 })
+        {
+            @foreach (var login in Logins)
+            {
+                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                    <GroveText TextStyle="TextStyle.Body2">@(login.ProviderDisplayName ?? login.LoginProvider) · @login.ProviderKey</GroveText>
+                    <GroveButton Text="@T["Unlink"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => UnlinkAsync(login))" Disabled="Busy" />
+                </GroveStack>
+            }
+        }
+        else
+        {
+            <GroveText TextStyle="TextStyle.Caption">@T["None."]</GroveText>
+        }
+    </GroveStack>
+</GroveCard>
+
+@code {
+    [Parameter, EditorRequired] public string UserId { get; set; } = string.Empty;
+
+    /// <summary>Raised after the email address was confirmed here, so the editor reloads it.</summary>
+    [Parameter] public EventCallback EmailConfirmedChanged { get; set; }
+
+    [Parameter] public bool EmailConfirmed { get; set; }
+
+    private StatusModel? Status;
+    private LoginModel[]? Logins;
+    private string? Error;
+    private string? Message;
+    private bool Busy;
+
+    private string Base => $"api/grove/users/{Uri.EscapeDataString(UserId)}";
+
+    protected override Task OnParametersSetAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            Status = await Http.GetFromJsonAsync<StatusModel>($"{Base}/status");
+            Logins = await Http.GetFromJsonAsync<LoginModel[]>($"{Base}/external-logins");
+        }
+        catch (Exception exception) { Error = exception.Message; }
+    }
+
+    private Task UnlockAsync() => RunAsync(() => Http.PostAsync($"{Base}/unlock", null), T["The user was unlocked."]);
+
+    private async Task ConfirmAsync()
+    {
+        await RunAsync(() => Http.PostAsync($"{Base}/confirm-email", null), T["The email address was confirmed."]);
+        if (Error is null) await EmailConfirmedChanged.InvokeAsync();
+    }
+
+    private Task SendVerificationAsync() => RunAsync(() => Http.PostAsync($"{Base}/send-verification", null), T["A verification email was sent."]);
+
+    private Task UnlinkAsync(LoginModel login) => RunAsync(() => Http.DeleteAsync($"{Base}/external-logins/{Uri.EscapeDataString(login.LoginProvider)}/{Uri.EscapeDataString(login.ProviderKey)}"), T["The external sign-in was unlinked."]);
+
+    private async Task RunAsync(Func<Task<HttpResponseMessage>> call, string success)
+    {
+        Busy = true;
+        Error = null;
+        Message = null;
+        try
+        {
+            using var response = await call();
+            if (!response.IsSuccessStatusCode) { Error = await response.Content.ReadAsStringAsync(); return; }
+            Message = success;
+            await LoadAsync();
+        }
+        finally { Busy = false; }
+    }
+
+    private sealed record StatusModel(bool IsLockedOut, DateTimeOffset? LockoutEnd, int AccessFailedCount);
+    private sealed record LoginModel(string LoginProvider, string ProviderKey, string? ProviderDisplayName);
+}

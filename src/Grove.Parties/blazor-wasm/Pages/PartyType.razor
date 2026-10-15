@@ -1,0 +1,33 @@
+@page "/Parties/{TypeKey}"
+@attribute [PageEntry(DeclaredBySource = true)]
+@namespace Grove.Parties.BlazorWasm.Pages
+@using Grove.Components.Model
+@using Grove.Parties.BlazorWasm.Components
+@using Grove.Parties.Constants
+@using Grove.Parties.PartyTypes
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* The dedicated page for one tenant-kind party type (Customers, Vendors, Contacts...): the
+   same pane All Parties shows, on its own route. A global kind's dedicated page belongs to its
+   owning module, so it never lands here. The user's own hidden panes still open by direct
+   link: hiding is a menu preference, not a permission. *@
+
+<PageTitle>@(Title is null ? T["Parties"] : T[Title])</PageTitle>
+
+<GroveKindPage TKind="PartyTypeModel"
+               KindsUrl="@($"{PartiesConstants.Routes.Api}/{PartiesConstants.Routes.Types}")"
+               KindKey="@TypeKey"
+               KeySelector="@(type => type.Key)"
+               Filter="@(type => type.Kind == PartyTypeKinds.Tenant)"
+               ErrorSummary="@T["Could not load party types"]"
+               NotFoundText="@T["No party type '{0}' is available to you.", TypeKey]"
+               Loaded="@(types => Title = types.FirstOrDefault(type => string.Equals(type.Key, TypeKey, StringComparison.OrdinalIgnoreCase))?.DisplayName)">
+    <Pane Context="type"><PartyTypePane Type="@type" /></Pane>
+</GroveKindPage>
+
+@code {
+    [Parameter]
+    public string TypeKey { get; set; } = string.Empty;
+
+    private string? Title { get; set; }
+}

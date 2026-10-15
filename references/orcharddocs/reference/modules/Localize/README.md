@@ -1,4 +1,4 @@
-# Localization (`Crest.Localization`)
+# Localization (`Grove.Localization`)
 
 This module provides the infrastructure necessary to support the PO (Portable Object) localization file format.  
 It also supports plural forms.
@@ -130,7 +130,7 @@ msgstr "Bonjour"
 ## Pluralization
 
 This module also provides support for pluralization.
-It is necessary to reference the `Crest.Localization.Abstractions` package in order to be able to use it.
+It is necessary to reference the `Grove.Localization.Abstractions` package in order to be able to use it.
 
 ### Sample PO file
 

@@ -1,0 +1,131 @@
+/* Local slots: a theme or design system feeds concrete values into these. */
+.grove-drive-browser {
+    --grove-files-border: var(--grove-border-color, rgba(127, 127, 127, 0.3));
+    --grove-files-muted: var(--grove-muted-color, rgba(127, 127, 127, 0.9));
+    --grove-files-active: var(--grove-accent-soft, rgba(80, 120, 220, 0.12));
+    --grove-files-danger: var(--grove-danger-color, #c62828);
+    display: grid;
+    grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+    gap: 1rem;
+    min-height: 24rem;
+}
+
+.grove-drive-browser--with-viewer {
+    grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr) minmax(16rem, 24rem);
+}
+
+.grove-drive-browser__drives {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    border-right: 1px solid var(--grove-files-border);
+    padding-right: 0.75rem;
+}
+
+.grove-drive-browser__group-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--grove-files-muted);
+    margin-bottom: 0.25rem;
+}
+
+.grove-drive-browser__drive,
+.grove-drive-browser__name,
+.grove-drive-browser__path button {
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+    padding: 0.25rem 0.4rem;
+    border-radius: 0.25rem;
+}
+
+.grove-drive-browser__drive { display: block; width: 100%; }
+
+.grove-drive-browser__drive.is-active,
+.grove-drive-browser__list tr.is-selected { background: var(--grove-files-active); }
+
+.grove-drive-browser__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.grove-drive-browser__path {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.grove-drive-browser__path li + li::before { content: "/"; padding: 0 0.15rem; color: var(--grove-files-muted); }
+
+.grove-drive-browser__actions { display: flex; gap: 0.5rem; align-items: center; }
+
+.grove-drive-browser__upload {
+    cursor: pointer;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--grove-files-border);
+    border-radius: 0.25rem;
+}
+
+.grove-drive-browser__upload ::deep input[type=file] { display: none; }
+
+.grove-drive-browser__list { width: 100%; border-collapse: collapse; }
+
+.grove-drive-browser__list th,
+.grove-drive-browser__list td {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid var(--grove-files-border);
+    text-align: left;
+}
+
+.grove-drive-browser__row-actions { white-space: nowrap; text-align: right; }
+
+.grove-drive-browser__kind { margin-right: 0.35rem; }
+
+.grove-drive-browser__empty { color: var(--grove-files-muted); padding: 1rem 0; }
+
+.grove-drive-browser__error { color: var(--grove-files-danger); margin: 0.5rem 0; }
+
+.grove-drive-browser__backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.grove-drive-browser__dialog {
+    background: var(--grove-surface-color, #fff);
+    color: inherit;
+    padding: 1.25rem;
+    border-radius: 0.5rem;
+    min-width: min(24rem, 90vw);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.grove-drive-browser__dialog-actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
+
+@media (max-width: 900px) {
+    .grove-drive-browser,
+    .grove-drive-browser--with-viewer { grid-template-columns: 1fr; }
+
+    .grove-drive-browser__drives { border-right: none; padding-right: 0; }
+}
+
+/* Sharing (docs/sharing.md § 8): the Share panel and Rules screen in the dialog. */
+.grove-drive-browser__dialog--wide { width: min(52rem, 95vw); max-height: 90vh; overflow-y: auto; }
+.grove-drive-browser__tabs { display: flex; gap: .5rem; margin-bottom: .75rem; }
+.grove-drive-browser__tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: .25rem .5rem; cursor: pointer; }
+.grove-drive-browser__tabs button.is-active { border-bottom-color: currentColor; font-weight: 600; }

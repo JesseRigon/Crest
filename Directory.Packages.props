@@ -136,7 +136,7 @@
   <ItemGroup>
     <!-- Aspire Packages -->
     <!-- When updating Aspire package versions, also update the corresponding SDK version in '<Project Sdk="Aspire.AppHost.Sdk/13.4.4">' 
-    within 'Crest.AspireHost/Crest.AspireHost.csproj. -->
+    within 'Grove.AspireHost/Grove.AspireHost.csproj. -->
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.5.3" />
   </ItemGroup>
   <ItemGroup>
@@ -144,7 +144,7 @@
     <PackageVersion Include="MessagePack" Version="3.1.8" />
   </ItemGroup>
 
-  <ItemGroup Label="Crest modules (the platform's versions above apply to them too)">
+  <ItemGroup Label="Grove modules (the platform's versions above apply to them too)">
     <PackageVersion Include="Microsoft.AspNetCore.Components" Version="10.0.13" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.13" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.Forms" Version="10.0.13" />
@@ -162,7 +162,7 @@
     <PackageVersion Include="NSubstitute" Version="6.0.0" />
   </ItemGroup>
 
-  <ItemGroup Label="Crest.Workflows (engine is vendored source under Crest.Workflows/engine; see its UPSTREAM.md)">
+  <ItemGroup Label="Grove.Workflows (engine is vendored source under Grove.Workflows/engine; see its UPSTREAM.md)">
     <!-- Snappier 1.2.0 arrives transitively (IronCompress, via the engine) with a known
          vulnerability (GHSA-pggp-6c3x-2xmx); transitive pinning lifts it for every project
          that references the engine. Bump with the engine. -->

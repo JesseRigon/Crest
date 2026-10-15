@@ -11,7 +11,7 @@
 module.exports = async function run(page, ctx) {
   const results = [];
 
-  const tokenResponse = await page.request.get(`${ctx.baseUrl}/api/crest/antiforgery/token`);
+  const tokenResponse = await page.request.get(`${ctx.baseUrl}/api/grove/antiforgery/token`);
   const token = await tokenResponse.json();
   const headers = { [token.headerName || 'RequestVerificationToken']: token.requestToken };
 
@@ -29,11 +29,11 @@ module.exports = async function run(page, ctx) {
     // region they belong to as their Source value... except Source is provenance, not
     // domain data. So instead the child options are keyed so the filter can match on
     // the KEY, which is what code compares on anyway.
-    const parentCreated = await post('/api/crest/content-part-lists', {
+    const parentCreated = await post('/api/grove/content-part-lists', {
       key: parentListKey,
       displayText: `Probe regions ${stamp}`,
     });
-    const childCreated = await post('/api/crest/content-part-lists', {
+    const childCreated = await post('/api/grove/content-part-lists', {
       key: childListKey,
       displayText: `Probe cities ${stamp}`,
     });
@@ -44,19 +44,19 @@ module.exports = async function run(page, ctx) {
       message: `parent HTTP ${parentCreated.status()}, child HTTP ${childCreated.status()}`,
     });
 
-    await post(`/api/crest/content-part-lists/${parentListKey}/options`, { key: 'North', displayText: 'North', position: 0 });
-    await post(`/api/crest/content-part-lists/${parentListKey}/options`, { key: 'South', displayText: 'South', position: 1 });
+    await post(`/api/grove/content-part-lists/${parentListKey}/options`, { key: 'North', displayText: 'North', position: 0 });
+    await post(`/api/grove/content-part-lists/${parentListKey}/options`, { key: 'South', displayText: 'South', position: 1 });
 
     // Child options keyed by their parent so a filter on Key can select them.
-    await post(`/api/crest/content-part-lists/${childListKey}/options`, { key: 'North', displayText: 'Northtown', position: 0 });
-    await post(`/api/crest/content-part-lists/${childListKey}/options`, { key: 'South', displayText: 'Southport', position: 1 });
+    await post(`/api/grove/content-part-lists/${childListKey}/options`, { key: 'North', displayText: 'Northtown', position: 0 });
+    await post(`/api/grove/content-part-lists/${childListKey}/options`, { key: 'South', displayText: 'Southport', position: 1 });
 
     const childSource = `contentpartlist:${childListKey}`;
 
     // --- Guarantee 1: the caller cannot smuggle in its own filters ---------------
     // The query request has no filter field at all. Posting one must be ignored
     // rather than honoured; if it were honoured, this would return one row.
-    const smuggled = await post('/api/crest/option-sources/query', {
+    const smuggled = await post('/api/grove/option-sources/query', {
       sourceKey: childSource,
       columns: ['DisplayText', 'Key'],
       filters: [{ path: 'Key', operator: 'Equals', values: ['North'] }],
@@ -71,7 +71,7 @@ module.exports = async function run(page, ctx) {
     });
 
     // --- Guarantee 2: an unconfigured attachment is simply unfiltered -------------
-    const unfiltered = await post('/api/crest/option-sources/query', {
+    const unfiltered = await post('/api/grove/option-sources/query', {
       sourceKey: childSource,
       columns: ['DisplayText', 'Key'],
       take: 50,
@@ -91,7 +91,7 @@ module.exports = async function run(page, ctx) {
     const northOption = childOptions.find((row) => row.key === 'North');
 
     if (northOption) {
-      const validation = await post('/api/crest/option-sources/validate-selection', {
+      const validation = await post('/api/grove/option-sources/validate-selection', {
         sourceKey: childSource,
         selectedIds: [northOption.id],
         editorState: {},
@@ -112,7 +112,7 @@ module.exports = async function run(page, ctx) {
     }
 
     // An empty selection is always valid - there is nothing to contradict.
-    const emptyValidation = await post('/api/crest/option-sources/validate-selection', {
+    const emptyValidation = await post('/api/grove/option-sources/validate-selection', {
       sourceKey: childSource,
       selectedIds: [],
       editorState: {},
@@ -129,18 +129,18 @@ module.exports = async function run(page, ctx) {
     // already references it must still render.
     if (northOption) {
       await page.request.put(
-        `${ctx.baseUrl}/api/crest/content-part-lists/${childListKey}/options/North`,
+        `${ctx.baseUrl}/api/grove/content-part-lists/${childListKey}/options/North`,
         { headers, data: { displayText: null, position: null, hidden: true } },
       );
 
-      const afterHide = await post('/api/crest/option-sources/query', {
+      const afterHide = await post('/api/grove/option-sources/query', {
         sourceKey: childSource,
         columns: ['DisplayText', 'Key'],
         take: 50,
       });
       const offered = afterHide.ok() ? await afterHide.json() : [];
 
-      const resolved = await post('/api/crest/option-sources/resolve', {
+      const resolved = await post('/api/grove/option-sources/resolve', {
         sourceKey: childSource,
         ids: [northOption.id],
         columns: ['DisplayText', 'Key'],
@@ -158,7 +158,7 @@ module.exports = async function run(page, ctx) {
   } finally {
     // Tenant-created lists are deletable, so the probes clean themselves up.
     for (const key of [parentListKey, childListKey]) {
-      await page.request.delete(`${ctx.baseUrl}/api/crest/content-part-lists/${key}`, { headers }).catch(() => {});
+      await page.request.delete(`${ctx.baseUrl}/api/grove/content-part-lists/${key}`, { headers }).catch(() => {});
     }
   }
 

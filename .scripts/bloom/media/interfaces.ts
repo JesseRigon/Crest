@@ -1,5 +1,5 @@
 /**
- * Maps to Crest's FileStoreEntryDto returned by the MediaApiController.
+ * Maps to Grove's FileStoreEntryDto returned by the MediaApiController.
  */
 export interface IFileLibraryItemDto {
   name: string;

@@ -1,0 +1,44 @@
+@page "/Sharing"
+@page "/Sharing/{Kind}/{Id}"
+@attribute [PageEntry("ManageTenantSharing", Route = "/Sharing", Id = "sharing", Parent = "accessControl", Caption = "Sharing")]
+@attribute [PageEntry("AccessAdminPanel", Route = "/Sharing/{Kind}/{Id}", Id = "sharing-item")]
+@using Grove.Components.Primitives
+@using Grove.Components.Sharing
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* Sharing screens (docs/sharing.md § 8): /Sharing is the tenant's entries and rules, which reach
+   every object (requirement 97, the tenant permission); /Sharing/{kind}/{id} is any object's Share
+   panel and, for a container, its Rules screen (a content type: /Sharing/contenttype/Article). The
+   server decides who may see and change what: everyone else is told "not found". *@
+
+<GroveStack Gap="1rem" data-testid="sharing-page">
+    <GroveText TextStyle="TextStyle.H4" Text="@(IsTenant ? T["Sharing for everything on this site"] : T["Sharing"])" />
+    <div class="grove-sharing-page__tabs" role="tablist">
+        <GroveButton Size="ButtonSize.Small" ButtonStyle="@(ShowRules ? ButtonStyle.Light : ButtonStyle.Primary)" Text="@T["Share"]" Click="@(() => ShowRules = false)" data-testid="sharing-tab-share" />
+        <GroveButton Size="ButtonSize.Small" ButtonStyle="@(ShowRules ? ButtonStyle.Primary : ButtonStyle.Light)" Text="@T["Rules"]" Click="@(() => ShowRules = true)" data-testid="sharing-tab-rules" />
+    </div>
+    <GroveCard>
+        @if (ShowRules)
+        {
+            <GroveShareRules Kind="@TargetKind" Id="@TargetId" />
+        }
+        else
+        {
+            <GroveSharePanel Kind="@TargetKind" Id="@TargetId" />
+        }
+    </GroveCard>
+</GroveStack>
+
+@code {
+    [Parameter] public string? Kind { get; set; }
+
+    [Parameter] public string? Id { get; set; }
+
+    private bool ShowRules;
+
+    private bool IsTenant => string.IsNullOrEmpty(Kind);
+
+    private string TargetKind => IsTenant ? GroveSharingClient.TenantKind : Kind!;
+
+    private string? TargetId => IsTenant ? null : Id;
+}

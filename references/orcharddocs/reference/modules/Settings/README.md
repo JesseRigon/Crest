@@ -1,6 +1,6 @@
-# Settings (`Crest.Settings`)
+# Settings (`Grove.Settings`)
 
-The `Crest.Settings` module provides the **site settings** infrastructure: a single, per-tenant container of configuration that other modules contribute to. It is always enabled and cannot be disabled.
+The `Grove.Settings` module provides the **site settings** infrastructure: a single, per-tenant container of configuration that other modules contribute to. It is always enabled and cannot be disabled.
 
 Site settings are where global, site-wide options live (site name, time zone, page size, …) as opposed to per-content-item data. Modules extend these settings by adding their own groups (for example, the SMTP settings, the search settings, or the reCAPTCHA settings all appear as additional sections of the site settings).
 
@@ -79,11 +79,11 @@ In Liquid, the current site settings are available through the `Site` accessor:
 This accessor has all properties of `ISite`, with two security limitations:
 
 1. `ISite.SiteSalt` may not be accessed. If you try to use `{{ Site.SiteSalt }}` in Liquid, you will get `[REDACTED]` instead of the actual value.
-2. `ISite.Properties` is filtered. By default, this object appears empty in Liquid. You can configure the `Crest.Settings.SettingsLiquidOptions` object to specify which properties should be exposed through Liquid. For example using _appsettings.json_:
+2. `ISite.Properties` is filtered. By default, this object appears empty in Liquid. You can configure the `Grove.Settings.SettingsLiquidOptions` object to specify which properties should be exposed through Liquid. For example using _appsettings.json_:
    ```json
    {
-     "Crest": {
-       "Crest_Settings_Liquid": {
+     "Grove": {
+       "Grove_Settings_Liquid": {
          "PermittedSiteProperties": [
            "ExternalRegistrationSettings",
            "ExternalLoginSettings",
@@ -105,7 +105,7 @@ Site settings can be set from a recipe using the `settings` step. Recognized key
   "steps": [
     {
       "name": "settings",
-      "SiteName": "My Crest Site",
+      "SiteName": "My Grove Site",
       "PageSize": 10,
       "TimeZoneId": "Europe/Paris",
       "UseCdn": false
@@ -122,4 +122,4 @@ Use the **Site Settings** deployment step to export and import the site settings
 
 The built-in site settings editor, setup screen, and user time zone editor all resolve their time zone `<option>` items through `ITimeZoneSelectListProvider`.
 
-Replace the default `DefaultTimeZoneSelectListProvider` service to change the rendered labels, ordering, or filtering of the available time zones anywhere Crest consumes that shared list.
+Replace the default `DefaultTimeZoneSelectListProvider` service to change the rendered labels, ordering, or filtering of the available time zones anywhere Grove consumes that shared list.

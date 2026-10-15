@@ -1,0 +1,165 @@
+#nullable enable
+
+using Grove.Admin;
+using Grove.DisplayManagement.Components;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
+using Grove.Api;
+
+namespace Grove.Templates.Api;
+
+public sealed class ComponentsApi : ApiContributor
+{
+    public override string Name => "Components";
+
+    public override string FeatureId => "Grove.Templates";
+
+    public override void Map(IEndpointRouteBuilder group)
+    {
+        var routes = group.MapGroup("components");
+        routes.MapGet("", (HttpContext __http, [FromQuery] string? shell = null, [FromQuery] string? page = null) => ApiHandlers.For<ComponentsHandlers>(__http).ListAsync(shell, page));
+        routes.MapGet("zone-keys", (HttpContext __http, [FromQuery] string? shell = null) => ApiHandlers.For<ComponentsHandlers>(__http).ZoneKeysAsync(shell));
+    }
+}
+
+
+/// <summary>
+/// The component registry's schema per shell (docs/blazor-display.md § 1: one schema shared by
+/// the server, the renderer and the designer): what the Layers page, the Templates page and the
+/// designer offer. Schema only, never data (permission set 2); admin users only.
+/// </summary>
+public sealed class ComponentsHandlers(
+    IComponentRegistryManager registries,
+    Grove.Templates.Services.ITemplateCatalog templates,
+    Grove.Templates.Services.ComponentOverrides overrides,
+    IAuthorizationService authorization) : ApiHandlers
+{
+    public async Task<IResult> ListAsync([FromQuery] string? shell = null, [FromQuery] string? page = null)
+    {
+        // Designing one page needs that page's Schema set (§ 10), not the admin panel.
+        var allowed = string.IsNullOrWhiteSpace(page)
+            ? await authorization.AuthorizeAsync(User, AdminPermissions.AccessAdminPanel)
+            : await authorization.AuthorizeAsync(User, Grove.Templates.Services.DesignedPagePermissions.Schema(page.Trim()));
+        if (!allowed)
+        {
+            return Forbid();
+        }
+
+        var kind = ComponentSchema.ParseShell(shell?.ToLowerInvariant()) ?? ShellKind.Site;
+
+        // Tenants' composites are components too (rulings 2026-10-12): listed with the coded ones,
+        // a coded component keeping its name over a composite of the same name.
+        var coded = registries.GetRegistry(kind).Components.ToList();
+        var composites = (await templates.ListPublishedAsync())
+            .Where(template => template.IsComposite && !coded.Any(component => string.Equals(component.Name, template.Name, StringComparison.OrdinalIgnoreCase)))
+            .Select(Grove.Templates.Services.TemplateComposites.Describe);
+
+        // Variants (§ 5a) are placed by name too: listed as what they resolve to, under their own name.
+        var known = coded.Concat(composites).ToList();
+        var document = await overrides.GetAsync();
+        var variants = document.Variants
+            .Select(variant => (Variant: variant, Resolved: Grove.Templates.Services.ComponentOverrides.Resolve(document, variant.Name, out _)))
+            .Where(entry => entry.Resolved is not null && known.Any(component => string.Equals(component.Name, entry.Resolved.Component, StringComparison.OrdinalIgnoreCase)))
+            .Select(entry => known.First(component => string.Equals(component.Name, entry.Resolved!.Component, StringComparison.OrdinalIgnoreCase)) with
+            {
+                Name = entry.Variant.Name,
+                Type = null,
+                Module = Grove.Templates.Services.TemplateComposites.Module,
+                DisplayName = entry.Variant.DisplayName ?? entry.Variant.Name,
+                Category = entry.Variant.Category ?? "Variants",
+                Icon = entry.Variant.Icon ?? "palette",
+            });
+
+        return Ok(known.Concat(variants)
+            .OrderBy(component => component.Category, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(component => component.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(ComponentSchemaModel.From)
+            .ToArray());
+    }
+
+    /// <summary>The open zone keys of a shell (decision 6): what the designer's zone picker and the Layers page offer.</summary>
+    public async Task<IResult> ZoneKeysAsync([FromQuery] string? shell = null)
+    {
+        if (!await authorization.AuthorizeAsync(User, AdminPermissions.AccessAdminPanel))
+        {
+            return Forbid();
+        }
+
+        var kind = ComponentSchema.ParseShell(shell?.ToLowerInvariant()) ?? ShellKind.Site;
+        return Ok(registries.GetRegistry(kind).ZoneKeys
+            .OrderBy(key => key.Module is null ? 0 : 1)
+            .ThenBy(key => key.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(key => new ZoneKeyModel(key.Key, key.DisplayName, key.Module, [.. key.Allowed], key.Instances.ToString(), key.RequiredOnLayout))
+            .ToArray());
+    }
+}
+
+public sealed record ZoneKeyModel(string Key, string? DisplayName, string? Module, string[] Allowed, string Instances, bool RequiredOnLayout);
+
+public sealed record ComponentSchemaModel(
+    string Name,
+    string? DisplayName,
+    string? Category,
+    string? Icon,
+    string? Module,
+    string? Permission,
+    string Instances,
+    bool IsWrapper,
+    bool IsHost,
+    bool IsOverlay,
+    ParameterSchemaModel[] Parameters,
+    ZoneSchemaModel[] Zones,
+    string Source = "code")
+{
+    /// <summary>The value types an editor component edits (the editor facet); empty for anything else.</summary>
+    public string[] Edits { get; init; } = [];
+
+    public static ComponentSchemaModel From(ComponentDescriptor component) => new(
+        component.Name,
+        component.DisplayName,
+        component.Category,
+        component.Icon,
+        component.Module,
+        component.Permission,
+        component.Instances.ToString(),
+        component.IsWrapper,
+        component.IsHost,
+        component.IsOverlay,
+        component.Parameters.Select(parameter => new ParameterSchemaModel(
+            parameter.Name,
+            parameter.Kind.ToString(),
+            parameter.Editor,
+            parameter.DisplayName,
+            parameter.Group,
+            parameter.Required,
+            parameter.Hidden,
+            parameter.Advanced,
+            parameter.ReadOnly,
+            parameter.Choices?.ToArray(),
+            parameter.Accepts?.ToArray(),
+            (parameter.ValueType ?? parameter.ClrType).Name)).ToArray(),
+        component.Zones.Select(zone => new ZoneSchemaModel(zone.Name, [.. zone.Allowed], zone.Min, zone.Max)).ToArray(),
+        component.Type is null ? "template" : "code")
+    {
+        Edits = [.. component.Edits],
+    };
+}
+
+public sealed record ParameterSchemaModel(
+    string Name,
+    string Kind,
+    string Editor,
+    string? DisplayName,
+    string? Group,
+    bool Required,
+    bool Hidden,
+    bool Advanced,
+    bool ReadOnly,
+    string[]? Choices,
+    string[]? Accepts,
+    string Type);
+
+public sealed record ZoneSchemaModel(string Name, string[] Allowed, int Min, int Max);

@@ -1,0 +1,13 @@
+using Grove.Workflows.Activities;
+
+namespace Grove.Workflows.Runtime;
+
+/// <summary>
+/// Represents a workflow definition and its workflow.
+/// </summary>
+/// <param name="Workflow">The workflow materialized from its workflow definition.</param>
+/// <param name="ProviderName">The name of the provider that provided the workflow definition.</param>
+/// <param name="MaterializerName">The name of the materializer that materialized the workflow.</param>
+/// <param name="MaterializerContext">The context of the materializer that materialized the workflow.</param>
+/// <param name="OriginalSource">The original source representation (JSON, GroveWorkflowsScript, YAML, etc.). When present, enables symmetric round-trip preservation without re-serialization.</param>
+public record MaterializedWorkflow(Workflow Workflow, string ProviderName, string MaterializerName, object? MaterializerContext = null, string? OriginalSource = null);

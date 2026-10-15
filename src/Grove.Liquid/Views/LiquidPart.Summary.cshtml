@@ -1,0 +1,4 @@
+@using Grove.Mvc.Utilities
+@model Grove.Liquid.ViewModels.LiquidPartViewModel
+
+@Html.Raw(Model.Html.RemoveTags(true).Ellipsize(200))

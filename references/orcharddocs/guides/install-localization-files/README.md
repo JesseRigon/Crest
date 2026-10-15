@@ -1,12 +1,12 @@
 # Installing Localization Files
 
-In this guide you will download and install community managed localization files to localize the Admin of Crest CMS.
+In this guide you will download and install community managed localization files to localize the Admin of Grove CMS.
 
 ## What you will need
 
 - The current version of the .NET SDK. You can download it from here <https://dotnet.microsoft.com/download>.
 - A text editor and a terminal where you can type dotnet commands.
-- An already running Crest CMS website. You can follow the guide [Creating an Crest CMS website](../create-cms-application/README.md) if you haven't done it yet.
+- An already running Grove CMS website. You can follow the guide [Creating an Grove CMS website](../create-cms-application/README.md) if you haven't done it yet.
 
 ## Downloading the localization files
 
@@ -24,7 +24,7 @@ For this guide we will download the French language.
 
 ## Extracting the localization files
 
-The zip file that you downloaded needs to be extracted in the `Localization` folder of your Crest CMS website.
+The zip file that you downloaded needs to be extracted in the `Localization` folder of your Grove CMS website.
 
 - Create a folder named `[your_site_root]/Localization` where `your_site_root` is the location of your website.
 - Extract the file `fr.zip` in `Localization`
@@ -35,18 +35,18 @@ The result should look like this:
 
 ## Configuring the supported cultures
 
-By default a new Crest CMS website will only accept the default system culture. This step will configure it to accept French as an alternate language.
+By default a new Grove CMS website will only accept the default system culture. This step will configure it to accept French as an alternate language.
 
-- Open the Admin section of Crest CMS by opening the browser on <https://localhost:5001/admin>.
+- Open the Admin section of Grove CMS by opening the browser on <https://localhost:5001/admin>.
 - In the __Settings__ > __Localization__ > __Cultures__ section, select `fr | French` then click __Add culture__.
 - Click on __Save__, the site is reloaded.
 
 ## Enabling localization and testing the site
 
-To enable Crest CMS to use these new files, we need to enable the Localization feature.
+To enable Grove CMS to use these new files, we need to enable the Localization feature.
 
 - In the __Modules__ page search for __Localization__ and click __Enable__. If the feature is already enabled you don't need to do anything.
-- In the current url, add `?culture=fr`, the link should look like <https://localhost:44300/blog/Crest.Features/Admin/Features?culture=fr>.
+- In the current url, add `?culture=fr`, the link should look like <https://localhost:44300/blog/Grove.Features/Admin/Features?culture=fr>.
 
 At that point most texts should be displayed in French.  
 From now on if a browser is configured with French as its default culture, the Admin will be displayed using the French text translations we downloaded.  
@@ -56,4 +56,4 @@ The `?culture=fr` is just one way to simulate that the current request should us
 
 ## Summary
 
-You just downloaded and enabled a new localization in Crest CMS.
+You just downloaded and enabled a new localization in Grove CMS.

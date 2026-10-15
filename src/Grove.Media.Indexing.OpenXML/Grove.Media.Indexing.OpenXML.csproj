@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Grove OpenXML files Indexing</Title>
+    <Description>
+      $(OCCMSDescription)
+
+      The media module adds OpenXML files indexing support.
+    </Description>
+    <PackageTags>$(PackageTags) PlatformCMS ContentManagement</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Indexing.Abstractions\Grove.Indexing.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Media.Abstractions\Grove.Media.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" />
+  </ItemGroup>
+</Project>

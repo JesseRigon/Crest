@@ -1,6 +1,6 @@
-# Archive Later (`Crest.ArchiveLater`)
+# Archive Later (`Grove.ArchiveLater`)
 
-The `Crest.ArchiveLater` module adds the ability to schedule a published content item to be unpublished (archived) automatically at a future date and time.
+The `Grove.ArchiveLater` module adds the ability to schedule a published content item to be unpublished (archived) automatically at a future date and time.
 
 ## Usage
 

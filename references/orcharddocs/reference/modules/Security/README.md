@@ -1,10 +1,10 @@
-# Security (`Crest.Security`)
+# Security (`Grove.Security`)
 
 This module adds `HTTP` headers to follow security best practices.
 
 ## Security Settings
 
-Enabling the `Crest.Security` module will allow the user to set the following settings:
+Enabling the `Grove.Security` module will allow the user to set the following settings:
 
 | Setting                 | Description                                             |
 |-------------------------|---------------------------------------------------------|
@@ -51,13 +51,13 @@ Security settings can be configured using the `Settings` recipe step:
 
 ## Security Settings Configuration
 
-The `Crest.Security` module allows the user to use configuration values to override the `AdminSettings` by calling `ConfigureSecuritySettings()` extension method.
+The `Grove.Security` module allows the user to use configuration values to override the `AdminSettings` by calling `ConfigureSecuritySettings()` extension method.
 
 The following configuration values can be customized:
 
 ```json
 {
-  "Crest_Security": {
+  "Grove_Security": {
     "ContentSecurityPolicy": {},
     "PermissionsPolicy": {
       "fullscreen": "self"

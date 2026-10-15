@@ -1,4 +1,4 @@
-# Bag (`Crest.Flows`)
+# Bag (`Grove.Flows`)
 
 The BagPart is part of the Flows module, and is a content part that can contain multiple types of content items directly within it.
 
@@ -97,10 +97,10 @@ to build the display shapes for the content items, then `DisplayAsync` is used t
 === "Razor"
 
     ``` html
-    @using Crest.Flows.ViewModels
+    @using Grove.Flows.ViewModels
 
     @model BagPartViewModel
-    @inject Crest.ContentManagement.Display.IContentItemDisplayManager ContentItemDisplayManager
+    @inject Grove.ContentManagement.Display.IContentItemDisplayManager ContentItemDisplayManager
 
     <section class="flow">
         @foreach (var item in Model.BagPart.ContentItems)

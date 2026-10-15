@@ -1,13 +1,13 @@
-# GitHub (`Crest.GitHub`)
+# GitHub (`Grove.GitHub`)
 
-This module adds GitHub Authentication to Crest.
+This module adds GitHub Authentication to Grove.
 
 ## Authenticate with GitHub
 
 Authenticates users with their GitHub Account.
 
 Create an OAuth app in the [GitHub Developer applications](https://GitHub.com/settings/developers).  
-In the app details, you must configure the Authorization Callback URL. The default url in Crest is [tenant]/signin-github.
+In the app details, you must configure the Authorization Callback URL. The default url in Grove is [tenant]/signin-github.
 
 Configuration can be set through the _GitHub -> Authenticate with GitHub_ settings menu in the admin dashboard.
 
@@ -20,7 +20,7 @@ If no value is provided, setup Authorization callback URL in GitHub app to use t
 
 ## Users Registration
 
-- Enable the `Crest.Users.Registration` feature when you also want local site registration.
+- Enable the `Grove.Users.Registration` feature when you also want local site registration.
 - New external-user creation and profile generation are controlled from the Users module's [`ExternalRegistrationSettings`](../Users/README.md#external-authentication-settings).
 - An existing user can link the account through the External Logins link from the user menu.
 
@@ -53,13 +53,13 @@ GitHub authentication settings can be configured using the `Settings` recipe ste
 
 ## GitHub Settings Configuration
 
-The `Crest.GitHub` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureGitHubSettings()` extension method on `PlatformBuilder` when initializing the app.
+The `Grove.GitHub` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureGitHubSettings()` extension method on `PlatformBuilder` when initializing the app.
 
 The following configuration values can be customized:
 
 ```json
 {
-  "Crest_GitHub": {
+  "Grove_GitHub": {
     "ClientID": "",
     "ClientSecret": "",
     "CallbackPath": "/signin-github",

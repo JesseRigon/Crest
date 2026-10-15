@@ -1,0 +1,160 @@
+@page "/OpenId/ServerConfiguration"
+@attribute [PageEntry("ManageServerSettings", Id = "openid-server", Parent = "openid-settings", Caption = "Authorization Server")]
+@using Grove.AdminTheme.Api
+@using Grove.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* The OpenID server configuration as a structured form (step 7: the MVC editor and its display
+   driver are retired): token format and authority, the signing and encryption certificates
+   (picked from those the server can use, or left to the managed development certificates),
+   the endpoints (on or off at their fixed paths), the flows and the token options. Saving
+   validates through the server service and reloads the tenant. *@
+
+<GroveStack Gap="1rem" data-testid="openid-server-page">
+    <GroveStack Gap="0.25rem">
+        <GroveText TextStyle="TextStyle.H4" Text="@T["OpenID server"]" />
+        <GroveText TextStyle="TextStyle.Body2" Text="@T["Saving reloads the tenant."]" />
+    </GroveStack>
+
+    @foreach (var error in Errors)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@(string.IsNullOrEmpty(error.Key) ? error.Message : $"{error.Key}: {error.Message}")</GroveAlert>
+    }
+
+    @if (Model is null)
+    {
+        <GroveCard><GroveProgressBar Mode="ProgressBarMode.Indeterminate" /></GroveCard>
+    }
+    else
+    {
+        <GroveCard>
+            <GroveRow Gap="1rem">
+                <GroveColumn Size="12" SizeMD="6"><GroveFormField Text="@T["Access token format"]" Style="width: 100%;"><GroveDropDown @bind-Value="Model.AccessTokenFormat" Data="@TokenFormats" Style="width: 100%;" /></GroveFormField></GroveColumn>
+                <GroveColumn Size="12" SizeMD="6"><GroveFormField Text="@T["Authority (empty: this tenant's address)"]" Style="width: 100%;"><GroveTextBox @bind-Value="Model.Authority" Style="width: 100%;" /></GroveFormField></GroveColumn>
+            </GroveRow>
+        </GroveCard>
+
+        <GroveCard>
+            <GroveStack Gap="0.75rem">
+                <GroveText TextStyle="TextStyle.H6" Text="@T["Certificates"]" />
+                <GroveText TextStyle="TextStyle.Body2" Text="@T["Leave a certificate empty to use the managed development certificates."]" />
+                <GroveRow Gap="1rem">
+                    <GroveColumn Size="12" SizeMD="6">
+                        <GroveFormField Text="@T["Signing certificate"]" Style="width: 100%;">
+                            <GroveDropDown TValue="string" Value="@Model.SigningCertificateThumbprint" ValueChanged="@((string? value) => PickSigning(value))" Data="@CertificateChoices" TextProperty="Text" ValueProperty="Value" AllowClear="true" Style="width: 100%;" />
+                        </GroveFormField>
+                    </GroveColumn>
+                    <GroveColumn Size="12" SizeMD="6">
+                        <GroveFormField Text="@T["Encryption certificate"]" Style="width: 100%;">
+                            <GroveDropDown TValue="string" Value="@Model.EncryptionCertificateThumbprint" ValueChanged="@((string? value) => PickEncryption(value))" Data="@CertificateChoices" TextProperty="Text" ValueProperty="Value" AllowClear="true" Style="width: 100%;" />
+                        </GroveFormField>
+                    </GroveColumn>
+                </GroveRow>
+                <SettingsSwitch @bind-Value="Model.DisableAccessTokenEncryption" Label="@T["Disable access token encryption"]" />
+            </GroveStack>
+        </GroveCard>
+
+        <GroveCard>
+            <GroveRow Gap="1rem">
+                <GroveColumn Size="12" SizeMD="6">
+                    <GroveStack Gap="0.35rem">
+                        <GroveText TextStyle="TextStyle.H6" Text="@T["Endpoints"]" />
+                        <SettingsSwitch @bind-Value="Model.EnableAuthorizationEndpoint" Label="@T["Authorization (/connect/authorize)"]" />
+                        <SettingsSwitch @bind-Value="Model.EnableTokenEndpoint" Label="@T["Token (/connect/token)"]" />
+                        <SettingsSwitch @bind-Value="Model.EnableLogoutEndpoint" Label="@T["Logout (/connect/logout)"]" />
+                        <SettingsSwitch @bind-Value="Model.EnableUserInfoEndpoint" Label="@T["User info (/connect/userinfo)"]" />
+                        <SettingsSwitch @bind-Value="Model.EnableIntrospectionEndpoint" Label="@T["Introspection (/connect/introspect)"]" />
+                        <SettingsSwitch @bind-Value="Model.EnableRevocationEndpoint" Label="@T["Revocation (/connect/revoke)"]" />
+                        <SettingsSwitch @bind-Value="Model.EnablePushedAuthorizationEndpoint" Label="@T["Pushed authorization (/connect/par)"]" />
+                    </GroveStack>
+                </GroveColumn>
+                <GroveColumn Size="12" SizeMD="6">
+                    <GroveStack Gap="0.35rem">
+                        <GroveText TextStyle="TextStyle.H6" Text="@T["Flows"]" />
+                        <SettingsSwitch @bind-Value="Model.AllowAuthorizationCodeFlow" Label="@T["Authorization code"]" />
+                        <SettingsSwitch @bind-Value="Model.AllowClientCredentialsFlow" Label="@T["Client credentials"]" />
+                        <SettingsSwitch @bind-Value="Model.AllowHybridFlow" Label="@T["Hybrid"]" />
+                        <SettingsSwitch @bind-Value="Model.AllowImplicitFlow" Label="@T["Implicit"]" />
+                        <SettingsSwitch @bind-Value="Model.AllowPasswordFlow" Label="@T["Password"]" />
+                        <SettingsSwitch @bind-Value="Model.AllowRefreshTokenFlow" Label="@T["Refresh token"]" />
+                    </GroveStack>
+                </GroveColumn>
+            </GroveRow>
+        </GroveCard>
+
+        <GroveCard>
+            <GroveStack Gap="0.35rem">
+                <GroveText TextStyle="TextStyle.H6" Text="@T["Tokens and requests"]" />
+                <SettingsSwitch @bind-Value="Model.DisableRollingRefreshTokens" Label="@T["Disable rolling refresh tokens"]" />
+                <SettingsSwitch @bind-Value="Model.UseReferenceAccessTokens" Label="@T["Use reference access tokens"]" />
+                <SettingsSwitch @bind-Value="Model.RequireProofKeyForCodeExchange" Label="@T["Require PKCE for every client"]" />
+                <SettingsSwitch @bind-Value="Model.RequirePushedAuthorizationRequests" Label="@T["Require pushed authorization requests"]" />
+                <SettingsSwitch @bind-Value="Model.RequireEndSessionConfirmation" Label="@T["Ask the user to confirm a logout request"]" />
+            </GroveStack>
+        </GroveCard>
+
+        <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" data-testid="openid-server-save" />
+        </GroveStack>
+    }
+</GroveStack>
+
+@code {
+    private OpenIdServerConfiguration? Model { get; set; }
+    private OpenIdFieldError[] Errors { get; set; } = [];
+    private bool IsBusy { get; set; }
+    private static readonly string[] TokenFormats = ["JsonWebToken", "DataProtection"];
+
+    private sealed record Choice(string Value, string Text);
+
+    private Choice[] CertificateChoices => Model is null
+        ? []
+        : [.. Model.AvailableCertificates.Select(certificate => new Choice(
+            certificate.Thumbprint,
+            $"{certificate.FriendlyName ?? certificate.Subject} ({certificate.StoreLocation}/{certificate.StoreName}, {certificate.NotAfter:yyyy-MM-dd}{(certificate.HasPrivateKey ? string.Empty : ", no private key")})"))];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Api.Grove.Rest.OpenId.GetServerAsync();
+        if (Model is null)
+        {
+            Errors = [new OpenIdFieldError(string.Empty, T["The server configuration could not be loaded."])];
+        }
+    }
+
+    private void PickSigning(string? thumbprint)
+    {
+        var certificate = Model!.AvailableCertificates.FirstOrDefault(candidate => candidate.Thumbprint == thumbprint);
+        Model.SigningCertificateThumbprint = certificate?.Thumbprint;
+        Model.SigningCertificateStoreLocation = certificate?.StoreLocation;
+        Model.SigningCertificateStoreName = certificate?.StoreName;
+    }
+
+    private void PickEncryption(string? thumbprint)
+    {
+        var certificate = Model!.AvailableCertificates.FirstOrDefault(candidate => candidate.Thumbprint == thumbprint);
+        Model.EncryptionCertificateThumbprint = certificate?.Thumbprint;
+        Model.EncryptionCertificateStoreLocation = certificate?.StoreLocation;
+        Model.EncryptionCertificateStoreName = certificate?.StoreName;
+    }
+
+    private async Task SaveAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var result = await Api.Grove.Rest.OpenId.SaveServerAsync(Model!);
+            Errors = result.Errors;
+            if (result.Succeeded)
+            {
+                Notifications.Notify(NotificationSeverity.Success, T["OpenID server saved"], T["The tenant reloads with the new configuration."]);
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

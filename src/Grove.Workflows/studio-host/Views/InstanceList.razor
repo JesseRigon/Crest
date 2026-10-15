@@ -1,0 +1,6 @@
+@using Grove.Workflows.Studio.Workflows.Components.WorkflowInstanceList
+@inject NavigationManager Navigation
+
+<StudioFrame>
+    <WorkflowInstanceList ViewWorkflowInstance="@(id => Navigation.NavigateTo($"workflows/instances/{id}/view"))" />
+</StudioFrame>

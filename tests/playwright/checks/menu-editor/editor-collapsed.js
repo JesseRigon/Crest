@@ -1,4 +1,4 @@
-// Converted from Crest.AdminTheme/tests/playwright/admin-menu-editor-collapsed.js.
+// Converted from Grove.AdminTheme/tests/playwright/admin-menu-editor-collapsed.js.
 // Admin menu tree nodes with children should default to collapsed.
 module.exports = async function run(page, ctx) {
   await page.goto(`${ctx.baseUrl}/Admin/AdminMenus`, { waitUntil: 'networkidle' });

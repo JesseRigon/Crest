@@ -1,8 +1,8 @@
 # The global store — tenant-less reference data
 
 Reference data that is the same for every tenant is stored **once**, in a YesSql store that
-belongs to no tenant (`Crest.Data.Global`). The Default tenant is its only editor. Tenants read it
-and may layer their own additions and presentation over it; they never modify it. `Crest.Data.Global` is the home of the standardized global data set
+belongs to no tenant (`Grove.Data.Global`). The Default tenant is its only editor. Tenants read it
+and may layer their own additions and presentation over it; they never modify it. `Grove.Data.Global` is the home of the standardized global data set
 imports and loading and of the global data registry, so no module reimplements either
 ([blazor-display.md](blazor-display.md) › Module homes). What is not built yet is under
 [Still to build](#still-to-build).
@@ -22,34 +22,34 @@ to edit; only labels, ordering, visibility and additions are.
 Orchard can store tenant settings in a database rather than `tenants.json`
 (`DatabaseShellsSettingsSources`). That data belongs to no tenant, so Orchard opens a YesSql
 session against a **store of its own** — its own `DatabaseProvider`, `ConnectionString`,
-`TablePrefix` and `Schema`, configured under `Crest_Shells_Database`.
+`TablePrefix` and `Schema`, configured under `Grove_Shells_Database`.
 
-Crest does the same: a **`GlobalStore`** — one host-level service that owns a
-tenant-less YesSql store configured under its own section (`Crest_Global`,
+Grove does the same: a **`GlobalStore`** — one host-level service that owns a
+tenant-less YesSql store configured under its own section (`Grove_Global`,
 same four fields). Full YesSql: documents, map indexes, SQLite, Postgres, SQL Server or
 MySQL. Shell services resolve host services, so tenant code queries it like any other
 service.
 
 Rather than building a synthetic `ShellSettings` and asking `IShellContextFactory` for a
 context, as Orchard's `internal` helper does, the store builds its YesSql `Configuration`
-directly from those options, the way Crest.Data builds a tenant's store, so no shell is
+directly from those options, the way Grove.Data builds a tenant's store, so no shell is
 involved. Modules contribute their global documents as `GlobalDataMigration` types (the
 platform's `DataMigration` convention: `CreateAsync`, then `UpdateFromNAsync`), discovered by
 scanning the loaded module assemblies, so the host does not name each one.
 
 **Topology is configuration, as it is for Orchard.** Orchard places tenants in one database
 by table prefix, or in separate databases by connection string, per configuration. The global
-store is the same: with no section configured it is a SQLite file (`crest-global.db`) in a
-`CrestGlobal` folder beside the tenant folders, with the table prefix `CrestGlobal`; an
+store is the same: with no section configured it is a SQLite file (`grove-global.db`) in a
+`GroveGlobal` folder beside the tenant folders, with the table prefix `GroveGlobal`; an
 operator who wants it elsewhere (Postgres, SQL Server, MySQL) sets the provider and connection
-string, exactly as they would for `Crest_Shells_Database`.
+string, exactly as they would for `Grove_Shells_Database`.
 
 **No cross-store joins**, and none needed. Tenant indexes hold global ids (stable strings,
 see below); lookups query the global store with an `IN`. Two indexed queries, not one join.
 
 ### The feature registers it
 
-The `Crest.Data.Global` feature registers `IGlobalStore` and `IGlobalCache` in each
+The `Grove.Data.Global` feature registers `IGlobalStore` and `IGlobalCache` in each
 tenant that enables it, and every tenant of a host gets the same instance (`GlobalHost`,
 keyed by the host), built from host-level services only and released when the application
 stops. A host makes no call of its own. The feature also adds the
@@ -57,7 +57,7 @@ stops. A host makes no call of its own. The feature also adds the
 
 ## Who can write
 
-**Only the Default tenant** (`ShellSettings.IsDefaultShell()`, which Crest's
+**Only the Default tenant** (`ShellSettings.IsDefaultShell()`, which Grove's
 `TenantsController` already special-cases) — the super-tenant: the host operator's own
 tenant, never a customer's. Ordinary tenants hold **no permission of any kind** against
 global rows — they reference them.
@@ -79,7 +79,7 @@ Two write paths, and they are different:
   layer.
 
 Super-tenant writes go through the `ManageGlobalReferenceData` permission and
-Default-shell-only controllers (`api/crest/global/lists`, geo import). The permission is
+Default-shell-only controllers (`api/grove/global/lists`, geo import). The permission is
 granted to no stereotype, and the controllers additionally require the Default shell, so an
 ordinary tenant has no route to them, not a hidden one.
 
@@ -122,7 +122,7 @@ copy the table into tenants.
 A tenant's view of a list is the standard rows with its overlay applied plus its own
 additions — which is exactly what a Content Part List *is*, so
 `IContentPartListService` keeps its contract and sources the standard rows from the
-global store with the tenant overlay (`Overrides` on `CrestContentPartListPart`,
+global store with the tenant overlay (`Overrides` on `GroveContentPartListPart`,
 `OptionOverride`) applied. Consumers reading option keys are unaffected.
 
 Tenant additions can never collide with standard keys (namespaced), and a standard row
@@ -133,7 +133,7 @@ not an automatic one.
 
 **In the global store** — identical for every tenant, owned by a standard:
 
-- The `global.*` lists, declared in `Crest.ContentPartLists/Data/global-lists.json`:
+- The `global.*` lists, declared in `Grove.ContentPartLists/Data/global-lists.json`:
   `country-codes`, `subdivisions`, `postal-formats`, `phone-country-codes`, `us-area-codes`,
   `languages`, `uom`, `uom-rec20`, `honorifics`, `name-suffixes`, `naics` (all levels,
   arranged by each option's `Parent`), plus `items.base-classification`
@@ -175,13 +175,13 @@ global store.
 
 ## The store and its cache
 
-- `GlobalStore`: one per host, registered by the `Crest.Data.Global` feature
-  (`GlobalHost`), configuration section `Crest_Global`, shell-less
+- `GlobalStore`: one per host, registered by the `Grove.Data.Global` feature
+  (`GlobalHost`), configuration section `Grove_Global`, shell-less
   `ReadAsync`/`WriteAsync`, migrations recorded in the store's own `DataMigrationRecord`,
   released on application stop. Two tenants reading one row set is exercised by every list
   read, not by a dedicated test.
 - Host-level cache with version-keyed invalidation: `IGlobalCache`, one per
-  host process; every `WriteAsync` bumps `CrestGlobalSchemaState.DataVersion`, the
+  host process; every `WriteAsync` bumps `GroveGlobalSchemaState.DataVersion`, the
   cache re-checks it at most every `CacheVersionCheckSeconds` (5) and drops every entry
   on change, so a write from another host lands within that window. Geo nodes (a
   country per entry), addressing maps, postal codes and global lists read through it, as
@@ -207,6 +207,6 @@ rows from a page yet, only the API and import endpoints.
 
 - [ ] **Super-tenant UI scope.** Which global tables get a generated editor first — geo
   groupings and authority catalogues are the ones with no upstream file. Whether the editor
-  is generic over any global list or per-table is a Crest UI decision.
+  is generic over any global list or per-table is a Grove UI decision.
 - [ ] **Does anything need a real join?** None identified. Record here if one turns up rather
   than reaching for cross-schema SQL.

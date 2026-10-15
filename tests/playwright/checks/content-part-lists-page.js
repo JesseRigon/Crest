@@ -5,7 +5,7 @@
 module.exports = async function run(page, ctx) {
   const results = [];
 
-  const tokenResponse = await page.request.get(`${ctx.baseUrl}/api/crest/antiforgery/token`);
+  const tokenResponse = await page.request.get(`${ctx.baseUrl}/api/grove/antiforgery/token`);
   const token = await tokenResponse.json();
   const headers = { [token.headerName || 'RequestVerificationToken']: token.requestToken };
 
@@ -17,13 +17,13 @@ module.exports = async function run(page, ctx) {
   const stamp = Date.now();
   const listKey = `probe.page.${stamp}`;
   const listTitle = `Probe page list ${stamp}`;
-  const created = await page.request.post(`${ctx.baseUrl}/api/crest/content-part-lists`, {
+  const created = await page.request.post(`${ctx.baseUrl}/api/grove/content-part-lists`, {
     headers,
     data: { key: listKey, displayText: listTitle },
   });
   results.push({ name: 'seed-list-created', pass: created.ok(), message: `HTTP ${created.status()}` });
 
-  await page.request.post(`${ctx.baseUrl}/api/crest/content-part-lists/${listKey}/options`, {
+  await page.request.post(`${ctx.baseUrl}/api/grove/content-part-lists/${listKey}/options`, {
     headers,
     data: { key: 'Alpha', displayText: 'Alpha', position: 0 },
   });
@@ -59,7 +59,7 @@ module.exports = async function run(page, ctx) {
     await page.keyboard.press('Tab');
     await page.waitForTimeout(2500);
 
-    const afterRelabel = await (await page.request.get(`${ctx.baseUrl}/api/crest/content-part-lists/${listKey}`)).json();
+    const afterRelabel = await (await page.request.get(`${ctx.baseUrl}/api/grove/content-part-lists/${listKey}`)).json();
     const option = (afterRelabel.options || []).find(entry => entry.key === 'Alpha');
     results.push({
       name: 'relabel-preserves-the-key',
@@ -72,8 +72,8 @@ module.exports = async function run(page, ctx) {
     await page.locator('[data-testid="option-grid"] tbody tr .rz-switch').first().click();
     await page.waitForTimeout(2000);
 
-    const full = await (await page.request.get(`${ctx.baseUrl}/api/crest/content-part-lists/${listKey}`)).json();
-    const selectable = await (await page.request.get(`${ctx.baseUrl}/api/crest/content-part-lists/${listKey}/selectable`)).json();
+    const full = await (await page.request.get(`${ctx.baseUrl}/api/grove/content-part-lists/${listKey}`)).json();
+    const selectable = await (await page.request.get(`${ctx.baseUrl}/api/grove/content-part-lists/${listKey}/selectable`)).json();
     results.push({
       name: 'hiding-drops-it-from-selectable-but-keeps-it-resolvable',
       pass: (full.options || []).some(entry => entry.key === 'Alpha')
@@ -85,7 +85,7 @@ module.exports = async function run(page, ctx) {
     results.push({ name: 'no-danger-alerts', pass: alerts === 0, message: `alertCount=${alerts}` });
   } finally {
     // Tenant-created lists are deletable, so the probe cleans itself up entirely.
-    await page.request.delete(`${ctx.baseUrl}/api/crest/content-part-lists/${listKey}`, { headers }).catch(() => {});
+    await page.request.delete(`${ctx.baseUrl}/api/grove/content-part-lists/${listKey}`, { headers }).catch(() => {});
   }
 
   return results;

@@ -1,11 +1,11 @@
 # Content system — items, types, parts, fields, lists
 
-How Crest surfaces Orchard's content system: the definition editors, the content
+How Grove surfaces Orchard's content system: the definition editors, the content
 items surface, per-type menu presence, and the Content Part Lists enum system with
 its option-picker machinery. This is an explanatory document — what exists, how it
 works, and what will bite you. Open work is under [Still to build](#still-to-build).
 
-## Architecture: Orchard owns the model, Crest adapts it
+## Architecture: Orchard owns the model, Grove adapts it
 
 Everything is a content item. Content TYPES are runtime-editable definitions
 (parts + fields) stored per tenant; module migrations declare types via
@@ -13,16 +13,16 @@ Everything is a content item. Content TYPES are runtime-editable definitions
 without code. Code works against stable PARTS (typed accessors), never against
 runtime-added fields — that is what makes runtime extension safe.
 
-Crest adds no parallel content framework. The content APIs are thin JSON surfaces
-(`api/crest/content-items`, `api/crest/content-types`, `api/crest/content-part-lists`,
-`api/crest/option-sources`, …) over the platform's own services, each declared by the module
-that owns the surface and registered with Crest.Server's API registry
-([server.md](server.md)): content items by `Crest.Contents`; content definitions (types, parts,
-field visibility, definition locks, content groups) by `Crest.ContentTypes`; lists and option
-pickers by `Crest.ContentPartLists`. Today the item and definition APIs are still hosted in
-Crest.Server; server.md tracks the move. Every surface authorizes the real request principal
+Grove adds no parallel content framework. The content APIs are thin JSON surfaces
+(`api/grove/content-items`, `api/grove/content-types`, `api/grove/content-part-lists`,
+`api/grove/option-sources`, …) over the platform's own services, each declared by the module
+that owns the surface and registered with Grove.Server's API registry
+([server.md](server.md)): content items by `Grove.Contents`; content definitions (types, parts,
+field visibility, definition locks, content groups) by `Grove.ContentTypes`; lists and option
+pickers by `Grove.ContentPartLists`. Today the item and definition APIs are still hosted in
+Grove.Server; server.md tracks the move. Every surface authorizes the real request principal
 with the native permission before touching a service (`IRequestAccess`).
-Tenant scope, feature gates, validation and lifecycle are Orchard's; Crest must
+Tenant scope, feature gates, validation and lifecycle are Orchard's; Grove must
 not bypass, broaden, or persist parallel state.
 
 **Contained items** are the recurring storage pattern: when child records have no
@@ -44,8 +44,8 @@ documents needs an explicit YesSql map index.
   settings (display name, description, position), type-level settings (Creatable,
   Securable, …), and the per-type Content-menu toggle.
 
-Backed by `api/crest/content-types/*` and `GET/PUT/DELETE
-api/crest/option-picker/attachment` (all `EditContentTypes`-gated). Settings
+Backed by `api/grove/content-types/*` and `GET/PUT/DELETE
+api/grove/option-picker/attachment` (all `EditContentTypes`-gated). Settings
 writes are FULL-REPLACE, never JSON-merge — a merge would resurrect deleted rows.
 There are deliberately NO per-user instance overrides: what the admin configures
 is the behaviour for everyone.
@@ -53,12 +53,12 @@ is the behaviour for everyone.
 ### Definition locks
 
 A module can freeze the parts, fields and attachments a system process downstream depends
-on (`Crest.Settings.CrestDefinitionLockSettings`, stored as a settings section on the
+on (`Grove.Settings.GroveDefinitionLockSettings`, stored as a settings section on the
 definition; the first consumer is the ERP host's transaction part, whose posting
 flows read its fields). Same shape as the list locks - **one mechanism, two authorities**:
 `Module` locks are declared by the owning migration (`.Locked()` on a field, part or
 attachment builder), re-asserted on every migration run and unliftable in-tenant; `Tenant`
-locks are placed and lifted through `PUT api/crest/content-types/locks` by holders of
+locks are placed and lifted through `PUT api/grove/content-types/locks` by holders of
 `LockContentDefinitions` (security-critical, Administrator; deliberately NOT implied by
 `EditContentTypes`). A lock freezes the MACHINE surface only:
 
@@ -78,7 +78,7 @@ The API reports the effective lock on every part (`lock`), field (`lock`, its ow
 part's) and attachment (`lock`); the Content Parts and Content Types pages show a badge and
 disable the frozen controls.
 
-> **Gotcha — enforcement is for TENANT writes only, and lives in two places.** Crest's
+> **Gotcha — enforcement is for TENANT writes only, and lives in two places.** Grove's
 > definition controllers ask `DefinitionLockGuard` before altering (409 with the
 > reason, through `DefinitionLockedExceptionMapper`, the API registry's error contract); the stock content-types module's
 > `IContentDefinitionService` and `IContentDefinitionDisplayManager` are decorated
@@ -99,8 +99,8 @@ disable the frozen controls.
 
 ## Content items surface
 
-`GET api/crest/content-items` lists; the stock Orchard Contents REST endpoints
-handle item CRUD (Crest does not duplicate them). When the list is filtered to a
+`GET api/grove/content-items` lists; the stock Orchard Contents REST endpoints
+handle item CRUD (Grove does not duplicate them). When the list is filtered to a
 type (`?contentType=X`), authorization runs `ListContent` against a stand-in item
 of that type, so Securable types enforce the dynamic `ListContent_{Type}`
 permission through Orchard's own `ContentTypeAuthorizationHandler`; the
@@ -109,17 +109,17 @@ unfiltered list checks global `ListContent`.
 The admin ContentItems page accepts a `?type=` query parameter
 (`SupplyParameterFromQuery`) that pre-applies the filter and swaps the heading to
 the type's display name. It is a QUERY parameter, not a route segment, on
-purpose: Crest's route-permission matching is path-segment-only
+purpose: Grove's route-permission matching is path-segment-only
 (query-invisible), so the existing `/Contents/ContentItems` registration and its
 gate cover the filtered view with no new route template.
 
 **Field visibility conditions** apply to ANY field type:
-`CrestFieldVisibilitySettings { Path, Operator: Any|Equals|In, Keys }` on the
+`GroveFieldVisibilitySettings { Path, Operator: Any|Equals|In, Keys }` on the
 field definition. The editor shows/hides live and exempts hidden fields from
 required-validation; the server CLEARS a hidden field's value on save
 (`FieldVisibilityEnforcer`, a fixpoint over chained conditions) — hidden
 values are never kept dormant. Configured per field via `GET/PUT
-api/crest/field-visibility` (wholesale replace; blank Path clears) and the
+api/grove/field-visibility` (wholesale replace; blank Path clears) and the
 Visibility editor on the Content Parts screen. Keys follow the identity rule
 below: picker parents resolve stored ids to KEYS before comparison, on both
 sides.
@@ -127,11 +127,11 @@ sides.
 ## Per-type Content menu presence
 
 A tenant-created type (a Blog, an FAQ) can appear in the admin Content menu
-without any module declaring a page for it. `CrestContentTypeMenuSettings
+without any module declaring a page for it. `GroveContentTypeMenuSettings
 { ShowInContentMenu }` is a type-level settings POCO stored on the definition via
 `MergeSettings<T>` — the same open settings bag every stock setting uses, so it
 rides the ContentDefinition recipe step/deployment for free. Toggled on the
-Content Types screen via `PUT api/crest/content-types/{type}/menu`
+Content Types screen via `PUT api/grove/content-types/{type}/menu`
 (`EditContentTypes`).
 
 `ContentTypePages` (a dynamic page registry source, read per request) emits one entry per
@@ -150,35 +150,35 @@ for types no module owns ([admin-menu.md › The page registry](admin-menu.md#th
 ## Content groups — grouping by KIND of content, across modules
 
 Orchard's `ContentItem` has no category, and `ContentTypeSettings.Category` is a
-single per-type string only the Flows widget picker reads. Crest's grouping is
+single per-type string only the Flows widget picker reads. Grove's grouping is
 therefore a property of the content SOURCE, never the item: a group is a named set
 of entries, each `{ kind, key }` — `type:Person`, `list:global.honorifics` — and
 what an entry covers is resolved at read time.
 
-- **Modules declare groups** through `IContentGroupProvider` (`Crest.ContentGroups`),
+- **Modules declare groups** through `IContentGroupProvider` (`Grove.ContentGroups`),
   exactly like admin-menu providers feed one section: several modules may
   `builder.Group("members")` and the entries merge; the first display name and
   the lowest position win. Parties declares `parties` (Person, Organization, the
   party vocabularies and the global name lists); Members declares `members`.
 - **Entry kinds are pluggable.** `IContentGroupEntryResolver` maps a kind to
-  content types and/or content-item ids. `type` ships in Crest.Server; `list`
-  ships in `Crest.ContentPartLists` (Server cannot reference the lists feature -
+  content types and/or content-item ids. `type` ships in Grove.Server; `list`
+  ships in `Grove.ContentPartLists` (Server cannot reference the lists feature -
   the resolver seam is what lets a feature teach the group system a new kind). An
   entry whose key does not exist on the tenant stays in the group as
   `resolved: false` rather than vanishing.
-- **The tenant reshapes, never redefines.** `CrestContentGroupsDocument`
+- **The tenant reshapes, never redefines.** `GroveContentGroupsDocument`
   (IDocumentManager) stores per-group overrides: display name, position, hidden,
   entries added, provider entries removed, and wholly tenant-owned groups. Provider
   defaults are re-derived from code on every read, so a module's later changes
   still surface. Deleting a module-declared group only hides it (its key is the
   module's contract); deleting a tenant-owned group removes it.
-- **API:** `api/crest/content-groups` (GET, `ListContent`), `POST` / `PUT {key}` /
+- **API:** `api/grove/content-groups` (GET, `ListContent`), `POST` / `PUT {key}` /
   `DELETE {key}` / `POST {key}/entries` / `DELETE {key}/entries/{kind}/{entryKey}`
-  and `GET|PUT settings` (`EditContentTypes`). `api/crest/content-items?group=<key>`
+  and `GET|PUT settings` (`EditContentTypes`). `api/grove/content-items?group=<key>`
   expands the group to `type IN (..) OR id IN (..)` (unknown group → 404; known
   but empty → no rows). The All Content Items page carries a group dropdown and
   honours `?group=` from the menu.
-- **Per-group pages are a tenant setting.** `CrestContentGroupsSettings
+- **Per-group pages are a tenant setting.** `GroveContentGroupsSettings
   { AutoMenuPages }` (site settings; "Content group pages in menu" on Admin
   settings). When on, `ContentGroupsMenuNavigationProvider` emits one Content
   entry per visible group beside the per-type entries, so a tenant can work by
@@ -191,14 +191,14 @@ Orchard has no central enum store. `TextFieldPredefinedListEditorSettings` store
 options inside ONE field's settings (copies drift, no provenance, no multi-column
 display); Taxonomies have the right data shape but are a CMS categorization
 feature whose routing apparatus (AliasPart/AutoroutePart, term pages) is noise
-for configuration data. So Crest defines its own system —
-`Crest.ContentPartLists`, its own feature, with no dependency on
-`Crest.Taxonomies`.
+for configuration data. So Grove defines its own system —
+`Grove.ContentPartLists`, its own feature, with no dependency on
+`Grove.Taxonomies`.
 
-- **`ContentPartList`**: `TitlePart` + `CrestContentPartListPart` (`Key` — the
+- **`ContentPartList`**: `TitlePart` + `GroveContentPartListPart` (`Key` — the
   set's stable logical key like `pricing.modifier-kind`; `Source`;
   `OptionContentType`; `DataLock`/`EditLock`; contained `Options`).
-- **`Option`**: `TitlePart` + `CrestOptionPart` (`Key` — what CODE switches on;
+- **`Option`**: `TitlePart` + `GroveOptionPart` (`Key` — what CODE switches on;
   `Source` = Module|Tenant; `Hidden`; `Position`; `Category`;
   `DisplayTextPlural`; `Value`; a back-reference to its list).
 - **`OptionPickerField`** is the reference mechanism, modelled file-for-file on
@@ -236,26 +236,26 @@ reseed, and unliftable in-tenant; tenant locks need the security-critical
 > check.
 
 **Custom fields on option types.** Tenants add fields to option parts at runtime;
-each list stores an `OptionContentType` (types carrying `CrestOptionPart` are
+each list stores an `OptionContentType` (types carrying `GroveOptionPart` are
 eligible; assignable from the list header; retargeting a POPULATED list is
 refused because existing option items keep their stored type and would orphan).
 Values travel stringified in a `Fields` bag (null = untouched, blank = clears,
 unknown names 400); `OptionFieldAccessor` is the ONE place that knows the
 document JSON, and Numeric/Boolean fields store typed values — unparseable input
 is refused, not stringified. Each field carries a per-field lock designation
-(`CrestOptionFieldSettings.DataLocked`): machine surface (frozen with the data
+(`GroveOptionFieldSettings.DataLocked`): machine surface (frozen with the data
 lock) or display surface (default). The grid renders Boolean fields as switches
 and Numeric fields as numeric inputs; the wire format stays strings and the
 server owns typing.
 
-**Global lists** are seeded by `Crest.ContentPartLists` for any enabling tenant:
+**Global lists** are seeded by `Grove.ContentPartLists` for any enabling tenant:
 country codes, UoM (with a separate `global.uom-rec20` mapping list — key = unit
 key, Value = UN/CEFACT Rec 20 code; package units are deliberately absent, Rec 21
 territory), phone country codes, postal-format regexes, languages, US area codes,
 subdivisions, honorifics/suffixes. All module-data-locked except the
 personal-name pair. What is deliberately NOT a list: currencies, time zones and
 cultures are option-source PROVIDERS over the services that already own them
-(Crest.Money's `ICurrencyProvider`, `TimeZoneInfo`, `CultureInfo`) — never a
+(Grove.Money's `ICurrencyProvider`, `TimeZoneInfo`, `CultureInfo`) — never a
 parallel seeded copy.
 
 > **Gotcha — seeding is DEFERRED.** List seeding runs as a deferred shell-scope
@@ -329,7 +329,7 @@ stock's admin list filter, fail-closed (`Where(x => false)` when nothing is
 viewable; "may see nothing" is DISTINCT from "unrestricted"). Content part
 lists are unrestricted: they are tenant configuration. **Assignment** is a
 separate model from ownership (`Owner` = who created it; assignment = who
-handles it): `CrestAssignmentPart` holds N assignments per item, indexed one row
+handles it): `GroveAssignmentPart` holds N assignments per item, indexed one row
 per assignment, and scope-layering only ever NARROWS the permission result.
 Unresolvable references make the REFERENCING item out of scope too (transitive,
 depth-budgeted, budget exhaustion DENIES) — a hollow record is worse than an
@@ -348,8 +348,8 @@ columns are never indexed — they are projections of the referenced record.
 
 The `contentitem` provider pushes sort and filter into SQL where it can
 (`PlanSqlSort`, `PlanFieldFilterPromotion` over the stock
-Text/Numeric/BooleanFieldIndex tables — Crest's Server manifest depends on
-`Crest.ContentFields.Indexing.SQL` so those rows exist). Known,
+Text/Numeric/BooleanFieldIndex tables — Grove's Server manifest depends on
+`Grove.ContentFields.Indexing.SQL` so those rows exist). Known,
 ACCEPTED boundaries:
 
 - Text filters deliberately never promote to SQL: the in-memory matcher is
@@ -375,7 +375,7 @@ ACCEPTED boundaries:
 - Providers must return absent (not hollow) rows for unresolvable ids; parent
   resolution fails closed.
 - `ContentItemId` differs per tenant; code compares `Key`, always.
-- Unsafe (`POST`/`PUT`/`DELETE`) Crest endpoints require the Orchard antiforgery
+- Unsafe (`POST`/`PUT`/`DELETE`) Grove endpoints require the Orchard antiforgery
   double-token; a missing header is a 400, not a 403.
 
 ## Picker relationship guards
@@ -387,7 +387,7 @@ editors cannot bypass it. `IContentSaveGuard` in the platform's content manager:
 every create and update after the handlers, and a refusal throws
 `ContentSaveRefusedException` (an `InvalidOperationException`; the content items API answers
 400) instead of being swallowed like a handler exception. `ContentPickerRelationshipGuard`
-(Crest.ContentFields) walks the item and its contained items, enforces each picker's allowed
+(Grove.ContentFields) walks the item and its contained items, enforces each picker's allowed
 types and stereotypes on the server, and runs the handlers registered with
 `AddContentPickerRelationshipHandler<T>(part, field)` (`IContentPickerRelationshipHandler`),
 such as refusing cycles. First user: Parties' parent organization.
@@ -396,7 +396,7 @@ Hierarchical lists (full NAICS, [parties.md](parties.md) › Industry classifica
 option's `Parent`, validated against strangers and cycles (`ContentPartListRules.ValidateParent`),
 refused on standard global rows and frozen under a data lock. Pickers get `Parent`, `Path`
 (ancestor labels, searchable) and `Level` columns, filter and search columns are computed even
-when not displayed, and `GET api/crest/content-part-lists/{key}/children?parent=` browses one
+when not displayed, and `GET api/grove/content-part-lists/{key}/children?parent=` browses one
 level. `Category` stays the flat label.
 
 ## Liquid over content
@@ -405,8 +405,8 @@ Templates are Liquid that emits component nodes ([blazor-display.md](blazor-disp
 admin and ERP screens are Blazor pages with no Liquid path in.
 
 - **Liquid filters over the services the API wraps.** Liquid renders server-side against
-  objects in scope; it never calls the `api/crest/*` endpoints. `Crest.ContentPartLists`
-  registers `option_list` and `option_label` when `Crest.Liquid` is on:
+  objects in scope; it never calls the `api/grove/*` endpoints. `Grove.ContentPartLists`
+  registers `option_list` and `option_label` when `Grove.Liquid` is on:
   `{{ "list-key" | option_list }}` gives the selectable options; `{{ value | option_label }}`
   gives the label for a stored ContentItemId, a list of them or a field with
   `TermContentItemIds`, and `option_label: "list-key"` also accepts an option key. Content
@@ -429,7 +429,7 @@ Nothing here is scheduled unless stated.
   replacement, per type, mounting at the same menu entry.
 - [ ] **Guided creation of option content types.** Lists can be ASSIGNED an option
   type (dropdown on the list header), but creating one still means visiting the
-  Content Types screen, creating a type carrying `CrestOptionPart`, and coming
+  Content Types screen, creating a type carrying `GroveOptionPart`, and coming
   back. A create-inline flow is a UX nicety, not machinery.
 - [ ] **Worldwide subdivisions** (~5,000 ISO 3166-2 entries) are deliberately not
   seeded. If a tenant needs them at scale, that is the worked example for

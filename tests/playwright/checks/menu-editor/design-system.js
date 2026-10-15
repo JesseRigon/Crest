@@ -1,5 +1,5 @@
-// Converted from Crest.AdminTheme/tests/playwright/admin-menu-design-system.js.
-// Validates the Blazor-managed Admin Menu editor consumes Crest design tokens (not
+// Converted from Grove.AdminTheme/tests/playwright/admin-menu-design-system.js.
+// Validates the Blazor-managed Admin Menu editor consumes Grove design tokens (not
 // hardcoded colors) and renders as a native Blazor page (no iframes).
 module.exports = async function run(page, ctx) {
   await page.goto(`${ctx.baseUrl}/Admin/AdminMenus`, { waitUntil: 'networkidle' });
@@ -13,9 +13,9 @@ module.exports = async function run(page, ctx) {
     Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(link => link.getAttribute('href') || ''),
   );
   // Phase 8: the admin shell is a Razor class library now, so its scoped CSS ships as
-  // the RCL bundle _content/Crest.AdminTheme.Client/*.bundle.scp.css instead of
-  // the old exe-style Crest.AdminTheme.styles.css app bundle.
-  const requiredStyles = ['/CrestAdmin.DesignSystem.Default.css', '/CrestAdmin.css', '/Crest.AdminTheme.Client.bundle.scp.css'];
+  // the RCL bundle _content/Grove.AdminTheme.Client/*.bundle.scp.css instead of
+  // the old exe-style Grove.AdminTheme.styles.css app bundle.
+  const requiredStyles = ['/GroveAdmin.DesignSystem.Default.css', '/GroveAdmin.css', '/Grove.AdminTheme.Client.bundle.scp.css'];
   const missingStyles = requiredStyles.filter(required => !loadedStyles.some(href => href.endsWith(required)));
 
   const initialSelected = page.locator('.admin-menu-list-item--selected').first();
@@ -24,11 +24,11 @@ module.exports = async function run(page, ctx) {
 
   await page.evaluate(() => {
     const root = document.querySelector('.admin-shell') || document.documentElement;
-    root.style.setProperty('--crest-color-accent-1', 'rgb(190, 20, 120)');
-    root.style.setProperty('--crest-color-active-surface-1', 'rgba(190, 20, 120, 0.25)');
-    root.style.setProperty('--crest-color-surface-1', 'rgb(250, 252, 240)');
-    root.style.setProperty('--crest-color-border-1', 'rgb(18, 52, 86)');
-    root.style.setProperty('--crest-radius-sm', '18px');
+    root.style.setProperty('--grove-color-accent-1', 'rgb(190, 20, 120)');
+    root.style.setProperty('--grove-color-active-surface-1', 'rgba(190, 20, 120, 0.25)');
+    root.style.setProperty('--grove-color-surface-1', 'rgb(250, 252, 240)');
+    root.style.setProperty('--grove-color-border-1', 'rgb(18, 52, 86)');
+    root.style.setProperty('--grove-radius-sm', '18px');
   });
 
   const selectedMetrics = await initialSelected.evaluate(element => {

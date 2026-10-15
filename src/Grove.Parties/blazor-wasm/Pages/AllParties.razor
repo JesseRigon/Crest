@@ -1,0 +1,46 @@
+@page "/Parties"
+@attribute [PageEntry(DeclaredBySource = true)]
+@namespace Grove.Parties.BlazorWasm.Pages
+@using Grove.Components.Model
+@using Grove.Parties.BlazorWasm.Components
+@using Grove.Parties.Constants
+@using Grove.Parties.PartyTypes
+@inject NavigationManager Navigation
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+<PageTitle>@T["All Parties"]</PageTitle>
+
+@* The Parties menu's own page: the party-type registry on Grove's generic kind browser. The
+   types down the left are the Parties menu's children, filtered by the same overlays the
+   sidebar honours - the tenant's admin-menu layout hides a type for everyone, the browser's
+   pane settings hide one for the signed-in user only. *@
+
+<GroveKindBrowser TKind="PartyTypeModel"
+                  KindsUrl="@($"{PartiesConstants.Routes.Api}/{PartiesConstants.Routes.Types}")"
+                  KeySelector="@(type => type.Key)"
+                  TextSelector="@(type => T[type.DisplayName])"
+                  DescriptionSelector="@(type => type.Kind == PartyTypeKinds.Global ? T["Global catalogue"] : type.ContentType)"
+                  MenuItemKeySelector="@(type => type.MenuItemKey)"
+                  HiddenByUserSelector="@(type => type.HiddenByUser)"
+                  Title="@T["All Parties"]"
+                  Description="@T["Every kind of party this tenant works with: the people and organizations, and the roles composed on them."]"
+                  ListTitle="@T["Party types"]"
+                  EmptyText="@T["No party types are visible to you."]"
+                  NoSelectionText="@T["Select a party type."]"
+                  ErrorSummary="@T["Could not load party types"]"
+                  InitialKey="@TypeQuery"
+                  Actions="TypeActions"
+                  TestId="all-parties"
+                  Class="all-parties">
+    <Pane Context="type"><PartyTypePane Type="@type" /></Pane>
+</GroveKindBrowser>
+
+@code {
+    [SupplyParameterFromQuery(Name = "type")]
+    public string? TypeQuery { get; set; }
+
+    private IReadOnlyList<GroveModelListAction<PartyTypeModel>> TypeActions =>
+    [
+        new() { Icon = "open_in_new", Title = T["Open page"], Callback = EventCallback.Factory.Create<PartyTypeModel>(this, type => Navigation.NavigateTo(type.Route.TrimStart('/'))) },
+    ];
+}

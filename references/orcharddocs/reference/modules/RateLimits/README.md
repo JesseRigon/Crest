@@ -1,6 +1,6 @@
-# Rate Limits (`Crest.RateLimits`)
+# Rate Limits (`Grove.RateLimits`)
 
-The Rate Limits module centralizes ASP.NET Core request rate limiting for Crest tenants.
+The Rate Limits module centralizes ASP.NET Core request rate limiting for Grove tenants.
 
 When the feature is enabled, it can:
 
@@ -9,7 +9,7 @@ When the feature is enabled, it can:
 - enable or disable one or many policies with a single tenant reload;
 - keep feature-contributed named-route and endpoint-group limits active as read-only built-in limits.
 
-Static assets are intentionally excluded because Crest registers static-file middleware before `UseRateLimiter()`. Scripts, stylesheets, and images therefore do not consume request budgets.
+Static assets are intentionally excluded because Grove registers static-file middleware before `UseRateLimiter()`. Scripts, stylesheets, and images therefore do not consume request budgets.
 
 ## Tenant policies
 
@@ -141,8 +141,8 @@ Choose **Sliding window** when a fixed window feels too abrupt.
 
 | Setting | What it means | Practical guidance |
 |---|---|---|
-| `Permit limit` | How many requests are allowed across the full rolling window. | If this is `10`, Crest looks at the full window and limits once those 10 requests have been used. |
-| `Window seconds` | How far back Crest looks when counting requests. | `60` means "look at the last minute of traffic." |
+| `Permit limit` | How many requests are allowed across the full rolling window. | If this is `10`, Grove looks at the full window and limits once those 10 requests have been used. |
+| `Window seconds` | How far back Grove looks when counting requests. | `60` means "look at the last minute of traffic." |
 | `Segments per window` | How many smaller slices exist inside the full window. | More segments make recovery smoother, but `4` to `10` is usually enough for most cases. |
 | `Queue limit` | How many extra requests may wait after the limit is reached. | Use `0` if you prefer an immediate rejection instead of making requests wait. |
 
@@ -201,7 +201,7 @@ Choose **Token bucket** when burst tolerance matters.
 |---|---|---|
 | `Token limit` | The maximum number of tokens the bucket can hold. | This is the largest burst a client can use at once. |
 | `Tokens per period` | How many tokens are added back each refill cycle. | If this is `5`, the bucket regains up to 5 requests' worth of capacity each cycle. |
-| `Replenishment seconds` | How often Crest refills the bucket. | `10` means tokens are added every 10 seconds. |
+| `Replenishment seconds` | How often Grove refills the bucket. | `10` means tokens are added every 10 seconds. |
 | `Queue limit` | How many extra requests may wait when the bucket is empty. | Use `0` to reject extra requests immediately instead of waiting for refills. |
 | `Queue processing order` | Which waiting request gets the next token first. | **Oldest first** is the safest default; **Newest first** favors fresh requests. |
 
@@ -285,7 +285,7 @@ If an endpoint belongs to multiple groups, every matching built-in group limit a
 
 ## Seeding the default global policy
 
-When the feature runs with this policy-based model for the first time, Crest seeds an enabled **Default Global Policy** with a fixed-window limiter using these defaults:
+When the feature runs with this policy-based model for the first time, Grove seeds an enabled **Default Global Policy** with a fixed-window limiter using these defaults:
 
 - permit limit: `150`
 - window seconds: `60`
@@ -317,4 +317,4 @@ Rate limiting is a defensive control that helps reduce abuse on high-risk endpoi
 
 This makes automated credential stuffing, brute-force attempts, and repetitive token or code requests more expensive for an attacker.
 
-Rate limiting is not a replacement for authentication, authorization, captcha, lockout, or monitoring. Use it together with the other security features that Crest and ASP.NET Core provide.
+Rate limiting is not a replacement for authentication, authorization, captcha, lockout, or monitoring. Use it together with the other security features that Grove and ASP.NET Core provide.

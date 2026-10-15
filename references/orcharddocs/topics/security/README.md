@@ -1,6 +1,6 @@
 # Security
 
-Crest provides many security features to give an authenticated access to the site.
+Grove provides many security features to give an authenticated access to the site.
 
 ## Secure your Application
 

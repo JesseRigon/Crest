@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- The *.BlazorWasm suffix is the routing convention the server and the admin client load
+         module pages by (see Grove.ContentPartLists.BlazorWasm). The audit pages live here,
+         isolated with the module they depend on (docs/architecture.md › Rules that hold). -->
+    <AssemblyName>Grove.AuditTrail.BlazorWasm</AssemblyName>
+    <RootNamespace>Grove.AuditTrail.BlazorWasm</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Grove.Components\Grove.Components.csproj" />
+  </ItemGroup>
+
+  <!-- The routes are shared with the server module without referencing it. -->
+  <ItemGroup>
+    <Compile Include="..\Api\AuditTrailRoutes.cs" Link="AuditTrailRoutes.cs" />
+  </ItemGroup>
+</Project>

@@ -1,6 +1,6 @@
-# Redis (`Crest.Redis`)
+# Redis (`Grove.Redis`)
 
-Integrates Redis into Crest. Provides the following features:
+Integrates Redis into Grove. Provides the following features:
 
 - Redis: Redis configuration support.
 - Redis Cache: Distributed cache using Redis.
@@ -18,21 +18,21 @@ This module provides a health check to report the status for the Redis server. R
 
 ## Data Protection
 
-The `Crest.Redis.DataProtection` feature enables storing data protection keys in Redis, providing a high-performance solution for distributed applications.
+The `Grove.Redis.DataProtection` feature enables storing data protection keys in Redis, providing a high-performance solution for distributed applications.
 
 ### Purpose
 
 Redis Data Protection enables sharing data protection keys across multiple application instances using Redis as the centralized storage. This is ideal for load-balanced environments where low-latency key access is required.
 
-Data Protection is a critical security feature in ASP.NET Core that Crest leverages to protect sensitive data such as authentication cookies, anti-forgery tokens, persisted secrets that need to be decrypted (e.g. SMTP passwords but not user passwords), and temporary data. In a multi-tenant or load-balanced environment, it's essential to ensure that data protection keys are shared across all nodes and persisted properly.
+Data Protection is a critical security feature in ASP.NET Core that Grove leverages to protect sensitive data such as authentication cookies, anti-forgery tokens, persisted secrets that need to be decrypted (e.g. SMTP passwords but not user passwords), and temporary data. In a multi-tenant or load-balanced environment, it's essential to ensure that data protection keys are shared across all nodes and persisted properly.
 
 ### Prerequisites
 
 Before configuring Redis Data Protection, ensure you have:
 
 1. A running Redis instance
-2. The `Crest.Redis` module enabled
-3. The `Crest.Redis.DataProtection` feature enabled
+2. The `Grove.Redis` module enabled
+3. The `Grove.Redis.DataProtection` feature enabled
 
 ### Configuration
 
@@ -40,8 +40,8 @@ First, configure the basic Redis connection in your `appsettings.json`:
 
 ```json
 {
-  "Crest": {
-    "Crest_Redis": {
+  "Grove": {
+    "Grove_Redis": {
       "Configuration": "<your-redis-connection-string>",
       "InstancePrefix": "MyApp:",
       "AllowAdmin": true

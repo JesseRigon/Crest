@@ -1,0 +1,97 @@
+/* The pane itself never scrolls: it fills its container's height and hands the
+   overflow to the items region below the (fixed) title and search rows. The card and
+   the stack inside it are child components, so they are reached with ::deep from the
+   scoped root div. */
+.grove-model-list {
+    min-width: var(--grove-model-list-min-width, 20rem);
+    max-width: var(--grove-model-list-max-width, 26rem);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.grove-model-list ::deep .grove-model-list__card {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* The card's single stack child carries the pane's full height down to the items. */
+.grove-model-list ::deep .grove-model-list__stack {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.grove-model-list ::deep .grove-model-list__items {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.grove-model-list__item {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.35rem;
+    border: 1px solid transparent;
+    border-radius: var(--grove-model-list-item-border-radius, var(--grove-radius-sm, 4px));
+    color: var(--grove-model-list-item-color, var(--grove-color-text-1, inherit));
+    background: transparent;
+    text-align: left;
+}
+
+.grove-model-list__item:hover,
+.grove-model-list__item--selected {
+    border-color: var(--grove-model-list-item-hover-border-color, var(--grove-color-border-1, currentColor));
+    background: var(--grove-model-list-item-hover-background, var(--grove-color-hover-surface-1, transparent));
+}
+
+.grove-model-list__item-select {
+    appearance: none;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.1rem 0.3rem;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.grove-model-list__item-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.grove-model-list__item-title,
+.grove-model-list__item-description {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.grove-model-list__item-description {
+    color: var(--grove-model-list-description-color, var(--grove-color-text-muted, currentColor));
+    font-size: 0.8rem;
+}
+
+.grove-model-list__item-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+    opacity: 0;
+    transition: opacity 120ms ease-in-out;
+}
+
+.grove-model-list__item:hover .grove-model-list__item-actions,
+.grove-model-list__item:focus-within .grove-model-list__item-actions,
+.grove-model-list__item--selected .grove-model-list__item-actions {
+    opacity: 1;
+}

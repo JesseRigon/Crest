@@ -115,11 +115,11 @@ This keeps the behavior centralized and reduces the chance that Basic and Galler
 
 ## Files Likely To Change
 
-- `src/Crest.Modules/Crest.Media/Assets/media-gallery/src/main.ts`
-- `src/Crest.Modules/Crest.Media/Assets/media-gallery/src/services/Globals.ts`
-- `src/Crest.Modules/Crest.Media/Assets/media-gallery/src/services/UppyFileUpload.ts`
-- `src/Crest.Modules/Crest.Media/Assets/media-gallery/src/composables/useFileListFiltering.ts`
-- `src/Crest.Modules/Crest.Media/Assets/media-field/src/components/MediaPickerModal.vue`
+- `src/Grove.Modules/Grove.Media/Assets/media-gallery/src/main.ts`
+- `src/Grove.Modules/Grove.Media/Assets/media-gallery/src/services/Globals.ts`
+- `src/Grove.Modules/Grove.Media/Assets/media-gallery/src/services/UppyFileUpload.ts`
+- `src/Grove.Modules/Grove.Media/Assets/media-gallery/src/composables/useFileListFiltering.ts`
+- `src/Grove.Modules/Grove.Media/Assets/media-field/src/components/MediaPickerModal.vue`
 - tests for both `media-gallery` and `media-field`
 
 ## Testing Plan

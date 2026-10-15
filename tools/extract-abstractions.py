@@ -3,7 +3,7 @@
 
     tools/extract-abstractions.py MODULE [--from-core] [--dry-run] [FILE ...]
 
-MODULE is a module project name under src/ (for example Crest.Flows). FILE paths are
+MODULE is a module project name under src/ (for example Grove.Flows). FILE paths are
 relative to the module folder. `--from-core` adds every file that an uncommitted fold of
 MODULE.Core moved into the module (read from `git status`) and that is a contract by kind:
 it declares an interface, is named *Permissions.cs, *Constants.cs, *Options.cs or
@@ -13,7 +13,7 @@ Options/, Abstractions/ or Handlers/ without being a handler, driver or migratio
 For the chosen files the script:
 
 1. Creates MODULE.Abstractions when it does not exist (root namespace MODULE), adds it to
-   Crest.Platform.slnx next to the module and to the platform library list, and makes the
+   Grove.Platform.slnx next to the module and to the platform library list, and makes the
    module reference it.
 2. Works out what the moved files need from their `using` lines: a namespace declared by a
    project other than the module becomes a project reference (abstractions projects
@@ -88,7 +88,7 @@ def main():
     # namespace -> declaring projects, over src/ (the Workflows engine is a separate world)
     nsidx = collections.defaultdict(set)
     for f in glob.glob(str(src / "**" / "*.cs"), recursive=True):
-        if "/obj/" in f or "/bin/" in f or "/Crest.Workflows/" in f:
+        if "/obj/" in f or "/bin/" in f or "/Grove.Workflows/" in f:
             continue
         try:
             text = open(f, encoding="utf-8", errors="ignore").read()
@@ -254,13 +254,13 @@ def main():
         mx = mx[: m.end()] + f"    {ref}\n" + mx[m.end():] if m else add_group(mx, [ref])
         mod_csproj.write_text(mx, encoding="utf-8")
     if create:
-        sln = root / "Crest.Platform.slnx"
+        sln = root / "Grove.Platform.slnx"
         sx = sln.read_text(encoding="utf-8")
         anchor = f'    <Project Path="src/{module}/{module}.csproj" />'
         if anchor in sx and abs_name not in sx:
             sx = sx.replace(anchor, f'    <Project Path="src/{abs_name}/{abs_name}.csproj" />\n{anchor}', 1)
             sln.write_text(sx, encoding="utf-8")
-        props = src / "Crest.Build" / "Platform.Projects.props"
+        props = src / "Grove.Build" / "Platform.Projects.props"
         px = props.read_text(encoding="utf-8")
         if f";{abs_name};" not in px:
             px = px.replace("</PlatformLibraryProjects>", f"{abs_name};</PlatformLibraryProjects>", 1)

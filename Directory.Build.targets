@@ -1,10 +1,10 @@
 <Project>
   <!--
-    Crest.Module.Targets / Theme.Targets embed "**\*" of the project folder as
-    resources. Crest nests test projects, WASM client libraries and themes INSIDE the
+    Grove.Module.Targets / Theme.Targets embed "**\*" of the project folder as
+    resources. Grove nests test projects, WASM client libraries and themes INSIDE the
     module folders (tests/, wasm/, blazor-wasm/, Themes/), so without this every module
-    DLL swallowed those projects' entire bin/obj output - Crest.dll and
-    Crest.ContentPartLists.dll grew past 700 MB / 1.1 GB, got copied into every
+    DLL swallowed those projects' entire bin/obj output - Grove.dll and
+    Grove.ContentPartLists.dll grew past 700 MB / 1.1 GB, got copied into every
     referencing project's bin on every build, and were re-emitted on every build because
     a nested obj/ was always newer than the last compile. Imported after the package
     props (Directory.Build.targets), so the Remove wins.
@@ -16,28 +16,28 @@
   </ItemGroup>
 
   <!--
-    Crest's own modules and themes import the platform's module/theme props at the top of their
+    Grove's own modules and themes import the platform's module/theme props at the top of their
     project file; the matching targets must come here, after the language targets, because they
     read $(DefaultLanguageSourceExtension) (imported at the end of a project body it is still
     empty, the "**\*.cs" exclusion becomes "**\*" and nothing is embedded). The platform projects
     get theirs from the imports below.
   -->
-  <Import Project="$(PlatformSrcDir)Crest.Module.Targets\Crest.Module.Targets.targets"
+  <Import Project="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.targets"
           Condition="'$(ModuleType)' != '' And '$(_IsPlatformProject)' != 'true'" />
-  <Import Project="$(PlatformSrcDir)Crest.Theme.Targets\Crest.Theme.Targets.targets"
+  <Import Project="$(PlatformSrcDir)Grove.Theme.Targets\Grove.Theme.Targets.targets"
           Condition="'$(ModuleType)' == 'Theme' And '$(_IsPlatformProject)' != 'true'" />
 
-  <!-- The component catalog generator for Crest's own component libraries (theme *.Client,
+  <!-- The component catalog generator for Grove's own component libraries (theme *.Client,
        module *.BlazorWasm, and the projects that opt in with ComponentCatalog=true): the same
        file the display abstractions package ships in buildTransitive/, with the generator as a
        project reference instead of the packaged assembly. -->
   <PropertyGroup Condition="'$(_IsPlatformProject)' != 'true'">
-    <ComponentCatalogGeneratorProject>$(MSBuildThisFileDirectory)src\Crest.SourceGenerators\Crest.SourceGenerators.csproj</ComponentCatalogGeneratorProject>
+    <ComponentCatalogGeneratorProject>$(MSBuildThisFileDirectory)src\Grove.SourceGenerators\Grove.SourceGenerators.csproj</ComponentCatalogGeneratorProject>
   </PropertyGroup>
-  <Import Project="$(MSBuildThisFileDirectory)src\Crest.DisplayManagement.Abstractions\buildTransitive\Crest.DisplayManagement.Abstractions.targets"
+  <Import Project="$(MSBuildThisFileDirectory)src\Grove.DisplayManagement.Abstractions\buildTransitive\Grove.DisplayManagement.Abstractions.targets"
           Condition="'$(_IsPlatformProject)' != 'true'" />
 
   <!-- The platform projects: what the former src/*/Directory.Build.targets files imported. -->
-  <Import Project="src\Crest.Build\Crest.Commons.targets" Condition="'$(_PlatformKind)' == 'Library' Or '$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
-  <Import Project="src\Crest.Module.Targets\Crest.Module.Targets.targets" Condition="'$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
+  <Import Project="src\Grove.Build\Grove.Commons.targets" Condition="'$(_PlatformKind)' == 'Library' Or '$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
+  <Import Project="src\Grove.Module.Targets\Grove.Module.Targets.targets" Condition="'$(_PlatformKind)' == 'Module' Or '$(_PlatformKind)' == 'Theme'" />
 </Project>

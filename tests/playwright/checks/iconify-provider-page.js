@@ -1,4 +1,4 @@
-// Converted from Crest.Icons/tests/playwright/iconify-provider-icons-page.js.
+// Converted from Grove.Icons/tests/playwright/iconify-provider-icons-page.js.
 // Verifies the /Admin/Design/Icons page renders the Iconify provider search preview, hides
 // the removed manual cache-update button, and that picking a remote Iconify icon updates the
 // field end-to-end.
@@ -31,7 +31,7 @@ async function api(page, path, options = {}) {
 }
 
 module.exports = async function run(page, ctx) {
-  const original = await api(page, '/api/crest/icons/providers');
+  const original = await api(page, '/api/grove/icons/providers');
   if (!original.ok || !original.body?.iconify) {
     return { name: 'read-provider-settings', pass: false, message: `status=${original.status}` };
   }
@@ -44,7 +44,7 @@ module.exports = async function run(page, ctx) {
   const results = [];
   try {
     const configured = { iconify: { enabled: true, baseUrl: 'https://api.iconify.design', apiKey: null, apiKeyHeader: null, prefixes: ['mdi'] } };
-    const save = await api(page, '/api/crest/icons/providers', { method: 'PUT', headers: antiforgeryHeaders, body: JSON.stringify(configured) });
+    const save = await api(page, '/api/grove/icons/providers', { method: 'PUT', headers: antiforgeryHeaders, body: JSON.stringify(configured) });
     results.push({
       name: 'save-iconify-provider-settings',
       pass: save.ok && save.body?.iconify?.baseUrl === configured.iconify.baseUrl && save.body?.iconify?.prefixes?.[0] === 'mdi',
@@ -66,7 +66,7 @@ module.exports = async function run(page, ctx) {
     const manualUpdateButtons = await page.getByRole('button', { name: /update public iconify cache|sync public iconify/i }).count();
     results.push({ name: 'no-manual-cache-update-button', pass: manualUpdateButtons === 0, message: `count=${manualUpdateButtons}` });
 
-    const remoteSearch = await api(page, '/api/crest/icons?library=iconify&query=home&skip=0&take=20');
+    const remoteSearch = await api(page, '/api/grove/icons?library=iconify&query=home&skip=0&take=20');
     const iconifyItem = remoteSearch.body?.items?.find(
       item => item.providerId === 'iconify' && item.key === 'iconify.mdi/current/default/home' && item.svgMarkup?.includes('<svg'),
     );
@@ -110,7 +110,7 @@ module.exports = async function run(page, ctx) {
     }
     results.push({ name: 'selecting-remote-icon-updates-field', pass: pickedIcon, message: `picked=${pickedIcon}` });
   } finally {
-    await api(page, '/api/crest/icons/providers', { method: 'PUT', headers: antiforgeryHeaders, body: JSON.stringify(original.body) }).catch(() => {});
+    await api(page, '/api/grove/icons/providers', { method: 'PUT', headers: antiforgeryHeaders, body: JSON.stringify(original.body) }).catch(() => {});
   }
 
   return results;

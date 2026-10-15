@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Provides workflow management functionality.
+        </Description>
+        <PackageTags>groveWorkflows module workflows management</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Humanizer.Core" />
+        <PackageReference Include="IronCompress" />
+        <PackageReference Include="Snappier" />
+        <PackageReference Include="System.Linq.Dynamic.Core" />
+        <PackageReference Include="PolySharp">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Grove.Workflows.Caching\Grove.Workflows.Caching.csproj" />
+        <ProjectReference Include="..\Grove.Workflows.Core\Grove.Workflows.Core.csproj" />
+    </ItemGroup>
+
+</Project>

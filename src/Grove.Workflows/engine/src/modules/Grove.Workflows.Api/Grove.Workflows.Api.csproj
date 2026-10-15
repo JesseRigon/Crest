@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Provides API endpoints for client applications such as the Grove.Workflows Designer web component.
+        </Description>
+        <PackageTags>groveWorkflows module workflows api</PackageTags>
+    </PropertyGroup>
+	
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\..\..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
+        <ProjectReference Include="..\Grove.Workflows.Expressions.JavaScript\Grove.Workflows.Expressions.JavaScript.csproj" />
+        <ProjectReference Include="..\Grove.Workflows.Resilience\Grove.Workflows.Resilience.csproj" />
+        <ProjectReference Include="..\Grove.Workflows.SasTokens\Grove.Workflows.SasTokens.csproj" />
+        <ProjectReference Include="..\Grove.Workflows.Management\Grove.Workflows.Management.csproj" />
+        <ProjectReference Include="..\Grove.Workflows.Runtime\Grove.Workflows.Runtime.csproj" />
+    </ItemGroup>
+
+</Project>

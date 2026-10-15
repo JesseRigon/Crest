@@ -1,0 +1,7 @@
+{
+  "name": "@grove/contenttypes",
+  "version": "1.0.0",
+  "scripts": {
+    "check": "vue-tsc --noEmit"
+  }
+}

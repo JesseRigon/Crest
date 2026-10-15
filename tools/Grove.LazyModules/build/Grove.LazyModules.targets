@@ -1,0 +1,58 @@
+<Project>
+  <!-- Module pages load on demand. Imported by the HOST app's WASM entry project (the one
+       Microsoft.NET.Sdk.BlazorWebAssembly project with Program.Main) - through the
+       Grove.LazyModules package, or directly when the host builds Grove from source.
+
+       Every module client library the host references is lazy, with the assemblies only it
+       needs; the admin router loads a route's module before it matches (Grove.AdminTheme's
+       LazyModules), and a page region loads the modules that contribute to regions
+       before it renders. Worked out at build time by the Grove.LazyModules tool from the
+       referenced assemblies themselves, so nothing is listed by hand and nothing depends on
+       where a module sits on disk (source or package):
+       - lazy roots: every referenced module client library (*.BlazorWasm - the same
+         convention Grove.Server uses for the server-side route table), plus
+         any assembly a module names in its embedded grove-lazy-assemblies.txt resource (a
+         library it loads itself, e.g. the workflow designer);
+       - lazy too: each theme client (an assembly declaring its shell that is not a module),
+         loaded when its shell's document boots (Grove.Shell.GroveShellRoot);
+       - eager roots: assemblies declaring [assembly: GroveEager] (the shell runtime, a
+         theme's services - the boot path Program.cs calls);
+       - kept eager: a module assembly declaring [GroveJSComponent] (JS components register
+         at startup), and everything the app itself reaches;
+       - framework and Microsoft.* assemblies always stay eager.
+       Produces BlazorWebAssemblyLazyLoad items and LazyModules.g.cs (a
+       LazyModulesManifest class in the app's own namespace - routes, per-module
+       dependencies, region contributors) that the app's Program.cs hands to Grove. -->
+  <PropertyGroup>
+    <!-- From source: set GroveLazyModulesToolProject to tools/Grove.LazyModules/Grove.LazyModules.csproj
+         before this file is imported and the tool is built with the app. From the package:
+         the tool ships next to this file. -->
+    <_GroveLazyToolDll Condition="'$(GroveLazyModulesToolProject)' == ''">$(MSBuildThisFileDirectory)..\tools\net10.0\Grove.LazyModules.dll</_GroveLazyToolDll>
+    <!-- The tool is run by the build, not deployed with the app. -->
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
+  </PropertyGroup>
+
+  <!-- Built before the app (restored with it); its output is run, not referenced. -->
+  <ItemGroup Condition="'$(GroveLazyModulesToolProject)' != ''">
+    <ProjectReference Include="$(GroveLazyModulesToolProject)" ReferenceOutputAssembly="false" Private="false" />
+  </ItemGroup>
+
+  <Target Name="LazyModules" AfterTargets="ResolveReferences" BeforeTargets="CoreCompile">
+    <!-- Here, not at evaluation: IntermediateOutputPath is set after this file is imported. -->
+    <PropertyGroup>
+      <_GroveLazyDir>$(IntermediateOutputPath)LazyModules/</_GroveLazyDir>
+    </PropertyGroup>
+    <MSBuild Projects="$(GroveLazyModulesToolProject)" Targets="GetTargetPath" Condition="'$(GroveLazyModulesToolProject)' != ''">
+      <Output TaskParameter="TargetOutputs" PropertyName="_GroveLazyToolDll" />
+    </MSBuild>
+    <MakeDir Directories="$(_GroveLazyDir)" />
+    <WriteLinesToFile File="$(_GroveLazyDir)references.txt" Lines="@(ReferencePath->'%(FullPath)')" Overwrite="true" />
+    <Exec Command="dotnet &quot;$(_GroveLazyToolDll)&quot; &quot;$(_GroveLazyDir)references.txt&quot; $(AssemblyName) &quot;$(_GroveLazyDir)LazyModules.g.cs&quot; &quot;$(_GroveLazyDir)lazy.txt&quot;" />
+    <ReadLinesFromFile File="$(_GroveLazyDir)lazy.txt">
+      <Output TaskParameter="Lines" ItemName="BlazorWebAssemblyLazyLoad" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <Compile Include="$(_GroveLazyDir)LazyModules.g.cs" />
+    </ItemGroup>
+  </Target>
+</Project>

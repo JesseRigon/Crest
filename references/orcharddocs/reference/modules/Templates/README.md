@@ -1,15 +1,15 @@
-# Templates (`Crest.Templates`)
+# Templates (`Grove.Templates`)
 
 The templates module allows editors to create custom Liquid templates.
 
 ## Available templates
 
 Templates can be defined using the web editor, or in a theme. Templates are distinguished by their name.  
-Crest doesn't render HTML directly, but instead will usually render something called a **Shape**, which is an object that represents
+Grove doesn't render HTML directly, but instead will usually render something called a **Shape**, which is an object that represents
 the thing to render and has all the necessary data and metadata to render HTML.
 
-When rendering a Shape, Crest will look for specific templates, passing the Shape to this template.  
-Crest can match with many templates for the same Shape.  
+When rendering a Shape, Grove will look for specific templates, passing the Shape to this template.  
+Grove can match with many templates for the same Shape.  
 These potential templates are called **Alternates**.  
 A Shape contains a list of acceptable template names (the alternates) and will look into providers to get the most appropriate one.  
 For instance, when rendering a Content Item of type Article, the corresponding Shape that is rendered will be configured
@@ -675,7 +675,7 @@ This template is called when displaying a User Name.
 
 ### Customizing User Display in Admin Lists
 
-The `UserDisplayName` shape provides a flexible way to display user information throughout Crest, particularly in admin lists. This shape is commonly used when displaying content authors, audit trail users, or any user reference.
+The `UserDisplayName` shape provides a flexible way to display user information throughout Grove, particularly in admin lists. This shape is commonly used when displaying content authors, audit trail users, or any user reference.
 
 #### Creating a UserDisplayName Shape
 
@@ -834,8 +834,8 @@ To access the full user object with custom properties and content parts:
 
     ```cshtml
     @using Microsoft.AspNetCore.Identity
-    @using Crest.Users
-    @using Crest.Users.Models
+    @using Grove.Users
+    @using Grove.Users.Models
 
     @inject UserManager<IUser> UserManager
 
@@ -886,8 +886,8 @@ Create `UserDisplayNameText.cshtml` or `UserDisplayNameText.liquid` to display a
 
     ```cshtml
     @using Microsoft.AspNetCore.Identity
-    @using Crest.Users
-    @using Crest.Users.Models
+    @using Grove.Users
+    @using Grove.Users.Models
 
     @inject UserManager<IUser> UserManager
 
@@ -972,7 +972,7 @@ When customizing sub-shapes:
 - `UserDisplayNameText_[DisplayType]` (e.g., `UserDisplayNameText.SummaryAdmin.cshtml` or `.liquid`)
 - `UserDisplayNameText` (e.g., `UserDisplayNameText.cshtml` or `.liquid`)
 
-Crest will use the first matching template it finds.
+Grove will use the first matching template it finds.
 
 #### Performance Considerations
 
@@ -1013,13 +1013,13 @@ You can override these defaults or add additional cache configuration via tag he
 
 #### Implementation Details
 
-- **Tag Helper**: `src/Crest/Crest.DisplayManagement/TagHelpers/UserDisplayNameTagHelper.cs`
-- **Shape Table Provider**: `src/Crest/Crest.Users.Core/Services/UserDisplayNameShapeTableProvider.cs`
-- **Default Templates**: `src/Crest.Modules/Crest.Users/Views/UserDisplayName*.cshtml`
+- **Tag Helper**: `src/Grove/Grove.DisplayManagement/TagHelpers/UserDisplayNameTagHelper.cs`
+- **Shape Table Provider**: `src/Grove/Grove.Users.Core/Services/UserDisplayNameShapeTableProvider.cs`
+- **Default Templates**: `src/Grove.Modules/Grove.Users/Views/UserDisplayName*.cshtml`
 
 ## Overriding Views
 
-Some modules (namely the Crest.Users module) allow you to override some of its views in your Theme. Since these views are not shapes, the way to override them is a little different than mentioned above.
+Some modules (namely the Grove.Users module) allow you to override some of its views in your Theme. Since these views are not shapes, the way to override them is a little different than mentioned above.
 
 ### View Resolution paths
 
@@ -1037,7 +1037,7 @@ Views/Shared/{0}.cshtml
 
 ### Overriding Login view
 
-For example, if you want to override the `Crest.Users\Views\Account\Login.cshtml` view you would need to create a file in your theme and place it under `YourTheme\Views\Crest.Users\Account\Login.cshtml`.  
+For example, if you want to override the `Grove.Users\Views\Account\Login.cshtml` view you would need to create a file in your theme and place it under `YourTheme\Views\Grove.Users\Account\Login.cshtml`.  
 For this particular file, you would also need to select the `Use site theme for login page`
 option under the `Settings -> Security -> User Login` page in the admin.
 

@@ -1,8 +1,8 @@
 # Display
 
-Crest allows you to customize the look and feel of your application by integrating your own [theme](../../reference/glossary/README.md#theme) or by overriding the rendering of the [templates](../../reference/glossary/README.md#template) in Razor or Liquid syntax.
+Grove allows you to customize the look and feel of your application by integrating your own [theme](../../reference/glossary/README.md#theme) or by overriding the rendering of the [templates](../../reference/glossary/README.md#template) in Razor or Liquid syntax.
 
-Rendering in Crest is built around a few concepts:
+Rendering in Grove is built around a few concepts:
 
 - **Themes** package the layout, templates, and assets (CSS, JavaScript, images) that define the appearance of the site.
 - **Shapes** are the dynamic objects that get rendered. Every piece of the page — the layout, a content item, a field, a menu — is a shape whose template can be replaced.

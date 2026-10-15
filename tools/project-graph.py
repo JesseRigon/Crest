@@ -61,7 +61,7 @@ for n in names:
     elif n.endswith(".Abstractions"): kind[n] = "abstractions"
     elif n.endswith(".Core"): kind[n] = "core"
     elif ".Targets" in n or n.endswith(".Build"): kind[n] = "targets"
-    elif n.startswith("Crest.") and (src / n).exists() and (src / n / "Manifest.cs").exists(): kind[n] = "module"
+    elif n.startswith("Grove.") and (src / n).exists() and (src / n / "Manifest.cs").exists(): kind[n] = "module"
     else: kind[n] = "library"
 colors = {"abstractions": "#8ecae6", "core": "#219ebc", "module": "#ffb703", "library": "#adb5bd", "engine": "#b5a2d8", "targets": "#e9c46a", "missing": "#e76f51"}
 indeg = {n: 0 for n in names}; outdeg = {n: 0 for n in names}
@@ -71,7 +71,7 @@ data = {"nodes": nodes, "edges": [{"from": a, "to": b, "arrows": "to"} for a, b 
 out.parent.mkdir(parents=True, exist_ok=True)
 out.with_suffix(".json").write_text(json.dumps(data, indent=1))
 out.write_text(f'''<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Crest project dependencies</title>
+<html lang="en"><head><meta charset="utf-8"><title>Grove project dependencies</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/dist/vis-network.min.js"></script>
 <style>
  :root{{--bg:#fff;--fg:#222;--muted:#6b7280;--line:#d9dde3;--panel:#f6f7f9;--accent:#2a6f97}}
@@ -110,7 +110,7 @@ out.write_text(f'''<!doctype html>
  @media (max-width:700px){{.legend{{margin-left:0}}.brand{{width:100%}}}}
 </style></head><body>
 <div id="bar">
- <div class="brand"><h1>Crest project dependencies</h1><span class="count">{len(projects)} projects · {len(edges)} references</span></div>
+ <div class="brand"><h1>Grove project dependencies</h1><span class="count">{len(projects)} projects · {len(edges)} references</span></div>
  <div class="group grow"><input id="q" type="search" placeholder="Filter projects (regex), e.g. Access|Infrastructure" aria-label="Filter projects"></div>
  <div class="group"><label for="depth">Depth</label><input type="number" id="depth" min="1" max="6" value="1"></div>
  <div class="group"><label for="dir">Arrows</label><select id="dir"><option value="both">both ways</option><option value="out">references only</option><option value="in">referenced by only</option></select></div>
@@ -128,7 +128,7 @@ const data = {json.dumps(data)};
 // is the layout, kept in this browser under a key derived from the data, and every later
 // view (filter, focus, back to the full graph) shows or hides nodes at those positions.
 // Re-layout recomputes on demand.
-const layoutKey = 'crest-deps-layout-v2:' + data.nodes.length + ':' + data.edges.length;
+const layoutKey = 'grove-deps-layout-v2:' + data.nodes.length + ':' + data.edges.length;
 let layout = null;
 try {{ layout = JSON.parse(localStorage.getItem(layoutKey) || 'null'); }} catch {{ layout = null; }}
 const shown = {{nodes: new vis.DataSet([]), edges: new vis.DataSet([])}};

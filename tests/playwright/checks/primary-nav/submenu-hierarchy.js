@@ -1,10 +1,10 @@
-// Converted from Crest.AdminTheme/tests/playwright/primary-nav-menu-submenu-hierarchy.js.
+// Converted from Grove.AdminTheme/tests/playwright/primary-nav-menu-submenu-hierarchy.js.
 // Verifies mixed icon/no-icon level-1 items align their text, and that expanding a
 // third-tier submenu renders a visible, indented, themed container.
 //
-// REWRITTEN twice: first for the CrestPanelMenu refactor (collapsed children are no
-// longer in the DOM; items render .crest-panel-menu__item-content with
-// __icon-rail/__text-rail, children live in .crest-panel-menu__children), then to stop
+// REWRITTEN twice: first for the GrovePanelMenu refactor (collapsed children are no
+// longer in the DOM; items render .grove-panel-menu__item-content with
+// __icon-rail/__text-rail, children live in .grove-panel-menu__children), then to stop
 // hard-coding the stock arrangement (Design > Content Definition > ...). A tenant's
 // imported layout overlay can move or rename anything - the invariant identities
 // survive as originalText, but positions and displayed captions are tenant data. The
@@ -18,10 +18,10 @@ const { clickForEffect } = require('../../harness/interactive');
 module.exports = async function run(page, ctx) {
   // Resolve subjects from the menu tree the sidebar actually renders from.
   const subjects = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+    const response = await fetch('/api/grove/admin-menus', { credentials: 'include' });
     if (!response.ok) throw new Error(`admin menus failed: ${response.status}`);
     const data = await response.json();
-    const menu = data.menus.find(candidate => candidate.id === '__crest_default_admin_menu');
+    const menu = data.menus.find(candidate => candidate.id === '__grove_default_admin_menu');
     const enabled = nodes => (nodes || []).filter(node => node.enabled !== false);
 
     for (const root of enabled(menu.nodes)) {
@@ -56,9 +56,9 @@ module.exports = async function run(page, ctx) {
   await primaryNavMenu.waitFor({ timeout: 20000 });
 
   const expandLink = label =>
-    primaryNavMenu.locator(`button.crest-panel-menu__item-link:has(.crest-panel-menu__text-rail:text-is("${label}"))`).first();
+    primaryNavMenu.locator(`button.grove-panel-menu__item-link:has(.grove-panel-menu__text-rail:text-is("${label}"))`).first();
   const itemContent = label =>
-    primaryNavMenu.locator(`.crest-panel-menu__item-content:has(.crest-panel-menu__text-rail:text-is("${label}"))`).first();
+    primaryNavMenu.locator(`.grove-panel-menu__item-content:has(.grove-panel-menu__text-rail:text-is("${label}"))`).first();
 
   // Collapsed children are entirely absent from the DOM, so expand the root first,
   // then the child-bearing level-1 item. clickForEffect covers the
@@ -67,14 +67,14 @@ module.exports = async function run(page, ctx) {
   await clickForEffect(expandLink(subjects.parentText), itemContent(subjects.childTexts[0]));
 
   const result = await primaryNavMenu.evaluate((root, subjects) => {
-    const textOf = element => (element.querySelector('.crest-panel-menu__text-rail')?.textContent || '').trim();
+    const textOf = element => (element.querySelector('.grove-panel-menu__text-rail')?.textContent || '').trim();
 
     const details = text => {
       const item = Array.from(root.querySelectorAll('.primary-nav-menu__item--level-1')).find(
         element => textOf(element) === text,
       );
       if (!item) return null;
-      const textElement = item.querySelector('.crest-panel-menu__text-rail');
+      const textElement = item.querySelector('.grove-panel-menu__text-rail');
       const icon = item.querySelector('.platform-icon:not(.primary-nav-menu__icon-placeholder)');
       const placeholder = item.querySelector('.primary-nav-menu__icon-placeholder');
       const textBox = textElement?.getBoundingClientRect();
@@ -91,18 +91,18 @@ module.exports = async function run(page, ctx) {
     const parentItem = Array.from(root.querySelectorAll('.primary-nav-menu__item--level-1')).find(
       element => textOf(element) === subjects.parentText,
     );
-    const link = parentItem?.querySelector(':scope button.crest-panel-menu__item-link');
-    const container = parentItem?.querySelector(':scope .crest-panel-menu__children');
+    const link = parentItem?.querySelector(':scope button.grove-panel-menu__item-link');
+    const container = parentItem?.querySelector(':scope .grove-panel-menu__children');
     const children = container
       ? Array.from(container.querySelectorAll('.primary-nav-menu__item--level-2')).map(item => textOf(item))
       : [];
-    // The tier background is set on the item LINK (CrestComponents.css: .crest-panel-menu__item-link
-    // uses --crest-panel-menu-level-background); __children-inner is only a layout/animation
+    // The tier background is set on the item LINK (GroveComponents.css: .grove-panel-menu__item-link
+    // uses --grove-panel-menu-level-background); __children-inner is only a layout/animation
     // wrapper and is always transparent. Sample a level-2 link for the themed-tier assertion.
-    const levelTwoLink = container?.querySelector('.primary-nav-menu__item--level-2 .crest-panel-menu__item-link');
+    const levelTwoLink = container?.querySelector('.primary-nav-menu__item--level-2 .grove-panel-menu__item-link');
     const innerStyle = levelTwoLink ? getComputedStyle(levelTwoLink) : null;
-    const levelOneText = parentItem?.querySelector('.crest-panel-menu__text-rail')?.getBoundingClientRect();
-    const levelTwoItem = container?.querySelector('.primary-nav-menu__item--level-2 .crest-panel-menu__text-rail');
+    const levelOneText = parentItem?.querySelector('.grove-panel-menu__text-rail')?.getBoundingClientRect();
+    const levelTwoItem = container?.querySelector('.primary-nav-menu__item--level-2 .grove-panel-menu__text-rail');
     const levelTwoText = levelTwoItem?.getBoundingClientRect();
 
     return {
@@ -111,7 +111,7 @@ module.exports = async function run(page, ctx) {
       textLeftDelta: first && second ? Math.abs(first.textLeft - second.textLeft) : null,
       levelTwoContainer: container
         ? {
-            expanded: container.classList.contains('crest-panel-menu__children--expanded'),
+            expanded: container.classList.contains('grove-panel-menu__children--expanded'),
             // Blazor renders a bool `true` attribute as aria-expanded="" (empty string), and
             // omits the attribute entirely when false - it never emits the literal "true".
             // Presence of the attribute IS the expanded signal.

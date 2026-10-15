@@ -1,8 +1,8 @@
-# OpenID (`Crest.OpenId`)
+# OpenID (`Grove.OpenId`)
 
 ## OpenID Connect Module
 
-`Crest.OpenId` provides robust OpenID Connect functionality, enabling Crest to act as an OpenID Connect server and client. The following features are available:
+`Grove.OpenId` provides robust OpenID Connect functionality, enabling Grove to act as an OpenID Connect server and client. The following features are available:
 
 - **OpenID Connect Core Services**
 - **OpenID Connect Authorization Server**
@@ -12,18 +12,18 @@
 
 ## Core OpenID Connect Services
 
-This feature provides the essential services that underpin all other OpenID Connect features within Crest. It includes fundamental components needed for secure communication, token handling, and user authentication.
+This feature provides the essential services that underpin all other OpenID Connect features within Grove. It includes fundamental components needed for secure communication, token handling, and user authentication.
 
 ## OpenID Connect Management UI
 
-Adds a management interface to the Crest admin dashboard, enabling users to manage OpenID Connect applications, define and modify scopes, and configure application permissions through a user-friendly UI.
+Adds a management interface to the Grove admin dashboard, enabling users to manage OpenID Connect applications, define and modify scopes, and configure application permissions through a user-friendly UI.
 
 ## OpenID Connect Authorization Server
 
-Allows Crest to function as an OpenID Connect authorization server, also referred to as an identity provider (IdP). This feature enables authentication and the issuance of tokens, conforming to OpenID Connect and OAuth 2.0 standards.
+Allows Grove to function as an OpenID Connect authorization server, also referred to as an identity provider (IdP). This feature enables authentication and the issuance of tokens, conforming to OpenID Connect and OAuth 2.0 standards.
 
 Key points:
-- Crest can serve as a centralized identity provider, allowing external applications to authenticate users and manage access control.
+- Grove can serve as a centralized identity provider, allowing external applications to authenticate users and manage access control.
 - Powered by the [`OpenIddict`](https://github.com/openiddict/openiddict-core) library, this feature supports token-based authentication without requiring an external identity provider.
 - The authorization server takes care of validating the access tokens received by the `/connect/userinfo` API endpoint, so you don't need to enable the token validation feature for the current tenant.
 - To validate issued tokens, ensure the 'OpenID Connect Token Validation' feature is activated.
@@ -37,7 +37,7 @@ Supported flows include:
 
 ## OpenID Connect Token Validation
 
-This feature is responsible for validating tokens issued either by Crest's own OpenID Connect authorization server or by other trusted servers. It supports JSON Web Tokens (JWT) and OpenID Connect discovery, ensuring secure and reliable token validation across distributed applications.
+This feature is responsible for validating tokens issued either by Grove's own OpenID Connect authorization server or by other trusted servers. It supports JSON Web Tokens (JWT) and OpenID Connect discovery, ensuring secure and reliable token validation across distributed applications.
 
 ### Configuration
 
@@ -48,8 +48,8 @@ Available settings are:
 - Token Format:
   - Data Protection: this format - enabled by default - uses non-standard opaque tokens encrypted by the ASP.NET Core Data Protection stack.
   - Json Web Token: this format uses signed JWT standard tokens. The tokens are encrypted by default but access token encryption can be turned off
-to allow third-party resource servers to use the JWT tokens produced by the Crest OpenID server.
-- Authority: Crest URL used by Crest to act as an identity server.
+to allow third-party resource servers to use the JWT tokens produced by the Grove OpenID server.
+- Authority: Grove URL used by Grove to act as an identity server.
 - Signing Certificate Store Location: CurrentUser/LocalMachine <https://msdn.microsoft.com/en-us/library/system.security.cryptography.x509certificates.storelocation(v=vs.110).aspx>
 - Signing Certificate Store Name: AddressBook/AuthRootCertificateAuthority/Disallowed/My/Root/TrustedPeople/TrustedPublisher <https://msdn.microsoft.com/en-us/library/system.security.cryptography.x509certificates.storename(v=vs.110).aspx>
 - Encryption Certificate Thumbprint: the thumbprint of the signing certificate (it is recommended to not use same certificate that is being used for SSL).
@@ -226,7 +226,7 @@ $mypwd = ConvertTo-SecureString -String "MySecretPassword123" -Force -AsPlainTex
 Import-PfxCertificate -FilePath C:\securelocation\connect.example.com.pfx cert:\localMachine\my -Password $mypwd
 ```
 
-**Important:** In order for the `Crest.OpenId` module to use the certificate's keys for signing, it requires `Read` access to the certificate in the store. This can be granted in various ways, for example:
+**Important:** In order for the `Grove.OpenId` module to use the certificate's keys for signing, it requires `Read` access to the certificate in the store. This can be granted in various ways, for example:
 
 - `MMC.exe`
     1. Add Snap-In 'Certificates' for Computer Account
@@ -254,7 +254,7 @@ To use the certificate on an Azure hosted site.
 
 ## Token Validation
 
-- Validates tokens issued by the Crest OpenID server
+- Validates tokens issued by the Grove OpenID server
   - Configure the validation feature to transparently use the server configuration of another tenant, which has the authorization server feature enabled.
 - Validates token by a remote server supporting JWT and OpenID Connect discovery.
 
@@ -313,7 +313,7 @@ A sample of OpenID Connect Client Settings recipe step:
 {
       "name": "OpenIdClientSettings",
       "Authority": "http://localhost:44300/t1",
-      "DisplayName": "Crest (t1) IdP",
+      "DisplayName": "Grove (t1) IdP",
       "ClientId": "platform_t2", 
       "CallbackPath": "/signin-oidc",
       "SignedOutCallbackPath": "/signout-callback-oidc",
@@ -370,7 +370,7 @@ All OpenID Connect settings can be configured using the generic `Settings` recip
 |----------------------------------|---------|---------------------------------------------------------------------------|
 | `TestingModeEnabled`             | Boolean | Whether testing mode is enabled (uses ephemeral signing/encryption keys). |
 | `TokenFormat`                    | String  | The access token format. Values: `DataProtection`, `JsonWebToken`.        |
-| `Authority`                      | String  | The authority URL used by Crest to act as an identity server.           |
+| `Authority`                      | String  | The authority URL used by Grove to act as an identity server.           |
 | `AuthorizationEndpointPath`      | String  | Path for the authorization endpoint.                                      |
 | `LogoutEndpointPath`             | String  | Path for the logout endpoint.                                             |
 | `TokenEndpointPath`              | String  | Path for the token endpoint.                                              |
@@ -453,5 +453,5 @@ All OpenID Connect settings can be configured using the generic `Settings` recip
 | `Audience`                   | String  | The audience used for token validation.                               |
 | `Authority`                  | String  | The authority URL for OpenID Connect discovery.                       |
 | `DisableTokenTypeValidation` | Boolean | Whether to disable access token type validation.                      |
-| `Tenant`                     | String  | The Crest tenant for local server validation.                       |
+| `Tenant`                     | String  | The Grove tenant for local server validation.                       |
 | `MetadataAddress`            | String  | Override the metadata discovery address (for non-standard providers). |

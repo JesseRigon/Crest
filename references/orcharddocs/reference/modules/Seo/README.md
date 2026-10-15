@@ -1,4 +1,4 @@
-# SEO (`Crest.Seo`)
+# SEO (`Grove.Seo`)
 
 Provides Search Engine Optimization (SEO) features:
 

@@ -1,4 +1,4 @@
-# ContentLocalization (`Crest.ContentLocalization`)
+# ContentLocalization (`Grove.ContentLocalization`)
 
 This module allows you to localize your content items.
 
@@ -6,7 +6,7 @@ This module allows you to localize your content items.
 
 Attach this part to a content type to manage multiple localized versions of a content item.
 
-## ContentCulturePicker (`Crest.ContentLocalization.ContentCulturePicker`)
+## ContentCulturePicker (`Grove.ContentLocalization.ContentCulturePicker`)
 
 ## ContentCulturePicker Feature
 
@@ -119,8 +119,8 @@ The following configuration is used by default and can be customized:
 
 ```json
 {
-   "Crest": {
-    "Crest_ContentLocalization_CulturePickerOptions": {
+   "Grove": {
+    "Grove_ContentLocalization_CulturePickerOptions": {
      "CookieLifeTime": 14 // Set the culture picker cookie life time (in days).
     }
   }

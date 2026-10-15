@@ -6,7 +6,7 @@
 //     navigation node carrying required fields (no malformed/empty authorization payload)
 //
 // One piece is intentionally NOT carried over: the original asserted that a SignalR
-// permissions-hub negotiation request (/api/crest/permissions/negotiate) fires as part of
+// permissions-hub negotiation request (/api/grove/permissions/negotiate) fires as part of
 // the live login POST. That assertion is inherently tied to the act of logging in, which
 // now happens exactly once in the shared harness before any check runs — re-triggering a
 // full login here (or logging the shared page out and back in) would defeat the point of
@@ -29,7 +29,7 @@ module.exports = async function run(page, ctx) {
     await anonymous.goto(`${ctx.baseUrl}/login`, { waitUntil: 'domcontentloaded' });
 
     const anonymousStatus = await anonymous.evaluate(async () =>
-      (await fetch('/api/crest/navigation/admin')).status);
+      (await fetch('/api/grove/navigation/admin')).status);
     results.push({
       name: 'anonymous-navigation-api-forbidden',
       pass: anonymousStatus === 403,
@@ -57,7 +57,7 @@ module.exports = async function run(page, ctx) {
 
   // --- Authenticated session (already logged in): navigation/manifest must be real ---
   const menu = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/navigation/admin');
+    const response = await fetch('/api/grove/navigation/admin');
     return {
       status: response.status,
       contentType: response.headers.get('content-type'),
@@ -91,7 +91,7 @@ module.exports = async function run(page, ctx) {
   });
 
   const manifest = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/app/manifest');
+    const response = await fetch('/api/grove/app/manifest');
     return { status: response.status, payload: await response.json().catch(() => null) };
   });
   const manifestOk = manifest.status === 200 &&

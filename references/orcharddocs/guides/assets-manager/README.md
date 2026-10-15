@@ -1,6 +1,6 @@
 # Assets Manager
 
-Based on [Concurrently](https://github.com/open-cli-tools/concurrently) the Crest assets management tool is used for building, watching, hosting assets. It allows to use bundlers as [Parcel](https://parceljs.org/) [Vite](https://vite.dev/) and [Webpack](https://webpack.js.org/). This is a non-opiniated tool which allows to be extended for any asset compiler/bundler that someone may require in the future. Everything is written as ES6 modules (.mjs files).
+Based on [Concurrently](https://github.com/open-cli-tools/concurrently) the Grove assets management tool is used for building, watching, hosting assets. It allows to use bundlers as [Parcel](https://parceljs.org/) [Vite](https://vite.dev/) and [Webpack](https://webpack.js.org/). This is a non-opiniated tool which allows to be extended for any asset compiler/bundler that someone may require in the future. Everything is written as ES6 modules (.mjs files).
 
 `Concurrently`, is a concurrent shell runner which allows to trigger any possible shell command.
 
@@ -45,7 +45,7 @@ Parcel is the easiest way to build assets so far as it doesn't require any confi
 
 ## Building assets if you change an SCSS, JS, or TS/TSX file
 
-What to do if you change an SCSS, JS, or TS/TSX file in any of Crest's projects, and want to update the output files (that go into the `wwwroot` folders)?
+What to do if you change an SCSS, JS, or TS/TSX file in any of Grove's projects, and want to update the output files (that go into the `wwwroot` folders)?
 
 1. Make sure you completed the above "Prerequisites" steps. You should always run at least `yarn` to update the dependencies.
 2. Run `yarn build` from the command line in the root of the repository. This will build all changed assets.
@@ -112,7 +112,7 @@ It is possible to bundle apps together when using Parcel by using the "bundleEnt
 Parcel bundle output folder:
 
 ```javascript
-export const parcelBundleOutput = "src/Crest.Modules/Crest.Resources/wwwroot/Scripts/bundle"
+export const parcelBundleOutput = "src/Grove.Modules/Grove.Resources/wwwroot/Scripts/bundle"
 ```
 
 Parcel bundleEntrypoint parameter:
@@ -162,11 +162,11 @@ The source property must be the root folder of your Vite app where your vite.con
 
 #### Getting Started with Vite
 
-Create a new module or theme in Crest. This module or theme needs to have a /Assets folder.
+Create a new module or theme in Grove. This module or theme needs to have a /Assets folder.
 In this /Assets folder we will create a boilerplate Vue app using this command:
 
 ```cmd
-cd src/Crest.Modules/path-to-your-module/Assets
+cd src/Grove.Modules/path-to-your-module/Assets
 yarn create vite
 ```
 
@@ -189,7 +189,7 @@ Here is an example of a Vue app using Typescript:
 √ Select a framework: » Vue
 √ Select a variant: » TypeScript
 
-Scaffolding project in C:\repo\Crest\src\Crest.Modules\Crest.Media\Assets\vite-project...
+Scaffolding project in C:\repo\Grove\src\Grove.Modules\Grove.Media\Assets\vite-project...
 
 Done. Now run:
 
@@ -200,7 +200,7 @@ Done. Now run:
 
 Now you could execute the commands that are suggested. It will start the Vite dev server with HMR feature. Though what we want is to execute the server by using the asset manager tool. We will need an Assets.json file for that matter.
 
-Create an Assets.json file at the root of your new module. For example: "src/Crest.Modules/PathToYourModule/Assets.json". This file should contain these settings:
+Create an Assets.json file at the root of your new module. For example: "src/Grove.Modules/PathToYourModule/Assets.json". This file should contain these settings:
 
 ```json
 [
@@ -240,8 +240,8 @@ export default defineConfig({
 Execute Vite dev server from the asset manager tool:
 
 ```sh
-# Move to Crest src folder
-cd C:/repo/Crest/src
+# Move to Grove src folder
+cd C:/repo/Grove/src
 
 # Install dependencies
 yarn 
@@ -264,7 +264,7 @@ yarn build -n my-vue-app
 
 #### Minification and Source Maps
 
-The asset manager automatically applies the `platform-minify` Vite plugin during `build` and `watch` commands. This plugin runs after Vite writes the bundle and produces output files that follow the Crest asset convention:
+The asset manager automatically applies the `platform-minify` Vite plugin during `build` and `watch` commands. This plugin runs after Vite writes the bundle and produces output files that follow the Grove asset convention:
 
 **JavaScript:**
 
@@ -551,8 +551,8 @@ Since `concat` **always** resolves from the root `node_modules/`, it will:
 
 **Example Problem:**
 ```
-Crest.Media/Assets/package.json:     "bootstrap": "5.3.8"
-Crest.Resources/Assets/package.json:  "bootstrap": "5.3.8"  
+Grove.Media/Assets/package.json:     "bootstrap": "5.3.8"
+Grove.Resources/Assets/package.json:  "bootstrap": "5.3.8"  
 SomeTheme/Assets/package.json:              "bootstrap": "4.6.1"  ← Different!
 ```
 
@@ -724,7 +724,7 @@ export function viteConfig(action) {
 You can also specify the glob pattern used to harvest the `Assets.json` files in your solution in the build.config.mjs file
 
 ```javascript
-export const assetsLookupGlob = "src/{Crest.Modules,Crest.Themes}/*/Assets.json";
+export const assetsLookupGlob = "src/{Grove.Modules,Grove.Themes}/*/Assets.json";
 ```
 
 ## ECMAScript vs CommonJS (Bundlers)
@@ -810,7 +810,7 @@ The following section describes the internal architecture of the asset managemen
 
 ### Package Structure Overview
 
-The Crest asset management system uses a **three-tier package structure** designed to separate concerns and minimize version conflicts:
+The Grove asset management system uses a **three-tier package structure** designed to separate concerns and minimize version conflicts:
 
 #### 1. Root `package.json` - Workspace Orchestrator
 **Location:** Root of the repository  
@@ -846,7 +846,7 @@ The Crest asset management system uses a **three-tier package structure** design
 - Clear separation: "What builds the assets" vs "What the workspace needs"
 
 #### 3. Module/Theme `Assets/package.json` Files
-**Location:** `src/Crest.{Modules,Themes}/*/Assets/`  
+**Location:** `src/Grove.{Modules,Themes}/*/Assets/`  
 **Purpose:**
 
 - Contains **runtime dependencies** for the specific module/theme
@@ -936,14 +936,14 @@ To add or update a build tool (e.g., upgrading Parcel, adding a new PostCSS plug
 #### Adding Module/Theme Runtime Dependencies
 To add a library that your module needs at runtime (e.g., a Vue component library):
 
-1. Navigate to your module's Assets folder: `cd src/Crest.Modules/YourModule/Assets`
+1. Navigate to your module's Assets folder: `cd src/Grove.Modules/YourModule/Assets`
 2. Add the dependency: `yarn add your-library`
 3. The dependency is added to `Assets/package.json` in that module only
 4. Import and use it in your module's asset files
 
 **Example:**
 ```bash
-cd src/Crest.Modules/Crest.Media/Assets
+cd src/Grove.Modules/Grove.Media/Assets
 yarn add blueimp-file-upload@10.32.0
 ```
 

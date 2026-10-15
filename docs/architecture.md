@@ -1,69 +1,69 @@
-# Crest architecture
+# Grove architecture
 
-Crest is a platform and the application layer built into it. This document is its shape: what it holds, the
+Grove is a platform and the application layer built into it. This document is its shape: what it holds, the
 modules that make it up, who signs in to it, and the rules that keep downstream modules plugging
 into it rather than it reaching for them. The global store, the geographic tree and money have
 their own documents: [globals.md](globals.md), [regions.md](regions.md),
 [types.md](types.md).
 
-## What Crest is
+## What Grove is
 
-Crest has two halves in one repository. **The platform** (the projects listed in
-`src/Crest.Build/Platform.Projects.props`, and `test/`) is a hard fork of OrchardCore: tenants, users, permissions, content, features, settings and the module
-system. Crest develops it as its own code. **The application layer** is everything a business-facing
+Grove has two halves in one repository. **The platform** (the projects listed in
+`src/Grove.Build/Platform.Projects.props`, and `test/`) is a hard fork of OrchardCore: tenants, users, permissions, content, features, settings and the module
+system. Grove develops it as its own code. **The application layer** is everything a business-facing
 application needs that is not a line of business. Its foundation is built — the Blazor admin and
 site shells, the content-item API, icons, localization, Content Part Lists, the global
 store and the geographic tree. Three modules complete it:
 
 | Module | What it is |
 | --- | --- |
-| `Crest.Parties` | Who an application deals with: Person and Organization content types, contact points, addresses, positions, a role registry (`IPartyTypeProvider`) that downstream modules register their party roles with (customer, vendor, employee, lead, …), and the parties UI. |
-| `Crest.Members` | The other side of the business: member accounts (ordinary Orchard users with a class marker), organization bindings with per-organization roles, a hierarchy store, the member portal (login, register, external login, pages), and impersonation for staff support. Commercial memberships (tiers, seats, groups, perks, entitlements) are a downstream module's, which hooks member lifecycle events through `IMemberLifecycleHandler`, a seam Members declares. |
-| `Crest.Access` ([access.md](access.md)) | The one access machinery every read and write passes through ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)): the caller built per request from the authenticated identity and server-held state (roles, permissions, organization, class ceiling) under a per-tenant permission version; one decision behind the platform's authorization service; scope providers per table compiled into every list, query and picker; the audit of decisions; the system caller for background work. Contracts in `Crest.Access.Abstractions`, below `Crest.Data`. One calculation per request, handed down the request's chain on the server, never across requests. |
-| `Crest.Queries` | The read side: the structured query model (a step list compiled through YesSql into parameterised SQL with the caller's scope conjoined for every table), the SQL source for external databases with its scope rewriter, the `System` source (`item`, `user`, `site`) that display slots bind, query descriptors and the catalog the workflow engine's registry reads. Every run is paged, cancellable, typed and caller-scoped. Queries owns no connections: it consumes SQL connections from the data layer and external connections from the protocol modules ([queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)). |
-| `Crest.Workflows` | The action side: a workflow service built on a vendored fork of Elsa 3 (MIT). Its registry (activities, triggers, hook slots, flows, and queries as `RunQuery` activities) is the operation registry; units of work (one burst, one session, one transaction, with inline hooks and durable background calls); the access gate as engine middleware with the actor rule (a run acts as the caller who started it, or as the system when published so); connectors with API-key, bearer, basic and OAuth2 authentication and OpenAPI import (☐ the connection model moves into the protocol modules, the activities stay as consumers); approvals; field dependencies; ownership tiers and per-flow access; the platform modules' activities and triggers (the stock OrchardCore workflow module is gone); the designer bridge. |
-| `Crest.Money` | The money type and the `PriceField` a tenant puts on any content type: `Amount` bound to an `ICurrency`, ISO 4217 metadata from the global store so minor units are never a per-tenant guess, and a default currency. Adapted from OrchardCore.Commerce (MIT). See [types.md](types.md). |
-| `Crest.Kinds` | The kind-registry contract, server-free: `IKindDescriptor` and `KindCatalog<TKind>` (merge what the enabled features register by key, order it, find by key or content type). Party types are one registry on it; a downstream module's own registries (asset kinds, transaction kinds) are others. `KindPageSource<TKind>` in Crest.Server.Abstractions builds a registry's pages (menu items and route gates) from it. |
+| `Grove.Parties` | Who an application deals with: Person and Organization content types, contact points, addresses, positions, a role registry (`IPartyTypeProvider`) that downstream modules register their party roles with (customer, vendor, employee, lead, …), and the parties UI. |
+| `Grove.Members` | The other side of the business: member accounts (ordinary Orchard users with a class marker), organization bindings with per-organization roles, a hierarchy store, the member portal (login, register, external login, pages), and impersonation for staff support. Commercial memberships (tiers, seats, groups, perks, entitlements) are a downstream module's, which hooks member lifecycle events through `IMemberLifecycleHandler`, a seam Members declares. |
+| `Grove.Access` ([access.md](access.md)) | The one access machinery every read and write passes through ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)): the caller built per request from the authenticated identity and server-held state (roles, permissions, organization, class ceiling) under a per-tenant permission version; one decision behind the platform's authorization service; scope providers per table compiled into every list, query and picker; the audit of decisions; the system caller for background work. Contracts in `Grove.Access.Abstractions`, below `Grove.Data`. One calculation per request, handed down the request's chain on the server, never across requests. |
+| `Grove.Queries` | The read side: the structured query model (a step list compiled through YesSql into parameterised SQL with the caller's scope conjoined for every table), the SQL source for external databases with its scope rewriter, the `System` source (`item`, `user`, `site`) that display slots bind, query descriptors and the catalog the workflow engine's registry reads. Every run is paged, cancellable, typed and caller-scoped. Queries owns no connections: it consumes SQL connections from the data layer and external connections from the protocol modules ([queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)). |
+| `Grove.Workflows` | The action side: a workflow service built on a vendored fork of Elsa 3 (MIT). Its registry (activities, triggers, hook slots, flows, and queries as `RunQuery` activities) is the operation registry; units of work (one burst, one session, one transaction, with inline hooks and durable background calls); the access gate as engine middleware with the actor rule (a run acts as the caller who started it, or as the system when published so); connectors with API-key, bearer, basic and OAuth2 authentication and OpenAPI import (☐ the connection model moves into the protocol modules, the activities stay as consumers); approvals; field dependencies; ownership tiers and per-flow access; the platform modules' activities and triggers (the stock OrchardCore workflow module is gone); the designer bridge. |
+| `Grove.Money` | The money type and the `PriceField` a tenant puts on any content type: `Amount` bound to an `ICurrency`, ISO 4217 metadata from the global store so minor units are never a per-tenant guess, and a default currency. Adapted from OrchardCore.Commerce (MIT). See [types.md](types.md). |
+| `Grove.Kinds` | The kind-registry contract, server-free: `IKindDescriptor` and `KindCatalog<TKind>` (merge what the enabled features register by key, order it, find by key or content type). Party types are one registry on it; a downstream module's own registries (asset kinds, transaction kinds) are others. `KindPageSource<TKind>` in Grove.Server.Abstractions builds a registry's pages (menu items and route gates) from it. |
 
 The thesis: **all an application needs is parties, workflows and content items.** A
 party is who, a workflow is what happens, a content item is everything else. Line-of-
 business objects (accounts, inventory, transactions, invoices) are content items with a
 registry and a discipline, and they belong to the modules that own that business.
-Members is Crest's because every business with a public face has members, customers or
+Members is Grove's because every business with a public face has members, customers or
 users on the other side of it, and the member portal is how a product reaches them.
 
 ## Direction: Blazor or headless, nothing else
 
-Crest is a hard fork of OrchardCore; the platform's projects sit beside Crest's own under
+Grove is a hard fork of OrchardCore; the platform's projects sit beside Grove's own under
 `src/`. When the platform lacks something, the platform is changed: no shims, no stock-id
 module forks, no workarounds kept to stay mergeable.
 
-**The platform is named `Crest`, fully**: namespaces, assemblies, project and folder names,
+**The platform is named `Grove`, fully**: namespaces, assemblies, project and folder names,
 package ids, feature and module ids, recipes, configuration sections and static asset paths.
 Identifiers that would carry the project name are neutral, per the naming rule
 (`PlatformBuilder`, `AddPlatform()`, `IPlatformHelper`, JS globals likewise), so a later
-rename touches module names only. Prose says "Crest", not "Orchard Core". External URLs and
+rename touches module names only. Prose says "Grove", not "Orchard Core". External URLs and
 the `OrchardCore.Translations` packages keep their names. Neither the platform nor
-Crest.Server is named just `Crest`:
+Grove.Server is named just `Grove`:
 
-- the platform's implementation library is `Crest.Infrastructure` (Crest is one system, with
+- the platform's implementation library is `Grove.Infrastructure` (Grove is one system, with
   no framework-versus-CMS split);
-- its contracts are `Crest.Infrastructure.Abstractions` (shell host, modules, extensions,
+- its contracts are `Grove.Infrastructure.Abstractions` (shell host, modules, extensions,
   caching, locking, background tasks, options invalidation);
-- `Crest.Abstractions` holds only primitives: JSON, routing, localization, setup and helpers;
-- the document-manager contracts sit in `Crest.Data.Abstractions`, which depends on
+- `Grove.Abstractions` holds only primitives: JSON, routing, localization, setup and helpers;
+- the document-manager contracts sit in `Grove.Data.Abstractions`, which depends on
   Infrastructure.Abstractions and not the reverse.
 
-**A module is at most two projects, `Crest.X` and `Crest.X.Abstractions`.** The
+**A module is at most two projects, `Grove.X` and `Grove.X.Abstractions`.** The
 `.Abstractions` project holds the module's contracts (interfaces, permissions, constants,
 options, models, settings, fields, indexes); shared implementation stays in the module and
-consumers reference the module. The GraphQL library builds on `Crest.Contents.Abstractions`,
-since the Contents module itself depends on that library. The MVC library is `Crest.Mvc`. Sub-module names such as `Crest.Search.Elasticsearch`
-stay. Feature ids such as `Crest.Roles.Core` are tenant data and keep their names.
+consumers reference the module. The GraphQL library builds on `Grove.Contents.Abstractions`,
+since the Contents module itself depends on that library. The MVC library is `Grove.Mvc`. Sub-module names such as `Grove.Search.Elasticsearch`
+stay. Feature ids such as `Grove.Roles.Core` are tenant data and keep their names.
 
-Where a platform module or type meets Crest code that was written to sit over it, the side
-Crest has already replaced is deleted, or the Crest code is merged into the platform module.
-Platform modules Crest has not reached yet stay until a replacement exists. As each Blazor
+Where a platform module or type meets Grove code that was written to sit over it, the side
+Grove has already replaced is deleted, or the Grove code is merged into the platform module.
+Platform modules Grove has not reached yet stay until a replacement exists. As each Blazor
 replacement lands, the Liquid templates and the stock Razor/Vue UIs it replaces are removed,
 until every page is a Blazor build. Headless (the content-item API, GraphQL, Queries) is first
 class alongside Blazor: every capability a Blazor page has is reachable through the API, and
@@ -81,31 +81,31 @@ and email templates. Liquid as a view engine goes with the stock UIs.
 - **The workflow engine's expression system is the one engine** (plan in
   [blazor-display.md](blazor-display.md) § 12): its expression model, descriptors and input
   metadata are the contract for workflows and for display; the platform's Liquid is its
-  Liquid implementation; the platform-side evaluators and `Crest.Scripting` are removed,
+  Liquid implementation; the platform-side evaluators and `Grove.Scripting` are removed,
   replaced by workflows. A workflow is written as a script or edited as a flow diagram; both
   are front ends for the same objects.
 - Every read and write is an **operation** in one registry (the engine's descriptors plus a
   query kind), behind one access machinery
   ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)).
   A module declares its API; its implementation may be generated from its operations, and a
-  generated route is an entry in Crest.Server's API registry beside the declared ones
-  (§ Modules declare, Crest.Server registers and serves).
+  generated route is an entry in Grove.Server's API registry beside the declared ones
+  (§ Modules declare, Grove.Server registers and serves).
 - Admins can grant C#, JavaScript and Python scripting access. Granting is only the first
   step toward sandboxing: those providers run code on the server and must be hardened
   before any tenant uses them. Neither C# nor Python exists in the vendored engine yet.
 
 ## Three shells
 
-Crest serves three audiences, each with its own shell: the **admin** shell for staff, the
+Grove serves three audiences, each with its own shell: the **admin** shell for staff, the
 **site** shell for the public, and the **member** shell — the application a member or
 customer actually uses, optional and present when Members is enabled. Modules contribute
 pages to a shell rather than shipping their own. Themes are not interchangeable: a theme
-declares which shell it serves and whether it hosts a Crest shell document, and a module
+declares which shell it serves and whether it hosts a Grove shell document, and a module
 declares the contract its pages need. See [shells-and-themes.md](shells-and-themes.md).
 
 ## The user vocabulary matches the shells
 
-Crest knows exactly three kinds of visitor, one per shell:
+Grove knows exactly three kinds of visitor, one per shell:
 
 - **users** — tenant users, who sign in to the admin shell;
 - **members** — organization-bound users, who sign in to the member shell;
@@ -113,34 +113,34 @@ Crest knows exactly three kinds of visitor, one per shell:
 
 Every one of them is an ordinary OrchardCore user in the tenant's own store (anonymous
 aside); the class is a marker that decides which login surface accepts the account, and
-Crest owns it along with the org bindings, the hierarchy and the surface separation.
+Grove owns it along with the org bindings, the hierarchy and the surface separation.
 
 **Employee is not one of them.** An employee is a person the business employs — an
 employment record, a party role, payroll — so it belongs to a downstream module. Some
-employees are tenant users and some never sign in at all; Crest neither knows nor cares.
+employees are tenant users and some never sign in at all; Grove neither knows nor cares.
 Products keep the three words and label them for their domain without renaming anything.
 
 **Super-tenancy splits.** The Default tenant, cross-tenant scope
 (`IShellHost.GetScopeAsync`) and the platform-user class are OrchardCore concepts, so the
-mechanism and its seams are Crest's. A SaaS product built on them — tenant provisioning
+mechanism and its seams are Grove's. A SaaS product built on them — tenant provisioning
 and lifecycle UI, plans and billing, operator dashboards, the hosting infrastructure — is
 not.
 
-**Crest.Members keeps its own permissions and hierarchy.** Member roles, the org-admin
-ceiling and the per-organization permission scope are Crest's, parallel to but separate
-from the tenant-user side: a product on Crest alone needs members with differentiated
+**Grove.Members keeps its own permissions and hierarchy.** Member roles, the org-admin
+ceiling and the per-organization permission scope are Grove's, parallel to but separate
+from the tenant-user side: a product on Grove alone needs members with differentiated
 access and org admins who manage their own people, with no line-of-business module present.
 A downstream module's entitlements are a layer above those permissions, never a replacement
 for them.
 
 ## Parties is the model, not the roles
 
-Crest has the party **model** — there is no engine to speak of: content types (Person,
+Grove has the party **model** — there is no engine to speak of: content types (Person,
 Organization, Address, ContactPoint, Position, Location, the `parties.*` vocabularies on
-`Crest.ContentPartLists`, the address's geo stack (`GeoStackField`) on `Crest.Regions`), the contacts /
+`Grove.ContentPartLists`, the address's geo stack (`GeoStackField`) on `Grove.Regions`), the contacts /
 positions / locations services and API, the Person ↔ portal-user link, three indexes, the
 `IPartyTypeProvider` registry with the menu and generic role pages generated from its
-catalog, and two workflow activities. It is Crest's for two reasons, neither of them
+catalog, and two workflow activities. It is Grove's for two reasons, neither of them
 cleverness: Members depends on it (a member is a Person with a portal user; an org binding
 points at an Organization), and every product needs people and organizations before it needs
 anything else. It ships no party role of its own.
@@ -148,101 +148,100 @@ anything else. It ships no party role of its own.
 Parties defines **no field types of its own**: the party picker on a role is a stock
 `ContentPickerField` constrained to Person/Organization, the portal-user link a stock
 `UserPickerField`, an address's country and the levels below it a `GeoStackField` from
-`Crest.Regions`, and honorific, address kind, phone country, organization type and
-industry are `OptionPickerField`s from `Crest.ContentPartLists`. The only Parties-specific
+`Grove.Regions`, and honorific, address kind, phone country, organization type and
+industry are `OptionPickerField`s from `Grove.ContentPartLists`. The only Parties-specific
 helper is `PartyRoleDefinitions` ("define a role type: party picker + number field +
 profile"), which downstream modules and products call. The role content types are defined
 and registered by the modules that own them.
 
-## Every content field type lives in Crest
+## Every content field type lives in Grove
 
 Field types are platform vocabulary: a tenant composes content from them in the type
-editor, and an application on Crest alone must be able to model prices, places and option
-sets without a line-of-business module. So **every custom `ContentField` belongs to Crest**
+editor, and an application on Grove alone must be able to model prices, places and option
+sets without a line-of-business module. So **every custom `ContentField` belongs to Grove**
 unless it is proprietary or depends on proprietary code. Three exist: `OptionPickerField`
-(Crest.Server), `GeoStackField` (Crest.Regions) and `PriceField` (Crest.Money,
+(Grove.Server), `GeoStackField` (Grove.Regions) and `PriceField` (Grove.Money,
 [types.md](types.md)).
 
 ## Naming
 
-`Crest.Parties`, `Crest.Members`, `Crest.Workflows`, matching `Crest.Regions`,
-`Crest.Data.Global`, `Crest.ContentPartLists`. Namespaces, assembly names, feature ids,
+`Grove.Parties`, `Grove.Members`, `Grove.Workflows`, matching `Grove.Regions`,
+`Grove.Data.Global`, `Grove.ContentPartLists`. Namespaces, assembly names, feature ids,
 manifests, permission names, option-set keys (`parties.*` — already unbranded), route
 constants and test names follow.
 
-**The project will be renamed.** "Crest" is already in use next to OrchardCore by another
-party (CrestApps, `orchardcore.crestapps.com`, an OrchardCore module vendor), so the name
-goes before the first public release; the new name is not chosen yet (open question below).
-The rule that follows is what makes the rename a mechanical one: it touches module, assembly
-and package names, the `Crest.` namespaces, the `Crest*` component library prefix, the
-`X-Powered-By` response header value, the `crest-workflows` and `api/crest` route prefixes (route names are the one place the brand is part of the wire
-contract, so they change with a deprecation window), the stored-by-type names listed below (at
-a tenant reset), and the docs. Nothing else may depend on the word.
+**The project is Grove, formerly Crest.** "Crest" was already in use next to OrchardCore by
+another party (CrestApps, `orchardcore.crestapps.com`, an OrchardCore module vendor), so the
+project was renamed on 2026-10-14, by script, everywhere at once: module, assembly and package
+names, the `Grove.` namespaces, the `Grove*` component library prefix, the `X-Powered-By`
+value, the `api/grove` and `grove-workflows` route prefixes, the stored-by-type names, the
+configuration section, and the docs. The rule that follows is what made that a mechanical
+change, and it keeps the next one mechanical too. The GitHub repositories follow the same name (`JesseRigon/Grove`, `JesseRigon/Grove.Host`).
 
-**"Crest" appears only in module naming.** Modules, assemblies and packages carry the
-`Crest.` prefix; nothing inside them does — not permission names, types, functions, settings
-keys or other internal names (`ManageConnections`, not `ManageCrestWorkflowConnections`). The
+**"Grove" appears only in module naming.** Modules, assemblies and packages carry the
+`Grove.` prefix; nothing inside them does — not permission names, types, functions, settings
+keys or other internal names (`ManageConnections`, not `ManageGroveWorkflowConnections`). The
 project must be renameable by renaming its modules alone. The same rule holds for downstream
 projects. Routes, JSON property names and recipe step names are not renamed for it.
 
-The rule is about services: `Crest…` service, controller, claim, settings-key and permission
+The rule is about services: `Grove…` service, controller, claim, settings-key and permission
 names are not used (`IGlobalStore`, `ContentPartListService`, `AuthController`,
 `ClientWebAssemblyHost`, `LazyModulesManifest`, `[BlazorComponent]`,
-`ManageGlobalReferenceData`). The UI component library (`CrestButton`, `CrestDataGrid`, …)
-keeps its prefix for conflict resolution with HTML and Blazor names. Where a Crest service
-would clash with a platform service of the same name, the Crest one keeps the prefix. Names
+`ManageGlobalReferenceData`). The UI component library (`GroveButton`, `GroveDataGrid`, …)
+keeps its prefix for conflict resolution with HTML and Blazor names. Where a Grove service
+would clash with a platform service of the same name, the Grove one keeps the prefix. Names
 that still carry it, and why:
 
-- **Stored by type name** (renaming would orphan data): the content parts `CrestOptionPart`,
-  `CrestContentPartListPart`, `CrestRegionalProfilePart`, `CrestRegionalProfileReferencePart`,
-  `CrestAssignmentPart`, `CrestOrganizationPart`, `CrestBlazorComponentPart`; the indexes
-  `CrestAssignmentIndex`, `CrestOrganizationIndex`; the migrations (the migration record keys
-  on the class name) `CrestContentPartListMigrations`, `CrestAssignmentIndexMigrations`,
-  `CrestOrganizationIndexMigrations`; the documents `CrestAdminMenuLayoutDocument`,
-  `CrestContentGroupsDocument`, `CrestMenuPlacementDocument`,
-  `CrestGlobalSchemaState`; the definition and entity settings `CrestOptionFieldSettings`,
-  `CrestDefinitionLockSettings`, `CrestFieldVisibilitySettings`, `CrestContentTypeMenuSettings`,
-  `CrestContentGroupsSettings`, `CrestLocalizationSettings`, `CrestMemberThemeSettings`,
-  `CrestUserMenuPreferences`, `CrestMemberInfo`; and the site-settings keys `CrestTitleBar`,
-  `CrestIconProviders`, `CrestAdminPrimaryNavMenu`. They go together at the first tenant reset
+- **Stored by type name** (renaming would orphan data): the content parts `GroveOptionPart`,
+  `GroveContentPartListPart`, `GroveRegionalProfilePart`, `GroveRegionalProfileReferencePart`,
+  `GroveAssignmentPart`, `GroveOrganizationPart`, `GroveBlazorComponentPart`; the indexes
+  `GroveAssignmentIndex`, `GroveOrganizationIndex`; the migrations (the migration record keys
+  on the class name) `GroveContentPartListMigrations`, `GroveAssignmentIndexMigrations`,
+  `GroveOrganizationIndexMigrations`; the documents `GroveAdminMenuLayoutDocument`,
+  `GroveContentGroupsDocument`, `GroveMenuPlacementDocument`,
+  `GroveGlobalSchemaState`; the definition and entity settings `GroveOptionFieldSettings`,
+  `GroveDefinitionLockSettings`, `GroveFieldVisibilitySettings`, `GroveContentTypeMenuSettings`,
+  `GroveContentGroupsSettings`, `GroveLocalizationSettings`, `GroveMemberThemeSettings`,
+  `GroveUserMenuPreferences`, `GroveMemberInfo`; and the site-settings keys `GroveTitleBar`,
+  `GroveIconProviders`, `GroveAdminPrimaryNavMenu`. They go together at the first tenant reset
   that allows it, or with an upgrade step after the first public release.
 - **Would clash with a platform type of the same name** (the clash exception): the admin
   API view models and their client mirrors that duplicate a module's own model
-  (`CrestUser`, `CrestTenant`, `CrestQuery`, `CrestLoginSettings`, `CrestTemplatePreview`,
-  `CrestDeploymentPlan`, `CrestLayer`, `CrestMediaOptions`, the icon catalog records and about
-  25 more), `CrestMediaProfilesController`, `CrestAntiforgeryToken`. Each
-  folds into its module's own model when the API it serves moves out of Crest.Server into the
+  (`GroveUser`, `GroveTenant`, `GroveQuery`, `GroveLoginSettings`, `GroveTemplatePreview`,
+  `GroveDeploymentPlan`, `GroveLayer`, `GroveMediaOptions`, the icon catalog records and about
+  25 more), `GroveMediaProfilesController`, `GroveAntiforgeryToken`. Each
+  folds into its module's own model when the API it serves moves out of Grove.Server into the
   module that declares it ([MVC/api.md](MVC/api.md) § Placement).
-- **The component library**, `Crest.Components` whole, including its client plumbing
-  (`[CrestShell]`, `[CrestEager]`, `[CrestJSComponent]`, `CrestShellContext`,
-  `CrestLateServiceProviders`, `CrestApiLocalizer`, the files and sharing clients); whether that plumbing counts as
+- **The component library**, `Grove.Components` whole, including its client plumbing
+  (`[GroveShell]`, `[GroveEager]`, `[GroveJSComponent]`, `GroveShellContext`,
+  `GroveLateServiceProviders`, `GroveApiLocalizer`, the files and sharing clients); whether that plumbing counts as
   components is an open question (below).
-- **Still to rename:** the Workflows permission names (`ViewCrestWorkflows` and siblings; the
+- **Still to rename:** the Workflows permission names (`ViewGroveWorkflows` and siblings; the
   connection one becomes the connection system's `ManageConnections`, [queries.md](queries.md)),
-  the client API root property `Api.Crest`, and `IsCrestBlazor`/`IsCrestBlazorTheme`
+  the client API root property `Api.Grove`, and `IsGroveBlazor`/`IsGroveBlazorTheme`
   (a JSON property on the themes API).
 
-**No downstream name appears in Crest.** Crest is open source and knows nothing of the
+**No downstream name appears in Grove.** Grove is open source and knows nothing of the
 products built on it — not in a namespace, an assembly name, a route, a comment, a test name
 or a fixture. That includes the vendored engine subtree:
-`engine/src/modules/Crest.Workflows.Core`, `.Engine`, `.Api` and the rest are
-`Crest.Workflows.*`, with their namespaces and internal references renamed with them. The
-engine API prefix is `crest-workflows/api` and activity type names are
-`Crest.Workflows.*`.
+`engine/src/modules/Grove.Workflows.Core`, `.Engine`, `.Api` and the rest are
+`Grove.Workflows.*`, with their namespaces and internal references renamed with them. The
+engine API prefix is `grove-workflows/api` and activity type names are
+`Grove.Workflows.*`.
 
 The cost is accepted deliberately: the subtree is tracked against
 `engine/UPSTREAM-COMMIT`, and renaming it makes future upstream diffs noisier. Pulling an
 upstream Elsa change therefore means applying it against renamed files — a mechanical
 rename of the incoming diff, documented at the top of the subtree
-([UPSTREAM.md](../src/Crest.Workflows/UPSTREAM.md)) so whoever does it next knows.
+([UPSTREAM.md](../src/Grove.Workflows/UPSTREAM.md)) so whoever does it next knows.
 `engine/LICENSE` (Elsa, MIT) and `UPSTREAM-COMMIT` stay exactly as they are; the fork's
 provenance is recorded in the subtree README rather than in its type names.
 
 ## Rules that hold
 
-- Crest never references a downstream module. Downstream modules register with the
-  registries Crest declares (`IPartyTypeProvider`, workflow activity/trigger/hook/flow
-  providers) and attach their own parts to Crest's content types from their own
+- Grove never references a downstream module. Downstream modules register with the
+  registries Grove declares (`IPartyTypeProvider`, workflow activity/trigger/hook/flow
+  providers) and attach their own parts to Grove's content types from their own
   migrations. The consumer owns the interface; the host composes.
 - No literal path strings; routes flow through the platform's own systems (see
   [agents.md](../agents.md)).
@@ -255,7 +254,7 @@ provenance is recorded in the subtree README rather than in its type names.
   isolated, one place per module, so they move with that module when it is reworked or
   removed.
 
-## Modules declare, Crest.Server registers and serves
+## Modules declare, Grove.Server registers and serves
 
 A central tenet of the application.
 
@@ -267,28 +266,28 @@ A central tenet of the application.
   This is what makes a feature switch on and off cleanly (a disabled module's registrations
   vanish with it), lets a downstream module override a module's registrations, and keeps the
   system modular. The component registry, zone keys, value types and party types follow it;
-  Crest.Server owns the two registries of what it serves: the **API endpoint registry** and
+  Grove.Server owns the two registries of what it serves: the **API endpoint registry** and
   the **page registry**.
-- **Crest.Server is the single server clients connect to, and only that.** It is the entry
+- **Grove.Server is the single server clients connect to, and only that.** It is the entry
   point and the hosting: it takes incoming requests, routes them, hands them to Access
   (authentication, antiforgery, authorization), answers them from the registered surfaces, and
-  connects outward through the data layer and the protocol modules (`Crest.Http`, `Crest.Rest`,
-  `Crest.Soap`, `Crest.GraphQL`, ☐ to be created; [queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)). It keeps
+  connects outward through the data layer and the protocol modules (`Grove.Http`, `Grove.Rest`,
+  `Grove.Soap`, `Grove.GraphQL`, ☐ to be created; [queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)). It keeps
   only hosting plumbing: route groups, per-tenant gating, the antiforgery filter (validation is
   Access's), JSON options, the error contract, the OpenAPI document and the registries. Every
   API is declared by a module, system management included: features, tenants, setup, recipes
-  and settings belong to `Crest.Features`, `Crest.Tenants`, `Crest.Setup`, `Crest.Recipes`,
-  `Crest.Settings` and `Crest.Infrastructure` ([MVC/api.md](MVC/api.md) § Placement). Keeping
-  the server thin is what allows a later proxy in front of many Crest instances. After the MVC
-  retirement Crest.Server is renamed Crest.Core ([server.md](server.md)).
-- **Not Crest.Server's:** database connections (`Crest.Data`, `Crest.Data.YesSql`), outgoing
+  and settings belong to `Grove.Features`, `Grove.Tenants`, `Grove.Setup`, `Grove.Recipes`,
+  `Grove.Settings` and `Grove.Infrastructure` ([MVC/api.md](MVC/api.md) § Placement). Keeping
+  the server thin is what allows a later proxy in front of many Grove instances. After the MVC
+  retirement Grove.Server is renamed Grove.Core ([server.md](server.md)).
+- **Not Grove.Server's:** database connections (`Grove.Data`, `Grove.Data.YesSql`), outgoing
   connections to external systems (the protocol modules) and search
-  indexes (`Crest.Indexing`; index profiles belong to their module and register like any
+  indexes (`Grove.Indexing`; index profiles belong to their module and register like any
   other surface).
-- **Modules reference `Crest.Server.Abstractions` only** (the contributor interfaces), never
-  Crest.Server, so registering creates no reference cycle.
+- **Modules reference `Grove.Server.Abstractions` only** (the contributor interfaces), never
+  Grove.Server, so registering creates no reference cycle.
 - **The API surface is ASP.NET minimal APIs**, not controllers and not FastEndpoints: every
-  handler names its binding source, and request DTOs carry Crest's validation ruleset
+  handler names its binding source, and request DTOs carry Grove's validation ruleset
   ([MVC/api.md › Hosting](MVC/api.md#hosting), [› Validation](MVC/api.md#validation)).
 
 ### Two layers in each registry
@@ -297,7 +296,7 @@ Both the API registry and the page registry have two layers:
 
 - **Declared**: from module code. Built when the tenant shell builds, follows feature
   enablement, never stored in the database.
-- **Defined**: data in the tenant database, changeable at runtime, served by Crest.Server
+- **Defined**: data in the tenant database, changeable at runtime, served by Grove.Server
   through a dynamic source that is invalidated on publish. Designed pages, workflow HTTP
   endpoints, generated operation endpoints and the tenant's admin-menu edits are defined
   entries.
@@ -305,7 +304,7 @@ Both the API registry and the page registry have two layers:
 The page registry's declared layer is the routed components' `[PageEntry]` declarations and the
 modules' `IPageSource`s; its defined layer is the `IDynamicPageSource`s (designed pages, New ›
 *content type*, content groups, custom settings types) and the tenant's menu edits
-(`src/Crest.Server/Routing`, contracts in `Crest.Server.Abstractions/Routing`).
+(`src/Grove.Server/Routing`, contracts in `Grove.Server.Abstractions/Routing`).
 
 ### Workflows builds on top
 
@@ -330,9 +329,9 @@ registry.
 
 ## The rules that keep it composable
 
-1. **Dependencies run one way.** Application layer (Crest: content, Parties, Members,
+1. **Dependencies run one way.** Application layer (Grove: content, Parties, Members,
    Workflows, UI and API) ← downstream modules (a line-of-business layer's registries and
-   its domain modules); products sit beside them and reference Crest. A downstream module
+   its domain modules); products sit beside them and reference Grove. A downstream module
    injects upward through a seam the upstream module declares (interfaces, registries, page
    regions, part attachment from the downstream module's own migration). Upstream code never
    names a downstream type.
@@ -342,7 +341,7 @@ registry.
    **Nothing declares its own version of a core object.** A module with a new kind of
    party or workflow registers it with the registry that owns that object; the registry is
    where the shape, the menu, the pages and the cross-module lookups come from, once. The
-   same holds for the surfaces a module serves (§ Modules declare, Crest.Server registers and
+   same holds for the surfaces a module serves (§ Modules declare, Grove.Server registers and
    serves).
 3. **Content types are the model.** Parties, roles and the records downstream modules keep
    are content types built from parts and fields, editable at runtime in the type editor.
@@ -361,68 +360,68 @@ registry.
 
 Parties, Members, Workflows and Money exist, and so does the member shell
 ([shells-and-themes.md](shells-and-themes.md) phases 1–2). This section is the checklist of
-what remains for Crest to stand alone, in build order; done items stay as a pointer to where
+what remains for Grove to stand alone, in build order; done items stay as a pointer to where
 the piece lives. The global store's host-call rough edge is in [globals.md](globals.md).
 
 ### Standing alone
 
-- [x] **3. A party role of Crest's own.** Feature `Crest.Parties.SampleRole` (category Samples,
+- [x] **3. A party role of Grove's own.** Feature `Grove.Parties.SampleRole` (category Samples,
   off by default) registers the `sample-roles` party type, so the menu item,
   `/Parties/sample-roles`, the All Parties pane and the route gate exist with no host module.
   Browser checks that need it enable the feature in their fixture recipe.
-- [ ] **4. No host references, and a publishing gate.** Crest must build, test and read without
+- [ ] **4. No host references, and a publishing gate.** Grove must build, test and read without
   any host present.
-  - [x] Crest's test solution lists no host project; workflow object constants name only
-    Crest's own objects, and the copy-fields target falls back to the payload's
+  - [x] Grove's test solution lists no host project; workflow object constants name only
+    Grove's own objects, and the copy-fields target falls back to the payload's
     `ContentItemId`; fixtures, comments and docs use neutral names (`approve-order`,
     `order.placed`).
-  - [ ] A global list for item classification ships in Crest although a downstream module
+  - [ ] A global list for item classification ships in Grove although a downstream module
     seeds and owns it; it moves to that module's global schema.
-  - [x] **Publishing gate:** `PublishingGateTests` in `Crest.Tests` reads the forbidden names
+  - [x] **Publishing gate:** `PublishingGateTests` in `Grove.Tests` reads the forbidden names
     from `PUBLISHING_GATE_NAMES` (comma-separated) or the file named by
     `PUBLISHING_GATE_NAMES_FILE`, scans every file git tracks or would add (whole words,
-    case-insensitive), and skips when no names are set, so Crest never contains the list.
+    case-insensitive), and skips when no names are set, so Grove never contains the list.
   - [ ] **Before publishing code that moved in from a private host:** no secrets, tokens,
     connection strings or real credentials in the moved trees (`Data/`, recipes, test
     fixtures, `appsettings*`); test fixtures use invented people and organizations only;
     third-party attribution present (Elsa's MIT licence for the engine and the Studio fork,
     and the header of anything else adapted at file boundaries); the moved plans read
     without the host's repository; the README lists the modules.
-- [x] **5. A host with no line-of-business modules.** `test/Crest.Tests.Standalone` builds a
-  host the way a product does (`AddPlatformCms`, `AddHostDefaults`, `UsePlatform`) over Crest's
-  application layer only, installs it fresh into a temp `Crest:DataRoot` from its own setup
-  recipe, and checks that only Crest's features are on, the registries' defaults (party types,
+- [x] **5. A host with no line-of-business modules.** `test/Grove.Tests.Standalone` builds a
+  host the way a product does (`AddPlatformCms`, `AddHostDefaults`, `UsePlatform`) over Grove's
+  application layer only, installs it fresh into a temp `Grove:DataRoot` from its own setup
+  recipe, and checks that only Grove's features are on, the registries' defaults (party types,
   the `currency` source, exchange rates), the shipped workflow roles, gap-free numbering and
   that the site and login serve. Setup takes a few minutes. A host's content root needs a
-  `wwwroot` (the resized-image cache) and the Web SDK (Crest.Server maps the static-assets
+  `wwwroot` (the resized-image cache) and the Web SDK (Grove.Server maps the static-assets
   manifest).
-- [x] **6. The generic pieces every Crest application needs live in Crest**, none referencing
+- [x] **6. The generic pieces every Grove application needs live in Grove**, none referencing
   a host's types:
   - the `currency` option source (`CurrencyOptionSourceProvider`), the money wire DTO
     (`MoneyModel`) and the exchange-rate seam (`ExchangeRate`, `IExchangeRateProvider`,
     `IExchangeRateRegistry`, `ManualExchangeRateProvider` over `ExchangeRateSettings`), in
-    `Crest.Money` ([types.md](types.md));
-  - workflow browser checks against a Crest fixture: feature `Crest.Workflows.Samples`
+    `Grove.Money` ([types.md](types.md));
+  - workflow browser checks against a Grove fixture: feature `Grove.Workflows.Samples`
     (category Samples, off by default; trigger `sample.content-published`, system flow
     `samples.content-published`, shipped draft `samples.template`) with
-    `Crest.Parties.SampleRole`; the checks are in `src/Crest.Workflows/tests/playwright/checks/`
-    and `buildCrestModuleChecks()`, enable first, tenant isolation last (written, not yet run);
+    `Grove.Parties.SampleRole`; the checks are in `src/Grove.Workflows/tests/playwright/checks/`
+    and `buildGroveModuleChecks()`, enable first, tenant isolation last (written, not yet run);
   - workflow editor and viewer roles, created when the feature is installed
     (`WorkflowRolesFeatureEvents`);
-  - host defaults, `ServerHostDefaults` in Crest.Server: `services.AddHostDefaults()` (the
-    `Crest:DataRoot` override of the shells data path: tenants, `tenants.json`, the global
+  - host defaults, `ServerHostDefaults` in Grove.Server: `services.AddHostDefaults()` (the
+    `Grove:DataRoot` override of the shells data path: tenants, `tenants.json`, the global
     store) and `app.UseHostStaticFiles()` (`Cache-Control: no-cache`, revalidated by ETag);
-  - kind-registry plumbing: `Crest.Kinds` (`IKindDescriptor`, `KindCatalog<TKind>`: merge by
+  - kind-registry plumbing: `Grove.Kinds` (`IKindDescriptor`, `KindCatalog<TKind>`: merge by
     key, first wins, ordered, `Find`, `ForContentType`, `RouteOf`), `KindPageSource<TKind>` in
-    Crest.Server.Abstractions (the section, its pages and their gates in the page registry), and
-    `CrestKindBrowser<TKind>` / `CrestKindPage<TKind>` in the component library; a downstream
+    Grove.Server.Abstractions (the section, its pages and their gates in the page registry), and
+    `GroveKindBrowser<TKind>` / `GroveKindPage<TKind>` in the component library; a downstream
     registry passes its kinds endpoint, how a kind reads and its pane; a registry whose kinds
     are not pages uses the catalog only;
-  - gap-free record numbering, `IRecordNumbering` in Crest.Server (named sequences per tenant in
+  - gap-free record numbering, `IRecordNumbering` in Grove.Server (named sequences per tenant in
     one document, a number taken only when the record commits; `Format(prefix, n)`);
-  - the content-part-list import, `IContentPartListImporter` in Crest.ContentPartLists (upsert
+  - the content-part-list import, `IContentPartListImporter` in Grove.ContentPartLists (upsert
     by key, a tenant's label, position and hidden flag never overwritten, failing rows reported)
-    and `POST api/crest/content-part-lists/{key}/import` (manage permission; refused under an
+    and `POST api/grove/content-part-lists/{key}/import` (manage permission; refused under an
     edit lock);
   - shared dev tooling: `tools/dev-lib.sh` (`ensure_feed`, `pack_into_output`, `restore_host`,
     `stop_server`, `start_test_server` / `stop_test_server`, `wait_until_provisioned`,
@@ -445,13 +444,9 @@ the piece lives. The global store's host-call rough edge is in [globals.md](glob
 
 ## Open questions
 
-- **The project's new name.** "Crest" collides with CrestApps' OrchardCore modules
-  (`orchardcore.crestapps.com`). To decide: the name, whether the `api/crest` and
-  `crest-workflows` route prefixes change with it or become brand-free (`api/`, `workflows/`),
-  and whether the rename lands before or with the stored-type-name cleanup (§ Naming).
-- **Translations of Crest's own UI.** Hosts currently ship them in their own catalogs, so a
-  second host gets an untranslated admin. Ship them with Crest, or keep translations the
+- **Translations of Grove's own UI.** Hosts currently ship them in their own catalogs, so a
+  second host gets an untranslated admin. Ship them with Grove, or keep translations the
   host's?
-- **Component library plumbing.** Whether `Crest.Components`' client plumbing (`[CrestShell]`,
-  `[CrestEager]`, `CrestShellContext`, …) counts as components and keeps the prefix
+- **Component library plumbing.** Whether `Grove.Components`' client plumbing (`[GroveShell]`,
+  `[GroveEager]`, `GroveShellContext`, …) counts as components and keeps the prefix
   (§ Naming).

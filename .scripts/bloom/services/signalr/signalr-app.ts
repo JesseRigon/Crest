@@ -2,7 +2,7 @@ import * as SignalR from "@microsoft/signalr";
 import dbg from "debug";
 import { signalRLogger, signalRReceivedData } from "./eventbus";
 
-const debug = dbg("crest:bloom:signalr");
+const debug = dbg("grove:bloom:signalr");
 
 export interface SignalRAppOptions {
     isTokenRequired?: boolean;

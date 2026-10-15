@@ -1,0 +1,38 @@
+@using Grove.Components.Primitives
+@implements IDisposable
+
+@namespace Grove.Components.Primitives.Rendering
+@Chart?.RenderTooltipOverlay()
+
+@code {
+    [Parameter]
+    public GroveChart? Chart { get; set; }
+
+    internal bool BoxWasVisible { get; private set; }
+
+    protected override void OnInitialized()
+    {
+        if (Chart != null)
+        {
+            Chart.TooltipOverlay = this;
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        BoxWasVisible = Chart?.CategoryTooltipRendered ?? false;
+    }
+
+    internal void Refresh()
+    {
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        if (Chart != null && ReferenceEquals(Chart.TooltipOverlay, this))
+        {
+            Chart.TooltipOverlay = null;
+        }
+    }
+}

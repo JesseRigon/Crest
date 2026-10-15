@@ -1,0 +1,59 @@
+@page "/Settings/userLogin"
+@attribute [PageEntry("ManageUsers", Id = "user-login", Parent = "settings-security", Caption = "User Login")]
+@using Grove.AdminTheme.Api
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives
+@inject IApi Api
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+<GroveStack Gap="1rem" data-testid="login-settings-page">
+    <GroveText TextStyle="TextStyle.H4" Text="@T["User Login Settings"]" />
+    @if (Model is null)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        <GroveFieldset Text="@T["General"]">
+            <GroveCheckBox @bind-Value="Model.AllowRememberMe" Name="allow-remember-me" /><label for="allow-remember-me"> @T["Allow user to be remembered during login"]</label><br />
+            <GroveCheckBox @bind-Value="Model.AllowChangingUsername" Name="allow-changing-username" /><label for="allow-changing-username"> @T["Allow user to change their username"]</label><br />
+            <GroveCheckBox @bind-Value="Model.AllowChangingEmail" Name="allow-changing-email" /><label for="allow-changing-email"> @T["Allow user to change their email address"]</label><br />
+            <GroveCheckBox @bind-Value="Model.AllowChangingPhoneNumber" Name="allow-changing-phone" /><label for="allow-changing-phone"> @T["Allow user to change their phone number"]</label><br />
+            <GroveCheckBox @bind-Value="Model.UseSiteTheme" Name="use-site-theme" /><label for="use-site-theme"> @T["Use site theme for login page"]</label><br />
+            <GroveCheckBox @bind-Value="Model.DisableLocalLogin" Name="disable-local-login" /><label for="disable-local-login"> @T["Disable local password login."]</label>
+        </GroveFieldset>
+        <GroveFieldset Text="@T["Two-Factor Authentication"]">
+            <GroveCheckBox @bind-Value="Model.AllowRememberClientTwoFactorAuthentication" Name="remember-two-factor" /><label for="remember-two-factor"> @T["Allow users to remember client"]</label><br />
+            <GroveCheckBox @bind-Value="Model.RequireTwoFactorAuthentication" Name="require-two-factor" /><label for="require-two-factor"> @T["Require two-factor authentication"]</label><br />
+            <GroveLabel Text="@T["Number of recovery codes to generate"]" Component="recovery-codes" />
+            <GroveNumeric @bind-Value="Model.NumberOfRecoveryCodesToGenerate" Name="recovery-codes" Min="1" /><br />
+            <GroveCheckBox @bind-Value="Model.UseSiteThemeForTwoFactorAuthentication" Name="two-factor-site-theme" /><label for="two-factor-site-theme"> @T["Use site theme for two-factor authentication pages"]</label>
+        </GroveFieldset>
+        <GroveFieldset Text="@T["External Login"]">
+            <GroveCheckBox @bind-Value="Model.UseExternalProviderIfOnlyOneDefined" Name="use-external-provider" /><label for="use-external-provider"> @T["Use external provider for login."]</label><br />
+            <GroveCheckBox @bind-Value="Model.UseScriptToSyncProperties" Name="sync-external-properties" /><label for="sync-external-properties"> @T["Use a script to sync user properties from external provider claims"]</label>
+            @if (Model.UseScriptToSyncProperties)
+            {
+                <GroveTextArea @bind-Value="Model.SyncPropertiesScript" Rows="16" Style="width:100%; margin-top: .75rem" Placeholder="@T["External login synchronization script"]" />
+            }
+        </GroveFieldset>
+        <GroveButton Text="@T["Save"]" Icon="save" Click="SaveAsync" />
+        @if (!string.IsNullOrWhiteSpace(Error)) { <GroveText TextStyle="TextStyle.Body2" Style="color: var(--rz-danger)">@Error</GroveText> }
+    }
+</GroveStack>
+
+@code {
+    private GroveLoginSettings? Model;
+    private string? Error;
+
+    protected override async Task OnInitializedAsync() => Model = await Api.Grove.Rest.LoginSettings.GetAsync();
+
+    private async Task SaveAsync()
+    {
+        if (Model is null) return;
+        Error = null;
+        var saved = await Api.Grove.Rest.LoginSettings.SaveAsync(Model);
+        if (saved is null) Error = T["The login settings could not be saved."];
+        else Model = saved;
+    }
+}

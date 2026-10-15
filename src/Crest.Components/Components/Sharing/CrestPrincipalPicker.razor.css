@@ -1,7 +1,0 @@
-.crest-principal-picker__search { display: flex; gap: .25rem; }
-.crest-principal-picker__search input { flex: 1; }
-.crest-principal-picker__results { list-style: none; margin: .25rem 0; padding: 0; max-height: 14rem; overflow-y: auto; }
-.crest-principal-picker__results button { width: 100%; text-align: start; background: none; border: 0; padding: .25rem .5rem; cursor: pointer; }
-.crest-principal-picker__results button.is-selected { background: var(--crest-selected, rgba(0, 0, 0, .08)); }
-.crest-principal-picker__kind { margin-inline-end: .35rem; }
-.crest-principal-picker__derived { margin-inline-start: .35rem; padding: 0 .3rem; border-radius: .5rem; border: 1px solid currentColor; opacity: .75; }

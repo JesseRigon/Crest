@@ -1,4 +1,4 @@
-# Audit Trail (`Crest.AuditTrail`)
+# Audit Trail (`Grove.AuditTrail`)
 
 The Audit Trail module provides an immutable (for users, even administrators but not for developers), auditable log of certain changes and events in the system. This includes e.g. creation or deletion of content items, and events like user login failures. For content items, previous versions and deleted items can be restored, and changes can be tracked.
 
@@ -41,7 +41,7 @@ You can attach the `AuditTrailPart` content part to your content type. This will
 
 ## Recording Custom Events
 
-Crest is built to be extended, and the Audit Trail module is no different. So, when creating your own module, you can log your events with Audit Trail too. Check out the source of the `Crest.Users` or `Crest.Contents` modules for examples.
+Grove is built to be extended, and the Audit Trail module is no different. So, when creating your own module, you can log your events with Audit Trail too. Check out the source of the `Grove.Users` or `Grove.Contents` modules for examples.
 
 ## Videos
 

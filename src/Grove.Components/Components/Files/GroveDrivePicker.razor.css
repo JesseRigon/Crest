@@ -1,0 +1,21 @@
+.grove-drive-picker__backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.grove-drive-picker__dialog {
+    background: var(--grove-surface-color, #fff);
+    color: inherit;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    width: min(64rem, 95vw);
+    max-height: 90vh;
+    overflow: auto;
+}
+
+.grove-drive-picker__bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }

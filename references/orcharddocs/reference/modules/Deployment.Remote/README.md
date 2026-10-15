@@ -1,6 +1,6 @@
-# Remote Deployment (`Crest.Deployment.Remote`)
+# Remote Deployment (`Grove.Deployment.Remote`)
 
-The Remote Deployment module adds remote Crest sites as execution targets for [deployment plans](../Deployment/README.md). When a plan is executed, the source site generates a deployment package, sends it to the destination site, and the destination immediately imports and executes its recipe.
+The Remote Deployment module adds remote Grove sites as execution targets for [deployment plans](../Deployment/README.md). When a plan is executed, the source site generates a deployment package, sends it to the destination site, and the destination immediately imports and executes its recipe.
 
 ## Prerequisites
 
@@ -34,7 +34,7 @@ Add the destination as a remote instance:
 4. Set **URL** to the destination tenant's remote import endpoint:
 
     ```text
-    https://example.com/Crest.Deployment.Remote/ImportRemoteInstance/Import
+    https://example.com/Grove.Deployment.Remote/ImportRemoteInstance/Import
     ```
 
     Include the tenant URL prefix when the destination is not the default tenant.

@@ -3,7 +3,7 @@
 The `Startup` classes are used to initialize the services and piece of middleware.
 They are called when a tenant is initialized.
 
-The interface `Crest.Modules.IModularTenantEvents` provides a way to define user code that will
+The interface `Grove.Modules.IModularTenantEvents` provides a way to define user code that will
 be executed when the tenant is first hit (tenant activation).
 
 All tenants are lazy-loaded, meaning that when the app starts the event handlers are
@@ -16,7 +16,7 @@ to implement `IModularTenantEvents`.
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Crest.Modules;
+using Grove.Modules;
 
 public class MyStartupTaskService : ModularTenantEvents
 {

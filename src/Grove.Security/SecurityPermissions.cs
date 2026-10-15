@@ -1,0 +1,25 @@
+using Grove.Security.Permissions;
+
+namespace Grove.Security;
+
+public sealed class SecurityPermissions : IPermissionProvider
+{
+    public static readonly Permission ManageSecurityHeadersSettings = new("ManageSecurityHeadersSettings", "Manage Security Headers Settings");
+
+    private readonly IEnumerable<Permission> _allPermissions =
+    [
+        ManageSecurityHeadersSettings,
+    ];
+
+    public Task<IEnumerable<Permission>> GetPermissionsAsync()
+        => Task.FromResult(_allPermissions);
+
+    public IEnumerable<PermissionStereotype> GetDefaultStereotypes() =>
+    [
+        new PermissionStereotype
+        {
+            Name = PlatformConstants.Roles.Administrator,
+            Permissions = _allPermissions,
+        },
+    ];
+}

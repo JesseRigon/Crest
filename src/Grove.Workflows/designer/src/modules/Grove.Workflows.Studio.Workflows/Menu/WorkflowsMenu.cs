@@ -1,0 +1,44 @@
+using Grove.Workflows.Studio.Contracts;
+using Grove.Workflows.Studio.Localization;
+using Grove.Workflows.Studio.Models;
+using Grove.Workflows.Studio.Workflows.Services;
+using MudBlazor;
+
+namespace Grove.Workflows.Studio.Workflows.Menu;
+
+/// <summary>
+/// Exposes menu entries for workflows.
+/// </summary>
+public class WorkflowsMenu(ILocalizer localizer) : IMenuProvider
+{
+    /// <summary>
+    /// Provides the get menu items async.
+    /// </summary>
+    public ValueTask<IEnumerable<MenuItem>> GetMenuItemsAsync(CancellationToken cancellationToken = default)
+    {
+        var menuItems = new List<MenuItem>
+        {
+            new()
+            {
+                Icon = Icons.Material.Outlined.Schema,
+                Text = localizer["Workflows"],
+                GroupName = MenuItemGroups.General.Name,
+                SubMenuItems =
+                {
+                    new MenuItem()
+                    {
+                        Text = localizer["Definitions"],
+                        Href = "workflows/definitions"
+                    },
+                    new MenuItem()
+                    {
+                        Text = localizer["Instances"],
+                        Href = "workflows/instances"
+                    },
+                }
+            }
+        };
+
+        return new ValueTask<IEnumerable<MenuItem>>(menuItems);
+    }
+}

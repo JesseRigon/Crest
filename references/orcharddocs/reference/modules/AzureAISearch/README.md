@@ -1,4 +1,4 @@
-# Azure AI Search (`Crest.AzureAI`)
+# Azure AI Search (`Grove.AzureAI`)
 
 The Azure AI Search module allows you to manage Azure AI Search indices.
 
@@ -8,8 +8,8 @@ Alternatively, you can configure the Azure Search AI service for all your tenant
 
 ```json
 {
-  "Crest":{
-    "Crest_AzureAISearch":{
+  "Grove":{
+    "Grove_AzureAISearch":{
       "Endpoint":"https://[search service name].search.windows.net",
       "IndexesPrefix":"", // Specify value to prefix all indexes. If using the same instance for production and staging, provide the environment name here to prevent naming conflicts.
       "AuthenticationType":"ApiKey", // Use 'Default' for default authentication, 'ManagedIdentity' for managed-identity authentication, or 'ApiKey' for  key-based authentication.
@@ -50,13 +50,13 @@ If you want the UI to capture custom data related to your source, implement `Dis
 If your custom source emits embeddings, add a vector field to `AzureAISearchIndexMetadata.IndexMappings` and define the corresponding vector search profile in `AzureAISearchIndexMetadata.VectorSearch`.
 
 ```csharp
-using Crest.AzureAI;
-using Crest.AzureAI.Models;
-using Crest.Entities;
-using Crest.Indexing;
-using Crest.Indexing.Core.Handlers;
-using Crest.Indexing.Models;
-using static Crest.Indexing.DocumentIndex;
+using Grove.AzureAI;
+using Grove.AzureAI.Models;
+using Grove.Entities;
+using Grove.Indexing;
+using Grove.Indexing.Core.Handlers;
+using Grove.Indexing.Models;
+using static Grove.Indexing.DocumentIndex;
 
 public sealed class ProductIndexProfileHandler : IndexProfileHandlerBase
 {
@@ -149,7 +149,7 @@ documentIndex.Set(
 ```
 
 !!! note
-    If a vector field doesn't specify `VectorSearchConfiguration`, Crest uses the first configured profile from `AzureAISearchIndexMetadata.VectorSearchMappings.Profiles`. If no profile is configured, it falls back to the built-in default profile and algorithm.
+    If a vector field doesn't specify `VectorSearchConfiguration`, Grove uses the first configured profile from `AzureAISearchIndexMetadata.VectorSearchMappings.Profiles`. If no profile is configured, it falls back to the built-in default profile and algorithm.
 
 ### Querying vector fields
 
@@ -158,9 +158,9 @@ The built-in `ISearchService` and the Site Search UI execute full-text search. T
 ```csharp
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
-using Crest.AzureAI;
-using Crest.AzureAI.Services;
-using Crest.Indexing;
+using Grove.AzureAI;
+using Grove.AzureAI.Services;
+using Grove.Indexing;
 
 public sealed class ProductVectorSearchService
 {
@@ -359,7 +359,7 @@ To rebuild all indices:
 !!! note
     It's recommended to use the `RebuildIndex` recipe step instead as the `azureai-index-rebuild` step is obsolete. 
 
-## Search Module (`Crest.Search`)
+## Search Module (`Grove.Search`)
 
 When the Search module is enabled along with Azure AI Search, you'll be able to use run the frontend site search against your Azure AI Search indices.
 

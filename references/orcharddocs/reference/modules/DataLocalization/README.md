@@ -1,4 +1,4 @@
-# Data Localization (`Crest.DataLocalization`)
+# Data Localization (`Grove.DataLocalization`)
 
 This module provides a database-backed localization system for translating dynamic content that cannot be handled by static PO files, such as:
 
@@ -92,7 +92,7 @@ The module includes these built-in `ILocalizationDataProvider` implementations:
 
 Provides admin menu display names for translation.
 
-Admin menu providers, including content-type admin menu nodes, require both `Crest.DataLocalization` and `Crest.AdminMenu`. Content type and content field display names remain available for translation when `Crest.Contents` and `Crest.DataLocalization` are enabled, even if `Crest.AdminMenu` is disabled.
+Admin menu providers, including content-type admin menu nodes, require both `Grove.DataLocalization` and `Grove.AdminMenu`. Content type and content field display names remain available for translation when `Grove.Contents` and `Grove.DataLocalization` are enabled, even if `Grove.AdminMenu` is disabled.
 
 - **Context**: `Admin Menus` or `Admin Menus:{menuName}`
 - **Strings**: Display names of all admin menu / sub menu items
@@ -130,7 +130,7 @@ Provides search-related strings for translation.
 Implement `ILocalizationDataProvider` to add your own translatable strings:
 
 ```csharp
-using Crest.Localization.Data;
+using Grove.Localization.Data;
 
 public class MyCustomLocalizationDataProvider : ILocalizationDataProvider
 {
@@ -221,11 +221,11 @@ Use the **All Data Translations** deployment step to export all translations for
 
 | Use Case                         | Recommended Approach                     |
 |----------------------------------|------------------------------------------|
-| Static UI strings in views/code  | PO files (`Crest.Localization`)    |
+| Static UI strings in views/code  | PO files (`Grove.Localization`)    |
 | Content type/field display names | Data Localization                        |
 | Permission descriptions          | Data Localization                        |
 | Admin menu items                 | Data Localization (with custom provider) |
-| User-defined content             | `Crest.ContentLocalization` module |
+| User-defined content             | `Grove.ContentLocalization` module |
 | Database-stored dynamic strings  | Data Localization (with custom provider) |
 
 ## API Reference
@@ -270,14 +270,14 @@ Translations are cached by the `LocalizationManager`. When translations are upda
 
 ## Dependencies
 
-- `Crest.Localization` - Required for culture support and base localization infrastructure
+- `Grove.Localization` - Required for culture support and base localization infrastructure
 
 ## Using IDataLocalizer in Views
 
 To display translated dynamic strings in Razor views, inject `IDataLocalizer`:
 
 ```cshtml
-@using Crest.Localization.Data
+@using Grove.Localization.Data
 @inject IDataLocalizer D
 
 <h1>@D["Article", "Content Types"]</h1>

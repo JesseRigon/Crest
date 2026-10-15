@@ -1,4 +1,4 @@
-# Body (`Crest.Html`)
+# Body (`Grove.Html`)
 
 ## Theming
 
@@ -84,7 +84,7 @@ To define what HTML to render when the editor is selected from the settings, a s
 Sample content:
 
 ```csharp
-@using Crest.Html.ViewModels
+@using Grove.Html.ViewModels
 @model HtmlBodyPartViewModel
 
 <fieldset class="mb-3">

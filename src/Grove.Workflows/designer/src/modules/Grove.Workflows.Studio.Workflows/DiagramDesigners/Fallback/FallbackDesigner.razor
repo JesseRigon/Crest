@@ -1,0 +1,17 @@
+@using System.Text.Json.Nodes
+@using Grove.Workflows.Api.Client.Extensions
+<MudPaper Width="100%" Class="pa-16">
+    <MudContainer MaxWidth="MaxWidth.ExtraSmall">
+        @if (Activity != null)
+        {
+            <Grove.Workflows.Studio.Workflows.Designer.Components.ActivityWrappers.V2.ActivityWrapper Activity="@Activity" ActivityId="@Activity.GetId()" />
+        }
+    </MudContainer>
+</MudPaper>
+
+@code {
+
+    [Parameter]
+    public JsonObject? Activity { get; set; }
+
+}

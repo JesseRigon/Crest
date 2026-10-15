@@ -11,8 +11,8 @@ When a Vue, TypeScript, or plain JavaScript component needs translated strings, 
 
 | Type                                      | Location                                  | Description                                                                                                            |
 |-------------------------------------------|-------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
-| `IJSLocalizer`                            | `Crest.Localization.Abstractions`   | Contract that returns an `IDictionary<string, string>` for a requested group.                                          |
-| `LocalizationPlatformHelperExtensions`     | `Crest.Localization.Abstractions`   | Razor / Liquid helper (`Platform.GetJSLocalizations(…)`) that aggregates all registered `IJSLocalizer` implementations. |
+| `IJSLocalizer`                            | `Grove.Localization.Abstractions`   | Contract that returns an `IDictionary<string, string>` for a requested group.                                          |
+| `LocalizationPlatformHelperExtensions`     | `Grove.Localization.Abstractions`   | Razor / Liquid helper (`Platform.GetJSLocalizations(…)`) that aggregates all registered `IJSLocalizer` implementations. |
 | `getTranslations()` / `setTranslations()` | `.scripts/bloom/helpers/localizations.ts` | Framework-agnostic helpers for seeding and reading a shared translations record in JavaScript or TypeScript.           |
 
 ## Registering a custom implementation
@@ -23,7 +23,7 @@ Create a class that implements `IJSLocalizer` and inject `IStringLocalizer<T>` t
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Localization;
-using Crest.Localization;
+using Grove.Localization;
 
 namespace MyModule.Services;
 
@@ -85,7 +85,7 @@ You can request translations from multiple groups in a single call. The dictiona
 
 ## Using localizations in JavaScript or TypeScript
 
-Crest ships framework-agnostic helpers at `.scripts/bloom/helpers/localizations.ts`.
+Grove ships framework-agnostic helpers at `.scripts/bloom/helpers/localizations.ts`.
 
 ### The shared translations store
 
@@ -108,7 +108,7 @@ The module keeps a single shared object alive for the lifetime of the JavaScript
 Initialize the store in your root component with the serialized localizations passed from Razor. Because the value is passed through an HTML attribute, the component receives it as a string and parses it once before seeding the shared store:
 
 ```typescript
-import { setTranslations } from "@crest/bloom/helpers/localizations";
+import { setTranslations } from "@grove/bloom/helpers/localizations";
 
 const props = defineProps({
     localizations: {
@@ -127,14 +127,14 @@ try {
 ### Reading translations in modules, services, or components
 
 ```typescript
-import { getTranslations } from "@crest/bloom/helpers/localizations";
+import { getTranslations } from "@grove/bloom/helpers/localizations";
 
 const t = getTranslations();
 
 console.log(t["Save"]);
 ```
 
-If your UI framework needs reactivity, wrap `getTranslations()` in framework-specific state inside your app. The shared Crest helper stays framework agnostic.
+If your UI framework needs reactivity, wrap `getTranslations()` in framework-specific state inside your app. The shared Grove helper stays framework agnostic.
 
 ### Media App pattern
 
@@ -162,7 +162,7 @@ The Vue 3 Media App on `skrypt/vue-3` uses the helper in a framework-agnostic wa
 #### Root component
 
 ```typescript
-import { getTranslations, setTranslations } from "@crest/bloom/helpers/localizations";
+import { getTranslations, setTranslations } from "@grove/bloom/helpers/localizations";
 
 const props = defineProps({
     translations: {
@@ -187,7 +187,7 @@ const t = translations;
 #### Anywhere else in the app
 
 ```typescript
-import { getTranslations } from "@crest/bloom/helpers/localizations";
+import { getTranslations } from "@grove/bloom/helpers/localizations";
 
 const t = getTranslations();
 ```
@@ -196,7 +196,7 @@ const t = getTranslations();
 
 ## PO file format
 
-`IJSLocalizer` uses standard Crest PO files for the actual translation strings, exactly the same format used for server-side strings. Place PO files at:
+`IJSLocalizer` uses standard Grove PO files for the actual translation strings, exactly the same format used for server-side strings. Place PO files at:
 
 ```
 /Localization/<ModuleId>/<CultureName>.po

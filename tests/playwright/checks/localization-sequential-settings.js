@@ -10,8 +10,8 @@ const { fetchAntiforgeryToken } = require('../harness/antiforgery');
 // resolved culture after each stage before moving to the next.
 //
 // Settings are driven via the same API the Localization admin page calls
-// (api/crest/localization, api/crest/localization/me) rather than the dropdown UI, since
-// that's faster and less brittle than driving three CrestDropDown widgets - the UI itself
+// (api/grove/localization, api/grove/localization/me) rather than the dropdown UI, since
+// that's faster and less brittle than driving three GroveDropDown widgets - the UI itself
 // is covered separately by localization-page.js. The session override (rung 1) genuinely
 // needs the titlebar picker since it's a client-only sessionStorage concept with no API.
 const CULTURES = ['en-US', 'es-ES', 'fr-FR', 'de-DE'];
@@ -63,10 +63,10 @@ module.exports = async function run(page, ctx) {
   // 2) and the user's stored default at es-ES behind for the rest of the suite and for
   // whoever next opens the tenant by hand - a check that reads the resolved culture then
   // sees this check's leftovers rather than the state it set up itself.
-  const localization = await getJson(page, ctx.baseUrl, '/api/crest/localization');
+  const localization = await getJson(page, ctx.baseUrl, '/api/grove/localization');
 
   const withAllCultures = { ...localization, supportedCultures: CULTURES, defaultCulture: 'en-US', adminDefaultCulture: null };
-  await putJson(page, ctx.baseUrl, '/api/crest/localization', withAllCultures);
+  await putJson(page, ctx.baseUrl, '/api/grove/localization', withAllCultures);
   results.push({ name: 'enables-es-fr-de', pass: true, message: `supported=${CULTURES.join(',')}` });
 
   // Stage 1: tenant default = en, nothing else set -> admin user with no personal
@@ -77,7 +77,7 @@ module.exports = async function run(page, ctx) {
   // Stage 2: admin default = fr -> same admin user (no personal default, no override)
   // should now resolve to fr under /admin, since rung 3 (admin default) beats rung 5
   // (tenant default) once the user default rung is empty.
-  await putJson(page, ctx.baseUrl, '/api/crest/localization', { ...withAllCultures, adminDefaultCulture: 'fr-FR' });
+  await putJson(page, ctx.baseUrl, '/api/grove/localization', { ...withAllCultures, adminDefaultCulture: 'fr-FR' });
   const admin2 = await resolvedCultureFor(page, ctx.baseUrl, '/Admin/Settings/localization');
   results.push({ name: 'stage2-admin-default-fr', pass: admin2 === 'fr-FR', message: `resolved=${admin2}` });
 
@@ -95,7 +95,7 @@ module.exports = async function run(page, ctx) {
 
     // Stage 3: testuser's stored default = es -> es wins over the admin default (rung 2
     // outranks rung 3) even though admin default is still fr from stage 2.
-    await putJson(userPage, ctx.baseUrl, '/api/crest/localization/me', { culture: 'es-ES' });
+    await putJson(userPage, ctx.baseUrl, '/api/grove/localization/me', { culture: 'es-ES' });
     userDefaultSet = true;
     const user3 = await resolvedCultureFor(userPage, ctx.baseUrl, '/Admin');
     results.push({ name: 'stage3-user-default-es', pass: user3 === 'es-ES', message: `resolved=${user3}` });
@@ -115,7 +115,7 @@ module.exports = async function run(page, ctx) {
     // the tenant-settings restore below. A blank culture is the documented clear (see
     // LocalizationController.SetMyCultureAsync: blank -> null, not a 400).
     if (userDefaultSet) {
-      await putJson(userPage, ctx.baseUrl, '/api/crest/localization/me', { culture: null })
+      await putJson(userPage, ctx.baseUrl, '/api/grove/localization/me', { culture: null })
         .catch(() => {});
     }
     await userBrowser.close();
@@ -125,7 +125,7 @@ module.exports = async function run(page, ctx) {
     // AdminDefaultCulture=fr-FR. Restoring the captured value rather than hardcoding a
     // "clean" default matters because the suite may run against a tenant that
     // legitimately has cultures configured; this check stays transparent either way.
-    restored = await putJson(page, ctx.baseUrl, '/api/crest/localization', localization)
+    restored = await putJson(page, ctx.baseUrl, '/api/grove/localization', localization)
       .then(() => true).catch(() => false);
   }
 

@@ -1,4 +1,4 @@
-# Navigation (`Crest.Navigation`)
+# Navigation (`Grove.Navigation`)
 
 ## Purpose
 
@@ -9,14 +9,14 @@ Provides the `Navigation`, `Pager` and `PagerSlim` shapes.
 Navigation can be themed by adding the appropriate partial view files to your theme's views folder.
 A good example can be found in the [`TheAdmin` theme project](https://github.com/OrchardCMS/OrchardCore/tree/dev/src/OrchardCore.Themes/TheAdmin).
 
-That theme creates the standard, vertical navigation menu that is found on the admin dashboard of any Crest application.
+That theme creates the standard, vertical navigation menu that is found on the admin dashboard of any Grove application.
 The `TheAdmin` theme provides the following alternates to the default ones provided in the `Navigation` module:  
 
 - `Navigation-admin.cshtml`  
 - `NavigationItem-admin.cshtml`  
 - `NavigationItemLink-admin.cshtml`  
 
-The theme developer has full control over how and where navigation is displayed in their Crest application.
+The theme developer has full control over how and where navigation is displayed in their Grove application.
 
 ### Pager
 
@@ -188,12 +188,12 @@ As mentioned about, you can implement the `INavigationProvider` interface to add
 This provider will be called as long as the site is using a theme that includes a line similar to the following, which causes the navigation menu to be rendered by your theme at the location specified:
 `@await DisplayAsync(await New.Navigation(MenuName: "main", RouteData: @ViewContext.RouteData))`
 
-Examples of extending the admin navigation can be found in various Crest modules. Searching the repository for `AdminMenu` will locate various settings. Below is a partial list:
+Examples of extending the admin navigation can be found in various Grove modules. Searching the repository for `AdminMenu` will locate various settings. Below is a partial list:
 
-- `Crest.Modules/Crest.Admin/AdminFilter.cs`
-- `Crest.Modules/Crest.Media/AdminMenu.cs`
+- `Grove.Modules/Grove.Admin/AdminFilter.cs`
+- `Grove.Modules/Grove.Media/AdminMenu.cs`
 
-At this time, the Admin Menu is the only navigation with code dynamically adding items in the Crest git repository. However, as the example above shows, the pattern can be used to control any named navigation.
+At this time, the Admin Menu is the only navigation with code dynamically adding items in the Grove git repository. However, as the example above shows, the pattern can be used to control any named navigation.
 
 ## Pager Code examples
 

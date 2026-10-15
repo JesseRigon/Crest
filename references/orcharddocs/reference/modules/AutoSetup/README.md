@@ -1,4 +1,4 @@
-# Auto Setup (`Crest.AutoSetup`)
+# Auto Setup (`Grove.AutoSetup`)
 
 The auto-setup module allows to automatically install the application/tenants on the first request.
 
@@ -8,8 +8,8 @@ Auto-Setup parameters are defined in `appsettings.json`. Example excerpt:
 
 ```json
 {
-  "Crest": {
-    "Crest_AutoSetup": {
+  "Grove": {
+    "Grove_AutoSetup": {
       "AutoSetupPath": "",
       "Tenants": [
         {
@@ -79,51 +79,51 @@ If your JSON configuration contains sensitive information, or you don't want to 
 [User secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets#secret-manager) are available during local development, and they are stored as JSON files. This means you can move the whole configuration from `appsettings.json` as-is. Alternatively, you can set each option directly from the command line (this will flatten any existing structures in the `secrets.json` file):
 
 ```shell
-cd src/Crest.Cms.Web
+cd src/Grove.Cms.Web
 dotnet user-secrets init
-dotnet user-secrets set "Crest:Crest_AutoSetup:Tenants:0:ShellName" "Default"
-dotnet user-secrets set "Crest:Crest_AutoSetup:Tenants:0:SiteName" "AutoSetup Example"
-dotnet user-secrets set "Crest:Crest_AutoSetup:Tenants:0:SiteTimeZone" "Europe/Amsterdam"
-dotnet user-secrets set "Crest:Crest_AutoSetup:Tenants:0:AdminUsername" "admin"
-dotnet user-secrets set "Crest:Crest_AutoSetup:Tenants:0:AdminEmail" "info@orchardproject.net"
-dotnet user-secrets set "Crest:Crest_AutoSetup:Tenants:0:AdminPassword" "PlatformRules1!"
-dotnet user-secrets set "Crest:Crest_AutoSetup:Tenants:0:RecipeName" "SaaS"
-dotnet user-secrets set "Crest:Crest_AutoSetup:Tenants:0:DatabaseProvider" "Sqlite"
+dotnet user-secrets set "Grove:Grove_AutoSetup:Tenants:0:ShellName" "Default"
+dotnet user-secrets set "Grove:Grove_AutoSetup:Tenants:0:SiteName" "AutoSetup Example"
+dotnet user-secrets set "Grove:Grove_AutoSetup:Tenants:0:SiteTimeZone" "Europe/Amsterdam"
+dotnet user-secrets set "Grove:Grove_AutoSetup:Tenants:0:AdminUsername" "admin"
+dotnet user-secrets set "Grove:Grove_AutoSetup:Tenants:0:AdminEmail" "info@orchardproject.net"
+dotnet user-secrets set "Grove:Grove_AutoSetup:Tenants:0:AdminPassword" "PlatformRules1!"
+dotnet user-secrets set "Grove:Grove_AutoSetup:Tenants:0:RecipeName" "SaaS"
+dotnet user-secrets set "Grove:Grove_AutoSetup:Tenants:0:DatabaseProvider" "Sqlite"
 ```
 
-If you use a setup like the above when working with the full source code of Crest, then all copies of the source will use it, due to `Crest.Cms.Web` having `UserSecretsId` pre-configured. This is really useful when contributing to Crest. However, if you want to remove this functionality, just remove the `UserSecretsId` element from the given copy's `Crest.Cms.Web.csproj`.
+If you use a setup like the above when working with the full source code of Grove, then all copies of the source will use it, due to `Grove.Cms.Web` having `UserSecretsId` pre-configured. This is really useful when contributing to Grove. However, if you want to remove this functionality, just remove the `UserSecretsId` element from the given copy's `Grove.Cms.Web.csproj`.
 
 [Environment variables](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration#non-prefixed-environment-variables) are available on both server and local machine. But if you have multiple projects, you have to prefix them to avoid clashes.
 
 ```
-"Crest__Crest_AutoSetup__AutoSetupPath": ""
+"Grove__Grove_AutoSetup__AutoSetupPath": ""
 
-"Crest__Crest_AutoSetup__Tenants__0__ShellName": "Default"
-"Crest__Crest_AutoSetup__Tenants__0__SiteName": "AutoSetup Example"
-"Crest__Crest_AutoSetup__Tenants__0__SiteTimeZone": "Europe/Amsterdam"
-"Crest__Crest_AutoSetup__Tenants__0__AdminUsername": "admin"
-"Crest__Crest_AutoSetup__Tenants__0__AdminEmail": "info@orchardproject.net"
-"Crest__Crest_AutoSetup__Tenants__0__AdminPassword": "PlatformRules1!"
-"Crest__Crest_AutoSetup__Tenants__0__DatabaseProvider": "Sqlite"
-"Crest__Crest_AutoSetup__Tenants__0__DatabaseConnectionString": ""
-"Crest__Crest_AutoSetup__Tenants__0__DatabaseTablePrefix": ""
-"Crest__Crest_AutoSetup__Tenants__0__RecipeName": "SaaS"
+"Grove__Grove_AutoSetup__Tenants__0__ShellName": "Default"
+"Grove__Grove_AutoSetup__Tenants__0__SiteName": "AutoSetup Example"
+"Grove__Grove_AutoSetup__Tenants__0__SiteTimeZone": "Europe/Amsterdam"
+"Grove__Grove_AutoSetup__Tenants__0__AdminUsername": "admin"
+"Grove__Grove_AutoSetup__Tenants__0__AdminEmail": "info@orchardproject.net"
+"Grove__Grove_AutoSetup__Tenants__0__AdminPassword": "PlatformRules1!"
+"Grove__Grove_AutoSetup__Tenants__0__DatabaseProvider": "Sqlite"
+"Grove__Grove_AutoSetup__Tenants__0__DatabaseConnectionString": ""
+"Grove__Grove_AutoSetup__Tenants__0__DatabaseTablePrefix": ""
+"Grove__Grove_AutoSetup__Tenants__0__RecipeName": "SaaS"
 
-"Crest__Crest_AutoSetup__Tenants__1__ShellName": "AutoSetupTenant"
-"Crest__Crest_AutoSetup__Tenants__1__SiteName": "AutoSetup Tenant"
-"Crest__Crest_AutoSetup__Tenants__1__SiteTimeZone": "Europe/Amsterdam"
-"Crest__Crest_AutoSetup__Tenants__1__AdminUsername": "tenantadmin"
-"Crest__Crest_AutoSetup__Tenants__1__AdminEmail": "tenant@orchardproject.net"
-"Crest__Crest_AutoSetup__Tenants__1__AdminPassword": "PlatformRules1!"
-"Crest__Crest_AutoSetup__Tenants__1__DatabaseProvider": "Sqlite"
-"Crest__Crest_AutoSetup__Tenants__1__DatabaseConnectionString": ""
-"Crest__Crest_AutoSetup__Tenants__1__DatabaseTablePrefix": ""
-"Crest__Crest_AutoSetup__Tenants__1__RecipeName": "Agency"
-"Crest__Crest_AutoSetup__Tenants__1__RequestUrlHost": ""
-"Crest__Crest_AutoSetup__Tenants__1__RequestUrlPrefix": "tenant"
+"Grove__Grove_AutoSetup__Tenants__1__ShellName": "AutoSetupTenant"
+"Grove__Grove_AutoSetup__Tenants__1__SiteName": "AutoSetup Tenant"
+"Grove__Grove_AutoSetup__Tenants__1__SiteTimeZone": "Europe/Amsterdam"
+"Grove__Grove_AutoSetup__Tenants__1__AdminUsername": "tenantadmin"
+"Grove__Grove_AutoSetup__Tenants__1__AdminEmail": "tenant@orchardproject.net"
+"Grove__Grove_AutoSetup__Tenants__1__AdminPassword": "PlatformRules1!"
+"Grove__Grove_AutoSetup__Tenants__1__DatabaseProvider": "Sqlite"
+"Grove__Grove_AutoSetup__Tenants__1__DatabaseConnectionString": ""
+"Grove__Grove_AutoSetup__Tenants__1__DatabaseTablePrefix": ""
+"Grove__Grove_AutoSetup__Tenants__1__RecipeName": "Agency"
+"Grove__Grove_AutoSetup__Tenants__1__RequestUrlHost": ""
+"Grove__Grove_AutoSetup__Tenants__1__RequestUrlPrefix": "tenant"
 ```
 
-For testing purposes, you may add the above environment variables into a "web" profile in the launchSettings.json file of the Crest.Cms.Web project.  
+For testing purposes, you may add the above environment variables into a "web" profile in the launchSettings.json file of the Grove.Cms.Web project.  
 Then, start the web app project with the following command:
 
 ```
@@ -139,7 +139,7 @@ To enable the Auto Setup feature, it is necessary to add it in the Web project's
     {
         services
             .AddPlatformCms()
-            .AddSetupFeatures("Crest.AutoSetup");
+            .AddSetupFeatures("Grove.AutoSetup");
     }
 ```
 
@@ -149,7 +149,7 @@ is created.
 
 ## Using Distributed Lock For Auto Setup
 
-If multiple Crest instances sharing the same database are launched, you might need a distributed lock for an atomic auto setup.
+If multiple Grove instances sharing the same database are launched, you might need a distributed lock for an atomic auto setup.
 ![Use case](./assets/lock-use-case.png)
 You should enable the Redis Lock feature in the startup file.
 
@@ -158,14 +158,14 @@ You should enable the Redis Lock feature in the startup file.
     {
         services
             .AddPlatformCms()
-            .AddSetupFeatures("Crest.Redis.Lock", "Crest.AutoSetup");
+            .AddSetupFeatures("Grove.Redis.Lock", "Grove.AutoSetup");
     }
 ```
 
 Make sure you set the Redis configuration string via an environment variable or a configuration file.
 
 ```
-"Crest__Crest_Redis__Configuration": "192.168.99.100:6379,allowAdmin=true"
+"Grove__Grove_Redis__Configuration": "192.168.99.100:6379,allowAdmin=true"
 ```
 
 Optional Distributed Lock Parameters.
@@ -178,12 +178,12 @@ Optional Distributed Lock Parameters.
 Lock configuration parameters are optional and can be set via environment variables or a configuration file.
 
 ```
-"Crest__Crest_AutoSetup__LockOptions__LockTimeout": "10000"
-"Crest__Crest_AutoSetup__LockOptions__LockExpiration": "10000"
+"Grove__Grove_AutoSetup__LockOptions__LockTimeout": "10000"
+"Grove__Grove_AutoSetup__LockOptions__LockExpiration": "10000"
 ```
 
 ## Additional information
 
 Please refer to separate sections for additional information on setup:
 
-- [Crest.Setup - setting up an empty site](../Setup/README.md)
+- [Grove.Setup - setting up an empty site](../Setup/README.md)

@@ -1,0 +1,518 @@
+/* A normal flex item inside the Sidebar wrapper — reserves the sidebar's width and,
+   since Sidebar's row is itself height-bounded by the app shell's flex layout (not a
+   hardcoded titlebar height), naturally gets the correct remaining height too. No
+   fixed/sticky positioning against the viewport at all: .primary-nav-menu__content
+   fills this box via position:absolute + inset:0 and scrolls internally. That's what
+   keeps it directly under the titlebar regardless of the titlebar's actual height, and
+   independent of page scroll.
+   Overflow is intentionally NOT hidden here — Sidebar (the parent) already leaves this
+   visible, and this element must too, or it would clip the same things Sidebar exists
+   to avoid clipping (the collapse/expand toggle, the hover-expanded compact overlay). */
+.primary-nav-menu {
+    position: relative;
+    z-index: 15;
+    width: 18rem;
+    min-width: 18rem;
+}
+
+.primary-nav-menu__content {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 0 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-right: var(--grove-border-size-xs, 1px) solid var(--grove-color-border-1, #e5e7eb);
+    background: var(--grove-color-surface-3, #fff);
+}
+
+.primary-nav-menu__filter-row {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    width: auto;
+    height: var(--grove-panel-menu-item-height, 2.5rem);
+    min-height: var(--grove-panel-menu-item-height, 2.5rem);
+    max-height: var(--grove-panel-menu-item-height, 2.5rem);
+    margin: 0.5rem 0 0 0;
+    padding: 0;
+    overflow: hidden;
+    background: transparent;
+    font-size: calc(var(--grove-panel-menu-tier-1-base-size, 1rem) * 0.875);
+}
+
+.primary-nav-menu__filter-row--quickadd {
+    margin-left: var(--grove-panel-menu-tier-1-indent, 0rem);
+}
+
+.primary-nav-menu__filter-row:hover,
+.primary-nav-menu__filter-row:focus-within {
+    background: transparent;
+}
+
+.primary-nav-menu__filter-input-rail {
+    display: inline-flex;
+    align-items: center;
+    flex: 1 1 auto;
+    width: auto;
+    min-width: var(--grove-panel-menu-text-rail-min-width, 0);
+    height: var(--grove-panel-menu-item-height, 2.5rem);
+}
+
+.primary-nav-menu__filter-row--search .primary-nav-menu__filter-input-rail {
+    margin-right: 0.5rem;
+}
+
+.primary-nav-menu__filter-row--quickadd .primary-nav-menu__filter-input-rail {
+    margin-left: max(0.5rem, var(--grove-panel-menu-tier-1-indent, 0rem));
+}
+
+.primary-nav-menu__filter-input-rail .rz-textbox {
+    width: 100% !important;
+    height: calc(var(--grove-panel-menu-item-height, 2.5rem) - 0.35rem);
+    min-height: calc(var(--grove-panel-menu-item-height, 2.5rem) - 0.35rem);
+}
+
+.primary-nav-menu__filter-search-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--grove-color-text-muted, #64748b);
+}
+
+.primary-nav-menu__quickadd-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--grove-panel-menu-action-rail-width, 2rem);
+    min-width: var(--grove-panel-menu-action-rail-width, 2rem);
+    max-width: var(--grove-panel-menu-action-rail-width, 2rem);
+    flex: 0 0 var(--grove-panel-menu-action-rail-width, 2rem);
+    height: var(--grove-panel-menu-item-height, 2.5rem);
+    margin-inline-end: var(--grove-panel-menu-action-rail-end-margin, 0.5rem);
+    padding: 0;
+    border: 0;
+    color: var(--grove-color-accent-1, #2f6f4e);
+    background: transparent;
+    cursor: pointer;
+    transition: width var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.16, 1, 0.3, 1),
+        min-width var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.16, 1, 0.3, 1),
+        max-width var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.16, 1, 0.3, 1),
+        flex-basis var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.16, 1, 0.3, 1),
+        margin var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.primary-nav-menu__quickadd-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--grove-panel-menu-action-rail-width, 2rem);
+    min-width: var(--grove-panel-menu-action-rail-width, 2rem);
+    height: var(--grove-panel-menu-item-height, 2.5rem);
+    border: 0;
+    border-radius: var(--grove-radius-sm, 4px);
+    padding: 0;
+    color: var(--grove-color-accent-1, #2f6f4e);
+    background: transparent;
+    cursor: pointer;
+}
+
+.primary-nav-menu__quickadd-button:hover,
+.primary-nav-menu__quickadd-button:focus-visible {
+    background: var(--grove-color-button-hover-surface-1, color-mix(in srgb, var(--grove-color-accent-1, #2f6f4e) 10%, transparent));
+    outline: none;
+}
+
+.primary-nav-menu__quickadd-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: auto;
+    margin: 0 1rem;
+    min-height: 2.5rem;
+    border: 0;
+    border-radius: var(--grove-radius-sm, 4px);
+    padding: 0.5rem 0.65rem;
+    color: var(--grove-color-text-1, #1f2937);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.primary-nav-menu__quickadd-row:hover,
+.primary-nav-menu__quickadd-row:focus-visible {
+    background: var(--grove-color-hover-surface-1, color-mix(in srgb, var(--grove-color-accent-1, #2f6f4e) 8%, transparent));
+    outline: none;
+}
+
+.primary-nav-menu__quickadd-add-icon {
+    color: var(--grove-color-accent-1, #2f6f4e);
+}
+
+.primary-nav-menu__quickadd-popover {
+    position: absolute;
+    inset: 0;
+    z-index: 21;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+    overflow: hidden;
+    background: var(--grove-color-surface-3, #fff);
+}
+
+.primary-nav-menu__quickadd-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 2.5rem;
+    padding: 0.25rem 0.35rem;
+    border-bottom: var(--grove-border-size-xs, 1px) solid var(--grove-color-border-1, #e5e7eb);
+}
+
+.primary-nav-menu__quickadd-menu {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+}
+
+/* ::deep is required here: GrovePanelMenu (which receives Class="primary-nav-menu__menu")
+   is a child component in a different .razor.css scope, so a plain selector never matches
+   its rendered root — without ::deep this rule silently never applied, and the item list
+   never got its own scrollbar (it just got clipped by .primary-nav-menu__content's
+   overflow:hidden instead of scrolling). */
+::deep .primary-nav-menu__menu {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    margin: 0;
+    /* Bottom padding lives on the scrollable content itself, not the fixed-height
+       container — it only becomes visible once scrolled all the way down, rather than
+       just permanently shrinking the visible list area. */
+    padding: 0 0 2rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overflow-anchor: none;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+::deep .primary-nav-menu__menu::-webkit-scrollbar {
+    display: none;
+}
+
+/* Leaves enough room for the fixed toggle row to overlay without permanently hiding the
+   last real item's text behind it. */
+.primary-nav-menu--toggle-inside ::deep .primary-nav-menu__menu {
+    padding-bottom: var(--grove-panel-menu-item-height, 2.5rem);
+}
+
+/* The in-nav variant of the collapse/expand toggle: a full-width row, styled like a menu
+   item row, pinned to the bottom of .primary-nav-menu__content (its nearest positioned
+   ancestor) instead of scrolling with the item list above it. Its own background is
+   opaque on purpose — .primary-nav-menu__menu's items scroll underneath this row, and
+   without an opaque background they'd show through. */
+.primary-nav-menu__mode-toggle-row {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 16;
+    display: flex;
+    align-items: center;
+    /* Left-aligned to match the icon rail of the menu item rows above it, not centered. */
+    justify-content: flex-start;
+    padding-left: calc((var(--grove-panel-menu-icon-rail-width, 4rem) - 1.25rem) / 2);
+    height: var(--grove-panel-menu-item-height, 2.5rem);
+    min-height: var(--grove-panel-menu-item-height, 2.5rem);
+    border: 0;
+    border-top: var(--grove-border-size-xs, 1px) solid var(--grove-color-border-1, #e5e7eb);
+    color: var(--grove-color-text-muted, #64748b);
+    background: var(--grove-color-surface-3, #fff);
+    cursor: pointer;
+}
+
+.primary-nav-menu__mode-toggle-row:hover,
+.primary-nav-menu__mode-toggle-row:focus-visible {
+    color: var(--grove-color-accent-1, #2f6f4e);
+    background: var(--grove-color-hover-surface-1, color-mix(in srgb, var(--grove-color-accent-1, #2f6f4e) 8%, transparent));
+    outline: none;
+}
+
+.primary-nav-menu__mode-toggle {
+    position: absolute;
+    right: -2.2rem;
+    bottom: 1rem;
+    z-index: 22;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.5rem;
+    padding: 0;
+    border: var(--grove-border-size-xs, 1px) solid var(--grove-color-border-1, #e5e7eb);
+    border-left: 0;
+    border-radius: 0 var(--grove-radius-lg, 0.75rem) var(--grove-radius-lg, 0.75rem) 0;
+    color: var(--grove-color-text-muted, #64748b);
+    background: var(--grove-color-surface-3, #fff);
+    box-shadow: var(--grove-shadow-sm, 0 0.35rem 0.8rem rgba(15, 23, 42, 0.12));
+    cursor: pointer;
+    transition: transform var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.22, 1, 0.36, 1), color 160ms ease, background-color 160ms ease;
+}
+
+.primary-nav-menu__mode-toggle:hover,
+.primary-nav-menu__mode-toggle:focus-visible {
+    color: var(--grove-color-accent-1, #2f6f4e);
+    background: var(--grove-color-hover-surface-1, color-mix(in srgb, var(--grove-color-accent-1, #2f6f4e) 8%, transparent));
+    outline: none;
+}
+
+.primary-nav-menu ::deep .primary-nav-menu__mode-toggle-icon {
+    transition: transform var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.primary-nav-menu ::deep .primary-nav-menu__mode-toggle-icon--collapse {
+    transform: rotate(180deg);
+}
+
+@media (min-width: 1025px) {
+    .primary-nav-menu,
+    .primary-nav-menu__content,
+    .primary-nav-menu__filter-row,
+    .primary-nav-menu__filter-input-rail,
+    .primary-nav-menu__quickadd-row,
+    .primary-nav-menu__quickadd-toggle,
+    .primary-nav-menu__quickadd-button,
+    .primary-nav-menu__quickadd-add-icon {
+        transition: width var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.16, 1, 0.3, 1), min-width var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.16, 1, 0.3, 1), max-width var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.16, 1, 0.3, 1), padding var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.16, 1, 0.3, 1), margin var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.16, 1, 0.3, 1), opacity 240ms ease, transform var(--primary-nav-menu-expansion-duration, 500ms) cubic-bezier(0.16, 1, 0.3, 1), box-shadow var(--primary-nav-menu-expansion-duration, 500ms) ease;
+    }
+
+    .primary-nav-menu--compact {
+        flex: 0 0 4rem;
+        width: 4rem;
+        min-width: 4rem;
+        overflow: visible !important;
+    }
+
+    .primary-nav-menu--compact .primary-nav-menu__content {
+        /* position/top/left inherited from the base rule (fixed, viewport-anchored) */
+        width: 4rem;
+        padding: 0;
+    }
+
+    /* Both pinned and hover-expanded navigation use this exact expanded menu state.
+       The compact parent only determines whether that shared menu overlays content. */
+    .primary-nav-menu--expanded .primary-nav-menu__content {
+        width: 18rem;
+        border-right: var(--grove-border-size-xs, 1px) solid var(--grove-color-border-1, #e5e7eb);
+        background: var(--grove-color-surface-3, #fff);
+    }
+
+    .primary-nav-menu--compact.primary-nav-menu--expanded .primary-nav-menu__content {
+        box-shadow: 0.85rem 0 1.5rem color-mix(in srgb, var(--grove-color-shadow-1, rgba(15, 23, 42, 0.18)) 67%, transparent);
+    }
+
+    /* The compact rail remains the layout width, while both normal navigation
+       and Quick Add use the same expanded overlay width. */
+    .primary-nav-menu--compact.primary-nav-menu--expanded .primary-nav-menu__quickadd-popover {
+        width: 18rem;
+    }
+
+    .primary-nav-menu--compact.primary-nav-menu--expanded .primary-nav-menu__mode-toggle {
+        transform: translateX(14rem);
+    }
+
+    .primary-nav-menu--compact:not(.primary-nav-menu--hover-ready) .primary-nav-menu__filter-row {
+        gap: 0;
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    .primary-nav-menu--compact:not(.primary-nav-menu--hover-ready) .primary-nav-menu__filter-row--quickadd .primary-nav-menu__filter-search-icon {
+        display: none;
+    }
+
+    .primary-nav-menu--compact:not(.primary-nav-menu--hover-ready) .primary-nav-menu__filter-row .primary-nav-menu__filter-input-rail {
+        width: 0;
+        min-width: 0;
+        max-width: 0;
+        flex-basis: 0;
+        margin: 0;
+        opacity: 0;
+        transform: translateX(-0.4rem);
+        pointer-events: none;
+    }
+
+    .primary-nav-menu--compact:not(.primary-nav-menu--hover-ready) .primary-nav-menu__filter-row .primary-nav-menu__quickadd-toggle {
+        order: -1;
+        width: var(--grove-panel-menu-icon-rail-width, 4rem);
+        min-width: var(--grove-panel-menu-icon-rail-width, 4rem);
+        max-width: var(--grove-panel-menu-icon-rail-width, 4rem);
+        flex-basis: var(--grove-panel-menu-icon-rail-width, 4rem);
+        margin: 0;
+    }
+
+    .primary-nav-menu--compact:not(.primary-nav-menu--hover-ready) .primary-nav-menu__quickadd-row {
+        margin-right: 0;
+        margin-left: 0;
+        padding: 0;
+    }
+
+    .primary-nav-menu--compact:not(.primary-nav-menu--hover-ready) .primary-nav-menu__quickadd-row .grove-panel-menu__text-rail {
+        width: 0;
+        min-width: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .primary-nav-menu--compact:not(.primary-nav-menu--hover-ready) .primary-nav-menu__quickadd-add-icon {
+        margin: 0;
+    }
+
+}
+
+.primary-nav-menu ::deep .primary-nav-menu__item--has-flyout,
+.primary-nav-menu ::deep .primary-nav-menu__item--has-flyout > .grove-panel-menu__item-wrapper,
+.primary-nav-menu ::deep .primary-nav-menu__item--has-flyout > .grove-panel-menu__item-wrapper > .grove-panel-menu__item-link {
+    overflow: visible;
+}
+
+.primary-nav-menu ::deep .primary-nav-menu__item--has-flyout {
+    position: relative;
+}
+
+::deep .primary-nav-menu__flyout {
+    position: absolute;
+    top: 0;
+    left: calc(100% + 0.25rem);
+    z-index: 1100;
+    display: none;
+    min-width: 14rem;
+    max-width: 20rem;
+    padding: 0.35rem;
+    border: var(--grove-border-size-xs, 1px) solid var(--grove-color-border-1, #e5e7eb);
+    border-radius: var(--grove-radius-md, 0.5rem);
+    background: var(--grove-color-surface-1, #fff);
+    box-shadow: var(--grove-shadow-lg, 0 12px 30px rgba(15, 23, 42, 0.18));
+}
+
+.primary-nav-menu ::deep .primary-nav-menu__item--has-flyout:hover > .grove-panel-menu__item-wrapper .primary-nav-menu__flyout,
+.primary-nav-menu ::deep .primary-nav-menu__item--has-flyout:focus-within > .grove-panel-menu__item-wrapper .primary-nav-menu__flyout,
+::deep .primary-nav-menu__flyout-item--has-children:hover > .primary-nav-menu__flyout,
+::deep .primary-nav-menu__flyout-item--has-children:focus-within > .primary-nav-menu__flyout {
+    display: block;
+}
+
+::deep .primary-nav-menu__flyout-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+::deep .primary-nav-menu__flyout-item {
+    position: relative;
+}
+
+::deep .primary-nav-menu__flyout-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.25rem;
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border-radius: calc(var(--grove-radius-md, 0.5rem) * 0.75);
+    color: var(--grove-color-text-1, #1f2937);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+::deep .primary-nav-menu__flyout-link:hover,
+::deep .primary-nav-menu__flyout-link:focus {
+    color: var(--grove-color-accent-1, #3b82f6);
+    background: var(--grove-color-hover-surface-1, rgba(59, 130, 246, 0.12));
+    outline: none;
+}
+
+::deep .primary-nav-menu__flyout-text {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::deep .primary-nav-menu__flyout-chevron {
+    margin-left: auto;
+    color: var(--grove-color-text-muted, #64748b);
+}
+
+::deep .primary-nav-menu__flyout--nested {
+    top: -0.35rem;
+    left: calc(100% + 0.35rem);
+}
+
+::deep .grove-flyout {
+    position: fixed;
+    z-index: 2147483647 !important;
+    pointer-events: auto;
+}
+
+::deep .primary-nav-menu__flyout--detached {
+    display: block;
+}
+
+
+.primary-nav-menu ::deep .primary-nav-menu__icon {
+    overflow: hidden;
+}
+
+.primary-nav-menu ::deep .primary-nav-menu__icon > svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.primary-nav-menu ::deep .primary-nav-menu__icon-placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    flex: 0 0 1.25rem;
+}
+
+.primary-nav-menu ::deep .primary-nav-menu__icon-placeholder--dot {
+    width: 0.5rem;
+    min-width: 0.5rem;
+    height: 0.5rem;
+    flex-basis: 0.5rem;
+    box-sizing: border-box;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    opacity: 0.7;
+}
+
+
+@media (max-width: 1024px) {
+    /* Sidebar itself now owns the mobile slide-in/out drawer (position, transform,
+       transition, box-shadow) — PrimaryNavMenu just needs to fill whatever box Sidebar
+       gives it, full width instead of the desktop-fixed 18rem. */
+    .primary-nav-menu {
+        width: 100%;
+        min-width: 0;
+        height: 100%;
+    }
+}

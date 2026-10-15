@@ -1,0 +1,190 @@
+{
+  "name": "Migrations",
+  "displayName": "Migrations",
+  "description": "Testing features having database migrations.",
+  "author": "The Grove Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "tests" ],
+  "tags": [ "tests" ],
+
+  // The variables are evaluated the first time they are accessed, and reused across steps
+  "variables": {
+    "homeContentItemId": "[js:uuid()]"
+  },
+
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        // SaaS
+        "Grove.HomeRoute",
+        "Grove.Admin",
+        "Grove.Diagnostics",
+        "Grove.DynamicCache",
+        "Grove.Features",
+        "Grove.Navigation",
+        "Grove.Recipes",
+        "Grove.Resources",
+        "Grove.Roles",
+        "Grove.Security",
+        "Grove.Settings",
+        "Grove.Themes",
+        "Grove.Users",
+
+        // Content Management including features having database migrations.
+        "Grove.AdminDashboard",
+        "Grove.AdminMenu",
+        "Grove.Alias",
+        "Grove.ArchiveLater",
+        "Grove.AuditTrail",
+        "Grove.Autoroute",
+        "Grove.ContentFields",
+        "Grove.ContentFields.Indexing.SQL",
+        "Grove.ContentFields.Indexing.SQL.UserPicker",
+        "Grove.ContentLocalization",
+        "Grove.ContentPreview",
+        "Grove.Contents",
+        "Grove.ContentTypes",
+        "Grove.CustomSettings",
+        "Grove.Deployment",
+        "Grove.Deployment.Remote",
+        "Grove.Feeds",
+        "Grove.Flows",
+        "Grove.Html",
+        "Grove.Indexing",
+        "Grove.Layers",
+        "Grove.Lists",
+        "Grove.Media",
+        "Grove.Menu",
+        "Grove.Markdown",
+        "Grove.Notifications",
+        "Grove.OpenId",
+        "Grove.Placements",
+        "Grove.PublishLater",
+        "Grove.Queries",
+        "Grove.Queries.Sql",
+        "Grove.Rules",
+        "Grove.Shortcodes.Templates",
+        "Grove.Taxonomies",
+        "Grove.Templates",
+        "Grove.Title",
+        "Grove.Workflows",
+
+        // Themes
+        "TheAdmin",
+        "SafeMode"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "TheAdmin",
+      "site": "SafeMode"
+    },
+    {
+      "name": "settings",
+      "HomeRoute": {
+        "Action": "Display",
+        "Controller": "Item",
+        "Area": "Grove.Contents",
+        "ContentItemId": "[js: variables('homeContentItemId')]"
+      },
+      "LayerSettings": {
+        "Zones": [ "Content", "Footer" ]
+      }
+    },
+    {
+      "name": "ContentDefinition",
+      "ContentTypes": [
+        {
+          "Name": "Article",
+          "DisplayName": "Article",
+          "Hidden": false,
+          "Settings": {
+            "ContentTypeSettings": {
+              "Creatable": true,
+              "Draftable": true,
+              "Versionable": true,
+              "Listable": true
+            }
+          },
+          "ContentTypePartDefinitionRecords": [
+            {
+              "PartName": "Article",
+              "Name": "Article",
+              "Settings": {
+                "ContentTypePartSettings": {
+                  "Position": "3"
+                }
+              }
+            },
+            {
+              "PartName": "AutoroutePart",
+              "Name": "AutoroutePart",
+              "Settings": {
+                "AutoroutePartSettings": {
+                  "AllowCustomPath": true,
+                  "Pattern": "{{ Model.ContentItem | display_text | slugify }}",
+                  "ShowHomepageOption": true
+                },
+                "ContentTypePartSettings": {
+                  "Position": "1"
+                }
+              }
+            },
+            {
+              "PartName": "HtmlBodyPart",
+              "Name": "HtmlBodyPart",
+              "Settings": {
+                "ContentTypePartSettings": {
+                  "Editor": "Wysiwyg",
+                  "Position": "2"
+                }
+              }
+            },
+            {
+              "PartName": "TitlePart",
+              "Name": "TitlePart",
+              "Settings": {
+                "ContentTypePartSettings": {
+                  "Position": "0"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "ContentParts": [
+        {
+          "Name": "Article",
+          "Settings": {}
+        }
+      ]
+    },
+    {
+      "name": "content",
+      "Data": [
+        {
+          "ContentItemId": "[js: variables('homeContentItemId')]",
+          "ContentType": "Article",
+          "DisplayText": "Home",
+          "Latest": true,
+          "Published": true,
+          "Owner": "[js: parameters('AdminUserId')]",
+          "Author": "[js: parameters('AdminUsername')]",
+          "AutoroutePart": {
+            "Path": "about",
+            "SetHomepage": false
+          },
+          "HtmlBodyPart": {
+            "Html": "<p>Testing features having database migrations.</p>"
+          },
+          "TitlePart": {
+            "Title": "Testing Migrations"
+          }
+        }
+      ]
+    }
+  ]
+}

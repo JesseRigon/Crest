@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <!-- NuGet properties-->
+    <Title>Grove Setup</Title>
+    <Description>$(OCCMSDescription)
+
+    The setup module is creating the application's setup experience..</Description>
+    <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Grove.Localization\ModularPoFileLocationProvider.cs" Link="ModularPoFileLocationProvider.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Data\Grove.Data.csproj" />
+    <ProjectReference Include="..\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Localization\Grove.Localization.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.Recipes.Abstractions\Grove.Recipes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Abstractions\Grove.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Setup.Abstractions\Grove.Setup.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YesSql" />
+  </ItemGroup>
+
+</Project>

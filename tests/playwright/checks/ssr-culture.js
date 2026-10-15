@@ -1,9 +1,9 @@
 // Phase 8 localization verification (plan doc Phase 6→8 item): the statically
 // SSR-rendered admin document must carry the culture the server's
 // request-localization pipeline resolved — proven by the <html lang> attribute in a
-// no-JS fetch. The tenant-wide crest_culture_{shellVersionId} cookie is the shared
+// no-JS fetch. The tenant-wide grove_culture_{shellVersionId} cookie is the shared
 // source of truth between the WASM DisplayManager chain and the server pipeline
-// (CrestCultureCookieOptionsConfiguration), so overriding that cookie must change
+// (GroveCultureCookieOptionsConfiguration), so overriding that cookie must change
 // the SSR document's language tag.
 module.exports = async function run(page, ctx) {
   const url = `${ctx.baseUrl}/Admin/Dashboard`;
@@ -20,10 +20,10 @@ module.exports = async function run(page, ctx) {
     message: `status=${baseline.status()} lang=${baselineLang || 'missing'}`,
   });
 
-  // The culture cookie is tenant-versioned (crest_culture_{shellVersionId}) — find
+  // The culture cookie is tenant-versioned (grove_culture_{shellVersionId}) — find
   // the live one from the shared authenticated context rather than hardcoding.
   const cookies = await page.context().cookies(ctx.baseUrl);
-  const cultureCookie = cookies.find(cookie => cookie.name.startsWith('crest_culture_'));
+  const cultureCookie = cookies.find(cookie => cookie.name.startsWith('grove_culture_'));
 
   if (!cultureCookie) {
     // No cookie yet means the session never picked an explicit culture; the
@@ -31,7 +31,7 @@ module.exports = async function run(page, ctx) {
     results.push({
       name: 'culture-cookie-overrides-ssr-lang',
       pass: true,
-      message: 'no crest_culture_* cookie in session — default-culture SSR verified only',
+      message: 'no grove_culture_* cookie in session — default-culture SSR verified only',
     });
     return results;
   }

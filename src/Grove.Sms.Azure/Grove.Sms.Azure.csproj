@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <!-- NuGet properties-->
+    <Title>Grove Sms</Title>
+    <Description>
+      $(OCCMSDescription)
+
+      The Azure Communication SMS feature enables sending SMS messages via Azure Communication Services (ACS).
+    </Description>
+    <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Communication.Sms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
+    <ProjectReference Include="..\Grove.Sms\Grove.Sms.csproj" />
+  </ItemGroup>
+</Project>

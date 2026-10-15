@@ -2,7 +2,7 @@
 
 ## Overview
 
-Crest's asset management system now uses **NPM package aliasing** to manage multiple versions of the same package without manual copying. This eliminates the need for manually vendored packages in the `Assets/Vendor/` folder, if an NPM package is available.
+Grove's asset management system now uses **NPM package aliasing** to manage multiple versions of the same package without manual copying. This eliminates the need for manually vendored packages in the `Assets/Vendor/` folder, if an NPM package is available.
 
 ## What is NPM Package Aliasing?
 
@@ -135,7 +135,7 @@ If you have existing manually vendored packages:
 ### Before (Manual Vendor)
 
 ```
-src/Crest.Modules/YourModule/
+src/Grove.Modules/YourModule/
 ├── Assets/
 │   └── Vendor/
 │       ├── vue-2.7.16/     ← Manually copied
@@ -156,7 +156,7 @@ Assets.json:
 ### After (NPM Aliasing)
 
 ```
-src/Crest.Modules/YourModule/
+src/Grove.Modules/YourModule/
 ├── Assets/
 │   └── package.json  ← Defines aliases
 └── Assets.json       ← References node_modules
@@ -185,7 +185,7 @@ Assets.json:
 
 1. **Add aliases to package.json**
    ```bash
-   cd src/Crest.Modules/YourModule/Assets
+   cd src/Grove.Modules/YourModule/Assets
    # Edit package.json to add aliases
    ```
 
@@ -201,7 +201,7 @@ Assets.json:
 4. **Remove manual vendor files**
    ```bash
    # After verifying build works:
-   rm -rf src/Crest.Modules/YourModule/Assets/Vendor/
+   rm -rf src/Grove.Modules/YourModule/Assets/Vendor/
    ```
 
 5. **Update .gitignore** (if needed)
@@ -284,7 +284,7 @@ Add comments in package.json to explain why legacy versions are needed:
 
 ### 3. Keep Aliases in Resources Module
 
-For shared libraries used across multiple modules, define the alias in `Crest.Resources/Assets/package.json` so all modules can reference the same version.
+For shared libraries used across multiple modules, define the alias in `Grove.Resources/Assets/package.json` so all modules can reference the same version.
 
 ### 4. Clean Builds
 

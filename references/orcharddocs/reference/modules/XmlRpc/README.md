@@ -1,13 +1,13 @@
-# XML-RPC (`Crest.XmlRpc`)
+# XML-RPC (`Grove.XmlRpc`)
 
-The `Crest.XmlRpc` module adds support for the XML-RPC protocol, allowing client applications such as [Open Live Writer](http://openlivewriter.com/) to interact with the site.
+The `Grove.XmlRpc` module adds support for the XML-RPC protocol, allowing client applications such as [Open Live Writer](http://openlivewriter.com/) to interact with the site.
 
 The module provides two features:
 
 | Feature                       | Description                                                                 |
 |-------------------------------|-----------------------------------------------------------------------------|
-| `Crest.XmlRpc`          | Provides the core XML-RPC endpoint and protocol support.                    |
-| `Crest.RemotePublishing` | Adds the MetaWeblog API on top of XML-RPC, enabling remote creation and editing of content. Depends on `Crest.XmlRpc`. |
+| `Grove.XmlRpc`          | Provides the core XML-RPC endpoint and protocol support.                    |
+| `Grove.RemotePublishing` | Adds the MetaWeblog API on top of XML-RPC, enabling remote creation and editing of content. Depends on `Grove.XmlRpc`. |
 
 ## Endpoints
 

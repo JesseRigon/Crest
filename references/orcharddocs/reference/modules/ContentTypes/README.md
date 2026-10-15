@@ -1,4 +1,4 @@
-# Content Types (`Crest.ContentTypes`)
+# Content Types (`Grove.ContentTypes`)
 
 ## View Components
 
@@ -142,7 +142,7 @@ public class Product : ContentPart
 Then, register your ContentPart with Dependency Injection:
 
 ```csharp
-using Crest.ContentManagement;
+using Grove.ContentManagement;
 
 ...
 
@@ -244,7 +244,7 @@ Each context exposes a mutable `Record` property that you can modify. Setting `c
 Register your implementation with the dependency injection container from a `Startup` class:
 
 ```csharp
-using Crest.ContentTypes.Events;
+using Grove.ContentTypes.Events;
 
 public sealed class Startup : StartupBase
 {
@@ -266,7 +266,7 @@ Content definition handlers make it possible to designate a content type, part, 
 An element is marked as system-defined by storing a `ContentSettings` with `IsSystemDefined` set to `true` in the `Settings` of its record, from within a content definition handler:
 
 ```csharp
-using Crest.ContentManagement.Metadata.Settings;
+using Grove.ContentManagement.Metadata.Settings;
 
 context.Record.Settings[nameof(ContentSettings)] = JObject.FromObject(new ContentSettings
 {
@@ -280,7 +280,7 @@ When an element is system-defined, the admin UI hides the corresponding **Remove
 
 ### Example: injecting a system-defined part
 
-The `DashboardPart` is injected into every content type that uses the `DashboardWidget` stereotype, without the user having to attach it manually. This is implemented by the `DashboardPartContentTypeDefinitionHandler` in the `Crest.AdminDashboard` module.
+The `DashboardPart` is injected into every content type that uses the `DashboardWidget` stereotype, without the user having to attach it manually. This is implemented by the `DashboardPartContentTypeDefinitionHandler` in the `Grove.AdminDashboard` module.
 
 ```csharp
 public sealed class DashboardPartContentTypeDefinitionHandler : IContentDefinitionHandler
@@ -415,8 +415,8 @@ Default values for category and thumbnail can be configured in `appsettings.json
 
 ```json
 {
-    "Crest": {
-        "Crest_ContentTypes": {
+    "Grove": {
+        "Grove_ContentTypes": {
             "DefaultCategory": "Widgets",
             "DefaultThumbnailPath": "/media/thumbnails/default.png"
         }

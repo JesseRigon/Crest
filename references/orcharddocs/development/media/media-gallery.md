@@ -19,7 +19,7 @@ This document records the agreed target architecture and the ordered implementat
 3. **Remove `openMediaPicker` from `media-gallery`** — it does not belong in the library browser.
 4. **Lazy-load `media-gallery`** — the full browser bundle (~3 MB) is only fetched when the user
    actually opens the picker, not on every page that contains an HTML/Markdown field.
-5. **Deduplicate the trumbowyg source files** — `Crest.ContentFields` and `Crest.Html`
+5. **Deduplicate the trumbowyg source files** — `Grove.ContentFields` and `Grove.Html`
    each carry identical copies; they should share a single canonical source.
 6. **Favor pure ES module exports** — no new `window.*` globals. Cross-bundle communication uses
    the browser's ES module cache via `import()`, not window properties.
@@ -36,13 +36,13 @@ Razor wrapper views
   └── loads media-gallery script eagerly  (media2.js, ~3 MB)
 
 trumbowyg / MDE editor plugins  (Parcel bundles)
-  └── import picker-api.ts  (from crest-media-gallery workspace package)
+  └── import picker-api.ts  (from grove-media-gallery workspace package)
         └── delegates to  window.PlatformMedia.openMediaPicker()
               └── media-gallery/main.ts: openMediaPicker()
                     └── mounts MediaPickerModal.vue  (Bootstrap, lives in media-gallery)
                           └── calls mountMediaAppAsPicker()  (also in media-gallery)
 
-media-field app  (crest-media-field → media-field2.js)
+media-field app  (grove-media-field → media-field2.js)
   └── MediaFieldBasic / Gallery components
         └── MediaPickerModal.vue  (Tailwind, lives in media-field)
               └── dynamic import("@media-gallery") → mountMediaAppAsPicker()
@@ -55,7 +55,7 @@ media-field app  (crest-media-field → media-field2.js)
 - Every Razor page with an HTML/Markdown editor pre-fetches the full 3 MB `media-gallery` bundle even
   if the picker is never opened.
 - `trumbowyg.media.tag.ts` and `trumbowyg.media.url.ts` are copied verbatim into both
-  `Crest.ContentFields` and `Crest.Html`.
+  `Grove.ContentFields` and `Grove.Html`.
 
 ---
 
@@ -68,7 +68,7 @@ Razor wrapper views
   └── data-media-picker-config div gains data-picker-src attribute (absolute URL of media-picker2.js)
 
 trumbowyg / MDE editor plugins  (Parcel bundles)
-  └── import picker-api.ts  (from crest-media-gallery workspace — path unchanged)
+  └── import picker-api.ts  (from grove-media-gallery workspace — path unchanged)
         └── reads data-picker-src from DOM
         └── await import(pickerSrc)  → browser returns cached module-picker2.js instance
               └── calls module.openMediaPicker(config)
@@ -76,7 +76,7 @@ trumbowyg / MDE editor plugins  (Parcel bundles)
                           └── mounts MediaPickerModal.vue  (single, Tailwind, lives in media-picker)
                                 └── dynamic import("@media-gallery") → mountMediaAppAsPicker()
 
-media-picker app  (crest-media-picker → media-picker2.js, type="module")
+media-picker app  (grove-media-picker → media-picker2.js, type="module")
   └── MediaFieldBasic / Gallery / Attached  (unchanged field editors)
   └── MediaPickerModal.vue  (the one true picker modal)
   └── openMediaPicker()  exported as a named ES module export — no window global
@@ -135,8 +135,8 @@ result to their own types (`filePath`, `url`, `name`) — the mapping stays in t
 
 ### 2. `picker-api.ts` uses a dynamic import via `data-picker-src` — no window delegation
 
-The trumbowyg/MDE Parcel packages declare `crest-media-gallery` as a workspace dependency and
-import from `crest-media-gallery/src/picker-api`. The package reference stays unchanged.
+The trumbowyg/MDE Parcel packages declare `grove-media-gallery` as a workspace dependency and
+import from `grove-media-gallery/src/picker-api`. The package reference stays unchanged.
 `picker-api.ts` is rewritten to use a dynamic ES module import instead of a window lookup:
 
 ```ts
@@ -177,10 +177,10 @@ wrapper views.
 
 ### 4. Trumbowyg source deduplication
 
-`Crest.ContentFields` and `Crest.Html` both compile
+`Grove.ContentFields` and `Grove.Html` both compile
 `trumbowyg.media.tag.ts` and `trumbowyg.media.url.ts` with Parcel. The source files are now
 identical (after the `data-media-picker-config` refactor). They should be moved into the
-`crest-media-gallery` package under `src/trumbowyg/` and re-exported, so both modules import
+`grove-media-gallery` package under `src/trumbowyg/` and re-exported, so both modules import
 from the shared workspace package and Parcel bundles the canonical source.
 
 Each module still produces its own wwwroot output and registers its own named resources — this step
@@ -204,7 +204,7 @@ After the migration `mountMediaAppAsPicker` is consumed only by `media-picker`'s
 | Action | Path |
 |--------|------|
 | Rename directory | `Assets/media-field/` → `Assets/media-picker/` |
-| Update `package.json` | `"name": "crest-media-picker"` |
+| Update `package.json` | `"name": "grove-media-picker"` |
 | Update `vite.config.ts` | output filenames `media-picker2.js` / `media-picker2.css` |
 | Update `Assets.json` | rename source entry from `media-field` to `media-picker` |
 | Update `ResourceManagementOptionsConfiguration.cs` | script/style paths `Scripts/media-picker2.js`, `Styles/media-picker2.css` |
@@ -244,9 +244,9 @@ In all three wrapper views:
 
 | Module | View |
 |--------|------|
-| `Crest.ContentFields` | `Media-HtmlField.Wrapper.cshtml` |
-| `Crest.Html` | `Media-HtmlBodyPart.Wrapper.cshtml` |
-| `Crest.Markdown` | `Media-MarkdownBodyPart.Wrapper.cshtml` |
+| `Grove.ContentFields` | `Media-HtmlField.Wrapper.cshtml` |
+| `Grove.Html` | `Media-HtmlBodyPart.Wrapper.cshtml` |
+| `Grove.Markdown` | `Media-MarkdownBodyPart.Wrapper.cshtml` |
 
 1. Replace `<script asp-name="media">` with `<script asp-name="media-picker">`.
 2. Keep `<style asp-name="media" at="Head">` — the media-gallery stylesheet must remain eagerly loaded
@@ -260,7 +260,7 @@ In all three wrapper views:
      data-translations="@JsonSerializer.Serialize(jsLocalizations)"
      data-base-path="@Url.Content("~/")"
      data-upload-files-url="@Url.Content("~/api/media/Upload")"
-     data-picker-src="@Url.Content("~/Crest.Media/Scripts/media-picker2.js")"></div>
+     data-picker-src="@Url.Content("~/Grove.Media/Scripts/media-picker2.js")"></div>
 ```
 
 Register `media-picker` (script + style) in `ResourceManifestOptionsConfiguration.cs` in the
@@ -269,12 +269,12 @@ Media module with `SetAttribute("type", "module")` — consistent with `media` a
 ### Phase 6 — Deduplicate trumbowyg source files
 
 1. Move `trumbowyg.media.tag.ts` and `trumbowyg.media.url.ts` into
-   `media-gallery/src/trumbowyg/` (they live in `crest-media-gallery` which is already a dep of both
+   `media-gallery/src/trumbowyg/` (they live in `grove-media-gallery` which is already a dep of both
    consuming modules).
-2. In `Crest.ContentFields/Assets/js/` and `Crest.Html/Assets/`, replace the local
+2. In `Grove.ContentFields/Assets/js/` and `Grove.Html/Assets/`, replace the local
    `.ts` files with thin re-exports:
    ```ts
-   export { } from 'crest-media-gallery/src/trumbowyg/trumbowyg.media.tag';
+   export { } from 'grove-media-gallery/src/trumbowyg/trumbowyg.media.tag';
    ```
 3. Parcel resolves the workspace import and bundles the canonical source into each module's wwwroot
    output. No change to resource registrations or wwwroot paths.
@@ -309,7 +309,7 @@ the built output no longer includes a separate stylesheet for either app.
 
 ## Files Affected (full list)
 
-### `Crest.Media`
+### `Grove.Media`
 
 - `Assets/media-field/` → `Assets/media-picker/` (entire directory rename)
 - `Assets/media-picker/package.json` — package name
@@ -330,19 +330,19 @@ the built output no longer includes a separate stylesheet for either app.
 - `ResourceManagementOptionsConfiguration.cs` — add `media-picker` resource, update paths; remove
   stylesheet registrations for both apps once CSS files are eliminated
 
-### `Crest.ContentFields`
+### `Grove.ContentFields`
 
 - `Assets/js/trumbowyg.media.tag.ts` — becomes re-export of shared source
 - `Assets/js/trumbowyg.media.url.ts` — becomes re-export of shared source
 - `Views/Media-HtmlField.Wrapper.cshtml` — swap `media` script for `media-picker`, add `data-picker-src`
 
-### `Crest.Html`
+### `Grove.Html`
 
 - `Assets/trumbowyg.media.tag.ts` — becomes re-export of shared source
 - `Assets/trumbowyg.media.url.ts` — becomes re-export of shared source
 - `Views/Media-HtmlBodyPart.Wrapper.cshtml` — swap `media` script for `media-picker`, add `data-picker-src`
 
-### `Crest.Markdown`
+### `Grove.Markdown`
 
 - `Assets/Scripts/mde.mediatoolbar.ts` — no source change; `picker-api.ts` update is transparent
 - `Views/Media-MarkdownBodyPart.Wrapper.cshtml` — swap `media` script for `media-picker`, add `data-picker-src`
@@ -353,6 +353,6 @@ the built output no longer includes a separate stylesheet for either app.
 
 - Merging the trumbowyg wwwroot outputs into a single shared resource owned by the Media module.
   The source deduplication in Phase 6 is sufficient; the two-module resource split is an
-  Crest module boundary concern.
+  Grove module boundary concern.
 - Changing how `media-gallery` is bundled (Vue Router, Globals, etc.) — that is out of scope.
-- Any changes to the `Crest.Media` C# backend.
+- Any changes to the `Grove.Media` C# backend.

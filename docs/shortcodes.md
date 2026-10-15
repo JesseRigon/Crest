@@ -10,7 +10,7 @@ shortcodes an admin defines in Liquid).
 
 - **Parsing**: the `Shortcodes` library (Sébastien Ros) parses `[name args]content[/name]` and
   self-closing `[name args]`.
-- **Processing**: `IShortcodeService.ProcessAsync(html)` (`Crest.Shortcodes`) runs over rendered
+- **Processing**: `IShortcodeService.ProcessAsync(html)` (`Grove.Shortcodes`) runs over rendered
   content text at display time: the Markdown body and field drivers, the HTML body, the Markdown
   GraphQL output, the Razor `Markdownify` helper. Each tag goes to the `IShortcodeProvider`s; the
   first that recognises the name produces the output.
@@ -24,7 +24,7 @@ shortcodes an admin defines in Liquid).
   | template shortcodes | Shortcodes (Templates feature) | defined in the admin, body written in Liquid |
   | options shortcodes | Shortcodes | registered in code |
 
-- **Liquid's side**: the `shortcode` Liquid filter (`Crest.Liquid`, when Shortcodes is on)
+- **Liquid's side**: the `shortcode` Liquid filter (`Grove.Liquid`, when Shortcodes is on)
   expands shortcodes inside a string from a template; template shortcodes are themselves Liquid.
 
 ## Media references: ids and paths ([media.md](media.md))
@@ -50,7 +50,7 @@ never cached for everyone (docs/media.md › Serving and CDNs).
 
 - [x] **Resolve ids and paths** in `[image]` and `[asset_url]`.
 - [x] **Explicit `id` and `path` arguments**, id first with the path as fallback
-  (`Crest.Media/Shortcodes/MediaShortcodeReference.cs`; compiled, not yet tested).
+  (`Grove.Media/Shortcodes/MediaShortcodeReference.cs`; compiled, not yet tested).
 - [ ] **Tests** for the explicit forms (id, path, both, id gone with path fallback, private file
   signed, invisible file rendering nothing).
 - [ ] **Write ids on save**: a content handler that rewrites path-form media shortcodes in body

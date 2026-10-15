@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Grove.Parties.BlazorWasm</AssemblyName>
+    <RootNamespace>Grove.Parties.BlazorWasm</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Provides the Razor component model ([Parameter], ComponentBase, etc.) without any
+       WASM-only APIs - this plain package pair works identically under every host: WASM
+       standalone, Blazor Server, and Blazor Web App SSR (mirrors
+       Grove.Components/Grove.Components.csproj). -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Grove.Parties.Domain.csproj" />
+    <ProjectReference Include="..\..\Grove.Components\Grove.Components.csproj" />
+  </ItemGroup>
+</Project>

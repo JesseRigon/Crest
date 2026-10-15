@@ -7,7 +7,7 @@ const { fetchAntiforgeryToken } = require('../harness/antiforgery');
 // Verifies docs/localization.md's "Multiple logins (switch-user)" requirement:
 // switching identity within the same browser tab must resolve the NEW user's own
 // stored default/override, never carry forward the previous user's session override
-// (the override key is scoped by user name - crest-culture-override:{userName} - so a
+// (the override key is scoped by user name - grove-culture-override:{userName} - so a
 // stale value under the old user's key must simply not apply to the new user).
 //
 // User A's override is deliberately set to a culture that ISN'T also the tenant's
@@ -19,13 +19,13 @@ const { fetchAntiforgeryToken } = require('../harness/antiforgery');
 // holds whether the tenant was configured by hand or by another check.
 async function clearAdminDefaultCulture(page, baseUrl) {
   const localization = await page.evaluate(async (baseUrl) => {
-    const r = await fetch(`${baseUrl}/api/crest/localization`, { credentials: 'include' });
+    const r = await fetch(`${baseUrl}/api/grove/localization`, { credentials: 'include' });
     return r.json();
   }, baseUrl);
   const antiforgery = await fetchAntiforgeryToken(page, baseUrl);
   await page.evaluate(async ({ baseUrl, antiforgery, body }) => {
     const headers = { 'Content-Type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken };
-    await fetch(`${baseUrl}/api/crest/localization`, {
+    await fetch(`${baseUrl}/api/grove/localization`, {
       method: 'PUT', credentials: 'include', headers,
       body: JSON.stringify({ ...body, adminDefaultCulture: null }),
     });

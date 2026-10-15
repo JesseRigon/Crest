@@ -14,13 +14,13 @@ The gallery works out of the box: requests use the ambient same-origin admin coo
 
 The API accepts only Bearer tokens via the `"Api"` scheme, and the gallery acquires one **silently**: an OAuth2 authorization-code + PKCE flow runs in a hidden iframe (`prompt=none`) against the tenant's OpenID Connect server, using the existing admin cookie session — no interactive login. The token auto-renews and is attached to every API call, Uppy/TUS upload request, and the SignalR connection. A request rejected with `401` is retried once after a silent renewal.
 
-If you use this mode, you **must** enable the **OpenID Token Validation** feature (`Crest.OpenId.Validation`) so Crest can validate the `access_token` sent by the SPA and the SignalR client.
+If you use this mode, you **must** enable the **OpenID Token Validation** feature (`Grove.OpenId.Validation`) so Grove can validate the `access_token` sent by the SPA and the SignalR client.
 
 To provision this mode, run the **Media API — Bearer/PKCE** recipe (Configuration → Recipes). It switches the authentication scheme to `Bearer`, enables the OpenID Server, Token Validation, and Management features, turns on the authorization-code flow with PKCE required, and registers a public (secret-less) `media_gallery` OpenID application whose redirect URI points at the gallery's silent-renew page. Adjust the recipe's `https://localhost:5001` origins to your tenant's real origin before running it, and make sure gallery users have roles granting the media permissions — the `roles` scope carries them into the token.
 
 ### Standalone external app
 
-The gallery SPA can also run on its own origin, outside the Crest admin. Since there is no ambient Crest cookie on the app origin, the first token acquisition uses an interactive redirect login instead of the hidden iframe; renewal is still silent. Two additional recipes configure this:
+The gallery SPA can also run on its own origin, outside the Grove admin. Since there is no ambient Grove cookie on the app origin, the first token acquisition uses an interactive redirect login instead of the hidden iframe; renewal is still silent. Two additional recipes configure this:
 
 - **Media API — Standalone external app** — layers the cross-origin (CORS) configuration and the standalone redirect URIs on top of the Bearer/PKCE recipe. Apply **Media API — Bearer/PKCE** first.
 - **Media API — Standalone external app (localhost dev)** — the same configuration with localhost origins baked in (app at `http://localhost:5173`, the pinned Vite dev port, against a tenant at `https://localhost:5001`), for local development.
@@ -81,7 +81,7 @@ Field-level extension settings intersect with the effective global list and can 
 
 When uploading multiple files, the Media Library uploads each file as a separate request with a maximum of **5 concurrent uploads**. Files beyond this limit are queued and uploaded as previous uploads complete. This prevents overwhelming the server while still allowing efficient batch uploads.
 
-## TUS Resumable Uploads (`Crest.Media.Tus`)
+## TUS Resumable Uploads (`Grove.Media.Tus`)
 
 The TUS feature enables resumable file uploads using the [TUS protocol](https://tus.io/). When enabled, it replaces the default upload mechanism, allowing uploads to be paused, resumed, and recovered after network interruptions.
 
@@ -97,13 +97,13 @@ When TUS is enabled:
 The TUS endpoint is available at `/api/media/tus`.
 
 !!! warning
-    TUS stores partial upload data on local disk by default. In multi-instance deployments, you must ensure that all upload chunks for a given file reach the same server instance. This can be achieved by configuring the temporary file location (`Crest:TempDirectory:Path`) to a **shared filesystem** path accessible from all instances, or by enabling **sticky sessions** (session affinity) on your load balancer. Without this, a chunked upload that spans multiple instances will fail because the second instance cannot find the partial file created by the first.
+    TUS stores partial upload data on local disk by default. In multi-instance deployments, you must ensure that all upload chunks for a given file reach the same server instance. This can be achieved by configuring the temporary file location (`Grove:TempDirectory:Path`) to a **shared filesystem** path accessible from all instances, or by enabling **sticky sessions** (session affinity) on your load balancer. Without this, a chunked upload that spans multiple instances will fail because the second instance cannot find the partial file created by the first.
 
 To configure a shared temporary file location (used by TUS and all other temporary files):
 
 ```json
 {
-  "Crest": {
+  "Grove": {
     "TempDirectory": {
       "Path": "/mnt/shared/temp"
     }
@@ -115,7 +115,7 @@ For Docker deployments, set `Path` to a path inside a shared volume:
 
 ```json
 {
-  "Crest": {
+  "Grove": {
     "TempDirectory": {
       "Path": "/app/data/temp"
     }
@@ -145,24 +145,24 @@ Alternatively, configure sticky sessions on your load balancer instead of a shar
 !!! note
     Sticky sessions ensure all chunks reach the same instance, but if that instance goes down mid-upload, the partial file is lost and the upload must restart from scratch. A shared filesystem provides better resilience since any instance can continue the upload if the original instance becomes unavailable.
 
-## SignalR Real-time Updates (`Crest.Media.SignalR`)
+## SignalR Real-time Updates (`Grove.Media.SignalR`)
 
 The SignalR feature enables real-time media updates. When enabled, changes to media files and folders (uploads, renames, moves, deletes) are broadcast to all connected clients. This keeps the Media Gallery in sync across multiple browser tabs and users.
 
-To enable, activate the **Media SignalR** feature in the admin panel. This feature depends on the reusable **`Crest.SignalR`** feature, which provides the SignalR services, client resources, and the `SignalR` authorization policy shared by any module that hosts a hub. The media hub accepts both the standard application cookie used by signed-in site users and API access tokens used by headless clients. If headless clients connect with `access_token`, you **must** enable the **OpenID Token Validation** feature (`Crest.OpenId.Validation`).
+To enable, activate the **Media SignalR** feature in the admin panel. This feature depends on the reusable **`Grove.SignalR`** feature, which provides the SignalR services, client resources, and the `SignalR` authorization policy shared by any module that hosts a hub. The media hub accepts both the standard application cookie used by signed-in site users and API access tokens used by headless clients. If headless clients connect with `access_token`, you **must** enable the **OpenID Token Validation** feature (`Grove.OpenId.Validation`).
 
 For multi-instance deployments, a backplane is required. The backplane is provided by the reusable SignalR module and applies to every hub in the tenant, so the same two features cover the Media Gallery and any other SignalR-based feature:
 
-- **`Crest.SignalR.Azure`** — Uses Azure SignalR Service as the backplane.
-- **`Crest.SignalR.Redis`** — Uses Redis as the backplane.
+- **`Grove.SignalR.Azure`** — Uses Azure SignalR Service as the backplane.
+- **`Grove.SignalR.Redis`** — Uses Redis as the backplane.
 
 ### Backplane Configuration
 
-The Redis backplane reuses the same connection string as the `Crest.Redis` module (`Crest_Redis:Configuration`), so a single Redis instance can serve the backplane and the other Redis-backed features (cache, lock, Data Protection):
+The Redis backplane reuses the same connection string as the `Grove.Redis` module (`Grove_Redis:Configuration`), so a single Redis instance can serve the backplane and the other Redis-backed features (cache, lock, Data Protection):
 
 ```json
 {
-  "Crest_Redis": {
+  "Grove_Redis": {
     "Configuration": "your-redis-host:6379,password=...,ssl=true"
   }
 }
@@ -175,13 +175,13 @@ The Azure SignalR Service backplane is configured with its own connection string
   "SignalR": {
     "Azure": {
       "ConnectionString": "Endpoint=https://<your-service>.service.signalr.net;AccessKey=...;Version=1.0;",
-      "ApplicationName": "Crest"
+      "ApplicationName": "Grove"
     }
   }
 }
 ```
 
-Set `ApplicationName` to a unique value when multiple Crest deployments share the same Azure SignalR Service. Crest automatically appends a stable tenant identifier.
+Set `ApplicationName` to a unique value when multiple Grove deployments share the same Azure SignalR Service. Grove automatically appends a stable tenant identifier.
 
 If a backplane feature is enabled but its connection string is missing, a warning is logged at startup and SignalR keeps working in single-instance (in-memory) mode — updates then only reach clients connected to the same instance.
 
@@ -191,10 +191,10 @@ To fully scale the Media Library across multiple application instances, the foll
 
 | Component | Purpose | Configuration |
 |---|---|---|
-| **SignalR backplane** | Broadcast real-time updates across instances | Enable `Crest.SignalR.Azure` or `Crest.SignalR.Redis` |
-| **Sticky sessions** or **shared TUS path** | Ensure TUS upload chunks are accessible across instances | Configure session affinity on your load balancer, or set `Crest:TempDirectory:Path` to a shared filesystem |
+| **SignalR backplane** | Broadcast real-time updates across instances | Enable `Grove.SignalR.Azure` or `Grove.SignalR.Redis` |
+| **Sticky sessions** or **shared TUS path** | Ensure TUS upload chunks are accessible across instances | Configure session affinity on your load balancer, or set `Grove:TempDirectory:Path` to a shared filesystem |
 | **Shared media storage** | Store media files accessible from all instances | Configure Azure Blob Storage, Amazon S3, or a shared filesystem |
-| **Shared Data Protection keys** | Let cookies, antiforgery tokens, and bearer tokens issued by one instance be validated by another | Enable `Crest.Redis.DataProtection`, or configure Azure Blob key storage via `Crest.DataProtection.Azure` |
+| **Shared Data Protection keys** | Let cookies, antiforgery tokens, and bearer tokens issued by one instance be validated by another | Enable `Grove.Redis.DataProtection`, or configure Azure Blob key storage via `Grove.DataProtection.Azure` |
 
 !!! note
     Without a SignalR backplane, real-time updates only work within a single instance. Without sticky sessions (or a shared temp filesystem), TUS resumable uploads may fail when chunks are routed to different instances. Standard (non-TUS) uploads are not affected since each file is uploaded in a single request.
@@ -204,11 +204,11 @@ To fully scale the Media Library across multiple application instances, the foll
 
 ### Reference Configuration (Redis)
 
-A single Redis instance can carry the whole cross-instance coordination load. Enable the **`Crest.Redis`**, **`Crest.Redis.DataProtection`**, and **`Crest.SignalR.Redis`** features, and configure:
+A single Redis instance can carry the whole cross-instance coordination load. Enable the **`Grove.Redis`**, **`Grove.Redis.DataProtection`**, and **`Grove.SignalR.Redis`** features, and configure:
 
 ```json
 {
-  "Crest_Redis": {
+  "Grove_Redis": {
     "Configuration": "your-redis-host:6379,password=...,ssl=true"
   },
   "TempDirectory": {

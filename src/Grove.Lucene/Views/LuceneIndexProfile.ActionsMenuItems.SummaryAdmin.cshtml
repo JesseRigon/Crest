@@ -1,0 +1,11 @@
+@using Grove.DisplayManagement.Views
+@using Grove.Indexing.Models
+
+@model ShapeViewModel<Grove.Indexing.Models.IndexProfile>
+
+<a asp-action="QueryIndex"
+   asp-route-indexName="@Model.Value.Name"
+   asp-action="Query"
+   asp-controller="Admin"
+   asp-area="Grove.Lucene"
+   class="dropdown-item btn-sm">@T["Query Index"]</a>

@@ -1,6 +1,6 @@
 # How YesSql works
 
-Crest does not use an ORM like Entity Framework. Most of its persistent application data — including content items, users, settings, and workflows — is stored with [YesSql](https://github.com/sebastienros/yessql), a .NET **document database interface over a relational database**. You get the flexibility of a document store (no schema to migrate when your objects change) while still running on SQL Server, SQLite, MySQL, or PostgreSQL.
+Grove does not use an ORM like Entity Framework. Most of its persistent application data — including content items, users, settings, and workflows — is stored with [YesSql](https://github.com/sebastienros/yessql), a .NET **document database interface over a relational database**. You get the flexibility of a document store (no schema to migrate when your objects change) while still running on SQL Server, SQLite, MySQL, or PostgreSQL.
 
 ## Documents
 
@@ -8,9 +8,9 @@ When an object is saved, YesSql serializes it to JSON and stores it as a row in 
 
 | Id | Type | Content | Version |
 | --- | --- | --- | --- |
-| 42 | `Crest.ContentManagement.ContentItem, Crest.ContentManagement.Abstractions` | `{ "ContentItemId": "4tavbc...", "DisplayText": "My blog post", ... }` | 3 |
+| 42 | `Grove.ContentManagement.ContentItem, Grove.ContentManagement.Abstractions` | `{ "ContentItemId": "4tavbc...", "DisplayText": "My blog post", ... }` | 3 |
 
-This is why adding a field or a part to a content type in Crest never requires a database migration: the shape of the JSON just changes.
+This is why adding a field or a part to a content type in Grove never requires a database migration: the shape of the JSON just changes.
 
 The obvious limitation is that you cannot efficiently query inside a JSON blob with SQL. That is what indexes are for.
 
@@ -78,11 +78,11 @@ public async Task<int> CreateAsync()
 }
 ```
 
-Real examples in the Crest source: [`ContentItemIndex`](https://github.com/OrchardCMS/OrchardCore/blob/main/src/OrchardCore/OrchardCore.ContentManagement/Records/ContentItemIndex.cs), [`AliasPartIndex`](https://github.com/OrchardCMS/OrchardCore/blob/main/src/OrchardCore.Modules/OrchardCore.Alias/Indexes/AliasPartIndex.cs) and its [migration](https://github.com/OrchardCMS/OrchardCore/blob/main/src/OrchardCore.Modules/OrchardCore.Alias/Migrations.cs).
+Real examples in the Grove source: [`ContentItemIndex`](https://github.com/OrchardCMS/OrchardCore/blob/main/src/OrchardCore/OrchardCore.ContentManagement/Records/ContentItemIndex.cs), [`AliasPartIndex`](https://github.com/OrchardCMS/OrchardCore/blob/main/src/OrchardCore.Modules/OrchardCore.Alias/Indexes/AliasPartIndex.cs) and its [migration](https://github.com/OrchardCMS/OrchardCore/blob/main/src/OrchardCore.Modules/OrchardCore.Alias/Migrations.cs).
 
 ## The session
 
-YesSql document reads and writes go through `ISession`, a scoped unit of work registered in the dependency injection container. `SaveAsync` and `Delete` are buffered in memory; the SQL commands run in a single transaction when `SaveChangesAsync` is called. Crest automatically commits the session resolved from a tenant shell scope when that scope ends, normally at the end of a request.
+YesSql document reads and writes go through `ISession`, a scoped unit of work registered in the dependency injection container. `SaveAsync` and `Delete` are buffered in memory; the SQL commands run in a single transaction when `SaveChangesAsync` is called. Grove automatically commits the session resolved from a tenant shell scope when that scope ends, normally at the end of a request.
 
 ```csharp
 public sealed class MyController : Controller
@@ -112,7 +112,7 @@ For content items specifically, prefer the higher-level `IContentManager` (or `I
 
 ## Configuration
 
-The database provider, connection string, and table prefix are chosen per tenant at setup time. `YesSqlOptions` (command page size, isolation level, custom serializer...) and table naming presets are configurable: see [Data (`Crest.Data`)](../../reference/modules/Data/README.md). For raw SQL against the same database, use `IDbConnectionAccessor` as described in that page, or the [SQL queries](../../reference/modules/Queries/README.md) module.
+The database provider, connection string, and table prefix are chosen per tenant at setup time. `YesSqlOptions` (command page size, isolation level, custom serializer...) and table naming presets are configurable: see [Data (`Grove.Data`)](../../reference/modules/Data/README.md). For raw SQL against the same database, use `IDbConnectionAccessor` as described in that page, or the [SQL queries](../../reference/modules/Queries/README.md) module.
 
 ## Going further
 

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
-using Crest.ResourceManagement;
+using Grove.ResourceManagement;
 
-namespace Crest.Themes.TheAdmin;
+namespace Grove.Themes.TheAdmin;
 
 public sealed class ResourceManagementOptionsConfiguration
     : IConfigureOptions<ResourceManagementOptions>

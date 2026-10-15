@@ -18,8 +18,8 @@ module.exports = async function run(page, ctx) {
   const results = [];
 
   const roles = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/roles', { credentials: 'include' });
-    if (!response.ok) throw new Error(`GET api/crest/roles failed: ${response.status}`);
+    const response = await fetch('/api/grove/roles', { credentials: 'include' });
+    if (!response.ok) throw new Error(`GET api/grove/roles failed: ${response.status}`);
     return response.json();
   });
   const limitedRole = roles.find(role => role.name === 'Editor' && !role.isAdmin)
@@ -53,7 +53,7 @@ module.exports = async function run(page, ctx) {
       const status = response?.status() ?? 0;
       const deniedPanel = status === 403
         ? false
-        : await session.page.locator('[data-testid="crest-route-forbidden"]').waitFor({ timeout: 15000 }).then(() => true).catch(() => false);
+        : await session.page.locator('[data-testid="grove-route-forbidden"]').waitFor({ timeout: 15000 }).then(() => true).catch(() => false);
       results.push({
         name: 'route-gate-denies-tenants',
         pass: status === 403 || deniedPanel,
@@ -70,7 +70,7 @@ module.exports = async function run(page, ctx) {
     const antiforgery = await fetchAntiforgeryToken(session.page, ctx.baseUrl);
     const statuses = await session.page.evaluate(async ({ antiforgery }) => {
       const results = {};
-      results.lockWrite = (await fetch('/api/crest/content-part-lists/zz.denial.probe/locks', {
+      results.lockWrite = (await fetch('/api/grove/content-part-lists/zz.denial.probe/locks', {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken },
@@ -78,7 +78,7 @@ module.exports = async function run(page, ctx) {
       })).status;
       // Positive control: their own identity read works, so the 403 above is
       // authorization, not a broken session.
-      results.me = (await fetch('/api/crest/auth/me', { credentials: 'include' })).status;
+      results.me = (await fetch('/api/grove/auth/me', { credentials: 'include' })).status;
       return results;
     }, { antiforgery });
 

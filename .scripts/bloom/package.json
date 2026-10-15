@@ -1,5 +1,5 @@
 {
-    "name": "@crest/bloom",
+    "name": "@grove/bloom",
     "version": "1.0.0",
     "type": "module",
     "dependencies": {

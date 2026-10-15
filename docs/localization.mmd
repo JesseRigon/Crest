@@ -1,10 +1,10 @@
 flowchart TD
 
 %% Menu caption resolution - the full display stack for one admin menu item, per request
-%% culture. Implemented by CrestMenuCaptionResolver + CrestPoTranslationLookup (shared with
+%% culture. Implemented by GroveMenuCaptionResolver + GrovePoTranslationLookup (shared with
 %% the provider-menu seeder and the Translations editor's Fallback placeholders, so all
 %% three always agree). The rename overlay is applied after resolution by
-%% CrestAdminMenuLayoutService.ApplyAsync. "Delete walks down": removing an entry at any
+%% GroveAdminMenuLayoutService.ApplyAsync. "Delete walks down": removing an entry at any
 %% layer reveals the next one - never a suppression. To force the invariant literal over a
 %% shipped PO value, store the literal itself as the value ("pin to literal").
 %%
@@ -14,9 +14,9 @@ flowchart TD
 %% shadow build and persisted on the sync document's entries (SourceContexts).
 %%
 %% The WASM client's own UI strings (T["Some text"] literals) resolve through the same
-%% layer order - store edit (context Crest.AdminTheme.Client) -> PO (client context, else
+%% layer order - store edit (context Grove.AdminTheme.Client) -> PO (client context, else
 %% most-common across all catalogs) -> the literal itself - server-side in
-%% CrestLocalizationController.GetStringsAsync, shipped to CrestApiLocalizer as one
+%% GroveLocalizationController.GetStringsAsync, shipped to GroveApiLocalizer as one
 %% per-culture dictionary. Same shape, no per-item identity tiers.
 %%
 %% PO layer provenance (see localization.md "Where translations come from"): the layer
@@ -26,9 +26,9 @@ flowchart TD
 %%     hand edits. Only this half ever changes when upstream/Crowdin ships new work.
 %%   - HOST-owned catalogs (a host, for example: Localization/{culture}/Admin.po /
 %%     Site.po; host modules may use module-local files): the
-%%     PRIVATE lane. By ruling (2026-08-22) Crest itself ships NO translation content -
+%%     PRIVATE lane. By ruling (2026-08-22) Grove itself ships NO translation content -
 %%     literals only, stock-localized. Crowdin never sees or touches these; air-gap
-%%     safe. Entries under msgctxt "Crest.AdminTheme.Client" outrank the mirror for the same
+%%     safe. Entries under msgctxt "Grove.AdminTheme.Client" outrank the mirror for the same
 %%     literal, and the store above outranks both - so upstream updates only fill gaps
 %%     you never claimed, and pin-to-literal vetoes a shipped translation entirely.
 %% Literal fidelity: matching is case-sensitive; a literal inherits upstream work only

@@ -1,9 +1,9 @@
 # Regions and locations — Regional Profiles, the geo tree, addresses
 
-`Crest.Regions` owns everything about **where** a party or a thing is: the Regional Profile
+`Grove.Regions` owns everything about **where** a party or a thing is: the Regional Profile
 a party is assigned, the geographic tree every place resolves into, and how addresses are
 entered per country. The `Address` part and the tenant's own Locations, which consume them,
-are `Crest.Parties`' content types. What is not built yet is in
+are `Grove.Parties`' content types. What is not built yet is in
 [Still to build](#still-to-build).
 
 Nothing here assumes a UI language — that is [localization.md](localization.md)'s scope
@@ -12,13 +12,13 @@ entirely.
 ## Naming: "Regional Profile," never "Tenant"
 
 OrchardCore's "Tenant" is a Shell — a hard isolation boundary with its own database,
-content, users and permissions (`CrestTenant`, the Tenants admin page). A Regional
+content, users and permissions (`GroveTenant`, the Tenants admin page). A Regional
 Profile is a content item living *inside* one Orchard Tenant. One Orchard Tenant can, and
 typically will, have several profiles (US, MX, CA, EU) side by side. Use
-`CrestRegionalProfile` for the content type and keep "Tenant" language out of this
+`GroveRegionalProfile` for the content type and keep "Tenant" language out of this
 feature's code, permissions and content types.
 
-The profile is a party's place, culture and currency, which is why it lives in Crest
+The profile is a party's place, culture and currency, which is why it lives in Grove
 rather than in a line-of-business module: every application has parties somewhere, and they
 all have a country and a locale. What a *business* additionally reads off a profile is the
 business's own — an accounting module attaches its currency tier facet, a tax module its
@@ -27,11 +27,11 @@ never declared here.
 
 ## Regional Profiles
 
-Content type `CrestRegionalProfile`, following the same "Orchard content, not a parallel
-JSON store" decision as [design-systems.md](design-systems.md)'s `CrestDesignSystem`.
+Content type `GroveRegionalProfile`, following the same "Orchard content, not a parallel
+JSON store" decision as [design-systems.md](design-systems.md)'s `GroveDesignSystem`.
 A tenant publishes and can enable/disable each Regional Profile independently.
 
-Built as `CrestRegionalProfilePart`, `CrestRegionalProfileReferencePart` (the
+Built as `GroveRegionalProfilePart`, `GroveRegionalProfileReferencePart` (the
 reference a party carries), `RegionalProfileIndex`, permissions and
 `IRegionalProfileResolver` (party → context). It declares no facets of its own.
 
@@ -58,7 +58,7 @@ What it does **not** declare, because downstream modules attach it:
 
 ### The context is a composition point
 
-`CrestRegionalProfile` must not gain a field of any downstream module's kind, because that
+`GroveRegionalProfile` must not gain a field of any downstream module's kind, because that
 would point this layer at a downstream module and the dependency only runs downstream.
 Instead each module attaches its own part to the context in its own migration, declaring the
 owner as a Manifest dependency ([architecture.md](architecture.md) › The rules that keep it
@@ -81,7 +81,7 @@ départements; the UK ships its nations and 92 counties with no state level at a
 the same table.
 
 Where this departs from OFBiz, deliberately: OFBiz names its levels in US terms
-(`stateProvinceGeoId`, `countyGeoId` — a département is filed as `COUNTY`). Crest uses
+(`stateProvinceGeoId`, `countyGeoId` — a département is filed as `COUNTY`). Grove uses
 **numbered levels** and lets each country say what its levels are called.
 
 ### Levels
@@ -144,7 +144,7 @@ The map is **global-store reference data keyed by country** ([globals.md](global
 loaded from data files and edited only by the Default tenant; a tenant may overlay labels.
 `addressing-maps.json` ships maps for US, GB, FR and CA plus a generic map, and postal
 patterns for 107 countries; `AddressingMap`/`AddressInput`/`AddressRules` live in
-`Crest.Regions.Domain`, shared by client and server. `global.country-codes` and
+`Grove.Regions.Domain`, shared by client and server. `global.country-codes` and
 `global.subdivisions` are levels 1 and 2 of the tree (`geo-nodes.json`: 249 countries, 69
 subdivisions) and `global.postal-formats` one column of the map. Per the validation decision
 below, both the WASM client and the server resolve the map at runtime from the same source.
@@ -179,7 +179,7 @@ point-in-polygon needs it, so it never rides on the node. A `GeoBoundary` docume
 global store, keyed by node id, holds a **MultiPolygon** — required, not optional, because
 geographies are non-contiguous: Hawaii, Michigan's two peninsulas, any archipelago, most
 transit districts. WKT or GeoJSON; loaded per node when a point is tested; never
-enumerated. Point-in-polygon is a **provider seam** like icons and tax: `IGeoBoundaryResolver` in Crest, with a built-in NetTopologySuite implementation first (BSD, in-process, no network) and external providers registrable later.
+enumerated. Point-in-polygon is a **provider seam** like icons and tax: `IGeoBoundaryResolver` in Grove, with a built-in NetTopologySuite implementation first (BSD, in-process, no network) and external providers registrable later.
 
 Geocoding (address → `Point`) is a provider seam of the same kind: `IGeocoder` and
 `IGeoLocator`, composed by `CompositeGeoLocator`.
@@ -195,7 +195,7 @@ it ships 63 US states but **2 counties and 1 postal code**.
 `CensusGazetteerParser` streams a Census gazetteer file into level-3 nodes; the 2024 county
 file ships embedded (3,222 counties, `US-{state}-{county FIPS}`), plus `geo-nodes-us.json`
 for places and groupings (Chicago under Cook and DuPage; the RTA grouping over its six
-counties). `POST api/crest/geo/import/gazetteer?level=` takes further files on the Default
+counties). `POST api/grove/geo/import/gazetteer?level=` takes further files on the Default
 tenant.
 
 ## Addresses
@@ -221,7 +221,7 @@ The part carries two kinds of data side by side, as OFBiz's `PostalAddress` does
   `PostalAddressBoundary`. Set by geocoding against boundary polygons or by import; never
   hand-typed.
 
-`Crest.Parties` owns the `Address` part and its write surface (`PartyContactsService`);
+`Grove.Parties` owns the `Address` part and its write surface (`PartyContactsService`);
 it consumes the tree and the map, which are global reference data. The form and
 `ResolveAddressAsync` are driven by the map.
 
@@ -229,7 +229,7 @@ The `GeoPostalCode` row for the address's code fills in any level the form left 
 the code maps to exactly one node at that level (a straddling code fills nothing). A stored
 point: supplied on the write model, else geocoded through `IGeoLocator`, else the postal
 centroid; boundary memberships follow from the point. The US/UK/FR entry-and-validate test is
-`Crest.Regions.Tests`; tree resolution is exercised by Playwright's US path.
+`Grove.Regions.Tests`; tree resolution is exercised by Playwright's US path.
 
 **What consumes the machine half** — and why the split matters:
 
@@ -248,7 +248,7 @@ taxing level 3 and that is an empty reference, not a missing field.
 A Location is a place the **tenant** operates from — warehouse, store, office, receiving
 dock. One Location is marked the tenant's **primary** — its "home", which a tax module reads
 as the tenant's tax home. Built as the `Location` and `LocationPoint` content types,
-`LocationIndex` and `ILocationService` in `Crest.Parties`.
+`LocationIndex` and `ILocationService` in `Grove.Parties`.
 
 ### A Location can straddle a boundary; an address cannot
 
@@ -303,12 +303,12 @@ edits them at runtime. `global.country-codes`, `global.subdivisions` and
 `global.postal-formats` are levels 1 and 2 of the tree plus one column of the map, and are
 replaced by them.
 
-- `api/crest/regions/addressing-maps` (`AddressingMapsController`): `GET {country}` answers the
+- `api/grove/regions/addressing-maps` (`AddressingMapsController`): `GET {country}` answers the
   applicable map (the generic one when the country has none) to any signed-in caller of any
   tenant, so the client resolves the same rule the server's `IGeoService` does; `GET`,
   `PUT {country}` and `DELETE {country}` (revert) are Default-tenant only behind
   `ManageGlobalReferenceData`.
-- A write is checked by `AddressingMapValidator` (`Crest.Regions.Domain`, shared with the
+- A write is checked by `AddressingMapValidator` (`Grove.Regions.Domain`, shared with the
   client: level 1 present, levels and fields unique, fields known or naming a declared level, the
   locality level declared, the postal pattern a valid regex) and marks the map `Edited`; the
   data-file loader skips an edited map, and a revert restores the shipped one
@@ -320,7 +320,7 @@ replaced by them.
 
 ## Loading postal codes and boundaries
 
-`POST api/crest/regions/geo/import/postal-codes` (`format=table`: a header row with Country,
+`POST api/grove/regions/geo/import/postal-codes` (`format=table`: a header row with Country,
 Code, NodeIds, Latitude, Longitude; or `format=geonames`: the GeoNames postal dump, whose admin
 codes name `{CC}-{admin1}` and `{CC}-{admin1}-{admin2}`) and `POST .../geo/import/boundaries` (a
 GeoJSON FeatureCollection; `idProperty` and `idFormat`, e.g. `COUNTYFP` and `US-IL-{0}`, compose

@@ -1,4 +1,4 @@
-# Azure Communication Services Email (`Crest.Email.Azure`)
+# Azure Communication Services Email (`Grove.Email.Azure`)
 
 This module adds Email providers for sending emails through [Azure Communication Services](https://learn.microsoft.com/en-us/azure/communication-services/concepts/email/email-overview).
 
@@ -8,7 +8,7 @@ Enabling this module will introduce a new tab labeled **Azure Communication Serv
 
 | Setting            | Description                                                                                                           |
 |--------------------|-----------------------------------------------------------------------------------------------------------------------|
-| `DefaultSender`    | The email of the sender. This will override the `DefaultSender` setting in [`Crest.Email`](../Email/README.md). |
+| `DefaultSender`    | The email of the sender. This will override the `DefaultSender` setting in [`Grove.Email`](../Email/README.md). |
 | `ConnectionString` | The ACS connection string that will be used to deliver the email.                                                     |
 
 ## **Default Azure Communication Services** Provider Configuration
@@ -17,7 +17,7 @@ You may configure the Default Azure Email Service provider by the configuration 
 
 ```json
 {
-  "Crest_Email_AzureCommunicationServices": {
+  "Grove_Email_AzureCommunicationServices": {
     "DefaultSender": "",
     "ConnectionString": ""
   }
@@ -31,7 +31,7 @@ For more information about configurations, please refer to [Configuration](../Co
 
 ## Runtime updates
 
-`AzureEmailOptions` is populated from tenant site settings, so custom services that need to observe admin changes without reloading the tenant should inject `IOptionsMonitor<AzureEmailOptions>` instead of `IOptions<AzureEmailOptions>`. The module registers a signal-backed `IOptionsChangeTokenSource<AzureEmailOptions>`, and when the Azure email settings are updated Crest invalidates the relevant option monitors after the YesSql session commits successfully, allowing running nodes to rebuild the provider options from the committed settings.
+`AzureEmailOptions` is populated from tenant site settings, so custom services that need to observe admin changes without reloading the tenant should inject `IOptionsMonitor<AzureEmailOptions>` instead of `IOptions<AzureEmailOptions>`. The module registers a signal-backed `IOptionsChangeTokenSource<AzureEmailOptions>`, and when the Azure email settings are updated Grove invalidates the relevant option monitors after the YesSql session commits successfully, allowing running nodes to rebuild the provider options from the committed settings.
 
 ## Recipe Configuration
 

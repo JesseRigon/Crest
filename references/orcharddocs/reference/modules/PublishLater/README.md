@@ -1,4 +1,4 @@
-# Publish Later (`Crest.PublishLater`)
+# Publish Later (`Grove.PublishLater`)
 
 The Publish Later module schedules a draft content item to be published at a specific date and time.
 
@@ -25,13 +25,13 @@ To change the schedule, enter another value and save the draft. To remove it, cl
 
 ## Permissions
 
-The scheduling controls are available only when the current user is authorized for the standard `PublishContent` permission on the content item. Crest automatically applies owner-specific and content-type-specific permission variants where appropriate. The module does not define a separate scheduling permission.
+The scheduling controls are available only when the current user is authorized for the standard `PublishContent` permission on the content item. Grove automatically applies owner-specific and content-type-specific permission variants where appropriate. The module does not define a separate scheduling permission.
 
 ## Date, time, and time zones
 
 The editor accepts a local date and time and converts it to UTC before storing it in `ScheduledPublishUtc`. When the editor displays an existing schedule, it converts the stored UTC value back to the local time zone for the current request.
 
-The local time zone is selected through `ILocalClock`. A configured user time zone takes precedence when the **User Time Zone** feature is enabled; otherwise, the site time zone is used. If neither provides a time zone, Crest falls back to the server's system time zone.
+The local time zone is selected through `ILocalClock`. A configured user time zone takes precedence when the **User Time Zone** feature is enabled; otherwise, the site time zone is used. If neither provides a time zone, Grove falls back to the server's system time zone.
 
 !!! warning
     Local times skipped or repeated by a daylight-saving transition are converted strictly. Choose an unambiguous local time; otherwise, the conversion fails and the schedule is not saved.

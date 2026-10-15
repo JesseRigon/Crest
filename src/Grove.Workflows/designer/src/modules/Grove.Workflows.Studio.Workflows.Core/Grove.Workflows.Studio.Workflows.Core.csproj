@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>Grove.Workflows Studio workflows core services.</Description>
+        <PackageTags>groveWorkflows studio core</PackageTags>
+        <RootNamespace>Grove.Workflows.Studio.Workflows</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Components" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\framework\Grove.Workflows.Studio.Core\Grove.Workflows.Studio.Core.csproj" />
+      <ProjectReference Include="..\..\framework\Grove.Workflows.Studio.Shared\Grove.Workflows.Studio.Shared.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Compile Remove="Domain\Handlers\Debugging.cs" />
+    </ItemGroup>
+
+</Project>

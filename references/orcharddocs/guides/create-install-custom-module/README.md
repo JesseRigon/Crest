@@ -1,7 +1,7 @@
 # Create and install a custom module
 
 ## Creating a custom module
-Crest offers a way to create a new CMS module. You can find a detailed guide in the official documentation: [Create a new CMS module](https://docs.orchardcore.net/en/latest/getting-started/templates/#create-a-new-cms-module). This guide assumes that a module already exists and focuses on how to install, customize, and enable it.
+Grove offers a way to create a new CMS module. You can find a detailed guide in the official documentation: [Create a new CMS module](https://docs.orchardcore.net/en/latest/getting-started/templates/#create-a-new-cms-module). This guide assumes that a module already exists and focuses on how to install, customize, and enable it.
 ## Module customization
 We can customize how your module appears in the Admin UI by editing the `Manifest.cs` file.
 
@@ -18,11 +18,11 @@ After modifying the `Manifest.cs` file, for the changes to take effect, follow t
 3. If changes are not reflected, disable and re-enable the module
 
 ## Installing the module
-To install a custom module in an Crest CMS application, the module project must be referenced by the main CMS web project.
+To install a custom module in an Grove CMS application, the module project must be referenced by the main CMS web project.
 
 For example, in Visual Studio:
 - Open the solution
-- Right-click on **Dependencies** in the project named `Crest.Cms.Web`
+- Right-click on **Dependencies** in the project named `Grove.Cms.Web`
 - Click on **Add Project Reference**
 - Select the custom module project
 - Click the Accept button
@@ -31,10 +31,10 @@ After adding the reference, the main CMS project file should include an entry si
 
 ```
 <ItemGroup>
-<ProjectReference Include="..\MyModule.Crest\MyModule.Crest.csproj" />
+<ProjectReference Include="..\MyModule.Grove\MyModule.Grove.csproj" />
 </ItemGroup>
 ```
-This reference allows Crest to discover and load the custom module at runtime.
+This reference allows Grove to discover and load the custom module at runtime.
 
 ## Enabling the module
 Once the module is installed, it can be enabled from the administration panel:

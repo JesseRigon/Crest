@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <Description>Adds various UI hint handlers for activity input.</Description>
+        <PackageTags>groveWorkflows studio module</PackageTags>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <SupportedPlatform Include="browser" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\framework\Grove.Workflows.Studio.Shared\Grove.Workflows.Studio.Shared.csproj" />
+      <ProjectReference Include="..\Grove.Workflows.Studio.Workflows.Core\Grove.Workflows.Studio.Workflows.Core.csproj" />
+    </ItemGroup>
+    
+</Project>

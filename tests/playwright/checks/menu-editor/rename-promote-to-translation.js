@@ -1,21 +1,21 @@
-// A rename recorded in the Crest layout only applies inside Crest's own sidebar. Promoting it
+// A rename recorded in the Grove layout only applies inside Grove's own sidebar. Promoting it
 // writes the same text into the tenant's translation store - the store IDataLocalizer reads at
 // render time - keyed on the item's ORIGINAL caption and scoped to the admin menu the node
 // belongs to.
 //
-// The store is read through GetStrings, the same JSON endpoint Crest's own translations
+// The store is read through GetStrings, the same JSON endpoint Grove's own translations
 // editor (a Vue app) loads its values from. Nothing HTML-based works here: /Admin pages render
-// inside the Crest shell whose sidebar shows the renamed caption as text, the editor itself
+// inside the Grove shell whose sidebar shows the renamed caption as text, the editor itself
 // sits in the legacy-frame iframe outside page.content(), and its values only arrive
 // client-side - the JSON endpoint is the one surface that reports exactly what the store holds.
 //
 // Since provider items are imported as admin menu nodes ("Primary Navigation"), promotion works
 // for them too: the imported node supplies the MenuName that scopes the IDataLocalizer context.
-// The store is verified through Crest's own Data Localization editor (/Admin/DataLocalization),
-// which renders directly from TranslationsDocument and knows nothing about the Crest layout.
+// The store is verified through Grove's own Data Localization editor (/Admin/DataLocalization),
+// which renders directly from TranslationsDocument and knows nothing about the Grove layout.
 const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
 
-const defaultMenuId = '__crest_default_admin_menu';
+const defaultMenuId = '__grove_default_admin_menu';
 
 module.exports = async function run(page, ctx) {
   const results = [];
@@ -37,7 +37,7 @@ module.exports = async function run(page, ctx) {
   async function rename(nodeId, text) {
     const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
     return page.evaluate(async ({ nodeId, text, antiforgery }) => {
-      const response = await fetch(`/api/crest/admin-menus/__crest_default_admin_menu/nodes/${encodeURIComponent(nodeId)}/rename`, {
+      const response = await fetch(`/api/grove/admin-menus/__grove_default_admin_menu/nodes/${encodeURIComponent(nodeId)}/rename`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken },
@@ -47,11 +47,11 @@ module.exports = async function run(page, ctx) {
     }, { nodeId, text, antiforgery });
   }
 
-  // The translation store, read through the same JSON endpoint Crest's translations editor
+  // The translation store, read through the same JSON endpoint Grove's translations editor
   // loads its values from.
   async function storeHtml() {
     return page.evaluate(async (baseUrl) => {
-      // legacy-frame=1 is the marker that makes Crest's admin middleware pass an /Admin/*
+      // legacy-frame=1 is the marker that makes Grove's admin middleware pass an /Admin/*
       // request through to MVC instead of serving the Blazor shell document - without it this
       // fetch returns the shell's HTML, whose sidebar contains the renamed caption as text and
       // makes every assertion here vacuous.
@@ -64,15 +64,15 @@ module.exports = async function run(page, ctx) {
   // "Content" is a provider-contributed item, imported as an admin menu node - exactly the case
   // promotion exists for. Resolved by caption; its id is the imported node's UniqueId.
   const content = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+    const response = await fetch('/api/grove/admin-menus', { credentials: 'include' });
     if (!response.ok) throw new Error(`admin menus failed: ${response.status}`);
     const data = await response.json();
-    const menu = data.menus.find(candidate => candidate.id === '__crest_default_admin_menu');
+    const menu = data.menus.find(candidate => candidate.id === '__grove_default_admin_menu');
     return menu.nodes.find(node => node.text === 'Content') ?? null;
   });
   if (!content) throw new Error('Expected a Content root menu node.');
   const nodeId = content.id;
-  const nodeUrl = `/api/crest/admin-menus/${defaultMenuId}/nodes/${encodeURIComponent(nodeId)}`;
+  const nodeUrl = `/api/grove/admin-menus/${defaultMenuId}/nodes/${encodeURIComponent(nodeId)}`;
 
   results.push({
     name: 'imported-provider-item-has-uniqueid',
@@ -99,7 +99,7 @@ module.exports = async function run(page, ctx) {
     const beforeAny = await storeHtml();
     const preexisting = inStore(beforeAny);
 
-    // A rename alone is a Crest-local display override and must NOT reach the translation
+    // A rename alone is a Grove-local display override and must NOT reach the translation
     // store - that separation is what makes promotion a distinct, separately-authorized action.
     await rename(nodeId, renameTo);
     const afterRenameOnly = await storeHtml();
@@ -110,7 +110,7 @@ module.exports = async function run(page, ctx) {
         ? `"${renameTo}" already present before the check ran; inconclusive`
         : inStore(afterRenameOnly)
           ? 'store already holds the rename before any promotion'
-          : 'store unchanged by the Crest-local rename, as expected',
+          : 'store unchanged by the Grove-local rename, as expected',
     });
 
     const promoted = await post(`${nodeUrl}/promote-rename`);

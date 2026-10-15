@@ -1,5 +1,5 @@
-using Crest.DisplayManagement.Manifest;
-using Crest.Modules.Manifest;
+using Grove.DisplayManagement.Manifest;
+using Grove.Modules.Manifest;
 
 [assembly: Theme(
     Name = "The Admin Theme",
@@ -9,7 +9,7 @@ using Crest.Modules.Manifest;
     Description = "The default Admin theme.",
     Dependencies =
     [
-        "Crest.Themes",
+        "Grove.Themes",
     ],
     Tags =
     [

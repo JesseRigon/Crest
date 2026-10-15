@@ -1,6 +1,6 @@
 # Glossary
 
-A list of terms and concepts that you can find in Crest.
+A list of terms and concepts that you can find in Grove.
 
 They are grouped by roles: user, theme designer, administrator.
 

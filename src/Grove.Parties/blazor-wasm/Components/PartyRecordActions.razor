@@ -1,0 +1,207 @@
+@namespace Grove.Parties.BlazorWasm.Components
+@using Grove.Components.Access
+@using Grove.Parties.Constants
+@using Grove.Parties.PartyTypes
+@using Grove.Parties.ViewModels
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* The actions of a selected base party (docs/parties.md, ruling 2026-10-14): add a role
+   ("make this person a customer" lands on their Individual organization), convert an
+   Individual organization into an ordinary one when the tenant allows it, the organization's
+   owner, and inviting a contact person to an organization's portal. Each action shows only
+   when the server answers for it (Members may be disabled). *@
+
+<GroveStack Gap="0.75rem" data-testid="party-record-actions">
+    @if (IsIndividual)
+    {
+        <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+            <GroveBadge BadgeStyle="BadgeStyle.Info" Text="@T["Individual"]" data-testid="party-individual-badge" />
+            <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary" Text="@T["The organization of one person; it reads as the person."]" />
+            @if (Settings?.AllowIndividualConversion == true)
+            {
+                <GroveButton Text="@T["Convert to ordinary organization"]" Icon="groups" ButtonStyle="ButtonStyle.Light" Click="ConvertAsync" Disabled="IsBusy" data-testid="party-convert-ordinary" />
+            }
+        </GroveStack>
+    }
+
+    @if (RoleTypes.Count > 0)
+    {
+        <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+            <GroveFormField Text="@T["Add role"]" Style="min-width: 14rem;">
+                <GroveDropDown TValue="string" @bind-Value="RoleKey" Data="@RoleTypes" TextProperty="DisplayName" ValueProperty="Key" Style="width: 100%;" data-testid="party-add-role-type" />
+            </GroveFormField>
+            <GroveButton Text="@T["Add"]" Icon="add" Click="AddRoleAsync" Disabled="@(IsBusy || string.IsNullOrWhiteSpace(RoleKey))" data-testid="party-add-role" />
+        </GroveStack>
+        @if (!string.IsNullOrWhiteSpace(Notice))
+        {
+            <GroveAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@Notice</GroveAlert>
+        }
+    }
+
+    @if (ContentType == PartiesConstants.ContentTypes.Organization)
+    {
+        <GroveOrganizationOwnerPanel OrganizationId="@PartyId" />
+    }
+
+    @if (ContentType == PartiesConstants.ContentTypes.Person && MembersAvailable && PortalUserId is null && Positions.Count > 0)
+    {
+        <GroveStack Gap="0.5rem" data-testid="party-invite">
+            <GroveText TextStyle="TextStyle.H6" Text="@T["Invite to portal"]" />
+            <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                <GroveFormField Text="@T["Organization"]" Style="min-width: 14rem;">
+                    <GroveDropDown TValue="string" @bind-Value="InviteOrganizationId" Data="@Positions" TextProperty="OrganizationName" ValueProperty="OrganizationId" Style="width: 100%;" />
+                </GroveFormField>
+                <GroveFormField Text="@T["User name"]"><GroveTextBox @bind-Value="InviteUserName" data-testid="party-invite-username" /></GroveFormField>
+                <GroveFormField Text="@T["Email"]"><GroveTextBox @bind-Value="InviteEmail" data-testid="party-invite-email" /></GroveFormField>
+                <GroveButton Text="@T["Invite"]" Icon="person_add" Click="InviteAsync" Disabled="@(IsBusy || string.IsNullOrWhiteSpace(InviteOrganizationId) || string.IsNullOrWhiteSpace(InviteUserName))" data-testid="party-invite-send" />
+            </GroveStack>
+        </GroveStack>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</GroveAlert>
+    }
+</GroveStack>
+
+@code {
+    [Parameter, EditorRequired] public string PartyId { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string ContentType { get; set; } = string.Empty;
+    [Parameter] public JsonObject? Content { get; set; }
+
+    /// <summary>Raised when an action changed parties (a role or an organization was created, an organization converted).</summary>
+    [Parameter] public EventCallback Changed { get; set; }
+
+    private bool IsIndividual => PartyDisplay.IsIndividual(ContentType, Content);
+    private string? PortalUserId => PartyDisplay.PortalUserId(Content);
+    private IReadOnlyList<PartyTypeModel> RoleTypes { get; set; } = [];
+    private IReadOnlyList<PositionModel> Positions { get; set; } = [];
+    private PartiesSettingsModel? Settings { get; set; }
+    private bool MembersAvailable { get; set; }
+    private string? RoleKey { get; set; }
+    private string? InviteOrganizationId { get; set; }
+    private string? InviteUserName { get; set; }
+    private string? InviteEmail { get; set; }
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+    private string? Notice { get; set; }
+    private string? _loadedFor;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.Equals(_loadedFor, PartyId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _loadedFor = PartyId;
+        Error = null;
+        Notice = null;
+        RoleKey = null;
+        RoleTypes = PartyDisplay.RoleTypes(await GetOrDefaultAsync<PartyTypeModel[]>("api/grove/parties/types") ?? []);
+        Settings = IsIndividual ? await GetOrDefaultAsync<PartiesSettingsModel>("api/grove/parties/settings") : null;
+
+        Positions = [];
+        if (ContentType == PartiesConstants.ContentTypes.Person)
+        {
+            // Members may be disabled: the invite shows only when its module answers.
+            MembersAvailable = await RespondsAsync("api/grove/members/me");
+            if (MembersAvailable && PortalUserId is null)
+            {
+                Positions = await GetOrDefaultAsync<PositionModel[]>($"api/grove/parties/{Uri.EscapeDataString(PartyId)}/positions") ?? [];
+                InviteOrganizationId = Positions.FirstOrDefault()?.OrganizationId;
+            }
+        }
+    }
+
+    private async Task AddRoleAsync()
+    {
+        var result = await SendAsync<PartyRoleResult>(HttpMethod.Post, $"api/grove/parties/{Uri.EscapeDataString(PartyId)}/roles", new AddPartyRoleRequest(RoleKey!));
+        if (result is not null)
+        {
+            Notice = result.IndividualOrganization && ContentType == PartiesConstants.ContentTypes.Person
+                ? T["The role was added to this person's Individual organization."]
+                : result.Created ? T["Role added."] : T["The party already holds this role."];
+            await Changed.InvokeAsync();
+        }
+    }
+
+    private async Task ConvertAsync()
+    {
+        if (await SendAsync<object>(HttpMethod.Post, $"api/grove/parties/{Uri.EscapeDataString(PartyId)}/convert-to-ordinary", null, expectBody: false) is not null)
+        {
+            await Changed.InvokeAsync();
+        }
+    }
+
+    private async Task InviteAsync()
+    {
+        var invited = await SendAsync<JsonObject>(HttpMethod.Post, "api/grove/members/invite", new
+        {
+            PersonId = PartyId,
+            OrganizationId = InviteOrganizationId,
+            UserName = InviteUserName,
+            Email = InviteEmail,
+        });
+        if (invited is not null)
+        {
+            Notice = T["Invited. The person sets a password through the portal's password recovery."];
+            await Changed.InvokeAsync();
+        }
+    }
+
+    private async Task<TResult?> GetOrDefaultAsync<TResult>(string url)
+    {
+        try
+        {
+            using var response = await Http.GetAsync(url);
+            return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<TResult>() : default;
+        }
+        catch
+        {
+            return default;
+        }
+    }
+
+    private async Task<bool> RespondsAsync(string url)
+    {
+        try
+        {
+            using var response = await Http.GetAsync(url);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    // The registered HttpClient's handler attaches credentials and the antiforgery token.
+    private async Task<TResult?> SendAsync<TResult>(HttpMethod method, string url, object? body, bool expectBody = true) where TResult : class
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            using var request = new HttpRequestMessage(method, url) { Content = body is null ? null : JsonContent.Create(body) };
+            using var response = await Http.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await response.Content.ReadAsStringAsync();
+                return null;
+            }
+
+            return expectBody ? await response.Content.ReadFromJsonAsync<TResult>() : (TResult)new object();
+        }
+        catch (Exception exception)
+        {
+            Error = exception.Message;
+            return null;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

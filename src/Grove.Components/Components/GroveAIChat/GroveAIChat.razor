@@ -1,0 +1,132 @@
+@using Grove
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+
+@inherits GroveComponent
+
+@inject IAIChatService ChatService
+
+@namespace Grove.Components.Primitives
+@if (Visible)
+{
+    <div @ref="@Element" @attributes="Attributes" class="@GetCssClass()" style="@Style" id="@GetId()">
+        <!-- Chat Header -->
+        @if (!string.IsNullOrWhiteSpace(Title) || ShowClearButton)
+        {
+            <GroveStack class="rz-chat-header" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                        JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem">
+                @if (!string.IsNullOrWhiteSpace(Title))
+                {
+                    <span class="rz-chat-header-title">@Title</span>
+                }
+                <GroveStack class="rz-chat-header-actions" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                            JustifyContent="JustifyContent.Center" Gap="0.5rem">
+                    @if (ShowClearButton)
+                    {
+                        <GroveButton Icon="delete_history" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                                     Size="ButtonSize.Small" Click="@OnClearChat"
+                                     Title="@Localize(nameof(GroveStrings.AIChat_ClearChatTitle))" class="rz-chat-header-clear" />
+                    }
+                </GroveStack>
+            </GroveStack>
+        }
+
+        <!-- Chat Messages -->
+        <div class="rz-chat-messages" @ref="messagesContainer">
+            @if (Messages.Count == 0)
+            {
+                if (EmptyTemplate != null)
+                {
+                    @EmptyTemplate
+                }
+                else
+                {
+                    <GroveStack class="rz-chat-empty" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center"
+                                Gap="1rem">
+                        <GroveIcon IconKey="iconify.mdi/current/default/chat-outline" class="rz-text-secondary-color" />
+                        <GroveText TextStyle="TextStyle.Body2" class="rz-mt-2 rz-text-tertiary-color">@EmptyMessage</GroveText>
+                    </GroveStack>
+                }
+            }
+            else
+            {
+                DateTime? previousDate = null;
+                @foreach (var message in Messages)
+                {
+                    if (ShowDateSeparator && (previousDate == null || previousDate.Value.Date != message.Timestamp.Date))
+                    {
+                        if (DateSeparatorTemplate != null)
+                        {
+                            @DateSeparatorTemplate(message.Timestamp)
+                        }
+                        else
+                        {
+                            <div class="rz-chat-date-separator">
+                                <span>@message.Timestamp.ToString(DateSeparatorFormat, Culture ??
+                                                    System.Globalization.CultureInfo.CurrentCulture)</span>
+                                </div>
+                            }
+                        }
+                        previousDate = message.Timestamp;
+                        if (MessageTemplate != null)
+                        {
+                            @MessageTemplate(message)
+                        }
+                        else
+                        {
+                            <div class="rz-chat-message @(message.IsUser ? "rz-chat-message-user" : "rz-chat-message-assistant")"
+                                 @key="message.Id">
+                                <GroveStack class="rz-chat-message-avatar" AlignItems="AlignItems.Center"
+                                            JustifyContent="JustifyContent.Center" Gap="0">
+                                    @if (message.IsUser)
+                                    {
+                                        <span class="rz-chat-avatar-initials" title="@UserAvatarText">@UserAvatarText</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="rz-chat-avatar-initials" title="@AssistantAvatarText">@AssistantAvatarText</span>
+                                    }
+                                </GroveStack>
+                                <GroveStack Orientation="Orientation.Vertical"
+                                            AlignItems="@(message.IsUser ? AlignItems.End : AlignItems.Start)" Gap="0.25rem"
+                                            class="rz-chat-message-content">
+                                    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                                                JustifyContent="@(message.IsUser ? JustifyContent.End : JustifyContent.Start)" Gap="0.5rem"
+                                                class="rz-chat-message-info">
+                                        <div class="rz-chat-message-time">
+                                            @message.Timestamp.ToString(TimestampFormat, Culture ??
+                                System.Globalization.CultureInfo.CurrentCulture)
+                                        </div>
+                                    </GroveStack>
+                                    <div class="rz-chat-message-text">
+                                        @if (message.IsStreaming)
+                                        {
+                                            @message.Content
+                                            <GroveIcon IconKey="iconify.mdi/current/default/dots-horizontal" class="rz-chat-message-streaming-icon" />
+                                        }
+                                        else
+                                        {
+                                            <GroveMarkdown Text=@message.Content />
+                                        }
+                                    </div>
+                                </GroveStack>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+
+            <!-- Chat Input -->
+            <div class="rz-chat-input">
+                <div class="rz-chat-input-inner">
+                    <textarea @ref="inputElement" value="@CurrentInput" @oninput="OnInput" @onkeydown="OnKeyDown"
+                              @onkeydown:preventDefault="preventDefault" class="rz-textarea rz-chat-textarea"
+                              placeholder="@Placeholder" disabled="@Disabled" readonly="@ReadOnly" rows="1"
+                              @attributes="@InputAttributes"></textarea>
+                    <GroveButton Icon="send" ButtonStyle="ButtonStyle.Primary" Variant="Variant.Text"
+                                 Disabled="@(string.IsNullOrWhiteSpace(CurrentInput) || IsLoading || Disabled)" Click="@OnSendMessage"
+                                 Title="@Localize(nameof(GroveStrings.AIChat_SendTitle))" class="rz-chat-send-btn" />
+                </div>
+            </div>
+        </div>
+    }

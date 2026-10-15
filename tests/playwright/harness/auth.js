@@ -1,4 +1,4 @@
-// /login is a Blazor WASM component (Crest.AdminTheme), not a plain server-rendered MVC
+// /login is a Blazor WASM component (Grove.AdminTheme), not a plain server-rendered MVC
 // form - its submit button starts disabled and only enables once Blazor's own
 // validation re-render catches up with the filled values. Clicking immediately after
 // page.fill() races that re-render and can hit the button while it's still disabled
@@ -21,7 +21,7 @@ async function clickLoginButton(page) {
 // function — it now lives in exactly one place.
 async function loginAsAdmin(page, baseUrl, creds = {}) {
   const username = creds.username || process.env.ADMIN_USER || process.env.ADMIN_USERNAME || 'admin';
-  const password = creds.password || process.env.ADMIN_PASSWORD || 'CrestRules1!';
+  const password = creds.password || process.env.ADMIN_PASSWORD || 'GroveRules1!';
 
   await page.goto(`${baseUrl}/login`, { waitUntil: 'networkidle' });
   if (await page.locator('#UserName').count()) {
@@ -41,7 +41,7 @@ async function loginAsAdmin(page, baseUrl, creds = {}) {
 
 // Placeholder for the public/front-end site's auth flow. No client-site feature checks
 // exist yet — this exists so run-client-suite.js has a real login step to call once the
-// first front-end check is written, instead of inventing the shape then. Same Crest
+// first front-end check is written, instead of inventing the shape then. Same Grove
 // /login mechanism as admin, just no forced redirect into /Admin afterward.
 async function loginAsClient(page, baseUrl, creds = {}) {
   const username = creds.username || process.env.CLIENT_USER;
@@ -75,7 +75,7 @@ async function loginAsUser(page, baseUrl, { username, password }) {
   }
 }
 
-// Logs the current session out via Crest's own auth API (not a UI click), so callers
+// Logs the current session out via Grove's own auth API (not a UI click), so callers
 // don't need to know which page/menu currently hosts the logout action.
 // AuthController is [AutoValidateAntiforgeryToken] - see harness/antiforgery.js for
 // why a DOM meta-tag scrape (the MVC convention) doesn't work against this WASM shell.
@@ -83,7 +83,7 @@ async function logout(page, baseUrl) {
   const { fetchAntiforgeryToken } = require('./antiforgery');
   const antiforgery = await fetchAntiforgeryToken(page, baseUrl);
   await page.evaluate(async ({ baseUrl, antiforgery }) => {
-    await fetch(`${baseUrl}/api/crest/auth/logout`, {
+    await fetch(`${baseUrl}/api/grove/auth/logout`, {
       method: 'POST',
       credentials: 'include',
       headers: { [antiforgery.headerName]: antiforgery.requestToken },

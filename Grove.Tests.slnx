@@ -1,0 +1,162 @@
+<Solution>
+  <Folder Name="/Grove.ContentPartLists/" />
+  <Folder Name="/Grove.ContentPartLists/blazor-wasm/">
+    <Project Path="src/Grove.ContentPartLists/blazor-wasm/Grove.ContentPartLists.BlazorWasm.csproj" />
+  </Folder>
+  <Folder Name="/Grove.ContentPartLists/tests/">
+    <Project Path="src/Grove.ContentPartLists/tests/Grove.ContentPartLists.Tests/Grove.ContentPartLists.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Members/" />
+  <Folder Name="/Grove.Members/blazor-wasm/">
+  </Folder>
+  <Folder Name="/Grove.Members/Domain/">
+    <Project Path="src/Grove.Members/Domain/Grove.Members.Domain.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Members/Server/">
+    <Project Path="src/Grove.Members/Server/Grove.Members.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Members/tests/">
+    <Project Path="src/Grove.Members/tests/Grove.Members.Tests/Grove.Members.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Data.Global/tests/">
+    <Project Path="src/Grove.Data.Global/tests/Grove.Data.Global.Tests/Grove.Data.Global.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Money/" />
+  <Folder Name="/Grove.Money/Domain/">
+    <Project Path="src/Grove.Money/Domain/Grove.Money.Domain.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Money/tests/">
+    <Project Path="src/Grove.Money/tests/Grove.Money.Tests/Grove.Money.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Parties/" />
+  <Folder Name="/Grove.AuditTrail/blazor-wasm/">
+    <Project Path="src/Grove.AuditTrail/blazor-wasm/Grove.AuditTrail.BlazorWasm.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Parties/blazor-wasm/">
+    <Project Path="src/Grove.Parties/blazor-wasm/Grove.Parties.BlazorWasm.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Parties/Domain/">
+    <Project Path="src/Grove.Parties/Domain/Grove.Parties.Domain.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Parties/Server/">
+    <Project Path="src/Grove.Parties/Server/Grove.Parties.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Parties/tests/">
+    <Project Path="src/Grove.Parties/tests/Grove.Parties.Tests/Grove.Parties.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Regions/" />
+  <Folder Name="/Grove.Regions/Domain/">
+    <Project Path="src/Grove.Regions/Domain/Grove.Regions.Domain.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Regions/tests/">
+    <Project Path="src/Grove.Regions/tests/Grove.Regions.Tests/Grove.Regions.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Workflows/" />
+  <Folder Name="/Grove.Workflows/blazor-wasm/">
+    <Project Path="src/Grove.Workflows/blazor-wasm/Grove.Workflows.BlazorWasm.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Workflows/designer/" />
+  <Folder Name="/Grove.Workflows/designer/src/" />
+  <Folder Name="/Grove.Workflows/designer/src/framework/">
+    <Project Path="src/Grove.Workflows/designer/src/framework/Grove.Workflows.Studio.Core.BlazorWasm/Grove.Workflows.Studio.Core.BlazorWasm.csproj" />
+    <Project Path="src/Grove.Workflows/designer/src/framework/Grove.Workflows.Studio.Core/Grove.Workflows.Studio.Core.csproj" />
+    <Project Path="src/Grove.Workflows/designer/src/framework/Grove.Workflows.Studio.DomInterop/Grove.Workflows.Studio.DomInterop.csproj" />
+    <Project Path="src/Grove.Workflows/designer/src/framework/Grove.Workflows.Studio.Shared/Grove.Workflows.Studio.Shared.csproj" />
+    <Project Path="src/Grove.Workflows/designer/src/framework/Grove.Workflows.Studio.Shell/Grove.Workflows.Studio.Shell.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Workflows/designer/src/modules/">
+    <Project Path="src/Grove.Workflows/designer/src/modules/Grove.Workflows.Studio.ActivityPortProviders/Grove.Workflows.Studio.ActivityPortProviders.csproj" />
+    <Project Path="src/Grove.Workflows/designer/src/modules/Grove.Workflows.Studio.UIHints/Grove.Workflows.Studio.UIHints.csproj" />
+    <Project Path="src/Grove.Workflows/designer/src/modules/Grove.Workflows.Studio.Workflows.Core/Grove.Workflows.Studio.Workflows.Core.csproj" />
+    <Project Path="src/Grove.Workflows/designer/src/modules/Grove.Workflows.Studio.Workflows.Designer/Grove.Workflows.Studio.Workflows.Designer.csproj" />
+    <Project Path="src/Grove.Workflows/designer/src/modules/Grove.Workflows.Studio.Workflows/Grove.Workflows.Studio.Workflows.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Workflows/Abstractions/">
+    <Project Path="src/Grove.Workflows/Abstractions/Grove.Workflows.Abstractions.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Workflows/engine/" />
+  <Folder Name="/Grove.Workflows/engine/src/" />
+  <Folder Name="/Grove.Workflows/engine/src/clients/">
+    <Project Path="src/Grove.Workflows/engine/src/clients/Grove.Workflows.Api.Client/Grove.Workflows.Api.Client.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Workflows/engine/src/common/">
+    <Project Path="src/Grove.Workflows/engine/src/common/Grove.Workflows.Features/Grove.Workflows.Features.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/common/Grove.Workflows.Mediator/Grove.Workflows.Mediator.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Workflows/engine/src/modules/">
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Api/Grove.Workflows.Api.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Caching/Grove.Workflows.Caching.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Common/Grove.Workflows.Common.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Core/Grove.Workflows.Core.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Engine/Grove.Workflows.Engine.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Expressions.JavaScript/Grove.Workflows.Expressions.JavaScript.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Expressions.Liquid/Grove.Workflows.Expressions.Liquid.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Expressions/Grove.Workflows.Expressions.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Http/Grove.Workflows.Http.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Management/Grove.Workflows.Management.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Resilience.Core/Grove.Workflows.Resilience.Core.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Resilience/Grove.Workflows.Resilience.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Runtime.Distributed/Grove.Workflows.Runtime.Distributed.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Runtime/Grove.Workflows.Runtime.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.SasTokens/Grove.Workflows.SasTokens.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Scheduling/Grove.Workflows.Scheduling.csproj" />
+    <Project Path="src/Grove.Workflows/engine/src/modules/Grove.Workflows.Tenants/Grove.Workflows.Tenants.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Workflows/Server/">
+    <Project Path="src/Grove.Workflows/Server/Grove.Workflows.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Workflows/studio-host/">
+    <Project Path="src/Grove.Workflows/studio-host/Grove.Workflows.Studio.Host.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Workflows/tests/">
+    <Project Path="src/Grove.Workflows/tests/Grove.Workflows.Tests/Grove.Workflows.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.AdminTheme/" />
+  <Folder Name="/Grove.AdminTheme/tests/">
+    <Project Path="src/Grove.AdminTheme/tests/Grove.AdminTheme.Tests/Grove.AdminTheme.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.AdminTheme/wasm/">
+    <Project Path="src/Grove.AdminTheme/wasm/Grove.AdminTheme.Client.csproj" />
+  </Folder>
+  <Folder Name="/Grove.AdminTheme/client-services/">
+    <Project Path="src/Grove.AdminTheme/client-services/Grove.AdminTheme.Client.Services.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Components/" />
+  <Folder Name="/Grove.Components/tests/">
+    <Project Path="src/Grove.Components/tests/Grove.Components.Tests/Grove.Components.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Iconify/" />
+  <Folder Name="/Grove.Iconify/tests/">
+    <Project Path="src/Grove.Iconify/tests/Grove.Iconify.Tests/Grove.Iconify.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Icons/" />
+  <Folder Name="/Grove.Icons/tests/">
+    <Project Path="src/Grove.Icons/tests/Grove.Icons.Tests/Grove.Icons.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Server/">
+    <Project Path="src/Grove.Server/Grove.Server.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Server/tests/">
+    <Project Path="src/Grove.Server/tests/Grove.Server.Tests/Grove.Server.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.SiteTheme/" />
+  <Folder Name="/Grove.SiteTheme/tests/">
+    <Project Path="src/Grove.SiteTheme/tests/Grove.SiteTheme.Tests/Grove.SiteTheme.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.SiteTheme/wasm/">
+    <Project Path="src/Grove.SiteTheme/wasm/Grove.SiteTheme.Client.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Grove.Tests.Standalone/Grove.Tests.Standalone.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Grove.LazyModules/Grove.LazyModules.csproj" />
+  </Folder>
+  <Project Path="src/Grove.ContentPartLists/Grove.ContentPartLists.csproj" />
+  <Project Path="src/Grove.Data.Global/Grove.Data.Global.csproj" />
+  <Project Path="src/Grove.Regions/Grove.Regions.csproj" />
+  <Project Path="src/Grove.Components/Grove.Components.csproj" />
+  <Project Path="src/Grove.Iconify/Grove.Iconify.csproj" />
+  <Project Path="src/Grove.Icons/Grove.Icons.csproj" />
+  <Project Path="src/Grove.SiteTheme/Grove.SiteTheme.csproj" />
+</Solution>

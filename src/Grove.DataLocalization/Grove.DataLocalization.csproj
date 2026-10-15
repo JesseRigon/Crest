@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <!-- NuGet properties-->
+    <Title>Grove Data Localization</Title>
+    <Description>$(OCFrameworkDescription)
+    
+    Provides the infrastructure necessary to support localized data string.
+    </Description>
+    <PackageTags>$(PackageTags) PlatformFramework Localization</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.AdminMenu.Abstractions\Grove.AdminMenu.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Apis.GraphQL.Abstractions\Grove.Apis.GraphQL.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Deployment.Abstractions\Grove.Deployment.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Grove.Localization.Abstractions\Grove.Localization.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Localization\Grove.Localization.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.Navigation\Grove.Navigation.csproj" />
+    <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
+    <ProjectReference Include="..\Grove.Settings\Grove.Settings.csproj" />
+    <ProjectReference Include="..\Grove.ContentTypes\Grove.ContentTypes.csproj" />
+  </ItemGroup>
+
+</Project>

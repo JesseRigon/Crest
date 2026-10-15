@@ -1,4 +1,4 @@
-# Workflows (`Crest.Workflows.Platform`)
+# Workflows (`Grove.Workflows.Platform`)
 
 The Workflows module provides a way for users to visually implement business rules using flowchart diagrams.
 
@@ -18,7 +18,7 @@ An example of such an event activity is *Content Created*, which executes whenev
 A workflow can have more than one start event. This allows you to trigger (run) a workflow in response to various types of events.
 
 Each activity has one or more **outcomes**, which represent a source endpoint from which a connection can be made to the next activity, which are called transitions.  
-By connecting activities, you are effectively creating a program that can be executed by Crest in response to a multitude of events.
+By connecting activities, you are effectively creating a program that can be executed by Grove in response to a multitude of events.
 
 ![The workflow editor](docs/workflow-editor.png)
 
@@ -34,7 +34,7 @@ By connecting activities, you are effectively creating a program that can be exe
 
 ## Vocabulary
 
-When working with Crest Workflows, you will encounter the following terms:
+When working with Grove Workflows, you will encounter the following terms:
 
 ### Workflow Definition
 
@@ -209,7 +209,7 @@ For more examples of supported content item filters, see the documentation on [L
 
 ## Activities out of the box
 
-The following activities are available with any default Crest installation:
+The following activities are available with any default Grove installation:
 
 | Activity                      | Type  | Description                                                                         |
 |-------------------------------|-------|-------------------------------------------------------------------------------------|
@@ -251,7 +251,7 @@ The following activities are available with any default Crest installation:
 
 ## Developing Custom Activities
 
-Crest is built to be extended, and the `Workflows` module is no different. When creating your own module, you can develop custom workflow activities.  
+Grove is built to be extended, and the `Workflows` module is no different. When creating your own module, you can develop custom workflow activities.  
 Developing custom activities involve the following steps:
 
 1. Create a new class that directly or indirectly implements `IActivity`. In most cases, you either derive from `TaskActivity` or `EventActivity`, depending on whether your activity represents an event or not. Although not required, it is recommended to keep this class in a folder called `Activities`.
@@ -470,11 +470,11 @@ Workflow trimming settings can be configured using the `Settings` recipe step:
 
 Old workflow instances can be automatically deleted with the Trimming feature. This is enabled by default and you can configure it (including disabling it) in Settings → Workflow Trimming. Without trimming, workflow instances remain in the database indefinitely.
 
-By default, the trimming background task runs once a day and removes at most 5000 workflow instances. You can change the frequency of the background task via [the `Crest.BackgroundTasks` configuration](../BackgroundTasks/README.md), and the batch size via the `Crest_Workflows` configuration from e.g. an `appsettings` file:
+By default, the trimming background task runs once a day and removes at most 5000 workflow instances. You can change the frequency of the background task via [the `Grove.BackgroundTasks` configuration](../BackgroundTasks/README.md), and the batch size via the `Grove_Workflows` configuration from e.g. an `appsettings` file:
 
 ```json
 {
-  "Crest_Workflows": {
+  "Grove_Workflows": {
     "Trimming": {
       "BatchSize": 1000
     }

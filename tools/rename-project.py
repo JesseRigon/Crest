@@ -3,8 +3,8 @@
 
     tools/rename-project.py OLD NEW [--dry-run]
 
-OLD and NEW are project names (for example Crest.Workflows.Platform.Abstractions and
-Crest.Workflows.Abstractions). The script, run from the repository root:
+OLD and NEW are project names (for example Grove.Workflows.Platform.Abstractions and
+Grove.Workflows.Abstractions). The script, run from the repository root:
 
 1. `git mv`s the project folder under src/ (or test/) and the .csproj inside it.
 2. Replaces every textual occurrence of OLD with NEW in tracked text files: project

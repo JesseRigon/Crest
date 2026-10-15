@@ -1,0 +1,19 @@
+/* Studio inside the Grove admin content area: fill it, and keep MudBlazor's typography
+   scoped to the designer rather than the page around it. */
+.grove-studio {
+  min-height: calc(100vh - 8rem);
+  font-family: var(--rz-text-font-family, Roboto, sans-serif);
+}
+
+.grove-studio .mud-main-content {
+  padding-top: 0;
+}
+
+.grove-studio-loading,
+.grove-studio-error {
+  padding: 1rem;
+}
+
+.grove-studio-error {
+  color: var(--rz-danger, #b00020);
+}

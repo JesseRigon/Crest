@@ -1,0 +1,240 @@
+@namespace Grove.Components.Sharing
+@using System.Globalization
+@using Grove.Components.Primitives
+@inject HttpClient Http
+@inject IServiceProvider Services
+
+@* A Rules screen (docs/sharing.md § 8, requirements 67 and 97): the rules from the tenant down to
+   this folder, drive or the tenant itself, each as "conditions → effect" in run order. Rules set
+   above are shown, not edited, here; this object's own are reorderable, filterable and editable.
+   Rules below it are not shown. The server decides who may see and change them: the tree's
+   Admins, or holders of the tenant permission at the tenant. *@
+
+<div class="grove-share-rules" data-testid="share-rules">
+    @if (Error is { } error)
+    {
+        <div class="grove-share-rules__error" role="alert" data-testid="rules-error">@error</div>
+    }
+
+    @if (Levels is null)
+    {
+        @if (Error is null)
+        {
+            <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+    }
+    else
+    {
+        <div class="grove-share-rules__toolbar">
+            <input type="search" placeholder="@L("Filter rules")" @bind="Filter" @bind:event="oninput" aria-label="@L("Filter rules")" data-testid="rules-filter" />
+        </div>
+
+        @foreach (var level in Levels.Where(level => !level.Editable))
+        {
+            var shown = level.Rules.Where(Matches).ToList();
+            @if (shown.Count > 0)
+            {
+                <section class="grove-share-rules__inherited">
+                    <h4>@string.Format(CultureInfo.CurrentCulture, L("Set on {0}"), level.Name)</h4>
+                    <ol>
+                        @foreach (var rule in shown)
+                        {
+                            <li>@Describe(rule)</li>
+                        }
+                    </ol>
+                </section>
+            }
+        }
+
+        <section class="grove-share-rules__own">
+            <h4>@L("Rules set here, in run order")</h4>
+            @if (Own.Count == 0)
+            {
+                <p class="grove-share-rules__empty">@L("No rules here.")</p>
+            }
+            <ol data-testid="rules-own">
+                @for (var i = 0; i < Own.Count; i++)
+                {
+                    var index = i;
+                    var rule = Own[index];
+                    if (!Matches(rule))
+                    {
+                        continue;
+                    }
+
+                    <li data-testid="rule">
+                        <span>@Describe(rule)</span>
+                        <GroveButton Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Icon="arrow_upward" title="@L("Earlier")" Click="@(() => Move(index, -1))" Disabled="@(index == 0)" />
+                        <GroveButton Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Icon="arrow_downward" title="@L("Later")" Click="@(() => Move(index, 1))" Disabled="@(index == Own.Count - 1)" />
+                        <GroveButton Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Icon="edit" title="@L("Edit")" Click="@(() => Editing = rule)" />
+                        <GroveButton Size="ButtonSize.ExtraSmall" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Icon="delete" title="@L("Remove")" Click="@(() => { Own.RemoveAt(index); Dirty = true; })" />
+                    </li>
+                }
+            </ol>
+            <div class="grove-share-rules__actions">
+                <GroveButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Icon="add" Text="@L("New rule")" Click="AddRule" />
+                <GroveButton Size="ButtonSize.Small" Text="@L("Save rules")" Click="SaveAsync" Disabled="@(Busy || !Dirty)" data-testid="rules-save" />
+            </div>
+        </section>
+
+        @if (Editing is { } editing)
+        {
+            <section class="grove-share-rules__editor" data-testid="rule-editor">
+                <h4>@L("Rule")</h4>
+                <label>@L("Name") <input @bind="editing.Name" /></label>
+
+                <h5>@L("When the item matches every condition")</h5>
+                @foreach (var condition in editing.Conditions.ToList())
+                {
+                    <div class="grove-share-rules__condition">
+                        <input @bind="condition.Fact" list="grove-share-facts" aria-label="@L("Fact")" />
+                        <select @bind="condition.Operator" aria-label="@L("Operator")">
+                            <option value="@GroveConditionOperator.Equals">@L("is")</option>
+                            <option value="@GroveConditionOperator.In">@L("is one of")</option>
+                            <option value="@GroveConditionOperator.NotIn">@L("is none of")</option>
+                        </select>
+                        <input value="@string.Join(", ", condition.Values)" @onchange="@(args => condition.Values = Split(args.Value as string))" aria-label="@L("Values")" placeholder="@L("psd, ai")" />
+                        <GroveButton Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Icon="close" title="@L("Remove")" Click="@(() => editing.Conditions.Remove(condition))" />
+                    </div>
+                }
+                <datalist id="grove-share-facts">
+                    <option value="extension" /><option value="mimetype" /><option value="tag" /><option value="kind" /><option value="contenttype" /><option value="drivetype" />
+                </datalist>
+                <GroveButton Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Icon="add" Text="@L("Condition")" Click="@(() => editing.Conditions.Add(new GroveShareCondition()))" />
+
+                <h5>@L("Then")</h5>
+                @foreach (var effect in editing.Effects.ToList())
+                {
+                    <div class="grove-share-rules__effect">
+                        <span>@EffectName(effect)</span>
+                        <select value="@(effect.IsBlock ? "Block" : effect.Level.ToString())" @onchange="@(args => SetEffect(effect, args.Value as string))" aria-label="@L("Access")">
+                            <option value="@nameof(GroveAccessLevel.Viewer)">@L("Viewer")</option>
+                            @if (effect.Principal.Kind != GrovePrincipalKind.Anyone)
+                            {
+                                <option value="@nameof(GroveAccessLevel.Commenter)">@L("Commenter")</option>
+                                <option value="@nameof(GroveAccessLevel.Editor)">@L("Editor")</option>
+                                <option value="@nameof(GroveAccessLevel.Manager)">@L("Manager")</option>
+                            }
+                            <option value="Block">@L("Blocked")</option>
+                        </select>
+                        <GroveButton Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Icon="close" title="@L("Remove")" Click="@(() => editing.Effects.Remove(effect))" />
+                    </div>
+                }
+                <GrovePrincipalPicker OnPick="@(option => editing.Effects.Add(new GroveShareEffect { Principal = option.Principal, Name = option.DisplayName }))" />
+
+                <div class="grove-share-rules__actions">
+                    <GroveButton Size="ButtonSize.Small" Text="@L("Done")" Click="@(() => { Editing = null; Dirty = true; })" />
+                </div>
+            </section>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Kind { get; set; } = string.Empty;
+
+    [Parameter] public string? Id { get; set; }
+
+    private GroveSharingClient Client => _client ??= new GroveSharingClient(Http);
+    private GroveSharingClient? _client;
+    private List<GroveShareRuleLevel>? Levels;
+    private List<GroveShareRule> Own = [];
+    private GroveShareRule? Editing;
+    private string? Filter;
+    private string? Error;
+    private bool Busy;
+    private bool Dirty;
+    private string? _loaded;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var key = $"{Kind}/{Id}";
+        if (_loaded != key)
+        {
+            _loaded = key;
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        var found = await Client.GetRulesAsync(Kind, Id);
+        Levels = found.Value;
+        Error = found.Status == 404 ? L("Not found.") : found.Error;
+        Own = Levels?.FirstOrDefault(level => level.Editable)?.Rules ?? [];
+        Dirty = false;
+    }
+
+    private void AddRule()
+    {
+        var rule = new GroveShareRule { Name = L("New rule"), Conditions = [new GroveShareCondition()] };
+        Own.Add(rule);
+        Editing = rule;
+        Dirty = true;
+    }
+
+    private void Move(int index, int by)
+    {
+        var to = index + by;
+        if (to < 0 || to >= Own.Count)
+        {
+            return;
+        }
+
+        (Own[index], Own[to]) = (Own[to], Own[index]);
+        Dirty = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        Busy = true;
+        var saved = await Client.SetRulesAsync(Kind, Id, Own);
+        Busy = false;
+        Error = saved.Error;
+        if (saved.Succeeded)
+        {
+            Editing = null;
+            await LoadAsync();
+        }
+    }
+
+    private static void SetEffect(GroveShareEffect effect, string? choice)
+    {
+        effect.IsBlock = choice == "Block";
+        effect.Level = effect.IsBlock ? GroveAccessLevel.None : Enum.TryParse<GroveAccessLevel>(choice, out var level) ? level : GroveAccessLevel.Viewer;
+    }
+
+    private bool Matches(GroveShareRule rule) =>
+        string.IsNullOrWhiteSpace(Filter) || Describe(rule).Contains(Filter.Trim(), StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>"name: extension is psd → Customer: Blocked, Dana: Editor".</summary>
+    private string Describe(GroveShareRule rule)
+    {
+        var conditions = rule.Conditions.Count == 0
+            ? L("everything")
+            : string.Join(L(" and "), rule.Conditions.Select(condition => $"{condition.Fact} {OperatorText(condition.Operator)} {string.Join(", ", condition.Values)}"));
+        var effects = string.Join(", ", rule.Effects.Select(effect => $"{EffectName(effect)}: {(effect.IsBlock ? L("Blocked") : L(GroveSharingClient.LevelName(effect.Level)))}"));
+        return $"{(string.IsNullOrWhiteSpace(rule.Name) ? string.Empty : rule.Name + ": ")}{conditions} → {effects}";
+    }
+
+    private string EffectName(GroveShareEffect effect) =>
+        effect.Principal.Kind switch
+        {
+            GrovePrincipalKind.Anyone => L("Anyone"),
+            GrovePrincipalKind.Tenant => L("Everyone signed in"),
+            _ when !string.IsNullOrEmpty(effect.Name) && !effect.Name.Contains(':') => effect.Name,
+            _ => $"{effect.Principal.Id}{(effect.Principal.OrganizationId is { } organization ? $" ({organization})" : null)}",
+        };
+
+    private string OperatorText(GroveConditionOperator op) => op switch
+    {
+        GroveConditionOperator.In => L("is one of"),
+        GroveConditionOperator.NotIn => L("is none of"),
+        _ => L("is"),
+    };
+
+    private static List<string> Split(string? text) =>
+        [.. (text ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

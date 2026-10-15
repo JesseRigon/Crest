@@ -1,6 +1,6 @@
 # File Upload Security
 
-When your feature accepts a user-uploaded file and stores it outside Crest's built-in media flow, use `FileCreationService` to run the shared pre-storage security pipeline.
+When your feature accepts a user-uploaded file and stores it outside Grove's built-in media flow, use `FileCreationService` to run the shared pre-storage security pipeline.
 
 This ensures every `IFileEventHandler` can inspect or replace the stream before the file is written permanently. If any handler returns a failed `FileCreatingResult`, the upload must be aborted and the file must not be stored.
 
@@ -37,7 +37,7 @@ Call `CreateAsync()` before writing the file. If the returned result did not suc
 
 ```csharp
 using Microsoft.AspNetCore.Http;
-using Crest.FileStorage;
+using Grove.FileStorage;
 
 public sealed class CustomUploadService
 {
@@ -82,8 +82,8 @@ Return `FileCreatingResult.Failed(...)` from `IFileEventHandler.CreatingAsync()`
 
 ```csharp
 using Microsoft.Extensions.Localization;
-using Crest.FileStorage;
-using Crest.Infrastructure;
+using Grove.FileStorage;
+using Grove.Infrastructure;
 
 namespace MyModule.Services;
 

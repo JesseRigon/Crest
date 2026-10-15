@@ -1,4 +1,4 @@
-# Media (`Crest.Media`)
+# Media (`Grove.Media`)
 
 The Media module provides a UI to upload and organize binary files that can be used while creating content.
 
@@ -188,9 +188,9 @@ Appends a version hash for an asset. Can be piped together with the other media 
 ## Razor Helpers
 
 !!! note
-    When using tag helpers in Razor, you must take a direct reference to the `Crest.Media` NuGet package in each theme or module that uses the tag helpers. This is not required when using Liquid.
+    When using tag helpers in Razor, you must take a direct reference to the `Grove.Media` NuGet package in each theme or module that uses the tag helpers. This is not required when using Liquid.
 
-To obtain the correct URL for an asset, use the `AssetUrl` helper extension method on the view's base `Crest` property, e.g.:
+To obtain the correct URL for an asset, use the `AssetUrl` helper extension method on the view's base `Grove` property, e.g.:
 
 `@Platform.AssetUrl(Model.Paths[0])`
 
@@ -214,7 +214,7 @@ or with resizing options as well, noting that the version hash is based on the s
 
 `@Platform.AssetUrl(Model.Paths[0], width: 100 , height: 240, resizeMode: ResizeMode.Crop, appendVersion: true)`
 
-To use a [Media Profile](#media-profiles), use the `AssetProfileUrlAsync` helper extension method on the view's base `Crest` property, e.g.:
+To use a [Media Profile](#media-profiles), use the `AssetProfileUrlAsync` helper extension method on the view's base `Grove` property, e.g.:
 
 `@await Platform.AssetProfileUrlAsync(Model.Paths[0], "medium")`
 
@@ -224,7 +224,7 @@ To use [Image Anchors](#image-anchors), use the `GetAnchors` helper extension me
 
 ### Razor image resizing tag helpers
 
-To use the image tag helpers, add `@addTagHelper *, Crest.Media` to `_ViewImports.cshtml`, and take a direct reference to the `Crest.Media` NuGet package.
+To use the image tag helpers, add `@addTagHelper *, Grove.Media` to `_ViewImports.cshtml`, and take a direct reference to the `Grove.Media` NuGet package.
 
 `asset-src` is used to obtain the correct URL for the asset and set the `src` attribute. Width, height, resize mode, quality and format can be set using `img-width`, `img-height`, `img-resize-mode`, `img-quality`, and `img-format` respectively. e.g.:
 
@@ -256,7 +256,7 @@ To use a [Image Anchor](#image-anchors) set the `asset-src` property and the `im
 
 ### Razor append version
 
-`asp-append-version` support is available on the Crest tag helpers and MVC tag helpers.
+`asp-append-version` support is available on the Grove tag helpers and MVC tag helpers.
 
 `<img asset-src="Model.Paths[0]" alt="..." asp-append-version="true" />`
 
@@ -268,7 +268,7 @@ Or when using the MVC tag helpers and the image is resolved from static assets, 
 
 `<img src="/favicon.ico" asp-append-version="true"/>`
 
-> The Razor Helper is accessible on the `Crest` property if the view is using Crest's Razor base class, or by injecting `Crest.IPlatformHelper` in all other cases.
+> The Razor Helper is accessible on the `Grove` property if the view is using Grove's Razor base class, or by injecting `Grove.IPlatformHelper` in all other cases.
 
 ### Razor Anchor Tag Helper
 
@@ -311,7 +311,7 @@ The following configuration values are used by default and can be customized:
 
 ```json
 {
-  "Crest_Media": {
+  "Grove_Media": {
     // The accepted sizes for custom width and height.
     // When the 'UseTokenizedQueryString' is True (default) all sizes are valid.
     "SupportedSizes": [
@@ -327,7 +327,7 @@ The following configuration values are used by default and can be customized:
       2048
     ],
     // The number of days to store images in the browser cache.
-    // NB: To control cache headers for module static assets, refer to the Crest Modules Section.
+    // NB: To control cache headers for module static assets, refer to the Grove Modules Section.
     "MaxBrowserCacheDays": 30,
     // The number of days to store secure media files in the browser cache.
     // Set to 0 (default) to disable caching secure files.
@@ -430,7 +430,7 @@ directory before being committed to the media store. By default this lives under
 directory (`Path.GetTempPath()`), whose available space is often limited. When many users upload large files at the
 same time this can exhaust the temporary volume.
 
-The base location is configurable through the framework-level `Crest:TempDirectory` section, so you can point
+The base location is configurable through the framework-level `Grove:TempDirectory` section, so you can point
 temporary storage at a larger or shared volume (such as a mounted Azure Files or AWS EFS/FSx share). This setting
 applies to all temporary file consumers, not just media. See [Temporary File Storage](../../core/temporary-file-storage.md)
 for configuration, mount instructions, and how to consume `ITempDirectoryProvider` from your own code.
@@ -461,18 +461,18 @@ On-demand image resizing is performed by a built-in middleware backed by an `IIm
 
 ### Image processing engines
 
-The image processing engine is a pluggable service contract (`IImageProcessingEngine`, defined in `Crest.Media.Abstractions`). The middleware parses the validated request into an engine-agnostic `ImageProcessingCommands` instance and hands it to the registered engine, so engines never deal with query strings, tokens or cache keys.
+The image processing engine is a pluggable service contract (`IImageProcessingEngine`, defined in `Grove.Media.Abstractions`). The middleware parses the validated request into an engine-agnostic `ImageProcessingCommands` instance and hands it to the registered engine, so engines never deal with query strings, tokens or cache keys.
 
-Two engines ship with Crest:
+Two engines ship with Grove:
 
 | Engine | Provided by | Backed by | Default |
 | --- | --- | --- | --- |
-| NetVips | `Crest.Media` (built in) | [NetVips](https://github.com/kleisauke/net-vips), a managed binding over the native [libvips](https://www.libvips.org/) library | Yes |
-| ImageSharp (v3) | `Crest.Media.ImageSharpV3` feature | [SixLabors.ImageSharp](https://github.com/SixLabors/ImageSharp) `3.1.x` | No |
+| NetVips | `Grove.Media` (built in) | [NetVips](https://github.com/kleisauke/net-vips), a managed binding over the native [libvips](https://www.libvips.org/) library | Yes |
+| ImageSharp (v3) | `Grove.Media.ImageSharpV3` feature | [SixLabors.ImageSharp](https://github.com/SixLabors/ImageSharp) `3.1.x` | No |
 
-The NetVips engine is registered by default. To use ImageSharp instead, enable the **Media ImageSharp Image Processing** feature (`Crest.Media.ImageSharpV3`); it replaces the default engine registration. Only one engine should be enabled at a time.
+The NetVips engine is registered by default. To use ImageSharp instead, enable the **Media ImageSharp Image Processing** feature (`Grove.Media.ImageSharpV3`); it replaces the default engine registration. Only one engine should be enabled at a time.
 
-To provide your own engine, implement `IImageProcessingEngine` and replace the registration after the `Crest.Media` module's services are configured:
+To provide your own engine, implement `IImageProcessingEngine` and replace the registration after the `Grove.Media` module's services are configured:
 
 ```csharp
 services.Replace(ServiceDescriptor.Singleton<IImageProcessingEngine, MyImageProcessingEngine>());
@@ -592,9 +592,9 @@ Media can be optionally indexed for search as well if files are referenced via M
 
 File extraction is available through explicit features:
 
-- `Crest.Media.Indexing.Pdf` for `.pdf`
-- `Crest.Media.Indexing.Text` for `.txt` and `.md`
-- `Crest.Media.Indexing.OpenXML` for `.docx` and `.pptx`
+- `Grove.Media.Indexing.Pdf` for `.pdf`
+- `Grove.Media.Indexing.Text` for `.txt` and `.md`
+- `Grove.Media.Indexing.OpenXML` for `.docx` and `.pptx`
 
 Enable the feature that corresponds to the file types you want to extract and index.
 
@@ -690,7 +690,7 @@ Use the **Gallery** editor when you want shared Media Library assets like the **
 
 #### Attached editor
 
-Unlike the **Standard** and **Gallery** editors, the **Attached** editor uploads files as part of the content item editing flow. Crest stores those files under:
+Unlike the **Standard** and **Gallery** editors, the **Attached** editor uploads files as part of the content item editing flow. Grove stores those files under:
 
 `mediafields/{ContentType}/{ContentItemId}/`
 
@@ -802,9 +802,9 @@ The base `Media Indexing` feature indexes media text stored by media fields. Add
 
 | Feature | File types |
 |---|---|
-| `Crest.Media.Indexing.Pdf` | `.pdf` |
-| `Crest.Media.Indexing.Text` | `.txt`, `.md` |
-| `Crest.Media.Indexing.OpenXML` | `.docx`, `.pptx` |
+| `Grove.Media.Indexing.Pdf` | `.pdf` |
+| `Grove.Media.Indexing.Text` | `.txt`, `.md` |
+| `Grove.Media.Indexing.OpenXML` | `.docx`, `.pptx` |
 
 <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/BQHUlvPFRR4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

@@ -1,4 +1,4 @@
-# Custom Users Settings (`Crest.User.CustomUserSettings`)
+# Custom Users Settings (`Grove.User.CustomUserSettings`)
 
 Custom Users Settings allow a site administrator to create a customized set of properties for a given user.  
 

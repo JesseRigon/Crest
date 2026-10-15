@@ -9,8 +9,8 @@ the remaining gaps are under [Backlog](#backlog).
 
 ## Design
 
-- **Sharing is its own module**: `Crest.Sharing` and `Crest.Sharing.Abstractions`, a tenant
-  feature that can be turned off. Not `Crest.Access.Sharing`: it is a domain with its own data
+- **Sharing is its own module**: `Grove.Sharing` and `Grove.Sharing.Abstractions`, a tenant
+  feature that can be turned off. Not `Grove.Access.Sharing`: it is a domain with its own data
   (entries, rules, the access index, the time registry, the Share panel), and it registers
   with the access gate like every other domain ([access.md](access.md) › Principles › Access is
   extended, never rewritten). Without the feature a tenant has no drives, sharing or rules, and
@@ -32,7 +32,7 @@ the remaining gaps are under [Backlog](#backlog).
   administrators pass at the decision's super-user step, before any mapper. With the feature
   off, or for a kind not registered, the module's own mapper decides. Nothing depends on
   registration order: priority decides ([access.md](access.md) › Mapper roles and priority).
-- **Extending or replacing sharing.** A module outside Crest can:
+- **Extending or replacing sharing.** A module outside Grove can:
   - **add** sharing for items by contributing entries and rules through an
     `IShareEntrySource`: the engine resolves them with the stored ones under the same
     precedence (principal tier, depth, order, blocks, Anyone only Viewer, Admin only on a root),
@@ -54,7 +54,7 @@ the remaining gaps are under [Backlog](#backlog).
 
 ## Module
 
-`Crest.Sharing.Abstractions`:
+`Grove.Sharing.Abstractions`:
 - the model: `SharePrincipal` (Anyone, Tenant, Organization, Role, User), `AccessLevel`
   (Viewer, Commenter, Editor, Manager, Admin: the generic name for Drive Admin, granted only
   on a root object), `ShareEntry` (a grant or a block, optionally time-bound), `ShareRule`
@@ -74,7 +74,7 @@ the remaining gaps are under [Backlog](#backlog).
   (71-72), `IShareableChildSource` (what another module files in a folder, 74),
   `IShareIndicators` (98), `ISharePrincipalDirectory`.
 
-`Crest.Sharing`:
+`Grove.Sharing`:
 - the share documents (`ShareDocument`, one per object with entries or rules) and their index;
 - the resolver (`SharingResolver`, requirements 58-65), reading time bounds exactly at every
   decision;
@@ -164,7 +164,7 @@ Tenant view grants removed when sharing is on.
     account in the audit trail, distinct from people and machine actors
     ([machine-actors.md](machine-actors.md)).
 
-Built as `Crest.Access.SystemAccounts`: the tenant account is `system:tenant`, an
+Built as `Grove.Access.SystemAccounts`: the tenant account is `system:tenant`, an
 organization's `system:organization:{id}`. They are ids, not user records, so 34-35 hold by
 construction; no user may take a `system:` id (the user store and the `Users` recipe step refuse
 it). The system actors act as them (`CallerContext.SystemAccountId`, `ActorId`), and the access
@@ -174,7 +174,7 @@ organization system actor is its owner. Sharing refuses a system account as a pr
 
 **The role registry with role kind.**
 
-44. Each role has a **kind**, kept in Crest's role registry: **Assigned** (stored on users, the
+44. Each role has a **kind**, kept in Grove's role registry: **Assigned** (stored on users, the
     ordinary kind) or **Derived** (computed, with the provider that computes it). The platform's
     role model has no field for this, and its built-in "system role" mechanism covers only its
     own fixed roles.
@@ -187,10 +187,10 @@ Built in [§ 5](#5-business-roles).
 
 **Default view grants removed.**
 
-84. No recipe shipped with Crest or a host built on it grants anything to Anyone or Tenant
+84. No recipe shipped with Grove or a host built on it grants anything to Anyone or Tenant
     unless it means to.
 
-The platform gives Anonymous and Authenticated `ViewContent` by default, and Crest's setup
+The platform gives Anonymous and Authenticated `ViewContent` by default, and Grove's setup
 recipe grants Anonymous `ViewContent` again; with sharing on that would make every published
 item public. `DefaultViewGrantsRemover`: when Sharing is enabled, the Anonymous and
 Authenticated roles lose `ViewContent`, `ViewOwnContent`, `View_{Type}` and `ViewOwn_{Type}`.
@@ -319,7 +319,7 @@ itself handles it.
 80. Removing access takes effect before the change is reported as done. Adding access may wait
     for its recalculation, and the Share panel shows it as pending.
 81. The explanation (66) and the index come from the same entries and rules and always agree.
-    Crest can verify any scope by recalculating and comparing.
+    Grove can verify any scope by recalculating and comparing.
 82. Failure is closed: an object with no resolvable access or no index entry is not visible.
 83. Public bytes are cacheable. Private bytes are served only after the access check.
 
@@ -358,7 +358,7 @@ children (Media lists a folder's children through every placement).
 
 ### Implementation
 
-- **Scope model** (`Crest.Access.Abstractions/Scope.cs`): `ScopeCondition` has comparisons
+- **Scope model** (`Grove.Access.Abstractions/Scope.cs`): `ScopeCondition` has comparisons
   (`<`, `<=`, `>`, `>=`), `IsNull`, and semi-joins (`InSelect`, `NotInSelect`: a column in a set
   a `ScopeSelect` selects from another index table under its own `ScopeFilter`). All three
   compilers compile them with the tenant prefix, dialect quoting, an alias per selected table
@@ -411,8 +411,8 @@ children (Media lists a folder's children through every placement).
   (`SharePrincipal.Role("MemberAdmin", "acme")`, `role:MemberAdmin@acme` in recipes), in the
   Role tier; a caller matches it when they hold the role and act for that organization
   (requirement 38). The index stores it as `role@org:id`.
-- **Media's kind**: `Crest.Media/Sharing/MediaShareableKind.cs`, through `MediaSharingStartup`
-  (`[RequireFeatures("Crest.Sharing")]`), with its placements' scope target, tree, roots and
+- **Media's kind**: `Grove.Media/Sharing/MediaShareableKind.cs`, through `MediaSharingStartup`
+  (`[RequireFeatures("Grove.Sharing")]`), with its placements' scope target, tree, roots and
   admin assignment. Sharing is off by default, so media keeps its folder permissions until it is
   turned on; then sharing is the authority for media (default deny, so public media needs an
   Anyone grant) ([media.md](media.md)).
@@ -424,12 +424,12 @@ children (Media lists a folder's children through every placement).
   sharing reads them off the caller. Feature off: none of it is registered, and each kind falls
   back to its module's own permissions (media: `ViewMediaContent`, `ManageMediaContent`, …;
   content: the per-type permissions).
-- Tests: `test/Crest.Tests/Sharing` (the worked example line by line and each resolution
+- Tests: `test/Grove.Tests/Sharing` (the worked example line by line and each resolution
   requirement in `SharingResolverTests`; `SharingServiceTests`; `ShareAccessIndexTests`;
   `ShareListScopeTests` on SQLite, every example caller's list through each compiler equal to
   what the resolver allows, around the time boundaries; `MediaShareableKindTests`,
   `ContentShareableKindTests`, `SharingPhaseTwoExtensionsTests`) and
-  `test/Crest.Tests/Queries/ScopeSemiJoinTests.cs`.
+  `test/Grove.Tests/Queries/ScopeSemiJoinTests.cs`.
 
 ## 5. Business roles
 
@@ -447,14 +447,14 @@ party-role index and provider.
     holds each organization's business roles only while acting for it.
 43. Changing a relationship invalidates the affected user's cached caller, so their principals
     are recomputed on their next request and a removed role stops counting immediately.
-48. Derived roles are computed by providers behind a Crest interface: given a user and the
+48. Derived roles are computed by providers behind a Grove interface: given a user and the
     organization they are acting for, a provider answers which business roles they hold. Party
     relationships are one provider, so the file system never needs to know what a party is.
 
 Implementation:
 
-- **Role registry** (`Crest.Roles.Abstractions/DerivedRoles.cs`,
-  `Crest.Roles/Services/RoleRegistry.cs`): `RoleKind` (Assigned, Derived),
+- **Role registry** (`Grove.Roles.Abstractions/DerivedRoles.cs`,
+  `Grove.Roles/Services/RoleRegistry.cs`): `RoleKind` (Assigned, Derived),
   `IDerivedRoleProvider` (its `Roles`, and `GetRolesAsync(DerivedRoleContext)`: the user and the
   organization they act for, or every organization for the user editor), `IRoleRegistry` (every
   role with its kind; the derived roles a user holds; `EnsureDerivedRolesAsync`). A role is
@@ -474,7 +474,7 @@ Implementation:
 - **Invalidation** (43): a relationship change bumps the tenant's permission version. Parties
   bumps it when a party-role item or a person changes (`PartyRoleChangeHandler`); Members bumps
   it on binding changes.
-- **Party relationships** (48, `Crest.Parties/Server/BusinessRoles`, `PartyDerivedRoleProvider`):
+- **Party relationships** (48, `Grove.Parties/Server/BusinessRoles`, `PartyDerivedRoleProvider`):
   every party role a module composes (Customer, Vendor, Lead, ...) is a derived role named after
   its content type. An organization role counts only through the organization the caller acts
   for; a person role only through the person ([parties.md](parties.md) › Core party records).
@@ -495,8 +495,8 @@ checks.
 74. A content item that belongs in a folder, such as a document page in a client folder, follows
     that folder's chain instead, with its content type as its type for rules.
 
-Implementation (`Crest.Contents/Sharing`, through `ContentSharingStartup`,
-`[RequireFeatures("Crest.Sharing")]`):
+Implementation (`Grove.Contents/Sharing`, through `ContentSharingStartup`,
+`[RequireFeatures("Grove.Sharing")]`):
 
 - Two kinds: `contenttype` (a type is a root; its entries flow to its items; a content
   permission asked against a type name or a `ContentTypeProbe` is about the type, so creating an
@@ -541,7 +541,7 @@ Implementation (`Crest.Contents/Sharing`, through `ContentSharingStartup`,
 
 Implementation:
 
-- API `api/sharing` (`Crest.Sharing/Controllers/SharingController.cs`), objects by `kind` and
+- API `api/sharing` (`Grove.Sharing/Controllers/SharingController.cs`), objects by `kind` and
   `id` in the query (the tenant: `kind=tenant`): `panel` (entries, every decision on the chain
   with the winner per principal, the public link through the kind's optional `IShareableLinks`,
   whether lists are still catching up: `ShareAccessIndexer.VerifyAsync` finds a difference,
@@ -551,9 +551,9 @@ Implementation:
   labelled, users for staff callers, organizations from Parties; never system accounts),
   `roles`, `roles/users/{id}` (a user's derived roles with their relationships, for those who
   may list users or the user themselves), and `comments`.
-- Components (`Crest.Components/Components/Sharing`): `CrestSharePanel` (96),
-  `CrestShareRules` (97), `CrestAccessIndicator` (98), `CrestPrincipalPicker` (46),
-  `CrestDerivedRoles` (47).
+- Components (`Grove.Components/Components/Sharing`): `GroveSharePanel` (96),
+  `GroveShareRules` (97), `GroveAccessIndicator` (98), `GrovePrincipalPicker` (46),
+  `GroveDerivedRoles` (47).
 - Where they show: the drive browser has a Share action per item and for the open folder
   (Share panel, and a Rules tab for folders and drives), an indicator per item, and an access
   filter applied in the query (`api/files/{id}/children?access=`, through
@@ -580,7 +580,7 @@ How the platform's mechanisms relate to sharing.
 - **Search: to build.** The platform's search (Lucene, Elasticsearch, Azure AI Search) checks
   only which index the caller may query, never each result (F5, below).
 - **Roles and sessions.** The platform's roles are names plus permission claims with no role
-  kind, so Crest keeps its own role registry (44). Derived business roles are added to the
+  kind, so Grove keeps its own role registry (44). Derived business roles are added to the
   caller per request; the security stamp still signs users out where needed.
 - **Storage engine.** YesSql over a relational database (SQLite, PostgreSQL, SQL Server, MySQL);
   no document database.
@@ -598,7 +598,7 @@ How the platform's mechanisms relate to sharing.
 
 ## Open questions
 
-- **Search filtering (F5).** Search engines are connections, and an engine indexing Crest data
+- **Search filtering (F5).** Search engines are connections, and an engine indexing Grove data
   is set up with the permission system, so access is written into what is indexed and every
   search is filtered; each principal or rule change reindexes the affected documents. Open: (1)
   one search path (the Search module through the query pipeline) with the caller's scope always

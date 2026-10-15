@@ -1,6 +1,6 @@
-# Home Route (`Crest.HomeRoute`)
+# Home Route (`Grove.HomeRoute`)
 
-The `Crest.HomeRoute` module defines the route that the homepage (the URL `/`) maps to. It registers a dynamic route on `/` that is resolved at request time from the configured home route, so any controller action or content item can act as the site's homepage.
+The `Grove.HomeRoute` module defines the route that the homepage (the URL `/`) maps to. It registers a dynamic route on `/` that is resolved at request time from the configured home route, so any controller action or content item can act as the site's homepage.
 
 ## Setting the homepage
 
@@ -19,7 +19,7 @@ The home route is part of the site settings, so it can be set with the `settings
     {
       "name": "settings",
       "HomeRoute": {
-        "Area": "Crest.Contents",
+        "Area": "Grove.Contents",
         "Controller": "Item",
         "Action": "Display",
         "ContentItemId": "4xn8...your-content-item-id"

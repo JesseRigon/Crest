@@ -1,6 +1,6 @@
 // Verifies an interactive component placed on the public site is genuinely interactive - a
 // real circuit/WASM click handler, not just server-rendered markup. The dev recipe places the
-// CrestCounter component (StartValue 5) in the site layout's Footer through a layer rule (widgets
+// GroveCounter component (StartValue 5) in the site layout's Footer through a layer rule (widgets
 // are retired, docs/blazor-display.md); the site renders every page as one display tree, so the
 // home page carries it. BLAZOR_COUNTER_PATH lets a host point at another page.
 module.exports = async function run(page, ctx) {

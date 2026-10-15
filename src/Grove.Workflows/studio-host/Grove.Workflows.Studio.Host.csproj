@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- The forked Studio, hosted in the Grove admin and loaded on demand: this assembly and
+       everything only it needs are lazy (blazor-wasm/grove-lazy-assemblies.txt). It builds
+       Studio's own service container when the first workflow page opens and holds the views
+       those pages render. Nothing outside it references its types. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Grove.Workflows.Studio.Host</AssemblyName>
+    <RootNamespace>Grove.Workflows.Studio.Host</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Abstractions\Grove.Workflows.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Grove.Components\Grove.Components.csproj" />
+    <ProjectReference Include="..\designer\src\framework\Grove.Workflows.Studio.Core.BlazorWasm\Grove.Workflows.Studio.Core.BlazorWasm.csproj" />
+    <ProjectReference Include="..\designer\src\framework\Grove.Workflows.Studio.Shell\Grove.Workflows.Studio.Shell.csproj" />
+    <ProjectReference Include="..\designer\src\modules\Grove.Workflows.Studio.Workflows\Grove.Workflows.Studio.Workflows.csproj" />
+  </ItemGroup>
+</Project>

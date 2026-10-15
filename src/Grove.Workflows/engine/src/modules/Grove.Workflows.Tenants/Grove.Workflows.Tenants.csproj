@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>
+            Provides multitenancy services.
+        </Description>
+        <PackageTags>groveWorkflows module multitenancy</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\common\Grove.Workflows.Features\Grove.Workflows.Features.csproj"/>
+        <ProjectReference Include="..\Grove.Workflows.Common\Grove.Workflows.Common.csproj"/>
+    </ItemGroup>
+
+</Project>

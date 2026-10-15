@@ -1,4 +1,4 @@
-# Rules (`Crest.Rules`)
+# Rules (`Grove.Rules`)
 
 The Rules module provides a reusable condition model, evaluation services, operators, and admin display drivers for building rules from nested conditions.
 
@@ -6,9 +6,9 @@ Rules are infrastructure. The module does not provide a standalone admin screen 
 
 ## Enable the module
 
-Enable **Rules** from **Tool** > **Features** in the admin. Enabling a feature that depends on `Crest.Rules`, such as Layers, enables it automatically.
+Enable **Rules** from **Tool** > **Features** in the admin. Enabling a feature that depends on `Grove.Rules`, such as Layers, enables it automatically.
 
-The Rules feature depends on `Crest.Scripting` so that JavaScript conditions can use the scripting infrastructure.
+The Rules feature depends on `Grove.Scripting` so that JavaScript conditions can use the scripting infrastructure.
 
 ## Rule composition and evaluation
 
@@ -27,8 +27,8 @@ The root rule and both group types evaluate their children in list order. Root a
 For example, the following rule represents `(authenticated OR homepage) AND URL starts with /docs`:
 
 ```csharp
-using Crest.Rules;
-using Crest.Rules.Models;
+using Grove.Rules;
+using Grove.Rules.Models;
 
 var rule = new Rule
 {
@@ -90,7 +90,7 @@ Each operator has a **Case sensitive** option. Case-insensitive comparisons are 
 
 ## JavaScript conditions
 
-The JavaScript condition evaluates its expression through the Crest scripting engine. The expression must produce a value that can be converted to a Boolean. The admin editor validates syntax, runtime errors, and Boolean conversion before saving.
+The JavaScript condition evaluates its expression through the Grove scripting engine. The expression must produce a value that can be converted to a Boolean. The admin editor validates syntax, runtime errors, and Boolean conversion before saving.
 
 Global methods are supplied by enabled features. When Layers is enabled, it provides:
 
@@ -116,8 +116,8 @@ Rules do not provide Liquid tags, filters, or Liquid rule evaluation. The `[js: 
 Inject `IRuleService` and call `EvaluateAsync()` with a `Rule`:
 
 ```csharp
-using Crest.Rules;
-using Crest.Rules.Services;
+using Grove.Rules;
+using Grove.Rules.Services;
 
 public sealed class RuleGate
 {
@@ -133,9 +133,9 @@ public sealed class RuleGate
 }
 ```
 
-The Rules feature registers `IRuleService` and all built-in evaluators. A module that uses these services should declare a feature dependency on `Crest.Rules`.
+The Rules feature registers `IRuleService` and all built-in evaluators. A module that uses these services should declare a feature dependency on `Grove.Rules`.
 
-When using `Crest.Rules.Core` outside the feature, call `services.AddRules()` and register every condition evaluator that a rule can contain. An unregistered condition cannot be evaluated reliably.
+When using `Grove.Rules.Core` outside the feature, call `services.AddRules()` and register every condition evaluator that a rule can contain. An unregistered condition cannot be evaluated reliably.
 
 ## Admin editors and permissions
 
@@ -162,7 +162,7 @@ The following valid recipe fragment creates an always-active layer:
         "ConditionId": "[js: uuid()]",
         "Conditions": [
           {
-            "$type": "Crest.Rules.Models.BooleanCondition, Crest.Rules",
+            "$type": "Grove.Rules.Models.BooleanCondition, Grove.Rules",
             "Name": "BooleanCondition",
             "Value": true,
             "ConditionId": "[js: uuid()]"
@@ -192,7 +192,7 @@ This condition tests whether the current request contains a configured header:
 
 ```csharp
 using Microsoft.AspNetCore.Http;
-using Crest.Rules;
+using Grove.Rules;
 
 public sealed class RequestHeaderCondition : Condition
 {
@@ -236,10 +236,10 @@ This registration adds the evaluator and factory and registers the concrete cond
 Derive the driver from `DisplayDriver<Condition, TCondition>`. A complete editor normally provides summary, thumbnail, and edit shapes:
 
 ```csharp
-using Crest;
-using Crest.DisplayManagement.Handlers;
-using Crest.DisplayManagement.Views;
-using Crest.Rules;
+using Grove;
+using Grove.DisplayManagement.Handlers;
+using Grove.DisplayManagement.Views;
+using Grove.Rules;
 
 public sealed class RequestHeaderConditionViewModel
 {
@@ -318,7 +318,7 @@ The following operator performs an ordinal string comparison:
 
 ```csharp
 using Microsoft.Extensions.Options;
-using Crest.Rules;
+using Grove.Rules;
 
 public sealed class OrdinalEqualsOperator : ConditionOperator;
 

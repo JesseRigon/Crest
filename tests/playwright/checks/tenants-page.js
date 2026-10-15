@@ -1,6 +1,6 @@
 // Converted from the old admin-tenants-page.js. Verifies the native Tenants page renders,
 // its API-backed catalog includes the default tenant, and that "Add tenant" still falls
-// back to Crest's native (legacy iframe) create form.
+// back to Grove's native (legacy iframe) create form.
 module.exports = async function run(page, ctx) {
   await page.goto(`${ctx.baseUrl}/Admin/Tenants`, { waitUntil: 'domcontentloaded' });
   const tenants = page.locator('[data-testid="tenants-page"]');
@@ -14,7 +14,7 @@ module.exports = async function run(page, ctx) {
 
   const results = [{ name: 'renders-tenants-page', pass: true, message: 'ok' }];
 
-  const response = await page.request.get(`${ctx.baseUrl}/api/crest/tenants`);
+  const response = await page.request.get(`${ctx.baseUrl}/api/grove/tenants`);
   let catalog = null;
   if (response.ok()) {
     catalog = await response.json();

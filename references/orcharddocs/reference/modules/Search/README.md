@@ -1,6 +1,6 @@
-# Search (`Crest.Search`)
+# Search (`Grove.Search`)
 
-The `Crest.Search` module provides a frontend search experience for your site. It exposes a search page and a search form, and queries an index built by one of the search providers (Lucene, Elasticsearch or Azure AI Search).
+The `Grove.Search` module provides a frontend search experience for your site. It exposes a search page and a search form, and queries an index built by one of the search providers (Lucene, Elasticsearch or Azure AI Search).
 
 This module only provides the user-facing search UI. The actual indexes are created and managed by the [`Indexing`](../Indexing/README.md) infrastructure together with a provider:
 
@@ -8,7 +8,7 @@ This module only provides the user-facing search UI. The actual indexes are crea
 - [Elasticsearch](../Elasticsearch/README.md)
 - [Azure AI Search](../AzureAISearch/README.md)
 
-Enable `Crest.Search` plus at least one provider feature, and create an index profile, before using the search page.
+Enable `Grove.Search` plus at least one provider feature, and create an index profile, before using the search page.
 
 ## Search page
 

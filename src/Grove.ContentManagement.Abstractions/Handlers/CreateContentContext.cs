@@ -1,0 +1,10 @@
+namespace Grove.ContentManagement.Handlers;
+
+public class CreateContentContext : ContentContextBase
+{
+    public CreateContentContext(ContentItem contentItem) : base(contentItem)
+    {
+    }
+
+    public bool Cancel { get; set; }
+}

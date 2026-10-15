@@ -1,4 +1,4 @@
-# Menu (`Crest.Menu`)
+# Menu (`Grove.Menu`)
 
 The **Menus** admin navigation item is available to users who can list `Menu` content items. The `Edit_Menu` content-type permission also grants `ManageMenu`, allowing users who can edit menus to manage their menu items.
 
@@ -229,7 +229,7 @@ available on the `MenuItem` shape are still available.
 === "Razor"
 
     ``` html
-    @using Crest.ContentManagement
+    @using Grove.ContentManagement
 
     @{
         ContentItem contentItem = Model.ContentItem;
@@ -249,7 +249,7 @@ available on the `MenuItem` shape are still available.
 ## Mark active item in a menu
 
 Some times you need to set a menu item as active if it is the currently displayed one.
-Because menus are cached, this must be done from javascript. Crest.Menu module provides a script to help you with that.
+Because menus are cached, this must be done from javascript. Grove.Menu module provides a script to help you with that.
 
 ``` javascript
 function activateLinks(options,cb)
@@ -266,7 +266,7 @@ function activateLinks(options,cb)
 
     ``` liquid
     ...
-    {% script at:"Foot", src:"~/Crest.Menu/Scripts/activate-links.min.js", debug_src:"~/Crest.Menu/Scripts/activate-links.js" %}
+    {% script at:"Foot", src:"~/Grove.Menu/Scripts/activate-links.min.js", debug_src:"~/Grove.Menu/Scripts/activate-links.js" %}
     ...
         <resources type="Footer" />
     ...
@@ -285,7 +285,7 @@ function activateLinks(options,cb)
 
     ``` html
     ...
-    <script at="Foot" asp-src="~/Crest.Menu/Scripts/activate-links.min.js" debug-src="~/Crest.Menu/Scripts/activate-links.js"></script>
+    <script at="Foot" asp-src="~/Grove.Menu/Scripts/activate-links.min.js" debug-src="~/Grove.Menu/Scripts/activate-links.js"></script>
     ...
     <resources type="Footer" />
     ...

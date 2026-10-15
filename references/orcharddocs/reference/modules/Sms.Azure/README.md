@@ -1,4 +1,4 @@
-# Azure Communication Services SMS (`Crest.Sms.Azure`)
+# Azure Communication Services SMS (`Grove.Sms.Azure`)
 
 This feature provides SMS providers for sending SMS through [Azure Communication Services SMS](https://learn.microsoft.com/en-us/azure/communication-services/concepts/sms/concepts).
 
@@ -43,7 +43,7 @@ You may configure the **Default Azure Communication Services** using any configu
 
 ```json
 {
-  "Crest_Sms_AzureCommunicationServices": {
+  "Grove_Sms_AzureCommunicationServices": {
     "PhoneNumber": "",
     "ConnectionString": ""
   }

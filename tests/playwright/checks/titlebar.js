@@ -13,15 +13,15 @@ module.exports = async function run(page, ctx) {
   const legacyTenantMenuCount = await page.locator('.admin-titlebar__tenant-menu').count();
 
   // Since the Radzen source merge (ad8db47) the dropdown root is the visible,
-  // clickable face — the old .crest-dropdown__trigger inner button is gone. The
+  // clickable face — the old .grove-dropdown__trigger inner button is gone. The
   // culture value (flag icon) renders in the label span; the chevron is a
-  // .crest-icon inside .rz-dropdown-trigger.
+  // .grove-icon inside .rz-dropdown-trigger.
   const cultureSelector = page.locator('.admin-titlebar__culture-selector');
   const cultureSelectorCount = await cultureSelector.count();
   let cultureIconCount = null;
   if (cultureSelectorCount) {
     cultureIconCount = await cultureSelector
-      .locator('.rz-dropdown-label .platform-icon, .rz-dropdown-trigger .crest-icon, .rz-dropdown-trigger .platform-icon')
+      .locator('.rz-dropdown-label .platform-icon, .rz-dropdown-trigger .grove-icon, .rz-dropdown-trigger .platform-icon')
       .count();
   }
 

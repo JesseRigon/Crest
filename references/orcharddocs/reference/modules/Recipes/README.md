@@ -1,14 +1,14 @@
-# Recipes (`Crest.Recipes`)
+# Recipes (`Grove.Recipes`)
 
 ## Overview
 
-The `Crest.Recipes` module allows you to automate Crest tenant setup and configuration using JSON-based recipe files. Recipes can install features, set themes, create content types, provision content, and much more.
+The `Grove.Recipes` module allows you to automate Grove tenant setup and configuration using JSON-based recipe files. Recipes can install features, set themes, create content types, provision content, and much more.
 
 ---
 
 ## What is a Recipe?
 
-A recipe is a `.recipe.json` file placed in a Recipes folder within your module or theme. Recipes are picked up by Crest and can be executed via the admin panel or automatically during tenant setup.
+A recipe is a `.recipe.json` file placed in a Recipes folder within your module or theme. Recipes are picked up by Grove and can be executed via the admin panel or automatically during tenant setup.
 
 ### Key Properties
 
@@ -32,7 +32,7 @@ A recipe is a `.recipe.json` file placed in a Recipes folder within your module 
   "name": "Blog",
   "displayName": "Blog Site",
   "description": "Creates a simple blog with custom content types, widgets, and pages.",
-  "author": "Crest Team",
+  "author": "Grove Team",
   "website": "https://orchardcore.net",
   "version": "1.0.0",
   "issetuprecipe": true,
@@ -59,7 +59,7 @@ These helpers allow dynamic expressions inside recipe values using a special syn
 | `js`           | `"ContentItemId": "[js:variables('homePageId')]"`                                   | Evaluates a JavaScript expression. Common for referencing `variables`.                                                 |
 | `file`         | `"Content": "[file:text('Snippets/homepage.liquid')]"`                              | Loads content from an external file. Often used for Liquid templates.                                                  |
 | `env`          | `"value": "[env:MyEnvironmentVariable]"`                                            | Injects values from environment variables.                                                                             |
-| `appsettings`  | `"value": "[appsettings:Crest:SiteName]"`                                     | Reads configuration from `appsettings.json`.                                                                           |
+| `appsettings`  | `"value": "[appsettings:Grove:SiteName]"`                                     | Reads configuration from `appsettings.json`.                                                                           |
 | `localization` | `"value": "[localization:WelcomeTitle]"`                                            | Retrieves localized strings by key.                                                                                    |
 | `uuid`         | `"Id": "[js:uuid()]"`                                                               | Generates a new unique identifier (UUID/GUID).                                                                         |
 | `base64`       | `"data": "[js:base64('ew0KICAgICJ0eXBlIjogIkNvbnRlbnRJdGVtL0Jsb2dQb3N0Ig0KfQ==')]"` | Decodes the specified string from Base64 encoding. Use https://www.base64-image.de/ to convert your files to base64.   |
@@ -89,7 +89,7 @@ Enables or disables features (modules/themes).
 ```json
 {
   "name": "feature",
-  "enable": [ "Crest.Admin", "MyCustomTheme" ],
+  "enable": [ "Grove.Admin", "MyCustomTheme" ],
   "disable": []
 }
 ```
@@ -123,7 +123,7 @@ Configures core site settings (like homepage route, culture, time zone, etc).
   "HomeRoute": {
     "Action": "Display",
     "Controller": "Item",
-    "Area": "Crest.Contents",
+    "Area": "Grove.Contents",
     "ContentItemId": "[js:variables('homeId')]"
   },
   "LayerSettings": {
@@ -447,7 +447,7 @@ Other commands, such as `help commands` (lists every available command) and `rec
 
 ## Recipe Migrations
 
-**Recipe migrations** allow you to perform updates using Crest recipe files. These migrations are especially useful for updating metadata such as content types, workflows, settings, or any other component that can be updated via a recipe.
+**Recipe migrations** allow you to perform updates using Grove recipe files. These migrations are especially useful for updating metadata such as content types, workflows, settings, or any other component that can be updated via a recipe.
 
 While many changes can be made through the admin UI, recipe migrations provide a repeatable and versioned way to apply updates, ideal for deployment automation or environment setup.
 
@@ -457,14 +457,14 @@ While many changes can be made through the admin UI, recipe migrations provide a
 
 A recipe migration is implemented by creating a `DataMigration` class in your module or theme. Inside this class, you call into the `IRecipeMigrator` service to execute recipe files.
 
-Recipe files must be stored in a `Migrations` folder within your project, and they are typically written in JSON format using the standard Crest recipe schema.
+Recipe files must be stored in a `Migrations` folder within your project, and they are typically written in JSON format using the standard Grove recipe schema.
 
 ---
 
 ### Setup
 
 1. **Create a migration class**:
-   - Inherit from `Crest.Data.Migration.DataMigration` (in the `Crest.Data.Abstractions` package).
+   - Inherit from `Grove.Data.Migration.DataMigration` (in the `Grove.Data.Abstractions` package).
    - Inject the `IRecipeMigrator` service.
    - Implement one or more of the following methods:
      - `CreateAsync()` – the first migration, must return `1`

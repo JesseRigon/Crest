@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Deployment</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Grove Deployment Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for Deployment module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Recipes.Abstractions\Grove.Recipes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YesSql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,6 @@
 # Localization
 
-How Crest resolves and applies culture (language, date/number formatting) for users,
+How Grove resolves and applies culture (language, date/number formatting) for users,
 and how UI strings are translated. This covers the user-facing localization system —
 per-user language, culture-aware formatting, translated menus/components/content. It
 deliberately excludes anything ERP-specific (currency, tax, regions, business
@@ -10,7 +10,7 @@ accounting and tax plans).
 ## Scope and boundary
 
 This is an **optional, additive feature set** over the platform's standard localization
-module (`Crest.Localization`) — nothing else in the codebase requires it. If it were
+module (`Grove.Localization`) — nothing else in the codebase requires it. If it were
 stripped out entirely, other modules keep working correctly using only the platform's
 localization
 (tenant culture); they don't get a required new dependency, cascading parameter, or
@@ -28,7 +28,7 @@ definitions are a business-context concern, not part of this system.
 culture to tell the server about.** The server does not guess culture from a chain of
 independent `IRequestCultureProvider`s: providers that each prepend themselves via
 `AddInitialRequestCultureProvider` race for the front slot, so module load order, not anything
-a site admin controls, would decide. `Crest.Localization` is the one owner of the provider list
+a site admin controls, would decide. `Grove.Localization` is the one owner of the provider list
 and assigns it rather than inserting into it.
 
 Instead:
@@ -42,14 +42,14 @@ Instead:
       unless "Save as default" is clicked.
    2. **User's stored default** — from `UserLocalizationSettings.Culture`, read via the
       manifest as the currently authenticated user (correct per-identity automatically).
-   3. **Admin default culture** — a Crest-owned tenant setting
-      (`CrestLocalizationSettings.AdminDefaultCulture`), consulted only when the current
+   3. **Admin default culture** — a Grove-owned tenant setting
+      (`GroveLocalizationSettings.AdminDefaultCulture`), consulted only when the current
       route is under the admin path prefix; skipped when unset or off-admin.
    4. **Browser locale** (`navigator.language`) — used only if it's one of the tenant's
       supported cultures.
    5. **Tenant default culture** — final fallback.
 3. **Client writes one cookie** with the fully-resolved value — the tenant-wide
-   `culture_{shellVersionId}` cookie (`Crest.Localization.CultureCookie`) — in the stock
+   `culture_{shellVersionId}` cookie (`Grove.Localization.CultureCookie`) — in the stock
    ASP.NET Core cookie format (`c=<culture>|uic=<culture>`), scoped tenant-wide (not
    `/admin`-only). The stock `CookieRequestCultureProvider` reads it back server-side.
 4. **Server reads back exactly what the client decided.** No ordering race remains,
@@ -63,10 +63,10 @@ would break the requirement that an admin tab and a front-end tab can independen
 different languages at once. Because a cookie is per-origin (not per-tab), the client
 re-resolves and rewrites the culture cookie **immediately before every
 culture-sensitive request**, not just on manifest load — implemented in
-`AntiforgeryHandler`, the single `DelegatingHandler` every Crest API call already
+`AntiforgeryHandler`, the single `DelegatingHandler` every Grove API call already
 funnels through.
 
-The override key is also scoped by user name (`crest-culture-override:{userName}`), so
+The override key is also scoped by user name (`grove-culture-override:{userName}`), so
 switching identities in the same tab ("sign in as another user") doesn't leak one user's
 override onto another — the new identity falls through to its own stored default.
 
@@ -84,11 +84,11 @@ extra plumbing needed.
 
 ## Front end and anonymous visitors (server-rendered)
 
-The tenant's front-end site (`Crest.SiteTheme`) is prerendered on the server before any client
+The tenant's front-end site (`Grove.SiteTheme`) is prerendered on the server before any client
 runs, and an anonymous visitor has no manifest to resolve from, so the server's culture comes
 from the stock ASP.NET Core `RequestLocalizationOptions` pipeline:
 
-1. `Crest.Localization`'s `RequestLocalizationOptionsConfigurations` assigns
+1. `Grove.Localization`'s `RequestLocalizationOptionsConfigurations` assigns
    `RequestCultureProviders` as
    `[CookieRequestCultureProvider, AcceptLanguageHeaderRequestCultureProvider]` —
    the tenant-wide culture cookie (the same one the admin's client-side chain writes)
@@ -99,7 +99,7 @@ from the stock ASP.NET Core `RequestLocalizationOptions` pipeline:
    registrations, so two modules each inserting at index 0 would race for the front slot.
    No other module adds a provider or rebuilds the list.
 3. The tenant's actual supported/default cultures come from `LocalizationSettings`
-   (`Crest.Localization`'s site settings, editable at `/Admin/Settings/localization`
+   (`Grove.Localization`'s site settings, editable at `/Admin/Settings/localization`
    or via a recipe's `settings` step) — **as top-level keys of the step itself**
    (`LocalizationSettings`, not wrapped in an extra `Properties` key). `SettingsStep.cs`'s
    recipe handler writes any key it doesn't special-case directly into
@@ -125,13 +125,13 @@ data (the SDK's default trimmed set only covers a handful of cultures).
 
 - **Tenant default culture / supported cultures** — stock OrchardCore
   `LocalizationSettings`, managed on `Pages/Localization.razor`.
-- **Admin default culture** — Crest-owned `CrestLocalizationSettings.AdminDefaultCulture`,
+- **Admin default culture** — Grove-owned `GroveLocalizationSettings.AdminDefaultCulture`,
   managed on the same page. Nullable; clearing it (or removing the culture it points at
   from the supported-cultures list) means "no admin-specific override, use the tenant
   default everywhere."
 - **Per-user stored default** — `UserLocalizationSettings.Culture` (upstream
-  `Crest.Users.Localization`'s storage, via `User.Properties`). Read/write via
-  `GET`/`PUT api/crest/localization/me`, scoped to the current user.
+  `Grove.Users.Localization`'s storage, via `User.Properties`). Read/write via
+  `GET`/`PUT api/grove/localization/me`, scoped to the current user.
 - **Session override** — client-only, `sessionStorage`, keyed by user name. Never touches
   the server unless explicitly saved as the new stored default.
 
@@ -139,50 +139,50 @@ data (the SDK's default trimmed set only covers a handful of cultures).
 
 Two independent mechanisms, by project:
 
-- **`Crest.Components`, `Crest.SiteTheme`** — compiled-resource /
-  `.po`-based mechanisms (`CrestStrings.resx` + `ILocalizer`/`Localizer` for Components;
+- **`Grove.Components`, `Grove.SiteTheme`** — compiled-resource /
+  `.po`-based mechanisms (`GroveStrings.resx` + `ILocalizer`/`Localizer` for Components;
   a `.po`-based theme mechanism for Site). New languages are `.po`/API content, not new
-  `CrestStrings.{culture}.resx` files.
-- **`Crest.AdminTheme` (headless Blazor WASM) and any project that can reference
-  `Crest.Components`** — pulls its string catalog at runtime via an API rather than
+  `GroveStrings.{culture}.resx` files.
+- **`Grove.AdminTheme` (headless Blazor WASM) and any project that can reference
+  `Grove.Components`** — pulls its string catalog at runtime via an API rather than
   compiled resources:
   - Keys are **invariant literals**, native Orchard style: `T["Some text"]`, or
     `T["Signed in as {0}", name]` for format strings. The literal is simultaneously the
     translation key and the rendered fallback — there is no separate slug key. Because
-    the same literal is the `msgid` in every shipped module catalog, Crest pages inherit
+    the same literal is the `msgid` in every shipped module catalog, Grove pages inherit
     upstream translations automatically. (Identity is a separate concern: menu items keep
     `UniqueId` for manipulation; literals are only ever translation keys.)
   - **Literal fidelity**: lookups are case-sensitive (`Ordinal`), matching OrchardCore's
     own msgid behavior — deliberately not loosened. A literal only inherits an upstream
     translation when it matches upstream's msgid **byte-for-byte** (casing, punctuation,
-    trailing periods). When a Crest literal drifts from a stock string, fix the literal
+    trailing periods). When a Grove literal drifts from a stock string, fix the literal
     to match stock; never make matching fuzzier. Upstream msgids are mechanically
     extracted from their source, so the authoritative spelling is whatever their code
     says (`Log in`, not `Login`; `Disable local password login.` with the period).
-  - Server: `GET api/crest/localization/strings?culture={culture}` on
+  - Server: `GET api/grove/localization/strings?culture={culture}` on
     `LocalizationController` serves a **layered** per-culture dictionary, callable
     pre-login, resolving each literal as **stored edit → PO → miss** (the client then
     renders the literal): tenant translation store entries under context
-    `Crest.AdminTheme.Client` first; then PO — a `Crest.AdminTheme.Client`-context entry if one
+    `Grove.AdminTheme.Client` first; then PO — a `Grove.AdminTheme.Client`-context entry if one
     exists, else the most common translation of the literal across **all** shipped
     catalogs (via `PoTranslationLookup`, the same helper the menu caption chain
     uses). Every layer falls back from a region culture (`es-ES`) to its parent (`es`).
     Storing the literal itself as the value pins the literal over a shipped translation.
-  - Client: `CrestApiLocalizer` (`Crest.Components.Theme.CrestApiLocalizer`) implements
+  - Client: `GroveApiLocalizer` (`Grove.Components.Theme.GroveApiLocalizer`) implements
     `ILocalizer`, exposes the `T["..."]` indexer, caches per culture, and renders the
     literal itself on a miss rather than throwing. Loaded whenever `AdminShellState`
-    resolves a new culture. Convention: `@inject Crest.Components.Theme.CrestApiLocalizer T`.
-  - **Translation content lives in the HOST, not in Crest**: the
-    Crest repo ships literals only and stays as stock-localized as upstream makes it —
+    resolves a new culture. Convention: `@inject Grove.Components.Theme.GroveApiLocalizer T`.
+  - **Translation content lives in the HOST, not in Grove**: the
+    Grove repo ships literals only and stays as stock-localized as upstream makes it —
     its aligned literals inherit whatever the host's catalogs provide. The host project
     supplies editorial translations as its own distinctly-named files next to the
     mirror (a host, for example: `Localization/{culture}/Admin.po`, literal msgids,
-    `msgctxt "Crest.AdminTheme.Client"`; front-site strings in `Site.po`). Distinct
-    filenames survive a mirror refresh. Host modules that are not part of Crest (e.g. a
+    `msgctxt "Grove.AdminTheme.Client"`; front-site strings in `Site.po`). Distinct
+    filenames survive a mirror refresh. Host modules that are not part of Grove (e.g. a
     line-of-business module) may keep module-local `Localization/{culture}.po` inside the host repo.
 
-Excluded from the API-based mechanism: `Crest.Workflows.Designer` (a
-vendored third-party package, not a Crest admin surface) and any currently-unreferenced
+Excluded from the API-based mechanism: `Grove.Workflows.Designer` (a
+vendored third-party package, not a Grove admin surface) and any currently-unreferenced
 component with no live surface to verify translations against.
 
 ## Where translations come from: Crowdin, the mirror, and the private lane
@@ -199,13 +199,13 @@ on **Crowdin** (crowdin.com) via the `OrchardCore.Translations` repo:
 3. **Packaging** — exports are packed into the `OrchardCore.Translations.{lang}` /
    `.All` NuGet packages per OrchardCore release.
 
-**Context mapping.** The platform's own names are `Crest.*`, but the Crowdin packages' `msgctxt`
+**Context mapping.** The platform's own names are `Grove.*`, but the Crowdin packages' `msgctxt`
 values are upstream OrchardCore type and view names. Internally, translations take a generic
 name (for example `Translations.*`, not a project name), and a mapping rewrites the packages'
 upstream contexts to the platform's names when they are loaded, so the community translations
-keep applying: `TranslationContextMap` (`Crest.Localization/PortableObject`) is applied by the
+keep applying: `TranslationContextMap` (`Grove.Localization/PortableObject`) is applied by the
 PO parser to every entry it reads, with the same rules as the platform rename (`OrchardCore.*` →
-`Crest.*`, identifiers carrying the name made neutral); contexts that never carried the name
+`Grove.*`, identifiers carrying the name made neutral); contexts that never carried the name
 pass through unchanged.
 
 Two consequences: **coverage lag** (extraction is automatic, translation is human — new
@@ -216,10 +216,10 @@ upstream after the last release don't exist as msgids at all yet).
 package's content. Treat it as **read-only upstream output** — never hand-edit it; the
 next refresh from the package clobbers local edits. Nothing refreshes it automatically.
 
-**The private lane**: everything Crest authors lives in module-local catalogs
-(`Crest.Server/Localization/{culture}.po` etc.) and the tenant translation
+**The private lane**: everything Grove authors lives in module-local catalogs
+(`Grove.Server/Localization/{culture}.po` etc.) and the tenant translation
 store. Crowdin has no knowledge of these in either direction — nothing uploads them,
-no refresh touches them. Crest-authored literals (strings that are not upstream msgids)
+no refresh touches them. Grove-authored literals (strings that are not upstream msgids)
 can **only** be translated here; they never appear in Crowdin's template, so modules
 that must stay private lose nothing. This is also why **Crowdin is not a runtime
 dependency**: what the app consumes is `.po` files on disk — an air-gapped deployment
@@ -227,16 +227,16 @@ localizes identically.
 
 **Where the two worlds meet** — literals that are also upstream msgids (the point of
 literal-key alignment). Resolution order arbitrates: store edit → own `.po` entry
-(`Crest.AdminTheme.Client` context) → upstream catalog → the literal. A Crowdin refresh can
+(`Grove.AdminTheme.Client` context) → upstream catalog → the literal. A Crowdin refresh can
 only change what renders when layers 1–2 say nothing about a string — the desirable
 case, where never-touched gaps quietly gain translations. Adding your own entry
 permanently shadows upstream's version, and pin-to-literal (store the literal as the
 value) vetoes a shipped translation outright.
 
-Every Crest literal therefore falls into one of three populations: **inheriting** (matches a translated upstream msgid), **Crowdin
+Every Grove literal therefore falls into one of three populations: **inheriting** (matches a translated upstream msgid), **Crowdin
 candidates** (matches an untranslated upstream msgid — translating it on Crowdin's
 OrchardCore project benefits everyone and flows in at the next Translations release),
-or **Crest-authored** (private lane only).
+or **Grove-authored** (private lane only).
 
 ## Menus and navigation
 
@@ -244,7 +244,7 @@ Admin menu captions are **tenant data**, resolved per request culture at seriali
 time by `MenuCaptionResolver` through the layered hierarchy **store edit → PO
 translation → invariant literal** (within the store: exact menu context → parent
 contexts → best entry in the culture; within PO: the declaring type's context, then
-`*.AdminMenu` contexts, then most-common), edited in the Crest translations page
+`*.AdminMenu` contexts, then most-common), edited in the Grove translations page
 (`/Admin/DataLocalization`). Deleting a stored
 entry reverts to the next layer down. `docs/localization.mmd` is the full resolution
 chain as a diagram — rename overlay, store steps, PO tiers, literal — kept current with
@@ -269,7 +269,7 @@ unchanged by anything in this document.
 ## Planned: cross-tenant translation suggestions ("internal Crowdin")
 
 Planning — nothing implemented. Future feature for a multi-tenant host, built as a
-**Crest feature**. It extends the resolution chain described above.
+**Grove feature**. It extends the resolution chain described above.
 
 ### The idea
 
@@ -284,15 +284,15 @@ distribute), with none of the external dependency, which fits the air-gap rule: 
 is its own translation platform.
 
 **Why this works.** Module-string keys are invariant literals (`msgctxt
-"Crest.AdminTheme.Client"` literals, stock msgids), so they are **tenant-independent by
+"Grove.AdminTheme.Client"` literals, stock msgids), so they are **tenant-independent by
 construction**, and a translation authored in tenant A is semantically valid in tenant B. A
 slug- or caption-keyed scheme could not support this.
 
 ### 1. Eligibility filter (at save time)
 
-- [ ] **Classify each saved translation's (context, key).** When a tenant saves a translation via the Crest Translations editor
+- [ ] **Classify each saved translation's (context, key).** When a tenant saves a translation via the Grove Translations editor
   (`TranslationsController.SaveAsync`), classify its (context, key):
-  - **Eligible**: module literals — context `Crest.AdminTheme.Client`, or a key that exists
+  - **Eligible**: module literals — context `Grove.AdminTheme.Client`, or a key that exists
     as a stock msgid in the shipped catalogs. The audit classification machinery
     (`PoTranslationLookup` index + template membership, see the "three populations"
     in [Where translations come from](#where-translations-come-from-crowdin-the-mirror-and-the-private-lane))
@@ -303,13 +303,13 @@ slug- or caption-keyed scheme could not support this.
 ### 2. Suggestion inbox (Default tenant)
 
 - [ ] **Emit eligible saves as suggestion records.** Eligible saves emit a suggestion record into a Default-shell document (via shell-scope
-  switching; Crest already performs cross-tenant operations for the Tenants page):
+  switching; Grove already performs cross-tenant operations for the Tenants page):
 
   ```csharp
   class TranslationSuggestion
   {
       string Culture;         // "es"
-      string Context;         // "Crest.AdminTheme.Client" or stock msgctxt
+      string Context;         // "Grove.AdminTheme.Client" or stock msgctxt
       string Key;             // invariant literal
       string Value;           // the suggested translation
       string SourceTenant;    // provenance
@@ -321,11 +321,11 @@ slug- or caption-keyed scheme could not support this.
 
   Dedupe on (culture, context, key, value); a differing value for the same key becomes a
   competing suggestion, not an overwrite. Deferred-document write discipline applies
-  (same one-behind trap every other Crest document writer handles).
+  (same one-behind trap every other Grove document writer handles).
 
 ### 3. Review surface (Default tenant operator page)
 
-- [ ] **Build the review page.** A Crest page on the Default tenant listing pending suggestions grouped by
+- [ ] **Build the review page.** A Grove page on the Default tenant listing pending suggestions grouped by
   culture/context/key, showing the **current resolution at each layer** for comparison
   (the Fallback-placeholder machinery already computes exactly this), with
   approve / edit-then-approve / reject, batch operations included.
@@ -366,7 +366,7 @@ For implementation time:
   "approved platform-wide" badges (provenance display).
 - [ ] **Culture governance:** which cultures accept suggestions (tie into
   `LocalizationSettings.SupportedCultures` of the Default tenant?).
-- [ ] **The seam in Crest's resolvers:** does the chain-rung insertion need code in Crest's resolvers (MenuCaptionResolver,
+- [ ] **The seam in Grove's resolvers:** does the chain-rung insertion need code in Grove's resolvers (MenuCaptionResolver,
   LocalizationController, PoTranslationLookup)? Almost certainly yes — the
   feature contributes a provider the resolvers consume; keep the seam an interface.
 
@@ -389,9 +389,9 @@ check `LANG` on that host before assuming it's a code bug.
 
 ## Testing
 
-- **C# unit tests** exist per `Crest.*` subproject
-  (`Crest.Server.Tests`, `.Admin.Tests`, etc.), following the
-  `Crest.Icons.Tests` convention (xUnit + Verify + NSubstitute), discovered
+- **C# unit tests** exist per `Grove.*` subproject
+  (`Grove.Server.Tests`, `.Admin.Tests`, etc.), following the
+  `Grove.Icons.Tests` convention (xUnit + Verify + NSubstitute), discovered
   automatically by `tests/run-tests.sh`. Localization-specific coverage: the culture
   resolution priority chain (table-driven over all rungs and combinations),
   `IsUnderAdminPath()`, `CultureSelector.FromAsync`, and `LocalizationController.SaveAsync`'s

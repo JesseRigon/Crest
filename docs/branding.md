@@ -30,7 +30,7 @@ unset; it becomes a designed page once the admin and member shells render data-d
 
 - [x] **`ISite.SiteName` is the display name.** No second field. Every editor of it goes
   through the one settings pipeline (`ISiteService`), so no two screens can disagree. It is
-  served by `GET api/crest/site` (`siteName`, behind `ManageSettings`) and edited on Settings ›
+  served by `GET api/grove/site` (`siteName`, behind `ManageSettings`) and edited on Settings ›
   General.
 - [x] **The site name in the document title**: the SSR document head (`App.razor`) reads
   `site` in process (`SiteIdentity`), so `<title>` is `site › name` on all three shells.
@@ -53,11 +53,11 @@ A logo is not one file: the app consumes specific renditions in specific places.
   never hard-code surface knowledge; a module that adds a surface registers the rendition it
   consumes. `BrandingRendition` (name, label, where it is used, intended size, accepted types,
   reserved) is registered with `services.AddBrandingRendition(...)` into `BrandingOptions`
-  (`Crest.Infrastructure.Abstractions/Settings/Branding.cs`); `Crest.Settings` registers the
+  (`Grove.Infrastructure.Abstractions/Settings/Branding.cs`); `Grove.Settings` registers the
   four above.
 - [x] **Files live in Media**, in a tenant-relative folder the service owns (resolved through
   `IMediaFileStore`, never a hand-typed absolute path), uploaded through the media pipeline so
-  Media permissions and validation apply unchanged. `api/crest/site/branding-settings`
+  Media permissions and validation apply unchanged. `api/grove/site/branding-settings`
   (`BrandingController`, `ManageSettings`; uploads also need `ManageMedia`, Media's allowed
   extensions and the upload pipeline) stores each upload as `_branding/{rendition}-{random}.{ext}`,
   so a new logo never comes from a cache, and deletes the file it replaced. It deletes only
@@ -90,7 +90,7 @@ other query result; SSR runs the same query in process.
 - [x] **The title bar's tenant chip** shows `branding.sidebar` before the title-bar avatar
   setting.
 - [ ] **The layouts bind renditions through slots.** The admin client reads `api/queries/site`,
-  falling back to the interim `GET api/crest/site/branding` (which answers from the same query)
+  falling back to the interim `GET api/grove/site/branding` (which answers from the same query)
   for a tenant whose Anonymous role predates the grant. The interim endpoint and
   `AdminShellState.Branding` go with the hand-built login page. The member layout's nav header
   has no logo spot yet (shells work, [shells-and-themes.md](shells-and-themes.md)).
@@ -144,11 +144,11 @@ does not host a Branding section of its own.
 
 ## Verification
 
-- [x] **Unit** (`test/Crest.Tests/Settings/BrandingSettingsTests.cs`): the settings section
+- [x] **Unit** (`test/Grove.Tests/Settings/BrandingSettingsTests.cs`): the settings section
   round-trips; the `site` query resolves renditions to URLs and answers empty for an unset one;
   the anonymous row holds only `Name` and `Branding`.
 - [ ] **Suite:** the login page shows the site name, and the logo once a probe uploads
-  one; the settings editor's branding group persists a name edit that `api/crest/site`
+  one; the settings editor's branding group persists a name edit that `api/grove/site`
   reflects; a tenant override of the login template renders and the route and permission
   stay the page's.
 

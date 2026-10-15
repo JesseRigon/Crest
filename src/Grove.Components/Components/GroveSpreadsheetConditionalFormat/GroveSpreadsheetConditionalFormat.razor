@@ -1,0 +1,51 @@
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives.Spreadsheet
+@using Grove.Components.Primitives.Spreadsheet.Tools
+@using Grove.Components.Primitives.Documents.Spreadsheet
+@inject DialogService DialogService
+@inherits GroveSpreadsheetToolBase
+
+@namespace Grove.Components.Primitives.Spreadsheet.Tools
+<GroveSplitButton ButtonAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_ConditionalFormatTool))) OpenAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_ConditionalFormatTool))) title=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_ConditionalFormatTool))) Click=@OnClickAsync Icon="format_color_fill" Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_Conditional)) ?? "Conditional") Disabled=@IsDisabled Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small">
+    <ChildContent>
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_GreaterThanMenu)) ?? "Greater Than...") Value="greater" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_LessThanMenu)) ?? "Less Than...") Value="less" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_BetweenMenu)) ?? "Between...") Value="between" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_EqualToMenu)) ?? "Equal To...") Value="equal" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_TextContainsMenu)) ?? "Text Contains...") Value="text" />
+    </ChildContent>
+</GroveSplitButton>
+
+@code {
+    protected override SpreadsheetFeature? Feature => SpreadsheetFeature.ConditionalFormatting;
+
+    private async Task OnClickAsync(GroveSplitButtonItem? item)
+    {
+        if (Worksheet is null || Worksheet.Selection.Cell == CellRef.Invalid)
+        {
+            return;
+        }
+
+        var ruleType = item?.Value switch
+        {
+            "less" => ConditionalFormatRuleType.LessThan,
+            "between" => ConditionalFormatRuleType.Between,
+            "equal" => ConditionalFormatRuleType.EqualTo,
+            "text" => ConditionalFormatRuleType.TextContains,
+            _ => ConditionalFormatRuleType.GreaterThan
+        };
+
+        var result = await DialogService.OpenAsync<ConditionalFormatDialog>(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_ConditionalFormattingTitle)) ?? "Conditional Formatting",
+            new Dictionary<string, object?>
+            {
+                { "RuleType", ruleType },
+                { "Culture", Worksheet.Culture }
+            });
+
+        if (result is ConditionalFormatBase rule && Spreadsheet is not null)
+        {
+            var command = new ConditionalFormatCommand(Worksheet, Worksheet.Selection.Range, rule);
+            await Spreadsheet.ExecuteAsync(command);
+        }
+    }
+}

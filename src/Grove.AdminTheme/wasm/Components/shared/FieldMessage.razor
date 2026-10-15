@@ -1,0 +1,15 @@
+@namespace Grove.AdminTheme.Components.Shared
+@using Grove.Components.Primitives
+
+@* A field's refusal under its input, rendering nothing when there is none - the native
+   editors' counterpart of the MVC validation message tag helper. *@
+
+@if (!string.IsNullOrEmpty(Text))
+{
+    <GroveText TextStyle="TextStyle.Caption" Text="@Text" Style="color: var(--grove-color-danger, #b3261e);" data-testid="field-message" />
+}
+
+@code {
+    [Parameter]
+    public string? Text { get; set; }
+}

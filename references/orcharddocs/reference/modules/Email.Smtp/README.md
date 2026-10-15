@@ -1,4 +1,4 @@
-# Email (`Crest.Email.Smtp`)
+# Email (`Grove.Email.Smtp`)
 
 This module provides an Email provider for sending emails through the Simple Mail Transfer Protocol (SMTP).
 
@@ -34,7 +34,7 @@ You may configure the Default SMTP provider by the configuration provider using 
 
 ```json
 {
-  "Crest_Email_Smtp": {
+  "Grove_Email_Smtp": {
     "DefaultSender": "site@example.com",
     "DeliveryMethod": "Network",
     "PickupDirectoryLocation": "",
@@ -57,7 +57,7 @@ or
 
 ```json
 {
-  "Crest_Email_Smtp": {
+  "Grove_Email_Smtp": {
     "DefaultSender": "site@example.com",
     "DeliveryMethod": "SpecifiedPickupDirectory",
     "PickupDirectoryLocation": "/"
@@ -69,7 +69,7 @@ To move the pickup directory outside the default tenant folder, set `PickupDirec
 
 ```json
 {
-  "Crest_Email_Smtp": {
+  "Grove_Email_Smtp": {
     "DefaultSender": "site@example.com",
     "DeliveryMethod": "SpecifiedPickupDirectory",
     "PickupDirectoryLocationBase": "{{ AppData }}\\Drops\\{{ ShellSettings.Name }}",

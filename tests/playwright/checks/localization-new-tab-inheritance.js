@@ -8,7 +8,7 @@ const { createInstance } = require('../harness/instance');
 // sessionStorage - and therefore its session culture override - per standard browser
 // behavior, distinct from an independently-opened tab which correctly starts blank
 // (covered by localization-tab-scoping.js). This exercises the actual browser mechanism
-// (window.open) rather than a specific Crest link, since the claim being verified is
+// (window.open) rather than a specific Grove link, since the claim being verified is
 // about browser storage-cloning semantics, not any one link's wiring.
 async function pickCulture(page, label) {
   const trigger = page.locator('.admin-titlebar__culture-selector');

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\..\src\Grove.Build\Grove.Commons.props" />
+  <Import Project="..\..\..\src\Grove.Theme.Targets\Grove.Theme.Targets.props" />
+  <Import Project="..\..\..\src\Grove.Module.Targets\Grove.Module.Targets.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(CommonTargetFrameworks)</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Grove.Theme.Targets\Grove.Theme.Targets.csproj" />
+    <ProjectReference Include="..\..\..\src\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\..\src\Grove.Module.Targets\Grove.Module.Targets.targets" />
+  <Import Project="..\..\..\src\Grove.Build\Grove.Commons.targets" />
+
+</Project>

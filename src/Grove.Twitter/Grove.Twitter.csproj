@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+     <!-- NuGet properties-->
+    <Title>Grove Twitter</Title>
+    <Description>$(OCCMSDescription)
+
+    Provides Twitter related features.
+    - TwitterClient and Workflow Activities to integrate with twitter.
+    - Authenticates users with their Twitter Account.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.ContentManagement.Abstractions\Grove.ContentManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Abstractions\Grove.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.Navigation\Grove.Navigation.csproj" />
+    <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
+    <ProjectReference Include="..\Grove.Recipes.Abstractions\Grove.Recipes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Workflows\Abstractions\Grove.Workflows.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Workflows\engine\src\modules\Grove.Workflows.Core\Grove.Workflows.Core.csproj" />
+    <ProjectReference Include="..\Grove.Workflows\engine\src\modules\Grove.Workflows.Engine\Grove.Workflows.Engine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Twitter" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+  </ItemGroup>
+
+</Project>

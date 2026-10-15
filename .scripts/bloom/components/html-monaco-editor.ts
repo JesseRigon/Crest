@@ -51,7 +51,7 @@ const initHtmlMonacoEditor = (element: HTMLElement) => {
                         editor.focus();
                     });
                 },
-                contextMenuGroupId: "crest",
+                contextMenuGroupId: "grove",
                 contextMenuOrder: 0,
                 keybindings: [monaco.KeyMod.Alt | monaco.KeyCode.KeyS],
             });

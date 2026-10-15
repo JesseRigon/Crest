@@ -1,0 +1,46 @@
+@using Grove.Components.Primitives.Spreadsheet
+@using Grove.Components.Primitives.Documents.Spreadsheet
+@inherits GroveSpreadsheetToolBase
+
+@namespace Grove.Components.Primitives.Spreadsheet.Tools
+<GroveSplitButton ButtonAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_InsertChart))) OpenAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_InsertChart))) Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small"
+    Disabled=@IsDisabled Click=@OnClick
+    Icon="bar_chart" Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_ChartText)) ?? "Chart")
+    title=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_InsertChart)) ?? "Insert Chart")>
+    <ChildContent>
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_ColumnChartText)) ?? "Column Chart") Value="column" Icon="bar_chart" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_BarChartText)) ?? "Bar Chart") Value="bar" Icon="align_horizontal_left" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_LineChartText)) ?? "Line Chart") Value="line" Icon="show_chart" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_AreaChartText)) ?? "Area Chart") Value="area" Icon="area_chart" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_PieChartText)) ?? "Pie Chart") Value="pie" Icon="pie_chart" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_DonutChartText)) ?? "Donut Chart") Value="donut" Icon="donut_large" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_ScatterChartText)) ?? "Scatter Chart") Value="scatter" Icon="scatter_plot" />
+    </ChildContent>
+</GroveSplitButton>
+
+@code {
+    protected override SpreadsheetFeature? Feature => SpreadsheetFeature.Charts;
+
+    private async Task OnClick(GroveSplitButtonItem? item)
+    {
+        if (Worksheet is null || Worksheet.Selection.Cell == CellRef.Invalid || Spreadsheet is null)
+        {
+            return;
+        }
+
+        var chartType = item?.Value switch
+        {
+            "bar" => SpreadsheetChartType.Bar,
+            "line" => SpreadsheetChartType.Line,
+            "area" => SpreadsheetChartType.Area,
+            "pie" => SpreadsheetChartType.Pie,
+            "donut" => SpreadsheetChartType.Donut,
+            "scatter" => SpreadsheetChartType.Scatter,
+            _ => SpreadsheetChartType.Column
+        };
+
+        var selection = Worksheet.Selection.Range;
+        var chart = ChartFactory.CreateFromSelection(Worksheet, selection, chartType);
+        await Spreadsheet.ExecuteAsync(new InsertChartCommand(Worksheet, chart));
+    }
+}

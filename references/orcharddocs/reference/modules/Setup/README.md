@@ -1,4 +1,4 @@
-# Setup (`Crest.Setup`)
+# Setup (`Grove.Setup`)
 
 When you begin with an empty site, a start screen allows you to setup the different parameters as the Title, the selected database, or the recipe that will be used to generate the site. This is done by the Setup module.
 
@@ -38,13 +38,13 @@ For example to provide a key for a tenant
 
 Other configuration keys can also be used, i.e. from the hosts `appsettings.json`
 
-`[js: configuration('Crest_Admin:AdminUrlPrefix', 'Admin')]`
+`[js: configuration('Grove_Admin:AdminUrlPrefix', 'Admin')]`
 
 In this example we also provide a default value, which will be used if the key is not found.
 
 ```json
     {
-        "Crest_Admin" : {
+        "Grove_Admin" : {
             "AdminUrlPrefix" : "MyAdmin"
         }
     }
@@ -56,7 +56,7 @@ The following configuration values are used by default and can be customized:
 
 ```json
 {
-  "Crest_Setup": {
+  "Grove_Setup": {
     "DefaultCulture": "",
     // When using "" the system OS culture will be used
     "SupportedCultures": [

@@ -21,12 +21,12 @@ export default [
             "**/eslintrc.cjs",
             "**/docs/assets/js/**",
             // TODO: large, jQuery-heavy legacy codebases; deferred to a dedicated follow-up.
-            "**/Crest.Resources/**",
-            "**/Crest.Media/**",
+            "**/Grove.Resources/**",
+            "**/Grove.Media/**",
             // Hand-authored ambient type declarations for the untyped third-party jsPlumb library
             // (not from DefinitelyTyped) - a typing compatibility shim, not application code.
             // Properly typing jsPlumb's full API is a separate, substantial effort.
-            "**/Crest.Workflows.Platform/Assets/Lib/jsplumb/typings.d.ts",
+            "**/Grove.Workflows.Platform/Assets/Lib/jsplumb/typings.d.ts",
         ],
     },
     { languageOptions: { globals: globals.browser } },
@@ -38,7 +38,7 @@ export default [
         // Legacy (pre-module) module/theme scripts that rely on libraries loaded as global
         // <script> tags rather than bundled imports. Scoped to .js only: the .ts sources that
         // have been migrated off jQuery must keep failing no-undef if $/jQuery reappear in them.
-        files: ["**/Crest.Modules/**/*.js", "**/Crest.Themes/**/*.js"],
+        files: ["**/Grove.Modules/**/*.js", "**/Grove.Themes/**/*.js"],
         languageOptions: {
             globals: {
                 $: "readonly",
@@ -52,9 +52,9 @@ export default [
                 CodeMirror: "readonly",
                 L: "readonly",
                 confirmDialog: "readonly",
-                // Defined by the (currently lint-deferred) Crest.Media module, consumed here.
+                // Defined by the (currently lint-deferred) Grove.Media module, consumed here.
                 mediaApp: "readonly",
-                // Defined by Crest.Shortcodes, consumed here.
+                // Defined by Grove.Shortcodes, consumed here.
                 shortcodesApp: "readonly",
             },
         },

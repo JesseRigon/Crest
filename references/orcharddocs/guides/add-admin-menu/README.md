@@ -13,13 +13,13 @@ Each menu item will point to its own view.
 - The current version of the .NET SDK. You can download it from here <https://dotnet.microsoft.com/download>.
 - A text editor and a terminal where you can type dotnet commands.
 
-## Creating an Crest CMS site and module
+## Creating an Grove CMS site and module
 
-There are different ways to create sites and modules for Crest. You can learn more about them [here](../../getting-started/templates/README.md). In this guide we will use our "Code Generation Templates".
+There are different ways to create sites and modules for Grove. You can learn more about them [here](../../getting-started/templates/README.md). In this guide we will use our "Code Generation Templates".
 
 You can install the latest released templates using this command:
 
-```dotnet new install Crest.ProjectTemplates@3.0.1-*```
+```dotnet new install Grove.ProjectTemplates@3.0.1-*```
 
 !!! note
     To use the development branch of the template add `--nuget-source https://nuget.cloudsmith.io/orchardcore/preview/v3/index.json`
@@ -28,7 +28,7 @@ Create an empty folder that will contain your site. Open a terminal, navigate to
 
 ```dotnet new occms -n MySite```
 
-This creates a new Crest CMS site in a new folder named `MySite`.
+This creates a new Grove CMS site in a new folder named `MySite`.
 We can now create a new module with the following command:
 
 ```dotnet new ocmodulecms -n MyModule```
@@ -38,9 +38,9 @@ The next step is to reference the module from the application, by adding a proje
 
 ```dotnet add MySite reference MyModule```
 
-We also need a reference to the `Crest.Admin` package in order to be able to implement the required interfaces:
+We also need a reference to the `Grove.Admin` package in order to be able to implement the required interfaces:
 
-```dotnet add .\MyModule\MyModule.csproj package Crest.Admin --version 3.0.1-*```
+```dotnet add .\MyModule\MyModule.csproj package Grove.Admin --version 3.0.1-*```
 
 !!! note
     To use the development branch of the template add ` --source https://nuget.cloudsmith.io/orchardcore/preview/v3/index.json --version 3.0.1-*`
@@ -60,7 +60,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Crest.Admin;
+using Grove.Admin;
 
 namespace MyModule.Controllers;
 
@@ -110,7 +110,7 @@ By convention, we call these classes `AdminMenu.cs` and put it in the root of ou
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Localization;
-using Crest.Navigation;
+using Grove.Navigation;
 
 namespace MyModule;
 
@@ -150,7 +150,7 @@ public sealed class AdminMenu : INavigationProvider
 
 ### Positioning menu items
 
-The second parameter of `Add(...)` is the **position**, the same position mechanism used everywhere in Crest (for example, [shape placement](../../reference/modules/Placement/README.md#position-ordering-rules)). Menu items — at every level of the tree — are sorted by it. The full ordering, from first to last, is:
+The second parameter of `Add(...)` is the **position**, the same position mechanism used everywhere in Grove (for example, [shape placement](../../reference/modules/Placement/README.md#position-ordering-rules)). Menu items — at every level of the tree — are sorted by it. The full ordering, from first to last, is:
 
 ```
 start  <  before  <  numbers  <  after  <  free-text (PrefixPosition)  <  end
@@ -172,7 +172,7 @@ Then you have to register this service in the `Startup.cs` file of the module.
 At the top of the `Startup.cs` file, add this `using` statement:
 
 ```csharp
-using Crest.Navigation;
+using Grove.Navigation;
 ```
 
 Add this line to the `ConfigureServices()` method:

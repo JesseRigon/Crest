@@ -1,4 +1,4 @@
-import { getTenantName } from '@crest/bloom/helpers/globals';
+import { getTenantName } from '@grove/bloom/helpers/globals';
 import Cookies from 'js-cookie';
 
 let isCompactExplicit = false;

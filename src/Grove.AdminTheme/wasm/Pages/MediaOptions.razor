@@ -1,0 +1,9 @@
+@page "/Media/Options"
+@attribute [PageEntry("ViewMediaOptions", Id = "media-options", Parent = "settings-media", Caption = "Options")]
+@using Grove.AdminTheme.Api
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives
+@inject IApi Api
+@inject Grove.Components.Theme.GroveApiLocalizer T
+<GroveStack Gap="1rem" data-testid="media-options-page"><GroveStack Gap=".25rem"><GroveText TextStyle="TextStyle.H4" Text="@T["Media Options"]"/><GroveText TextStyle="TextStyle.Body2" Text="@T["Read-only media configuration provided by the host."]"/></GroveStack>@if(Model is null){<GroveProgressBar Mode="ProgressBarMode.Indeterminate"/>}else{<GroveCard><dl class="media-options"><dt>@T["Supported sizes"]</dt><dd>@string.Join(", ",Model.SupportedSizes)</dd><dt>@T["Allowed extensions"]</dt><dd>@string.Join(", ",Model.AllowedFileExtensions)</dd><dt>@T["Max file size"]</dt><dd>@T["{0} bytes", Model.MaxFileSize.ToString("n0")]</dd><dt>@T["Browser cache"]</dt><dd>@T["{0} days", Model.MaxBrowserCacheDays]</dd><dt>@T["Media URL path"]</dt><dd>@Model.AssetsRequestPath</dd><dt>@T["Assets path"]</dt><dd>@Model.AssetsPath</dd><dt>@T["Tokenized query strings"]</dt><dd>@(Model.UseTokenizedQueryString?T["Enabled"]:T["Disabled"])</dd></dl></GroveCard>}</GroveStack>
+@code { GroveMediaOptions? Model; protected override async Task OnInitializedAsync()=>Model=await Api.Grove.Rest.MediaOptions.GetAsync(); }

@@ -1,6 +1,6 @@
 # Search
 
-Crest allows you to define the information to [index](../../reference/glossary/README.md#indexing) and to [query](../../reference/glossary/README.md#query) them to provide an integrated Search experience.
+Grove allows you to define the information to [index](../../reference/glossary/README.md#indexing) and to [query](../../reference/glossary/README.md#query) them to provide an integrated Search experience.
 
 ## Query and Search
 

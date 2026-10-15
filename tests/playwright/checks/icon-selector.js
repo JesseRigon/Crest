@@ -1,14 +1,14 @@
-// Converted from Crest.Icons/tests/playwright/admin-icon-selector.js.
+// Converted from Grove.Icons/tests/playwright/admin-icon-selector.js.
 // Exercises the admin menu node icon-picker dialog: grid rendering, metadata-backed filters
 // (icon set category/traits/palette), infinite-scroll pagination, style-pack switching,
 // category filtering, search, and cross-version de-duplication.
 //
 // This check attaches its own transient `response` listener (removed in `finally`) to
-// capture /api/crest/icons payloads, since the shared harness page doesn't track those.
+// capture /api/grove/icons payloads, since the shared harness page doesn't track those.
 module.exports = async function run(page, ctx) {
   const iconApiResponses = [];
   const onResponse = async response => {
-    if (!response.url().includes('/api/crest/icons')) return;
+    if (!response.url().includes('/api/grove/icons')) return;
     try {
       const payload = await response.json();
       if (typeof payload.skip === 'number' && typeof payload.take === 'number') {
@@ -73,7 +73,7 @@ module.exports = async function run(page, ctx) {
     const nextBatchResponse = page
       .waitForResponse(
         response =>
-          response.url().includes('/api/crest/icons?') &&
+          response.url().includes('/api/grove/icons?') &&
           response.url().includes('skip=200') &&
           response.url().includes(`take=${columnCount * 20}`),
         { timeout: 15000 },
@@ -102,7 +102,7 @@ module.exports = async function run(page, ctx) {
     const categoryFilterResponse = page
       .waitForResponse(
         response =>
-          response.url().includes('/api/crest/icons') &&
+          response.url().includes('/api/grove/icons') &&
           response.url().includes('library=iconify.mdi') &&
           response.url().includes('filter=iconify.icon-category%3A'),
         { timeout: 15000 },
@@ -146,7 +146,7 @@ module.exports = async function run(page, ctx) {
       return keys.filter((key, index) => keys.indexOf(key) !== index);
     });
 
-    const firstGridFetch = iconApiResponses.find(response => response.skip === 0 && response.url.includes('/api/crest/icons?'));
+    const firstGridFetch = iconApiResponses.find(response => response.skip === 0 && response.url.includes('/api/grove/icons?'));
 
     return [
       { name: 'renders-icon-grid', pass: beforeCount > 0 && firstIcon.hasSvg, message: `beforeCount=${beforeCount} hasSvg=${firstIcon.hasSvg}` },

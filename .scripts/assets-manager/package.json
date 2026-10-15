@@ -1,9 +1,9 @@
 {
-    "name": "@crest/assets-manager",
+    "name": "@grove/assets-manager",
     "version": "1.0.0",
     "type": "module",
     "bin": "./build.mjs",
-    "description": "Crest asset management CLI tool and build orchestrator",
+    "description": "Grove asset management CLI tool and build orchestrator",
     "eslintConfig": {
         "parserOptions": {
             "ecmaVersion": "latest"

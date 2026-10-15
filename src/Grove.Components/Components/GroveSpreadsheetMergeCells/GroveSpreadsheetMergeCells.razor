@@ -1,0 +1,34 @@
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives.Spreadsheet
+@using Grove.Components.Primitives.Documents.Spreadsheet
+@inherits GroveSpreadsheetToolBase
+
+@namespace Grove.Components.Primitives.Spreadsheet.Tools
+<GroveSplitButton ButtonAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_MergeCells))) OpenAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_MergeCells))) title=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_MergeCells))) Click=@OnClick Icon="merge_type" Disabled=@IsDisabled Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small">
+    <ChildContent>
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_MergeAndCenter)) ?? "Merge && Center") Value="merge-center" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_MergeCells)) ?? "Merge Cells") Value="merge" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_UnmergeCells)) ?? "Unmerge Cells") Value="unmerge" />
+    </ChildContent>
+</GroveSplitButton>
+
+@code {
+    protected override SpreadsheetFeature? Feature => SpreadsheetFeature.Merging;
+
+    private async Task OnClick(GroveSplitButtonItem? item)
+    {
+        if (Worksheet is null || Worksheet.Selection.Cell == CellRef.Invalid || Spreadsheet is null)
+        {
+            return;
+        }
+
+        ICommand command = item?.Value switch
+        {
+            "merge" => new MergeCellsCommand(Worksheet, Worksheet.Selection.Range),
+            "unmerge" => new UnmergeCellsCommand(Worksheet, Worksheet.Selection.Cell),
+            _ => new MergeCellsCommand(Worksheet, Worksheet.Selection.Range, center: true),
+        };
+
+        await Spreadsheet.ExecuteAsync(command);
+    }
+}

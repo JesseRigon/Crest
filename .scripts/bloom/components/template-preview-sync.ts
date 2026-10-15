@@ -22,11 +22,11 @@ export const initializeTemplatePreview = (element: HTMLInputElement | HTMLTextAr
             Content: target.value,
             __RequestVerificationToken: antiforgerytoken,
         };
-        localStorage.setItem("Crest.templates", JSON.stringify(toQueryString(formData)));
+        localStorage.setItem("Grove.templates", JSON.stringify(toQueryString(formData)));
     };
 
     window.addEventListener("storage", (ev) => {
-        if (ev.key !== "Crest.templates:ready") {
+        if (ev.key !== "Grove.templates:ready") {
             return;
         }
 
@@ -36,8 +36,8 @@ export const initializeTemplatePreview = (element: HTMLInputElement | HTMLTextAr
     element.addEventListener(changeEventName, () => sendFormData(element));
 
     window.addEventListener("unload", () => {
-        localStorage.removeItem("Crest.templates");
-        localStorage.setItem("Crest.templates:not-connected", "");
-        localStorage.removeItem("Crest.templates:not-connected");
+        localStorage.removeItem("Grove.templates");
+        localStorage.setItem("Grove.templates:not-connected", "");
+        localStorage.removeItem("Grove.templates:not-connected");
     });
 };

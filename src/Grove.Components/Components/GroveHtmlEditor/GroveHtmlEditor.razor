@@ -1,0 +1,62 @@
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives.Rendering
+@using Microsoft.JSInterop
+@inherits FormComponent<string>
+
+@namespace Grove.Components.Primitives
+@if(Visible)
+{
+    <div @ref=Element style=@Style @attributes=@Attributes class=@GetCssClass() id=@GetId()>
+        @if (ShowToolbar)
+        {
+        <div class="rz-toolbar rz-html-editor-toolbar">
+            <CascadingValue Value=@this>
+            @if (ChildContent != null)
+            {
+                @ChildContent
+            }
+            else
+            {
+                <GroveHtmlEditorUndo />
+                <GroveHtmlEditorRedo />
+                <GroveHtmlEditorSeparator />
+                <GroveHtmlEditorBold />
+                <GroveHtmlEditorItalic />
+                <GroveHtmlEditorUnderline />
+                <GroveHtmlEditorStrikeThrough />
+                <GroveHtmlEditorSeparator />
+                <GroveHtmlEditorAlignLeft />
+                <GroveHtmlEditorAlignCenter />
+                <GroveHtmlEditorAlignRight />
+                <GroveHtmlEditorJustify />
+                <GroveHtmlEditorSeparator />
+                <GroveHtmlEditorIndent />
+                <GroveHtmlEditorOutdent />
+                <GroveHtmlEditorUnorderedList />
+                <GroveHtmlEditorOrderedList />
+                <GroveHtmlEditorSeparator />
+                <GroveHtmlEditorColor />
+                <GroveHtmlEditorBackground />
+                <GroveHtmlEditorRemoveFormat />
+                <GroveHtmlEditorSeparator />
+                <GroveHtmlEditorSubscript />
+                <GroveHtmlEditorSuperscript />
+                <GroveHtmlEditorSeparator />
+                <GroveHtmlEditorLink />
+                <GroveHtmlEditorUnlink />
+                <GroveHtmlEditorImage />
+                <GroveHtmlEditorTableTools />
+                <GroveHtmlEditorFontName />
+                <GroveHtmlEditorFontSize />
+                <GroveHtmlEditorFormatBlock />
+                <GroveHtmlEditorSeparator />
+                <GroveHtmlEditorSource />
+            }
+            </CascadingValue>
+        </div>
+        }
+        <GroveTextArea @ref=@TextArea spellcheck="false" Visible=@(mode == HtmlEditorMode.Source) class="rz-html-editor-source" Value=@Html Change=@SourceChanged Immediate=@Immediate />
+        <div hidden="@(mode != HtmlEditorMode.Design)" @ref=@ContentEditable class="rz-html-editor-content" contenteditable=@(!Disabled) @onfocus=@OnFocus @onblur=@OnBlur></div>
+    </div>
+}

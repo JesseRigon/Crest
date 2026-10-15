@@ -22,20 +22,20 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ☑ Currency lookup asks the providers before the culture table (types.md; host bugs list #12)
 - ☑ The Iconify cache is not a hosted service (host bugs list #7)
 - ☑ Member self-registration sends FirstName/LastName (host bugs list #1)
-- ☑ The global store needs no host call (`AddCrestGlobalStore`) (globals.md)
+- ☑ The global store needs no host call (`AddGroveGlobalStore`) (globals.md)
 - ☑ Global schema versioning moves onto `DataMigration` (queries.md)
-- ☑ One `CrestTenant` model, not two (regions.md)
+- ☑ One `GroveTenant` model, not two (regions.md)
 - ☑ `option_label` / `option_list` Liquid filters (content-items.md)
 - ☑ "DBA" out of the organization-type seed; `convert-to-staff` removed (parties.md)
 - ☑ Platform modules' unused activity display drivers and views deleted (workflows.md)
-- ◐ Host references out of Crest's test solution and comments; a publishing gate test (architecture.md #4) - left: item-classification list move, pre-publish review
-- ☑ A Crest-owned party role or fixture (architecture.md #3)
+- ◐ Host references out of Grove's test solution and comments; a publishing gate test (architecture.md #4) - left: item-classification list move, pre-publish review
+- ☑ A Grove-owned party role or fixture (architecture.md #3)
 - ☑ Location data removed from PNG, WebP and HEIC uploads (media.md)
 - ☑ An admin editor for the tenant's upload scanning settings (media.md)
 - ☑ Machine actors: OpenId in the setup recipe, antiforgery skipped for bearer requests, the client id in the workflow actor (machine-actors.md)
 - ☐ Shortcodes: retired into Liquid (blazor-display.md, shortcodes.md)
 
-## Registries (architecture.md › Modules declare, Crest.Server registers and serves)
+## Registries (architecture.md › Modules declare, Grove.Server registers and serves)
 
 - ☑ **One page registry** (admin-menu.md › The page registry): each page declares its route,
   shell, permission and menu placement (parent path, caption, position, icon) once; the route
@@ -55,13 +55,13 @@ Status: ☐ open, ◐ partial, ☑ done.
   publish. The workflow engine's `HttpEndpoint` routes are defined entries (its private route
   table is gone) and its management API a declared contributor; generated operation endpoints
   (P14) join the defined layer.
-- ◐ **APIs out of Crest.Server** into their declaring modules as route groups, registered
-  through `Crest.Server.Abstractions`; Crest.Server keeps the hosting plumbing, the bootstrap,
+- ◐ **APIs out of Grove.Server** into their declaring modules as route groups, registered
+  through `Grove.Server.Abstractions`; Grove.Server keeps the hosting plumbing, the bootstrap,
   routing and display endpoints (server.md § 1, MVC/api.md P1-P9). Left: the admin menu and
   navigation (page registry), the option picker (S2), the icons (a server-side icons module).
 - ☑ **Minimal APIs, explicit binding, native validation** (MVC/api.md › Hosting, › Validation):
-  every route group's handler names its binding source, request DTOs carry Crest's validation
-  ruleset (`Crest.Validation`), the mapper leaves a contributor that cannot build out and reports
+  every route group's handler names its binding source, request DTOs carry Grove's validation
+  ruleset (`Grove.Validation`), the mapper leaves a contributor that cannot build out and reports
   it, and the conformance test covers every shipped contributor.
 - ☐ **In-module controllers to route groups** (MVC/api.md P16): listed in the API registry from
   their MVC endpoints; each converted in the change that next touches its area.
@@ -70,8 +70,8 @@ Status: ☐ open, ◐ partial, ☑ done.
 
 - ☑ Anonymous actors: machine identity and roles on connections, the "accepts anonymous runs" flag, login and registration triggers run as the user the event names
 - ☑ Members onto the extension system (resource mapper, scope provider on the org binding index, `OrganizationScopeProvider` out of Server); member admins through `ManageOrgMembers`
-- ☑ Parties onto the extension system (mapper, scope provider, route permissions off `ICrestRoutePermissionProvider`)
-- ◐ Page and route gates move to Access (`ICrestRoutePermissionProvider`, `CrestRouteAuthorizationService`, `AssignmentScopeProvider`; `AdminFilter` goes). Left: `AdminFilter` (goes with the MVC admin). `AssignmentScopeProvider` is retired
+- ☑ Parties onto the extension system (mapper, scope provider, route permissions off `IGroveRoutePermissionProvider`)
+- ◐ Page and route gates move to Access (`IGroveRoutePermissionProvider`, `GroveRouteAuthorizationService`, `AssignmentScopeProvider`; `AdminFilter` goes). Left: `AdminFilter` (goes with the MVC admin). `AssignmentScopeProvider` is retired
 - ☑ Admin controllers' per-type content authorization goes; the scope is the filter (content-items list; the MVC list goes with the MVC admin)
 - ☑ Version bumps only for rights writes; implied-by resolved from the permission instance; the revocation check run (the check is in the suite; it runs with the tests at the end)
 - ☑ Recorded defects: SSRF guard on messaging and HTTP activities, per-definition narrowing of engine instance reads, `UsersController` scoped. Instance-read narrowing is the View list
@@ -84,7 +84,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ☑ Widget replacements (widgets.md): rich text, figure, forms, validation, search box, the per-item page body (`DisplayTreePart`), visibility rules, the captcha, `FacebookPlugin` and the media picker editor
 - ☑ Step 1 leftovers: route scanner reads the catalogs, page regions as zone keys, editor facet entries, primitives annotated (icon, markdown, layout hosts, colour and media editors; the form editors stay unregistered as a parallel set, reason in blazor-display.md)
 - ◐ Step 2 leftovers: tree cache (versioned and validated, see decision 12; the unfiltered cache is left); display events for bound nodes ☑
-- ☐ Razor → Blazor component parity audit: every Razor view, shape template and widget has a Blazor component equivalent, reusing `Crest.Components` (blazor-display.md step 7; MVC/views.md, MVC/shape-engine.md, widgets.md; tracker: [MVC/parity.md](MVC/parity.md))
+- ☐ Razor → Blazor component parity audit: every Razor view, shape template and widget has a Blazor component equivalent, reusing `Grove.Components` (blazor-display.md step 7; MVC/views.md, MVC/shape-engine.md, widgets.md; tracker: [MVC/parity.md](MVC/parity.md))
 - ☐ The Liquid templates updated to display trees and optionalities (blazor-display.md step 7)
 - ◐ Step 7 remainder: content displays (fields with localized labels, title, bag, list with its pager, taxonomy, geo point) and editors (BagPart, user picker) on the tree; MVC Menu admin, audit content screen and Flows BuildEditor deleted; left: the ContentFields/Flows edit views (still rendered by the MVC Contents Create/Edit and the Demo module), LiquidPart (HTML by design), admin-only shapes (go with TheAdmin), the MVC screens (~1,250 Razor views)
 - ◐ Decision 6: zone keys as registry entries with a schema; single or multiple instances per page: keys, contributions, validation and the single-instance check built; left: priority reordering through overrides and a `Zone` component node (designer zone settings)
@@ -92,18 +92,18 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ☑ Decision 10: the default permitted-fields `Content` template
 - ◐ Decision 12: client ETag trees, unfiltered server cache: ETags, client-held trees and the shared anonymous cache built; the unfiltered per-page cache needs the builder's per-viewer decisions moved into the node filter
 - ◐ § 10: per-page permission sets (Design, Schema, Data, Publish): per designed page built; Publish per component waits for component drafts
-- ◐ Module homes: `Crest.Data.Types` ☑ (registry; readers not wired), `Crest.Global` → `Crest.Data.Global` ☑ (Fruitful needs the repack), `Crest.Components.Primitives` / `.Templates` skipped (open question in blazor-display.md)
-- ◐ § 12: one expression engine: the engine's Liquid runs through the platform's, one Fluid version; `Crest.Scripting` removal waits for workflows.md's Retire step, limits wait for the parked sandbox
+- ◐ Module homes: `Grove.Data.Types` ☑ (registry; readers not wired), `Grove.Global` → `Grove.Data.Global` ☑ (Fruitful needs the repack), `Grove.Components.Primitives` / `.Templates` skipped (open question in blazor-display.md)
+- ◐ § 12: one expression engine: the engine's Liquid runs through the platform's, one Fluid version; `Grove.Scripting` removal waits for workflows.md's Retire step, limits wait for the parked sandbox
 
 ## Workflows (workflows.md)
 
 - ◐ Operations step 1 remainder: caller lifetime rules for circuits and websockets ☑, read logging as a tenant setting ☑, conformance fixtures for organizations and policies ☑. Left: OpenId validation in the host recipe (the same work as the Machine actors line above)
 - ◐ Step 3: typed per-type content operations ☑ (Copy/Move fields write through them). Left: one registry (`WorkflowRegistryCatalog` folded) and per-tenant operation names, both waiting on a decision (workflows.md › Tasks › 3)
 - ☑ Step 4: queue partitioned by correlation id, idempotency keys (unit id + slot); the object version in the payload is not built (no raiser names one)
-- ◐ `ICrestAntiforgery`; the hook attachment page ☑ and webhook insight; per-process metrics. Left: `ICrestAntiforgery` (comes with the designer move, W6 open); webhook insight and per-process metrics (as audit feeds, which wait on run history in audit)
+- ◐ `IGroveAntiforgery`; the hook attachment page ☑ and webhook insight; per-process metrics. Left: `IGroveAntiforgery` (comes with the designer move, W6 open); webhook insight and per-process metrics (as audit feeds, which wait on run history in audit)
 
-- ☑ The engine's management API as minimal APIs with explicit binding (`EngineBody<T>`, `EngineApiPolicies`, the error contract's problem details); the request DTOs on the shared validation ruleset (`Validated<T>`); FastEndpoints, FluentValidation and `Crest.Workflows.Api.Common` removed from the engine (workflows.md › The engine API)
-- ☑ The View list (`Crest.Access.View`): the ceiling, the access API, the engine API instance operations decided per definition, the instance list narrowed (workflows.md › Ownership and permissions; access.md defect closed). Left: Studio's access editor (with the designer UI list)
+- ☑ The engine's management API as minimal APIs with explicit binding (`EngineBody<T>`, `EngineApiPolicies`, the error contract's problem details); the request DTOs on the shared validation ruleset (`Validated<T>`); FastEndpoints, FluentValidation and `Grove.Workflows.Api.Common` removed from the engine (workflows.md › The engine API)
+- ☑ The View list (`Grove.Access.View`): the ceiling, the access API, the engine API instance operations decided per definition, the instance list narrowed (workflows.md › Ownership and permissions; access.md defect closed). Left: Studio's access editor (with the designer UI list)
 
 ## Audit (audit.md)
 
@@ -126,7 +126,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 
 ## Shells and themes (shells-and-themes.md)
 
-- ☐ Tenant-address conformance (shells-and-themes.md › The tenant base and enabled modules): a tenant on a URL prefix and a tenant on its own host, each with non-default admin, login and member paths, log in on each shell and reach `api/crest/*`, hubs and the login redirects at the tenant's own addresses; absolute links in email and OAuth callbacks carry the tenant's host
+- ☐ Tenant-address conformance (shells-and-themes.md › The tenant base and enabled modules): a tenant on a URL prefix and a tenant on its own host, each with non-default admin, login and member paths, log in on each shell and reach `api/grove/*`, hubs and the login redirects at the tenant's own addresses; absolute links in email and OAuth callbacks carry the tenant's host
 - ☑ A disabled module is absent per tenant; theme clients and UIs load per shell
 - ☑ Member password-reset and external-login pages; side-checking login gate
 - ☑ Organization slugs in paths and an organization picker; one device-local tenant switcher; impersonation under one account
@@ -142,7 +142,7 @@ Status: ☐ open, ◐ partial, ☑ done.
 - ☑ Association content type; bag-element service; contact-point and organization-name indexes
 - ☑ NAICS reseed; user-list class filter; Person creation for external logins
 - ☑ Role bases (organization and person roles), Individual organizations, portal promotion, organization-derived business roles, organization-role transaction parties
-- ☑ Assignments retired; organization ownership part, index and scope moved into Crest.Parties (access.md › Members, server.md S3)
+- ☑ Assignments retired; organization ownership part, index and scope moved into Grove.Parties (access.md › Members, server.md S3)
 - ☑ Parties UI: add role, Individual badge and conversion, owner panel, invite to portal, settings section
 
 ## Content items (content-items.md)
@@ -151,9 +151,9 @@ Status: ☐ open, ◐ partial, ☑ done.
 
 ## Architecture (architecture.md)
 
-- ☑ X3: "Crest" only in module and package names (stored names, platform clashes and the component library kept — list in architecture.md › Naming)
-- ☑ #5 standalone host test (`test/Crest.Tests.Standalone`)
-- ☑ #6 generic pieces into Crest (the workflow browser checks are written, not yet run)
+- ☑ X3: "Grove" only in module and package names (stored names, platform clashes and the component library kept — list in architecture.md › Naming)
+- ☑ #5 standalone host test (`test/Grove.Tests.Standalone`)
+- ☑ #6 generic pieces into Grove (the workflow browser checks are written, not yet run)
 
 ## Other
 

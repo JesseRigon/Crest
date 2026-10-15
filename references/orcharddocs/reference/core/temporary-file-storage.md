@@ -1,6 +1,6 @@
 # Temporary File Storage
 
-When Crest needs to write a file temporarily — an in-progress chunked or resumable (TUS) upload, an extracted deployment/recipe archive, or a recipe written to disk before setup — it goes through the `ITempDirectoryProvider` abstraction (`Crest.FileStorage`) instead of writing directly to the operating system temporary directory.
+When Grove needs to write a file temporarily — an in-progress chunked or resumable (TUS) upload, an extracted deployment/recipe archive, or a recipe written to disk before setup — it goes through the `ITempDirectoryProvider` abstraction (`Grove.FileStorage`) instead of writing directly to the operating system temporary directory.
 
 The default implementation, `DefaultTempDirectoryProvider`, is filesystem based. It stores everything under a **tenant-scoped** sub-directory of a configurable base path, so operators can relocate temporary storage onto a larger or shared volume, and every tenant's temporary files stay separated from one another.
 
@@ -10,11 +10,11 @@ Previously these consumers wrote to `Path.GetTempPath()`, whose available space 
 
 ## Configuration
 
-The base location is controlled globally by the `Crest:TempDirectory` configuration section:
+The base location is controlled globally by the `Grove:TempDirectory` configuration section:
 
 ```json
 {
-  "Crest": {
+  "Grove": {
     "TempDirectory": {
       // Base path under which tenant-scoped temporary files are stored.
       // When omitted, the operating system temporary directory (Path.GetTempPath()) is used.
@@ -29,7 +29,7 @@ Files are laid out as `{Path}/{TenantName}/...`. The tenant sub-directory is add
 This one setting applies to every temporary file consumer: media chunked uploads, TUS uploads, deployment and recipe imports/exports, and tenant recipe uploads.
 
 !!! note
-    Resumable (TUS) partial uploads are stored in a `TusUploads` sub-directory of this location, so they follow `Crest:TempDirectory:Path` like every other temporary file.
+    Resumable (TUS) partial uploads are stored in a `TusUploads` sub-directory of this location, so they follow `Grove:TempDirectory:Path` like every other temporary file.
 
 ## Using a mounted file share (Azure Files, AWS EFS/FSx)
 
@@ -44,7 +44,7 @@ Because `DefaultTempDirectoryProvider` uses plain `System.IO` operations, **any 
     ```
 
     ```json
-    { "Crest": { "TempDirectory": { "Path": "/mnt/octemp" } } }
+    { "Grove": { "TempDirectory": { "Path": "/mnt/octemp" } } }
     ```
 
 === "Windows"
@@ -54,7 +54,7 @@ Because `DefaultTempDirectoryProvider` uses plain `System.IO` operations, **any 
     ```
 
     ```json
-    { "Crest": { "TempDirectory": { "Path": "Z:\\octemp" } } }
+    { "Grove": { "TempDirectory": { "Path": "Z:\\octemp" } } }
     ```
 
 === "Azure App Service / Container Apps"
@@ -62,7 +62,7 @@ Because `DefaultTempDirectoryProvider` uses plain `System.IO` operations, **any 
     Use the platform's Azure Files mount (App Service: *Configuration → Path mappings → Azure Storage Mounts*; Container Apps: an `AzureFile` volume). Then set `Path` to the platform mount path (e.g. `/mounts/octemp`). The platform manages the credentials and reconnection.
 
 !!! warning
-    Point `Path` at a mounted **file share**, not object storage. The temporary file consumers require real, seekable local files — for example the chunked-upload path does `Seek`/`SetLength` and reopens the same file across requests, and deployment import uses `ZipFile.ExtractToDirectory` and `PhysicalFileProvider`. Azure Files (SMB) and AWS EFS/FSx support this; Azure Blob and AWS S3 object storage do not. Resumable (TUS) uploads are the exception: they can target object storage through the `ITusTempStore` implementations in the `Crest.Media.Azure` and `Crest.Media.AmazonS3` features.
+    Point `Path` at a mounted **file share**, not object storage. The temporary file consumers require real, seekable local files — for example the chunked-upload path does `Seek`/`SetLength` and reopens the same file across requests, and deployment import uses `ZipFile.ExtractToDirectory` and `PhysicalFileProvider`. Azure Files (SMB) and AWS EFS/FSx support this; Azure Blob and AWS S3 object storage do not. Resumable (TUS) uploads are the exception: they can target object storage through the `ITusTempStore` implementations in the `Grove.Media.Azure` and `Grove.Media.AmazonS3` features.
 
 Operational notes: make sure the mount is writable by the identity the application runs as; keep the share in the same region to limit latency; and note that existing cleanup (such as the media `TemporaryFileLifetime` purge) now runs against the configured path.
 
@@ -77,7 +77,7 @@ If your feature writes temporary files, inject `ITempDirectoryProvider` instead 
 | `CreateTempSubdirectory(prefix)` | A newly created, unique sub-directory — for extracting an archive into, or exposing through a `PhysicalFileProvider`. An optional prefix can be prepended to its generated name. |
 
 ```csharp
-using Crest.FileStorage;
+using Grove.FileStorage;
 
 public sealed class MyImportService
 {

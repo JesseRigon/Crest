@@ -13,11 +13,11 @@ You will add a Liquid Widget to the Content Type Definitions and create a templa
 
 ## What you will need
 
-- A working Crest CMS website.
+- A working Grove CMS website.
 
 ## Create the Liquid Widget
 
-- Navigate to the Crest CMS admin area <https://localhost:5001/admin>
+- Navigate to the Grove CMS admin area <https://localhost:5001/admin>
 
 - Through the admin menu select _Design -> Content Definition -> Content Types_
 

@@ -1,0 +1,73 @@
+@attribute [Route(Route)]
+@namespace Grove.Members.Member.Pages
+@using System.Net.Http.Json
+@using Grove.Components.Access
+@using Grove.Components.Primitives
+@using Grove.MemberTheme.Services
+@using Grove.Members.Models
+@inject HttpClient Http
+
+@* The organization's own permission system (docs/permissions.md › Editors, member side): its
+   groups - cloned from the tenant's defaults when it was created, its own since - their
+   members, the roles they hold from the tenant's allowed list, and its members' overrides.
+   For the organization's admins; the server refuses everyone else (ManageOrgMembers against
+   this organization), so this page decides nothing. *@
+
+<PageTitle>Organization access</PageTitle>
+
+<div data-testid="member-organization-access">
+    <GroveStack Gap="1rem">
+        <GroveText TextStyle="TextStyle.H4" Text="Organization access" />
+        @if (!string.IsNullOrWhiteSpace(Error))
+        {
+            <GroveAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@Error</GroveAlert>
+        }
+        else if (ShellContext.ActiveOrganizationId is { } organizationId)
+        {
+            <GroveAccessGroupsEditor OrganizationId="@organizationId" Users="@Users" Roles="@Roles" />
+        }
+
+        @if (ShellContext.ActiveOrganizationId is { } ownedId)
+        {
+            @* The owner's settings: transferring the organization (docs/permissions.md › The organization owner). *@
+            <GroveOrganizationOwnerPanel OrganizationId="@ownedId" />
+        }
+    </GroveStack>
+</div>
+
+@code {
+    /// <summary>The page, relative to the organization's member path.</summary>
+    public const string Route = "/organization-access";
+
+    [CascadingParameter]
+    private IMemberShellContext ShellContext { get; set; } = default!;
+
+    private IReadOnlyList<UserChoice> Users { get; set; } = [];
+    private IReadOnlyList<string> Roles { get; set; } = [];
+    private string? Error { get; set; }
+    private string? _loadedFor;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var organizationId = ShellContext.ActiveOrganizationId;
+        if (organizationId is null || organizationId == _loadedFor)
+        {
+            return;
+        }
+
+        _loadedFor = organizationId;
+        var query = $"organizationId={Uri.EscapeDataString(organizationId)}";
+        // Only the members under the caller in the organization's hierarchy.
+        using var managed = await Http.GetAsync($"api/grove/access/managed-users?{query}");
+        if (!managed.IsSuccessStatusCode)
+        {
+            Error = "Only the organization's administrators manage its access.";
+            return;
+        }
+
+        Users = ((await managed.Content.ReadFromJsonAsync<List<ManagedUserInfo>>()) ?? [])
+            .Select(user => new UserChoice(user.Id, user.Label))
+            .ToArray();
+        Roles = await Http.GetFromJsonAsync<List<string>>($"api/grove/access/assignable-roles?{query}") ?? [];
+    }
+}

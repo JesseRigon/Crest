@@ -1,6 +1,6 @@
 # Access — who may do what, in one place
 
-`Crest.Access` is the one system that decides who may do what: authentication, authorization,
+`Grove.Access` is the one system that decides who may do what: authentication, authorization,
 permissions, roles, tenant and theme shells, OpenId, machine access. This document maps it:
 its principles, how domains extend it, the parts as they stand, and what is still to change.
 The operations model it serves (one request path, four pipelines) is
@@ -14,16 +14,16 @@ tests and audits): [user-stories.md](user-stories.md).
 ## Principles
 
 - **Access declares the access APIs; others register with Access** (the tenet in
-  [architecture.md › Modules declare, Crest.Server registers and serves](architecture.md#modules-declare-crestserver-registers-and-serves)).
+  [architecture.md › Modules declare, Grove.Server registers and serves](architecture.md#modules-declare-groveserver-registers-and-serves)).
   The sign-in, account, two-factor, login-settings and antiforgery APIs are declared by the
-  access modules (Crest.Users for account, sign-in, two-factor and login settings; Crest.Access
-  for the antiforgery token) and registered in Crest.Server's API endpoint registry
-  ([MVC/api.md](MVC/api.md) P6). Crest.Server hands each request to Access and applies the antiforgery filter, which asks
+  access modules (Grove.Users for account, sign-in, two-factor and login settings; Grove.Access
+  for the antiforgery token) and registered in Grove.Server's API endpoint registry
+  ([MVC/api.md](MVC/api.md) P6). Grove.Server hands each request to Access and applies the antiforgery filter, which asks
   Access to validate. Other modules register their access systems (page permissions, scope
   providers, resource mappers) with Access rather than checking for themselves. The access
   model's own API (permission sets, groups, overrides) is Access's too.
-- **Access is its own module.** `Crest.Access.Abstractions` holds the contracts below
-  `Crest.Data`; `Crest.Access` holds the caller builder, the decision, the scope compiler, the
+- **Access is its own module.** `Grove.Access.Abstractions` holds the contracts below
+  `Grove.Data`; `Grove.Access` holds the caller builder, the decision, the scope compiler, the
   cache, the version and the auditor, always enabled. What remains of the platform's old
   pipeline is folded into it, never the other way round.
 - **One request, one access calculation.** The caller, its decision inputs and its scope set
@@ -46,15 +46,15 @@ tests and audits): [user-stories.md](user-stories.md).
 - **Identity in the cookie and in tokens; rights on the server.** Cookies and bearer tokens
   carry who the caller is. Roles, permissions, class, organization and ceiling are read from
   the store under the tenant's permission version, never from claims.
-- **Opinionated, but every feature can be turned off.** Crest ships with most features
+- **Opinionated, but every feature can be turned off.** Grove ships with most features
   enabled by default, unlike Orchard's pick-your-own model; every feature stays
   disable-able, and the access machinery works with any domain feature off: a feature
-  registers its access extensions only while enabled, and nothing in `Crest.Access` names a
+  registers its access extensions only while enabled, and nothing in `Grove.Access` names a
   domain module.
 - **Access is extended, never rewritten.** The gate, the caller, the decision and the scope
   are one system that does all permission processing; domain modules keep their own access
   logic in their own projects and **register it** through the contracts in
-  `Crest.Access.Abstractions`, so adding a domain never means editing the gate:
+  `Grove.Access.Abstractions`, so adding a domain never means editing the gate:
   - resource mappers, in two roles ([Mapper roles and priority](#mapper-roles-and-priority)):
     `IResourcePermissionMapper` (a module's own) and `IAuthoritativeResourcePermissionMapper`
     (replaces every other answer for what it claims);
@@ -66,8 +66,8 @@ tests and audits): [user-stories.md](user-stories.md).
 
   The access gate owns the pipeline, pages and data alike. Every domain (sharing, Members,
   Parties, and each module after them) plugs into it through these contracts and decides
-  nothing on its own. Sharing is its own module, `Crest.Sharing` and
-  `Crest.Sharing.Abstractions` ([sharing.md](sharing.md)), which any module uses to make its
+  nothing on its own. Sharing is its own module, `Grove.Sharing` and
+  `Grove.Sharing.Abstractions` ([sharing.md](sharing.md)), which any module uses to make its
   items shareable and which registers one authoritative mapper and its scope providers with
   Access.
 - **A page's permission comes from the page registry.** Each page declares its permission once
@@ -83,7 +83,7 @@ from the shell blueprint), never by the order modules registered their services 
 
 - **Authoritative** (`IAuthoritativeResourcePermissionMapper`): for a resource it claims, the
   only answer; no module mapper is consulted. Among authorities claiming one resource, the
-  highest-priority feature's wins, so a module that is not built into Crest **replaces** an
+  highest-priority feature's wins, so a module that is not built into Grove **replaces** an
   authority for exactly the resources it claims by declaring a higher priority; the lower one
   still answers for everything else. Two authorities claiming one resource **at the same
   priority** are a configuration conflict: the decision denies (finally), audits and logs it.
@@ -100,7 +100,7 @@ from the shell blueprint), never by the order modules registered their services 
 
 The same rule picks between modules inside a domain: two shareable kinds registered for one
 name are decided by priority, and at the same priority the name is conflicted and allows
-nothing ([sharing.md](sharing.md)). Tests: `test/Crest.Tests/Access/Conformance/MapperRolesTests.cs`.
+nothing ([sharing.md](sharing.md)). Tests: `test/Grove.Tests/Access/Conformance/MapperRolesTests.cs`.
 
 ## The system
 
@@ -108,18 +108,18 @@ nothing ([sharing.md](sharing.md)). Tests: `test/Crest.Tests/Access/Conformance/
 
 | Scheme | Where | What it does |
 | --- | --- | --- |
-| Identity cookie (`orchauth_{tenant}`) | `Crest.Users` | the default sign-in; `AddIdentity`, cookie paths from `UserOptions`; `UseAuthorization` at order 0 |
-| The access gate | `Crest.Access` `IAccessGate` (`AccessGateService`), called by the shell selector; `AccessGateMiddleware` at order −150 for what the selector did not classify | the one authentication (cookie, or `Api` when an `Authorization` header is present), the side stamp, the caller; runs the request-handler schemes (OpenIddict's endpoints) |
-| `Api` forwarder | `Crest.Infrastructure/Security/ApiAuthenticationHandler.cs` | forwards to the scheme in `ApiAuthorizationOptions` (default "Bearer"), then to each `AdditionalSchemes` entry (the remote deployment key); challenge writes 401 with `WWW-Authenticate: Bearer` |
-| OpenId Validation | `Crest.OpenId` | the only bearer-to-principal path: OpenIddict validation, local (data protection, optionally another tenant's server) or remote (discovery); re-points `Api` to itself |
-| OpenId Server | `Crest.OpenId` | issues tokens: code, password, refresh and client credentials; user flows carry the user's name identifier, the client-credentials flow carries the application's id as the name identifier and the application's roles, never Permission claims |
-| OpenId Client, Management | `Crest.OpenId` | external OIDC login; admin UI for applications and scopes |
-| External providers | `Crest.Microsoft.Authentication`, `Crest.Google`, `Crest.Facebook`, `Crest.GitHub`, `Crest.Twitter` | land in `Identity.External`, finished by the Users external-authentication feature |
-| Member portal login | `Crest.Members` `MemberPortalController`, `MemberLoginSurfaceGate` | the portal's login, register and external-login; the `ILoginFormEvent` veto that keeps members off the tenant surface and staff off the portal |
-| Crest JSON login | `LoginService`, `api/crest/auth` (Crest.Users, `AuthApi`) | replays the stock login event sequence and signs the one cookie |
-| Workflows engine API | `Crest.Workflows` `ApiSecurityMiddleware`, order −151 | under `/crest-workflows/api`: the gated caller (none → 403), the decision, antiforgery, a transient claims identity with engine permission names, the Run list and the endpoint's policy; no authentication of its own |
-| Secure media, GraphQL, media tus, OpenApi | `Crest.Media`, `Crest.Apis.GraphQL`, `Crest.OpenApi` | authorize the gate's principal; none authenticates again |
-| Remote deployment key | `Crest.Deployment.Remote` `RemoteDeploymentKeyAuthenticationHandler` | `Authorization: RemoteDeployment {client}:{key}`, an additional `Api` scheme; the import controller is `[Authorize]` and asks `ImportRemoteInstances`, which the remote client's contributor grants its application caller; the exporting instance sends the header |
+| Identity cookie (`orchauth_{tenant}`) | `Grove.Users` | the default sign-in; `AddIdentity`, cookie paths from `UserOptions`; `UseAuthorization` at order 0 |
+| The access gate | `Grove.Access` `IAccessGate` (`AccessGateService`), called by the shell selector; `AccessGateMiddleware` at order −150 for what the selector did not classify | the one authentication (cookie, or `Api` when an `Authorization` header is present), the side stamp, the caller; runs the request-handler schemes (OpenIddict's endpoints) |
+| `Api` forwarder | `Grove.Infrastructure/Security/ApiAuthenticationHandler.cs` | forwards to the scheme in `ApiAuthorizationOptions` (default "Bearer"), then to each `AdditionalSchemes` entry (the remote deployment key); challenge writes 401 with `WWW-Authenticate: Bearer` |
+| OpenId Validation | `Grove.OpenId` | the only bearer-to-principal path: OpenIddict validation, local (data protection, optionally another tenant's server) or remote (discovery); re-points `Api` to itself |
+| OpenId Server | `Grove.OpenId` | issues tokens: code, password, refresh and client credentials; user flows carry the user's name identifier, the client-credentials flow carries the application's id as the name identifier and the application's roles, never Permission claims |
+| OpenId Client, Management | `Grove.OpenId` | external OIDC login; admin UI for applications and scopes |
+| External providers | `Grove.Microsoft.Authentication`, `Grove.Google`, `Grove.Facebook`, `Grove.GitHub`, `Grove.Twitter` | land in `Identity.External`, finished by the Users external-authentication feature |
+| Member portal login | `Grove.Members` `MemberPortalController`, `MemberLoginSurfaceGate` | the portal's login, register and external-login; the `ILoginFormEvent` veto that keeps members off the tenant surface and staff off the portal |
+| Grove JSON login | `LoginService`, `api/grove/auth` (Grove.Users, `AuthApi`) | replays the stock login event sequence and signs the one cookie |
+| Workflows engine API | `Grove.Workflows` `ApiSecurityMiddleware`, order −151 | under `/grove-workflows/api`: the gated caller (none → 403), the decision, antiforgery, a transient claims identity with engine permission names, the Run list and the endpoint's policy; no authentication of its own |
+| Secure media, GraphQL, media tus, OpenApi | `Grove.Media`, `Grove.Apis.GraphQL`, `Grove.OpenApi` | authorize the gate's principal; none authenticates again |
+| Remote deployment key | `Grove.Deployment.Remote` `RemoteDeploymentKeyAuthenticationHandler` | `Authorization: RemoteDeployment {client}:{key}`, an additional `Api` scheme; the import controller is `[Authorize]` and asks `ImportRemoteInstances`, which the remote client's contributor grants its application caller; the exporting instance sends the header |
 
 **The request path.** The shell selector (`ShellSelectionMiddleware`, a startup filter before
 routing) classifies the request and calls the gate for it (`AdmitAsync` for pages with the side
@@ -135,20 +135,20 @@ after it authenticates; controllers use plain `[Authorize]`.
 `IHttpAuthenticationFeature`; its `User` setter retires the ticket (as the platform's
 `AuthenticationFeatures` does), so a principal set after the gate (the workflow API gate's
 per-request grant) survives the authorization middleware. Pinned by
-`Crest.Workflows.Tests/ApiGateResponseTests`.
+`Grove.Workflows.Tests/ApiGateResponseTests`.
 
 **An API path never redirects.** `AccessGate.IsApiPath` is the one rule (`/api`,
-`/crest-workflows`), read by the shell selector, `AccessGateMiddleware` and `ApiCookieResponses`,
-a post-configuration of the identity cookie registered by `Crest.Access`: on an API path the
+`/grove-workflows`), read by the shell selector, `AccessGateMiddleware` and `ApiCookieResponses`,
+a post-configuration of the identity cookie registered by `Grove.Access`: on an API path the
 cookie's challenge answers 401 and its forbid 403, the status code pages opted out so
 `ApiProblemDetailsMiddleware` writes the body; a page keeps the login and access-denied
 redirects the Users module configures.
 
 ### Authorization
 
-The platform's permission types are `Crest.Infrastructure.Abstractions/Security`
+The platform's permission types are `Grove.Infrastructure.Abstractions/Security`
 (`Permission`, `PermissionRequirement`, `IPermissionService`, `IPermissionProvider`).
-`Crest.Security` is only the security-headers module. `AccessAuthorizationHandler` is the only
+`Grove.Security` is only the security-headers module. `AccessAuthorizationHandler` is the only
 `IAuthorizationHandler`; it delegates every `PermissionRequirement` to the one decision and
 records every denial. Per-resource rules are mappers and ceilings inside the decision,
 registered by their modules; a candidate may re-ask the decision for another resource (a
@@ -182,7 +182,7 @@ the page; the list query carries the caller's view scope as a server-side predic
 of only `ListContent_{type}` gets the list with that one type and nothing else
 (`ContentItemsController.ListAsync`).
 
-### The access machinery (`Crest.Access.Abstractions`, `Crest.Access`)
+### The access machinery (`Grove.Access.Abstractions`, `Grove.Access`)
 
 Contracts: `CallerContext` (tenant, side, user, organization, class, impersonator, super
 user, roles, permissions, permission version, culture, scope signature), `CallerSide`
@@ -200,7 +200,7 @@ sharing's, one per shareable kind with an index table), `ScopeSet`, `IScopeSetPr
 (`RouteAccess`, `IRouteAuthorization`: the authorized routes, a path's check, and
 `AllowsAnyAsync`, the per-item question the admin menu asks). The pages and their permissions
 are the page registry's (`IPageRegistry`, `PageEntry`, `RouteTemplates` in
-`Crest.Server.Abstractions`).
+`Grove.Server.Abstractions`).
 
 Implementation (module "Access", always enabled, depends on Roles, Users, Settings):
 `CallerContextFactory` (identity from the name identifier; roles from the user manager;
@@ -217,7 +217,7 @@ decision).
 
 Scope providers: `ContentItemScopeProvider` (Contents), `OrganizationScopeProvider` (Parties),
 `UserConnectionScopeProvider` (Members), `PartyScopeProvider` (Parties), sharing's sources;
-compiled by `Crest.Data.YesSql` `ScopeExpressions`. Contributors and ceilings:
+compiled by `Grove.Data.YesSql` `ScopeExpressions`. Contributors and ceilings:
 `MemberCallerContributor`, `MemberCallerRequestResolver`, `MemberClassCeiling` (Members),
 `RemoteDeploymentCallerContributor` (Deployment.Remote), `WorkflowConnectionCallerContributor`,
 `WorkflowDefinitionAccessCeiling` (Workflows), the ceilings of the permission model
@@ -239,7 +239,7 @@ The impersonator and the session's active organization are request-level facts s
   principal (it answers as anonymous). The workflow caller resolver's per-burst build is an
   entry point by design; nothing else calls the factory.
 - **The caller is immutable for the request**, and so is its scope set.
-- **Hand-down into child scopes.** `IInheritedShellScopeFeature` (Crest.Abstractions) marks a
+- **Hand-down into child scopes.** `IInheritedShellScopeFeature` (Grove.Abstractions) marks a
   scope feature that every scope created from the current one receives
   (`CreateChildScopeAsync`, the deferred tasks); the caller accessor keeps the caller as such a
   feature (`CallerFeature`), so child scopes, deferred tasks and after-commit work carry the
@@ -309,7 +309,7 @@ client learns of a change on its next request. The conformance suite checks revo
 
 ### Members
 
-`Crest.Members` registers `MemberCallerContributor` (class, acting organization, binding roles,
+`Grove.Members` registers `MemberCallerContributor` (class, acting organization, binding roles,
 impersonator), `MemberCallerRequestResolver`, `MemberClassCeiling` (the member ceiling list,
 [user-stories.md](user-stories.md) § 4), `UserConnectionScopeProvider` and
 `MemberResourcePermissionMapper`.
@@ -338,16 +338,16 @@ The permission model):
   through it and shows a member only its organization's bindings. The organization system
   actor's lookup of member admins (`MemberCallerContributor`) builds a caller and stays
   unscoped.
-- Crest.Members holds organization-to-member logic only (bindings, the acting organization,
+- Grove.Members holds organization-to-member logic only (bindings, the acting organization,
   the member caller). Row ownership by organization concerns staff as well as members and is
   Parties' ([Parties](#parties)).
 
 ### Parties
 
-- `CrestOrganizationPart`, `CrestOrganizationIndex`, `OrganizationScopedTypes` and
+- `GroveOrganizationPart`, `GroveOrganizationIndex`, `OrganizationScopedTypes` and
   `OrganizationScopeProvider` (the organization row scope, reading the acting organization
-  Members supplies) live in `Crest.Parties/Server/Organizations` (namespace
-  `Crest.Parties.Organizations`), registered by Parties; no abstractions project, since a
+  Members supplies) live in `Grove.Parties/Server/Organizations` (namespace
+  `Grove.Parties.Organizations`), registered by Parties; no abstractions project, since a
   module declaring scoped types references Parties anyway.
 - Derived business roles: `PartyDerivedRoleProvider` counts an organization role only through
   the organization acted for and a person role only through the person
@@ -376,8 +376,8 @@ authorized routes) use the Access types.
 - [x] **Route gate reads the page registry.** The route gate takes each page's permission from
   its page registry entry; the per-module route permission providers are gone
   ([architecture.md › One page registry](architecture.md#one-page-registry)).
-- [ ] **MVC admin leftovers.** `AdminFilter` (`Crest.Admin`) and the admin controllers'
-  per-type content authorization (the MVC list in `Crest.Contents` `AdminController`) go with
+- [ ] **MVC admin leftovers.** `AdminFilter` (`Grove.Admin`) and the admin controllers'
+  per-type content authorization (the MVC list in `Grove.Contents` `AdminController`) go with
   the MVC admin; the scope is the filter ([server.md](server.md)).
 - [ ] **One shell stamp.** The selector stamps the route bucket and the side as two items;
   target: one item set once by the selector.

@@ -1,6 +1,6 @@
-# Admin Dashboard (`Crest.AdminDashboard`)
+# Admin Dashboard (`Grove.AdminDashboard`)
 
-The `Crest.AdminDashboard` module lets you compose the landing page of the admin area (`/admin`) from widgets. Each widget is a regular content item, so it can be edited, secured, versioned and localized like any other content.
+The `Grove.AdminDashboard` module lets you compose the landing page of the admin area (`/admin`) from widgets. Each widget is a regular content item, so it can be edited, secured, versioned and localized like any other content.
 
 This page describes the options available to customize the dashboard: permissions, the built-in widget types, widget configuration, arranging widgets, and how to override their look.
 
@@ -119,7 +119,7 @@ Dashboard widgets are content items, so they can be created from a recipe using 
         {
           "ContentItemId": "[js: uuid()]",
           "ContentType": "HtmlDashboardWidget",
-          "DisplayText": "Crest",
+          "DisplayText": "Grove",
           "Latest": true,
           "Published": true,
           "HtmlDashboardWidget": {},
@@ -129,10 +129,10 @@ Dashboard widgets are content items, so they can be created from a recipe using 
             "Height": 2.0
           },
           "HtmlBodyPart": {
-            "Html": "<ul class=\"list-group list-group-flush\">\n\t<li class=\"list-group-item\"><a href=\"https://orchardcore.net\" target=\"_blank\">Crest site</a></li>\n\t<li class=\"list-group-item\"><a href=\"https://docs.orchardcore.net\" target=\"_blank\">Crest docs</a></li>\n</ul>"
+            "Html": "<ul class=\"list-group list-group-flush\">\n\t<li class=\"list-group-item\"><a href=\"https://orchardcore.net\" target=\"_blank\">Grove site</a></li>\n\t<li class=\"list-group-item\"><a href=\"https://docs.orchardcore.net\" target=\"_blank\">Grove docs</a></li>\n</ul>"
           },
           "TitlePart": {
-            "Title": "Crest"
+            "Title": "Grove"
           }
         }
       ]

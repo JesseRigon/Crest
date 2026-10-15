@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>Grove.Workflows Studio Login module for Blazor Server apps.</Description>
+        <PackageTags>groveWorkflows studio module login blazor server</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Grove.Workflows.Studio.Login\Grove.Workflows.Studio.Login.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,213 @@
+@using Grove.AdminTheme.Api
+@using Grove.AdminTheme.State
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+<GroveStack Gap="1rem">
+            <GroveTabs>
+                <Tabs>
+            <GroveTabsItem Text="@T["App"]">
+                @if (AdminShellState?.Manifest is null)
+                {
+                    <GroveText Text="@T["Loading app manifest..."]" />
+                }
+                else
+                {
+                    <GroveStack Gap="0.75rem">
+                        <GroveText TextStyle="TextStyle.H6" Text="@AdminShellState.Manifest.Site.SiteName" />
+                        <GroveText Text="@T["Tenant: {0} · State: {1} · Admin: {2}", AdminShellState.Manifest.Tenant.Name, AdminShellState.Manifest.Tenant.State, AdminShellState.Manifest.Admin.BasePath]" />
+                        <GroveText TextStyle="TextStyle.Caption" Text="@T["Feature hash: {0}", AdminShellState.Manifest.FeatureHash]" />
+                        <GroveText Text="@T["Enabled features: {0}", AdminShellState.Manifest.Features.Length]" />
+                        <GroveText Text="@T["Roles: {0}", AdminShellState.Roles.Length]" />
+                    </GroveStack>
+                }
+            </GroveTabsItem>
+
+            <GroveTabsItem Text="@T["Site"]">
+                @if (Site is null)
+                {
+                    <GroveText Text="@T["Loading site settings..."]" />
+                }
+                else
+                {
+                    <GroveStack Gap="1rem" Style="max-width: 48rem;">
+                        <GroveTextBox @bind-Value="Site.SiteName" Placeholder="@T["Site name"]" />
+                        <GroveTextBox @bind-Value="Site.PageTitleFormat" Placeholder="@T["Page title format"]" />
+                        <GroveTextBox @bind-Value="Site.BaseUrl" Placeholder="@T["Base url"]" />
+                        <GroveTextBox @bind-Value="Site.TimeZoneId" Placeholder="@T["Time zone ID"]" />
+                        <GroveTextBox @bind-Value="Site.Calendar" Placeholder="@T["Calendar"]" />
+                        <GroveNumeric @bind-Value="Site.PageSize" Placeholder="@T["Page Size"]" />
+                        <GroveNumeric @bind-Value="Site.MaxPageSize" Placeholder="@T["Max page size"]" />
+                        <GroveNumeric @bind-Value="Site.MaxPagedCount" Placeholder="@T["Max paged count"]" />
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <GroveButton Text="@T["Save site settings"]" Click="SaveSiteAsync" Disabled="@IsLoading" />
+                            <GroveButton Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsLoading" />
+                        </GroveStack>
+                        @if (!string.IsNullOrWhiteSpace(Status))
+                        {
+                            <GroveText TextStyle="TextStyle.Caption" Text="@Status" />
+                        }
+                    </GroveStack>
+                }
+            </GroveTabsItem>
+
+            <GroveTabsItem Text="@T["Content"]">
+                <GroveStack Gap="1rem">
+                    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        <GroveTextBox @bind-Value="ContentHandle" Placeholder="@T["alias:main-menu"]" Style="min-width: 18rem;" />
+                        <GroveButton Text="@T["Load by handle"]" Click="LoadContentItemAsync" Disabled="@IsLoading" />
+                    </GroveStack>
+
+                    @if (AdminShellState?.CurrentContentItem is not null)
+                    {
+                        <GroveCard>
+                            <GroveText TextStyle="TextStyle.H6" Text="@AdminShellState.CurrentContentItem.DisplayText" />
+                            <GroveText Text="@($"{AdminShellState.CurrentContentItem.ContentType} · {AdminShellState.CurrentContentItem.ContentItemId}")" />
+                        </GroveCard>
+                    }
+
+                    <GroveText TextStyle="TextStyle.H6" Text="@T["Content Types"]" />
+                    @if (AdminShellState?.ContentTypes.Length is null or 0)
+                    {
+                        <GroveText Text="@T["No content types returned."]" />
+                    }
+                    else
+                    {
+                        <ul>
+                            @foreach (var contentType in AdminShellState.ContentTypes)
+                            {
+                                <li>@contentType.DisplayName (@contentType.Name) · @contentType.Parts.Length @T["Parts"]</li>
+                            }
+                        </ul>
+                    }
+                </GroveStack>
+            </GroveTabsItem>
+                </Tabs>
+            </GroveTabs>
+</GroveStack>
+
+@code {
+    [CascadingParameter]
+    public AdminShellState? AdminShellState { get; set; }
+
+    private EditableSiteSettings? Site { get; set; }
+    private string ContentHandle { get; set; } = "alias:main-menu";
+    private bool IsLoading { get; set; }
+    private string? Status { get; set; }
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        if (AdminShellState is null)
+        {
+            return;
+        }
+
+        IsLoading = true;
+        Status = null;
+
+        if (AdminShellState.Manifest is null)
+        {
+            await AdminShellState.RefreshAdminStateAsync();
+        }
+
+        BindEditableSite();
+
+        IsLoading = false;
+    }
+
+    private async Task LoadContentItemAsync()
+    {
+        if (AdminShellState is null || string.IsNullOrWhiteSpace(ContentHandle))
+        {
+            return;
+        }
+
+        IsLoading = true;
+        await AdminShellState.LoadContentItemByHandleAsync(ContentHandle.Trim());
+        IsLoading = false;
+    }
+
+    private async Task SaveSiteAsync()
+    {
+        if (AdminShellState is null || Site is null)
+        {
+            return;
+        }
+
+        IsLoading = true;
+        Status = null;
+
+        var saved = await AdminShellState.UpdateSiteAsync(Site.ToUpdate());
+        if (saved is null)
+        {
+            Status = AdminShellState.ErrorMessage ?? "Unable to save site settings.";
+        }
+        else
+        {
+            Site = EditableSiteSettings.From(saved);
+            Status = "Site settings saved.";
+        }
+
+        IsLoading = false;
+    }
+
+    private void BindEditableSite()
+    {
+        if (AdminShellState?.Site is not null)
+        {
+            Site = EditableSiteSettings.From(AdminShellState.Site);
+        }
+    }
+
+    private sealed class EditableSiteSettings
+    {
+        public string SiteName { get; set; } = string.Empty;
+        public string PageTitleFormat { get; set; } = string.Empty;
+        public string BaseUrl { get; set; } = string.Empty;
+        public string TimeZoneId { get; set; } = string.Empty;
+        public string Calendar { get; set; } = string.Empty;
+        public int PageSize { get; set; }
+        public int MaxPageSize { get; set; }
+        public int MaxPagedCount { get; set; }
+        public bool AppendVersion { get; set; }
+        public bool UseCdn { get; set; }
+        public string CdnBaseUrl { get; set; } = string.Empty;
+        public string ResourceDebugMode { get; set; } = "FromConfiguration";
+        public string CacheMode { get; set; } = "FromConfiguration";
+
+        public static EditableSiteSettings From(SiteSettings settings) => new()
+        {
+            SiteName = settings.SiteName,
+            PageTitleFormat = settings.PageTitleFormat,
+            BaseUrl = settings.BaseUrl,
+            TimeZoneId = settings.TimeZoneId,
+            Calendar = settings.Calendar,
+            PageSize = settings.PageSize,
+            MaxPageSize = settings.MaxPageSize,
+            MaxPagedCount = settings.MaxPagedCount,
+            AppendVersion = settings.AppendVersion,
+            UseCdn = settings.UseCdn,
+            CdnBaseUrl = settings.CdnBaseUrl,
+            ResourceDebugMode = settings.ResourceDebugMode,
+            CacheMode = settings.CacheMode,
+        };
+
+        public SiteSettingsUpdate ToUpdate() => new(
+            SiteName,
+            PageTitleFormat,
+            BaseUrl,
+            TimeZoneId,
+            Calendar,
+            PageSize,
+            MaxPageSize,
+            MaxPagedCount,
+            AppendVersion,
+            UseCdn,
+            CdnBaseUrl,
+            ResourceDebugMode,
+            CacheMode);
+    }
+}

@@ -1,4 +1,4 @@
-# Lucene (`Crest.Lucene`)
+# Lucene (`Grove.Lucene`)
 
 The Lucene module allows you to manage Lucene indexes.
 
@@ -77,7 +77,7 @@ Verbs: `POST` and `GET`
 | `query`      | `{ "query": { "match_all": {} }, "size": 10 }` | A JSON object representing the query.                   |
 | `parameters` | `{ size: 3}`                                   | A JSON object representing the parameters of the query. |
 
-## Lucene Worker (`Crest.Search.Lucene.Worker`)
+## Lucene Worker (`Grove.Search.Lucene.Worker`)
 
 This legacy compatibility feature creates a background task that will keep the local file system index synchronized with
 other instances that could have their own local index.  

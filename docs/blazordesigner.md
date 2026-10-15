@@ -30,7 +30,7 @@ define a component model, a registry or a node format of its own:
   permission.
 
 Custom data types are the registry's editor components (blazor-display.md › Vocabulary, Editor
-kind) over the value types of `Crest.Data.Types`. Types a tenant creates without code reach the
+kind) over the value types of `Grove.Data.Types`. Types a tenant creates without code reach the
 designer through them; tenant-made party roles are the first such case and need their own design
 before the designer is done ([parties.md](parties.md) › Tenant-defined party roles).
 
@@ -85,26 +85,26 @@ reflow engines (layout is container primitives).
   instance id, and the undo history.
 - [ ] **Parse and write back.** Map the known tags to editable nodes and write a node's changed
   arguments back into the tag; keep unknown statements as opaque blocks.
-- [ ] **Preview round trip** through the templates preview endpoint (`api/crest/templates`), the
+- [ ] **Preview round trip** through the templates preview endpoint (`api/grove/templates`), the
   canvas rendering the returned tree with `DisplayTreeRenderer`.
 
 ## Phase 2: the design studio
 
 - [ ] **The shell**: palette, canvas, property pane.
-- [ ] **The palette** from `api/crest/components?shell=` (components, composites, variants).
+- [ ] **The palette** from `api/grove/components?shell=` (components, composites, variants).
 - [ ] **The overlay**: instance-id markers, measuring, hover and selection boundaries, snapping,
   drop into a zone as a tag move.
 - [ ] **The property pane**: one input per parameter kind through the registry's editor
   components, writing back into the tag; slots offer the query picker; outputs offer bindings.
 - [ ] **Override modes**: instance (default) and base node, with the permission gate.
-- [ ] **Designed page editor** over `api/crest/pages`; **item body editor** replacing the JSON
+- [ ] **Designed page editor** over `api/grove/pages`; **item body editor** replacing the JSON
   `DisplayTreeEditor`.
 - [ ] **The Appsmith `NOTICE` entry.**
 
 ## Phase 3: headless verification engine
 
 Verification without external web hooks, in the same spirit as the Playwright screenshot-diff
-harness under `modules/Crest/tests/playwright/harness/`.
+harness under `modules/Grove/tests/playwright/harness/`.
 
 | Dependency | Purpose | License | Tier |
 |---|---|---|---|
@@ -128,13 +128,13 @@ public class DesignSnapshot
   marker attributes, generated element ids) so the same tree yields the same text signature.
 - [ ] **Record snapshots with Puppeteer Sharp** in an isolated background task, with the same
   base/new/`UPDATE_BASE=1` promotion convention as
-  `modules/Crest/tests/playwright/harness/screenshot-diff.js`.
+  `modules/Grove/tests/playwright/harness/screenshot-diff.js`.
 - [ ] **Image difference**: reuse `Verify.XunitV3`'s image comparison if it covers the need,
   otherwise a deterministic colour-delta loop (`dE = sqrt((r1-r2)^2 + (g1-g2)^2 + (b1-b2)^2)`).
 
 ## Phase 4: pilot
 
-- [ ] **One real component end to end**: a registered component from `Crest.Components` through
+- [ ] **One real component end to end**: a registered component from `Grove.Components` through
   palette → canvas → property pane → snapshot, no synthetic test-only component.
 
 ## Verification matrix

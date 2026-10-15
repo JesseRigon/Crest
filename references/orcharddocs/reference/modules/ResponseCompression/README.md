@@ -1,6 +1,6 @@
-# Response Compression (`Crest.ResponseCompression`)
+# Response Compression (`Grove.ResponseCompression`)
 
-The `Crest.ResponseCompression` module enables ASP.NET Core [response compression](https://learn.microsoft.com/aspnet/core/performance/response-compression) for the tenant, reducing the size of HTTP responses sent to clients.
+The `Grove.ResponseCompression` module enables ASP.NET Core [response compression](https://learn.microsoft.com/aspnet/core/performance/response-compression) for the tenant, reducing the size of HTTP responses sent to clients.
 
 ## Usage
 

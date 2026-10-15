@@ -334,7 +334,7 @@ if (task === "host" && packageNames.length === 0) {
 // Filter for bundling if the user passes the -b/--bundle cli flag
 const shouldBuildBundle = parsedArgs.b != undefined;
 if (shouldBuildBundle) {
-    console.log(chalk.yellow("Filtering groups for crest-bundle"));
+    console.log(chalk.yellow("Filtering groups for grove-bundle"));
     groups = groups.filter((g) => g.bundleEntrypoint);
 }
 
@@ -370,7 +370,7 @@ if (task === "build" || task === "watch" || task === "host") {
 
             groups.push({
                 action: "parcel",
-                name: `crest-bundle`,
+                name: `grove-bundle`,
                 source: entries,
                 dest: parcelBundleOutput,
             });

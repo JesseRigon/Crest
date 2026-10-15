@@ -1,4 +1,4 @@
-# Placements (`Crest.Placements`)
+# Placements (`Grove.Placements`)
 
 The placements module allows editors to add custom placement logic.
 
@@ -16,7 +16,7 @@ Placements defined in placements module override placements defined by theme and
 
 Placements defined with this module are stored in the database by default.
 
-You can also choose to store placements in a file by enabling 'Placements file storage' (`Crest.Placements.FileStorage`) feature.
+You can also choose to store placements in a file by enabling 'Placements file storage' (`Grove.Placements.FileStorage`) feature.
 
 ### Shape placements format
 

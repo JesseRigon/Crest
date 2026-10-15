@@ -6,7 +6,7 @@ import { writeAssetFile } from "../output.mjs";
 
 /**
  * Vite plugin that minifies output and generates files following the
- * Crest asset-manager convention:
+ * Grove asset-manager convention:
  *
  *   file.js      — minified WITH sourceMappingURL reference
  *   file.min.js  — minified WITHOUT sourceMappingURL reference

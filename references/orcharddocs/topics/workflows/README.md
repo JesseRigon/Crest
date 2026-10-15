@@ -1,6 +1,6 @@
 # Workflows
 
-Crest allows you to handle Workflows with specific Events and Activities, like reacting to the submission a dynamic Form or the creation of a content for example.
+Grove allows you to handle Workflows with specific Events and Activities, like reacting to the submission a dynamic Form or the creation of a content for example.
 
 ## Automate your Workflows
 

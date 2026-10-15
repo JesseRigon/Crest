@@ -1,6 +1,6 @@
 # Localization
 
-Crest allows you to translate your strings with .po files and your contents in different cultures.
+Grove allows you to translate your strings with .po files and your contents in different cultures.
 
 ## Localize your Site
 

@@ -1,0 +1,11 @@
+using Grove.Workflows.Mediator.Contracts;
+using JetBrains.Annotations;
+
+namespace Grove.Workflows.Management.Notifications;
+
+/// <summary>
+/// A notification that is sent when workflow definitions are about to be deleted.
+/// </summary>
+/// <param name="DefinitionIds">The IDs of the workflow definitions.</param>
+[PublicAPI]
+public record WorkflowDefinitionsDeleting(ICollection<string> DefinitionIds) : INotification;

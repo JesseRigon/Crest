@@ -1,4 +1,4 @@
-# Admin Menu (`Crest.AdminMenu`)
+# Admin Menu (`Grove.AdminMenu`)
 
 The Admin Menu module provides a way for users to create custom admin menus through the Admin UI.
 
@@ -10,7 +10,7 @@ There are two basic concepts:
 
 2. **Admin Node**: Each one of the nodes that form an Admin Menu. An AdminNode can contain other Admin Nodes. Each admin node results in one or more menu items rendered on TheAdmin menu.
 
-These trees of menu items are merged with the standard admin menu that Crest provides out of the box. In this document when we refer to that menu that is provided by Crest out of the box we use the term **TheAdmin Menu**.
+These trees of menu items are merged with the standard admin menu that Grove provides out of the box. In this document when we refer to that menu that is provided by Grove out of the box we use the term **TheAdmin Menu**.
 
 You can disable an Admin Menu and it won't be shown.
 
@@ -28,17 +28,17 @@ You can disable an Admin Node and neither it nor their descendants will be shown
 
 ## Provided Admin Node Types
 
-At the time of writing this document there are 3 Admin Node Types provided out of the box by Crest:
+At the time of writing this document there are 3 Admin Node Types provided out of the box by Grove:
 
 1. **Link Admin Node**: It provides a simple menu item. The user can add a text, a URL, and a Font Awesome icon class so that the current admin theme can use them when rendering the menu item. At the moment TheAdmin theme is using that icon class only for first level menu items.
-This link is the only one provided by the Crest.AdminMenu module itself.
+This link is the only one provided by the Grove.AdminMenu module itself.
 
 2. **Content Types Admin Node**: It provides a list of menu items containing a menu item for each content type. The links point to the Index action in the Contents Controller.
-This node type is provided by the Crest.Contents module.
+This node type is provided by the Grove.Contents module.
 
 3. **Lists Admin Node**: It provides menu items pointing to the Edit Page of those Content Items that include a part list on them.
 For example, if you have a Blog Content Type, and several Blog Content Items, it will provide a link for each existing Blog.
-This node type is provided by the Crest.Lists module.
+This node type is provided by the Grove.Lists module.
 
 Note that each one of these nodes can have other nodes nested on it. The nesting is done through drag and drop on the UI.
 
@@ -46,7 +46,7 @@ Note that each one of these nodes can have other nodes nested on it. The nesting
 
 ### How it works without the Admin Menu Module
 
-The Admin Menu that Crest provides out of the box it's built broadly speaking like this:
+The Admin Menu that Grove provides out of the box it's built broadly speaking like this:
 
 1. NavigationManager retrieves all classes that implement `INavigationProvider`. There are many of them through many modules with the file name of "AdminMenu.cs".
 
@@ -134,7 +134,7 @@ public Task BuildNavigationAsync(MenuItem menuItem, NavigationBuilder builder, I
         return Task.CompletedTask;
     }
 
-    // This is the standard Crest way of adding menuItems to a builder.
+    // This is the standard Grove way of adding menuItems to a builder.
     return builder.AddAsync(new LocalizedString(node.LinkText, node.LinkText), async itemBuilder =>
     {
         var nodeLinkUrl = node.LinkUrl;

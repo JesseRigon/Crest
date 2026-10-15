@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <Import Project="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.props" />
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(PlatformSrcDir)Grove.ContentFields\Grove.ContentFields.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.ContentManagement\Grove.ContentManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents\Grove.Contents.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Data\Grove.Data.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Flows\Grove.Flows.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Sharing.Abstractions\Grove.Sharing.Abstractions.csproj" />
+    <PackageReference Include="YesSql.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Domain/Grove.Parties.Domain.csproj" />
+    <ProjectReference Include="../../Grove.Workflows/Abstractions/Grove.Workflows.Abstractions.csproj" />
+    <ProjectReference Include="../../Grove.Workflows/engine/src/modules/Grove.Workflows.Core/Grove.Workflows.Core.csproj" />
+    <ProjectReference Include="../../Grove.Workflows/engine/src/modules/Grove.Workflows.Engine/Grove.Workflows.Engine.csproj" />
+    <ProjectReference Include="../../Grove.Server/Grove.Server.csproj" />
+    <ProjectReference Include="../../Grove.ContentPartLists/Grove.ContentPartLists.csproj" />
+    <ProjectReference Include="../../Grove.Regions/Grove.Regions.csproj" />
+  </ItemGroup>
+</Project>

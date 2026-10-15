@@ -1,4 +1,4 @@
-# Data Migrations (`Crest.Data.Migration.DataMigration`)
+# Data Migrations (`Grove.Data.Migration.DataMigration`)
 
 ## Configuring Data Migration
 
@@ -14,10 +14,10 @@ The following example showcases three different data migrations (recipe migratio
 ```csharp
 using System.Threading.Tasks;
 using Members.Indexes;
-using Crest.ContentManagement.Metadata;
-using Crest.ContentManagement.Metadata.Settings;
-using Crest.Data.Migration;
-using Crest.Recipes.Services;
+using Grove.ContentManagement.Metadata;
+using Grove.ContentManagement.Metadata.Settings;
+using Grove.Data.Migration;
+using Grove.Recipes.Services;
 using YesSql.Sql;
 
 namespace Members;

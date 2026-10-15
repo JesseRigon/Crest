@@ -1,0 +1,114 @@
+# Host-owned translations (moved out of the Grove submodule 2026-08-22:
+# Grove ships literals only and stays stock-localized; editorial translation
+# content is the HOST's. Distinct filename = never clobbered by a mirror refresh
+# of the OrchardCore.Translations package content around it.)
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fr\n"
+
+# Hand-written test/seed content for the Grove.Admin.Client context - see es.po in this
+# same directory for the full explanation.
+#: Grove.Admin/wasm/Pages/AdminMenus.razor
+msgctxt "Grove.Admin.Client"
+msgid "Loading admin menus..."
+msgstr "Chargement des menus d'administration..."
+
+#: Grove.Admin/wasm/Pages/AdminMenus.razor
+msgctxt "Grove.Admin.Client"
+msgid "No admin menus found."
+msgstr "Aucun menu d'administration trouvé."
+
+# Representative sample added 2026-08-07 covering phase 6's newly-converted files
+# (Login, Profile, Menus, Indexes, Templates, AdminStatus) - proves the .po -> API ->
+# GroveApiLocalizer -> rendered UI pipeline end-to-end without translating every key.
+#: Grove.Admin/wasm/Pages/Login.razor
+msgctxt "Grove.Admin.Client"
+msgid "Signed in as {0}"
+msgstr "Connecté en tant que {0}"
+
+#: Grove.Admin/wasm/Pages/Login.razor
+msgctxt "Grove.Admin.Client"
+msgid "Log out"
+msgstr "Déconnexion"
+
+#: Grove.Admin/wasm/Pages/Login.razor
+msgctxt "Grove.Admin.Client"
+msgid "Username or email"
+msgstr "Nom d'utilisateur ou e-mail"
+
+#: Grove.Admin/wasm/Pages/Login.razor
+msgctxt "Grove.Admin.Client"
+msgid "Password"
+msgstr "Mot de passe"
+
+#: Grove.Admin/wasm/Pages/Login.razor
+msgctxt "Grove.Admin.Client"
+msgid "Log in"
+msgstr "Connexion"
+
+#: Grove.Admin/wasm/Pages/Profile.razor
+msgctxt "Grove.Admin.Client"
+msgid "Your account."
+msgstr "Votre compte."
+
+#: Grove.Admin/wasm/Pages/Profile.razor
+msgctxt "Grove.Admin.Client"
+msgid "Account"
+msgstr "Compte"
+
+#: Grove.Admin/wasm/Pages/Profile.razor
+msgctxt "Grove.Admin.Client"
+msgid "User Name"
+msgstr "Nom d'utilisateur"
+
+#: Grove.Admin/wasm/Pages/Profile.razor
+msgctxt "Grove.Admin.Client"
+msgid "Settings"
+msgstr "Paramètres"
+
+#: Grove.Admin/wasm/Pages/Menus.razor
+msgctxt "Grove.Admin.Client"
+msgid "Menus"
+msgstr "Menus"
+
+#: Grove.Admin/wasm/Pages/Menus.razor
+msgctxt "Grove.Admin.Client"
+msgid "New menu"
+msgstr "Nouveau menu"
+
+#: Grove.Admin/wasm/Pages/Indexes.razor
+msgctxt "Grove.Admin.Client"
+msgid "Indexes"
+msgstr "Index"
+
+#: Grove.Admin/wasm/Pages/Indexes.razor
+msgctxt "Grove.Admin.Client"
+msgid "Rebuild"
+msgstr "Reconstruire"
+
+#: Grove.Admin/wasm/Pages/Templates.razor
+msgctxt "Grove.Admin.Client"
+msgid "Templates"
+msgstr "Modèles"
+
+#: Grove.Admin/wasm/Pages/Templates.razor
+msgctxt "Grove.Admin.Client"
+msgid "New template"
+msgstr "Nouveau modèle"
+
+#: Grove.Admin/wasm/Pages/Templates.razor
+msgctxt "Grove.Admin.Client"
+msgid "Save"
+msgstr "Enregistrer"
+
+#: Grove.Admin/wasm/DisplayManagement/AdminStatus.razor
+msgctxt "Grove.Admin.Client"
+msgid "Grove Admin"
+msgstr "Grove Admin"
+
+#: Grove.Admin/wasm/DisplayManagement/AdminStatus.razor
+msgctxt "Grove.Admin.Client"
+msgid "Signed in as {0}"
+msgstr "Connecté en tant que {0}"

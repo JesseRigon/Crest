@@ -1,0 +1,82 @@
+@page "/OpenId/Application"
+@attribute [PageEntry("ManageApplications", Id = "openid-applications", Parent = "openid", Caption = "Applications")]
+@using Grove.AdminTheme.Api
+@using Grove.Components.Primitives
+@inject IApi Api
+@inject NavigationManager Navigation
+@inject NotificationService Notifications
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* The OpenID Connect applications (step 7: the MVC Application screens are retired). *@
+
+<GroveStack Gap="1rem" data-testid="openid-applications-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <GroveStack Gap="0.25rem">
+            <GroveText TextStyle="TextStyle.H4" Text="@T["OpenID Connect applications"]" />
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["Clients allowed to request tokens from this tenant."]" />
+        </GroveStack>
+        <GroveButton Text="@T["Add application"]" Icon="add" Click="@(() => Navigation.NavigateTo("OpenId/Application/Create"))" data-testid="openid-application-add" />
+    </GroveStack>
+
+    @if (Error is not null)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</GroveAlert>
+    }
+
+    <GroveCard>
+        @if (Items is null)
+        {
+            <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (Items.Length == 0)
+        {
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["No applications yet."]" />
+        }
+        else
+        {
+            <GroveDataGrid Data="@Items" TItem="OpenIdApplicationListItem" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <GroveDataGridColumn TItem="OpenIdApplicationListItem" Property="DisplayName" Title="@T["Name"]" />
+                    <GroveDataGridColumn TItem="OpenIdApplicationListItem" Property="ClientId" Title="@T["Client id"]" />
+                    <GroveDataGridColumn TItem="OpenIdApplicationListItem" Property="Type" Title="@T["Type"]" />
+                    <GroveDataGridColumn TItem="OpenIdApplicationListItem" Title="@T["Actions"]" Width="10rem">
+                        <Template Context="item">
+                            <GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                <GroveButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Navigation.NavigateTo($"OpenId/Application/Edit/{Uri.EscapeDataString(item.Id)}"))" title="@T["Edit"]" />
+                                <GroveButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteAsync(item))" title="@T["Delete"]" />
+                            </GroveStack>
+                        </Template>
+                    </GroveDataGridColumn>
+                </Columns>
+            </GroveDataGrid>
+        }
+    </GroveCard>
+</GroveStack>
+
+@code {
+    private OpenIdApplicationListItem[]? Items { get; set; }
+    private string? Error { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Items = await Api.Grove.Rest.OpenId.ListApplicationsAsync();
+        if (Items is null)
+        {
+            Error = T["The applications could not be loaded."];
+            Items = [];
+        }
+    }
+
+    private async Task DeleteAsync(OpenIdApplicationListItem item)
+    {
+        if (await Api.Grove.Rest.OpenId.DeleteApplicationAsync(item.Id))
+        {
+            Notifications.Notify(NotificationSeverity.Success, T["Application deleted"], item.DisplayName ?? item.ClientId ?? item.Id);
+            Items = [.. Items!.Where(candidate => candidate.Id != item.Id)];
+        }
+        else
+        {
+            Notifications.Notify(NotificationSeverity.Error, T["Delete failed"], T["The application could not be deleted."]);
+        }
+    }
+}

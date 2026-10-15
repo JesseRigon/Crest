@@ -1,9 +1,9 @@
-# Crest tests
+# Grove tests
 
-This directory is the entrypoint for every test that lives inside the `Crest`
+This directory is the entrypoint for every test that lives inside the `Grove`
 submodule when it runs standalone: `run-tests.sh` here runs everything underneath it. A
-host that builds Crest's test projects into its own solution and starts its browser suite
-with Crest's shared checks (see "Adding a browser check" below) does not call
+host that builds Grove's test projects into its own solution and starts its browser suite
+with Grove's shared checks (see "Adding a browser check" below) does not call
 `run-tests.sh`, which would run both a second time.
 
 ## Stack
@@ -43,7 +43,7 @@ native UI automation.
 ## Layout and discovery
 
 ```
-modules/Crest/
+modules/Grove/
   tests/
     run-tests.sh                 <- the entrypoint host dev.sh scripts call
     playwright/                  <- shared browser E2E suite (existing)
@@ -51,38 +51,38 @@ modules/Crest/
       harness/                   <- auth, health, instance bootstrap, screenshot-diff
       run-admin-suite.js
       run-client-suite.js
-  Crest.Icons/
+  Grove.Icons/
     tests/
-      Crest.Icons.Tests/
-        Crest.Icons.Tests.csproj   <- discovered and run by run-tests.sh
-  Crest.<OtherProject>/
+      Grove.Icons.Tests/
+        Grove.Icons.Tests.csproj   <- discovered and run by run-tests.sh
+  Grove.<OtherProject>/
     tests/
       <OtherProject>.Tests/...                 <- same convention
 ```
 
 `run-tests.sh` runs every test project in one `dotnet test` over
-`Crest.Tests.slnx`, refusing a partial run when a `*/tests/*` project is
+`Grove.Tests.slnx`, refusing a partial run when a `*/tests/*` project is
 missing from that solution, then runs this directory's own shared Playwright suite.
-Adding a new C# test project to any `Crest.*` subproject means: create it
+Adding a new C# test project to any `Grove.*` subproject means: create it
 under `<Subproject>/tests/<ProjectName>/`, and **exclude that `tests/` folder from the
 parent project's own compile glob** — SDK-style projects (especially
 `Microsoft.NET.Sdk.Razor` ones) default-glob every `.cs` file under the project
 directory, so without an explicit exclusion the parent project will try to compile the
 test files itself and fail on missing test package references. See
-`Crest.Icons.csproj`'s `<Compile Remove="tests\**\*.cs" />` for the pattern
+`Grove.Icons.csproj`'s `<Compile Remove="tests\**\*.cs" />` for the pattern
 to copy.
 
 ## Why the host repos don't do this scan themselves
 
 A product host has a flat `modules/*/tests/` layout (one `tests/` dir per module —
-its business modules, `Crest`, any future module). `Crest` is the one
+its business modules, `Grove`, any future module). `Grove` is the one
 module that isn't flat — it's a submodule with its own nested subprojects, each
 potentially owning a `tests/` dir. Rather than have every host repo's `dev.sh`
-duplicate knowledge of that nested layout, `Crest` owns discovering and
+duplicate knowledge of that nested layout, `Grove` owns discovering and
 running its own tests, and reports pass/fail back to whichever host invoked it. This
-keeps `Crest.Crest.Host/dev/dev.sh` (which only ever needs to run this one
-module's tests) a thin wrapper. A product host that registers every Crest test project in
-its own solution and runs Crest's shared checks at the head of its own browser suite needs
+keeps `Grove.Host/dev/dev.sh` (which only ever needs to run this one
+module's tests) a thin wrapper. A product host that registers every Grove test project in
+its own solution and runs Grove's shared checks at the head of its own browser suite needs
 no delegation at all.
 
 ## Adding a browser check
@@ -91,7 +91,7 @@ no delegation at all.
    exporting `async function (page, { baseUrl, outputRoot, consoleErrors })` that returns
    one result `{ name, pass, message }` or an array of them. The page is already logged in
    as admin; `consoleErrors` holds the browser console errors raised during this check.
-2. Crest-owned checks are registered once in `tests/playwright/run-admin-suite.js`'s
+2. Grove-owned checks are registered once in `tests/playwright/run-admin-suite.js`'s
    `buildSharedAdminChecks()`, after any check they depend on (a feature-enable check
    precedes the checks that need the feature); a host's own suite list starts with those.
 3. Wait for a **positive signal** and assert on it. `await x.waitFor({ timeout: 20000 })
@@ -106,12 +106,12 @@ no delegation at all.
 
 `run-tests.sh` and everything under this directory hold **no credentials, no `.env`
 loading, and no server-lifecycle logic**. This submodule is checked out into multiple
-independent host repos (a product host, `Crest.Crest.Host`, and potentially
+independent host repos (a product host, `Grove.Host`, and potentially
 others), each with its own environment, admin accounts, and database — a credential
 baked in here would either leak between hosts or be wrong for at least one of them.
 
 The boundary: `run-tests.sh` accepts `BASE_URL` as an already-resolved input (falling
-back to `CREST_SERVER_URL` only as a convenience, not as its own
+back to `GROVE_SERVER_URL` only as a convenience, not as its own
 source of truth) and the Playwright harness (`harness/auth.js`) reads `ADMIN_USER`/
 `ADMIN_PASSWORD`/`CLIENT_USER`/`CLIENT_PASSWORD` from the environment with generic
 fallback defaults — it never hardcodes a real credential. Each host's own `dev/.env`
@@ -120,4 +120,4 @@ supplies these at test time; that file is host-repo-local and never copied into 
 read from this submodule.
 
 If a future test needs a new credential or connection string, add the env var to the
-*host's* `.env` and `dev.sh`, not to anything under `modules/Crest/`.
+*host's* `.env` and `dev.sh`, not to anything under `modules/Grove/`.

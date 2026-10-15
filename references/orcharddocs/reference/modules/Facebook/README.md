@@ -1,8 +1,8 @@
-# Facebook/Meta (`Crest.Facebook`)
+# Facebook/Meta (`Grove.Facebook`)
 
 ## Facebook/Meta Module
 
-`Crest.Facebook` provides the following features:
+`Grove.Facebook` provides the following features:
 
 - Meta Core Components
 - Meta Login
@@ -44,7 +44,7 @@ If no value is provided, setup Meta app to use the default path /signin-facebook
 
 ## Users Registration
 
-- Enable the `Crest.Users.Registration` feature when you also want local site registration.
+- Enable the `Grove.Users.Registration` feature when you also want local site registration.
 - New external-user creation and profile generation are controlled from the Users module's [`ExternalRegistrationSettings`](../Users/README.md#external-authentication-settings).
 - An existing user can link the account through the External Logins link from the user menu.
 
@@ -76,7 +76,7 @@ From the _Settings -> Integrations -> Meta Pixel_ settings page, in addition to 
 
 #### Meta Conversions API Event workflow task
 
-When the `Crest.Workflows.Platform` feature is also enabled, a **Meta Conversions API Event** task becomes available in the workflow editor, under the **Meta** category. Add it to any workflow to send a server-side event (e.g. `Purchase`, `Lead`) to Meta when that workflow runs.
+When the `Grove.Workflows.Platform` feature is also enabled, a **Meta Conversions API Event** task becomes available in the workflow editor, under the **Meta** category. Add it to any workflow to send a server-side event (e.g. `Purchase`, `Lead`) to Meta when that workflow runs.
 
 The task accepts:
 
@@ -146,13 +146,13 @@ Facebook settings can be configured using the `Settings` recipe step:
 
 ## Meta Settings Configuration
 
-The `Crest.Facebook` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureFacebookSettings()` extension method on `PlatformBuilder` when initializing the app.
+The `Grove.Facebook` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureFacebookSettings()` extension method on `PlatformBuilder` when initializing the app.
 
 The following configuration values can be customized:
 
 ```json
 {
-  "Crest_Facebook": {
+  "Grove_Facebook": {
     "AppId": "",
     "AppSecret": "",
     "FBInit": false,

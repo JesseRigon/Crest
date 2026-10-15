@@ -1,0 +1,17 @@
+using Grove.Security.Settings;
+using Grove.Settings;
+
+namespace Grove.Security.Services;
+
+public class SecurityService : ISecurityService
+{
+    private readonly ISiteService _siteService;
+
+    public SecurityService(ISiteService siteService)
+    {
+        _siteService = siteService;
+    }
+
+    public Task<SecuritySettings> GetSettingsAsync()
+        => _siteService.GetSettingsAsync<SecuritySettings>();
+}

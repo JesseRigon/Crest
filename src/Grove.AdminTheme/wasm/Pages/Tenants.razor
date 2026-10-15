@@ -1,0 +1,153 @@
+@page "/Tenants"
+@attribute [PageEntry("ManageTenants", Id = "tenants", Parent = "multitenancy", Caption = "Tenants", Icon = "@iconify:mdi:home-city", DefaultTenantOnly = true)]
+@using Grove.AdminTheme.Api
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives
+@inject IApi Api
+@inject NavigationManager Navigation
+@inject NotificationService Notifications
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+<GroveStack Gap="1rem" data-testid="tenants-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <GroveStack Gap="0.25rem">
+            <GroveText TextStyle="TextStyle.H4" Text="@T["Tenants"]" />
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["Manage the tenants of this installation."]" />
+        </GroveStack>
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <GroveButton Text="@T["Refresh"]" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" />
+            <GroveButton Text="@T["Add Tenant"]" Icon="add" Click="CreateTenant" Disabled="@IsBusy" />
+        </GroveStack>
+    </GroveStack>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</GroveAlert>
+    }
+
+    <GroveCard>
+        <GroveRow AlignItems="AlignItems.End" Gap="0.75rem">
+            <GroveColumn Size="12" SizeMD="4"><GroveFormField Text="@T["Search"]" Style="width: 100%;"><GroveTextBox @bind-Value="Search" Placeholder="@T["Search name, host, or prefix"]" Style="width: 100%;" /></GroveFormField></GroveColumn>
+            <GroveColumn Size="12" SizeMD="2"><GroveFormField Text="@T["Category"]" Style="width: 100%;"><GroveDropDown @bind-Value="Category" Data="CategoryOptions" AllowClear="true" Style="width: 100%;" /></GroveFormField></GroveColumn>
+            <GroveColumn Size="12" SizeMD="2"><GroveFormField Text="@T["State"]" Style="width: 100%;"><GroveDropDown @bind-Value="State" Data="StateOptions" AllowClear="true" Style="width: 100%;" /></GroveFormField></GroveColumn>
+            <GroveColumn Size="12" SizeMD="2"><GroveFormField Text="@T["Sort"]" Style="width: 100%;"><GroveDropDown @bind-Value="OrderBy" Data="OrderOptions" Style="width: 100%;" /></GroveFormField></GroveColumn>
+            <GroveColumn Size="12" SizeMD="2"><GroveButton Text="@T["Apply"]" Icon="filter_alt" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="@IsBusy" /></GroveColumn>
+        </GroveRow>
+    </GroveCard>
+
+    @if (ConfirmAction is not null)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
+            <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                <span>@ConfirmMessage</span>
+                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem"><GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CancelConfirm" Disabled="@IsBusy" /><GroveButton Text="@T["Confirm"]" ButtonStyle="ButtonStyle.Danger" Click="RunConfirmedActionAsync" Disabled="@IsBusy" /></GroveStack>
+            </GroveStack>
+        </GroveAlert>
+    }
+
+    <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+        <GroveButton Text="@T["Enable selected ({0})", SelectedNames.Count]" Icon="play_arrow" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmBulk("Enable"))" Disabled="@(SelectedNames.Count == 0 || IsBusy)" />
+        <GroveButton Text="@T["Disable selected ({0})", SelectedNames.Count]" Icon="pause" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmBulk("Disable"))" Disabled="@(SelectedNames.Count == 0 || IsBusy)" />
+    </GroveStack>
+
+    <GroveCard>
+        @if (IsLoading)
+        {
+            <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+        else if (Catalog.Tenants.Length == 0)
+        {
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["No tenants match this filter."]" />
+        }
+        else
+        {
+            <GroveDataGrid Data="@Catalog.Tenants" TItem="GroveTenant" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <GroveDataGridColumn TItem="GroveTenant" Width="3.5rem" Sortable="false" Filterable="false"><HeaderTemplate><GroveCheckBox Value="@(Catalog.Tenants.Length > 0 && Catalog.Tenants.All(tenant => SelectedNames.Contains(tenant.Name)))" Change="@((bool value) => ToggleAll(value))" Name="select-all-tenants" /></HeaderTemplate><Template Context="tenant"><GroveCheckBox Value="@SelectedNames.Contains(tenant.Name)" Change="@((bool value) => Toggle(tenant.Name, value))" Name="@($"tenant-{tenant.Name}")" Disabled="@tenant.IsDefault" /></Template></GroveDataGridColumn>
+                    <GroveDataGridColumn TItem="GroveTenant" Property="Name" Title="@T["Name"]"><Template Context="tenant"><GroveStack Gap="0.15rem"><GroveText TextStyle="TextStyle.Subtitle2" Text="@tenant.Name" />@if (tenant.IsDefault) { <GroveText TextStyle="TextStyle.Caption" Text="@T["Default tenant"]" /> }</GroveStack></Template></GroveDataGridColumn>
+                    <GroveDataGridColumn TItem="GroveTenant" Property="State" Title="@T["State"]" />
+                    <GroveDataGridColumn TItem="GroveTenant" Property="Category" Title="@T["Category"]"><Template Context="tenant">@(string.IsNullOrWhiteSpace(tenant.Category) ? "—" : tenant.Category)</Template></GroveDataGridColumn>
+                    <GroveDataGridColumn TItem="GroveTenant" Title="@T["Host / prefix"]"><Template Context="tenant"><GroveStack Gap="0.1rem">@if (!string.IsNullOrWhiteSpace(tenant.RequestUrlHost)) { <GroveText TextStyle="TextStyle.Caption" Text="@tenant.RequestUrlHost" /> } @if (!string.IsNullOrWhiteSpace(tenant.RequestUrlPrefix)) { <GroveText TextStyle="TextStyle.Caption" Text="@tenant.RequestUrlPrefix" /> }</GroveStack></Template></GroveDataGridColumn>
+                    <GroveDataGridColumn TItem="GroveTenant" Title="@T["Actions"]" Width="14rem"><Template Context="tenant"><GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem"><GroveButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => EditTenant(tenant.Name))" title="@T["Edit"]" />@if (tenant.State == "Running" && !tenant.IsDefault) { <GroveButton Icon="pause" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmSingle("Disable", tenant.Name))" title="@T["Disable"]" /> } @if (tenant.State == "Disabled") { <GroveButton Icon="play_arrow" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => ConfirmSingle("Enable", tenant.Name))" title="@T["Enable"]" /> }<GroveButton Icon="refresh" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => ReloadAsync(tenant.Name))" title="@T["Reload"]" />@if (Catalog.TenantRemovalAllowed && tenant.IsRemovable) { <GroveButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => ConfirmSingle("Remove", tenant.Name))" title="@T["Remove"]" /> }</GroveStack></Template></GroveDataGridColumn>
+                </Columns>
+            </GroveDataGrid>
+        }
+    </GroveCard>
+</GroveStack>
+
+@code {
+    private TenantCatalog Catalog { get; set; } = TenantCatalog.Empty;
+    private HashSet<string> SelectedNames { get; } = new(StringComparer.OrdinalIgnoreCase);
+    private string? Search { get; set; }
+    private string? Category { get; set; }
+    private string? State { get; set; }
+    private string OrderBy { get; set; } = "Name";
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsBusy => IsLoading || IsSaving;
+    private string? ErrorMessage { get; set; }
+    private string? ConfirmAction { get; set; }
+    private string[] ConfirmNames { get; set; } = [];
+    private string ConfirmMessage => ConfirmAction == "Remove"
+        ? T["Remove tenant {0}? This cannot be undone.", ConfirmNames.FirstOrDefault()]
+        : T["{0} {1} tenant{2}?", ConfirmAction, ConfirmNames.Length, ConfirmNames.Length == 1 ? string.Empty : "s"];
+    private IEnumerable<string> CategoryOptions => Catalog.Categories;
+    private static readonly string[] StateOptions = ["Running", "Disabled", "Uninitialized"];
+    private static readonly string[] OrderOptions = ["Name", "State"];
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try { Catalog = await Api.Grove.Rest.Tenants.ListAsync(Search, Category, State, OrderBy); }
+        catch (Exception exception) { ErrorMessage = exception.Message; }
+        finally { IsLoading = false; }
+    }
+
+    private void CreateTenant() => Navigation.NavigateTo("Tenants/Create");
+    private void EditTenant(string name) => Navigation.NavigateTo($"Tenants/Edit/{Uri.EscapeDataString(name)}");
+    private void Toggle(string name, bool selected) { if (selected) SelectedNames.Add(name); else SelectedNames.Remove(name); }
+    private void ToggleAll(bool selected) { if (selected) foreach (var tenant in Catalog.Tenants.Where(tenant => !tenant.IsDefault)) SelectedNames.Add(tenant.Name); else SelectedNames.Clear(); }
+    private void ConfirmSingle(string action, string name) { ConfirmAction = action; ConfirmNames = [name]; }
+    private void ConfirmBulk(string action) { ConfirmAction = action; ConfirmNames = SelectedNames.ToArray(); }
+    private void CancelConfirm() { ConfirmAction = null; ConfirmNames = []; }
+
+    private async Task ReloadAsync(string name)
+    {
+        IsSaving = true;
+        try
+        {
+            if (await Api.Grove.Rest.Tenants.ReloadAsync(name)) Notifications.Notify(NotificationSeverity.Success, T["Tenant reloaded"], T["{0} was reloaded.", name]);
+            else Notifications.Notify(NotificationSeverity.Error, T["Tenant reload failed"], T["{0} could not be reloaded.", name]);
+        }
+        finally { IsSaving = false; }
+    }
+
+    private async Task RunConfirmedActionAsync()
+    {
+        if (ConfirmAction is null || ConfirmNames.Length == 0) return;
+        IsSaving = true;
+        try
+        {
+            var success = ConfirmAction switch
+            {
+                "Enable" when ConfirmNames.Length == 1 => await Api.Grove.Rest.Tenants.EnableAsync(ConfirmNames[0]) is not null,
+                "Disable" when ConfirmNames.Length == 1 => await Api.Grove.Rest.Tenants.DisableAsync(ConfirmNames[0]) is not null,
+                "Enable" or "Disable" => (await Api.Grove.Rest.Tenants.BulkAsync(ConfirmAction, ConfirmNames)).Length > 0,
+                "Remove" => await Api.Grove.Rest.Tenants.RemoveAsync(ConfirmNames[0]),
+                _ => false,
+            };
+            if (success)
+            {
+                Notifications.Notify(NotificationSeverity.Success, T["Tenant{0} {1}d", ConfirmNames.Length == 1 ? string.Empty : "s", ConfirmAction.ToLowerInvariant()], T["The tenant state was updated."]);
+                foreach (var name in ConfirmNames) SelectedNames.Remove(name);
+                CancelConfirm();
+                await LoadAsync();
+            }
+            else Notifications.Notify(NotificationSeverity.Error, T["Tenant action failed"], T["The requested tenant action could not be completed."]);
+        }
+        finally { IsSaving = false; }
+    }
+}

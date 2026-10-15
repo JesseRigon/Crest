@@ -1,0 +1,39 @@
+@namespace Grove.Components.Files
+@using System.Globalization
+@using Grove.Components.Primitives
+@inject IServiceProvider Services
+
+@* The drive-aware picker (docs/media.md › The media library (F1), left item): files from any
+   drive the caller can see, chosen by placement id, not by media library path. The browser in
+   pick mode does the browsing; only published files can be chosen. *@
+
+@if (Open)
+{
+    <div class="grove-drive-picker__backdrop" data-testid="drive-picker">
+        <div class="grove-drive-picker__dialog" role="dialog" aria-label="@L("Choose a file")">
+            <div class="grove-drive-picker__bar">
+                <strong>@L("Choose a file")</strong>
+                <GroveButton Icon="close" Variant="Variant.Text" Click="CloseAsync" title="@L("Close")" />
+            </div>
+            <GroveDriveBrowser PickMode="true" ShowViewer="false" OnPick="PickAsync" />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Open { get; set; }
+
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+
+    [Parameter] public EventCallback<GroveFileItem> Picked { get; set; }
+
+    private async Task PickAsync(GroveFileItem item)
+    {
+        await Picked.InvokeAsync(item);
+        await CloseAsync();
+    }
+
+    private Task CloseAsync() => OpenChanged.InvokeAsync(false);
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

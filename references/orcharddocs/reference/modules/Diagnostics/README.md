@@ -1,4 +1,4 @@
-# Diagnostics (`Crest.Diagnostics`)
+# Diagnostics (`Grove.Diagnostics`)
 
 ## Purpose
 

@@ -1,4 +1,4 @@
-# Content Preview (`Crest.ContentPreview`)
+# Content Preview (`Grove.ContentPreview`)
 
 The Content Preview module adds a live preview to the content editor. It renders the current
 form values in a separate window without saving or publishing the content item.
@@ -9,11 +9,11 @@ Enable the **Content Preview** feature from **Configuration** > **Features**. Th
 
 The **Preview** button appears in the action area of a content item editor when the current user
 is authorized to preview that item. Placement rules can hide the button for specific content
-types; Crest does this for menu items and dashboard widgets by default.
+types; Grove does this for menu items and dashboard widgets by default.
 
 ## Choose the preview workflow
 
-Crest provides two related preview workflows:
+Grove provides two related preview workflows:
 
 | Workflow | Where to start | Content that is rendered |
 | --- | --- | --- |
@@ -48,15 +48,15 @@ The pattern has access to `ContentItem`. It must resolve to a local path, such a
 `/blog/my-post`, not an absolute URL on another host. If the result doesn't start with `/`, the
 module adds it.
 
-When a preview path is configured, Crest runs that frontend route through the tenant's
+When a preview path is configured, Grove runs that frontend route through the tenant's
 normal request pipeline. The route must:
 
-- Resolve the content item through Crest's content management APIs.
+- Resolve the content item through Grove's content management APIs.
 - Render a complete response through the intended frontend theme and layout.
 - Be reachable in the same tenant as the content editor.
 
 The preview draft is available from the request's content manager session. A route hosted by a
-separate application or one that bypasses Crest's content manager can't load it.
+separate application or one that bypasses Grove's content manager can't load it.
 
 ## How live preview works
 
@@ -114,8 +114,8 @@ because the module submits the serialized editor form.
 provide the same aspect when the path must be calculated in code:
 
 ```csharp
-using Crest.ContentManagement;
-using Crest.ContentManagement.Handlers;
+using Grove.ContentManagement;
+using Grove.ContentManagement.Handlers;
 
 public sealed class ProductPreviewHandler : ContentHandlerBase
 {
@@ -152,7 +152,7 @@ var isPreview = httpContext.Features
 ```
 
 Use this signal when an editor, handler, or service would otherwise produce a persistent side
-effect while processing the temporary item. Crest uses it to avoid indexing preview
+effect while processing the temporary item. Grove uses it to avoid indexing preview
 items and moving attached media files during preview.
 
 ## Content lifecycle and validation
@@ -190,7 +190,7 @@ request reaches another node.
 - A custom editor needs one of the live-update hooks described above.
 - Full frontend layout and resources require a valid preview path from `PreviewPart` or a custom
   `PreviewAspect` provider.
-- Preview paths can target only routes in the current Crest tenant, not an external
+- Preview paths can target only routes in the current Grove tenant, not an external
   headless frontend.
 - Temporary drafts expire after five minutes without a successful cache access.
 - Preview renders editor input; it doesn't simulate a future publish or unpublish schedule.
@@ -219,7 +219,7 @@ The module is using its minimal fallback layout. Attach `PreviewPart` to the con
 
 The token can be missing or expired, or a different application node might not have the cache
 entry. Reopen the preview to create a current draft. For multi-node deployments, verify the shared distributed cache configuration.
-Also verify that the `PreviewPart` pattern resolves to an existing tenant route and that the route loads the item through Crest's content manager.
+Also verify that the `PreviewPart` pattern resolves to an existing tenant route and that the route loads the item through Grove's content manager.
 
 ### The preview shows an older value
 

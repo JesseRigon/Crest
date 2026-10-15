@@ -1,6 +1,6 @@
 # Use Microsoft Entra ID (Azure AD) as an external identity provider
 
-In order to authenticate users with Microsoft Entra ID (Azure AD), you must enable and configure The `Crest.MicrosoftAuthentication.AzureAD` (you can learn more about [here](../../reference/modules/Microsoft.Authentication/README.md)) and the `Crest.Users.Registration` features
+In order to authenticate users with Microsoft Entra ID (Azure AD), you must enable and configure The `Grove.MicrosoftAuthentication.AzureAD` (you can learn more about [here](../../reference/modules/Microsoft.Authentication/README.md)) and the `Grove.Users.Registration` features
 
 ## What you will build
 
@@ -8,11 +8,11 @@ You will build a blog that allow users to login with their AzureAD account and g
 
 ## What you will need
 
-Follow the guide to [create a new Crest CMS website](../../guides/create-cms-application/README.md)
+Follow the guide to [create a new Grove CMS website](../../guides/create-cms-application/README.md)
 
 An Azure Account with Microsoft Entra ID configured.
 
-## Login to Crest Admin and enable the required Features
+## Login to Grove Admin and enable the required Features
 
 Navigate to <https://localhost:5001/Admin/Features> and enable the Microsoft Entra ID Authentication and the Users Registration features
 
@@ -22,7 +22,7 @@ Navigate to <https://localhost:5001/Admin/Features> and enable the Microsoft Ent
 
 ## Login to Azure Portal to configure the Directory
 
-Create the Crest roles you want to manage/assign as Security Groups at [Azure Portal](https://portal.azure.com/#blade/Microsoft_AAD_IAM/GroupsManagementMenuBlade/AllGroups). Copy the Object Id's as you will need it later to make the mapping.
+Create the Grove roles you want to manage/assign as Security Groups at [Azure Portal](https://portal.azure.com/#blade/Microsoft_AAD_IAM/GroupsManagementMenuBlade/AllGroups). Copy the Object Id's as you will need it later to make the mapping.
 
 ![image](assets/create-azure-groups.jpg)
 
@@ -50,9 +50,9 @@ The last step is to copy Application Id and Tenant Id from Azure Portal
 
 ![image](assets/get-appid-tenantid-from-portal.jpg)
 
-[Navigate to Settings/Security/Authentication/Microsoft Entra ID](https://localhost:5001/Admin/Settings/Crest.Microsoft.Authentication.AzureAD) in Crest Admin to configure the AzureAD app.
+[Navigate to Settings/Security/Authentication/Microsoft Entra ID](https://localhost:5001/Admin/Settings/Grove.Microsoft.Authentication.AzureAD) in Grove Admin to configure the AzureAD app.
 
-![image](assets/configure-crest-azuread.jpg)
+![image](assets/configure-grove-azuread.jpg)
 
 ## Configure registration settings
 
@@ -130,7 +130,7 @@ switch (context.loginProvider) {
 
 ## Check the result
 
-Logout from Crest. Navigate to <https://localhost:5001/admin> and use the external provider button to login.
+Logout from Grove. Navigate to <https://localhost:5001/admin> and use the external provider button to login.
 
 ![Login](assets/login.jpg)
 

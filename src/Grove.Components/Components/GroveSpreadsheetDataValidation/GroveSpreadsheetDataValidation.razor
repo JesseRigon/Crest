@@ -1,0 +1,45 @@
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives.Spreadsheet
+@using Grove.Components.Primitives.Spreadsheet.Tools
+@using Grove.Components.Primitives.Documents.Spreadsheet
+@inject DialogService DialogService
+@inherits GroveSpreadsheetToolBase
+
+@namespace Grove.Components.Primitives.Spreadsheet.Tools
+<GroveSplitButton ButtonAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_DataValidationTool))) OpenAriaLabel=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_DataValidationTool))) title=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_DataValidationTool))) Click=@OnClickAsync Icon="rule" Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_Validation)) ?? "Validation") Disabled=@IsDisabled Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small">
+    <ChildContent>
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_DataValidationMenu)) ?? "Data Validation...") Value="validate" />
+        <GroveSplitButtonItem Text=@(Spreadsheet?.Localize(nameof(GroveStrings.Spreadsheet_ClearValidation)) ?? "Clear Validation") Value="clear" />
+    </ChildContent>
+</GroveSplitButton>
+
+@code {
+    protected override SpreadsheetFeature? Feature => SpreadsheetFeature.DataValidation;
+
+    private async Task OnClickAsync(GroveSplitButtonItem? item)
+    {
+        if (Worksheet is null || Worksheet.Selection.Cell == CellRef.Invalid || Spreadsheet is null)
+        {
+            return;
+        }
+
+        var action = item?.Value ?? "validate";
+
+        if (action == "clear")
+        {
+            await Spreadsheet.ExecuteAsync(new ClearValidationCommand(Worksheet, Worksheet.Selection.Range));
+            return;
+        }
+
+        var result = await DialogService.OpenAsync<DataValidationDialog>(Spreadsheet.Localize(nameof(GroveStrings.Spreadsheet_DataValidationTitle)),
+            new Dictionary<string, object?>
+            {
+                { "Culture", Worksheet.Culture }
+            }, new DialogOptions { Width = "520px" });
+
+        if (result is DataValidationRule rule)
+        {
+            await Spreadsheet.ExecuteAsync(new DataValidationCommand(Worksheet, Worksheet.Selection.Range, rule));
+        }
+    }
+}

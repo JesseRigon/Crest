@@ -2,7 +2,7 @@
 
 Who did what, to which record, when, from where, and on whose behalf. It is
 append-only: an event is never edited or deleted through the application, only aged out
-by retention. It is built on Crest.AuditTrail and its `IAuditTrailManager` /
+by retention. It is built on Grove.AuditTrail and its `IAuditTrailManager` /
 `IAuditTrailEventHandler` seams; see [Implementation](#implementation). Still to build: feed
 definitions and the caller-scoped feed API; open: feeds at volume (A4), the organization-scoped
 view and telling the member ([Open questions](#open-questions)).
@@ -26,10 +26,10 @@ chooses what it displays.
 
 ## Design
 
-- **A Crest index on the platform's AuditTrail.** The extra dimensions activity feeds filter on
-  (record, parties, owner, organization, impersonated member, side) are a Crest index provider
+- **A Grove index on the platform's AuditTrail.** The extra dimensions activity feeds filter on
+  (record, parties, owner, organization, impersonated member, side) are a Grove index provider
   on the stock `Audit` collection; attribution uses `IAuditTrailEventHandler`. The admin UI is
-  Crest Blazor pages, kept isolated with the module so they move with it
+  Grove Blazor pages, kept isolated with the module so they move with it
   ([architecture.md](architecture.md) › Rules that hold). Retention uses the stock trimming,
   which deletes what has expired; per-category retention policies that set an event's expiry
   are downstream.
@@ -96,7 +96,7 @@ row per party) on the stock `Audit` collection. The stock `CorrelationId` column
 (workflow instance ids, connection keys, role names).
 
 **Sessions.** Sign-in, failed sign-in (on by default), sign-out (`LoggedOut`, recorded before
-the sign-out by the stock `LogOff` and by `api/crest/auth/logout`, so it carries the session)
+the sign-out by the stock `LogOff` and by `api/grove/auth/logout`, so it carries the session)
 and lock-out, on both surfaces; the side tells them apart. Impersonation start and stop are the
 `Impersonation` category (`AuditTrailSessionEvents`, mandatory). The impersonation session id is
 generated at start and kept in the session (`MemberSessionKeys.ImpersonationSessionId`); it is
@@ -130,11 +130,11 @@ incidents; every hook attachment run (`HookRan`, `HookFailed`); every inbound we
 reason, never the body). Failures are written in a child scope that commits on its own, as access
 denials are. The engine's own stores still hold the per-activity records the designer reads.
 
-**Admin surface.** `Crest.AuditTrail.BlazorWasm` (in `Crest.AuditTrail/blazor-wasm`, isolated
+**Admin surface.** `Grove.AuditTrail.BlazorWasm` (in `Grove.AuditTrail/blazor-wasm`, isolated
 with the module): the audit page (`/Audit`: actor name, impersonated member, organization,
 category, record, dates, impersonated only), a record's history (`/Audit/Records/{RecordId}`)
 and the impersonation sessions (`/Audit/Sessions`, each with its events). API:
-`api/crest/audit` (`events`, `events/{id}`, `records/{id}`, `sessions`, `categories`), every
+`api/grove/audit` (`events`, `events/{id}`, `records/{id}`, `sessions`, `categories`), every
 call decided on `ViewAuditTrail` for the gated caller; the routes are gated on the same
 permission. `ViewAuditTrail` and `ManageAuditTrailSettings` are under the member class ceiling.
 The admin menu's Audit Trail entry opens the new page. Staff without the permission get 403;

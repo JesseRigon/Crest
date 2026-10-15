@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <Description>Grove.Workflows Studio application shell.</Description>
+        <PackageTags>groveWorkflows studio framework</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <SupportedPlatform Include="browser"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Grove.Workflows.Studio.Core\Grove.Workflows.Studio.Core.csproj" />
+      <ProjectReference Include="..\Grove.Workflows.Studio.Shared\Grove.Workflows.Studio.Shared.csproj" />
+    </ItemGroup>
+    
+</Project>

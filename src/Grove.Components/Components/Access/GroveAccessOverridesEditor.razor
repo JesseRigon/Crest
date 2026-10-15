@@ -1,0 +1,123 @@
+@namespace Grove.Components.Access
+@using System.Net.Http.Json
+@using Grove.Components.Primitives
+@using Grove.Components.Model
+@using Grove.Components.Models
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* One user's overrides at one reach (docs/permissions.md › Overrides): a role, a set or a
+   permission, granted or denied. The override belongs to the user, not to the group it is
+   edited under, so every editor shows the same list. A grant and a deny of one name at one
+   level is refused by the server. Below, what the user holds with where each permission came from. *@
+
+<GroveStack Gap="0.75rem" data-testid="overrides-editor">
+    <GroveText TextStyle="TextStyle.H6" Text="@T["Overrides for {0}", UserLabel ?? UserId]" />
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</GroveAlert>
+    }
+
+    @foreach (var entry in Entries)
+    {
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+            <GroveBadge Text="@entry.Level.ToString()" BadgeStyle="BadgeStyle.Secondary" />
+            <GroveText Text="@entry.Name" />
+            <GroveBadge Text="@entry.Effect.ToString()" BadgeStyle="@(entry.Effect == OverrideEffect.Grant ? BadgeStyle.Success : BadgeStyle.Danger)" />
+            <GroveButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Entries.Remove(entry))" />
+        </GroveStack>
+    }
+
+    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
+        <GroveDropDown TValue="OverrideLevel" @bind-Value="NewLevel" Data="@Levels" Style="width: 9rem;" />
+        <GroveTextBox @bind-Value="NewName" Placeholder="@T["Role, set or permission name"]" Style="width: 16rem;" />
+        <GroveDropDown TValue="OverrideEffect" @bind-Value="NewEffect" Data="@Effects" Style="width: 8rem;" />
+        <GroveButton Text="@T["Add"]" Icon="add" ButtonStyle="ButtonStyle.Light" Click="Add" Disabled="@string.IsNullOrWhiteSpace(NewName)" />
+    </GroveStack>
+
+    <GroveButton Text="@T["Save overrides"]" Icon="save" Click="SaveAsync" Disabled="@IsBusy" data-testid="overrides-save" />
+
+    @if (Resolved is not null)
+    {
+        <GroveText TextStyle="TextStyle.Subtitle2" Text="@T["What the user holds here"]" />
+        <GroveText TextStyle="TextStyle.Body2" Text="@($"{T["Groups"]}: {string.Join(", ", Resolved.Groups)} · {T["Roles"]}: {string.Join(", ", Resolved.Roles)} · {T["Sets"]}: {string.Join(", ", Resolved.Sets)}")" />
+        @foreach (var grant in Resolved.Permissions.Where(grant => grant.Permission.Length > 0))
+        {
+            <GroveText TextStyle="TextStyle.Caption" Text="@($"{grant.Permission} - {grant.Source}")" />
+        }
+    }
+</GroveStack>
+
+@code {
+    [Parameter, EditorRequired] public string UserId { get; set; } = string.Empty;
+    [Parameter] public string? UserLabel { get; set; }
+    [Parameter] public string? OrganizationId { get; set; }
+
+    private List<UserAccessOverride> Entries { get; set; } = [];
+    private UserAccessInfo? Resolved { get; set; }
+    private OverrideLevel NewLevel { get; set; } = OverrideLevel.Permission;
+    private OverrideEffect NewEffect { get; set; } = OverrideEffect.Grant;
+    private string? NewName { get; set; }
+    private string? Error { get; set; }
+    private bool IsBusy { get; set; }
+    private string? _loadedFor;
+
+    private static readonly OverrideLevel[] Levels = Enum.GetValues<OverrideLevel>();
+    private static readonly OverrideEffect[] Effects = Enum.GetValues<OverrideEffect>();
+
+    private string Query => string.IsNullOrWhiteSpace(OrganizationId) ? string.Empty : $"?organizationId={Uri.EscapeDataString(OrganizationId)}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var key = UserId + "|" + OrganizationId;
+        if (_loadedFor == key)
+        {
+            return;
+        }
+
+        _loadedFor = key;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        Error = null;
+        try
+        {
+            Entries = (await Http.GetFromJsonAsync<UserOverridesModel>($"api/grove/access/users/{Uri.EscapeDataString(UserId)}/overrides{Query}"))?.Overrides ?? [];
+            Resolved = await Http.GetFromJsonAsync<UserAccessInfo>($"api/grove/access/users/{Uri.EscapeDataString(UserId)}{Query}");
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+
+    private void Add()
+    {
+        Entries.Add(new UserAccessOverride(NewLevel, NewName!.Trim(), NewEffect));
+        NewName = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            using var response = await Http.PutAsJsonAsync($"api/grove/access/users/{Uri.EscapeDataString(UserId)}/overrides{Query}", new UserOverridesModel(Entries));
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await AccessApi.ErrorAsync(response);
+                return;
+            }
+
+            await LoadAsync();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

@@ -1,9 +1,9 @@
 # Content Relationships
 
-How can you relate (connect) content items to other content items in Crest? When would you use each built-in option? This guide aims to clear up the available options.
+How can you relate (connect) content items to other content items in Grove? When would you use each built-in option? This guide aims to clear up the available options.
 
 !!! note
-    This is a quick overview of the built-in options. However, you are free to roll out your own implementation for your custom content. Check out in Crest's source code how these are implemented for inspiration.
+    This is a quick overview of the built-in options. However, you are free to roll out your own implementation for your custom content. Check out in Grove's source code how these are implemented for inspiration.
 
 !!! tip
     If you're working with the content relationship features mentioned below from code, note that there are also corresponding index tables for quick querying.

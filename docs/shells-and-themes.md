@@ -1,6 +1,6 @@
 # Shells and themes: admin, site, member — and theme compatibility
 
-How a Crest tenant serves its three audiences as three shells, how a module contributes
+How a Grove tenant serves its three audiences as three shells, how a module contributes
 pages to a shell, and how themes declare what they host so incompatible ones are caught.
 The admin and site shells' hosting mechanics (endpoint gate, base paths, render modes) are
 in [blazor-web.md](blazor-web.md); open work is under
@@ -8,7 +8,7 @@ in [blazor-web.md](blazor-web.md); open work is under
 
 ## Three shells
 
-A Crest tenant serves three audiences, and each is a shell: its own base path, document,
+A Grove tenant serves three audiences, and each is a shell: its own base path, document,
 route bucket, authentication behaviour and navigation model.
 
 | | Admin | Site | Member |
@@ -20,13 +20,13 @@ route bucket, authentication behaviour and navigation model.
 | Data scope | tenant-wide per role and hierarchy | public content | one organization, fail-closed |
 | Rendering | SSR + `InteractiveAuto` | content pages | app-like, `InteractiveAuto` |
 
-The member shell is **first-class but optional**: it ships with Crest, registers in the
+The member shell is **first-class but optional**: it ships with Grove, registers in the
 theme registry, appears in the theme-selection UI with its own active-theme card and
 filter, and is present only when the Members feature is enabled.
 
 ### What the member shell owns
 
-`Crest.MemberTheme` (theme) + `Crest.MemberTheme.Client` (a razor class
+`Grove.MemberTheme` (theme) + `Grove.MemberTheme.Client` (a razor class
 library compiled into the one WASM app, exactly as Admin.Client and Site.Client are):
 
 - the layout, header and navigation region;
@@ -41,7 +41,7 @@ library compiled into the one WASM app, exactly as Admin.Client and Site.Client 
 Modules contribute member pages the way they contribute admin pages, through a client
 library whose `[Route]`-attributed components are scanned into a bucket - but a
 **separate library per bucket**: admin pages in the module's `blazor-wasm/` library,
-member pages in its `member-wasm/` library. `Crest.Members` keeps the portal's server
+member pages in its `member-wasm/` library. `Grove.Members` keeps the portal's server
 machinery (sessions, class stamping, org bindings, provisioning); its member-facing
 client half (the shell seams below) is its `member-wasm` library, and its staff-facing
 screens (membership tiers, perks, default groups) stay in `blazor-wasm`, in the admin
@@ -64,10 +64,10 @@ insufficient:
    admin page and a member page in one assembly would both be routable in both shells
    on client-side navigation, past the server gate.
 
-An assembly declares its bucket with `[assembly: CrestShell(...)]`
-(`Crest.Components.Modules`). A module ships one client library per shell it contributes
-to: `blazor-wasm/` for admin pages, `member-wasm/` (`CrestShells.Member`) for member pages,
-`site-wasm/` (`CrestShells.Site`) for public pages. A module client library without the
+An assembly declares its bucket with `[assembly: GroveShell(...)]`
+(`Grove.Components.Modules`). A module ships one client library per shell it contributes
+to: `blazor-wasm/` for admin pages, `member-wasm/` (`GroveShells.Member`) for member pages,
+`site-wasm/` (`GroveShells.Site`) for public pages. A module client library without the
 attribute is admin, which is where module pages have always gone. All three shells are
 built the same way: the theme client is the router's own assembly, and module libraries
 of that shell reach it through the app's per-folder glob and are loaded with the shell.
@@ -81,7 +81,7 @@ generator and each shell's router - so they cannot disagree.
 The WASM payload has one entry and one `Program.cs`, but what a browser *loads* is per
 shell:
 
-- **`Crest.Shell`** - eager, small: the shell runtime every shell needs
+- **`Grove.Shell`** - eager, small: the shell runtime every shell needs
   (the lazy-module loader, per-bucket module manifests). Theme clients reference it; it
   references no theme.
 - **Module client libraries** load per shell and per route: a member's browser loads
@@ -93,18 +93,18 @@ shell:
   it renders, activates the implementations against the container
   (`ActivatorUtilities`), and cascades them to its layout and pages.
 - **Theme UIs load per shell.** Each theme client is lazy and loads when its shell's
-  document boots: the document mounts one eager root, `Crest.Shell.CrestShellRoot`, naming
+  document boots: the document mounts one eager root, `Grove.Shell.GroveShellRoot`, naming
   the shell; it loads that shell's theme UI (`LazyModules.EnsureThemeAsync`) and renders
-  the `Routes` component the theme declares (`[assembly: CrestShell(..., Routes = typeof(...))]`).
+  the `Routes` component the theme declares (`[assembly: GroveShell(..., Routes = typeof(...))]`).
   The boot path and what every shell registers before the container is sealed - the HTTP
   pipeline, the API client, the admin shell state, the routing options - are the admin theme's
-  **services**, `Crest.AdminTheme.Client.Services` (`[assembly: CrestEager]`, with
-  `Crest.Shell`); `Program.cs` calls `ClientWebAssemblyHost` there and names no theme UI. The
+  **services**, `Grove.AdminTheme.Client.Services` (`[assembly: GroveEager]`, with
+  `Grove.Shell`); `Program.cs` calls `ClientWebAssemblyHost` there and names no theme UI. The
   site and member theme clients have no services anything eager needs, so they load whole.
   The lazy-module generator makes every theme client a lazy root, names the eager roots by
-  `[CrestEager]`, and emits each shell's theme (`themes:`); `LazyModules` keeps loaded theme
+  `[GroveEager]`, and emits each shell's theme (`themes:`); `LazyModules` keeps loaded theme
   UIs apart from modules (`LoadedThemes`, which the shell's component registry reads). Hosts
-  reference `Crest.AdminTheme.Client.Services` directly. Between the first interactive render
+  reference `Grove.AdminTheme.Client.Services` directly. Between the first interactive render
   and the theme UI's arrival the root renders nothing.
 
 ### One theme, per-member authorization
@@ -131,13 +131,13 @@ of a server decision that has already been made, never the decision itself.
 Dispatch is a registry of shells, with Site as the fallback:
 
 - **`ShellId`** (`admin`, `site`, `member`: the string a client assembly declares with
-  `[assembly: CrestShell(...)]`) is carried by `RouteComponentEntry` and by the
+  `[assembly: GroveShell(...)]`) is carried by `RouteComponentEntry` and by the
   `ThemeOwnerMetadata` endpoint marker. An id, not an enum, so a shell is a registration
   rather than a code change in every place that dispatches.
-- **The registry** (`ShellRegistryOptions`, `Crest.Routing`) lists `ShellDescriptor`s: base
+- **The registry** (`ShellRegistryOptions`, `Grove.Routing`) lists `ShellDescriptor`s: base
   path, shell, caller side, theme detector, authentication policy (login path, route
   authorization), not-found page, and whether pages carry the organization in their path.
-  Crest registers admin, its login page and member from the tenant's configured paths
+  Grove registers admin, its login page and member from the tenant's configured paths
   (`ShellRegistryConfiguration`); a host adds its own with `services.Configure`.
   Every tenant reserves the member prefix, Members enabled or not.
 - **`IShellSelector`** takes the request (not a path string) and picks an entry; path prefixes
@@ -181,7 +181,7 @@ third build output.
 
 ### The tenant base and enabled modules
 
-The server provides the tenant base; the client never derives it. `api/crest/routing` returns
+The server provides the tenant base; the client never derives it. `api/grove/routing` returns
 `TenantBase` (the request's PathBase, which the Path-only API rewrite leaves at the tenant
 layer); `RoutingOptions` keeps it and composes the admin, login and member paths on it, on the
 client and in the server-side factory alike, and `ClientWebAssemblyHost.ShellOf` reads the
@@ -200,18 +200,18 @@ deployment targets) are built from the tenant's own host settings, never the hos
 shell is still chosen within the tenant by path prefix; a shell on its own hostname is an open
 question below.
 
-A disabled module is absent for that tenant. `IEnabledModuleAssemblies` (`Crest.Routing`,
+A disabled module is absent for that tenant. `IEnabledModuleAssemblies` (`Grove.Routing`,
 cached for the shell's lifetime) maps each `*.BlazorWasm` to its module by the longest module id
 (`ModuleClientAssemblies`) and keeps those whose module has an enabled feature; a library of a
 module that is not installed is absent too (fail closed). The route table leaves their pages
 out (admin URLs fall to the legacy frame, member URLs to not-found) and `RouteGateMatcherPolicy`
 vetoes their endpoints (the site's pages, which endpoint routing matches directly). The browser
-gets the list with the routing options (`api/crest/routing` › `EnabledModules`, anonymous like
+gets the list with the routing options (`api/grove/routing` › `EnabledModules`, anonymous like
 the rest of that response, since the site shell needs it too) and `LazyModules.Restrict` loads
 only those.
 
 **The page registry.** Each page declares its routes, shell, permissions and menu placement
-once in Crest.Server's page registry; the route table (`IRouteComponentTableManager`, a view over
+once in Grove.Server's page registry; the route table (`IRouteComponentTableManager`, a view over
 `IPageRegistry`), the route gate and the admin menu all derive from that entry
 ([admin-menu.md › The page registry](admin-menu.md#the-page-registry)). The registry's scan reads
 each client assembly's bucket with `ShellAssemblies`, so the table and the endpoint stamping
@@ -225,7 +225,7 @@ first-visit server circuit a credential POST goes out on the server-side loopbac
 browser. The member login, registration and any other page that establishes a session hits
 the identical trap, so the rule is general: **a page that sets an authentication cookie
 renders `InteractiveWebAssembly`**, and the page declares it with
-`[SetsAuthenticationCookie]` (`Crest.Components.Modules`). `App.razor` reads the attribute off
+`[SetsAuthenticationCookie]` (`Grove.Components.Modules`). `App.razor` reads the attribute off
 the routed page; no shell or path is special-cased. The admin login, the member login and the
 member registration carry it.
 
@@ -242,7 +242,7 @@ what a member may do (the class, the ceiling, the caller) is
 only, never at the tenant login; staff reach a member portal only through impersonation,
 which starts from an authenticated staff session and never passes through a login. The
 portal's login flow takes local tenant accounts and the external identity providers the
-tenant configures (the stock `Crest.Users` external authentication features, Google, GitHub,
+tenant configures (the stock `Grove.Users` external authentication features, Google, GitHub,
 Microsoft, …, per tenant through site settings), with auto-provisioning creating the
 member on first sign-in; the class and the binding are assigned by the portal's
 registration flow, never by the raw external callback.
@@ -264,7 +264,7 @@ external-login page with the message, a tenant one to the tenant login.
 `RegisterAsync` or by external-login auto-registration during a portal request is stamped
 member with the binding; a portal mark naming no organization may sign an existing member
 in but never creates an account (no user exists outside an organization), and everything
-else stays staff. Crest's JSON login
+else stays staff. Grove's JSON login
 (`LoginService`) fires the standard `ILoginFormEvent` sequence exactly as the stock
 controller does (LoggingIn → AuthenticateAsync → ValidatingLogin veto → SignIn → LoggedIn,
 LoggingInFailed on every failure path), so moderation, e-mail confirmation, audit login
@@ -285,7 +285,7 @@ method)`.
 **The side comes from the request, not the user** (the caller of [workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)). Pages carry the side in the path (the
 admin prefix or the member prefix); API calls carry it in `X-Shell` (`admin` or `member`)
 and, on the member side, the organization in `X-Org`, both sent by each shell's HttpClient
-(`CrestShellContext`). A cookie-authenticated API call without `X-Shell` is malformed and
+(`GroveShellContext`). A cookie-authenticated API call without `X-Shell` is malformed and
 denied, never defaulted; a member-side request whose organization the user holds no
 binding to is denied; a marker that disagrees with the shell the path selected is denied.
 The caller is then built per request: on the staff side the user's tenant roles and no
@@ -297,7 +297,7 @@ organizations are independent; the session only remembers the last choice
 
 **Portal surfaces as built.** A `@page` component carrying `[AllowAnonymous]` yields
 `RouteComponentEntry.AllowsAnonymous`, the shell middleware skips the login redirect and
-the route gate for it, and `AdminRoutes` renders it shell-less. `api/crest/members/portal`:
+the route gate for it, and `AdminRoutes` renders it shell-less. `api/grove/members/portal`:
 `login` (organization optional; the first binding becomes the active organization),
 `register` (creates the Person, wraps `RegisterAsync` so the tenant's registration
 settings, moderation and e-mail confirmation apply, links person ↔ user, signs in with the
@@ -307,7 +307,7 @@ organization stamped on the external properties; the platform's own callback fin
 links to the member shell's reset page, never the tenant's; the answer never says whether
 the account exists; only a member-bound account is sent a portal link). The portal login,
 registration, password reset, external-login, organization picker, member home and account
-pages live in `Crest.MemberTheme` (routes in `MemberRoutePaths`); `Crest.Members`'
+pages live in `Grove.MemberTheme` (routes in `MemberRoutePaths`); `Grove.Members`'
 `member-wasm` library supplies the shell's seams (`MemberAuthenticationService`,
 `MemberShellContext`, which sets the shell context's organization).
 
@@ -330,11 +330,11 @@ else is not found. A bare member base goes to the organization picker
 (`MemberRoutePaths.Organizations`), which opens the only organization straight away. Slugs
 are derived from the name, so renaming an organization changes its slug (the id still
 resolves). The document base of an organization page is `{member base}/{slug}/`; the client reads the slug
-off it (`CrestShellContext.OrganizationSlug`) and sends the matching organization as `X-Org`.
+off it (`GroveShellContext.OrganizationSlug`) and sends the matching organization as `X-Org`.
 
-**One switcher, device-local tenants.** `CrestShellSwitcher` (`Crest.Components`) is the same
+**One switcher, device-local tenants.** `GroveShellSwitcher` (`Grove.Components`) is the same
 in the admin title bar and the member header: the accounts this device signed in to on top
-(kept in the browser, `crestComponents.deviceAccounts`, one entry per tenant base and user,
+(kept in the browser, `groveComponents.deviceAccounts`, one entry per tenant base and user,
 added by signing in, kept after sign-out until removed), a separator, then the active
 tenant's organizations from the user's own bindings (`AppManifest.Organizations` on the admin
 side, the member session on the member side). Choosing a tenant opens it; choosing an
@@ -385,8 +385,8 @@ tenants has two member accounts.
 The account and protocol pages a signed-in or signing-in user meets are shell pages
 ([blazor-display.md](blazor-display.md) › Rework plan, step 7):
 
-- **Account security** is one shared component, `CrestAccountSecurity` (Crest.Components,
-  `Account/`), over `api/crest/account` (Crest.Users' `AccountApiController`): change the
+- **Account security** is one shared component, `GroveAccountSecurity` (Grove.Components,
+  `Account/`), over `api/grove/account` (Grove.Users' `AccountApiController`): change the
   password, change the email (where the tenant allows) and resend its confirmation, list,
   remove and link external logins (linking is a fetch for a five-minute data-protected ticket,
   then a navigation to the provider, so another site cannot start it). The admin profile
@@ -401,14 +401,14 @@ The account and protocol pages a signed-in or signing-in user meets are shell pa
   redirects to the site pages `/ExternalLogin/Register` (a new account, with what the tenant's
   external registration settings still ask) or `/ExternalLogin/Link` (the existing account with
   the provider's email, by its password), which complete through
-  `api/crest/account/external-login{,/register,/link}`; the MVC views and the manage actions are
+  `api/grove/account/external-login{,/register,/link}`; the MVC views and the manage actions are
   deleted, the rate limits kept on the same route names.
 - **OpenID consent and logout confirmation**: the authorization and logout endpoints redirect
   to the site pages `/connect/consent` and `/connect/logout-confirm` with the request's
   parameters; the decision stays a plain form post back to the endpoint (OpenIddict answers in
-  that request), with an antiforgery token from `api/crest/openid/consent`. Token and UserInfo
+  that request), with an antiforgery token from `api/grove/openid/consent`. Token and UserInfo
   stay protocol endpoints.
-- **Error pages**: every shell has one (`CrestErrorPage`; admin, member - organization-free -
+- **Error pages**: every shell has one (`GroveErrorPage`; admin, member - organization-free -
   and site pages at `/Error/{status}`). The status code pages re-execute inside the shell that
   answered (the shell stamp and base survive), so an admin URL's error shows in the admin
   document; API paths keep their bare status. The MVC Diagnostics controller and views are
@@ -418,8 +418,8 @@ The account and protocol pages a signed-in or signing-in user meets are shell pa
   completion, the consent page for its antiforgery cookie) declare `[SetsAuthenticationCookie]`,
   honoured in every shell, the site included.
 - **Setup stays MVC**, the last island: an uninitialized tenant runs the
-  minimum shell (the host's setup features, Crest.Setup and Recipes, no database), while the
-  Blazor host - `MapRazorComponents`, the shell selection, the theme clients - is the `Crest`
+  minimum shell (the host's setup features, Grove.Setup and Recipes, no database), while the
+  Blazor host - `MapRazorComponents`, the shell selection, the theme clients - is the `Grove`
   feature, which depends on database-backed modules and cannot run before setup. The native
   Tenants page sets a tenant up from the Default tenant without it. SiteTheme's
   `Views/Layout.cshtml` therefore stays too, with the account screens still on MVC (login,
@@ -427,9 +427,9 @@ The account and protocol pages a signed-in or signing-in user meets are shell pa
 
 ## Theme compatibility
 
-Themes are **not** interchangeable. A Crest shell is a Blazor Web App document plus a
+Themes are **not** interchangeable. A Grove shell is a Blazor Web App document plus a
 route bucket plus a design system; a module's pages are written against that. A host's
-admin pages do not work under an arbitrary Orchard theme — the Crest admin theme (or a
+admin pages do not work under an arbitrary Orchard theme — the Grove admin theme (or a
 direct descendant of it) is a dependency, and the system must say so instead of rendering
 a broken shell.
 
@@ -440,41 +440,41 @@ Manifest tags are the mechanism (`admin` and `hidden` are read by Orchard itself
 - a **bucket** tag — `admin`, `member`, or neither (site). The site shell deliberately has
   no bucket tag of its own: "neither admin nor member" keeps every existing Orchard site
   theme valid with no manifest edit (`ThemeBuckets.GetBucket`);
-- `crest-blazor` for a theme that hosts a Crest shell document. This one tag, read through
-  the `BaseTheme` chain (`ThemeBuckets.IsCrestBlazorTheme`), is the only answer to "is this
-  a Crest Blazor theme": the admin shell's detector and the compatibility check both ask
+- `grove-blazor` for a theme that hosts a Grove shell document. This one tag, read through
+  the `BaseTheme` chain (`ThemeBuckets.IsGroveBlazorTheme`), is the only answer to "is this
+  a Grove Blazor theme": the admin shell's detector and the compatibility check both ask
   it, so serving a shell and checking compatibility cannot disagree.
 
 **Descendants count.** Orchard's `BaseTheme` chain is exactly "a direct child fork with
 simple mods": a child theme inherits its parent's shapes and assets, so
-`BaseTheme = Crest.AdminTheme` is a compatible admin theme. Every compatibility
+`BaseTheme = Grove.AdminTheme` is a compatible admin theme. Every compatibility
 check walks the `BaseTheme` chain, never a single id.
 
 **Theme structure and branding.** A theme is page structures (templates, composites, zone
 settings) with the design system (branding) layered on top, so either can be swapped or
 imported alone; data themes and compiled module themes register through one mechanism; a
 public marketplace carries data themes only ([blazor-display.md](blazor-display.md) ›
-decision 8). The compatibility contract in this section (buckets, `crest-blazor`, contracts,
+decision 8). The compatibility contract in this section (buckets, `grove-blazor`, contracts,
 the two guards, the route gate) holds for the compiled part of a theme.
 
 ### How a module declares what it needs
 
 A module's contract follows from what it ships: a module with a `blazor-wasm/` library
-needs a `crest-blazor` admin theme, one with `member-wasm/` a `crest-blazor` member theme,
-one with `site-wasm/` a `crest-blazor` site theme. The libraries are named for their module
-(`Crest.Members.Member.BlazorWasm` belongs to `Crest.Members`), so every feature of that
+needs a `grove-blazor` admin theme, one with `member-wasm/` a `grove-blazor` member theme,
+one with `site-wasm/` a `grove-blazor` site theme. The libraries are named for their module
+(`Grove.Members.Member.BlazorWasm` belongs to `Grove.Members`), so every feature of that
 module carries the contract with no declaration to keep in sync. A module whose needs go
 beyond what it ships adds an `IShellContractProvider`. The check resolves each contract
 against the active theme of that bucket and its `BaseTheme` ancestors. A client library
 belongs to the module with the longest id its assembly name starts with
-(`ShellCompatibilityService.OwningExtensionId`; `Crest.Members.Member.BlazorWasm` is
-`Crest.Members`, not `Crest`), and `ShippedContracts` credits it only to that module. Contracts are per
+(`ShellCompatibilityService.OwningExtensionId`; `Grove.Members.Member.BlazorWasm` is
+`Grove.Members`, not `Grove`), and `ShippedContracts` credits it only to that module. Contracts are per
 module, not per contributed page set: a module's pages are written against one shell
 contract in practice, and per-page granularity would multiply the declarations without
 changing any answer.
 
 Orchard has a site theme and an admin theme but no member theme, so the member theme is a
-Crest site setting (`IMemberThemeService`), defaulting to `Crest.MemberTheme`.
+Grove site setting (`IMemberThemeService`), defaulting to `Grove.MemberTheme`.
 Selecting a member theme sets that setting; it never touches the site theme.
 
 ### The two guards
@@ -509,7 +509,7 @@ same text, so the state is visible rather than merely having been warned about o
 - Three sections — Site, Admin, Member — each with its own active-theme card at the top
   and its own filter; the Member section appears only when an enabled feature ships member
   pages.
-- Each theme shows its bucket, whether it is `crest-blazor`-capable, and its `BaseTheme`
+- Each theme shows its bucket, whether it is `grove-blazor`-capable, and its `BaseTheme`
   ancestry when it has one.
 - Incompatible themes are listed, marked, and selectable only through the two-step
   confirmation above.
@@ -518,7 +518,7 @@ same text, so the state is visible rather than merely having been warned about o
 
 `MemberOptions.MemberUrlPrefix`, defaulting to **`members`**, tenant-settable exactly as
 `AdminOptions.AdminUrlPrefix` is: one option, bound per tenant from the shell
-configuration (`Crest_Member:MemberUrlPrefix`), read through `IOptions<MemberOptions>` and
+configuration (`Grove_Member:MemberUrlPrefix`), read through `IOptions<MemberOptions>` and
 never hardcoded at a call site. Every member URL is built
 from it — navigation, the login surface, cross-shell links — so a tenant that changes the
 prefix gets working links with no further edits, the way `AdminUrlPrefix "backoffice"`
@@ -537,7 +537,7 @@ mechanism.
 - [ ] **`/{prefix}/_framework/dotnet.js` served with an empty MIME type** (S2, a bug; diagnosed
   after the display and operations work). Under a tenant addressed by path prefix the Blazor
   runtime file comes back with no content type, so the browser refuses it and the admin shell
-  does not boot; the workflows isolation check signs in through `api/crest/auth/login` instead.
+  does not boot; the workflows isolation check signs in through `api/grove/auth/login` instead.
   The cause is unknown: something other than the static-asset endpoint answers (the per-tenant
   static files, the host's `UseStaticFiles`, or a fingerprint mismatch); `App.razor` also has no
   `<ImportMap/>`. Diagnose by comparing response headers on prefixed and unprefixed URLs, in

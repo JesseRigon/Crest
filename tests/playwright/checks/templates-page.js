@@ -12,18 +12,18 @@ module.exports = async function run(page, ctx) {
   const legacyFrame = await page.locator('iframe').count();
 
   // Round-trips a throwaway template through the native API to prove the page sits on
-  // top of real Crest template APIs, then cleans it up immediately.
-  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  // top of real Grove template APIs, then cleans it up immediately.
+  // Mutating Grove APIs are antiforgery-protected - see harness/antiforgery.js.
   const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
 
-  const name = `crest-probe-${Date.now()}`;
-  const saved = await page.request.put(`${ctx.baseUrl}/api/crest/templates/${name}`, {
+  const name = `grove-probe-${Date.now()}`;
+  const saved = await page.request.put(`${ctx.baseUrl}/api/grove/templates/${name}`, {
     headers: { [antiforgery.headerName]: antiforgery.requestToken },
     data: { description: 'probe', content: 'Hello' },
   });
   let cleanupOk = false;
   if (saved.ok()) {
-    const deleted = await page.request.delete(`${ctx.baseUrl}/api/crest/templates/${name}`, {
+    const deleted = await page.request.delete(`${ctx.baseUrl}/api/grove/templates/${name}`, {
       headers: { [antiforgery.headerName]: antiforgery.requestToken },
     });
     cleanupOk = deleted.ok();

@@ -1,0 +1,120 @@
+@page "/Audit/Sessions"
+@attribute [PageEntry("ViewAuditTrail", Id = "audittrail-sessions", Parent = "audittrail", Caption = "Impersonation sessions", Position = "10")]
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* Impersonation sessions (docs/audit.md › step 4): each session as one unit - the staff user,
+   the member, the organization, when it started and stopped - with its events grouped under it
+   through the session id. *@
+
+<PageTitle>@T["Impersonation sessions"]</PageTitle>
+
+<GroveStack Gap="1rem" data-testid="audit-sessions">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <div>
+            <GroveText TextStyle="TextStyle.H4" class="rz-m-0">@T["Impersonation sessions"]</GroveText>
+            <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["Staff support access to member portals, and everything done inside it."]</GroveText>
+        </div>
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <GroveLink Path="@AuditTrailRoutes.TrailAdmin.TrimStart('/')" Text="@T["Audit trail"]" />
+            <GroveButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="@(() => LoadAsync(0))" Disabled="IsBusy" />
+        </GroveStack>
+    </GroveStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" Summary="@T["Could not load the sessions"]" Detail="@Error" />
+    }
+
+    <GroveTable GridLines="DataGridGridLines.Horizontal" AllowAlternatingRows="false">
+        <GroveTableHeader>
+            <GroveTableHeaderRow>
+                <GroveTableHeaderCell>@T["Started"]</GroveTableHeaderCell>
+                <GroveTableHeaderCell>@T["Stopped"]</GroveTableHeaderCell>
+                <GroveTableHeaderCell>@T["Staff user"]</GroveTableHeaderCell>
+                <GroveTableHeaderCell>@T["Member"]</GroveTableHeaderCell>
+                <GroveTableHeaderCell>@T["Organization"]</GroveTableHeaderCell>
+                <GroveTableHeaderCell>@T["Events"]</GroveTableHeaderCell>
+                <GroveTableHeaderCell></GroveTableHeaderCell>
+            </GroveTableHeaderRow>
+        </GroveTableHeader>
+        <GroveTableBody>
+            @foreach (var session in Sessions.Items)
+            {
+                <GroveTableRow data-testid="audit-session" data-session-id="@session.SessionId">
+                    <GroveTableCell>@session.StartedUtc.ToLocalTime().ToString("g")</GroveTableCell>
+                    <GroveTableCell>@(session.StoppedUtc?.ToLocalTime().ToString("g") ?? T["open"])</GroveTableCell>
+                    <GroveTableCell>@(session.StaffUserName ?? session.StaffUserId)</GroveTableCell>
+                    <GroveTableCell>@(session.MemberUserName ?? session.MemberUserId)</GroveTableCell>
+                    <GroveTableCell>@session.OrganizationId</GroveTableCell>
+                    <GroveTableCell>@session.EventCount</GroveTableCell>
+                    <GroveTableCell><GroveButton Icon="list" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OpenAsync(session, 0))" /></GroveTableCell>
+                </GroveTableRow>
+            }
+        </GroveTableBody>
+    </GroveTable>
+
+    @if (Sessions.Items.Count == 0 && !IsBusy)
+    {
+        <GroveText TextStyle="TextStyle.Body2">@T["No impersonation sessions."]</GroveText>
+    }
+
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+        <GroveButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Disabled="@(Sessions.Skip == 0)" Click="@(() => LoadAsync(Math.Max(0, Sessions.Skip - Sessions.Take)))" />
+        <GroveText TextStyle="TextStyle.Caption">@T["{0}-{1} of {2}", Sessions.Total == 0 ? 0 : Sessions.Skip + 1, Sessions.Skip + Sessions.Items.Count, Sessions.Total]</GroveText>
+        <GroveButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Disabled="@(Sessions.Skip + Sessions.Items.Count >= Sessions.Total)" Click="@(() => LoadAsync(Sessions.Skip + Sessions.Take))" />
+    </GroveStack>
+
+    @if (Selected is not null)
+    {
+        <GroveCard data-testid="audit-session-events">
+            <GroveStack Gap="0.5rem">
+                <GroveText TextStyle="TextStyle.H6" class="rz-m-0">
+                    @T["{0} impersonating {1}", Selected.StaffUserName ?? Selected.StaffUserId ?? "", Selected.MemberUserName ?? Selected.MemberUserId ?? ""]
+                </GroveText>
+                <AuditEventTable Page="SessionEvents" PageChanged="@(skip => OpenAsync(Selected, skip))" />
+            </GroveStack>
+        </GroveCard>
+    }
+</GroveStack>
+
+@code {
+    private AuditSessionPage Sessions { get; set; } = new([], 0, 0, 25);
+    private AuditSession? Selected { get; set; }
+    private AuditEventPage SessionEvents { get; set; } = new([], 0, 0, 50);
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadAsync(0);
+
+    private async Task LoadAsync(int skip)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            Sessions = await Http.GetFromJsonAsync<AuditSessionPage>($"{AuditTrailRoutes.Api}/sessions?skip={skip}&take=25") ?? Sessions;
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task OpenAsync(AuditSession session, int skip)
+    {
+        Selected = session;
+        try
+        {
+            SessionEvents = await Http.GetFromJsonAsync<AuditEventPage>($"{AuditTrailRoutes.Api}/events?sessionId={Uri.EscapeDataString(session.SessionId)}&skip={skip}&take=50") ?? SessionEvents;
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+}

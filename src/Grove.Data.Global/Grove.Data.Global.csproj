@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <Import Project="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.props" />
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Grove.Data.Global</AssemblyName>
+    <RootNamespace>Grove.Data.Global</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs;blazor-wasm/**/*.cs" />
+  </ItemGroup>
+
+  <!-- The tenant-less reference-data store (plans/global.md). Host-level: the store is
+       built once per process and shared by every shell, on Grove's own
+       DatabaseShellsSettingsSources pattern. Grove.Data.YesSql is referenced for
+       the provider extensions (UseSqLite/UsePostgreSql/...) and SqliteHelper. -->
+  <ItemGroup>
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Data\Grove.Data.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Data.YesSql\Grove.Data.YesSql.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Security\Grove.Security.csproj" />
+    <PackageReference Include="YesSql.Abstractions" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,267 @@
+@namespace Grove.Components.Files
+@using System.Globalization
+@using Grove.Components.Primitives
+@inject IServiceProvider Services
+
+@* The viewer pane (docs/media.md § 8, ruling 2026-10-06): the selected file, previewed, or
+   edited in place by an add-on registered for its type. Add-ons that offer a full editor are
+   opened over the browser. With no add-on the pane previews; what cannot be previewed is
+   offered for download. The add-on seam is GroveFileViewerAddOnAttribute. *@
+
+<aside class="grove-file-viewer" data-testid="file-viewer-pane">
+    @if (File is null)
+    {
+        <div class="grove-file-viewer__empty">@L("Select a file to see it here.")</div>
+    }
+    else
+    {
+        <header class="grove-file-viewer__header">
+            <GroveText TextStyle="TextStyle.H6" Text="@File.Name" />
+            <div class="grove-file-viewer__facts">
+                @if (File.Type is { } type) { <span>@type</span> }
+                @if (File.Size is { } size) { <span>@FormatBytes(size)</span> }
+                <span>@L("Modified") @File.ModifiedUtc.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)</span>
+            </div>
+        </header>
+
+        @if (Error is { } error)
+        {
+            <div class="grove-file-viewer__error" role="alert">@error</div>
+        }
+
+        @if (Pending)
+        {
+            <div class="grove-file-viewer__notice">@L("This file is being checked. It can be opened once the check has passed.")</div>
+        }
+        else if (InPlace is { } addOn && Context is not null)
+        {
+            <div class="grove-file-viewer__addon" data-testid="file-viewer-addon">
+                <DynamicComponent Type="addOn.Component" Parameters="@(new Dictionary<string, object?> { ["Context"] = Context })" />
+            </div>
+        }
+        else if (Url is { } url)
+        {
+            <div class="grove-file-viewer__preview" data-testid="file-viewer-preview">
+                @switch (PreviewKind)
+                {
+                    case "image":
+                        <img src="@url" alt="@(File.Metadata.AlternativeText ?? File.Name)" />
+                        break;
+                    case "video":
+                        <video src="@url" controls preload="metadata"></video>
+                        break;
+                    case "audio":
+                        <audio src="@url" controls preload="metadata"></audio>
+                        break;
+                    case "frame":
+                        <iframe src="@url" title="@File.Name"></iframe>
+                        break;
+                    default:
+                        <div class="grove-file-viewer__empty">@L("No preview for this type.")</div>
+                        break;
+                }
+            </div>
+        }
+
+        <div class="grove-file-viewer__actions">
+            @if (Url is not null && !Pending)
+            {
+                <a class="grove-file-viewer__link" href="@Url" target="_blank" rel="noopener">@L("Open")</a>
+            }
+            @if (DownloadUrl is { } download && !Pending)
+            {
+                <a class="grove-file-viewer__link" href="@download" download="@File.Name">@L("Download")</a>
+            }
+            @foreach (var full in FullAddOns)
+            {
+                <GroveButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Text="@(string.Format(CultureInfo.CurrentCulture, L("Open in {0}"), full.Declaration.Name))" Click="@(() => OpenFull(full))" Disabled="@Pending" />
+            }
+        </div>
+
+        @if (File.Metadata is { } metadata && (metadata.Title ?? metadata.Description) is not null)
+        {
+            <dl class="grove-file-viewer__metadata">
+                @if (metadata.Title is { } title) { <dt>@L("Title")</dt><dd>@title</dd> }
+                @if (metadata.Description is { } description) { <dt>@L("Description")</dt><dd>@description</dd> }
+            </dl>
+        }
+
+        @if (File.Versions.Count > 0)
+        {
+            <section class="grove-file-viewer__versions" data-testid="file-viewer-versions">
+                <GroveText TextStyle="TextStyle.Subtitle2" Text="@L("Versions")" />
+                <ul>
+                    @foreach (var version in File.Versions)
+                    {
+                        <li>
+                            <span>v@(version.Number)</span>
+                            <span>@StateText(version)</span>
+                            <span>@version.CreatedUtc.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)</span>
+                            @if (version.IsPublished)
+                            {
+                                <strong>@L("Published")</strong>
+                            }
+                            else if (File.CanEdit && version.State == GroveFileVersionState.Clean)
+                            {
+                                <GroveButton Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Text="@L("Publish")" Click="@(() => PublishAsync(version.Number))" />
+                            }
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
+    }
+</aside>
+
+@if (FullAddOn is { } open && FullContext is not null)
+{
+    <div class="grove-file-viewer__full" role="dialog" aria-label="@open.Declaration.Name" data-testid="file-viewer-full">
+        <div class="grove-file-viewer__full-bar">
+            <GroveText TextStyle="TextStyle.Subtitle1" Text="@($"{open.Declaration.Name} — {File?.Name}")" />
+            <GroveButton Icon="close" Variant="Variant.Text" Click="CloseFull" title="@L("Close")" />
+        </div>
+        <div class="grove-file-viewer__full-body">
+            <DynamicComponent Type="open.Component" Parameters="@(new Dictionary<string, object?> { ["Context"] = FullContext })" />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public GroveFilesClient Files { get; set; } = default!;
+
+    [Parameter] public GroveFileItem? File { get; set; }
+
+    /// <summary>The base the API is called against, to turn API paths into links.</summary>
+    [Parameter] public Uri? ApiBase { get; set; }
+
+    /// <summary>The file changed (a new version, a publish): the browser reloads it.</summary>
+    [Parameter] public EventCallback<GroveFileItem> Changed { get; set; }
+
+    private string? Url;
+    private string? Error;
+    private GroveFileViewerAddOn? InPlace;
+    private IReadOnlyList<GroveFileViewerAddOn> FullAddOns = [];
+    private GroveFileViewerContext? Context;
+    private GroveFileViewerAddOn? FullAddOn;
+    private GroveFileViewerContext? FullContext;
+    private string? _loadedFor;
+
+    private bool Pending => File is { Kind: GroveFileKind.File, PublishedVersion: null };
+
+    private string? DownloadUrl => File is null || File.IsContainer ? null : ApiBase is null ? Files.DownloadPath(File.Id) : new Uri(ApiBase, Files.DownloadPath(File.Id)).ToString();
+
+    private string PreviewKind => File?.Type?.ToLowerInvariant() switch
+    {
+        null => "none",
+        var type when type.StartsWith("image/", StringComparison.Ordinal) && !type.Contains("svg", StringComparison.Ordinal) => "image",
+        var type when type.StartsWith("video/", StringComparison.Ordinal) => "video",
+        var type when type.StartsWith("audio/", StringComparison.Ordinal) => "audio",
+        "application/pdf" or "text/plain" => "frame",
+        _ => "none",
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var key = File is null ? null : $"{File.Id}:{File.PublishedVersion}:{File.ModifiedUtc.UtcTicks}";
+        if (key == _loadedFor)
+        {
+            return;
+        }
+
+        _loadedFor = key;
+        Url = null;
+        Error = null;
+        InPlace = null;
+        FullAddOns = [];
+        Context = null;
+        if (File is null || File.IsContainer)
+        {
+            return;
+        }
+
+        if (!Pending)
+        {
+            var url = await Files.UrlAsync(File.Id);
+            Url = url.Value?.Url;
+            if (!url.Succeeded && url.Status != 404)
+            {
+                Error = url.Error;
+            }
+        }
+
+        InPlace = GroveFileViewerAddOns.For(File, GroveFileAddOnModes.InPlace).FirstOrDefault();
+        FullAddOns = GroveFileViewerAddOns.For(File, GroveFileAddOnModes.Full);
+        Context = ContextFor(File, GroveFileAddOnModes.InPlace);
+    }
+
+    private GroveFileViewerContext ContextFor(GroveFileItem file, GroveFileAddOnModes mode) => new()
+    {
+        File = file,
+        Files = Files,
+        Url = Url,
+        Mode = mode,
+        SaveVersionAsync = async (content, contentType) =>
+        {
+            var saved = await Files.ReplaceAsync(file.Id, file.Name, contentType ?? file.Type, content, publish: true);
+            if (saved.Value is { } item)
+            {
+                await Changed.InvokeAsync(item);
+            }
+
+            return saved;
+        },
+        CloseAsync = () =>
+        {
+            CloseFull();
+            return Task.CompletedTask;
+        },
+    };
+
+    private void OpenFull(GroveFileViewerAddOn addOn)
+    {
+        if (File is null)
+        {
+            return;
+        }
+
+        FullAddOn = addOn;
+        FullContext = ContextFor(File, GroveFileAddOnModes.Full);
+    }
+
+    private void CloseFull()
+    {
+        FullAddOn = null;
+        FullContext = null;
+        StateHasChanged();
+    }
+
+    private async Task PublishAsync(int version)
+    {
+        if (File is null)
+        {
+            return;
+        }
+
+        var result = await Files.PublishVersionAsync(File.Id, version);
+        if (result.Value is { } item)
+        {
+            await Changed.InvokeAsync(item);
+        }
+        else
+        {
+            Error = result.Error;
+        }
+    }
+
+    private string StateText(GroveFileVersion version) => version.State switch
+    {
+        GroveFileVersionState.Quarantined => L("Being checked"),
+        GroveFileVersionState.Clean => L("Ready"),
+        GroveFileVersionState.Rejected => version.Reason is { } reason ? $"{L("Rejected")}: {reason}" : L("Rejected"),
+        _ => L("Check failed"),
+    };
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+
+    internal static string FormatBytes(long bytes) => bytes < 1024 ? $"{bytes} B" : bytes < 1024 * 1024 ? $"{bytes / 1024d:F1} KB" : bytes < 1024L * 1024 * 1024 ? $"{bytes / 1024d / 1024d:F1} MB" : $"{bytes / 1024d / 1024d / 1024d:F1} GB";
+}

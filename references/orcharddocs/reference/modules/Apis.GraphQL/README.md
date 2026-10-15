@@ -1,8 +1,8 @@
-# GraphQL (Crest.GraphQL)
+# GraphQL (Grove.GraphQL)
 
 ## GraphQL
 
-The GraphQL module allows client applications to query the content handled by an Crest website.  
+The GraphQL module allows client applications to query the content handled by an Grove website.  
 It enables the GraphiQL Explorer view to test GraphQL queries, and provides HTTP endpoints to send client queries.
 
 ## HTTP Methods, Headers, and Body
@@ -66,7 +66,7 @@ If no data is returned the "data" field is only included if the error occurred d
 
 ## Authentication
 
-Executing a GraphQL query requires the issuer to have the `ExecuteGraphQL` permission. Like any other API in Crest, the GraphQL API supports
+Executing a GraphQL query requires the issuer to have the `ExecuteGraphQL` permission. Like any other API in Grove, the GraphQL API supports
 cookie and OAuth 2.0 authentication. This means it's compatible with the OpenId module and supports JSON Web Token (JWT).
 
 By default anonymous users are not able to execute a GraphQL query.
@@ -113,8 +113,8 @@ Configuration is done via the standard shell configuration, as follows.
 
 ```json
 {
-  "Crest": {
-    "Crest_Apis_GraphQL": {
+  "Grove": {
+    "Grove_Apis_GraphQL": {
       "ExposeExceptions": true,
       "MaxDepth": 50, 
       "MaxComplexity": 100, 

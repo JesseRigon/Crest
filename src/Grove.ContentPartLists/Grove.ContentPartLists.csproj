@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.props" />
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Grove.ContentPartLists</AssemblyName>
+    <RootNamespace>Grove</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs;blazor-wasm/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(PlatformSrcDir)Grove.ContentFields\Grove.ContentFields.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.ContentManagement\Grove.ContentManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents\Grove.Contents.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Data\Grove.Data.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <PackageReference Include="YesSql.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The picker abstraction (IOptionSourceProvider, OptionRow,
+         OptionSourceKeys) and OptionPickerField live in Grove.Server; this module
+         plugs Content Part Lists in as one provider among several. -->
+    <ProjectReference Include="../Grove.Server/Grove.Server.csproj" />
+    <ProjectReference Include="../Grove.Data.Global/Grove.Data.Global.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,17 +1,17 @@
 # Modules Reference
 
-This is a comprehensive reference for the modules and their features available in Crest. Under each of these pages, you'll find an overview of the given module with documentation on how to use and extend it.
+This is a comprehensive reference for the modules and their features available in Grove. Under each of these pages, you'll find an overview of the given module with documentation on how to use and extend it.
 
 Check out the reference pages for each module under the following categories in the menu:
 
 - CMS Modules: Modules that contain content management features that all interact with content items in some way. E.g. the base content management module, the media management module, or modules related to search and indexing are here.
 - Core Modules: Modules that usually provide some fundamental features for a web app that is not connected to content management, or framework-like functionality that you can build on. These modules include e.g. user and role management, or the UI localization and background task management infrastructure.
 
-The above distinction is also present in the Crest source code with solution folders. However, this is just a logical categorization and technically all the modules are alike.
+The above distinction is also present in the Grove source code with solution folders. However, this is just a logical categorization and technically all the modules are alike.
 
-## Overview of all Crest features
+## Overview of all Grove features
 
-Here's a categorized overview of all built-in Crest features at a glance. Click on the links to open the corresponding documentation pages.
+Here's a categorized overview of all built-in Grove features at a glance. Click on the links to open the corresponding documentation pages.
 
 ### Admin
 

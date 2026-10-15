@@ -1,6 +1,6 @@
 # Parties — Person, Organization and the roles composed on them
 
-`Crest.Parties` is the platform-wide party model: the `Person` and `Organization` records,
+`Grove.Parties` is the platform-wide party model: the `Person` and `Organization` records,
 their contact points, addresses and org positions, the link from a person to a user
 account, and the party-type registry that lets other modules compose roles on a party and
 get its admin pages without Parties knowing them. Work not yet built is under
@@ -68,10 +68,10 @@ Implementation:
   member binding is refused. `IPartyRoleService` gives a party a role by its base (an
   organization role given to a person lands on their Individual organization; a person role
   given to an Individual organization lands on its person; any other mismatch is refused);
-  the Create party role activity uses it. API: `POST api/crest/parties/{partyId}/roles`
-  (`{ typeKey }`), `POST api/crest/parties/{orgId}/convert-to-ordinary`, `GET|PUT
-  api/crest/parties/settings` (`ManageSettings`).
-- **Portal promotion.** `POST api/crest/members/invite` (`ManageOrgMembers` against the
+  the Create party role activity uses it. API: `POST api/grove/parties/{partyId}/roles`
+  (`{ typeKey }`), `POST api/grove/parties/{orgId}/convert-to-ordinary`, `GET|PUT
+  api/grove/parties/settings` (`ManageSettings`).
+- **Portal promotion.** `POST api/grove/members/invite` (`ManageOrgMembers` against the
   organization): a Person holding a position there, without an account, becomes a member
   user linked to the person and bound to the organization (the first member is the owner);
   no password, the person sets one through portal password recovery. Portal
@@ -83,12 +83,12 @@ Implementation:
   role* (the registered role types; an organization role added to a person reports that it
   landed on their Individual organization), the *Individual* badge and *Convert to ordinary
   organization* (only when `AllowIndividualConversion` is on), the organization's
-  `CrestOrganizationOwnerPanel` (Access's shared component), and *Invite to portal* over the
+  `GroveOrganizationOwnerPanel` (Access's shared component), and *Invite to portal* over the
   person's positions when the person has no account and Members answers
-  (`api/crest/members/me`). Lists describe an Individual organization as "Individual" and a
+  (`api/grove/members/me`). Lists describe an Individual organization as "Individual" and a
   role's party reference says "Individual" rather than Organization (`PartyDisplay`, Domain,
   tested). The Parties settings section is contributed to the general settings page through
-  the `SettingsPageRegions.General` region (Crest.Components).
+  the `SettingsPageRegions.General` region (Grove.Components).
 
 Parties owns the **party-type registry** (`IPartyTypeProvider`). A module registers a
 descriptor for each role it composes and gets, without further code, its Parties menu
@@ -118,10 +118,10 @@ party may have no customer account, one, or potentially several.
   address-kind seed gains a DataLock when posting starts snapshotting by kind). Organization
   carries OrganizationType and Industry pickers. Seed keys in
   `PartiesOptionSets`/`ContactPointKinds`/`AddressKinds`.
-- **Content Part List adoption.** `Crest.Parties` declares `Crest.ContentPartLists` in its
+- **Content Part List adoption.** `Grove.Parties` declares `Grove.ContentPartLists` in its
   manifest and its migration attaches pickers DEFERRED (global lists seed in a deferred task;
   an inline attach at first-time setup runs before the seeds and aborts provisioning): Person
-  gets Honorific, Suffix and PreferredLanguage from Crest's global lists; the `ContactPoint`
+  gets Honorific, Suffix and PreferredLanguage from Grove's global lists; the `ContactPoint`
   element gets PhoneCountry, and both bag elements get their Kind picker.
 
 ### Industry classification
@@ -139,13 +139,13 @@ hides survive every reseed.
 - **Contact points and addresses**: two named BagParts on Person and Organization,
   `ContactPoints` (element type `ContactPoint`: Kind picker, Value, Label, Preferred,
   PhoneCountry picker) and `Addresses` (element type `Address`: Kind picker, Line1/2,
-  Locality, `Geo` (a `GeoStackField` from `Crest.Regions` whose level 1 is the country),
+  Locality, `Geo` (a `GeoStackField` from `Grove.Regions` whose level 1 is the country),
   PostalCode, Preferred). Person and Organization carry no scalar Email/Phone/Website fields.
 - **One bag-element service.** The platform stores bags but edits them only through its MVC
   editor, so Parties owns the write surface: `PartyBagElementService` over `PartyBag`
   descriptors (`PartyBags.ContactPoints|Addresses|OrganizationNames`), one service
   parameterized by bag, element type and kind list, never a second bag service. API:
-  `api/crest/parties/{partyId}/contacts|contact-points|addresses|names` (authorized with
+  `api/grove/parties/{partyId}/contacts|contact-points|addresses|names` (authorized with
   View/EditContent on the party item); kinds and phone countries travel as option KEYS,
   translated through the scoped `PartyOptionKeys`; an address's country selects its
   addressing map, which validates it server-side; "preferred" is exclusive per kind.
@@ -190,7 +190,7 @@ hides survive every reseed.
   `parties.organization-name-kind` (legal, dba, former, other), Name, Primary), so an
   organization can hold several DBAs. One primary entry per kind. No effective dates: a
   superseded name becomes the `former` kind. None of these is a second display name
-  ([branding.md](branding.md)). API: `api/crest/parties/{orgId}/names`.
+  ([branding.md](branding.md)). API: `api/grove/parties/{orgId}/names`.
 - **Parent organization**: `ParentOrganization`, a picker on the Organization part restricted
   to Organization; `ParentOrganizationRelationshipHandler` refuses itself and any descendant
   ([content-items.md](content-items.md) › Picker relationship handlers).
@@ -201,16 +201,16 @@ hides survive every reseed.
   legal entity: its legal names, tax id and addresses come from there; the display name stays
   `ISite.SiteName`. By default it has no members, so staff and member logins never share an
   organization; the Members setting `AllowMembersOnTenantOrganization` (default: blocked,
-  `api/crest/members/settings`) can allow it. One source of truth: Parties answers "is this
+  `api/grove/members/settings`) can allow it. One source of truth: Parties answers "is this
   the tenant's organization" from the site-settings reference (never a flag on the item), and
   every binding write goes through the one Members service that checks it with the setting.
 
 ## Party ↔ user link
 
 `Person.PortalUser` is a stock `UserPickerField`, indexed by
-`Crest.ContentFields.Indexing.SQL.UserPicker` so person-for-user is a query.
+`Grove.ContentFields.Indexing.SQL.UserPicker` so person-for-user is a query.
 `IPartyUserLinkService` (Parties) owns the writes and the lookup;
-`Crest.Members.CreateMemberAsync` calls it when a `PersonId` is supplied (unknown person →
+`Grove.Members.CreateMemberAsync` calls it when a `PersonId` is supplied (unknown person →
 error), so the link is recorded on both sides by the module that creates the account. Who a
 member is, and the bindings and hierarchy around the link, are under
 [Members](#members-persons-who-act-for-an-organization) below.
@@ -220,8 +220,8 @@ member is, and the bindings and hierarchy around the link, are under
 A `Positions` bag on Person (element type `OrgPosition`: Organization ContentPickerField
 restricted to Organization, Title, Department, Primary; one primary per person). Bag-contained
 fields are outside stock field indexes, so `PartyPositionIndex` (Parties-owned map index, one
-row per position) makes the organization side a query: `api/crest/parties/{personId}/positions`
-(CRUD) and `api/crest/parties/{orgId}/people`. Live check: `party-positions-api.js`.
+row per position) makes the organization side a query: `api/grove/parties/{personId}/positions`
+(CRUD) and `api/grove/parties/{orgId}/people`. Live check: `party-positions-api.js`.
 
 ## Members: persons who act for an organization
 
@@ -230,7 +230,7 @@ vendor's person) through a user account; **staff** are the tenant's own people. 
 ordinary platform users in the tenant's user store, with the same user management, the same
 roles and permissions machinery and the same hierarchy; what differs is the organization
 they act for and the shell they sign in to. The party model carries the relationship, the
-user record carries authentication and roles. `Crest.Members` owns it, on `Crest.Parties`
+user record carries authentication and roles. `Grove.Members` owns it, on `Grove.Parties`
 (a member is a Person with a portal user; a binding points at an Organization) and on the
 platform's user, role and permission pipelines; nothing in it is specific to a line of
 business. The sign-in side (the member portal, sessions, sides) is
@@ -256,11 +256,11 @@ through `IMemberLifecycleHandler` (`MemberBoundAsync` / `MemberUnboundAsync`, re
 fresh scope after the binding write commits) and knows nothing more about its consumers.
 
 **The link.** `Person.PortalUser` (above) is the person ↔ account link, written through
-`IPartyUserLinkService.LinkPortalUserAsync` by `Crest.Members.CreateMemberAsync` whenever a
+`IPartyUserLinkService.LinkPortalUserAsync` by `Grove.Members.CreateMemberAsync` whenever a
 `PersonId` is supplied, and the person's org position links to the Organization.
 
 **Bindings.** One account can hold several **organization bindings**, with different roles
-per organization: the binding record (`CrestMemberInfo` aspect on the user, the record of
+per organization: the binding record (`GroveMemberInfo` aspect on the user, the record of
 truth) says in which organization, in which class, and with which role templates.
 
 - **Class is a set derived from the bindings**: staff is a binding to the tenant's own
@@ -273,12 +273,12 @@ truth) says in which organization, in which class, and with which role templates
 - **One home per fact.** `UserConnectionIndex`, the flattened projection on the user object
   (what the caller builder reads) and the hierarchy nodes are projections of the binding
   record, written only by `MemberBindingService` (the one binding write path, which also
-  enforces the tenant organization rule) and rebuilt by `POST api/crest/members/rebuild`
+  enforces the tenant organization rule) and rebuilt by `POST api/grove/members/rebuild`
   (re-saves every user, places a user with no binding as staff and rebuilds the hierarchy).
 - **No user exists outside an organization**: the tenant and its organizations exist before
   any user, so registration places the member in an organization or refuses.
 - **Conversion is adding or removing a class**, its own permission-gated action
-  (`api/crest/members/{userId}/classes`, `ConvertUserClass`, bumping the security stamp);
+  (`api/grove/members/{userId}/classes`, `ConvertUserClass`, bumping the security stamp);
   adding staff keeps the bindings, removing member ends them. The binding API refuses to add
   or end a class.
 - **Role templates.** Roles are per user in the platform and `RolesDocument` is one cached
@@ -333,21 +333,21 @@ organization's. Edge writes take a per-organization lock held until the unit of 
 recompute the ancestors of the report and everyone below and save the documents that changed;
 an edge is refused when the report is already above the manager; removing a node detaches its
 reports; `RebuildAsync` repairs from the edges. API:
-`api/crest/members/hierarchy/{organizationId}` (nodes, `edges` add and remove),
+`api/grove/members/hierarchy/{organizationId}` (nodes, `edges` add and remove),
 `ManageOrgMembers` against the organization.
 
 **Associations are content items**, kept apart from the hierarchy so the root guard and the
 closure table never see them: the `Association` content type (FromPerson, FromOrganization,
 ToPerson, ToOrganization, Type from `parties.association-type`), `AssociationIndex`,
 `IAssociationVisibilityResolver` (per type: whether the far end sees it, which parties it
-grants; default nothing) and `GET api/crest/parties/associations/me`. Module types are built
+grants; default nothing) and `GET api/grove/parties/associations/me`. Module types are built
 in and not editable; tenant types are additions to the list; resolvers come from modules.
 
-### What `Crest.Members` contains on the party side
+### What `Grove.Members` contains on the party side
 
-- Bindings: the `CrestMemberInfo` aspect, `UserConnectionIndex`, `MemberBindingService`,
+- Bindings: the `GroveMemberInfo` aspect, `UserConnectionIndex`, `MemberBindingService`,
   `MemberService` (reads, member creation), `UserClassService` (add or remove a class), the
-  endpoints (`api/crest/members`: me, active-org, list-by-org, create, invite, bindings
+  endpoints (`api/grove/members`: me, active-org, list-by-org, create, invite, bindings
   add/remove, classes, settings, rebuild, hierarchy). The user list filters by class with the
   `class:member` / `class:staff` named term (`UserClassAdminListFilterProvider`).
 - Provisioning: every new user is placed in an organization at creation
@@ -371,7 +371,7 @@ that compose them.
 ## Party-type registry and All Parties
 
 Parties owns `IPartyTypeProvider` / `PartyTypeDescriptor` (Domain) and `PartyTypeCatalog`; the
-Parties admin menu, the route gates and `GET api/crest/parties/types` are all generated from
+Parties admin menu, the route gates and `GET api/grove/parties/types` are all generated from
 it, so a module that composes a party type registers a descriptor and gets its menu item, its
 `/Parties/{key}` page and its All Parties pane at once. Parties registers Contacts (Person) and
 Organizations; other modules register the role types they compose. Parties registers no role
@@ -385,7 +385,7 @@ of its own, so All Parties is exercised by the checks of whichever module regist
   `/Parties/{key}`; a module may register a **global kind** (a catalogue that is global and
   read-only, with the tenant's own standing kept in a tenant-side record), whose descriptor
   names its owner's page and whose All Parties pane is the owner's contribution through
-  Crest's page-region seam ([page-regions.md](page-regions.md); `PartiesPageRegions.Pane(key)`;
+  Grove's page-region seam ([page-regions.md](page-regions.md); `PartiesPageRegions.Pane(key)`;
   `Detail(key)` opens a selected record's summary to downstream blocks), so Parties never
   references the owning module.
 - **All Parties** (`/Parties`, the Parties menu's "All Parties" child) lists the types down the
@@ -394,7 +394,7 @@ of its own, so All Parties is exercised by the checks of whichever module regist
   parent with children, so the "All Parties" first child carries the link.
 - **Hide/show is the admin menu's own mechanism**: the tenant's layer hides a type for
   everyone; the page's pane settings hide one for the signed-in user only, through the per-user
-  layer (`api/crest/navigation/me/hidden`, keyed by the served menu item key, so the sidebar
+  layer (`api/grove/navigation/me/hidden`, keyed by the served menu item key, so the sidebar
   link goes with the pane; [admin-menu.md](admin-menu.md) › Two hide layers). The per-user
   layer is an overlay, never a copy: it stores only the user's own hidden item keys, is applied
   last, and a user cannot unhide what the tenant hid.
@@ -409,7 +409,7 @@ of its own, so All Parties is exercised by the checks of whichever module regist
 - [ ] **Hierarchy-aware scope expansion** feeding the fail-closed scope providers
   ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery)):
   subtree(user) as an input to the content scope, joining on the organization-scope axis
-  (`CrestOrganizationPart` and its index). Not wired yet; the management bound on users
+  (`GroveOrganizationPart` and its index). Not wired yet; the management bound on users
   already uses the closure table ([permissions.md](permissions.md)).
 - [ ] **Per-type contact validation and the kind data lock** (› Contact points and
   addresses), pending P2.

@@ -1,18 +1,18 @@
 const { createInstance } = require('../harness/instance');
 
 // Verifies anonymous-visitor culture resolution on the front-end site
-// (Crest.SiteTheme) - server-rendered Liquid/cshtml, no Blazor WASM client, so
+// (Grove.SiteTheme) - server-rendered Liquid/cshtml, no Blazor WASM client, so
 // this exercises the STOCK ASP.NET Core RequestLocalizationOptions pipeline (the
 // Accept-Language header provider + the tenant's LocalizationSettings.DefaultCulture
 // fallback), not DisplayManager.ResolveCultureAsync's client-side chain - the
 // WASM-resolved chain only exists inside .Admin, which an anonymous front-end visitor
 // never loads.
 //
-// CrestCultureCookie.cs's provider list is [CrestCookie, AcceptLanguage] via
+// GroveCultureCookie.cs's provider list is [GroveCookie, AcceptLanguage] via
 // IPostConfigureOptions (deterministic - see that file's comment for why a plain
-// IConfigureOptions Insert(0, ...) raced with stock Crest.Localization's own
+// IConfigureOptions Insert(0, ...) raced with stock Grove.Localization's own
 // AdminCookieCultureProvider and made Accept-Language win unpredictably). A first-ever
-// anonymous visitor has no Crest cookie yet, so Accept-Language is the real fallback:
+// anonymous visitor has no Grove cookie yet, so Accept-Language is the real fallback:
 //   - a browser locale the tenant DOES support (es-ES) should resolve to es-ES.
 //   - a browser locale the tenant does NOT support (ja-JP) should fall back to the
 //     tenant default (en-US).

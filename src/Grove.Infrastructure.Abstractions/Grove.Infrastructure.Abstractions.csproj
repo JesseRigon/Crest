@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Infrastructure</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Grove Infrastructure Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for PlatformCMS Infrastructure </Description>
+    <PackageTags>$(PackageTags) PlatformCMS Infrastructure Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Grove.Infrastructure" />
+    <InternalsVisibleTo Include="Grove.Tests" />
+    <InternalsVisibleTo Include="Grove.Abstractions.Tests" />
+    <InternalsVisibleTo Include="Grove.Data.YesSql" />
+    <InternalsVisibleTo Include="Grove.ContentManagement.GraphQL" />
+    <InternalsVisibleTo Include="Grove.DisplayManagement" />
+    <InternalsVisibleTo Include="Grove.DynamicCache" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Abstractions\Grove.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.ResourceManagement.Abstractions\Grove.ResourceManagement.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

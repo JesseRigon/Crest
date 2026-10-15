@@ -1,5 +1,5 @@
 // Phase 8: BlazorAdminThemeMiddleware still gates every admin page request ahead of
-// the Blazor Web App document render (auth check + CrestRouteAuthorizationService).
+// the Blazor Web App document render (auth check + GroveRouteAuthorizationService).
 // This check proves that gating holds for direct server-side GETs — the SSR path —
 // not just for client-side navigation:
 //   1. an ANONYMOUS request for a protected admin URL never receives admin markup

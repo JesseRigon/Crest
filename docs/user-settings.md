@@ -1,10 +1,10 @@
 # User settings: future features
 
 One per-user preference exists beyond culture: **hidden admin-menu items**
-(`CrestUserMenuPreferences.HiddenItemKeys` on `User.Properties`, self-service
-`GET`/`PUT api/crest/navigation/me/hidden`, applied by `AdminMenuBuilder` under the
+(`GroveUserMenuPreferences.HiddenItemKeys` on `User.Properties`, self-service
+`GET`/`PUT api/grove/navigation/me/hidden`, applied by `AdminMenuBuilder` under the
 tenant layout overlay — [docs/admin-menu.md](admin-menu.md) › Two hide layers). It is the pattern the landing-page idea below follows:
-a Crest-owned document on the user and one self-service endpoint. The
+a Grove-owned document on the user and one self-service endpoint. The
 rest of this doc is planning: a holding doc for small, per-user preference features that
 don't belong in [docs/localization.md](localization.md) (culture and language) or a host's
 business-data plans. Add new self-contained user-preference ideas here rather than starting a new
@@ -12,7 +12,7 @@ plan doc per feature, unless one grows large enough to deserve its own file.
 
 ## Default admin landing page
 
-When a user logs into the Crest admin, they always land on the dashboard
+When a user logs into the Grove admin, they always land on the dashboard
 (`Dashboard.razor`, `@page "/Dashboard"` — the admin shell's own base-relative root,
 served whenever a request resolves to `AdminOptions.AdminUrlPrefix` with no further
 path segment; see `Home.razor`'s authenticated branch, which redirects there).
@@ -23,7 +23,7 @@ falls back to the site root `~/`, never `/Admin`; `AdminOptions` only exposes
 `AdminUrlPrefix`; `AdminController.Index()` is a bare `return View()`. No `UserOptions`/profile property anywhere
 stores a preferred admin destination, per-user or per-tenant, so this is a new feature.
 
-- [ ] **Let each user pick their own default landing page** from Crest's admin (e.g. "Content
+- [ ] **Let each user pick their own default landing page** from Grove's admin (e.g. "Content
   Items" instead of "Dashboard", or a specific saved view/filter once those exist).
   Stored per-user, read by `Home.razor`'s authenticated branch instead of the current
   hardcoded `Navigation.NavigateTo("Dashboard")`.
@@ -32,11 +32,11 @@ stores a preferred admin destination, per-user or per-tenant, so this is a new f
   describes for per-user culture (`UserLocalizationSettings.Culture`,
   `LocalizationController`'s self-service `GET`/`PUT` endpoint,
   `DisplayManager.Manifest`-carried value):
-  - [ ] A new per-user setting, likely on a Crest-owned settings document (not
+  - [ ] A new per-user setting, likely on a Grove-owned settings document (not
     `UserLocalizationSettings` — different concern) — e.g. `UserPreferencesSettings` or
     similar, storing a canonical route string.
   - [ ] Self-service `GET`/`PUT` endpoint scoped to the current user, same shape as
-    `api/crest/localization/me`.
+    `api/grove/localization/me`.
   - [ ] Surfaced through the manifest (`DisplayManager.Manifest`) so `Home.razor` can read
     it without an extra round trip on every login.
   - [ ] `Home.razor`'s authenticated branch reads it instead of the hardcoded

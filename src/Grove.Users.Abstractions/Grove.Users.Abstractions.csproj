@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Users</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Grove Users Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    Abstractions for Users module.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Abstractions\Grove.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YesSql" />
+    <PackageReference Include="YesSql.Filters.Query" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.DisplayManagement.Abstractions\Grove.DisplayManagement.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

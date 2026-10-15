@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    
+    <PropertyGroup>
+        <Description>Grove.Workflows Studio Login module for Blazor Web Assembly apps.</Description>
+        <PackageTags>groveWorkflows studio module login blazor wasm</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Grove.Workflows.Studio.Login\Grove.Workflows.Studio.Login.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,18 +1,18 @@
-// Converted from Crest.AdminTheme/tests/playwright/admin-menu-icon-override-persistence.js.
+// Converted from Grove.AdminTheme/tests/playwright/admin-menu-icon-override-persistence.js.
 // Two separate icon-override saves on different root nodes must each persist
 // independently — a later save on one node must not clobber an earlier save on another.
 const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
 
 module.exports = async function run(page, ctx) {
-  const defaultMenuId = '__crest_default_admin_menu';
+  const defaultMenuId = '__grove_default_admin_menu';
 
-  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  // Mutating Grove APIs are antiforgery-protected - see harness/antiforgery.js.
   const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
   const antiforgeryHeaders = { [antiforgery.headerName]: antiforgery.requestToken };
 
   async function getRootNodes() {
     const data = await page.evaluate(async () => {
-      const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+      const response = await fetch('/api/grove/admin-menus', { credentials: 'include' });
       if (!response.ok) throw new Error(`admin menus failed: ${response.status}`);
       return response.json();
     });
@@ -35,7 +35,7 @@ module.exports = async function run(page, ctx) {
 
     const result = await page.evaluate(
       async ({ id, payload, antiforgeryHeaders }) => {
-        const response = await fetch(`/api/crest/admin-menus/__crest_default_admin_menu/nodes/${encodeURIComponent(id)}`, {
+        const response = await fetch(`/api/grove/admin-menus/__grove_default_admin_menu/nodes/${encodeURIComponent(id)}`, {
           method: 'PUT',
           credentials: 'include',
           headers: { 'content-type': 'application/json', ...antiforgeryHeaders },

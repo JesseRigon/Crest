@@ -1,0 +1,72 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <Import Project="$(PlatformSrcDir)Grove.Theme.Targets\Grove.Theme.Targets.props" />
+  <Import Project="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformCompatibilityVersion>4.0.0</PlatformCompatibilityVersion>
+    <GroveSecurityPatch>0</GroveSecurityPatch>
+    <GroveBugPatch>0</GroveBugPatch>
+    <GroveVersion>$(PlatformCompatibilityVersion).$(GroveSecurityPatch).$(GroveBugPatch)</GroveVersion>
+    <VersionPrefix>$(PlatformCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(PlatformCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(GroveVersion)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="wwwroot\node_modules\**" />
+    <EmbeddedResource Remove="wwwroot\node_modules\**" />
+    <None Remove="wwwroot\node_modules\**" />
+    <Compile Remove="tests\**\*.cs" />
+    <!-- wasm\ is a sibling project (Grove.SiteTheme.Client), not part of this
+         one - without this, the SDK's default **/*.cs glob also sweeps in its
+         generated obj\ output (duplicate AssemblyInfo/TargetFramework attributes,
+         CS0579) and its own .razor/.cs sources. -->
+    <Compile Remove="wasm\**\*.cs" />
+    <Content Remove="wasm\**" />
+    <EmbeddedResource Remove="wasm\**" />
+    <None Remove="wasm\**" />
+    <RazorGenerate Remove="wasm\**" />
+    <RazorComponent Remove="wasm\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Theme.Targets, not Module.Targets: sets ModuleType=Theme so IsTheme() is true at
+         runtime and ThemeViewLocationExpanderProvider contributes this theme's Views/
+         paths. See the same note in Grove.LegacyFrame.csproj. -->
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Theme.Targets\Grove.Theme.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.ContentManagement\Grove.ContentManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Users.Abstractions\Grove.Users.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Users\Grove.Users.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Menu\Grove.Menu.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Email.Abstractions\Grove.Email.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Setup.Abstractions\Grove.Setup.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Setup\Grove.Setup.csproj" />
+  </ItemGroup>
+
+  <!-- Grove.Server is the single Blazor Web App host (API + SSR) for every Grove theme -
+       it, not this project, calls AddRazorComponents()/AddInteractiveWebAssemblyComponents()
+       and owns the App.razor/Routes.razor roots (see plans/blazor hybrid conversion.md).
+       This project keeps its own page/layout components (Phase 5) and references
+       Components/Icons to build them, plus its WASM half
+       (wasm/Grove.SiteTheme.Client.csproj) for @rendermode
+       InteractiveWebAssembly/InteractiveAuto components - it just doesn't self-host. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Components\Grove.Components.csproj" />
+    <ProjectReference Include="..\Grove.Icons\Grove.Icons.csproj" />
+    <ProjectReference Include="wasm\Grove.SiteTheme.Client.csproj" />
+  </ItemGroup>
+
+</Project>

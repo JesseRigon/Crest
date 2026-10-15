@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Grove.Workflows</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Description>
+            Provides core workflowing functionality. Basically the heart of Grove Workflows.
+        </Description>
+        <PackageTags>groveWorkflows module common workflows</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Humanizer.Core" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+        <PackageReference Include="Microsoft.Extensions.Logging" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+        <PackageReference Include="Microsoft.Extensions.Options" />
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="ShortGuid" />
+    </ItemGroup>
+
+    <!-- System.Linq.Async only for .NET 8 and 9 - .NET 10 has native async LINQ support -->
+    <ItemGroup Condition="'$(TargetFramework)' != 'net10.0'">
+        <PackageReference Include="System.Linq.Async" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Grove.Workflows.Common\Grove.Workflows.Common.csproj" />
+        <ProjectReference Include="..\Grove.Workflows.Expressions\Grove.Workflows.Expressions.csproj" />
+    </ItemGroup>
+
+</Project>

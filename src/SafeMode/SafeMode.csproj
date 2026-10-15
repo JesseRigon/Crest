@@ -4,7 +4,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 
      <!-- NuGet properties-->
-    <Title>Crest SafeMode theme</Title>
+    <Title>Grove SafeMode theme</Title>
     <Description>$(OCCMSDescription)
 
     A fail-safe theme when no other themes are available.</Description>
@@ -16,8 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Crest.Theme.Targets\Crest.Theme.Targets.csproj" />
-    <ProjectReference Include="..\Crest.DisplayManagement\Crest.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Grove.Theme.Targets\Grove.Theme.Targets.csproj" />
+    <ProjectReference Include="..\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2597,18 +2597,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@crest/admindashboard@workspace:Crest.AdminDashboard/Assets":
+"@grove/admindashboard@workspace:Grove.AdminDashboard/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/admindashboard@workspace:Crest.AdminDashboard/Assets"
+  resolution: "@grove/admindashboard@workspace:Grove.AdminDashboard/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
   languageName: unknown
   linkType: soft
 
-"@crest/adminmenu@workspace:Crest.AdminMenu/Assets":
+"@grove/adminmenu@workspace:Grove.AdminMenu/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/adminmenu@workspace:Crest.AdminMenu/Assets"
+  resolution: "@grove/adminmenu@workspace:Grove.AdminMenu/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
@@ -2616,15 +2616,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@crest/alias@workspace:Crest.Alias/Assets":
+"@grove/alias@workspace:Grove.Alias/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/alias@workspace:Crest.Alias/Assets"
+  resolution: "@grove/alias@workspace:Grove.Alias/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/apis-graphql@workspace:Crest.Apis.GraphQL/Assets":
+"@grove/apis-graphql@workspace:Grove.Apis.GraphQL/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/apis-graphql@workspace:Crest.Apis.GraphQL/Assets"
+  resolution: "@grove/apis-graphql@workspace:Grove.Apis.GraphQL/Assets"
   dependencies:
     "@babel/cli": "npm:^7.22.10"
     "@babel/core": "npm:^7.22.11"
@@ -2649,9 +2649,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@crest/assets-manager@workspace:.scripts/assets-manager, @crest/assets-manager@workspace:^":
+"@grove/assets-manager@workspace:.scripts/assets-manager, @grove/assets-manager@workspace:^":
   version: 0.0.0-use.local
-  resolution: "@crest/assets-manager@workspace:.scripts/assets-manager"
+  resolution: "@grove/assets-manager@workspace:.scripts/assets-manager"
   dependencies:
     "@parcel/config-default": "npm:2.13.3"
     "@parcel/core": "npm:2.13.3"
@@ -2701,9 +2701,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@crest/audittrail@workspace:Crest.AuditTrail/Assets":
+"@grove/audittrail@workspace:Grove.AuditTrail/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/audittrail@workspace:Crest.AuditTrail/Assets"
+  resolution: "@grove/audittrail@workspace:Grove.AuditTrail/Assets"
   dependencies:
     "@babel/cli": "npm:^7.22.10"
     "@babel/core": "npm:^7.22.11"
@@ -2733,27 +2733,27 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@crest/autoroute@workspace:Crest.Autoroute/Assets":
+"@grove/autoroute@workspace:Grove.Autoroute/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/autoroute@workspace:Crest.Autoroute/Assets"
+  resolution: "@grove/autoroute@workspace:Grove.Autoroute/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/azureai@workspace:Crest.AzureAI/Assets":
+"@grove/azureai@workspace:Grove.AzureAI/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/azureai@workspace:Crest.AzureAI/Assets"
+  resolution: "@grove/azureai@workspace:Grove.AzureAI/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/backgroundtasks@workspace:Crest.BackgroundTasks/Assets":
+"@grove/backgroundtasks@workspace:Grove.BackgroundTasks/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/backgroundtasks@workspace:Crest.BackgroundTasks/Assets"
+  resolution: "@grove/backgroundtasks@workspace:Grove.BackgroundTasks/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/bloom@workspace:.scripts/bloom":
+"@grove/bloom@workspace:.scripts/bloom":
   version: 0.0.0-use.local
-  resolution: "@crest/bloom@workspace:.scripts/bloom"
+  resolution: "@grove/bloom@workspace:.scripts/bloom"
   dependencies:
     "@microsoft/signalr": "npm:^8.0.0"
     axios: "npm:^1.7.0"
@@ -2764,179 +2764,179 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@crest/contentfields@workspace:Crest.ContentFields/Assets":
+"@grove/contentfields@workspace:Grove.ContentFields/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/contentfields@workspace:Crest.ContentFields/Assets"
+  resolution: "@grove/contentfields@workspace:Grove.ContentFields/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
     flatpickr: "npm:4.6.13"
-    crest-media-gallery: "workspace:*"
+    grove-media-gallery: "workspace:*"
   languageName: unknown
   linkType: soft
 
-"@crest/contentpreview@workspace:Crest.ContentPreview/Assets":
+"@grove/contentpreview@workspace:Grove.ContentPreview/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/contentpreview@workspace:Crest.ContentPreview/Assets"
+  resolution: "@grove/contentpreview@workspace:Grove.ContentPreview/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/contents@workspace:Crest.Contents/Assets":
+"@grove/contents@workspace:Grove.Contents/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/contents@workspace:Crest.Contents/Assets"
+  resolution: "@grove/contents@workspace:Grove.Contents/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/contenttypes@workspace:Crest.ContentTypes/Assets":
+"@grove/contenttypes@workspace:Grove.ContentTypes/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/contenttypes@workspace:Crest.ContentTypes/Assets"
+  resolution: "@grove/contenttypes@workspace:Grove.ContentTypes/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/cors@workspace:Crest.Cors/Assets":
+"@grove/cors@workspace:Grove.Cors/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/cors@workspace:Crest.Cors/Assets"
+  resolution: "@grove/cors@workspace:Grove.Cors/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/customsettings@workspace:Crest.CustomSettings/Assets":
+"@grove/customsettings@workspace:Grove.CustomSettings/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/customsettings@workspace:Crest.CustomSettings/Assets"
+  resolution: "@grove/customsettings@workspace:Grove.CustomSettings/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/datalocalization@workspace:Crest.DataLocalization/Assets":
+"@grove/datalocalization@workspace:Grove.DataLocalization/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/datalocalization@workspace:Crest.DataLocalization/Assets"
+  resolution: "@grove/datalocalization@workspace:Grove.DataLocalization/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/deployment-remote@workspace:Crest.Deployment.Remote/Assets":
+"@grove/deployment-remote@workspace:Grove.Deployment.Remote/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/deployment-remote@workspace:Crest.Deployment.Remote/Assets"
+  resolution: "@grove/deployment-remote@workspace:Grove.Deployment.Remote/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/deployment@workspace:Crest.Deployment/Assets":
+"@grove/deployment@workspace:Grove.Deployment/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/deployment@workspace:Crest.Deployment/Assets"
+  resolution: "@grove/deployment@workspace:Grove.Deployment/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/elasticsearch@workspace:Crest.Elasticsearch/Assets":
+"@grove/elasticsearch@workspace:Grove.Elasticsearch/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/elasticsearch@workspace:Crest.Elasticsearch/Assets"
+  resolution: "@grove/elasticsearch@workspace:Grove.Elasticsearch/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/email-smtp@workspace:Crest.Email.Smtp/Assets":
+"@grove/email-smtp@workspace:Grove.Email.Smtp/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/email-smtp@workspace:Crest.Email.Smtp/Assets"
+  resolution: "@grove/email-smtp@workspace:Grove.Email.Smtp/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/email@workspace:Crest.Email/Assets":
+"@grove/email@workspace:Grove.Email/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/email@workspace:Crest.Email/Assets"
+  resolution: "@grove/email@workspace:Grove.Email/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/facebook@workspace:Crest.Facebook/Assets":
+"@grove/facebook@workspace:Grove.Facebook/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/facebook@workspace:Crest.Facebook/Assets"
+  resolution: "@grove/facebook@workspace:Grove.Facebook/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/features@workspace:Crest.Features/Assets":
+"@grove/features@workspace:Grove.Features/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/features@workspace:Crest.Features/Assets"
+  resolution: "@grove/features@workspace:Grove.Features/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/flows@workspace:Crest.Flows/Assets":
+"@grove/flows@workspace:Grove.Flows/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/flows@workspace:Crest.Flows/Assets"
+  resolution: "@grove/flows@workspace:Grove.Flows/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/forms@workspace:Crest.Forms/Assets":
+"@grove/forms@workspace:Grove.Forms/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/forms@workspace:Crest.Forms/Assets"
+  resolution: "@grove/forms@workspace:Grove.Forms/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/html@workspace:Crest.Html/Assets":
+"@grove/html@workspace:Grove.Html/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/html@workspace:Crest.Html/Assets"
+  resolution: "@grove/html@workspace:Grove.Html/Assets"
   dependencies:
-    crest-media-gallery: "workspace:*"
+    grove-media-gallery: "workspace:*"
   languageName: unknown
   linkType: soft
 
-"@crest/indexing@workspace:Crest.Indexing/Assets":
+"@grove/indexing@workspace:Grove.Indexing/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/indexing@workspace:Crest.Indexing/Assets"
+  resolution: "@grove/indexing@workspace:Grove.Indexing/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/layers@workspace:Crest.Layers/Assets":
+"@grove/layers@workspace:Grove.Layers/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/layers@workspace:Crest.Layers/Assets"
+  resolution: "@grove/layers@workspace:Grove.Layers/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/liquid@workspace:Crest.Liquid/Assets":
+"@grove/liquid@workspace:Grove.Liquid/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/liquid@workspace:Crest.Liquid/Assets"
+  resolution: "@grove/liquid@workspace:Grove.Liquid/Assets"
   dependencies:
     monaco-editor: "npm:0.52.2"
   languageName: unknown
   linkType: soft
 
-"@crest/lists@workspace:Crest.Lists/Assets":
+"@grove/lists@workspace:Grove.Lists/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/lists@workspace:Crest.Lists/Assets"
+  resolution: "@grove/lists@workspace:Grove.Lists/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/localization@workspace:Crest.Localization/Assets":
+"@grove/localization@workspace:Grove.Localization/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/localization@workspace:Crest.Localization/Assets"
+  resolution: "@grove/localization@workspace:Grove.Localization/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/lucene@workspace:Crest.Lucene/Assets":
+"@grove/lucene@workspace:Grove.Lucene/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/lucene@workspace:Crest.Lucene/Assets"
+  resolution: "@grove/lucene@workspace:Grove.Lucene/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/markdown@workspace:Crest.Markdown/Assets":
+"@grove/markdown@workspace:Grove.Markdown/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/markdown@workspace:Crest.Markdown/Assets"
+  resolution: "@grove/markdown@workspace:Grove.Markdown/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
     easymde: "npm:2.18.0"
-    crest-media-gallery: "workspace:*"
+    grove-media-gallery: "workspace:*"
   languageName: unknown
   linkType: soft
 
-"@crest/menu@workspace:Crest.Menu/Assets":
+"@grove/menu@workspace:Grove.Menu/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/menu@workspace:Crest.Menu/Assets"
+  resolution: "@grove/menu@workspace:Grove.Menu/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/notifications@workspace:Crest.Notifications/Assets":
+"@grove/notifications@workspace:Grove.Notifications/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/notifications@workspace:Crest.Notifications/Assets"
+  resolution: "@grove/notifications@workspace:Grove.Notifications/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/openapi-ui-auth@workspace:Crest.OpenApi/Assets/openapi-ui-auth":
+"@grove/openapi-ui-auth@workspace:Grove.OpenApi/Assets/openapi-ui-auth":
   version: 0.0.0-use.local
-  resolution: "@crest/openapi-ui-auth@workspace:Crest.OpenApi/Assets/openapi-ui-auth"
+  resolution: "@grove/openapi-ui-auth@workspace:Grove.OpenApi/Assets/openapi-ui-auth"
   dependencies:
     oidc-client-ts: "npm:^3.1.0"
     typescript: "npm:^5.7.3"
@@ -2944,39 +2944,39 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@crest/openid@workspace:Crest.OpenId/Assets":
+"@grove/openid@workspace:Grove.OpenId/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/openid@workspace:Crest.OpenId/Assets"
+  resolution: "@grove/openid@workspace:Grove.OpenId/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/placements@workspace:Crest.Placements/Assets":
+"@grove/placements@workspace:Grove.Placements/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/placements@workspace:Crest.Placements/Assets"
+  resolution: "@grove/placements@workspace:Grove.Placements/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/queries@workspace:Crest.Queries/Assets":
+"@grove/queries@workspace:Grove.Queries/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/queries@workspace:Crest.Queries/Assets"
+  resolution: "@grove/queries@workspace:Grove.Queries/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/rate-limits@workspace:Crest.RateLimits/Assets":
+"@grove/rate-limits@workspace:Grove.RateLimits/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/rate-limits@workspace:Crest.RateLimits/Assets"
+  resolution: "@grove/rate-limits@workspace:Grove.RateLimits/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/recipes@workspace:Crest.Recipes/Assets":
+"@grove/recipes@workspace:Grove.Recipes/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/recipes@workspace:Crest.Recipes/Assets"
+  resolution: "@grove/recipes@workspace:Grove.Recipes/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/resources@workspace:Crest.Resources/Assets":
+"@grove/resources@workspace:Grove.Resources/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/resources@workspace:Crest.Resources/Assets"
+  resolution: "@grove/resources@workspace:Grove.Resources/Assets"
   dependencies:
     "@crestapps/bootstrap-select": "npm:1.2.4"
     "@fortawesome/fontawesome-free": "npm:7.3.1"
@@ -3011,21 +3011,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@crest/roles@workspace:Crest.Roles/Assets":
+"@grove/roles@workspace:Grove.Roles/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/roles@workspace:Crest.Roles/Assets"
+  resolution: "@grove/roles@workspace:Grove.Roles/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/root@workspace:.":
+"@grove/root@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@crest/root@workspace:."
+  resolution: "@grove/root@workspace:."
   dependencies:
     "@babel/core": "npm:^7.22.11"
     "@babel/preset-env": "npm:^7.22.10"
     "@babel/preset-flow": "npm:7.22.5"
     "@eslint/js": "npm:^9.21.0"
-    "@crest/assets-manager": "workspace:^"
+    "@grove/assets-manager": "workspace:^"
     child_process: "npm:^1.0.2"
     es6-promise: "npm:4.2.8"
     eslint: "npm:^9.21.0"
@@ -3041,91 +3041,91 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@crest/rules@workspace:Crest.Rules/Assets":
+"@grove/rules@workspace:Grove.Rules/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/rules@workspace:Crest.Rules/Assets"
+  resolution: "@grove/rules@workspace:Grove.Rules/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/security@workspace:Crest.Security/Assets":
+"@grove/security@workspace:Grove.Security/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/security@workspace:Crest.Security/Assets"
+  resolution: "@grove/security@workspace:Grove.Security/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/seo@workspace:Crest.Seo/Assets":
+"@grove/seo@workspace:Grove.Seo/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/seo@workspace:Crest.Seo/Assets"
+  resolution: "@grove/seo@workspace:Grove.Seo/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/setup@workspace:Crest.Setup/Assets":
+"@grove/setup@workspace:Grove.Setup/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/setup@workspace:Crest.Setup/Assets"
+  resolution: "@grove/setup@workspace:Grove.Setup/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
   languageName: unknown
   linkType: soft
 
-"@crest/shortcodes@workspace:Crest.Shortcodes/Assets":
+"@grove/shortcodes@workspace:Grove.Shortcodes/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/shortcodes@workspace:Crest.Shortcodes/Assets"
+  resolution: "@grove/shortcodes@workspace:Grove.Shortcodes/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
   languageName: unknown
   linkType: soft
 
-"@crest/signalr@workspace:Crest.SignalR/Assets":
+"@grove/signalr@workspace:Grove.SignalR/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/signalr@workspace:Crest.SignalR/Assets"
+  resolution: "@grove/signalr@workspace:Grove.SignalR/Assets"
   dependencies:
     "@microsoft/signalr": "npm:10.0.0"
   languageName: unknown
   linkType: soft
 
-"@crest/sitemaps@workspace:Crest.Sitemaps/Assets":
+"@grove/sitemaps@workspace:Grove.Sitemaps/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/sitemaps@workspace:Crest.Sitemaps/Assets"
+  resolution: "@grove/sitemaps@workspace:Grove.Sitemaps/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/sms@workspace:Crest.Sms/Assets":
+"@grove/sms@workspace:Grove.Sms/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/sms@workspace:Crest.Sms/Assets"
+  resolution: "@grove/sms@workspace:Grove.Sms/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/spatial@workspace:Crest.Spatial/Assets":
+"@grove/spatial@workspace:Grove.Spatial/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/spatial@workspace:Crest.Spatial/Assets"
+  resolution: "@grove/spatial@workspace:Grove.Spatial/Assets"
   dependencies:
     leaflet: "npm:1.9.4"
   languageName: unknown
   linkType: soft
 
-"@crest/taxonomies@workspace:Crest.Taxonomies/Assets":
+"@grove/taxonomies@workspace:Grove.Taxonomies/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/taxonomies@workspace:Crest.Taxonomies/Assets"
+  resolution: "@grove/taxonomies@workspace:Grove.Taxonomies/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/templates@workspace:Crest.Templates/Assets":
+"@grove/templates@workspace:Grove.Templates/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/templates@workspace:Crest.Templates/Assets"
+  resolution: "@grove/templates@workspace:Grove.Templates/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/tenants@workspace:Crest.Tenants/Assets":
+"@grove/tenants@workspace:Grove.Tenants/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/tenants@workspace:Crest.Tenants/Assets"
+  resolution: "@grove/tenants@workspace:Grove.Tenants/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/theadmin@workspace:TheAdmin/Assets":
+"@grove/theadmin@workspace:TheAdmin/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/theadmin@workspace:TheAdmin/Assets"
+  resolution: "@grove/theadmin@workspace:TheAdmin/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     "@types/js-cookie": "npm:^3.0.6"
@@ -3135,74 +3135,74 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@crest/theagencytheme@workspace:TheAgencyTheme/Assets":
+"@grove/theagencytheme@workspace:TheAgencyTheme/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/theagencytheme@workspace:TheAgencyTheme/Assets"
+  resolution: "@grove/theagencytheme@workspace:TheAgencyTheme/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.2.3"
   languageName: unknown
   linkType: soft
 
-"@crest/theblogtheme@workspace:TheBlogTheme/Assets":
+"@grove/theblogtheme@workspace:TheBlogTheme/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/theblogtheme@workspace:TheBlogTheme/Assets"
+  resolution: "@grove/theblogtheme@workspace:TheBlogTheme/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.1.3"
   languageName: unknown
   linkType: soft
 
-"@crest/thecomingsoontheme@workspace:TheComingSoonTheme/Assets":
+"@grove/thecomingsoontheme@workspace:TheComingSoonTheme/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/thecomingsoontheme@workspace:TheComingSoonTheme/Assets"
+  resolution: "@grove/thecomingsoontheme@workspace:TheComingSoonTheme/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.1.3"
   languageName: unknown
   linkType: soft
 
-"@crest/themes@workspace:Crest.Themes/Assets":
+"@grove/themes@workspace:Grove.Themes/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/themes@workspace:Crest.Themes/Assets"
+  resolution: "@grove/themes@workspace:Grove.Themes/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
   languageName: unknown
   linkType: soft
 
-"@crest/thetheme@workspace:TheTheme/Assets":
+"@grove/thetheme@workspace:TheTheme/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/thetheme@workspace:TheTheme/Assets"
+  resolution: "@grove/thetheme@workspace:TheTheme/Assets"
   dependencies:
     "@popperjs/core": "npm:2.11.8"
     bootstrap: "npm:5.3.8"
   languageName: unknown
   linkType: soft
 
-"@crest/title@workspace:Crest.Title/Assets":
+"@grove/title@workspace:Grove.Title/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/title@workspace:Crest.Title/Assets"
+  resolution: "@grove/title@workspace:Grove.Title/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/urlrewriting@workspace:Crest.UrlRewriting/Assets":
+"@grove/urlrewriting@workspace:Grove.UrlRewriting/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/urlrewriting@workspace:Crest.UrlRewriting/Assets"
+  resolution: "@grove/urlrewriting@workspace:Grove.UrlRewriting/Assets"
   languageName: unknown
   linkType: soft
 
-"@crest/users@workspace:Crest.Users/Assets":
+"@grove/users@workspace:Grove.Users/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/users@workspace:Crest.Users/Assets"
+  resolution: "@grove/users@workspace:Grove.Users/Assets"
   dependencies:
     qrcodejs: "npm:^1.0.0"
   languageName: unknown
   linkType: soft
 
-"@crest/widgets@workspace:Crest.Widgets/Assets":
+"@grove/widgets@workspace:Grove.Widgets/Assets":
   version: 0.0.0-use.local
-  resolution: "@crest/widgets@workspace:Crest.Widgets/Assets"
+  resolution: "@grove/widgets@workspace:Grove.Widgets/Assets"
   languageName: unknown
   linkType: soft
 
@@ -13398,9 +13398,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"crest-media-gallery@workspace:*, crest-media-gallery@workspace:Crest.Media/Assets/media-gallery":
+"grove-media-gallery@workspace:*, grove-media-gallery@workspace:Grove.Media/Assets/media-gallery":
   version: 0.0.0-use.local
-  resolution: "crest-media-gallery@workspace:Crest.Media/Assets/media-gallery"
+  resolution: "grove-media-gallery@workspace:Grove.Media/Assets/media-gallery"
   dependencies:
     "@fortawesome/fontawesome-svg-core": "npm:^6.4.2"
     "@fortawesome/free-regular-svg-icons": "npm:^6.4.2"
@@ -13443,9 +13443,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"crest-media-picker@workspace:Crest.Media/Assets/media-picker":
+"grove-media-picker@workspace:Grove.Media/Assets/media-picker":
   version: 0.0.0-use.local
-  resolution: "crest-media-picker@workspace:Crest.Media/Assets/media-picker"
+  resolution: "grove-media-picker@workspace:Grove.Media/Assets/media-picker"
   dependencies:
     "@fortawesome/fontawesome-svg-core": "npm:^6.4.2"
     "@fortawesome/free-regular-svg-icons": "npm:^6.4.2"

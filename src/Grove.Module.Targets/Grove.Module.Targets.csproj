@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Target for Grove Module</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Converts project/library into an Grove Module that can be referenced in Grove modular application.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!--
+    Add the necessary '.props' and '.targets' files under the 'build\' folder of this package,
+    so that a referencing project is built / packed and considered as an 'Grove' module.
+
+    If a referencing project targets multiple TFMs the scripts under 'build\' may not be used,
+    so we pack other scripts under 'buildMultiTargeting\' just to import those under `build\`.
+  -->
+
+  <ItemGroup>
+    <None Include="Grove.Module.Targets.props" Pack="true">
+      <PackagePath>build\Grove.Module.Targets.props</PackagePath>
+    </None>
+    <None Include="buildMultiTargeting\Grove.Module.Targets.props" Pack="true">
+      <PackagePath>buildMultiTargeting\Grove.Module.Targets.props</PackagePath>
+    </None>
+    <None Include="Grove.Module.Targets.targets" Pack="true">
+      <PackagePath>build\Grove.Module.Targets.targets</PackagePath>
+    </None>
+    <None Include="buildMultiTargeting\Grove.Module.Targets.targets" Pack="true">
+      <PackagePath>buildMultiTargeting\Grove.Module.Targets.targets</PackagePath>
+    </None>
+    <None Include="Package.Build.props" Pack="true">
+      <PackagePath>build\Package.Build.props</PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

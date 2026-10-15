@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+
+    <!-- NuGet properties-->
+    <Title>Grove DisplayManagement</Title>
+    <Description>$(OCFrameworkDescription)
+
+    Library for DisplayManagement. Provides BaseDisplayManager, Shape, Layout and Theming support.</Description>
+    <PackageTags>$(PackageTags) PlatformFramework DisplayManagement</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Grove.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Mvc.Abstractions\Grove.Mvc.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.DisplayManagement.Abstractions\Grove.DisplayManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Liquid.Abstractions\Grove.Liquid.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Localization.Abstractions\Grove.Localization.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Mvc\Grove.Mvc.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Castle.Core" />
+  </ItemGroup>
+
+</Project>

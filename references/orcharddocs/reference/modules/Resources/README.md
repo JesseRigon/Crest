@@ -1,4 +1,4 @@
-# Resources (`Crest.Resources`)
+# Resources (`Grove.Resources`)
 
 ## Purpose
 
@@ -40,7 +40,7 @@ When supplied, this will prepend local resources served via the `IResourceManage
 
 Named resources are well-known scripts and stylesheets that are described in a module or theme.  
 They have a name, a type (script, stylesheet) and optionally a version.  
-The `Crest.Resources` module provides some commonly used ones:
+The `Grove.Resources` module provides some commonly used ones:
 
 | Name                  | Type   | Versions     | Dependencies  |
 |-----------------------|--------|--------------|---------------|
@@ -278,8 +278,8 @@ The API is necessary if you need to inject a resource from code, however it is r
 
 ### Using the API
 
-From your module, add a reference to the `Crest.Resources.Abstractions` project.  
-From the class you want to use the API in, inject the `Crest.ResourceManagement.IResourceManager` interface.
+From your module, add a reference to the `Grove.Resources.Abstractions` project.  
+From the class you want to use the API in, inject the `Grove.ResourceManagement.IResourceManager` interface.
 
 #### Register a named resource
 
@@ -334,7 +334,7 @@ resourceManager.RegisterFootScript(new HtmlString("<script>alert('Hello')</scrip
 ### Add custom meta tag
 
 ```csharp
-resourceManager.RegisterMeta(new MetaEntry { Content = "Crest", Name = "generator" });
+resourceManager.RegisterMeta(new MetaEntry { Content = "Grove", Name = "generator" });
 ```
 
 You can also add more content to an existing tag like this:
@@ -345,7 +345,7 @@ resourceManager.AppendMeta(new MetaEntry { Name = "keywords", Content = "orchard
 
 ### Using the Tag Helpers
 
-From your module, in the `_ViewImports.cshtml` or your view, add `@addTagHelper *, Crest.ResourceManagement`, and take a direct reference to the `Crest.ResourceManagement` nuget package.
+From your module, in the `_ViewImports.cshtml` or your view, add `@addTagHelper *, Grove.ResourceManagement`, and take a direct reference to the `Grove.ResourceManagement` nuget package.
 
 #### Register a named script or stylesheet
 
@@ -709,7 +709,7 @@ These should be rendered at the bottom of the `<body>` section.
     ```
 
 !!! note
-    When using tag helpers in Razor, you must take a direct reference to the `Crest.ResourceManagement` nuget package in each theme or module that uses the tag helpers. This is not required when using Liquid.
+    When using tag helpers in Razor, you must take a direct reference to the `Grove.ResourceManagement` nuget package in each theme or module that uses the tag helpers. This is not required when using Liquid.
 
 ### Logging
 

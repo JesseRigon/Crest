@@ -1,10 +1,10 @@
-# Contents (`Crest.Contents`)
+# Contents (`Grove.Contents`)
 
 This module provides Content Management services.
 
 ## Content Life Cycle
 
-The content life cycle is managed through different content item versions. In Crest, the content item could be:
+The content life cycle is managed through different content item versions. In Grove, the content item could be:
 
 - **Draft**: A version that is being worked on but has not yet been published or saved as the latest version.
 - **Published**: The version that is currently live on the website and visible to visitors.
@@ -123,7 +123,7 @@ The following methods are available from the Razor helper.
 | `GetContentItemByVersionIdAsync` | `string contentItemVersionId`                             | Loads a content item from its version id.                                                     |
 | `ConsoleLog`                     | `object content`                                          | Logs content to the browser console                                                           |
 
-> The Razor Helper is accessible on the `Crest` property if the view is using Crest's Razor base class, or by injecting `Crest.IPlatformHelper` in all other cases.
+> The Razor Helper is accessible on the `Grove` property if the view is using Grove's Razor base class, or by injecting `Grove.IPlatformHelper` in all other cases.
 
 ### Razor console log
 
@@ -147,19 +147,19 @@ Well known properties include
 
 ## Contents Module RESTful Web API
 
-The `Crest.Contents` module provides RESTful API endpoints via [`minimal API`](https://github.com/OrchardCMS/OrchardCore/tree/main/src/OrchardCore.Modules/OrchardCore.Contents/Endpoints/Api) featuring endpoints to manage _content items_. These endpoints allow for operations such as retrieving, creating, updating, and deleting single content item instances. Access to these endpoints requires authentication and appropriate user role permissions.
+The `Grove.Contents` module provides RESTful API endpoints via [`minimal API`](https://github.com/OrchardCMS/OrchardCore/tree/main/src/OrchardCore.Modules/OrchardCore.Contents/Endpoints/Api) featuring endpoints to manage _content items_. These endpoints allow for operations such as retrieving, creating, updating, and deleting single content item instances. Access to these endpoints requires authentication and appropriate user role permissions.
 
 ### Useful modules and libraries
 
 - We would suggest you read the docs about the [GraphQL module](../Apis.GraphQL/README.md), to be used for querying content items.
 - There's a [Swagger module](https://github.com/OrchardCoreContrib/OrchardCoreContrib.Modules/blob/main/src/OrchardCoreContrib.Apis.Swagger/README.md) made by the community, that allows you to create APIs documentation using Swagger.
-- Lombiq provide a [client library](https://github.com/Lombiq/Orchard-Core-API-Client) for communicating with the Crest web APIs.
+- Lombiq provide a [client library](https://github.com/Lombiq/Orchard-Core-API-Client) for communicating with the Grove web APIs.
 
 ### Activating the "OpenId Authorization Server" and "OpenId Token Validation" Features, and setting User Roles
 
-To utilize the Crest Contents API endpoints, user accounts must authenticate using the OAuth 2 standard by activating and configuring the "OpenId Authorization Server" and "OpenId Token Validation" features. Detailed configuration steps can be found in the [OpenId Authorization Server documentation](https://docs.orchardcore.net/en/main/docs/reference/modules/OpenId/#authorization-server) and the [OpenId Token Validation documentation](https://docs.orchardcore.net/en/main/docs/reference/modules/OpenId/#token-validation).
+To utilize the Grove Contents API endpoints, user accounts must authenticate using the OAuth 2 standard by activating and configuring the "OpenId Authorization Server" and "OpenId Token Validation" features. Detailed configuration steps can be found in the [OpenId Authorization Server documentation](https://docs.orchardcore.net/en/main/docs/reference/modules/OpenId/#authorization-server) and the [OpenId Token Validation documentation](https://docs.orchardcore.net/en/main/docs/reference/modules/OpenId/#token-validation).
 
-It is usually better to **create a dedicated user for performing API calls**, maintain control over user rights, and easily activate/deactivate the API user. The `Crest.OpenId` feature allows setting these user role permissions from "Roles → Edit (User)". Those are the available permissions:
+It is usually better to **create a dedicated user for performing API calls**, maintain control over user rights, and easily activate/deactivate the API user. The `Grove.OpenId` feature allows setting these user role permissions from "Roles → Edit (User)". Those are the available permissions:
 
 - View and edit the OpenID Connect client settings
 - View and edit the OpenID Connect server settings
@@ -642,7 +642,7 @@ The same pattern is used by the [users admin list](../Users/README.md#documentin
 
 ## Content Version Pruning
 
-The `Content Version Pruning` feature (`Crest.Contents.VersionPruning`) provides a background task that periodically deletes old **archived** content item versions — versions that are neither the *latest* nor the *published* one. On sites that are edited often, every save or publish leaves the previous version behind in the database. Over time, these accumulate, growing the storage footprint and slowing version-history queries. Pruning keeps that history bounded.
+The `Content Version Pruning` feature (`Grove.Contents.VersionPruning`) provides a background task that periodically deletes old **archived** content item versions — versions that are neither the *latest* nor the *published* one. On sites that are edited often, every save or publish leaves the previous version behind in the database. Over time, these accumulate, growing the storage footprint and slowing version-history queries. Pruning keeps that history bounded.
 
 The latest draft and the published version of an item are **never** deleted; only superseded (archived) versions are eligible.
 

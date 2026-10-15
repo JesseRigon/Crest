@@ -1,4 +1,4 @@
-# Dynamic Cache (`Crest.DynamicCache`)
+# Dynamic Cache (`Grove.DynamicCache`)
 
 ## Purpose
 

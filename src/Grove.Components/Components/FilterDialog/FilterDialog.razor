@@ -1,0 +1,39 @@
+@using Microsoft.AspNetCore.Components
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives.Spreadsheet
+@using Grove.Components.Primitives.Documents.Spreadsheet
+@inherits SpreadsheetDialogBase
+
+@namespace Grove.Components.Primitives.Spreadsheet
+<GroveStack Orientation="Orientation.Vertical" Gap="0.5rem">
+    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+        <GroveLabel class="rz-text-subtitle2" Text=@L(nameof(GroveStrings.Spreadsheet_ShowRowsWhere)) />
+        <GroveLabel class="rz-text-subtitle2" Text=@fieldName />
+    </GroveStack>
+
+    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+        <GroveDropDown @bind-Value=@selectedOperator Data=@availableOperators TextProperty="Text" ValueProperty="Value"
+                       Placeholder=@L(nameof(GroveStrings.Spreadsheet_SelectOperator)) InputSize="InputSize.Small"
+                       Style="width: 12rem" />
+        <GroveTextBox @bind-Value=@filterValue Placeholder=@L(nameof(GroveStrings.Spreadsheet_EnterValue))
+                      InputSize="InputSize.Small" Style="flex: 1" />
+    </GroveStack>
+
+    <GroveSelectBar @bind-Value=@logicalOperator Data=@logicalOperators TextProperty="Text" ValueProperty="Value"
+                    Size="ButtonSize.Small" />
+    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+        <GroveDropDown @bind-Value=@secondOperator Data=@availableOperators TextProperty="Text" ValueProperty="Value"
+                       Placeholder=@L(nameof(GroveStrings.Spreadsheet_SelectOperator)) InputSize="InputSize.Small"
+                       Style="width: 12rem" />
+        <GroveTextBox @bind-Value=@secondFilterValue Placeholder=@L(nameof(GroveStrings.Spreadsheet_EnterValue))
+                      InputSize="InputSize.Small" Style="flex:1" />
+    </GroveStack>
+
+    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End"
+                class="rz-spreadsheet-dialog-actions">
+        <GroveButton Text=@L(nameof(GroveStrings.Spreadsheet_Cancel)) Click=@OnCancel ButtonStyle="ButtonStyle.Base"
+                     Variant="Variant.Outlined" />
+        <GroveButton Text=@L(nameof(GroveStrings.Spreadsheet_OK)) Click=@OnOk ButtonStyle="ButtonStyle.Primary"
+                     Variant="Variant.Flat" />
+    </GroveStack>
+</GroveStack>

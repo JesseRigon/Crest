@@ -58,10 +58,10 @@ There are two things going on here;
 1. Inherit off `ObjectGraphType`. GraphQL understands this type.
 2. Field(x => x.Path);. This tells the class from #1 what fields you want exposed publicly.
 
-The last part is to tell the Crest Subsystem about your new type, once this is done, the GraphQL subsystem will pick up your new object from its dependency tree. To do this, simple register it in a Startup class;
+The last part is to tell the Grove Subsystem about your new type, once this is done, the GraphQL subsystem will pick up your new object from its dependency tree. To do this, simple register it in a Startup class;
 
 ```csharp
-[RequireFeatures("Crest.Apis.GraphQL")]
+[RequireFeatures("Grove.Apis.GraphQL")]
 public class sealed Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -110,7 +110,7 @@ public class AutorouteInputObjectType : InputObjectGraphType<AutoroutePart>
 Update Startup class like below.
 
 ```csharp
-[RequireFeatures("Crest.Apis.GraphQL")]
+[RequireFeatures("Grove.Apis.GraphQL")]
 public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -261,7 +261,7 @@ public class AutoroutePartIndexAliasProvider : IIndexAliasProvider
 Update Startup class like below.
 
 ```csharp
-[RequireFeatures("Crest.Apis.GraphQL")]
+[RequireFeatures("Grove.Apis.GraphQL")]
 public sealed class Startup : StartupBase
 {
     // Assuming we've added the necessary using directives.
@@ -313,9 +313,9 @@ Use this approach if you:
 * or will use custom logic for filtration.
 * or you need to switch data sources, or logic, based on the argument's value
 
-Crest's implementation of a filtering query by an argument can be seen in [`ContentItemQuery`](https://github.com/OrchardCMS/OrchardCore/blob/main/src/OrchardCore/OrchardCore.ContentManagement.GraphQL/Queries/ContentItemQuery.cs) or `MediaAssetQuery`.
+Grove's implementation of a filtering query by an argument can be seen in [`ContentItemQuery`](https://github.com/OrchardCMS/OrchardCore/blob/main/src/OrchardCore/OrchardCore.ContentManagement.GraphQL/Queries/ContentItemQuery.cs) or `MediaAssetQuery`.
 
-Crest's implementation of applying an argument on a field can be seen in `MediaFieldQueryObjectType`.
+Grove's implementation of applying an argument on a field can be seen in `MediaFieldQueryObjectType`.
 
 ## Querying related content items
 

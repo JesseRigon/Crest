@@ -1,4 +1,4 @@
-# Widgets (`Crest.Widgets`)
+# Widgets (`Grove.Widgets`)
 
 Widgets are content items of a specific category (stereotype) that can be rendered in custom locations of a page.  
 The Widgets module provides a `Widget` stereotype and some templates to render it.  
@@ -56,7 +56,7 @@ The `Widget` shape is used to render a Widget. The default template will render 
 If the HTML contains `<div class="widget-container">` then your widget has been rendered by the `Layers` modules which will add this automatically, as it needs to
 be able to render a title, and uses it as a container for both the title and the widget's actual content.
 
-The actual template for the `Widget` shape can be found in `src/Crest.Modules/Crest.Widgets/Views/Widgets.cshtml` but can be simplified to this:
+The actual template for the `Widget` shape can be found in `src/Grove.Modules/Grove.Widgets/Views/Widgets.cshtml` but can be simplified to this:
 
 === "Liquid"
 
@@ -88,7 +88,7 @@ Alternates are available per Content Type.
 
 As mentioned in the previous section, the `Layers` module uses a template to wrap the widgets that it renders and insert a custom title for each of them.
 
-The actual template for this wrapper shape can be found in `src/Crest.Modules/Crest.Layers/Views/Widget.Wrapper.cshtml`.
+The actual template for this wrapper shape can be found in `src/Grove.Modules/Grove.Layers/Views/Widget.Wrapper.cshtml`.
 
 A common requirement is to remove these tags, which can be done by creating this template instead:
 

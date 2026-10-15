@@ -1,4 +1,4 @@
-# Liquid (`Crest.Liquid`)
+# Liquid (`Grove.Liquid`)
 
 This module provides a way to create templates securely from the admin site.  
 For more information about the Liquid syntax, please refer to this site: <https://shopify.github.io/liquid/>.
@@ -14,8 +14,8 @@ If you need to render some raw HTML chars you can use the `raw` filter.
 
 ## Content Item Filters
 
-All the default filters that are available in the standard Liquid syntax are available in Crest.  
-On top of that each Crest module can provide custom filters for their own purpose.
+All the default filters that are available in the standard Liquid syntax are available in Grove.  
+On top of that each Grove module can provide custom filters for their own purpose.
 Here is a list of common filters that apply to content items.
 
 ### `display_url`
@@ -577,8 +577,8 @@ The following properties are available on the `Request` object.
 | `Query`          | Usage: `Request.Query.sort`                        | The query value collection parsed from `QueryString`. Each property value is an array of values. |
 | `Form`           | Usage: `Request.Form.value`                        | The collection of form values.                                                                   |
 | `Protocol`       | `https`                                            | The protocol of this request.                                                                    |
-| `Path`           | `/Crest.ContentPreview/Preview/Render`       | The unescaped path of the request.                                                               |
-| `UriPath`        | `/Crest.ContentPreview/Preview/Render`       | The path escaped in a way which is correct for combining into the URI representation.            |
+| `Path`           | `/Grove.ContentPreview/Preview/Render`       | The unescaped path of the request.                                                               |
+| `UriPath`        | `/Grove.ContentPreview/Preview/Render`       | The path escaped in a way which is correct for combining into the URI representation.            |
 | `PathBase`       | `/mytenant`                                        | The unescaped base path of the request.                                                          |
 | `UriPathBase`    | `/mytenant`                                        | The base path escaped in a way which is correct for combining into the URI representation.       |
 | `Host`           | `localhost:44300`                                  | The unescaped `Host` header. May contain the port.                                               |
@@ -1159,7 +1159,7 @@ Invokes the `style` tag helper from the `Platform.ResourceManagement` package. [
 
 ### `a`
 
-Invokes the `a` content link tag helper from the `Crest.Contents` package.
+Invokes the `a` content link tag helper from the `Grove.Contents` package.
 
 ### `route_*`
 
@@ -1214,7 +1214,7 @@ Block Tag example
 
 ### `LiquidToHtmlAsync`
 
-To render a liquid string template as `IHtmlContent` within Razor use the `LiquidToHtmlAsync` helper extension method on the view's base `Crest` property, e.g.:
+To render a liquid string template as `IHtmlContent` within Razor use the `LiquidToHtmlAsync` helper extension method on the view's base `Grove` property, e.g.:
 
 Input
 

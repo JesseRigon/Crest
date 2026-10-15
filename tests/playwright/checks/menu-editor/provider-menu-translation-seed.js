@@ -9,7 +9,7 @@
 // items.
 //
 // Assertions run against both halves of the pipeline: the store itself (via GetStrings, the
-// JSON endpoint Crest's own translations editor loads from) and the served sidebar (the
+// JSON endpoint Grove's own translations editor loads from) and the served sidebar (the
 // navigation API, which resolves captions through IDataLocalizer per request culture).
 //
 // A fresh setup tenant supports en-US and es-ES, so es-ES needs no provisioning here.
@@ -24,7 +24,7 @@ module.exports = async function run(page, ctx) {
   // this shell already synced before the check ran.
   const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
   const synced = await page.evaluate(async ({ antiforgery }) => {
-    const response = await fetch('/api/crest/admin-menus/sync-providers', {
+    const response = await fetch('/api/grove/admin-menus/sync-providers', {
       method: 'POST',
       credentials: 'include',
       headers: { [antiforgery.headerName]: antiforgery.requestToken },
@@ -52,10 +52,10 @@ module.exports = async function run(page, ctx) {
       : `es-ES store has no "Contenido" (${store.length} bytes returned)`,
   });
 
-  // The sidebar under es-ES. The culture cookie is Crest's own (name carries the shell's
+  // The sidebar under es-ES. The culture cookie is Grove's own (name carries the shell's
   // VersionId), so it is read from the app manifest rather than assumed.
   const cookie = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/app/manifest', { credentials: 'include' });
+    const response = await fetch('/api/grove/app/manifest', { credentials: 'include' });
     if (!response.ok) throw new Error(`manifest failed: ${response.status}`);
     const manifest = await response.json();
     return { name: manifest.cultureSelector.cookieName, path: manifest.cultureSelector.cookiePath };
@@ -68,7 +68,7 @@ module.exports = async function run(page, ctx) {
       } else {
         document.cookie = `${cookie.name}=; path=${cookie.path}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
       }
-      const response = await fetch('/api/crest/navigation/admin', { credentials: 'include' });
+      const response = await fetch('/api/grove/navigation/admin', { credentials: 'include' });
       if (!response.ok) throw new Error(`navigation failed: ${response.status}`);
       const menu = await response.json();
       return menu.items.map(item => item.text);

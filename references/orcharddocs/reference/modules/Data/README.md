@@ -1,12 +1,12 @@
-# Data (`Crest.Data`)
+# Data (`Grove.Data`)
 
-Crest uses [YesSql](https://github.com/sebastienros/yessql) to store documents and indexes in a relational database. The Data services configure YesSql for each tenant and provide access to the tenant's database connection, SQL dialect, schema, and table naming conventions.
+Grove uses [YesSql](https://github.com/sebastienros/yessql) to store documents and indexes in a relational database. The Data services configure YesSql for each tenant and provide access to the tenant's database connection, SQL dialect, schema, and table naming conventions.
 
 For an introduction to documents, indexes, and sessions, see [How YesSql works](../../../topics/data/yessql.md).
 
 ## Database providers
 
-You select a database provider during tenant setup. Crest includes these providers:
+You select a database provider during tenant setup. Grove includes these providers:
 
 | Database | Provider value | Connection string | Table prefix and schema |
 | --- | --- | --- | --- |
@@ -15,7 +15,7 @@ You select a database provider during tenant setup. Crest includes these provide
 | MySQL | `MySql` | Required | Supported |
 | PostgreSQL | `Postgres` | Required | Supported |
 
-For SQL Server, MySQL, and PostgreSQL, create the database before running setup and grant the configured account permission to create and modify tables. Crest validates the connection and then creates its tables; it doesn't create the database itself.
+For SQL Server, MySQL, and PostgreSQL, create the database before running setup and grant the configured account permission to create and modify tables. Grove validates the connection and then creates its tables; it doesn't create the database itself.
 
 The provider, connection string, table prefix, and schema are tenant settings. You can enter them on the setup screen or preconfigure them through `IShellConfiguration`. See [Setup](../Setup/README.md) for setup parameters and [Configuration](../Configuration/README.md) for tenant configuration sources and shared-database guidance.
 
@@ -25,18 +25,18 @@ SQLite is the default provider and stores each tenant's database file in that te
 
 ### Database name
 
-The `DatabaseName` shell setting controls the file name. Setup uses `Crest.db` when no name is provided. Because the value belongs to the tenant's `ShellSettings`, each tenant can use a different file name.
+The `DatabaseName` shell setting controls the file name. Setup uses `Grove.db` when no name is provided. Because the value belongs to the tenant's `ShellSettings`, each tenant can use a different file name.
 
 ### Connection pooling
 
 `Microsoft.Data.Sqlite` connection pooling is enabled by default. Pooled connections can keep the database file open, which may interfere with operations such as copying or replacing the file for a backup. Set `UseConnectionPooling` to `false` when you need those operations to release the file; disabling pooling can reduce performance.
 
-In the root web application's `appsettings.json`, configure the option under the `Crest` section:
+In the root web application's `appsettings.json`, configure the option under the `Grove` section:
 
 ```json
 {
-  "Crest": {
-    "Crest_Data_Sqlite": {
+  "Grove": {
+    "Grove_Data_Sqlite": {
       "UseConnectionPooling": false
     }
   }
@@ -47,7 +47,7 @@ See the [`Microsoft.Data.Sqlite` connection string documentation](https://learn.
 
 ## YesSql options
 
-Crest binds the `Crest_YesSql` configuration section to `YesSqlOptions`.
+Grove binds the `Grove_YesSql` configuration section to `YesSqlOptions`.
 
 | Setting | Default | Description |
 | --- | --- | --- |
@@ -60,8 +60,8 @@ Configure these values through any supported tenant configuration source. For ex
 
 ```json
 {
-  "Crest": {
-    "Crest_YesSql": {
+  "Grove": {
+    "Grove_YesSql": {
       "CommandsPageSize": 1000,
       "QueryGatingEnabled": true,
       "EnableThreadSafetyChecks": false,
@@ -74,7 +74,7 @@ Configure these values through any supported tenant configuration source. For ex
 `YesSqlOptions` also exposes `IdGenerator`, `IdentifierAccessorFactory`, `VersionAccessorFactory`, and `ContentSerializer` for service implementations that can't be created by configuration binding. Configure those options in code:
 
 ```csharp
-using Crest.Data.YesSql;
+using Grove.Data.YesSql;
 
 services.Configure<YesSqlOptions>(options =>
 {
@@ -84,7 +84,7 @@ services.Configure<YesSqlOptions>(options =>
 
 ## Table naming presets
 
-The `Crest_Data_TableOptions` section defines presets that Crest copies into a tenant's shell settings during initial setup.
+The `Grove_Data_TableOptions` section defines presets that Grove copies into a tenant's shell settings during initial setup.
 
 | Setting | Default for a new tenant | Description |
 | --- | --- | --- |
@@ -94,8 +94,8 @@ The `Crest_Data_TableOptions` section defines presets that Crest copies into a t
 
 ```json
 {
-  "Crest": {
-    "Crest_Data_TableOptions": {
+  "Grove": {
+    "Grove_Data_TableOptions": {
       "DefaultDocumentTable": "Document",
       "DefaultTableNameSeparator": "_",
       "DefaultIdentityColumnSize": "Int64"
@@ -107,15 +107,15 @@ The `Crest_Data_TableOptions` section defines presets that Crest copies into a t
 !!! warning
     Configure these presets before setting up a tenant. Changing them later doesn't rename existing tables or alter existing identity columns.
 
-The examples above show the root web application's `appsettings.json` shape. In a tenant-local `App_Data/Sites/{tenant}/appsettings.json` file, omit the outer `Crest` section. See [Configuration](../Configuration/README.md) for the complete configuration source hierarchy.
+The examples above show the root web application's `appsettings.json` shape. In a tenant-local `App_Data/Sites/{tenant}/appsettings.json` file, omit the outer `Grove` section. See [Configuration](../Configuration/README.md) for the complete configuration source hierarchy.
 
 ## Running SQL queries
 
 Prefer `IContentManager` for content items and `ISession` for YesSql documents and indexes. Use raw SQL only when you need to work directly with relational tables.
 
-`IDbConnectionAccessor` from the `Crest.Data` namespace creates a `DbConnection` for the current tenant. The interface is provided by the `Crest.Data.Abstractions` package. Resolve `IStore` from the `YesSql` namespace to access the configured SQL dialect, schema, and table prefix.
+`IDbConnectionAccessor` from the `Grove.Data` namespace creates a `DbConnection` for the current tenant. The interface is provided by the `Grove.Data.Abstractions` package. Resolve `IStore` from the `YesSql` namespace to access the configured SQL dialect, schema, and table prefix.
 
-Create custom relational tables through a [data migration](../Migrations/README.md) so Crest can apply their schema consistently.
+Create custom relational tables through a [data migration](../Migrations/README.md) so Grove can apply their schema consistently.
 
 ### Quote table names
 
@@ -123,7 +123,7 @@ Database providers use different identifier syntax. Build table names from the Y
 
 ```csharp
 using Dapper;
-using Crest.Data;
+using Grove.Data;
 using YesSql;
 
 public sealed class CustomTableReader

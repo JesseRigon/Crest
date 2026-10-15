@@ -1,12 +1,12 @@
-# Create an Crest theme from an HTML template
+# Create an Grove theme from an HTML template
 
-Many websites start from a static HTML template, whether hand-crafted or downloaded from providers like [Start Bootstrap](https://startbootstrap.com/) or [HTML5 UP](https://html5up.net/). This guide explains how to turn such a template into a fully working Crest theme.
+Many websites start from a static HTML template, whether hand-crafted or downloaded from providers like [Start Bootstrap](https://startbootstrap.com/) or [HTML5 UP](https://html5up.net/). This guide explains how to turn such a template into a fully working Grove theme.
 
 This is exactly how the built-in `TheBlogTheme` was created: it is a port of the [Start Bootstrap Clean Blog](https://startbootstrap.com/theme/clean-blog) template. You can use its [source code](https://github.com/OrchardCMS/OrchardCore/tree/main/src/OrchardCore.Themes/TheBlogTheme) as a real-world reference while following this guide.
 
 ## Prerequisites
 
-- An Crest CMS application ([Create a CMS application](../../guides/create-cms-application/README.md)).
+- An Grove CMS application ([Create a CMS application](../../guides/create-cms-application/README.md)).
 - An empty theme project added to your solution ([Create a Theme](../../getting-started/theme.md)).
 - The HTML template you want to convert, with its CSS, JavaScript and image assets.
 
@@ -35,13 +35,13 @@ Anything in `wwwroot` is served by the static file middleware under the theme's 
 
 ## 2. Declare the resources
 
-Instead of hardcoding `<link>` and `<script>` tags, register the template's stylesheets and scripts as named resources. This lets Crest handle versioning (cache busting), minified vs. non-minified files, CDN fallbacks, and dependency ordering.
+Instead of hardcoding `<link>` and `<script>` tags, register the template's stylesheets and scripts as named resources. This lets Grove handle versioning (cache busting), minified vs. non-minified files, CDN fallbacks, and dependency ordering.
 
 Create a `ResourceManagementOptionsConfiguration.cs` file in the theme project:
 
 ```csharp
 using Microsoft.Extensions.Options;
-using Crest.ResourceManagement;
+using Grove.ResourceManagement;
 
 namespace MyTheme;
 
@@ -75,7 +75,7 @@ Then register it in a `Startup.cs` file:
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
-using Crest.Modules;
+using Grove.Modules;
 
 namespace MyTheme;
 

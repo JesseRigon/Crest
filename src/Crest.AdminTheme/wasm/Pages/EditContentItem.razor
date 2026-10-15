@@ -1,9 +1,0 @@
-@page "/Contents/ContentItems/{ContentItemId}/Edit"
-@attribute [PageEntry("EditContent")]
-@using Crest.AdminTheme.Components.Admin
-
-<Crest.AdminTheme.Components.Admin.CrestContentItemEditor ContentItemId="@ContentItemId" />
-
-@code {
-    [Parameter] public string? ContentItemId { get; set; }
-}

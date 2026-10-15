@@ -8,13 +8,13 @@ module.exports = async function run(page, ctx) {
   await page.locator('[data-testid="content-types-page"]').waitFor({ timeout: 20000 });
   await page.getByRole('heading', { name: 'Content Types', exact: true, level: 4 }).waitFor({ timeout: 20000 });
 
-  const rows = page.locator('.crest-model-list__item');
+  const rows = page.locator('.grove-model-list__item');
   const count = await rows.count();
 
   const results = [{ name: 'renders-content-types-list', pass: count >= 1, message: `${count} content types` }];
 
   if (count >= 1) {
-    const selectedName = await rows.first().locator('.crest-model-list__item-title').innerText();
+    const selectedName = await rows.first().locator('.grove-model-list__item-title').innerText();
     await rows.first().click();
     const detailShown = await page.locator('[data-testid="content-type-detail"]').waitFor({ timeout: 10000 }).then(() => true).catch(() => false);
     const headingShown = await page.getByRole('heading', { name: selectedName, exact: true, level: 5 }).waitFor({ timeout: 10000 }).then(() => true).catch(() => false);

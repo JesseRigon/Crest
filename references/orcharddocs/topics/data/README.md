@@ -1,6 +1,6 @@
 # Data
 
-Crest allows you to access your internal data with YesSql and expose them with GraphQL.
+Grove allows you to access your internal data with YesSql and expose them with GraphQL.
 
 ## Expose your Data
 

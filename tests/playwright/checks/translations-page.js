@@ -1,9 +1,9 @@
-// The Crest translations editor replaces the stock DataLocalization page: same per-culture,
+// The Grove translations editor replaces the stock DataLocalization page: same per-culture,
 // grouped editing of the tenant translation store, but reads include orphaned entries and the
 // save merges (posted rows are the displayed set; blank deletes; everything else is preserved)
 // instead of replacing the culture wholesale.
 //
-// UI assertions stay light (the page renders as a Crest Blazor page, not the legacy frame);
+// UI assertions stay light (the page renders as a Grove Blazor page, not the legacy frame);
 // the data contract is exercised through the API the page itself uses.
 const { fetchAntiforgeryToken } = require('../harness/antiforgery');
 
@@ -12,20 +12,20 @@ module.exports = async function run(page, ctx) {
   const probeKey = 'Ghost Probe Type';
   const probeValue = 'Tipo fantasma de prueba';
 
-  // 1. The stock URL now renders the Crest page, not the legacy frame.
+  // 1. The stock URL now renders the Grove page, not the legacy frame.
   await page.goto(`${ctx.baseUrl}/Admin/DataLocalization`, { waitUntil: 'networkidle' });
-  const crestPage = await page.locator('[data-testid="translations-page"]').count();
+  const grovePage = await page.locator('[data-testid="translations-page"]').count();
   const legacyFrame = await page.locator('iframe.legacy-admin-frame').count();
   results.push({
-    name: 'crest-page-shadows-the-stock-url',
-    pass: crestPage > 0 && legacyFrame === 0,
-    message: `crestPage=${crestPage} legacyFrame=${legacyFrame}`,
+    name: 'grove-page-shadows-the-stock-url',
+    pass: grovePage > 0 && legacyFrame === 0,
+    message: `grovePage=${grovePage} legacyFrame=${legacyFrame}`,
   });
 
   async function api(method, body) {
     const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
     return page.evaluate(async ({ method, body, antiforgery }) => {
-      const response = await fetch('/api/crest/translations' + (method === 'GET' ? '?culture=es-ES' : ''), {
+      const response = await fetch('/api/grove/translations' + (method === 'GET' ? '?culture=es-ES' : ''), {
         method,
         credentials: 'include',
         headers: { 'content-type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken },

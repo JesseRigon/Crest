@@ -1,0 +1,44 @@
+{
+  "name": "MediaTusAzure",
+  "displayName": "Media TUS Azure",
+  "description": "Minimal recipe for testing Media TUS uploads with Azure Blob storage.",
+  "author": "The Grove Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "tests" ],
+  "tags": [ "tests" ],
+
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Grove.HomeRoute",
+        "Grove.Admin",
+        "Grove.Diagnostics",
+        "Grove.Features",
+        "Grove.Navigation",
+        "Grove.Recipes",
+        "Grove.Resources",
+        "Grove.Roles",
+        "Grove.Security",
+        "Grove.Settings",
+        "Grove.Themes",
+        "Grove.Users",
+        "Grove.Contents",
+        "Grove.ContentTypes",
+        "Grove.Media",
+        "Grove.Media.SignalR",
+        "Grove.Media.Tus",
+        "Grove.Media.Azure.Storage",
+        "TheAdmin",
+        "SafeMode"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "TheAdmin",
+      "site": ""
+    }
+  ]
+}

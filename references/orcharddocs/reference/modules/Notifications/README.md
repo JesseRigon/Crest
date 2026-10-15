@@ -1,8 +1,8 @@
-# Notifications (`Crest.Notifications`)
+# Notifications (`Grove.Notifications`)
 
 The `Notifications` module offers a comprehensive infrastructure for managing notifications effectively. It includes a centralized notification center and streamlined mechanisms for dispatching notifications to users within the application.
 
-Crest also provides `INotifier` for transient UI notifications rendered by the active theme. Use `INotificationService` for persistent user notifications in the notification center, and use `INotifier` for per-request status messages such as success, warning, and error messages shown after an admin action.
+Grove also provides `INotifier` for transient UI notifications rendered by the active theme. Use `INotificationService` for persistent user notifications in the notification center, and use `INotifier` for per-request status messages such as success, warning, and error messages shown after an admin action.
 
 ## Configurations
 
@@ -10,7 +10,7 @@ You can customize the default notification options through the configuration pro
 
 ```json
 {
-  "Crest_Notifications": {
+  "Grove_Notifications": {
     "TotalUnreadNotifications": 10,
     "DisableNotificationHtmlBodySanitizer": false,
     "AbsoluteCacheExpirationSeconds": 3600,
@@ -54,7 +54,7 @@ When using `SMS Notifications` feature, you must also configure the [SMS Service
 To add a new notification method like `Web Push`, `Mobile Push`, or `SMS`, you can simply implement the `INotificationMethodProvider` interface. Then, register your new implementation. For example, in the `Email Notifications` feature, we register the email notification provider like this:
 
 ```csharp
-[Feature("Crest.Notifications.Email")]
+[Feature("Grove.Notifications.Email")]
 public class EmailNotificationsStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
@@ -69,7 +69,7 @@ public class EmailNotificationsStartup : StartupBase
 You can send a notification to a user via code by injecting `INotificationService`, then calling the `SendAsync(...)` method. Alternatively, you can use workflows to notify a user about an event that took place.
 
 ```csharp
-using Crest.Notifications;
+using Grove.Notifications;
 
 public sealed class PublishNotificationService
 {
@@ -100,7 +100,7 @@ The default `TheAdmin` and `TheTheme` themes currently render these entries as B
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
-using Crest.DisplayManagement.Notify;
+using Grove.DisplayManagement.Notify;
 
 public sealed class SampleController : Controller
 {
@@ -193,7 +193,7 @@ This shape renders a single notification entry.
 
     To customize the admin toast item from the dashboard:
 
-    1. Enable the `Crest.AdminTemplates` feature.
+    1. Enable the `Grove.AdminTemplates` feature.
     2. Go to **Design** -> **Admin Templates**.
     3. Create or edit the `Message` template.
     4. Paste the Liquid template shown above and save it.
@@ -224,7 +224,7 @@ This shape renders the collection of notification entries. The default implement
     Create `Views/NotifyMessages.cshtml` in your theme or admin theme:
 
     ```cshtml
-    @using Crest.DisplayManagement.Notify
+    @using Grove.DisplayManagement.Notify
 
     @foreach (var entry in (IEnumerable<NotifyEntry>)Model.Entries)
     {
@@ -246,7 +246,7 @@ This shape renders the collection of notification entries. The default implement
 
 If you want to customize the full admin notification rendering from the dashboard instead of from a theme:
 
-1. Enable the `Crest.AdminTemplates` feature.
+1. Enable the `Grove.AdminTemplates` feature.
 2. Go to **Design** -> **Admin Templates**.
 3. Create or edit the `Message` template to change each notification item.
 4. Create or edit the `NotifyMessages` template to change the container and placement.
@@ -256,7 +256,7 @@ Admin Templates affect only the admin UI. For the front-end, override the same s
 
 ## Workflow Activities
 
-When `Crest.Workflows.Platform` feature is enabled, you'll see new activities that would allow you to notify users using workflows. Here are some of the available workflow tasks
+When `Grove.Workflows.Platform` feature is enabled, you'll see new activities that would allow you to notify users using workflows. Here are some of the available workflow tasks
 
 - Notify Content's Owner Task
 - Notify User Task

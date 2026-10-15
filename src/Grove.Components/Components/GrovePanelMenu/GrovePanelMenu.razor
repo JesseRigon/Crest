@@ -1,0 +1,399 @@
+@namespace Grove.Components.Navigation
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+
+<nav @attributes="AdditionalAttributes"
+     class="@CssClass"
+     style="@ComputedStyle"
+     aria-label="@AriaLabel">
+    <GrovePanelMenuTree Items="Items"
+                        ExpandedItemKeys="ExpandedItemKeys"
+                        ExpansionVersion="ExpansionVersion"
+                        ExpandedChanged="ExpandedChanged"
+                        FlyoutOpened="FlyoutOpened"
+                        FlyoutCloseRequested="FlyoutCloseRequested"
+                        FlyoutDepth="FlyoutDepth"
+                        IndentItems="IndentItems"
+                        IndentWhenCollapsed="IndentWhenCollapsed"
+                        LevelIndents="LevelIndents"
+                        LevelBackgrounds="LevelBackgrounds"
+                        LevelBaseSizes="LevelBaseSizes"
+                        TierSeparators="TierSeparators"
+                        ActionIcon="ActionIcon"
+                        FocusedItemKey="_focusedKey"
+                        PreventKeyDown="_preventKeyDown"
+                        OnItemKeyDown="HandleKeyDownAsync"
+                        OnFocusIn="HandleFocusIn" />
+</nav>
+
+@code {
+    // Ported from RadzenPanelMenu's OnKeyPress: roving-focus keyboard navigation over the
+    // flattened, currently-visible item tree (arrow keys, Home/End, expand/collapse, activate).
+    // The new Items/ExpandedItemKeys data model has no parent back-references, so visibility
+    // and parent linkage are recomputed by walking the tree fresh on every keystroke; menus at
+    // this scale make that cheap enough to not warrant caching.
+    private string? _focusedKey;
+    private bool _preventKeyDown;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    private sealed record FocusNode(GrovePanelMenuItem Item, string? ParentKey);
+
+    private List<FocusNode> BuildVisibleNodes()
+    {
+        var result = new List<FocusNode>();
+
+        void Walk(IReadOnlyList<GrovePanelMenuItem> items, string? parentKey, int level)
+        {
+            foreach (var item in items)
+            {
+                if (item.IsSeparator)
+                {
+                    continue;
+                }
+
+                result.Add(new FocusNode(item, parentKey));
+
+                var isFlyout = level >= FlyoutDepth && item.HasChildren;
+                if (item.HasChildren && !isFlyout && ExpandedItemKeys.Contains(item.Key))
+                {
+                    Walk(item.Items, item.Key, level + 1);
+                }
+            }
+        }
+
+        Walk(Items, null, 0);
+        return result;
+    }
+
+    private void HandleFocusIn()
+    {
+        if (_focusedKey is null)
+        {
+            var nodes = BuildVisibleNodes();
+            if (nodes.Count > 0)
+            {
+                _focusedKey = nodes[0].Item.Key;
+            }
+        }
+    }
+
+    private async Task HandleKeyDownAsync(KeyboardEventArgs args)
+    {
+        var nodes = BuildVisibleNodes();
+        if (nodes.Count == 0)
+        {
+            _preventKeyDown = false;
+            return;
+        }
+
+        var currentIndex = _focusedKey is null ? -1 : nodes.FindIndex(n => n.Item.Key == _focusedKey);
+
+        switch (args.Key)
+        {
+            case "ArrowDown":
+                _preventKeyDown = true;
+                SetFocus(nodes[Math.Clamp(currentIndex + 1, 0, nodes.Count - 1)].Item.Key);
+                break;
+
+            case "ArrowUp":
+                _preventKeyDown = true;
+                SetFocus(nodes[Math.Clamp(currentIndex < 0 ? 0 : currentIndex - 1, 0, nodes.Count - 1)].Item.Key);
+                break;
+
+            case "Home":
+                _preventKeyDown = true;
+                SetFocus(nodes[0].Item.Key);
+                break;
+
+            case "End":
+                _preventKeyDown = true;
+                SetFocus(nodes[^1].Item.Key);
+                break;
+
+            case "ArrowRight":
+                _preventKeyDown = true;
+                if (currentIndex >= 0)
+                {
+                    var item = nodes[currentIndex].Item;
+                    if (item.HasChildren && !ExpandedItemKeys.Contains(item.Key))
+                    {
+                        await ExpandedChanged.InvokeAsync(new GrovePanelMenuExpansionChangedEventArgs(item, true));
+                        if (item.Items.Count > 0)
+                        {
+                            SetFocus(item.Items[0].Key);
+                        }
+                    }
+                }
+                break;
+
+            case "ArrowLeft":
+            case "Escape":
+                _preventKeyDown = true;
+                if (currentIndex >= 0)
+                {
+                    var item = nodes[currentIndex].Item;
+                    if (item.HasChildren && ExpandedItemKeys.Contains(item.Key))
+                    {
+                        await ExpandedChanged.InvokeAsync(new GrovePanelMenuExpansionChangedEventArgs(item, false));
+                    }
+                    else if (nodes[currentIndex].ParentKey is { } parentKey)
+                    {
+                        SetFocus(parentKey);
+                    }
+                }
+                break;
+
+            case "Enter":
+            case " ":
+                _preventKeyDown = true;
+                if (currentIndex >= 0)
+                {
+                    var item = nodes[currentIndex].Item;
+                    if (!item.IsDisabled)
+                    {
+                        if (item.HasChildren)
+                        {
+                            await ExpandedChanged.InvokeAsync(new GrovePanelMenuExpansionChangedEventArgs(item, !ExpandedItemKeys.Contains(item.Key)));
+                        }
+                        else if (item.HasLink)
+                        {
+                            Navigation.NavigateTo(item.Href!);
+                        }
+                    }
+                }
+                break;
+
+            default:
+                _preventKeyDown = false;
+                break;
+        }
+    }
+
+    private void SetFocus(string key)
+    {
+        _focusedKey = key;
+        _ = ScrollFocusedIntoViewAsync(key);
+    }
+
+    private async Task ScrollFocusedIntoViewAsync(string key)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("groveComponents.scrollIntoViewIfNeeded", $"grove-panel-menu-item-{key}");
+        }
+        catch (JSException)
+        {
+        }
+        catch (JSDisconnectedException)
+        {
+            // Fire-and-forget from a focus handler: the circuit can drop mid-flight and the
+            // exception would otherwise go unobserved. Scroll state dies with the page anyway.
+        }
+    }
+
+    private static readonly string[] DefaultLevelIndents = ["0rem", "0.75rem", "1.25rem", "1.75rem"];
+    private static readonly string[] DefaultLevelBackgrounds = ["transparent"];
+    private static readonly string[] DefaultLevelBaseSizes = ["1rem", "0.95rem", "0.9rem"];
+    private static readonly bool[] DefaultTierSeparators = [];
+
+    [Parameter]
+    public IReadOnlyList<GrovePanelMenuItem> Items { get; set; } = [];
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter]
+    public string AriaLabel { get; set; } = "Navigation";
+
+    [Parameter]
+    public ISet<string> ExpandedItemKeys { get; set; } = new HashSet<string>();
+
+    /// <summary>
+    /// Increments only when an expandable branch changes. Presentation-only
+    /// changes such as compact, hover, and pinned state do not affect the tree.
+    /// </summary>
+    [Parameter]
+    public int ExpansionVersion { get; set; }
+
+    [Parameter]
+    public EventCallback<GrovePanelMenuExpansionChangedEventArgs> ExpandedChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<GrovePanelMenuFlyoutEventArgs> FlyoutOpened { get; set; }
+
+    [Parameter]
+    public EventCallback FlyoutCloseRequested { get; set; }
+
+    [Parameter]
+    public int FlyoutDepth { get; set; } = 2;
+
+    [Parameter]
+    public bool Collapsed { get; set; }
+
+    [Parameter]
+    public bool IndentItems { get; set; } = true;
+
+    [Parameter]
+    public bool IndentWhenCollapsed { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<string> LevelIndents { get; set; } = DefaultLevelIndents;
+
+    [Parameter]
+    public IReadOnlyList<string> LevelBackgrounds { get; set; } = DefaultLevelBackgrounds;
+
+    [Parameter]
+    public IReadOnlyList<string> LevelBaseSizes { get; set; } = DefaultLevelBaseSizes;
+
+    [Parameter]
+    public IReadOnlyList<bool> TierSeparators { get; set; } = DefaultTierSeparators;
+
+    [Parameter]
+    public RenderFragment<GrovePanelMenuActionIconContext>? ActionIcon { get; set; }
+
+    [Parameter]
+    public string IconRailWidth { get; set; } = "4rem";
+
+    [Parameter]
+    public string TextRailMinWidth { get; set; } = "0";
+
+    [Parameter]
+    public string ActionRailWidth { get; set; } = "2rem";
+
+    [Parameter]
+    public string ActionRailEndMargin { get; set; } = "0.5rem";
+
+    [Parameter]
+    public string ItemHeight { get; set; } = "2.5rem";
+
+    [Parameter]
+    public string ItemGap { get; set; } = "0.125rem";
+
+    [Parameter]
+    public string? ItemColor { get; set; }
+
+    [Parameter]
+    public string? ItemHoverColor { get; set; }
+
+    [Parameter]
+    public string? ItemHoverBackground { get; set; }
+
+    [Parameter]
+    public string? ActiveItemColor { get; set; }
+
+    [Parameter]
+    public string? ActiveItemBackground { get; set; }
+
+    [Parameter]
+    public string? ActiveItemAccentColor { get; set; }
+
+    [Parameter]
+    public string? ActionColor { get; set; }
+
+    [Parameter]
+    public string? BorderRadius { get; set; }
+
+    [Parameter]
+    public string? SeparatorColor { get; set; }
+
+    [Parameter]
+    public string IndentTransitionDuration { get; set; } = "500ms";
+
+    [Parameter]
+    public string CompactTransitionDuration { get; set; } = "500ms";
+
+    [Parameter]
+    public string TextTransitionDuration { get; set; } = "240ms";
+
+    [Parameter]
+    public string TransitionEasing { get; set; } = "cubic-bezier(0.16, 1, 0.3, 1)";
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string CssClass => string.Join(' ', new[]
+    {
+        "grove-panel-menu",
+        Collapsed ? "grove-panel-menu--collapsed" : "grove-panel-menu--expanded",
+        IndentItems ? "grove-panel-menu--indented" : "grove-panel-menu--flush",
+        Class,
+    }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private string ComputedStyle
+    {
+        get
+        {
+            var variables = string.Join(' ', new[]
+            {
+                $"--grove-panel-menu-icon-rail-width: {IconRailWidth};",
+                $"--grove-panel-menu-text-rail-min-width: {TextRailMinWidth};",
+                $"--grove-panel-menu-action-rail-width: {ActionRailWidth};",
+                $"--grove-panel-menu-action-rail-end-margin: {ActionRailEndMargin};",
+                $"--grove-panel-menu-item-height: {ItemHeight};",
+                $"--grove-panel-menu-item-gap: {ItemGap};",
+                $"--grove-panel-menu-indent-duration: {IndentTransitionDuration};",
+                $"--grove-panel-menu-compact-duration: {CompactTransitionDuration};",
+                $"--grove-panel-menu-text-duration: {TextTransitionDuration};",
+                $"--grove-panel-menu-easing: {TransitionEasing};",
+            }.Concat(StyleVariables()));
+
+            return string.IsNullOrWhiteSpace(Style) ? variables : $"{variables} {Style}";
+        }
+    }
+
+    private IEnumerable<string> StyleVariables()
+    {
+        if (!string.IsNullOrWhiteSpace(ItemColor))
+        {
+            yield return $"--grove-panel-menu-color: {ItemColor};";
+        }
+
+        if (!string.IsNullOrWhiteSpace(ItemHoverColor))
+        {
+            yield return $"--grove-panel-menu-hover-color: {ItemHoverColor};";
+        }
+
+        if (!string.IsNullOrWhiteSpace(ItemHoverBackground))
+        {
+            yield return $"--grove-panel-menu-hover-background: {ItemHoverBackground};";
+        }
+
+        if (!string.IsNullOrWhiteSpace(ActiveItemColor))
+        {
+            yield return $"--grove-panel-menu-active-color: {ActiveItemColor};";
+        }
+
+        if (!string.IsNullOrWhiteSpace(ActiveItemBackground))
+        {
+            yield return $"--grove-panel-menu-active-background: {ActiveItemBackground};";
+        }
+
+        if (!string.IsNullOrWhiteSpace(ActiveItemAccentColor))
+        {
+            yield return $"--grove-panel-menu-active-accent-color: {ActiveItemAccentColor};";
+        }
+
+        if (!string.IsNullOrWhiteSpace(ActionColor))
+        {
+            yield return $"--grove-panel-menu-action-color: {ActionColor};";
+        }
+
+        if (!string.IsNullOrWhiteSpace(BorderRadius))
+        {
+            yield return $"--grove-panel-menu-border-radius: {BorderRadius};";
+        }
+
+        if (!string.IsNullOrWhiteSpace(SeparatorColor))
+        {
+            yield return $"--grove-panel-menu-separator-color: {SeparatorColor};";
+        }
+    }
+}

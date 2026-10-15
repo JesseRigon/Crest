@@ -2,7 +2,7 @@ import mitt from "mitt";
 import dbg from "debug";
 import { SeverityLevel } from "./interfaces";
 
-const debug = dbg("crest:bloom:notifier");
+const debug = dbg("grove:bloom:notifier");
 
 interface ProblemDetailsLike {
     title?: string;

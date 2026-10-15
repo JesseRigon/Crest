@@ -1,0 +1,141 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Target for Modular Grove CMS Application</Title>
+    <Description>
+      $(OCCMSDescription)
+
+      Converts the application into a modular Grove CMS application with TheAdmin theme but without any front-end Themes.
+    </Description>
+    <PackageTags>$(PackageTags) PlatformCMS CMS</PackageTags>
+  </PropertyGroup>
+
+  <!-- Add ".props" and ".targets" files in the package specific to the "Cms.Core" bundle -->
+
+  <ItemGroup>
+    <None Include="Grove.Application.Cms.Core.Targets.props" Pack="true">
+      <PackagePath>build\Grove.Application.Cms.Core.Targets.props</PackagePath>
+    </None>
+    <None Include="Grove.Application.Cms.Core.Targets.targets" Pack="true">
+      <PackagePath>build\Grove.Application.Cms.Core.Targets.targets</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <!--
+    When a package is not directly referenced, e.g only through the reference of this bundle package,
+    the files in its build folder are not evaluated on building if this folder is marked as private.
+    This can be defined by using the 'PrivateAssets' attribute.
+
+    Here, only project references are used but when packing the bundle they become package references,
+    and with the same 'PrivateAssets' attribute.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Application.Targets\Grove.Application.Targets.csproj" PrivateAssets="none" />
+
+    <!--
+      When adding a reference to this list, please keep it ordered alphabetically, and set PrivateAssets="none"
+    -->
+    <ProjectReference Include="..\Grove.Admin\Grove.Admin.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.AdminDashboard\Grove.AdminDashboard.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.AdminMenu\Grove.AdminMenu.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Alias\Grove.Alias.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Antivirus\Grove.Antivirus.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Apis.GraphQL\Grove.Apis.GraphQL.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.ArchiveLater\Grove.ArchiveLater.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.AuditTrail\Grove.AuditTrail.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Autoroute\Grove.Autoroute.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.AutoSetup\Grove.AutoSetup.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.BackgroundTasks\Grove.BackgroundTasks.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.ContentFields\Grove.ContentFields.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.ContentLocalization\Grove.ContentLocalization.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.ContentPreview\Grove.ContentPreview.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Contents\Grove.Contents.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.ContentTypes\Grove.ContentTypes.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Cors\Grove.Cors.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.CustomSettings\Grove.CustomSettings.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.DataProtection.Azure\Grove.DataProtection.Azure.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Deployment\Grove.Deployment.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Deployment.Remote\Grove.Deployment.Remote.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Diagnostics\Grove.Diagnostics.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.DynamicCache\Grove.DynamicCache.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Email\Grove.Email.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Email.Azure\Grove.Email.Azure.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Email.Smtp\Grove.Email.Smtp.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Facebook\Grove.Facebook.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Features\Grove.Features.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Feeds\Grove.Feeds.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Flows\Grove.Flows.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.GitHub\Grove.GitHub.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Google\Grove.Google.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.HealthChecks\Grove.HealthChecks.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.HomeRoute\Grove.HomeRoute.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Html\Grove.Html.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Https\Grove.Https.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Indexing\Grove.Indexing.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Infrastructure\Grove.Infrastructure.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Layers\Grove.Layers.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Liquid\Grove.Liquid.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Lists\Grove.Lists.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Localization\Grove.Localization.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.DataLocalization\Grove.DataLocalization.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Markdown\Grove.Markdown.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Media\Grove.Media.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Media.AmazonS3\Grove.Media.AmazonS3.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Media.Azure\Grove.Media.Azure.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Media.ImageSharpV3\Grove.Media.ImageSharpV3.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Media.Indexing.OpenXML\Grove.Media.Indexing.OpenXML.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Media.Indexing.Pdf\Grove.Media.Indexing.Pdf.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Media.Scanning\Grove.Media.Scanning.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Microsoft.Authentication\Grove.Microsoft.Authentication.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.MiniProfiler\Grove.MiniProfiler.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Menu\Grove.Menu.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Navigation\Grove.Navigation.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Notifications\Grove.Notifications.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.OpenApi\Grove.OpenApi.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.OpenId\Grove.OpenId.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Placements\Grove.Placements.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.PublishLater\Grove.PublishLater.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Queries\Grove.Queries.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.RateLimits\Grove.RateLimits.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.ReCaptcha\Grove.ReCaptcha.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Recipes\Grove.Recipes.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Redis\Grove.Redis.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Resources\Grove.Resources.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.ResponseCompression\Grove.ResponseCompression.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.UrlRewriting\Grove.UrlRewriting.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.ReverseProxy\Grove.ReverseProxy.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Rules\Grove.Rules.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Roles\Grove.Roles.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Scripting\Grove.Scripting.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Search\Grove.Search.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.AzureAI\Grove.AzureAI.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Elasticsearch\Grove.Elasticsearch.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Lucene\Grove.Lucene.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Security\Grove.Security.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Seo\Grove.Seo.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Settings\Grove.Settings.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Setup\Grove.Setup.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.SignalR\Grove.SignalR.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.SignalR.Azure\Grove.SignalR.Azure.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.SignalR.Redis\Grove.SignalR.Redis.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Sitemaps\Grove.Sitemaps.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Access\Grove.Access.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Sharing\Grove.Sharing.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Shortcodes\Grove.Shortcodes.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Sms\Grove.Sms.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Sms.Azure\Grove.Sms.Azure.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Spatial\Grove.Spatial.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Taxonomies\Grove.Taxonomies.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Templates\Grove.Templates.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Tenants\Grove.Tenants.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Themes\Grove.Themes.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Title\Grove.Title.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Twitter\Grove.Twitter.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Users\Grove.Users.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.XmlRpc\Grove.XmlRpc.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\TheAdmin\TheAdmin.csproj" PrivateAssets="none" />
+  </ItemGroup>
+
+</Project>

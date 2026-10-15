@@ -1,4 +1,4 @@
-# Taxonomies (`Crest.Taxonomies`)
+# Taxonomies (`Grove.Taxonomies`)
 
 This module provides a Taxonomy content type that is used to define managed vocabularies (categories) of any type.  
 Taxonomy content items are made of terms organized as a hierarchy. Using the Taxonomy Field allows any content item
@@ -242,7 +242,7 @@ The following properties are available on the `DisplayTaxonomyFieldViewModel` cl
 | `Part`                | `ContentPart`                | The part this field attached to |
 | `PartFieldDefinition` | `ContentPartFieldDefinition` | The part field definition       |
 
-## Crest Helpers
+## Grove Helpers
 
 ### GetTaxonomyTermAsync
 

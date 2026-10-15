@@ -1,3 +1,0 @@
-msgctxt "Crest.Tests.Localization.PortableObjectStringLocalizerFactoryTests.Model"
-msgid "Hello"
-msgstr "مرحبا"

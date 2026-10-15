@@ -41,20 +41,20 @@ module.exports = async function run(page, ctx) {
 
   // API persistence: GET current settings, PUT them back with the antiforgery token,
   // GET again — proves the endpoint accepts authorized writes and round-trips state.
-  const current = await page.request.get(`${ctx.baseUrl}/api/crest/security-headers`);
+  const current = await page.request.get(`${ctx.baseUrl}/api/grove/security-headers`);
   const currentOk = current.ok();
   let putOk = false;
   let roundTripOk = false;
   if (currentOk) {
     const settings = await current.json();
     const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
-    const put = await page.request.put(`${ctx.baseUrl}/api/crest/security-headers`, {
+    const put = await page.request.put(`${ctx.baseUrl}/api/grove/security-headers`, {
       headers: { [antiforgery.headerName]: antiforgery.requestToken },
       data: settings,
     });
     putOk = put.ok();
     if (putOk) {
-      const after = await page.request.get(`${ctx.baseUrl}/api/crest/security-headers`);
+      const after = await page.request.get(`${ctx.baseUrl}/api/grove/security-headers`);
       roundTripOk = after.ok() && JSON.stringify(await after.json()) === JSON.stringify(settings);
     }
   }

@@ -1,4 +1,4 @@
-# Tenants (`Crest.Tenants`)
+# Tenants (`Grove.Tenants`)
 
 The `Tenants` module allows you to manage tenants from the admin.
 
@@ -47,7 +47,7 @@ Consider the following
 [
   {
     "Rule": "Exclude",
-    "Expression": "Crest.AdminTemplates"
+    "Expression": "Grove.AdminTemplates"
   },
   {
     "Rule": "Exclude",
@@ -56,7 +56,7 @@ Consider the following
 ]
 ```
 
-In this rule we exclude the `Crest.AdminTemplates` and `TheAgencyTheme` features
+In this rule we exclude the `Grove.AdminTemplates` and `TheAgencyTheme` features
 
 or we can use wild card matching
 
@@ -79,7 +79,7 @@ Rules are processed in the order they are supplied, so reversing the order of th
 
 #### Defining Feature Profiles in Recipes
 
-By using the `FeatureProfiles` recipe step, you can define profiles from recipes as well (don't forget to also enable the `Crest.Tenants.FeatureProfiles` feature in the recipe too):
+By using the `FeatureProfiles` recipe step, you can define profiles from recipes as well (don't forget to also enable the `Grove.Tenants.FeatureProfiles` feature in the recipe too):
 
 ```json
 {
@@ -89,23 +89,23 @@ By using the `FeatureProfiles` recipe step, you can define profiles from recipes
       "FeatureRules": [
         {
           "Rule": "Exclude",
-          "Expression": "Crest.Contents.FileContentDefinition"
+          "Expression": "Grove.Contents.FileContentDefinition"
         },
         {
           "Rule": "Exclude",
-          "Expression": "Crest.MiniProfiler"
+          "Expression": "Grove.MiniProfiler"
         },
         {
           "Rule": "Exclude",
-          "Expression": "Crest.Placements.FileStorage"
+          "Expression": "Grove.Placements.FileStorage"
         },
         {
           "Rule": "Exclude",
-          "Expression": "Crest.Tenants.FileProvider"
+          "Expression": "Grove.Tenants.FileProvider"
         },
         {
           "Rule": "Exclude",
-          "Expression": "Crest.Workflows.Platform.Session"
+          "Expression": "Grove.Workflows.Platform.Session"
         }
       ]
     }
@@ -130,12 +130,12 @@ If you're using [Auto Setup](../AutoSetup/README.md), you can specify the `Featu
 
 Allows removing a tenant if it is not yet set up or is in the disabled state. By default, this feature is not allowed.
 
-Tenant Removal can be allowed from any configuration source (e.g. `appsettings.json`) under the `Crest` section. See the [configuration documentation](../Configuration/README.md) for details.
+Tenant Removal can be allowed from any configuration source (e.g. `appsettings.json`) under the `Grove` section. See the [configuration documentation](../Configuration/README.md) for details.
 
 ```json
 {
-  "Crest": {
-    "Crest_Tenants": {
+  "Grove": {
+    "Grove_Tenants": {
       "TenantRemovalAllowed": false // Whether tenant removal is allowed or not. Default is false.
     }
   }
@@ -146,12 +146,12 @@ Tenant Removal can be allowed from any configuration source (e.g. `appsettings.j
 
 When tenants share the same database, `TablePrefix` isolates each tenant's tables. The `Default:TablePrefix` setting only configures the Default tenant's own prefix; it does not force newly created tenants to provide one.
 
-You can control tenant table prefixes and schemas from any configuration source (e.g. `appsettings.json`) under the `Crest` section:
+You can control tenant table prefixes and schemas from any configuration source (e.g. `appsettings.json`) under the `Grove` section:
 
 ```json
 {
-  "Crest": {
-    "Crest_Tenants": {
+  "Grove": {
+    "Grove_Tenants": {
       "RequireTablePrefix": true,
       "TablePrefixPattern": "{{ ShellSettings.Name }}",
       "SchemaPattern": "dbo"
@@ -162,7 +162,7 @@ You can control tenant table prefixes and schemas from any configuration source 
 
 When enabled, creating a tenant or editing an uninitialized tenant requires a non-empty `TablePrefix` for database providers that support table prefixes.
 
-If `TablePrefixPattern` is configured, Crest generates the tenant `TablePrefix` automatically from a Fluid template and no longer prompts for manual entry in the tenant UI for that field. `SchemaPattern` does the same for the tenant `Schema`.
+If `TablePrefixPattern` is configured, Grove generates the tenant `TablePrefix` automatically from a Fluid template and no longer prompts for manual entry in the tenant UI for that field. `SchemaPattern` does the same for the tenant `Schema`.
 
 These patterns render with `ShellSettings` in scope, so you can use values such as:
 

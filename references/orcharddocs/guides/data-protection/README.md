@@ -1,12 +1,12 @@
-# Data Protection in Crest
+# Data Protection in Grove
 
-This guide provides information about implementing data protection in Crest applications, particularly in multi-tenant and load-balanced environments.
+This guide provides information about implementing data protection in Grove applications, particularly in multi-tenant and load-balanced environments.
 
 ## Overview
 
-Data Protection is a critical security feature in ASP.NET Core that Crest leverages to protect sensitive data such as authentication cookies, anti-forgery tokens, persisted secrets that need to be decrypted (e.g. SMTP passwords but not user passwords), and temporary data. In a multi-tenant or load-balanced environment, it's essential to ensure that data protection keys are shared across all nodes and persisted properly.
+Data Protection is a critical security feature in ASP.NET Core that Grove leverages to protect sensitive data such as authentication cookies, anti-forgery tokens, persisted secrets that need to be decrypted (e.g. SMTP passwords but not user passwords), and temporary data. In a multi-tenant or load-balanced environment, it's essential to ensure that data protection keys are shared across all nodes and persisted properly.
 
-Crest provides several options for persisting data protection keys:
+Grove provides several options for persisting data protection keys:
 
 - Local storage in `App_Data` folder's tenant-specific folder (like `App_Data/Sites/Default/DataProtection-Keys`)
 - [Azure Blob Storage](../../reference/modules/DataProtection.Azure/README.md)

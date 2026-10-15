@@ -11,11 +11,11 @@ const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
 const { createInstance } = require('../../harness/instance');
 const { loginAsAdmin } = require('../../harness/auth');
 
-const defaultMenuId = '__crest_default_admin_menu';
+const defaultMenuId = '__grove_default_admin_menu';
 
 async function getRootNodes(page) {
   const data = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+    const response = await fetch('/api/grove/admin-menus', { credentials: 'include' });
     if (!response.ok) throw new Error(`admin menus failed: ${response.status}`);
     return response.json();
   });
@@ -26,7 +26,7 @@ async function renameNode(page, baseUrl, nodeId, text) {
   const antiforgery = await fetchAntiforgeryToken(page, baseUrl);
   const result = await page.evaluate(
     async ({ nodeId, text, antiforgery }) => {
-      const response = await fetch(`/api/crest/admin-menus/__crest_default_admin_menu/nodes/${encodeURIComponent(nodeId)}/rename`, {
+      const response = await fetch(`/api/grove/admin-menus/__grove_default_admin_menu/nodes/${encodeURIComponent(nodeId)}/rename`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken },
@@ -66,8 +66,8 @@ module.exports = async function run(page, ctx) {
   const frenchRename = 'Contenu personnalise';
   const englishRename = 'Custom Content';
 
-  const localization = await getJson(page, ctx.baseUrl, '/api/crest/localization');
-  await putJson(page, ctx.baseUrl, '/api/crest/localization', {
+  const localization = await getJson(page, ctx.baseUrl, '/api/grove/localization');
+  await putJson(page, ctx.baseUrl, '/api/grove/localization', {
     ...localization,
     supportedCultures: Array.from(new Set([...(localization.supportedCultures || []), 'en-US', 'fr-FR'])),
     defaultCulture: 'en-US',
@@ -132,7 +132,7 @@ module.exports = async function run(page, ctx) {
     // Both renames cleared above, but repeat defensively from the surviving page so a throw
     // mid-check doesn't leave a renamed menu behind for the rest of the suite.
     await renameNode(page, ctx.baseUrl, nodeId, '').catch(() => {});
-    await putJson(page, ctx.baseUrl, '/api/crest/localization', localization).catch(() => {});
+    await putJson(page, ctx.baseUrl, '/api/grove/localization', localization).catch(() => {});
   }
 
   return results;

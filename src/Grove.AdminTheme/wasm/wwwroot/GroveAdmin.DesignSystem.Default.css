@@ -1,0 +1,63 @@
+/*
+    Default Grove Grove design token contract.
+
+    This file is the packaged fallback/reference design system. Runtime tenant
+    and user design systems should set the same --grove-* primitive variables
+    from Grove content, not edit component implementation CSS.
+*/
+
+:root,
+.admin-shell {
+    /* Color primitives */
+    --grove-color-accent-1: var(--rz-primary, #2f6f4e);
+    --grove-color-accent-2: var(--rz-secondary, #64748b);
+    --grove-color-accent-3: var(--rz-info, #2563eb);
+    --grove-color-on-accent-1: var(--rz-on-primary, #fff);
+    --grove-color-surface-1: var(--rz-base-background-color, #fff);
+    --grove-color-surface-2: var(--rz-body-background-color, #f7f8f6);
+    --grove-color-surface-3: var(--rz-sidebar-background-color, var(--rz-base-background-color, #fff));
+    --grove-color-text-1: var(--rz-text-color, #1f2937);
+    --grove-color-text-2: var(--rz-text-title-color, var(--rz-text-color, #1f2937));
+    --grove-color-text-muted: var(--rz-text-secondary-color, #64748b);
+    --grove-color-border-1: var(--rz-border-color, #e5e7eb);
+    --grove-color-shadow-1: rgba(15, 23, 42, 0.18);
+
+    /* Interaction primitives */
+    --grove-color-hover-surface-1: var(--rz-menu-item-hover-background-color, color-mix(in srgb, var(--grove-color-accent-1) 8%, transparent));
+    --grove-color-hover-text-1: var(--rz-menu-item-hover-color, var(--grove-color-accent-1));
+    --grove-color-active-surface-1: color-mix(in srgb, var(--grove-color-accent-1) 25%, transparent);
+    --grove-color-button-hover-surface-1: var(--rz-button-light-hover-background-color, color-mix(in srgb, var(--grove-color-accent-1) 10%, transparent));
+
+    /* Border primitives */
+    --grove-border-size-xs: 1px;
+    --grove-border-size-sm: 2px;
+    --grove-border-size-md: 3px;
+
+    /* Radius primitives */
+    --grove-radius-xs: 0.25rem;
+    --grove-radius-sm: var(--rz-border-radius, 4px);
+    --grove-radius-md: 0.5rem;
+    --grove-radius-lg: 0.75rem;
+    --grove-radius-pill: 999px;
+
+    /* Spacing primitives */
+    --grove-space-2xs: 0.125rem;
+    --grove-space-xs: 0.25rem;
+    --grove-space-sm: 0.5rem;
+    --grove-space-md: 0.75rem;
+    --grove-space-lg: 1rem;
+    --grove-space-xl: 1.5rem;
+    --grove-space-2xl: 2rem;
+
+    /* Type primitives */
+    --grove-font-size-xs: 0.75rem;
+    --grove-font-size-sm: 0.8125rem;
+    --grove-font-size-md: 0.875rem;
+    --grove-font-size-lg: 1.05rem;
+    --grove-font-size-xl: 1.25rem;
+
+    /* Shadow primitives */
+    --grove-shadow-sm: 0 0.35rem 0.8rem color-mix(in srgb, var(--grove-color-shadow-1) 70%, transparent);
+    --grove-shadow-md: 0 1rem 2rem var(--grove-color-shadow-1);
+    --grove-shadow-lg: var(--rz-shadow-4, 0 12px 30px var(--grove-color-shadow-1));
+}

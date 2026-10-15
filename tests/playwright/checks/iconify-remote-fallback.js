@@ -1,4 +1,4 @@
-// Converted from Crest.Icons/tests/playwright/iconify-remote-fallback-api.js.
+// Converted from Grove.Icons/tests/playwright/iconify-remote-fallback-api.js.
 //
 // REWRITTEN (Phase 8 triage): the original asserted that a Debug build disables the
 // local App_Data Iconify mirror ("disabled for this build" lastError). That premise no
@@ -19,18 +19,18 @@ async function api(page, path, options = {}) {
 }
 
 module.exports = async function run(page, ctx) {
-  const original = await api(page, '/api/crest/icons/providers');
+  const original = await api(page, '/api/grove/icons/providers');
   if (!original.ok) {
     return { name: 'read-provider-settings', pass: false, message: `status=${original.status}` };
   }
 
-  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  // Mutating Grove APIs are antiforgery-protected - see harness/antiforgery.js.
   const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
   const antiforgeryHeaders = { [antiforgery.headerName]: antiforgery.requestToken };
 
   const results = [];
   try {
-    const save = await api(page, '/api/crest/icons/providers', {
+    const save = await api(page, '/api/grove/icons/providers', {
       method: 'PUT',
       headers: antiforgeryHeaders,
       body: JSON.stringify({ iconify: { enabled: true, baseUrl: 'https://api.iconify.design', apiKey: null, apiKeyHeader: null, prefixes: ['mdi'] } }),
@@ -43,7 +43,7 @@ module.exports = async function run(page, ctx) {
     // available; unavailable after a failed sync (lastError set); or unavailable and
     // never synced (lastError null, lastSyncUtc null). What must always hold is that
     // the endpoint answers with a coherent, self-consistent status.
-    const status = await api(page, '/api/crest/icons/providers/iconify/local');
+    const status = await api(page, '/api/grove/icons/providers/iconify/local');
     const body = status.body ?? {};
     const neverSynced = body.isAvailable === false && !body.lastError && !body.lastSyncUtc;
     const failedSync = body.isAvailable === false && Boolean(body.lastError);
@@ -54,7 +54,7 @@ module.exports = async function run(page, ctx) {
       message: `status=${status.status} isAvailable=${body.isAvailable} lastError=${body.lastError ?? 'null'} lastSyncUtc=${body.lastSyncUtc ?? 'null'}`,
     });
 
-    const search = await api(page, '/api/crest/icons?library=iconify.mdi&query=home&skip=0&take=20');
+    const search = await api(page, '/api/grove/icons?library=iconify.mdi&query=home&skip=0&take=20');
     const home = search.body?.items?.find(item => item.key === 'iconify.mdi/current/default/home' && item.svgMarkup?.includes('<svg'));
     results.push({
       name: 'public-provider-search-returns-mdi-home',
@@ -62,7 +62,7 @@ module.exports = async function run(page, ctx) {
       message: `status=${search.status} total=${search.body?.total} found=${Boolean(home)}`,
     });
   } finally {
-    await api(page, '/api/crest/icons/providers', { method: 'PUT', headers: antiforgeryHeaders, body: JSON.stringify(original.body) }).catch(() => {});
+    await api(page, '/api/grove/icons/providers', { method: 'PUT', headers: antiforgeryHeaders, body: JSON.stringify(original.body) }).catch(() => {});
   }
 
   return results;

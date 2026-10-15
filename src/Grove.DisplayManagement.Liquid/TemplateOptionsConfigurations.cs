@@ -1,0 +1,79 @@
+using System.Globalization;
+using Fluid;
+using Fluid.Values;
+using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
+using Grove.DisplayManagement.Liquid.Values;
+using Grove.DisplayManagement.Shapes;
+using Grove.DisplayManagement.Zones;
+
+namespace Grove.DisplayManagement.Liquid;
+
+public class TemplateOptionsConfigurations : IConfigureOptions<TemplateOptions>
+{
+    private readonly IHostEnvironment _hostEnvironment;
+
+    public TemplateOptionsConfigurations(IHostEnvironment hostEnvironment) => _hostEnvironment = hostEnvironment;
+
+    public void Configure(TemplateOptions options)
+    {
+        // The sandbox's resource bound: Liquid is tenant-authored (title patterns, templates),
+        // so a template cannot loop or recurse without end. What it can REACH is bounded by
+        // the data-loading filters, which go through the caller's access decision
+        // (docs/content-items.md › Fluid sandboxing).
+        options.MaxSteps = 1_000_000;
+        options.MaxRecursion = 100;
+
+        options.ValueConverters.Add(x =>
+        {
+            if (x is Shape s)
+            {
+                return new ObjectValue(s);
+            }
+            else if (x is IHtmlContent c)
+            {
+                return new HtmlContentValue(c);
+            }
+            else if (x is StringValues sv)
+            {
+                return new StringValuesValue(sv);
+            }
+
+            return null;
+        });
+
+        options.MemberAccessStrategy.Register<Shape>("*", new ShapeAccessor());
+        options.MemberAccessStrategy.Register<ZoneHolding>("*", new ShapeAccessor());
+        options.MemberAccessStrategy.Register<ShapeMetadata>();
+        options.MemberAccessStrategy.Register<CultureInfo>();
+
+        options.Scope.SetValue("Culture", new CultureValue());
+
+        options.Scope.SetValue("Environment", new HostingEnvironmentValue(_hostEnvironment));
+
+        options.Scope.SetValue("Request", new HttpRequestValue());
+
+        options.Scope.SetValue("HttpContext", new HttpContextValue());
+
+        options.Scope.SetValue("TrackingConsent", new TrackingConsentValue());
+
+        options.MemberAccessStrategy.Register<FormCollection, FluidValue>((forms, name) =>
+        {
+            if (name == "Keys")
+            {
+                return new ArrayValue(forms.Keys.Select(x => new StringValue(x)).ToArray());
+            }
+
+            return new StringValuesValue(forms[name]);
+        });
+
+        options.MemberAccessStrategy.Register<HttpContextItemsWrapper, object>((httpContext, name) => httpContext.Items[name]);
+        options.MemberAccessStrategy.Register<QueryCollection, StringValues>((queries, name) => queries[name]);
+        options.MemberAccessStrategy.Register<CookieCollectionWrapper, string>((cookies, name) => cookies.RequestCookieCollection[name]);
+        options.MemberAccessStrategy.Register<HeaderDictionaryWrapper, StringValues>((headers, name) => headers.HeaderDictionary[name]);
+        options.MemberAccessStrategy.Register<RouteValueDictionaryWrapper, object>((headers, name) => headers.RouteValueDictionary[name]);
+    }
+}

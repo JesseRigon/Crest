@@ -1,12 +1,12 @@
-# Crest Source Generators
+# Grove Source Generators
 
-Crest includes source generators that optimize performance by generating code at compile time, eliminating reflection overhead in critical paths.
+Grove includes source generators that optimize performance by generating code at compile time, eliminating reflection overhead in critical paths.
 
 ## Arguments Source Generation
 
 ### Overview
 
-The `Arguments` class is used throughout Crest to convert objects into named argument collections for shapes and other scenarios. Source generation provides compile-time generated property access to avoid reflection overhead.
+The `Arguments` class is used throughout Grove to convert objects into named argument collections for shapes and other scenarios. Source generation provides compile-time generated property access to avoid reflection overhead.
 
 ### Recommended: Use Named Types with `[GenerateArguments]`
 
@@ -15,7 +15,7 @@ The `Arguments` class is used throughout Crest to convert objects into named arg
 #### Quick Start
 
 ```csharp
-using Crest.DisplayManagement;
+using Grove.DisplayManagement;
 
 [GenerateArguments]
 public partial class MyShapeArguments
@@ -70,7 +70,7 @@ var shape = await factory.CreateAsync("MyShape", new
 
 ### Fallback: Reflection with Caching
 
-If you don't use source generation or interceptors, Crest.Core automatically uses cached reflection:
+If you don't use source generation or interceptors, Grove.Core automatically uses cached reflection:
 
 ```csharp
 // Works on any .NET version - uses reflection + caching
@@ -81,14 +81,14 @@ This is suitable for prototyping or infrequent usage where performance isn't cri
 
 ## Build-Time Analyzers
 
-`Crest.SourceGenerators` also ships analyzers that catch invalid Crest shape patterns during build.
+`Grove.SourceGenerators` also ships analyzers that catch invalid Grove shape patterns during build.
 
 ### OCSG001: Sealed types can't be used as proxy-based shapes
 
-Crest creates strongly typed shapes by subclassing the model type with Castle DynamicProxy. If a view model used with proxy-based shape APIs is `sealed` and does not implement `IShape`, the proxy cannot be generated and shape creation fails at runtime.
+Grove creates strongly typed shapes by subclassing the model type with Castle DynamicProxy. If a view model used with proxy-based shape APIs is `sealed` and does not implement `IShape`, the proxy cannot be generated and shape creation fails at runtime.
 
 !!! note
-    `OCSG` stands for `Crest Source Generators`.
+    `OCSG` stands for `Grove Source Generators`.
 
 The `OCSG001` analyzer makes this discoverable at build time for APIs such as `Initialize<TModel>(...)` and proxy-based `CreateAsync<TModel>(...)` overloads.
 
@@ -107,7 +107,7 @@ return Initialize<DebugSettingsViewModel>("DebugSettings_Edit", model =>
 This produces a build warning similar to:
 
 ```text
-warning OCSG001: Type 'DebugSettingsViewModel' is sealed and does not implement IShape, so Crest can't create a proxy-based shape for this 'Initialize' call
+warning OCSG001: Type 'DebugSettingsViewModel' is sealed and does not implement IShape, so Grove can't create a proxy-based shape for this 'Initialize' call
 ```
 
 **Ways to fix it:**
@@ -119,7 +119,7 @@ warning OCSG001: Type 'DebugSettingsViewModel' is sealed and does not implement 
 
 ## Real-World Examples
 
-Crest modules use source-generated models extensively. For example:
+Grove modules use source-generated models extensively. For example:
 
 ### Pager Shape
 
@@ -265,8 +265,8 @@ Check for generated files after building:
 
 ```
 obj/Debug/net10.0/generated/
-  Crest.SourceGenerators/
-    Crest.DisplayManagement.SourceGenerators.ArgumentsFromInterceptor/
+  Grove.SourceGenerators/
+    Grove.DisplayManagement.SourceGenerators.ArgumentsFromInterceptor/
       ArgumentsFromInterceptors.g.cs
 ```
 
@@ -305,7 +305,7 @@ public bool TryGetValue(string key, out object value)
 
 **Why linear search?**
 
-For typical Crest shape arguments (2-15 properties):
+For typical Grove shape arguments (2-15 properties):
 
 - **Simplicity** - Easy to understand and maintain
 - **No allocation overhead** - No dictionary initialization unless needed
@@ -319,7 +319,7 @@ For typical Crest shape arguments (2-15 properties):
 3. **Group related properties** - Create focused models for specific scenarios
 4. **Keep models simple** - Avoid complex logic in getters
 5. **Document usage** - Add XML comments explaining the model's purpose
-6. **Look at Crest examples** - Check existing modules for reference patterns
+6. **Look at Grove examples** - Check existing modules for reference patterns
 7. **Consider reusability** - Named types can be shared across multiple call sites
 8. **Keep property counts reasonable** - Designed for typical shape arguments with 2-20 properties
 
@@ -400,7 +400,7 @@ Intercepts `Arguments.From(anonymousType)` calls and optimizes them using type i
 
 ### SealedShapeTypeAnalyzer
 
-Reports `OCSG001` when a sealed non-`IShape` model is passed to Crest APIs that create proxy-based strongly typed shapes.
+Reports `OCSG001` when a sealed non-`IShape` model is passed to Grove APIs that create proxy-based strongly typed shapes.
 
 **Status:** ✅ Stable
 
@@ -408,7 +408,7 @@ Reports `OCSG001` when a sealed non-`IShape` model is passed to Crest APIs that 
 
 ### FeatureAttributeTargetAnalyzer
 
-Reports `OCSG002` when `Crest.Modules.FeatureAttribute` targets a feature ID that is not declared by the current module assembly.
+Reports `OCSG002` when `Grove.Modules.FeatureAttribute` targets a feature ID that is not declared by the current module assembly.
 
 **Status:** ✅ Stable
 

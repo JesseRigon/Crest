@@ -1,5 +1,5 @@
-// Converted from Crest.Icons/tests/playwright/iconify-provider-reset-defaults.js.
-// Verifies PUT /api/crest/icons/providers resets the Iconify provider to its default baseUrl
+// Converted from Grove.Icons/tests/playwright/iconify-provider-reset-defaults.js.
+// Verifies PUT /api/grove/icons/providers resets the Iconify provider to its default baseUrl
 // and an empty prefix allow-list.
 //
 // ADAPTATION: the original script only asserted the reset and left the tenant in the reset
@@ -28,14 +28,14 @@ async function api(page, path, options = {}) {
 }
 
 module.exports = async function run(page, ctx) {
-  const original = await api(page, '/api/crest/icons/providers');
+  const original = await api(page, '/api/grove/icons/providers');
 
-  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  // Mutating Grove APIs are antiforgery-protected - see harness/antiforgery.js.
   const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
   const antiforgeryHeaders = { [antiforgery.headerName]: antiforgery.requestToken };
 
   try {
-    const result = await api(page, '/api/crest/icons/providers', {
+    const result = await api(page, '/api/grove/icons/providers', {
       method: 'PUT',
       headers: antiforgeryHeaders,
       body: JSON.stringify({ iconify: { enabled: true, baseUrl: 'https://api.iconify.design', apiKey: null, apiKeyHeader: null, prefixes: [] } }),
@@ -48,7 +48,7 @@ module.exports = async function run(page, ctx) {
     };
   } finally {
     if (original.ok) {
-      await api(page, '/api/crest/icons/providers', { method: 'PUT', headers: antiforgeryHeaders, body: JSON.stringify(original.body) }).catch(() => {});
+      await api(page, '/api/grove/icons/providers', { method: 'PUT', headers: antiforgeryHeaders, body: JSON.stringify(original.body) }).catch(() => {});
     }
   }
 };

@@ -1,4 +1,4 @@
-// Converted from Crest.AdminTheme/tests/playwright/admin-menu-icon-override.js.
+// Converted from Grove.AdminTheme/tests/playwright/admin-menu-icon-override.js.
 // Setting a custom iconClass on an admin menu node via the API should be reflected in the
 // rendered primary-nav icon. Restores the original iconClass in `finally` either way.
 //
@@ -7,7 +7,7 @@
 const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
 
 module.exports = async function run(page, ctx) {
-  const menuId = '__crest_default_admin_menu';
+  const menuId = '__grove_default_admin_menu';
   const targetNodeId = process.env.NODE_ID || 'content';
   const testIconClass = process.env.ICON_CLASS || '@iconify:mdi:folder';
 
@@ -33,11 +33,11 @@ module.exports = async function run(page, ctx) {
     return response.text ? JSON.parse(response.text) : null;
   }
 
-  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  // Mutating Grove APIs are antiforgery-protected - see harness/antiforgery.js.
   const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
   const antiforgeryHeaders = { [antiforgery.headerName]: antiforgery.requestToken };
 
-  const state = await api('/api/crest/admin-menus');
+  const state = await api('/api/grove/admin-menus');
   const menu = state.menus.find(m => m.id === menuId);
   if (!menu) throw new Error(`Menu ${menuId} not found`);
   // Provider items are imported as admin menu nodes keyed by UniqueId, so 'content' is no
@@ -65,7 +65,7 @@ module.exports = async function run(page, ctx) {
   let updatedIconClass;
   let contentIcon;
   try {
-    const updated = await api(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/nodes/${encodeURIComponent(nodeId)}`, {
+    const updated = await api(`/api/grove/admin-menus/${encodeURIComponent(menuId)}/nodes/${encodeURIComponent(nodeId)}`, {
       method: 'PUT',
       headers: antiforgeryHeaders,
       body: JSON.stringify(model),
@@ -75,7 +75,7 @@ module.exports = async function run(page, ctx) {
     await page.goto(`${ctx.baseUrl}/Admin/Accounting/Customers`, { waitUntil: 'networkidle' });
     await page.locator('.primary-nav-menu').waitFor({ timeout: 15000 });
     contentIcon = await page
-      .locator('.crest-panel-menu__item-content', { hasText: /^Content$/ })
+      .locator('.grove-panel-menu__item-content', { hasText: /^Content$/ })
       .first()
       .locator('.platform-icon')
       .evaluate(icon => ({
@@ -85,7 +85,7 @@ module.exports = async function run(page, ctx) {
       }));
   } finally {
     const restore = { ...model, iconClass: originalIconClass };
-    await api(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/nodes/${encodeURIComponent(nodeId)}`, {
+    await api(`/api/grove/admin-menus/${encodeURIComponent(menuId)}/nodes/${encodeURIComponent(nodeId)}`, {
       method: 'PUT',
       headers: antiforgeryHeaders,
       body: JSON.stringify(restore),

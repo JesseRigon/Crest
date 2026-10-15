@@ -1,0 +1,41 @@
+@namespace Grove.Shell
+@using System.Reflection
+@using Grove.Components.Modules
+@using Microsoft.AspNetCore.Components.WebAssembly.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject IServiceProvider Services
+
+@* The one root component every shell document mounts (Grove.Server's App.razor), naming the
+   shell rather than its Routes type: theme UIs are lazy, each loading when its shell is
+   opened (docs/shells-and-themes.md › Theme UIs load per shell), and blazor.web.js activates
+   a root component by type at boot - a Routes type in a lazy assembly could not be
+   activated. This component lives in the eager shell runtime, loads the shell's theme UI,
+   then renders the Routes component the theme declares ([assembly: GroveShell(..., Routes =
+   typeof(...))]). On the server every assembly is already loaded and it renders at once. *@
+
+@if (_routes is not null)
+{
+    <DynamicComponent Type="_routes" />
+}
+
+@code {
+    /// <summary>The shell this document serves ("admin", "site", "member").</summary>
+    [Parameter, EditorRequired]
+    public string Shell { get; set; } = GroveShells.Site;
+
+    private Type? _routes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Browser: load the shell's theme UI (with what only it needs). Server: the loader is
+        // not attached and every assembly is in the process.
+        if (Services.GetService<LazyModules>() is { } lazyModules
+            && Services.GetService<LazyAssemblyLoader>() is { } loader)
+        {
+            lazyModules.Attach(loader);
+            await lazyModules.EnsureThemeAsync(Shell);
+        }
+
+        _routes = ShellThemes.RoutesOf(Shell);
+    }
+}

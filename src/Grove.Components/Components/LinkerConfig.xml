@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<linker>
+  <assembly fullname="System.Core">
+    <type fullname="System.Linq.Queryable" preserve="all" />
+  </assembly>
+  <assembly fullname="System.Linq.Expressions">
+    <type fullname="System.Linq.Expressions.Expression" preserve="all" />
+    <type fullname="System.Linq.Expressions.ExpressionVisitor" preserve="all" />
+  </assembly>
+  <assembly fullname="Microsoft.CSharp" preserve="all" />
+  <assembly fullname="Grove.Components.Primitives">
+    <!-- Preserve DropDownItem used in filter dropdowns via reflection -->
+    <type fullname="Grove.DropDownItem`1" preserve="all" />
+    <!-- Preserve OData service result types for JSON deserialization -->
+    <type fullname="Grove.ODataServiceResult`1" preserve="all" />
+    <!-- Preserve Google Map marker types serialized to JS interop -->
+    <type fullname="Grove.Components.Primitives.GoogleMapMarkerData" preserve="all" />
+    <type fullname="Grove.GoogleMapPosition" preserve="all" />
+    <!-- Preserve AI chat request types serialized to the chat API -->
+    <type fullname="Grove.ChatCompletionRequest" preserve="all" />
+    <type fullname="Grove.ChatCompletionMessage" preserve="all" />
+    <!-- Preserve all types with [JSInvokable] methods (called from JS, invisible to trimmer) -->
+    <type fullname="Grove.DialogService" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveChart" preserve="methods" />
+    <type fullname="Grove.GroveComponent" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveContextMenu" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveDataGrid`1" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveDatePicker`1" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveDropDown`1" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveDropDownDataGrid`1" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveFabMenu" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveFileInput`1" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveGoogleMap" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveHeatmap" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveHtmlEditor" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveMediaQuery" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveRangeNavigator" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveSankeyDiagram`1" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveScheduler`1" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveSecurityCode" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveSlider`1" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveSpeechToTextButton" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveSpiderChart" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveSplitter" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveToc" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveTreemap" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GroveUpload" preserve="methods" />
+    <type fullname="Grove.Components.Primitives.GaugeBase" preserve="methods" />
+    <!-- Preserve GroupResult for dynamic Key access -->
+    <type fullname="Grove.GroupResult" preserve="all" />
+  </assembly>
+</linker>

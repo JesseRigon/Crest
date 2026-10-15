@@ -1,0 +1,138 @@
+#nullable enable
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
+using Grove.Api;
+using Microsoft.Extensions.Options;
+using Grove.Entities;
+using Grove.Environment.Shell;
+using Grove.Security;
+using Grove.Security.Options;
+using Grove.Security.Settings;
+using Grove.Settings;
+
+namespace Grove.Security.Api;
+
+public sealed class SecurityHeadersApi : ApiContributor
+{
+    public override string Name => "SecurityHeaders";
+
+    public override string FeatureId => "Grove.Security";
+
+    public override void Map(IEndpointRouteBuilder group)
+    {
+        var routes = group.MapGroup("security-headers");
+        routes.MapGet("", ApiHandlers.Handle<SecurityHeadersHandlers>(h => h.GetAsync()));
+        routes.MapPut("", (HttpContext __http, [FromBody] SecurityHeadersDto dto) => ApiHandlers.For<SecurityHeadersHandlers>(__http).SaveAsync(dto));
+    }
+}
+
+public sealed class SecurityHeadersHandlers(
+    ISiteService sites,
+    IShellReleaseManager releaseManager,
+    IOptionsSnapshot<SecuritySettings> configuredSettings,
+    IAuthorizationService authorization) : ApiHandlers
+{
+    private static readonly HashSet<string> ContentSecurityPolicyNames =
+    [
+        ContentSecurityPolicyValue.BaseUri, ContentSecurityPolicyValue.ChildSource,
+        ContentSecurityPolicyValue.ConnectSource, ContentSecurityPolicyValue.DefaultSource,
+        ContentSecurityPolicyValue.FontSource, ContentSecurityPolicyValue.FormAction,
+        ContentSecurityPolicyValue.FrameAncestors, ContentSecurityPolicyValue.FrameSource,
+        ContentSecurityPolicyValue.ImageSource, ContentSecurityPolicyValue.ManifestSource,
+        ContentSecurityPolicyValue.MediaSource, ContentSecurityPolicyValue.ObjectSource,
+        ContentSecurityPolicyValue.ScriptSource, ContentSecurityPolicyValue.StyleSource,
+        ContentSecurityPolicyValue.Sandbox, ContentSecurityPolicyValue.UpgradeInsecureRequests,
+    ];
+
+    private static readonly HashSet<string> PermissionsPolicyNames =
+    [
+        PermissionsPolicyValue.Accelerometer, PermissionsPolicyValue.AmbientLightSensor,
+        PermissionsPolicyValue.Autoplay, PermissionsPolicyValue.Battery, PermissionsPolicyValue.Camera,
+        PermissionsPolicyValue.DisplayCapture, PermissionsPolicyValue.DocumentDomain,
+        PermissionsPolicyValue.EncryptedMedia, PermissionsPolicyValue.FullScreen,
+        PermissionsPolicyValue.GamePad, PermissionsPolicyValue.Geolocation, PermissionsPolicyValue.Gyroscope,
+        PermissionsPolicyValue.LayoutAnimations, PermissionsPolicyValue.LegacyImageFormat,
+        PermissionsPolicyValue.Magnetometer, PermissionsPolicyValue.Microphone, PermissionsPolicyValue.Midi,
+        PermissionsPolicyValue.OversizedImages, PermissionsPolicyValue.Payment,
+        PermissionsPolicyValue.PictureInPicture, PermissionsPolicyValue.PublicKeyRetrieval,
+        PermissionsPolicyValue.SpeakerSelection, PermissionsPolicyValue.ScreenWakeLock,
+        PermissionsPolicyValue.SyncXhr, PermissionsPolicyValue.UnoptimizedImages,
+        PermissionsPolicyValue.UnsizedMedia, PermissionsPolicyValue.Usb, PermissionsPolicyValue.WebShare,
+        PermissionsPolicyValue.WebXR,
+    ];
+
+    private static readonly HashSet<string> ReferrerPolicies =
+    [
+        ReferrerPolicyValue.NoReferrer, ReferrerPolicyValue.NoReferrerWhenDowngrade,
+        ReferrerPolicyValue.Origin, ReferrerPolicyValue.OriginWhenCrossOrigin,
+        ReferrerPolicyValue.SameOrigin, ReferrerPolicyValue.StrictOrigin,
+        ReferrerPolicyValue.StrictOriginWhenCrossOrigin, ReferrerPolicyValue.UnsafeUrl,
+    ];
+
+    public async Task<IResult> GetAsync()
+    {
+        if (!await authorization.AuthorizeAsync(User, SecurityPermissions.ManageSecurityHeadersSettings)) return Forbid();
+        var settings = await sites.GetSettingsAsync<SecuritySettings>();
+        return Ok(SecurityHeadersDto.From(settings, configuredSettings.Value.FromConfiguration));
+    }
+
+    public async Task<IResult> SaveAsync([FromBody] SecurityHeadersDto dto)
+    {
+        if (!await authorization.AuthorizeAsync(User, SecurityPermissions.ManageSecurityHeadersSettings)) return Forbid();
+
+        var contentSecurityPolicy = NormalizeContentSecurityPolicy(dto.ContentSecurityPolicy);
+        var permissionsPolicy = NormalizePermissionsPolicy(dto.PermissionsPolicy);
+        var referrerPolicy = ReferrerPolicies.Contains(dto.ReferrerPolicy ?? string.Empty)
+            ? dto.ReferrerPolicy!
+            : SecurityHeaderDefaults.ReferrerPolicy;
+
+        var site = await sites.LoadSiteSettingsAsync();
+        SecuritySettings? updated = null;
+        site.Alter<SecuritySettings>(settings =>
+        {
+            settings.ContentTypeOptions = SecurityHeaderDefaults.ContentTypeOptions;
+            settings.ContentSecurityPolicy = contentSecurityPolicy;
+            settings.PermissionsPolicy = permissionsPolicy;
+            settings.ReferrerPolicy = referrerPolicy;
+            updated = settings;
+        });
+        await sites.UpdateSiteSettingsAsync(site);
+        releaseManager.RequestRelease();
+
+        return Ok(SecurityHeadersDto.From(updated!, configuredSettings.Value.FromConfiguration));
+    }
+
+    private static Dictionary<string, string> NormalizeContentSecurityPolicy(Dictionary<string, string>? values)
+    {
+        values ??= [];
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var name in ContentSecurityPolicyNames)
+        {
+            if (!values.TryGetValue(name, out var value)) continue;
+            if (name is ContentSecurityPolicyValue.Sandbox or ContentSecurityPolicyValue.UpgradeInsecureRequests)
+            {
+                result[name] = null!;
+            }
+            else if (!string.IsNullOrWhiteSpace(value))
+            {
+                result[name] = value.Trim();
+            }
+        }
+        return result;
+    }
+
+    private static Dictionary<string, string> NormalizePermissionsPolicy(Dictionary<string, string>? values)
+    {
+        values ??= [];
+        return values
+            .Where(pair => PermissionsPolicyNames.Contains(pair.Key))
+            .Select(pair => new KeyValuePair<string, string>(pair.Key, pair.Value?.Trim() ?? string.Empty))
+            .Where(pair => pair.Value is PermissionsPolicyOriginValue.Any or PermissionsPolicyOriginValue.Self ||
+                pair.Value.StartsWith(PermissionsPolicyOriginValue.Self + " ", StringComparison.Ordinal))
+            .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+    }
+}

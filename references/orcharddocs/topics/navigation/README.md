@@ -1,6 +1,6 @@
 # Navigation
 
-Crest allows you to define the front and admin menus to navigate easily in your site.
+Grove allows you to define the front and admin menus to navigate easily in your site.
 
 ## Navigate between Pages
 

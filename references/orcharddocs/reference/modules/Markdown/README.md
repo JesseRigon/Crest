@@ -1,4 +1,4 @@
-# Markdown (`Crest.Markdown`)
+# Markdown (`Grove.Markdown`)
 
 ## Theming
 
@@ -109,7 +109,7 @@ To define what HTML to render when the editor is selected from the settings, a s
 Sample content:
 
 ```csharp
-@using Crest.Markdown.ViewModels
+@using Grove.Markdown.ViewModels
 @model MarkdownBodyPartViewModel
 
 <fieldset class="mb-3">
@@ -127,7 +127,7 @@ You can override the HTML editor for the `Default` editor by creating a shape fi
 
 ## Razor Helper
 
-To render a Markdown string to HTML within Razor use the `MarkdownToHtmlAsync` helper extension method on the view's base `Crest` property, e.g.:
+To render a Markdown string to HTML within Razor use the `MarkdownToHtmlAsync` helper extension method on the view's base `Grove` property, e.g.:
 
 ```csharp
 @await Platform.MarkdownToHtmlAsync((string)Model.ContentItem.Content.MarkdownParagraph.Content.Markdown)
@@ -157,7 +157,7 @@ The following configuration values are used by default and can be customized:
 
 ```json
 {
-  "Crest_Markdown": {
+  "Grove_Markdown": {
     "Extensions": "nohtml+advanced"
   }
 }

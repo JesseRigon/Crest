@@ -1,4 +1,4 @@
-// Converted from Crest/tests/playwright/admin-primary-nav-menu-flyout-popup.js.
+// Converted from Grove/tests/playwright/admin-primary-nav-menu-flyout-popup.js.
 // Creates a temporary 4-level-deep menu branch, then verifies the detached tier-4 popup
 // anchors to its trigger's top-right, flips to top-right-above when the viewport is too
 // short, stays inside the viewport, and doesn't close while the pointer is over it.
@@ -19,7 +19,7 @@ module.exports = async function run(page, ctx) {
   async function postJson(url, body) {
     return page.evaluate(
       async ({ url, body }) => {
-        const tokenResponse = await fetch('/api/crest/antiforgery/token', { credentials: 'include' });
+        const tokenResponse = await fetch('/api/grove/antiforgery/token', { credentials: 'include' });
         if (!tokenResponse.ok) throw new Error(`Unable to load antiforgery token: ${tokenResponse.status}`);
         const token = await tokenResponse.json();
         const response = await fetch(url, {
@@ -39,8 +39,8 @@ module.exports = async function run(page, ctx) {
   async function deleteNode(menuId, nodeId) {
     await page.evaluate(
       async ({ menuId, nodeId }) => {
-        const token = await (await fetch('/api/crest/antiforgery/token', { credentials: 'include' })).json();
-        const response = await fetch(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/nodes/${encodeURIComponent(nodeId)}`, {
+        const token = await (await fetch('/api/grove/antiforgery/token', { credentials: 'include' })).json();
+        const response = await fetch(`/api/grove/admin-menus/${encodeURIComponent(menuId)}/nodes/${encodeURIComponent(nodeId)}`, {
           method: 'DELETE',
           credentials: 'include',
           headers: { [token.headerName || 'RequestVerificationToken']: token.requestToken },
@@ -61,7 +61,7 @@ module.exports = async function run(page, ctx) {
   }
 
   async function createNode(menuId, text, parentNodeId, position = 2147483647) {
-    await postJson(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/nodes`, {
+    await postJson(`/api/grove/admin-menus/${encodeURIComponent(menuId)}/nodes`, {
       type: 'placeholder',
       text,
       iconClass: '@iconify:mdi:circle-outline',
@@ -72,7 +72,7 @@ module.exports = async function run(page, ctx) {
       position,
     });
     for (let attempt = 0; attempt < 20; attempt++) {
-      const summary = await fetchJson(`/api/crest/admin-menus/${encodeURIComponent(menuId)}`);
+      const summary = await fetchJson(`/api/grove/admin-menus/${encodeURIComponent(menuId)}`);
       const node = findNode(summary.nodes, text);
       if (node?.id) return node.id;
       await page.waitForTimeout(150);
@@ -86,12 +86,12 @@ module.exports = async function run(page, ctx) {
   const results = [];
 
   try {
-    const state = await fetchJson('/api/crest/admin-menus');
-    const menu = state.menus?.find(menu => menu.isDefault) || state.menus?.find(menu => menu.id === '__crest_default_admin_menu');
+    const state = await fetchJson('/api/grove/admin-menus');
+    const menu = state.menus?.find(menu => menu.isDefault) || state.menus?.find(menu => menu.id === '__grove_default_admin_menu');
     if (!menu?.id) throw new Error('Default primary navigation menu was not returned.');
     menuId = menu.id;
     originalSettings = JSON.parse(JSON.stringify(menu.primaryNavMenuSettings));
-    await postJson(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/primary-nav-menu-settings`, {
+    await postJson(`/api/grove/admin-menus/${encodeURIComponent(menuId)}/primary-nav-menu-settings`, {
       ...originalSettings,
       collapsible: true,
       expansionDurationMilliseconds: 300,
@@ -125,7 +125,7 @@ module.exports = async function run(page, ctx) {
     await primaryNavMenu.hover();
     await page.waitForTimeout(1350);
 
-    const rootButton = primaryNavMenu.locator('.crest-panel-menu__item-link', { hasText: rootText }).first();
+    const rootButton = primaryNavMenu.locator('.grove-panel-menu__item-link', { hasText: rootText }).first();
     await rootButton.waitFor({ timeout: 10000 });
     // Blazor emits aria-expanded="" (empty string) for a true bool and OMITS the attribute
     // entirely when false — it never writes the literal "true" or "false". So "expanded"
@@ -136,11 +136,11 @@ module.exports = async function run(page, ctx) {
     };
     if (!(await isExpanded(rootButton))) await rootButton.click();
 
-    const childButton = primaryNavMenu.locator('.crest-panel-menu__item-link', { hasText: childText }).first();
+    const childButton = primaryNavMenu.locator('.grove-panel-menu__item-link', { hasText: childText }).first();
     await childButton.waitFor({ timeout: 10000 });
     if (!(await isExpanded(childButton))) await childButton.click();
 
-    const trigger = primaryNavMenu.locator('.crest-panel-menu__item-link', { hasText: triggerText }).first();
+    const trigger = primaryNavMenu.locator('.grove-panel-menu__item-link', { hasText: triggerText }).first();
     await trigger.waitFor({ timeout: 10000 });
     await trigger.scrollIntoViewIfNeeded();
     await trigger.hover();
@@ -151,7 +151,7 @@ module.exports = async function run(page, ctx) {
     const triggerRect = await trigger.evaluate(element => element.getBoundingClientRect().toJSON());
     const anchoredPlacement = await page.evaluate(() => {
       const popupElement = document.querySelector('.primary-nav-menu__flyout--detached');
-      return { placement: popupElement?.dataset.crestPopupPlacement, popup: popupElement?.getBoundingClientRect().toJSON() };
+      return { placement: popupElement?.dataset.grovePopupPlacement, popup: popupElement?.getBoundingClientRect().toJSON() };
     });
 
     results.push({
@@ -172,7 +172,7 @@ module.exports = async function run(page, ctx) {
     await popup.waitFor({ timeout: 5000 });
     const flippedTriggerRect = await trigger.evaluate(element => element.getBoundingClientRect().toJSON());
     const placement = await popup.evaluate(element => ({
-      placement: element.dataset.crestPopupPlacement,
+      placement: element.dataset.grovePopupPlacement,
       rect: element.getBoundingClientRect().toJSON(),
       viewportHeight: window.innerHeight,
     }));
@@ -194,7 +194,7 @@ module.exports = async function run(page, ctx) {
     results.push({ name: 'popup-stays-open-while-pointer-hovers-it', pass: stillExpanded, message: `stillExpanded=${stillExpanded}` });
 
     await page.locator('.admin-dashboard__main').hover();
-    // CrestPopup keeps the wrapper div mounted and hides it via display:none rather than
+    // GrovePopup keeps the wrapper div mounted and hides it via display:none rather than
     // removing it from the DOM — 'hidden' (not 'detached') is the correct closed state.
     await popup.waitFor({ state: 'hidden', timeout: 5000 });
   } finally {
@@ -203,7 +203,7 @@ module.exports = async function run(page, ctx) {
         // Delete in CREATION order (root first), not reverse. Deleting a node re-parents
         // its surviving children to the root rather than cascading, so leaf-first deletion
         // left "Popup Child" promoted to a root-level orphan that no later delete targeted
-        // — it then persisted in the tenant AND got baked into recipes/crest-admin-menu-layout.json
+        // — it then persisted in the tenant AND got baked into recipes/grove-admin-menu-layout.json
         // by the layout-export check. Root-first lets the server remove the whole subtree;
         // the follow-up sweep below catches anything the cascade misses.
         for (const nodeId of createdNodeIds) {
@@ -213,7 +213,7 @@ module.exports = async function run(page, ctx) {
         // survive this check, however the server chose to re-parent during deletion.
         await page
           .evaluate(async id => {
-            const state = await (await fetch('/api/crest/admin-menus', { credentials: 'include' })).json();
+            const state = await (await fetch('/api/grove/admin-menus', { credentials: 'include' })).json();
             const menu = state.menus.find(entry => entry.id === id);
             const flatten = nodes => (nodes || []).flatMap(node => [node, ...flatten(node.children || node.nodes || [])]);
             return flatten(menu?.nodes).filter(node => /^Popup (Root|Child|Trigger|Leaf) /.test(node.text || '')).map(node => node.id);
@@ -223,7 +223,7 @@ module.exports = async function run(page, ctx) {
           })
           .catch(() => {});
         if (originalSettings) {
-          await postJson(`/api/crest/admin-menus/${encodeURIComponent(menuId)}/primary-nav-menu-settings`, originalSettings).catch(() => {});
+          await postJson(`/api/grove/admin-menus/${encodeURIComponent(menuId)}/primary-nav-menu-settings`, originalSettings).catch(() => {});
         }
       }
     } finally {

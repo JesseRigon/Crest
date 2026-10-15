@@ -1,5 +1,5 @@
 import { isCompactExplicit, setCompactExplicit, getAdminPreferences, setAdminPreferences } from '../constants';
-import { getTenantName, getAdminPrefix } from '@crest/bloom/helpers/globals';
+import { getTenantName, getAdminPrefix } from '@grove/bloom/helpers/globals';
 import { persistAdminPreferences } from './userPreferencesPersistor';
 
 let leftNav: HTMLElement | null = null;

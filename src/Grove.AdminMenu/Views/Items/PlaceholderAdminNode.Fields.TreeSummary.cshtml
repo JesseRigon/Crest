@@ -1,0 +1,12 @@
+@using Grove
+@using Grove.AdminMenu
+@using Grove.AdminMenu.Services
+@using Grove.Localization.Data
+@model ShapeViewModel<PlaceholderAdminNode>
+@inject IDataLocalizer D
+@{
+    string localizedAdminMenuItemLinkText = D[Model.Value.LinkText, Grove.AdminMenu.DataLocalizationContext.AdminMenu(Model.Value.MenuName)];
+}
+<div class="@(Model.Value.Enabled ? "" : "disabled")">
+    <span>@localizedAdminMenuItemLinkText <span class="text-muted dashed">@T["Placeholder"]</span></span>
+</div>

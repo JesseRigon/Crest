@@ -6,7 +6,7 @@ In this example, you will build a search tool to filter blog posts based on the 
 
 ## What you will need
 
-You will start from a new Crest site built using the Blog recipe.
+You will start from a new Grove site built using the Blog recipe.
 
 You will be using a Lucene query, made dynamic with a Liquid template.
 

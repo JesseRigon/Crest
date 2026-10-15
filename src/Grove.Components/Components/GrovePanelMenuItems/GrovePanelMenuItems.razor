@@ -1,0 +1,301 @@
+@namespace Grove.Components.Navigation
+@using Microsoft.AspNetCore.Components.Web
+@using Grove.Components.Primitives
+
+@for (var index = 0; index < Items.Count; index++)
+{
+    var item = Items[index];
+    var renderFlyout = ShouldRenderFlyout(item);
+    var hasExpandableChildren = item.HasChildren && !renderFlyout;
+
+    @if (ShouldRenderTierSeparatorBefore(index))
+    {
+        <li @key="@($"auto-separator-{Level}-{index}")" class="@GetAutoSeparatorClass()" style="@GetItemStyle()">
+            <div class="grove-panel-menu__item-wrapper grove-panel-menu__separator-wrapper grove-panel-menu__separator-wrapper--auto" role="separator" aria-orientation="horizontal">
+                <span class="grove-panel-menu__separator-line"></span>
+            </div>
+        </li>
+    }
+
+    <li @key="item.Key" class="@GetItemClass(item)" style="@GetItemStyle()">
+        @if (item.IsSeparator)
+        {
+            <div class="grove-panel-menu__item-wrapper grove-panel-menu__separator-wrapper" role="separator" aria-orientation="horizontal">
+                <span class="grove-panel-menu__separator-line"></span>
+            </div>
+        }
+        else
+        {
+        <div id="@item.ElementId" class="grove-panel-menu__item-wrapper">
+            @if (hasExpandableChildren)
+            {
+                <button type="button"
+                        class="@GetItemLinkClass(item)"
+                        disabled="@item.IsDisabled"
+                        aria-expanded="@IsExpanded(item)"
+                        tabindex="-1"
+                        @onclick="@(() => ToggleExpanded(item))">
+                    @RenderItemContent(item)
+                    @RenderActionIcon(item, GetExpandIconClass(item), "iconify.mdi/current/default/chevron-down", "Toggle submenu")
+                </button>
+            }
+            else if (renderFlyout)
+            {
+                <button type="button"
+                        class="@GetItemLinkClass(item)"
+                        data-grove-panel-menu-flyout-anchor="@item.Key"
+                        disabled="@item.IsDisabled"
+                        aria-haspopup="menu"
+                        tabindex="-1"
+                    @onmouseover="@(args => OpenFlyout(item, args))"
+                    @onmouseout="CloseFlyoutSoon">
+                    @RenderItemContent(item)
+                    @RenderActionIcon(item, "grove-panel-menu__action-rail grove-panel-menu__flyout-trigger", "iconify.mdi/current/default/chevron-right", "Open submenu")
+                </button>
+            }
+            else if (item.HasLink && !item.IsDisabled)
+            {
+                <a class="@GetItemLinkClass(item)"
+                   href="@item.Href"
+                   target="@item.Target"
+                   tabindex="-1"
+                   aria-current="@(item.IsActive ? "page" : null)">
+                    @RenderItemContent(item)
+                </a>
+            }
+            else
+            {
+                <button type="button"
+                        class="@GetItemLinkClass(item)"
+                        disabled="@item.IsDisabled"
+                        tabindex="-1">
+                    @RenderItemContent(item)
+                </button>
+            }
+        </div>
+        }
+
+        @if (hasExpandableChildren && IsExpanded(item))
+        {
+            <div class="@GetChildrenClass(item)">
+                <div class="grove-panel-menu__children-inner">
+                    <ul class="grove-panel-menu__list grove-panel-menu__list--nested">
+                        <GrovePanelMenuItems Items="item.Items"
+                                             Level="@(Level + 1)"
+                                             ExpandedItemKeys="ExpandedItemKeys"
+                                             ExpansionVersion="ExpansionVersion"
+                                             ExpandedChanged="ExpandedChanged"
+                                             FlyoutOpened="FlyoutOpened"
+                                             FlyoutCloseRequested="FlyoutCloseRequested"
+                                             FlyoutDepth="FlyoutDepth"
+                                             IndentItems="IndentItems"
+                                             IndentWhenCollapsed="IndentWhenCollapsed"
+                                     LevelIndents="LevelIndents"
+                                     LevelBackgrounds="LevelBackgrounds"
+                                     LevelBaseSizes="LevelBaseSizes"
+                                     TierSeparators="TierSeparators"
+                                     ActionIcon="ActionIcon"
+                                     FocusedItemKey="FocusedItemKey" />
+                    </ul>
+                </div>
+            </div>
+        }
+    </li>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<GrovePanelMenuItem> Items { get; set; } = [];
+
+    [Parameter]
+    public int Level { get; set; }
+
+    [Parameter]
+    public ISet<string> ExpandedItemKeys { get; set; } = new HashSet<string>();
+
+    [Parameter]
+    public int ExpansionVersion { get; set; }
+
+    [Parameter]
+    public EventCallback<GrovePanelMenuExpansionChangedEventArgs> ExpandedChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<GrovePanelMenuFlyoutEventArgs> FlyoutOpened { get; set; }
+
+    [Parameter]
+    public EventCallback FlyoutCloseRequested { get; set; }
+
+    [Parameter]
+    public int FlyoutDepth { get; set; } = 2;
+
+    [Parameter]
+    public bool IndentItems { get; set; } = true;
+
+    [Parameter]
+    public bool IndentWhenCollapsed { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<string> LevelIndents { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<string> LevelBackgrounds { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<string> LevelBaseSizes { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<bool> TierSeparators { get; set; } = [];
+
+    [Parameter]
+    public RenderFragment<GrovePanelMenuActionIconContext>? ActionIcon { get; set; }
+
+    [Parameter]
+    public string? FocusedItemKey { get; set; }
+
+    private bool IsExpanded(GrovePanelMenuItem item) => item.HasChildren && !ShouldRenderFlyout(item) && ExpandedItemKeys.Contains(item.Key);
+
+    private async Task ToggleExpanded(GrovePanelMenuItem item)
+    {
+        if (item.HasChildren && !ShouldRenderFlyout(item))
+        {
+            await ExpandedChanged.InvokeAsync(new GrovePanelMenuExpansionChangedEventArgs(item, !IsExpanded(item)));
+        }
+    }
+
+    private async Task OpenFlyout(GrovePanelMenuItem item, MouseEventArgs args) =>
+        await FlyoutOpened.InvokeAsync(new GrovePanelMenuFlyoutEventArgs(item, args));
+
+    private async Task CloseFlyoutSoon() => await FlyoutCloseRequested.InvokeAsync();
+
+    private bool ShouldRenderFlyout(GrovePanelMenuItem item) => Level >= FlyoutDepth && item.HasChildren;
+
+    private bool ShouldRenderTierSeparatorBefore(int index)
+    {
+        if (!IsTierSeparatorEnabled() || index <= 0)
+        {
+            return false;
+        }
+
+        var current = Items[index];
+        var previous = Items[index - 1];
+        return !current.IsSeparator && !previous.IsSeparator;
+    }
+
+    private bool IsTierSeparatorEnabled()
+    {
+        return Level < TierSeparators.Count && TierSeparators[Level];
+    }
+
+    private string GetAutoSeparatorClass() => string.Join(' ', new[]
+    {
+        "grove-panel-menu__item",
+        $"grove-panel-menu__item--level-{Level}",
+        "grove-panel-menu__item--separator",
+        "grove-panel-menu__item--auto-separator",
+    });
+
+    private string GetItemClass(GrovePanelMenuItem item) => string.Join(' ', new[]
+    {
+        "grove-panel-menu__item",
+        $"grove-panel-menu__item--level-{Level}",
+        item.IsSeparator ? "grove-panel-menu__item--separator" : null,
+        item.HasChildren ? "grove-panel-menu__item--has-children" : null,
+        ShouldRenderFlyout(item) ? "grove-panel-menu__item--has-flyout" : null,
+        item.IsActive ? "grove-panel-menu__item--active" : null,
+        item.IsDisabled ? "grove-panel-menu__item--disabled" : null,
+        item.CssClass,
+    }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private string GetItemLinkClass(GrovePanelMenuItem item) => string.Join(' ', new[]
+    {
+        "grove-panel-menu__item-link",
+        item.IsActive ? "grove-panel-menu__item-link--active" : null,
+        IsExpanded(item) ? "grove-panel-menu__item-link--expanded" : null,
+        item.HasLink ? "grove-panel-menu__item-link--linked" : null,
+        item.Key == FocusedItemKey ? "grove-panel-menu__item-link--focused" : null,
+        item.LinkCssClass,
+    }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private string GetExpandIconClass(GrovePanelMenuItem item) => string.Join(' ', new[]
+    {
+        "grove-panel-menu__action-rail",
+        "grove-panel-menu__expand-icon",
+        IsExpanded(item) ? "grove-panel-menu__expand-icon--expanded" : null,
+    }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private string GetChildrenClass(GrovePanelMenuItem item) => string.Join(' ', new[]
+    {
+        "grove-panel-menu__children",
+        IsExpanded(item) ? "grove-panel-menu__children--expanded" : "grove-panel-menu__children--collapsed",
+    });
+
+    private string GetItemStyle()
+    {
+        var expandedIndent = IndentItems ? GetLevelIndent() : "0rem";
+        var collapsedIndent = IndentItems && IndentWhenCollapsed ? expandedIndent : "0rem";
+        return $"--grove-panel-menu-node-inset: {expandedIndent}; --grove-panel-menu-node-inset-collapsed: {collapsedIndent}; --grove-panel-menu-level-background: var(--grove-panel-menu-tier-{Level + 1}-background, {GetLevelBackground()}); --grove-panel-menu-level-base-size: var(--grove-panel-menu-tier-{Level + 1}-base-size, {GetLevelBaseSize()});";
+    }
+
+    private string GetLevelIndent()
+    {
+        if (LevelIndents.Count == 0)
+        {
+            return "0rem";
+        }
+
+        return Level < LevelIndents.Count ? LevelIndents[Level] : LevelIndents[^1];
+    }
+
+    private string GetLevelBackground()
+    {
+        if (LevelBackgrounds.Count == 0)
+        {
+            return "transparent";
+        }
+
+        return Level < LevelBackgrounds.Count ? LevelBackgrounds[Level] : LevelBackgrounds[^1];
+    }
+
+    private string GetLevelBaseSize()
+    {
+        if (LevelBaseSizes.Count == 0)
+        {
+            return "1rem";
+        }
+
+        return Level < LevelBaseSizes.Count ? LevelBaseSizes[Level] : LevelBaseSizes[^1];
+    }
+
+    private static RenderFragment RenderItemContent(GrovePanelMenuItem item) => builder =>
+    {
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", "grove-panel-menu__item-content");
+
+        builder.OpenElement(2, "span");
+        builder.AddAttribute(3, "class", "grove-panel-menu__icon-rail");
+        builder.AddContent(4, item.Icon);
+        builder.CloseElement();
+
+        builder.OpenElement(5, "span");
+        builder.AddAttribute(6, "class", "grove-panel-menu__text-rail");
+        builder.AddContent(7, item.Text);
+        builder.CloseElement();
+
+        builder.CloseElement();
+    };
+
+    private RenderFragment RenderActionIcon(GrovePanelMenuItem item, string cssClass, string iconKey, string title) => builder =>
+    {
+        if (ActionIcon is not null)
+        {
+            builder.AddContent(0, ActionIcon(new GrovePanelMenuActionIconContext(item, cssClass, iconKey, title)));
+            return;
+        }
+
+        builder.OpenComponent<Grove.Components.Display.GroveIcon>(1);
+        builder.AddAttribute(2, "IconKey", iconKey);
+        builder.AddAttribute(3, "Class", cssClass);
+        builder.AddAttribute(4, "Alt", title);
+        builder.CloseComponent();
+    };
+}

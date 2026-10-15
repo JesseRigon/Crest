@@ -11,21 +11,21 @@ const { fetchAntiforgeryToken } = require('./antiforgery');
 // transparent on a hand-configured one - the restore puts back whatever was found at entry.
 async function ensureCultures(page, baseUrl, cultures) {
   const getJson = () => page.evaluate(async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/api/crest/localization`, { credentials: 'include' });
-    if (!response.ok) throw new Error(`GET /api/crest/localization failed: ${response.status}`);
+    const response = await fetch(`${baseUrl}/api/grove/localization`, { credentials: 'include' });
+    if (!response.ok) throw new Error(`GET /api/grove/localization failed: ${response.status}`);
     return response.json();
   }, baseUrl);
 
   const putJson = async (body) => {
     const antiforgery = await fetchAntiforgeryToken(page, baseUrl);
     return page.evaluate(async ({ baseUrl, body, antiforgery }) => {
-      const response = await fetch(`${baseUrl}/api/crest/localization`, {
+      const response = await fetch(`${baseUrl}/api/grove/localization`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken },
         body: JSON.stringify(body),
       });
-      if (!response.ok) throw new Error(`PUT /api/crest/localization failed: ${response.status} ${await response.text()}`);
+      if (!response.ok) throw new Error(`PUT /api/grove/localization failed: ${response.status} ${await response.text()}`);
       return response.json();
     }, { baseUrl, body, antiforgery });
   };

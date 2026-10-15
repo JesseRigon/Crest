@@ -1,6 +1,6 @@
-# ReCaptcha (`Crest.ReCaptcha`)
+# ReCaptcha (`Grove.ReCaptcha`)
 
-The Crest.ReCaptcha module can be used to prevent robots from abusing your Crest website.
+The Grove.ReCaptcha module can be used to prevent robots from abusing your Grove website.
 
 There are four features in the module:
 
@@ -22,7 +22,7 @@ You can add protection from robots to forms by including the reCaptcha field whe
 ### Workflow
 
 You can add a validate ReCaptcha task in your workflow.
-You can use this to validate the captcha that you show on your Crest.Forms form.
+You can use this to validate the captcha that you show on your Grove.Forms form.
 
 ### Manual validation
 
@@ -86,13 +86,13 @@ reCAPTCHA settings can be configured using the `Settings` recipe step:
 
 ## ReCaptcha Settings Configuration
 
-The `Crest.ReCaptcha` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureReCaptchaSettings()` extension method on `PlatformBuilder` when initializing the app.
+The `Grove.ReCaptcha` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureReCaptchaSettings()` extension method on `PlatformBuilder` when initializing the app.
 
 The following configuration values can be customized:
 
 ```json
 {
-  "Crest_ReCaptcha": {
+  "Grove_ReCaptcha": {
     "SiteKey": "",
     "SecretKey": "",
     "ReCaptchaScriptUri": "",

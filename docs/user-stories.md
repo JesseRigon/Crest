@@ -9,7 +9,7 @@ with the privilege each takes.
 How to use it:
 
 - **Tests.** Every row of an object table and every refusal is a case for the conformance
-  suite (`test/Crest.Tests/Access/Conformance/AccessWorld.cs`): the caller, the permission,
+  suite (`test/Grove.Tests/Access/Conformance/AccessWorld.cs`): the caller, the permission,
   the resource and the expected verdict. A refusal is as much a test as a grant.
 - **Audits.** For a code path, find the stories that reach it and check it asks the one
   decision (`IAccessDecision`, or `IAuthorizationService` routed to it) with the permission
@@ -230,7 +230,7 @@ Refusals:
 | Organization's parties | view | `ViewContent` on the party types | organization scope |
 | Organization's members (below me in the hierarchy) | view | binding role's member rights | hierarchy root guard |
 | Global lists / reference data | view | per list | read-only |
-| Member workflows | run | `RunCrestWorkflows` + definition Run list | as the member; org scope inside |
+| Member workflows | run | `RunGroveWorkflows` + definition Run list | as the member; org scope inside |
 
 ---
 
@@ -382,7 +382,7 @@ Refusals:
 
 Admin side, staff, workflow roles (`WorkflowEditor`, `WorkflowViewer`). **Anonymous: no.
 Privileged: authors yes** (a flow acts with its actor's rights and can be published as
-system only with ⚠ `ManageShippedCrestWorkflows`).
+system only with ⚠ `ManageShippedGroveWorkflows`).
 
 Stories:
 
@@ -405,8 +405,8 @@ Refusals:
 
 | Shell | Pages | Anonymous | Route permission |
 | --- | --- | --- | --- |
-| Admin | workflow definitions list, designer, instances, journals | no | `ViewCrestWorkflows` (the designer is read-only without `EditCrestWorkflows`) |
-| Admin | connections | no | `ManageCrestWorkflowConnections` |
+| Admin | workflow definitions list, designer, instances, journals | no | `ViewGroveWorkflows` (the designer is read-only without `EditGroveWorkflows`) |
+| Admin | connections | no | `ManageGroveWorkflowConnections` |
 | Admin | approvals inbox | no | the approval's role or permission |
 | Site / any | page-URL HTTP endpoints of flows | per definition | public only when the definition accepts anonymous runs |
 
@@ -414,14 +414,14 @@ Refusals:
 
 | Object | Privilege | Permission | Scope / notes |
 | --- | --- | --- | --- |
-| Workflow definition | view | `ViewCrestWorkflows` | |
-| Workflow definition | create, edit, delete, test activities | `EditCrestWorkflows` | Edit list |
-| Workflow definition | publish, retract | `PublishCrestWorkflows` | Edit list |
-| Shipped / system flag | edit shipped, publish as system | ⚠ `ManageShippedCrestWorkflows` | |
-| Workflow run / instance | start, resume, cancel, delete, import | `RunCrestWorkflows` | Run list of the definition |
-| Workflow instance | view (journal, variables, export) | `ViewCrestWorkflows` | **gap: no per-definition narrowing** |
-| Connections | manage | `ManageCrestWorkflowConnections` | |
-| Connections | use in a flow | `UseCrestWorkflowConnections` | gate on the activity |
+| Workflow definition | view | `ViewGroveWorkflows` | |
+| Workflow definition | create, edit, delete, test activities | `EditGroveWorkflows` | Edit list |
+| Workflow definition | publish, retract | `PublishGroveWorkflows` | Edit list |
+| Shipped / system flag | edit shipped, publish as system | ⚠ `ManageShippedGroveWorkflows` | |
+| Workflow run / instance | start, resume, cancel, delete, import | `RunGroveWorkflows` | Run list of the definition |
+| Workflow instance | view (journal, variables, export) | `ViewGroveWorkflows` | **gap: no per-definition narrowing** |
+| Connections | manage | `ManageGroveWorkflowConnections` | |
+| Connections | use in a flow | `UseGroveWorkflowConnections` | gate on the activity |
 | Queries in flows | run | `ExecuteApi_{query}` (descriptor) | scope of the run's caller |
 
 ---

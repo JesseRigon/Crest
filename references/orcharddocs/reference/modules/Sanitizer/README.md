@@ -1,6 +1,6 @@
 # HTML Sanitizer
 
-An HTML Sanitizer is available as part of the Crest Infrastructure.
+An HTML Sanitizer is available as part of the Grove Infrastructure.
 
 The Sanitizer cleans user input that could lead to XSS attacks.
 
@@ -23,7 +23,7 @@ It is used by default for the following parts and fields:
 
 The elements sanitized by default are listed on this page: <https://github.com/mganss/HtmlSanitizer#tags-allowed-by-default>
 
-Crest changes these defaults by:
+Grove changes these defaults by:
 
 - allowing the attribute `class`
 - allowing the `mailto` and `tel` schemes

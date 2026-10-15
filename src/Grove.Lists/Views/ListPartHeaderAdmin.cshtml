@@ -1,0 +1,9 @@
+@model Grove.Lists.ViewModels.ListPartHeaderAdminViewModel
+@inject Grove.ContentManagement.Display.IContentItemDisplayManager ContentItemDisplayManager
+@inject Grove.DisplayManagement.ModelBinding.IUpdateModelAccessor UpdateModelAccessor
+
+<div class="card text-bg-theme mb-3">
+    <div class="card-body">
+        @await DisplayAsync(await ContentItemDisplayManager.BuildDisplayAsync(Model.ContainerContentItem, UpdateModelAccessor.ModelUpdater, "HeaderAdmin"))
+    </div>
+</div>

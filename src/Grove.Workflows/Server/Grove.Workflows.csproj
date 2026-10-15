@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <Import Project="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Server.Abstractions\Grove.Server.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Contents\Grove.Contents.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Infrastructure\Grove.Infrastructure.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.ContentManagement\Grove.ContentManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.ContentTypes.Abstractions\Grove.ContentTypes.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Navigation\Grove.Navigation.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Roles.Abstractions\Grove.Roles.Abstractions.csproj" />
+    <ProjectReference Include="$(PlatformSrcDir)Grove.Liquid.Abstractions\Grove.Liquid.Abstractions.csproj" />
+    <PackageReference Include="System.Linq.Dynamic.Core" />
+  </ItemGroup>
+
+  <ItemGroup Label="Grove.Workflows">
+    <ProjectReference Include="..\engine\src\modules\Grove.Workflows.Engine\Grove.Workflows.Engine.csproj" />
+    <ProjectReference Include="..\engine\src\modules\Grove.Workflows.Expressions.JavaScript\Grove.Workflows.Expressions.JavaScript.csproj" />
+    <ProjectReference Include="..\engine\src\modules\Grove.Workflows.Expressions.Liquid\Grove.Workflows.Expressions.Liquid.csproj" />
+    <ProjectReference Include="..\engine\src\modules\Grove.Workflows.Http\Grove.Workflows.Http.csproj" />
+    <ProjectReference Include="..\engine\src\modules\Grove.Workflows.Api\Grove.Workflows.Api.csproj" />
+    <ProjectReference Include="..\engine\src\modules\Grove.Workflows.Runtime.Distributed\Grove.Workflows.Runtime.Distributed.csproj" />
+    <ProjectReference Include="..\engine\src\modules\Grove.Workflows.Resilience\Grove.Workflows.Resilience.csproj" />
+    <ProjectReference Include="..\engine\src\modules\Grove.Workflows.Scheduling\Grove.Workflows.Scheduling.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Abstractions\Grove.Workflows.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Grove.AuditTrail.Abstractions\Grove.AuditTrail.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Grove.Queries.Abstractions\Grove.Queries.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Grove.Server\Grove.Server.csproj" />
+  </ItemGroup>
+</Project>

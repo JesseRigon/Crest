@@ -1,0 +1,21 @@
+﻿namespace Grove.Components.Primitives
+{
+    /// <summary>
+    /// Specifies which data points display labels. Used by <see cref="GroveSeriesDataLabels" />.
+    /// </summary>
+    public enum DataLabelDisplay
+    {
+        /// <summary>
+        /// Every data point displays a label (subject to <see cref="GroveSeriesDataLabels.Step" /> and overlap hiding).
+        /// </summary>
+        All,
+        /// <summary>
+        /// Only the minimum and maximum values display labels.
+        /// </summary>
+        MinMax,
+        /// <summary>
+        /// Only the first and last data points display labels.
+        /// </summary>
+        FirstLast
+    }
+}

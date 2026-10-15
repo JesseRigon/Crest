@@ -1,4 +1,4 @@
-// Converted from Crest.Icons/tests/playwright/iconify-local-mirror-api.js.
+// Converted from Grove.Icons/tests/playwright/iconify-local-mirror-api.js.
 // Verifies the App_Data local Iconify mirror is used for search when the provider is
 // configured with the public Iconify baseUrl, and is bypassed (no stale results) when a
 // deliberately unreachable custom baseUrl (127.0.0.1:9) is configured instead. Restores
@@ -27,18 +27,18 @@ async function api(page, path, options = {}) {
 }
 
 module.exports = async function run(page, ctx) {
-  const original = await api(page, '/api/crest/icons/providers');
+  const original = await api(page, '/api/grove/icons/providers');
   if (!original.ok) {
     return { name: 'read-provider-settings', pass: false, message: `status=${original.status}` };
   }
 
-  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  // Mutating Grove APIs are antiforgery-protected - see harness/antiforgery.js.
   const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
   const antiforgeryHeaders = { [antiforgery.headerName]: antiforgery.requestToken };
 
   const results = [];
   try {
-    const savePublic = await api(page, '/api/crest/icons/providers', {
+    const savePublic = await api(page, '/api/grove/icons/providers', {
       method: 'PUT',
       headers: antiforgeryHeaders,
       body: JSON.stringify({ iconify: { enabled: true, baseUrl: 'https://api.iconify.design', apiKey: null, apiKeyHeader: null, prefixes: ['mdi'] } }),
@@ -50,7 +50,7 @@ module.exports = async function run(page, ctx) {
     // icons/Sources/IconifyCache is absent too). Everything below this point asserts
     // mirror-vs-remote cache semantics, which are meaningless without a mirror, so
     // report the environment condition and stop rather than emitting false failures.
-    const status = await api(page, '/api/crest/icons/providers/iconify/local');
+    const status = await api(page, '/api/grove/icons/providers/iconify/local');
     const mirrorAvailable = status.ok && Boolean(status.body?.isAvailable);
     results.push({
       name: 'local-cache-status-readable',
@@ -67,7 +67,7 @@ module.exports = async function run(page, ctx) {
       return results;
     }
 
-    const localSearch = await api(page, '/api/crest/icons?library=iconify.mdi&query=home&skip=0&take=20');
+    const localSearch = await api(page, '/api/grove/icons?library=iconify.mdi&query=home&skip=0&take=20');
     const homeIcon = localSearch.body?.items?.find(item => item.key === 'iconify.mdi/current/default/home' && item.svgMarkup?.includes('<svg'));
     results.push({
       name: 'local-search-finds-home-icon',
@@ -75,7 +75,7 @@ module.exports = async function run(page, ctx) {
       message: `status=${localSearch.status} found=${Boolean(homeIcon)}`,
     });
 
-    const saveCustom = await api(page, '/api/crest/icons/providers', {
+    const saveCustom = await api(page, '/api/grove/icons/providers', {
       method: 'PUT',
       headers: antiforgeryHeaders,
       body: JSON.stringify({ iconify: { enabled: true, baseUrl: 'http://127.0.0.1:9', apiKey: null, apiKeyHeader: null, prefixes: ['mdi'] } }),
@@ -84,7 +84,7 @@ module.exports = async function run(page, ctx) {
 
     // baseUrl 127.0.0.1:9 is deliberately unreachable, so a search under this config must not
     // silently fall back to the public App_Data mirror's cached results.
-    const customSearch = await api(page, '/api/crest/icons?library=iconify.mdi&query=home&skip=0&take=20');
+    const customSearch = await api(page, '/api/grove/icons?library=iconify.mdi&query=home&skip=0&take=20');
     const customUsedLocalCache = customSearch.body?.items?.some(item => item.key === 'iconify.mdi/current/default/home');
     results.push({
       name: 'custom-provider-bypasses-public-cache',
@@ -92,7 +92,7 @@ module.exports = async function run(page, ctx) {
       message: `status=${customSearch.status} usedLocalCache=${Boolean(customUsedLocalCache)}`,
     });
   } finally {
-    await api(page, '/api/crest/icons/providers', { method: 'PUT', headers: antiforgeryHeaders, body: JSON.stringify(original.body) }).catch(() => {});
+    await api(page, '/api/grove/icons/providers', { method: 'PUT', headers: antiforgeryHeaders, body: JSON.stringify(original.body) }).catch(() => {});
   }
 
   return results;

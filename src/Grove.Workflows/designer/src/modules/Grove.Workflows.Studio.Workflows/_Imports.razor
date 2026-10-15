@@ -1,0 +1,27 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.Components.Forms
+@using Blazored.FluentValidation
+@using Grove.Workflows.Studio.Localization
+@using Grove.Workflows.Studio.Components
+@using Grove.Workflows.Studio.Workflows.Components
+@using Grove.Workflows.Studio.Workflows.Components.WorkflowDefinitionEditor
+@using Grove.Workflows.Studio.Workflows.Components.WorkflowDefinitionEditor.Components
+@using Grove.Workflows.Studio.Workflows.Components.WorkflowInstanceViewer
+@using Grove.Workflows.Studio.Workflows.Components.WorkflowInstanceViewer.Components
+@using Grove.Workflows.Studio.Workflows.Components.WorkflowDefinitionList
+@using Grove.Workflows.Studio.Workflows.Components.WorkflowInstanceList
+@using Grove.Workflows.Studio.Workflows.Constants
+@using Grove.Workflows.Studio.Workflows.Designer.Components
+@using Grove.Workflows.Studio.Workflows.Shared.Components
+@using Grove.Workflows.Studio.Localization.Time.Components
+@using Humanizer
+@using MudBlazor
+@using MudExtensions
+@using Radzen
+@using Radzen.Blazor
+@attribute [Authorize]
+@* Radzen 11 has an ILocalizer too; Studio means its own. *@
+@using ILocalizer = Grove.Workflows.Studio.Localization.ILocalizer

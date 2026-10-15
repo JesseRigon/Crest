@@ -1,0 +1,15 @@
+.grove-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--grove-icon-size, 1em);
+    block-size: var(--grove-icon-size, 1em);
+    color: var(--grove-icon-color, currentColor);
+    line-height: 1;
+}
+
+.grove-icon ::deep svg {
+    inline-size: 100%;
+    block-size: 100%;
+    fill: currentColor;
+}

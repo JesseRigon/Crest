@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>Blazor WebAssembly impementation for certain abstractions provided by Grove.Workflows.Studio.Core.</Description>
+        <PackageTags>groveWorkflows studio blazor webassembly</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Blazored.LocalStorage"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Grove.Workflows.Studio.Core\Grove.Workflows.Studio.Core.csproj"/>
+        <ProjectReference Include="..\Grove.Workflows.Studio.Shared\Grove.Workflows.Studio.Shared.csproj" />
+    </ItemGroup>
+
+</Project>

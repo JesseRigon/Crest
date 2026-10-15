@@ -1,0 +1,3 @@
+namespace Grove.Workflows.Pipelines.WorkflowExecution;
+
+public delegate ValueTask WorkflowMiddlewareDelegate(WorkflowExecutionContext context);

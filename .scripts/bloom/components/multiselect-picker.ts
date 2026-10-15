@@ -2,11 +2,11 @@ import { getTranslations, setTranslations } from "../helpers/localizations";
 
 // Shared by 3 near-identical Vue 2 "draggable selected-list + async-search multiselect" widgets
 // that existed as separate copy-pasted files before this migration:
-//   - Crest.ContentFields' ContentPickerField.Edit.cshtml (badge: hasPublished/"Not
+//   - Grove.ContentFields' ContentPickerField.Edit.cshtml (badge: hasPublished/"Not
 //     published"; only consumer with per-item clickable links via editUrl/viewUrl)
-//   - Crest.ContentFields' LocalizationSetContentPickerField.Edit.cshtml (badge:
+//   - Grove.ContentFields' LocalizationSetContentPickerField.Edit.cshtml (badge:
 //     hasPublished/"Not published"; no clickable links)
-//   - Crest.ContentFields' UserPickerField.Edit.cshtml (badge: isEnabled/"Not enabled"; no
+//   - Grove.ContentFields' UserPickerField.Edit.cshtml (badge: isEnabled/"Not enabled"; no
 //     clickable links; own debounce copy in the original Vue 2 file, now shared)
 //
 // Follows this repo's established plain-.ts bloom-component shape (Vue.createApp + template

@@ -1,4 +1,4 @@
-# URL Rewriting (`Crest.UrlRewriting`)
+# URL Rewriting (`Grove.UrlRewriting`)
 
 The URL Rewriting feature allows you to configure URL rewrites and redirects for incoming HTTP requests, significantly improving your site's SEO and user experience. This feature enables you to control how URLs are presented to both users and search engines.
 
@@ -32,7 +32,7 @@ In this example, `CustomRuleSource` represents your implementation of `IUrlRewri
 
 ## Recipes
 
-The recipe will be accessible only if the Crest.Recipes.Core feature is enabled.
+The recipe will be accessible only if the Grove.Recipes.Core feature is enabled.
 
 ### Recipe for Creating and Updating Rules
 

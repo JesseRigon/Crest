@@ -1,5 +1,5 @@
 // Provider-contributed menu items are imported into the DB-backed admin menu system, so that
-// Crest's sidebar and menu editor only ever deal with admin menu nodes.
+// Grove's sidebar and menu editor only ever deal with admin menu nodes.
 //
 // This matters because provider items have no dependable identity of their own: 20 of the 57
 // upstream admin menu providers never call .Id(...), and those that do use hand-written slugs
@@ -36,7 +36,7 @@ module.exports = async function run(page, ctx) {
 
   async function importedNodes() {
     return page.evaluate(async (menuName) => {
-      const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+      const response = await fetch('/api/grove/admin-menus', { credentials: 'include' });
       if (!response.ok) throw new Error(`admin menus failed: ${response.status}`);
       const data = await response.json();
       const menu = data.menus.find(candidate => candidate.name === menuName);
@@ -85,7 +85,7 @@ module.exports = async function run(page, ctx) {
 
   // Re-running must be a no-op. If matching were done on the translated caption, or if new
   // UniqueIds were minted each pass, this would add duplicates and orphan every stored override.
-  const second = await post('/api/crest/admin-menus/sync-providers');
+  const second = await post('/api/grove/admin-menus/sync-providers');
   const afterSecond = await importedNodes();
   results.push({
     name: 'resync-adds-nothing',

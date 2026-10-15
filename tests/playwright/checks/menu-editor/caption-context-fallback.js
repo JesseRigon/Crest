@@ -3,7 +3,7 @@
 // 1. MenuName restoration. NavigationManager.Merge drops MenuName whenever the provider's
 //    instance survives the fold (registration-order roulette; entry #7 in the host's
 //    docs/upstream-platform-proposals.md - upstreamable as a Merge copy-list completeness
-//    fix, though only Crest's import makes it bite at scale), so captions like "Settings" carried a
+//    fix, though only Grove's import makes it bite at scale), so captions like "Settings" carried a
 //    stored translation that never rendered. The resolver restores the owning menu from the
 //    surviving Id (the node's UniqueId), so every stored Primary Navigation caption must now
 //    render translated - checked against the store itself rather than hardcoded values.
@@ -24,7 +24,7 @@ module.exports = async function run(page, ctx) {
   const probeValue = 'Contabilidad-PRUEBA';
 
   const cookie = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/app/manifest', { credentials: 'include' });
+    const response = await fetch('/api/grove/app/manifest', { credentials: 'include' });
     if (!response.ok) throw new Error(`manifest failed: ${response.status}`);
     const manifest = await response.json();
     return { name: manifest.cultureSelector.cookieName, path: manifest.cultureSelector.cookiePath };
@@ -37,7 +37,7 @@ module.exports = async function run(page, ctx) {
       } else {
         document.cookie = `${cookie.name}=; path=${cookie.path}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
       }
-      const response = await fetch('/api/crest/navigation/admin', { credentials: 'include' });
+      const response = await fetch('/api/grove/navigation/admin', { credentials: 'include' });
       if (!response.ok) throw new Error(`navigation failed: ${response.status}`);
       const menu = await response.json();
       const items = [];
@@ -53,7 +53,7 @@ module.exports = async function run(page, ctx) {
   async function putTranslation(key, value) {
     const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
     return page.evaluate(async ({ antiforgery, key, value }) => {
-      const response = await fetch('/api/crest/translations', {
+      const response = await fetch('/api/grove/translations', {
         method: 'PUT',
         credentials: 'include',
         headers: { 'content-type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken },
@@ -68,7 +68,7 @@ module.exports = async function run(page, ctx) {
     // 1. Every stored Primary Navigation caption renders translated - read the expectation
     // from the store itself so the check tracks the seeds instead of hardcoding them.
     const stored = await page.evaluate(async () => {
-      const response = await fetch('/api/crest/translations?culture=es-ES', { credentials: 'include' });
+      const response = await fetch('/api/grove/translations?culture=es-ES', { credentials: 'include' });
       if (!response.ok) throw new Error(`translations failed: ${response.status}`);
       const data = await response.json();
       const group = data.groups.find(g => g.name === 'Admin Menus:Primary Navigation');
@@ -134,7 +134,7 @@ module.exports = async function run(page, ctx) {
     // the now-empty row. Restores the original entry afterward.
     const poKey = 'Cultures';
     const getRow = async () => page.evaluate(async ({ poKey }) => {
-      const r = await fetch('/api/crest/translations?culture=es-ES', { credentials: 'include' });
+      const r = await fetch('/api/grove/translations?culture=es-ES', { credentials: 'include' });
       if (!r.ok) return null;
       const data = await r.json();
       const group = data.groups.find(g => g.name === 'Admin Menus:Primary Navigation');
@@ -146,7 +146,7 @@ module.exports = async function run(page, ctx) {
       const original = before.value;
       const antiforgery2 = await fetchAntiforgeryToken(page, ctx.baseUrl);
       const putRow = async (value) => page.evaluate(async ({ antiforgery, poKey, value }) => {
-        const r = await fetch('/api/crest/translations', {
+        const r = await fetch('/api/grove/translations', {
           method: 'PUT',
           credentials: 'include',
           headers: { 'content-type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken },

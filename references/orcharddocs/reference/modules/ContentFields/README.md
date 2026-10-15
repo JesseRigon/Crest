@@ -1,6 +1,6 @@
-# Content Fields (`Crest.ContentFields`)
+# Content Fields (`Grove.ContentFields`)
 
-This module provides common content fields for capturing data in Crest. Fields are typically added to a content part, which is then added to a content type. 
+This module provides common content fields for capturing data in Grove. Fields are typically added to a content part, which is then added to a content type. 
 
 !!! note
     While the UI allows adding fields directly to content types, behind the scenes it creates a content part with the same name as the content type and attaches the fields to it.
@@ -230,10 +230,10 @@ per set based on the request culture, if no culture is specified.
 === "Razor"
 
     ``` html
-    @model Crest.ContentFields.ViewModels.DisplayLocalizationSetContentPickerFieldViewModel
+    @model Grove.ContentFields.ViewModels.DisplayLocalizationSetContentPickerFieldViewModel
     @using Microsoft.AspNetCore.Localization
 
-    @inject Crest.ContentLocalization.IContentLocalizationManager ContentLocalizationManager;
+    @inject Grove.ContentLocalization.IContentLocalizationManager ContentLocalizationManager;
 
     @{
         var currentCulture = Context.Features.Get<IRequestCultureFeature>().RequestCulture.Culture.Name;
@@ -272,8 +272,8 @@ When adding the field to a content type, use the settings to specify whether to
 === "Razor"
 
     ``` html
-    @model Crest.ContentFields.ViewModels.DisplayUserPickerFieldViewModel
-    @using Crest.Mvc.Utilities
+    @model Grove.ContentFields.ViewModels.DisplayUserPickerFieldViewModel
+    @using Grove.Mvc.Utilities
 
     @{
         var name = (Model.PartFieldDefinition.PartDefinition.Name + "-" + Model.PartFieldDefinition.Name).HtmlClassify();

@@ -15,7 +15,7 @@
 // positionally.
 const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
 
-const defaultMenuId = '__crest_default_admin_menu';
+const defaultMenuId = '__grove_default_admin_menu';
 
 module.exports = async function run(page, ctx) {
   const results = [];
@@ -25,10 +25,10 @@ module.exports = async function run(page, ctx) {
 
   async function getMenu() {
     return page.evaluate(async () => {
-      const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+      const response = await fetch('/api/grove/admin-menus', { credentials: 'include' });
       if (!response.ok) throw new Error(`admin menus failed: ${response.status}`);
       const data = await response.json();
-      return data.menus.find(menu => menu.id === '__crest_default_admin_menu');
+      return data.menus.find(menu => menu.id === '__grove_default_admin_menu');
     });
   }
 
@@ -44,7 +44,7 @@ module.exports = async function run(page, ctx) {
     }, { path, body, headers });
   }
 
-  const nodeUrl = nodeId => `/api/crest/admin-menus/${defaultMenuId}/nodes/${encodeURIComponent(nodeId)}`;
+  const nodeUrl = nodeId => `/api/grove/admin-menus/${defaultMenuId}/nodes/${encodeURIComponent(nodeId)}`;
 
   const before = await getMenu();
   const roots = before.nodes;

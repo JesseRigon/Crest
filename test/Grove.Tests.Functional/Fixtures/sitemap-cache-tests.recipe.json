@@ -1,0 +1,53 @@
+{
+  "name": "SitemapCacheTests",
+  "displayName": "SitemapCacheTests",
+  "description": "Testing Grove.Sitemaps' SitemapsCache admin page (search box + Purge/Purge All actions).",
+  "author": "The Grove Team",
+  "website": "https://orchardcore.net",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [ "tests" ],
+  "tags": [ "tests" ],
+
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Grove.HomeRoute",
+        "Grove.Admin",
+        "Grove.Navigation",
+        "Grove.Recipes",
+        "Grove.Resources",
+        "Grove.Roles",
+        "Grove.Security",
+        "Grove.Settings",
+        "Grove.Themes",
+        "Grove.Users",
+
+        "Grove.Contents",
+        "Grove.Sitemaps",
+
+        "TheAdmin",
+        "SafeMode"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "TheAdmin",
+      "site": "TheAdmin"
+    },
+    {
+      "name": "Sitemaps",
+      "Data": [
+        {
+          "$type": "Grove.Sitemaps.Models.Sitemap, Grove.Sitemaps.Abstractions",
+          "SitemapId": "sitemapcachetestsitemap",
+          "Name": "Sitemap Cache Test Sitemap",
+          "Enabled": true,
+          "Path": "sitemap-cache-test-sitemap",
+          "SitemapSources": []
+        }
+      ]
+    }
+  ]
+}

@@ -2,16 +2,16 @@
 
 An external machine (a CLI, an integration server) acts in a tenant with its own identity,
 permissions and workflow usage, without borrowing a user account. Machine identities are an
-application-layer concern and belong with Workflows and Access in Crest
+application-layer concern and belong with Workflows and Access in Grove
 ([architecture.md](architecture.md), [workflows.md](workflows.md)): workflows have a permission
 set and per-flow access lists a machine identity can hold.
 
-The platform's per-tenant system for machine identities is `Crest.OpenId`. It has no opaque
-API keys and no machine registry. Crest's APIs accept bearer tokens through the access gate.
+The platform's per-tenant system for machine identities is `Grove.OpenId`. It has no opaque
+API keys and no machine registry. Grove's APIs accept bearer tokens through the access gate.
 Points below not marked as built are from knowledge of the module and are confirmed at
 design time.
 
-## What the platform provides: `Crest.OpenId`
+## What the platform provides: `Grove.OpenId`
 
 - **Applications are machine identities, per tenant.** Each tenant can run its own OpenID
   Connect server. An "application" registered there has a client id and secret and is
@@ -39,14 +39,14 @@ design time.
 
 ## Build order
 
-- [ ] **1. OpenId client credentials.** Enable per tenant, accept the `Api` scheme on the Crest
+- [ ] **1. OpenId client credentials.** Enable per tenant, accept the `Api` scheme on the Grove
   controllers and the engine gate, carry the client id into the workflow actor.
   - [x] **Enable the features.** The host's setup recipe enables the OpenId server, validation
     and management features, turns on the token endpoint with only the client-credentials flow,
-    and validates against the tenant's own server (empty validation settings); Crest's sample
+    and validates against the tenant's own server (empty validation settings); Grove's sample
     recipes enable them too. Not yet verified against a running tenant.
   - [x] **Accept bearer tokens on our APIs.** The access gate authenticates the `Api` scheme for every request carrying an `Authorization` header, so
-    the Crest controllers and the workflow engine gate see the machine's caller; the
+    the Grove controllers and the workflow engine gate see the machine's caller; the
     forwarder also takes additional schemes (`ApiAuthorizationOptions.AdditionalSchemes`).
   - [x] **Skip antiforgery for bearer requests** (safe: a browser never sends a bearer token on
     its own). The tenant's `IAntiforgery` is wrapped by `BearerRequestAntiforgery`: a request
@@ -59,7 +59,7 @@ design time.
     "check workflow permissions" item.
   - [ ] **Check workflow permissions.** Workflow permissions fit as they are. A machine whose
     application holds `WorkflowViewer` or `WorkflowEditor` would get exactly those engine
-    grants from the gate. Per-flow access lists (`Crest.Access.Edit` / `Run`) would work by
+    grants from the gate. Per-flow access lists (`Grove.Access.Edit` / `Run`) would work by
     role name. Naming a machine directly in a list compares against the caller's user name,
     which for a client-credentials token is the application's display name
     (`WorkflowDefinitionAccessCeiling`).
@@ -77,7 +77,7 @@ design time.
   question.
 - **Principal name.** The application's display name: the client-credentials flow adds it as
   the `name` claim; the name identifier is the client id.
-- **Applications admin page.** Crest's native OpenID Connect pages manage applications
+- **Applications admin page.** Grove's native OpenID Connect pages manage applications
   ([admin-routes.md](admin-routes.md)).
 
 ## Open questions

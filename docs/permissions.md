@@ -8,11 +8,11 @@ before they happen. All of it sits on the one access machinery
 ## Per-part access for the content-items API
 
 The platform's permission model is content-type and item level: `ContentTypePermissions`
-(`Crest.Contents/Security/ContentTypePermissions.cs`) generates per-type permissions
+(`Grove.Contents/Security/ContentTypePermissions.cs`) generates per-type permissions
 (`Editable_<ContentType>`, `Viewable_<ContentType>`); a role can or cannot act on the whole item.
 
-Per-part access is a **scope provider** on content parts in `Crest.Access`, not a generated
-permission per (type, part). The seam is `Crest.Access.ContentPartScope`: a module registers an
+Per-part access is a **scope provider** on content parts in `Grove.Access`, not a generated
+permission per (type, part). The seam is `Grove.Access.ContentPartScope`: a module registers an
 `IScopeProvider` with the target `ContentPartScope.Target(type, part)`
 (`ContentPart:{type}.{part}`); its rule, read against the item's content index row, shows the
 part (`All`), hides it (`None`) or shows it on the rows a filter admits (a semi-join fails
@@ -32,15 +32,15 @@ every part follows the item. The first rule is built when a type needs it.
 
 ## Approvals
 
-**Not started.** One Crest approvals system that any feature can use when an action needs
+**Not started.** One Grove approvals system that any feature can use when an action needs
 someone else's agreement before it happens, not only workflows. In the operations model an
 approval is a pause on an action: the unit of work bookmarks, the request is recorded, and
 the decision resumes the action as its own unit ([workflows.md](workflows.md) › Units of
 work).
 
-`Crest.Workflows` already has approvals ([workflows.md](workflows.md) › Approvals): the
+`Grove.Workflows` already has approvals ([workflows.md](workflows.md) › Approvals): the
 `Request approval` activity records an `ApprovalTask` for a role or permission, the
-`api/crest/workflows/approvals` endpoints list and decide them, and the page
+`api/grove/workflows/approvals` endpoints list and decide them, and the page
 `/workflows/approvals` shows them. It is reachable only from inside a workflow. The general
 system grows out of that, not beside it: the task, the decision and the queue move to a shared
 place, and the workflow activity becomes one way of requesting an approval.
@@ -192,12 +192,12 @@ what reaches across organizations. The owner is never managed.
 
 ### Implementation
 
-- *Sets and roles* (`Crest.Roles`): `PermissionSet` and `IPermissionSetService` (one cached
+- *Sets and roles* (`Grove.Roles`): `PermissionSet` and `IPermissionSetService` (one cached
   document; modules ship defaults through `IPermissionSetProvider`, created once when missing).
   `Role.PermissionSets` beside the loose `RoleClaims`; `RoleStore.GetClaimsAsync` returns the
   loose permissions plus every set's, so every existing reader of a role keeps working. A set
   write bumps the permission version.
-- *Groups, overrides, defaults* (`Crest.Access`, contracts in `Crest.Access.Abstractions`):
+- *Groups, overrides, defaults* (`Grove.Access`, contracts in `Grove.Access.Abstractions`):
   `AccessReach` (tenant or one organization), `IAccessGroupService` (one group type, YesSql
   documents with `AccessGroupIndex` and `AccessGroupMemberIndex`), `IUserAccessOverrideService`
   (per user and reach, role, set or permission level, grant or deny; a same-level conflict
@@ -217,7 +217,7 @@ what reaches across organizations. The owner is never managed.
   class ceiling; Fruitful's `SubscriptionCeiling`; `OwnerLockedCeiling` (below).
 - *Members*: binding roles live in the organization's groups (`MemberOrganizationGroups`;
   new bindings place their roles there).
-- *Management permissions*: `AccessPermissions` (Crest.Access): Create/Read/Update/Delete for
+- *Management permissions*: `AccessPermissions` (Grove.Access): Create/Read/Update/Delete for
   roles, permission sets, user overrides, groups and group membership, and
   `ReadPermissionCatalog`; the default sets "Manage permissions" and "Manage groups"
   (`AccessPermissionSetProvider`, created by the Access migration, which also gives them to the
@@ -232,7 +232,7 @@ what reaches across organizations. The owner is never managed.
   shell bounds the reach; the super user manages every user of the reach; a staff caller
   acting in no organization whose decision grants `ManageOrgMembers` manages every member of
   any organization except its owner. Override reads and writes, group-membership writes and the
-  editors' user lists (`api/crest/access/managed-users`) go through it. Default hierarchy:
+  editors' user lists (`api/grove/access/managed-users`) go through it. Default hierarchy:
   `MemberBindingService` places every newly bound user under the reach's admins unless they are
   one or already have a manager.
 - *Owner*: `IOrganizationOwnership` (Access.Abstractions; Members'
@@ -245,20 +245,20 @@ what reaches across organizations. The owner is never managed.
   it, and removing the owner's binding are refused (`OwnerProtectionException`).
   `OwnerLockedCeiling` denies owner-locked permissions to everyone acting in the organization
   but its owner, and an organization's override cannot grant them. Transfer:
-  `POST api/crest/members/organizations/{id}/owner` (and `GET` for the owner), started by staff
+  `POST api/grove/members/organizations/{id}/owner` (and `GET` for the owner), started by staff
   holding `TransferOrganizationOwnership` (a tenant permission on the member ceiling) or by the
   current owner; records the `OwnershipTransferred` audit event.
-- *Editor APIs and pages*: `api/crest/permission-catalog`, `permission-sets`, `roles/{name}`,
+- *Editor APIs and pages*: `api/grove/permission-catalog`, `permission-sets`, `roles/{name}`,
   `access/groups`, `access/users/{id}/overrides`, `access/users/{id}` (resolved, with
   provenance), `access/organization-defaults`, `access/assignable-roles`
   (`AccessModelController`). Admin pages: Roles (sets and permissions), Permission sets, Groups
   (with overrides and the organization defaults); member side: Organization access
-  (`Crest.Members.Member.BlazorWasm`) with `CrestOrganizationOwnerPanel` (Crest.Components);
-  the group and override editors are `Crest.Components.Access` components both use.
+  (`Grove.Members.Member.BlazorWasm`) with `GroveOrganizationOwnerPanel` (Grove.Components);
+  the group and override editors are `Grove.Components.Access` components both use.
 
 ### Backlog
 
-- [ ] The admin organization page (Crest.Parties) hosts `CrestOrganizationOwnerPanel`, as the
+- [ ] The admin organization page (Grove.Parties) hosts `GroveOrganizationOwnerPanel`, as the
   member Organization access page does.
 
 ### Open questions

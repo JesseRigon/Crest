@@ -1,24 +1,24 @@
-# Email (`Crest.Email`)
+# Email (`Grove.Email`)
 
 This module provides the infrastructure necessary to send emails using multiple email providers.
 
 
 ## Settings
 
-Enabling the `Email` feature will add a new settings page under `Settings` → `Communication` → `Email`. You can utilize these settings to set up the default Email provider. The following are the providers that are readily accessible in Crest:
+Enabling the `Email` feature will add a new settings page under `Settings` → `Communication` → `Email`. You can utilize these settings to set up the default Email provider. The following are the providers that are readily accessible in Grove:
 
 
 | Provider                                         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 |--------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Simple Mail Transfer Protocol (SMTP)**         | The SMTP provider utilizes the SMTP protocol for sending email messages. This provider is a component of the `Crest.Email.Smtp` feature. To activate it, edit the `SMTP` tab in the email settings. For detailed information on configuring the SMTP provider, refer to the [SMTP provider documentation](../Email.Smtp/README.md).                                                                                                                        |
-| **Simple Mail Transfer Protocol (Default SMTP)** | The Default SMTP provider utilization of the SMTP protocol for sending email messages. This provider is a component of the `Crest.Email.Smtp` feature. To activate it, utilize the configuration provider, such as the `appsettings.json` file or environment variables. For detailed information on configuring the SMTP provider, refer to the [SMTP provider documentation](../Email.Smtp/README.md).                                                   |
-| **Azure Communication Service**                  | The Azure Communication Service provider utilizes the Azure Communication Services for sending email messages. This provider is a component of the `Crest.Email.Azure` feature. To activate it, edit the `Azure` tab in the email settings. For detailed information on configuring the Azure Communication provider, refer to the [Azure provider documentation](../Email.Azure/README.md).                                                               |
-| **Default Azure Communication Service**          | The Default Azure Communication Service provider utilizes the Azure Communication Services for sending email messages. This provider is a component of the `Crest.Email.Azure` feature. To activate it, utilize the configuration provider, such as the `appsettings.json` file or environment variables. For detailed information on configuring the Azure Communication provider, refer to the [Azure provider documentation](../Email.Azure/README.md). |
+| **Simple Mail Transfer Protocol (SMTP)**         | The SMTP provider utilizes the SMTP protocol for sending email messages. This provider is a component of the `Grove.Email.Smtp` feature. To activate it, edit the `SMTP` tab in the email settings. For detailed information on configuring the SMTP provider, refer to the [SMTP provider documentation](../Email.Smtp/README.md).                                                                                                                        |
+| **Simple Mail Transfer Protocol (Default SMTP)** | The Default SMTP provider utilization of the SMTP protocol for sending email messages. This provider is a component of the `Grove.Email.Smtp` feature. To activate it, utilize the configuration provider, such as the `appsettings.json` file or environment variables. For detailed information on configuring the SMTP provider, refer to the [SMTP provider documentation](../Email.Smtp/README.md).                                                   |
+| **Azure Communication Service**                  | The Azure Communication Service provider utilizes the Azure Communication Services for sending email messages. This provider is a component of the `Grove.Email.Azure` feature. To activate it, edit the `Azure` tab in the email settings. For detailed information on configuring the Azure Communication provider, refer to the [Azure provider documentation](../Email.Azure/README.md).                                                               |
+| **Default Azure Communication Service**          | The Default Azure Communication Service provider utilizes the Azure Communication Services for sending email messages. This provider is a component of the `Grove.Email.Azure` feature. To activate it, utilize the configuration provider, such as the `appsettings.json` file or environment variables. For detailed information on configuring the Azure Communication provider, refer to the [Azure provider documentation](../Email.Azure/README.md). |
 
 
 ## Adding Custom Providers
 
-The `Crest.Email` module provides you with the capability to integrate additional providers for dispatching email messages. To achieve this, you can easily create an implementation of the `IEmailProvider` interface and then proceed to register it using one of the following approaches:
+The `Grove.Email` module provides you with the capability to integrate additional providers for dispatching email messages. To achieve this, you can easily create an implementation of the `IEmailProvider` interface and then proceed to register it using one of the following approaches:
 
 If your provider does not require any settings, you may register it using the `AddEmailProvider<>` extension. For instance:
 
@@ -58,7 +58,7 @@ public class SmtpProviderOptionsConfigurations : IConfigureOptions<EmailProvider
 
 If your provider options are built from site settings or other tenant data that can change at runtime, consume them through `IOptionsMonitor<TOptions>` in the provider and any `IConfigureOptions<EmailProviderOptions>` implementation that depends on them. Register `AddSignalOptionsChangeTokenSource<TOptions>()` for any options type that should participate in post-commit refresh, then request invalidation for the affected options types with `IOptionsUpdateNotifier` when the settings editor saves changes.
 
-For example, Crest now refreshes the Azure email provider in-place by invalidating `AzureEmailOptions`, `EmailProviderOptions`, and `EmailOptions`, and the built-in email modules register signal-backed change token sources for those options types so the standard `IOptionsMonitor<TOptions>` can rebuild them from committed tenant state.
+For example, Grove now refreshes the Azure email provider in-place by invalidating `AzureEmailOptions`, `EmailProviderOptions`, and `EmailOptions`, and the built-in email modules register signal-backed change token sources for those options types so the standard `IOptionsMonitor<TOptions>` can rebuild them from committed tenant state.
 
 ## Sending Email Messages
 

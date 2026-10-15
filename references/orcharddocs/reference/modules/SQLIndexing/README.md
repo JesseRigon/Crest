@@ -34,7 +34,7 @@ Here are some SQL tables that you can query and their columns.
 
 ## Content Fields Indexing
 
-The `Crest.ContentFields.Indexing.SQL` module provides database indexing for content fields.
+The `Grove.ContentFields.Indexing.SQL` module provides database indexing for content fields.
 
 * Note that the listed types are SQL Server data types.
 
@@ -219,8 +219,8 @@ Please look at each index tables to see which fields are available to query on. 
 From a class.
 
 ```csharp
-using Crest.ContentManagement;
-using Crest.ContentFields.Indexing
+using Grove.ContentManagement;
+using Grove.ContentFields.Indexing
 
 public class MyClass(){
     private readonly ISession _session;
@@ -239,8 +239,8 @@ public class MyClass(){
 From a Razor template:
 
 ```html
-@using Crest.ContentManagement
-@using Crest.ContentFields.Indexing
+@using Grove.ContentManagement
+@using Grove.ContentFields.Indexing
 @inject ISession Session
 
 @{
@@ -248,7 +248,7 @@ From a Razor template:
 }
 ```
 
-From Liquid, you will be required to create a SQL Query in Crest to retrieve these records first. Name it "AllCountries" for the current example and **don't select** the option "Return Documents" on the Query:
+From Liquid, you will be required to create a SQL Query in Grove to retrieve these records first. Name it "AllCountries" for the current example and **don't select** the option "Return Documents" on the Query:
 
 ```SQL
 SELECT * FROM TextFieldIndex
@@ -268,7 +268,7 @@ Please note that Datetimes are stored as UTC so a conversion with the current re
 
 ## GraphQL Usage
 
-Enabling the `Crest.ContentFields.Indexing.SQL` module allows building filters based on dynamic content fields in GraphQL queries.
+Enabling the `Grove.ContentFields.Indexing.SQL` module allows building filters based on dynamic content fields in GraphQL queries.
 
 The following examples demonstrate filtering products based on a numeric content field named `Amount` attached to a content part named `PricePart` where the Amount is greater than 10:
 

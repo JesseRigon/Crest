@@ -2,14 +2,14 @@ const path = require('path');
 const { runSuite, printSummary } = require('./harness/run-suite');
 const { loginAsAdmin } = require('./harness/auth');
 
-// The set of admin-route checks that exist in the shared Crest submodule — every repo
-// that embeds this submodule (a product host, Crest.Crest.Host) gets these for
+// The set of admin-route checks that exist in the shared Grove submodule — every repo
+// that embeds this submodule (a product host, Grove.Host) gets these for
 // free. A consuming repo's own entry script (e.g. a host's own dev/run-admin-suite.js)
 // calls buildSharedAdminChecks() and appends its own repo-specific checks to the list
 // before calling runSuite — same shared browser instance, same login, no extra cost.
 //
-// STATUS: 34 of the ~55 pre-existing raw scripts under Crest.AdminTheme,
-// Crest.Icons, and the shared Crest/tests/playwright directory
+// STATUS: 34 of the ~55 pre-existing raw scripts under Grove.AdminTheme,
+// Grove.Icons, and the shared Grove/tests/playwright directory
 // have been converted into this checks/ convention. The Icons subproject is fully
 // converted. Remaining un-converted (still standalone, not wired in here): the menu
 // editor scripts (drag/drop, icon overrides, layout export), primary-nav-menu
@@ -103,39 +103,39 @@ function buildSharedAdminChecks() {
   ];
 }
 
-// The checks belonging to Crest's own opt-in modules, which live beside each module
+// The checks belonging to Grove's own opt-in modules, which live beside each module
 // rather than in this directory. Kept separate from the platform set above so a host
 // that enables only some of these modules, or wants its own ordering, can pick: it calls
-// buildSharedAdminChecks() and then whichever of these it needs. Running Crest on its
+// buildSharedAdminChecks() and then whichever of these it needs. Running Grove on its
 // own takes the lot.
-function buildCrestModuleChecks() {
+function buildGroveModuleChecks() {
   const module = (name, relative) => ({ name, fn: require(`../../src/${relative}`) });
   return [
-    module('parties-contacts-api', 'Crest.Parties/tests/playwright/checks/party-contacts-api'),
-    module('parties-positions-api', 'Crest.Parties/tests/playwright/checks/party-positions-api'),
-    module('workflows-api', 'Crest.Workflows/tests/playwright/checks/workflows-api'),
-    module('workflows-units', 'Crest.Workflows/tests/playwright/checks/workflows-units'),
-    module('workflows-approvals', 'Crest.Workflows/tests/playwright/checks/workflows-approvals'),
-    module('workflows-designer', 'Crest.Workflows/tests/playwright/checks/workflows-designer'),
-    module('members-portal-api', 'Crest.Members/tests/playwright/checks/members-portal-api'),
-    // Workflow checks on Crest's own fixtures (the sample role and Crest.Workflows.Samples):
+    module('parties-contacts-api', 'Grove.Parties/tests/playwright/checks/party-contacts-api'),
+    module('parties-positions-api', 'Grove.Parties/tests/playwright/checks/party-positions-api'),
+    module('workflows-api', 'Grove.Workflows/tests/playwright/checks/workflows-api'),
+    module('workflows-units', 'Grove.Workflows/tests/playwright/checks/workflows-units'),
+    module('workflows-approvals', 'Grove.Workflows/tests/playwright/checks/workflows-approvals'),
+    module('workflows-designer', 'Grove.Workflows/tests/playwright/checks/workflows-designer'),
+    module('members-portal-api', 'Grove.Members/tests/playwright/checks/members-portal-api'),
+    // Workflow checks on Grove's own fixtures (the sample role and Grove.Workflows.Samples):
     // the enable runs first, tenant isolation last (it provisions a second tenant).
-    module('workflows-fixtures-enable', 'Crest.Workflows/tests/playwright/checks/workflows-fixtures-enable'),
-    module('workflows-parties', 'Crest.Workflows/tests/playwright/checks/workflows-parties'),
-    module('workflows-ownership', 'Crest.Workflows/tests/playwright/checks/workflows-ownership'),
-    module('workflows-connectors', 'Crest.Workflows/tests/playwright/checks/workflows-connectors'),
-    module('workflows-tenant-isolation', 'Crest.Workflows/tests/playwright/checks/workflows-tenant-isolation'),
+    module('workflows-fixtures-enable', 'Grove.Workflows/tests/playwright/checks/workflows-fixtures-enable'),
+    module('workflows-parties', 'Grove.Workflows/tests/playwright/checks/workflows-parties'),
+    module('workflows-ownership', 'Grove.Workflows/tests/playwright/checks/workflows-ownership'),
+    module('workflows-connectors', 'Grove.Workflows/tests/playwright/checks/workflows-connectors'),
+    module('workflows-tenant-isolation', 'Grove.Workflows/tests/playwright/checks/workflows-tenant-isolation'),
   ];
 }
 
 async function main() {
-  const baseUrl = process.env.BASE_URL || 'http://crest.localhost:5010';
+  const baseUrl = process.env.BASE_URL || 'http://grove.localhost:5010';
   const outputRoot = process.env.OUTPUT_ROOT || path.join(__dirname, 'output');
 
   const results = await runSuite({
     baseUrl,
     login: loginAsAdmin,
-    checks: [...buildSharedAdminChecks(), ...buildCrestModuleChecks()],
+    checks: [...buildSharedAdminChecks(), ...buildGroveModuleChecks()],
     outputRoot,
   });
 
@@ -143,7 +143,7 @@ async function main() {
   process.exit(ok ? 0 : 1);
 }
 
-module.exports = { buildSharedAdminChecks, buildCrestModuleChecks };
+module.exports = { buildSharedAdminChecks, buildGroveModuleChecks };
 
 if (require.main === module) {
   main();

@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- Necessary as we reference the projects and not the packages (see Grove.Cms.Web). -->
+  <Import Project="..\..\src\Grove.Application.Cms.Core.Targets\Grove.Application.Cms.Core.Targets.props" />
+
+  <!-- A host with Grove's application layer and no line-of-business module, installed fresh
+       from its own setup recipe into a throwaway data root: proves Grove stands alone
+       (docs/architecture.md › Still to build, item 5). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Recipes\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Grove.Application.Cms.Targets\Grove.Application.Cms.Targets.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Server\Grove.Server.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Server\Themes\Grove.LegacyFrame\Grove.LegacyFrame.csproj" />
+    <ProjectReference Include="..\..\src\Grove.AdminTheme\Grove.AdminTheme.csproj" />
+    <ProjectReference Include="..\..\src\Grove.SiteTheme\Grove.SiteTheme.csproj" />
+    <ProjectReference Include="..\..\src\Grove.MemberTheme\Grove.MemberTheme.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Icons\Grove.Icons.csproj" />
+    <ProjectReference Include="..\..\src\Grove.ContentPartLists\Grove.ContentPartLists.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Data.Global\Grove.Data.Global.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Regions\Grove.Regions.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Money\Grove.Money.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Parties\Server\Grove.Parties.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Members\Server\Grove.Members.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Workflows\Server\Grove.Workflows.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Workflows\Contents\Grove.Workflows.Contents.csproj" />
+  </ItemGroup>
+
+  <!-- Necessary as we reference the projects and not the packages (see Grove.Cms.Web). -->
+  <Import Project="..\..\src\Grove.Application.Cms.Core.Targets\Grove.Application.Cms.Core.Targets.targets" />
+  <Import Project="..\..\src\Grove.Application.Targets\Grove.Application.Targets.targets" />
+
+</Project>

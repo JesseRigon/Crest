@@ -1,8 +1,8 @@
 # Workflows
 
-How Crest's workflow service works: what a workflow is here, who may do what to one, how
+How Grove's workflow service works: what a workflow is here, who may do what to one, how
 a flow gets started, how a run commits (or does not), and how a downstream module builds on
-top of it. Workflows are the **action** kind of operation: every read and write in Crest goes
+top of it. Workflows are the **action** kind of operation: every read and write in Grove goes
 through one registry, one request path, four pipelines and one access machinery, described,
 with its task list, in [Operations](#operations-one-registry-one-request-path-four-pipelines-one-access-machinery).
 Design not yet built is under [Still to build](#still-to-build) and open questions under
@@ -10,35 +10,35 @@ Design not yet built is under [Still to build](#still-to-build) and open questio
 
 ## What it is
 
-`Crest.Workflows` is the tenant's workflow service and its only workflow engine. The engine is
+`Grove.Workflows` is the tenant's workflow service and its only workflow engine. The engine is
 a vendored fork of Elsa 3 (activities, flowcharts, bookmarks, bursts, the designer); platform
-modules register engine activities and raise registry triggers like any Crest module. The
-designer (the forked Studio, Blazor WebAssembly) is loaded on demand into the Crest admin.
+modules register engine activities and raise registry triggers like any Grove module. The
+designer (the forked Studio, Blazor WebAssembly) is loaded on demand into the Grove admin.
 
 What the system does:
 
 1. **Connects modules to each other without references.** A stage change in one module
    creates a party role; a posted document starts a tenant's own flow. Modules register
    activities, triggers and flows; the definition holds the connection.
-2. **Connects to Crest modules.** Content events, users and roles, e-mail, notifications:
+2. **Connects to Grove modules.** Content events, users and roles, e-mail, notifications:
    everything the platform already does is a palette item, not a re-implementation.
 3. **Connects to external services.** Outgoing HTTP calls with stored credentials, incoming
    signed webhooks, polling on a schedule, retries and rate limits, without code.
-4. **Is authored by tenants in the Crest admin**, with drafts, publishing and versions.
+4. **Is authored by tenants in the Grove admin**, with drafts, publishing and versions.
 5. **Is multi-tenant and permissioned like everything else:** the platform's permissions and
    roles through the one access machinery, per-shell data and execution, shipped definitions
    migrated by code.
 
 **Where it lives.** Workflows is part of the application layer
-([architecture.md](architecture.md)): `Crest.Workflows` in the Crest repository, engine
-included. The engine API prefix is `crest-workflows/api` and activity type names are
-`Crest.Workflows.*`. A downstream module's activities, hook attachments and shipped flows are
+([architecture.md](architecture.md)): `Grove.Workflows` in the Grove repository, engine
+included. The engine API prefix is `grove-workflows/api` and activity type names are
+`Grove.Workflows.*`. A downstream module's activities, hook attachments and shipped flows are
 that module's own.
 
 Workflows is a **registry** like Parties and the other core registries: modules register
 what they contribute (triggers, activities, hook slots, shipped flows, connectors) through
-contracts in `Crest.Workflows.Abstractions`, and never reference the engine module. The
-registry is read at `GET api/crest/workflows/registry`.
+contracts in `Grove.Workflows.Abstractions`, and never reference the engine module. The
+registry is read at `GET api/grove/workflows/registry`.
 
 | A module registers | Through | Example |
 | --- | --- | --- |
@@ -58,14 +58,14 @@ e-mails, invoice-to-bill, budgeting, approval flows from downstream applications
 operations and APIs their modules registered. A module's domain API is never replaced by, or
 moved into, a workflow endpoint ([architecture.md › Workflows builds on top](architecture.md#workflows-builds-on-top)).
 
-Workflows hosts nothing itself. Crest.Server's API registry has two layers
+Workflows hosts nothing itself. Grove.Server's API registry has two layers
 ([architecture.md › Two layers in each registry](architecture.md#two-layers-in-each-registry)):
 
 - **Declared**: from module code, built when the tenant shell builds, following feature
-  enablement, never stored in the database. Crest.Workflows' management API
-  (`api/crest/workflows/*`: definitions' access, registry, hooks, connections, approvals,
+  enablement, never stored in the database. Grove.Workflows' management API
+  (`api/grove/workflows/*`: definitions' access, registry, hooks, connections, approvals,
   pending, triggers) is declared like any module's and registered there.
-- **Defined**: data in the tenant database, changeable at runtime, served by Crest.Server
+- **Defined**: data in the tenant database, changeable at runtime, served by Grove.Server
   through a dynamic source invalidated on publish. A published workflow's `HttpEndpoint`
   routes are defined entries in the Server's API registry, as are the operation endpoints
   generated from the operations registry, not a private table of the engine's.
@@ -76,29 +76,29 @@ a registry entry like any other ([Generate the surfaces](#7-generate-the-surface
 
 In code: `WorkflowHttpEndpointSource` (`Server/Api/WorkflowHttpEndpoints.cs`) is the defined
 source. It lists the routes of every `HttpEndpoint` trigger and waiting bookmark of the tenant
-(the engine's `IHttpEndpointRoutes`) under the `CrestWorkflows:Http` base path (default
+(the engine's `IHttpEndpointRoutes`) under the `GroveWorkflows:Http` base path (default
 `/workflows`), plus a catch-all there that answers 404, and each route's request goes to the
 engine's `HttpWorkflowRequestHandler` with the route template that matched. When the engine
 indexes an added or removed `HttpEndpoint` trigger or bookmark, `NotifyHttpEndpointRoutesChanged`
 tells `WorkflowHttpEndpointsInvalidator`, which invalidates the source; a reload that yields the
 same routes leaves the tenant's endpoints alone. The engine's management API
-(`crest-workflows/api`, § The engine API) is the declared contributor `WorkflowsManagementApi`,
+(`grove-workflows/api`, § The engine API) is the declared contributor `WorkflowsManagementApi`,
 behind the engine's `ApiSecurityMiddleware`.
 
 ## Architecture
 
 ```
- Crest admin (Blazor WASM, Radzen)
- ├─ Workflows pages: Definitions, Instances (Studio, lazy), Connections, Approvals, Hooks (Crest)
+ Grove admin (Blazor WASM, Radzen)
+ ├─ Workflows pages: Definitions, Instances (Studio, lazy), Connections, Approvals, Hooks (Grove)
  └─ Designer: the forked Studio (MudBlazor), loaded on demand in its own container
-        │  engine API (minimal APIs) at ~/crest-workflows/api, tenant cookie + antiforgery,
-        │  Crest permissions mapped onto the engine's per-endpoint grants
+        │  engine API (minimal APIs) at ~/grove-workflows/api, tenant cookie + antiforgery,
+        │  Grove permissions mapped onto the engine's per-endpoint grants
         ▼
- Crest.Workflows  (a core registry)
- ├─ engine/   vendored elsa-core 3.6.0 (renamed Crest.Workflows.*)
+ Grove.Workflows  (a core registry)
+ ├─ engine/   vendored elsa-core 3.6.0 (renamed Grove.Workflows.*)
  ├─ Server/   the integration: stores on YesSql per shell, definitions as content items,
  │            the API gate, the registry, ownership, access, connectors, approvals
- ├─ Contents/ content triggers and tasks (feature Crest.Workflows.Contents)
+ ├─ Contents/ content triggers and tasks (feature Grove.Workflows.Contents)
  ├─ Abstractions/ the contracts modules bind to (descriptors, IWorkflowTriggerPublisher, constants)
  ├─ blazor-wasm/ + studio-host/   the admin pages and the lazily loaded Studio container
  └─ designer/ vendored elsa-studio 3.6.0
@@ -107,17 +107,17 @@ behind the engine's `ApiSecurityMiddleware`.
 **The engine is Elsa 3.6, vendored and renamed** (`engine/`, `designer/`; `UPSTREAM.md` and
 the `UPSTREAM-COMMIT` files record the upstream tag and commits). Upstream is a diff source,
 not a dependency: no `Elsa*` package exists in the graph; namespaces, assembly ids, activity
-type ids (`Crest.Workflows.WriteLine`), the API prefix (`crest-workflows/api`) and the
-YesSql collections (`CrestWorkflows_*`) are renamed. Licences: elsa-core and elsa-studio
+type ids (`Grove.Workflows.WriteLine`), the API prefix (`grove-workflows/api`) and the
+YesSql collections (`GroveWorkflows_*`) are renamed. Licences: elsa-core and elsa-studio
 MIT, the original integration BSD-3-Clause, Jint (BSD-2),
 Fluid (MIT), Polly (BSD-3), MudBlazor (MIT). At every upstream diff, refuse anything not MIT /
 Apache-2.0 / BSD.
 
-**Crest.Workflows is core.** Every module that registers or raises anything depends on it
+**Grove.Workflows is core.** Every module that registers or raises anything depends on it
 (Parties and every downstream module that registers declare the feature); there is no no-op
-mode. Crest's UI and API core never references it; the generic pieces the module needed from
-Crest (late service containers, lazy module pages, JS components, antiforgery access) are
-Crest features any module can use.
+mode. Grove's UI and API core never references it; the generic pieces the module needed from
+Grove (late service containers, lazy module pages, JS components, antiforgery access) are
+Grove features any module can use.
 
 **Where code lives**
 
@@ -126,7 +126,7 @@ Crest features any module can use.
 | Contracts modules bind to: `WorkflowTriggerDescriptor`, `WorkflowFlowDescriptor` (+ `WorkflowOwnership`), `WorkflowActivityDescriptor`, `WorkflowConnectorDescriptor`, the provider interfaces, `IWorkflowTriggerPublisher`, `IUnitBoundary`, `WorkflowsConstants` (routes, permissions, roles, property keys) | `Abstractions/` |
 | Engine wiring, stores, publisher, API gate, permissions, ownership guard, access handler and API, registry catalog/importer/controller, triggers, connectors, approvals, navigation | `Server/` |
 | Content triggers and tasks | `Contents/` |
-| Admin pages, `StudioHost`, the canvas node stand-in, `crest-lazy-assemblies.txt` | `blazor-wasm/` (always loaded, thin) |
+| Admin pages, `StudioHost`, the canvas node stand-in, `grove-lazy-assemblies.txt` | `blazor-wasm/` (always loaded, thin) |
 | Studio's own container (`StudioServices.BuildAsync`), cookie API handler, views | `studio-host/` (lazy) |
 | Activities on core objects | the module that owns the object (Parties: CreatePartyRole, ResolveParty) |
 | Triggers a registry raises | the owning module's service or content handler |
@@ -136,11 +136,11 @@ Crest features any module can use.
 
 **One engine.** `CoreStartup` (`Order = int.MaxValue`, last by feature dependency and then
 by order) wires the engine into the tenant container. A platform module that contributes
-activities or triggers references `Crest.Workflows.Abstractions` (the contracts) and the
-engine's `Crest.Workflows.Core` and `.Engine` (the activity base classes and the module
-builder), and from a startup gated on the `Crest.Workflows` feature registers an
+activities or triggers references `Grove.Workflows.Abstractions` (the contracts) and the
+engine's `Grove.Workflows.Core` and `.Engine` (the activity base classes and the module
+builder), and from a startup gated on the `Grove.Workflows` feature registers an
 `IWorkflowActivityProvider` / `IWorkflowTriggerProvider` for the registry and calls
-`services.ConfigureCrestWorkflows(w => w.AddActivitiesFrom<Startup>())`. Triggers are
+`services.ConfigureGroveWorkflows(w => w.AddActivitiesFrom<Startup>())`. Triggers are
 raised through `IWorkflowTriggerPublisher` from the module's own handlers. There is no stock
 workflow module, bridge or second evaluator: the platform's activities are engine activities
 (§ Platform activities).
@@ -148,10 +148,10 @@ workflow module, bridge or second evaluator: the platform's activities are engin
 ### The engine API
 
 The management API the designer, the admin pages and the browser checks consume:
-`crest-workflows/api`, 73 operations (86 route and verb pairs; definitions, instances, journal,
+`grove-workflows/api`, 73 operations (86 route and verb pairs; definitions, instances, journal,
 descriptors, bookmarks, events, tasks, activity tests, features, resilience, the package
 version), written as ASP.NET minimal-API handlers in
-`engine/src/modules/Crest.Workflows.Api/Endpoints`, one static class per area
+`engine/src/modules/Grove.Workflows.Api/Endpoints`, one static class per area
 (`WorkflowDefinitionEndpoints`, `WorkflowInstanceEndpoints`, `DescriptorEndpoints`,
 `ActivityExecutionEndpoints`, `RunEndpoints`, `PlatformEndpoints`, `ResilienceEndpoints`;
 execute, export and import of definitions and instances have their own files), gathered by
@@ -219,7 +219,7 @@ started (a tenant deactivated after a failed setup); `ResumeWorkflowAsync` virtu
 bursts; `ActivityDescriber` carries `[Activity(RunAsynchronously = true)]` onto the descriptor;
 `StimulusSenderOptions.QueueUnmatchedBroadcastStimuli` is off (a broadcast nobody listens to is
 not written to the bookmark queue on every content save). Designer: Radzen 11 and ASP.NET
-10.0.9 (Crest's versions), the ILocalizer clash aliased, `data-testid` on Save/Publish/Run, the
+10.0.9 (Grove's versions), the ILocalizer clash aliased, `data-testid` on Save/Publish/Run, the
 ClientLib webpack bundles built by `designer/Directory.Build.targets` when missing (gitignored).
 
 **Expressions.** The engine's Liquid handler uses the platform's parser and context
@@ -252,7 +252,7 @@ channel), dispatchers over it (`IEventPublisher`, `IStimulusDispatcher`, `IWorkf
 a durable bookmark queue (stimuli that arrive before their bookmark), background activities
 (bookmark → out-of-band run → captured outputs → resume), commit strategies, a Polly-based
 resilience feature, scheduling, distributed locks. None of it knows the host's transaction.
-Crest adds what it lacks: ownership, the registry, hooks, units, field dependencies, approvals,
+Grove adds what it lacks: ownership, the registry, hooks, units, field dependencies, approvals,
 connections, the after-commit queue and `RegistryTrigger` (thin glue over `IStimulusSender`).
 Two-phase calls are the engine's background activities, and connector retries are the
 engine's resilience feature (`ConnectionResilienceStrategy`; moving into the connection
@@ -269,15 +269,15 @@ Every definition has an **ownership tier**, kept in its custom properties:
   administrator, upgraded in place when the module bumps its version. The posting flows.
 - **shipped**: a template a module ships that the tenant may edit. Editing marks it
   *forked*; a forked copy is not upgraded until it is **reset** to the shipped version
-  (`POST api/crest/workflows/registry/flows/{key}/reset`), which keeps the tenant's edits in
+  (`POST api/grove/workflows/registry/flows/{key}/reset`), which keeps the tenant's edits in
   the version history. A flow shipped as a draft is turned on by publishing it.
 - **tenant**: the tenant's own.
 
 Permissions are integrated with the platform's grant system, not a separate ACL.
 
 **Permission set** (`Server/Permissions.cs`; names in `WorkflowsConstants.Permissions`):
-`ViewCrestWorkflows`, `EditCrestWorkflows`, `PublishCrestWorkflows`, `RunCrestWorkflows`,
-`ManageShippedCrestWorkflows`, `ManageCrestWorkflowConnections` (☐ to become the connection
+`ViewGroveWorkflows`, `EditGroveWorkflows`, `PublishGroveWorkflows`, `RunGroveWorkflows`,
+`ManageShippedGroveWorkflows`, `ManageGroveWorkflowConnections` (☐ to become the connection
 system's `ManageConnections`, [queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)), each implied by the `ManageWorkflows`
 umbrella, so existing roles keep working. Approvals are decided per task by role or permission
 (`all=true` listing needs `ManageWorkflows`). Pages and controllers take the specific
@@ -288,10 +288,10 @@ roles (also the provider's stereotypes): `WorkflowEditor` (View, Edit, Publish, 
 panel) and `WorkflowViewer` (View, admin panel), created on install when the tenant has no role
 of that name (`WorkflowRolesFeatureEvents`).
 
-**Samples.** The feature `Crest.Workflows.Samples` (off by default) registers the trigger
+**Samples.** The feature `Grove.Workflows.Samples` (off by default) registers the trigger
 `sample.content-published` (every published item; payload ContentItemId, ContentType,
 DisplayText), a system flow `samples.content-published` and a shipped draft
-`samples.template`; the browser checks in `src/Crest.Workflows/tests/playwright/checks/` run on
+`samples.template`; the browser checks in `src/Grove.Workflows/tests/playwright/checks/` run on
 them.
 
 **The API gate** (`Security/ApiSecurityMiddleware`, on the engine API branch, after the
@@ -312,13 +312,13 @@ cached in the cookie; a role change applies on the next request, and the member 
 applies.
 
 **Ownership tiers** (`WorkflowFlowDescriptor.Ownership` + `Version`; custom properties
-`Crest.Ownership`, `Crest.FlowVersion`, `Crest.Forked` next to `Crest.FlowKey`;
+`Grove.Ownership`, `Grove.FlowVersion`, `Grove.Forked` next to `Grove.FlowKey`;
 enforced by the store, not the UI):
 
 | Tier | Who changes it | Upgrades |
 | --- | --- | --- |
 | `system` | Code only. No user, the super user included, can save, publish, retract or delete it; stored `IsReadonly`, so the engine's endpoints refuse first and Studio opens it read-only. Always published: the importer re-publishes one found unpublished. | A newer `Version` in the descriptor is imported as a new version of the same definition at the next activation. Running instances finish on theirs. |
-| `shipped` | Users with *Manage shipped workflows*. The first user save (or version revert) marks `Crest.Forked`. Never deleted. | Unforked copies upgrade like system ones (published if the copy was). A forked copy is left alone; the registry reports `outdated`; `POST api/crest/workflows/registry/flows/{key}/reset` re-imports the shipped JSON as a new version, fork mark cleared, the tenant's edits in version history. |
+| `shipped` | Users with *Manage shipped workflows*. The first user save (or version revert) marks `Grove.Forked`. Never deleted. | Unforked copies upgrade like system ones (published if the copy was). A forked copy is left alone; the registry reports `outdated`; `POST api/grove/workflows/registry/flows/{key}/reset` re-imports the shipped JSON as a new version, fork mark cleared, the tenant's edits in version history. |
 | `tenant` | Whoever holds Edit/Publish and passes the flow's access lists. | None. |
 
 `WorkflowOwnershipGuard` (`Server/Registry`) decides on the *stored* definition's
@@ -329,9 +329,9 @@ and the store's Delete. GetDraft is guarded because the content system's `DraftR
 creates and saves a new draft version; a refusal after it would leave a stray draft as the
 latest version. It decides for the gated caller and refuses a change with none.
 
-**Per-flow access: three lists.** Custom properties `Crest.Access.Edit`, `Crest.Access.Run`
-and `Crest.Access.View` list role names and user names (a user name is the per-user override);
-`GET/PUT api/crest/workflows/definitions/{id}/access` reads and sets them
+**Per-flow access: three lists.** Custom properties `Grove.Access.Edit`, `Grove.Access.Run`
+and `Grove.Access.View` list role names and user names (a user name is the per-user override);
+`GET/PUT api/grove/workflows/definitions/{id}/access` reads and sets them
 (`WorkflowDefinitionAccessModel`). `WorkflowDefinitionAccessCeiling` is a ceiling inside the
 one decision: it vetoes Edit, Manage shipped and Publish when the Edit list is non-empty and
 names neither the caller nor one of their roles, Run against the Run list, and instance reads
@@ -339,7 +339,7 @@ against the View list; it acts only when the resource is a `WorkflowDefinitionAc
 so `AuthorizeAsync(user, permission, resource)` and a direct `DecideAsync` give the same answer
 everywhere (guard, gate, linker, access API). The super user and the system are never
 narrowed. Edit and Run do not imply View. A definition with no View list is tenant-wide: every
-`ViewCrestWorkflows` holder reads its instances even when they can neither edit nor run it.
+`ViewGroveWorkflows` holder reads its instances even when they can neither edit nor run it.
 
 `EngineInstanceAccess` (`Server/Security`), called by the API gate, decides every engine
 instance operation with the definition(s) it reaches as the resource: get, journal (the posted
@@ -364,12 +364,12 @@ editing to the `publish` link, so Edit without Publish reads as read-only.
 **A run acts as the caller who started it.** The acting user at trigger time is snapshotted as
 **identity only** (`WorkflowUserContext`: user id, user name, tenant, authentication type;
 workflow input `Actor`, not `User`, which stock Users events use); `WorkflowCallerResolver`
-builds the caller from it again at the start of every burst through `Crest.Access`, so a right
+builds the caller from it again at the start of every burst through `Grove.Access`, so a right
 lost between bursts fails the next one, and `IWorkflowAuthorizer`, `RequiredPermission` on the
-Crest and content triggers, `Require permission` and `Validate user` ask the one
+Grove and content triggers, `Require permission` and `Validate user` ask the one
 `IAccessDecision` for the burst's caller, never the input.
 
-- **Run as system.** A definition published with `Crest.RunsAsSystem` (a property that takes
+- **Run as system.** A definition published with `Grove.RunsAsSystem` (a property that takes
   *Manage shipped workflows* to set, enforced by `WorkflowOwnershipGuard`) runs as the tenant
   system actor instead. Timers, cron runs, the bookmark queue and background jobs resolve the
   same way; a flow with neither an actor nor the system property is refused by the gate.
@@ -399,7 +399,7 @@ Crest and content triggers, `Require permission` and `Validate user` ask the one
   authentication. Login and registration triggers (`user.logged-in`, `user.created`,
   `user.confirmed`) act as the user the event names when the request is anonymous
   (`IWorkflowTriggerPublisher.PublishForUserAsync`; an administrator creating a user stays the
-  actor). Anonymous runs are opt-in per definition (`Crest.AcceptsAnonymousRuns`,
+  actor). Anonymous runs are opt-in per definition (`Grove.AcceptsAnonymousRuns`,
   `WorkflowsConstants.AcceptsAnonymousRunsProperty`, mirrored on `WorkflowDefinitionPart`,
   publishing it takes `ManageShippedWorkflows`) and only for runs starting at an `HttpEndpoint`
   trigger (a public page, and the public endpoints that serve specific public media and
@@ -407,8 +407,8 @@ Crest and content triggers, `Require permission` and `Validate user` ask the one
   anonymous flow means publishing it as system. `WorkflowAccessGateMiddleware` refuses every
   other anonymous burst with the reason (`WorkflowCallerResolver.AnonymousRefusal`).
 
-The security token (`ICrestAntiforgery`, the API behind the cookie) stays until the designer
-moves onto Crest components. Machine identities (client credentials, API keys) are
+The security token (`IGroveAntiforgery`, the API behind the cookie) stays until the designer
+moves onto Grove components. Machine identities (client credentials, API keys) are
 [machine-actors.md](machine-actors.md).
 
 ## Registry
@@ -436,21 +436,21 @@ which takes the catalog. (The catalog is to fold into the engine's registry,
   `Data/workflows`, imported per tenant by `WorkflowFlowImporter.SyncAsync` right after the
   activity registry is populated (the JSON names activity types). `Publish: false` ships a
   flow as a draft the tenant opts into (anything that changes business data on its own).
-  `WorkflowFlowLookup` finds a tenant's copy by `Crest.FlowKey`.
+  `WorkflowFlowLookup` finds a tenant's copy by `Grove.FlowKey`.
 - **Connectors**: `WorkflowConnectorDescriptor(Key, DisplayName, AuthKind, BaseUrl,
   Description, Position)` from `IWorkflowConnectorProvider`; see [Connectors](#connectors).
 - **Extension points.** `Raise trigger` (`RaiseTrigger`, Done/Failed) publishes a registered
   key after this flow's unit commits, with its correlation id and payload by default;
-  Crest.Workflows registers the generic `flow.raised`. `Hook` runs a slot's attachments
+  Grove.Workflows registers the generic `flow.raised`. `Hook` runs a slot's attachments
   inside the unit ([Units of work](#units-of-work-how-a-run-commits));
   `WorkflowHookSlotDescriptor` and `WorkflowHookAttachmentDescriptor` are the registry's slot
-  and system-attachment contracts, listed by the registry API and `api/crest/workflows/hooks`.
-- **API:** `GET api/crest/workflows/registry` (triggers, activities, flows with definition
+  and system-attachment contracts, listed by the registry API and `api/grove/workflows/hooks`.
+- **API:** `GET api/grove/workflows/registry` (triggers, activities, flows with definition
   id, published, ownership, shipped/installed version, forked, outdated; connectors);
-  `POST .../registry/flows/{key}/reset`; `POST api/crest/workflows/registry/sync`
+  `POST .../registry/flows/{key}/reset`; `POST api/grove/workflows/registry/sync`
   (ManageShipped) re-runs the activation sync and answers what it did per flow (Install,
   Republish, Upgrade, Keep; the decision is `WorkflowFlowImporter.Decide`, unit-tested branch by
-  branch); `GET api/crest/workflows/triggers[?definitionId=]` and
+  branch); `GET api/grove/workflows/triggers[?definitionId=]` and
   `POST .../triggers/{definitionId}/reindex` (diagnostics over the stored triggers).
 
 Gotchas: a trigger node indexes only with `customProperties.canStartWorkflow = true`
@@ -474,12 +474,12 @@ A flow starts from a **trigger** node, or by hand, or as a **hook attachment**, 
   UserName, Email, Roles as a comma list, Provider on login; correlation = user id) from its
   event handlers and both login paths. Content events are the Contents feature's triggers
   below. Platform tasks are engine activities in their own modules (§ Platform activities).
-- **Content triggers** (`Crest.Workflows.Contents`): created, published, updated,
+- **Content triggers** (`Grove.Workflows.Contents`): created, published, updated,
   deleted, ... with a content-type filter.
 - **Timers and cron**, **webhooks** (`Webhook received`: HMAC-signed posts to
-  `api/crest/workflows/webhooks/{connection}/{hook}`), **approvals** (`Request approval`
+  `api/grove/workflows/webhooks/{connection}/{hook}`), **approvals** (`Request approval`
   parks the flow until a role member or permission holder decides at
-  `api/crest/workflows/approvals`).
+  `api/grove/workflows/approvals`).
 - **HTTP endpoints** (the engine's `HttpEndpoint` trigger, [above](#workflows-builds-on-top-of-the-module-apis)).
 - **Raise trigger**: a flow raises a registered key for other flows (`flow.raised` is the
   generic one). Fire-and-forget, after commit.
@@ -508,7 +508,7 @@ in a unit of their own ([Units of work](#units-of-work-how-a-run-commits)).
 | Facebook (Pixel) | `Send Meta conversion event` | yes |
 | Users | `Create user` (e-mail, user name, moderation, optional confirmation e-mail with the link as the ConfirmationUrl output), `Validate user` (Anonymous / Authenticated / InRole on the burst's caller), `Assign user role`, `Unassign user role` (refreshes the security stamp), `Get users by role` (user id → name) | no |
 | Tenants | `Create tenant`, `Setup tenant`, `Enable tenant`, `Disable tenant` (default tenant only; unit boundaries) | no |
-| Crest.Workflows | `Log` (level, message) | no |
+| Grove.Workflows | `Log` (level, message) | no |
 
 The content, user, tenant and party activities ask the decision against the item, role or user
 (`IAccessDecision.RequireAsync`/`AllowsAsync`); a read the caller may not make is "not found".
@@ -518,7 +518,7 @@ connection, redirects included, reaches only public addresses unless the shell's
 `AllowPrivateNetworks` opens it. Form posting is the engine's HTTP workflows. Publishing a
 `WorkflowDefinition` item never fans out to content triggers.
 
-`Crest.Workflows.Contents` (feature) adds the engine-native content triggers (created,
+`Grove.Workflows.Contents` (feature) adds the engine-native content triggers (created,
 published, updated, deleted, versioned, draft saved, unpublished) with a content-type filter
 and the acting user, and content tasks (create/get/update/publish/unpublish/delete).
 
@@ -582,7 +582,7 @@ terms) is in the same unit; the invoice with those fields exists, or nothing doe
   owning registry service around every write to an object and by the after-commit send around
   each correlated run: no two units touching one object interleave. Version checks reduce to
   "read under the lock". What is still pending for an object (flows about it that have not
-  finished and the jobs they wait on) is `GET api/crest/workflows/pending?correlationId=`.
+  finished and the jobs they wait on) is `GET api/grove/workflows/pending?correlationId=`.
 - **What stays impossible, on purpose:** a hook that must call out *and* be in the transaction
   (a distributed transaction with someone else's API). The validator says so and names the two
   honest shapes: call after commit with compensation (`Void` answers `Post`), or call before
@@ -598,7 +598,7 @@ anything that must be after-commit uses it, never `WorkflowStateCommitted` (sent
 YesSql commit). `Hook` and `Fail unit` activities, `WorkflowHookService` (system attachments
 from `IWorkflowHookAttachmentProvider`, tenant ones in a document), `WorkflowHookRunner`,
 `WorkflowHookFailedException` → 409 through `WorkflowHookFailedExceptionMapper` (the API
-registry's error contract) for any module's API, `api/crest/workflows/hooks`, `WorkflowAtomicityAnalyzer` (used at attach and,
+registry's error contract) for any module's API, `api/grove/workflows/hooks`, `WorkflowAtomicityAnalyzer` (used at attach and,
 through the engine's validating notification, at publish). The trigger store treats a
 re-indexed trigger as an update (delete-then-insert of one document in a session is refused by
 YesSql). `BackgroundJobContext` (the running job, for the idempotency key). The two action
@@ -626,10 +626,10 @@ dependency is a declaration beside the inputs, read from literal bindings at pub
 - At publish, `WorkflowFieldDependencyAnalyzer` (nested published definitions walked)
   resolves each dependency against the tenant's content definitions as they stand and
   `FieldDependencyPublishHandler` stamps the **warnings** on the version
-  (`Crest.FieldWarnings` custom property; absent when clean), never a refusal: the part
+  (`Grove.FieldWarnings` custom property; absent when clean), never a refusal: the part
   or field does not exist, or the activity requires a field the tenant's definition leaves
-  optional or shows only under a Crest visibility condition. Written fields only have to
-  exist. `GET api/crest/workflows/definitions/{id}/field-dependencies` resolves the latest
+  optional or shows only under a Grove visibility condition. Written fields only have to
+  exist. `GET api/grove/workflows/definitions/{id}/field-dependencies` resolves the latest
   version on demand (the "what this flow needs" panel). A tenant who wants a run to stop on
   a condition adds the condition node; the warning is the reminder.
 - At runtime, a missing value for a **required** dependency completes the activity on
@@ -638,14 +638,14 @@ dependency is a declaration beside the inputs, read from literal bindings at pub
   **optional** dependency reads null and the activity accounts for it ("use it if you have
   it"; tax is the standing example, it may not be enabled).
 - Declared dependencies ride the engine's activity descriptors
-  (`crest:fieldDependencies`, via an `IActivityDescriptorModifier`) and the registry's
+  (`grove:fieldDependencies`, via an `IActivityDescriptorModifier`) and the registry's
   activity entries (`FieldDependencies`), so the palette and the panel can show them.
 
 **System activities name their fields, and those fields are locked.** Every system activity
 is specific about the fields it depends on (id, created date, the transaction part's number,
 status, party id, subtotal, total, ...); those are marked required and **locked in the
 shipped content type definition** so tenants cannot make them optional or hidden. The lock
-mechanism lives in Crest: the field/part-definition counterpart of Crest's option-list locks
+mechanism lives in Grove: the field/part-definition counterpart of Grove's option-list locks
 (None|Tenant|Module, module locks unliftable in-tenant), tracked in
 [content-items.md](content-items.md).
 
@@ -655,7 +655,7 @@ palette entry (`WorkflowDefinitionActivity`, a `Composite`), so a posting flow i
 smaller system flows; the C# `Composite` base stays for pieces that belong in code. The
 ownership tiers apply to the pieces. Posting is workflows.
 
-## Activities Crest adds
+## Activities Grove adds
 
 | Activity | What it does |
 | --- | --- |
@@ -671,29 +671,29 @@ ownership tiers apply to the pieces. Posting is workflows.
 | `Copy fields`, `Move fields` | copy field values between content items by typed mapping rows |
 | `Create party role`, `Resolve party` | Parties |
 
-Triggers, activities and shipped flows by Crest module:
+Triggers, activities and shipped flows by Grove module:
 
 | Module | Triggers raised | Activities | Shipped flows |
 | --- | --- | --- | --- |
 | Users | `user.created`, `.updated`, `.deleted`, `.enabled`, `.disabled`, `.confirmed`, `.logged-in`, `.logged-out` (event handlers and both login paths; correlation = user id) | `CreateUser`, `ValidateUser`, `AssignUserRole`, `UnassignUserRole`, `GetUsersByRole` | — |
 | Email, Sms, Notifications, Twitter, Facebook, Tenants | — | `SendEmail`; `SendSms`; `NotifyUsers`, `NotifyContentOwner`; `UpdateTwitterStatus`; `SendMetaConversionEvent`; `CreateTenant`, `SetupTenant`, `EnableTenant`, `DisableTenant` | — |
 | Parties | `party.role-created`, `.role-removed` (a content handler on every registered party type except the two base types; correlation = role id) | `CreatePartyRole` (registry key → role type, party from the payload, through `IPartyRoleService`, idempotent); `ResolveParty` (a role or base party id → RoleId, RoleContentType, RoleTypeKey, BasePartyId, BasePartyContentType: which item holds a field, nothing walks the graph implicitly) | — |
-| Crest.Workflows | `flow.raised`; hook slot `flow.hook` | `Registry trigger`, `Raise trigger`, `Hook`, `Fail unit`, `Require permission`, `Request approval`, connector activities, `Log`, `Copy fields` / `Move fields` (Server/Contents: source and target item ids, the target defaulting to the payload's ContentItemId or TransactionId, and a JSON mapping of `Part.Field → Part.Field` rows each with a `required` marker; `ContentFieldValueCopier` resolves both sides against the tenant's current definitions, copies a same-type pair's JSON whole, converts text ↔ numeric, refuses other pairs; a required source that is empty or missing ends on Failed with the field named, an optional one is skipped and listed in `Skipped`; Move clears the source; the write goes through the content operations' update path) | — |
+| Grove.Workflows | `flow.raised`; hook slot `flow.hook` | `Registry trigger`, `Raise trigger`, `Hook`, `Fail unit`, `Require permission`, `Request approval`, connector activities, `Log`, `Copy fields` / `Move fields` (Server/Contents: source and target item ids, the target defaulting to the payload's ContentItemId or TransactionId, and a JSON mapping of `Part.Field → Part.Field` rows each with a `required` marker; `ContentFieldValueCopier` resolves both sides against the tenant's current definitions, copies a same-type pair's JSON whole, converts text ↔ numeric, refuses other pairs; a required source that is empty or missing ends on Failed with the field named, an optional one is skipped and listed in `Skipped`; Move clears the source; the write goes through the content operations' update path) | — |
 
 **Approvals** (`Server/Approvals`): `Request approval` records an `ApprovalTask` (YesSql,
 indexed) for a role and/or permission and waits on a bookmark;
-`api/crest/workflows/approvals` lists what the signed-in user may decide,
+`api/grove/workflows/approvals` lists what the signed-in user may decide,
 `{id}/decide` (approve|reject, comment) authorizes through role membership or the decision for
 the permission (member ceilings apply), records the decision and resumes the flow on Approved
 or Rejected with DecidedBy/Comment as outputs, as the run's own actor; 403 outside the role,
-409 once decided. Crest page `/workflows/approvals`. The shared approvals system grows out of
+409 once decided. Grove page `/workflows/approvals`. The shared approvals system grows out of
 this ([permissions.md](permissions.md) › Approvals).
 
 ## Connectors
 
 The connection model, sealed secrets and tokens, OAuth flow, HTTP invoker, token cache, rate
-limiting and retries belong to the connection system: the protocol modules (`Crest.Http`,
-`Crest.Rest`, `Crest.Soap`, `Crest.GraphQL`, ☐ to be created). Workflows keeps the activities
+limiting and retries belong to the connection system: the protocol modules (`Grove.Http`,
+`Grove.Rest`, `Grove.Soap`, `Grove.GraphQL`, ☐ to be created). Workflows keeps the activities
 and inbound webhook triggers as consumers of their connections; the one Connections screen and
 the `ManageConnections` permission are the connection system's, not Workflows' or Queries'
 ([queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)).
@@ -705,15 +705,15 @@ A **connection** is a tenant's handle on an external service: base URL, auth kin
 rate limit, timeout and roles (the webhook caller's, [Running identity](#running-identity)).
 The registry ships the generic `http` and `webhook` connectors; a module ships a specific one
 for a service it knows. Tenant connections live in one document (`WorkflowConnection`), secrets
-sealed with the tenant's data protection (purpose `Crest.Workflows.Connections`) and never
+sealed with the tenant's data protection (purpose `Grove.Workflows.Connections`) and never
 returned (`WorkflowConnectorAuthKinds`, settings in `WorkflowConnectionSettingKeys`). API
-`api/crest/workflows/connections` (Manage connections, antiforgery); Crest page
+`api/grove/workflows/connections` (Manage connections, antiforgery); Grove page
 `/workflows/connections`.
 
 Activities: `Call connector` (Done/Failed; outputs status, body, parsed JSON, failure),
 `Poll connector` (Changed/Unchanged/Failed; a hash per definition + node in the tenant
 database, driven by the engine's Timer or Cron), `Webhook received`
-(`api/crest/workflows/webhooks/{connection}/{hook}`, HMAC-SHA256 of the body required, 401
+(`api/grove/workflows/webhooks/{connection}/{hook}`, HMAC-SHA256 of the body required, 401
 otherwise, 404 for unknown/non-hmac connections; payload Body/Query/ContentType; runs as the
 connection's application caller).
 
@@ -724,7 +724,7 @@ connection's `RetryCount` as the policy (`ConnectionResilienceStrategy`, categor
 default on connector nodes, attempts journaled). Per-connection fixed-window rate limit without
 queue, response and webhook size caps, no automatic redirects, paths cannot leave the base URL,
 and every connection is refused on loopback/private/link-local/CGNAT addresses at connect time
-(after DNS) unless the shell sets `CrestWorkflows:Connectors:AllowPrivateNetworks` (a host's dev
+(after DNS) unless the shell sets `GroveWorkflows:Connectors:AllowPrivateNetworks` (a host's dev
 setup does, for the local test endpoint).
 
 **OpenAPI import** (`POST connections/import-openapi`): the first server becomes the base
@@ -744,35 +744,35 @@ token and refreshes it with the refresh token when expired; the API only says
 **Admin surface.** A "Workflows" menu section (`WorkflowsPages`, a page registry source) with
 Definitions, Instances, Connections, Approvals, Hooks; each page declares its route permission
 and menu place with `[PageEntry]` ([admin-menu.md](admin-menu.md) › The page registry), and the
-Studio pages are marked browser-only (`ClientOnly`). Connections, Approvals and Hooks are Crest pages;
+Studio pages are marked browser-only (`ClientOnly`). Connections, Approvals and Hooks are Grove pages;
 Definitions/Instances (and the editor and instance viewer, on Studio's own routes
 `/workflows/definitions[/{id}/edit]`, `/workflows/instances[/{id}/view]`) are the forked
 Studio.
 
 **Hooks page** (`blazor-wasm/Pages/WorkflowHooks.razor` at `/workflows/hooks`, menu
 Workflows › Hooks, View workflows): every slot with its module and tenant attachments, attach
-(published flows the user may edit, from `GET api/crest/workflows/hooks/candidates`) and detach
+(published flows the user may edit, from `GET api/grove/workflows/hooks/candidates`) and detach
 for users with Edit workflows; the API refuses what is not atomic.
 
 **Studio loads on demand, in its own container.** Nothing of Studio is in the admin client's
-startup download or its service container. `Crest.Workflows.BlazorWasm` (always loaded,
+startup download or its service container. `Grove.Workflows.BlazorWasm` (always loaded,
 thin) has the pages, `StudioHost` (loads the lazy assemblies with `LazyAssemblyLoader`,
-builds Studio's container through `Crest.Workflows.Studio.Host.StudioServices.BuildAsync`
+builds Studio's container through `Grove.Workflows.Studio.Host.StudioServices.BuildAsync`
 by reflection, attaches it as a late container and renders the view) and
 `StudioActivityNode`, the canvas node's always-registered stand-in
-(`[CrestJSComponent]`). `Crest.Workflows.Studio.Host` (lazy) holds the container setup
+(`[GroveJSComponent]`). `Grove.Workflows.Studio.Host` (lazy) holds the container setup
 (Studio core, shell/MudBlazor, workflows module, the engine backend at
-`{tenant}/crest-workflows/api` behind `CookieApiHandler` with the antiforgery token, a cookie
+`{tenant}/grove-workflows/api` behind `CookieApiHandler` with the antiforgery token, a cookie
 auth provider manager) and the views with MudBlazor's providers. The lazy set (26 assemblies:
 Studio, MudBlazor + extensions, Monaco, Refit, Polly, FluentValidation, Humanizer, Radzen, the
-engine API client) is listed in `crest-lazy-assemblies.txt`; the host app's WASM build turns
-every module's `blazor-wasm` library into lazy pages (`tools/Crest.LazyModules`, imported by
+engine API client) is listed in `grove-lazy-assemblies.txt`; the host app's WASM build turns
+every module's `blazor-wasm` library into lazy pages (`tools/Grove.LazyModules`, imported by
 the host's WASM entry project). Measured on a trimmed Release publish (brotli): startup ≈ 5.2
 MB, on demand 2.6 MB. **Browser-only** because under InteractiveAuto a first visit runs in a
 server circuit where Studio's HTTP clients would share scopes across users; the host prerenders
 a placeholder and reloads into WASM if an in-app link reached it inside a circuit.
 
-The move of the designer onto Crest components is under [Still to build › Designer](#designer-the-transition-onto-crest-components).
+The move of the designer onto Grove components is under [Still to build › Designer](#designer-the-transition-onto-grove-components).
 
 **Run history and insight go through the audit system** (`Server/Audit`): each burst of a run
 with its journal and incidents, hook attachment runs and inbound webhook deliveries (rejected
@@ -783,8 +783,8 @@ metrics are audit feeds.
 ## Testing
 
 Playwright checks under `tests/playwright/checks`, registered in the host's aggregated
-suite (the harness is Crest's); each cleans up what it creates and leaves shipped flows as
-shipped. The checks Crest.Workflows carries:
+suite (the harness is Grove's); each cleans up what it creates and leaves shipped flows as
+shipped. The checks Grove.Workflows carries:
 
 | Check | Covers |
 | --- | --- |
@@ -796,7 +796,7 @@ shipped. The checks Crest.Workflows carries:
 A consuming host's own checks cover the registry, ownership, connectors, field activities
 and tenant isolation end to end through its modules.
 
-Unit tests (`tests/Crest.Workflows.Tests`): the API gate branch by branch (grant mapping,
+Unit tests (`tests/Grove.Workflows.Tests`): the API gate branch by branch (grant mapping,
 per-definition Run, 403 on refusal, `ApiGateResponseTests` against the real authorization
 middleware), ownership property round-trips and stamping, the access handler's
 veto/admit/bypass rules, the system scope, the registry catalog and publisher, the user
@@ -807,7 +807,7 @@ decision.
 **Known flake:** on a freshly provisioned tenant, a check running early in a filtered run
 occasionally hits Playwright's "Execution context was destroyed" (the admin page navigated
 once under an evaluate). Not reproduced idle or in the full suite; the check most exposed
-settles and retries once. Suspect a circuit drop and reload in Crest.
+settles and retries once. Suspect a circuit drop and reload in Grove.
 Also: edits under the watch dev server during a test run rebuild shared WASM
 assets and break the test server's integrity checks (every login stays disabled); stop the
 watch server or do not edit during a run. A build that fails on
@@ -816,18 +816,18 @@ watch server or do not edit during a run. A build that fails on
 
 ## Where things are
 
-- Module: `Crest.Workflows`: `Abstractions` (contracts), `Server` (the module: `Registry`,
+- Module: `Grove.Workflows`: `Abstractions` (contracts), `Server` (the module: `Registry`,
   `Security`, `Units`, `Hooks`, `Fields`, `Contents`, `Connectors`, `Approvals`, `Audit`,
   `Queries`, `Stores`), `engine` (the vendored engine; its management API in
-  `src/modules/Crest.Workflows.Api/Endpoints`), `designer` (the forked Studio), `tests`.
+  `src/modules/Grove.Workflows.Api/Endpoints`), `designer` (the forked Studio), `tests`.
 - The consuming module's part, e.g. an ERP module's `Server/Workflows` (provider,
   activities), `Server/Ledger`, `Server/Data/workflows/*.json` (shipped flows).
 - Admin pages: Workflows › Definitions, Instances, Connections, Approvals, Hooks, under the
-  Crest admin; the designer opens from a definition.
+  Grove admin; the designer opens from a definition.
 
 ## Operations: one registry, one request path, four pipelines, one access machinery
 
-The backbone of the application: how every read and write in Crest, from a UI button, a
+The backbone of the application: how every read and write in Grove, from a UI button, a
 picker, a content list, a Liquid slot, a workflow step, a REST, GraphQL or RPC call, a webhook
 or an external connector, goes through one system. The designs it builds on are
 [queries.md](queries.md) (the query pipeline, and the connection system it and the action
@@ -852,17 +852,17 @@ Priorities, in order: speed, runtime adaptability, ease of maintenance.
   machine client) follows the same eight steps; only dispatch differs.
 - **Four pipelines** at the end of the path: read and action, each synchronous and
   asynchronous. The ACID and queue guarantees built for workflows apply to every operation.
-- **One access machinery** (`Crest.Access`) in front of all four: caller, decision, scope,
+- **One access machinery** (`Grove.Access`) in front of all four: caller, decision, scope,
   audit. Nothing reaches data except through it; the surfaces are generated from the
   registry so they cannot check permissions on their own.
-- **Modules declare, Crest.Server serves.** Every surface, declared or generated, is an entry
-  in Crest.Server's API registry ([Workflows builds on top of the module APIs](#workflows-builds-on-top-of-the-module-apis)).
+- **Modules declare, Grove.Server serves.** Every surface, declared or generated, is an entry
+  in Grove.Server's API registry ([Workflows builds on top of the module APIs](#workflows-builds-on-top-of-the-module-apis)).
 - **The caller is built per request on the server**, from the authenticated identity plus
   server-held state cached under the tenant's permission version; the client's session copy
   is for the UI only and never authority.
 - **A read never writes; an action never serves a page; the workflow runtime never runs a
   synchronous read for a page.**
-- **Workflows are the only code path for tenant logic**; there is no `Crest.Scripting`
+- **Workflows are the only code path for tenant logic**; there is no `Grove.Scripting`
   ([blazor-display.md](blazor-display.md) § 12).
 
 **Why one system.** The platform has no data-access layer below the web layer
@@ -897,7 +897,7 @@ place answers the question, and the surfaces are generated.
 8. Audit             the auditor records the decision and the execution.
 ```
 
-Steps 2–6 run once each, in `Crest.Access`'s gate, called from the shell selector's startup
+Steps 2–6 run once each, in `Grove.Access`'s gate, called from the shell selector's startup
 filter before routing ([access.md › The system](access.md#the-system)). The order, host then
 tenant: `ModularTenantContainerMiddleware` (matches the tenant by host and prefix, opens the
 shell scope the whole request runs in, commits or cancels it at the end) →
@@ -919,7 +919,7 @@ compared on every use, so a decision is always against current rights.
 | Lifetime | Caller built | Decision and scope |
 | --- | --- | --- |
 | HTTP request | once, at step 4 | per operation |
-| Interactive circuit or websocket (Blazor Server, SignalR) | per operation (`ConnectionCallerHubFilter`, `ConnectionCallerCircuitHandler` in `Crest.Access/Services/ConnectionCallers.cs`), from the side and organization the connection was admitted on; the security stamp is re-validated once the stamp interval has passed; a changed stamp, a gone or disabled user or a refused caller aborts the hub connection or tears the circuit down. The shell selector admits `{shellBase}/_blazor` on the shell's side | per operation |
+| Interactive circuit or websocket (Blazor Server, SignalR) | per operation (`ConnectionCallerHubFilter`, `ConnectionCallerCircuitHandler` in `Grove.Access/Services/ConnectionCallers.cs`), from the side and organization the connection was admitted on; the security stamp is re-validated once the stamp interval has passed; a changed stamp, a gone or disabled user or a refused caller aborts the hub connection or tears the circuit down. The shell selector admits `{shellBase}/_blazor` on the shell's side | per operation |
 | Workflow burst | the sealed actor bound to the instance says **who**; the caller is built again at the start of every burst, so a right lost between bursts fails the next one; only the first burst may inherit a caller from its scope, and never the system caller unless the definition is published as system | per data activity |
 | Background job | enters the path at step 1 as the actor it was written with; built then, never from the job payload | per operation |
 
@@ -942,7 +942,7 @@ side they act on and the organization they act for, and that is the caller's bus
 
 **The class is a property on the user record, never a role**: a set derived from the user's
 bindings (staff is a binding to the tenant organization, member a binding to any other;
-`CrestMemberInfo` aspect, indexed by `UserConnectionIndex`, stamped in
+`GroveMemberInfo` aspect, indexed by `UserConnectionIndex`, stamped in
 `IUserEventHandler.CreatingAsync` so it persists in the same write; [parties.md](parties.md)
 › Members). Roles are what admins grant and revoke daily; the class decides which login
 surface accepts the account at all, so it must not be grantable: a mis-granted member role
@@ -1001,9 +1001,9 @@ background action.
 
 ### Design decisions
 
-- **Organization scope on data.** `CrestOrganizationPart` with an index (`OrganizationId`),
+- **Organization scope on data.** `GroveOrganizationPart` with an index (`OrganizationId`),
   carried by every scoped type and filled by the owning module, is the row's owner (in
-  Crest.Parties, [access.md](access.md) › Parties). Per-item grants are Sharing's
+  Grove.Parties, [access.md](access.md) › Parties). Per-item grants are Sharing's
   ([sharing.md](sharing.md)). The hierarchy's subtree scoping ([parties.md](parties.md) ›
   Hierarchies) joins on the owner column.
 - **What is audited: actions always; reads selectively.** Every action (unit of work, durable
@@ -1023,17 +1023,17 @@ background action.
   authenticated as the Anonymous caller, since it is the first check on use and on the share
   settings of content, pages and media), then permissions. The gate owns authentication before
   routing.
-- **One registry.** The engine's registry (`IActivityRegistry`) is the registry. Crest's
+- **One registry.** The engine's registry (`IActivityRegistry`) is the registry. Grove's
   `WorkflowRegistryCatalog` and its providers (`IWorkflowTriggerProvider`,
   `IWorkflowActivityProvider`, `IWorkflowFlowProvider`, `IWorkflowConnectorProvider`, hook
   slots) migrate onto it: each catalog kind becomes engine descriptors with grouping and
   position in `CustomProperties`, and every consumer of the catalog (the registry page,
-  `api/crest/workflows/registry`, the trigger publisher, the stock-activity and
+  `api/grove/workflows/registry`, the trigger publisher, the stock-activity and
   connector-operation providers) reads the engine registry instead. The catalog is deleted when
   its last consumer moves. (How each catalog kind maps is open, [Open questions](#open-questions).)
 - **HTTP-endpoint workflows** are served under `/workflows/`, consolidated so a caller knows
   it is calling an action; later `/workflows/{group}/{name}` once workflows have groups and an
-  organization system. Their routes are defined entries in Crest.Server's API registry
+  organization system. Their routes are defined entries in Grove.Server's API registry
   ([above](#workflows-builds-on-top-of-the-module-apis)); the trigger's `Authorize`/`Policy`
   inputs give way to the operation's decision, and the run is the request's unit of work.
 - **Structured queries compiled through YesSql, not SQL text.** A tenant-authored query is a
@@ -1047,11 +1047,11 @@ background action.
   through the builder onto the same store. A Liquid template names query operations only, so it
   is read-only by kind. The external SQL connector keeps SQL text; parameters-only there comes
   later.
-- **Where `Crest.Access` sits.** The chain is core → access contracts → data → connections →
-  access implementation and query → surfaces, with workflows on query: `Crest.Access.Abstractions`
+- **Where `Grove.Access` sits.** The chain is core → access contracts → data → connections →
+  access implementation and query → surfaces, with workflows on query: `Grove.Access.Abstractions`
   (`ICallerContext`, `IAccessDecision`, `IScopeProvider`, `ScopeSet`, `ScopedExecution`) below
-  `Crest.Data`, because the data layer hands out `ScopedExecution` instead of raw sessions;
-  `Crest.Access` (caller builder, decision, cache, gate) beside `Crest.Queries`, because
+  `Grove.Data`, because the data layer hands out `ScopedExecution` instead of raw sessions;
+  `Grove.Access` (caller builder, decision, cache, gate) beside `Grove.Queries`, because
   building a caller reads roles, bindings and policies from the store.
 - **System actors.** The **tenant system actor acts as a tenant admin**, always; an
   **organization system actor acts as that organization's admin**, always (background work
@@ -1060,7 +1060,7 @@ background action.
   `ManageShippedWorkflows`. **Only the system can use the system credentials**: a system caller
   is never produced from a request, a token, a cookie or a job payload; it exists only where the
   path's step 1 admits a background entry point or a definition published as system, built in
-  process by `Crest.Access` with no credential a user could present. There is no system user
+  process by `Grove.Access` with no credential a user could present. There is no system user
   account, no system role a user can be given, and no API scheme that yields the system caller.
   Impersonating the system is impossible by construction, and the audit records the definition
   or job that ran as system, never a user. The system actors act as the system accounts
@@ -1072,7 +1072,7 @@ background action.
 Each step compiles and runs on its own. Pre-release rules apply: no compatibility code, dev
 tenants reset ([architecture.md](architecture.md)). The order is the dependency order.
 
-#### 1. `Crest.Access`: the access machinery
+#### 1. `Grove.Access`: the access machinery
 
 Built: the caller per request, the permission version, the server-side state cache, the one
 decision behind `IAuthorizationService`, scope providers and the `ScopeSet` (a target with no
@@ -1080,19 +1080,19 @@ provider is refused), organization scope on data, the auditor, the gate owning a
 background entry points with an explicit system caller, the `Api` scheme for machines (a
 principal with no user record is an application caller), caller lifetime for circuits,
 websockets and bursts, the two projects. Details: [access.md](access.md). The clients send
-`X-Shell`/`X-Org` (`CrestShellContext`), the loopback client forwards them.
+`X-Shell`/`X-Org` (`GroveShellContext`), the loopback client forwards them.
 
-- [ ] **The analyzer** in `Crest.Build` that refuses `ISession`, content-manager writes,
-  `IDbConnectionAccessor` and `IQueryManager` outside `Crest.Access` and the registered
+- [ ] **The analyzer** in `Grove.Build` that refuses `ISession`, content-manager writes,
+  `IDbConnectionAccessor` and `IQueryManager` outside `Grove.Access` and the registered
   sources.
 - [ ] **The conformance suite**: fixtures (callers, organizations, roles, policies, rows) and
   expected verdicts, run against every pipeline and every generated surface; a differing
-  answer fails the build. Written, not yet run: `test/Crest.Tests/Access/Conformance/`
+  answer fails the build. Written, not yet run: `test/Grove.Tests/Access/Conformance/`
   (`AccessWorld`, the fixture tenant and verdict table; `AccessConformanceTests`;
   `CallerContextFactoryTests`, with revocation between two requests and a subscription policy
   as a fixture; `AccessGateTests`; `HandDownTests`; `DataAccessBoundaryTests`, the analyzer's
   rules over the source, failing on the known bypasses by design),
-  `Crest.Members.Tests/OrganizationConformanceTests`, `ConnectionCallerTests`, and on the
+  `Grove.Members.Tests/OrganizationConformanceTests`, `ConnectionCallerTests`, and on the
   workflow side `AccessGateTests`, `WorkflowCallerLifetimeTests`,
   `ActorStampingDispatcherTests`. Still to add: the workflow activity gate and the query
   pipeline running the table.
@@ -1120,8 +1120,8 @@ built-in query. Every run pages.
   the stock SQL source; dialect paging through YesSql's `ISqlDialect`.
 - [ ] **The read job**: the asynchronous read pipeline on the durable background machinery;
   streaming through `DbDataReader`.
-- [ ] **The connection system**: the protocol modules `Crest.Http`, `Crest.Rest`, `Crest.Soap`,
-  `Crest.GraphQL` (with `Crest.Apis.GraphQL.Client` becoming or folding into the GraphQL one),
+- [ ] **The connection system**: the protocol modules `Grove.Http`, `Grove.Rest`, `Grove.Soap`,
+  `Grove.GraphQL` (with `Grove.Apis.GraphQL.Client` becoming or folding into the GraphQL one),
   owning the model, sealed secrets, OAuth, retries with `Retry-After`, rate limits and the SSRF
   guard, moved down from Workflows; SQL connections (host and external) in the data layer;
   Queries' sources over both; search engines as connections (Lucene and Elasticsearch sources
@@ -1135,15 +1135,15 @@ The engine's `ActivityDescriptor` comes from `IActivityProvider`s (`TypedActivit
 CLR activities, `WorkflowDefinitionActivityProvider` for each published definition, which
 turns a definition's `Inputs`/`Outputs` into synthetic `InputDescriptor`/`OutputDescriptor`s so
 a flow is itself a typed activity); `IActivityDescriptorModifier` post-processes every
-descriptor (Crest's `FieldDependencyDescriptorModifier` adds Crest data to
-`CustomProperties`); `IActivityRegistryPopulator` runs the providers from Crest's
+descriptor (Grove's `FieldDependencyDescriptorModifier` adds Grove data to
+`CustomProperties`); `IActivityRegistryPopulator` runs the providers from Grove's
 `PopulateRegistriesTask`.
 
-- [x] **Query descriptors are engine `ActivityDescriptor`s** emitted by a Crest
+- [x] **Query descriptors are engine `ActivityDescriptor`s** emitted by a Grove
   `IActivityProvider` (`QueryActivityProvider` over `IQueryCatalog`,
   `Server/Queries/RunQuery.cs`): one per saved query and one per code query, with the query's
   parameters as `InputDescriptor`s, its columns as typed `OutputDescriptor`s, and the output
-  schema (pageable, total, column types) in `CustomProperties` under a Crest key. This gives the
+  schema (pageable, total, column types) in `CustomProperties` under a Grove key. This gives the
   palette, `/descriptors/activities`, the studio's hint handlers and the options endpoint for
   free. The descriptor's `ClrType` is the one run-query activity.
 - [x] **The run-query activity** (`RunQuery`): executes its descriptor's query through the
@@ -1152,15 +1152,15 @@ descriptor (Crest's `FieldDependencyDescriptorModifier` adds Crest data to
   activities wrapping the content manager, so validation, handlers and the audit content
   handler keep firing; the only writes outside workflows. `Server/Contents/ContentOperations.cs`:
   `ContentOperationActivityProvider` emits one descriptor per content type and operation
-  (`Crest.Content.{Operation}{Type}`, CLR type `ContentOperation`), create and update with the
+  (`Grove.Content.{Operation}{Type}`, CLR type `ContentOperation`), create and update with the
   type's fields as typed synthetic inputs (text, HTML, Markdown, numeric, boolean, date,
   date-time, content, user and option pickers; other kinds stay with Copy fields); the gate asks
   the owner variation of the operation's content permission against the type (the
-  `crest:permissionResource` descriptor property), and `ContentOperationService` asks the
+  `grove:permissionResource` descriptor property), and `ContentOperationService` asks the
   decision again with the item, validates before it writes, and calls the content manager. Copy
   fields and Move fields write through its update path. Update writes the latest version in
   place (no draft is forced).
-- [ ] **One registry** ([Design decisions](#design-decisions)): Crest's catalog kinds
+- [ ] **One registry** ([Design decisions](#design-decisions)): Grove's catalog kinds
   (triggers, flows, connectors, hook slots) become engine descriptors; the catalog's consumers
   move to the engine registry; the catalog goes. Not started; the mapping is open.
 - [ ] **Operation names per tenant**, mapped from the module's declared name, so a tenant can
@@ -1173,7 +1173,7 @@ descriptor (Crest's `FieldDependencyDescriptorModifier` adds Crest data to
 The engine runs its default pipelines (`EngineFeature.cs`; workflow: heartbeat, engine
 exception handling, persistent variables, exception handling, scheduler; activity: exception
 handling, execution logging, notifications, log-persistence evaluation,
-`BackgroundActivityInvokerMiddleware` as the terminal). Crest's extensions are two inserted
+`BackgroundActivityInvokerMiddleware` as the terminal). Grove's extensions are two inserted
 middleware and service replacements in `Server/Features/CoreStartup.cs`
 (`ICommitStateHandler` → `UnitOfWorkCommitStateHandler`, `IBackgroundActivityScheduler` →
 `DurableBackgroundActivityScheduler`, `IBackgroundActivityInvoker` →
@@ -1183,7 +1183,7 @@ the background consumers).
 - [x] **The access gate as engine middleware** (`Server/Security/AccessGate.cs`):
   `WorkflowAccessGateMiddleware` at index 0 (the run's actor and decision, once per burst) and
   `ActivityAccessGateMiddleware` before the terminal invoker (decision and scope for each data
-  activity), both inserted with `pipeline.Insert` in `CoreStartup.AddCrestWorkflows` rather
+  activity), both inserted with `pipeline.Insert` in `CoreStartup.AddGroveWorkflows` rather
   than a rebuilt list, so engine updates do not silently drop them.
 - [x] **The actor rule** ([Running identity](#running-identity)), including actors where the
   engine had none: the scheduled-task handler, the bookmark worker and the background-job runner
@@ -1209,7 +1209,7 @@ the background consumers).
 
 #### 5. Move the reads
 
-- [ ] `api/crest` lists (content items, content types, groups, navigation, menus, media,
+- [ ] `api/grove` lists (content items, content types, groups, navigation, menus, media,
   users, roles, tenants, features) re-expressed as query operations, module by module.
 - [ ] **The pickers**: the option-sources scope logic becomes scope providers; the
   controller becomes the generated surface of the queries each picker binds; the user
@@ -1226,8 +1226,8 @@ the background consumers).
 
 #### 7. Generate the surfaces
 
-Every generated route is an entry in Crest.Server's API endpoint registry, beside the APIs
-modules declare ([architecture.md › Modules declare, Crest.Server registers and serves](architecture.md#modules-declare-crestserver-registers-and-serves)).
+Every generated route is an entry in Grove.Server's API endpoint registry, beside the APIs
+modules declare ([architecture.md › Modules declare, Grove.Server registers and serves](architecture.md#modules-declare-groveserver-registers-and-serves)).
 A generated route implements a module's declared API, or is a defined entry (an operation
 endpoint); a module's domain API is never moved into a workflow endpoint.
 
@@ -1244,8 +1244,8 @@ endpoint); a module's domain API is never moved into a workflow endpoint.
 - [ ] The platform's `api/content`, the stock GraphQL content schema and per-query types,
   `api/queries`, the Lucene and Elasticsearch APIs (search is a connection).
 - [ ] The Liquid `query` filter and the Razor query helpers.
-- [ ] `Crest.Scripting` and every global method provider.
-- [ ] The hand-written `api/crest/*` controllers as each generated route lands. The API stays
+- [ ] `Grove.Scripting` and every global method provider.
+- [ ] The hand-written `api/grove/*` controllers as each generated route lands. The API stays
   declared by its module ([MVC/api.md](MVC/api.md) § Placement); only the implementation
   becomes a generated route over that module's operations.
 
@@ -1253,8 +1253,8 @@ endpoint); a module's domain API is never moved into a workflow endpoint.
 
 | Path | Today | Fate |
 | --- | --- | --- |
-| `api/crest/*` (about 25 controllers) | one permission per controller, no scope on lists | declared by their module and registered in Crest.Server's API registry; implementations generated over operations (5–7) |
-| `api/crest/option-sources` | one gate; content scoped by scope providers; user provider unscoped | generated (7) |
+| `api/grove/*` (about 25 controllers) | one permission per controller, no scope on lists | declared by their module and registered in Grove.Server's API registry; implementations generated over operations (5–7) |
+| `api/grove/option-sources` | one gate; content scoped by scope providers; user provider unscoped | generated (7) |
 | Platform `api/content` | `AccessContentApi` + resource checks | retired (8) |
 | GraphQL | execute permission, scoped content filters, hand-written query types | regenerated (7) |
 | `api/queries/{name}` | per-query permission; sources scoped; 404 on deny | retired; queries are operations (3, 8) |
@@ -1301,33 +1301,33 @@ again at activation. Values keep their types (a content item in the input stays 
 - [ ] Version checks and a serial writer beyond the object lock, only if a measured conflict
   rate asks for them.
 
-### Designer: the transition onto Crest components
+### Designer: the transition onto Grove components
 
 Built today: see [Designer and admin pages](#designer-and-admin-pages).
 
-The designer moves onto Crest components last; Studio on MudBlazor in the Crest admin is
-acceptable until the backend is complete. Crest's UI layer is its own fork over Radzen
-(`Crest*` components, theme tokens, localization), and the Studio fork must end up on it so the
-designer is themed, localized and tested like every other Crest page, without losing what the
+The designer moves onto Grove components last; Studio on MudBlazor in the Grove admin is
+acceptable until the backend is complete. Grove's UI layer is its own fork over Radzen
+(`Grove*` components, theme tokens, localization), and the Studio fork must end up on it so the
+designer is themed, localized and tested like every other Grove page, without losing what the
 Elsa designer offers. What stays foreign: the canvas (X6, DOM interop) and Monaco. Studio is on
 Radzen 11 already; what remains is MudBlazor (about 2.6 MB, loaded only when the designer
-opens). Inventory: 98 Razor files, ~800 usages, every one with a Crest counterpart: MudStack 70
-→ CrestStack; MudText 53 → CrestText; MudTable family ~120 → CrestDataGrid/CrestTable;
-MudMenu family 62 → CrestMenu/CrestContextMenu/CrestSplitButton; MudTabs 44 → CrestTabs;
-MudButton family ~73 → CrestButton/CrestToggleButton; MudSelect family ~80 → CrestDropDown;
-MudTextField family ~51 → CrestTextBox/CrestTextArea/CrestFormField; MudTooltip 30;
-MudAlert 19; MudDivider/Spacer/Paper/Container ~46 → markup + CrestCard; MudDialog 12 →
-CrestDialog; MudCheckBox/Switch/Radio ~16; MudForm 7 → CrestTemplateForm; MudChip ~6;
-MudBadge 4; MudFileUpload 3 → CrestUpload; date/time pickers 4; MudTreeView 2 → CrestTree;
-MudTimeline 2; MudExpansionPanels 4 → CrestAccordion (the palette); MudProgressLinear;
-ISnackbar → Crest notifications. Proposed order (W6): the shared UIHints (20 files) and Shared
+opens). Inventory: 98 Razor files, ~800 usages, every one with a Grove counterpart: MudStack 70
+→ GroveStack; MudText 53 → GroveText; MudTable family ~120 → GroveDataGrid/GroveTable;
+MudMenu family 62 → GroveMenu/GroveContextMenu/GroveSplitButton; MudTabs 44 → GroveTabs;
+MudButton family ~73 → GroveButton/GroveToggleButton; MudSelect family ~80 → GroveDropDown;
+MudTextField family ~51 → GroveTextBox/GroveTextArea/GroveFormField; MudTooltip 30;
+MudAlert 19; MudDivider/Spacer/Paper/Container ~46 → markup + GroveCard; MudDialog 12 →
+GroveDialog; MudCheckBox/Switch/Radio ~16; MudForm 7 → GroveTemplateForm; MudChip ~6;
+MudBadge 4; MudFileUpload 3 → GroveUpload; date/time pickers 4; MudTreeView 2 → GroveTree;
+MudTimeline 2; MudExpansionPanels 4 → GroveAccordion (the palette); MudProgressLinear;
+ISnackbar → Grove notifications. Proposed order (W6): the shared UIHints (20 files) and Shared
 components (17) first (the property panel every view uses), then the editor, then list/instance
-viewers; MudThemeProvider last (until then the Mud theme reads Crest tokens).
+viewers; MudThemeProvider last (until then the Mud theme reads Grove tokens).
 `workflows-designer` stays green throughout. New pages (hook attachment, hook and webhook
-insight, per-process metrics) are built on Crest components now, independent of the move.
+insight, per-process metrics) are built on Grove components now, independent of the move.
 
 - [ ] The transition itself (W6).
-- [ ] The security token consolidation (`ICrestAntiforgery`), with the transition.
+- [ ] The security token consolidation (`IGroveAntiforgery`), with the transition.
 - [ ] Edit without Publish: Studio ties editing to the `publish` link.
 - [ ] **Hook and webhook insight**: clear, labelled sections for **webhooks** (pub/sub
   insight, process instances and history) and for **internal hooks**, with the same insight
@@ -1379,8 +1379,8 @@ insight, per-process metrics) are built on Crest components now, independent of 
   database-backed distributed lock when there is a second server or real traffic; (2) decide
   everything now; (3) leave all of it until measured. Recommendation: 1; the race is a bug, the
   rest is capacity.
-- **Moving the designer onto Crest components (W6).** Options: (1) staged, as above; (2) keep
-  MudBlazor permanently, themed from Crest's tokens, and build only new designer pages on Crest
+- **Moving the designer onto Grove components (W6).** Options: (1) staged, as above; (2) keep
+  MudBlazor permanently, themed from Grove's tokens, and build only new designer pages on Grove
   components; (3) rewrite from scratch reusing only the canvas. Recommendation: 1, still last;
   the edit-without-publish fix comes in the first stage; if the move stalls, it stops at option
   2.
@@ -1393,7 +1393,7 @@ insight, per-process metrics) are built on Crest components now, independent of 
 - **The access machinery on separate hardware (later).** About half of all queries are
   permission work: building each request's caller for its side and organization, the policy
   verdicts, the hierarchy's "everyone under me", the file access index. The direction:
-  `Crest.Access` gets an API that can be deployed apart from the web servers, in-process for a
+  `Grove.Access` gets an API that can be deployed apart from the web servers, in-process for a
   small host and a separate service for a large one, without callers changing. Bears on
   [parties.md](parties.md) (the hierarchy) and the caller state cache, [media.md](media.md)
   (the access index), [queries.md](queries.md) (the scope inside queries) and

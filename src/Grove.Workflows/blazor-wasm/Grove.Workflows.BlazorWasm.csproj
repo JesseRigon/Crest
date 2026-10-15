@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Grove.Workflows.BlazorWasm</AssemblyName>
+    <RootNamespace>Grove.Workflows.BlazorWasm</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <!-- BrowserRequestCredentials: the cookie on Studio's API calls. -->
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+  </ItemGroup>
+
+  <!-- Always loaded, and kept thin: the pages, the host that loads Studio on demand, and
+       the canvas node stand-in. Studio itself (studio-host, the designer projects, MudBlazor,
+       Monaco, ...) is referenced only so it ships with the app; its assemblies are lazy
+       (grove-lazy-assemblies.txt) and nothing here touches their types. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Abstractions\Grove.Workflows.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Grove.Components\Grove.Components.csproj" />
+    <ProjectReference Include="..\studio-host\Grove.Workflows.Studio.Host.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="grove-lazy-assemblies.txt" LogicalName="grove-lazy-assemblies.txt" />
+  </ItemGroup>
+</Project>

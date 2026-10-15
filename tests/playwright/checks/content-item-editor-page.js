@@ -6,7 +6,7 @@ const { fetchAntiforgeryToken } = require('../harness/antiforgery');
 // from the API rather than assuming a specific content-item ID, since seeded IDs aren't
 // guaranteed stable across environments.
 module.exports = async function run(page, ctx) {
-  const listResponse = await page.request.get(`${ctx.baseUrl}/api/crest/content-items?pageSize=1`);
+  const listResponse = await page.request.get(`${ctx.baseUrl}/api/grove/content-items?pageSize=1`);
   if (!listResponse.ok()) {
     return [{ name: 'has-real-content-item', pass: false, message: `list request failed: ${listResponse.status()}` }];
   }
@@ -36,19 +36,19 @@ module.exports = async function run(page, ctx) {
   results.push({ name: 'editor-json-valid', pass: jsonValid, message: `length=${jsonLength}` });
 
   // Round-trips a throwaway content item through the native API to prove the editor
-  // route sits on top of real Crest content APIs, then cleans it up immediately.
-  // Mutating Crest APIs are antiforgery-protected - see harness/antiforgery.js.
+  // route sits on top of real Grove content APIs, then cleans it up immediately.
+  // Mutating Grove APIs are antiforgery-protected - see harness/antiforgery.js.
   const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
-  const created = await page.request.post(`${ctx.baseUrl}/api/crest/content-items`, {
+  const created = await page.request.post(`${ctx.baseUrl}/api/grove/content-items`, {
     headers: { [antiforgery.headerName]: antiforgery.requestToken },
-    data: { contentType: item.contentType, displayText: 'Crest editor probe', content: {}, publish: false },
+    data: { contentType: item.contentType, displayText: 'Grove editor probe', content: {}, publish: false },
   });
   let createdOk = created.ok();
   let probeId;
   if (createdOk) {
     const probe = await created.json();
     probeId = probe.contentItemId;
-    const deleted = await page.request.delete(`${ctx.baseUrl}/api/crest/content-items/${encodeURIComponent(probeId)}`, {
+    const deleted = await page.request.delete(`${ctx.baseUrl}/api/grove/content-items/${encodeURIComponent(probeId)}`, {
       headers: { [antiforgery.headerName]: antiforgery.requestToken },
     });
     createdOk = deleted.ok();

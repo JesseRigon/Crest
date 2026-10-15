@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <!-- NuGet properties-->
+    <Title>Grove Html</Title>
+    <Description>$(OCCMSDescription)
+
+    The Html module enables content items to have rich content using Html syntax.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Acornima" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Admin.Abstractions\Grove.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Apis.GraphQL.Abstractions\Grove.Apis.GraphQL.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.ContentLocalization.Abstractions\Grove.ContentLocalization.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.ContentManagement\Grove.ContentManagement.csproj" />
+    <ProjectReference Include="..\Grove.ContentManagement.Abstractions\Grove.ContentManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.ContentManagement.Display\Grove.ContentManagement.Display.csproj" />
+    <ProjectReference Include="..\Grove.ContentTypes.Abstractions\Grove.ContentTypes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Abstractions\Grove.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Grove.Indexing.Abstractions\Grove.Indexing.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.MetaWeblog.Abstractions\Grove.MetaWeblog.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Media.Abstractions\Grove.Media.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.ResourceManagement\Grove.ResourceManagement.csproj" />
+    <ProjectReference Include="..\Grove.Liquid.Abstractions\Grove.Liquid.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Shortcodes.Abstractions\Grove.Shortcodes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Html.Abstractions\Grove.Html.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,223 @@
+@namespace Grove.Components.Sharing
+@using System.Globalization
+@using Grove.Components.Primitives
+@inject HttpClient Http
+@inject IServiceProvider Services
+
+@* The Share panel (docs/sharing.md § 8, requirement 96), for the Admins of the object's tree (a
+   drive's Drive Admins) and tenant administrators: who has access and why, grants and blocks to
+   add, change or remove, and the public link while the object is public. A change that only adds
+   access may still be on its way to lists; the panel says so (requirement 80). The server decides
+   everything: what this caller may not see answers "not found". *@
+
+<div class="grove-share-panel" data-testid="share-panel">
+    @if (Error is { } error)
+    {
+        <div class="grove-share-panel__error" role="alert" data-testid="share-error">@error</div>
+    }
+
+    @if (Model is null)
+    {
+        @if (Error is null)
+        {
+            <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+    }
+    else
+    {
+        <header class="grove-share-panel__header">
+            <h3>@string.Format(CultureInfo.CurrentCulture, L("Share “{0}”"), Model.Name)</h3>
+            @if (Model.Pending)
+            {
+                <span class="grove-share-panel__pending" title="@L("Lists and search pick this change up shortly.")" data-testid="share-pending">@L("Applying…")</span>
+            }
+        </header>
+
+        @if (Model.IsPublic)
+        {
+            <div class="grove-share-panel__public" data-testid="share-public">
+                🌐 @L("Anyone can view this.")
+                @if (Model.PublicLink is { } link)
+                {
+                    <a href="@link" target="_blank" rel="noopener">@L("Public link")</a>
+                }
+            </div>
+        }
+
+        <section>
+            <h4>@L("Grants and blocks on this item")</h4>
+            @if (Model.Entries.Count == 0)
+            {
+                <p class="grove-share-panel__empty">@L("Nothing set here: everything is inherited.")</p>
+            }
+            else
+            {
+                <table class="grove-share-panel__table" data-testid="share-entries">
+                    <thead><tr><th>@L("Who")</th><th>@L("Access")</th><th>@L("From")</th><th>@L("Until")</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var entry in Model.Entries)
+                        {
+                            <tr data-testid="share-entry">
+                                <td>@entry.Name</td>
+                                <td>@(entry.IsBlock ? L("Blocked") : L(GroveSharingClient.LevelName(entry.Level)))</td>
+                                <td>@Date(entry.Starts)</td>
+                                <td>@Date(entry.Ends)</td>
+                                <td>
+                                    <GroveButton Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Icon="edit" title="@L("Change")" Click="@(() => Edit(entry))" Disabled="@Busy" />
+                                    <GroveButton Size="ButtonSize.ExtraSmall" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Icon="delete" title="@L("Remove")" Click="@(() => RemoveAsync(entry))" Disabled="@Busy" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </section>
+
+        <section class="grove-share-panel__add" data-testid="share-add">
+            <h4>@(Editing is null ? L("Add a grant or a block") : string.Format(CultureInfo.CurrentCulture, L("Change {0}"), Editing.Name))</h4>
+            @if (Editing is null)
+            {
+                <GrovePrincipalPicker AllowAnyone="@Model.CanShareWithAnyone" OnPick="@(option => Draft = option)" />
+            }
+            <div class="grove-share-panel__form">
+                <label>
+                    @L("Access")
+                    <select @bind="DraftChoice" data-testid="share-level">
+                        <option value="@nameof(GroveAccessLevel.Viewer)">@L("Viewer")</option>
+                        @if (!IsAnyone)
+                        {
+                            <option value="@nameof(GroveAccessLevel.Commenter)">@L("Commenter")</option>
+                            <option value="@nameof(GroveAccessLevel.Editor)">@L("Editor")</option>
+                            <option value="@nameof(GroveAccessLevel.Manager)">@L("Manager")</option>
+                            @if (Model.IsRoot)
+                            {
+                                <option value="@nameof(GroveAccessLevel.Admin)">@L("Admin")</option>
+                            }
+                        }
+                        <option value="Block">@L("Blocked")</option>
+                    </select>
+                </label>
+                <label>@L("From") <input type="datetime-local" @bind="DraftStarts" /></label>
+                <label>@L("Until") <input type="datetime-local" @bind="DraftEnds" /></label>
+                <GroveButton Size="ButtonSize.Small" Text="@L("Save")" Click="SaveAsync" Disabled="@(Busy || DraftPrincipal is null)" data-testid="share-save" />
+                @if (Editing is not null)
+                {
+                    <GroveButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Text="@L("Cancel")" Click="@(() => Editing = null)" />
+                }
+            </div>
+        </section>
+
+        @if (Model.IsAdmin && Model.Access.Count > 0)
+        {
+            <section>
+                <h4>@L("Who has access, and why")</h4>
+                <table class="grove-share-panel__table grove-share-panel__why" data-testid="share-why">
+                    <thead><tr><th>@L("Who")</th><th>@L("Decision")</th><th>@L("Set on")</th><th>@L("By")</th></tr></thead>
+                    <tbody>
+                        @foreach (var decision in Model.Access)
+                        {
+                            <tr class="@(decision.Wins ? "is-winning" : "is-overridden")">
+                                <td>@decision.Name</td>
+                                <td>@(decision.IsBlock ? L("Blocked") : L(GroveSharingClient.LevelName(decision.Level)))@(decision.Wins ? null : $" ({L("overridden")})")</td>
+                                <td>@(decision.DefinedOnKind == GroveSharingClient.TenantKind ? L("Everything on this site") : decision.DefinedOnId == Model.Id ? L("This item") : decision.DefinedOnId)</td>
+                                <td>@(decision.RuleId is { } rule ? string.Format(CultureInfo.CurrentCulture, L("Rule {0}"), rule) : L("Entry"))@(decision.Source is { } source ? $" ({source})" : null)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </section>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Kind { get; set; } = string.Empty;
+
+    [Parameter] public string? Id { get; set; }
+
+    /// <summary>Raised after a change was saved.</summary>
+    [Parameter] public EventCallback Changed { get; set; }
+
+    private GroveSharingClient Client => _client ??= new GroveSharingClient(Http);
+    private GroveSharingClient? _client;
+    private GroveSharePanelModel? Model;
+    private string? Error;
+    private bool Busy;
+    private GrovePrincipalOption? Draft;
+    private GroveShareEntry? Editing;
+    private string DraftChoice = nameof(GroveAccessLevel.Viewer);
+    private DateTime? DraftStarts;
+    private DateTime? DraftEnds;
+    private string? _loaded;
+
+    private GrovePrincipal? DraftPrincipal => Editing?.Principal ?? Draft?.Principal;
+
+    private bool IsAnyone => DraftPrincipal?.Kind == GrovePrincipalKind.Anyone;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var key = $"{Kind}/{Id}";
+        if (_loaded != key)
+        {
+            _loaded = key;
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        var found = await Client.GetPanelAsync(Kind, Id);
+        Model = found.Value;
+        Error = found.Status == 404 ? L("Not found.") : found.Error;
+    }
+
+    private void Edit(GroveShareEntry entry)
+    {
+        Editing = entry;
+        DraftChoice = entry.IsBlock ? "Block" : entry.Level.ToString();
+        DraftStarts = entry.Starts?.LocalDateTime;
+        DraftEnds = entry.Ends?.LocalDateTime;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (DraftPrincipal is not { } principal)
+        {
+            return;
+        }
+
+        Busy = true;
+        var isBlock = DraftChoice == "Block";
+        var level = isBlock ? GroveAccessLevel.None : Enum.Parse<GroveAccessLevel>(DraftChoice);
+        var saved = await Client.SetEntryAsync(Kind, Id, principal, level, isBlock, Instant(DraftStarts), Instant(DraftEnds));
+        Busy = false;
+        Error = saved.Error;
+        if (saved.Succeeded)
+        {
+            Editing = null;
+            Draft = null;
+            DraftStarts = DraftEnds = null;
+            await LoadAsync();
+            await Changed.InvokeAsync();
+        }
+    }
+
+    private async Task RemoveAsync(GroveShareEntry entry)
+    {
+        Busy = true;
+        var removed = await Client.RemoveEntryAsync(Kind, Id, entry.Principal);
+        Busy = false;
+        Error = removed.Error;
+        if (removed.Succeeded)
+        {
+            await LoadAsync();
+            await Changed.InvokeAsync();
+        }
+    }
+
+    private static DateTimeOffset? Instant(DateTime? local) => local is { } value ? new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Local)) : null;
+
+    private static string Date(DateTimeOffset? value) => value?.LocalDateTime.ToString("g", CultureInfo.CurrentCulture) ?? string.Empty;
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

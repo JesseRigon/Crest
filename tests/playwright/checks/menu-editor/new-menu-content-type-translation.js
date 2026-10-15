@@ -1,13 +1,13 @@
 // The "New" branch's children are content types, and their captions render outside any owning
 // admin menu - upstream resolves them under the generic "Admin Menus" data-localization
 // context, which no provider populates with type names, leaving them untranslatable from the
-// Translations editor. Crest closes that seam additively: an ownerless caption with no
+// Translations editor. Grove closes that seam additively: an ownerless caption with no
 // "Admin Menus" translation falls back to the same caption's "Content Types" translation - the
 // one the Translations editor DOES offer, and the one every content-editing surface already
 // uses. One translation covers every surface a type name appears on.
 //
 // The check writes a probe translation for the first New child's type name under the
-// "Content Types" context (via Crest's own Save endpoint, carrying the full existing list
+// "Content Types" context (via Grove's own Save endpoint, carrying the full existing list
 // because Save replaces a culture's translations wholesale), asserts the New menu serves it
 // for that culture, and restores the original list afterwards.
 const { fetchAntiforgeryToken } = require('../../harness/antiforgery');
@@ -19,7 +19,7 @@ module.exports = async function run(page, ctx) {
   const probeValue = 'Tipo Probe';
 
   const cookie = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/app/manifest', { credentials: 'include' });
+    const response = await fetch('/api/grove/app/manifest', { credentials: 'include' });
     if (!response.ok) throw new Error(`manifest failed: ${response.status}`);
     const manifest = await response.json();
     return { name: manifest.cultureSelector.cookieName, path: manifest.cultureSelector.cookiePath };
@@ -32,7 +32,7 @@ module.exports = async function run(page, ctx) {
       } else {
         document.cookie = `${cookie.name}=; path=${cookie.path}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
       }
-      const response = await fetch('/api/crest/navigation/admin', { credentials: 'include' });
+      const response = await fetch('/api/grove/navigation/admin', { credentials: 'include' });
       if (!response.ok) throw new Error(`navigation failed: ${response.status}`);
       return response.json();
     }, { cookie, cultureValue });
@@ -103,7 +103,7 @@ module.exports = async function run(page, ctx) {
 
     // Save evicts the culture dictionary cache in-request, but the document write commits
     // after the response - so a menu request fired in that window re-primes the cache from the
-    // OLD document and nothing evicts it again (an upstream race, not a Crest one). Wait for
+    // OLD document and nothing evicts it again (an upstream race, not a Grove one). Wait for
     // the commit to be visible at the document level (GetStrings reads the document, not the
     // dictionary cache), then save the identical list once more: that second eviction happens
     // strictly after the commit, so the next menu read rebuilds from the probe-bearing state.
@@ -142,12 +142,12 @@ module.exports = async function run(page, ctx) {
     });
   } finally {
     await saveTranslations(original).catch(() => {});
-    // Crest's Save replaces the culture's list with what the editor enumerates, and the
+    // Grove's Save replaces the culture's list with what the editor enumerates, and the
     // upstream admin menu providers enumerate top-level nodes only - so both saves above
     // silently dropped every seeded child-caption translation. Re-running the provider sync
     // reseeds exactly the missing ones, leaving the tenant as this check found it.
     await page.evaluate(async (antiforgery) => {
-      await fetch('/api/crest/admin-menus/sync-providers', {
+      await fetch('/api/grove/admin-menus/sync-providers', {
         method: 'POST',
         credentials: 'include',
         headers: { [antiforgery.headerName]: antiforgery.requestToken },

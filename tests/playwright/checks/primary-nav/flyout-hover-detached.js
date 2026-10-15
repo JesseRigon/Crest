@@ -1,4 +1,4 @@
-// Converted from Crest.AdminTheme/tests/playwright/primary-nav-menu-fourth-tier-flyout.js.
+// Converted from Grove.AdminTheme/tests/playwright/primary-nav-menu-fourth-tier-flyout.js.
 // A deeply-nested primaryNavMenu item's flyout must render detached (fixed-position,
 // portalled outside the menu tree) rather than as an inline submenu, and must actually
 // hit-test at its rendered screen position on hover.
@@ -17,7 +17,7 @@ module.exports = async function run(page, ctx) {
   async function moveNode(nodeId, parentNodeId, position) {
     const antiforgery = await fetchAntiforgeryToken(page, ctx.baseUrl);
     return page.evaluate(async ({ nodeId, parentNodeId, position, antiforgery }) => {
-      const response = await fetch(`/api/crest/admin-menus/__crest_default_admin_menu/nodes/${encodeURIComponent(nodeId)}/move`, {
+      const response = await fetch(`/api/grove/admin-menus/__grove_default_admin_menu/nodes/${encodeURIComponent(nodeId)}/move`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken },
@@ -29,10 +29,10 @@ module.exports = async function run(page, ctx) {
 
   // Resolve geometry from the live menu - keys are UniqueIds, not knowable up front.
   const plan = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+    const response = await fetch('/api/grove/admin-menus', { credentials: 'include' });
     if (!response.ok) throw new Error(`admin menus failed: ${response.status}`);
     const data = await response.json();
-    const menu = data.menus.find(candidate => candidate.id === '__crest_default_admin_menu');
+    const menu = data.menus.find(candidate => candidate.id === '__grove_default_admin_menu');
     const enabled = nodes => (nodes || []).filter(node => node.enabled !== false);
 
     // Preferred: a child-bearing node ALREADY at depth 2 (inline-expandable ancestors).
@@ -101,19 +101,19 @@ module.exports = async function run(page, ctx) {
   await page.locator('.primary-nav-menu__flyout--detached').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
 
   // Expand the resolved ancestor chain so the flyout parent renders. Collapsed children
-  // are not in the DOM at all (CrestPanelMenuItems renders them only when expanded).
+  // are not in the DOM at all (GrovePanelMenuItems renders them only when expanded).
   // clickForEffect covers the prerendered-inert-button race.
   const expandLink = label =>
-    primaryNavMenu.locator(`button.crest-panel-menu__item-link:has(.crest-panel-menu__text-rail:text-is("${label}"))`).first();
+    primaryNavMenu.locator(`button.grove-panel-menu__item-link:has(.grove-panel-menu__text-rail:text-is("${label}"))`).first();
   const itemContent = label =>
-    primaryNavMenu.locator(`.crest-panel-menu__item-content:has(.crest-panel-menu__text-rail:text-is("${label}"))`).first();
+    primaryNavMenu.locator(`.grove-panel-menu__item-content:has(.grove-panel-menu__text-rail:text-is("${label}"))`).first();
   await clickForEffect(expandLink(plan.chain[0]), itemContent(plan.chain[1]));
   await clickForEffect(expandLink(plan.chain[1]), itemContent(parentText));
   await page.waitForTimeout(250);
 
   const before = await primaryNavMenu.evaluate(
     (root, { parentText, childText }) => {
-      const textOf = element => (element.querySelector('.crest-panel-menu__item-content')?.textContent || '').replace(/\s+/g, ' ').trim();
+      const textOf = element => (element.querySelector('.grove-panel-menu__item-content')?.textContent || '').replace(/\s+/g, ' ').trim();
       const isReachable = element => !element.closest('.rz-expander.rz-state-collapsed');
       const parent = Array.from(root.querySelectorAll('.primary-nav-menu__item')).find(item => textOf(item) === parentText && isReachable(item));
       if (!parent) return { found: false };
@@ -139,7 +139,7 @@ module.exports = async function run(page, ctx) {
 
   await primaryNavMenu.evaluate(
     (root, { parentText }) => {
-      const textOf = element => (element.querySelector('.crest-panel-menu__item-content')?.textContent || '').replace(/\s+/g, ' ').trim();
+      const textOf = element => (element.querySelector('.grove-panel-menu__item-content')?.textContent || '').replace(/\s+/g, ' ').trim();
       const isReachable = element => !element.closest('.rz-expander.rz-state-collapsed');
       root.querySelectorAll('[data-primaryNavMenu-flyout-target]').forEach(element => element.removeAttribute('data-primaryNavMenu-flyout-target'));
       const parent = Array.from(root.querySelectorAll('.primary-nav-menu__item')).find(item => textOf(item) === parentText && isReachable(item));
@@ -148,14 +148,14 @@ module.exports = async function run(page, ctx) {
     },
     { parentText },
   );
-  await page.locator('[data-primaryNavMenu-flyout-target="true"] .crest-panel-menu__item-content').hover();
+  await page.locator('[data-primaryNavMenu-flyout-target="true"] .grove-panel-menu__item-content').hover();
   // The flyout opens on a hover delay (~1s), so a fixed 250ms wait sampled too early.
   // Wait for the host to actually become visible instead.
   await page.locator('.primary-nav-menu__flyout--detached').waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
 
   const after = await primaryNavMenu.evaluate(
     (root, { parentText }) => {
-      const textOf = element => (element.querySelector('.crest-panel-menu__item-content')?.textContent || '').replace(/\s+/g, ' ').trim();
+      const textOf = element => (element.querySelector('.grove-panel-menu__item-content')?.textContent || '').replace(/\s+/g, ' ').trim();
       const isReachable = element => !element.closest('.rz-expander.rz-state-collapsed');
       const parent = Array.from(root.querySelectorAll('.primary-nav-menu__item')).find(item => textOf(item) === parentText && isReachable(item));
       if (!parent) return { error: `no reachable item titled "${parentText}"` };

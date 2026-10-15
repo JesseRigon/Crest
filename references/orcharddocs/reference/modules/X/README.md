@@ -1,6 +1,6 @@
-# X (Twitter) (`Crest.Twitter`)
+# X (Twitter) (`Grove.Twitter`)
 
-This module adds Twitter for Websites features to Crest.
+This module adds Twitter for Websites features to Grove.
 
 ## X (Twitter) Integration
 
@@ -16,14 +16,14 @@ Available settings are:
 
 ### Workflows
 
-If the Crest.Workflows.Platform is enabled, a new Task is added to Update X Status
+If the Grove.Workflows.Platform is enabled, a new Task is added to Update X Status
 
 ## Sign in with X (Twitter)
 
 Authenticates users with their X Account.
 
 Create an app in the [Twitter Developer Platform](https://developer.x.com) and enable Sign in with X.  
-In the app details, you must configure the Callback URL. The default url in Crest is [tenant]/signin-x.
+In the app details, you must configure the Callback URL. The default url in Grove is [tenant]/signin-x.
 
 Configuration can be set through the _X -> Sign in with X_ settings menu in the admin dashboard.
 
@@ -36,7 +36,7 @@ If no value is provided, setup Callback URL in Twitter app to use the default pa
 
 ### Users Registration
 
-- Enable the `Crest.Users.Registration` feature when you also want local site registration.
+- Enable the `Grove.Users.Registration` feature when you also want local site registration.
 - New external-user creation and profile generation are controlled from the Users module's [`ExternalRegistrationSettings`](../Users/README.md#external-authentication-settings).
 - An existing user can link the account through the External Logins link from the user menu.
 
@@ -69,13 +69,13 @@ X (Twitter) settings can be configured using the `Settings` recipe step:
 
 ## X (Twitter) Settings Configuration
 
-The `Crest.Twitter` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureTwitterSettings()` extension method on `PlatformBuilder` when initializing the app.
+The `Grove.Twitter` module allows the user to use configuration values to override the settings configured from the admin area by calling the `ConfigureTwitterSettings()` extension method on `PlatformBuilder` when initializing the app.
 
 The following configuration values can be customized:
 
 ```json
 {
-  "Crest_X": {
+  "Grove_X": {
     "ConsumerKey": "",
     "ConsumerSecret": "",
     "AccessToken": "",

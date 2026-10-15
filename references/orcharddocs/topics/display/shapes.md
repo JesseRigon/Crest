@@ -1,6 +1,6 @@
 # Shapes
 
-Crest builds its user interface from **shapes**. A shape is an object that
+Grove builds its user interface from **shapes**. A shape is an object that
 contains the data to display and metadata that describes how to display it. Shapes
 are assembled into a tree, then each shape is rendered independently into
 `IHtmlContent`.
@@ -22,7 +22,7 @@ In a Razor shape template, `New` creates shapes and `DisplayAsync` renders them:
 ```
 
 `New.Car(...)` creates a shape whose type is `Car` and whose properties include
-`Brand` and `Color`. Crest looks for a binding for that shape type. The
+`Brand` and `Color`. Grove looks for a binding for that shape type. The
 simplest binding is a Razor file named `Views/Car.cshtml`:
 
 ```cshtml
@@ -113,7 +113,7 @@ var metadata = shape.Metadata;
 ```
 
 The model class must be proxyable: use a non-sealed class with an accessible
-parameterless constructor. If the model already implements `IShape`, Crest
+parameterless constructor. If the model already implements `IShape`, Grove
 creates it directly instead of generating a proxy.
 
 Display drivers normally create strongly typed shapes with `Initialize<TModel>()`,
@@ -158,7 +158,7 @@ shape.Attributes["data-brand"] = "Toyota";
 The template can use those values consistently:
 
 ```cshtml
-@using Crest.DisplayManagement
+@using Grove.DisplayManagement
 @{
     var shape = (IShape)Model;
     var tagBuilder = shape.GetTagBuilder("div");
@@ -296,7 +296,7 @@ example, a type or alternate named `Car__Toyota__Hybrid` falls back through:
 
 This fallback is separate from the explicit `Alternates` collection.
 
-Crest adds many alternates automatically. Content shapes, for example, can
+Grove adds many alternates automatically. Content shapes, for example, can
 receive alternates for their content type, display type, alias, slug, and other
 context. Prefer those standard alternates to conditionals inside a shared
 template.
@@ -624,7 +624,7 @@ lifecycle handlers must be configured together.
 
 ## Use lifecycle hooks carefully
 
-Crest exposes hooks at several scopes:
+Grove exposes hooks at several scopes:
 
 | Scope | API |
 | --- | --- |

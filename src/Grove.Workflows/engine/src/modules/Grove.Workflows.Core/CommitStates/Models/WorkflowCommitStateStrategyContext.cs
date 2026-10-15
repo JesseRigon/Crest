@@ -1,0 +1,3 @@
+namespace Grove.Workflows.CommitStates;
+
+public record WorkflowCommitStateStrategyContext(WorkflowExecutionContext WorkflowExecutionContext, WorkflowLifetimeEvent LifetimeEvent);

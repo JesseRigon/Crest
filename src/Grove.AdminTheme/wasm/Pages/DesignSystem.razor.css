@@ -1,0 +1,6 @@
+.design-system-preview {
+    border: var(--grove-border-size-xs, 1px) solid var(--grove-color-border-1, #e5e7eb);
+    border-radius: var(--grove-radius-sm, 4px);
+    padding: var(--grove-space-lg, 1rem);
+    background: var(--grove-color-surface-1, #fff);
+}

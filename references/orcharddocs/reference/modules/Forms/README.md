@@ -1,4 +1,4 @@
-# Forms (`Crest.Forms`)
+# Forms (`Grove.Forms`)
 
 The Forms module provides components in the form of widgets and workflow activities to create, validate and process forms.
 
@@ -190,7 +190,7 @@ Click the **Add Task** button and locate the Send Email activity. Enter the foll
 
 * Title: `Send Email to Site Admin`
 * Sender: (leave empty)
-* Recipients: `admin@crest.io`
+* Recipients: `admin@grove.io`
 * Subject: `Contact Form submitted by {{ Request.Form.Name }}!`
 * Body:
 
@@ -204,7 +204,7 @@ Click the **Add Task** button and locate the Send Email activity. Enter the foll
 #### Configuring SMTP
 
 In order to try out sending emails, you will need to configure the SMTP settings. You can do so via *Settings* -> *Communication* -> *Email* and then select the *SMTP* tab. For development purposes, I am a big fan of [Smtp4Dev](https://github.com/rnwood/smtp4dev), which makes it super easy to try out sending emails *without actually sending them*. It's basically an SMTP host that intercepts emails being sent that you can then inspect.  
-When configuring the SMTP settings in Crest, make sure to provide the **Sender email address**, which will be used by default (remember, we didn't specify a Sender in the Send Email activity). Enter `system@crest.io` or any other valid email address you like.  
+When configuring the SMTP settings in Grove, make sure to provide the **Sender email address**, which will be used by default (remember, we didn't specify a Sender in the Send Email activity). Enter `system@grove.io` or any other valid email address you like.  
 If you're using Smtp4Dev, make sure to enter `localhost` in the Host name field, and the configured port number.
 
 ### Adding the Second Redirect Activity

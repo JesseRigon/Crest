@@ -1,11 +1,11 @@
 // Converted from the old admin-queries-page.js
-// (modules/Crest/tests/playwright/admin-queries-page.js). Covers, in order:
+// (modules/Grove/tests/playwright/admin-queries-page.js). Covers, in order:
 // page render, query catalog API shape, a full create-then-delete lifecycle through the
-// Crest query editor UI, and confirming the legacy raw-SQL console route still resolves
-// through the Crest legacy iframe rather than being hijacked by the native "All Queries"
+// Grove query editor UI, and confirming the legacy raw-SQL console route still resolves
+// through the Grove legacy iframe rather than being hijacked by the native "All Queries"
 // Blazor page.
 //
-// This check mutates state (creates and deletes a temporary "crest-playwright-*" query) the
+// This check mutates state (creates and deletes a temporary "grove-playwright-*" query) the
 // same way the original script did — that's inherent to what it's testing, not something
 // introduced by the conversion. Leftover queries from a previous aborted run are swept up
 // before asserting anything new, same as the original.
@@ -35,7 +35,7 @@ module.exports = async function run(page, ctx) {
   let catalog = { sources: [], queries: [] };
   let apiOk = false;
   try {
-    const response = await page.request.get(`${ctx.baseUrl}/api/crest/queries`);
+    const response = await page.request.get(`${ctx.baseUrl}/api/grove/queries`);
     if (response.ok()) {
       catalog = await response.json();
       apiOk = Array.isArray(catalog.sources);
@@ -66,14 +66,14 @@ module.exports = async function run(page, ctx) {
 
   // Sweep leftover test queries from a previous failed run before asserting anything new
   // (same cleanup the original script did, unconditionally).
-  for (const query of (catalog.queries || []).filter(q => q.name.startsWith('crest-playwright-'))) {
+  for (const query of (catalog.queries || []).filter(q => q.name.startsWith('grove-playwright-'))) {
     await removeQuery(query.name).catch(() => {});
   }
 
   if (apiOk && catalog.sources.length > 0) {
     let created = false;
     let deleted = false;
-    const temporaryName = `crest-playwright-${Date.now()}`;
+    const temporaryName = `grove-playwright-${Date.now()}`;
     try {
       await queriesPage.locator('button').filter({ hasText: 'New query' }).click();
       const editor = page.locator('[data-testid="query-editor"]');
@@ -96,7 +96,7 @@ module.exports = async function run(page, ctx) {
     results.push({ name: 'create-and-delete-query', pass: true, message: 'skipped: no query sources available' });
   }
 
-  // The legacy raw-SQL console route must still resolve through the Crest legacy iframe, not
+  // The legacy raw-SQL console route must still resolve through the Grove legacy iframe, not
   // get intercepted by the native "All Queries" Blazor page.
   await page.goto(`${ctx.baseUrl}/Admin/Queries/Sql/Query`, { waitUntil: 'networkidle' });
   const legacyFrame = page.locator('iframe.legacy-admin-frame');

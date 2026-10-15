@@ -1,5 +1,5 @@
 {
-  "name": "@crest/root",
+  "name": "@grove/root",
   "private": true,
   "version": "1.0.0",
   "packageManager": "yarn@4.17.0",
@@ -23,7 +23,7 @@
     "@babel/preset-env": "^7.22.10",
     "@babel/preset-flow": "7.22.5",
     "@eslint/js": "^9.21.0",
-    "@crest/assets-manager": "workspace:^",
+    "@grove/assets-manager": "workspace:^",
     "child_process": "^1.0.2",
     "es6-promise": "4.2.8",
     "eslint": "^9.21.0",

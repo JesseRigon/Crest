@@ -1,10 +1,10 @@
-# Crest.Logging.Serilog
+# Grove.Logging.Serilog
 
-`Crest.Logging.Serilog` integrates [Serilog](https://serilog.net/) structured logging with Crest.
+`Grove.Logging.Serilog` integrates [Serilog](https://serilog.net/) structured logging with Grove.
 
 ## How to use
 
-Add a reference to `Crest.Logging.Serilog`.
+Add a reference to `Grove.Logging.Serilog`.
 
 ### Add serilog configuration in `appsettings.json`
 
@@ -60,7 +60,7 @@ Add a reference to `Crest.Logging.Serilog`.
 ### Modify `startup.cs` to include TenantName in LogContext
 
 ``` csharp
-        using Crest.Logging;
+        using Grove.Logging;
         ...
         public void Configure(IApplicationBuilder app, IHostEnvironment env)
         {

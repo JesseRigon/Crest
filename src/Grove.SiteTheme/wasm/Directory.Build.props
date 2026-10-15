@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>obj\Grove.SiteTheme.Client\</BaseIntermediateOutputPath>
+    <BaseOutputPath>bin\Grove.SiteTheme.Client\</BaseOutputPath>
+  </PropertyGroup>
+</Project>

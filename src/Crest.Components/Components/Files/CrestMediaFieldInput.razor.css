@@ -1,5 +1,0 @@
-.crest-media-field ul { list-style: none; padding: 0; margin: 0 0 0.5rem; }
-
-.crest-media-field li { display: flex; align-items: center; gap: 0.25rem; }
-
-.crest-media-field__empty { color: var(--crest-muted-color, rgba(127, 127, 127, 0.9)); margin-right: 0.5rem; }

@@ -1,10 +1,10 @@
-# Roles (`Crest.Roles`)
+# Roles (`Grove.Roles`)
 
-Enabling the `Crest.Roles` module will allow you to manage the user roles.
+Enabling the `Grove.Roles` module will allow you to manage the user roles.
 
 ## Predefined Roles
 
-Crest defines the following predefined permission stereotypes:
+Grove defines the following predefined permission stereotypes:
 
 | Name            | Description                                                          |
 |-----------------|----------------------------------------------------------------------|

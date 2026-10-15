@@ -1,18 +1,18 @@
 // Definition locks (docs/content-items.md › Definition locks) from the tenant side, on a
-// part this check owns (CrestLockCheckPart, created if absent and left in place - there is
-// no Crest endpoint that deletes a part, and the check is idempotent). A Tenant lock on a
+// part this check owns (GroveLockCheckPart, created if absent and left in place - there is
+// no Grove endpoint that deletes a part, and the check is idempotent). A Tenant lock on a
 // field refuses retyping, a visibility condition and an option-picker conversion (409, with
 // the reason), a Module lock cannot be placed from the tenant, lifting the lock lets the
 // retype through, and a part lock covers every field while still allowing new ones.
 module.exports = async function run(page, ctx) {
   const results = [];
-  const part = 'CrestLockCheckPart';
+  const part = 'GroveLockCheckPart';
   const field = 'Code';
-  const types = `${ctx.baseUrl}/api/crest/content-types`;
+  const types = `${ctx.baseUrl}/api/grove/content-types`;
 
   async function token() {
     return page.evaluate(async () => {
-      const response = await fetch('/api/crest/antiforgery/token', { credentials: 'include' });
+      const response = await fetch('/api/grove/antiforgery/token', { credentials: 'include' });
       if (!response.ok) throw new Error(`antiforgery failed: ${response.status}`);
       return response.json();
     });
@@ -50,8 +50,8 @@ module.exports = async function run(page, ctx) {
   results.push({ name: 'tenant-lock-is-placed-and-reported', pass: locked.status === 204 && fieldLock(afterLock, field) === 'Tenant' && afterLock?.part?.lock === 'None', message: `HTTP ${locked.status} field=${fieldLock(afterLock, field)} part=${afterLock?.part?.lock}` });
 
   const retype = await api('PUT', `${types}/fields`, { part, field, fieldType: 'NumericField' });
-  const hide = await api('PUT', `${ctx.baseUrl}/api/crest/field-visibility`, { part, field, settings: { path: 'Other', operator: 'Any', keys: [] } });
-  const picker = await api('PUT', `${ctx.baseUrl}/api/crest/option-picker/attachment`, { part, field, settings: { sourceKey: 'contentitem:ContentPartList' } });
+  const hide = await api('PUT', `${ctx.baseUrl}/api/grove/field-visibility`, { part, field, settings: { path: 'Other', operator: 'Any', keys: [] } });
+  const picker = await api('PUT', `${ctx.baseUrl}/api/grove/option-picker/attachment`, { part, field, settings: { sourceKey: 'contentitem:ContentPartList' } });
   const relabel = await api('PUT', `${types}/fields`, { part, field, fieldType: 'TextField', displayName: 'Code (relabelled)' });
   results.push({ name: 'locked-field-refuses-retype-hide-and-picker-with-the-reason', pass: retype.status === 409 && /locked/.test(retype.json?.detail || retype.text) && hide.status === 409 && picker.status === 409, message: `retype=${retype.status} hide=${hide.status} picker=${picker.status} ${(retype.json?.detail || retype.text).slice(0, 120)}` });
   // Same type, new display name: the display surface is not the lock's business (a no-op here, since the type is unchanged).

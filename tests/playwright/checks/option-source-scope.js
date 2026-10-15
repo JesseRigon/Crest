@@ -23,7 +23,7 @@
 module.exports = async function run(page, ctx) {
   const results = [];
 
-  const tokenResponse = await page.request.get(`${ctx.baseUrl}/api/crest/antiforgery/token`);
+  const tokenResponse = await page.request.get(`${ctx.baseUrl}/api/grove/antiforgery/token`);
   const token = await tokenResponse.json();
   const headers = { [token.headerName || 'RequestVerificationToken']: token.requestToken };
 
@@ -35,7 +35,7 @@ module.exports = async function run(page, ctx) {
     // The negative path (a restricted role seeing nothing) is covered by unit tests
     // over OptionSourceScope, since switching roles mid-suite would require a second
     // authenticated context.
-    const queryAsAdmin = await post('/api/crest/option-sources/query', {
+    const queryAsAdmin = await post('/api/grove/option-sources/query', {
       sourceKey: 'contentitem:ContentPartList',
       columns: ['DisplayText', 'Owner'],
       take: 5,
@@ -51,7 +51,7 @@ module.exports = async function run(page, ctx) {
     // An authorized user gets the real record, with real values - and no placeholder
     // shape anywhere in the payload.
     if (adminRows.length > 0) {
-      const resolved = await post('/api/crest/option-sources/resolve', {
+      const resolved = await post('/api/grove/option-sources/resolve', {
         sourceKey: 'contentitem:ContentPartList',
         ids: [adminRows[0].id],
         columns: ['DisplayText'],
@@ -76,7 +76,7 @@ module.exports = async function run(page, ctx) {
 
     // An unknown id must simply not resolve - no row, no error, and above all no
     // fabricated placeholder that would imply the id exists.
-    const unknown = await post('/api/crest/option-sources/resolve', {
+    const unknown = await post('/api/grove/option-sources/resolve', {
       sourceKey: 'contentitem:ContentPartList',
       ids: ['definitely-not-a-real-content-item-id'],
       columns: ['DisplayText'],
@@ -92,7 +92,7 @@ module.exports = async function run(page, ctx) {
     // type but posts ids of another must get nothing back - otherwise scope would be
     // computed for the named type while records of a different type were returned.
     if (adminRows.length > 0) {
-      const crossType = await post('/api/crest/option-sources/resolve', {
+      const crossType = await post('/api/grove/option-sources/resolve', {
         sourceKey: 'contentitem:Option',
         ids: [adminRows[0].id],
         columns: ['DisplayText'],
@@ -107,7 +107,7 @@ module.exports = async function run(page, ctx) {
 
     // A source with no qualifier must not become an unbounded query over every
     // content item in the tenant.
-    const unqualified = await post('/api/crest/option-sources/query', {
+    const unqualified = await post('/api/grove/option-sources/query', {
       sourceKey: 'contentitem:',
       columns: ['DisplayText'],
       take: 50,
@@ -121,7 +121,7 @@ module.exports = async function run(page, ctx) {
 
     // Content part lists are tenant CONFIGURATION rather than per-user records, so they
     // carry no ownership scope and stay readable.
-    const contentPartListSource = await post('/api/crest/option-sources/query', {
+    const contentPartListSource = await post('/api/grove/option-sources/query', {
       sourceKey: 'contentpartlist:transaction.status',
       columns: ['DisplayText', 'Key'],
       take: 20,

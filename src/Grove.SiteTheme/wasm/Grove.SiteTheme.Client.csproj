@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!-- Phase 8: converted from Microsoft.NET.Sdk.BlazorWebAssembly to a Razor class
+       library - a Blazor Web App has exactly ONE WASM entry project
+       (the host app's, see ClientWebAssemblyHost), which references this library. Routable @page
+       components (Routes.razor, Pages/*) stay here, per docs/blazor-web.md. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Grove.SiteTheme.Client</AssemblyName>
+    <RootNamespace>Grove.SiteTheme.Client</RootNamespace>
+    <PlatformCompatibilityVersion>4.0.0</PlatformCompatibilityVersion>
+    <GroveSecurityPatch>0</GroveSecurityPatch>
+    <GroveBugPatch>0</GroveBugPatch>
+    <GroveVersion>$(PlatformCompatibilityVersion).$(GroveSecurityPatch).$(GroveBugPatch)</GroveVersion>
+    <VersionPrefix>$(PlatformCompatibilityVersion)</VersionPrefix>
+    <PackageVersion>$(PlatformCompatibilityVersion)</PackageVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <AssemblyInformationalVersion>$(GroveVersion)</AssemblyInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Grove.Components\Grove.Components.csproj" />
+    <ProjectReference Include="..\..\Grove.Icons\Grove.Icons.csproj" />
+    <ProjectReference Include="..\..\Grove.Shell\Grove.Shell.csproj" />
+    <!-- The site-shell libraries of modules (GroveShell(Site)): the site router and the
+         component registry read them, as the admin client reads the admin ones. -->
+    <ProjectReference Include="..\..\Grove.Facebook\site-wasm\Grove.Facebook.BlazorWasm.csproj" />
+  </ItemGroup>
+
+</Project>

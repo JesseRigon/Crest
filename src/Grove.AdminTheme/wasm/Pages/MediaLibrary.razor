@@ -1,0 +1,178 @@
+@page "/Media"
+@attribute [PageEntry("ManageMediaContent", Id = "library", Parent = "media", Caption = "Library", Position = "1", Icon = "@iconify:mdi:folder-image")]
+@using Grove.AdminTheme.Api
+@using Microsoft.AspNetCore.Components.Forms
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+<GroveStack Gap="1rem" data-testid="media-library-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <GroveStack Gap="0.25rem">
+            <GroveText TextStyle="TextStyle.H4" Text="@T["Media Library"]" />
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["Manage this tenant's media files and folders."]" />
+        </GroveStack>
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+            <label class="rz-button rz-button-md rz-button-primary"><span class="rzi rzi-upload"></span> @T["Upload"]<InputFile hidden OnChange="UploadAsync" disabled="@IsBusy" /></label>
+            <GroveButton Text="@T["New folder"]" Icon="create_new_folder" Click="OpenFolderDialog" Disabled="@IsBusy" />
+            <GroveButton Text="@T["Refresh"]" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="@(() => LoadAsync())" Disabled="@IsBusy" />
+        </GroveStack>
+    </GroveStack>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</GroveAlert>
+    }
+
+    <GroveCard>
+        <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.35rem" Wrap="FlexWrap.Wrap" data-testid="media-breadcrumbs">
+            <GroveButton Text="@T["Media"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OpenFolderAsync(string.Empty))" />
+            @foreach (var crumb in Breadcrumbs)
+            {
+                <GroveText Text="@T["/"]" />
+                <GroveButton Text="@crumb.Name" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OpenFolderAsync(crumb.Path))" />
+            }
+        </GroveStack>
+    </GroveCard>
+
+    @if (IsLoading)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (Directory.Entries.Length == 0)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">@T["This folder is empty. Upload a file or create a folder to get started."]</GroveAlert>
+    }
+    else
+    {
+        <GroveDataGrid Data="@Directory.Entries" TItem="MediaEntry" AllowPaging="false" Responsive="true" data-testid="media-library-grid">
+            <Columns>
+                <GroveDataGridColumn TItem="MediaEntry" Title="@T["Name"]">
+                    <Template Context="entry">
+                        @if (entry.IsDirectory)
+                        {
+                            <GroveButton Text="@entry.Name" Icon="folder" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => OpenFolderAsync(entry.Path))" />
+                        }
+                        else if (!string.IsNullOrWhiteSpace(entry.PublicUrl))
+                        {
+                            <a href="@entry.PublicUrl" target="_blank" rel="noopener">@entry.Name</a>
+                        }
+                        else { @entry.Name }
+                    </Template>
+                </GroveDataGridColumn>
+                <GroveDataGridColumn TItem="MediaEntry" Title="@T["Type"]"><Template Context="entry">@(entry.IsDirectory ? T["Folder"] : T["File"])</Template></GroveDataGridColumn>
+                <GroveDataGridColumn TItem="MediaEntry" Title="@T["Size"]"><Template Context="entry">@(entry.IsDirectory ? T["—"] : FormatBytes(entry.Length))</Template></GroveDataGridColumn>
+                <GroveDataGridColumn TItem="MediaEntry" Title="@T["Modified"]"><Template Context="entry">@entry.LastModifiedUtc.LocalDateTime.ToString("g")</Template></GroveDataGridColumn>
+                <GroveDataGridColumn TItem="MediaEntry" Title="@T["Actions"]" Width="6rem" Sortable="false" Filterable="false">
+                    <Template Context="entry">
+                        @if (!entry.IsDirectory)
+                        {
+                            <GroveButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small" title="@T["Delete file"]" Click="@(() => ConfirmDelete(entry))" Disabled="@IsBusy" />
+                        }
+                    </Template>
+                </GroveDataGridColumn>
+            </Columns>
+        </GroveDataGrid>
+    }
+
+    @if (FolderDialogOpen)
+    {
+        <div class="media-dialog-backdrop"><GroveCard class="media-dialog"><GroveStack Gap="1rem"><GroveText TextStyle="TextStyle.H5" Text="@T["New folder"]" /><GroveTextBox @bind-Value="NewFolderName" Placeholder="@T["Folder name"]" Style="width: 100%;" /><GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CloseFolderDialog" /><GroveButton Text="@T["Create"]" Click="CreateFolderAsync" Disabled="@(IsBusy || string.IsNullOrWhiteSpace(NewFolderName))" /></GroveStack></GroveStack></GroveCard></div>
+    }
+    @if (DeleteCandidate is not null)
+    {
+        <div class="media-dialog-backdrop"><GroveCard class="media-dialog"><GroveStack Gap="1rem"><GroveText TextStyle="TextStyle.H5" Text="@T["Delete media file?"]" /><GroveText Text="@(T["This permanently removes {0}.", DeleteCandidate.Name])" /><GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem"><GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="CancelDelete" /><GroveButton Text="@T["Delete"]" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="@IsBusy" /></GroveStack></GroveStack></GroveCard></div>
+    }
+</GroveStack>
+
+@code {
+    private MediaDirectoryResult Directory { get; set; } = MediaDirectoryResult.Empty;
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsBusy => IsLoading || IsSaving;
+    private string? ErrorMessage { get; set; }
+    private bool FolderDialogOpen { get; set; }
+    private string? NewFolderName { get; set; }
+    private MediaEntry? DeleteCandidate { get; set; }
+    private IEnumerable<Breadcrumb> Breadcrumbs
+    {
+        get
+        {
+            var segments = Directory.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            return segments.Select((name, index) => new Breadcrumb(name, string.Join('/', segments.Take(index + 1))));
+        }
+    }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync(string? path = null)
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try { Directory = await Api.Grove.Rest.Media.ListAsync(path ?? Directory.Path); }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsLoading = false; }
+    }
+
+    private Task OpenFolderAsync(string path) => LoadAsync(path);
+    private void OpenFolderDialog() { NewFolderName = null; FolderDialogOpen = true; }
+    private void CloseFolderDialog() => FolderDialogOpen = false;
+    private void ConfirmDelete(MediaEntry entry) => DeleteCandidate = entry;
+    private void CancelDelete() => DeleteCandidate = null;
+
+    private async Task CreateFolderAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewFolderName)) return;
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            var result = await Api.Grove.Rest.Media.CreateFolderAsync(Directory.Path, NewFolderName);
+            if (result is null) throw new InvalidOperationException(T["The media folder could not be created."]);
+            Directory = result;
+            FolderDialogOpen = false;
+            Notifications.Notify(NotificationSeverity.Success, T["Media Library"], T["Folder created."]);
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private async Task UploadAsync(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+        if (file.Size == 0) return;
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            await using var stream = file.OpenReadStream(100 * 1024 * 1024);
+            var result = await Api.Grove.Rest.Media.UploadAsync(Directory.Path, file.Name, stream);
+            if (result is null) throw new InvalidOperationException(T["The media file could not be uploaded."]);
+            Directory = result;
+            Notifications.Notify(NotificationSeverity.Success, T["Media Library"], T["{0} uploaded.", file.Name]);
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (DeleteCandidate is null) return;
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            if (!await Api.Grove.Rest.Media.DeleteAsync(DeleteCandidate.Path)) throw new InvalidOperationException(T["The media file could not be deleted."]);
+            Notifications.Notify(NotificationSeverity.Success, T["Media Library"], T["{0} deleted.", DeleteCandidate.Name]);
+            DeleteCandidate = null;
+            await LoadAsync();
+        }
+        catch (Exception ex) { ErrorMessage = ex.Message; }
+        finally { IsSaving = false; }
+    }
+
+    private static string FormatBytes(long bytes) => bytes < 1024 ? $"{bytes} B" : bytes < 1024 * 1024 ? $"{bytes / 1024d:F1} KB" : $"{bytes / 1024d / 1024d:F1} MB";
+    private sealed record Breadcrumb(string Name, string Path);
+}

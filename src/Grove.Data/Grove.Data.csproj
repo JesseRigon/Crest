@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Grove Data</Title>
+    <Description>$(OCCMSDescription)
+
+    Provides data access functionality</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Data</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Data.Abstractions\Grove.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Types\Grove.Data.Types.csproj" />
+    <ProjectReference Include="..\Grove.Abstractions\Grove.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

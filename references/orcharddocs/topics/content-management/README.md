@@ -1,6 +1,6 @@
 # Content Management
 
-Crest allows you to define your [content types](../../reference/glossary/README.md#content-type) and manage your [content items](../../reference/glossary/README.md#content-item) dynamically.
+Grove allows you to define your [content types](../../reference/glossary/README.md#content-type) and manage your [content items](../../reference/glossary/README.md#content-item) dynamically.
 
 ## How to Create Content
 

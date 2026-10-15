@@ -1,0 +1,74 @@
+@namespace Grove.Components.Files
+@using System.Globalization
+@using System.Text
+@using Grove.Components.Primitives
+@inject HttpClient Http
+@inject IServiceProvider Services
+@attribute [GroveFileViewerAddOn("Text editor", "text/plain", "text/markdown", "text/csv", "application/json", ".txt", ".md", ".csv", ".json", Priority = -1)]
+
+@* The built-in add-on (docs/media.md § 8): plain text edited in place, saved back as a new
+   version through the upload pipeline. Other modules add their own the same way. *@
+
+<div class="grove-text-addon" data-testid="text-file-addon">
+    @if (Text is null)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        <GroveTextArea @bind-Value="Text" Rows="@(Context.Mode == GroveFileAddOnModes.Full ? 30 : 12)" Disabled="@(!Context.CanEdit || Saving)" Style="width: 100%; font-family: monospace;" />
+        @if (Context.CanEdit)
+        {
+            <div class="grove-text-addon__actions">
+                <GroveButton Text="@L("Save as new version")" Size="ButtonSize.Small" Click="SaveAsync" Disabled="@(Saving || Text == Loaded)" />
+                @if (Message is { } message) { <span>@message</span> }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public GroveFileViewerContext Context { get; set; } = default!;
+
+    private string? Text;
+    private string? Loaded;
+    private bool Saving;
+    private string? Message;
+    private string? _for;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_for == Context.File.Id + Context.File.PublishedVersion || Context.Url is null)
+        {
+            return;
+        }
+
+        _for = Context.File.Id + Context.File.PublishedVersion;
+        try
+        {
+            Loaded = Text = await Http.GetStringAsync(Context.Url);
+        }
+        catch (HttpRequestException exception)
+        {
+            Message = exception.Message;
+            Loaded = Text = string.Empty;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        Saving = true;
+        Message = null;
+        await using var content = new MemoryStream(Encoding.UTF8.GetBytes(Text ?? string.Empty));
+        var result = await Context.SaveVersionAsync(content, Context.File.Type ?? "text/plain");
+        Message = result.Succeeded ? L("Saved. The new version is published once it has been checked.") : result.Error;
+        if (result.Succeeded)
+        {
+            Loaded = Text;
+        }
+
+        Saving = false;
+    }
+
+    private string L(string text) => (Services.GetService(typeof(ILocalizer)) as ILocalizer)?.Get(text, CultureInfo.CurrentUICulture) ?? text;
+}

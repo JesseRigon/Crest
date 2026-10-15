@@ -1,7 +1,7 @@
 # Shells Configuration Providers
 
 The Azure Shells Configuration and Database Shells Configuration providers allow hosting of shell / tenant
-`tenants.json` files and related tenants `appsettings.json` configuration settings in an environment external to the Crest host.
+`tenants.json` files and related tenants `appsettings.json` configuration settings in an environment external to the Grove host.
 
 By default the `tenants.json` and related `appsettings.json` for the `Default` shell and any configured tenants
 are stored in the `App_Data` folder.
@@ -24,7 +24,7 @@ The root of the Azure Blob Container includes a `tenants.json` file, and optiona
 
 Each shell, or tenant has a directory under the `Sites` folder, named for the tenant, with an individual `appsettings.json` file.
 
-The hierarchy is separated into single files, and is useful if you need to manage the tenants `appsettings.json` independently from Crest.
+The hierarchy is separated into single files, and is useful if you need to manage the tenants `appsettings.json` independently from Grove.
 For example, you may prefer to provide different Azure Blob Storage keys, for each tenant when using the Azure Media Storage feature.
 
 The Azure Shells Configuration supports a root `appsettings.json` and `appsettings.Environment.json` file.
@@ -34,14 +34,14 @@ The Azure Shells Configuration supports a root `appsettings.json` and `appsettin
 
 ### Enable Azure Shells Configuration
 
-The Azure Shells Configuration is provided by a separate NuGet package: `Crest.Shells.Azure`
+The Azure Shells Configuration is provided by a separate NuGet package: `Grove.Shells.Azure`
 
 The Azure Shells Configuration is configured via the `appsettings.json` section in the web host project.
 
 ``` json
 {
-  "Crest": {
-    "Crest_Shells_Azure": {
+  "Grove": {
+    "Grove_Shells_Azure": {
       "ConnectionString": "", // Set to your Azure Storage account connection string.
       "ContainerName": "hostcontainer", // Set to the Azure Blob container name.
       "BasePath": "some/base/path", // Optionally, set to a subdirectory inside your container.
@@ -52,10 +52,10 @@ The Azure Shells Configuration is configured via the `appsettings.json` section 
 }
 ```
 
-In the web host `Startup.cs` it is enabled via an extension method on the Crest Builder.
+In the web host `Startup.cs` it is enabled via an extension method on the Grove Builder.
 
 ``` csharp
-namespace Crest.Cms.Web
+namespace Grove.Cms.Web
 {
     public sealed class Startup
     {
@@ -87,8 +87,8 @@ The Database Shells Configuration is configured via the `appsettings.json` secti
 
 ``` json
 {
-  "Crest": {
-    "Crest_Shells_Database": {
+  "Grove": {
+    "Grove_Shells_Database": {
       "DatabaseProvider": "SqlConnection", // Set to a supported database provider.
       "ConnectionString": "", // Set to the database connection string.
       "TablePrefix": "", // Optionally, configure a table prefix.
@@ -98,10 +98,10 @@ The Database Shells Configuration is configured via the `appsettings.json` secti
 }
 ```
 
-In the web host `Startup.cs` it is enabled via an extension method on the Crest Builder.
+In the web host `Startup.cs` it is enabled via an extension method on the Grove Builder.
 
 ``` csharp
-namespace Crest.Cms.Web
+namespace Grove.Cms.Web
 {
     public sealed class Startup
     {
@@ -134,7 +134,7 @@ and migrate it to the storage platform of choice.
 To disable a provider in Development, or different environments, inject the `IHostEnvironment`
 
 ``` csharp
-namespace Crest.Cms.Web
+namespace Grove.Cms.Web
 {
     public sealed class Startup
     {

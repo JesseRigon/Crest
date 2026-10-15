@@ -1,0 +1,249 @@
+@page "/Design/Icons"
+@page "/Icons"
+@attribute [PageEntry("ManageSettings", Id = "icons", Parent = "design", Caption = "Icons", Icon = "@iconify:mdi:shape")]
+@using Grove.AdminTheme.Api
+@using Grove.AdminTheme.Components.Shared
+@using Grove.Icons.Components
+@using Grove.Components.Primitives
+@using Grove.Components.Primitives
+@inject IApi Api
+@inject NotificationService Notifications
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+<GroveStack Gap="1rem">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <GroveStack Gap="0.25rem">
+            <GroveText TextStyle="TextStyle.H4" Text="@T["Icons"]" />
+            <GroveText TextStyle="TextStyle.Body2" Text="@T["Manage server-side icon providers used by the icon selector, admin menus, and icon packs."]" />
+        </GroveStack>
+        <GroveButton Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Icon="refresh" Click="LoadAsync" Disabled="@IsBusy" />
+    </GroveStack>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@ErrorMessage</GroveAlert>
+    }
+
+    @if (IsLoading)
+    {
+        <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+            <GroveProgressBarCircular Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+            <GroveText Text="@T["Loading icon provider settings..."]" />
+        </GroveStack>
+    }
+    else
+    {
+        <GroveRow Gap="1rem">
+            <GroveColumn Size="12" SizeLG="6">
+                <GroveCard>
+                    <GroveTemplateForm TItem="IconifyProviderModel" Data="@Model" Submit="@(_ => SaveAsync())">
+                        <GroveStack Gap="1rem">
+                            <GroveStack Gap="0.25rem">
+                                <GroveText TextStyle="TextStyle.H5" Text="@T["Iconify"]" />
+                                <GroveText TextStyle="TextStyle.Body2" Text="@T["Default example provider. Uses the Iconify API contract and can point at the public API or a self-hosted compatible server."]" />
+                            </GroveStack>
+
+                            <SettingsSwitch Label="@T["Enable Iconify provider"]" Hint="@T["When enabled, Iconify appears in icon search and can resolve selected Iconify icon keys for response icon packs."]" @bind-Value="Model.Enabled" />
+
+                            <GroveFormField Text="@T["API base URL"]" Style="width: 100%;">
+                                <GroveTextBox @bind-Value="Model.BaseUrl" Placeholder="https://api.iconify.design" Style="width: 100%;" />
+                            </GroveFormField>
+
+                            <GroveFormField Text="@T["API key"]" Style="width: 100%;">
+                                <GrovePassword @bind-Value="Model.ApiKey" Placeholder="@T["Optional"]" Style="width: 100%;" />
+                            </GroveFormField>
+
+                            <GroveFormField Text="@T["API key header"]" Style="width: 100%;">
+                                <GroveTextBox @bind-Value="Model.ApiKeyHeader" Placeholder="Authorization" Style="width: 100%;" />
+                            </GroveFormField>
+
+                            <GroveFormField Text="@T["Allowed prefixes"]" Style="width: 100%;">
+                                <GroveTextBox @bind-Value="Model.Prefixes" Placeholder="@T["Optional comma-separated list, for example mdi, lucide, material-symbols"]" Style="width: 100%;" />
+                            </GroveFormField>
+                            <GroveText TextStyle="TextStyle.Caption" Text="@T["Leave prefixes empty to search every collection exposed by the configured Iconify-compatible API."]" />
+
+                            @if (IsCustomIconifyServer)
+                            {
+                                <GroveAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
+                                    @T["Custom Iconify servers are remote-only and are not cached."]
+                                </GroveAlert>
+                            }
+
+                            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                                <GroveButton Text="@T["Save provider settings"]" Icon="save" ButtonType="ButtonType.Submit" Disabled="@IsSaving" />
+                                <GroveButton Text="@T["Reset Iconify defaults"]" Icon="restart_alt" ButtonStyle="ButtonStyle.Light" Click="ResetDefaults" ButtonType="ButtonType.Button" Disabled="@IsSaving" />
+                            </GroveStack>
+                        </GroveStack>
+                    </GroveTemplateForm>
+                </GroveCard>
+            </GroveColumn>
+
+            <GroveColumn Size="12" SizeLG="6">
+                <GroveCard>
+                    <GroveStack Gap="1rem">
+                        <GroveStack Gap="0.25rem">
+                            <GroveText TextStyle="TextStyle.H5" Text="@T["Public Iconify local cache"]" />
+                            <GroveText TextStyle="TextStyle.Body2" Text="@T["Public Iconify data is synced into App_Data, shared across tenants, and searched locally by default. Custom Iconify servers bypass this cache."]" />
+                        </GroveStack>
+
+                        <GroveRow>
+                            <GroveColumn Size="6">
+                                <GroveText TextStyle="TextStyle.Caption" Text="@T["Status"]" />
+                                <GroveText Text="@(LocalMirror.IsAvailable ? T["Available"] : T["Remote fallback"])" />
+                            </GroveColumn>
+                            <GroveColumn Size="6">
+                                <GroveText TextStyle="TextStyle.Caption" Text="@T["Version"]" />
+                                <GroveText Text="@(LocalMirror.Version ?? T["Not initialized"])" />
+                            </GroveColumn>
+                            <GroveColumn Size="6">
+                                <GroveText TextStyle="TextStyle.Caption" Text="@T["Prefixes"]" />
+                                <GroveText Text="@LocalMirror.PrefixCount.ToString("n0")" />
+                            </GroveColumn>
+                            <GroveColumn Size="6">
+                                <GroveText TextStyle="TextStyle.Caption" Text="@T["Icons"]" />
+                                <GroveText Text="@LocalMirror.IconCount.ToString("n0")" />
+                            </GroveColumn>
+                        </GroveRow>
+
+                        <GroveText TextStyle="TextStyle.Caption" Text="@T["Root: {0}", string.IsNullOrWhiteSpace(LocalMirror.RootPath) ? T["Not Configured"] : LocalMirror.RootPath]" />
+                        @if (LocalMirror.LastSyncUtc is not null)
+                        {
+                            <GroveText TextStyle="TextStyle.Caption" Text="@T["Source commit: {0:u}", LocalMirror.LastSyncUtc]" />
+                        }
+                        @if (!string.IsNullOrWhiteSpace(LocalMirror.LastError))
+                        {
+                            <GroveAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
+                                @T["Last cache error: {0}", LocalMirror.LastError]
+                            </GroveAlert>
+                        }
+
+                        <GroveText TextStyle="TextStyle.Caption" Text="@T["The install/first-run cache is cloned from the Iconify icon-sets GitHub repository and refreshed automatically once per day by the server."]" />
+                    </GroveStack>
+                </GroveCard>
+            </GroveColumn>
+
+            <GroveColumn Size="12" SizeLG="6">
+                <GroveCard>
+                    <GroveStack Gap="1rem">
+                        <GroveStack Gap="0.25rem">
+                            <GroveText TextStyle="TextStyle.H5" Text="@T["Provider search preview"]" />
+                            <GroveText TextStyle="TextStyle.Body2" Text="@T["This uses the same icon selector component as menu editors. Selecting an icon stores the normalized icon key."]" />
+                        </GroveStack>
+
+                        <IconSelector @bind-Value="SelectedIcon" />
+
+                        @if (!string.IsNullOrWhiteSpace(SelectedIcon))
+                        {
+                            <GroveAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
+                                @T["Selected icon: {0}", SelectedIcon]
+                            </GroveAlert>
+                        }
+                    </GroveStack>
+                </GroveCard>
+            </GroveColumn>
+        </GroveRow>
+    }
+</GroveStack>
+
+@code {
+    private IconifyProviderModel Model { get; set; } = IconifyProviderModel.From(IconifyIconProviderSettings.Default);
+    private IconifyLocalMirrorStatus LocalMirror { get; set; } = IconifyLocalMirrorStatus.Empty;
+    private string? SelectedIcon;
+    private bool IsLoading = true;
+    private bool IsSaving;
+    private string? ErrorMessage;
+    private bool IsBusy => IsLoading || IsSaving;
+    private bool IsCustomIconifyServer => !string.Equals(
+        (Model.BaseUrl ?? string.Empty).Trim().TrimEnd('/'),
+        IconifyIconProviderSettings.Default.BaseUrl.TrimEnd('/'),
+        StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            var settings = await Api.Grove.Rest.Icons.GetProvidersAsync();
+            Model = IconifyProviderModel.From(settings.Iconify);
+            LocalMirror = await Api.Grove.Rest.Icons.GetIconifyLocalStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        IsSaving = true;
+        ErrorMessage = null;
+        try
+        {
+            var saved = await Api.Grove.Rest.Icons.UpdateProvidersAsync(new IconProvidersSettings(Model.ToSettings()));
+            if (saved is null)
+            {
+                Notifications.Notify(NotificationSeverity.Error, T["Icon providers not saved"], T["The server rejected the provider settings."]);
+                return;
+            }
+
+            Model = IconifyProviderModel.From(saved.Iconify);
+            Notifications.Notify(NotificationSeverity.Success, T["Icon providers saved"], T["The Iconify provider settings were updated."]);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private void ResetDefaults()
+    {
+        Model = IconifyProviderModel.From(IconifyIconProviderSettings.Default);
+    }
+
+    private sealed class IconifyProviderModel
+    {
+        public bool Enabled { get; set; }
+        public string BaseUrl { get; set; } = IconifyIconProviderSettings.Default.BaseUrl;
+        public string? ApiKey { get; set; }
+        public string? ApiKeyHeader { get; set; }
+        public string? Prefixes { get; set; }
+        public bool LocalLibraryCacheEnabled { get; set; } = true;
+
+        public static IconifyProviderModel From(IconifyIconProviderSettings settings) => new()
+        {
+            Enabled = settings.Enabled,
+            BaseUrl = settings.BaseUrl,
+            ApiKey = settings.ApiKey,
+            ApiKeyHeader = settings.ApiKeyHeader,
+            Prefixes = string.Join(", ", settings.Prefixes),
+            LocalLibraryCacheEnabled = settings.LocalLibraryCacheEnabled,
+        };
+
+        public IconifyIconProviderSettings ToSettings() => new(
+            Enabled,
+            string.IsNullOrWhiteSpace(BaseUrl) ? IconifyIconProviderSettings.Default.BaseUrl : BaseUrl.Trim(),
+            string.IsNullOrWhiteSpace(ApiKey) ? null : ApiKey.Trim(),
+            string.IsNullOrWhiteSpace(ApiKeyHeader) ? null : ApiKeyHeader.Trim(),
+            (Prefixes ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(prefix => !string.IsNullOrWhiteSpace(prefix))
+                .Select(prefix => prefix.ToLowerInvariant())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray(),
+            LocalLibraryCacheEnabled);
+    }
+}

@@ -6,15 +6,15 @@ const { loginAsAdmin } = require('../../harness/auth');
 // icon/rename) used to be keyed by a hash of the item's TRANSLATED display text when no
 // explicit Id/link was present, so switching the admin UI culture changed the hash and
 // silently orphaned every stored override for items without an Id (most stock
-// Crest admin-menu category nodes - "Content", "Design", etc). The fix makes Key
+// Grove admin-menu category nodes - "Content", "Design", etc). The fix makes Key
 // use LocalizedString.Name (the untranslated resource key) instead, so this check drives
 // the SAME override under one culture and verifies it still applies after switching the
 // admin's resolved culture, in a browser context configured for that other culture.
-const defaultMenuId = '__crest_default_admin_menu';
+const defaultMenuId = '__grove_default_admin_menu';
 
 async function getRootNodes(page) {
   const data = await page.evaluate(async () => {
-    const response = await fetch('/api/crest/admin-menus', { credentials: 'include' });
+    const response = await fetch('/api/grove/admin-menus', { credentials: 'include' });
     if (!response.ok) throw new Error(`admin menus failed: ${response.status}`);
     return response.json();
   });
@@ -39,7 +39,7 @@ async function updateNodeIcon(page, baseUrl, node, iconClass) {
   const antiforgery = await fetchAntiforgeryToken(page, baseUrl);
   const result = await page.evaluate(
     async ({ id, payload, antiforgery }) => {
-      const response = await fetch(`/api/crest/admin-menus/__crest_default_admin_menu/nodes/${encodeURIComponent(id)}`, {
+      const response = await fetch(`/api/grove/admin-menus/__grove_default_admin_menu/nodes/${encodeURIComponent(id)}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'content-type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken },
@@ -83,9 +83,9 @@ module.exports = async function run(page, ctx) {
   const results = [];
   const overrideIcon = '@iconify:mdi:home';
 
-  const localization = await getJson(page, ctx.baseUrl, '/api/crest/localization');
+  const localization = await getJson(page, ctx.baseUrl, '/api/grove/localization');
   const withFrench = { ...localization, supportedCultures: Array.from(new Set([...(localization.supportedCultures || []), 'en-US', 'fr-FR'])), defaultCulture: 'en-US' };
-  await putJson(page, ctx.baseUrl, '/api/crest/localization', withFrench);
+  await putJson(page, ctx.baseUrl, '/api/grove/localization', withFrench);
   results.push({ name: 'enables-fr-culture', pass: true, message: 'supportedCultures includes fr-FR' });
 
   let original;
@@ -149,7 +149,7 @@ module.exports = async function run(page, ctx) {
     }
     // Restore the tenant's original supportedCultures/defaultCulture - otherwise fr-FR
     // stays enabled for every check that runs after this one in the same suite run.
-    await putJson(page, ctx.baseUrl, '/api/crest/localization', localization).catch(() => {});
+    await putJson(page, ctx.baseUrl, '/api/grove/localization', localization).catch(() => {});
   }
 
   return results;

@@ -1,6 +1,6 @@
 # Queries — the query system, and the connections it consumes
 
-`Crest.Queries` is **the query system**: querying data simply and safely, enough for Crest's own
+`Grove.Queries` is **the query system**: querying data simply and safely, enough for Grove's own
 consumers (audit activity streams first) and for downstream modules to extend. It owns typed,
 paged rows, saved queries, local storage of results and its API. A query is any request through
 a connection, reads and writes alike; a SQL query is a CRUD action on a database. The query
@@ -8,19 +8,19 @@ system is a tool for builders and administrators; business users and members nev
 directly.
 
 Queries does not own connections. Every outgoing connection to an external system belongs to
-**the connection system**: one module per protocol, `Crest.Http`, `Crest.Rest`, `Crest.Soap`,
-`Crest.GraphQL` and later others (☐ to be created). Database connections belong to the data
-layer (`Crest.Data`, `Crest.Data.YesSql`): the host database and external databases are SQL
+**the connection system**: one module per protocol, `Grove.Http`, `Grove.Rest`, `Grove.Soap`,
+`Grove.GraphQL` and later others (☐ to be created). Database connections belong to the data
+layer (`Grove.Data`, `Grove.Data.YesSql`): the host database and external databases are SQL
 connections there. Queries consumes connections from both and keeps no connection model of its
 own ([Connections](#connections-the-protocol-modules-and-the-data-layer)).
 
 Queries are one of the two kinds of **operation** in the operation registry, behind the one
 access machinery ([workflows.md › Operations](workflows.md#operations-one-registry-one-request-path-four-pipelines-one-access-machinery));
-`Crest.Access` supplies the caller and the `ScopeSet` that run-time permission injection is
-implemented with. Crest.Queries declares its own API surface (the management API
-`api/crest/queries` and, as generated surfaces, the run endpoints of saved queries) and
-registers it in Crest.Server's API endpoint registry
-([architecture.md › Modules declare, Crest.Server registers and serves](architecture.md#modules-declare-crestserver-registers-and-serves)).
+`Grove.Access` supplies the caller and the `ScopeSet` that run-time permission injection is
+implemented with. Grove.Queries declares its own API surface (the management API
+`api/grove/queries` and, as generated surfaces, the run endpoints of saved queries) and
+registers it in Grove.Server's API endpoint registry
+([architecture.md › Modules declare, Grove.Server registers and serves](architecture.md#modules-declare-groveserver-registers-and-serves)).
 
 **Workflows consumes the same connections.** Its connector activities and webhook triggers use
 connections from the protocol modules; Workflows only does the wiring inside
@@ -32,7 +32,7 @@ with a plugin registry other modules can hook into. Very downstream; not in the 
 public release.
 
 **Value types.** The value type registry (field type, editor, display primitive, query column
-type, workflow type per value type) lives in `Crest.Data` (`Crest.Data.Types`); the query
+type, workflow type per value type) lives in `Grove.Data` (`Grove.Data.Types`); the query
 system reads it.
 
 **The display system binds through queries** ([blazor-display.md](blazor-display.md) ›
@@ -53,14 +53,14 @@ Every question about queries is answered from **two aspects**, kept apart: **the
 (authoring a query, inside the tenant's shell) and **query runs** (executing a saved query
 for whoever requests it: API, GraphQL, Liquid, feeds).
 
-- **Queries are Crest's**: the platform's Queries and indexes, reworked in place (as the file
-  system reworks Media), a query builder on the Queries page and `api/crest/queries`, and basic
+- **Queries are Grove's**: the platform's Queries and indexes, reworked in place (as the file
+  system reworks Media), a query builder on the Queries page and `api/grove/queries`, and basic
   export of a query's results. Sharing, scheduled delivery and full reporting are built
-  downstream on it. The bar: stock Crest is enough for the audit system to build custom filtered
+  downstream on it. The bar: stock Grove is enough for the audit system to build custom filtered
   activity streams on it ([audit.md](audit.md) › Activity feeds), and for downstream reporting
   to extend it. The stock query feature ids and the `api/queries` and Liquid surfaces keep
   working for existing callers.
-- **The contract** is `IQuerySource` in `Crest.Queries.Abstractions` (the platform's pattern
+- **The contract** is `IQuerySource` in `Grove.Queries.Abstractions` (the platform's pattern
   for extension points other modules implement): typed, paged, cancellable, caller-scoped. The
   SQL, Lucene and Elasticsearch sources implement it. **Paging and cancellation** are in the
   contract: page tokens, a `CancellationToken`, a total where the source can give one. **Typed
@@ -118,7 +118,7 @@ for whoever requests it: API, GraphQL, Liquid, feeds).
 
 ### Scope enforcement
 
-What keeps the scope rule unbypassable (tests in `test/Crest.Tests/Queries`):
+What keeps the scope rule unbypassable (tests in `test/Grove.Tests/Queries`):
 
 - **The SQL rewriter** (`Sql/SqlParser.cs`): CTE names are scoped lexically (a non-recursive
   CTE's body sees the real table, so `WITH Document AS (SELECT * FROM Document)` is refused);
@@ -183,20 +183,20 @@ The connection system is the base the downstream connectors, the external data f
 Queries and Workflows' connectors stand on, so it is designed before them. There is one
 connection system; Queries and Workflows consume it and keep no parallel set.
 
-- **One module per protocol** (☐ to be created): `Crest.Http`, `Crest.Rest`, `Crest.Soap`,
-  `Crest.GraphQL`, later others. Each owns, for its protocol: the connection model (endpoint,
+- **One module per protocol** (☐ to be created): `Grove.Http`, `Grove.Rest`, `Grove.Soap`,
+  `Grove.GraphQL`, later others. Each owns, for its protocol: the connection model (endpoint,
   auth, credentials sealed per tenant), executing a request, the SSRF-guarded client, the token
   cache, rate limiting and the OAuth authorize/callback flow. The existing
-  `Crest.Apis.GraphQL.Client` (a client for Crest's own GraphQL API) becomes or folds into the
+  `Grove.Apis.GraphQL.Client` (a client for Grove's own GraphQL API) becomes or folds into the
   GraphQL connector (☐).
 - **Database connections are the data layer's.** The host database and external databases are
-  SQL connections in `Crest.Data` / `Crest.Data.YesSql`; the host connection carries the
+  SQL connections in `Grove.Data` / `Grove.Data.YesSql`; the host connection carries the
   tenant's table prefix, the store's isolation level and the caller's scope.
-- **Queries consumes connections.** Its sources (the `Crest.Queries.Sql` feature for SQL, one per
+- **Queries consumes connections.** Its sources (the `Grove.Queries.Sql` feature for SQL, one per
   protocol for the others) take a connection from the data layer or a protocol module, run the
   request through it, map the results into the query system's typed, paged rows, and store
   results locally when asked, so external data is queryable like any other and publishable
-  through the Crest API under tenant and user scope and permissions.
+  through the Grove API under tenant and user scope and permissions.
 - **The SQL source is dogfooded.** The host's own database is just another SQL connection:
   queries over the tenant's data run through the SQL source against it (tenant table prefix
   and caller scope applied), replacing the stock SQL query source rather than sitting beside it.
@@ -209,7 +209,7 @@ connection system; Queries and Workflows consume it and keep no parallel set.
   verifier without ever reading the secret. One Connections screen and one `ManageConnections`
   permission serve every consumer; both belong to the connection system, not to Queries or
   Workflows. Workflows' connection names change with no aliases: the OAuth callback route, the
-  permission (`ManageCrestWorkflowConnections` → `ManageConnections`), the config section and the
+  permission (`ManageGroveWorkflowConnections` → `ManageConnections`), the config section and the
   data-protection purpose; provider apps and settings are updated by hand. Secrets and tokens
   live under a new data-protection purpose and new document names in the connection system;
   there is no migration code (dev tenants are reset and connections re-entered). A secret that
@@ -222,7 +222,7 @@ connection system; Queries and Workflows consume it and keep no parallel set.
   worker: the connection system returns "retry after T" and the caller reschedules (a workflow
   resumes the activity at T). Today it is the reverse: the HTTP layer sends once, Workflows'
   `ConnectionResilienceStrategy` retries around the activity, `Retry-After` is honoured nowhere,
-  and a refusal by Crest's own rate limiter is treated as permanent.
+  and a refusal by Grove's own rate limiter is treated as permanent.
 - **What the protocol modules and Queries' sources carry for external sources**: two
   execution models behind one interface (asynchronous jobs: submit, job id, poll, page; and synchronous streaming readers); retries
   with backoff that honour the source's rate limits; per-user delegated credentials where the
@@ -236,34 +236,34 @@ connection system; Queries and Workflows consume it and keep no parallel set.
   remote engine through its protocol module) and register their query source with Queries, like
   any SQL or REST source. A separate Search module holds the in-app search UI components, the C# search interface and the search APIs, and runs
   through Queries the standard way, so it works with any registered search provider; run-time
-  permission injection applies to search as to every query. A search engine indexing Crest data
+  permission injection applies to search as to every query. A search engine indexing Grove data
   is set up with the permission system (permissions written into what it indexes, and filters
-  applied in every search) so Crest data never leaks through it ([sharing.md](sharing.md) ›
+  applied in every search) so Grove data never leaks through it ([sharing.md](sharing.md) ›
   Open questions, F5). Until its engine becomes a connection, a search source that does not
   apply the caller's scope stays admin-only.
 - **Where permissions live.**
-  - **Data Crest owns** (its own database, and search engines indexing Crest data) is scoped
-    by Crest's permission system, injected at run time as above.
+  - **Data Grove owns** (its own database, and search engines indexing Grove data) is scoped
+    by Grove's permission system, injected at run time as above.
   - **Truly external systems** (Salesforce, for example) keep their own permission sets;
-    Crest is not their permission provider and stores none of their permissions. Crest
+    Grove is not their permission provider and stores none of their permissions. Grove
     stores only who may use a connection (a permission on the connection or connector), and
     passes the user's own credentials to the external system (OAuth per user, or whatever
     the system uses) so that system applies its own permissions to what it returns.
 - **Plugin registry for connectors.** Connectors for specific platforms register as plugins
   against a protocol module; any module can add one. The registry is the connection system's;
   the connectors themselves are downstream. Workflows' connector descriptors and
-  `IWorkflowConnectorProvider` belong here (☐ today in `Crest.Workflows.Abstractions`);
+  `IWorkflowConnectorProvider` belong here (☐ today in `Grove.Workflows.Abstractions`);
   Workflows lists connector operations from the connection system for its palette.
 
 ## Persistence: one system
 
-Crest data goes through one data-access system, YesSql on the tenant's `ISession` and its unit
+Grove data goes through one data-access system, YesSql on the tenant's `ISession` and its unit
 of work.
 
 - **In the unit of work**: Members' user hierarchy (a YesSql closure table, documents and
   indexes, [parties.md](parties.md) › Hierarchies); every workflow engine store (definitions,
   instances, triggers, bookmarks, bookmark queue, execution log, activity execution records),
-  YesSql-backed in `Crest.Workflows`. The engine's store factories throw "No X configured"
+  YesSql-backed in `Grove.Workflows`. The engine's store factories throw "No X configured"
   unless the host supplies a store; it has no in-memory stores and no tenant management of its
   own (`TenantsFeature` and `TenantHeaders` remain for the runtime dispatchers).
 - **Deliberately outside the session**:
@@ -275,12 +275,12 @@ of work.
     `DefaultContentItemsQueryProvider` (a non-tracking read whose items are cached) and
     `MoveAttachedMediaFieldsStepExecutor` (one session per batch in a bulk recipe migration,
     keyset paging).
-- **`Crest.Global` is the one exception**: the only store outside a tenant, for host-wide
+- **`Grove.Global` is the one exception**: the only store outside a tenant, for host-wide
   reference data (geo, currencies, global lists). It uses the one migration system: a global
   migration is a `GlobalDataMigration` (a `DataMigration` with the global `Session` and its
   index providers), run by `DataMigrationSteps` (the Create/UpdateFrom convention shared with
   the tenant `DataMigrationManager`) and recorded in a `DataMigrationRecord` in the global
-  store. `CrestGlobalSchemaState` keeps only the data version; its old per-schema versions
+  store. `GroveGlobalSchemaState` keeps only the data version; its old per-schema versions
   seed the record once (`LegacySchemaName`, transitional). A host's own global schemas
   convert the same way. Test: `GlobalMigrationTests`.
 
@@ -290,28 +290,28 @@ of work.
 - [ ] Statement caching.
 - [ ] `ReturnContentItems` through the gate.
 - [ ] The read job.
-- [ ] The connection system: the protocol modules (`Crest.Http`, `Crest.Rest`, `Crest.Soap`,
-  `Crest.GraphQL`, with `Crest.Apis.GraphQL.Client` becoming or folding into the GraphQL one),
+- [ ] The connection system: the protocol modules (`Grove.Http`, `Grove.Rest`, `Grove.Soap`,
+  `Grove.GraphQL`, with `Grove.Apis.GraphQL.Client` becoming or folding into the GraphQL one),
   the move of Workflows' connection model, secrets, OAuth, HTTP client, connector descriptors
   and `IWorkflowConnectorProvider` into them, retries in the connection system (deleting
   `ConnectionResilienceStrategy`), search engines as connections, the connector plugin registry.
-- [ ] SQL connections in the data layer (`Crest.Data`, `Crest.Data.YesSql`): the host database
+- [ ] SQL connections in the data layer (`Grove.Data`, `Grove.Data.YesSql`): the host database
   and external databases; Queries' SQL source over them, the host connection replacing the
   stock SQL source.
 - [ ] Queries' sources over the protocol modules' connections (typed paged rows, local storage
   of results).
-- [ ] Crest's management surface (`api/crest/queries`, the Queries page) and the platform's
+- [ ] Grove's management surface (`api/grove/queries`, the Queries page) and the platform's
   `api/queries/{name}` are replaced by the declared and generated surfaces.
 
 ## Open questions
 
-- **The data-layer module chain** (`Crest.Data`, connectors, query, API surfaces); see
+- **The data-layer module chain** (`Grove.Data`, connectors, query, API surfaces); see
   [blazor-display.md](blazor-display.md).
 - **What the platform already offers natively** to build the connection system on, to be
   researched before designing, so nothing is reinvented.
 - **Where the shared connection pieces live.** The Connections screen, `ManageConnections`, the
   connection document and the sealed-secret store are shared by every protocol module: in one
-  of them (`Crest.Http`, which the others build on) or in a module of their own? And do the data
+  of them (`Grove.Http`, which the others build on) or in a module of their own? And do the data
   layer's external SQL connections appear on the same screen?
 - **Host database versus external SQL connections (Q6)**, in the data layer. The host
   connection must use the tenant's table prefix, the store's isolation level and the caller's
@@ -319,9 +319,9 @@ of work.
   their own credentials.
   Options: (1) a connection kind, host or external, set by the system and not editable; (2) one
   kind with prefixing and scope as per-connection settings. Recommendation: 1; the host
-  connection is created by Crest and cannot be pointed elsewhere, every other SQL connection is
+  connection is created by Grove and cannot be pointed elsewhere, every other SQL connection is
   external.
-- **Crest's Queries API (Q7).** `QueriesController` writes a query's settings as raw JSON
+- **Grove's Queries API (Q7).** `QueriesController` writes a query's settings as raw JSON
   without the source handlers (nothing validates them) and has no run, preview, results or
   schema endpoints, which the builder needs. Options: (1) each source validates its own
   settings through the contract, and run, preview, results and schema endpoints are added for

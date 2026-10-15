@@ -1,0 +1,84 @@
+{
+  "name": "GroveStandalone",
+  "displayName": "Grove standalone",
+  "description": "Grove's application layer with no line-of-business module: the fresh-install test host's setup recipe.",
+  "author": "Grove",
+  "website": "",
+  "version": "1.0.0",
+  "issetuprecipe": true,
+  "categories": [
+    "test"
+  ],
+  "tags": [
+    "test"
+  ],
+  "variables": {},
+  "steps": [
+    {
+      "name": "feature",
+      "enable": [
+        "Grove.Admin",
+        "Grove.AdminMenu",
+        "Grove.ContentTypes",
+        "Grove.Contents",
+        "Grove.Deployment",
+        "Grove.Diagnostics",
+        "Grove.Features",
+        "Grove.Layers",
+        "Grove.Placements",
+        "Grove.Liquid",
+        "Grove.Media",
+        "Grove.Navigation",
+        "Grove.Notifications.Portal",
+        "Grove.Recipes",
+        "Grove.Roles",
+        "Grove.Settings",
+        "Grove.Shortcodes",
+        "Grove.Templates",
+        "Grove.Themes",
+        "Grove.Users",
+        "Grove.AuditTrail",
+        "Grove.Users.AuditTrail",
+        "Grove",
+        "Grove.AdminTheme",
+        "Grove.SiteTheme",
+        "Grove.ContentPartLists",
+        "TheAdmin",
+        "SafeMode",
+        "Grove.Localization",
+        "Grove.LegacyFrame",
+        "Grove.Icons",
+        "Grove.Data.Global",
+        "Grove.Regions",
+        "Grove.Money",
+        "Grove.Parties",
+        "Grove.Members",
+        "Grove.Workflows",
+        "Grove.Workflows.Contents",
+        "Grove.Autoroute",
+        "Grove.Email",
+        "Grove.DynamicCache",
+        "Grove.Flows",
+        "Grove.HomeRoute",
+        "Grove.Html",
+        "Grove.Recipes.Core",
+        "Grove.Resources",
+        "Grove.Roles.Core",
+        "Grove.Security",
+        "Grove.Tenants",
+        "Grove.Title",
+        "Grove.MemberTheme"
+      ]
+    },
+    {
+      "name": "themes",
+      "admin": "Grove.AdminTheme",
+      "site": "Grove.SiteTheme"
+    },
+    {
+      "name": "settings",
+      "SiteName": "Grove standalone",
+      "CurrentAdminThemeName": "Grove.AdminTheme"
+    }
+  ]
+}

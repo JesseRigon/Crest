@@ -1,0 +1,248 @@
+@page "/DeploymentPlan/Display/{Id:long}"
+@attribute [PageEntry("ManageDeploymentPlan")]
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Grove.AdminTheme.Api
+@using Grove.Components.Primitives
+@inject IApi Api
+@inject IJSRuntime Js
+@inject NotificationService Notifications
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* A deployment plan: its ordered steps, each edited as the settings the plan stores (a
+   step type a module adds needs no component of its own), and its export (download, or
+   send to a remote instance). *@
+
+<GroveStack Gap="1rem" data-testid="deployment-plan-page">
+    @if (Plan is null)
+    {
+        @if (NotFound)
+        {
+            <GroveAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@T["This deployment plan does not exist."]</GroveAlert>
+        }
+        else
+        {
+            <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+        }
+    }
+    else
+    {
+        <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Wrap="FlexWrap.Wrap">
+            <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="0.5rem">
+                <a href="DeploymentPlan/Index">@T["Deployment Plans"]</a>
+                <GroveText TextStyle="TextStyle.Body2" Text="/" />
+                @if (Renaming)
+                {
+                    <GroveTextBox @bind-Value="DraftName" />
+                    <GroveButton Icon="check" Size="ButtonSize.Small" Click="RenameAsync" Disabled="@IsBusy" title="@T["Save"]" />
+                    <GroveButton Icon="close" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => Renaming = false)" title="@T["Cancel"]" />
+                }
+                else
+                {
+                    <GroveText TextStyle="TextStyle.H4" Text="@Plan.Name" />
+                    <GroveButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => { Renaming = true; DraftName = Plan.Name; })" title="@T["Rename"]" />
+                }
+            </GroveStack>
+            <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                @if (Plan.CanExport)
+                {
+                    <GroveButton Text="@T["Download package"]" Icon="download" ButtonStyle="ButtonStyle.Light" Click="@(() => DeploymentDownload.SaveAsync(Api, Js, Plan.Id, Notifications, T))" Disabled="@IsBusy" />
+                }
+                @if (Plan.CanExport && Plan.RemoteInstances.Length > 0)
+                {
+                    <GroveDropDown @bind-Value="RemoteInstanceId" Data="@Plan.RemoteInstances" TextProperty="Name" ValueProperty="Id" Placeholder="@T["Remote instance"]" Style="min-width: 12rem;" />
+                    <GroveButton Text="@T["Send"]" Icon="send" Click="SendAsync" Disabled="@(IsBusy || string.IsNullOrEmpty(RemoteInstanceId))" />
+                }
+            </GroveStack>
+        </GroveStack>
+
+        @if (Error is not null)
+        {
+            <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</GroveAlert>
+        }
+
+        @if (Editing)
+        {
+            <GroveCard data-testid="deployment-step-editor">
+                <GroveStack Gap="1rem">
+                    <GroveText TextStyle="TextStyle.H5" Text="@(EditingStepId is null ? T["Add {0}", Label(DraftType)] : T["Edit {0}", Label(DraftType)])" />
+                    <GroveFormField Text="@T["Step settings (JSON object)"]" Style="width: 100%;">
+                        <GroveTextArea @bind-Value="DraftProperties" Rows="14" Style="width: 100%; font-family: var(--rz-code-font-family, monospace);" />
+                    </GroveFormField>
+                    <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                        <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Editing = false)" Disabled="@IsBusy" />
+                        <GroveButton Text="@T["Save"]" Icon="save" Click="SaveStepAsync" Disabled="@IsBusy" />
+                    </GroveStack>
+                </GroveStack>
+            </GroveCard>
+        }
+
+        <GroveCard>
+            <GroveStack Gap="0.75rem">
+                <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" JustifyContent="JustifyContent.SpaceBetween" Gap="0.75rem">
+                    <GroveText TextStyle="TextStyle.H5" Text="@T["Steps"]" />
+                    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="0.5rem">
+                        <GroveDropDown @bind-Value="NewStepType" Data="@StepTypeOptions" TextProperty="Text" ValueProperty="Value" Placeholder="@T["Step type"]" AllowFiltering="true" Style="min-width: 18rem;" />
+                        <GroveButton Text="@T["Add step"]" Icon="add" Click="NewStep" Disabled="@(IsBusy || string.IsNullOrEmpty(NewStepType))" />
+                    </GroveStack>
+                </GroveStack>
+                @if (Plan.Steps.Length == 0)
+                {
+                    <GroveText TextStyle="TextStyle.Body2" Text="@T["This plan has no steps yet."]" />
+                }
+                else
+                {
+                    <GroveDataGrid Data="@Plan.Steps" TItem="GroveDeploymentStep">
+                        <Columns>
+                            <GroveDataGridColumn TItem="GroveDeploymentStep" Title="@T["Step"]"><Template Context="step">@Label(step.Type)</Template></GroveDataGridColumn>
+                            <GroveDataGridColumn TItem="GroveDeploymentStep" Property="Category" Title="@T["Category"]" Width="12rem" />
+                            <GroveDataGridColumn TItem="GroveDeploymentStep" Title="@T["Settings"]"><Template Context="step"><span style="font-family: var(--rz-code-font-family, monospace); font-size: 0.8em;">@Summary(step.Properties)</span></Template></GroveDataGridColumn>
+                            <GroveDataGridColumn TItem="GroveDeploymentStep" Title="@T["Actions"]" Width="14rem"><Template Context="step">
+                                <GroveStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                    <GroveButton Icon="arrow_upward" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => MoveAsync(step, -1))" Disabled="@(IsBusy || Array.IndexOf(Plan.Steps, step) == 0)" title="@T["Move up"]" />
+                                    <GroveButton Icon="arrow_downward" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => MoveAsync(step, 1))" Disabled="@(IsBusy || Array.IndexOf(Plan.Steps, step) == Plan.Steps.Length - 1)" title="@T["Move down"]" />
+                                    <GroveButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => EditStep(step))" title="@T["Edit"]" />
+                                    <GroveButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Click="@(() => DeleteStepAsync(step))" Disabled="@IsBusy" title="@T["Delete"]" />
+                                </GroveStack>
+                            </Template></GroveDataGridColumn>
+                        </Columns>
+                    </GroveDataGrid>
+                }
+            </GroveStack>
+        </GroveCard>
+    }
+</GroveStack>
+
+@code {
+    [Parameter] public long Id { get; set; }
+
+    private DeploymentPlanDetail? Plan { get; set; }
+    private bool NotFound { get; set; }
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+    private bool Renaming { get; set; }
+    private string DraftName { get; set; } = string.Empty;
+    private string? RemoteInstanceId { get; set; }
+    private string? NewStepType { get; set; }
+    private bool Editing { get; set; }
+    private string? EditingStepId { get; set; }
+    private string DraftType { get; set; } = string.Empty;
+    private string DraftProperties { get; set; } = "{}";
+    private object[] StepTypeOptions { get; set; } = [];
+
+    protected override Task OnParametersSetAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        Plan = await Api.Grove.Rest.Deployment.GetPlanAsync(Id);
+        NotFound = Plan is null;
+        StepTypeOptions = Plan?.StepTypes
+            .Select(type => (object)new { Value = type.Type, Text = string.IsNullOrEmpty(type.Category) ? Label(type.Type) : $"{type.Category} › {Label(type.Type)}" })
+            .ToArray() ?? [];
+    }
+
+    // "AllContentDeploymentStep" -> "All Content"
+    private static string Label(string type)
+    {
+        var name = type.EndsWith("DeploymentStep", StringComparison.Ordinal) ? type[..^"DeploymentStep".Length] : type;
+        return string.Concat(name.Select((character, index) => index > 0 && char.IsUpper(character) && !char.IsUpper(name[index - 1]) ? " " + character : character.ToString()));
+    }
+
+    private static string Summary(JsonObject properties)
+    {
+        var text = properties.ToJsonString();
+        return text.Length > 120 ? text[..117] + "..." : text;
+    }
+
+    private void NewStep()
+    {
+        var type = Plan?.StepTypes.FirstOrDefault(candidate => candidate.Type == NewStepType);
+        if (type is null) return;
+        Editing = true;
+        EditingStepId = null;
+        DraftType = type.Type;
+        DraftProperties = type.Defaults.ToJsonString(new() { WriteIndented = true });
+        Error = null;
+    }
+
+    private void EditStep(GroveDeploymentStep step)
+    {
+        Editing = true;
+        EditingStepId = step.Id;
+        DraftType = step.Type;
+        DraftProperties = step.Properties.ToJsonString(new() { WriteIndented = true });
+        Error = null;
+    }
+
+    private async Task SaveStepAsync()
+    {
+        JsonObject? properties;
+        try { properties = JsonNode.Parse(DraftProperties) as JsonObject; }
+        catch (JsonException) { properties = null; }
+        if (properties is null) { Error = T["The step settings must be a JSON object."]; return; }
+
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var write = new DeploymentStepWrite(DraftType, properties);
+            var result = EditingStepId is null
+                ? await Api.Grove.Rest.Deployment.AddStepAsync(Id, write)
+                : await Api.Grove.Rest.Deployment.SaveStepAsync(Id, EditingStepId, write);
+            if (!result.Succeeded) { Error = result.Message ?? T["The step could not be saved."]; return; }
+            Editing = false;
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task DeleteStepAsync(GroveDeploymentStep step)
+    {
+        IsBusy = true;
+        try
+        {
+            if (!await Api.Grove.Rest.Deployment.DeleteStepAsync(Id, step.Id)) Error = T["The step could not be deleted."];
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task MoveAsync(GroveDeploymentStep step, int offset)
+    {
+        if (Plan is null) return;
+        var index = Array.IndexOf(Plan.Steps, step);
+        IsBusy = true;
+        try
+        {
+            if (!await Api.Grove.Rest.Deployment.MoveStepAsync(Id, index, index + offset)) Error = T["The step could not be moved."];
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task RenameAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var result = await Api.Grove.Rest.Deployment.RenamePlanAsync(Id, DraftName);
+            if (!result.Succeeded) { Error = result.Message ?? T["The plan could not be renamed."]; return; }
+            Renaming = false;
+            await LoadAsync();
+        }
+        finally { IsBusy = false; }
+    }
+
+    private async Task SendAsync()
+    {
+        if (string.IsNullOrEmpty(RemoteInstanceId)) return;
+        IsBusy = true;
+        try
+        {
+            var result = await Api.Grove.Rest.Deployment.SendToRemoteAsync(Id, RemoteInstanceId);
+            Notifications.Notify(result.Succeeded ? NotificationSeverity.Success : NotificationSeverity.Error, T["Send to remote instance"], result.Message ?? string.Empty);
+        }
+        finally { IsBusy = false; }
+    }
+}

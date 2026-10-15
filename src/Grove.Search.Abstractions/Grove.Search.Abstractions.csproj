@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Search</RootNamespace>
+    <!-- NuGet properties-->
+    <Title>Grove Search Abstractions</Title>
+    <Description>
+      $(OCCMSDescription)
+
+      Abstractions for search.
+    </Description>
+    <PackageTags>$(PackageTags) PlatformCMS Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.ContentManagement\Grove.ContentManagement.csproj" />
+    <ProjectReference Include="..\Grove.DisplayManagement\Grove.DisplayManagement.csproj" />
+    <ProjectReference Include="..\Grove.Indexing.Abstractions\Grove.Indexing.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

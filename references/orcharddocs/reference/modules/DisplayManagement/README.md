@@ -1,4 +1,4 @@
-# Crest.DisplayManagement
+# Grove.DisplayManagement
 
 ## Shapes
 
@@ -43,7 +43,7 @@ You can use the `<shape>` tag helper to render any shape, even pass properties.
     ```
 
 For rendering content items, you could also use the following tag helper.
-Note: you need to add `@addTagHelper *, Crest.Contents.TagHelpers` to your `_ViewImports.cshtml` file to load this tag helper. Ensure your project file also has a reference to Crest.Contents.TagHelpers.
+Note: you need to add `@addTagHelper *, Grove.Contents.TagHelpers` to your `_ViewImports.cshtml` file to load this tag helper. Ensure your project file also has a reference to Grove.Contents.TagHelpers.
 
 === "Razor"
 
@@ -104,7 +104,7 @@ This is the same as `<shape type="MyShape" prop-foo="1" prop-bar="a" prop-conten
 
 ### Shape debug information
 
-You can instruct Crest to write HTML comments around rendered shapes. This makes it easier to determine which Razor or Liquid template produced a specific fragment in the final page output.
+You can instruct Grove to write HTML comments around rendered shapes. This makes it easier to determine which Razor or Liquid template produced a specific fragment in the final page output.
 
 Enable it per site from **Settings** -> **Debugging** by checking **Write shape debug information**. The setting is disabled by default.
 

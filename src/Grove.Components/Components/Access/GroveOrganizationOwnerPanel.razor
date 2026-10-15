@@ -1,0 +1,79 @@
+@namespace Grove.Components.Access
+@using System.Net.Http.Json
+@using Grove.Components.Primitives
+@inject HttpClient Http
+@inject Grove.Components.Theme.GroveApiLocalizer T
+
+@* An organization's owner and its transfer (docs/permissions.md › The organization owner). Shown
+   where the server lets the caller read it (its owner, or who manages the organization's
+   members); the transfer form only where the server says the caller may transfer (staff with
+   the tenant permission, or the current owner). The new owner is any user of the tenant: one
+   outside the organization is bound to it as a member and becomes an org-admin. *@
+
+@if (Model is not null)
+{
+    <GroveCard data-testid="organization-owner">
+        <GroveStack Gap="0.75rem">
+            <GroveText TextStyle="TextStyle.H6" Text="@T["Owner"]" />
+            <GroveText TextStyle="TextStyle.Body2" Text="@(Model.OwnerUserId ?? T["No owner yet"])" />
+            @if (Model.CanTransfer)
+            {
+                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                    <GroveTextBox @bind-Value="NewOwner" Placeholder="@T["New owner's user id"]" Style="width: 18rem;" data-testid="organization-owner-target" />
+                    <GroveButton Text="@T["Transfer ownership"]" Icon="swap_horiz" ButtonStyle="ButtonStyle.Warning" Click="TransferAsync" Disabled="@(string.IsNullOrWhiteSpace(NewOwner) || IsBusy)" data-testid="organization-owner-transfer" />
+                </GroveStack>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Error))
+            {
+                <GroveAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@Error</GroveAlert>
+            }
+        </GroveStack>
+    </GroveCard>
+}
+
+@code {
+    [Parameter, EditorRequired] public string OrganizationId { get; set; } = string.Empty;
+
+    private OwnershipInfo? Model { get; set; }
+    private string? NewOwner { get; set; }
+    private string? Error { get; set; }
+    private bool IsBusy { get; set; }
+    private string? _loadedFor;
+
+    private string Path => $"api/grove/members/organizations/{Uri.EscapeDataString(OrganizationId)}/owner";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedFor == OrganizationId)
+        {
+            return;
+        }
+
+        _loadedFor = OrganizationId;
+        using var response = await Http.GetAsync(Path);
+        Model = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<OwnershipInfo>() : null;
+    }
+
+    private async Task TransferAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            using var response = await Http.PostAsJsonAsync(Path, new TransferOwnershipRequest(NewOwner!.Trim()));
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = await AccessApi.ErrorAsync(response);
+                return;
+            }
+
+            Model = await response.Content.ReadFromJsonAsync<OwnershipInfo>();
+            NewOwner = null;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

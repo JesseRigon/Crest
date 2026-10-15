@@ -1,4 +1,4 @@
-# Crest Theming explained (`Crest.Themes`)
+# Grove Theming explained (`Grove.Themes`)
 
 This article explains how a Content Item is rendered, and the many ways in which the HTML that is rendered can be customized.  
 It also explains the fundamental theming concepts, namely __Shapes__, __Alternates__, __Templates__, __Differentiators__, __Content Zones__ and __Display Types__.
@@ -104,7 +104,7 @@ For instance the `TitleDisplayDriver` class will return a shape of type `TitlePa
 
 Then the `BagPart` shape is added in the `Content` zone of the main shape at the position `5`. See [`BagPartDisplayDriver`](https://github.com/OrchardCMS/OrchardCore/blob/main/src/OrchardCore.Modules/OrchardCore.Flows/Drivers/BagPartDisplayDriver.cs).
 
-Once all the drivers for all the parts and all the fields have returned their shapes to specific zones of the main `Content` shape, Crest will look for a matching template.
+Once all the drivers for all the parts and all the fields have returned their shapes to specific zones of the main `Content` shape, Grove will look for a matching template.
 Template matching is done dynamically, and if no specific ones are created for a Content Type, then the file `Content.cshtml` (or `Content.liquid`) is used.  
 The default template will go over all the zones it knows about and render the shapes that are inside each of them.  
 See [the source file](https://github.com/OrchardCMS/OrchardCore/blob/main/src/OrchardCore.Modules/OrchardCore.Contents/Views/Content.cshtml) where the `Header` zone shapes are rendered (the `TitlePart` shape) and also `Content` where the `Content` zone shapes are rendered (`BagPart` and `TextField` shapes).
@@ -121,7 +121,7 @@ Themes are able to provide custom templates that will be used instead of the def
 When the __Content__ shape is rendered into HTML, it is done using the `Content.cshtml` file as mentioned earlier.  
 Similarly, the __TitlePart__ shape will be converted using a `TitlePart.cshtml` template.
 
-This means that we can copy the `Content.cshtml` file from the `Crest.Contents` module in order to customize how the __Content__ shape is rendered.  
+This means that we can copy the `Content.cshtml` file from the `Grove.Contents` module in order to customize how the __Content__ shape is rendered.  
 
 One issue with customizing the `Content.cshtml` file is that it would change how any content item is rendered.  
 The original file is generic enough to be usable with any content type, and does so by rendering a generic `<article>` element with a `<header>`, a body and a `<footer>`.

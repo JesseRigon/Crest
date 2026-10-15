@@ -1,6 +1,6 @@
 # Media
 
-Crest allows you to upload your media, store them in Azure if needed and reference your scripts and css files.
+Grove allows you to upload your media, store them in Azure if needed and reference your scripts and css files.
 
 ## Manage the Assets
 

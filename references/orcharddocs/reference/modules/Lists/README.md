@@ -1,4 +1,4 @@
-# Lists (`Crest.Lists`)
+# Lists (`Grove.Lists`)
 
 A ListPart allows you to associate content items to a parent container (Ex: A blog contains a list of blog posts).
 
@@ -64,7 +64,7 @@ For instance, it can be set in a file named `Blog-ListPart.liquid` to override t
 {{ Model.Pager | shape_render }}
 ```
 
-## Crest Helpers
+## Grove Helpers
 
 ### QueryListItemsCountAsync
 
@@ -93,7 +93,7 @@ The `list_items` filter loads published content items for a given `ContentItem` 
 ## Lucene Indexing
 
 **Breaking Change**: Every content item that is contained in a list has a `ContainedPart` associated with it.
-The indexed data in Lucene before Crest 1.1 was:
+The indexed data in Lucene before Grove 1.1 was:
 
 `"Content.ContentItem.ListContentItemId"`
 

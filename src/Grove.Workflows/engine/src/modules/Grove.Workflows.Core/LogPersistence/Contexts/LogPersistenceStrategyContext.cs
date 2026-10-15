@@ -1,0 +1,3 @@
+namespace Grove.Workflows.LogPersistence;
+
+public record LogPersistenceStrategyContext(CancellationToken CancellationToken);

@@ -3,7 +3,7 @@ const { fetchAntiforgeryToken } = require('./antiforgery');
 // Provisions the two non-admin identities the localization multi-user/anonymous checks
 // need (see docs/localization.md): a "testuser" (rung 2 - stored default es)
 // and a "testuser2" (rung 2 - stored default fr, used for switch-user coverage). Created
-// idempotently via api/crest/users (UsersController) against an already-logged-in
+// idempotently via api/grove/users (UsersController) against an already-logged-in
 // admin page/context - no recipe/setup changes, so this works against any already-
 // provisioned tenant, not just a fresh one.
 //
@@ -14,18 +14,18 @@ function testUserCredentials(suffix) {
   const upper = suffix.toUpperCase();
   return {
     username: process.env[`CLIENT_USER${upper}`] || `testuser${suffix}`,
-    password: process.env[`CLIENT_PASSWORD${upper}`] || 'CrestRules1!',
+    password: process.env[`CLIENT_PASSWORD${upper}`] || 'GroveRules1!',
   };
 }
 
 // suffix: '' for the first test user, '2' for the second (switch-user) identity.
-// Looks up by username first (GET api/crest/users?search=) and only creates if absent -
+// Looks up by username first (GET api/grove/users?search=) and only creates if absent -
 // id is always resolved via that same id-based API (UsersController.ListAsync),
 // never guessed or looked up by name after creation.
 //
 // options.roles selects the identity's role set (default ['Administrator'] - see the
 // comment at the create call). When the user already exists with a DIFFERENT role set,
-// the roles are aligned via PUT api/crest/users/{id} - that diff-based save is the
+// the roles are aligned via PUT api/grove/users/{id} - that diff-based save is the
 // role-switching fixture's lever, so a denial-path check can reuse one stable account
 // across runs without accumulating grants.
 async function ensureTestUser(page, baseUrl, suffix = '', options = {}) {
@@ -34,17 +34,17 @@ async function ensureTestUser(page, baseUrl, suffix = '', options = {}) {
   // (DisplayManager/AppController.GetManifest requires AdminPermissions.
   // AccessAdminPanel) - a role-less user can log in but gets "Access denied" on
   // every /Admin route, which is useless for most checks. "Administrator" is the
-  // only stock role with isAdmin:true (confirmed via GET api/crest/roles); a
+  // only stock role with isAdmin:true (confirmed via GET api/grove/roles); a
   // throwaway dev-tenant test account having full admin rights is an acceptable
   // trade-off as the default, matching every other Playwright check's use of the
   // fixed `admin` account. Denial-path checks override this deliberately.
   const roles = options.roles ?? ['Administrator'];
 
   const existing = await page.evaluate(async ({ baseUrl, username }) => {
-    const response = await fetch(`${baseUrl}/api/crest/users?search=${encodeURIComponent(username)}`, {
+    const response = await fetch(`${baseUrl}/api/grove/users?search=${encodeURIComponent(username)}`, {
       credentials: 'include',
     });
-    if (!response.ok) throw new Error(`GET api/crest/users?search= failed: ${response.status} ${await response.text()}`);
+    if (!response.ok) throw new Error(`GET api/grove/users?search= failed: ${response.status} ${await response.text()}`);
     const body = await response.json();
     return body.items.find(user => user.userName?.toLowerCase() === username.toLowerCase()) || null;
   }, { baseUrl, username });
@@ -57,7 +57,7 @@ async function ensureTestUser(page, baseUrl, suffix = '', options = {}) {
       const antiforgery = await fetchAntiforgeryToken(page, baseUrl);
       await page.evaluate(async ({ baseUrl, existing, roles, antiforgery }) => {
         const headers = { 'Content-Type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken };
-        const response = await fetch(`${baseUrl}/api/crest/users/${encodeURIComponent(existing.id)}`, {
+        const response = await fetch(`${baseUrl}/api/grove/users/${encodeURIComponent(existing.id)}`, {
           method: 'PUT',
           credentials: 'include',
           headers,
@@ -83,13 +83,13 @@ async function ensureTestUser(page, baseUrl, suffix = '', options = {}) {
 
   const created = await page.evaluate(async ({ baseUrl, username, password, roles, antiforgery }) => {
     const headers = { 'Content-Type': 'application/json', [antiforgery.headerName]: antiforgery.requestToken };
-    const response = await fetch(`${baseUrl}/api/crest/users`, {
+    const response = await fetch(`${baseUrl}/api/grove/users`, {
       method: 'POST',
       credentials: 'include',
       headers,
       body: JSON.stringify({
         userName: username,
-        email: `${username}@crest.example.com`,
+        email: `${username}@grove.example.com`,
         emailConfirmed: true,
         isEnabled: true,
         roles,

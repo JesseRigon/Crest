@@ -1,8 +1,8 @@
 # Configuration
 
-Crest allows you to create your own setup templates (known as [Recipes](../../reference/glossary/README.md#recipe)) and configure your [Tenants](../../reference/glossary/README.md#tenant) individually.
+Grove allows you to create your own setup templates (known as [Recipes](../../reference/glossary/README.md#recipe)) and configure your [Tenants](../../reference/glossary/README.md#tenant) individually.
 
-## Configure your Crest instance
+## Configure your Grove instance
 
 - [Configuration](../../reference/modules/Configuration/README.md)
 - [Setup](../../reference/modules/Setup/README.md)

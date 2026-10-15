@@ -1,11 +1,11 @@
 // Legacy (stock Razor) admin pages render inside an iframe wrapper, never nesting a second
-// Crest shell. Verifies the initial frame, an in-frame link navigation, and a location.href
+// Grove shell. Verifies the initial frame, an in-frame link navigation, and a location.href
 // reassignment all preserve legacy-frame=1 and stay free of nested chrome. Uses the stock
 // Deployment plans pages, which have no Blazor replacement yet.
 module.exports = async function run(page, ctx) {
   const listPath = '/Admin/DeploymentPlan/Index';
 
-  async function assertNoNestedCrestShell(frame) {
+  async function assertNoNestedGroveShell(frame) {
     const nestedFrames = await frame.locator('iframe.legacy-admin-frame').count();
     const nestedFrameWrapper = await frame.locator('.legacy-admin-frame-page').count();
     const nestedPrimaryNavMenu = await frame.locator('.primary-nav-menu').count();
@@ -24,8 +24,8 @@ module.exports = async function run(page, ctx) {
     return [{ name: 'legacy-frame-available', pass: false, message: 'Legacy frame was not available.' }];
   }
 
-  await frame.locator('body.crest-legacy-frame').waitFor({ timeout: 20000 });
-  const initialNoNesting = await assertNoNestedCrestShell(frame);
+  await frame.locator('body.grove-legacy-frame').waitFor({ timeout: 20000 });
+  const initialNoNesting = await assertNoNestedGroveShell(frame);
   const initialFrameUrl = new URL(frame.url());
   const initialKeepsLegacyParam = initialFrameUrl.searchParams.get('legacy-frame') === '1';
 
@@ -46,8 +46,8 @@ module.exports = async function run(page, ctx) {
     }, createHref),
   ]);
   await frame.waitForLoadState('networkidle').catch(() => {});
-  await frame.locator('body.crest-legacy-frame').waitFor({ timeout: 20000 });
-  const linkNoNesting = await assertNoNestedCrestShell(frame);
+  await frame.locator('body.grove-legacy-frame').waitFor({ timeout: 20000 });
+  const linkNoNesting = await assertNoNestedGroveShell(frame);
 
   await Promise.all([
     frame.waitForURL(/\/Admin\/DeploymentPlan\/Index/i, { timeout: 20000 }),
@@ -56,8 +56,8 @@ module.exports = async function run(page, ctx) {
     }, listPath),
   ]);
   await frame.waitForLoadState('networkidle').catch(() => {});
-  await frame.locator('body.crest-legacy-frame').waitFor({ timeout: 20000 });
-  const reassignedNoNesting = await assertNoNestedCrestShell(frame);
+  await frame.locator('body.grove-legacy-frame').waitFor({ timeout: 20000 });
+  const reassignedNoNesting = await assertNoNestedGroveShell(frame);
   const reassignedUrl = new URL(frame.url());
   const reassignedKeepsLegacyParam = reassignedUrl.searchParams.get('legacy-frame') === '1';
 

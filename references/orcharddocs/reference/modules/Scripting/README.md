@@ -1,4 +1,4 @@
-# Scripting (`Crest.Scripting`)
+# Scripting (`Grove.Scripting`)
 
 ## Purpose
 
@@ -54,7 +54,7 @@ The File scripting engine provides methods to read file contents.
 | `text`   | `file:text('../wwwroot/template.html')` | Returns the content of a text file.           |
 | `base64` | `file:base64('../wwwroot/image.jpg')`   | Returns the base64 encoded content of a file. |
 
-## JavaScript `Crest.Scripting.JavaScript`
+## JavaScript `Grove.Scripting.JavaScript`
 
 The JavaScript scripting module implements an `IScriptingEngine` that uses [Jint](https://github.com/sebastienros/jint) to evaluate scripts.
 
@@ -110,7 +110,7 @@ Three kinds of method are created eagerly instead, so a factory backing one of t
 
 ### Methods
 
-Here is a list of javascript methods provided by Crest Modules.
+Here is a list of javascript methods provided by Grove Modules.
 
 #### Generic functions
 
@@ -155,7 +155,7 @@ To read the value back later using JavaScript:
 var plainText = decrypt(encryptedValue);
 ```
 
-#### Content (`Crest.Contents`)
+#### Content (`Grove.Contents`)
 
 | Function                                                                                                   | Description                                                         |
 |------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
@@ -165,7 +165,7 @@ var plainText = decrypt(encryptedValue);
 | `deleteContentItemAsync(contentItem: IContent): Promise`                                                   | Deletes an existing content item                                    |
 | `getUrlPrefix(path: String): String`                                                                       | Prefixes the path with the Tenant prefix (if specified)             |
 
-#### Layers (`Crest.Layers`)
+#### Layers (`Grove.Layers`)
 
 | Function                         | Description                                                                                                                          |
 |----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
@@ -175,13 +175,13 @@ var plainText = decrypt(encryptedValue);
 | `url(url: String): Boolean`      | Returns true if the current URL matches the provided URL. Add a `*` to the end of the URL parameter to match any URL that starts with the provided value. |
 | `culture(name: String): Boolean` | Returns true if the current culture name or the current culture's parent name matches the `name` argument                            |
 
-#### Queries (`Crest.Queries`)
+#### Queries (`Grove.Queries`)
 
 | Function                                                                                               | Description                      |
 |--------------------------------------------------------------------------------------------------------|----------------------------------|
 | `executeQueryAsync(name: String, parameters: Dictionary<string,object>): Promise<IEnumerable<object>>` | Returns the result of the query. |
 
-#### HTTP (`Crest.Workflows.Platform.Http`)
+#### HTTP (`Grove.Workflows.Platform.Http`)
 
 | Function                                                             | Description                                                                                                                                                                 |
 |----------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -193,15 +193,15 @@ var plainText = decrypt(encryptedValue);
 | `requestForm(name: String): String`                                  | Array`                                                                                                                                                                      | Returns the value(s) of the form field name passed in as an argument. |
 | `deserializeRequestDataAsync(): Promise<Dictionary<string, object>>` | Deserializes the request data as a Dictionary<string, object> for requests that send JSON or form data. Replaces deprecated queryStringAsJson and requestFormAsJson methods |
 
-#### Recipes (`Crest.Recipes`)
+#### Recipes (`Grove.Recipes`)
 
 | Function                                                   | Description                                                                                                                                                                                                            |
 |------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `variables(): string`                                      | Declare variables at the root of a recipe. Ex: `"variables": { "blogContentItemId": "[js:uuid()]" }`  Retrieve a variable value like this: `"ContentItemId": "[js: variables('blogContentItemId')]"`                   |
 | `parameters(): string`                                     | Retrieves the parameters specified during the setup. Ex: `"Owner": "[js: parameters('AdminUserId')]"` See the available [Setup Recipe parameters](../Setup/README.md#recipe-parameters)                                |
-| `configuration(key: String, defaultValue: String): string` | Retrieves the specified configuration setting by its key, optionally providing a default. Ex: `[js: configuration('Crest_Admin:AdminUrlPrefix', 'Admin')]` See [IShellConfiguration](../Configuration/README.md) |
+| `configuration(key: String, defaultValue: String): string` | Retrieves the specified configuration setting by its key, optionally providing a default. Ex: `[js: configuration('Grove_Admin:AdminUrlPrefix', 'Admin')]` See [IShellConfiguration](../Configuration/README.md) |
 
-#### Workflows (`Crest.Workflows.Platform.Http`)
+#### Workflows (`Grove.Workflows.Platform.Http`)
 
 The following JavaScript functions are available by default to any workflow activity that supports script expressions:
 

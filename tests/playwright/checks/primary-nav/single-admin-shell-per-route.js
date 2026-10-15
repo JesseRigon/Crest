@@ -1,7 +1,7 @@
-// Converted from Crest.AdminTheme/tests/playwright/admin-route-primary-nav-menu.js.
+// Converted from Grove.AdminTheme/tests/playwright/admin-route-primary-nav-menu.js.
 // The original script was parameterized per-invocation (ADMIN_ROUTE / EXPECT_ACTIVE_TEXT /
 // EXPECT_INACTIVE_TEXT env vars) to probe many routes individually. This keeps the
-// generally-true invariant — exactly one Crest admin shell renders, with a visible
+// generally-true invariant — exactly one Grove admin shell renders, with a visible
 // primaryNavMenu and main content area — for a representative route, rather than
 // re-parameterizing per fixed suite run.
 //

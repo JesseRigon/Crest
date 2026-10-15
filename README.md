@@ -1,30 +1,30 @@
-# Crest
+# Grove
 
-> **Please read this first.** Crest is a personal project. I am not a good programmer, and
+> **Please read this first.** Grove is a personal project. I am not a good programmer, and
 > most of this code was vibe coded. It is not hardened, not
-> security-reviewed and not stable. **If you need safe, stable code, don't use Crest** —
+> security-reviewed and not stable. **If you need safe, stable code, don't use Grove** —
 > use the original projects below, which are excellent and have wonderful communities
 > behind them. Honestly, I hope no one actually uses it.
 >
-> Crest is **not affiliated with, or endorsed by,** OrchardCore, the .NET Foundation, Elsa
+> Grove is **not affiliated with, or endorsed by,** OrchardCore, the .NET Foundation, Elsa
 > Workflows, Radzen or any other project it builds on.
 
-Crest is an **application layer**: Blazor admin, site and member shells, the content API,
+Grove is an **application layer**: Blazor admin, site and member shells, the content API,
 Parties (people, organizations, roles), Members (member accounts, organizations, the
 member portal) and Workflows (an Elsa-based workflow service with a registry, units of
 work and connectors). See [docs/architecture.md](docs/architecture.md).
 
-## Why Crest forks OrchardCore
+## Why Grove forks OrchardCore
 
-Crest started as a set of modules on [OrchardCore](https://github.com/OrchardCMS/OrchardCore).
+Grove started as a set of modules on [OrchardCore](https://github.com/OrchardCMS/OrchardCore).
 Over time I wanted a lot of opinionated changes — Blazor-only UIs, permissions injected
 into queries, a different audit and media model — that the OrchardCore community
-shouldn't have to carry. So Crest now contains a hard fork of OrchardCore, its projects beside
-Crest's own, and develops it on its own. It is not meant to go back upstream.
+shouldn't have to carry. So Grove now contains a hard fork of OrchardCore, its projects beside
+Grove's own, and develops it on its own. It is not meant to go back upstream.
 
-Crest borrows heavily from several permissively licensed projects (MIT and BSD-3-Clause):
+Grove borrows heavily from several permissively licensed projects (MIT and BSD-3-Clause):
 OrchardCore, Elsa, Radzen Blazor, OrchardCore.Commerce and others. Their licences and
-copyright notices stay with the code — see [NOTICE.md](NOTICE.md). Crest itself is MIT, so
+copyright notices stay with the code — see [NOTICE.md](NOTICE.md). Grove itself is MIT, so
 anything taken from here is as freely usable as what it was built from.
 
 ## Layout
@@ -33,67 +33,67 @@ One repository holds the platform and the application layer. The projects stay
 independently packageable.
 
 ```text
-Crest/
+Grove/
   src/                every project, platform and application alike
-    Crest.Infrastructure/, Crest.Abstractions/, Crest.ContentManagement/, Crest.Users/, Crest.Media/, ...
-                      the platform, forked from OrchardCore and renamed Crest.*:
+    Grove.Infrastructure/, Grove.Abstractions/, Grove.ContentManagement/, Grove.Users/, Grove.Media/, ...
+                      the platform, forked from OrchardCore and renamed Grove.*:
                       tenants, users, permissions, content, features, settings, the
-                      module system. Listed by kind in src/Crest.Build/Platform.Projects.props.
-    Crest.Build/      the platform's build settings
-    Crest.Server/     the application layer's server module
-    Crest.Components/ the Blazor component library
-    Crest.Iconify/    Iconify provider
-    Crest.Icons/      icon registry and UI
-    Crest.Parties/ Crest.Members/ Crest.Workflows/ Crest.Money/ ...
-    Crest.AdminTheme/ Crest.SiteTheme/ Crest.MemberTheme/
-  test/               the platform's tests (Crest's modules keep theirs in their own tests/ folders)
+                      module system. Listed by kind in src/Grove.Build/Platform.Projects.props.
+    Grove.Build/      the platform's build settings
+    Grove.Server/     the application layer's server module
+    Grove.Components/ the Blazor component library
+    Grove.Iconify/    Iconify provider
+    Grove.Icons/      icon registry and UI
+    Grove.Parties/ Grove.Members/ Grove.Workflows/ Grove.Money/ ...
+    Grove.AdminTheme/ Grove.SiteTheme/ Grove.MemberTheme/
+  test/               the platform's tests (Grove's modules keep theirs in their own tests/ folders)
   tests/              the browser suites
-  tools/              build tools (Crest.LazyModules)
+  tools/              build tools (Grove.LazyModules)
   docs/               design docs and decisions
 ```
 
-`Crest.Platform.slnx` builds the platform; `Crest.slnx` builds the Crest modules, which
+`Grove.Platform.slnx` builds the platform; `Grove.slnx` builds the Grove modules, which
 reference the platform's projects directly (`$(PlatformSrcDir)`, the `src/` folder). Platform
-and application projects sit side by side under `src/`; `src/Crest.Build/Platform.Projects.props`
+and application projects sit side by side under `src/`; `src/Grove.Build/Platform.Projects.props`
 says which is which, and `Directory.Build.props` gives the platform projects their own build
 settings.
 
 ## Project roles
 
-`Crest.Server` is the application layer's server module. It serves the active Blazor
-admin shell when a Crest-compatible admin theme is selected, exposes the `api/crest/*`
+`Grove.Server` is the application layer's server module. It serves the active Blazor
+admin shell when a Grove-compatible admin theme is selected, exposes the `api/grove/*`
 JSON endpoints the Blazor shells need, and owns shared infrastructure such as legacy
 frame theme selection. It calls the platform's services and enforces its permissions; it
 does not keep a second copy of content, auth, menu or theme state.
 
-`Crest.Components` is the shared Radzen-derived Blazor component layer. It owns reusable
+`Grove.Components` is the shared Radzen-derived Blazor component layer. It owns reusable
 primitives, forms, model/editor UI, and client-safe UI contracts. It must not reference
 feature modules.
 
-`Crest.Iconify` owns the Iconify-specific C# API, provider settings, and optional
-full-library cache integration. It does not depend on `Crest.Icons`.
+`Grove.Iconify` owns the Iconify-specific C# API, provider settings, and optional
+full-library cache integration. It does not depend on `Grove.Icons`.
 
-`Crest.Icons` owns the generic icon provider contract, registry/search/used-icon pack
+`Grove.Icons` owns the generic icon provider contract, registry/search/used-icon pack
 services, tenant/media icon cache behavior, icon UI such as `IconSelector`, and
-icon-specific CSS/JS/assets. It depends on `Crest.Iconify` for the default Iconify provider.
+icon-specific CSS/JS/assets. It depends on `Grove.Iconify` for the default Iconify provider.
 
-Admin and site themes are composition roots. They reference `Crest.Components`,
-`Crest.Icons`, and the feature UI modules they want compiled into the WASM app.
+Admin and site themes are composition roots. They reference `Grove.Components`,
+`Grove.Icons`, and the feature UI modules they want compiled into the WASM app.
 
-Application modules that build UI reference `Crest.Components` explicitly. For example, a
+Application modules that build UI reference `Grove.Components` explicitly. For example, a
 new module `Example.BlazorWasm` would reference the components project and contribute
 Blazor routes/components to the admin WASM build.
 
 In the future, I'd like 3rd party modules to be able to call 'generic' components from the
 shared components module as a standard library, so custom component libraries can recreate
 them in their own style. I'd also like a standard API for modules and routes to declare
-pages that Crest serves as WASM on their behalf.
+pages that Grove serves as WASM on their behalf.
 
 ## Runtime model
 
 The platform is the system of record for tenants, users, permissions, content,
-features, settings, themes, admin menus and navigation. Crest's modules build on its
-services. When the platform lacks something Crest needs, the platform is changed: no
+features, settings, themes, admin menus and navigation. Grove's modules build on its
+services. When the platform lacks something Grove needs, the platform is changed: no
 shims or parallel copies.
 
 The end state is Blazor or headless only. The Liquid views and stock Razor/Vue admin pages
@@ -106,23 +106,23 @@ Preferred data-access order for the Blazor shells:
 2. GraphQL for content/query/read models where it fits.
 3. Queries for configured reports and query-backed screens.
 4. OpenID/JWT for external headless clients.
-5. `api/crest/*` endpoints for Blazor-specific projections and actions, or functionality
+5. `api/grove/*` endpoints for Blazor-specific projections and actions, or functionality
    that is only reachable through Razor UI, services or shapes today.
 
 ## Blazor admin theme serving
 
-`Crest.Server` installs middleware that checks the selected admin theme. If it is
-`Crest.AdminTheme` or carries the `crest-blazor` manifest tag (itself or through its
-`BaseTheme` chain), the middleware serves the Crest admin WASM files for admin routes and
+`Grove.Server` installs middleware that checks the selected admin theme. If it is
+`Grove.AdminTheme` or carries the `grove-blazor` manifest tag (itself or through its
+`BaseTheme` chain), the middleware serves the Grove admin WASM files for admin routes and
 Blazor assets.
 
-The admin shell's assets live under `Crest.AdminTheme/wasm`; the theme manifest project
-is `Crest.AdminTheme`.
+The admin shell's assets live under `Grove.AdminTheme/wasm`; the theme manifest project
+is `Grove.AdminTheme`.
 
 ## Component system boundary
 
 The current UI implementation is Radzen-derived. Shared primitives belong in
-`Crest.Components`. Feature UI and assets belong with their feature modules; theme chrome
+`Grove.Components`. Feature UI and assets belong with their feature modules; theme chrome
 belongs with theme projects.
 
 Shared runtime contracts and infrastructure should not depend on Radzen. Future component
@@ -130,22 +130,22 @@ systems should be able to reuse the server runtime, JSON contracts, route/theme
 conventions and legacy frame infrastructure without copying Radzen-specific code.
 
 The planned neutral client/core package has not been extracted yet. Until it exists, some
-client contracts and display-management ideas still live inside `Crest.Components` or the
-Crest admin WASM project.
+client contracts and display-management ideas still live inside `Grove.Components` or the
+Grove admin WASM project.
 
 ## Legacy frame system (transitional)
 
-Legacy framing lets a stock Razor admin page render inside the Crest admin shell when no
+Legacy framing lets a stock Razor admin page render inside the Grove admin shell when no
 Blazor page exists for it yet. It goes away with the last stock admin page.
 
-The pieces live in `Crest.Server`:
+The pieces live in `Grove.Server`:
 
 ```text
-Crest.Server/LegacyFrameThemeSelector.cs
-Crest.Server/Themes/Crest.LegacyFrame
+Grove.Server/LegacyFrameThemeSelector.cs
+Grove.Server/Themes/Grove.LegacyFrame
 ```
 
-Requests with `legacy-frame=1` or `legacy-frame=true` use the stripped `Crest.LegacyFrame`
+Requests with `legacy-frame=1` or `legacy-frame=true` use the stripped `Grove.LegacyFrame`
 admin theme. It keeps the admin resources available while hiding the normal admin chrome,
 so the page can sit inside an iframe.
 
@@ -154,13 +154,13 @@ so the page can sit inside an iframe.
 The repository stays a single git repository while publishing separate NuGet packages. The
 intended package boundaries are:
 
-- The platform's packages (`Crest.*`; the implementation library is `Crest.Infrastructure`).
-- `Crest.Server`: the server module and shared server infrastructure.
-- `Crest.Components`: the component layer.
-- `Crest.Iconify`: Iconify provider API and optional full-library cache.
-- `Crest.Icons`: icon providers, icon UI, and icon-owned assets.
+- The platform's packages (`Grove.*`; the implementation library is `Grove.Infrastructure`).
+- `Grove.Server`: the server module and shared server infrastructure.
+- `Grove.Components`: the component layer.
+- `Grove.Iconify`: Iconify provider API and optional full-library cache.
+- `Grove.Icons`: icon providers, icon UI, and icon-owned assets.
 - Theme packages: admin/site/member composition roots.
-- Future `Crest.Client`: UI-library-neutral client contracts, display manager, routing
+- Future `Grove.Client`: UI-library-neutral client contracts, display manager, routing
   helpers, and the legacy frame client component.
 
 Project files are not fully package-ready yet. Some projects still have
@@ -169,8 +169,8 @@ before publishing.
 
 ## Development recipes
 
-Reusable development recipes live under `Crest.SiteTheme/Recipes`: `CrestBasicDev` for a
-focused admin shell and `CrestFullDev` for broad feature testing. Host apps keep
+Reusable development recipes live under `Grove.SiteTheme/Recipes`: `GroveBasicDev` for a
+focused admin shell and `GroveFullDev` for broad feature testing. Host apps keep
 tenant/user autosetup recipes in the host repo.
 
 ## Validation
@@ -184,7 +184,7 @@ inline scripts.
 
 MIT — see [LICENSE](LICENSE).
 
-Crest vendors, forks and adapts several permissively licensed works, each of which keeps
+Grove vendors, forks and adapts several permissively licensed works, each of which keeps
 its own licence beside the code it covers: the platform projects (OrchardCore,
 BSD-3-Clause, `LICENSE.platform`), the workflow engine and designer (Elsa), the Blazor component
 library (Radzen Blazor), the money types (OrchardCore.Commerce) and the default site
