@@ -67,7 +67,7 @@
       "node_modules/@crestapps/bootstrap-select/dist/js/bootstrap-select.min.js",
       "node_modules/@crestapps/bootstrap-select/dist/js/bootstrap-select.min.js.map"
     ],
-    "dest": "wwwroot/Vendor/CrestApps/bootstrap-select/",
+    "dest": "wwwroot/Vendor/bootstrap-select/",
     "tags": [ "resources", "bootstrap-select", "js" ]
   },
   {
@@ -77,7 +77,7 @@
       "node_modules/@crestapps/bootstrap-select/dist/css/bootstrap-select.css",
       "node_modules/@crestapps/bootstrap-select/dist/css/bootstrap-select.min.css"
     ],
-    "dest": "wwwroot/Vendor/CrestApps/bootstrap-select/",
+    "dest": "wwwroot/Vendor/bootstrap-select/",
     "tags": [ "resources", "bootstrap-select", "css" ]
   },
   {

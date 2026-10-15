@@ -464,8 +464,8 @@ public sealed class ResourceManagementOptionsConfiguration
             .DefineStyle("bootstrap-select")
             .SetDependencies("bootstrap")
             .SetUrl(
-                "~/Grove.Resources/Vendor/CrestApps/bootstrap-select/bootstrap-select.min.css",
-                "~/Grove.Resources/Vendor/CrestApps/bootstrap-select/bootstrap-select.css"
+                "~/Grove.Resources/Vendor/bootstrap-select/bootstrap-select.min.css",
+                "~/Grove.Resources/Vendor/bootstrap-select/bootstrap-select.css"
             )
             .SetCdn(
                 "https://cdn.jsdelivr.net/npm/@crestapps/bootstrap-select@1.2.4/dist/css/bootstrap-select.min.css",
@@ -481,8 +481,8 @@ public sealed class ResourceManagementOptionsConfiguration
             .DefineScript("bootstrap-select")
             .SetDependencies("bootstrap")
             .SetUrl(
-                "~/Grove.Resources/Vendor/CrestApps/bootstrap-select/bootstrap-select.min.js",
-                "~/Grove.Resources/Vendor/CrestApps/bootstrap-select/bootstrap-select.js"
+                "~/Grove.Resources/Vendor/bootstrap-select/bootstrap-select.min.js",
+                "~/Grove.Resources/Vendor/bootstrap-select/bootstrap-select.js"
             )
             .SetCdn(
                 "https://cdn.jsdelivr.net/npm/@crestapps/bootstrap-select@1.2.4/dist/js/bootstrap-select.min.js",

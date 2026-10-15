@@ -170,14 +170,6 @@ unless it is proprietary or depends on proprietary code. Three exist: `OptionPic
 manifests, permission names, option-set keys (`parties.*` — already unbranded), route
 constants and test names follow.
 
-**The project is Grove, formerly Crest.** "Crest" was already in use next to OrchardCore by
-another party (CrestApps, `orchardcore.crestapps.com`, an OrchardCore module vendor), so the
-project was renamed on 2026-10-14, by script, everywhere at once: module, assembly and package
-names, the `Grove.` namespaces, the `Grove*` component library prefix, the `X-Powered-By`
-value, the `api/grove` and `grove-workflows` route prefixes, the stored-by-type names, the
-configuration section, and the docs. The rule that follows is what made that a mechanical
-change, and it keeps the next one mechanical too. The GitHub repositories follow the same name (`JesseRigon/Grove`, `JesseRigon/Grove.Host`).
-
 **"Grove" appears only in module naming.** Modules, assemblies and packages carry the
 `Grove.` prefix; nothing inside them does — not permission names, types, functions, settings
 keys or other internal names (`ManageConnections`, not `ManageGroveWorkflowConnections`). The
