@@ -2,16 +2,27 @@ using System.Text;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
 using Microsoft.Extensions.Logging;
+using Grove.Environment.Shell.Configuration;
 using Grove.Search.Elasticsearch.Models;
 
 namespace Grove.Search.Elasticsearch.Services;
 
+/// <summary>
+/// Builds the Elasticsearch client from the options its connection gives. The client sends
+/// through <see cref="EngineRoutedHttpHandler"/> (the connector engine's guarded pipeline, with
+/// the connection's rate limit, retries and response cap); the transport's own retries, sniffing
+/// and pinging are off so attempts never multiply and every request is one engine call.
+/// </summary>
 public sealed class ElasticsearchClientFactory : IElasticsearchClientFactory
 {
+    private readonly IServiceProvider _services;
+    private readonly IShellConfiguration _shellConfiguration;
     private readonly ILogger _logger;
 
-    public ElasticsearchClientFactory(ILogger<ElasticsearchClientFactory> logger)
+    public ElasticsearchClientFactory(IServiceProvider services, IShellConfiguration shellConfiguration, ILogger<ElasticsearchClientFactory> logger)
     {
+        _services = services;
+        _shellConfiguration = shellConfiguration;
         _logger = logger;
     }
 
@@ -25,23 +36,38 @@ public sealed class ElasticsearchClientFactory : IElasticsearchClientFactory
             _ => new BasicAuthentication(configuration.Username, configuration.Password),
         };
 
-        var settings = configuration.ConnectionType switch
+        var nodes = GetNodeUris(configuration).ToArray();
+        if (nodes.Length == 0 && configuration.ConnectionType != ElasticsearchConnectionType.CloudConnectionPool)
         {
-            ElasticsearchConnectionType.CloudConnectionPool => new ElasticsearchClientSettings(configuration.CloudId, authentication),
-            ElasticsearchConnectionType.StaticConnectionPool => new ElasticsearchClientSettings(new StaticNodePool(GetNodeUris(configuration)))
-                .Authentication(authentication),
-            ElasticsearchConnectionType.SniffingConnectionPool => new ElasticsearchClientSettings(new SniffingNodePool(GetNodeUris(configuration)))
-                .Authentication(authentication),
-            ElasticsearchConnectionType.StickyConnectionPool => new ElasticsearchClientSettings(new StickyNodePool(GetNodeUris(configuration)))
-                .Authentication(authentication),
-            _ => new ElasticsearchClientSettings(GetNodeUris(configuration).FirstOrDefault())
-                .Authentication(authentication),
+            // No connection defined yet: the feature stays inert. The placeholder node is never
+            // reached, because every request goes through the engine, which refuses an unknown
+            // connection.
+            _logger.LogWarning("Elasticsearch has no connection: define the '{Connection}' connection to use it.", ElasticsearchConnectionOptionsConfigurations.ConnectionKey(_shellConfiguration));
+            nodes = [new Uri("http://localhost:9200")];
+        }
+
+        NodePool pool = configuration.ConnectionType switch
+        {
+            ElasticsearchConnectionType.CloudConnectionPool => new CloudNodePool(configuration.CloudId, authentication),
+            ElasticsearchConnectionType.StaticConnectionPool => new StaticNodePool(nodes),
+            // Sniffing would discover nodes past the connection's base URL: a static pool instead.
+            ElasticsearchConnectionType.SniffingConnectionPool => new StaticNodePool(nodes),
+            ElasticsearchConnectionType.StickyConnectionPool => new StickyNodePool(nodes),
+            _ => new SingleNodePool(nodes[0]),
         };
 
-        if (!string.IsNullOrWhiteSpace(configuration.CertificateFingerprint))
-        {
-            settings.CertificateFingerprint(configuration.CertificateFingerprint);
-        }
+        var connectionKey = ElasticsearchConnectionOptionsConfigurations.ConnectionKey(_shellConfiguration);
+        var invoker = new HttpRequestInvoker((_, _) => new EngineRoutedHttpHandler(_services, connectionKey));
+
+        var settings = new ElasticsearchClientSettings(pool, invoker)
+            .Authentication(authentication)
+            .MaximumRetries(0)
+            .DisablePing()
+            .SniffOnStartup(false)
+            .SniffOnConnectionFault(false);
+
+        // The connection's certificate fingerprint (es:certificateFingerprint) is pinned by the
+        // engine's guarded client, which carries every request.
 
         if (configuration.EnableDebugMode)
         {

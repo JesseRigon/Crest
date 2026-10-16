@@ -22,10 +22,22 @@ declare, Grove.Infrastructure.Server registers and serves).
 `Grove.Communications` and `Grove.Communications.Abstractions` are the home of
 communications as a whole. They hold:
 
-- **The communications settings and management screens.** These cover the enabled channels,
-  each channel's default provider and that provider's settings, test sends, and the delivery
-  log. A channel's screens are Blazor components that the channel registers; Communications
-  hosts them in one place in the admin.
+- **The communications screens** (feature `Grove.Communications.Screens`, which every channel
+  requires): the admin's Communications menu section. Its overview page shows each enabled
+  channel's card: the send and receive providers, the connection each uses, the defaults, and
+  links to the channel's settings and test send. A channel contributes its card to the
+  `Communications.Channels` page region from its own WASM library ([page-regions.md](page-regions.md)),
+  so Communications never references a channel. The channels' settings groups and test pages
+  sit in the same menu section.
+- **The delivery log.** Every send through a channel is recorded: channel, provider,
+  connection, recipient, subject, outcome (sent, failed, deferred, refused, not authorized),
+  the connector engine's attempts, the error and the time. The channel services write it
+  (`IDeliveryLog`, resolved optionally); a provider over a connection returns a
+  `DeliveryResult` built from the engine's `ConnectorResult`, and any other result is logged
+  with its success alone. Each record is written in a unit of its own, so it is kept when the
+  caller's unit fails. The Delivery Log page lists it newest first, filtered by channel,
+  outcome and recipient, with paging, behind `ViewDeliveryLog`
+  (`api/grove/communications/deliveries`).
 - **Notifications.** A notification goes to a *user* or a group of users, never to an address,
   and is kept on record. Notifications are covered below.
 
@@ -36,7 +48,7 @@ Each channel is a capability module pair. `Grove.Communications.Email` and
 
 | Module | Holds |
 |---|---|
-| `Grove.Communications.<Channel>.Abstractions` | The message model (`MailMessage`, `SmsMessage`), the send service (`IEmailService`, `ISmsService`), the provider contract (`IEmailProvider`, `ISmsProvider`), the provider registry (`IEmailProviderResolver`, `ISmsProviderResolver`), the channel's settings and permissions |
+| `Grove.Communications.<Channel>.Abstractions` | The message model (`MailMessage`, `SmsMessage`), the send service (`IEmailService`, `ISmsService`), the provider contract (`IEmailProvider`, `ISmsProvider`), the provider registry (`IEmailProviderResolver`, `ISmsProviderResolver`), the channel's settings and permissions; for e-mail also the receive side (`IEmailReceiveProvider`, `IEmailReceiveProviderResolver`, `IEmailReceiveService`, `ReceivedMailMessage`) |
 | `Grove.Communications.<Channel>` | The send service, the registry, message validation, the channel's settings screens, a test send, the channel's health check, the send API surface, the `Send <channel>` workflow activity, and a log provider for development (it writes messages to the log instead of sending them) |
 
 A channel module is vendor-neutral. A type that only one provider uses, such as its options,
@@ -51,19 +63,100 @@ mailboxes.
 
 A protocol module implements an open standard as a provider for one or more channels:
 - `Grove.Data.Protocols.Smtp` sends e-mail through any SMTP server.
-- `Grove.Data.Protocols.Imap` and `Grove.Data.Protocols.Pop` receive it, when receiving is
-  needed.
+- `Grove.Data.Protocols.Imap` and `Grove.Data.Protocols.Pop` receive it.
 
 A protocol module knows the channel it serves, but nothing about notifications or about any
 vendor.
+
+## Providers run on the connector engine
+
+Every provider, from a protocol or from an integration, sends through a connection in the
+connector engine ([connectors.md](connectors.md)). The channel's registry and contract stay as
+they are: the tenant picks a default provider per channel, and notifications send through
+`IEmailService` and `ISmsService`. Underneath:
+- **The provider is thin.** It turns the channel's message into an operation of its connection
+  (Twilio's "create message", an SMTP send) and asks the engine to run it. It holds no
+  credentials and no HTTP or SDK retry code.
+- **Credentials live on the Connections screen**, sealed with every other external credential.
+  The communications screens pick which connection each channel's provider uses; they hold no
+  secrets.
+- **The engine does retries, rate limits and attempt history.** Sending is not safe to repeat,
+  so each send operation declares itself unsafe. The engine retries it only on errors that prove
+  nothing was sent, or with an idempotency key where the service supports one.
+- **A vendor SDK runs inside the engine** through an adapter that wraps the SDK call in the
+  connection's credentials and policy, so working SDK code (Azure Communication Services) is not
+  rewritten against REST.
+- **One connection, many uses.** The Twilio connection that sends SMS also serves Workflows'
+  calls to Twilio's other operations and Queries' reads of message history, with no second set
+  of credentials.
+- **Receiving** is a receive connection on the same channel: IMAP or POP3 over the SMTP
+  account's server, or a vendor mailbox.
+- **Providers run as the tenant.** A provider calls the engine as the tenant's system actor, so
+  a message a member's action triggers (a password reset in the member shell) still goes out
+  through a tenant connection, and member shells hold no connections of their own.
+
+### The providers and their connections
+
+| Provider | Module | Connection | Credential (Connections screen) |
+|---|---|---|---|
+| SMTP (send) | `Grove.Data.Protocols.Smtp` | a defined `smtp` connection the tenant picks | user name and password; none for an open relay |
+| IMAP (receive) | `Grove.Data.Protocols.Imap` | a defined `imap` connection | user name and password |
+| POP3 (receive) | `Grove.Data.Protocols.Pop` | a defined `pop` connection | user name and password |
+| Twilio (SMS) | `Grove.Integrations.Twilio` | the declared `twilio` connection (REST, basic auth) | account SID or API key SID, and its auth token or secret |
+| Azure Communication Services (e-mail, SMS) | `Grove.Integrations.Microsoft` | the declared `azure-communication-email` and `azure-communication-sms` connections (`sdk`) | the resource's connection string |
+| Microsoft Graph (send, receive) | `Grove.Integrations.Microsoft` | the declared `microsoft-graph` connection (REST, OAuth 2.0) | the tenant's grant: the mailbox account an admin connected |
+
+- **A mail server connection** (protocols `smtp`, `imap` and `pop`) carries its server in the
+  connection's settings: `host`, `port` (SMTP 587, IMAP 993 and POP3 995 by default), `security`
+  (`auto`, `none`, `ssl` or `starttls`), `acceptInvalidCertificate`, and an optional SOCKS5
+  `proxyHost` and `proxyPort`. An IMAP connection may name its `folder` (`INBOX` by default).
+  The protocol resolves the host and refuses a loopback, private, link-local or CGNAT address
+  unless the shell allows private networks, the same rule the guarded HTTP client applies.
+- **SMTP.** The provider builds the MIME message and asks the engine for a send on its
+  connection; the protocol hands it to the server with MailKit. Anything that fails before the
+  server accepted the envelope (DNS, connect, TLS, sign-in, a refused sender or recipient)
+  is reported as not sent, so the engine may retry it; a connection lost during the transfer is
+  not retried.
+- **Twilio.** The connection declares Twilio's message and account operations; "create
+  message" is unsafe and accepts Twilio's idempotency token, which the provider sends with
+  every message, so the engine may repeat it without sending twice. Workflows and Queries run
+  the same connection's other operations (list and fetch messages, fetch the account).
+- **Azure Communication Services.** The provider runs the Azure SDK's send inside the engine
+  (`IConnectorEngine.RunSdkAsync`) on the guarded HTTP client, with the SDK's own retries off.
+  A request the service refused (4xx) or never reached is not sent; a 5xx is left unknown.
+- **Microsoft Graph.** The send provider runs the connection's `sendMail` as the tenant's
+  grant (Graph takes no idempotency key, so only not-sent failures are retried). The mailbox
+  provider lists a folder's messages received at or after the cursor's time with
+  `listMessages`, oldest first and then by id, reads each one's MIME with `getMessageMime`,
+  and removes with `deleteMessage`. The cursor is the last message's received time and the ids
+  already read at that time (`{time}|{id1,id2}`); the next read skips those ids, so messages
+  sharing a timestamp are neither lost nor read twice.
+- **IMAP and POP3** read a mailbox oldest first after a cursor (`UIDVALIDITY:UID` for IMAP, the
+  last UIDL for POP3) without marking messages read, and remove messages by id.
+- **The host's pickup delivery.** A development or test host can set the shell configuration
+  section `Grove_Email_Smtp` (`DefaultSender`, `DeliveryMethod: SpecifiedPickupDirectory`,
+  `PickupDirectoryLocationBase`, `PickupDirectoryLocation`). The SMTP module then registers a
+  further e-mail provider, `SmtpPickup`, that writes each message as an `.eml` file under the
+  base directory instead of sending it. Nothing leaves the host, so it uses no connection.
+- **The channels' log providers** (`Log` for SMS, in development) write messages to the log
+  and use no connection either.
+
+### Settings
+
+Each channel is a settings group in the Communications menu section: Email (`email`) and SMS
+(`sms`). The channel's own section picks the default provider (and for e-mail the default
+receive provider). Each provider adds its own section: whether it is enabled, its sender, and
+the connection it uses, picked from the tenant's connections of its protocol. The test pages
+(Email Test, SMS Test), in the same section, send through any enabled provider.
 
 ## Integrations
 
 An integration module wraps one vendor. Everything it registers goes into a registry that
 another module owns:
-- an e-mail or SMS provider, into that channel's registry;
+- a connection, into the connector engine (connectors.md › Integrations);
+- an e-mail or SMS provider over that connection, into the channel's registry;
 - a login provider, into Access;
-- a workflow activity or connector, into Workflows.
+- a workflow activity, into Workflows.
 
 It never defines a capability of its own.
 
@@ -72,9 +165,12 @@ features page lists it where it belongs. A tenant can enable one area without th
 
 | Integration | Features |
 |---|---|
-| `Grove.Integrations.Microsoft` | Microsoft account and Entra ID sign-in (Access); Graph / Exchange mail (e-mail provider); Communication Services e-mail and SMS (providers) |
+| `Grove.Integrations.Facebook` | Meta: the Graph API connection and the Meta app credentials (Connectors); Meta Login (Access); Meta Pixel and the Conversions API connection (Meta) |
+| `Grove.Integrations.GitHub` | GitHub: the connection and the GitHub app credentials (Connectors); GitHub sign-in (Access) |
+| `Grove.Integrations.Google` | Google: the connection and the Google app credentials (Connectors); Google sign-in (Access); Analytics and Tag Manager |
+| `Grove.Integrations.Microsoft` | Microsoft Graph: the connection and the Microsoft app credentials (Connectors); Microsoft account and Entra ID sign-in (Access); Graph / Exchange mail (e-mail provider); Communication Services e-mail and SMS (providers) |
 | `Grove.Integrations.Twilio` | SMS provider |
-| `Grove.Integrations.Twitter` | Sign in with X (Access); posting to X (Connectors) |
+| `Grove.Integrations.Twitter` | X: the connection, the X app credentials and posting to X (Connectors); Sign in with X (Access) |
 
 ## Notifications
 
@@ -111,23 +207,4 @@ e-mail on an invoice.
 | E-mail providers (receive) | `Grove.Communications.Email` | `Grove.Data.Protocols.Imap`, `Grove.Data.Protocols.Pop`, `Grove.Integrations.Microsoft` |
 | SMS providers | `Grove.Communications.Sms` | `Grove.Integrations.Twilio`, `Grove.Integrations.Microsoft`, the log provider |
 | Notification methods | `Grove.Communications` | its e-mail, SMS and portal features |
-| Communications screens | `Grove.Communications` | each channel's settings and log components |
-
-## Code that still has to change
-
-- The SMTP types in `Grove.Communications.Email.Abstractions` move to
-  `Grove.Data.Protocols.Smtp`: `SmtpSettings`, `SmtpOptions`, `DefaultSmtpOptions`,
-  `SmtpEncryptionMethod` and `SmtpDeliveryMethod`.
-- The Twilio code moves to a new `Grove.Integrations.Twilio`:
-  - from `Grove.Communications.Sms`: `TwilioSmsProvider`, `TwilioOptionsConfiguration` and
-    `TwilioProviderOptionsConfigurations`;
-  - from `Grove.Communications.Sms.Abstractions`: `TwilioOptions`, `TwilioSettings` and
-    `TwilioMessageResponse`.
-- `SmsNotificationProvider` moves from `Grove.Communications.Sms` to `Grove.Communications`, as
-  the SMS notification method feature.
-- The Azure Communication Services providers become features of
-  `Grove.Integrations.Microsoft`. Today they are two separate modules:
-  `Grove.Integrations.Email.Azure` (e-mail) and `Grove.Data.Protocols.Sms.Azure` (SMS).
-- Each channel's settings pages move into the communications screens.
-- Nothing receives e-mail yet. The receive registry and the IMAP and POP3 providers do not
-  exist.
+| Communications channels (the `Communications.Channels` page region) | `Grove.Communications` | each channel's card, from the channel's WASM library |

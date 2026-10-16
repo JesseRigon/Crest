@@ -1,4 +1,6 @@
 using Grove.Api;
+using Grove.Communications.Delivery;
+using Grove.Infrastructure.Settings;
 using Grove.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -24,6 +26,7 @@ public sealed class SmsTestApi : ApiContributor
     {
         var routes = group.MapGroup("sms");
         routes.MapGet("providers", ApiHandlers.Handle<SmsTestHandlers>(h => h.ListProvidersAsync()));
+        routes.MapGet("channel", ApiHandlers.Handle<SmsTestHandlers>(h => h.ChannelAsync()));
         routes.MapPost("test", (HttpContext http, [FromBody] SmsTestRequest request) => ApiHandlers.For<SmsTestHandlers>(http).SendTestAsync(request));
     }
 }
@@ -33,8 +36,25 @@ public sealed class SmsTestHandlers(
     IOptionsMonitor<SmsProviderOptions> providerOptions,
     ISmsProviderResolver providers,
     IPhoneFormatValidator phoneFormat,
+    ISiteService siteService,
     IStringLocalizer<SmsTestHandlers> S) : ApiHandlers
 {
+    /// <summary>The channel's card on the Communications page: its enabled providers, their connections and the default.</summary>
+    public async Task<IResult> ChannelAsync()
+    {
+        if (!await CanManageAsync()) return Forbid();
+
+        var list = new List<SmsProviderModel>();
+        foreach (var entry in providerOptions.CurrentValue.Providers.Where(entry => entry.Value.IsEnabled))
+        {
+            var provider = await providers.GetAsync(entry.Key);
+            list.Add(new SmsProviderModel(entry.Key, provider?.Name.Value ?? entry.Key, (provider as IConnectedProvider)?.ConnectionKey));
+        }
+
+        var settings = await siteService.GetSettingsAsync<SmsSettings>();
+        return Ok(new SmsChannelModel(settings.DefaultProviderName, [.. list.OrderBy(provider => provider.DisplayName, StringComparer.CurrentCultureIgnoreCase)]));
+    }
+
     public async Task<IResult> ListProvidersAsync()
     {
         if (!await CanManageAsync()) return Forbid();

@@ -1,0 +1,19 @@
+@page "/Communications"
+@attribute [PageEntry("ManageEmailSettings", "ManageSmsSettings", "ViewDeliveryLog", Id = "communications-overview", Parent = "communications", Caption = "Overview", Position = "1")]
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The communications screens' home (Grove.Communications): each enabled channel's card - its
+   providers, the connection each uses, the defaults, and links to its settings and test send -
+   contributed by the channel into the Channels region. *@
+<PageTitle>@T["Communications"]</PageTitle>
+
+<GroveStack Gap="1rem" data-testid="communications-page">
+    <GroveStack Gap="0.25rem">
+        <GroveText TextStyle="TextStyle.H4" class="rz-m-0">@T["Communications"]</GroveText>
+        <GroveText TextStyle="TextStyle.Body2">@T["The channels, their providers and the connection each provider sends through. Credentials are kept on the Connections screen."]</GroveText>
+    </GroveStack>
+
+    <GrovePageRegion Key="@Grove.Communications.BlazorWasm.CommunicationsRegions.Channels" />
+
+    <div><a href="Communications/DeliveryLog" data-testid="communications-delivery-log">@T["Delivery log"]</a></div>
+</GroveStack>

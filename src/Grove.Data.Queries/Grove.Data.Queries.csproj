@@ -21,6 +21,7 @@
     <ProjectReference Include="..\Grove.Contents.Management.Display\Grove.Contents.Management.Display.csproj" />
     <ProjectReference Include="..\Grove.Contents.Management.GraphQL\Grove.Contents.Management.GraphQL.csproj" />
     <ProjectReference Include="..\Grove.Data.Abstractions\Grove.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Deployment.Abstractions\Grove.Deployment.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Display.Management\Grove.Display.Management.csproj" />
     <ProjectReference Include="..\Grove.Data.Localization.Abstractions\Grove.Data.Localization.Abstractions.csproj" />

@@ -6,21 +6,25 @@ using Grove.Integrations.Twitter;
     Author = ManifestConstants.PlatformTeam,
     Website = ManifestConstants.PlatformWebsite,
     Version = ManifestConstants.PlatformVersion,
-    Category = "X (Twitter)"
+    Category = "Connectors"
 )]
 
 [assembly: Feature(
     Id = TwitterConstants.Features.Twitter,
-    Name = "X (Twitter) Integration",
-    Category = "X (Twitter)",
-    Description = "Provides a TwitterClient and Workflow Activities to integrate with X (Twitter)"
+    Name = "X (Twitter)",
+    Category = "Connectors",
+    Description = "Declares the X connection (X API v2, OAuth 2.0) and the X app credentials, and a workflow activity that posts on X.",
+    Dependencies =
+    [
+        "Grove.Data.Connectors",
+    ]
 )]
 
 [assembly: Feature(
     Id = TwitterConstants.Features.Signin,
     Name = "Sign in with X (Twitter)",
-    Category = "X (Twitter)",
-    Description = "Authenticates users with their X (Twitter) Account.",
+    Category = "Access",
+    Description = "Authenticates users with their X (Twitter) account, on the X app credentials.",
     Dependencies =
     [
         TwitterConstants.Features.Twitter,

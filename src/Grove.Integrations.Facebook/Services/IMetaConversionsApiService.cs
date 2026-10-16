@@ -10,8 +10,8 @@ namespace Grove.Integrations.Facebook.Services;
 public interface IMetaConversionsApiService
 {
     /// <summary>
-    /// Sends a single event. Returns a failed <see cref="Result"/> when the Meta Pixel or
-    /// Conversions API settings are missing/invalid, or when the Graph API request fails.
+    /// Sends a single event through the Conversions API connection. Returns a failed
+    /// <see cref="Result"/> when the pixel is not set, the connection has no token, or the call fails.
     /// </summary>
     Task<Result> SendEventAsync(MetaConversionEvent conversionEvent, CancellationToken cancellationToken = default);
 }

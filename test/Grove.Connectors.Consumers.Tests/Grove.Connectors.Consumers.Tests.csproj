@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The connector engine's consumers on a fake engine: Queries' connection and SQL sources,
+       the integrations' shared app credentials and connections, the search engines' connections. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AssemblyName>Grove.Connectors.Consumers.Tests</AssemblyName>
+    <RootNamespace>Grove.Connectors.Consumers.Tests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <!-- A vulnerable transitive package of the host graph is the host's to bump, not this test's. -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1903</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Grove.Data.Queries\Grove.Data.Queries.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Integrations.Facebook\Grove.Integrations.Facebook.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Integrations.GitHub\Grove.Integrations.GitHub.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Integrations.Google\Grove.Integrations.Google.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Integrations.Microsoft\Grove.Integrations.Microsoft.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Integrations.Twitter\Grove.Integrations.Twitter.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Integrations.AI.Azure\Grove.Integrations.AI.Azure.csproj" />
+    <ProjectReference Include="..\..\src\Grove.Search.Elasticsearch\Grove.Search.Elasticsearch.csproj" />
+  </ItemGroup>
+
+</Project>

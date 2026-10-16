@@ -62,8 +62,9 @@
     <ProjectReference Include="..\Grove.Diagnostics\Grove.Diagnostics.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Data.Cache.Dynamic\Grove.Data.Cache.Dynamic.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Communications.Email\Grove.Communications.Email.csproj" PrivateAssets="none" />
-    <ProjectReference Include="..\Grove.Integrations.Email.Azure\Grove.Integrations.Email.Azure.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Data.Protocols.Smtp\Grove.Data.Protocols.Smtp.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Data.Protocols.Imap\Grove.Data.Protocols.Imap.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Data.Protocols.Pop\Grove.Data.Protocols.Pop.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Integrations.Facebook\Grove.Integrations.Facebook.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Infrastructure.Features\Grove.Infrastructure.Features.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Data.Feeds\Grove.Data.Feeds.csproj" PrivateAssets="none" />
@@ -100,6 +101,7 @@
     <ProjectReference Include="..\Grove.Display.Placements\Grove.Display.Placements.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Contents.PublishLater\Grove.Contents.PublishLater.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Data.Queries\Grove.Data.Queries.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Data.Connectors\Grove.Data.Connectors.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Security.RateLimits\Grove.Security.RateLimits.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Security.ReCaptcha\Grove.Security.ReCaptcha.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Infrastructure.Recipes\Grove.Infrastructure.Recipes.csproj" PrivateAssets="none" />
@@ -127,13 +129,13 @@
     <ProjectReference Include="..\Grove.Access.Sharing\Grove.Access.Sharing.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Shortcodes\Grove.Shortcodes.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Communications.Sms\Grove.Communications.Sms.csproj" PrivateAssets="none" />
-    <ProjectReference Include="..\Grove.Data.Protocols.Sms.Azure\Grove.Data.Protocols.Sms.Azure.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Data.Types.Spatial\Grove.Data.Types.Spatial.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Contents.Taxonomies\Grove.Contents.Taxonomies.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Display.Templates\Grove.Display.Templates.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Infrastructure.Tenants\Grove.Infrastructure.Tenants.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Themes\Grove.Themes.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Contents.Title\Grove.Contents.Title.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Grove.Integrations.Twilio\Grove.Integrations.Twilio.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Integrations.Twitter\Grove.Integrations.Twitter.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\Grove.Access.Users\Grove.Access.Users.csproj" PrivateAssets="none" />
   </ItemGroup>

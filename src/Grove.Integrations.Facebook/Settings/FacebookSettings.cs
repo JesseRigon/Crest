@@ -3,17 +3,12 @@ using Grove.Infrastructure.Settings;
 
 namespace Grove.Integrations.Facebook.Settings;
 
+/// <summary>
+/// The Meta JavaScript SDK's settings. The app id and secret are the Meta app credentials
+/// (<see cref="FacebookConstants.AppCredentialsKey"/>), managed on the Connections screen.
+/// </summary>
 public class FacebookSettings
 {
-    [Display(Name = "Application Identifier", Description = "The Application ID found on the Meta developer portal parameters.", GroupName = "Meta Integration", Order = 0)]
-    [Required]
-    public string AppId { get; set; }
-
-    [Display(Name = "Secret Key", Description = "The Application secret key found on the Meta developer portal parameters.", GroupName = "Meta Integration", Order = 1)]
-    [Required]
-    [Setting(Secret = true, ProtectedBy = FacebookConstants.Features.Core)]
-    public string AppSecret { get; set; }
-
     [Display(Name = "Init on every page", GroupName = "Meta Integration", Order = 4)]
     public bool FBInit { get; set; }
 

@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <!-- NuGet properties-->
-    <Title>Grove GraphQL Client Abstractions</Title>
+    <Title>Grove GraphQL Client</Title>
     <Description>$(OCFrameworkDescription)
 
-    Abstractions for GraphQL Client</Description>
+    The GraphQL client side: a client for Grove's own GraphQL API, and the connector protocol for external GraphQL endpoints.</Description>
     <PackageTags>$(PackageTags) PlatformFramework GraphQL Client Abstractions</PackageTags>
   </PropertyGroup>
 
@@ -15,6 +15,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.Http\Grove.Data.Protocols.Http.csproj" />
   </ItemGroup>
 
 </Project>

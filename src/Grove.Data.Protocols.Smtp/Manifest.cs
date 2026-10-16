@@ -1,14 +1,15 @@
 using Grove.Modules.Manifest;
 
 [assembly: Module(
-    Name = "SMTP Email Provider",
+    Name = "SMTP",
     Author = ManifestConstants.PlatformTeam,
     Website = ManifestConstants.PlatformWebsite,
     Version = ManifestConstants.PlatformVersion,
-    Description = "Provides an email service provider leveraging Simple Mail Transfer Protocol (SMTP).",
+    Description = "The SMTP protocol of the connector engine, and an e-mail provider that sends through an SMTP connection.",
     Dependencies =
     [
-        "Grove.Communications.Email"
+        "Grove.Communications.Email",
+        "Grove.Data.Connectors",
     ],
     Category = "Communication"
 )]

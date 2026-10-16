@@ -41,39 +41,10 @@ public sealed class Startup : StartupBase
         services.AddSettingsGroup<AzureAISearchDefaultSettings>(AzureAISearchDefaultSettings.GroupId, "Azure AI Search", IndexingPermissions.ManageIndexes, group => group
             .InMenu("settings-search", entryId: "azureaisearch")
             .AlsoAdmits(AzureAISearchPermissions.ManageAzureAISearchISettings)
+            .Describe("The search service's endpoint and key are a connection on the Connections screen.")
             .ValidatedBy((provider, settings, errors, cancellationToken) =>
             {
-                var options = provider.GetRequiredService<IOptionsMonitor<AzureAISearchDefaultOptions>>().CurrentValue;
-                if (options.DisableUIConfiguration)
-                {
-                    errors.Add(string.Empty, "The host configures Azure AI Search; these settings cannot be changed here.");
-                    return Task.CompletedTask;
-                }
-
-                if (!options.FileConfigurationExists())
-                {
-                    settings.UseCustomConfiguration = true;
-                }
-
-                if (settings.UseCustomConfiguration)
-                {
-                    if (string.IsNullOrWhiteSpace(settings.Endpoint))
-                    {
-                        errors.Add(nameof(settings.Endpoint), "Endpoint is required.");
-                    }
-                    else if (!Uri.TryCreate(settings.Endpoint, UriKind.Absolute, out _))
-                    {
-                        errors.Add(nameof(settings.Endpoint), "Endpoint must be a valid url.");
-                    }
-
-                    if (settings.AuthenticationType == AzureAIAuthenticationType.ApiKey && string.IsNullOrEmpty(settings.ApiKey))
-                    {
-                        errors.Add(nameof(settings.ApiKey), "API Key is required when using API Key authentication type.");
-                    }
-
-                    settings.IdentityClientId = settings.IdentityClientId?.Trim();
-                }
-
+                settings.Connection = string.IsNullOrWhiteSpace(settings.Connection) ? null : settings.Connection.Trim();
                 return Task.CompletedTask;
             })
             .OnSaved((provider, _, _) =>
@@ -81,6 +52,8 @@ public sealed class Startup : StartupBase
                 provider.GetRequiredService<IOptionsUpdateNotifier>().RequestUpdate<AzureAISearchDefaultOptions>();
                 return Task.CompletedTask;
             }));
+        services.AddScoped<Grove.Data.Connectors.IConnectionChangeHandler, AzureAISearchConnectionChangeHandler>();
+        services.AddDataMigration<AzureAISearchConnectionMigrations>();
         services.AddAzureAISearchServices();
         services.AddDataMigration<AzureAISearchIndexSettingsMigrations>();
         services.AddDataMigration<PermissionMigrations>();

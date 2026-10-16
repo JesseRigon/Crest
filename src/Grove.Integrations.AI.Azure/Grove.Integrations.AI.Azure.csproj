@@ -23,6 +23,7 @@
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
     <ProjectReference Include="..\Grove.Access.Roles.Abstractions\Grove.Access.Roles.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Data.Indexing\Grove.Data.Indexing.csproj" />
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Contents.Localization.Abstractions\Grove.Contents.Localization.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Contents.Management.Abstractions\Grove.Contents.Management.Abstractions.csproj" />
@@ -37,6 +38,10 @@
   <ItemGroup>
     <PackageReference Include="Azure.Search.Documents" />
     <PackageReference Include="Microsoft.Extensions.Azure" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Grove.Connectors.Consumers.Tests" />
   </ItemGroup>
 
 </Project>

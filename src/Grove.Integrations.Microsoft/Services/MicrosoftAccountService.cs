@@ -35,8 +35,7 @@ public class MicrosoftAccountService : IMicrosoftAccountService
         var container = await _siteService.LoadSiteSettingsAsync();
         container.Alter<MicrosoftAccountSettings>(aspect =>
         {
-            aspect.AppId = settings.AppId;
-            aspect.AppSecret = settings.AppSecret;
+            aspect.SaveTokens = settings.SaveTokens;
             aspect.CallbackPath = settings.CallbackPath;
         });
 
@@ -47,14 +46,6 @@ public class MicrosoftAccountService : IMicrosoftAccountService
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        if (string.IsNullOrWhiteSpace(settings.AppId))
-        {
-            yield return new ValidationResult(S["AppId is required"], new string[] { nameof(settings.AppId) });
-        }
-
-        if (string.IsNullOrWhiteSpace(settings.AppSecret))
-        {
-            yield return new ValidationResult(S["AppSecret is required"], new string[] { nameof(settings.AppSecret) });
-        }
+        yield break;
     }
 }

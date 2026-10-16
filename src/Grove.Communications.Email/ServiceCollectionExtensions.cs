@@ -11,6 +11,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEmailService, DefaultEmailService>();
         services.AddScoped<IEmailProviderResolver, DefaultEmailProviderResolver>();
         services.AddScoped<IEmailServiceEvents, EmailMessageValidator>();
+        services.AddScoped<IEmailReceiveService, DefaultEmailReceiveService>();
+        services.AddScoped<IEmailReceiveProviderResolver, DefaultEmailReceiveProviderResolver>();
 
         services.AddTransient<IConfigureOptions<EmailOptions>, EmailOptionsConfiguration>();
 
@@ -35,6 +37,15 @@ public static class ServiceCollectionExtensions
         where TConfiguration : class, IConfigureOptions<EmailProviderOptions>
     {
         services.AddTransient<IConfigureOptions<EmailProviderOptions>, TConfiguration>();
+
+        return services;
+    }
+
+    /// <summary>Registers a receive provider configuration (the receive registry's contributor).</summary>
+    public static IServiceCollection AddEmailReceiveProviderOptionsConfiguration<TConfiguration>(this IServiceCollection services)
+        where TConfiguration : class, IConfigureOptions<EmailReceiveProviderOptions>
+    {
+        services.AddTransient<IConfigureOptions<EmailReceiveProviderOptions>, TConfiguration>();
 
         return services;
     }

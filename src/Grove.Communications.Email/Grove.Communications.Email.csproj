@@ -11,6 +11,13 @@
     <PackageTags>$(PackageTags) PlatformFramework</PackageTags>
   </PropertyGroup>
 
+  <!-- The e-mail test page and channel card are their own WASM library (blazor-wasm/, Grove.Communications.Email.BlazorWasm). -->
+  <ItemGroup>
+    <Compile Remove="blazor-wasm/**/*.cs" />
+    <Content Remove="blazor-wasm/**" />
+    <None Remove="blazor-wasm/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -28,6 +35,7 @@
     <ProjectReference Include="..\Grove.Workflows\engine\src\modules\Grove.Workflows.Engine\Grove.Workflows.Engine.csproj" />
     <ProjectReference Include="..\Grove.Communications.Email.Abstractions\Grove.Communications.Email.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Communications.Abstractions\Grove.Communications.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

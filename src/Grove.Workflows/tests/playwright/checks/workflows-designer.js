@@ -173,14 +173,17 @@ module.exports = async function run(page, ctx) {
     const journalShown = onInstance && await page.getByText('Write Line').first().waitFor({ timeout: 20000 }).then(() => true, () => false);
     results.push({ name: 'instance-page-shows-the-journal', pass: journalShown, message: `journal=${journalShown}` });
 
-    // 5. The Grove pages beside Studio: Connections lists the tenant's connections (a
+    // 5. The pages beside Studio: the engine's Connections screen lists the tenant's connections (a
     //    secret-bearing one shows no secret), the approval queue renders.
     const connectionKey = `pw-designer-${stamp}`;
     const secret = `designer-secret-${stamp}`;
-    const connection = await call('POST', `${ctx.baseUrl}/api/grove/workflows/connections`, { key: connectionKey, displayName: `Designer check ${stamp}`, baseUrl: 'https://api.example.com/', authKind: 'bearer', secret });
-    if (connection.ok) created.connections.push(connectionKey);
-    await page.goto(`${ctx.baseUrl}/Admin/workflows/connections`, { waitUntil: 'networkidle' });
-    const connectionsPage = await page.locator('[data-testid="workflow-connections"]').waitFor({ timeout: 30000 }).then(() => true, () => false);
+    const connection = await call('POST', `${ctx.baseUrl}/api/grove/connections`, { key: connectionKey, displayName: `Designer check ${stamp}`, protocol: 'http', baseUrl: 'https://api.example.com/', auth: { scheme: 'bearer' } });
+    if (connection.ok) {
+      created.connections.push(connectionKey);
+      await call('PUT', `${ctx.baseUrl}/api/grove/connections/${encodeURIComponent(connectionKey)}/credential`, { values: { token: secret } });
+    }
+    await page.goto(`${ctx.baseUrl}/Admin/connections`, { waitUntil: 'networkidle' });
+    const connectionsPage = await page.locator('[data-testid="connections-page"]').waitFor({ timeout: 30000 }).then(() => true, () => false);
     const connectionListed = connectionsPage && await page.getByText(`Designer check ${stamp}`).first().waitFor({ timeout: 15000 }).then(() => true, () => false);
     const secretShown = (await page.content()).includes(secret);
     results.push({ name: 'connections-page-lists-connections-without-secrets', pass: connectionsPage && connectionListed && !secretShown, message: `page=${connectionsPage} listed=${connectionListed} secretShown=${secretShown}` });
@@ -195,7 +198,7 @@ module.exports = async function run(page, ctx) {
     results.push({ name: 'designer-run-completes', pass: false, message: `${error.message.split('\n').slice(0, 4).join(' | ')} (screenshot: ${shot})` });
   } finally {
     for (const id of created.definitions) await call('DELETE', `${api}/workflow-definitions/${encodeURIComponent(id)}`);
-    for (const key of created.connections) await call('DELETE', `${ctx.baseUrl}/api/grove/workflows/connections/${encodeURIComponent(key)}`);
+    for (const key of created.connections) await call('DELETE', `${ctx.baseUrl}/api/grove/connections/${encodeURIComponent(key)}`);
     // Leave the shared page where the next check expects an admin page, not on Studio.
     await page.goto(`${ctx.baseUrl}/Admin/Dashboard`, { waitUntil: 'networkidle' }).catch(() => {});
   }

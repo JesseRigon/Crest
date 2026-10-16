@@ -10,12 +10,24 @@ using Grove.Modules.Manifest;
 )]
 
 [assembly: Feature(
-    Id = GoogleConstants.Features.GoogleAuthentication,
-    Name = "Google Authentication",
-    Category = "Google",
-    Description = "Authenticates users with their Google Account.",
+    Id = GoogleConstants.Features.Google,
+    Name = "Google",
+    Category = "Connectors",
+    Description = "Declares the Google connection (Google APIs, OAuth 2.0) and the Google app credentials.",
     Dependencies =
     [
+        "Grove.Data.Connectors",
+    ]
+)]
+
+[assembly: Feature(
+    Id = GoogleConstants.Features.GoogleAuthentication,
+    Name = "Google Authentication",
+    Category = "Access",
+    Description = "Authenticates users with their Google Account, on the Google app credentials.",
+    Dependencies =
+    [
+        GoogleConstants.Features.Google,
         "Grove.Access.Users.ExternalAuthentication",
     ]
 )]

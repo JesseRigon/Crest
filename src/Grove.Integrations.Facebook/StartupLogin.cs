@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Grove.Data.Connectors;
 using Grove.Deployment;
+using Grove.Environment.Shell;
+using Grove.Integrations.Facebook.Services;
 using Grove.Display.Management.Handlers;
 using Grove.Integrations.Facebook.Deployment;
 using Grove.Integrations.Facebook.Login.Configuration;
@@ -27,6 +30,8 @@ public sealed class StartupLogin : StartupBase
             Permissions.ManageFacebookApp,
             group => group.InMenu("settings-authentication", entryId: "facebook").ReloadsTenant());
         services.AddRecipeExecutionStep<FacebookLoginSettingsStep>();
+        services.AddScoped<IConnectionChangeHandler>(sp => new AppCredentialsChangeHandler(
+            sp.GetRequiredService<IShellReleaseManager>(), FacebookConstants.AppCredentialsKey, FacebookConstants.GraphConnectionKey));
 
         // Register the options initializers required by the Facebook handler.
         // Grove-specific initializers:

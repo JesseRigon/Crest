@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
+using Grove.Communications.Delivery;
 using Grove.Infrastructure;
 using Grove.Modules;
+using Microsoft.Extensions.Options;
 
 namespace Grove.Communications.Email.Services;
 
@@ -10,6 +12,9 @@ public class DefaultEmailService : IEmailService
     private readonly IEmailProviderResolver _providerResolver;
     private readonly IEnumerable<IEmailServiceEvents> _emailServiceEvents;
     private readonly ILogger _logger;
+    private readonly IOptionsMonitor<EmailOptions> _emailOptions;
+    private readonly IClock _clock;
+    private readonly IDeliveryLog _deliveryLog;
 
     protected readonly IStringLocalizer S;
 
@@ -17,12 +22,18 @@ public class DefaultEmailService : IEmailService
         IEmailProviderResolver providerResolver,
         IEnumerable<IEmailServiceEvents> emailServiceEvents,
         ILogger<DefaultEmailService> logger,
-        IStringLocalizer<DefaultEmailService> stringLocalizer)
+        IStringLocalizer<DefaultEmailService> stringLocalizer,
+        IOptionsMonitor<EmailOptions> emailOptions,
+        IClock clock,
+        IDeliveryLog deliveryLog = null)
     {
         _providerResolver = providerResolver;
         _emailServiceEvents = emailServiceEvents;
         _logger = logger;
         S = stringLocalizer;
+        _emailOptions = emailOptions;
+        _clock = clock;
+        _deliveryLog = deliveryLog;
     }
 
     /// <summary>
@@ -59,7 +70,10 @@ public class DefaultEmailService : IEmailService
                 Message = error,
             }));
 
-            return Result.Failed(resultErrors);
+            var failed = Result.Failed(resultErrors);
+            await RecordAsync(providerName, message, failed, cancellationToken);
+
+            return failed;
         }
 
         await _emailServiceEvents.InvokeAsync((e, token) => e.SendingAsync(message, token), cancellationToken, _logger);
@@ -75,6 +89,19 @@ public class DefaultEmailService : IEmailService
             await _emailServiceEvents.InvokeAsync((e, token) => e.FailedAsync(message, token), cancellationToken, _logger);
         }
 
+        await RecordAsync(providerName, message, result, cancellationToken);
+
         return result;
     }
+
+    /// <summary>Writes the send to the delivery log (Grove.Communications' delivery log feature), when it is on.</summary>
+    private Task RecordAsync(string providerName, MailMessage message, Result result, CancellationToken cancellationToken) =>
+        _deliveryLog.RecordAsync(
+            DeliveryChannels.Email,
+            string.IsNullOrEmpty(providerName) ? _emailOptions.CurrentValue.DefaultProviderName : providerName,
+            string.Join(", ", new[] { message.To, message.Cc, message.Bcc }.Where(value => !string.IsNullOrWhiteSpace(value))),
+            message.Subject,
+            result,
+            _clock.UtcNow,
+            cancellationToken);
 }

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Data.Protocols.Rest</RootNamespace>
+    <Nullable>enable</Nullable>
+    <!-- NuGet properties-->
+    <Title>Grove REST Protocol</Title>
+    <Description>$(OCCMSDescription)
+
+    REST described by OpenAPI for the connector engine: reads an OpenAPI 3 document into operations, their parameters, paging and auth scheme.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Connectors Rest OpenApi</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.Http\Grove.Data.Protocols.Http.csproj" />
+  </ItemGroup>
+
+</Project>

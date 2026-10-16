@@ -69,8 +69,11 @@
     <ProjectReference Include="..\..\Grove.Contents.OptionPicker\blazor-wasm\Grove.Contents.OptionPicker.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.Parties\blazor-wasm\Grove.Parties.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.Routes\blazor-wasm\Grove.Routes.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Data.Connectors\blazor-wasm\Grove.Data.Connectors.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.Shortcodes\blazor-wasm\Grove.Shortcodes.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.Seo.Sitemaps\blazor-wasm\Grove.Seo.Sitemaps.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Communications\blazor-wasm\Grove.Communications.BlazorWasm.csproj" />
+    <ProjectReference Include="..\..\Grove.Communications.Email\blazor-wasm\Grove.Communications.Email.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.Communications.Sms\blazor-wasm\Grove.Communications.Sms.BlazorWasm.csproj" />
     <ProjectReference Include="..\..\Grove.Workflows\blazor-wasm\Grove.Workflows.BlazorWasm.csproj" />
   </ItemGroup>

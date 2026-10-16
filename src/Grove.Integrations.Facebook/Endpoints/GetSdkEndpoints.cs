@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Memory;
+using Grove.Integrations.Facebook.Services;
 using Grove.Integrations.Facebook.Settings;
 using Grove.Infrastructure.Settings;
 
@@ -35,21 +36,22 @@ public static class GetSdkEndpoints
 
         private static readonly string CacheKey = "Facebook.GetInitScriptEndpoint";
 
-        public static ulong HashCacheBustingValues(FacebookSettings settings)
+        public static ulong HashCacheBustingValues(FacebookSettings settings, string? appId)
         {
             var hash = new XxHash3(ScriptVersion);
-            hash.Append(Encoding.UTF8.GetBytes(settings.AppId ?? ""));
+            hash.Append(Encoding.UTF8.GetBytes(appId ?? ""));
             hash.Append(Encoding.UTF8.GetBytes(settings.Version ?? ""));
             hash.Append(Encoding.UTF8.GetBytes(settings.FBInitParams ?? ""));
             return hash.GetCurrentHashAsUInt64();
         }
 
-        public static async Task<IResult> HandleRequestAsync(HttpContext context, ISiteService siteService, IMemoryCache cache)
+        public static async Task<IResult> HandleRequestAsync(HttpContext context, ISiteService siteService, IFacebookService facebookService, IMemoryCache cache)
         {
             byte[] scriptBytes;
             var settings = await siteService.GetSettingsAsync<FacebookSettings>();
+            var appId = await facebookService.GetAppIdAsync();
             // Regenerate hash: Don't trust url hash because it could cause cache issues
-            var expectedHash = HashCacheBustingValues(settings);
+            var expectedHash = HashCacheBustingValues(settings, appId);
 
             var cachedScript = cache.Get(CacheKey) as KeyValuePair<ulong, byte[]>?;
             if (cachedScript == null || cachedScript.Value.Key != expectedHash)
@@ -59,7 +61,7 @@ public static class GetSdkEndpoints
                 scriptBytes = Encoding.UTF8.GetBytes($@"
                     window.fbAsyncInit = function() {{
                         FB.init({{
-                            appId:'{settings.AppId}',
+                            appId:'{JavaScriptEncoder.Default.Encode(appId ?? string.Empty)}',
                             version:'{settings.Version}',
                             {settings.FBInitParams}
                         }});

@@ -13,13 +13,6 @@ public static class WorkflowsConstants
         /// <summary>The Grove-style registry API: what modules registered, and where it landed.</summary>
         public const string RegistryApi = "api/grove/workflows/registry";
         public const string TriggersApi = "api/grove/workflows/triggers";
-        public const string ConnectionsApi = "api/grove/workflows/connections";
-        /// <summary>Under connections: start the OAuth2 authorization-code dance for a connection.</summary>
-        public const string ConnectionOAuthAuthorizeApi = "{key}/oauth/authorize";
-        /// <summary>Under connections: where the provider sends the user back with the code.</summary>
-        public const string ConnectionOAuthCallbackApi = "oauth/callback";
-        /// <summary>Under connections: create a connection from an OpenAPI document.</summary>
-        public const string ConnectionOpenApiImportApi = "import-openapi";
         /// <summary>Under the registry: <c>flows/{key}/reset</c> re-imports a shipped flow.</summary>
         public const string RegistryFlowResetApi = "flows/{key}/reset";
         /// <summary>A definition's access lists: <c>{definitionId}/access</c>.</summary>
@@ -78,9 +71,6 @@ public static class WorkflowsConstants
         public const string Publish = "PublishGroveWorkflows";
         public const string Run = "RunGroveWorkflows";
         public const string ManageShipped = "ManageShippedGroveWorkflows";
-        public const string ManageConnections = "ManageGroveWorkflowConnections";
-        /// <summary>Call or poll a connection from a running flow; implied by ManageConnections.</summary>
-        public const string UseConnections = "UseGroveWorkflowConnections";
     }
 
     /// <summary>The roles the recipe ships for the permission set (Administrator and Editor hold the stock umbrella).</summary>

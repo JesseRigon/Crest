@@ -1,0 +1,655 @@
+@page "/connections"
+@attribute [PageEntry("ManageConnections", Id = "connections", Parent = "settings", Caption = "Connections", Icon = "@iconify:mdi:connection")]
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The tenant's connections to external services (docs/connectors.md): the ones modules declare
+   and the ones defined here, with their tenant credentials, schemas, operations and the users'
+   own credentials (revocable, never readable). Secrets go in and never come back. *@
+
+<PageTitle>@T["Connections"]</PageTitle>
+
+<GroveStack Gap="1rem" data-testid="connections-page">
+    <GroveStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+        <div>
+            <GroveText TextStyle="TextStyle.H4" class="rz-m-0">@T["Connections"]</GroveText>
+            <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["Every external service this tenant calls or receives webhooks from. Credentials are sealed for this tenant and never shown again."]</GroveText>
+        </div>
+        <GroveButton Icon="refresh" Text="@T["Refresh"]" ButtonStyle="ButtonStyle.Light" Click="LoadAsync" Disabled="IsBusy" />
+    </GroveStack>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" Summary="@T["Connection action failed"]" Detail="@Error" AllowClose="true" />
+    }
+
+    @if (Warnings.Count > 0)
+    {
+        <GroveAlert AlertStyle="AlertStyle.Warning" Summary="@T["Schema notes"]" Detail="@string.Join(" ", Warnings)" AllowClose="true" />
+    }
+
+    <GroveTabs RenderMode="TabRenderMode.Client">
+        <Tabs>
+            <GroveTabsItem Text="@T["Connections"]" Icon="hub">
+                <GroveStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Stretch">
+                    <GroveModelList TItem="ConnectionModel"
+                                    Title="@T["Connections"]"
+                                    Items="@Items"
+                                    SelectedKey="@SelectedKey"
+                                    KeySelector="@(item => item.Key)"
+                                    TextSelector="@(item => item.DisplayName)"
+                                    DescriptionSelector="@(item => $"{item.Key} · {item.Protocol} · {item.Origin}{(item.TenantCredential is null ? string.Empty : " · " + T["credential set"])}")"
+                                    SearchPredicate="@((item, text) => (item.Key + " " + item.DisplayName + " " + item.BaseUrl + " " + item.Protocol).Contains(text, StringComparison.OrdinalIgnoreCase))"
+                                    Select="@(item => SelectAsync(item.Key))"
+                                    Create="@(() => New())"
+                                    CreateText="@T["New"]"
+                                    EmptyText="@T["No connections yet."]"
+                                    IsBusy="IsBusy" />
+
+                    <GroveCard Style="flex: 1; min-width: 0;">
+                        @if (Mode == EditMode.None)
+                        {
+                            <GroveText TextStyle="TextStyle.Body1">@T["Select a connection, define one, or import one from a schema."]</GroveText>
+                        }
+                        else if (Mode == EditMode.Import)
+                        {
+                            <GroveStack Gap="0.75rem" data-testid="connection-import">
+                                <GroveText TextStyle="TextStyle.H5" class="rz-m-0">@T["Import from a schema"]</GroveText>
+                                <GroveFormField Text="@T["Key"]"><GroveTextBox @bind-Value="Import.Key" Placeholder="accountant-api" Style="width: 100%;" data-testid="import-key" /></GroveFormField>
+                                <GroveFormField Text="@T["Name"]"><GroveTextBox @bind-Value="Import.DisplayName" Style="width: 100%;" /></GroveFormField>
+                                <GroveFormField Text="@T["Format"]">
+                                    <GroveDropDown TValue="string" @bind-Value="Import.Format" Data="@SchemaFormats" Style="width: 100%;" data-testid="import-format" />
+                                </GroveFormField>
+                                <GroveFormField Text="@T["Schema URL"]"><GroveTextBox @bind-Value="Import.Url" Placeholder="https://api.example.com/openapi.json" Style="width: 100%;" /></GroveFormField>
+                                <GroveFormField Text="@T["Or paste the document"]" Style="width: 100%;"><GroveTextArea @bind-Value="Import.Document" Rows="10" Style="width: 100%; font-family: monospace;" data-testid="import-document" /></GroveFormField>
+                                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                                    <GroveButton Text="@T["Import"]" Click="ImportAsync" Disabled="IsBusy" data-testid="import-save" />
+                                    <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="Close" />
+                                </GroveStack>
+                            </GroveStack>
+                        }
+                        else
+                        {
+                            <GroveStack Gap="0.75rem">
+                                @if (Mode == EditMode.New)
+                                {
+                                    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                        <GroveText TextStyle="TextStyle.H5" class="rz-m-0">@T["New connection"]</GroveText>
+                                        <GroveButton Text="@T["Import from a schema instead"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => Mode = EditMode.Import)" />
+                                    </GroveStack>
+                                    <GroveFormField Text="@T["Key"]"><GroveTextBox @bind-Value="Draft.Key" Placeholder="accountant-api" Style="width: 100%;" data-testid="connection-key" /></GroveFormField>
+                                }
+                                else
+                                {
+                                    <GroveText TextStyle="TextStyle.H5" class="rz-m-0">@Draft.DisplayName</GroveText>
+                                    <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary">
+                                        @Draft.Key · @Draft.Protocol · @(Detail!.Connection.Origin == "declared" ? T["declared by"] + " " + (Detail.Connection.FeatureId ?? T["a module"]) : T["defined in this tenant"])
+                                    </GroveText>
+                                }
+
+                                @if (IsDefined)
+                                {
+                                    <GroveFieldset Text="@T["Definition"]">
+                                        <GroveStack Gap="0.5rem">
+                                            <GroveFormField Text="@T["Name"]"><GroveTextBox @bind-Value="Draft.DisplayName" Style="width: 100%;" data-testid="connection-name" /></GroveFormField>
+                                            <GroveFormField Text="@T["Description"]"><GroveTextBox @bind-Value="Draft.Description" Style="width: 100%;" /></GroveFormField>
+                                            <GroveFormField Text="@T["Protocol"]">
+                                                <GroveDropDown TValue="string" Value="@Draft.Protocol" Data="@Protocols" TextProperty="DisplayName" ValueProperty="Id"
+                                                               Change="@(value => Draft.Protocol = value as string ?? "http")" Style="width: 100%;" data-testid="connection-protocol" />
+                                            </GroveFormField>
+                                            @if (CurrentProtocol?.SettingFields.Count is null or 0 && Draft.Protocol != "webhook")
+                                            {
+                                                <GroveFormField Text="@T["Base URL"]"><GroveTextBox @bind-Value="Draft.BaseUrl" Placeholder="https://api.example.com/v1/" Style="width: 100%;" data-testid="connection-base-url" /></GroveFormField>
+                                                <GroveFormField Text="@T["Pinned TLS certificate (SHA-256 fingerprints, comma-separated)"]">
+                                                    <GroveTextBox Value="@Draft.Setting(TlsPin)" ValueChanged="@((string value) => Draft.Settings[TlsPin] = value)" Placeholder="@T["Empty: the certificate chain must be trusted"]" Style="width: 100%;" />
+                                                </GroveFormField>
+                                            }
+                                            @foreach (var field in CurrentProtocol?.SettingFields ?? [])
+                                            {
+                                                <GroveFormField Text="@(T[field.Label] + (field.Required ? " *" : string.Empty))">
+                                                    @if (field.Type == "select")
+                                                    {
+                                                        <GroveDropDown TValue="string" Value="@(Draft.Setting(field.Name) ?? field.Default)" Data="@(field.Options ?? [])" Change="@(value => Draft.Settings[field.Name] = value as string ?? string.Empty)" Style="width: 100%;" />
+                                                    }
+                                                    else if (field.Type == "boolean")
+                                                    {
+                                                        <GroveCheckBox TValue="bool" Value="@(string.Equals(Draft.Setting(field.Name) ?? field.Default, "true", StringComparison.OrdinalIgnoreCase))" ValueChanged="@((bool value) => Draft.Settings[field.Name] = value ? "true" : "false")" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <GroveTextBox Value="@Draft.Setting(field.Name)" ValueChanged="@((string value) => Draft.Settings[field.Name] = value)" Placeholder="@(field.Default ?? field.Description ?? string.Empty)" Style="width: 100%;" />
+                                                    }
+                                                </GroveFormField>
+                                            }
+
+                                            <GroveFormField Text="@T["Authentication"]">
+                                                <GroveDropDown TValue="string" Value="@Draft.Auth.Scheme" Data="@AuthSchemesFor" Change="@(value => Draft.Auth.Scheme = value as string ?? "none")" Style="width: 100%;" data-testid="connection-auth-scheme" />
+                                            </GroveFormField>
+                                            @if (Draft.Auth.Scheme == "api-key")
+                                            {
+                                                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                                                    <GroveFormField Text="@T["Key name"]"><GroveTextBox @bind-Value="Draft.Auth.KeyName" Placeholder="X-Api-Key" /></GroveFormField>
+                                                    <GroveFormField Text="@T["Sent in"]"><GroveDropDown TValue="string" @bind-Value="Draft.Auth.KeyLocation" Data="@(new[] { "header", "query" })" /></GroveFormField>
+                                                </GroveStack>
+                                            }
+                                            @if (Draft.Auth.Scheme.StartsWith("oauth2", StringComparison.Ordinal))
+                                            {
+                                                @if (Draft.Auth.Scheme == "oauth2-authorization-code")
+                                                {
+                                                    <GroveFormField Text="@T["Authorization URL"]"><GroveTextBox @bind-Value="Draft.Auth.AuthorizeUrl" Style="width: 100%;" /></GroveFormField>
+                                                }
+                                                @if (Draft.Auth.Scheme == "oauth2-device-code")
+                                                {
+                                                    <GroveFormField Text="@T["Device authorization URL"]"><GroveTextBox @bind-Value="Draft.Auth.DeviceAuthorizationUrl" Style="width: 100%;" /></GroveFormField>
+                                                }
+                                                <GroveFormField Text="@T["Token URL"]"><GroveTextBox @bind-Value="Draft.Auth.TokenUrl" Style="width: 100%;" /></GroveFormField>
+                                                <GroveFormField Text="@T["Revocation URL"]"><GroveTextBox @bind-Value="Draft.Auth.RevokeUrl" Style="width: 100%;" /></GroveFormField>
+                                                <GroveFormField Text="@T["Scopes (space-separated)"]"><GroveTextBox @bind-Value="Draft.Auth.Scopes" Style="width: 100%;" /></GroveFormField>
+                                                <GroveFormField Text="@T["Shared app credentials (key)"]"><GroveTextBox @bind-Value="Draft.Auth.AppCredentialsKey" Placeholder="@T["Empty: the tenant credential holds the client id and secret"]" Style="width: 100%;" /></GroveFormField>
+                                            }
+                                            @if (Draft.Auth.Scheme == "hmac")
+                                            {
+                                                <GroveFormField Text="@T["Signature header"]"><GroveTextBox @bind-Value="Draft.Auth.SignatureHeader" Placeholder="X-Signature" /></GroveFormField>
+                                                <GroveFormField Text="@T["Roles of the webhook's caller (comma-separated)"]">
+                                                    <GroveTextBox @bind-Value="Draft.CallerRoles" Placeholder="@T["No roles: the run holds only what Anonymous and Authenticated grant"]" Style="width: 100%;" data-testid="connection-roles" />
+                                                </GroveFormField>
+                                            }
+
+                                            <GroveStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                                                <div><GroveCheckBox TValue="bool" @bind-Value="Draft.AllowTenant" Name="scope-tenant" /> <GroveLabel Text="@T["Tenant credential"]" Component="scope-tenant" /></div>
+                                                <div><GroveCheckBox TValue="bool" @bind-Value="Draft.AllowUser" Name="scope-user" /> <GroveLabel Text="@T["Each staff user's own credential"]" Component="scope-user" /></div>
+                                                <div><GroveCheckBox TValue="bool" @bind-Value="Draft.Policy.AllowTenantFallback" Name="scope-fallback" /> <GroveLabel Text="@T["Fall back to the tenant credential"]" Component="scope-fallback" /></div>
+                                            </GroveStack>
+
+                                            <GroveStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
+                                                <GroveFormField Text="@T["Retries"]"><GroveNumeric TValue="int" @bind-Value="Draft.Policy.RetryCount" Min="0" Max="10" /></GroveFormField>
+                                                <GroveFormField Text="@T["Timeout (s)"]"><GroveNumeric TValue="int" @bind-Value="Draft.Policy.TimeoutSeconds" Min="1" Max="300" /></GroveFormField>
+                                                <GroveFormField Text="@T["Requests per window"]"><GroveNumeric TValue="int?" @bind-Value="Draft.Policy.RateLimitPermits" Min="0" Placeholder="@T["No limit"]" /></GroveFormField>
+                                                <GroveFormField Text="@T["Window (s)"]"><GroveNumeric TValue="int?" @bind-Value="Draft.Policy.RateLimitWindowSeconds" Min="1" Placeholder="60" /></GroveFormField>
+                                                <GroveFormField Text="@T["Quota"]"><GroveNumeric TValue="long?" @bind-Value="Draft.Policy.QuotaLimit" Min="0" Placeholder="@T["None"]" /></GroveFormField>
+                                                <GroveFormField Text="@T["Quota period (h)"]"><GroveNumeric TValue="int?" @bind-Value="Draft.Policy.QuotaPeriodHours" Min="1" Placeholder="24" /></GroveFormField>
+                                                <GroveFormField Text="@T["Cache (s)"]"><GroveNumeric TValue="int?" @bind-Value="Draft.Policy.CacheSeconds" Min="0" Placeholder="@T["No cache"]" /></GroveFormField>
+                                                <GroveFormField Text="@T["Longest inline wait (s)"]"><GroveNumeric TValue="int" @bind-Value="Draft.Policy.MaxInlineWaitSeconds" Min="0" Max="60" /></GroveFormField>
+                                            </GroveStack>
+
+                                            @if (Draft.Protocol == "webhook" && Mode == EditMode.Edit)
+                                            {
+                                                <GroveAlert AlertStyle="AlertStyle.Info" Summary="@T["Webhook URL"]" Detail="@($"{TenantRoot}api/grove/workflows/webhooks/{Draft.Key}/{{hook}} - POST, signed with HMAC-SHA256 of the body.")" />
+                                            }
+
+                                            <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                                                <GroveButton Text="@T["Save"]" Click="SaveAsync" Disabled="IsBusy" data-testid="connection-save" />
+                                                @if (Mode == EditMode.Edit)
+                                                {
+                                                    <GroveButton Text="@T["Delete"]" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" Disabled="IsBusy" data-testid="connection-delete" />
+                                                }
+                                                <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="Close" />
+                                            </GroveStack>
+                                        </GroveStack>
+                                    </GroveFieldset>
+                                }
+                                else if (Detail is not null)
+                                {
+                                    <GroveText TextStyle="TextStyle.Body2">@Detail.Connection.Description</GroveText>
+                                    <GroveText TextStyle="TextStyle.Body2">@T["Base URL"]: @(Detail.Connection.BaseUrl ?? "-") · @T["Authentication"]: @Detail.Connection.Auth.Scheme · @T["Credentials"]: @string.Join(", ", Detail.Connection.AllowedScopes)</GroveText>
+                                }
+
+                                @if (Mode == EditMode.Edit && Detail is not null)
+                                {
+                                    @if (Detail.Connection.AllowedScopes.Contains("tenant") || Detail.Connection.Auth.Scheme.StartsWith("oauth2", StringComparison.Ordinal))
+                                    {
+                                        <GroveFieldset Text="@T["Tenant credential"]">
+                                            <GroveStack Gap="0.5rem" data-testid="tenant-credential">
+                                                <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary">
+                                                    @(Detail.Connection.TenantCredential is { } info
+                                                        ? $"{T["Holds"]}: {string.Join(", ", info.ValueNames.Concat(info.ExpiresUtc is null ? [] : ["tokens"]))} · {T["updated"]} {info.UpdatedUtc:g} · {info.Status}"
+                                                        : T["None stored."])
+                                                </GroveText>
+                                                @foreach (var field in TenantFields)
+                                                {
+                                                    <GroveFormField Text="@T[field.Label]">
+                                                        @if (field.Type == "secret")
+                                                        {
+                                                            <GrovePassword Value="@CredentialValue(field.Name)" ValueChanged="@((string value) => CredentialValues[field.Name] = value)" Placeholder="@(HasValue(field.Name) ? T["Stored - type to replace"] : string.Empty)" Style="width: 100%;" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <GroveTextBox Value="@CredentialValue(field.Name)" ValueChanged="@((string value) => CredentialValues[field.Name] = value)" Placeholder="@(HasValue(field.Name) ? T["Stored - type to replace"] : field.Description ?? string.Empty)" Style="width: 100%;" />
+                                                        }
+                                                    </GroveFormField>
+                                                }
+                                                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                                                    @if (TenantFields.Count > 0)
+                                                    {
+                                                        <GroveButton Text="@T["Save credential"]" Click="SaveCredentialAsync" Disabled="IsBusy" data-testid="tenant-credential-save" />
+                                                    }
+                                                    @if (Detail.Connection.Auth.Scheme == "oauth2-authorization-code" && Detail.Connection.AllowedScopes.Contains("tenant"))
+                                                    {
+                                                        <GroveButton Text="@T["Authorize"]" ButtonStyle="ButtonStyle.Secondary" Click="@(() => AuthorizeAsync("tenant"))" Disabled="IsBusy" />
+                                                    }
+                                                    @if (Detail.Connection.TenantCredential is not null)
+                                                    {
+                                                        <GroveButton Text="@T["Remove"]" ButtonStyle="ButtonStyle.Danger" Click="RevokeTenantAsync" Disabled="IsBusy" />
+                                                    }
+                                                </GroveStack>
+                                            </GroveStack>
+                                        </GroveFieldset>
+                                    }
+
+                                    @if (Detail.Connection.AllowedScopes.Contains("user"))
+                                    {
+                                        <GroveFieldset Text="@T["Users' own credentials"]">
+                                            @if (Detail.UserCredentials.Count == 0)
+                                            {
+                                                <GroveText TextStyle="TextStyle.Body2">@T["No user has connected an account yet."]</GroveText>
+                                            }
+                                            else
+                                            {
+                                                <GroveDataGrid Data="@Detail.UserCredentials" TItem="CredentialInfoModel" Density="Density.Compact">
+                                                    <Columns>
+                                                        <GroveDataGridColumn TItem="CredentialInfoModel" Property="OwnerId" Title="@T["User"]" />
+                                                        <GroveDataGridColumn TItem="CredentialInfoModel" Property="AccountName" Title="@T["Account"]" />
+                                                        <GroveDataGridColumn TItem="CredentialInfoModel" Property="Status" Title="@T["Status"]" Width="8rem" />
+                                                        <GroveDataGridColumn TItem="CredentialInfoModel" Title="" Width="8rem">
+                                                            <Template Context="credential">
+                                                                <GroveButton Text="@T["Revoke"]" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => RevokeUserAsync(credential.OwnerId!))" />
+                                                            </Template>
+                                                        </GroveDataGridColumn>
+                                                    </Columns>
+                                                </GroveDataGrid>
+                                            }
+                                        </GroveFieldset>
+                                    }
+
+                                    <GroveFieldset Text="@($"{T["Operations"]} ({Detail.Operations.Count})")">
+                                        <GroveStack Gap="0.5rem">
+                                            @if (IsDefined && Detail.Connection.SchemaFormat is not null)
+                                            {
+                                                <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["From"] @Detail.Connection.SchemaFormat @(Detail.Connection.SchemaLocation ?? T["(imported document)"])</GroveText>
+                                            }
+                                            @if (IsDefined)
+                                            {
+                                                <GroveButton Text="@T["Replace the schema"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="StartReimport" />
+                                            }
+                                            <GroveDataGrid Data="@Detail.Operations" TItem="OperationModel" AllowPaging="true" PageSize="20" Density="Density.Compact" data-testid="connection-operations">
+                                                <Columns>
+                                                    <GroveDataGridColumn TItem="OperationModel" Property="Id" Title="@T["Operation"]" />
+                                                    <GroveDataGridColumn TItem="OperationModel" Title="@T["Request"]">
+                                                        <Template Context="operation">@operation.Method @operation.Path</Template>
+                                                    </GroveDataGridColumn>
+                                                    <GroveDataGridColumn TItem="OperationModel" Title="@T["Retry"]" Width="9rem">
+                                                        <Template Context="operation">@(operation.IsSafeToRetry ? T["safe"] : operation.SupportsIdempotencyKey ? T["with key"] : T["not sent only"])</Template>
+                                                    </GroveDataGridColumn>
+                                                    <GroveDataGridColumn TItem="OperationModel" Property="Paging" Title="@T["Paging"]" Width="7rem" />
+                                                </Columns>
+                                            </GroveDataGrid>
+                                        </GroveStack>
+                                    </GroveFieldset>
+                                }
+                            </GroveStack>
+                        }
+                    </GroveCard>
+                </GroveStack>
+            </GroveTabsItem>
+
+            <GroveTabsItem Text="@T["App credentials"]" Icon="key">
+                <GroveStack Gap="0.75rem" data-testid="app-credentials">
+                    <GroveText TextStyle="TextStyle.Body2">@T["A vendor's app (client id and secret), shared by its sign-in provider and its connections. The secret is sealed and never shown again."]</GroveText>
+                    <GroveDataGrid Data="@AppCredentials" TItem="AppCredentialsModel" Density="Density.Compact">
+                        <Columns>
+                            <GroveDataGridColumn TItem="AppCredentialsModel" Property="Key" Title="@T["Key"]" Width="12rem" />
+                            <GroveDataGridColumn TItem="AppCredentialsModel" Property="ClientId" Title="@T["Client id"]" />
+                            <GroveDataGridColumn TItem="AppCredentialsModel" Title="@T["Secret"]" Width="7rem">
+                                <Template Context="app">@(app.HasSecret ? T["set"] : T["none"])</Template>
+                            </GroveDataGridColumn>
+                            <GroveDataGridColumn TItem="AppCredentialsModel" Title="@T["Used by"]">
+                                <Template Context="app">@string.Join(", ", app.UsedBy)</Template>
+                            </GroveDataGridColumn>
+                            <GroveDataGridColumn TItem="AppCredentialsModel" Title="" Width="11rem">
+                                <Template Context="app">
+                                    <GroveButton Text="@T["Edit"]" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => { AppDraft = new() { Key = app.Key, ClientId = app.ClientId ?? string.Empty }; })" />
+                                    @if (app.ClientId is not null)
+                                    {
+                                        <GroveButton Text="@T["Delete"]" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@(() => DeleteAppAsync(app.Key))" />
+                                    }
+                                </Template>
+                            </GroveDataGridColumn>
+                        </Columns>
+                    </GroveDataGrid>
+                    <GroveButton Text="@T["New app credentials"]" ButtonStyle="ButtonStyle.Light" Click="@(() => AppDraft = new())" Style="align-self: flex-start;" />
+                    @if (AppDraft is not null)
+                    {
+                        <GroveCard>
+                            <GroveStack Gap="0.5rem">
+                                <GroveFormField Text="@T["Key"]"><GroveTextBox @bind-Value="AppDraft.Key" Style="width: 100%;" /></GroveFormField>
+                                <GroveFormField Text="@T["Client id"]"><GroveTextBox @bind-Value="AppDraft.ClientId" Style="width: 100%;" /></GroveFormField>
+                                <GroveFormField Text="@T["Client secret"]"><GrovePassword @bind-Value="AppDraft.ClientSecret" Placeholder="@T["Empty keeps the stored secret"]" Style="width: 100%;" /></GroveFormField>
+                                <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                                    <GroveButton Text="@T["Save"]" Click="SaveAppAsync" Disabled="IsBusy" />
+                                    <GroveButton Text="@T["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => AppDraft = null)" />
+                                </GroveStack>
+                            </GroveStack>
+                        </GroveCard>
+                    }
+                </GroveStack>
+            </GroveTabsItem>
+        </Tabs>
+    </GroveTabs>
+</GroveStack>
+
+@code {
+    private const string Api = CredentialForm.ApiRoot;
+    private const string TlsPin = "tls:certificateFingerprint";
+
+    private enum EditMode { None, New, Edit, Import }
+
+    private ConnectionModel[] Items { get; set; } = [];
+    private ProtocolModel[] Protocols { get; set; } = [];
+    private AppCredentialsModel[] AppCredentials { get; set; } = [];
+    private string? SelectedKey { get; set; }
+    private EditMode Mode { get; set; }
+    private ConnectionDetailModel? Detail { get; set; }
+    private ConnectionDraft Draft { get; set; } = new();
+    private SchemaImportRequest Import { get; set; } = new();
+    private AppDraftModel? AppDraft { get; set; }
+    private Dictionary<string, string> CredentialValues { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    private List<string> Warnings { get; set; } = [];
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    private bool IsDefined => Mode == EditMode.New || (Mode == EditMode.Edit && Detail?.Connection.Origin == "defined");
+    private ProtocolModel? CurrentProtocol => Protocols.FirstOrDefault(p => p.Id == Draft.Protocol);
+    private IReadOnlyList<string> AuthSchemesFor => CurrentProtocol?.AuthSchemes ?? CredentialForm.AuthSchemes;
+    private string[] SchemaFormats => Protocols.SelectMany(p => p.SchemaFormats).Distinct().ToArray();
+    private IReadOnlyList<SettingFieldModel> TenantFields => Detail is null ? [] : CredentialForm.Fields(Detail.Connection.Auth.Scheme, "tenant", Detail.Connection.Auth.AppCredentialsKey is not null, Protocols.FirstOrDefault(p => p.Id == Detail.Connection.Protocol));
+
+    // The tenant root is the admin document base one segment up (tenant prefix kept).
+    private string TenantRoot => new Uri(new Uri(Navigation.BaseUri), "../").AbsoluteUri;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        if (CredentialForm.QueryValue(Navigation.Uri, "connectError") is { } connectError)
+        {
+            Error = connectError;
+        }
+    }
+
+    private async Task LoadAsync() => await RunAsync(async () =>
+    {
+        Items = await Http.GetFromJsonAsync<ConnectionModel[]>(Api) ?? [];
+        Protocols = await Http.GetFromJsonAsync<ProtocolModel[]>($"{Api}/protocols") ?? [];
+        AppCredentials = await Http.GetFromJsonAsync<AppCredentialsModel[]>($"{Api}/app-credentials") ?? [];
+    });
+
+    private void New()
+    {
+        SelectedKey = null;
+        Detail = null;
+        Draft = new ConnectionDraft();
+        Mode = EditMode.New;
+    }
+
+    private void Close()
+    {
+        SelectedKey = null;
+        Detail = null;
+        Mode = EditMode.None;
+    }
+
+    private async Task SelectAsync(string key) => await RunAsync(async () =>
+    {
+        Detail = await Http.GetFromJsonAsync<ConnectionDetailModel>($"{Api}/{Uri.EscapeDataString(key)}");
+        SelectedKey = key;
+        Draft = ConnectionDraft.From(Detail!.Connection);
+        CredentialValues = new(StringComparer.OrdinalIgnoreCase);
+        Warnings = [.. Detail.Warnings];
+        Mode = EditMode.Edit;
+    });
+
+    private void StartReimport()
+    {
+        Import = new SchemaImportRequest { Key = Draft.Key, Format = Detail?.Connection.SchemaFormat, Url = Detail?.Connection.SchemaLocation, Replace = true };
+        Mode = EditMode.Import;
+    }
+
+    private async Task ImportAsync() => await RunAsync(async () =>
+    {
+        var response = await Http.PostAsJsonAsync($"{Api}/import", Import);
+        if (await FailedAsync(response)) return;
+        var result = await response.Content.ReadFromJsonAsync<SchemaImportResult>();
+        Warnings = [.. result?.Warnings ?? []];
+        Items = await Http.GetFromJsonAsync<ConnectionModel[]>(Api) ?? [];
+        if (result is not null)
+        {
+            Detail = result.Connection;
+            SelectedKey = Detail.Connection.Key;
+            Draft = ConnectionDraft.From(Detail.Connection);
+            Mode = EditMode.Edit;
+        }
+    });
+
+    private async Task SaveAsync() => await RunAsync(async () =>
+    {
+        var request = Draft.ToRequest();
+        var response = Mode == EditMode.New
+            ? await Http.PostAsJsonAsync(Api, request)
+            : await Http.PutAsJsonAsync($"{Api}/{Uri.EscapeDataString(Draft.Key)}", request);
+        if (await FailedAsync(response)) return;
+        Detail = await response.Content.ReadFromJsonAsync<ConnectionDetailModel>();
+        Items = await Http.GetFromJsonAsync<ConnectionModel[]>(Api) ?? [];
+        SelectedKey = Detail?.Connection.Key;
+        Draft = ConnectionDraft.From(Detail!.Connection);
+        Mode = EditMode.Edit;
+    });
+
+    private async Task DeleteAsync() => await RunAsync(async () =>
+    {
+        var response = await Http.DeleteAsync($"{Api}/{Uri.EscapeDataString(Draft.Key)}");
+        if (await FailedAsync(response)) return;
+        Close();
+        Items = await Http.GetFromJsonAsync<ConnectionModel[]>(Api) ?? [];
+    });
+
+    private string CredentialValue(string name) => CredentialValues.TryGetValue(name, out var value) ? value : string.Empty;
+
+    private bool HasValue(string name) => Detail?.Connection.TenantCredential?.ValueNames.Contains(name, StringComparer.OrdinalIgnoreCase) == true;
+
+    private async Task SaveCredentialAsync() => await RunAsync(async () =>
+    {
+        var response = await Http.PutAsJsonAsync($"{Api}/{Uri.EscapeDataString(Draft.Key)}/credential", new CredentialSaveRequest { Values = CredentialValues.Where(v => !string.IsNullOrEmpty(v.Value)).ToDictionary(v => v.Key, v => v.Value) });
+        if (await FailedAsync(response)) return;
+        await ReloadSelectedAsync();
+    });
+
+    private async Task RevokeTenantAsync() => await RunAsync(async () =>
+    {
+        var response = await Http.DeleteAsync($"{Api}/{Uri.EscapeDataString(Draft.Key)}/credential");
+        if (await FailedAsync(response)) return;
+        await ReloadSelectedAsync();
+    });
+
+    private async Task RevokeUserAsync(string userId) => await RunAsync(async () =>
+    {
+        var response = await Http.DeleteAsync($"{Api}/{Uri.EscapeDataString(Draft.Key)}/credentials/{Uri.EscapeDataString(userId)}");
+        if (await FailedAsync(response)) return;
+        await ReloadSelectedAsync();
+    });
+
+    private async Task AuthorizeAsync(string scope) => await RunAsync(async () =>
+    {
+        var returnUrl = new Uri(Navigation.Uri).PathAndQuery;
+        var started = await Http.GetFromJsonAsync<AuthorizationStartModel>($"{Api}/{Uri.EscapeDataString(Draft.Key)}/oauth/authorize?scope={scope}&returnUrl={Uri.EscapeDataString(returnUrl)}");
+        if (started is not null)
+        {
+            Navigation.NavigateTo(started.Url, forceLoad: true);
+        }
+    });
+
+    private async Task SaveAppAsync() => await RunAsync(async () =>
+    {
+        var response = await Http.PutAsJsonAsync($"{Api}/app-credentials/{Uri.EscapeDataString(AppDraft!.Key.Trim().ToLowerInvariant())}",
+            new AppCredentialsSaveRequest { ClientId = AppDraft.ClientId, ClientSecret = string.IsNullOrEmpty(AppDraft.ClientSecret) ? null : AppDraft.ClientSecret });
+        if (await FailedAsync(response)) return;
+        AppDraft = null;
+        AppCredentials = await Http.GetFromJsonAsync<AppCredentialsModel[]>($"{Api}/app-credentials") ?? [];
+    });
+
+    private async Task DeleteAppAsync(string key) => await RunAsync(async () =>
+    {
+        var response = await Http.DeleteAsync($"{Api}/app-credentials/{Uri.EscapeDataString(key)}");
+        if (await FailedAsync(response)) return;
+        AppCredentials = await Http.GetFromJsonAsync<AppCredentialsModel[]>($"{Api}/app-credentials") ?? [];
+    });
+
+    private async Task ReloadSelectedAsync()
+    {
+        Detail = await Http.GetFromJsonAsync<ConnectionDetailModel>($"{Api}/{Uri.EscapeDataString(Draft.Key)}");
+        CredentialValues = new(StringComparer.OrdinalIgnoreCase);
+        Items = await Http.GetFromJsonAsync<ConnectionModel[]>(Api) ?? [];
+    }
+
+    private async Task<bool> FailedAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return false;
+        }
+
+        Error = await response.Content.ReadAsStringAsync();
+        if (string.IsNullOrWhiteSpace(Error)) Error = $"HTTP {(int)response.StatusCode}";
+        return true;
+    }
+
+    private async Task RunAsync(Func<Task> action)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private sealed class AppDraftModel
+    {
+        public string Key { get; set; } = string.Empty;
+        public string ClientId { get; set; } = string.Empty;
+        public string? ClientSecret { get; set; }
+    }
+
+    private sealed class AuthDraft
+    {
+        public string Scheme { get; set; } = "none";
+        public string? KeyName { get; set; }
+        public string KeyLocation { get; set; } = "header";
+        public string? AuthorizeUrl { get; set; }
+        public string? TokenUrl { get; set; }
+        public string? DeviceAuthorizationUrl { get; set; }
+        public string? RevokeUrl { get; set; }
+        public string? Scopes { get; set; }
+        public bool UsePkce { get; set; } = true;
+        public string? AppCredentialsKey { get; set; }
+        public string? SignatureScheme { get; set; }
+        public string? SignatureHeader { get; set; }
+    }
+
+    private sealed class PolicyDraft
+    {
+        public int RetryCount { get; set; } = 2;
+        public int TimeoutSeconds { get; set; } = 30;
+        public int? RateLimitPermits { get; set; }
+        public int? RateLimitWindowSeconds { get; set; }
+        public long? QuotaLimit { get; set; }
+        public int? QuotaPeriodHours { get; set; }
+        public int? CacheSeconds { get; set; }
+        public long MaxResponseBytes { get; set; } = 1024 * 1024;
+        public long MaxRequestBytes { get; set; } = 1024 * 1024;
+        public int MaxInlineWaitSeconds { get; set; } = 5;
+        public bool AllowTenantFallback { get; set; }
+    }
+
+    private sealed class ConnectionDraft
+    {
+        public string Key { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string Protocol { get; set; } = "http";
+        public string? BaseUrl { get; set; }
+        public AuthDraft Auth { get; set; } = new();
+        public PolicyDraft Policy { get; set; } = new();
+        public bool AllowTenant { get; set; } = true;
+        public bool AllowUser { get; set; }
+        public Dictionary<string, string> Settings { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public string CallerRoles { get; set; } = string.Empty;
+
+        public string? Setting(string key) => Settings.TryGetValue(key, out var value) ? value : null;
+
+        public static ConnectionDraft From(ConnectionModel model) => new()
+        {
+            Key = model.Key,
+            DisplayName = model.DisplayName,
+            Description = model.Description,
+            Protocol = model.Protocol,
+            BaseUrl = model.BaseUrl,
+            Auth = new AuthDraft
+            {
+                Scheme = model.Auth.Scheme,
+                KeyName = model.Auth.KeyName,
+                KeyLocation = model.Auth.KeyLocation,
+                AuthorizeUrl = model.Auth.AuthorizeUrl,
+                TokenUrl = model.Auth.TokenUrl,
+                DeviceAuthorizationUrl = model.Auth.DeviceAuthorizationUrl,
+                RevokeUrl = model.Auth.RevokeUrl,
+                Scopes = string.Join(' ', model.Auth.Scopes ?? []),
+                UsePkce = model.Auth.UsePkce,
+                AppCredentialsKey = model.Auth.AppCredentialsKey,
+                SignatureScheme = model.Auth.SignatureScheme,
+                SignatureHeader = model.Auth.SignatureHeader,
+            },
+            Policy = new PolicyDraft
+            {
+                RetryCount = model.Policy.RetryCount,
+                TimeoutSeconds = model.Policy.TimeoutSeconds,
+                RateLimitPermits = model.Policy.RateLimitPermits,
+                RateLimitWindowSeconds = model.Policy.RateLimitWindowSeconds,
+                QuotaLimit = model.Policy.QuotaLimit,
+                QuotaPeriodHours = model.Policy.QuotaPeriodHours,
+                CacheSeconds = model.Policy.CacheSeconds,
+                MaxResponseBytes = model.Policy.MaxResponseBytes,
+                MaxRequestBytes = model.Policy.MaxRequestBytes,
+                MaxInlineWaitSeconds = model.Policy.MaxInlineWaitSeconds,
+                AllowTenantFallback = model.Policy.AllowTenantFallback,
+            },
+            AllowTenant = model.AllowedScopes.Contains("tenant"),
+            AllowUser = model.AllowedScopes.Contains("user"),
+            Settings = new Dictionary<string, string>(model.Settings, StringComparer.OrdinalIgnoreCase),
+            CallerRoles = string.Join(", ", model.CallerRoles),
+        };
+
+        public ConnectionSaveRequest ToRequest() => new()
+        {
+            Key = Key,
+            DisplayName = DisplayName,
+            Description = Description ?? string.Empty,
+            Protocol = Protocol,
+            BaseUrl = BaseUrl ?? string.Empty,
+            Auth = new ConnectionAuthModel(Auth.Scheme, Auth.KeyName, Auth.KeyLocation, Auth.AuthorizeUrl, Auth.TokenUrl, Auth.DeviceAuthorizationUrl, Auth.RevokeUrl,
+                (Auth.Scopes ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries), Auth.UsePkce, Auth.AppCredentialsKey, Auth.SignatureScheme, Auth.SignatureHeader),
+            AllowedScopes = [.. AllowTenant ? new[] { "tenant" } : [], .. AllowUser ? new[] { "user" } : []],
+            Policy = new ConnectionPolicyModel(Policy.RetryCount, Policy.TimeoutSeconds, Policy.RateLimitPermits, Policy.RateLimitWindowSeconds, Policy.QuotaLimit, Policy.QuotaPeriodHours,
+                Policy.CacheSeconds, Policy.MaxResponseBytes, Policy.MaxRequestBytes, Policy.MaxInlineWaitSeconds, Policy.AllowTenantFallback),
+            Settings = Settings.Where(s => !string.IsNullOrWhiteSpace(s.Value)).ToDictionary(s => s.Key, s => s.Value),
+            CallerRoles = [.. CallerRoles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)],
+        };
+    }
+}

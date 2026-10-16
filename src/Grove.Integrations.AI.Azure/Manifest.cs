@@ -10,10 +10,11 @@ using Grove.Modules.Manifest;
 [assembly: Feature(
     Id = "Grove.Integrations.AI.Azure",
     Name = "Azure AI Search",
-    Description = "Provides Azure AI Search services for managing indexes and facilitating search scenarios within indexes.",
+    Description = "Azure AI Search indexes and search, on a connection to the search service (Connections).",
     Dependencies =
     [
         "Grove.Data.Indexing",
+        "Grove.Data.Connectors",
     ],
     Category = "Search"
 )]

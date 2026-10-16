@@ -4,8 +4,7 @@ Items the docs record as decided, with no open question against them, that the c
 have yet. Each line names the doc that holds the design; that doc is the spec. Mark an item
 done here when it lands, and update its doc to describe what exists.
 
-Left out on purpose, because a question is still open against them: the connection system
-(the protocol modules, the data layer's SQL connections, queries.md › Connections) and the
+Left out on purpose, because a question is still open against them: the
 Queries API (queries.md Q6, Q7; workflows.md "what the platform offers for connections"),
 audit feeds at volume (A4), the designer UI and its move (blazordesigner.md, workflows.md W6),
 design systems as content (part vs fields), cross-tenant translation suggestions, the global
@@ -77,9 +76,24 @@ Status: ☐ open, ◐ partial, ☑ done.
   "Api" scheme.
 - ☐ Localization as a registry: modules declare localization sources for their data types (Regions: country, subdivision and place names) and the translations editor lists them all (localization.md › Localization is a registry)
 
+## Connectors (connectors.md)
+
+- ☑ The protocol libraries: `Grove.Data.Protocols.Http`, `.Rest` (OpenAPI), `.Soap` (WSDL), `.OAuth` (client flows), `.Webhooks`, `.Sql`, and the GraphQL client side (connectors.md › Protocols)
+- ☑ The connector engine `Grove.Data.Connectors` (+ Abstractions): declared and defined connections, tenant and user credential scopes, the OAuth lifecycle, the execution pipeline (guarded client, cache, retries with `Retry-After`, rate limits, "retry after T"); Workflows' `Server/Connectors` moved into it, with the renames listed in connectors.md (connectors.md › The connector engine)
+- ☑ The Connections screen and each user's Connected accounts page (connectors.md › Screens and permissions)
+- ☑ Integrations on declared connections with shared app credentials; their own HTTP clients removed: Facebook (Graph and Conversions API), Google, GitHub, Microsoft (Graph, on the Entra ID tenant's authority), X (OAuth 2.0 sign-in and posting); the sign-in handlers read the app credentials; the settings secrets moved by migration (connectors.md › Integrations)
+- ☑ The X connection's token exchange: the OAuth client's HTTP Basic client authentication (`tokenEndpointAuth = client_secret_basic`) (connectors.md › Code that still has to change)
+- ☑ App credentials and tenant credentials saved on the Connections screen raise `IConnectionChangeHandler`, so the sign-in handlers reload with them (connectors.md › App credentials)
+- ☑ Queries' sources over connections: the `Connection` source over REST, GraphQL and SOAP operations, the `Sql` source over external databases' SQL connections (queries.md › Connections)
+- ☐ Local storage of an external source's results (queries.md › Connections)
+- ☑ Search engines as connections: Elasticsearch and Azure AI Search build their SDK clients from a defined SDK connection and send every request through the engine (connectors.md › Search engines)
+
 ## Communications (communications.md)
 
-- ☐ Communications as capabilities, protocols and integrations: SMTP types to `Grove.Data.Protocols.Smtp`, Twilio to `Grove.Integrations.Twilio`, `SmsNotificationProvider` into `Grove.Communications`, the Azure Communication Services providers into `Grove.Integrations.Microsoft`, the channel settings pages into the communications screens (communications.md › Code that still has to change)
+- ☑ Communications as capabilities, protocols and integrations: SMTP types in `Grove.Data.Protocols.Smtp`, Twilio in `Grove.Integrations.Twilio`, `SmsNotificationProvider` in `Grove.Communications`, the Azure Communication Services providers as features of `Grove.Integrations.Microsoft` (communications.md)
+- ☑ Every e-mail and SMS provider on a connection (communications.md › Providers run on the connector engine): the SMTP, IMAP and POP3 protocols, the Twilio and Azure Communication Services connections, thin providers with no credentials or retry code, the settings sections picking connections; the e-mail receive registry with the IMAP and POP3 receive providers
+- ☑ The communications screens: the Communications menu section with the channel cards (a page region each channel contributes to), the channels' settings and test sends, and the delivery log written by the channel services from the engine's results (communications.md › Grove.Communications)
+- ☑ Microsoft Graph mail: the send provider over `sendMail` and the mailbox receive provider over the Graph connection, features of `Grove.Integrations.Microsoft` (communications.md › Providers run on the connector engine)
 
 ## Access (access.md, permissions.md)
 

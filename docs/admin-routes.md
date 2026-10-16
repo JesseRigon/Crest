@@ -34,8 +34,11 @@ This list is generated from the current resolved Orchard admin navigation for th
 | Settings > Search > Indexes | `/Admin/indexing` | native: create (per provider kind), edit as JSON, rebuild, reset, synchronize, delete/force-delete (MVC admin, the providers' profile drivers and the Lucene/Elasticsearch query screens deleted) |
 | Settings > Search > Queries > All Queries | `/Admin/Queries/Index` | native list/editor (provider metadata as JSON; MVC admin and the query editor drivers deleted) |
 | Settings > Search > Queries > Run SQL Query | `/Admin/Queries/Sql/Query` | native: SELECT-only runner through the query pipeline (`SqlQueryRunner`) |
-| Settings > Communication > Email | `/Admin/Settings/email` | native: default provider, SMTP (password write-only), send a test (MVC settings drivers deleted) |
-| Tools > Testing > Email Test | `/Admin/Email/Test` | native (same page) |
+| Communications > Overview | `/Admin/Communications` | each channel's card (providers, connections, defaults), contributed to the `Communications.Channels` region |
+| Communications > Email | `/Admin/Settings/email` | `SettingsForm` group `email`: the default send and receive providers, a section per provider (SMTP, IMAP, POP3, Azure Communication Services, Microsoft Graph) picking its connection |
+| Communications > Email Test | `/Admin/Email/Test` | native test send (Grove.Communications.Email.BlazorWasm) |
+| Communications > SMS, SMS Test | `/Admin/Settings/sms`, `/Admin/Sms/Test` | `SettingsForm` group `sms`; native test send |
+| Communications > Delivery Log | `/Admin/Communications/DeliveryLog` | every send, filtered and paged (`ViewDeliveryLog`) |
 | Settings > Users > Registration, Reset password, Change email | `/Admin/Settings/userRegistration`, `userResetPassword`, `userChangeEmail` | native settings editors (with external sign-up rules) |
 | Settings > Custom settings types | `/Admin/CustomSettings/{Type}` | native, on the content editor tree |
 | Audit Trail > Events | `/Admin/Audit`, `/Admin/Audit/Records/{id}` | native list and record (MVC list deleted) |

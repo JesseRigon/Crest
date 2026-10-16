@@ -31,9 +31,21 @@ using Grove.Modules.Manifest;
 )]
 
 [assembly: Feature(
+    Id = "Grove.Data.Queries.Connections",
+    Name = "Connection Queries",
+    Description = "Queries over the operations of connections (REST, GraphQL, SOAP) through the connector engine, as typed, paged rows.",
+    Dependencies =
+    [
+        "Grove.Data.Queries",
+        "Grove.Data.Connectors",
+    ],
+    Category = "Content Management"
+)]
+
+[assembly: Feature(
     Id = "Grove.Data.Queries.Sql",
     Name = "SQL Queries",
-    Description = "Introduces a way to create custom Queries in pure SQL.",
+    Description = "Custom Queries in pure SQL, over the tenant's own database (scoped to the caller) or an external database's SQL connection.",
     Dependencies =
     [
         "Grove.Data.Queries",

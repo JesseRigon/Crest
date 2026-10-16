@@ -289,7 +289,7 @@ public class AccessGateTests
     {
         var descriptor = new ActivityDescriptor { ClrType = typeof(Connectors.CallConnector) };
         new RequiredPermissionDescriptorModifier().Modify(descriptor);
-        Assert.Equal(WorkflowsConstants.Permissions.UseConnections, ActivityAccessGateMiddleware.RequiredPermission(descriptor));
+        Assert.Equal(Grove.Data.Connectors.ConnectorsPermissionNames.UseConnections, ActivityAccessGateMiddleware.RequiredPermission(descriptor));
 
         var copy = new ActivityDescriptor { ClrType = typeof(Contents.CopyFields) };
         new RequiredPermissionDescriptorModifier().Modify(copy);
@@ -368,22 +368,5 @@ public class QueryActivityProviderTests
         var activity = (Queries.RunQuery)descriptor.Constructor(new ActivityConstructorContext(descriptor, type => new ActivityConstructionResult((IActivity)Activator.CreateInstance(type)!))).Activity;
         Assert.Equal("open-invoices", activity.QueryName);
         Assert.Equal(descriptor.TypeName, activity.Type);
-    }
-}
-
-// A connection's machine identity (docs/access.md, Anonymous actors): a webhook's run acts as
-// the connection's application caller, named by the connection's key, never as a user.
-public class WorkflowConnectionCallerTests
-{
-    [Fact]
-    public void The_connection_identity_round_trips_and_is_never_a_user_id()
-    {
-        var principal = Connectors.WorkflowConnectionCaller.Principal(new Connectors.WorkflowConnection { Key = "stripe", DisplayName = "Stripe" });
-
-        Assert.Equal("stripe", Connectors.WorkflowConnectionCaller.ConnectionKeyOf(principal.FindFirstValue(ClaimTypes.NameIdentifier)));
-        Assert.False(principal.Identity!.AuthenticationType!.StartsWith("Identity.", StringComparison.Ordinal));
-        Assert.Null(Connectors.WorkflowConnectionCaller.ConnectionKeyOf("u-1"));
-        Assert.Null(Connectors.WorkflowConnectionCaller.ConnectionKeyOf("connection:"));
-        Assert.Null(Connectors.WorkflowConnectionCaller.ConnectionKeyOf(null));
     }
 }

@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Options;
 using Grove.Integrations.Google.Authentication.Settings;
 
@@ -15,28 +14,9 @@ public sealed class GoogleAuthenticationSettingsConfiguration : IConfigureOption
 
     public void Configure(GoogleAuthenticationSettings options)
     {
-        var settings = GetGoogleAuthenticationSettingsAsync()
-            .GetAwaiter()
-            .GetResult();
+        var settings = _googleAuthenticationService.GetSettingsAsync().GetAwaiter().GetResult();
 
-        if (settings != null)
-        {
-            options.CallbackPath = settings.CallbackPath;
-            options.ClientID = settings.ClientID;
-            options.ClientSecret = settings.ClientSecret;
-            options.SaveTokens = settings.SaveTokens;
-        }
-    }
-
-    private async Task<GoogleAuthenticationSettings> GetGoogleAuthenticationSettingsAsync()
-    {
-        var settings = await _googleAuthenticationService.GetSettingsAsync();
-
-        if ((_googleAuthenticationService.ValidateSettings(settings)).Any(result => result != ValidationResult.Success))
-        {
-            return null;
-        }
-
-        return settings;
+        options.CallbackPath = settings.CallbackPath;
+        options.SaveTokens = settings.SaveTokens;
     }
 }

@@ -1,42 +1,41 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Grove.Integrations.Google.Authentication.Settings;
+using Grove.Integrations.Google.Services;
 
 namespace Grove.Integrations.Google.Authentication.Configuration;
 
+/// <summary>
+/// Registers Google sign-in when the Google app credentials are set, and configures the handler
+/// with them (client id and secret from the app credentials, the rest from the sign-in settings).
+/// </summary>
 public class GoogleOptionsConfiguration :
     IConfigureOptions<AuthenticationOptions>,
     IConfigureNamedOptions<GoogleOptions>
 {
     private readonly GoogleAuthenticationSettings _googleAuthenticationSettings;
-    private readonly IDataProtectionProvider _dataProtectionProvider;
+    private readonly IServiceProvider _services;
     private readonly ILogger _logger;
 
     public GoogleOptionsConfiguration(
         IOptions<GoogleAuthenticationSettings> googleAuthenticationSettings,
-        IDataProtectionProvider dataProtectionProvider,
+        IServiceProvider services,
         ILogger<GoogleOptionsConfiguration> logger)
     {
         _googleAuthenticationSettings = googleAuthenticationSettings.Value;
-        _dataProtectionProvider = dataProtectionProvider;
+        _services = services;
         _logger = logger;
     }
 
     public void Configure(AuthenticationOptions options)
     {
-        if (_googleAuthenticationSettings == null)
+        var app = AppCredentialsAccess.Read(_services, GoogleConstants.AppCredentialsKey, _logger);
+        if (string.IsNullOrWhiteSpace(app?.ClientId) || string.IsNullOrWhiteSpace(app.ClientSecret))
         {
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(_googleAuthenticationSettings.ClientID) ||
-            string.IsNullOrWhiteSpace(_googleAuthenticationSettings.ClientSecret))
-        {
-            _logger.LogWarning("The Google login provider is enabled but not configured.");
+            _logger.LogWarning("The Google login provider is enabled but the Google app credentials are not set (Connections).");
 
             return;
         }
@@ -55,27 +54,21 @@ public class GoogleOptionsConfiguration :
             return;
         }
 
-        if (_googleAuthenticationSettings == null)
+        var app = AppCredentialsAccess.Read(_services, GoogleConstants.AppCredentialsKey, _logger);
+        if (app is null)
         {
             return;
         }
 
-        options.ClientId = _googleAuthenticationSettings.ClientID;
-        try
-        {
-            options.ClientSecret = _dataProtectionProvider.CreateProtector(GoogleConstants.Features.GoogleAuthentication).Unprotect(_googleAuthenticationSettings.ClientSecret);
-        }
-        catch
-        {
-            _logger.LogError("The Consumer Secret could not be decrypted. It may have been encrypted using a different key.");
-        }
+        options.ClientId = app.ClientId;
+        options.ClientSecret = app.ClientSecret;
 
-        if (!string.IsNullOrEmpty(_googleAuthenticationSettings.CallbackPath))
+        if (!string.IsNullOrEmpty(_googleAuthenticationSettings?.CallbackPath))
         {
             options.CallbackPath = _googleAuthenticationSettings.CallbackPath;
         }
 
-        options.SaveTokens = _googleAuthenticationSettings.SaveTokens;
+        options.SaveTokens = _googleAuthenticationSettings?.SaveTokens ?? false;
     }
 
     public void Configure(GoogleOptions options) => Debug.Fail("This infrastructure method shouldn't be called.");

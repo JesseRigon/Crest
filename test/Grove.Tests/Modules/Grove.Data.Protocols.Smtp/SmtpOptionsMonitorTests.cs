@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Grove.Communications.Email;
 using Grove.Communications.Email.Services;
+using Grove.Data.Protocols.Smtp;
 using Grove.Data.Protocols.Smtp.Services;
 using Grove.Entities;
 using Grove.Environment.Options;
@@ -54,8 +55,7 @@ public class SmtpOptionsMonitorTests
             {
                 IsEnabled = true,
                 DefaultSender = "admin@example.com",
-                DeliveryMethod = SmtpDeliveryMethod.SpecifiedPickupDirectory,
-                PickupDirectoryLocation = "Email",
+                ConnectionKey = "smtp-test",
             });
 
             site.Put(new EmailSettings
@@ -80,7 +80,7 @@ public class SmtpOptionsMonitorTests
             var smtpOptions = scope.ServiceProvider.GetRequiredService<IOptionsMonitor<SmtpOptions>>().CurrentValue;
             Assert.True(smtpOptions.IsEnabled);
             Assert.Equal("admin@example.com", smtpOptions.DefaultSender);
-            Assert.Equal(SmtpDeliveryMethod.SpecifiedPickupDirectory, smtpOptions.DeliveryMethod);
+            Assert.Equal("smtp-test", smtpOptions.ConnectionKey);
 
             var emailOptions = scope.ServiceProvider.GetRequiredService<IOptionsMonitor<EmailOptions>>().CurrentValue;
             Assert.Equal(SmtpEmailProvider.TechnicalName, emailOptions.DefaultProviderName);

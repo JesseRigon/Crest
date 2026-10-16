@@ -21,8 +21,10 @@ public sealed class FacebookLoginDeploymentSource
         // The 'name' property should match the related recipe step name.
         var jObject = new JsonObject { ["name"] = "FacebookCoreSettings" };
 
-        // Merge settings as the recipe step doesn't use a child property.
+        // Merge settings as the recipe step doesn't use a child property. The app secret is a
+        // sealed credential and is never exported; the app id is, so the target knows which app.
         jObject.Merge(JObject.FromObject(settings));
+        jObject["AppId"] = await _facebookService.GetAppIdAsync();
 
         result.Steps.Add(jObject);
     }

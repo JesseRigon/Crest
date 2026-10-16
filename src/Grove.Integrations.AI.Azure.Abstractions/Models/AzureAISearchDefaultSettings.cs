@@ -1,29 +1,20 @@
 using System.ComponentModel.DataAnnotations;
-using Grove.Infrastructure.Settings;
 
 namespace Grove.Integrations.AI.Azure.Models;
 
+/// <summary>
+/// Which connection Azure AI Search runs on. The endpoint, the authentication and the API key
+/// are the connection's (an SDK connection on the Connections screen): its base URL is the
+/// service endpoint, an API key credential selects key authentication, and without one the
+/// connection's <c>azure:identityClientId</c> setting (or the system identity) is used.
+/// </summary>
 public class AzureAISearchDefaultSettings
 {
     public const string GroupId = "azureAISearch";
 
-    [Display(Name = "Use custom Azure Search AI settings", Description = "Check to configure a custom Azure Search AI instance; required when the host does not configure one.", Order = 0)]
-    public bool UseCustomConfiguration { get; set; }
+    /// <summary>The connection used when the settings name none.</summary>
+    public const string DefaultConnection = "azure-ai-search";
 
-    [Display(Name = "Authentication Type", Order = 2)]
-    [Setting(VisibleWhen = nameof(UseCustomConfiguration))]
-    public AzureAIAuthenticationType AuthenticationType { get; set; }
-
-    [Display(Name = "Endpoint", Prompt = "https://[search service name].search.windows.net", Order = 1)]
-    [DataType(DataType.Url)]
-    [Setting(VisibleWhen = nameof(UseCustomConfiguration))]
-    public string Endpoint { get; set; }
-
-    [Display(Name = "Api Key", Order = 3)]
-    [Setting(Secret = true, ProtectedBy = "AzureAISearch", VisibleWhen = "AuthenticationType=ApiKey")]
-    public string ApiKey { get; set; }
-
-    [Display(Name = "Identity Client Id", Description = "Leaving identity client id blank will use system.", Order = 4)]
-    [Setting(VisibleWhen = "AuthenticationType=ManagedIdentity")]
-    public string IdentityClientId { get; set; }
+    [Display(Name = "Connection", Description = "The key of the connection to the search service (Connections). Its base URL is the service endpoint, e.g. https://[service].search.windows.net.", Prompt = DefaultConnection, Order = 0)]
+    public string Connection { get; set; }
 }

@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Grove.Environment.Options;
-using Grove.Communications.Sms.Models;
 using Grove.Communications.Sms.Services;
 
 namespace Grove.Communications.Sms;
@@ -39,18 +38,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IConfigureOptions<SmsProviderOptions>, TConfiguration>();
 
         return services;
-    }
-
-    public static IServiceCollection AddTwilioSmsProvider(this IServiceCollection services)
-    {
-        services.AddHttpClient(TwilioSmsProvider.TechnicalName, client =>
-        {
-            client.BaseAddress = new Uri("https://api.twilio.com/2010-04-01/Accounts/");
-        }).AddStandardResilienceHandler();
-
-        return services.AddSignalOptionsChangeTokenSource<TwilioOptions>()
-            .AddSmsProviderOptionsConfiguration<TwilioProviderOptionsConfigurations>()
-            .AddTransient<IConfigureOptions<TwilioOptions>, TwilioOptionsConfiguration>();
     }
 
     public static IServiceCollection AddLogSmsProvider(this IServiceCollection services)

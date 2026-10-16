@@ -406,7 +406,7 @@ Refusals:
 | Shell | Pages | Anonymous | Route permission |
 | --- | --- | --- | --- |
 | Admin | workflow definitions list, designer, instances, journals | no | `ViewGroveWorkflows` (the designer is read-only without `EditGroveWorkflows`) |
-| Admin | connections | no | `ManageGroveWorkflowConnections` |
+| Admin | connections | no | `ManageConnections` |
 | Admin | approvals inbox | no | the approval's role or permission |
 | Site / any | page-URL HTTP endpoints of flows | per definition | public only when the definition accepts anonymous runs |
 
@@ -420,8 +420,8 @@ Refusals:
 | Shipped / system flag | edit shipped, publish as system | ⚠ `ManageShippedGroveWorkflows` | |
 | Workflow run / instance | start, resume, cancel, delete, import | `RunGroveWorkflows` | Run list of the definition |
 | Workflow instance | view (journal, variables, export) | `ViewGroveWorkflows` | **gap: no per-definition narrowing** |
-| Connections | manage | `ManageGroveWorkflowConnections` | |
-| Connections | use in a flow | `UseGroveWorkflowConnections` | gate on the activity |
+| Connections | manage | `ManageConnections` | |
+| Connections | use in a flow | `UseConnections` | gate on the activity |
 | Queries in flows | run | `ExecuteApi_{query}` (descriptor) | scope of the run's caller |
 
 ---

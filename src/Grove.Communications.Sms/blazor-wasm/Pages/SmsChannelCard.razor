@@ -1,0 +1,51 @@
+@inject HttpClient Http
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The SMS channel's card on the Communications page: the providers, the connection each uses,
+   the default, and links to the settings and the test send. Nothing renders for a caller who
+   may not manage SMS, or when the channel is off. *@
+@if (Channel is { } channel)
+{
+    <GroveCard data-testid="channel-sms">
+        <GroveStack Gap="0.5rem">
+            <GroveText TextStyle="TextStyle.H6" class="rz-m-0">@T["SMS"]</GroveText>
+            @if (channel.Providers.Length == 0)
+            {
+                <GroveText TextStyle="TextStyle.Body2">@T["No SMS provider is enabled."]</GroveText>
+            }
+            else
+            {
+                <table class="rz-grid-table">
+                    <thead><tr><th>@T["Provider"]</th><th>@T["Connection"]</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var provider in channel.Providers)
+                        {
+                            <tr>
+                                <td>@provider.DisplayName</td>
+                                <td>@(provider.Connection ?? T["none needed"])</td>
+                                <td>@(provider.Name == channel.DefaultProvider ? T["default"] : "")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            <GroveStack Orientation="Orientation.Horizontal" Gap="1rem">
+                <a href="Settings/sms">@T["Settings"]</a>
+                <a href="Sms/Test">@T["Send a test message"]</a>
+            </GroveStack>
+        </GroveStack>
+    </GroveCard>
+}
+
+@code {
+    /// <summary>The region's context (unused).</summary>
+    [Parameter] public object? Context { get; set; }
+
+    private SmsChannelModel? Channel;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { Channel = await Http.GetFromJsonAsync<SmsChannelModel>(SmsTestApiPaths.Channel); }
+        catch { Channel = null; }
+    }
+}

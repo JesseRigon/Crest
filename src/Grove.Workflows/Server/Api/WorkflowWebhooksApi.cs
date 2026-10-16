@@ -1,8 +1,9 @@
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Grove.Access;
 using Grove.Api;
+using Grove.Data.Connectors;
+using Grove.Data.Connectors.Services;
 using Grove.Security;
 using Grove.Workflows.Connectors;
 using Grove.Workflows.Contexts;
@@ -20,11 +21,11 @@ namespace Grove.Workflows.Api;
 /// <summary>
 /// <c>api/grove/workflows/webhooks/{connection}/{hook}</c>: inbound webhooks. Anonymous by design
 /// (the caller is an external service) and outside the antiforgery check, so the signature is the
-/// authentication: HMAC-SHA256 of the raw body with the connection's secret, hex, in the
-/// connection's signature header (optionally prefixed <c>sha256=</c>). Unknown or non-hmac
-/// connections are 404, a missing or wrong signature 401. The engine is the tenant's, so a hook
-/// can only start this tenant's workflows. The run acts as the connection's application caller
-/// (<see cref="WorkflowConnectionCaller"/>).
+/// authentication, checked by the connector engine's verifier (<see cref="IWebhookVerifier"/>:
+/// the connection's signature scheme and header, its sealed secret, which this handler never
+/// sees). Unknown or non-inbound connections are 404, a missing or wrong signature 401. The
+/// engine is the tenant's, so a hook can only start this tenant's workflows. The run acts as the
+/// connection's application caller (<see cref="ConnectionCaller"/>).
 /// </summary>
 public sealed class WorkflowWebhooksApi : ApiContributor
 {
@@ -40,9 +41,9 @@ public sealed class WorkflowWebhooksApi : ApiContributor
 }
 
 public sealed class WorkflowWebhooksHandlers(
-    WorkflowConnectionService connections,
+    IWebhookVerifier verifier,
     IStimulusSender stimulusSender,
-    IOptions<WorkflowConnectorOptions> options,
+    IOptions<ConnectorOptions> options,
     ICallerContextFactory callerFactory,
     IAccessRunner accessRunner,
     WorkflowActorSeal seal,
@@ -51,13 +52,6 @@ public sealed class WorkflowWebhooksHandlers(
 {
     public async Task<IResult> ReceiveAsync(string connection, string hook, CancellationToken cancellationToken)
     {
-        var found = await connections.FindAsync(connection);
-        if (found is null || found.AuthKind != WorkflowConnectorAuthKinds.Hmac || connections.RevealSecret(found) is not { } secret)
-        {
-            await RejectedAsync(connection, hook, StatusCodes.Status404NotFound, "unknown or non-signing connection", Request.ContentLength);
-            return NotFound();
-        }
-
         var max = options.Value.MaxWebhookBytes;
         if (Request.ContentLength > max)
         {
@@ -74,10 +68,17 @@ public sealed class WorkflowWebhooksHandlers(
         }
 
         var body = buffer.ToArray();
-        var headerName = found.Setting(WorkflowConnectionSettingKeys.SignatureHeader) ?? WorkflowConnectionSettingKeys.DefaultSignatureHeader;
-        if (!IsValidSignature(Request.Headers[headerName].ToString(), body, secret))
+        var headers = Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+        var verification = await verifier.VerifyAsync(connection, new WebhookRequest(body, headers), cancellationToken);
+        if (verification.Status is WebhookVerificationStatus.UnknownConnection or WebhookVerificationStatus.NotInbound)
         {
-            logger.LogWarning("Webhook {Connection}/{Hook} refused: missing or invalid signature.", connection, hook);
+            await RejectedAsync(connection, hook, StatusCodes.Status404NotFound, "unknown or non-signing connection", body.Length);
+            return NotFound();
+        }
+
+        if (!verification.Verified || verification.Connection is not { } found)
+        {
+            logger.LogWarning("Webhook {Connection}/{Hook} refused: {Reason}", connection, hook, verification.Error);
             await RejectedAsync(connection, hook, StatusCodes.Status401Unauthorized, "missing or invalid signature", body.Length);
             return Unauthorized();
         }
@@ -107,7 +108,7 @@ public sealed class WorkflowWebhooksHandlers(
         // The signature authenticated the connection: the run acts as its machine identity, with
         // the roles assigned on the connection, never as the anonymous request (docs/access.md,
         // Anonymous actors).
-        var caller = await callerFactory.CreateAsync(new CallerRequest(WorkflowConnectionCaller.Principal(found), CallerSide.Site, null, null), cancellationToken);
+        var caller = await callerFactory.CreateAsync(new CallerRequest(ConnectionCaller.Principal(found), CallerSide.Site, null, null), cancellationToken);
         var input = new Dictionary<string, object>
         {
             [WorkflowsConstants.InputKeys.Payload] = payload,
@@ -122,7 +123,7 @@ public sealed class WorkflowWebhooksHandlers(
                 Audit.WorkflowAuditTrailEventConfiguration.WebhookReceived,
                 found.Key,
                 new Audit.WorkflowAuditTrailEvent { Connection = found.Key, Hook = hook, StatusCode = StatusCodes.Status202Accepted, Bytes = body.Length, Started = sent.WorkflowInstanceResponses.Count },
-                new Grove.AuditTrail.Models.AuditTrailSubject { RecordId = found.Key, RecordType = "WorkflowConnection", DisplayText = $"{found.Key}/{hook}" },
+                new Grove.AuditTrail.Models.AuditTrailSubject { RecordId = found.Key, RecordType = "Connection", DisplayText = $"{found.Key}/{hook}" },
                 isolated: false);
             return sent;
         });
@@ -140,33 +141,6 @@ public sealed class WorkflowWebhooksHandlers(
             Audit.WorkflowAuditTrailEventConfiguration.WebhookRejected,
             connection,
             new Audit.WorkflowAuditTrailEvent { Connection = connection, Hook = hook, StatusCode = statusCode, Reason = reason, Bytes = bytes },
-            new Grove.AuditTrail.Models.AuditTrailSubject { RecordId = connection, RecordType = "WorkflowConnection", DisplayText = $"{connection}/{hook}" },
+            new Grove.AuditTrail.Models.AuditTrailSubject { RecordId = connection, RecordType = "Connection", DisplayText = $"{connection}/{hook}" },
             isolated: true);
-
-    public static bool IsValidSignature(string header, byte[] body, string secret)
-    {
-        if (string.IsNullOrWhiteSpace(header))
-        {
-            return false;
-        }
-
-        var value = header.Trim();
-        if (value.StartsWith("sha256=", StringComparison.OrdinalIgnoreCase))
-        {
-            value = value[7..];
-        }
-
-        byte[] given;
-        try
-        {
-            given = Convert.FromHexString(value);
-        }
-        catch (FormatException)
-        {
-            return false;
-        }
-
-        var expected = HMACSHA256.HashData(Encoding.UTF8.GetBytes(secret), body);
-        return CryptographicOperations.FixedTimeEquals(given, expected);
-    }
 }

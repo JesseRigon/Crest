@@ -22,10 +22,16 @@ public class HttpStartup(IShellConfiguration shellConfiguration) : StartupBase
                     shellConfiguration.GetSection("GroveWorkflows:Http").Bind(options);
                 };
                 http.UseCache();
-                // The engine's HTTP activities reach only public addresses, as the connectors do
-                // (docs/access.md, recorded defects: SSRF); the shell's AllowPrivateNetworks opens it.
+                // The engine's HTTP activities reach only public addresses, as connections do
+                // (docs/access.md, recorded defects: SSRF): the connector engine's network guard,
+                // opened by the shell's Connectors:AllowPrivateNetworks. Redirects are followed
+                // here (each hop is guarded); connections never follow them.
                 http.HttpClientBuilder = builder => builder.ConfigurePrimaryHttpMessageHandler(sp =>
-                    Connectors.ConnectorNetworkPolicy.CreateHandler(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Connectors.WorkflowConnectorOptions>>().Value.AllowPrivateNetworks));
+                {
+                    var handler = Grove.Data.Protocols.Http.NetworkGuard.CreateHandler(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Grove.Data.Connectors.ConnectorOptions>>().Value.AllowPrivateNetworks);
+                    handler.AllowAutoRedirect = true;
+                    return handler;
+                });
                 // An HTTP-endpoint workflow acts as the request's caller, and a trigger with
                 // Authorize asks the one decision for Run on the definition (docs/operations.md
                 // step 4). The engine's base path (/workflows by default) stays as it is.

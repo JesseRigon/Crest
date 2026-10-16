@@ -35,7 +35,6 @@ public class AzureADService : IAzureADService
         var container = await _siteService.LoadSiteSettingsAsync();
         container.Alter<AzureADSettings>(aspect =>
         {
-            aspect.AppId = settings.AppId;
             aspect.CallbackPath = settings.CallbackPath;
             aspect.DisplayName = settings.DisplayName;
             aspect.TenantId = settings.TenantId;
@@ -51,11 +50,6 @@ public class AzureADService : IAzureADService
         if (string.IsNullOrWhiteSpace(settings.DisplayName))
         {
             yield return new ValidationResult(S["DisplayName is required"], new string[] { nameof(settings.DisplayName) });
-        }
-
-        if (string.IsNullOrWhiteSpace(settings.AppId))
-        {
-            yield return new ValidationResult(S["AppId is required"], new string[] { nameof(settings.AppId) });
         }
 
         if (string.IsNullOrWhiteSpace(settings.TenantId))

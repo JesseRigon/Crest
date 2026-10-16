@@ -43,6 +43,12 @@
   <Folder Name="/Grove.Data.Protocols.GraphQL/blazor-wasm/">
     <Project Path="src/Grove.Data.Protocols.GraphQL/blazor-wasm/Grove.Data.Protocols.GraphQL.BlazorWasm.csproj" />
   </Folder>
+  <Folder Name="/Grove.Data.Connectors/blazor-wasm/">
+    <Project Path="src/Grove.Data.Connectors/blazor-wasm/Grove.Data.Connectors.BlazorWasm.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Data.Connectors/tests/">
+    <Project Path="src/Grove.Data.Connectors/tests/Grove.Data.Connectors.Tests/Grove.Data.Connectors.Tests.csproj" />
+  </Folder>
   <Folder Name="/Grove.Routes/blazor-wasm/">
     <Project Path="src/Grove.Routes/blazor-wasm/Grove.Routes.BlazorWasm.csproj" />
   </Folder>
@@ -51,6 +57,15 @@
   </Folder>
   <Folder Name="/Grove.Seo.Sitemaps/blazor-wasm/">
     <Project Path="src/Grove.Seo.Sitemaps/blazor-wasm/Grove.Seo.Sitemaps.BlazorWasm.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Communications/tests/">
+    <Project Path="src/Grove.Communications/tests/Grove.Communications.Tests/Grove.Communications.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Communications/blazor-wasm/">
+    <Project Path="src/Grove.Communications/blazor-wasm/Grove.Communications.BlazorWasm.csproj" />
+  </Folder>
+  <Folder Name="/Grove.Communications.Email/blazor-wasm/">
+    <Project Path="src/Grove.Communications.Email/blazor-wasm/Grove.Communications.Email.BlazorWasm.csproj" />
   </Folder>
   <Folder Name="/Grove.Communications.Sms/blazor-wasm/">
     <Project Path="src/Grove.Communications.Sms/blazor-wasm/Grove.Communications.Sms.BlazorWasm.csproj" />
@@ -171,6 +186,7 @@
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Grove.Tests.Standalone/Grove.Tests.Standalone.csproj" />
+    <Project Path="test/Grove.Connectors.Consumers.Tests/Grove.Connectors.Consumers.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/Grove.LazyModules/Grove.LazyModules.csproj" />

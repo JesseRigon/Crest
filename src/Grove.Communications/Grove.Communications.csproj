@@ -13,6 +13,13 @@
     <PackageTags>$(PackageTags) PlatformFramework</PackageTags>
   </PropertyGroup>
 
+  <!-- The unit tests (tests/Grove.Communications.Tests) are their own project. -->
+  <ItemGroup>
+    <Compile Remove="tests\**;blazor-wasm\**" />
+    <Content Remove="blazor-wasm\**" />
+    <None Remove="blazor-wasm\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -31,6 +38,7 @@
     <ProjectReference Include="..\Grove.Workflows\engine\src\modules\Grove.Workflows.Engine\Grove.Workflows.Engine.csproj" />
     <ProjectReference Include="..\Grove.Contents.Management.Abstractions\Grove.Contents.Management.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Communications.Email.Abstractions\Grove.Communications.Email.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Communications.Sms.Abstractions\Grove.Communications.Sms.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure\Grove.Infrastructure.csproj" />
     <ProjectReference Include="..\Grove.Communications.Abstractions\Grove.Communications.Abstractions.csproj" />
   </ItemGroup>

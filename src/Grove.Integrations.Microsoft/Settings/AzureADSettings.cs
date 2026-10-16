@@ -2,15 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Grove.Integrations.Microsoft.Settings;
 
+/// <summary>Microsoft Entra ID sign-in. The application (client) id and secret are the Microsoft app credentials on the Connections screen.</summary>
 public class AzureADSettings
 {
     [Display(Name = "Display Name", Description = "The display name of the provider.", Order = 0)]
     [Required]
     public string DisplayName { get; set; }
-
-    [Display(Name = "AppId", Description = "The Application ID found on the Microsoft Entra ID App registration parameters.", Order = 1)]
-    [Required(AllowEmptyStrings = false, ErrorMessage = "Application Id is required")]
-    public string AppId { get; set; }
 
     [Display(Name = "TenantId", Description = "The Tenant (Directory) ID found on the Microsoft Entra ID App registration parameters. For multi-tenant App registrations, use 'common' or 'organizations'.", Order = 2)]
     [Required(AllowEmptyStrings = false, ErrorMessage = "Tenant Id is required")]

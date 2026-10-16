@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Contents.Management.GraphQL\Grove.Contents.Management.GraphQL.csproj" />
     <ProjectReference Include="..\Grove.Display.Management\Grove.Display.Management.csproj" />
     <ProjectReference Include="..\Grove.Display.Navigation\Grove.Display.Navigation.csproj" />
@@ -39,6 +40,10 @@
     <ProjectReference Include="..\Grove.Access.Roles.Abstractions\Grove.Access.Roles.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Search.Abstractions\Grove.Search.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Search.Elasticsearch.Abstractions\Grove.Search.Elasticsearch.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Grove.Connectors.Consumers.Tests" />
   </ItemGroup>
 
 </Project>

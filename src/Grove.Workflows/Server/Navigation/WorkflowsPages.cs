@@ -4,7 +4,7 @@ using Grove.Routing;
 namespace Grove.Workflows.Navigation;
 
 /// <summary>
-/// The Workflows section: definitions (list and designer), instances, connections, hooks and
+/// The Workflows section: definitions (list and designer), instances, hooks and
 /// approvals, the forked Studio mounted in the Grove shell. The pages declare themselves on their
 /// components; the section opens Approvals, which any admin user may have to decide, so it is
 /// shown to everyone who can reach one of its pages.

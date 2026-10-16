@@ -2,57 +2,51 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Facebook;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Grove.Integrations.Facebook.Login.Services;
 using Grove.Integrations.Facebook.Login.Settings;
-using Grove.Integrations.Facebook.Settings;
+using Grove.Integrations.Facebook.Services;
 
 namespace Grove.Integrations.Facebook.Login.Configuration;
 
+/// <summary>
+/// Registers Meta Login when the Meta app credentials are set, and configures the handler with
+/// them (app id and secret from the app credentials, the rest from the login settings).
+/// </summary>
 public class FacebookLoginConfiguration :
     IConfigureOptions<AuthenticationOptions>,
     IConfigureNamedOptions<FacebookOptions>
 {
-    private readonly FacebookSettings _facebookSettings;
+    private readonly IServiceProvider _services;
     private readonly IFacebookLoginService _loginService;
-    private readonly IDataProtectionProvider _dataProtectionProvider;
     private readonly ILogger _logger;
 
     public FacebookLoginConfiguration(
-        IOptions<FacebookSettings> facebookSettings,
+        IServiceProvider services,
         IFacebookLoginService loginService,
-        IDataProtectionProvider dataProtectionProvider,
         ILogger<FacebookLoginConfiguration> logger)
     {
-        _facebookSettings = facebookSettings.Value;
+        _services = services;
         _loginService = loginService;
-        _dataProtectionProvider = dataProtectionProvider;
         _logger = logger;
     }
 
     public void Configure(AuthenticationOptions options)
     {
-        if (_facebookSettings == null)
+        var app = AppCredentialsAccess.Read(_services, FacebookConstants.AppCredentialsKey, _logger);
+        if (string.IsNullOrWhiteSpace(app?.ClientId) || string.IsNullOrWhiteSpace(app.ClientSecret))
         {
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(_facebookSettings.AppId) || string.IsNullOrWhiteSpace(_facebookSettings.AppSecret))
-        {
-            _logger.LogWarning("The Facebook login provider is enabled but not configured.");
+            _logger.LogWarning("The Facebook login provider is enabled but the Meta app credentials are not set (Connections).");
 
             return;
         }
 
-        var loginSettings = GetFacebookLoginSettingsAsync().GetAwaiter().GetResult();
-        if (loginSettings == null)
+        if (GetFacebookLoginSettingsAsync().GetAwaiter().GetResult() is null)
         {
             return;
         }
 
-        // Register the OpenID Connect client handler in the authentication handlers collection.
         options.AddScheme(FacebookDefaults.AuthenticationScheme, builder =>
         {
             builder.DisplayName = "Facebook";
@@ -62,33 +56,20 @@ public class FacebookLoginConfiguration :
 
     public void Configure(string name, FacebookOptions options)
     {
-        // Ignore OpenID Connect client handler instances that don't correspond to the instance managed by the OpenID module.
         if (!string.Equals(name, FacebookDefaults.AuthenticationScheme, StringComparison.Ordinal))
         {
             return;
         }
 
-        if (_facebookSettings == null)
-        {
-            return;
-        }
-
         var loginSettings = GetFacebookLoginSettingsAsync().GetAwaiter().GetResult();
-        if (loginSettings == null)
+        var app = AppCredentialsAccess.Read(_services, FacebookConstants.AppCredentialsKey, _logger);
+        if (loginSettings is null || app is null)
         {
             return;
         }
 
-        options.AppId = _facebookSettings.AppId;
-
-        try
-        {
-            options.AppSecret = _dataProtectionProvider.CreateProtector(FacebookConstants.Features.Core).Unprotect(_facebookSettings.AppSecret);
-        }
-        catch
-        {
-            _logger.LogError("The Facebook secret key could not be decrypted. It may have been encrypted using a different key.");
-        }
+        options.AppId = app.ClientId;
+        options.AppSecret = app.ClientSecret;
 
         if (!string.IsNullOrEmpty(loginSettings.CallbackPath))
         {

@@ -141,7 +141,7 @@ module.exports = async function run(page, ctx) {
     const viewerInstances = await asViewer('GET', `${api}/workflow-instances?page=0&pageSize=5`);
     const viewerSave = await asViewer('POST', `${api}/workflow-definitions`, { model: flowModel('viewer flow', [writeLine('log', 'viewer')], []), publish: false });
     const viewerRegistry = await asViewer('GET', registryApi);
-    const viewerConnections = await asViewer('GET', `${ctx.baseUrl}/api/grove/workflows/connections`);
+    const viewerConnections = await asViewer('GET', `${ctx.baseUrl}/api/grove/connections`);
     if (viewerSave.json?.workflowDefinition?.definitionId) created.definitions.push(viewerSave.json.workflowDefinition.definitionId);
     results.push({ name: 'viewer-reads-and-changes-nothing', pass: viewerList.ok && viewerInstances.ok && viewerRegistry.ok && viewerSave.status === 403 && viewerConnections.status === 403, message: `definitions=${viewerList.status} instances=${viewerInstances.status} registry=${viewerRegistry.status} save=${viewerSave.status} connections=${viewerConnections.status}` });
     if (sample?.definitionId) {
@@ -157,7 +157,7 @@ module.exports = async function run(page, ctx) {
     const editorPublished = editorFlowId ? await asEditor('POST', `${api}/workflow-definitions/${encodeURIComponent(editorFlowId)}/publish`, {}) : { status: 0 };
     results.push({ name: 'editor-can-view-create-and-publish-tenant-flows', pass: editorList.ok && editorSaved.ok && Boolean(editorFlowId) && editorPublished.ok, message: `list=${editorList.status} save=${editorSaved.status} publish=${editorPublished.status} ${editorSaved.text.slice(0, 100)}` });
 
-    const editorConnections = await asEditor('GET', `${ctx.baseUrl}/api/grove/workflows/connections`);
+    const editorConnections = await asEditor('GET', `${ctx.baseUrl}/api/grove/connections`);
     const editorRegistry = await asEditor('GET', registryApi);
     results.push({ name: 'editor-cannot-manage-connections-but-reads-the-registry', pass: editorConnections.status === 403 && editorRegistry.ok, message: `connections=${editorConnections.status} registry=${editorRegistry.status}` });
 

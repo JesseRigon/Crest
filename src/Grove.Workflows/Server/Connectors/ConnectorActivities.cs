@@ -2,13 +2,18 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using Grove.Access;
+using Grove.Data.Connectors;
 using Grove.Workflows.Activities.Flowchart.Attributes;
 using Grove.Workflows.Attributes;
 using Grove.Workflows.Expressions.Models;
 using Grove.Workflows.Extensions;
 using Grove.Workflows.Models;
-using Grove.Workflows.Resilience;
-using Grove.Workflows.Resilience.Models;
+using Grove.Workflows.Runtime;
+using Grove.Workflows.Runtime.Stimuli;
+using Grove.Workflows.Scheduling;
+using Grove.Workflows.Scheduling.Bookmarks;
 using Grove.Workflows.UIHints;
 using Grove.Workflows.UIHints.Dropdown;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,89 +23,161 @@ using YesSql;
 namespace Grove.Workflows.Connectors;
 
 /// <summary>
-/// What connector activities share: the connection, the request, and the response outputs.
-/// Connector activities run as engine <em>background activities</em> (`RunAsynchronously`,
-/// docs/workflows.md › Posting on workflows): the burst bookmarks the node and commits; the
-/// call is made afterwards in a unit of its own (<see cref="Units.DurableBackgroundActivityScheduler"/>)
-/// with the connection's auth, retries and rate limit and the job's <c>Idempotency-Key</c>;
-/// the flow resumes with the response as the next burst. A unit that fails never makes the
-/// call.
+/// What connector activities share: they run a connection's operation, or a raw request under
+/// its base URL, through the connector engine (docs/connectors.md). They run as engine
+/// <em>background activities</em> (docs/workflows.md › Posting on workflows): the burst
+/// bookmarks the node and commits; the call is made afterwards in a unit of its own as the
+/// instance's caller, with the job's idempotency key; the flow resumes with the result. The
+/// engine owns retries (the connection's policy), so the node has no resilience strategy of
+/// its own and attempts never multiply; the attempts the engine made are an output. When the
+/// engine answers "retry after T", the node waits on a timer and runs the call again at T.
 /// </summary>
-public abstract class ConnectorActivityBase : Activity, IUnitBoundary, IResilientActivity
+public abstract class ConnectorActivityBase : Activity, IUnitBoundary
 {
-    public const string IdempotencyHeader = "Idempotency-Key";
-    private const string ResilienceStrategyProperty = "resilienceStrategy";
+    /// <summary>Retry-after answers further away than this end the node on Failed instead of waiting.</summary>
+    private static readonly TimeSpan LongestWait = TimeSpan.FromHours(24);
 
-    [Input(DisplayName = "Connection", Description = "The tenant connection to call (Workflows > Connections).", UIHint = InputUIHints.DropDown, UIHandler = typeof(ConnectionOptionsProvider))]
+    [Input(DisplayName = "Connection", Description = "The connection to call (Connections).", UIHint = InputUIHints.DropDown, UIHandler = typeof(ConnectionOptionsProvider))]
     public Input<string> Connection { get; set; } = null!;
 
-    [Input(DisplayName = "Path", Description = "Relative to the connection's base URL; may carry a query string. Expressions can map the trigger payload in.", UIHint = InputUIHints.SingleLine)]
+    [Input(DisplayName = "Operation", Description = "The connection's operation to run (its id). Empty: a raw request with the method and path below.", UIHint = InputUIHints.SingleLine)]
+    public Input<string?> Operation { get; set; } = null!;
+
+    [Input(DisplayName = "Arguments (JSON)", Description = "The operation's arguments as a JSON object: path, query and header parameters by name, the body under \"body\" (or the remaining arguments).", UIHint = InputUIHints.MultiLine)]
+    public Input<string?> ArgumentsJson { get; set; } = null!;
+
+    [Input(DisplayName = "Path", Description = "Raw request: relative to the connection's base URL; may carry a query string.", UIHint = InputUIHints.SingleLine)]
     public Input<string?> Path { get; set; } = null!;
 
-    [Input(DisplayName = "Headers (JSON)", Description = "Optional extra request headers as a JSON object. The connection's auth is applied after them.", UIHint = InputUIHints.MultiLine)]
+    [Input(DisplayName = "Headers (JSON)", Description = "Raw request: extra request headers as a JSON object. The connection's auth is applied after them.", UIHint = InputUIHints.MultiLine)]
     public Input<string?> HeadersJson { get; set; } = null!;
 
-    [Output(Description = "The HTTP status of the last attempt (0 when nothing was received).")]
+    [Output(Description = "The status of the last attempt (0 when nothing was received).")]
     public Output<int> StatusCode { get; set; } = null!;
 
     [Output(Description = "The response body as text.")]
     public Output<string?> ResponseBody { get; set; } = null!;
 
-    [Output(Description = "The response body parsed as JSON, when it is JSON.")]
+    [Output(Description = "The response parsed (JSON, a SOAP body, SQL rows), when the protocol could parse it.")]
     public Output<object?> Response { get; set; } = null!;
 
     [Output(Description = "Why the activity ended on Failed, when it did.")]
     public Output<string?> Failure { get; set; } = null!;
 
-    protected async ValueTask<ConnectorResponse> SendAsync(ActivityExecutionContext context, string method, string? body, string? contentType)
+    [Output(Description = "The attempts the connector engine made: number, status, failure kind, error, wait before.")]
+    public Output<object?> Attempts { get; set; } = null!;
+
+    /// <summary>
+    /// Runs the call. Null when the engine answered "retry after T" and the node now waits on
+    /// a timer (the activity is not complete).
+    /// </summary>
+    protected async ValueTask<ConnectorResult?> SendAsync(ActivityExecutionContext context, string method, string? body, string? contentType)
     {
         var connectionKey = Connection.GetOrDefault(context);
-        var connection = await context.GetRequiredService<WorkflowConnectionService>().FindAsync(connectionKey);
-        if (connection is null)
+        var caller = context.GetRequiredService<ICallerContextAccessor>().Current;
+        if (caller is null)
         {
-            return ConnectorResponse.Failed($"No connection '{connectionKey}' in this tenant.");
+            return Refused("No caller: connector calls run as the flow's caller.");
         }
 
-        var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var headersJson = HeadersJson.GetOrDefault(context);
-        if (!string.IsNullOrWhiteSpace(headersJson))
+        JsonObject? arguments = null;
+        var argumentsJson = ArgumentsJson.GetOrDefault(context);
+        if (!string.IsNullOrWhiteSpace(argumentsJson))
         {
             try
             {
-                foreach (var (name, value) in JsonSerializer.Deserialize<Dictionary<string, string>>(headersJson) ?? [])
-                {
-                    headers[name] = value;
-                }
+                arguments = JsonNode.Parse(argumentsJson) as JsonObject ?? throw new JsonException();
             }
             catch (JsonException)
             {
-                return ConnectorResponse.Failed("Headers must be a JSON object of strings.");
+                return Refused("Arguments must be a JSON object.");
             }
         }
 
-        // The scheduled run's key, stable across retries of this run.
-        if (context.GetService<Units.BackgroundJobContext>()?.Current is { } job)
+        var operation = Operation.GetOrDefault(context);
+        ConnectorRequest? request = null;
+        if (string.IsNullOrWhiteSpace(operation))
         {
-            headers.TryAdd(IdempotencyHeader, job.IdempotencyKey);
+            var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var headersJson = HeadersJson.GetOrDefault(context);
+            if (!string.IsNullOrWhiteSpace(headersJson))
+            {
+                try
+                {
+                    foreach (var (name, value) in JsonSerializer.Deserialize<Dictionary<string, string>>(headersJson) ?? [])
+                    {
+                        headers[name] = value;
+                    }
+                }
+                catch (JsonException)
+                {
+                    return Refused("Headers must be a JSON object of strings.");
+                }
+            }
+
+            request = new ConnectorRequest(method, Path.GetOrDefault(context), body, contentType, headers);
         }
 
-        // Retries are the engine's resilience feature: the connection's policy unless the node picked another strategy.
-        CustomProperties.TryAdd(ResilienceStrategyProperty, new ResilienceStrategyConfig { Mode = ResilienceStrategyConfigMode.Identifier, StrategyId = ConnectionResilienceStrategy.StrategyId });
-        var request = new ConnectorRequest(method, Path.GetOrDefault(context), body, contentType, headers);
-        var invoker = context.GetRequiredService<ConnectorInvoker>();
-        var response = await context.GetRequiredService<IResilientActivityInvoker>().InvokeAsync(this, context, () => invoker.SendAsync(connection, request, context.CancellationToken), context.CancellationToken);
-        StatusCode.Set(context, response.StatusCode);
-        ResponseBody.Set(context, response.Body);
-        Response.Set(context, TryParse(response.Body));
-        return response;
+        var job = context.GetService<Units.BackgroundJobContext>()?.Current;
+        var result = await context.GetRequiredService<IConnectorEngine>().ExecuteAsync(new ConnectorCall
+        {
+            ConnectionKey = connectionKey,
+            Caller = caller,
+            OperationId = string.IsNullOrWhiteSpace(operation) ? null : operation.Trim(),
+            Arguments = arguments,
+            Request = request,
+            // The scheduled run's key, stable across retries of this run: an unsafe call may be retried with it.
+            IdempotencyKey = job?.IdempotencyKey,
+        }, context.CancellationToken);
+
+        StatusCode.Set(context, result.StatusCode);
+        ResponseBody.Set(context, result.Body);
+        Response.Set(context, result.Value is null ? null : Services.JsonPlain.ToPlain(JsonSerializer.SerializeToElement(result.Value)));
+        Attempts.Set(context, result.Attempts.Select(a => new Dictionary<string, object?>
+        {
+            ["Number"] = a.Number,
+            ["StatusCode"] = a.StatusCode,
+            ["Failure"] = a.Failure.ToString(),
+            ["Error"] = a.Error,
+            ["WaitBeforeMs"] = a.WaitBefore?.TotalMilliseconds,
+            ["StartedUtc"] = a.StartedUtc,
+        }).ToList());
+
+        if (result.Outcome == ConnectorOutcome.RetryAfter && result.RetryAt is { } retryAt && retryAt - DateTimeOffset.UtcNow <= LongestWait)
+        {
+            context.GetRequiredService<ILogger<ConnectorActivityBase>>().LogInformation("{Activity} on {Connection}: the service asked to retry at {RetryAt}; the node waits.", GetType().Name, connectionKey, retryAt);
+            context.CreateBookmark(new CreateBookmarkArgs
+            {
+                BookmarkName = SchedulingStimulusNames.Delay,
+                Stimulus = new DelayPayload(retryAt),
+                Callback = RetryDueAsync,
+                AutoComplete = false,
+            });
+            return null;
+        }
+
+        return result;
     }
 
-    /// <summary>What the journal shows per retry attempt.</summary>
-    public IDictionary<string, string?> CollectRetryDetails(ActivityExecutionContext context, RetryAttempt attempt) => new Dictionary<string, string?>
+    /// <summary>
+    /// The timer of a "retry after" fired: schedule the call again as a background job, the
+    /// way the engine schedules a background activity, so the call never runs inside a burst.
+    /// </summary>
+    private async ValueTask RetryDueAsync(ActivityExecutionContext context)
     {
-        ["Connection"] = Connection.GetOrDefault(context),
-        ["Path"] = Path.GetOrDefault(context),
-    };
+        var scheduler = context.GetRequiredService<IBackgroundActivityScheduler>();
+        var bookmarkId = context.GetRequiredService<IIdentityGenerator>().GenerateId();
+        var jobId = await scheduler.CreateAsync(new ScheduledBackgroundActivity(context.WorkflowExecutionContext.Id, context.NodeId, bookmarkId), context.CancellationToken);
+        context.CreateBookmark(new CreateBookmarkArgs
+        {
+            BookmarkId = bookmarkId,
+            BookmarkName = "BackgroundActivity",
+            Stimulus = new BackgroundActivityStimulus { JobId = jobId },
+            AutoComplete = false,
+        });
+        var cancellationToken = context.CancellationToken;
+        context.DeferTask(async () => await scheduler.ScheduleAsync(jobId, cancellationToken));
+    }
 
     protected async ValueTask FailAsync(ActivityExecutionContext context, string reason)
     {
@@ -109,41 +186,24 @@ public abstract class ConnectorActivityBase : Activity, IUnitBoundary, IResilien
         await context.CompleteActivityWithOutcomesAsync("Failed");
     }
 
-    private static object? TryParse(string? body)
-    {
-        if (string.IsNullOrWhiteSpace(body) || body.TrimStart()[0] is not ('{' or '['))
-        {
-            return null;
-        }
-
-        try
-        {
-            using var json = JsonDocument.Parse(body);
-            return Services.JsonPlain.ToPlain(json.RootElement.Clone());
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-    }
+    private static ConnectorResult Refused(string error) => new() { Outcome = ConnectorOutcome.Refused, Failure = FailureKind.Refused, Error = error };
 }
 
 /// <summary>
-/// Calls an external service through a tenant connection: auth from the connection
-/// (sealed secret, never in the definition), retries and rate limit from the connection,
-/// the body and path from expressions over the workflow's input. The call happens after
-/// this flow's unit commits and the flow resumes with the response. Done on a 2xx, Failed
-/// otherwise with the reason in <c>Failure</c>.
+/// Runs a connection's operation (or a raw request) through the connector engine: the
+/// credential, retries, rate limit and caching are the connection's, never the definition's.
+/// The call happens after this flow's unit commits and the flow resumes with the result. Done
+/// on success, Failed otherwise with the reason in <c>Failure</c>.
 /// </summary>
-[Activity("Grove.Workflows", "Connectors", "Calls an external API through a tenant connection (auth, retries and rate limits from the connection), after this flow's transaction commits.", DisplayName = "Call connector", Kind = ActivityKind.Task, RunAsynchronously = true)]
+[Activity("Grove.Workflows", "Connectors", "Runs a connection's operation (auth, retries and rate limits from the connection), after this flow's transaction commits.", DisplayName = "Call connector", Kind = ActivityKind.Task, RunAsynchronously = true)]
 [FlowNode("Done", "Failed")]
-[RequiresPermission(WorkflowsConstants.Permissions.UseConnections)]
+[RequiresPermission(ConnectorsPermissionNames.UseConnections)]
 public class CallConnector : ConnectorActivityBase
 {
-    [Input(DisplayName = "Method", DefaultValue = "POST", Options = new[] { "GET", "POST", "PUT", "PATCH", "DELETE" }, UIHint = InputUIHints.DropDown)]
+    [Input(DisplayName = "Method", Description = "Raw request: the HTTP method.", DefaultValue = "POST", Options = new[] { "GET", "POST", "PUT", "PATCH", "DELETE" }, UIHint = InputUIHints.DropDown)]
     public Input<string> Method { get; set; } = null!;
 
-    [Input(DisplayName = "Body", Description = "The request body (usually JSON; an expression can build it from the trigger payload).", UIHint = InputUIHints.MultiLine)]
+    [Input(DisplayName = "Body", Description = "Raw request: the body (usually JSON; an expression can build it from the trigger payload).", UIHint = InputUIHints.MultiLine)]
     public Input<string?> Body { get; set; } = null!;
 
     [Input(DisplayName = "Content type", DefaultValue = "application/json", UIHint = InputUIHints.SingleLine)]
@@ -152,10 +212,15 @@ public class CallConnector : ConnectorActivityBase
     protected override async ValueTask ExecuteAsync(ActivityExecutionContext context)
     {
         var method = Method.GetOrDefault(context);
-        var response = await SendAsync(context, string.IsNullOrWhiteSpace(method) ? "POST" : method, Body.GetOrDefault(context), ContentType.GetOrDefault(context));
-        if (!response.Succeeded)
+        var result = await SendAsync(context, string.IsNullOrWhiteSpace(method) ? "POST" : method, Body.GetOrDefault(context), ContentType.GetOrDefault(context));
+        if (result is null)
         {
-            await FailAsync(context, response.Error ?? "Failed.");
+            return;
+        }
+
+        if (!result.Succeeded)
+        {
+            await FailAsync(context, result.Error ?? result.Outcome.ToString());
             return;
         }
 
@@ -164,26 +229,32 @@ public class CallConnector : ConnectorActivityBase
 }
 
 /// <summary>
-/// GETs a connection's resource and tells whether it changed since this node last looked
-/// (a hash per definition and node, kept in the tenant's database). Put it after a Cron or
-/// Timer trigger to poll a service that has no webhooks. The first poll is Changed.
+/// Reads through a connection (a safe operation, or a raw GET) and tells whether the result
+/// changed since this node last looked (a hash per definition and node, kept in the tenant's
+/// database). Put it after a Cron or Timer trigger to poll a service that has no webhooks. The
+/// first poll is Changed.
 /// </summary>
-[Activity("Grove.Workflows", "Connectors", "Fetches a resource through a tenant connection and continues on Changed when it differs from the last poll.", DisplayName = "Poll connector", Kind = ActivityKind.Task, RunAsynchronously = true)]
+[Activity("Grove.Workflows", "Connectors", "Reads through a connection and continues on Changed when the result differs from the last poll.", DisplayName = "Poll connector", Kind = ActivityKind.Task, RunAsynchronously = true)]
 [FlowNode("Changed", "Unchanged", "Failed")]
-[RequiresPermission(WorkflowsConstants.Permissions.UseConnections)]
+[RequiresPermission(ConnectorsPermissionNames.UseConnections)]
 public class PollConnector : ConnectorActivityBase
 {
     protected override async ValueTask ExecuteAsync(ActivityExecutionContext context)
     {
-        var response = await SendAsync(context, "GET", null, null);
-        if (!response.Succeeded)
+        var result = await SendAsync(context, "GET", null, null);
+        if (result is null)
         {
-            await FailAsync(context, response.Error ?? "Failed.");
             return;
         }
 
-        var stateKey = $"{context.WorkflowExecutionContext.Workflow.Identity.DefinitionId}:{context.Activity.Id}:{Connection.GetOrDefault(context)}:{Path.GetOrDefault(context)}";
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(response.Body ?? string.Empty)));
+        if (!result.Succeeded)
+        {
+            await FailAsync(context, result.Error ?? result.Outcome.ToString());
+            return;
+        }
+
+        var stateKey = $"{context.WorkflowExecutionContext.Workflow.Identity.DefinitionId}:{context.Activity.Id}:{Connection.GetOrDefault(context)}:{Operation.GetOrDefault(context)}:{Path.GetOrDefault(context)}";
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(result.Body ?? result.Value?.ToJsonString() ?? string.Empty)));
         var session = context.GetRequiredService<ISession>();
         var state = await session.Query<ConnectorPollStateDocument>().FirstOrDefaultAsync() ?? new ConnectorPollStateDocument();
         var changed = !state.Hashes.TryGetValue(stateKey, out var previous) || previous != hash;
@@ -209,14 +280,14 @@ public sealed record WebhookStimulus(string Connection, string Hook);
 
 /// <summary>
 /// Fires when an external service posts to the tenant's webhook URL
-/// (<c>api/grove/workflows/webhooks/{connection}/{hook}</c>) with a valid HMAC signature
-/// made with the connection's secret. The result is the payload: <c>Body</c> (parsed JSON
-/// or text), <c>Query</c>, <c>ContentType</c>. There is no acting user.
+/// (<c>api/grove/workflows/webhooks/{connection}/{hook}</c>) with a signature the connection's
+/// verifier accepts. The result is the payload: <c>Body</c> (parsed JSON or text),
+/// <c>Query</c>, <c>ContentType</c>. The run acts as the connection's application caller.
 /// </summary>
 [Activity("Grove.Workflows", "Connectors", "Fires when an external service posts a signed request to this tenant's webhook URL.", DisplayName = "Webhook received")]
 public class WebhookReceived : Trigger<IDictionary<string, object>>
 {
-    [Input(DisplayName = "Connection", Description = "An hmac connection; its secret verifies the signature.", UIHint = InputUIHints.DropDown, UIHandler = typeof(ConnectionOptionsProvider))]
+    [Input(DisplayName = "Connection", Description = "An inbound (signed webhook) connection; the connector engine verifies the signature.", UIHint = InputUIHints.DropDown, UIHandler = typeof(ConnectionOptionsProvider))]
     public Input<string> Connection { get; set; } = null!;
 
     [Input(DisplayName = "Hook", Description = "The last URL segment, e.g. invoice-paid.", UIHint = InputUIHints.SingleLine)]
@@ -249,8 +320,40 @@ public class WebhookReceived : Trigger<IDictionary<string, object>>
 }
 
 /// <summary>The tenant's connections, for connection inputs.</summary>
-public sealed class ConnectionOptionsProvider(WorkflowConnectionService connections) : DropDownOptionsProviderBase
+public sealed class ConnectionOptionsProvider(IConnectionRegistry connections) : DropDownOptionsProviderBase
 {
     protected override async ValueTask<ICollection<SelectListItem>> GetItemsAsync(PropertyInfo propertyInfo, object? context, CancellationToken cancellationToken) =>
-        (await connections.ListAsync()).Select(c => new SelectListItem($"{c.DisplayName} ({c.Key})", c.Key)).ToList();
+        (await connections.ListAsync(cancellationToken)).Select(c => new SelectListItem($"{c.DisplayName} ({c.Key})", c.Key)).ToList();
+}
+
+/// <summary>
+/// Every operation of every connection as a palette entry: Call connector with the connection
+/// and operation preset, keyed <c>connector.{connection}.{operationId}</c>. A flow author picks
+/// "Accountant API › createInvoice" and binds the arguments.
+/// </summary>
+public sealed class ConnectionOperationActivityProvider(IConnectionRegistry connections) : IWorkflowActivityProvider
+{
+    public IEnumerable<WorkflowActivityDescriptor> Activities
+    {
+        get
+        {
+            var position = 2000;
+            foreach (var entry in connections.ListOperationsAsync().GetAwaiter().GetResult())
+            {
+                yield return new WorkflowActivityDescriptor(
+                    $"connector.{entry.ConnectionKey}.{entry.Operation.Id}",
+                    $"{entry.ConnectionDisplayName} › {entry.Operation.DisplayName ?? entry.Operation.Id}",
+                    WorkflowsConstants.Objects.Workflow,
+                    "Grove.Workflows.CallConnector",
+                    entry.Operation.Description ?? $"{entry.Operation.Method} {entry.Operation.Path}".Trim(),
+                    position++,
+                    Category: entry.ConnectionDisplayName,
+                    Inputs: new Dictionary<string, string>
+                    {
+                        ["connection"] = entry.ConnectionKey,
+                        ["operation"] = entry.Operation.Id,
+                    });
+            }
+        }
+    }
 }

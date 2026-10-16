@@ -12,11 +12,13 @@ namespace Grove.Integrations.Microsoft.Recipes;
 public sealed class MicrosoftAccountSettingsStep : NamedRecipeStepHandler
 {
     private readonly IMicrosoftAccountService _microsoftAccountService;
+    private readonly IServiceProvider _services;
 
-    public MicrosoftAccountSettingsStep(IMicrosoftAccountService microsoftAccountService)
+    public MicrosoftAccountSettingsStep(IMicrosoftAccountService microsoftAccountService, IServiceProvider services)
         : base(nameof(MicrosoftAccountSettings))
     {
         _microsoftAccountService = microsoftAccountService;
+        _services = services;
     }
 
     protected override async Task HandleAsync(RecipeExecutionContext context)
@@ -24,11 +26,10 @@ public sealed class MicrosoftAccountSettingsStep : NamedRecipeStepHandler
         var model = context.Step.ToObject<MicrosoftAccountSettingsStepModel>();
         var settings = await _microsoftAccountService.LoadSettingsAsync();
 
-        settings.AppId = model.AppId;
-        settings.AppSecret = model.AppSecret;
         settings.CallbackPath = model.CallbackPath;
 
         await _microsoftAccountService.UpdateSettingsAsync(settings);
+        await AppCredentialsAccess.SaveAsync(_services, MicrosoftAuthenticationConstants.AppCredentialsKey, model.AppId, model.AppSecret);
     }
 }
 

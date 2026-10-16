@@ -8,10 +8,10 @@ system is a tool for builders and administrators; business users and members nev
 directly.
 
 Queries does not own connections. Every outgoing connection to an external system belongs to
-**the connection system**: one module per protocol, `Grove.Http`, `Grove.Rest`, `Grove.Soap`,
-`Grove.GraphQL` and later others (☐ to be created). Database connections belong to the data
-layer (`Grove.Data`, `Grove.Data.YesSql`): the host database and external databases are SQL
-connections there. Queries consumes connections from both and keeps no connection model of its
+**the connector engine** (`Grove.Data.Connectors`, over the protocol libraries
+`Grove.Data.Protocols.Http`, `.Rest`, `.Soap`, `.GraphQL.Client`, `.Sql` and others;
+[connectors.md](connectors.md)): external databases are SQL connections there. The host
+database stays the data layer's (`Grove.Data`, `Grove.Data.YesSql`). Queries consumes connections from both and keeps no connection model of its
 own ([Connections](#connections-the-protocol-modules-and-the-data-layer)).
 
 Queries are one of the two kinds of **operation** in the operation registry, behind the one
@@ -179,51 +179,52 @@ the login page as a page) is [branding.md](branding.md).
 
 ## Connections: the protocol modules and the data layer
 
-The connection system is the base the downstream connectors, the external data features,
-Queries and Workflows' connectors stand on, so it is designed before them. There is one
-connection system; Queries and Workflows consume it and keep no parallel set.
+Queries reaches external data through the connector engine ([connectors.md](connectors.md)):
+one connection system, which Queries and Workflows consume without keeping a parallel set.
 
-- **One module per protocol** (☐ to be created): `Grove.Http`, `Grove.Rest`, `Grove.Soap`,
-  `Grove.GraphQL`, later others. Each owns, for its protocol: the connection model (endpoint,
-  auth, credentials sealed per tenant), executing a request, the SSRF-guarded client, the token
-  cache, rate limiting and the OAuth authorize/callback flow. The existing
-  `Grove.Data.Protocols.GraphQL.Client` (a client for Grove's own GraphQL API) becomes or folds into the
-  GraphQL connector (☐).
-- **Database connections are the data layer's.** The host database and external databases are
-  SQL connections in `Grove.Data` / `Grove.Data.YesSql`; the host connection carries the
-  tenant's table prefix, the store's isolation level and the caller's scope.
-- **Queries consumes connections.** Its sources (the `Grove.Data.Queries.Sql` feature for SQL, one per
-  protocol for the others) take a connection from the data layer or a protocol module, run the
-  request through it, map the results into the query system's typed, paged rows, and store
-  results locally when asked, so external data is queryable like any other and publishable
-  through the Grove API under tenant and user scope and permissions.
-- **The SQL source is dogfooded.** The host's own database is just another SQL connection:
-  queries over the tenant's data run through the SQL source against it (tenant table prefix
-  and caller scope applied), replacing the stock SQL query source rather than sitting beside it.
-  External databases use the same source with a different connection.
-- **Workflows on the connection system.** The connection model and its document, sealed secrets
-  and tokens, the OAuth flow, the SSRF-guarded HTTP client and invoker, the token cache and rate
-  limiting are the protocol modules'. What Workflows keeps is wiring: the activities (`Call
-  connector`, `Poll connector`) as consumers of the protocol modules' connections, and inbound
-  webhooks as triggers, which use the connection only to verify signatures through a narrow
-  verifier without ever reading the secret. One Connections screen and one `ManageConnections`
-  permission serve every consumer; both belong to the connection system, not to Queries or
-  Workflows. Workflows' connection names change with no aliases: the OAuth callback route, the
-  permission (`ManageGroveWorkflowConnections` → `ManageConnections`), the config section and the
-  data-protection purpose; provider apps and settings are updated by hand. Secrets and tokens
-  live under a new data-protection purpose and new document names in the connection system;
-  there is no migration code (dev tenants are reset and connections re-entered). A secret that
-  fails to decrypt is an explicit error, not a connection that silently looks unauthorized.
-- **Retries belong to the connection system.** The connection system retries failed requests
-  with backoff, honours `Retry-After` (429 included) and respects each connection's retry
-  count, for every caller (workflows, query runs, search, reports). Connector activities
-  default to no engine retry, so attempts never multiply; the attempts made are reported back
-  to the caller, so run history still shows them. A long wait is never slept through on a
-  worker: the connection system returns "retry after T" and the caller reschedules (a workflow
-  resumes the activity at T). Today it is the reverse: the HTTP layer sends once, Workflows'
-  `ConnectionResilienceStrategy` retries around the activity, `Retry-After` is honoured nowhere,
-  and a refusal by Grove's own rate limiter is treated as permanent.
-- **What the protocol modules and Queries' sources carry for external sources**: two
+- **Protocols and the engine.** The protocol libraries (`Grove.Data.Protocols.*`) parse and
+  generate each protocol. The engine (`Grove.Data.Connectors`) owns connections, sealed
+  credentials (tenant and user scopes), OAuth, the guarded client, caching, retries and rate
+  limits. The existing `Grove.Data.Protocols.GraphQL.Client` (a client for Grove's own GraphQL
+  API) folds into the GraphQL protocol's client side (☐).
+- **Databases.** An external database is a connection over the SQL protocol, managed on the same
+  Connections screen. The tenant's own database stays the data layer's (`Grove.Data` /
+  `Grove.Data.YesSql`): its connection carries the tenant's table prefix, the store's isolation
+  level and the caller's scope.
+- **Queries consumes connections.** Its sources take a connection, run the request through the
+  engine and map the results into the query system's typed, paged rows, so external data is
+  queryable like any other and publishable through the Grove API under tenant and user scope and
+  permissions:
+  - the `Connection` source (feature `Grove.Data.Queries.Connections`) runs one operation of a
+    REST, GraphQL or SOAP connection, declared or defined. A query stores
+    `ConnectionQueryMetadata`: the connection, the operation, fixed arguments (a run's
+    parameters of the same name replace them) and where the rows are in the answer (a dot path;
+    else an array, or the first array under `data`, `items`, `value`, `results` or `records`).
+    Columns are typed from the values (number, boolean, date, text, JSON). The operation's own
+    paging pages the query: the engine's next-page position is the page token, and the run's
+    page size goes in the operation's size parameter;
+  - the `Sql` source (feature `Grove.Data.Queries.Sql`) runs against an SQL connection when
+    `SqlQueryMetadata.Connection` names one: the template is checked as SELECT only and sent as
+    the SQL protocol's `QUERY` request with the parameters bound by name. Neither the tenant's
+    table prefix nor its scope applies there; the database applies its own permissions to the
+    connection's credential. The connection caps the rows (`sql:maxRows`), and the run pages
+    within them. Only a query over the tenant's own database returns content items;
+  - a run calls as its caller when the caller may use connectors (a staff user, or a system
+    actor), so a per-user connection uses their own credential. Anyone else was admitted by
+    the query's own permission and runs on the connection's tenant credential as the tenant's
+    system actor: member shells hold no credentials. A call that fails, is refused, has no
+    credential or must wait is an error, never an empty result.
+- ☐ **Local storage of results.** A query that stores what an external source returned, so a
+  run reads the stored rows instead of calling again, does not exist yet; Queries has no result
+  store of its own today.
+- **The SQL source is dogfooded.** Queries over the tenant's data run through the SQL source
+  against the tenant's own database (table prefix and caller scope applied), replacing the stock
+  SQL query source rather than sitting beside it. External databases use the same source with a
+  different connection.
+- **Retries belong to the engine**, for every caller (workflows, query runs, search, reports):
+  backoff, `Retry-After`, each connection's retry count, and "retry after T" instead of a long
+  sleep on a worker ([connectors.md](connectors.md) › Execution).
+- **What the engine and Queries' sources carry for external sources**: two
   execution models behind one interface (asynchronous jobs: submit, job id, poll, page; and synchronous streaming readers); retries
   with backoff that honour the source's rate limits; per-user delegated credentials where the
   source supports them, a service credential only where the tenant chooses it; caching scoped
@@ -232,9 +233,10 @@ connection system; Queries and Workflows consume it and keep no parallel set.
   concurrency limits); results that can expire at the source; query-language and parameter
   metadata per source (SQL dialects, DAX, KQL); regional endpoints.
 - **Search engines are connections; search is a consumer of Queries.** Lucene, Elasticsearch,
-  Azure AI Search and later engines are modules that connect through the connection system (a
-  remote engine through its protocol module) and register their query source with Queries, like
-  any SQL or REST source. **Grove.Search is the search seam**: one search interface
+  Azure AI Search and later engines are modules that connect through the connector engine (a
+  remote engine over its protocol) and register their query source with Queries, like
+  any SQL or REST source. Elasticsearch and Azure AI Search build their SDK clients from a
+  connection the tenant defines ([connectors.md](connectors.md) › Search engines). **Grove.Search is the search seam**: one search interface
   (`ISiteSearch`), its API (`api/grove/search`) and its UI (`SearchBox`, the site search page).
   The engines are providers that register with Grove.Search (`AddSearchService<T>(provider)`,
   an `ISearchService` per engine; an index profile names its provider) and feed that interface;
@@ -256,11 +258,10 @@ connection system; Queries and Workflows consume it and keep no parallel set.
     stores only who may use a connection (a permission on the connection or connector), and
     passes the user's own credentials to the external system (OAuth per user, or whatever
     the system uses) so that system applies its own permissions to what it returns.
-- **Plugin registry for connectors.** Connectors for specific platforms register as plugins
-  against a protocol module; any module can add one. The registry is the connection system's;
-  the connectors themselves are downstream. Workflows' connector descriptors and
-  `IWorkflowConnectorProvider` belong here (☐ today in `Grove.Workflows.Abstractions`);
-  Workflows lists connector operations from the connection system for its palette.
+- **Connections registry.** Connections for specific platforms are declared by their
+  integration modules (`services.AddConnection`) on a protocol; any module can add one. The
+  registry is the connector engine's (`IConnectionRegistry`); Workflows lists its operations
+  for the palette.
 
 ## Persistence: one system
 
@@ -297,16 +298,15 @@ of work.
 - [ ] Statement caching.
 - [ ] `ReturnContentItems` through the gate.
 - [ ] The read job.
-- [ ] The connection system: the protocol modules (`Grove.Http`, `Grove.Rest`, `Grove.Soap`,
-  `Grove.GraphQL`, with `Grove.Data.Protocols.GraphQL.Client` becoming or folding into the GraphQL one),
-  the move of Workflows' connection model, secrets, OAuth, HTTP client, connector descriptors
-  and `IWorkflowConnectorProvider` into them, retries in the connection system (deleting
-  `ConnectionResilienceStrategy`), search engines as connections, the connector plugin registry.
+- [x] The connector engine and the protocol libraries ([connectors.md](connectors.md)):
+  Workflows' connection model, secrets, OAuth, HTTP client and retries moved into it, search
+  engines as connections.
 - [ ] SQL connections in the data layer (`Grove.Data`, `Grove.Data.YesSql`): the host database
-  and external databases; Queries' SQL source over them, the host connection replacing the
-  stock SQL source.
-- [ ] Queries' sources over the protocol modules' connections (typed paged rows, local storage
-  of results).
+  as a connection of its own kind; the SQL source over external databases' SQL connections
+  exists.
+- [x] Queries' sources over the engine's connections: the `Connection` source (REST, GraphQL,
+  SOAP operations) and the `Sql` source over an SQL connection, as typed, paged rows.
+- [ ] Local storage of an external source's results.
 - [ ] Grove's management surface (`api/grove/queries`, the Queries page) and the platform's
   `api/queries/{name}` are replaced by the declared and generated surfaces.
 
@@ -316,10 +316,6 @@ of work.
   [blazor-display.md](blazor-display.md).
 - **What the platform already offers natively** to build the connection system on, to be
   researched before designing, so nothing is reinvented.
-- **Where the shared connection pieces live.** The Connections screen, `ManageConnections`, the
-  connection document and the sealed-secret store are shared by every protocol module: in one
-  of them (`Grove.Http`, which the others build on) or in a module of their own? And do the data
-  layer's external SQL connections appear on the same screen?
 - **Host database versus external SQL connections (Q6)**, in the data layer. The host
   connection must use the tenant's table prefix, the store's isolation level and the caller's
   scope; external SQL connections must not be prefixed or rewritten for the tenant, and use

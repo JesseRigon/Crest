@@ -1,49 +1,26 @@
-using Microsoft.Extensions.Options;
 using Grove.Communications.Email.Services;
-using Grove.Communications.Email;
+using Microsoft.Extensions.Options;
 
 namespace Grove.Data.Protocols.Smtp.Services;
 
-public sealed class SmtpProviderOptionsConfigurations : IConfigureOptions<EmailProviderOptions>
+/// <summary>Registers the SMTP provider, and the host's pickup delivery when it is configured.</summary>
+public sealed class SmtpProviderOptionsConfigurations(
+    IOptionsMonitor<SmtpOptions> smtpOptions,
+    IOptionsMonitor<DefaultSmtpOptions> defaultSmtpOptions) : IConfigureOptions<EmailProviderOptions>
 {
-    private readonly IOptionsMonitor<SmtpOptions> _smtpOptions;
-    private readonly DefaultSmtpOptions _defaultSmtpOptions;
-
-    public SmtpProviderOptionsConfigurations(
-        IOptionsMonitor<SmtpOptions> smtpOptions,
-        IOptions<DefaultSmtpOptions> defaultSmtpOptions)
-    {
-        _smtpOptions = smtpOptions;
-        _defaultSmtpOptions = defaultSmtpOptions.Value;
-    }
-
     public void Configure(EmailProviderOptions options)
     {
-        ConfigureTenantProvider(options);
-
-        if (_defaultSmtpOptions.IsEnabled)
+        options.TryAddProvider(SmtpEmailProvider.TechnicalName, new EmailProviderTypeOptions(typeof(SmtpEmailProvider))
         {
-            ConfigureDefaultProvider(options);
+            IsEnabled = smtpOptions.CurrentValue.IsEnabled,
+        });
+
+        if (defaultSmtpOptions.CurrentValue.IsEnabled)
+        {
+            options.TryAddProvider(SmtpPickupEmailProvider.TechnicalName, new EmailProviderTypeOptions(typeof(SmtpPickupEmailProvider))
+            {
+                IsEnabled = true,
+            });
         }
-    }
-
-    private void ConfigureTenantProvider(EmailProviderOptions options)
-    {
-        var typeOptions = new EmailProviderTypeOptions(typeof(SmtpEmailProvider))
-        {
-            IsEnabled = _smtpOptions.CurrentValue.IsEnabled,
-        };
-
-        options.TryAddProvider(SmtpEmailProvider.TechnicalName, typeOptions);
-    }
-
-    private static void ConfigureDefaultProvider(EmailProviderOptions options)
-    {
-        var typeOptions = new EmailProviderTypeOptions(typeof(DefaultSmtpEmailProvider))
-        {
-            IsEnabled = true,
-        };
-
-        options.TryAddProvider(DefaultSmtpEmailProvider.TechnicalName, typeOptions);
     }
 }

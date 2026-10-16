@@ -1,20 +1,19 @@
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Twitter;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http.Resilience;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Grove.Display.Management.Handlers;
+using Grove.Data.Connectors;
+using Grove.Data.Migration;
+using Grove.Environment.Shell;
+using Grove.Environment.Shell.Scope;
 using Grove.Modules;
-using Grove.Display.Navigation;
-using Grove.Infrastructure.Recipes;
 using Grove.Security.Permissions;
-using Grove.Integrations.Twitter.Recipes;
+using Grove.Integrations.Twitter.Connections;
 using Grove.Integrations.Twitter.Services;
-using Grove.Integrations.Twitter.Settings;
 using Grove.Integrations.Twitter.Signin.Configuration;
 using Grove.Integrations.Twitter.Signin.Services;
 using Grove.Integrations.Twitter.Signin.Settings;
-using Polly;
 
 namespace Grove.Integrations.Twitter;
 
@@ -26,38 +25,14 @@ public sealed class Startup : StartupBase
     }
 }
 
+/// <summary>Posting to X: the X connection (with the app credentials Sign in with X shares) and its workflow activity.</summary>
 [Feature(TwitterConstants.Features.Twitter)]
 public sealed class TwitterStartup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSettingsGroup<TwitterSettings>(
-            TwitterConstants.Features.Twitter,
-            "X (Twitter)",
-            Permissions.ManageTwitter,
-            group => group.InMenu("settings-integrations", entryId: "twitter").ReloadsTenant());
-        services.AddSingleton<ITwitterSettingsService, TwitterSettingsService>();
-
-        services.AddRecipeExecutionStep<TwitterSettingsStep>();
-
-        services.AddTransient<TwitterClientMessageHandler>();
-        services.AddTransient<IConfigureOptions<TwitterSettings>, TwitterSettingsConfiguration>();
-
-        services.AddHttpClient<TwitterClient>()
-            .AddHttpMessageHandler<TwitterClientMessageHandler>()
-            .AddResilienceHandler("oc-handler", builder => builder
-                .AddRetry(new HttpRetryStrategyOptions
-                {
-                    Name = "oc-retry",
-                    MaxRetryAttempts = 3,
-                    OnRetry = attempt =>
-                    {
-                        attempt.RetryDelay.Add(TimeSpan.FromSeconds(0.5 * attempt.AttemptNumber));
-
-                        return ValueTask.CompletedTask;
-                    },
-                })
-            );
+        services.AddXConnection();
+        services.AddDataMigration<TwitterSettingsMigrations>();
     }
 }
 
@@ -71,13 +46,43 @@ public sealed class TwitterSigninStartup : StartupBase
             TwitterConstants.Features.Signin,
             "Sign In with X (Twitter)",
             Permissions.ManageTwitterSignin,
-            group => group.InMenu("settings-authentication", entryId: "twitter-signin").ReloadsTenant());
+            group => group
+                .InMenu("settings-authentication", entryId: "twitter-signin")
+                .Describe("The X app's client id and secret are the X app credentials on the Connections screen.")
+                .ReloadsTenant());
 
-        // Register the options initializers required by the Twitter Handler.
-        // Grove-specific initializers:
+        services.AddScoped<IConnectionChangeHandler>(sp => new AppCredentialsChangeHandler(
+            sp.GetRequiredService<IShellReleaseManager>(), TwitterConstants.AppCredentialsKey, TwitterConstants.ConnectionKey));
+
+        // Register the options initializers required by the X handler.
         services.AddTransient<IConfigureOptions<AuthenticationOptions>, TwitterOptionsConfiguration>();
-        services.AddTransient<IConfigureOptions<TwitterOptions>, TwitterOptionsConfiguration>();
-        // Built-in initializers:
-        services.AddTransient<IPostConfigureOptions<TwitterOptions>, TwitterPostConfigureOptions>();
+        services.AddTransient<IConfigureOptions<XAuthenticationOptions>, TwitterOptionsConfiguration>();
+        services.AddTransient<IPostConfigureOptions<XAuthenticationOptions>, OAuthPostConfigureOptions<XAuthenticationOptions, XAuthenticationHandler>>();
+    }
+}
+
+/// <summary>
+/// Drops the OAuth 1.0a keys the X settings used to hold (consumer key and secret, access token
+/// and secret): posting runs on the X connection's OAuth 2.0 grant now, and the keys do not
+/// carry over to an OAuth 2.0 client.
+/// </summary>
+internal sealed class TwitterSettingsMigrations : DataMigration
+{
+    public static int Create()
+    {
+        ShellScope.AddDeferredTask(async scope =>
+        {
+            var siteService = scope.ServiceProvider.GetRequiredService<Grove.Infrastructure.Settings.ISiteService>();
+            var site = await siteService.LoadSiteSettingsAsync();
+
+            if (site.Properties.Remove("TwitterSettings"))
+            {
+                scope.ServiceProvider.GetRequiredService<ILogger<TwitterSettingsMigrations>>()
+                    .LogWarning("The X (Twitter) OAuth 1.0a keys were removed; connect the X account on the Connections screen.");
+                await siteService.UpdateSiteSettingsAsync(site);
+            }
+        });
+
+        return 1;
     }
 }

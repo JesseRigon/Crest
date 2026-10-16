@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Data.Protocols.Soap</RootNamespace>
+    <Nullable>enable</Nullable>
+    <!-- NuGet properties-->
+    <Title>Grove SOAP Protocol</Title>
+    <Description>$(OCCMSDescription)
+
+    SOAP described by WSDL for the connector engine: reads a WSDL 1.1 document into operations, sends SOAP 1.1 envelopes and classifies faults.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Connectors Soap</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.Http\Grove.Data.Protocols.Http.csproj" />
+  </ItemGroup>
+
+</Project>

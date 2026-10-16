@@ -31,7 +31,10 @@ public sealed class AzureADStartup : StartupBase
             MicrosoftAuthenticationConstants.Features.AAD,
             "Microsoft Entra ID",
             Permissions.ManageMicrosoftAuthentication,
-            group => group.InMenu("settings-authentication", entryId: "microsoftentraid").ReloadsTenant());
+            group => group
+                .InMenu("settings-authentication", entryId: "microsoftentraid")
+                .Describe("The app registration's client id and secret are the Microsoft app credentials on the Connections screen.")
+                .ReloadsTenant());
 
         services.AddTransient<IConfigureOptions<AzureADSettings>, AzureADSettingsConfiguration>();
 

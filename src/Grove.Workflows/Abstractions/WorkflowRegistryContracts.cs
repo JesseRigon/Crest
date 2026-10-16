@@ -159,60 +159,6 @@ public sealed record WorkflowFieldDependencyWarning(string ActivityId, string Ac
 public sealed record WorkflowFieldDependencyReport(IReadOnlyList<WorkflowFieldDependencyBinding> Dependencies, IReadOnlyList<WorkflowFieldDependencyWarning> Warnings);
 
 /// <summary>
-/// A kind of external service a tenant can connect to: a base URL and how it authenticates
-/// (<see cref="WorkflowConnectorAuthKinds"/>). A module ships one for a service it knows; a
-/// tenant creates a connection from it (or from the generic HTTP connector) and supplies the
-/// secret, which is sealed per tenant and never leaves the server.
-/// </summary>
-public sealed record WorkflowConnectorDescriptor(string Key, string DisplayName, string AuthKind, string? BaseUrl = null, string? Description = null, int Position = 0);
-
-public static class WorkflowConnectorAuthKinds
-{
-    public const string None = "none";
-    /// <summary>A static key in a request header (setting <c>headerName</c>, default X-Api-Key).</summary>
-    public const string ApiKey = "api-key";
-    /// <summary>HTTP basic: setting <c>username</c>, secret = password.</summary>
-    public const string Basic = "basic";
-    /// <summary>A static bearer token.</summary>
-    public const string Bearer = "bearer";
-    /// <summary>OAuth2 client credentials: settings <c>tokenUrl</c>, <c>clientId</c>, <c>scope</c>; secret = client secret.</summary>
-    public const string OAuth2ClientCredentials = "oauth2-client-credentials";
-    /// <summary>Inbound webhooks signed with HMAC-SHA256 of the body (setting <c>signatureHeader</c>); secret = signing key.</summary>
-    public const string Hmac = "hmac";
-    /// <summary>
-    /// OAuth2 authorization code: settings <c>authorizeUrl</c>, <c>tokenUrl</c>, <c>clientId</c>,
-    /// <c>scope</c>; secret = client secret. A user authorizes once through
-    /// <c>connections/{key}/oauth/authorize</c>; the tokens are sealed on the connection and
-    /// refreshed as needed.
-    /// </summary>
-    public const string OAuth2AuthorizationCode = "oauth2-authorization-code";
-
-    public static readonly IReadOnlyList<string> All = [None, ApiKey, Basic, Bearer, OAuth2ClientCredentials, OAuth2AuthorizationCode, Hmac];
-}
-
-/// <summary>Non-secret settings a connection's auth kind reads.</summary>
-public static class WorkflowConnectionSettingKeys
-{
-    public const string HeaderName = "headerName";
-    public const string Username = "username";
-    public const string TokenUrl = "tokenUrl";
-    public const string ClientId = "clientId";
-    public const string Scope = "scope";
-    public const string SignatureHeader = "signatureHeader";
-    public const string AuthorizeUrl = "authorizeUrl";
-    /// <summary>Operations imported from an OpenAPI document, as JSON (<c>WorkflowConnectionOperation</c> list).</summary>
-    public const string Operations = "operations";
-
-    public const string DefaultApiKeyHeader = "X-Api-Key";
-    public const string DefaultSignatureHeader = "X-Grove-Signature";
-}
-
-public interface IWorkflowConnectorProvider
-{
-    IEnumerable<WorkflowConnectorDescriptor> Connectors { get; }
-}
-
-/// <summary>
 /// A hook slot (docs/workflows.md › Posting on workflows): a named point inside a flow where
 /// attached flows run <em>inline, inside the same unit of work</em> - the invoice and what the
 /// tenant attached to its creation exist together or not at all. Declared by the module
@@ -357,49 +303,7 @@ public sealed record WorkflowFlowModel(
     bool Forked,
     bool Outdated);
 
-public sealed record WorkflowRegistryModel(IReadOnlyList<WorkflowTriggerDescriptor> Triggers, IReadOnlyList<WorkflowActivityDescriptor> Activities, IReadOnlyList<WorkflowFlowModel> Flows, IReadOnlyList<WorkflowConnectorDescriptor> Connectors, IReadOnlyList<WorkflowHookSlotDescriptor> HookSlots);
-
-/// <summary>A tenant's connection as the API shows it: never the secret, only whether one is set.</summary>
-public sealed record WorkflowConnectionModel(
-    string Key,
-    string DisplayName,
-    string? ConnectorKey,
-    string? BaseUrl,
-    string AuthKind,
-    IReadOnlyDictionary<string, string> Settings,
-    bool HasSecret,
-    int RetryCount,
-    int? RateLimitPerMinute,
-    int TimeoutSeconds,
-    DateTime UpdatedUtc,
-    bool Authorized = false,
-    DateTime? TokenExpiresUtc = null,
-    IReadOnlyList<WorkflowConnectionOperation>? Operations = null,
-    IReadOnlyList<string>? Roles = null);
-
-/// <summary>One operation of a connection's API, imported from its OpenAPI document; the registry shows each as a palette entry preset on Call connector.</summary>
-public sealed record WorkflowConnectionOperation(string OperationId, string Method, string Path, string? Summary);
-
-/// <summary>Import an OpenAPI 3 document as a connection: server URL, security scheme and operations.</summary>
-public sealed record WorkflowConnectionOpenApiImportRequest(string? Key, string? DisplayName, string Document, string? Secret = null);
-
-/// <summary>
-/// Create or update a connection. <see cref="Secret"/>: null keeps the stored one, an empty
-/// string clears it, anything else replaces it.
-/// </summary>
-public sealed record WorkflowConnectionSaveRequest(
-    string? Key,
-    string? DisplayName,
-    string? ConnectorKey,
-    string? BaseUrl,
-    string? AuthKind,
-    Dictionary<string, string>? Settings,
-    string? Secret,
-    int? RetryCount,
-    int? RateLimitPerMinute,
-    int? TimeoutSeconds,
-    // The roles the connection's machine identity holds (a webhook's run acts with them); null keeps them.
-    IReadOnlyList<string>? Roles = null);
+public sealed record WorkflowRegistryModel(IReadOnlyList<WorkflowTriggerDescriptor> Triggers, IReadOnlyList<WorkflowActivityDescriptor> Activities, IReadOnlyList<WorkflowFlowModel> Flows, IReadOnlyList<WorkflowHookSlotDescriptor> HookSlots);
 
 /// <summary>What is still pending for an object: the flows about it that have not finished, and the background jobs (external calls) they wait on.</summary>
 public sealed record WorkflowPendingModel(string CorrelationId, IReadOnlyList<WorkflowPendingInstanceModel> Instances, IReadOnlyList<WorkflowPendingJobModel> Jobs)

@@ -13,8 +13,8 @@
    "label": "Grove.Access.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 28,
-   "title": "Grove.Access.Abstractions\\nreferenced by 27, references 2, packages 0"
+   "value": 30,
+   "title": "Grove.Access.Abstractions\\nreferenced by 29, references 2, packages 0"
   },
   {
    "id": "Grove.Access.Members",
@@ -77,8 +77,8 @@
    "label": "Grove.Access.Roles.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 14,
-   "title": "Grove.Access.Roles.Abstractions\\nreferenced by 13, references 1, packages 1"
+   "value": 15,
+   "title": "Grove.Access.Roles.Abstractions\\nreferenced by 14, references 1, packages 1"
   },
   {
    "id": "Grove.Access.Sharing",
@@ -101,8 +101,8 @@
    "label": "Grove.Access.Users",
    "color": "#ffb703",
    "kind": "module",
-   "value": 11,
-   "title": "Grove.Access.Users\\nreferenced by 10, references 28, packages 2"
+   "value": 10,
+   "title": "Grove.Access.Users\\nreferenced by 9, references 28, packages 2"
   },
   {
    "id": "Grove.Access.Users.Abstractions",
@@ -134,7 +134,7 @@
    "color": "#e9c46a",
    "kind": "targets",
    "value": 2,
-   "title": "Grove.Application.Cms.Core.Targets\\nreferenced by 1, references 98, packages 0"
+   "title": "Grove.Application.Cms.Core.Targets\\nreferenced by 1, references 100, packages 0"
   },
   {
    "id": "Grove.Application.Cms.Targets",
@@ -198,47 +198,63 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Grove.Communications\\nreferenced by 1, references 15, packages 0"
+   "title": "Grove.Communications\\nreferenced by 1, references 16, packages 0"
   },
   {
    "id": "Grove.Communications.Abstractions",
    "label": "Grove.Communications.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 5,
-   "title": "Grove.Communications.Abstractions\\nreferenced by 4, references 3, packages 2"
+   "value": 9,
+   "title": "Grove.Communications.Abstractions\\nreferenced by 8, references 4, packages 2"
+  },
+  {
+   "id": "Grove.Communications.BlazorWasm",
+   "label": "Grove.Communications.BlazorWasm",
+   "color": "#adb5bd",
+   "kind": "library",
+   "value": 2,
+   "title": "Grove.Communications.BlazorWasm\\nreferenced by 1, references 1, packages 2"
   },
   {
    "id": "Grove.Communications.Email",
    "label": "Grove.Communications.Email",
    "color": "#ffb703",
    "kind": "module",
-   "value": 4,
-   "title": "Grove.Communications.Email\\nreferenced by 3, references 12, packages 0"
+   "value": 5,
+   "title": "Grove.Communications.Email\\nreferenced by 4, references 13, packages 0"
   },
   {
    "id": "Grove.Communications.Email.Abstractions",
    "label": "Grove.Communications.Email.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 6,
-   "title": "Grove.Communications.Email.Abstractions\\nreferenced by 5, references 1, packages 0"
+   "value": 9,
+   "title": "Grove.Communications.Email.Abstractions\\nreferenced by 8, references 2, packages 0"
+  },
+  {
+   "id": "Grove.Communications.Email.BlazorWasm",
+   "label": "Grove.Communications.Email.BlazorWasm",
+   "color": "#adb5bd",
+   "kind": "library",
+   "value": 2,
+   "title": "Grove.Communications.Email.BlazorWasm\\nreferenced by 1, references 1, packages 2"
   },
   {
    "id": "Grove.Communications.Sms",
    "label": "Grove.Communications.Sms",
    "color": "#ffb703",
    "kind": "module",
-   "value": 3,
-   "title": "Grove.Communications.Sms\\nreferenced by 2, references 12, packages 1"
+   "value": 2,
+   "title": "Grove.Communications.Sms\\nreferenced by 1, references 11, packages 0"
   },
   {
    "id": "Grove.Communications.Sms.Abstractions",
    "label": "Grove.Communications.Sms.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 3,
-   "title": "Grove.Communications.Sms.Abstractions\\nreferenced by 2, references 2, packages 0"
+   "value": 6,
+   "title": "Grove.Communications.Sms.Abstractions\\nreferenced by 5, references 2, packages 0"
   },
   {
    "id": "Grove.Communications.Sms.BlazorWasm",
@@ -509,8 +525,8 @@
    "label": "Grove.Data.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 46,
-   "title": "Grove.Data.Abstractions\\nreferenced by 45, references 1, packages 0"
+   "value": 47,
+   "title": "Grove.Data.Abstractions\\nreferenced by 46, references 1, packages 0"
   },
   {
    "id": "Grove.Data.Cache.Dynamic",
@@ -527,6 +543,30 @@
    "kind": "abstractions",
    "value": 2,
    "title": "Grove.Data.Cache.Dynamic.Abstractions\\nreferenced by 1, references 1, packages 0"
+  },
+  {
+   "id": "Grove.Data.Connectors",
+   "label": "Grove.Data.Connectors",
+   "color": "#ffb703",
+   "kind": "module",
+   "value": 3,
+   "title": "Grove.Data.Connectors\\nreferenced by 2, references 15, packages 0"
+  },
+  {
+   "id": "Grove.Data.Connectors.Abstractions",
+   "label": "Grove.Data.Connectors.Abstractions",
+   "color": "#8ecae6",
+   "kind": "abstractions",
+   "value": 22,
+   "title": "Grove.Data.Connectors.Abstractions\\nreferenced by 21, references 2, packages 0"
+  },
+  {
+   "id": "Grove.Data.Connectors.BlazorWasm",
+   "label": "Grove.Data.Connectors.BlazorWasm",
+   "color": "#adb5bd",
+   "kind": "library",
+   "value": 2,
+   "title": "Grove.Data.Connectors.BlazorWasm\\nreferenced by 1, references 1, packages 2"
   },
   {
    "id": "Grove.Data.Feeds",
@@ -629,8 +669,8 @@
    "label": "Grove.Data.Protocols.GraphQL.Client",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 1,
-   "title": "Grove.Data.Protocols.GraphQL.Client\\nreferenced by 0, references 1, packages 0"
+   "value": 2,
+   "title": "Grove.Data.Protocols.GraphQL.Client\\nreferenced by 1, references 3, packages 0"
   },
   {
    "id": "Grove.Data.Protocols.Html",
@@ -649,12 +689,36 @@
    "title": "Grove.Data.Protocols.Html.Abstractions\\nreferenced by 1, references 1, packages 1"
   },
   {
+   "id": "Grove.Data.Protocols.Http",
+   "label": "Grove.Data.Protocols.Http",
+   "color": "#adb5bd",
+   "kind": "library",
+   "value": 7,
+   "title": "Grove.Data.Protocols.Http\\nreferenced by 6, references 1, packages 0"
+  },
+  {
    "id": "Grove.Data.Protocols.Https",
    "label": "Grove.Data.Protocols.Https",
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
    "title": "Grove.Data.Protocols.Https\\nreferenced by 1, references 4, packages 0"
+  },
+  {
+   "id": "Grove.Data.Protocols.Imap",
+   "label": "Grove.Data.Protocols.Imap",
+   "color": "#ffb703",
+   "kind": "module",
+   "value": 2,
+   "title": "Grove.Data.Protocols.Imap\\nreferenced by 1, references 6, packages 1"
+  },
+  {
+   "id": "Grove.Data.Protocols.OAuth",
+   "label": "Grove.Data.Protocols.OAuth",
+   "color": "#adb5bd",
+   "kind": "library",
+   "value": 2,
+   "title": "Grove.Data.Protocols.OAuth\\nreferenced by 1, references 2, packages 0"
   },
   {
    "id": "Grove.Data.Protocols.OpenApi",
@@ -671,6 +735,22 @@
    "kind": "abstractions",
    "value": 2,
    "title": "Grove.Data.Protocols.OpenApi.Abstractions\\nreferenced by 1, references 1, packages 0"
+  },
+  {
+   "id": "Grove.Data.Protocols.Pop",
+   "label": "Grove.Data.Protocols.Pop",
+   "color": "#ffb703",
+   "kind": "module",
+   "value": 2,
+   "title": "Grove.Data.Protocols.Pop\\nreferenced by 1, references 6, packages 1"
+  },
+  {
+   "id": "Grove.Data.Protocols.Rest",
+   "label": "Grove.Data.Protocols.Rest",
+   "color": "#adb5bd",
+   "kind": "library",
+   "value": 2,
+   "title": "Grove.Data.Protocols.Rest\\nreferenced by 1, references 2, packages 0"
   },
   {
    "id": "Grove.Data.Protocols.SignalR",
@@ -697,20 +777,36 @@
    "title": "Grove.Data.Protocols.SignalR.Redis\\nreferenced by 1, references 3, packages 1"
   },
   {
-   "id": "Grove.Data.Protocols.Sms.Azure",
-   "label": "Grove.Data.Protocols.Sms.Azure",
-   "color": "#ffb703",
-   "kind": "module",
-   "value": 2,
-   "title": "Grove.Data.Protocols.Sms.Azure\\nreferenced by 1, references 4, packages 1"
-  },
-  {
    "id": "Grove.Data.Protocols.Smtp",
    "label": "Grove.Data.Protocols.Smtp",
    "color": "#ffb703",
    "kind": "module",
+   "value": 4,
+   "title": "Grove.Data.Protocols.Smtp\\nreferenced by 3, references 10, packages 1"
+  },
+  {
+   "id": "Grove.Data.Protocols.Soap",
+   "label": "Grove.Data.Protocols.Soap",
+   "color": "#adb5bd",
+   "kind": "library",
    "value": 2,
-   "title": "Grove.Data.Protocols.Smtp\\nreferenced by 1, references 8, packages 1"
+   "title": "Grove.Data.Protocols.Soap\\nreferenced by 1, references 2, packages 0"
+  },
+  {
+   "id": "Grove.Data.Protocols.Sql",
+   "label": "Grove.Data.Protocols.Sql",
+   "color": "#adb5bd",
+   "kind": "library",
+   "value": 2,
+   "title": "Grove.Data.Protocols.Sql\\nreferenced by 1, references 2, packages 1"
+  },
+  {
+   "id": "Grove.Data.Protocols.Webhooks",
+   "label": "Grove.Data.Protocols.Webhooks",
+   "color": "#adb5bd",
+   "kind": "library",
+   "value": 2,
+   "title": "Grove.Data.Protocols.Webhooks\\nreferenced by 1, references 1, packages 0"
   },
   {
    "id": "Grove.Data.Queries",
@@ -718,7 +814,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 5,
-   "title": "Grove.Data.Queries\\nreferenced by 4, references 14, packages 2"
+   "title": "Grove.Data.Queries\\nreferenced by 4, references 15, packages 2"
   },
   {
    "id": "Grove.Data.Queries.Abstractions",
@@ -893,8 +989,8 @@
    "label": "Grove.Display.Components",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 27,
-   "title": "Grove.Display.Components\\nreferenced by 26, references 1, packages 3"
+   "value": 30,
+   "title": "Grove.Display.Components\\nreferenced by 29, references 1, packages 3"
   },
   {
    "id": "Grove.Display.Icons",
@@ -949,8 +1045,8 @@
    "label": "Grove.Display.Management",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 64,
-   "title": "Grove.Display.Management\\nreferenced by 63, references 5, packages 1"
+   "value": 62,
+   "title": "Grove.Display.Management\\nreferenced by 61, references 5, packages 1"
   },
   {
    "id": "Grove.Display.Management.Abstractions",
@@ -965,8 +1061,8 @@
    "label": "Grove.Display.Navigation",
    "color": "#ffb703",
    "kind": "module",
-   "value": 59,
-   "title": "Grove.Display.Navigation\\nreferenced by 58, references 8, packages 1"
+   "value": 58,
+   "title": "Grove.Display.Navigation\\nreferenced by 57, references 8, packages 1"
   },
   {
    "id": "Grove.Display.Navigation.Abstractions",
@@ -997,8 +1093,8 @@
    "label": "Grove.Display.Resources.Management",
    "color": "#adb5bd",
    "kind": "library",
-   "value": 65,
-   "title": "Grove.Display.Resources.Management\\nreferenced by 64, references 2, packages 0"
+   "value": 64,
+   "title": "Grove.Display.Resources.Management\\nreferenced by 63, references 2, packages 0"
   },
   {
    "id": "Grove.Display.Resources.Management.Abstractions",
@@ -1053,8 +1149,8 @@
    "label": "Grove.Infrastructure.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 91,
-   "title": "Grove.Infrastructure.Abstractions\\nreferenced by 90, references 1, packages 4"
+   "value": 96,
+   "title": "Grove.Infrastructure.Abstractions\\nreferenced by 95, references 1, packages 4"
   },
   {
    "id": "Grove.Infrastructure.CustomSettings",
@@ -1125,8 +1221,8 @@
    "label": "Grove.Infrastructure.Server.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 43,
-   "title": "Grove.Infrastructure.Server.Abstractions\\nreferenced by 42, references 4, packages 0"
+   "value": 44,
+   "title": "Grove.Infrastructure.Server.Abstractions\\nreferenced by 43, references 4, packages 0"
   },
   {
    "id": "Grove.Infrastructure.Server.ReverseProxy",
@@ -1149,8 +1245,8 @@
    "label": "Grove.Infrastructure.Settings.Abstractions",
    "color": "#8ecae6",
    "kind": "abstractions",
-   "value": 17,
-   "title": "Grove.Infrastructure.Settings.Abstractions\\nreferenced by 16, references 2, packages 0"
+   "value": 18,
+   "title": "Grove.Infrastructure.Settings.Abstractions\\nreferenced by 17, references 2, packages 0"
   },
   {
    "id": "Grove.Infrastructure.Setup",
@@ -1222,7 +1318,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Grove.Integrations.AI.Azure\\nreferenced by 1, references 16, packages 2"
+   "title": "Grove.Integrations.AI.Azure\\nreferenced by 1, references 17, packages 2"
   },
   {
    "id": "Grove.Integrations.AI.Azure.Abstractions",
@@ -1233,20 +1329,12 @@
    "title": "Grove.Integrations.AI.Azure.Abstractions\\nreferenced by 1, references 5, packages 2"
   },
   {
-   "id": "Grove.Integrations.Email.Azure",
-   "label": "Grove.Integrations.Email.Azure",
-   "color": "#ffb703",
-   "kind": "module",
-   "value": 2,
-   "title": "Grove.Integrations.Email.Azure\\nreferenced by 1, references 5, packages 1"
-  },
-  {
    "id": "Grove.Integrations.Facebook",
    "label": "Grove.Integrations.Facebook",
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Grove.Integrations.Facebook\\nreferenced by 1, references 16, packages 3"
+   "title": "Grove.Integrations.Facebook\\nreferenced by 1, references 17, packages 2"
   },
   {
    "id": "Grove.Integrations.Facebook.BlazorWasm",
@@ -1262,7 +1350,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Grove.Integrations.GitHub\\nreferenced by 1, references 9, packages 1"
+   "title": "Grove.Integrations.GitHub\\nreferenced by 1, references 10, packages 1"
   },
   {
    "id": "Grove.Integrations.Google",
@@ -1270,7 +1358,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Grove.Integrations.Google\\nreferenced by 1, references 9, packages 1"
+   "title": "Grove.Integrations.Google\\nreferenced by 1, references 10, packages 1"
   },
   {
    "id": "Grove.Integrations.Microsoft",
@@ -1278,7 +1366,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Grove.Integrations.Microsoft\\nreferenced by 1, references 10, packages 2"
+   "title": "Grove.Integrations.Microsoft\\nreferenced by 1, references 14, packages 5"
   },
   {
    "id": "Grove.Integrations.Redis",
@@ -1297,12 +1385,20 @@
    "title": "Grove.Integrations.Redis.Abstractions\\nreferenced by 2, references 1, packages 3"
   },
   {
+   "id": "Grove.Integrations.Twilio",
+   "label": "Grove.Integrations.Twilio",
+   "color": "#ffb703",
+   "kind": "module",
+   "value": 2,
+   "title": "Grove.Integrations.Twilio\\nreferenced by 1, references 5, packages 0"
+  },
+  {
    "id": "Grove.Integrations.Twitter",
    "label": "Grove.Integrations.Twitter",
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Grove.Integrations.Twitter\\nreferenced by 1, references 12, packages 2"
+   "title": "Grove.Integrations.Twitter\\nreferenced by 1, references 13, packages 0"
   },
   {
    "id": "Grove.Media",
@@ -1373,8 +1469,8 @@
    "label": "Grove.Module.Targets",
    "color": "#e9c46a",
    "kind": "targets",
-   "value": 103,
-   "title": "Grove.Module.Targets\\nreferenced by 102, references 1, packages 0"
+   "value": 105,
+   "title": "Grove.Module.Targets\\nreferenced by 104, references 1, packages 0"
   },
   {
    "id": "Grove.Parties",
@@ -1486,7 +1582,7 @@
    "color": "#ffb703",
    "kind": "module",
    "value": 2,
-   "title": "Grove.Search.Elasticsearch\\nreferenced by 1, references 20, packages 1"
+   "title": "Grove.Search.Elasticsearch\\nreferenced by 1, references 21, packages 1"
   },
   {
    "id": "Grove.Search.Elasticsearch.Abstractions",
@@ -1670,7 +1766,7 @@
    "color": "#adb5bd",
    "kind": "library",
    "value": 2,
-   "title": "Grove.Themes.Admin.Client\\nreferenced by 1, references 15, packages 3"
+   "title": "Grove.Themes.Admin.Client\\nreferenced by 1, references 18, packages 3"
   },
   {
    "id": "Grove.Themes.Admin.Client.Services",
@@ -1726,7 +1822,7 @@
    "color": "#adb5bd",
    "kind": "library",
    "value": 2,
-   "title": "Grove.Workflows\\nreferenced by 1, references 26, packages 2"
+   "title": "Grove.Workflows\\nreferenced by 1, references 27, packages 2"
   },
   {
    "id": "Grove.Workflows.Abstractions",
@@ -2070,26 +2166,6 @@
   {
    "from": "Grove.Contents.Taxonomies.Abstractions",
    "to": "Grove.Communications.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Data.Protocols.Sms.Azure",
-   "to": "Grove.Display.Management",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Data.Protocols.Sms.Azure",
-   "to": "Grove.Module.Targets",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Data.Protocols.Sms.Azure",
-   "to": "Grove.Display.Resources.Management",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Data.Protocols.Sms.Azure",
-   "to": "Grove.Communications.Sms",
    "arrows": "to"
   },
   {
@@ -2649,12 +2725,17 @@
   },
   {
    "from": "Grove.Application.Cms.Core.Targets",
-   "to": "Grove.Integrations.Email.Azure",
+   "to": "Grove.Data.Protocols.Smtp",
    "arrows": "to"
   },
   {
    "from": "Grove.Application.Cms.Core.Targets",
-   "to": "Grove.Data.Protocols.Smtp",
+   "to": "Grove.Data.Protocols.Imap",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Application.Cms.Core.Targets",
+   "to": "Grove.Data.Protocols.Pop",
    "arrows": "to"
   },
   {
@@ -2834,6 +2915,11 @@
   },
   {
    "from": "Grove.Application.Cms.Core.Targets",
+   "to": "Grove.Data.Connectors",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Application.Cms.Core.Targets",
    "to": "Grove.Security.RateLimits",
    "arrows": "to"
   },
@@ -2969,11 +3055,6 @@
   },
   {
    "from": "Grove.Application.Cms.Core.Targets",
-   "to": "Grove.Data.Protocols.Sms.Azure",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Application.Cms.Core.Targets",
    "to": "Grove.Data.Types.Spatial",
    "arrows": "to"
   },
@@ -3000,6 +3081,11 @@
   {
    "from": "Grove.Application.Cms.Core.Targets",
    "to": "Grove.Contents.Title",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Application.Cms.Core.Targets",
+   "to": "Grove.Integrations.Twilio",
    "arrows": "to"
   },
   {
@@ -3150,6 +3236,11 @@
   {
    "from": "Grove.Integrations.Google",
    "to": "Grove.Data.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.Google",
+   "to": "Grove.Data.Connectors.Abstractions",
    "arrows": "to"
   },
   {
@@ -3823,8 +3914,73 @@
    "arrows": "to"
   },
   {
+   "from": "Grove.Data.Protocols.Imap",
+   "to": "Grove.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Imap",
+   "to": "Grove.Communications.Email.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Imap",
+   "to": "Grove.Communications.Email",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Imap",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Imap",
+   "to": "Grove.Data.Protocols.Smtp",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Imap",
+   "to": "Grove.Module.Targets",
+   "arrows": "to"
+  },
+  {
    "from": "Grove.Data.Protocols.GraphQL.Client",
    "to": "Grove.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.GraphQL.Client",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.GraphQL.Client",
+   "to": "Grove.Data.Protocols.Http",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.Twilio",
+   "to": "Grove.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.Twilio",
+   "to": "Grove.Communications.Sms.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.Twilio",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.Twilio",
+   "to": "Grove.Communications.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.Twilio",
+   "to": "Grove.Module.Targets",
    "arrows": "to"
   },
   {
@@ -3910,6 +4066,11 @@
   {
    "from": "Grove.Integrations.Facebook",
    "to": "Grove.Data.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.Facebook",
+   "to": "Grove.Data.Connectors.Abstractions",
    "arrows": "to"
   },
   {
@@ -4114,6 +4275,11 @@
   },
   {
    "from": "Grove.Integrations.GitHub",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.GitHub",
    "to": "Grove.Display.Management",
    "arrows": "to"
   },
@@ -4240,6 +4406,81 @@
   {
    "from": "Grove.Access",
    "to": "Grove.AuditTrail.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Module.Targets",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Infrastructure.Server.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Data.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Access.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Access.Roles.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Infrastructure.Shells.Admin.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Data.Protocols.Http",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Data.Protocols.Rest",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Data.Protocols.Soap",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Data.Protocols.OAuth",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Data.Protocols.Webhooks",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Data.Protocols.Sql",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors",
+   "to": "Grove.Data.Protocols.GraphQL.Client",
    "arrows": "to"
   },
   {
@@ -4583,6 +4824,11 @@
    "arrows": "to"
   },
   {
+   "from": "Grove.Data.Protocols.Webhooks",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
    "from": "Grove.Data.Storage.AzureBlob",
    "to": "Grove.Infrastructure.Abstractions",
    "arrows": "to"
@@ -4718,31 +4964,6 @@
    "arrows": "to"
   },
   {
-   "from": "Grove.Integrations.Email.Azure",
-   "to": "Grove.Infrastructure.Shells.Admin.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Integrations.Email.Azure",
-   "to": "Grove.Display.Management",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Integrations.Email.Azure",
-   "to": "Grove.Communications.Email",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Integrations.Email.Azure",
-   "to": "Grove.Display.Navigation",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Integrations.Email.Azure",
-   "to": "Grove.Module.Targets",
-   "arrows": "to"
-  },
-  {
    "from": "Grove.Data.Cache.Dynamic.Abstractions",
    "to": "Grove.Infrastructure.Abstractions",
    "arrows": "to"
@@ -4815,6 +5036,36 @@
   {
    "from": "Grove.Shortcodes.Abstractions",
    "to": "Grove.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Pop",
+   "to": "Grove.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Pop",
+   "to": "Grove.Communications.Email.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Pop",
+   "to": "Grove.Communications.Email",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Pop",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Pop",
+   "to": "Grove.Data.Protocols.Smtp",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Pop",
+   "to": "Grove.Module.Targets",
    "arrows": "to"
   },
   {
@@ -4914,6 +5165,16 @@
   },
   {
    "from": "Grove.Integrations.Microsoft",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.Microsoft",
+   "to": "Grove.Communications.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.Microsoft",
    "to": "Grove.Deployment.Abstractions",
    "arrows": "to"
   },
@@ -4945,6 +5206,16 @@
   {
    "from": "Grove.Integrations.Microsoft",
    "to": "Grove.Infrastructure.Recipes.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.Microsoft",
+   "to": "Grove.Communications.Email.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.Microsoft",
+   "to": "Grove.Communications.Sms.Abstractions",
    "arrows": "to"
   },
   {
@@ -5010,6 +5281,11 @@
   {
    "from": "Grove.Communications",
    "to": "Grove.Communications.Email.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Communications",
+   "to": "Grove.Communications.Sms.Abstractions",
    "arrows": "to"
   },
   {
@@ -5248,6 +5524,16 @@
    "arrows": "to"
   },
   {
+   "from": "Grove.Data.Protocols.OAuth",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.OAuth",
+   "to": "Grove.Data.Protocols.Http",
+   "arrows": "to"
+  },
+  {
    "from": "Grove.Infrastructure.Settings.Abstractions",
    "to": "Grove.Infrastructure.Abstractions",
    "arrows": "to"
@@ -5255,6 +5541,16 @@
   {
    "from": "Grove.Infrastructure.Settings.Abstractions",
    "to": "Grove.Display.Management.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors.Abstractions",
+   "to": "Grove.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors.Abstractions",
+   "to": "Grove.Access.Abstractions",
    "arrows": "to"
   },
   {
@@ -5804,6 +6100,11 @@
   },
   {
    "from": "Grove.Data.Queries",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Queries",
    "to": "Grove.Deployment.Abstractions",
    "arrows": "to"
   },
@@ -6068,6 +6369,11 @@
    "arrows": "to"
   },
   {
+   "from": "Grove.Communications.Email.Abstractions",
+   "to": "Grove.Infrastructure.Settings.Abstractions",
+   "arrows": "to"
+  },
+  {
    "from": "Grove.Communications.Sms",
    "to": "Grove.Display.Management",
    "arrows": "to"
@@ -6120,11 +6426,6 @@
   {
    "from": "Grove.Communications.Sms",
    "to": "Grove.Infrastructure.Server.Abstractions",
-   "arrows": "to"
-  },
-  {
-   "from": "Grove.Communications.Sms",
-   "to": "Grove.Access.Users",
    "arrows": "to"
   },
   {
@@ -6465,6 +6766,16 @@
   {
    "from": "Grove.Data.Protocols.Smtp",
    "to": "Grove.Communications.Email",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Smtp",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Smtp",
+   "to": "Grove.Communications.Abstractions",
    "arrows": "to"
   },
   {
@@ -6838,6 +7149,16 @@
    "arrows": "to"
   },
   {
+   "from": "Grove.Data.Protocols.Rest",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Rest",
+   "to": "Grove.Data.Protocols.Http",
+   "arrows": "to"
+  },
+  {
    "from": "Grove.Display.Resources.Management",
    "to": "Grove.Infrastructure.Abstractions",
    "arrows": "to"
@@ -6934,6 +7255,11 @@
   },
   {
    "from": "Grove.Communications.Abstractions",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Communications.Abstractions",
    "to": "Grove.Contents.Management.Abstractions",
    "arrows": "to"
   },
@@ -7010,6 +7336,11 @@
   {
    "from": "Grove.Search.Elasticsearch",
    "to": "Grove.Module.Targets",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Search.Elasticsearch",
+   "to": "Grove.Data.Connectors.Abstractions",
    "arrows": "to"
   },
   {
@@ -7140,6 +7471,16 @@
   {
    "from": "Grove.Contents.Management.Abstractions",
    "to": "Grove.Data.YesSql.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Soap",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Soap",
+   "to": "Grove.Data.Protocols.Http",
    "arrows": "to"
   },
   {
@@ -7428,6 +7769,11 @@
    "arrows": "to"
   },
   {
+   "from": "Grove.Data.Protocols.Http",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
    "from": "Grove.Infrastructure.Recipes",
    "to": "Grove.Infrastructure.Server.Abstractions",
    "arrows": "to"
@@ -7550,6 +7896,11 @@
   {
    "from": "Grove.Communications.Email",
    "to": "Grove.Infrastructure.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Communications.Email",
+   "to": "Grove.Communications.Abstractions",
    "arrows": "to"
   },
   {
@@ -8099,6 +8450,11 @@
   },
   {
    "from": "Grove.Integrations.AI.Azure",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.AI.Azure",
    "to": "Grove.Infrastructure.Abstractions",
    "arrows": "to"
   },
@@ -8428,6 +8784,16 @@
    "arrows": "to"
   },
   {
+   "from": "Grove.Data.Protocols.Sql",
+   "to": "Grove.Data.Connectors.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Protocols.Sql",
+   "to": "Grove.Data.Protocols.Http",
+   "arrows": "to"
+  },
+  {
    "from": "Grove.Data.Abstractions",
    "to": "Grove.Infrastructure.Abstractions",
    "arrows": "to"
@@ -8455,6 +8821,11 @@
   {
    "from": "Grove.Integrations.Twitter",
    "to": "Grove.Data.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Integrations.Twitter",
+   "to": "Grove.Data.Connectors.Abstractions",
    "arrows": "to"
   },
   {
@@ -8775,6 +9146,11 @@
   {
    "from": "Grove.Workflows",
    "to": "Grove.Data.Queries.Abstractions",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Workflows",
+   "to": "Grove.Data.Connectors",
    "arrows": "to"
   },
   {
@@ -9329,12 +9705,27 @@
   },
   {
    "from": "Grove.Themes.Admin.Client",
+   "to": "Grove.Data.Connectors.BlazorWasm",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Themes.Admin.Client",
    "to": "Grove.Shortcodes.BlazorWasm",
    "arrows": "to"
   },
   {
    "from": "Grove.Themes.Admin.Client",
    "to": "Grove.Seo.Sitemaps.BlazorWasm",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Themes.Admin.Client",
+   "to": "Grove.Communications.BlazorWasm",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Themes.Admin.Client",
+   "to": "Grove.Communications.Email.BlazorWasm",
    "arrows": "to"
   },
   {
@@ -9364,6 +9755,11 @@
   },
   {
    "from": "Grove.Integrations.Facebook.BlazorWasm",
+   "to": "Grove.Display.Components",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Data.Connectors.BlazorWasm",
    "to": "Grove.Display.Components",
    "arrows": "to"
   },
@@ -9404,6 +9800,11 @@
   },
   {
    "from": "Grove.AuditTrail.BlazorWasm",
+   "to": "Grove.Display.Components",
+   "arrows": "to"
+  },
+  {
+   "from": "Grove.Communications.BlazorWasm",
    "to": "Grove.Display.Components",
    "arrows": "to"
   },
@@ -9523,6 +9924,11 @@
    "arrows": "to"
   },
   {
+   "from": "Grove.Communications.Email.BlazorWasm",
+   "to": "Grove.Display.Components",
+   "arrows": "to"
+  },
+  {
    "from": "Grove.Contents.OptionPicker.BlazorWasm",
    "to": "Grove.Display.Components",
    "arrows": "to"
@@ -9556,9 +9962,6 @@
  "packages": {
   "Grove.Contents.Taxonomies.Abstractions": [
    "YesSql"
-  ],
-  "Grove.Data.Protocols.Sms.Azure": [
-   "Azure.Communication.Sms"
   ],
   "Grove.Contents.Fields": [
    "Acornima"
@@ -9643,12 +10046,14 @@
   "Grove.Data.Types.Money": [
    "YesSql.Abstractions"
   ],
+  "Grove.Data.Protocols.Imap": [
+   "MailKit"
+  ],
   "Grove.AspireHost": [
    "Aspire.Hosting.AppHost"
   ],
   "Grove.Integrations.Facebook": [
    "Microsoft.AspNetCore.Authentication.Facebook",
-   "Microsoft.Extensions.Http.Resilience",
    "System.IO.Hashing"
   ],
   "Grove.SourceGenerators": [
@@ -9678,9 +10083,6 @@
   "Grove.Display.Rules": [
    "Jint"
   ],
-  "Grove.Integrations.Email.Azure": [
-   "Azure.Communication.Email"
-  ],
   "Grove.Data.Protocols.OpenApi": [
    "Microsoft.AspNetCore.OpenApi",
    "Scalar.AspNetCore",
@@ -9691,13 +10093,19 @@
   "Grove.Shortcodes.Abstractions": [
    "Shortcodes"
   ],
+  "Grove.Data.Protocols.Pop": [
+   "MailKit"
+  ],
   "Grove.Display.Icons": [
    "Microsoft.AspNetCore.Components.WebAssembly",
    "Microsoft.Extensions.Http"
   ],
   "Grove.Integrations.Microsoft": [
+   "Azure.Communication.Email",
+   "Azure.Communication.Sms",
    "Microsoft.AspNetCore.Authentication.MicrosoftAccount",
-   "Microsoft.Identity.Web"
+   "Microsoft.Identity.Web",
+   "MimeKit"
   ],
   "Grove.Search.Elasticsearch.Abstractions": [
    "Elastic.Clients.Elasticsearch"
@@ -9742,9 +10150,6 @@
   "Grove.Access.Users": [
    "Microsoft.Extensions.Compliance.Redaction",
    "YesSql.Filters.Query"
-  ],
-  "Grove.Communications.Sms": [
-   "Microsoft.Extensions.Http.Resilience"
   ],
   "Grove.Data.Storage.AmazonS3": [
    "AWSSDK.Extensions.NETCore.Setup",
@@ -9851,9 +10256,8 @@
   "Grove.Routes": [
    "YesSql.Abstractions"
   ],
-  "Grove.Integrations.Twitter": [
-   "Microsoft.AspNetCore.Authentication.Twitter",
-   "Microsoft.Extensions.Http.Resilience"
+  "Grove.Data.Protocols.Sql": [
+   "YesSql"
   ],
   "Grove.Integrations.Redis.Abstractions": [
    "Microsoft.AspNetCore.DataProtection.StackExchangeRedis",
@@ -10056,10 +10460,18 @@
    "Microsoft.AspNetCore.Components",
    "Microsoft.AspNetCore.Components.Web"
   ],
+  "Grove.Data.Connectors.BlazorWasm": [
+   "Microsoft.AspNetCore.Components",
+   "Microsoft.AspNetCore.Components.Web"
+  ],
   "Grove.Themes.Site.Client": [
    "Microsoft.AspNetCore.Components.WebAssembly"
   ],
   "Grove.AuditTrail.BlazorWasm": [
+   "Microsoft.AspNetCore.Components",
+   "Microsoft.AspNetCore.Components.Web"
+  ],
+  "Grove.Communications.BlazorWasm": [
    "Microsoft.AspNetCore.Components",
    "Microsoft.AspNetCore.Components.Web"
   ],
@@ -10089,6 +10501,10 @@
   ],
   "Grove.Parties": [
    "YesSql.Abstractions"
+  ],
+  "Grove.Communications.Email.BlazorWasm": [
+   "Microsoft.AspNetCore.Components",
+   "Microsoft.AspNetCore.Components.Web"
   ],
   "Grove.Contents.OptionPicker.BlazorWasm": [
    "Microsoft.AspNetCore.Components",

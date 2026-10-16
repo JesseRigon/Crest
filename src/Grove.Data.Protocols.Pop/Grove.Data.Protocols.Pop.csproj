@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Grove Pop</Title>
+    <Description>
+      $(OCFrameworkDescription)
+
+      The POP3 protocol of the connector engine, and an e-mail receive provider that reads a mailbox through a pop connection.
+    </Description>
+    <PackageTags>$(PackageTags) PlatformFramework</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Communications.Email.Abstractions\Grove.Communications.Email.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Communications.Email\Grove.Communications.Email.csproj" />
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.Smtp\Grove.Data.Protocols.Smtp.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MailKit" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,43 @@
+@inject HttpClient Http
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The e-mail channel's card on the Communications page: the send and receive providers, the
+   connection each uses, the defaults, and links to the settings and the test send. Nothing
+   renders for a caller who may not manage e-mail, or when the channel is off. *@
+@if (Channel is { } channel)
+{
+    <GroveCard data-testid="channel-email">
+        <GroveStack Gap="0.5rem">
+            <GroveText TextStyle="TextStyle.H6" class="rz-m-0">@T["Email"]</GroveText>
+            @if (channel.Providers.Length == 0)
+            {
+                <GroveText TextStyle="TextStyle.Body2">@T["No send provider is enabled."]</GroveText>
+            }
+            <ProviderTable Title="@T["Send"]" Providers="channel.Providers" Default="@channel.DefaultProvider" />
+            @if (channel.ReceiveProviders.Length > 0)
+            {
+                <ProviderTable Title="@T["Receive"]" Providers="channel.ReceiveProviders" Default="@channel.DefaultReceiveProvider" />
+            }
+            <GroveStack Orientation="Orientation.Horizontal" Gap="1rem">
+                <a href="Settings/email">@T["Settings"]</a>
+                <a href="Email/Test">@T["Send a test message"]</a>
+            </GroveStack>
+        </GroveStack>
+    </GroveCard>
+}
+
+@code {
+    /// <summary>The region's context (unused).</summary>
+    [Parameter] public object? Context { get; set; }
+
+    private EmailChannel? Channel;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { Channel = await Http.GetFromJsonAsync<EmailChannel>("api/grove/email/channel"); }
+        catch { Channel = null; }
+    }
+
+    public sealed record EmailProvider(string Name, string DisplayName, string? Connection);
+    private sealed record EmailChannel(string? DefaultProvider, EmailProvider[] Providers, string? DefaultReceiveProvider, EmailProvider[] ReceiveProviders);
+}

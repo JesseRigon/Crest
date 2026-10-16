@@ -18,9 +18,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Grove.Connectors.Consumers.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Contents.Management.Abstractions\Grove.Contents.Management.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Data.Abstractions\Grove.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Display.Management\Grove.Display.Management.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
     <ProjectReference Include="..\Grove.Display.Navigation\Grove.Display.Navigation.csproj" />

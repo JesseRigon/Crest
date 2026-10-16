@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <!-- NuGet properties-->
+    <Title>Grove Twilio</Title>
+    <Description>
+      $(OCCMSDescription)
+
+      Twilio: its REST connection in the connector engine, and an SMS provider over it.
+    </Description>
+    <PackageTags>$(PackageTags) PlatformCMS Twilio</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Communications.Sms.Abstractions\Grove.Communications.Sms.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Communications.Abstractions\Grove.Communications.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+  </ItemGroup>
+
+</Project>

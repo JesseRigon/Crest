@@ -1,0 +1,142 @@
+@page "/Communications/DeliveryLog"
+@attribute [PageEntry("ViewDeliveryLog", Id = "deliverylog", Parent = "communications", Caption = "Delivery Log", Position = "6")]
+@using System.Text.Json
+@inject HttpClient Http
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The delivery log (Grove.Communications): every send through a channel, newest first, with its
+   provider, connection, outcome and the connector engine's attempts. *@
+<PageTitle>@T["Delivery Log"]</PageTitle>
+
+<GroveStack Gap="1rem" data-testid="delivery-log-page">
+    <GroveText TextStyle="TextStyle.H4" class="rz-m-0">@T["Delivery Log"]</GroveText>
+    @if (Error is { } error) { <GroveAlert AlertStyle="AlertStyle.Danger" AllowClose="false">@error</GroveAlert> }
+
+    <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+        <GroveDropDown TValue="string" @bind-Value="Channel" Data="@Channels" TextProperty="Text" ValueProperty="Value" AllowClear="true" Placeholder="@T["All channels"]" Style="width: 12rem" Name="delivery-channel" />
+        <GroveDropDown TValue="string" @bind-Value="Outcome" Data="@Outcomes" TextProperty="Text" ValueProperty="Value" AllowClear="true" Placeholder="@T["All outcomes"]" Style="width: 12rem" Name="delivery-outcome" />
+        <GroveTextBox @bind-Value="Recipient" Placeholder="@T["Recipient"]" Style="width: 16rem" Name="delivery-recipient" />
+        <GroveButton Text="@T["Filter"]" Icon="filter_list" Click="FilterAsync" data-testid="delivery-filter" />
+    </GroveStack>
+
+    @if (Page is null)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (Page.Records.Length == 0)
+    {
+        <GroveText TextStyle="TextStyle.Body2">@T["Nothing was sent."]</GroveText>
+    }
+    else
+    {
+        <table class="rz-grid-table rz-grid-table-fixed" data-testid="delivery-log">
+            <thead>
+                <tr>
+                    <th>@T["Time"]</th>
+                    <th>@T["Channel"]</th>
+                    <th>@T["Provider"]</th>
+                    <th>@T["Connection"]</th>
+                    <th>@T["Recipient"]</th>
+                    <th>@T["Outcome"]</th>
+                    <th>@T["Attempts"]</th>
+                    <th>@T["Error"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var record in Page.Records)
+                {
+                    <tr>
+                        <td>@record.CreatedUtc.ToLocalTime().ToString("g")</td>
+                        <td>@record.Channel</td>
+                        <td>@record.Provider</td>
+                        <td>@record.ConnectionKey</td>
+                        <td>@record.Recipient@(string.IsNullOrEmpty(record.Subject) ? "" : $" - {record.Subject}")</td>
+                        <td>@OutcomeText(record.Outcome)</td>
+                        <td title="@AttemptsText(record)">@record.AttemptCount</td>
+                        <td>@record.Error</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+            <GroveButton Text="@T["Newer"]" Disabled="@(Skip == 0)" Click="@(() => MoveAsync(-Take))" />
+            <GroveText TextStyle="TextStyle.Body2">@T["{0}-{1} of {2}", Skip + 1, Skip + Page.Records.Length, Page.Total]</GroveText>
+            <GroveButton Text="@T["Older"]" Disabled="@(Skip + Take >= Page.Total)" Click="@(() => MoveAsync(Take))" />
+        </GroveStack>
+    }
+</GroveStack>
+
+@code {
+    private const int Take = 50;
+    private static readonly string[] OutcomeNames = ["Sent", "Failed", "Deferred", "Refused", "NotAuthorized"];
+
+    private readonly Option[] Channels = [new("email", "Email"), new("sms", "SMS")];
+    private Option[] Outcomes = [];
+    private string? Channel;
+    private string? Outcome;
+    private string? Recipient;
+    private int Skip;
+    private DeliveryPage? Page;
+    private string? Error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Outcomes = [.. OutcomeNames.Select(name => new Option(name, T[name]))];
+        await LoadAsync();
+    }
+
+    private Task FilterAsync()
+    {
+        Skip = 0;
+        return LoadAsync();
+    }
+
+    private Task MoveAsync(int by)
+    {
+        Skip = Math.Max(0, Skip + by);
+        return LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var query = new List<string> { $"skip={Skip}", $"take={Take}" };
+        if (!string.IsNullOrEmpty(Channel)) query.Add($"channel={Uri.EscapeDataString(Channel)}");
+        if (!string.IsNullOrEmpty(Outcome)) query.Add($"outcome={Uri.EscapeDataString(Outcome)}");
+        if (!string.IsNullOrWhiteSpace(Recipient)) query.Add($"recipient={Uri.EscapeDataString(Recipient.Trim())}");
+
+        try
+        {
+            Page = await Http.GetFromJsonAsync<DeliveryPage>($"api/grove/communications/deliveries?{string.Join("&", query)}");
+            Error = null;
+        }
+        catch (Exception exception) { Error = exception.Message; Page = new DeliveryPage(0, []); }
+    }
+
+    // The outcome arrives as its name or its number, depending on the server's enum handling.
+    private string OutcomeText(JsonElement outcome) => outcome.ValueKind switch
+    {
+        JsonValueKind.Number when outcome.GetInt32() is var index && index >= 0 && index < OutcomeNames.Length => T[OutcomeNames[index]],
+        JsonValueKind.String => T[outcome.GetString() ?? string.Empty],
+        _ => string.Empty,
+    };
+
+    private static string AttemptsText(DeliveryRecord record) => string.Join(
+        Environment.NewLine,
+        record.Attempts.Select(attempt => $"#{attempt.Number} {attempt.StartedUtc:T} {attempt.StatusCode} {attempt.Failure} {attempt.Error}".TrimEnd()));
+
+    private sealed record Option(string Value, string Text);
+    private sealed record DeliveryPage(int Total, DeliveryRecord[] Records);
+    private sealed record DeliveryAttempt(int Number, DateTime StartedUtc, int StatusCode, string? Failure, string? Error);
+    private sealed record DeliveryRecord(
+        string DeliveryId,
+        string Channel,
+        string? Provider,
+        string? ConnectionKey,
+        string? Recipient,
+        string? Subject,
+        JsonElement Outcome,
+        int AttemptCount,
+        DeliveryAttempt[] Attempts,
+        string? Error,
+        DateTime CreatedUtc);
+}

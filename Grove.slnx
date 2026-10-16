@@ -31,8 +31,11 @@
   <Project Path="src/Grove.AuditTrail/blazor-wasm/Grove.AuditTrail.BlazorWasm.csproj" />
   <Project Path="src/Grove.Data.Protocols.GraphQL/blazor-wasm/Grove.Data.Protocols.GraphQL.BlazorWasm.csproj" />
   <Project Path="src/Grove.Routes/blazor-wasm/Grove.Routes.BlazorWasm.csproj" />
+  <Project Path="src/Grove.Data.Connectors/blazor-wasm/Grove.Data.Connectors.BlazorWasm.csproj" />
   <Project Path="src/Grove.Shortcodes/blazor-wasm/Grove.Shortcodes.BlazorWasm.csproj" />
   <Project Path="src/Grove.Seo.Sitemaps/blazor-wasm/Grove.Seo.Sitemaps.BlazorWasm.csproj" />
+  <Project Path="src/Grove.Communications/blazor-wasm/Grove.Communications.BlazorWasm.csproj" />
+  <Project Path="src/Grove.Communications.Email/blazor-wasm/Grove.Communications.Email.BlazorWasm.csproj" />
   <Project Path="src/Grove.Communications.Sms/blazor-wasm/Grove.Communications.Sms.BlazorWasm.csproj" />
   <Project Path="src/Grove.Parties/blazor-wasm/Grove.Parties.BlazorWasm.csproj" />
   <Project Path="src/Grove.Data.Regions/Grove.Data.Regions.csproj" />

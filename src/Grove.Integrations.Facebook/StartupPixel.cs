@@ -1,7 +1,15 @@
 using Grove.Display.Management.Document;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http.Resilience;
+using Grove.Data.Connectors;
+using Grove.Data.Migration;
+using Grove.Environment.Shell.Scope;
+using Grove.Infrastructure.Settings;
+using Grove.Integrations.Facebook.Connections;
+using System.Security.Cryptography;
+using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Logging;
 using Grove.Display.Management.Handlers;
 using Grove.Integrations.Facebook.Filters;
 using Grove.Integrations.Facebook.Services;
@@ -12,7 +20,6 @@ using Grove.Security.Permissions;
 using Grove.Integrations.Facebook.Workflows;
 using Grove.Workflows;
 using Grove.Workflows.Extensions;
-using Polly;
 
 namespace Grove.Integrations.Facebook;
 
@@ -30,22 +37,9 @@ public sealed class StartupPixel : StartupBase
 
         services.AddDocumentContributor<FacebookPixelDocumentContributor>();
 
-        services.AddHttpClient<IMetaConversionsApiService, MetaConversionsApiService>(client =>
-        {
-            client.BaseAddress = new Uri("https://graph.facebook.com/");
-        }).AddResilienceHandler("oc-handler", builder => builder
-            .AddRetry(new HttpRetryStrategyOptions
-            {
-                Name = "oc-retry",
-                MaxRetryAttempts = 3,
-                OnRetry = attempt =>
-                {
-                    attempt.RetryDelay.Add(TimeSpan.FromSeconds(0.5 * attempt.AttemptNumber));
-
-                    return ValueTask.CompletedTask;
-                },
-            })
-        );
+        services.AddConversionsConnection();
+        services.AddScoped<IMetaConversionsApiService, MetaConversionsApiService>();
+        services.AddDataMigration<FacebookPixelSettingsMigrations>();
     }
 }
 
@@ -60,3 +54,57 @@ public sealed class StartupPixelWorkflows : StartupBase
     }
 }
 
+
+/// <summary>
+/// Moves the Conversions API access token out of the pixel settings into the tenant credential
+/// of the Meta Conversions API connection.
+/// </summary>
+internal sealed class FacebookPixelSettingsMigrations : DataMigration
+{
+    private const string TokenProperty = "ConversionsApiAccessToken";
+
+    public static int Create()
+    {
+        ShellScope.AddDeferredTask(async scope =>
+        {
+            var services = scope.ServiceProvider;
+            var siteService = services.GetRequiredService<ISiteService>();
+            var site = await siteService.LoadSiteSettingsAsync();
+
+            if (site.Properties[nameof(FacebookPixelSettings)] is not JsonObject settings
+                || settings[TokenProperty]?.GetValue<string>() is not { Length: > 0 } sealedToken)
+            {
+                return;
+            }
+
+            var logger = services.GetRequiredService<ILogger<FacebookPixelSettingsMigrations>>();
+
+            try
+            {
+                var token = services.GetRequiredService<IDataProtectionProvider>().CreateProtector(FacebookConstants.ConversionsApiProtectorName).Unprotect(sealedToken);
+
+                if (services.GetService<ICredentialStore>() is { } store)
+                {
+                    await store.SaveAsync(
+                        FacebookConstants.ConversionsConnectionKey,
+                        CredentialOwner.Tenant,
+                        new ConnectionCredential { Values = new Dictionary<string, string> { [CredentialKeys.ApiKey] = token } },
+                        label: "Dataset access token");
+                }
+                else
+                {
+                    logger.LogWarning("The Conversions API token could not be moved: the connector engine is not enabled. Enter it on the Connections screen.");
+                }
+            }
+            catch (CryptographicException exception)
+            {
+                logger.LogWarning(exception, "The Conversions API token could not be opened; enter it again on the Connections screen.");
+            }
+
+            settings.Remove(TokenProperty);
+            await siteService.UpdateSiteSettingsAsync(site);
+        });
+
+        return 1;
+    }
+}

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Data.Protocols.OAuth</RootNamespace>
+    <Nullable>enable</Nullable>
+    <!-- NuGet properties-->
+    <Title>Grove OAuth Protocol</Title>
+    <Description>$(OCCMSDescription)
+
+    OAuth 2.0 client flows for the connector engine and sign-in: authorization code with PKCE, client credentials, refresh, device code, revocation.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Connectors OAuth</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.Http\Grove.Data.Protocols.Http.csproj" />
+  </ItemGroup>
+
+</Project>

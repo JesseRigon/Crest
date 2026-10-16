@@ -12,11 +12,13 @@ namespace Grove.Integrations.Microsoft.Recipes;
 public sealed class AzureADSettingsStep : NamedRecipeStepHandler
 {
     private readonly IAzureADService _azureADService;
+    private readonly IServiceProvider _services;
 
-    public AzureADSettingsStep(IAzureADService azureADService)
+    public AzureADSettingsStep(IAzureADService azureADService, IServiceProvider services)
         : base(nameof(AzureADSettings))
     {
         _azureADService = azureADService;
+        _services = services;
     }
 
     protected override async Task HandleAsync(RecipeExecutionContext context)
@@ -24,12 +26,14 @@ public sealed class AzureADSettingsStep : NamedRecipeStepHandler
         var model = context.Step.ToObject<AzureADSettingsStepModel>();
         var settings = await _azureADService.LoadSettingsAsync();
 
-        settings.AppId = model.AppId;
         settings.TenantId = model.TenantId;
         settings.DisplayName = model.DisplayName;
         settings.CallbackPath = model.CallbackPath;
 
         await _azureADService.UpdateSettingsAsync(settings);
+
+        // The application id is the Microsoft app credentials' client id.
+        await AppCredentialsAccess.SaveAsync(_services, MicrosoftAuthenticationConstants.AppCredentialsKey, model.AppId, null);
     }
 }
 

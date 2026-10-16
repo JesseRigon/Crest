@@ -20,12 +20,23 @@ public sealed class SqlQueryHandler : QueryHandlerBase
         }
 
         var template = context.Data[nameof(SqlQueryMetadata.Template)]?.GetValue<string>();
+        var connection = context.Data[nameof(SqlQueryMetadata.Connection)];
 
-        if (!string.IsNullOrEmpty(template))
+        if (!string.IsNullOrEmpty(template) || connection is not null)
         {
             var metadata = context.Query.GetOrCreate<SqlQueryMetadata>();
 
-            metadata.Template = template;
+            if (!string.IsNullOrEmpty(template))
+            {
+                metadata.Template = template;
+            }
+
+            if (connection is not null)
+            {
+                var key = connection.GetValue<string>()?.Trim();
+                metadata.Connection = string.IsNullOrEmpty(key) ? null : key;
+            }
+
             context.Query.Put(metadata);
         }
 

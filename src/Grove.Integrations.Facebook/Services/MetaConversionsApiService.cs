@@ -1,43 +1,41 @@
-using System.Net.Http.Json;
-using System.Security.Cryptography;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Logging;
+using System.Text.Json.Nodes;
+using Grove.Access;
+using Grove.Data.Connectors;
 using Grove.Integrations.Facebook.Models;
 using Grove.Integrations.Facebook.Settings;
 using Grove.Infrastructure;
 using Grove.Infrastructure.Settings;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 
 namespace Grove.Integrations.Facebook.Services;
 
+/// <summary>
+/// Sends server-side events through the Meta Conversions API connection
+/// (<see cref="FacebookConstants.ConversionsConnectionKey"/>): the pixel from the pixel settings,
+/// the dataset's access token from the connection's tenant credential.
+/// </summary>
 public sealed class MetaConversionsApiService : IMetaConversionsApiService
 {
-    // https://developers.facebook.com/docs/graph-api/changelog - bump periodically.
-    private const string GraphApiVersion = "v21.0";
-
-    private static readonly JsonSerializerOptions s_serializerOptions = new(JsonSerializerDefaults.Web)
-    {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
-
-    private readonly HttpClient _httpClient;
+    private readonly IConnectorEngine _engine;
     private readonly ISiteService _siteService;
-    private readonly IDataProtectionProvider _dataProtectionProvider;
+    private readonly ICallerContextAccessor _callerAccessor;
+    private readonly ICallerContextFactory _callerFactory;
     private readonly ILogger _logger;
     private readonly IStringLocalizer S;
 
     public MetaConversionsApiService(
-        HttpClient httpClient,
+        IConnectorEngine engine,
         ISiteService siteService,
-        IDataProtectionProvider dataProtectionProvider,
+        ICallerContextAccessor callerAccessor,
+        ICallerContextFactory callerFactory,
         ILogger<MetaConversionsApiService> logger,
         IStringLocalizer<MetaConversionsApiService> stringLocalizer)
     {
-        _httpClient = httpClient;
+        _engine = engine;
         _siteService = siteService;
-        _dataProtectionProvider = dataProtectionProvider;
+        _callerAccessor = callerAccessor;
+        _callerFactory = callerFactory;
         _logger = logger;
         S = stringLocalizer;
     }
@@ -58,68 +56,69 @@ public sealed class MetaConversionsApiService : IMetaConversionsApiService
             return Result.Failed(S["The Meta Pixel is not configured. Set the Pixel ID under Settings > Meta Pixel."]);
         }
 
-        if (string.IsNullOrWhiteSpace(settings.ConversionsApiAccessToken))
+        var arguments = new JsonObject
         {
-            return Result.Failed(S["The Meta Conversions API access token is not configured. Set it under Settings > Meta Pixel."]);
-        }
-
-        string accessToken;
-        try
-        {
-            var protector = _dataProtectionProvider.CreateProtector(FacebookConstants.ConversionsApiProtectorName);
-            accessToken = protector.Unprotect(settings.ConversionsApiAccessToken);
-        }
-        catch (CryptographicException ex)
-        {
-            _logger.LogError(ex, "The Meta Conversions API access token could not be decrypted. It may have been encrypted using a different key.");
-
-            return Result.Failed(S["The Meta Conversions API access token could not be decrypted. Re-enter it under Settings > Meta Pixel."]);
-        }
-
-        var payload = new MetaConversionsApiRequest
-        {
-            Data =
-            [
-                new MetaConversionsApiEvent
-                {
-                    EventName = conversionEvent.EventName,
-                    EventTime = (conversionEvent.EventTime ?? DateTimeOffset.UtcNow).ToUnixTimeSeconds(),
-                    EventSourceUrl = conversionEvent.EventSourceUrl,
-                    ActionSource = ToActionSourceValue(conversionEvent.ActionSource),
-                    EventId = conversionEvent.EventId,
-                },
-            ],
-            TestEventCode = string.IsNullOrWhiteSpace(settings.ConversionsApiTestEventCode)
-                ? null
-                : settings.ConversionsApiTestEventCode,
+            ["pixelId"] = settings.PixelId,
+            ["data"] = new JsonArray(ToJson(conversionEvent)),
         };
 
-        var requestUri = $"{GraphApiVersion}/{settings.PixelId}/events?access_token={Uri.EscapeDataString(accessToken)}";
-
-        try
+        if (!string.IsNullOrWhiteSpace(settings.ConversionsApiTestEventCode))
         {
-            using var response = await _httpClient.PostAsJsonAsync(requestUri, payload, s_serializerOptions, cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return Result.Success();
-            }
-
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
-
-            _logger.LogError(
-                "The Meta Conversions API request failed with status {StatusCode}: {Body}",
-                (int)response.StatusCode,
-                body);
-
-            return Result.Failed(S["The Meta Conversions API request failed with status {0}.", (int)response.StatusCode]);
+            arguments["test_event_code"] = settings.ConversionsApiTestEventCode;
         }
-        catch (HttpRequestException ex)
+
+        // Runs as the flow's caller when it may use connectors, else as the tenant's system actor:
+        // the dataset token is a tenant credential either way.
+        var caller = _callerAccessor.Current is { } current && ConnectorCallers.MayCall(current)
+            ? current
+            : await _callerFactory.CreateSystemAsync(cancellationToken: cancellationToken);
+
+        var result = await _engine.ExecuteAsync(new ConnectorCall
         {
-            _logger.LogError(ex, "An error occurred connecting to the Meta Conversions API.");
+            ConnectionKey = FacebookConstants.ConversionsConnectionKey,
+            Caller = caller,
+            OperationId = FacebookConstants.Operations.SendEvents,
+            Arguments = arguments,
+            Scope = CredentialScope.Tenant,
+            IdempotencyKey = conversionEvent.EventId,
+        }, cancellationToken);
 
-            return Result.Failed(S["An error occurred connecting to the Meta Conversions API."]);
+        if (result.Succeeded)
+        {
+            return Result.Success();
         }
+
+        _logger.LogError("The Meta Conversions API call ended {Outcome} ({StatusCode}): {Error}", result.Outcome, result.StatusCode, result.Error);
+
+        return result.Outcome switch
+        {
+            ConnectorOutcome.NotAuthorized => Result.Failed(S["The Meta Conversions API access token is not set. Enter it on the Connections screen."]),
+            ConnectorOutcome.RetryAfter => Result.Failed(S["The Meta Conversions API asked to wait until {0}.", result.RetryAt?.ToString("u") ?? string.Empty]),
+            _ when result.StatusCode > 0 => Result.Failed(S["The Meta Conversions API request failed with status {0}.", result.StatusCode]),
+            _ => Result.Failed(S["An error occurred connecting to the Meta Conversions API."]),
+        };
+    }
+
+    internal static JsonObject ToJson(MetaConversionEvent conversionEvent)
+    {
+        var json = new JsonObject
+        {
+            ["event_name"] = conversionEvent.EventName,
+            ["event_time"] = (conversionEvent.EventTime ?? DateTimeOffset.UtcNow).ToUnixTimeSeconds(),
+            ["action_source"] = ToActionSourceValue(conversionEvent.ActionSource),
+        };
+
+        if (!string.IsNullOrWhiteSpace(conversionEvent.EventSourceUrl))
+        {
+            json["event_source_url"] = conversionEvent.EventSourceUrl;
+        }
+
+        if (!string.IsNullOrWhiteSpace(conversionEvent.EventId))
+        {
+            json["event_id"] = conversionEvent.EventId;
+        }
+
+        return json;
     }
 
     private static string ToActionSourceValue(MetaActionSource actionSource)
@@ -134,31 +133,4 @@ public sealed class MetaConversionsApiService : IMetaConversionsApiService
             MetaActionSource.SystemGenerated => "system_generated",
             _ => "other",
         };
-
-    private sealed class MetaConversionsApiRequest
-    {
-        [JsonPropertyName("data")]
-        public MetaConversionsApiEvent[] Data { get; set; }
-
-        [JsonPropertyName("test_event_code")]
-        public string TestEventCode { get; set; }
-    }
-
-    private sealed class MetaConversionsApiEvent
-    {
-        [JsonPropertyName("event_name")]
-        public string EventName { get; set; }
-
-        [JsonPropertyName("event_time")]
-        public long EventTime { get; set; }
-
-        [JsonPropertyName("event_source_url")]
-        public string EventSourceUrl { get; set; }
-
-        [JsonPropertyName("action_source")]
-        public string ActionSource { get; set; }
-
-        [JsonPropertyName("event_id")]
-        public string EventId { get; set; }
-    }
 }

@@ -122,6 +122,13 @@
     <Project Path="src/Grove.Module.Targets/Grove.Module.Targets.csproj" />
     <Project Path="src/Grove.Communications.Abstractions/Grove.Communications.Abstractions.csproj" />
     <Project Path="src/Grove.Data.Queries.Abstractions/Grove.Data.Queries.Abstractions.csproj" />
+    <Project Path="src/Grove.Data.Connectors.Abstractions/Grove.Data.Connectors.Abstractions.csproj" />
+    <Project Path="src/Grove.Data.Protocols.Http/Grove.Data.Protocols.Http.csproj" />
+    <Project Path="src/Grove.Data.Protocols.Rest/Grove.Data.Protocols.Rest.csproj" />
+    <Project Path="src/Grove.Data.Protocols.Soap/Grove.Data.Protocols.Soap.csproj" />
+    <Project Path="src/Grove.Data.Protocols.OAuth/Grove.Data.Protocols.OAuth.csproj" />
+    <Project Path="src/Grove.Data.Protocols.Webhooks/Grove.Data.Protocols.Webhooks.csproj" />
+    <Project Path="src/Grove.Data.Protocols.Sql/Grove.Data.Protocols.Sql.csproj" />
     <Project Path="src/Grove.Infrastructure.Recipes.Abstractions/Grove.Infrastructure.Recipes.Abstractions.csproj" />
     <Project Path="src/Grove.Integrations.Redis.Abstractions/Grove.Integrations.Redis.Abstractions.csproj" />
     <Project Path="src/Grove.Display.Resources.Management.Abstractions/Grove.Display.Resources.Management.Abstractions.csproj" />
@@ -175,8 +182,9 @@
     <Project Path="src/Grove.Data.Cache.Dynamic/Grove.Data.Cache.Dynamic.csproj" />
     <Project Path="src/Grove.Search.Elasticsearch.Abstractions/Grove.Search.Elasticsearch.Abstractions.csproj" />
     <Project Path="src/Grove.Search.Elasticsearch/Grove.Search.Elasticsearch.csproj" />
-    <Project Path="src/Grove.Integrations.Email.Azure/Grove.Integrations.Email.Azure.csproj" />
     <Project Path="src/Grove.Data.Protocols.Smtp/Grove.Data.Protocols.Smtp.csproj" />
+    <Project Path="src/Grove.Data.Protocols.Imap/Grove.Data.Protocols.Imap.csproj" />
+    <Project Path="src/Grove.Data.Protocols.Pop/Grove.Data.Protocols.Pop.csproj" />
     <Project Path="src/Grove.Communications.Email/Grove.Communications.Email.csproj" />
     <Project Path="src/Grove.Integrations.Facebook/Grove.Integrations.Facebook.csproj" />
     <Project Path="src/Grove.Infrastructure.Features.Abstractions/Grove.Infrastructure.Features.Abstractions.csproj" />
@@ -218,6 +226,7 @@
     <Project Path="src/Grove.Display.Placements/Grove.Display.Placements.csproj" />
     <Project Path="src/Grove.Contents.PublishLater/Grove.Contents.PublishLater.csproj" />
     <Project Path="src/Grove.Data.Queries/Grove.Data.Queries.csproj" />
+    <Project Path="src/Grove.Data.Connectors/Grove.Data.Connectors.csproj" />
     <Project Path="src/Grove.Security.RateLimits.Abstractions/Grove.Security.RateLimits.Abstractions.csproj" />
     <Project Path="src/Grove.Security.RateLimits/Grove.Security.RateLimits.csproj" />
     <Project Path="src/Grove.Security.ReCaptcha.Abstractions/Grove.Security.ReCaptcha.Abstractions.csproj" />
@@ -241,7 +250,6 @@
     <Project Path="src/Grove.Data.Protocols.SignalR.Redis/Grove.Data.Protocols.SignalR.Redis.csproj" />
     <Project Path="src/Grove.Data.Protocols.SignalR/Grove.Data.Protocols.SignalR.csproj" />
     <Project Path="src/Grove.Seo.Sitemaps/Grove.Seo.Sitemaps.csproj" />
-    <Project Path="src/Grove.Data.Protocols.Sms.Azure/Grove.Data.Protocols.Sms.Azure.csproj" />
     <Project Path="src/Grove.Communications.Sms/Grove.Communications.Sms.csproj" />
     <Project Path="src/Grove.Data.Types.Spatial/Grove.Data.Types.Spatial.csproj" />
     <Project Path="src/Grove.Contents.Taxonomies.Abstractions/Grove.Contents.Taxonomies.Abstractions.csproj" />
@@ -250,6 +258,7 @@
     <Project Path="src/Grove.Infrastructure.Tenants/Grove.Infrastructure.Tenants.csproj" />
     <Project Path="src/Grove.Themes/Grove.Themes.csproj" />
     <Project Path="src/Grove.Contents.Title/Grove.Contents.Title.csproj" />
+    <Project Path="src/Grove.Integrations.Twilio/Grove.Integrations.Twilio.csproj" />
     <Project Path="src/Grove.Integrations.Twitter/Grove.Integrations.Twitter.csproj" />
     <Project Path="src/Grove.Routes/Grove.Routes.csproj" />
     <Project Path="src/Grove.Access.Users/Grove.Access.Users.csproj" />

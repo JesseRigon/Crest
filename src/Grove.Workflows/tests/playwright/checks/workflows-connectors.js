@@ -4,7 +4,8 @@ const http = require('http');
 const path = require('path');
 const { fetchAntiforgeryToken } = require('../../../../../tests/playwright/harness/antiforgery');
 
-// Connectors, the Zapier part (plans/workflows.md, phase 3). The check hosts its own
+// Connectors, the Zapier part (docs/connectors.md: the connector engine, api/grove/connections;
+// Workflows' connector activities and webhook trigger are its consumers). The check hosts its own
 // external service on a local port (dev.sh lets the dev and test instances reach private
 // addresses; tenants elsewhere cannot) and proves:
 //  - connections keep their secret server-side (the API never returns it);
@@ -23,7 +24,7 @@ const { fetchAntiforgeryToken } = require('../../../../../tests/playwright/harne
 module.exports = async function run(page, ctx) {
   const results = [];
   const api = `${ctx.baseUrl}/grove-workflows/api`;
-  const connectionsApi = `${ctx.baseUrl}/api/grove/workflows/connections`;
+  const connectionsApi = `${ctx.baseUrl}/api/grove/connections`;
   const webhooksApi = `${ctx.baseUrl}/api/grove/workflows/webhooks`;
   const mailDir = process.env.GROVE_MAIL_DIR;
   const created = { definitions: [], connections: [], items: [] };
@@ -131,10 +132,43 @@ module.exports = async function run(page, ctx) {
     return new Set((journal.json?.items || []).filter(e => e.eventName === 'Completed').map(e => e.activityId));
   }
 
+  // A defined connection on the engine (old field names kept in the calls below): the
+  // definition first, then the sealed tenant credential. Answers the definition's response
+  // with json.key set, and hasSecret when a credential was stored.
   async function connection(body) {
-    const response = await call('POST', connectionsApi, { ...body, key: `pw-${body.key}-${stamp}` });
-    if (response.json?.key) created.connections.push(response.json.key);
-    return response;
+    const key = `pw-${body.key}-${stamp}`;
+    const settings = body.settings || {};
+    const scheme = body.authKind || 'none';
+    const response = await call('POST', connectionsApi, {
+      key,
+      displayName: body.displayName,
+      protocol: body.connectorKey === 'webhook' ? 'webhook' : 'http',
+      baseUrl: body.baseUrl,
+      auth: {
+        scheme,
+        keyName: settings.headerName,
+        authorizeUrl: settings.authorizeUrl,
+        tokenUrl: settings.tokenUrl,
+        scopes: settings.scope ? settings.scope.split(' ') : [],
+        signatureHeader: scheme === 'hmac' ? 'X-Grove-Signature' : undefined,
+      },
+      policy: { retryCount: body.retryCount ?? 2, timeoutSeconds: 30, rateLimitPermits: body.rateLimitPerMinute, rateLimitWindowSeconds: 60, maxResponseBytes: 1048576, maxRequestBytes: 1048576, maxInlineWaitSeconds: 5 },
+    });
+    if (!response.ok) return response;
+    created.connections.push(key);
+    const values = {
+      'bearer': { token: body.secret },
+      'api-key': { apiKey: body.secret },
+      'hmac': { signingSecret: body.secret },
+      'oauth2-client-credentials': { clientId: settings.clientId, clientSecret: body.secret },
+      'oauth2-authorization-code': { clientId: settings.clientId, clientSecret: body.secret },
+    }[scheme];
+    let hasSecret = false;
+    if (values && body.secret) {
+      const credential = await call('PUT', `${connectionsApi}/${encodeURIComponent(key)}/credential`, { values });
+      hasSecret = credential.ok && !credential.text.includes(body.secret);
+    }
+    return { ...response, json: { ...response.json, key, hasSecret } };
   }
 
   function mailsContaining(marker) {
@@ -144,10 +178,10 @@ module.exports = async function run(page, ctx) {
   }
 
   try {
-    // 1. Connections: the registry lists the generic connectors; the secret goes in, never out.
-    const registry = await call('GET', `${ctx.baseUrl}/api/grove/workflows/registry`);
-    const connectorKeys = (registry.json?.connectors || []).map(c => c.key);
-    results.push({ name: 'registry-lists-generic-connectors', pass: connectorKeys.includes('http') && connectorKeys.includes('webhook'), message: connectorKeys.join(',') });
+    // 1. Connections: the engine lists its protocols; the secret goes in, never out.
+    const protocols = await call('GET', `${connectionsApi}/protocols`);
+    const protocolIds = (protocols.json || []).map(p => p.id);
+    results.push({ name: 'engine-lists-its-protocols', pass: protocolIds.includes('http') && protocolIds.includes('webhook') && protocolIds.includes('rest'), message: protocolIds.join(',') });
 
     const bearerSecret = `s3cret-${stamp}`;
     const accountant = await connection({ key: 'accountant', displayName: 'Accountant API', connectorKey: 'http', baseUrl: `${external}/api/`, authKind: 'bearer', secret: bearerSecret });
@@ -158,7 +192,7 @@ module.exports = async function run(page, ctx) {
       message: `create=${accountant.status} ${accountant.text.slice(0, 160)}`,
     });
 
-    const invalid = await call('POST', connectionsApi, { key: `pw-bad-${stamp}`, baseUrl: 'ftp://example.com', authKind: 'bearer' });
+    const invalid = await call('POST', connectionsApi, { key: `pw-bad-${stamp}`, protocol: 'http', baseUrl: 'ftp://example.com', auth: { scheme: 'bearer' } });
     results.push({ name: 'invalid-connection-is-refused', pass: invalid.status === 400, message: `HTTP ${invalid.status} ${invalid.text.slice(0, 160)}` });
 
     // 2. A sample role published -> POST it to the accountant -> e-mail.
@@ -241,10 +275,12 @@ module.exports = async function run(page, ctx) {
       { type: 'Grove.Workflows.CallConnector', id: 'first', version: 1, connection: literal(limited.json?.key), method: literal('GET'), path: literal('limited') },
       { type: 'Grove.Workflows.CallConnector', id: 'second', version: 1, connection: literal(limited.json?.key), method: literal('GET'), path: literal('limited') },
       writeLine('limitedOut', 'rate limited'),
-    ], [connect('first', 'Done', 'second'), connect('second', 'Failed', 'limitedOut')]);
+    ], [connect('first', 'Done', 'second'), connect('second', 'Done', 'limitedOut')]);
     const limitRun = limitFlow.id ? await execute(limitFlow.id) : {};
     const limitNodes = limitRun.instanceId ? await ranNodes(limitRun.instanceId) : new Set();
-    results.push({ name: 'rate-limit-fails-the-second-call-without-sending-it', pass: limitNodes.has('limitedOut') && hitsFor('/limited').length === 1, message: `nodes=${[...limitNodes].join(',')} hits=${hitsFor('/limited').length}` });
+    // The engine answers "retry after" (the window is longer than an inline wait): the second
+    // node waits on a timer instead of failing, and nothing is sent until the window refills.
+    results.push({ name: 'rate-limit-holds-the-second-call-without-sending-it', pass: !limitNodes.has('limitedOut') && limitNodes.has('first') && hitsFor('/limited').length === 1, message: `nodes=${[...limitNodes].join(',')} hits=${hitsFor('/limited').length}` });
 
     const oauth = await connection({ key: 'oauth', baseUrl: external, authKind: 'oauth2-client-credentials', settings: { tokenUrl: `${external}/token`, clientId: 'grove', scope: 'invoices' }, secret: 'client-secret' });
     const oauthFlow = await publish('oauth', [
@@ -299,23 +335,23 @@ module.exports = async function run(page, ctx) {
     // 4b. OAuth2 authorization code, end to end against the local provider.
     const codeConnection = await connection({ key: 'oauthcode', baseUrl: external, authKind: 'oauth2-authorization-code', settings: { authorizeUrl: `${external}/authorize`, tokenUrl: `${external}/token`, clientId: 'grove-code', scope: 'ledger' }, secret: 'code-client-secret' });
     const codeKey = codeConnection.json?.key;
-    // The browser's own request context (same cookies) with redirects off: the 302 to the provider is the assertion.
-    const authorize = await page.context().request.get(`${connectionsApi}/${encodeURIComponent(codeKey)}/oauth/authorize`, { maxRedirects: 0 });
-    const location = authorize.headers()['location'] || '';
+    // The tenant grant: the API answers the provider URL (the page then navigates to it).
+    const authorize = await call('GET', `${connectionsApi}/${encodeURIComponent(codeKey)}/oauth/authorize?scope=tenant`);
+    const location = authorize.json?.url || '';
     const params = new URLSearchParams(location.split('?')[1] || '');
     const state = params.get('state');
     results.push({
-      name: 'oauth-authorize-redirects-to-the-provider-with-a-sealed-state',
-      pass: authorize.status() === 302 && location.startsWith(`${external}/authorize`) && Boolean(state) && params.get('client_id') === 'grove-code' && params.get('response_type') === 'code' && params.get('scope') === 'ledger' && /oauth\/callback/.test(params.get('redirect_uri') || ''),
-      message: `HTTP ${authorize.status()} location=${location.slice(0, 120)}`,
+      name: 'oauth-authorize-answers-the-provider-url-with-a-sealed-state',
+      pass: authorize.ok && location.startsWith(`${external}/authorize`) && Boolean(state) && params.get('client_id') === 'grove-code' && params.get('response_type') === 'code' && params.get('scope') === 'ledger' && params.get('code_challenge_method') === 'S256' && /oauth\/callback/.test(params.get('redirect_uri') || ''),
+      message: `HTTP ${authorize.status} location=${location.slice(0, 120)}`,
     });
     const callback = state ? await call('GET', `${connectionsApi}/oauth/callback?code=abc-${stamp}&state=${encodeURIComponent(state)}`) : { status: 0, text: 'no state' };
     const codeExchange = hitsFor('/token').find(h => /grant_type=authorization_code/.test(h.body));
     const authorizedModel = codeKey ? (await call('GET', `${connectionsApi}/${encodeURIComponent(codeKey)}`)).json : null;
     results.push({
       name: 'oauth-callback-exchanges-the-code-and-seals-the-tokens',
-      pass: callback.ok && Boolean(codeExchange) && new RegExp(`code=abc-${stamp}`).test(codeExchange?.body || '') && /client_secret=code-client-secret/.test(codeExchange?.body || '') && authorizedModel?.authorized === true && !JSON.stringify(authorizedModel).includes(`code-tok-${stamp}`),
-      message: `callback=${callback.status} exchange=${codeExchange ? 'yes' : 'no'} authorized=${authorizedModel?.authorized} ${callback.text.slice(0, 120)}`,
+      pass: callback.ok && Boolean(codeExchange) && new RegExp(`code=abc-${stamp}`).test(codeExchange?.body || '') && /client_secret=code-client-secret/.test(codeExchange?.body || '') && Boolean(authorizedModel?.connection?.tenantCredential?.expiresUtc) && !JSON.stringify(authorizedModel).includes(`code-tok-${stamp}`),
+      message: `callback=${callback.status} exchange=${codeExchange ? 'yes' : 'no'} expires=${authorizedModel?.connection?.tenantCredential?.expiresUtc} ${callback.text.slice(0, 120)}`,
     });
     const codeFlow = await publish('oauth code call', [
       { type: 'Grove.Workflows.CallConnector', id: 'call', version: 1, connection: literal(codeKey), method: literal('GET'), path: literal('ledger/1') },
@@ -332,15 +368,19 @@ module.exports = async function run(page, ctx) {
       security: [{ key: [] }],
       paths: { '/invoices': { post: { operationId: 'createInvoice', summary: 'Create an invoice' }, get: { operationId: 'listInvoices' } }, '/invoices/{id}': { get: { operationId: 'getInvoice' } } },
     };
-    const imported = await call('POST', `${connectionsApi}/import-openapi`, { key: `pw-imported-${stamp}`, document: JSON.stringify(openApi), secret: 'imported-key' });
-    if (imported.json?.connection?.key) created.connections.push(imported.json.connection.key);
-    const importedModel = imported.json?.connection;
+    const imported = await call('POST', `${connectionsApi}/import`, { key: `pw-imported-${stamp}`, format: 'openapi', document: JSON.stringify(openApi) });
+    if (imported.ok) {
+      created.connections.push(`pw-imported-${stamp}`);
+      await call('PUT', `${connectionsApi}/pw-imported-${stamp}/credential`, { values: { apiKey: 'imported-key' } });
+    }
+    const importedModel = imported.json?.connection?.connection;
+    const importedOperations = imported.json?.connection?.operations || [];
     const importedRegistry = await call('GET', `${ctx.baseUrl}/api/grove/workflows/registry`);
     const createOp = (importedRegistry.json?.activities || []).find(a => a.key === `connector.pw-imported-${stamp}.createInvoice`);
     results.push({
       name: 'an-openapi-document-imports-as-a-connection-with-operations',
-      pass: imported.ok && importedModel?.authKind === 'api-key' && importedModel?.settings?.headerName === 'X-Imported-Key' && importedModel?.baseUrl === `${external}/v1` && importedModel?.operations?.length === 3 && createOp?.activityType === 'Grove.Workflows.CallConnector' && createOp?.inputs?.method === 'POST' && createOp?.inputs?.path === 'invoices',
-      message: `HTTP ${imported.status} auth=${importedModel?.authKind} ops=${importedModel?.operations?.length} palette=${JSON.stringify(createOp?.inputs || null)} ${imported.text.slice(0, 120)}`,
+      pass: imported.ok && importedModel?.auth?.scheme === 'api-key' && importedModel?.auth?.keyName === 'X-Imported-Key' && importedModel?.baseUrl === `${external}/v1` && importedOperations.length === 3 && createOp?.activityType === 'Grove.Workflows.CallConnector' && createOp?.inputs?.operation === 'createInvoice',
+      message: `HTTP ${imported.status} auth=${importedModel?.auth?.scheme} ops=${importedOperations.length} palette=${JSON.stringify(createOp?.inputs || null)} ${imported.text.slice(0, 120)}`,
     });
 
     // 5. Poll connector: Changed, Unchanged, Changed.

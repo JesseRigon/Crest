@@ -1,0 +1,25 @@
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* A channel's providers: name, connection, and which one is the default. *@
+<GroveText TextStyle="TextStyle.Subtitle2" class="rz-m-0">@Title</GroveText>
+<table class="rz-grid-table">
+    <thead><tr><th>@T["Provider"]</th><th>@T["Connection"]</th><th></th></tr></thead>
+    <tbody>
+        @foreach (var provider in Providers)
+        {
+            <tr>
+                <td>@provider.DisplayName</td>
+                <td>@(provider.Connection ?? T["none needed"])</td>
+                <td>@(provider.Name == Default ? T["default"] : "")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+
+    [Parameter] public EmailChannelCard.EmailProvider[] Providers { get; set; } = [];
+
+    [Parameter] public string? Default { get; set; }
+}

@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <!-- NuGet properties-->
-    <Title>Grove Microsoft Authentication</Title>
+    <Title>Grove Microsoft</Title>
     <Description>$(OCCMSDescription)
 
-    Provide features to Authenticates users using Microsoft Account, Microsoft Entra ID (Azure Active Directory) Account.</Description>
+    Microsoft: sign-in with a Microsoft Account or Microsoft Entra ID, and Azure Communication Services e-mail and SMS providers over their connections.</Description>
     <PackageTags>$(PackageTags) PlatformCMS</PackageTags>
   </PropertyGroup>
 
@@ -17,6 +17,8 @@
     <ProjectReference Include="..\Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Contents.Management.Abstractions\Grove.Contents.Management.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Data.Abstractions\Grove.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Communications.Abstractions\Grove.Communications.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Deployment.Abstractions\Grove.Deployment.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Display.Management\Grove.Display.Management.csproj" />
     <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
@@ -24,11 +26,16 @@
     <ProjectReference Include="..\Grove.Display.Resources.Management\Grove.Display.Resources.Management.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Settings.Abstractions\Grove.Infrastructure.Settings.Abstractions.csproj" />
     <ProjectReference Include="..\Grove.Infrastructure.Recipes.Abstractions\Grove.Infrastructure.Recipes.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Communications.Email.Abstractions\Grove.Communications.Email.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Communications.Sms.Abstractions\Grove.Communications.Sms.Abstractions.csproj" />
   </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" />
       <PackageReference Include="Microsoft.Identity.Web" />
+      <PackageReference Include="Azure.Communication.Email" />
+      <PackageReference Include="Azure.Communication.Sms" />
+      <PackageReference Include="MimeKit" />
     </ItemGroup>
 
   </Project>

@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using Microsoft.Extensions.Localization;
 using Grove.Entities;
 using Grove.Integrations.Google.Authentication.Settings;
 using Grove.Infrastructure.Settings;
@@ -9,14 +7,10 @@ namespace Grove.Integrations.Google.Authentication.Services;
 public class GoogleAuthenticationService : IGoogleAuthenticationService
 {
     private readonly ISiteService _siteService;
-    protected readonly IStringLocalizer S;
 
-    public GoogleAuthenticationService(
-        ISiteService siteService,
-        IStringLocalizer<GoogleAuthenticationService> stringLocalizer)
+    public GoogleAuthenticationService(ISiteService siteService)
     {
         _siteService = siteService;
-        S = stringLocalizer;
     }
 
     public async Task<GoogleAuthenticationSettings> GetSettingsAsync()
@@ -38,36 +32,10 @@ public class GoogleAuthenticationService : IGoogleAuthenticationService
         var container = await _siteService.LoadSiteSettingsAsync();
         container.Alter<GoogleAuthenticationSettings>(aspect =>
         {
-            aspect.ClientID = settings.ClientID;
-            aspect.ClientSecret = settings.ClientSecret;
             aspect.CallbackPath = settings.CallbackPath;
+            aspect.SaveTokens = settings.SaveTokens;
         });
 
         await _siteService.UpdateSiteSettingsAsync(container);
-    }
-
-    public IEnumerable<ValidationResult> ValidateSettings(GoogleAuthenticationSettings settings)
-    {
-        ArgumentNullException.ThrowIfNull(settings);
-
-        var results = new List<ValidationResult>();
-
-        if (string.IsNullOrEmpty(settings.ClientID))
-        {
-            results.Add(new ValidationResult(S["The Client ID is required."], new[]
-            {
-                nameof(settings.ClientID),
-            }));
-        }
-
-        if (string.IsNullOrEmpty(settings.ClientSecret))
-        {
-            results.Add(new ValidationResult(S["The Client Secret is required."], new[]
-            {
-                nameof(settings.ClientSecret),
-            }));
-        }
-
-        return results;
     }
 }

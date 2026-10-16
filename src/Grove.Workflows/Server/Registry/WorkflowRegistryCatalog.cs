@@ -8,7 +8,6 @@ public sealed class WorkflowRegistryCatalog(
     IEnumerable<IWorkflowTriggerProvider> triggerProviders,
     IEnumerable<IWorkflowFlowProvider> flowProviders,
     IEnumerable<IWorkflowActivityProvider> activityProviders,
-    IEnumerable<IWorkflowConnectorProvider> connectorProviders,
     IEnumerable<IWorkflowHookSlotProvider> hookSlotProviders,
     IEnumerable<IWorkflowHookAttachmentProvider> hookAttachmentProviders)
 {
@@ -19,15 +18,12 @@ public sealed class WorkflowRegistryCatalog(
     private IReadOnlyList<WorkflowTriggerDescriptor>? _triggers;
     private IReadOnlyList<WorkflowFlowDescriptor>? _flows;
     private IReadOnlyList<WorkflowActivityDescriptor>? _activities;
-    private IReadOnlyList<WorkflowConnectorDescriptor>? _connectors;
     private IReadOnlyList<WorkflowHookSlotDescriptor>? _hookSlots;
     private IReadOnlyList<WorkflowHookAttachmentDescriptor>? _hookAttachments;
 
     public IReadOnlyList<WorkflowTriggerDescriptor> Triggers => _triggers ??= Merge(triggerProviders.SelectMany(p => p.Triggers), t => t.Key, t => t.Position);
     public IReadOnlyList<WorkflowFlowDescriptor> Flows => _flows ??= Merge(flowProviders.SelectMany(p => p.Flows), f => f.Key, f => f.Position);
     public IReadOnlyList<WorkflowActivityDescriptor> Activities => _activities ??= Merge(activityProviders.SelectMany(p => p.Activities), a => a.Key, a => a.Position);
-
-    public IReadOnlyList<WorkflowConnectorDescriptor> Connectors => _connectors ??= Merge(connectorProviders.SelectMany(p => p.Connectors), c => c.Key, c => c.Position);
 
     public IReadOnlyList<WorkflowHookSlotDescriptor> HookSlots => _hookSlots ??= Merge(hookSlotProviders.SelectMany(p => p.HookSlots), s => s.Key, s => s.Position);
 
@@ -36,7 +32,6 @@ public sealed class WorkflowRegistryCatalog(
 
     public WorkflowHookSlotDescriptor? FindHookSlot(string key) => HookSlots.FirstOrDefault(s => string.Equals(s.Key, key, StringComparison.OrdinalIgnoreCase));
 
-    public WorkflowConnectorDescriptor? FindConnector(string key) => Connectors.FirstOrDefault(c => string.Equals(c.Key, key, StringComparison.OrdinalIgnoreCase));
     public WorkflowTriggerDescriptor? FindTrigger(string key) => Triggers.FirstOrDefault(t => string.Equals(t.Key, key, StringComparison.OrdinalIgnoreCase));
     public WorkflowFlowDescriptor? FindFlow(string key) => Flows.FirstOrDefault(f => string.Equals(f.Key, key, StringComparison.OrdinalIgnoreCase));
 

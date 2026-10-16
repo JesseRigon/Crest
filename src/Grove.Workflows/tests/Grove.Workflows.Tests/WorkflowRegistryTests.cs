@@ -29,7 +29,7 @@ public class WorkflowRegistryTests
         var a = new Provider([new("order.placed", "Posted", "order", null, 10), new("party.role-created", "Role", "party", null, 5)], [new("orders.flow", "Flow A", "order", "{}", 2)]);
         var b = new Provider([new("order.placed", "Duplicate", "order", null, 1)], [new("crm.flow", "Flow B", "party", "{}", 1)]);
 
-        var catalog = new WorkflowRegistryCatalog([a, b], [a, b], [], [], [], []);
+        var catalog = new WorkflowRegistryCatalog([a, b], [a, b], [], [], []);
 
         Assert.Equal(["party.role-created", "order.placed"], catalog.Triggers.Select(t => t.Key));
         Assert.Equal("Posted", catalog.FindTrigger("ORDER.PLACED")!.DisplayName);
@@ -40,7 +40,7 @@ public class WorkflowRegistryTests
     public async Task Publisher_refuses_an_unregistered_trigger()
     {
         var sender = Substitute.For<IStimulusSender>();
-        var publisher = new WorkflowTriggerPublisher(new WorkflowRegistryCatalog([], [], [], [], [], []), Queue(sender), Substitute.For<IWorkflowUserContextAccessor>(), AccessGateTests.Seal, NullLogger<WorkflowTriggerPublisher>.Instance);
+        var publisher = new WorkflowTriggerPublisher(new WorkflowRegistryCatalog([], [], [], [], []), Queue(sender), Substitute.For<IWorkflowUserContextAccessor>(), AccessGateTests.Seal, NullLogger<WorkflowTriggerPublisher>.Instance);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => publisher.PublishAsync("order.placed", "doc-1", null, TestContext.Current.CancellationToken));
         await sender.DidNotReceiveWithAnyArgs().SendAsync(default!, default(object)!, default, TestContext.Current.CancellationToken);
@@ -56,7 +56,7 @@ public class WorkflowRegistryTests
         var user = Substitute.For<IWorkflowUserContextAccessor>();
         user.Capture().Returns(new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme" });
         user.CaptureSealed().Returns(AccessGateTests.Seal.Seal(new WorkflowUserContext { UserId = "u-1", UserName = "alice", Tenant = "acme" }));
-        var publisher = new WorkflowTriggerPublisher(new WorkflowRegistryCatalog([provider], [], [], [], [], []), Queue(sender), user, AccessGateTests.Seal, NullLogger<WorkflowTriggerPublisher>.Instance);
+        var publisher = new WorkflowTriggerPublisher(new WorkflowRegistryCatalog([provider], [], [], [], []), Queue(sender), user, AccessGateTests.Seal, NullLogger<WorkflowTriggerPublisher>.Instance);
 
         await publisher.PublishAsync("order.placed", "doc-1", new Dictionary<string, object> { ["Number"] = "Q-00001" }, TestContext.Current.CancellationToken);
 
@@ -79,7 +79,7 @@ public class WorkflowRegistryTests
             .Returns(new SendStimulusResult([]));
         var user = Substitute.For<IWorkflowUserContextAccessor>();
         user.Capture().Returns(WorkflowUserContext.Anonymous("acme"));
-        var publisher = new WorkflowTriggerPublisher(new WorkflowRegistryCatalog([provider], [], [], [], [], []), Queue(sender), user, AccessGateTests.Seal, NullLogger<WorkflowTriggerPublisher>.Instance);
+        var publisher = new WorkflowTriggerPublisher(new WorkflowRegistryCatalog([provider], [], [], [], []), Queue(sender), user, AccessGateTests.Seal, NullLogger<WorkflowTriggerPublisher>.Instance);
 
         await publisher.PublishForUserAsync("user.logged-in", "u-5", "u-5", "bob", null, TestContext.Current.CancellationToken);
 
@@ -102,7 +102,7 @@ public class WorkflowRegistryTests
         var user = Substitute.For<IWorkflowUserContextAccessor>();
         user.Capture().Returns(admin);
         user.CaptureSealed().Returns(AccessGateTests.Seal.Seal(admin));
-        var publisher = new WorkflowTriggerPublisher(new WorkflowRegistryCatalog([provider], [], [], [], [], []), Queue(sender), user, AccessGateTests.Seal, NullLogger<WorkflowTriggerPublisher>.Instance);
+        var publisher = new WorkflowTriggerPublisher(new WorkflowRegistryCatalog([provider], [], [], [], []), Queue(sender), user, AccessGateTests.Seal, NullLogger<WorkflowTriggerPublisher>.Instance);
 
         await publisher.PublishForUserAsync("user.created", "u-5", "u-5", "bob", null, TestContext.Current.CancellationToken);
 

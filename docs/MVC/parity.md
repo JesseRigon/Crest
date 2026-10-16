@@ -286,7 +286,7 @@ Fates: **existing** (the component or page named covers it now), **existing+** (
 | ☑ | Grove.Access.OpenId | `OpenIdClientSettings.Edit` | 1 | new | `SettingsForm`, group `Grove.Access.OpenId.Client` (the client service checks the settings on save) |
 | ☑ | Grove.Integrations.Facebook | `FacebookSettings.Edit`, `FacebookLoginSettings.Edit`, `FacebookPixelSettings.Edit` | 3 | new | `SettingsForm`, one group per settings type |
 | ☑ | Grove.Integrations.Google | `GoogleAnalyticsSettings.Edit`, `GoogleAuthenticationSettings.Edit`, `GoogleTagManagerSettings.Edit` | 3 | new | `SettingsForm`, one group per settings type |
-| ☑ | Grove.Integrations.Twitter | `TwitterSettings.Edit`, `TwitterSigninSettings.Edit` | 2 | new | `SettingsForm`, one group per settings type |
+| ☑ | Grove.Integrations.Twitter | `TwitterSettings.Edit`, `TwitterSigninSettings.Edit` | 2 | new | the `x` connection on the Connections screen (app credentials and the posting grant); `SettingsForm` for the sign-in options |
 | ☑ | Grove.Integrations.GitHub | `GithubAuthenticationSettings.Edit` | 1 | new | `SettingsForm` |
 | ☑ | Grove.Integrations.Microsoft | `MicrosoftAccountSettings.Edit`, `MicrosoftEntraIDSettings.Edit` | 2 | new | `SettingsForm`, one group per settings type |
 | ☑ | Grove.Security.ReCaptcha | `ReCaptchaSettings.Edit` | 1 | new | `SettingsForm`, group `recaptcha` |
@@ -302,10 +302,10 @@ Fates: **existing** (the component or page named covers it now), **existing+** (
 | ☑ | Grove.Security | `{ContentSecurityPolicy,PermissionsPolicy,ReferrerPolicy}Settings.Edit` | 3 | not needed | native `Pages/SecurityHeaders.razor` |
 | ☑ | Grove.Data.Localization | `AdminCulturePicker`, `LocalizationSettings.Edit` | 2 | not needed | native `AdminTitleBar.razor` (culture selector), `Pages/Localization.razor` |
 | ☑ | Grove.Data.Localization.Translations | `Admin/{Index,Statistics}` | 2 | not needed | native `Pages/Translations.razor` |
-| ☑ | Grove.Integrations.Email.Azure | `AzureEmailSettings.Edit` | 1 | existing+ | `Pages/EmailSettings.razor`: the Azure provider section (backlog: left) |
-| ☑ | Grove.Communications.Sms | `Admin/Test` | 1 | new | `SmsTest.razor` (`/Sms/Test`, Grove.Communications.Sms.BlazorWasm) on the `Pages/EmailSettings.razor` pattern |
+| ☑ | Grove.Integrations.Microsoft (Azure e-mail) | `AzureEmailSettings.Edit` | 1 | existing+ | `SettingsForm` group `email`: the Azure section; the connection string on the Connections screen |
+| ☑ | Grove.Communications.Sms | `Admin/Test` | 1 | new | `SmsTest.razor` (`/Sms/Test`, Grove.Communications.Sms.BlazorWasm) on the `EmailTest.razor` pattern (Communications section) |
 | ☑ | Grove.Communications.Sms | `SmsSettings.Edit`, `TwilioSettings.Edit` | 2 | new | `SettingsForm`, group `sms`: the default provider, a section per provider (`AddSettingsModel`) |
-| ☑ | Grove.Data.Protocols.Sms.Azure | `AzureSmsSettings.Edit` | 1 | new | `SettingsForm`, group `sms`: the default provider, a section per provider (`AddSettingsModel`) |
+| ☑ | Grove.Integrations.Microsoft (Azure SMS) | `AzureSmsSettings.Edit` | 1 | new | `SettingsForm`, group `sms`: the default provider, a section per provider (`AddSettingsModel`) |
 | ☑ | Grove.Communications | `UserNotificationNavbar` | 1 | existing | `GrovePortalNotifications` (`Grove.Display.Components/Components/Files/GrovePortalNotifications.razor`), `Pages/Notifications.razor`; the navbar driver and the module's MVC scripts are deleted |
 | ☑ | Grove.Communications | `UserNotificationPreferencesPart.Edit` | 1 | existing+ | `Pages/ProfileSettings.razor` and `Pages/UserEditor.razor`: a notification methods section (`NotificationPreferences`, Grove.Communications' `api/grove/notifications/preferences`) |
 | ☑ | Grove.Infrastructure.Features | `Admin/Features` | 1 | not needed | native `Pages/Features.razor` |

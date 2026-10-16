@@ -6,36 +6,33 @@ using Grove.Infrastructure.Recipes.Services;
 namespace Grove.Integrations.Facebook.Recipes;
 
 /// <summary>
-/// This recipe step sets general Facebook Login settings.
+/// Sets the Meta app: the app id and secret go to the Meta app credentials (sealed by the
+/// connector engine), the SDK options to the Meta settings.
 /// </summary>
 public sealed class FacebookSettingsStep : NamedRecipeStepHandler
 {
     private readonly IFacebookService _facebookService;
+    private readonly IServiceProvider _services;
 
-    public FacebookSettingsStep(IFacebookService facebookService)
+    public FacebookSettingsStep(IFacebookService facebookService, IServiceProvider services)
         : base("FacebookCoreSettings")
     {
         _facebookService = facebookService;
+        _services = services;
     }
 
     protected override async Task HandleAsync(RecipeExecutionContext context)
     {
-        if (!string.Equals(context.Name, "FacebookCoreSettings", StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
-
         var model = context.Step.ToObject<FacebookCoreSettingsStepModel>();
         var settings = await _facebookService.GetSettingsAsync();
 
-        settings.AppId = model.AppId;
-        settings.AppSecret = model.AppSecret;
         settings.SdkJs = model.SdkJs ?? "sdk.js";
         settings.FBInit = model.FBInit;
         settings.FBInitParams = model.FBInitParams;
-        settings.Version = model.Version ?? "3.2";
+        settings.Version = model.Version ?? "v3.2";
 
         await _facebookService.UpdateSettingsAsync(settings);
+        await AppCredentialsAccess.SaveAsync(_services, FacebookConstants.AppCredentialsKey, model.AppId, model.AppSecret);
     }
 }
 

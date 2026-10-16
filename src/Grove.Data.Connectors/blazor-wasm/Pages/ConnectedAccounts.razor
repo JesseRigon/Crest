@@ -1,0 +1,218 @@
+@page "/connected-accounts"
+@attribute [PageEntry("ConnectOwnAccounts", Id = "connected-accounts", Parent = "settings", Caption = "Connected accounts", Icon = "@iconify:mdi:account-key-outline")]
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject Grove.Display.Components.Theme.GroveApiLocalizer T
+
+@* The caller's own credentials (docs/connectors.md › Credentials, the user scope): for every
+   connection that takes a personal credential, connect an account (OAuth authorize or device
+   code), enter a personal token, or revoke it. Staff only; an admin can revoke these but never
+   read them. *@
+
+<PageTitle>@T["Connected accounts"]</PageTitle>
+
+<GroveStack Gap="1rem" data-testid="connected-accounts-page">
+    <div>
+        <GroveText TextStyle="TextStyle.H4" class="rz-m-0">@T["Connected accounts"]</GroveText>
+        <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary">@T["Services that act as you. What you enter is sealed for this tenant and never shown again."]</GroveText>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <GroveAlert AlertStyle="AlertStyle.Danger" Summary="@T["Action failed"]" Detail="@Error" AllowClose="true" />
+    }
+
+    @if (Accounts is null)
+    {
+        <GroveProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    else if (Accounts.Length == 0)
+    {
+        <GroveText TextStyle="TextStyle.Body1">@T["No connection takes a personal account."]</GroveText>
+    }
+    else
+    {
+        @foreach (var account in Accounts)
+        {
+            <GroveCard data-testid="@($"account-{account.ConnectionKey}")">
+                <GroveStack Gap="0.5rem">
+                    <GroveStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                        <div>
+                            <GroveText TextStyle="TextStyle.H6" class="rz-m-0">@account.DisplayName</GroveText>
+                            <GroveText TextStyle="TextStyle.Body2" class="rz-color-secondary">
+                                @(account.Credential is { } credential
+                                    ? $"{T["Connected"]}{(credential.AccountName is null ? string.Empty : " as " + credential.AccountName)} · {T["updated"]} {credential.UpdatedUtc:g} · {credential.Status}"
+                                    : account.TenantFallback ? T["Not connected: calls use the tenant's account."] : T["Not connected."])
+                            </GroveText>
+                        </div>
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            @if (account.AuthScheme == "oauth2-authorization-code")
+                            {
+                                <GroveButton Text="@(account.Credential is null ? T["Connect"] : T["Reconnect"])" Click="@(() => AuthorizeAsync(account))" Disabled="IsBusy" />
+                            }
+                            else if (account.AuthScheme == "oauth2-device-code")
+                            {
+                                <GroveButton Text="@(account.Credential is null ? T["Connect"] : T["Reconnect"])" Click="@(() => StartDeviceAsync(account))" Disabled="IsBusy" />
+                            }
+                            @if (account.Credential is not null)
+                            {
+                                <GroveButton Text="@T["Revoke"]" ButtonStyle="ButtonStyle.Danger" Click="@(() => RevokeAsync(account))" Disabled="IsBusy" />
+                            }
+                        </GroveStack>
+                    </GroveStack>
+
+                    @if (account.Description is { Length: > 0 } description)
+                    {
+                        <GroveText TextStyle="TextStyle.Body2">@description</GroveText>
+                    }
+
+                    @if (Device is { } device && device.ConnectionKey == account.ConnectionKey)
+                    {
+                        <GroveAlert AlertStyle="AlertStyle.Info" Summary="@T["Enter this code"]"
+                                    Detail="@($"{device.Authorization.UserCode} at {device.Authorization.VerificationUri}")" />
+                        <GroveStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <GroveLink Path="@(device.Authorization.VerificationUriComplete ?? device.Authorization.VerificationUri)" Target="_blank" Text="@T["Open the sign-in page"]" />
+                            <GroveButton Text="@T["I have entered it"]" Click="@(() => PollDeviceAsync(account))" Disabled="IsBusy" />
+                        </GroveStack>
+                    }
+
+                    @if (!account.Interactive)
+                    {
+                        @foreach (var field in CredentialForm.Fields(account.AuthScheme, "user", true, null))
+                        {
+                            <GroveFormField Text="@T[field.Label]">
+                                @if (field.Type == "secret")
+                                {
+                                    <GrovePassword Value="@Value(account, field.Name)" ValueChanged="@((string value) => Set(account, field.Name, value))" Placeholder="@(Has(account, field.Name) ? T["Stored - type to replace"] : string.Empty)" Style="width: 100%;" />
+                                }
+                                else
+                                {
+                                    <GroveTextBox Value="@Value(account, field.Name)" ValueChanged="@((string value) => Set(account, field.Name, value))" Style="width: 100%;" />
+                                }
+                            </GroveFormField>
+                        }
+                        <GroveButton Text="@T["Save"]" Click="@(() => SaveAsync(account))" Disabled="IsBusy" Style="align-self: flex-start;" />
+                    }
+                </GroveStack>
+            </GroveCard>
+        }
+    }
+</GroveStack>
+
+@code {
+    private const string Api = CredentialForm.ApiRoot;
+
+    private ConnectedAccountModel[]? Accounts { get; set; }
+    private readonly Dictionary<string, Dictionary<string, string>> _values = new(StringComparer.OrdinalIgnoreCase);
+    private (string ConnectionKey, DeviceAuthorizationModel Authorization)? Device { get; set; }
+    private bool IsBusy { get; set; }
+    private string? Error { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (CredentialForm.QueryValue(Navigation.Uri, "connectError") is { } connectError)
+        {
+            Error = connectError;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync() => await RunAsync(async () => Accounts = await Http.GetFromJsonAsync<ConnectedAccountModel[]>($"{Api}/me") ?? []);
+
+    private string Value(ConnectedAccountModel account, string name) =>
+        _values.TryGetValue(account.ConnectionKey, out var values) && values.TryGetValue(name, out var value) ? value : string.Empty;
+
+    private void Set(ConnectedAccountModel account, string name, string value)
+    {
+        if (!_values.TryGetValue(account.ConnectionKey, out var values))
+        {
+            _values[account.ConnectionKey] = values = new(StringComparer.OrdinalIgnoreCase);
+        }
+
+        values[name] = value;
+    }
+
+    private static bool Has(ConnectedAccountModel account, string name) => account.Credential?.ValueNames.Contains(name, StringComparer.OrdinalIgnoreCase) == true;
+
+    private async Task SaveAsync(ConnectedAccountModel account) => await RunAsync(async () =>
+    {
+        var values = _values.TryGetValue(account.ConnectionKey, out var entered) ? entered.Where(v => !string.IsNullOrEmpty(v.Value)).ToDictionary(v => v.Key, v => v.Value) : [];
+        var response = await Http.PutAsJsonAsync($"{Api}/me/{Uri.EscapeDataString(account.ConnectionKey)}", new CredentialSaveRequest { Values = values });
+        if (await FailedAsync(response)) return;
+        _values.Remove(account.ConnectionKey);
+        Accounts = await Http.GetFromJsonAsync<ConnectedAccountModel[]>($"{Api}/me") ?? [];
+    });
+
+    private async Task RevokeAsync(ConnectedAccountModel account) => await RunAsync(async () =>
+    {
+        var response = await Http.DeleteAsync($"{Api}/me/{Uri.EscapeDataString(account.ConnectionKey)}");
+        if (await FailedAsync(response)) return;
+        Accounts = await Http.GetFromJsonAsync<ConnectedAccountModel[]>($"{Api}/me") ?? [];
+    });
+
+    private async Task AuthorizeAsync(ConnectedAccountModel account) => await RunAsync(async () =>
+    {
+        var returnUrl = new Uri(Navigation.Uri).AbsolutePath;
+        var started = await Http.GetFromJsonAsync<AuthorizationStartModel>($"{Api}/{Uri.EscapeDataString(account.ConnectionKey)}/oauth/authorize?scope=user&returnUrl={Uri.EscapeDataString(returnUrl)}");
+        if (started is not null)
+        {
+            Navigation.NavigateTo(started.Url, forceLoad: true);
+        }
+    });
+
+    private async Task StartDeviceAsync(ConnectedAccountModel account) => await RunAsync(async () =>
+    {
+        var response = await Http.PostAsync($"{Api}/{Uri.EscapeDataString(account.ConnectionKey)}/oauth/device?scope=user", null);
+        if (await FailedAsync(response)) return;
+        var authorization = await response.Content.ReadFromJsonAsync<DeviceAuthorizationModel>();
+        Device = authorization is null ? null : (account.ConnectionKey, authorization);
+    });
+
+    private async Task PollDeviceAsync(ConnectedAccountModel account) => await RunAsync(async () =>
+    {
+        if (Device is not { } device) return;
+        var response = await Http.PostAsJsonAsync($"{Api}/{Uri.EscapeDataString(account.ConnectionKey)}/oauth/device/poll?scope=user", new DevicePollRequest { DeviceCode = device.Authorization.DeviceCode });
+        if (await FailedAsync(response)) return;
+        var result = await response.Content.ReadFromJsonAsync<DevicePollResult>();
+        if (result?.Connected == true)
+        {
+            Device = null;
+            Accounts = await Http.GetFromJsonAsync<ConnectedAccountModel[]>($"{Api}/me") ?? [];
+        }
+        else
+        {
+            Error = result?.Pending == true ? T["Not confirmed yet: finish signing in, then try again."] : result?.Error;
+        }
+    });
+
+    private async Task<bool> FailedAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return false;
+        }
+
+        Error = await response.Content.ReadAsStringAsync();
+        if (string.IsNullOrWhiteSpace(Error)) Error = $"HTTP {(int)response.StatusCode}";
+        return true;
+    }
+
+    private async Task RunAsync(Func<Task> action)
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

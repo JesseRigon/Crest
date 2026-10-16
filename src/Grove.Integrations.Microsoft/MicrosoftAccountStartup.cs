@@ -28,7 +28,10 @@ public sealed class MicrosoftAccountStartup : StartupBase
             MicrosoftAuthenticationConstants.Features.MicrosoftAccount,
             "Microsoft",
             Permissions.ManageMicrosoftAuthentication,
-            group => group.InMenu("settings-authentication", entryId: "microsoft").ReloadsTenant());
+            group => group
+                .InMenu("settings-authentication", entryId: "microsoft")
+                .Describe("The app registration's client id and secret are the Microsoft app credentials on the Connections screen.")
+                .ReloadsTenant());
 
         services.AddRecipeExecutionStep<MicrosoftAccountSettingsStep>();
 

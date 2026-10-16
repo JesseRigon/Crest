@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <!-- NuGet properties-->
+    <Title>Grove Connectors</Title>
+    <Description>$(OCCMSDescription)
+
+      The connector engine: every call Grove makes to an external service. Connections declared
+      by modules and defined by tenants, sealed credentials in tenant and user scopes, the OAuth
+      lifecycle, and the execution pipeline (address guard, retries honouring Retry-After, rate
+      limits, quotas, caching per credential, size caps).
+    </Description>
+    <PackageTags>$(PackageTags) PlatformCMS Connectors</PackageTags>
+  </PropertyGroup>
+
+  <!-- The Connections and Connected accounts pages are their own WASM library (blazor-wasm/, Grove.Data.Connectors.BlazorWasm). -->
+  <ItemGroup>
+    <Compile Remove="blazor-wasm/**/*.cs" />
+    <Content Remove="blazor-wasm/**" />
+    <None Remove="blazor-wasm/**" />
+    <Compile Remove="tests/**" />
+    <Content Remove="tests/**" />
+    <None Remove="tests/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Module.Targets\Grove.Module.Targets.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Server.Abstractions\Grove.Infrastructure.Server.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Abstractions\Grove.Data.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.Roles.Abstractions\Grove.Access.Roles.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Infrastructure.Shells.Admin.Abstractions\Grove.Infrastructure.Shells.Admin.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.Http\Grove.Data.Protocols.Http.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.Rest\Grove.Data.Protocols.Rest.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.Soap\Grove.Data.Protocols.Soap.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.OAuth\Grove.Data.Protocols.OAuth.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.Webhooks\Grove.Data.Protocols.Webhooks.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.Sql\Grove.Data.Protocols.Sql.csproj" />
+    <ProjectReference Include="..\Grove.Data.Protocols.GraphQL.Client\Grove.Data.Protocols.GraphQL.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Grove.Data.Connectors.Tests" />
+  </ItemGroup>
+
+</Project>

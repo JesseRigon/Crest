@@ -2,70 +2,54 @@ using System.Diagnostics;
 using System.Security.Claims;
 using AspNet.Security.OAuth.GitHub;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Grove.Integrations.GitHub.Services;
 using Grove.Integrations.GitHub.Settings;
 using Grove.Infrastructure.Settings;
 
 namespace Grove.Integrations.GitHub.Configuration;
 
+/// <summary>Configures the GitHub handler: client id and secret from the GitHub app credentials, the rest from the sign-in settings.</summary>
 internal sealed class GitHubAuthenticationOptionsConfiguration : IConfigureNamedOptions<GitHubAuthenticationOptions>
 {
     private readonly ISiteService _siteService;
-    private readonly IDataProtectionProvider _dataProtectionProvider;
+    private readonly IServiceProvider _services;
     private readonly ILogger _logger;
 
     public GitHubAuthenticationOptionsConfiguration(
         ISiteService siteService,
-        IDataProtectionProvider dataProtectionProvider,
+        IServiceProvider services,
         ILogger<GitHubAuthenticationOptionsConfiguration> logger)
     {
         _siteService = siteService;
-        _dataProtectionProvider = dataProtectionProvider;
+        _services = services;
         _logger = logger;
     }
 
     public void Configure(string name, GitHubAuthenticationOptions options)
     {
-        // Ignore OpenID Connect client handler instances that don't correspond to the instance managed by the OpenID module.
         if (!string.Equals(name, GitHubAuthenticationDefaults.AuthenticationScheme, StringComparison.Ordinal))
         {
             return;
         }
 
-        var settings = _siteService.GetSettings<GitHubAuthenticationSettings>();
-
-        if (settings == null)
+        var app = AppCredentialsAccess.Read(_services, GitHubConstants.AppCredentialsKey, _logger);
+        if (app is null)
         {
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(settings.ClientID) ||
-            string.IsNullOrWhiteSpace(settings.ClientSecret))
-        {
-            _logger.LogWarning("The GitHub login provider is enabled but not configured.");
-
-            return;
-        }
+        var settings = _siteService.GetSettings<GitHubAuthenticationSettings>() ?? new GitHubAuthenticationSettings();
 
         options.CallbackPath = new PathString("/signin-github");
         options.ClaimActions.MapJsonKey("name", "login");
         options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email", ClaimValueTypes.Email);
         options.ClaimActions.MapJsonKey("url", "url");
 
-        options.ClientId = settings.ClientID;
-
-        try
-        {
-            options.ClientSecret = _dataProtectionProvider.CreateProtector(GitHubConstants.Features.GitHubAuthentication)
-                .Unprotect(settings.ClientSecret);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "The GitHub Consumer Secret could not be decrypted. It may have been encrypted using a different key.");
-        }
+        options.ClientId = app.ClientId;
+        options.ClientSecret = app.ClientSecret;
 
         if (!string.IsNullOrEmpty(settings.CallbackPath))
         {

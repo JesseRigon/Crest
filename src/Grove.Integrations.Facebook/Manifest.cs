@@ -6,22 +6,26 @@ using Grove.Modules.Manifest;
     Author = ManifestConstants.PlatformTeam,
     Website = ManifestConstants.PlatformWebsite,
     Version = ManifestConstants.PlatformVersion,
-    Category = "Meta"
+    Category = "Connectors"
 )]
 
 [assembly: Feature(
     Id = FacebookConstants.Features.Core,
-    Name = "Meta Core Components",
-    Category = "Meta",
-    Description = "Registers the core components used by the Meta features.",
+    Name = "Meta",
+    Category = "Connectors",
+    Description = "Declares the Meta app credentials and the Graph API connection, and serves the Meta JavaScript SDK.",
+    Dependencies =
+    [
+        "Grove.Data.Connectors",
+    ],
     EnabledByDependencyOnly = true
 )]
 
 [assembly: Feature(
     Id = FacebookConstants.Features.Login,
     Name = "Meta Login",
-    Category = "Meta",
-    Description = "Authenticates users from Meta.",
+    Category = "Access",
+    Description = "Authenticates users from Meta, on the Meta app credentials.",
     Dependencies =
     [
         FacebookConstants.Features.Core,
@@ -33,5 +37,9 @@ using Grove.Modules.Manifest;
     Id = FacebookConstants.Features.Pixel,
     Name = "Meta Pixel",
     Category = "Meta",
-    Description = "Provides a way to enable Meta Pixel tracking for your site."
+    Description = "Meta Pixel tracking for your site, and server-side events through the Meta Conversions API connection.",
+    Dependencies =
+    [
+        "Grove.Data.Connectors",
+    ]
 )]

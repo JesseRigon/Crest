@@ -22,8 +22,6 @@ public sealed class MicrosoftAccountSettingsConfiguration : IConfigureOptions<Mi
 
         if (settings != null)
         {
-            options.AppId = settings.AppId;
-            options.AppSecret = settings.AppSecret;
             options.CallbackPath = settings.CallbackPath;
             options.SaveTokens = settings.SaveTokens;
         }

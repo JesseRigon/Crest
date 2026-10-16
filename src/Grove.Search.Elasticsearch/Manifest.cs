@@ -10,9 +10,10 @@ using Grove.Modules.Manifest;
 [assembly: Feature(
     Id = "Grove.Search.Elasticsearch",
     Name = "Elasticsearch",
-    Description = "Creates Elasticsearch indexes to support search scenarios, introduces a preconfigured container-enabled content type.",
+    Description = "Creates Elasticsearch indexes to support search scenarios, on a connection to the cluster (Connections).",
     Dependencies =
-    ["Grove.Access", 
+    ["Grove.Access",
+        "Grove.Data.Connectors",
         "Grove.Data.Queries.Core",
         "Grove.Data.Indexing",
         "Grove.Contents.Types",

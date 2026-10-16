@@ -1,19 +1,10 @@
 using System.ComponentModel.DataAnnotations;
-using Grove.Infrastructure.Settings;
 
 namespace Grove.Integrations.Microsoft.Settings;
 
+/// <summary>Microsoft account sign-in. The application (client) id and secret are the Microsoft app credentials on the Connections screen.</summary>
 public class MicrosoftAccountSettings
 {
-    [Display(Name = "AppId", Description = "The Application ID found on the Microsoft developer portal parameters.", Order = 0)]
-    [Required(AllowEmptyStrings = false, ErrorMessage = "Application Id is required")]
-    public string AppId { get; set; }
-
-    [Display(Name = "Secret Key", Description = "The Application secret key found on the Microsoft developer portal parameters.", Order = 1)]
-    [Required(AllowEmptyStrings = false, ErrorMessage = "Application Secret is required")]
-    [Setting(Secret = true, ProtectedBy = MicrosoftAuthenticationConstants.Features.MicrosoftAccount)]
-    public string AppSecret { get; set; }
-
     /// <summary>
     /// The callback path; the handler's default when empty.
     /// </summary>

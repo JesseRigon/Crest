@@ -1,63 +1,31 @@
-using System.Net.Http.Headers;
-using System.Text;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Options;
-using Grove.Communications.Sms.Models;
-using Grove.Communications.Sms.Services;
 
 namespace Grove.Communications.Sms.HealthChecks;
 
+/// <summary>
+/// The SMS channel is healthy when a default provider resolves. Whether a provider's service
+/// answers is its connection's concern (the Connections screen tests a connection).
+/// </summary>
 internal sealed class SmsHealthCheck : IHealthCheck
 {
-    private readonly ISmsService _smsService;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IOptionsMonitor<TwilioOptions> _twilioOptions;
+    private readonly ISmsProviderResolver _providerResolver;
 
-    public SmsHealthCheck(
-        ISmsService smsService,
-        IHttpClientFactory httpClientFactory,
-        IOptionsMonitor<TwilioOptions> twilioOptions)
+    public SmsHealthCheck(ISmsProviderResolver providerResolver)
     {
-        _smsService = smsService;
-        _httpClientFactory = httpClientFactory;
-        _twilioOptions = twilioOptions;
+        _providerResolver = providerResolver;
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try
         {
-            if (_smsService is null)
-            {
-                return HealthCheckResult.Unhealthy(description: $"The service '{nameof(ISmsService)}' isn't registered.");
-            }
-
-            var settings = _twilioOptions.CurrentValue;
-
-            if (await ValidateTwilioCredentialsAsync(settings.AccountSID, settings.AuthToken))
-            {
-                return HealthCheckResult.Healthy();
-            }
-            else
-            {
-                return HealthCheckResult.Unhealthy(description: "The client is not connected to the Twilio service.");
-            }
+            return await _providerResolver.GetAsync() is null
+                ? HealthCheckResult.Unhealthy(description: "No SMS provider is enabled.")
+                : HealthCheckResult.Healthy();
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            return HealthCheckResult.Unhealthy(description: "Retrieving the status of the Twilio service failed.", ex);
+            return HealthCheckResult.Unhealthy(description: "Resolving the SMS provider failed.", exception);
         }
-    }
-
-    private async Task<bool> ValidateTwilioCredentialsAsync(string accountSid, string authToken)
-    {
-        using var client = _httpClientFactory.CreateClient(TwilioSmsProvider.TechnicalName);
-
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
-            Convert.ToBase64String(Encoding.ASCII.GetBytes($"{accountSid}:{authToken}")));
-
-        var response = await client.GetAsync($"https://api.twilio.com/2010-04-01/Accounts/{accountSid}.json", CancellationToken.None);
-
-        return response.IsSuccessStatusCode;
     }
 }

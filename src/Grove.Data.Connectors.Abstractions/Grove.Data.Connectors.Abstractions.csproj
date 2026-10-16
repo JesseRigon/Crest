@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Data.Connectors</RootNamespace>
+    <Nullable>enable</Nullable>
+    <!-- NuGet properties-->
+    <Title>Grove Connectors Abstractions</Title>
+    <Description>$(OCCMSDescription)
+
+    The connector engine's contracts: connections, operations, credentials and scopes, the engine, the protocol, OAuth and webhook seams, and the registry.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Connectors Abstractions</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

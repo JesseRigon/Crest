@@ -1,19 +1,25 @@
-using Grove.Integrations.Twitter.Services;
+#nullable enable
+
+using System.Text.Json.Nodes;
+using Grove.Access;
+using Grove.Data.Connectors;
 using Grove.Workflows;
 using Grove.Workflows.Activities.Flowchart.Attributes;
 using Grove.Workflows.Attributes;
 using Grove.Workflows.Extensions;
 using Grove.Workflows.Models;
 using Grove.Workflows.UIHints;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Grove.Integrations.Twitter.Workflows;
 
 /// <summary>
-/// Posts a status through the tenant's X (Twitter) client. An external effect: runs after the
-/// unit that reached it commits.
+/// Posts on X through the X connection (<c>createPost</c>), as the account the tenant connected
+/// on the Connections screen. An external effect: runs after the unit that reached it commits.
+/// The engine makes no retry of its own: the post is not idempotent.
 /// </summary>
-[Activity("Grove.Integrations.Twitter", "Social", "Posts a status on X (Twitter) after this flow's transaction commits.", DisplayName = "Update X status", Kind = ActivityKind.Task, RunAsynchronously = true)]
+[Activity("Grove.Integrations.Twitter", "Social", "Posts on X (Twitter) through the X connection after this flow's transaction commits.", DisplayName = "Update X status", Kind = ActivityKind.Task, RunAsynchronously = true)]
 [FlowNode("Done", "Failed")]
 public class UpdateTwitterStatus : Activity, IUnitBoundary
 {
@@ -35,17 +41,49 @@ public class UpdateTwitterStatus : Activity, IUnitBoundary
             return;
         }
 
-        var response = await context.GetRequiredService<TwitterClient>().UpdateStatus(status);
-        var body = await response.Content.ReadAsStringAsync();
-        Response.Set(context, body);
-
-        if (!response.IsSuccessStatusCode)
+        var engine = context.GetService<IConnectorEngine>();
+        if (engine is null)
         {
-            await FailAsync(context, $"X answered {(int)response.StatusCode}.");
+            await FailAsync(context, "The connector engine is not enabled.");
+            return;
+        }
+
+        var result = await engine.ExecuteAsync(new ConnectorCall
+        {
+            ConnectionKey = TwitterConstants.ConnectionKey,
+            Caller = await ResolveCallerAsync(context),
+            OperationId = TwitterConstants.Operations.CreatePost,
+            Arguments = new JsonObject { ["text"] = status },
+            Scope = CredentialScope.Tenant,
+            MaxRetries = 0,
+        }, context.CancellationToken);
+
+        Response.Set(context, result.Body);
+
+        if (!result.Succeeded)
+        {
+            await FailAsync(context, result.Outcome switch
+            {
+                ConnectorOutcome.NotAuthorized => "The X connection has no account connected (Connections).",
+                ConnectorOutcome.RetryAfter => $"X asked to wait until {result.RetryAt:u}.",
+                _ => result.Error ?? $"X answered {result.StatusCode}.",
+            });
             return;
         }
 
         await context.CompleteActivityWithOutcomesAsync("Done");
+    }
+
+    /// <summary>The flow's caller when it may use connectors, else the tenant's system actor.</summary>
+    internal static async Task<CallerContext> ResolveCallerAsync(ActivityExecutionContext context)
+    {
+        var current = context.GetService<ICallerContextAccessor>()?.Current;
+        if (current is not null && ConnectorCallers.MayCall(current))
+        {
+            return current;
+        }
+
+        return await context.GetRequiredService<ICallerContextFactory>().CreateSystemAsync(cancellationToken: context.CancellationToken);
     }
 
     private async ValueTask FailAsync(ActivityExecutionContext context, string reason)
@@ -61,6 +99,6 @@ public sealed class TwitterWorkflowProvider : IWorkflowActivityProvider
 {
     public IEnumerable<WorkflowActivityDescriptor> Activities =>
     [
-        new("twitter.update-status", "Update X status", WorkflowsConstants.Objects.Platform, "Grove.Integrations.Twitter.UpdateTwitterStatus", "Posts a status on X (Twitter) after the unit commits.", 10, Category: "Social"),
+        new("twitter.update-status", "Update X status", WorkflowsConstants.Objects.Platform, "Grove.Integrations.Twitter.UpdateTwitterStatus", "Posts on X through the X connection after the unit commits.", 10, Category: "Social"),
     ];
 }

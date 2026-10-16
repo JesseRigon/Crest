@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Data.Protocols.Http</RootNamespace>
+    <Nullable>enable</Nullable>
+    <!-- NuGet properties-->
+    <Title>Grove HTTP Protocol</Title>
+    <Description>$(OCCMSDescription)
+
+    The HTTP protocol for the connector engine: the guarded client (public addresses only, no redirects), request composition, response reading and failure classification (429 and Retry-After).</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Connectors Http</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

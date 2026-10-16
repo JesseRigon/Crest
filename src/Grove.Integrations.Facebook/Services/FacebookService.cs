@@ -1,23 +1,20 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
-using Microsoft.Extensions.Localization;
+using Grove.Data.Connectors;
 using Grove.Integrations.Facebook.Settings;
 using Grove.Infrastructure.Settings;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Grove.Integrations.Facebook.Services;
 
 public class FacebookService : IFacebookService
 {
     private readonly ISiteService _siteService;
+    private readonly IServiceProvider _services;
 
-    protected readonly IStringLocalizer S;
-
-    public FacebookService(
-        ISiteService siteService,
-        IStringLocalizer<FacebookService> stringLocalizer)
+    public FacebookService(ISiteService siteService, IServiceProvider services)
     {
         _siteService = siteService;
-        S = stringLocalizer;
+        _services = services;
     }
 
     public Task<FacebookSettings> GetSettingsAsync()
@@ -32,28 +29,15 @@ public class FacebookService : IFacebookService
         await _siteService.UpdateSiteSettingsAsync(container);
     }
 
-    public IEnumerable<ValidationResult> ValidateSettings(FacebookSettings settings)
+    public async Task<string> GetAppIdAsync()
     {
-        ArgumentNullException.ThrowIfNull(settings);
-
-        var results = new List<ValidationResult>();
-
-        if (string.IsNullOrEmpty(settings.AppId))
+        using var scope = _services.CreateScope();
+        var provider = scope.ServiceProvider.GetService<IAppCredentialsProvider>();
+        if (provider is null)
         {
-            results.Add(new ValidationResult(S["The AppId is required."], new[]
-            {
-                nameof(settings.AppId),
-            }));
+            return null;
         }
 
-        if (string.IsNullOrEmpty(settings.AppSecret))
-        {
-            results.Add(new ValidationResult(S["The App Secret is required."], new[]
-            {
-                nameof(settings.AppSecret),
-            }));
-        }
-
-        return results;
+        return (await provider.GetAsync(FacebookConstants.AppCredentialsKey))?.ClientId;
     }
 }

@@ -7,6 +7,8 @@ using Grove.Access;
 using Grove.Contents.Management;
 using Grove.Contents.Management.Records;
 using Grove.Data;
+using Grove.Data.Connectors;
+using Grove.Data.Queries.Connections;
 using Grove.Entities;
 using Grove.Data.Queries.Sql.Models;
 using Grove.Data.Queries.Structured;
@@ -53,6 +55,12 @@ public sealed class SqlQuerySource : IQuerySource
         if (query.TryGet<SqlQueryMetadata>(out var metadata))
         {
             template = metadata.Template;
+
+            // An external database: the same source over a SQL connection of the engine.
+            if (!string.IsNullOrWhiteSpace(metadata.Connection))
+            {
+                return await ExecuteOnConnectionAsync(query, metadata.Connection.Trim(), template, request);
+            }
         }
 
         var cancellationToken = request.CancellationToken;
@@ -152,4 +160,54 @@ public sealed class SqlQuerySource : IQuerySource
             NextPageToken = nextPageToken,
         };
     }
+
+    /// <summary>
+    /// Runs the template against an external database through the connector engine: SELECT
+    /// only, values bound as parameters, no tenant prefix and no Grove scope (the database
+    /// applies its own permissions to the connection's credential). The connection caps the
+    /// rows a query returns; the run pages within them.
+    /// </summary>
+    private async Task<IQueryResults> ExecuteOnConnectionAsync(Query query, string connectionKey, string? template, QueryRequest request)
+    {
+        if (query.ReturnContentItems)
+        {
+            throw new SqlQueryException(["Only a query over the tenant's own database returns content items."]);
+        }
+
+        var errors = SqlParser.Validate(template ?? string.Empty);
+        if (errors.Count > 0)
+        {
+            throw new SqlQueryException(errors);
+        }
+
+        var engine = _services.GetService(typeof(IConnectorEngine)) as IConnectorEngine
+            ?? throw new SqlQueryException([$"Connection '{connectionKey}' needs the connector engine, which is not enabled."]);
+
+        var cancellationToken = request.CancellationToken;
+        var (caller, scope) = await ConnectionQueryRunner.ResolveCallerAsync(_services, cancellationToken);
+        var result = await ConnectionQueryRunner.ExecuteAsync(engine, new ConnectorCall
+        {
+            ConnectionKey = connectionKey,
+            Caller = caller,
+            Scope = scope,
+            Request = new ConnectorRequest(ExternalQueryMethod, null, template, "application/sql"),
+            Arguments = ConnectionQueryRunner.Arguments(null, request.Parameters),
+        }, cancellationToken);
+
+        var rows = ConnectionQueryRunner.Rows(result.Value, null);
+        var pageSize = StructuredQueryCompiler.PageSize(request.PageSize);
+        var offset = PageTokens.Decode(request.PageToken);
+        var page = rows.Skip(offset).Take(pageSize).ToList();
+
+        return new QueryResults
+        {
+            Items = page,
+            Columns = ConnectionQueryRunner.Columns(rows),
+            Total = rows.Count,
+            NextPageToken = offset + pageSize < rows.Count ? PageTokens.Encode(offset + pageSize) : null,
+        };
+    }
+
+    /// <summary>The SQL protocol's raw request method for a statement that returns rows.</summary>
+    public const string ExternalQueryMethod = "QUERY";
 }

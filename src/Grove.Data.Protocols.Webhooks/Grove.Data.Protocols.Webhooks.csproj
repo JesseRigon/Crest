@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grove.Data.Protocols.Webhooks</RootNamespace>
+    <Nullable>enable</Nullable>
+    <!-- NuGet properties-->
+    <Title>Grove Webhooks Protocol</Title>
+    <Description>$(OCCMSDescription)
+
+    Inbound webhook signature schemes (HMAC) for the connector engine.</Description>
+    <PackageTags>$(PackageTags) PlatformCMS Connectors Webhooks</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
+
+  </ItemGroup>
+
+</Project>

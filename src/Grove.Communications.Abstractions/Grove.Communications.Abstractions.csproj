@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Grove.Infrastructure.Abstractions\Grove.Infrastructure.Abstractions.csproj" />
+    <ProjectReference Include="..\Grove.Data.Connectors.Abstractions\Grove.Data.Connectors.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

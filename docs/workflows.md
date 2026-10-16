@@ -46,7 +46,7 @@ registry is read at `GET api/grove/workflows/registry`.
 | Activities (palette entries) | `IWorkflowActivityProvider` + an engine `Activity` class | `Create party role`, `Resolve party` |
 | Hook slots and system attachments | `IWorkflowHookSlotProvider`, `IWorkflowHookAttachmentProvider`, run with `IWorkflowHookRunner.RunAsync(slot, correlationId, payload)` | `flow.hook` |
 | Shipped flows | `IWorkflowFlowProvider` (definition JSON embedded in the module) | a module's `Data/workflows/*.json` |
-| Connectors | `IWorkflowConnectorProvider` | `http`, `webhook` |
+| Connections | the connector engine's `services.AddConnection(...)` ([connectors.md](connectors.md)); each operation becomes a `Call connector` preset | `facebook-graph` |
 
 Trigger payloads are **ids and scalars only**; an activity re-reads the object through its
 own registry service.
@@ -256,9 +256,8 @@ a durable bookmark queue (stimuli that arrive before their bookmark), background
 resilience feature, scheduling, distributed locks. None of it knows the host's transaction.
 Grove adds what it lacks: ownership, the registry, hooks, units, field dependencies, approvals,
 connections, the after-commit queue and `RegistryTrigger` (thin glue over `IStimulusSender`).
-Two-phase calls are the engine's background activities, and connector retries are the
-engine's resilience feature (`ConnectionResilienceStrategy`; moving into the connection
-system, [Connectors](#connectors)). Scheduled tasks, the background command and notification
+Two-phase calls are the engine's background activities; connector retries are the connector
+engine's ([Connectors](#connectors)). Scheduled tasks, the background command and notification
 channels and the bookmark queue worker run in shell scopes (`ShellScopedRunScheduledTaskHandler`,
 `ShellScopedBackgroundConsumers` started at activation, since the host never starts a tenant
 container's hosted services; `ShellScopedBookmarkQueueWorker`), so every entry point is a unit.
@@ -279,12 +278,12 @@ Permissions are integrated with the platform's grant system, not a separate ACL.
 
 **Permission set** (`Server/Permissions.cs`; names in `WorkflowsConstants.Permissions`):
 `ViewGroveWorkflows`, `EditGroveWorkflows`, `PublishGroveWorkflows`, `RunGroveWorkflows`,
-`ManageShippedGroveWorkflows`, `ManageGroveWorkflowConnections` (☐ to become the connection
-system's `ManageConnections`, [queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)), each implied by the `ManageWorkflows`
-umbrella, so existing roles keep working. Approvals are decided per task by role or permission
+`ManageShippedGroveWorkflows`, each implied by the `ManageWorkflows` umbrella, so existing
+roles keep working. Connections are the connector engine's (`ManageConnections`,
+`UseConnections`, [connectors.md](connectors.md)); the connector activities need `UseConnections`. Approvals are decided per task by role or permission
 (`all=true` listing needs `ManageWorkflows`). Pages and controllers take the specific
 permission: Definitions and Instances pages, the registry and the triggers list → View;
-Connections page and API → Manage connections; triggers reindex → Publish. The stock
+triggers reindex → Publish. The stock
 stereotypes give Administrator **and Editor** `ManageWorkflows`, so the finer set ships as two
 roles (also the provider's stereotypes): `WorkflowEditor` (View, Edit, Publish, Run, admin
 panel) and `WorkflowViewer` (View, admin panel), created on install when the tenant has no role
@@ -395,9 +394,9 @@ Grove and content triggers, `Require permission` and `Validate user` ask the one
   does not become the tenant super user); every **later** burst runs as the run's bound actor,
   never as whoever resumed it (an approver, an HTTP resume).
 - **Anonymous actors.** Webhooks run as the connection's **application caller**
-  (`WorkflowConnectionCaller`, name identifier `connection:{key}`): a connection carries
-  `Roles` (`WorkflowConnection.Roles`), read on every build by
-  `WorkflowConnectionCallerContributor`, so a later burst holds what the connection holds then;
+  (the connector engine's `ConnectionCaller`, name identifier `connection:{key}`): a connection
+  carries caller roles (`ConnectionDefinition.CallerRoles`), read on every build by
+  `ConnectionCallerContributor`, so a later burst holds what the connection holds then;
   adding a role to a connection takes `AssignRoleToUsers` for that role; a role change or a
   deleted connection with roles bumps the permission version; the signature check stays its
   authentication. Login and registration triggers (`user.logged-in`, `user.created`,
@@ -441,8 +440,8 @@ which takes the catalog. (The catalog is to fold into the engine's registry,
   activity registry is populated (the JSON names activity types). `Publish: false` ships a
   flow as a draft the tenant opts into (anything that changes business data on its own).
   `WorkflowFlowLookup` finds a tenant's copy by `Grove.FlowKey`.
-- **Connectors**: `WorkflowConnectorDescriptor(Key, DisplayName, AuthKind, BaseUrl,
-  Description, Position)` from `IWorkflowConnectorProvider`; see [Connectors](#connectors).
+- **Connections**: the connector engine's registry (`IConnectionRegistry`); the palette lists
+  one preset per operation; see [Connectors](#connectors).
 - **Extension points.** `Raise trigger` (`RaiseTrigger`, Done/Failed) publishes a registered
   key after this flow's unit commits, with its correlation id and payload by default;
   Grove.Workflows registers the generic `flow.raised`. `Hook` runs a slot's attachments
@@ -517,7 +516,7 @@ in a unit of their own ([Units of work](#units-of-work-how-a-run-commits)).
 The content, user, tenant and party activities ask the decision against the item, role or user
 (`IAccessDecision.RequireAsync`/`AllowsAsync`); a read the caller may not make is "not found".
 HTTP requests are the engine's own activities (`Send HTTP request`, `Download HTTP file`),
-which use the connectors' guarded handler (`ConnectorNetworkPolicy.CreateHandler`), so every
+which use the connector engine's guarded handler (`NetworkGuard.CreateHandler`), so every
 connection, redirects included, reaches only public addresses unless the shell's
 `AllowPrivateNetworks` opens it. Form posting is the engine's HTTP workflows. Publishing a
 `WorkflowDefinition` item never fans out to content triggers.
@@ -695,60 +694,48 @@ this ([permissions.md](permissions.md) › Approvals).
 
 ## Connectors
 
-The connection model, sealed secrets and tokens, OAuth flow, HTTP invoker, token cache, rate
-limiting and retries belong to the connection system: the protocol modules (`Grove.Http`,
-`Grove.Rest`, `Grove.Soap`, `Grove.GraphQL`, ☐ to be created). Workflows keeps the activities
-and inbound webhook triggers as consumers of their connections; the one Connections screen and
-the `ManageConnections` permission are the connection system's, not Workflows' or Queries'
-([queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)).
-What follows is what is built today in `Server/Connectors`, until it moves (☐).
+Connections, sealed credentials and tokens, the OAuth flow, the guarded HTTP client, the token
+cache, rate limiting and retries belong to the connector engine (`Grove.Data.Connectors`, over
+the `Grove.Data.Protocols.*` libraries; [connectors.md](connectors.md)). Workflows keeps the
+activities and the inbound webhook trigger (`Server/Connectors/ConnectorActivities.cs`) as
+consumers of the engine's connections; the Connections screen and the `ManageConnections` and
+`UseConnections` permissions are the engine's. The feature depends on `Grove.Data.Connectors`.
 
-A **connection** is a tenant's handle on an external service: base URL, auth kind (`none`,
-`api-key`, `basic`, `bearer`, `oauth2-client-credentials`, `oauth2-authorization-code`,
-`hmac` for inbound webhooks), a sealed secret that never leaves the server, retry count,
-rate limit, timeout and roles (the webhook caller's, [Running identity](#running-identity)).
-The registry ships the generic `http` and `webhook` connectors; a module ships a specific one
-for a service it knows. Tenant connections live in one document (`WorkflowConnection`), secrets
-sealed with the tenant's data protection (purpose `Grove.Workflows.Connections`) and never
-returned (`WorkflowConnectorAuthKinds`, settings in `WorkflowConnectionSettingKeys`). API
-`api/grove/workflows/connections` (Manage connections, antiforgery); Grove page
-`/workflows/connections`.
+Activities, both engine background activities that need `UseConnections`:
+- `Call connector` (Done/Failed) runs a connection's operation (`Operation`, its id, with
+  `Arguments (JSON)`: path, query and header parameters by name, the body under `body`) or a
+  raw request (`Method`, `Path`, `Headers (JSON)`, `Body`, `Content type`) through
+  `IConnectorEngine.ExecuteAsync`, as the instance's caller, with the job's idempotency key.
+  Outputs: status, body, parsed value, failure, and the attempts the engine made.
+- `Poll connector` (Changed/Unchanged/Failed) reads the same way and compares a hash per
+  definition and node in the tenant database; it is driven by the engine's Timer or Cron.
 
-Activities: `Call connector` (Done/Failed; outputs status, body, parsed JSON, failure),
-`Poll connector` (Changed/Unchanged/Failed; a hash per definition + node in the tenant
-database, driven by the engine's Timer or Cron), `Webhook received`
-(`api/grove/workflows/webhooks/{connection}/{hook}`, HMAC-SHA256 of the body required, 401
-otherwise, 404 for unknown/non-hmac connections; payload Body/Query/ContentType; runs as the
-connection's application caller).
+The engine retries per the connection's policy, so connector nodes carry no resilience
+strategy of their own and attempts never multiply. When the engine answers "retry after T"
+(a rate limit, a quota, a long `Retry-After`), the node waits on a timer bookmark until T and
+then schedules the call again as a background job; an answer more than 24 hours away ends the
+node on Failed. The palette offers one preset per connection operation
+(`connector.{connection}.{operationId}`: `Call connector` with the connection and operation
+set), from the engine's registry; connection inputs list the engine's connections.
 
-Policy (`ConnectorHttpClient`, `ConnectorInvoker`, `ConnectorRateLimiters`,
-`ConnectorTokenCache`): `ConnectorInvoker` makes one attempt and marks transient failures
-(network/timeout/408/429/5xx); retries are the engine's resilience feature with the
-connection's `RetryCount` as the policy (`ConnectionResilienceStrategy`, category Connectors,
-default on connector nodes, attempts journaled). Per-connection fixed-window rate limit without
-queue, response and webhook size caps, no automatic redirects, paths cannot leave the base URL,
-and every connection is refused on loopback/private/link-local/CGNAT addresses at connect time
-(after DNS) unless the shell sets `GroveWorkflows:Connectors:AllowPrivateNetworks` (a host's dev
-setup does, for the local test endpoint).
+`Webhook received` fires on `api/grove/workflows/webhooks/{connection}/{hook}`: the body is
+verified by the engine's `IWebhookVerifier` (the connection's signature scheme and header, its
+sealed signing secret, which Workflows never reads); an unknown or non-inbound connection is
+404, a missing or wrong signature 401, an oversized body 413 (`Connectors:MaxWebhookBytes`).
+The payload is Body/Query/ContentType, and the run acts as the connection's application caller
+(`ConnectionCaller`, name identifier `connection:{key}`, with the connection's caller roles).
+Accepted and rejected deliveries are audited.
 
-**OpenAPI import** (`POST connections/import-openapi`): the first server becomes the base
-URL, the global security scheme the auth kind (http bearer/basic, apiKey header, oauth2
-clientCredentials or authorizationCode with their URLs and scopes), every path operation an
-entry stored on the connection (`settings.operations`) and shown by the registry as a
-palette preset on `Call connector` (`connector.{connection}.{operationId}`: connection, method
-and path preset; the flow binds the body). **OAuth2 authorization code**
-(`oauth2-authorization-code`): `GET connections/{key}/oauth/authorize` redirects to the
-provider with a sealed state (tenant, connection, user, issued-at), `oauth/callback`
-exchanges the code and seals the token set on the connection; the invoker uses the access
-token and refreshes it with the refresh token when expired; the API only says
-`authorized` and when the token expires.
+The engine's HTTP activities (Send HTTP request, Download HTTP file) use the engine's network
+guard (`NetworkGuard`), opened by the shell's `Connectors:AllowPrivateNetworks`; they follow
+redirects, each hop guarded.
 
 ## Designer and admin pages
 
 **Admin surface.** A "Workflows" menu section (`WorkflowsPages`, a page registry source) with
-Definitions, Instances, Connections, Approvals, Hooks; each page declares its route permission
+Definitions, Instances, Approvals, Hooks; each page declares its route permission
 and menu place with `[PageEntry]` ([admin-menu.md](admin-menu.md) › The page registry), and the
-Studio pages are marked browser-only (`ClientOnly`). Connections, Approvals and Hooks are Grove pages;
+Studio pages are marked browser-only (`ClientOnly`). Approvals and Hooks are Grove pages;
 Definitions/Instances (and the editor and instance viewer, on Studio's own routes
 `/workflows/definitions[/{id}/edit]`, `/workflows/instances[/{id}/view]`) are the forked
 Studio.
@@ -795,7 +782,7 @@ shipped. The checks Grove.Workflows carries:
 | `workflows-api` | engine API round-trip (save, publish, execute, journal), antiforgery 400, limited role 403, anonymous 401 |
 | `workflows-units` | a failed required hook attachment faults the host and discards its writes; a healthy one commits with child instances; best-effort failure journaled; long-running flows refused at attach and at republish; a trigger raised in a failed unit never fires |
 | `workflows-approvals` | request, queue, decide, 403/409; the pending API shows the parked flow for its object |
-| `workflows-designer` | the real UI: open, add node, connect, save, publish, run, journal; lazy download assertion; Connections and Approvals pages |
+| `workflows-designer` | the real UI: open, add node, connect, save, publish, run, journal; lazy download assertion; the engine's Connections page and the Approvals page |
 
 A consuming host's own checks cover the registry, ownership, connectors, field activities
 and tenant isolation end to end through its modules.
@@ -804,9 +791,10 @@ Unit tests (`tests/Grove.Workflows.Tests`): the API gate branch by branch (grant
 per-definition Run, 403 on refusal, `ApiGateResponseTests` against the real authorization
 middleware), ownership property round-trips and stamping, the access handler's
 veto/admit/bypass rules, the system scope, the registry catalog and publisher, the user
-snapshot, `WorkflowCallerLifetimeTests`, `ActorStampingDispatcherTests`, connector address
-policy, path containment and signatures, the async-only disposable scan, the shipped-flow sync
-decision.
+snapshot, `WorkflowCallerLifetimeTests`, `ActorStampingDispatcherTests`, the async-only
+disposable scan, the shipped-flow sync decision. The connector engine's own tests
+(`Grove.Data.Connectors.Tests`) cover the address guard, path containment, signatures and the
+pipeline.
 
 **Known flake:** on a freshly provisioned tenant, a check running early in a filtered run
 occasionally hits Playwright's "Execution context was destroyed" (the admin page navigated
@@ -1029,7 +1017,7 @@ background action.
   routing.
 - **One registry.** The engine's registry (`IActivityRegistry`) is the registry. Grove's
   `WorkflowRegistryCatalog` and its providers (`IWorkflowTriggerProvider`,
-  `IWorkflowActivityProvider`, `IWorkflowFlowProvider`, `IWorkflowConnectorProvider`, hook
+  `IWorkflowActivityProvider`, `IWorkflowFlowProvider`, hook
   slots) migrate onto it: each catalog kind becomes engine descriptors with grouping and
   position in `CustomProperties`, and every consumer of the catalog (the registry page,
   `api/grove/workflows/registry`, the trigger publisher, the stock-activity and
@@ -1202,10 +1190,10 @@ the background consumers).
 - [x] **The two action pipelines named and hosted** (`Server/Units/ActionPipelines.cs`), with
   the queue's partition and idempotency keys ([Queues](#queues)).
 - [x] **The engine API gate is a consumer of `IAccessDecision`** (§ Ownership and permissions).
-- [ ] **Connectors into the connection system** ([queries.md › Connections](queries.md#connections-the-protocol-modules-and-the-data-layer)):
-  the model, sealed secrets, OAuth, `ConnectorHttp` (SSRF guard, redirects off, size
-  limits), rate limiters, token cache and `ConnectionResilienceStrategy` move down into the
-  protocol modules; the activities stay as consumers; the webhook controller verifies through a narrow verifier.
+- [x] **Connectors on the connector engine** ([connectors.md](connectors.md)): connections,
+  sealed credentials, OAuth, the guarded client, limits and retries are `Grove.Data.Connectors`'
+  and the protocol libraries'; the activities are consumers; the webhook verifies through
+  `IWebhookVerifier`.
 - [ ] **Expression limits**: Jint and Fluid limits configured in one place
   ([blazor-display.md](blazor-display.md) § 12, with the parked sandbox).
 - [ ] **HTTP endpoints and the engine API in the Server's API registry**

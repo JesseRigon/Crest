@@ -45,6 +45,7 @@
     <ProjectReference Include="..\..\Grove.Access.Abstractions\Grove.Access.Abstractions.csproj" />
     <ProjectReference Include="..\..\Grove.AuditTrail.Abstractions\Grove.AuditTrail.Abstractions.csproj" />
     <ProjectReference Include="..\..\Grove.Data.Queries.Abstractions\Grove.Data.Queries.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Grove.Data.Connectors\Grove.Data.Connectors.csproj" />
     <ProjectReference Include="..\..\Grove.Infrastructure.Server\Grove.Infrastructure.Server.csproj" />
     <ProjectReference Include="..\..\Grove.Contents.OptionPicker\Grove.Contents.OptionPicker.csproj" />
   </ItemGroup>

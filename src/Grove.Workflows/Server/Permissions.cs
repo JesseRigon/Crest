@@ -27,12 +27,9 @@ public static class Permissions
     public static readonly Permission PublishWorkflows = new(WorkflowsConstants.Permissions.Publish, "Publish and retract workflows", [ManageWorkflows]);
     public static readonly Permission RunWorkflows = new(WorkflowsConstants.Permissions.Run, "Run workflows by hand and manage their instances", [ManageWorkflows]);
     public static readonly Permission ManageShippedWorkflows = new(WorkflowsConstants.Permissions.ManageShipped, "Manage shipped workflows: edit, fork and reset the shipped templates", [ManageWorkflows]);
-    public static readonly Permission ManageConnections = new(WorkflowsConstants.Permissions.ManageConnections, "Manage workflow connections and their secrets", [ManageWorkflows]);
-    /// <summary>What the connector activities take at run time, for the burst's caller; managing a connection implies using it.</summary>
-    public static readonly Permission UseConnections = new(WorkflowsConstants.Permissions.UseConnections, "Use workflow connections: call and poll them from a running flow", [ManageConnections]);
 
     /// <summary>Everything this feature declares.</summary>
-    public static readonly IReadOnlyList<Permission> All = [ManageWorkflows, ViewWorkflows, EditWorkflows, PublishWorkflows, RunWorkflows, ManageShippedWorkflows, ManageConnections, UseConnections];
+    public static readonly IReadOnlyList<Permission> All = [ManageWorkflows, ViewWorkflows, EditWorkflows, PublishWorkflows, RunWorkflows, ManageShippedWorkflows];
 }
 
 public sealed class WorkflowsPermissionProvider : IPermissionProvider

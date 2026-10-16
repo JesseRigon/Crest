@@ -1,6 +1,5 @@
 using Fluid;
 using Grove.Environment.Shell;
-using Grove.Communications.Email;
 
 namespace Grove.Data.Protocols.Smtp.Services;
 
@@ -19,7 +18,7 @@ internal static class SmtpPickupDirectoryResolver
     ];
 
     public static void ConfigurePickupDirectory(
-        SmtpOptions options,
+        DefaultSmtpOptions options,
         string configuredBasePath,
         FluidParser fluidParser,
         ShellOptions shellOptions,

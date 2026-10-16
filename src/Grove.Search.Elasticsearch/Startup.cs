@@ -41,6 +41,7 @@ public sealed class Startup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddTransient<IConfigureOptions<ElasticsearchConnectionOptions>, ElasticsearchConnectionOptionsConfigurations>();
+        services.AddScoped<Grove.Data.Connectors.IConnectionChangeHandler, ElasticsearchConnectionChangeHandler>();
         services.AddTransient<IElasticsearchClientFactory, ElasticsearchClientFactory>();
         services.AddSingleton((sp) =>
         {

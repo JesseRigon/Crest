@@ -1,0 +1,90 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Grove.Entities;
+using Grove.Environment.Options;
+using Grove.Environment.Shell;
+using Grove.Infrastructure.Settings;
+using Grove.Communications.Sms;
+using Grove.Integrations.Microsoft;
+using Grove.Integrations.Microsoft.Sms;
+using Grove.Tests.Apis.Context;
+
+namespace Grove.Tests.Modules.AzureCommunication;
+
+public class AzureSmsOptionsMonitorTests
+{
+    [Fact]
+    public async Task RequestUpdate_ShouldRefreshAzureSmsOptionsWithoutReleasingTenant()
+    {
+        using var context = new SiteContext()
+            .WithRecipe(TestRecipes.Blank);
+
+        await context.InitializeAsync();
+
+        await context.UsingTenantScopeAsync(async scope =>
+        {
+            var shellFeaturesManager = scope.ServiceProvider.GetRequiredService<IShellFeaturesManager>();
+            var availableFeatures = await shellFeaturesManager.GetAvailableFeaturesAsync();
+            var featuresToEnable = availableFeatures.Where(feature => feature.Id == AzureCommunicationServices.Features.Sms);
+
+            await shellFeaturesManager.EnableFeaturesAsync(featuresToEnable, force: true);
+        });
+
+        await context.WaitForDeferredTasksAsync(CancellationToken.None);
+
+        long shellContextTicks = 0;
+
+        await context.UsingTenantScopeAsync(scope =>
+        {
+            shellContextTicks = scope.ShellContext.UtcTicks;
+
+            Assert.False(scope.ServiceProvider.GetRequiredService<IOptionsMonitor<AzureSmsOptions>>().CurrentValue.IsEnabled);
+
+            return Task.CompletedTask;
+        });
+
+        await context.UsingTenantScopeAsync(async scope =>
+        {
+            var siteService = scope.ServiceProvider.GetRequiredService<ISiteService>();
+            var notifier = scope.ServiceProvider.GetRequiredService<IOptionsUpdateNotifier>();
+
+            var site = await siteService.LoadSiteSettingsAsync();
+            site.Put(new SmsSettings
+            {
+                DefaultProviderName = AzureSmsProvider.TechnicalName,
+            });
+            site.Put(new AzureSmsSettings
+            {
+                IsEnabled = true,
+                PhoneNumber = "+15555555555",
+                ConnectionKey = AzureCommunicationServices.SmsConnectionKey,
+            });
+
+            notifier
+                .RequestUpdate<AzureSmsOptions>()
+                .RequestUpdate<SmsProviderOptions>();
+
+            await siteService.UpdateSiteSettingsAsync(site);
+        });
+
+        await context.WaitForDeferredTasksAsync(CancellationToken.None);
+
+        await context.UsingTenantScopeAsync(async scope =>
+        {
+            Assert.Equal(shellContextTicks, scope.ShellContext.UtcTicks);
+
+            var azureOptions = scope.ServiceProvider.GetRequiredService<IOptionsMonitor<AzureSmsOptions>>().CurrentValue;
+            Assert.True(azureOptions.IsEnabled);
+            Assert.Equal("+15555555555", azureOptions.PhoneNumber);
+            Assert.Equal(AzureCommunicationServices.SmsConnectionKey, azureOptions.ConnectionKey);
+
+            var providerOptions = scope.ServiceProvider.GetRequiredService<IOptionsMonitor<SmsProviderOptions>>().CurrentValue;
+            Assert.True(providerOptions.Providers[AzureSmsProvider.TechnicalName].IsEnabled);
+
+            var providerResolver = scope.ServiceProvider.GetRequiredService<ISmsProviderResolver>();
+            var provider = await providerResolver.GetAsync();
+
+            Assert.IsType<AzureSmsProvider>(provider);
+        });
+    }
+}

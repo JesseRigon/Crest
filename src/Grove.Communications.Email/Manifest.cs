@@ -6,5 +6,9 @@ using Grove.Modules.Manifest;
     Website = ManifestConstants.PlatformWebsite,
     Version = ManifestConstants.PlatformVersion,
     Description = "Provides the necessary infrastructure for configuring email settings.",
-    Category = "Communication"
+    Category = "Communication",
+    Dependencies =
+    [
+        "Grove.Communications.Screens",
+    ]
 )]

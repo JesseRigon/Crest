@@ -1,4 +1,11 @@
+using Grove.Data.Connectors;
+using Grove.Data.Migration;
 using Grove.Display.Management.Document;
+using Grove.Environment.Shell;
+using Grove.Environment.Shell.Scope;
+using Grove.Integrations.Google.Connections;
+using Grove.Integrations.Google.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +28,16 @@ using Grove.Infrastructure.Settings.Deployment;
 
 namespace Grove.Integrations.Google;
 
+/// <summary>The Google connection and the Google app credentials it shares with Google sign-in.</summary>
+[Feature(GoogleConstants.Features.Google)]
+public sealed class GoogleStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddGoogleConnection();
+    }
+}
+
 [Feature(GoogleConstants.Features.GoogleAuthentication)]
 public sealed class GoogleAuthenticationStartup : StartupBase
 {
@@ -32,7 +49,13 @@ public sealed class GoogleAuthenticationStartup : StartupBase
             GoogleConstants.Features.GoogleAuthentication,
             "Google",
             Permissions.ManageGoogleAuthentication,
-            group => group.InMenu("settings-authentication", entryId: "google").ReloadsTenant());
+            group => group
+                .InMenu("settings-authentication", entryId: "google")
+                .Describe("The Google OAuth client's id and secret are the Google app credentials on the Connections screen.")
+                .ReloadsTenant());
+        services.AddScoped<IConnectionChangeHandler>(sp => new AppCredentialsChangeHandler(
+            sp.GetRequiredService<IShellReleaseManager>(), GoogleConstants.AppCredentialsKey, GoogleConstants.ConnectionKey));
+        services.AddDataMigration<GoogleAuthenticationSettingsMigrations>();
 
         // Register the options initializers required by the Google Handler.
         // Grove-specific initializers:
@@ -108,5 +131,23 @@ public sealed class GoogleTagManagerDeploymentStartup : StartupBase
     public override void ConfigureServices(IServiceCollection services)
     {
         services.AddSiteSettingsPropertyDeploymentStep<GoogleTagManagerSettings>();
+    }
+}
+
+/// <summary>Moves the Google client id and secret out of the sign-in settings into the Google app credentials.</summary>
+internal sealed class GoogleAuthenticationSettingsMigrations : DataMigration
+{
+    public static int Create()
+    {
+        ShellScope.AddDeferredTask(scope => AppCredentialsAccess.MoveFromSiteSettingsAsync(
+            scope.ServiceProvider,
+            nameof(GoogleAuthenticationSettings),
+            "ClientID",
+            "ClientSecret",
+            GoogleConstants.Features.GoogleAuthentication,
+            GoogleConstants.AppCredentialsKey,
+            scope.ServiceProvider.GetRequiredService<ILogger<GoogleAuthenticationSettingsMigrations>>()));
+
+        return 1;
     }
 }

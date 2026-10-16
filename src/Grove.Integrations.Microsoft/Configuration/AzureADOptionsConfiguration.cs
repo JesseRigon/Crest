@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
+using Grove.Integrations.Microsoft.Services;
 using Grove.Integrations.Microsoft.Settings;
 using MicrosoftIdentityDefaults = Microsoft.Identity.Web.Constants;
 
@@ -18,11 +19,13 @@ public class AzureADOptionsConfiguration :
     public const string AzureAdOpenIdConnectScheme = MicrosoftIdentityDefaults.AzureAd + OpenIdConnectDefaults.AuthenticationScheme;
 
     private readonly AzureADSettings _azureADSettings;
+    private readonly IServiceProvider _services;
     private readonly ILogger _logger;
 
-    public AzureADOptionsConfiguration(IOptions<AzureADSettings> azureADSettings, ILogger<AzureADOptionsConfiguration> logger)
+    public AzureADOptionsConfiguration(IOptions<AzureADSettings> azureADSettings, IServiceProvider services, ILogger<AzureADOptionsConfiguration> logger)
     {
         _azureADSettings = azureADSettings.Value;
+        _services = services;
         _logger = logger;
     }
 
@@ -34,9 +37,10 @@ public class AzureADOptionsConfiguration :
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(settings.AppId) || string.IsNullOrWhiteSpace(settings.TenantId))
+        var app = AppCredentialsAccess.Read(_services, MicrosoftAuthenticationConstants.AppCredentialsKey, _logger);
+        if (string.IsNullOrWhiteSpace(app?.ClientId) || string.IsNullOrWhiteSpace(settings.TenantId))
         {
-            _logger.LogWarning("The AzureAD login provider is enabled but not configured.");
+            _logger.LogWarning("The AzureAD login provider is enabled but not configured (the Microsoft app credentials on Connections, the tenant id in its settings).");
 
             return;
         }
@@ -67,7 +71,9 @@ public class AzureADOptionsConfiguration :
             return;
         }
 
-        options.ClientId = loginSettings.AppId;
+        var app = AppCredentialsAccess.Read(_services, MicrosoftAuthenticationConstants.AppCredentialsKey, _logger);
+        options.ClientId = app?.ClientId;
+        options.ClientSecret = app?.ClientSecret;
         options.TenantId = loginSettings.TenantId;
         options.Instance = "https://login.microsoftonline.com/";
 

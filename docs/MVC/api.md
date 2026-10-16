@@ -79,8 +79,8 @@ methods and JSON shapes are the controllers' ones; the clients did not change.
 | Grove.Contents (`Grove.Contents.PartLists`) | `ContentPartListsApi`, `GlobalListsApi` | `api/grove/content-part-lists`, `api/grove/global/lists` | services, yessql |
 | Grove.Contents | `AuditTrailContentApi` | `api/grove/audit/content/{eventId}` | content-manager, yessql |
 | Grove.Contents.Localization | `CultureRedirectApi` | the culture switch redirect (site links) | services |
-| Grove.Data.Protocols.Smtp | `SmtpSettingsApi` | `api/grove/settings/email/smtp` | site-settings |
-| Grove.Communications.Email | `EmailSettingsApi` | `api/grove/settings/email` | site-settings |
+| Grove.Communications.Email | `EmailTestApi` | `api/grove/email/providers`, `api/grove/email/channel`, `api/grove/email/test` (the channel's settings are the `email` settings group) | services |
+| Grove.Communications | `DeliveryLogApi` | `api/grove/communications/deliveries` | yessql |
 | Grove.Communications | `PortalNotificationsApi` | `api/grove/notifications` | yessql |
 | Grove.Display.Layers | `LayersApi` (a layer's save runs Grove.Display.Rules' condition checks through `IRuleConditionChecker`, answered as the error contract's map keyed `conditions.{conditionId}`) | `api/grove/layers` | services |
 | Grove.Display.Placements | `PlacementsApi` | `api/grove/placements` | services |
@@ -104,7 +104,7 @@ methods and JSON shapes are the controllers' ones; the clients did not change.
 | Grove.Infrastructure.Server | `IconsApi`, `IconProvidersApi`, `IconifyApi`, `TenantIconsApi` | `api/grove/icons`, `icons/providers`, `iconify`, `icons/tenant` | services |
 | Grove.Infrastructure.Server | `AppApi`, `RoutingApi` | `api/grove/app`, `api/grove/routing` (the host's own) | site-settings, identity, services |
 | Grove.Infrastructure.Tenants | `TenantApi` | `api/tenants` (remote callers) | shells |
-| Grove.Workflows | `WorkflowApprovals`, `WorkflowConnections`, `WorkflowWebhooks`, `WorkflowHooks`, `WorkflowRegistry`, `WorkflowDefinitions`, `WorkflowTriggers`, `WorkflowActions`, `WorkflowPending` | `api/grove/workflows/*` | workflow-engine, identity, access, yessql |
+| Grove.Workflows | `WorkflowApprovals`, `WorkflowWebhooks`, `WorkflowHooks`, `WorkflowRegistry`, `WorkflowDefinitions`, `WorkflowTriggers`, `WorkflowActions`, `WorkflowPending` | `api/grove/workflows/*` | workflow-engine, identity, access, yessql |
 | Fruitful | `AccountsApi`, `CustomersApi`, `PricingApi`, `TransactionTaxApi`, `TransactionsApi`, `LedgerApi`, `AssetsApi`, `GpcImportApi`, `MembershipsApi`, `TaxesApi`, `TaxRateImportsApi` | `api/grove/accounting/*`, `assets`, `gs1`, `members/memberships`, `taxes` | services |
 
 Not in the table: the vendored engine's management API (below) and the
@@ -122,10 +122,11 @@ The APIs built as route groups from the start; every module's `Api/` folder hold
 | Grove.Shortcodes (`Api/ShortcodesApi.cs`) | `api/grove/shortcodes` | the shortcodes the HTML and Markdown editors insert |
 | Grove.Shortcodes (`Api/ShortcodeTemplatesApi.cs`) | `api/grove/shortcodes/templates` (GET, POST, PUT, DELETE) | the shortcode templates page |
 | Grove.Contents.OptionPicker (`Api/OptionSourcesApi.cs`, `Api/OptionPickerAttachmentsApi.cs`) | `api/grove/option-sources` (6), `api/grove/option-picker/attachment` (3) | the option picker's rows, columns, dependencies and a field's binding ([server.md](../server.md) § 3) |
+| Grove.Data.Connectors (`Api/ConnectionsApi.cs`) | `api/grove/connections` (definitions, `import`, `protocols`, `{key}/credential`, `{key}/credentials/{userId}`, `app-credentials`, `me`, `{key}/oauth/authorize`, `oauth/callback`, `{key}/oauth/device[/poll]`) | the Connections and Connected accounts pages; admin-side staff callers only; the OAuth callback is served on the admin shell's path |
 | Grove.Routes (`Api/RoutesApi.cs`) | `api/grove/routes/{pages,home,content-sources,content,rules,rules/reorder}` | the route management page (views.md › Routes) |
 | Grove.Search (`Api/SearchApi.cs`) | `api/grove/search` | the site search, anonymous; the index's query permission decides |
 | Grove.Seo.Sitemaps (`Api/SitemapsApi.cs`) | `api/grove/sitemaps`, `{id}`, `{id}/sources[/{sourceId}]`, `source-types`, `content-types`, `cache[/{fileName}]` | the sitemaps pages |
-| Grove.Communications.Sms (`Api/SmsTestApi.cs`) | `api/grove/sms/providers`, `api/grove/sms/test` | the SMS test page |
+| Grove.Communications.Sms (`Api/SmsTestApi.cs`) | `api/grove/sms/providers`, `api/grove/sms/channel`, `api/grove/sms/test` | the SMS test page and the channel card |
 | Grove.Infrastructure.Tenants (`Api/FeatureProfilesApi.cs`) | `api/grove/tenants/feature-profiles` (GET, POST, PUT, DELETE) | the feature profiles page (Default tenant) |
 
 ### Workflow engine

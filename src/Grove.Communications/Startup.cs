@@ -83,3 +83,12 @@ public sealed class EmailNotificationsStartup : StartupBase
         services.AddScoped<INotificationMethodProvider, EmailNotificationProvider>();
     }
 }
+
+[Feature("Grove.Communications.Notifications.Sms")]
+public sealed class SmsNotificationsStartup : StartupBase
+{
+    public override void ConfigureServices(IServiceCollection services)
+    {
+        services.AddScoped<INotificationMethodProvider, SmsNotificationProvider>();
+    }
+}

@@ -106,8 +106,10 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             groveWorkflows.UseScheduling();
             groveWorkflows.UseJavaScript();
             groveWorkflows.UseLiquid();
-            // Connector retries ride the engine's resilience feature: the connection's policy as a strategy.
-            groveWorkflows.UseResilience(resilience => resilience.AddResilienceStrategyType<ConnectionResilienceStrategy>());
+            // The engine's resilience feature, for the strategies a tenant picks on a node. Connector
+            // activities have none by default: the connector engine retries per the connection's
+            // policy, so attempts never multiply.
+            groveWorkflows.UseResilience();
             groveWorkflows.UseWorkflowsApi();
 
             // The access gate as engine middleware (docs/operations.md step 4): the engine's
@@ -141,11 +143,10 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
         // The engine's management API, declared in the server's API registry (docs/MVC/api.md P7).
         services.AddApiContributor<Api.WorkflowsManagementApi>();
 
-        // The module's own APIs under api/grove/workflows (the registry, connections and webhooks,
-        // hooks, approvals, definitions, triggers, display actions, pending state).
+        // The module's own APIs under api/grove/workflows (the registry, webhooks, hooks,
+        // approvals, definitions, triggers, display actions, pending state).
         services
             .AddApiContributor<Api.WorkflowRegistryApi>()
-            .AddApiContributor<Api.WorkflowConnectionsApi>()
             .AddApiContributor<Api.WorkflowWebhooksApi>()
             .AddApiContributor<Api.WorkflowHooksApi>()
             .AddApiContributor<Api.WorkflowApprovalsApi>()
@@ -231,20 +232,11 @@ public class CoreStartup(IOptions<ShellOptions> shellOptions, ShellSettings shel
             .AddScoped<Grove.Access.IAccessCeiling, WorkflowDefinitionAccessCeiling>();
         services.Replace(ServiceDescriptor.Scoped<Grove.Workflows.Api.IWorkflowDefinitionLinker, WorkflowDefinitionLinker>());
 
-        // Connectors (docs/workflows.md, phase 3): per-shell HTTP client, limiters and token
-        // cache (singletons of the tenant's container), connections in a tenant document.
-        services.Configure<WorkflowConnectorOptions>(shellConfiguration.GetSection(WorkflowConnectorOptions.ConfigurationSection));
+        // Connector activities and the webhook trigger are consumers of the connector engine
+        // (Grove.Data.Connectors, docs/connectors.md): the palette offers one preset per
+        // connection operation, and connection inputs list the engine's connections.
         services
-            .AddSingleton<ConnectorHttpClient>()
-            .AddSingleton<ConnectorRateLimiters>()
-            .AddSingleton<ConnectorTokenCache>()
-            .AddScoped<WorkflowConnectionService>()
-            .AddScoped<Grove.Access.ICallerContextContributor, WorkflowConnectionCallerContributor>()
-            .AddScoped<ConnectorInvoker>()
-            .AddScoped<ConnectorOAuthClient>()
             .AddScoped<IWorkflowActivityProvider, ConnectionOperationActivityProvider>()
-            .AddScoped<Grove.Workflows.Resilience.IResilienceStrategySource, ConnectionResilienceStrategySource>()
-            .AddScoped<IWorkflowConnectorProvider, GenericConnectorProvider>()
             .AddScoped<IPropertyUIHandler, ConnectionOptionsProvider>();
 
         // Approvals (docs/workflows.md, phase 4): a task per decision, a queue per user.

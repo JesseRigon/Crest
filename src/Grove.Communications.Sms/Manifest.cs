@@ -10,17 +10,9 @@ using Grove.Modules.Manifest;
     Name = "SMS",
     Id = "Grove.Communications.Sms",
     Description = "Provides settings and services to send SMS messages.",
-    Category = "Communication"
-)]
-
-[assembly: Feature(
-    Name = "SMS Notifications",
-    Id = "Grove.Communications.Notifications.Sms",
-    Description = "Provides a way to send SMS notifications to users.",
-    Category = "Notifications",
+    Category = "Communication",
     Dependencies =
     [
-        "Grove.Communications",
-        "Grove.Communications.Sms",
+        "Grove.Communications.Screens",
     ]
 )]

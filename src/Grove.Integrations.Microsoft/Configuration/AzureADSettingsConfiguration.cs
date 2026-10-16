@@ -22,7 +22,6 @@ public sealed class AzureADSettingsConfiguration : IConfigureOptions<AzureADSett
 
         if (settings != null)
         {
-            options.AppId = settings.AppId;
             options.DisplayName = settings.DisplayName;
             options.CallbackPath = settings.CallbackPath;
             options.TenantId = settings.TenantId;

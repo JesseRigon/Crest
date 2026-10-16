@@ -70,7 +70,7 @@ public sealed class WorkflowRegistryHandlers(
                 : null,
         }).ToList();
 
-        return Ok(new WorkflowRegistryModel(catalog.Triggers, activities, flows, catalog.Connectors, catalog.HookSlots));
+        return Ok(new WorkflowRegistryModel(catalog.Triggers, activities, flows, catalog.HookSlots));
     }
 
     /// <summary>
