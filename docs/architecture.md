@@ -245,6 +245,16 @@ provenance is recorded in the subtree README rather than in its type names.
 - Blazor pages and components that depend on a platform module being enabled are kept
   isolated, one place per module, so they move with that module when it is reworked or
   removed.
+- Memory a process holds is bounded. A cache, a queue or a retained list has a size limit,
+  an expiry, or a producer that ends by design; nothing grows with traffic or uptime alone
+  ([workflows.md › Interrupted instances](workflows.md#interrupted-instances)).
+- A released shell leaves nothing running. Whatever a shell starts that outlives a request (a
+  timer, a rate limiter, a background loop, a change-token registration) is owned by the
+  shell's container and disposed with it; nothing host-level holds a shell's services. Rate
+  limiting is one shell-owned limiter (`ShellRateLimiter`, `UseShellRateLimiter`), not ASP.NET's
+  middleware, which never disposes its limiters.
+- A cached value is data, never a service. A store returns materialized results, so a cache
+  entry does not hold a lazy sequence or closure over a request's scope.
 
 ## Modules declare, Grove.Infrastructure.Server registers and serves
 

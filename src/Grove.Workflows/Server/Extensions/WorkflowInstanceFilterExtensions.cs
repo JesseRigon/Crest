@@ -8,6 +8,10 @@ using YesSql.Services;
 
 namespace Grove.Workflows.Extensions;
 
+/// <summary>
+/// Translates a <see cref="WorkflowInstanceFilter"/> to YesSql. Every filter property is applied: a property
+/// left out silently widens the query, and a sweep built on it then acts on every instance.
+/// </summary>
 public static class WorkflowInstanceFilterExtensions
 {
     public static IQuery<WorkflowInstanceDocument, WorkflowInstanceIndex> Apply(this WorkflowInstanceFilter filter, IQuery<WorkflowInstanceDocument, WorkflowInstanceIndex> query)
@@ -16,8 +20,8 @@ public static class WorkflowInstanceFilterExtensions
         if (filter.Ids != null) query = query.Where(x => x.InstanceId.IsIn(filter.Ids));
         if (filter.DefinitionId != null) query = query.Where(x => x.DefinitionId == filter.DefinitionId);
         if (filter.DefinitionIds != null) query = query.Where(x => x.DefinitionId.IsIn(filter.DefinitionIds));
-        if (filter.DefinitionVersionId != null) query = query.Where(x => x.DefinitionId == filter.DefinitionVersionId);
-        if (filter.DefinitionVersionIds != null) query = query.Where(x => x.DefinitionId.IsIn(filter.DefinitionVersionIds));
+        if (filter.DefinitionVersionId != null) query = query.Where(x => x.DefinitionVersionId == filter.DefinitionVersionId);
+        if (filter.DefinitionVersionIds != null) query = query.Where(x => x.DefinitionVersionId.IsIn(filter.DefinitionVersionIds));
         if (filter.CorrelationId != null) query = query.Where(x => x.CorrelationId == filter.CorrelationId);
         if (filter.CorrelationIds != null) query = query.Where(x => x.CorrelationId.IsIn(filter.CorrelationIds));
         if (filter.Name != null) query = query.Where(x => x.Name == filter.Name);
@@ -29,6 +33,9 @@ public static class WorkflowInstanceFilterExtensions
         if (filter.ParentWorkflowInstanceIds != null) query = query.Where(x => x.ParentInstanceId.IsIn(filter.ParentWorkflowInstanceIds));
         if (filter.HasIncidents != null) query = query.Where(x => x.HasIncidents == filter.HasIncidents);
         if (filter.IsSystem != null) query = query.Where(x => x.IsSystem == filter.IsSystem);
+        if (filter.IsExecuting != null) query = query.Where(x => x.IsExecuting == filter.IsExecuting);
+        if (filter.BeforeLastUpdated != null) query = query.Where(x => x.UpdatedAt < filter.BeforeLastUpdated);
+        if (filter.Names != null) query = query.Where(x => x.Name.IsIn(filter.Names));
         
         if (filter.TimestampFilters != null)
         {
@@ -94,6 +101,9 @@ public static class WorkflowInstanceFilterExtensions
         if (filter.ParentWorkflowInstanceIds != null) query = query.Where(x => x.ParentInstanceId.IsIn(filter.ParentWorkflowInstanceIds));
         if (filter.HasIncidents != null) query = query.Where(x => x.HasIncidents == filter.HasIncidents);
         if (filter.IsSystem != null) query = query.Where(x => x.IsSystem == filter.IsSystem);
+        if (filter.IsExecuting != null) query = query.Where(x => x.IsExecuting == filter.IsExecuting);
+        if (filter.BeforeLastUpdated != null) query = query.Where(x => x.UpdatedAt < filter.BeforeLastUpdated);
+        if (filter.Names != null) query = query.Where(x => x.Name.IsIn(filter.Names));
         
         if (filter.TimestampFilters != null)
         {

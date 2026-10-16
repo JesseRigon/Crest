@@ -62,7 +62,7 @@ public class YesSqlWorkflowInstanceStore(ISession session, IWorkflowStateSeriali
     {
         var query = QueryIndex(filter);
         var indexes = (await query.ListAsync(cancellationToken)).ToList();
-        return indexes.Select(x => x.InstanceId);
+        return indexes.Select(x => x.InstanceId).ToList();
     }
 
     public async ValueTask<Page<string>> FindManyIdsAsync(WorkflowInstanceFilter filter, PageArgs pageArgs, CancellationToken cancellationToken = default)
@@ -156,7 +156,7 @@ public class YesSqlWorkflowInstanceStore(ISession session, IWorkflowStateSeriali
 
     public async ValueTask<long> DeleteAsync(WorkflowInstanceFilter filter, CancellationToken cancellationToken = default)
     {
-        var pageArgs = PageArgs.FromRange(0, 100);
+        var pageArgs = PageArgs.FromRange(0, 100); // Always the first page: see the flush below.
         var order = new WorkflowInstanceOrder<string>(x => x.Id, OrderDirection.Ascending);
         var count = 0;
 
@@ -172,7 +172,8 @@ public class YesSqlWorkflowInstanceStore(ISession session, IWorkflowStateSeriali
             foreach (var document in documents)
                 session.Delete(document, collection: Collection);
 
-            pageArgs = pageArgs.Next();
+            // The deleted batch is gone once flushed, so the next batch is again the first page.
+            await session.FlushAsync(cancellationToken);
         }
 
         await session.FlushAsync(cancellationToken);
@@ -229,7 +230,7 @@ public class YesSqlWorkflowInstanceStore(ISession session, IWorkflowStateSeriali
 
     private IEnumerable<WorkflowInstanceSummary> MapSummaries(IEnumerable<WorkflowInstanceIndex> indexes)
     {
-        return indexes.Select(MapSummary);
+        return indexes.Select(MapSummary).ToList();
     }
 
     private WorkflowInstanceSummary MapSummary(WorkflowInstanceIndex index)
@@ -268,6 +269,7 @@ public class YesSqlWorkflowInstanceStore(ISession session, IWorkflowStateSeriali
         target.SubStatus = source.SubStatus;
         target.IncidentCount = source.IncidentCount;
         target.IsSystem = source.IsSystem;
+        target.IsExecuting = source.IsExecuting;
         target.CreatedAt = source.CreatedAt;
         target.FinishedAt = source.FinishedAt;
         target.UpdatedAt = source.UpdatedAt;
@@ -281,7 +283,7 @@ public class YesSqlWorkflowInstanceStore(ISession session, IWorkflowStateSeriali
 
     private IEnumerable<WorkflowInstance> Map(IEnumerable<WorkflowInstanceDocument> source)
     {
-        return source.Select(x => Map(x)!);
+        return source.Select(x => Map(x)!).ToList();
     }
 
     private WorkflowInstance? Map(WorkflowInstanceDocument? source)
@@ -307,6 +309,7 @@ public class YesSqlWorkflowInstanceStore(ISession session, IWorkflowStateSeriali
             SubStatus = source.SubStatus,
             IncidentCount = source.IncidentCount,
             IsSystem = source.IsSystem,
+            IsExecuting = source.IsExecuting,
             CreatedAt = source.CreatedAt,
             FinishedAt = source.FinishedAt,
             UpdatedAt = source.UpdatedAt,

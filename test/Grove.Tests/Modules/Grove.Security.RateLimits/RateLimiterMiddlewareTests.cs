@@ -213,7 +213,7 @@ public class RateLimiterMiddlewareTests
                 webBuilder.ConfigureServices(services =>
                 {
                     services.AddRouting();
-                    services.AddRateLimiter();
+                    services.AddShellRateLimiter();
                     services.AddTransient<IConfigureOptions<RateLimiterOptions>, RateLimiterOptionsConfigurations>();
                     services.AddSingleton(CreatePolicyStore(enabledPolicies ?? []));
                     services.AddSingleton(new FixedWindowRateLimiterSource(Mock.Of<IStringLocalizer<FixedWindowRateLimiterSource>>()));
@@ -240,7 +240,7 @@ public class RateLimiterMiddlewareTests
                     });
 
                     app.UseRouting();
-                    app.UseRateLimiter();
+                    app.UseShellRateLimiter();
 
                     app.UseEndpoints(endpoints =>
                     {
@@ -270,7 +270,7 @@ public class RateLimiterMiddlewareTests
                 webBuilder.ConfigureServices(services =>
                 {
                     services.AddRouting();
-                    services.AddRateLimiter();
+                    services.AddShellRateLimiter();
                     services.AddTransient<IConfigureOptions<RateLimiterOptions>, RateLimiterOptionsConfigurations>();
                     services.AddSingleton(CreatePolicyStore(enabledPolicies ?? []));
                     services.AddSingleton(new FixedWindowRateLimiterSource(Mock.Of<IStringLocalizer<FixedWindowRateLimiterSource>>()));
@@ -292,7 +292,7 @@ public class RateLimiterMiddlewareTests
                     var routes = (IEndpointRouteBuilder)app.Properties["__EndpointRouteBuilder"];
                     seoStartup.Configure(app, routes, app.ApplicationServices);
 
-                    app.UseRateLimiter();
+                    app.UseShellRateLimiter();
                     app.UseEndpoints(endpoints =>
                     {
                         endpoints.MapGet("/other", () => Results.Text("other-response"));
@@ -315,7 +315,7 @@ public class RateLimiterMiddlewareTests
                 webBuilder.ConfigureServices(services =>
                 {
                     services.AddRouting();
-                    services.AddRateLimiter();
+                    services.AddShellRateLimiter();
                     services.AddTransient<IConfigureOptions<RateLimiterOptions>, RateLimiterOptionsConfigurations>();
                     services.AddSingleton(CreatePolicyStore(enabledPolicies ?? []));
                     services.AddSingleton(new FixedWindowRateLimiterSource(Mock.Of<IStringLocalizer<FixedWindowRateLimiterSource>>()));
@@ -344,7 +344,7 @@ public class RateLimiterMiddlewareTests
                     var routes = (IEndpointRouteBuilder)app.Properties["__EndpointRouteBuilder"];
                     graphQLStartup.Configure(app, routes, app.ApplicationServices);
 
-                    app.UseRateLimiter();
+                    app.UseShellRateLimiter();
                     app.UseEndpoints(_ => { });
                 });
             });

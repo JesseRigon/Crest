@@ -42,9 +42,13 @@ public sealed class RateLimiterOptionsConfigurations : IConfigureOptions<RateLim
     {
         options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
+        // Every limiter built here runs a timer until disposed: the shell's rate limiter owns them all.
+        var owner = _serviceProvider.GetService<ShellRateLimiter>();
+        PartitionedRateLimiter<HttpContext> Own(PartitionedRateLimiter<HttpContext> limiter) => owner is null ? limiter : owner.Own(limiter);
+
         var limiters = new List<PartitionedRateLimiter<HttpContext>>
         {
-            PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            Own(PartitionedRateLimiter.Create<HttpContext, string>(context =>
             {
                 var routeRateLimit = FindRouteRateLimit(context);
                 if (routeRateLimit is null || LoopbackRequests.IsLoopback(context))
@@ -53,12 +57,12 @@ public sealed class RateLimiterOptionsConfigurations : IConfigureOptions<RateLim
                 }
 
                 return routeRateLimit.Partitioner(context);
-            }),
+            })),
         };
 
         foreach (var groupRateLimit in _rateLimitsOptions.GroupRateLimits)
         {
-            limiters.Add(PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            limiters.Add(Own(PartitionedRateLimiter.Create<HttpContext, string>(context =>
             {
                 if (!EndpointBelongsToGroup(context, groupRateLimit.GroupName) || LoopbackRequests.IsLoopback(context))
                 {
@@ -66,7 +70,7 @@ public sealed class RateLimiterOptionsConfigurations : IConfigureOptions<RateLim
                 }
 
                 return groupRateLimit.Partitioner(context);
-            }));
+            })));
         }
 
         var policies = _policyStore.GetAllAsync(PolicyVersion.Enabled).AsTask().GetAwaiter().GetResult();
@@ -81,7 +85,7 @@ public sealed class RateLimiterOptionsConfigurations : IConfigureOptions<RateLim
                     continue;
                 }
 
-                limiters.Add(PartitionedRateLimiter.Create<HttpContext, string>(context =>
+                limiters.Add(Own(PartitionedRateLimiter.Create<HttpContext, string>(context =>
                 {
                     // The server's own calls (admin pages rendering through the APIs) are part of
                     // the request that caused them, which was counted already.
@@ -91,15 +95,15 @@ public sealed class RateLimiterOptionsConfigurations : IConfigureOptions<RateLim
                     }
 
                     return source.CreatePartition(policy.Name, context, limiter);
-                }));
+                })));
             }
         }
 
         options.GlobalLimiter = limiters.Count switch
         {
-            0 => PartitionedRateLimiter.Create<HttpContext, string>(_ => RateLimitPartition.GetNoLimiter("default")),
+            0 => Own(PartitionedRateLimiter.Create<HttpContext, string>(_ => RateLimitPartition.GetNoLimiter("default"))),
             1 => limiters[0],
-            _ => PartitionedRateLimiter.CreateChained([.. limiters]),
+            _ => Own(PartitionedRateLimiter.CreateChained([.. limiters])),
         };
     }
 

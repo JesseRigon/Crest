@@ -64,8 +64,11 @@ public record PageArgs
     public int? PageSize => Limit;
 
     /// <summary>
-    /// Returns pagination arguments for the next page.
+    /// Returns pagination arguments for the next page: the offset advances by one page of items.
     /// </summary>
     /// <returns>The arguments for the next page.</returns>
-    public PageArgs Next() => this with { Offset = Page + 1 };
+    /// <exception cref="InvalidOperationException">Thrown when there is no limit, so there is no next page.</exception>
+    public PageArgs Next() => Limit is { } limit
+        ? this with { Offset = (Offset ?? 0) + limit }
+        : throw new InvalidOperationException("Pagination arguments without a limit have no next page.");
 }

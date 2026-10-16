@@ -25,12 +25,19 @@ public class RestartInterruptedWorkflowsTask(
         var batchSize = options.Value.RestartInterruptedWorkflowsBatchSize;
         var workflowInstances = workflowInstanceStore.EnumerateSummariesAsync(workflowInstanceFilter, batchSize, cancellationToken);
 
+        // One sweep restarts each instance at most once: a restart only queues the instance, so a store
+        // that returned it again would otherwise queue it again, without bound.
+        var restarted = new HashSet<string>(StringComparer.Ordinal);
+
         logger.LogInformation("Restarting interrupted workflows.");
         await foreach (var workflowInstance in workflowInstances)
         {
+            if (!restarted.Add(workflowInstance.Id))
+                break;
+
             await workflowRestarter.RestartWorkflowAsync(workflowInstance.Id, cancellationToken: cancellationToken);
         }
-        logger.LogInformation("Finished restarting interrupted workflows.");
+        logger.LogInformation("Finished restarting interrupted workflows ({Count} restarted).", restarted.Count);
     }
 
     private WorkflowInstanceFilter CreateWorkflowInstanceFilter()

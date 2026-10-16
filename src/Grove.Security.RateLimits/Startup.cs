@@ -24,7 +24,7 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        services.AddRateLimiter();
+        services.AddShellRateLimiter();
         services.AddDataMigration<GlobalRateLimitsMigrations>();
         services.AddTransient<IConfigureOptions<RateLimiterOptions>, RateLimiterOptionsConfigurations>();
         services.AddSingleton<IRateLimitPolicyStore, RateLimitPolicyStore>();
@@ -52,7 +52,7 @@ public sealed class Startup : StartupBase
 
     public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
     {
-        app.UseRateLimiter();
+        app.UseShellRateLimiter();
     }
 }
 

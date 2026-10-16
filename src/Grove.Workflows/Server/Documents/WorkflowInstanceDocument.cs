@@ -65,6 +65,12 @@ public class WorkflowInstanceDocument
     public bool IsSystem { get; set; }
 
     /// <summary>
+    /// Gets or sets whether the instance was executing when it was last saved. An instance still marked
+    /// executing after the runtime's inactivity threshold was interrupted and is restarted.
+    /// </summary>
+    public bool IsExecuting { get; set; }
+
+    /// <summary>
     /// Gets or sets the creation timestamp.
     /// </summary>
     public DateTimeOffset CreatedAt { get; set; }

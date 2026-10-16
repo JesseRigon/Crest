@@ -88,7 +88,7 @@ public class YesSqlActivityExecutionRecordStore(ISession session, IPayloadSerial
 
     public async Task<long> DeleteManyAsync(ActivityExecutionRecordFilter filter, CancellationToken cancellationToken = default)
     {
-        var pageArgs = PageArgs.FromRange(0, 100);
+        var pageArgs = PageArgs.FromRange(0, 100); // Always the first page: see the flush below.
         var count = 0;
 
         while (true)
@@ -103,7 +103,8 @@ public class YesSqlActivityExecutionRecordStore(ISession session, IPayloadSerial
             foreach (var record in records)
                 session.Delete(record, collection: Collection);
 
-            pageArgs = pageArgs.Next();
+            // The deleted batch is gone once flushed, so the next batch is again the first page.
+            await session.FlushAsync(cancellationToken);
         }
 
         return count;
@@ -149,7 +150,7 @@ public class YesSqlActivityExecutionRecordStore(ISession session, IPayloadSerial
     
     private IEnumerable<ActivityExecutionRecordSummary> MapSummaries(IEnumerable<ActivityExecutionRecordIndex> indexes)
     {
-        return indexes.Select(MapSummary);
+        return indexes.Select(MapSummary).ToList();
     }
 
     private ActivityExecutionRecordSummary MapSummary(ActivityExecutionRecordIndex index)
@@ -206,7 +207,7 @@ public class YesSqlActivityExecutionRecordStore(ISession session, IPayloadSerial
 
     private IEnumerable<ActivityExecutionRecord> Map(IEnumerable<ActivityExecutionRecordDocument> source)
     {
-        return source.Select(x => Map(x)!);
+        return source.Select(x => Map(x)!).ToList();
     }
 
     private ActivityExecutionRecord? Map(ActivityExecutionRecordDocument? source)

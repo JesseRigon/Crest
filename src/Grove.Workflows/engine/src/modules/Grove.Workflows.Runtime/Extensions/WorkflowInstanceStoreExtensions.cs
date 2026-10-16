@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Grove.Workflows.Common.Entities;
 using Grove.Workflows.Common.Models;
 using Grove.Workflows.Management;
 using Grove.Workflows.Management.Filters;
@@ -14,18 +15,20 @@ public static class WorkflowInstanceStoreExtensions
         int batchSize = 100, 
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        // Offset paging needs a stable order, or pages overlap and skip; a short page is the last one.
         var pageArgs = PageArgs.FromPage(0, batchSize);
+        var order = new WorkflowInstanceOrder<string>(x => x.Id, OrderDirection.Ascending);
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            var page = await store.SummarizeManyAsync(filter, pageArgs, cancellationToken);
+            var page = await store.SummarizeManyAsync(filter, pageArgs, order, cancellationToken);
             var workflowInstances = page.Items;
-
-            if (workflowInstances.Count == 0)
-                yield break;
 
             foreach (var workflowInstance in workflowInstances)
                 yield return workflowInstance;
+
+            if (workflowInstances.Count < batchSize)
+                yield break;
 
             pageArgs = pageArgs.Next();
         }

@@ -148,6 +148,27 @@ raised through `IWorkflowTriggerPublisher` from the module's own handlers. There
 workflow module, bridge or second evaluator: the platform's activities are engine activities
 (§ Platform activities).
 
+### Interrupted instances
+
+An instance is saved with `IsExecuting` while a burst runs on it, and the flag is an index
+column (`WorkflowInstanceIndex.IsExecuting`). The engine's recurring sweep
+(`RestartInterruptedWorkflowsTask`, every five minutes) restarts the instances still marked
+executing past the runtime's inactivity threshold, so the ones a dead process left behind
+run again. Each sweep restarts an instance at most once.
+
+The sweep's guarantees rest on rules every engine store and background enumeration keeps:
+
+- **A store filter applies every property of its filter.** A property the YesSql translation
+  (`Server/Extensions/*FilterExtensions.cs`) skips widens the query without a trace, and a
+  sweep built on it then acts on every instance.
+- **Paging advances and ends.** `PageArgs.Next()` moves the offset by one page of items; an
+  enumeration pages in a stable order (by id) and stops at a short page. A delete loop does not
+  page: it flushes each batch and reads the first page again until none is left.
+- **Background dispatch is bounded by its producer.** The engine's command and notification
+  channels are unbounded queues drained by workers that may enqueue again, so they are not
+  bounded themselves. A producer that loops enqueues without limit until the process runs
+  out of memory, so every producer that enqueues in a loop ends that loop by design.
+
 ### The engine API
 
 The management API the designer, the admin pages and the browser checks consume:

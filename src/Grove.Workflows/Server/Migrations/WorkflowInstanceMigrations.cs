@@ -27,6 +27,7 @@ public class WorkflowInstanceMigrations : DataMigration
                 .Column<bool>(nameof(WorkflowInstanceIndex.HasIncidents), c => c.NotNull())
                 .Column<int>(nameof(WorkflowInstanceIndex.IncidentCount), c => c.NotNull())
                 .Column<bool>(nameof(WorkflowInstanceIndex.IsSystem), c => c.NotNull())
+                .Column<bool>(nameof(WorkflowInstanceIndex.IsExecuting), c => c.NotNull())
                 .Column<DateTimeOffset>(nameof(WorkflowInstanceIndex.CreatedAt), c => c.NotNull())
                 .Column<DateTimeOffset>(nameof(WorkflowInstanceIndex.UpdatedAt), c => c.Nullable())
                 .Column<DateTimeOffset>(nameof(WorkflowInstanceIndex.FinishedAt), c => c.Nullable())
@@ -46,6 +47,7 @@ public class WorkflowInstanceMigrations : DataMigration
             table.CreateIndex("IDX_WorkflowInstanceIndex_HasIncidents", nameof(WorkflowInstanceIndex.HasIncidents));
             table.CreateIndex("IDX_WorkflowInstanceIndex_IncidentCount", nameof(WorkflowInstanceIndex.IncidentCount));
             table.CreateIndex("IDX_WorkflowInstanceIndex_IsSystem", nameof(WorkflowInstanceIndex.IsSystem));
+            table.CreateIndex("IDX_WorkflowInstanceIndex_IsExecuting", nameof(WorkflowInstanceIndex.IsExecuting));
             table.CreateIndex("IDX_WorkflowInstanceIndex_CreatedAt", nameof(WorkflowInstanceIndex.CreatedAt));
             table.CreateIndex("IDX_WorkflowInstanceIndex_UpdatedAt", nameof(WorkflowInstanceIndex.UpdatedAt));
             table.CreateIndex("IDX_WorkflowInstanceIndex_FinishedAt", nameof(WorkflowInstanceIndex.FinishedAt));

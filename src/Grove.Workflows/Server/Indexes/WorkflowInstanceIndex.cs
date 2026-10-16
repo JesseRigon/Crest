@@ -17,6 +17,7 @@ public class WorkflowInstanceIndex : MapIndex
     public bool HasIncidents { get; set; }
     public int IncidentCount { get; set; }
     public bool IsSystem { get; set; }
+    public bool IsExecuting { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? FinishedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }

@@ -82,7 +82,7 @@ public class YesSqlTriggerStore(ISession session, IPayloadSerializer payloadSeri
 
     public async ValueTask<long> DeleteManyAsync(TriggerFilter filter, CancellationToken cancellationToken = default)
     {
-        var pageArgs = PageArgs.FromRange(0, 100);
+        var pageArgs = PageArgs.FromRange(0, 100); // Always the first page: see the flush below.
         var count = 0;
 
         while (true)
@@ -97,7 +97,8 @@ public class YesSqlTriggerStore(ISession session, IPayloadSerializer payloadSeri
             foreach (var document in documents)
                 session.Delete(document, collection: Collection);
 
-            pageArgs = pageArgs.Next();
+            // The deleted batch is gone once flushed, so the next batch is again the first page.
+            await session.FlushAsync(cancellationToken);
         }
 
         await session.FlushAsync(cancellationToken);
@@ -144,7 +145,7 @@ public class YesSqlTriggerStore(ISession session, IPayloadSerializer payloadSeri
 
     private IEnumerable<StoredTrigger> Map(IEnumerable<StoredTriggerDocument> source)
     {
-        return source.Select(x => Map(x)!);
+        return source.Select(x => Map(x)!).ToList();
     }
 
     private StoredTrigger? Map(StoredTriggerDocument? source)

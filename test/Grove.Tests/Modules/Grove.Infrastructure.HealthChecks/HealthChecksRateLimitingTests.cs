@@ -61,7 +61,7 @@ public class HealthChecksRateLimitingTests
                 webBuilder.ConfigureServices(services =>
                 {
                     services.AddRouting();
-                    services.AddRateLimiter();
+                    services.AddShellRateLimiter();
                     services.AddTransient<IConfigureOptions<RateLimiterOptions>, RateLimiterOptionsConfigurations>();
                     services.AddSingleton(CreatePolicyStore(enabledPolicies ?? []));
                     services.AddSingleton(new FixedWindowRateLimiterSource(Mock.Of<IStringLocalizer<FixedWindowRateLimiterSource>>()));
@@ -83,7 +83,7 @@ public class HealthChecksRateLimitingTests
                     var routes = (IEndpointRouteBuilder)app.Properties["__EndpointRouteBuilder"];
                     healthChecksStartup.Configure(app, routes, app.ApplicationServices);
 
-                    app.UseRateLimiter();
+                    app.UseShellRateLimiter();
                     app.UseEndpoints(_ => { });
                 });
             });

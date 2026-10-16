@@ -86,7 +86,7 @@ public class YesSqlWorkflowExecutionLogStore(ISession session, IPayloadSerialize
 
     public async Task<long> DeleteManyAsync(WorkflowExecutionLogRecordFilter filter, CancellationToken cancellationToken = default)
     {
-        var pageArgs = PageArgs.FromRange(0, 100);
+        var pageArgs = PageArgs.FromRange(0, 100); // Always the first page: see the flush below.
         var count = 0;
 
         while (true)
@@ -101,7 +101,8 @@ public class YesSqlWorkflowExecutionLogStore(ISession session, IPayloadSerialize
             foreach (var document in documents)
                 session.Delete(document, collection: Collection);
 
-            pageArgs = pageArgs.Next();
+            // The deleted batch is gone once flushed, so the next batch is again the first page.
+            await session.FlushAsync(cancellationToken);
         }
 
         return count;
@@ -157,7 +158,7 @@ public class YesSqlWorkflowExecutionLogStore(ISession session, IPayloadSerialize
 
     private IEnumerable<WorkflowExecutionLogRecord> Map(IEnumerable<WorkflowExecutionLogRecordDocument> source)
     {
-        return source.Select(x => Map(x)!);
+        return source.Select(x => Map(x)!).ToList();
     }
 
     private WorkflowExecutionLogRecord? Map(WorkflowExecutionLogRecordDocument? source)

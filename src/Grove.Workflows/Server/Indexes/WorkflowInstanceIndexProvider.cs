@@ -27,6 +27,7 @@ public class WorkflowInstanceIndexProvider : IndexProvider<WorkflowInstanceDocum
             CorrelationId = document.CorrelationId,
             IncidentCount = document.IncidentCount,
             IsSystem = document.IsSystem,
+            IsExecuting = document.IsExecuting,
             SubStatus = document.SubStatus,
             UpdatedAt = document.UpdatedAt,
             ParentInstanceId = document.ParentWorkflowInstanceId,

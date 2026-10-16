@@ -49,7 +49,7 @@ public class YesSqlBookmarkStore(ISession session, IPayloadSerializer payloadSer
 
     public async ValueTask<long> DeleteAsync(BookmarkFilter filter, CancellationToken cancellationToken = default)
     {
-        var pageArgs = PageArgs.FromRange(0, 100);
+        var pageArgs = PageArgs.FromRange(0, 100); // Always the first page: see the flush below.
         var count = 0;
 
         while (true)
@@ -64,7 +64,8 @@ public class YesSqlBookmarkStore(ISession session, IPayloadSerializer payloadSer
             foreach (var document in documents)
                 session.Delete(document, collection: Collection);
 
-            pageArgs = pageArgs.Next();
+            // The deleted batch is gone once flushed, so the next batch is again the first page.
+            await session.FlushAsync(cancellationToken);
         }
 
         await session.FlushAsync(cancellationToken);
@@ -101,7 +102,7 @@ public class YesSqlBookmarkStore(ISession session, IPayloadSerializer payloadSer
 
     private IEnumerable<StoredBookmark> Map(IEnumerable<StoredBookmarkDocument> source)
     {
-        return source.Select(x => Map(x)!);
+        return source.Select(x => Map(x)!).ToList();
     }
 
     private StoredBookmark? Map(StoredBookmarkDocument? source)
